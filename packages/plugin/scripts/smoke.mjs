@@ -124,4 +124,20 @@ await check('runLedgerScript 错误路径：不存在的仓库 → 人话错误'
   if (!result.ok) assert.match(result.error, /repo|目录|不存在/)
 })
 
+await check('buildSkillRegistration：name/description/正文 + 占位符替换为绝对路径', async () => {
+  const { existsSync } = await import('node:fs')
+  const { buildSkillRegistration } = await import('../dist/host/skill-registration.js')
+  const registration = buildSkillRegistration()
+  assert.equal(registration.name, 'task-ledger')
+  assert.ok(registration.description.length > 20, 'description 应非空（取自 SKILL.md frontmatter）')
+  assert.ok(registration.content.includes('# task-ledger'), '正文应是完整 SKILL.md')
+  assert.ok(registration.content.includes('progress.py'), '正文应含脚本调用示例')
+  assert.ok(registration.content.includes('claim'), '正文应含子命令说明（claim 等）')
+  assert.ok(!registration.content.includes('<本 SKILL.md 所在目录>'), '占位符应全部替换')
+  const match = /python3 (\S*progress\.py)/.exec(registration.content)
+  assert.ok(match !== null, '正文应含 python3 <路径>/progress.py 命令')
+  assert.ok(existsSync(match[1]), `替换后的脚本路径应真实存在：${match[1]}`)
+  console.log(`    （${registration.name}｜正文 ${registration.content.length} 字｜脚本 ${match[1]}）`)
+})
+
 console.log(`\n${passed} 项通过${process.exitCode ? '（有失败）' : ''}`)

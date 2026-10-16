@@ -5,9 +5,9 @@
       "created": "2026-10-16 23:38:13",
       "creator": "GuoJia-Agent",
       "finished": null,
-      "owner": null,
-      "started": null,
-      "status": "open",
+      "owner": "GuoJia-Agent",
+      "started": "2026-10-17 01:51:03",
+      "status": "doing",
       "tags": [
         "DSH",
         "插件",
