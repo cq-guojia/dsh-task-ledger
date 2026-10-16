@@ -1,6 +1,6 @@
 # 功能：台账看板首页（board-home）
 
-> **状态**：🔵 落码（2026-10-16 深夜用户拍板「全按你推荐的来」；码未开。⚠️ §三 按钮的台账**写入路径待定**，见 architecture.md 不变量 1）
+> **状态**：🔵 首页已落码（2026-10-17 交付：整页 + 浮标角标 + 中英 / 明暗）。⚠️ §三 按钮矩阵**未落码**——台账**写入路径待定**（见 architecture.md 不变量 1），拍板前不先斩后奏；统计 tab 只落了占位（归「统计报表」任务）
 > **来源**：用户需求原话（2026-10-16 深夜对话：入口形式 / 首页构想 / 任务按钮逻辑）+ 需求讨论结案任务结论
 > **配套**：架构见 [`../architecture.md`](../architecture.md)；数据见 [`../ledger-data.md`](../ledger-data.md)；样式见 [`../ui-style.md`](../ui-style.md)；宿主事实见 [`../external/client-ui-layout.md`](../external/client-ui-layout.md) 与 [`../external/dsh-session-handoff.md`](../external/dsh-session-handoff.md)
 
@@ -13,7 +13,7 @@
 | 槽位 | `shell.overlay`（list / root，0.2.0-rc.2 亲验）：全帧浮层，官方注释 "a badge, a toast stack or a status pill all belong here"；第三方条目**并排添加**不替换 |
 | 形态 | 自绘小图标按钮（用户提供的插件图标），`position:absolute; top:var(--dsh-frame-overlay-top); right:12px`；浮层默认 `pointer-events:none`、子元素自动恢复，**不挡下方应用** |
 | 角标 | 我名下（owner = 当前 git 身份）`doing` + `blocked` 计数，>0 才显示；0→n 跳变时一次脉冲动画，不自动消失 |
-| 通知 | 宿主**无**推送通知 API（grep 两包无 notification）⇒「通知」= 角标计数，由 host 侧 SSE 推送驱动，不用系统通知 |
+| 通知 | 宿主**无**推送通知 API（grep 两包无 notification）⇒「通知」= 角标计数，不用系统通知。**不用 SSE**：2026-10-17 拍板后端纯按需 ⇒ 角标与整页共用同一份快照（首读 + 手动刷新） |
 | 点击 | `ctx.layout.selectPanel(<看板 id>)`，且列表落到「我的待办」筛选态 |
 | 备选（未采用） | `sidebar.panellist` 条目 `order` 放大沉到侧栏底部「设置」旁；真机用一周仍找不到入口再补（加一条 list 注册约十几行） |
 
@@ -31,6 +31,8 @@
    - **近一年完成** = 最近 13 个月文件的行数，**封顶 1 万**（超出显示「1万+」，精确值走搜索 / 统计 tab）。
 
    > 口径说明（2026-10-17 拍板）：两个完成类统计只读近一年窗口 + 计数封顶，与历史总量脱钩；「累计」改名「近一年」是数字不撒谎（数据真实红线）。已结案列表同理：默认只读近 13 个月 + 500 条/页分页；更早的数据只在显式搜索时全量解析（按需等待）。
+   >
+   > 落码补充（2026-10-17）：「我的待办」档要按 owner 判「是不是我」，而 git 身份只有 host 侧取得到（cwd = 该工作区跑 `git config user.name`）⇒ `GET /board` 增发 `identities`（工作区 id → 身份，取不到为 null），前端按它筛；拿不到身份时「我的」= 0，不谎报。
 2. **筛选行**：左 = Segmented 状态档（全部 / 我的待办 / 待认领 / 已结案）+ 时间范围 + 标签/搜索。**历史查询不单开 tab** = 「已结案」档 + 时间 / 人 / 标签筛选（同一份数据同一套筛选，少一个切换层）。
 3. **任务列表**（宿主无表格件，行自绘，几何参照 `DisclosureRow`）：
    - 状态点：`StateDot` 语义 open=idle / doing=ongoing / blocked=warning / 已结案=done；

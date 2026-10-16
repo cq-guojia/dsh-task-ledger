@@ -45,7 +45,10 @@ export async function getBoardSnapshot(workspaces) {
     const tasks = perWorkspace.flatMap((entry) => entry.tasks);
     const myActive = perWorkspace.reduce((sum, entry) => sum + entry.tasks.filter((task) => task.owner === entry.identity && (task.status === 'doing' || task.status === 'blocked')).length, 0);
     const open = tasks.filter((task) => task.status === 'open').length;
-    return { at: new Date().toISOString(), workspaces, tasks, stats: { myActive, open } };
+    const identities = {};
+    for (const entry of perWorkspace)
+        identities[entry.workspace.id] = entry.identity;
+    return { at: new Date().toISOString(), workspaces, tasks, stats: { myActive, open }, identities };
 }
 /**
  * 完成类统计（数行封顶，与总量脱钩）：本周 = 最近 2 个月文件 + 创建时间落在本周；

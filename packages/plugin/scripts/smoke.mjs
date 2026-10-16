@@ -37,7 +37,9 @@ await check('resolveWorkspaces：只返回有 progress.json 的（未初始化/�
 
 await check('readTasks：在办任务带 id 与 workspace', async () => {
   const tasks = await readTasks({ id: 'ws-self', title: 'self', path: repoRoot })
-  assert.ok(tasks.length >= 6, `在办应 ≥6，实际 ${tasks.length}`)
+  // 只卡「有在办」，不写死条数：本仓台账会被日常结案改变，条数是数据不是契约
+  // （结构断言才是这条冒烟要守的东西）。
+  assert.ok(tasks.length >= 1, `本仓应有在办任务，实际 ${tasks.length}`)
   for (const task of tasks) {
     assert.ok(typeof task.id === 'string' && task.id !== '')
     assert.equal(task.workspace.id, 'ws-self')
@@ -122,6 +124,91 @@ await check('runLedgerScript 错误路径：不存在的仓库 → 人话错误'
   const result = await runLedgerScript('list', ['--repo', '/tmp/definitely-not-here'])
   assert.equal(result.ok, false)
   if (!result.ok) assert.match(result.error, /repo|目录|不存在/)
+})
+
+await check('getBoardSnapshot：identities 按工作区 id 给出当前 git 身份（前端「我的待办」判定源）', async () => {
+  const snapshot = await getBoardSnapshot([{ id: 'ws-self', title: 'self', path: repoRoot }])
+  const ids = Object.keys(snapshot.identities)
+  assert.deepEqual(ids, ['ws-self'], `identities 应按工作区 id 建键，实际 ${JSON.stringify(ids)}`)
+  // 本仓有 git 身份 ⇒ 非 null；取不到（非 git 目录）时必须是 null，不许编造。
+  assert.ok(snapshot.identities['ws-self'] === null || typeof snapshot.identities['ws-self'] === 'string')
+})
+
+// ── client 产物（浏览器半）：契约 + 文案两档对齐 ──
+// 打 dist/client.js：它是 dsh 模块内核消费的 CJS 闭包工厂，形状错了插件根本加载不起来，
+// 且这种错在类型检查里看不出来（tsc 只认源码）。
+await check('dist/client.js：模块加载器契约 + 只 require 平台模块', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const text = await readFile(path.resolve(here, '../dist/client.js'), 'utf-8')
+  assert.ok(text.includes('window.__ModuleLoader__.load('), '缺少模块加载器包裹')
+  assert.ok(text.includes('id: "dsh-task-ledger"'), '模块 id 应为包名')
+  // 末尾还挂着 sourcemap 注释 ⇒ 先摘掉再看收尾。
+  const code = text.replace(/\/\/# sourceMappingURL=.*$/m, '').trimEnd()
+  assert.ok(code.includes('return module.exports;'), '缺少 factory 返回值')
+  assert.ok(code.endsWith('});'), '缺少 factory 收尾')
+  const PLATFORM = new Set([
+    'react', 'react/jsx-runtime', 'react-dom', 'react-dom/client', '@deepseek-ai/cordis',
+    '@deepseek-ai/dsh-client-store', '@deepseek-ai/dsh-client-ui-slots',
+    '@deepseek-ai/dsh-client-ui-primitives', '@deepseek-ai/dsh-client-ui-dockkit',
+  ])
+  const required = [...text.matchAll(/require\("([^"]+)"\)/g)].map(m => m[1])
+  const stray = required.filter(name => !PLATFORM.has(name))
+  assert.deepEqual(stray, [], `打进包外的 require 运行时必然抛：${stray.join(',')}`)
+  assert.ok(required.includes('react'), 'react 应保留为平台 require')
+})
+
+// 筛选是首页的核心逻辑，且**只在浏览器里跑** ⇒ 冒烟直测这两个纯函数（无 DOM 依赖；
+// 剥类型直读源码，client 单文件产物不可 import）。
+await check('客户端筛选逻辑：档位 / 时间窗 / 标签 / 关键字', async () => {
+  const { rangeToDates } = await import(path.resolve(here, '../src/client/format.ts'))
+  const { selectRows } = await import(path.resolve(here, '../src/client/rows.ts'))
+  const pad = (n) => String(n).padStart(2, '0')
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  const now = new Date()
+  const monday = new Date(now)
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
+  assert.deepEqual(rangeToDates('week'), { since: ymd(monday), until: ymd(now) }, '本周 = 周一 ~ 今天')
+  assert.deepEqual(rangeToDates('all'), {}, '全部时间不拼参数')
+
+  const ws = { id: 'w1', title: 'w1', path: '/tmp' }
+  const today = `${ymd(now)} 10:00:00`
+  const old = '2020-01-02 10:00:00'
+  const tasks = [
+    { id: 't1', workspace: ws, title: '甲任务', status: 'doing', owner: 'me', creator: 'me', created: today, tags: ['DSH'] },
+    { id: 't2', workspace: ws, title: '乙任务', status: 'open', owner: null, created: old, tags: [] },
+    { id: 't3', workspace: ws, title: '丙任务', status: 'blocked', owner: 'other', created: today, tags: [] },
+  ]
+  const state = (query) => ({
+    board: { identities: { w1: 'me' }, tasks, workspaces: [ws], stats: {}, closed: {} },
+    history: [],
+    query,
+  })
+  const base = { range: 'all', tag: '', keyword: '', limit: 500 }
+  const ids = (rows) => rows.map(r => (r.kind === 'task' ? r.task.id : r.record.id))
+  // 默认按创建时间倒序（t1 / t3 今天、t2 是 2020 年）
+  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'all' }))), ['t1', 't3', 't2'])
+  // 「我的」= owner 命中该工作区身份 且 doing/blocked
+  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'mine' }))), ['t1'])
+  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'open' }))), ['t2'])
+  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'all', tag: 'DSH' }))), ['t1'])
+  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'all', keyword: '乙' }))), ['t2'])
+  // 时间窗只留今天的（t2 是 2020 年的）
+  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'all', range: 'week' }))), ['t1', 't3'])
+  // 已结案档走 history，行 kind = closed
+  const closed = selectRows({ ...state({ ...base, bucket: 'closed' }), history: [{ id: 'h1', summary: '完工' }] })
+  assert.deepEqual(closed.map(r => r.kind), ['closed'])
+})
+
+await check('文案字典：zh / en 键完全对齐（漏一种语言界面就露键名）', async () => {
+  // 纯数据模块、无副作用 ⇒ Node 24 原生剥类型直读源码（产物里键名已被打包压缩，读不出来）。
+  const { zh, en } = await import(path.resolve(here, '../src/client/locales.ts'))
+  const zk = Object.keys(zh).sort()
+  const ek = Object.keys(en).sort()
+  assert.deepEqual(ek, zk, `en 与 zh 键不一致：${JSON.stringify(zk.filter(k => !ek.includes(k)).concat(ek.filter(k => !zk.includes(k))))}`)
+  assert.ok(zk.length > 40, `键数应 >40，实际 ${zk.length}`)
+  for (const [key, value] of Object.entries(zh)) {
+    assert.ok(typeof value === 'string' && value !== '', `zh.${key} 为空`)
+  }
 })
 
 await check('buildSkillRegistration：name/description/正文 + 占位符替换为绝对路径', async () => {

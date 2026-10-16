@@ -53,9 +53,9 @@
       "created": "2026-10-16 23:38:13",
       "creator": "GuoJia-Agent",
       "finished": null,
-      "owner": null,
-      "started": null,
-      "status": "open",
+      "owner": "GuoJia-Agent",
+      "started": "2026-10-17 02:41:37",
+      "status": "doing",
       "tags": [
         "DSH",
         "看板",

@@ -18,6 +18,12 @@ export interface BoardSnapshot {
         readonly myActive: number;
         readonly open: number;
     };
+    /**
+     * 工作区 id → 该工作区的当前 git 身份（取不到为 null）。
+     * 「我的待办」在前端按 `owner === identities[workspace.id]` 筛——身份只在 host 侧取得到
+     * （cwd = 该工作区跑 `git config user.name`），UI 不摸 git。
+     */
+    readonly identities: Readonly<Record<string, string | null>>;
 }
 /**
  * 当前 git 身份（cwd = 该工作区）——「我的待办」判定源。
