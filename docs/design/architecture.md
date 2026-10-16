@@ -12,14 +12,16 @@
 2. **台账管理 UI**：待办查询（按 A/B/C/CD 工作区分组）、历史追溯（按创建人 / 提交人筛选）、日志与报表；
 3. skill 本身可脱离 dsh 单独安装（npm / git）给其他 agent 用。
 
-**单仓双包**（pnpm workspaces，已定稿）：
+**单仓双包**（pnpm workspaces，已落地；仓库根为 private workspace 根，不发布）：
 
-| 包 | 内容 | 发布触发（规划） |
+| 包 | 内容 | 发布触发 |
 |---|---|---|
-| `dsh-task-ledger`（插件包） | host 半（skill 注册 + webServer 路由 + 跨工作区读台账）+ client 半（侧栏条目 + 主面板 UI）+ `cordis.patch.yml`；`dist/` 入仓 | tag `plugin-v*` |
-| `task-ledger`（skill 包） | 零代码：SKILL.md + scripts + assets 直发（files 白名单），供 CodeBuddy / 其他 agent 用 | tag `skill-v*` |
+| `dsh-task-ledger`（插件包，`packages/plugin/`） | host 半（skill 注册 + webServer 路由 + 跨工作区读台账）+ client 半（侧栏条目 + 主面板 UI）+ `cordis.patch.yml`；`dist/` 入仓 | tag `plugin-v*` |
+| `task-ledger`（skill 包，`packages/skill/`） | 零代码：SKILL.md + scripts + assets 直发（files 白名单），供 CodeBuddy / 其他 agent 用 | tag `skill-v*` |
 
 两包独立 semver。skill 内容唯一真源在 `packages/skill/`，插件包构建时纳入（内嵌副本与独立包必须同源）。
+
+版本线：`task-ledger` 已发 1.0.0（2026-10-16，后续走 `skill-v*`）；`dsh-task-ledger` 的 npm 占位 0.0.3 已发，插件真身自 `packages/plugin/` 起、下一版 0.0.4 走 `plugin-v*`。workspace 声明走 root `package.json` 的 `workspaces`（pnpm 与 npm 均认，不另建 `pnpm-workspace.yaml`）。
 
 ## 二、运行逻辑
 

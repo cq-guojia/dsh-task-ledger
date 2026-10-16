@@ -38,22 +38,27 @@
   repository.url 防 E422）
 - ✅ **task-ledger@1.0.0 已发布并验证**（2026-10-16，用户手发）：maintainer=guojia、
   latest=1.0.0、5 文件、tarball integrity 与发布输出一致
-- ⏳ **待用户执行**：① `npm unpublish ledger-progress@0.0.0-stage --force`——1.0.0 已撤，
-  但 staging 占位版本还占着名字，撤掉它包才彻底消失（验证 `npm view ledger-progress`
-  应变 404）；② 可选：`npm unpublish task-ledger@0.0.0-stage --force` 清掉我们自己包
-  里的 staging 占位版本（纯 cosmetic，latest 已指向 1.0.0）
-- monorepo 化：`pnpm-workspace.yaml` + root `package.json` 改造（现为占位包 0.0.3）；
-  `packages/plugin/` 待建（先占位）
-- 发布工作流改建：tag 前缀 `skill-v*` / `plugin-v*` 分别触发；skill 包无 install/build
+- ✅ **npm 侧清理完成**（用户 2026-10-16 执行）：`ledger-progress@0.0.0-stage` 已撤、
+  包彻底消失（E404 Unpublished 11:17:48Z，名字释放）；`task-ledger@0.0.0-stage`
+  占位版已清。独立核验终态：task-ledger 单版本 1.0.0、latest=1.0.0、5 文件、
+  integrity 与发布输出一致
+- ✅ **monorepo 化落地**：root `package.json` 改 private workspace 根
+  （`workspaces: ["packages/*"]`，name 改 `dsh-task-ledger-monorepo`；未建
+  `pnpm-workspace.yaml`——package.json 的 workspaces pnpm 同样认）；`packages/plugin/`
+  占位包落地（name `dsh-task-ledger`、version 0.0.4 接占位版本线、repository.url）
+- ✅ **发布工作流改建**：`publish.yml` 双前缀分家（`skill-v*` → packages/skill、
+  `plugin-v*` → packages/plugin，均 OIDC + `--provenance`、Node 24）；npm 侧
+  `task-ledger` 的 Trusted Publisher 连接已由用户建好（GitHub Actions + 本仓 +
+  publish.yml + Allow npm publish；dist-tag 未勾、Environment 留空）
+- ⏳ **待实测**：下一次 skill 版本（如 1.0.1）推 `skill-v*` tag，验证 CI OIDC 发布
+  链路（推 tag 属发布动作，由用户执行）
 - ⚠️ 待用户确认：NAS-Docker 规范源目录改名（`_Skills/koc-ledger-progress/` →
   `task-ledger/`）+ rulemux 重新同步；EXE001 修复落点（应落规范源）
 
 ## 下一步
 
-`task-ledger@1.0.0` 已发布（`ledger-progress` 残留占位版本清理进行中，不影响仓内
-状态）：本次「迁入 + 改名 + package.json」变更已提交推送；随后建
-`pnpm-workspace.yaml` 与 root 改造，为 CI 分 tag 发布（`skill-v*` / `plugin-v*`）
-做准备。
+本任务收尾 = CI 发布实测（用户推 `skill-v*` tag）。DSH 插件开发（host/client 两半）
+按用户既定规划**另建任务**，不在本任务范围。
 
 ## 过程
 
@@ -94,6 +99,20 @@
    publishing"）——这是占位版本不是抢名，等处理完（约 1 分钟）即让位给正式版本。
    `ledger-progress` 因此还残留一个 0.0.0-stage 占位版本占名，需再 unpublish 一次
    才彻底消失；`task-ledger` 自身也带一个同名占位版本（可选清理）。
+7. **npm 清理 + 传播延迟坑**（2026-10-16，用户执行）：撤 `ledger-progress@0.0.0-stage`
+   时输出 `- ledger-progress`（末版撤掉即整包消失）。⚠️ **传播延迟**：撤完立刻
+   `npm view ledger-progress` 仍返回旧文档（registry 副本滞后），约 30 秒后再查才
+   E404（"Unpublished on 2026-10-16T11:17:48.341Z"）⇒ **发布 / 撤销后不能信第一次
+   view，必须重查确认**。`task-ledger@0.0.0-stage` 占位版亦已清，终态独立核验：
+   versions=[1.0.0]、latest=1.0.0、fileCount=5、integrity 与发布输出一致。
+8. **monorepo 化落地**（用户 2026-10-16 授权「你去操作吧」，Trusted Publisher 连接
+   已由用户建好）：root `package.json` → private workspace 根（name
+   `dsh-task-ledger-monorepo`、`workspaces: ["packages/*"]`）；`packages/plugin/`
+   占位包（`dsh-task-ledger@0.0.4` 接占位版本线、files 只 README、repository.url）；
+   `publish.yml` 改建为双前缀（skill-v* / plugin-v*，两 job 均 OIDC + --provenance、
+   Node 24、working-directory 发布；占位期无 install/build，注释留待补）；根 README
+   改 monorepo 总览（双包表 + 安装矩阵），原占位说明移交 packages/plugin/README.md；
+   architecture.md 双包表同步（路径、版本线、workspaces 声明方式）。
 
 ## 结论
 
