@@ -47,7 +47,7 @@ jobs:
 
       - run: node --version && npm --version
 
-      # 占位期无依赖、无构建步骤；monorepo 真身落地后在此补 install + build
-      # （DSH 生态 dist 入仓、装完即用）。
+      # dist 已入仓（DSH 生态规则：git 直装、装完即用）⇒ CI 直接发布仓库内产物，不重构建。
+      # 若要 CI 侧兜底构建（防漏 build），在此补 install + build 两步。
       - run: npm publish --provenance
         working-directory: packages/plugin
