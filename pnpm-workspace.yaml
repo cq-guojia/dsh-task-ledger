@@ -1,0 +1,4 @@
+# pnpm 只认本文件（不读 package.json 的 workspaces 字段——2026-10-17 实测 pnpm 12.3.4）。
+# 2026-10-17 修正：架构文档原记「workspaces 走 root package.json、不另建本文件」有误，以此为准。
+packages:
+  - "packages/*"

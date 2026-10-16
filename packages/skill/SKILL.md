@@ -82,7 +82,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 | `set` | 改状态 / 换负责人 | `--id`（必填）、`--status`、`--owner` |
 | `close` | 结案：移出状态 + 追加历史 + 封卷过程文档 | `--id`、`--summary`（都必填）、`--finished`（可选，结案时间）、`--category` / `--tags`（可选，结案时覆盖修正一次） |
 | `list` | 查询在办任务 | `--mine`、`--owner`、`--status`、`--since`、`--until`、`--category`（精确）、`--tag`（包含）、`--json` |
-| `history` | 查已结案任务（只读） | `--owner`、`--mine`、`--since`、`--until`、`--limit`、`--category`（精确）、`--tag`（包含）、`--json` |
+| `history` | 查已结案任务（只读） | `--owner`、`--mine`、`--since`、`--until`、`--limit`、`--category`（精确）、`--tag`（包含）、`--json`；另：`--count-only`（只数行数、封顶 1 万输出 `{count, capped}`，显示级统计）、`--months N`（只读最近 N 个月文件，不含存量平铺文件） |
 | `show` | 单任务详情 | `--id`（必填） |
 | `tags` | 分类/标签巡检与归并 | `--all`（全量频次表）、`--rename 旧 新`（归并在办任务的同值） |
 | `validate` | 校验状态表与过程文档是否一致 | — |

@@ -1,13 +1,9 @@
-.DS_Store
-.codebuddy/
-.trae/
-
-# hindsight MCP registration (machine-specific)
-.trae/mcp.json
-
+# 依赖安装产物（pnpm workspace）
 node_modules/
-lib/
-*.tsbuildinfo
+
+# IDE 本地状态（不入仓、不删）
+.codebuddy/
+
+# 构建产物中不入仓的（dist/ 与 packages/plugin/skill/ 按 DSH 规则必须入仓，不忽略）
 *.log
-.env
-.env.local
+.DS_Store

@@ -736,6 +736,47 @@ def history_sources(repo: Path) -> list[Path]:
     return paths
 
 
+# 数行计数的封顶值（2026-10-17 为 dsh-task-ledger 看板统计卡新增）：显示级统计封顶，
+# 超出即 capped，精确值走 history --json / 列表。
+COUNT_CAP = 10000
+
+
+def history_row_count(
+    sources: list[Path], since: str | None, until: str | None, cap: int = COUNT_CAP
+) -> dict[str, Any]:
+    """数行计数（只读；2026-10-17 新增，服务看板「本周 / 近一年完成」统计卡）。
+
+    只数数据行（`| 2` 开头 = 结案时间以年份开头），到 cap 封顶返回 capped=True。
+    给了 since/until 时按创建时间列（第 2 列）粗筛——取日期部分做字符串比较
+    （ISO 日期字典序即时间序），不建对象、不判格式，比 parse_history 便宜一个量级。
+    ⚠️ 显示级统计：坏行 / 旧格式行可能多数少数，精确数以 history --json 为准。
+    """
+    since_d = (since or "")[:10]
+    until_d = (until or "")[:10]
+    total = 0
+    for hp in sources:
+        try:
+            text = hp.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for line in text.splitlines():
+            if not line.startswith("| 2"):
+                continue
+            if since_d or until_d:
+                cells = line.split("|")
+                if len(cells) < 4:
+                    continue
+                created = cells[2].strip()[:10]
+                if since_d and created < since_d:
+                    continue
+                if until_d and created > until_d:
+                    continue
+            total += 1
+            if total >= cap:
+                return {"count": total, "capped": True}
+    return {"count": total, "capped": False}
+
+
 def worklog_link(log_path: Path, history_path: Path) -> str:
     """worklog 相对历史文件所在目录的 posix 链接。
 
@@ -1696,6 +1737,15 @@ def cmd_history(args: argparse.Namespace) -> None:
             f"没有已结案记录：ledger/history/ 还没有文件（存量 {HISTORY_REL} 也没有）。"
         )
         return
+    if args.months is not None:
+        if args.months < 1:
+            raise Fail("--months 必须是正整数")
+        # 只取按月归档的文件（存量平铺文件不进了——它是改造前的历史，窗口模式用不到）
+        monthly = [p for p in sources if p.parent.name == HISTORY_DIR.name]
+        sources = monthly[-args.months :]
+    if args.count_only:
+        print(json.dumps(history_row_count(sources, since, until), ensure_ascii=False))
+        return
     records: list[dict[str, Any]] = []
     warnings: list[str] = []
     for hp in sources:
@@ -1914,6 +1964,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--limit", type=int, help="过滤 + 倒序后取前 N 条（最近 N 条）")
     p.add_argument("--json", action="store_true", help="输出结构化 JSON（含摘要）")
+    p.add_argument(
+        "--count-only",
+        action="store_true",
+        help="只数行数（封顶 1 万，输出 {count, capped}）；显示级统计，精确数以 --json 为准",
+    )
+    p.add_argument(
+        "--months",
+        type=int,
+        help="只读最近 N 个月的历史文件（ledger/history/*.md 按文件名取末 N 个；不含存量平铺文件）",
+    )
     add_repo(p)
     p.set_defaults(func=cmd_history)
 

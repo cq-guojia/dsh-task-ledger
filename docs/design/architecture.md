@@ -21,7 +21,7 @@
 
 两包独立 semver。skill 内容唯一真源在 `packages/skill/`，插件包构建时纳入（内嵌副本与独立包必须同源）。
 
-版本线：`task-ledger` 已发 1.0.0（2026-10-16，后续走 `skill-v*`）；`dsh-task-ledger` 的 npm 占位 0.0.3 已发，插件真身自 `packages/plugin/` 起、下一版 0.0.4 走 `plugin-v*`。workspace 声明走 root `package.json` 的 `workspaces`（pnpm 与 npm 均认，不另建 `pnpm-workspace.yaml`）。
+版本线：`task-ledger` 已发 1.0.0（2026-10-16，后续走 `skill-v*`）；`dsh-task-ledger` 的 npm 占位 0.0.3 已发，插件真身自 `packages/plugin/` 起、下一版 0.0.4 走 `plugin-v*`。workspace 声明走根 `pnpm-workspace.yaml`（**pnpm 只认这个，不读 package.json 的 `workspaces` 字段**——2026-10-17 实测 pnpm 12.3.4；root package.json 里的 `workspaces` 字段留给 npm 生态读）。
 
 ## 二、运行逻辑
 
@@ -31,7 +31,7 @@
 │  <工作区>/ledger/history/<年月>.md        已结案索引   │
 │  <工作区>/ledger/worklog/<年月>/*.md      过程正文     │
 └────────────────────────┬─────────────────────────────┘
-                         │ host 进程直读本地文件（只读）
+                         │ host 经内嵌 skill 脚本（Python 子进程）只读
                          ▼
 ┌─ dsh-task-ledger host 半（插件进程内）───────────────┐
 │  · apply 时 ctx.skills.register 注册内嵌 skill       │
@@ -71,7 +71,7 @@
 
 ## 五、待拍板（未验证，不作结论）
 
-- 工作区根路径（A/B/C/CD）走插件配置项 + `ctx.settings` 命名空间的具体形态；
+- 工作区**补充源**（宿主 registry 未收录的目录，如从未在 dsh 里添加过的项目）的配置形态 —— 主来源已定 = `ctx.workspaceRegistry.list()`（见 [`external/dsh-workspace-registry.md`](external/dsh-workspace-registry.md)）；
 - UI API 路由的鉴权方案；
 - Desktop（Electron）表面真机表现；
 - （仅当不变量 1 拍板为混合制 B 才涉及）host 代跑 `progress.py` 的环境：`--repo` 传参来源、宿主进程的 git 身份（owner 取 `git config user.name`）。

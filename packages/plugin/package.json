@@ -1,7 +1,7 @@
 {
   "name": "dsh-task-ledger",
   "version": "0.0.4",
-  "description": "Name reserved: upcoming dsh (DeepSeek Harness) plugin — task ledger board with the task-ledger skill bundled. First functional release in development.",
+  "description": "Task ledger board for dsh (DeepSeek Harness): read-only board over task-ledger skill workspaces. The task-ledger skill is bundled — install the plugin, get the skill globally.",
   "keywords": [
     "deepseek",
     "harness",
@@ -10,12 +10,37 @@
     "task-ledger"
   ],
   "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "skill",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && node scripts/copy-skill.mjs",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "typescript": "^5.9.3"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cq-guojia/dsh-task-ledger.git"
   },
-  "type": "module",
-  "files": [
-    "README.md"
-  ]
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
 }
