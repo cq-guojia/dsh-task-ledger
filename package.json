@@ -1,0 +1,17 @@
+{
+  "name": "dsh-task-ledger",
+  "version": "0.0.1",
+  "description": "Name reserved: upcoming dsh (DeepSeek Harness) plugin — task ledger board with the koc-ledger-progress skill bundled. First functional release in development.",
+  "keywords": [
+    "deepseek",
+    "harness",
+    "dsh",
+    "dsh-plugin",
+    "task-ledger"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "README.md"
+  ]
+}

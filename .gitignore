@@ -1,0 +1,13 @@
+.DS_Store
+.codebuddy/
+.trae/
+
+# hindsight MCP registration (machine-specific)
+.trae/mcp.json
+
+node_modules/
+lib/
+*.tsbuildinfo
+*.log
+.env
+.env.local
