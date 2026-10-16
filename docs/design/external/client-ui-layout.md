@@ -2,10 +2,25 @@
 
 > **类型**：🌐 **外部事实** —— 记的是**宿主（DSH）**能给什么，不是本项目的设计
 > **适用版本**：`@deepseek-ai/dsh-client-ui-layout` / `-sidebar` / `-primitives` / `-theme` 均取 **0.2.0-rc.2**（npm `next` 线；⚠️ `latest` tag 指向旧版，勿用）；**开发基线 = 0.2.0-rc.2**（用户 2026-10-16 拍板）
-> **状态**：✅ 已核实（2026-10-16：入口槽位两包 `npm pack` 亲验；元件与设计变量引用姊妹仓 0.2.0-rc.2 核实记录）
+> **状态**：✅ 已核实（2026-10-16：入口槽位两包 `npm pack` 亲验；**2026-10-16 深夜补全**：全槽位清单 + `shell.overlay` 实现细节 —— layout `lib/client.js` 亲验；元件与设计变量引用姊妹仓 0.2.0-rc.2 核实记录）
 > **来源**：`@deepseek-ai/dsh-client-ui-layout` / `-sidebar` @0.2.0-rc.2 解包产物 `lib/types/client/*.d.ts` 原文；姊妹仓 `cq-guojia/dsh-task-dispatch-table` `docs/design/external/dsh-capabilities.md`（primitives / theme 部分）
 
-## 一、结论（界面入口三件套，0.2.0-rc.2 亲验）
+## 一、结论：全槽位清单（0.2.0-rc.2 亲验，深夜补全）
+
+| 槽位 | 类型 / 作用域 | 第三方可否注册 | 用途 |
+|---|---|---|---|
+| `sidebar.panellist` | list / root | ✅ | 侧栏全局面板条目（只画图标；行按钮、点击、激活态归侧栏） |
+| `main` | keyed / root | ✅ | 整页面板；保留键 `conversation`，其他键**不绑 Session** |
+| `shell.overlay` | list / root | ✅ | **全帧浮层**：徽标 / toast / 状态 pill 的正式席位；条目**并排添加**不替换 |
+| `sidebar.footer.action` | list / root | ✅ | 侧栏脚注行（「设置」旁） |
+| `sidebar` | single / root | ❌ 被 ui-sidebar 的 SidebarRoot 占用 | 注册即整体替换导航列 |
+| `rightbar` | single / root | ❌ 被会话右侧栏占用 | — |
+| `shell.leading` | single / root | ❌ 被 ui-sidebar 占用 | 左上窗口 chrome（重开 / 新会话控件） |
+| `sidebar.toggle.badge` | single / root | 可注册但**仅折叠侧栏展开钮内、不可交互** | — |
+
+**本插件入口定论 = `shell.overlay` 浮标**（2026-10-16 深夜拍板，详见 [`../../features/board-home.md`](../../features/board-home.md) §一）；`sidebar.panellist` 为备选未采用。
+
+入口三件套结论（仍有效）：
 
 1. **侧栏条目**：注册进 `sidebar.panellist`（list 槽，root 作用域）—— 由 `dsh-client-ui-sidebar` 声明，原文 *"Global panel icons. Each list id addresses the matching main panel"*；
 2. **整页面板**：注册进 `main`（keyed 槽，root）—— 由 `dsh-client-ui-layout` 声明；保留键 `conversation` 宿主会话，其他键**不绑 Session**；
@@ -32,13 +47,18 @@
 | 设计变量 | 去重后约 400 个 `--dsw-*`（alias 107 / static 77 / font 族 182…）+ 5 个 `--ds-*` | `dsh-client-ui-theme@0.2.0-rc.2` `lib/client.js` 内嵌 CSS |
 | **明暗判据唯一** | `body[data-ds-dark-theme]`（宿主启动脚本 `toggleAttribute` 写）；`prefers-color-scheme` 仅宿主内部用 ⇒ 插件侧不得自己使用 | theme `lib/index.js`（bootThemeBodyScript） |
 | 品牌色不是蓝 | `--dsw-alias-brand-primary` 明色近黑（bluish-1000）/ 暗色近白（bluish-50）；蓝色强调走 `--dsw-alias-state-business-primary` | theme `lib/client.js` + 姊妹仓记录 |
+| **浮层实现** | `.overlayLayer{position:absolute;inset:0;z-index:20;pointer-events:none}` + `.overlayLayer>*{pointer-events:auto}`；宿主发布 `--dsh-frame-overlay-top`（= 标题栏净空 + 20px；全屏时 20px）供条目自定位 | layout `lib/client.js`（深夜亲验） |
+| 浮层定位原文 | *"Frame-wide floating layer, above every column and outside their scroll containers… a badge, a toast stack or a status pill all belong here… This is the additive seat… a fresh `id` is added beside the shipped entries instead of replacing them."* | layout `lib/types/client/index.d.ts:75-88` |
+| **无通知 API** | layout / sidebar 两包全文 grep 无 `notification` 字样 ⇒ 宿主无推送通知能力，「通知」只能自绘（角标 / toast / pill） | 两包 `lib/client.js` 全文 |
+| 三列几何 | 右栏先缩后失 track，center 保底 400（`CENTER_MIN`）；`rightbar` 占用者自报开合状态 | layout `lib/types/client/columns.d.ts`、`service.d.ts:47-49` |
 
 ## 三、对本插件的落地含义
 
-1. 侧栏条目 = panellist list 注册（`id` / `order` / `label` + 图标渲染，`active` 由宿主传入）+ `main` keyed 注册（同 id 整页看板）。
-2. 三 tab 看板（待办 / 历史 / 报表）= `main` 面板内自绘；非 `conversation` 键**不绑 Session**，无需处理会话上下文。
+1. **入口 = `shell.overlay` 浮标**（深夜拍板）：list 条目自绘小图标按钮，定位 `top:var(--dsh-frame-overlay-top); right:12px`；点击 `selectPanel(看板 id)`。浮层默认点击穿透，子元素自动恢复指针事件 ⇒ 不挡应用。备选 `panellist`（`order` 放大沉底部）未采用。
+2. 两 tab 看板（任务 / 统计）= `main` 面板内自绘；非 `conversation` 键**不绑 Session**，无需处理会话上下文。
 3. 列表行自绘（无表格件），行件参照 `DisclosureRow` 几何，状态用 `StateDot`，文件类型用 `FileTypeIcon`。
-4. 样式硬约束（明暗判据、token 使用）见 [`../ui-style.md`](../ui-style.md)。
+4. 角标计数由 host SSE 推送驱动（宿主无通知 API，见 [`dsh-session-handoff.md`](dsh-session-handoff.md) 同源的 webServer 事实）。
+5. 样式硬约束（明暗判据、token 使用）见 [`../ui-style.md`](../ui-style.md)。
 
 ## 四、复核方式（宿主升级后）
 

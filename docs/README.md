@@ -13,7 +13,7 @@
 | 任务进度（在办 / 已结案 / 过程叙事） | **不入 `docs/`** —— 由 `task-ledger` skill 统一管理（`ledger/progress.json`、`ledger/history/<年月>.md`、`ledger/worklog/<年月>/`，路径以 skill 为准） |
 | 运行逻辑 | `docs/design/architecture.md` |
 | 功能总索引 | `docs/design/features.md` |
-| 各功能 | `docs/design/features/`（一功能一文件，清单见功能总索引；初建期尚未建任何功能文档） |
+| 各功能 | `docs/design/features/`（一功能一文件，清单见功能总索引） |
 | 外部事实 | `docs/design/external/`：`dsh-skill-registration.md`、`host-webserver.md`、`client-ui-layout.md`、`publish-oidc.md` |
 | 数据库说明 | `docs/design/ledger-data.md`（本项目的「数据」= 各工作区台账文件，插件只读、不自建数据库） |
 | 样式规范 | `docs/design/ui-style.md` |

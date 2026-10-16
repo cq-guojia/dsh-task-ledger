@@ -1,20 +1,100 @@
 {
   "tasks": {
-    "20261016-2041-dsh-插件真身开发-skill-注册最小闭环-台账数据面-看板-ui-8e70": {
+    "20261016-2338-skill-注册最小闭环-4dc1": {
       "category": "建设",
-      "created": "2026-10-16 20:41:15",
+      "created": "2026-10-16 23:38:13",
       "creator": "GuoJia-Agent",
       "finished": null,
-      "owner": "GuoJia-Agent",
-      "started": "2026-10-16 20:41:15",
-      "status": "doing",
+      "owner": null,
+      "started": null,
+      "status": "open",
       "tags": [
         "DSH",
         "插件",
-        "开发"
+        "skill"
       ],
-      "title": "DSH 插件真身开发：skill 注册最小闭环 → 台账数据面 → 看板 UI",
-      "worklog": "worklog/202610/16-2041-dsh-插件真身开发-skill-注册最小闭环-台账数据面-看板-ui-8e70.md"
+      "title": "skill 注册最小闭环",
+      "worklog": "worklog/202610/16-2338-skill-注册最小闭环-4dc1.md"
+    },
+    "20261016-2338-发布到插件市场-6dbd": {
+      "category": "建设",
+      "created": "2026-10-16 23:38:14",
+      "creator": "GuoJia-Agent",
+      "finished": null,
+      "owner": null,
+      "started": null,
+      "status": "open",
+      "tags": [
+        "DSH",
+        "发布",
+        "市场"
+      ],
+      "title": "发布到插件市场",
+      "worklog": "worklog/202610/16-2338-发布到插件市场-6dbd.md"
+    },
+    "20261016-2338-后端方法抽象-台账读取查询与会话交接-362a": {
+      "category": "建设",
+      "created": "2026-10-16 23:38:13",
+      "creator": "GuoJia-Agent",
+      "finished": null,
+      "owner": null,
+      "started": null,
+      "status": "open",
+      "tags": [
+        "DSH",
+        "数据面",
+        "方法"
+      ],
+      "title": "后端方法抽象：台账读取查询与会话交接",
+      "worklog": "worklog/202610/16-2338-后端方法抽象-台账读取查询与会话交接-362a.md"
+    },
+    "20261016-2338-插件基础建设-工程化-入口-图标-元信息-设置页-6a2e": {
+      "category": "建设",
+      "created": "2026-10-16 23:38:13",
+      "creator": "GuoJia-Agent",
+      "finished": null,
+      "owner": null,
+      "started": null,
+      "status": "open",
+      "tags": [
+        "DSH",
+        "插件",
+        "基础"
+      ],
+      "title": "插件基础建设：工程化 + 入口 + 图标 + 元信息 + 设置页",
+      "worklog": "worklog/202610/16-2338-插件基础建设-工程化-入口-图标-元信息-设置页-6a2e.md"
+    },
+    "20261016-2338-看板首页-9372": {
+      "category": "建设",
+      "created": "2026-10-16 23:38:13",
+      "creator": "GuoJia-Agent",
+      "finished": null,
+      "owner": null,
+      "started": null,
+      "status": "open",
+      "tags": [
+        "DSH",
+        "看板",
+        "UI"
+      ],
+      "title": "看板首页",
+      "worklog": "worklog/202610/16-2338-看板首页-9372.md"
+    },
+    "20261016-2338-统计报表-073b": {
+      "category": "建设",
+      "created": "2026-10-16 23:38:14",
+      "creator": "GuoJia-Agent",
+      "finished": null,
+      "owner": null,
+      "started": null,
+      "status": "open",
+      "tags": [
+        "DSH",
+        "看板",
+        "报表"
+      ],
+      "title": "统计报表",
+      "worklog": "worklog/202610/16-2338-统计报表-073b.md"
     }
   }
 }

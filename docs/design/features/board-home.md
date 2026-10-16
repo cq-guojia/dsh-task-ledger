@@ -1,0 +1,79 @@
+# 功能：台账看板首页（board-home）
+
+> **状态**：🔵 落码（2026-10-16 深夜用户拍板「全按你推荐的来」；码未开。⚠️ §三 按钮的台账**写入路径待定**，见 architecture.md 不变量 1）
+> **来源**：用户需求原话（2026-10-16 深夜对话：入口形式 / 首页构想 / 任务按钮逻辑）+ 需求讨论结案任务结论
+> **配套**：架构见 [`../architecture.md`](../architecture.md)；数据见 [`../ledger-data.md`](../ledger-data.md)；样式见 [`../ui-style.md`](../ui-style.md)；宿主事实见 [`../external/client-ui-layout.md`](../external/client-ui-layout.md) 与 [`../external/dsh-session-handoff.md`](../external/dsh-session-handoff.md)
+
+## 一、入口：右上角浮标（`shell.overlay`）
+
+**唯一入口**，不占侧栏（参考插件的侧栏条目形式被用户明确否决「太显眼」）。
+
+| 项 | 定论 |
+|---|---|
+| 槽位 | `shell.overlay`（list / root，0.2.0-rc.2 亲验）：全帧浮层，官方注释 "a badge, a toast stack or a status pill all belong here"；第三方条目**并排添加**不替换 |
+| 形态 | 自绘小图标按钮（用户提供的插件图标），`position:absolute; top:var(--dsh-frame-overlay-top); right:12px`；浮层默认 `pointer-events:none`、子元素自动恢复，**不挡下方应用** |
+| 角标 | 我名下（owner = 当前 git 身份）`doing` + `blocked` 计数，>0 才显示；0→n 跳变时一次脉冲动画，不自动消失 |
+| 通知 | 宿主**无**推送通知 API（grep 两包无 notification）⇒「通知」= 角标计数，由 host 侧 SSE 推送驱动，不用系统通知 |
+| 点击 | `ctx.layout.selectPanel(<看板 id>)`，且列表落到「我的待办」筛选态 |
+| 备选（未采用） | `sidebar.panellist` 条目 `order` 放大沉到侧栏底部「设置」旁；真机用一周仍找不到入口再补（加一条 list 注册约十几行） |
+
+## 二、页面结构（`main` keyed 槽整页）
+
+- **头部**：左 = 「← 返回会话」（`selectPanel(null)`）+ 标题「任务台账」；右 = Segmented 两 tab：**任务 / 统计**（名称占位，用户未最终定稿）。
+- **非 `conversation` 键不绑 Session**：看板不消费会话上下文，无需处理会话状态。
+
+### 任务 tab（首页）
+
+1. **统计卡区**（4 张横排，**可点联动**下方列表筛选）：
+   - 我的待办 = `doing` + `blocked` 且 owner = 当前 git 身份；
+   - 待认领 = `open`；
+   - 本周已完成 = history 行按**结案时间**落在本周；
+   - 累计已完成 = history 全部行。
+2. **筛选行**：左 = Segmented 状态档（全部 / 我的待办 / 待认领 / 已结案）+ 时间范围 + 标签/搜索。**历史查询不单开 tab** = 「已结案」档 + 时间 / 人 / 标签筛选（同一份数据同一套筛选，少一个切换层）。
+3. **任务列表**（宿主无表格件，行自绘，几何参照 `DisclosureRow`）：
+   - 状态点：`StateDot` 语义 open=idle / doing=ongoing / blocked=warning / 已结案=done；
+   - 标题 + **谁**（creator / owner）+ **何时**（创建 / 开始 / 结案时间，悬停给全量时刻）；
+   - 分类 chip + 标签；右缘主按钮**常显**、次按钮 hover 显（触屏无常驻 hover ⇒ 全常显）；
+   - 行展开 = worklog 过程文档链接 + 过程正文渲染（`MarkdownText`）。
+
+### 统计 tab
+
+分类分布、按人完成数、本周 / 累计趋势、时间线 —— 全部同源聚合。**本文不预设其布局**，随「统计报表 tab」任务展开（用户原话：右上角滑动功能先占位）。
+
+## 三、任务按钮矩阵（按任务状态）
+
+| 状态 | 主按钮 | 次按钮 | 落点 |
+|---|---|---|---|
+| `open` 待认领 | **认领并开始** | — | 起会话发预置提示词 → 跳转（提示词模板见 [`dsh-session-handoff.md`](../external/dsh-session-handoff.md) §三） |
+| `doing`（owner=我） | **继续** | 移交 / 结束任务 | 起会话发预置提示词 → 跳转 |
+| `blocked`（owner=我） | **继续** | 移交 / 结束任务 | 起会话发预置提示词 → 跳转 |
+| 已结案（history） | — | 过程文档（链接） | 只读 |
+
+各动作语义：
+
+- **认领并开始**：新会话首条消息 = 认领通知模板。claim 由谁执行见下方「写入路径待定」。
+- **继续**：新会话首条 = 「用户准备继续任务 X，过程文档在 \<path\>，请读『下一步』继续执行」。台账不记会话 id（progress.json 无此字段）⇒ 每次继续都是**新会话**，不追溯旧会话。
+- **移交**：弹层选新 owner（候选 = history 中出现过的 git 身份 + 手输），选定后起会话发移交提示词（模板见 session-handoff §三）。
+- **结束任务**：确认框（内嵌折叠展示将发送的提示词全文，intent-and-confirmation）→ 起会话，首条 = 结案指令模板；**任务在模型真正 close 前留在列表**，Toast 明示「模型确认后关闭」。
+- **放弃**：确认框（可选填原因）→ 起会话发放弃提示词（模板见 session-handoff §三），由会话里的 Agent 执行 close。与「结束」分开的理由：放弃无判断量，不需要模型判断、只需执行。
+
+> ⚠️ **写入路径待定**（architecture.md 不变量 1，2026-10-16 深夜挂起）：上表「落点」列写的是**全会话制**（方案 A）——五个按钮全部只起会话，写台账由会话里的 Agent 经 skill 脚本完成。曾设计的**混合制**（方案 B：认领 / 移交 / 放弃 / blocked 解阻由 host 代跑 `progress.py`、状态立即生效）与「插件对台账只读」的原口径冲突，两案未决。**「任务按钮与会话交接」任务开工第一件事就是拍这个板**；拍板前本节视为未定稿，实现不得先斩后奏。
+
+## 四、交接链路（技术约束，已核实）
+
+浏览器半**没有**往会话发自由文本的官方 API；按钮的统一形态：
+
+```
+浏览器 POST host 路由 → host ctx.agents.create() 起会话 + agent.send() 发预置提示词
+                    → 浏览器 uiWorkspace.openSession(新会话 id) 跳转
+```
+
+host 路由是否还代跑 skill 脚本写台账（混合制）——**待定**，见不变量 1。与参考插件 dsh-task-dispatch-table「立即执行」按钮同构（`src/dispatch.ts:519-548`、`:627-634`）。逐条 API 事实与提示词模板见 [`dsh-session-handoff.md`](../external/dsh-session-handoff.md)。
+
+## 五、数据与硬约束
+
+1. **数据全部真实**：界面任何数字 / 时间 / 状态来自各工作区 `ledger/` 真文件经 host 聚合，不编造、不占位（DSH 插件规则「数据真实」）。
+2. **写台账只经 skill 脚本**：插件不得手改 `progress.json` / `history` / worklog。按钮引发的写入**路径待定**（不变量 1）：A 案 = 按钮只起会话、由 Agent 跑脚本；B 案 = host 代跑同一脚本。两案共同的底线：用户点击按钮即 skill 红线认可的「明确指令」（close 只能由用户明确的结案指令触发 —— 按钮即该指令）。
+3. **刷新**：SSE 事件驱动 + 挂载首读；**不轮询**（参考插件同款纪律）。
+4. **空态三分**：未就绪（不渲染）/ 真空（虚线引导卡）/ 筛选空（小字）。
+5. **样式硬约束**（明暗判据、token、无表格件）见 [`ui-style.md`](../ui-style.md)；列表行自绘已在本文 §二 定稿。
