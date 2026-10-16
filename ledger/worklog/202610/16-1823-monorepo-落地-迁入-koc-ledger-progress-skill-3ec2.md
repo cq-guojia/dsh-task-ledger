@@ -1,5 +1,6 @@
 # 20261016-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2：monorepo 落地：迁入 koc-ledger-progress skill 并发布可安装包
 
+> **✅ 完成封卷**：2026-10-16 20:41:15（@GuoJia-Agent）
 > **创建**：2026-10-16 18:23:28（@GuoJia-Agent）
 > **分类**：建设 ｜ **标签**：monorepo、skill、发布
 
@@ -50,15 +51,17 @@
   `plugin-v*` → packages/plugin，均 OIDC + `--provenance`、Node 24）；npm 侧
   `task-ledger` 的 Trusted Publisher 连接已由用户建好（GitHub Actions + 本仓 +
   publish.yml + Allow npm publish；dist-tag 未勾、Environment 留空）
-- ⏳ **待实测**：下一次 skill 版本（如 1.0.1）推 `skill-v*` tag，验证 CI OIDC 发布
-  链路（推 tag 属发布动作，由用户执行）
-- ⚠️ 待用户确认：NAS-Docker 规范源目录改名（`_Skills/koc-ledger-progress/` →
+- ✅ **CI 信任发布实测通过**（2026-10-16，用户授权实测）：`skill-v1.0.1` tag →
+  skill job 五步全 success（含 `npm publish --provenance`）、plugin job 按 `if`
+  正确跳过 ⇒ `task-ledger@1.0.1` 上线、`latest=1.0.1`，OIDC + provenance 链路
+  端到端验证（Trusted Publisher 连接配置正确）
+- ⚠️ 待用户确认（移交后续）：NAS-Docker 规范源目录改名（`_Skills/koc-ledger-progress/` →
   `task-ledger/`）+ rulemux 重新同步；EXE001 修复落点（应落规范源）
 
 ## 下一步
 
-本任务收尾 = CI 发布实测（用户推 `skill-v*` tag）。DSH 插件开发（host/client 两半）
-按用户既定规划**另建任务**，不在本任务范围。
+本任务已结案。DSH 插件开发（host/client 两半）按用户既定规划**另建任务**——
+「把 skill 安装弄好之后，我们再去做 DSH 的插件」。
 
 ## 过程
 
@@ -113,6 +116,13 @@
    Node 24、working-directory 发布；占位期无 install/build，注释留待补）；根 README
    改 monorepo 总览（双包表 + 安装矩阵），原占位说明移交 packages/plugin/README.md；
    architecture.md 双包表同步（路径、版本线、workspaces 声明方式）。
+9. **CI 信任发布实测通过**（用户 2026-10-16 授权「改个 tag 实测一下」）：版本
+   1.0.0→1.0.1 提交推送后打 `skill-v1.0.1` tag（commit `5eb5566`）→ skill job
+   五步全 success（含 `npm publish --provenance`），plugin job 按 `if` 正确跳过。
+   ⚠️ **传播延迟二次踩到**：run 完成后立刻查 npm 两次均 404（副本滞后，比手工发布
+   那次更久），约 1 分半后复查才见 `versions=[1.0.0, 1.0.1]`、`latest=1.0.1`
+   ⇒ **CI 发布后至少等 2 分钟再验证、且必须重查**。GitHub API 拉 run 日志需认证
+   （403），但 npm 侧结果已确认链路通。
 
 ## 结论
 

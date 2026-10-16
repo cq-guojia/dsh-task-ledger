@@ -1,20 +1,20 @@
 {
   "tasks": {
-    "20261016-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2": {
+    "20261016-2041-dsh-插件真身开发-skill-注册最小闭环-台账数据面-看板-ui-8e70": {
       "category": "建设",
-      "created": "2026-10-16 18:23:28",
+      "created": "2026-10-16 20:41:15",
       "creator": "GuoJia-Agent",
       "finished": null,
       "owner": "GuoJia-Agent",
-      "started": "2026-10-16 18:23:28",
+      "started": "2026-10-16 20:41:15",
       "status": "doing",
       "tags": [
-        "monorepo",
-        "skill",
-        "发布"
+        "DSH",
+        "插件",
+        "开发"
       ],
-      "title": "monorepo 落地：迁入 koc-ledger-progress skill 并发布可安装包",
-      "worklog": "worklog/202610/16-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2.md"
+      "title": "DSH 插件真身开发：skill 注册最小闭环 → 台账数据面 → 看板 UI",
+      "worklog": "worklog/202610/16-2041-dsh-插件真身开发-skill-注册最小闭环-台账数据面-看板-ui-8e70.md"
     }
   }
 }
