@@ -1,21 +1,5 @@
 {
   "tasks": {
-    "20261016-2338-skill-注册最小闭环-4dc1": {
-      "category": "建设",
-      "created": "2026-10-16 23:38:13",
-      "creator": "GuoJia-Agent",
-      "finished": null,
-      "owner": "GuoJia-Agent",
-      "started": "2026-10-17 01:51:03",
-      "status": "doing",
-      "tags": [
-        "DSH",
-        "插件",
-        "skill"
-      ],
-      "title": "skill 注册最小闭环",
-      "worklog": "worklog/202610/16-2338-skill-注册最小闭环-4dc1.md"
-    },
     "20261016-2338-发布到插件市场-6dbd": {
       "category": "建设",
       "created": "2026-10-16 23:38:14",
