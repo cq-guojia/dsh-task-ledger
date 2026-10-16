@@ -1,3 +1,20 @@
 {
-  "tasks": {}
+  "tasks": {
+    "20261016-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2": {
+      "category": "建设",
+      "created": "2026-10-16 18:23:28",
+      "creator": "GuoJia-Agent",
+      "finished": null,
+      "owner": "GuoJia-Agent",
+      "started": "2026-10-16 18:23:28",
+      "status": "doing",
+      "tags": [
+        "monorepo",
+        "skill",
+        "发布"
+      ],
+      "title": "monorepo 落地：迁入 koc-ledger-progress skill 并发布可安装包",
+      "worklog": "worklog/202610/16-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2.md"
+    }
+  }
 }

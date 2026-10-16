@@ -1,7 +1,7 @@
 # 数据说明：台账文件格式（插件唯一数据源）
 
 > **状态**：✅ 已核实（2026-10-16，对照真实工作区文件 + skill 源码）
-> **来源**：`koc-ledger-progress` skill（`scripts/progress.py` + `assets/worklog.md`）为格式真源；样例取自 NAS-Docker 工作区与本仓 `ledger/`
+> **来源**：`task-ledger` skill（`scripts/progress.py` + `assets/worklog.md`）为格式真源；样例取自 NAS-Docker 工作区与本仓 `ledger/`
 > **配套**：架构见 [`architecture.md`](architecture.md)；skill 分发见 [`external/dsh-skill-registration.md`](external/dsh-skill-registration.md)
 
 本项目**不自建数据库**：插件只读各工作区的台账文件。格式真源在 skill 侧；history 列数等字面值若随 skill 调整，以 skill 代码为准回改本文。

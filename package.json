@@ -1,7 +1,7 @@
 {
   "name": "dsh-task-ledger",
   "version": "0.0.3",
-  "description": "Name reserved: upcoming dsh (DeepSeek Harness) plugin — task ledger board with the koc-ledger-progress skill bundled. First functional release in development.",
+  "description": "Name reserved: upcoming dsh (DeepSeek Harness) plugin — task ledger board with the task-ledger skill bundled. First functional release in development.",
   "keywords": [
     "deepseek",
     "harness",

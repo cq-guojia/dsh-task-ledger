@@ -19,9 +19,9 @@
 
 | 功能 | 干什么 | 状态 | 详细文档 |
 |---|---|---|---|
-| **skill 全局集成** | 装插件即把 `koc-ledger-progress` 注册进 dsh 全局（`ctx.skills.register`） | 📝 待设计 | 事实见 [`external/dsh-skill-registration.md`](external/dsh-skill-registration.md) |
+| **skill 全局集成** | 装插件即把 `task-ledger` 注册进 dsh 全局（`ctx.skills.register`） | 📝 待设计 | 事实见 [`external/dsh-skill-registration.md`](external/dsh-skill-registration.md) |
 | **台账数据面** | host 进程跨工作区读 `ledger/` 文件，经 webServer 路由供 UI 消费（JSON + SSE） | 📝 待设计 | 事实见 [`external/host-webserver.md`](external/host-webserver.md) |
-| **skill 独立分发** | `koc-ledger-progress` npm 包零代码直发，供 CodeBuddy / 其他 agent 安装 | 📝 待设计 | 发布事实见 [`external/publish-oidc.md`](external/publish-oidc.md) |
+| **skill 独立分发** | `task-ledger` npm 包零代码直发，供 CodeBuddy / 其他 agent 安装 | 📝 待设计 | 发布事实见 [`external/publish-oidc.md`](external/publish-oidc.md) |
 
 ---
 

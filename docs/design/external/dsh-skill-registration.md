@@ -28,10 +28,10 @@
 
 ## 三、对本插件的落地含义
 
-1. **内嵌 skill 副本**：插件构建时把 `packages/skill/` 内容（SKILL.md + scripts + assets）纳入产物，`apply` 时 `register({ name: 'koc-ledger-progress', description, content })`。
+1. **内嵌 skill 副本**：插件构建时把 `packages/skill/` 内容（SKILL.md + scripts + assets）纳入产物，`apply` 时 `register({ name: 'task-ledger', description, content })`。
 2. **相对路径解析二选一（未拍板）**：① 正文里插值插件安装目录，保住 skill「scripts/progress.py 相对 SKILL.md 定位」的写法；② 用 `resourceBase: { kind: 'directory', path: <安装目录> }`（宿主原生机制，但消费者如何呈现待验证）。
 3. **卸载即失效**：`register` 返回的 disposer 随插件 dispose 自动注销，无需额外清理。
-4. **独立分发不依赖宿主**：`koc-ledger-progress` npm 包零代码直发（SKILL.md + scripts + assets），其他 agent 按各自约定安装；与插件内嵌副本同源（见 [`../architecture.md`](../architecture.md) 不变量 2）。
+4. **独立分发不依赖宿主**：`task-ledger` npm 包零代码直发（SKILL.md + scripts + assets），其他 agent 按各自约定安装；与插件内嵌副本同源（见 [`../architecture.md`](../architecture.md) 不变量 2）。
 
 ## 四、复核方式（宿主升级后）
 
