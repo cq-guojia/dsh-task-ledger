@@ -1,6 +1,6 @@
 {
   "name": "dsh-task-ledger",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Name reserved: upcoming dsh (DeepSeek Harness) plugin — task ledger board with the koc-ledger-progress skill bundled. First functional release in development.",
   "keywords": [
     "deepseek",
@@ -10,6 +10,10 @@
     "task-ledger"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cq-guojia/dsh-task-ledger.git"
+  },
   "type": "module",
   "files": [
     "README.md"
