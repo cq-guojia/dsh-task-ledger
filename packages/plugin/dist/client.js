@@ -44,16 +44,6 @@ window.__ModuleLoader__.load({
 		function fetchBoard() {
 			return fetchJson("/board");
 		}
-		/** 已结案列表（服务端按窗口 / 标签 / 分页过滤）。 */
-		function fetchHistory(params) {
-			const query = new URLSearchParams();
-			if (params.since !== void 0) query.set("since", params.since);
-			if (params.until !== void 0) query.set("until", params.until);
-			if (params.tag !== void 0 && params.tag !== "") query.set("tag", params.tag);
-			if (params.limit !== void 0) query.set("limit", String(params.limit));
-			const suffix = query.toString();
-			return fetchJson(`/history${suffix === "" ? "" : `?${suffix}`}`).then((body) => body.records ?? []);
-		}
 		/** 单条在办 + 过程文档正文（展开行用）。 */
 		function fetchTaskDetail(workspaceId, taskId) {
 			return fetchJson(`/task?${new URLSearchParams({
@@ -61,83 +51,26 @@ window.__ModuleLoader__.load({
 				id: taskId
 			}).toString()}`);
 		}
-		/** 筛选项候选（在办全量 + 近 13 个月历史的去重 owner / category / tag）。 */
-		function fetchFilters() {
-			return fetchJson("/filters");
-		}
 		//#endregion
-		//#region src/client/format.ts
+		//#region src/client/store.ts
 		/**
-		* 客户端时间口径**单源**：补零 / 时刻串 / 时间范围 → `--since` / `--until`。
-		* 走**本机时区**；解析失败按调用方给的兜底返回（不编造时间）。
+		* 看板数据仓（client 侧**唯一**取数入口）：浮标角标与整页共用同一份快照，
+		* 谁先挂载谁触发首读；刷新按钮走同一个 `refresh()`，**不轮询**（2026-10-17 拍板：
+		* 后端纯按需，刷新时机归前端 = 打开面板首读 + 手动刷新）。
 		*
-		* ⚠️ 与 skill 脚本的边界一致：`--since` 取当天 00:00、`--until` 只给日期时含当天整天
-		* （脚本 `normalize_time` 的 `date_only_ref="23:59:59"`），故这里只拼 `YYYY-MM-DD`。
+		* 消费方式：`useSyncExternalStore(boardSubscribe, boardSnapshot)`。
+		* ⚠️ `getSnapshot` 必须返回**稳定引用**（每次新建对象会被判定为「一直在变」⇒ 无限重渲染），
+		* 故只在真变了时才换 `state` 对象。
 		*/
-		function pad2(value) {
-			return String(value).padStart(2, "0");
-		}
-		/** ISO → `YYYY-MM-DD HH:mm`（`seconds: true` 时补 `:ss`）；解析失败返回 `fallback`（缺省原串）。 */
-		function formatDateTime(iso, opts) {
-			const ms = Date.parse(iso);
-			if (Number.isNaN(ms)) return opts?.fallback ?? iso;
-			const d = new Date(ms);
-			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
-		}
-		/** 周一 00:00 所在日期（与 host `board.ts` 的 `mondayDateString` 同口径：周一为一周之始）。 */
-		function mondayOf(now) {
-			const date = new Date(now);
-			date.setDate(date.getDate() - (date.getDay() + 6) % 7);
-			return date;
-		}
-		/**
-		* 时间范围 → `{ since, until }`（`YYYY-MM-DD`，含边界）。`all` 返回空对象 = 不拼参数。
-		* 近一年 = 今天往前推 365 天（与统计卡「近 13 个月文件」不同口径：那是文件窗口，这是创建时间过滤）。
-		*/
-		function rangeToDates(range, now = /* @__PURE__ */ new Date()) {
-			const ymd = (date) => `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-			if (range === "week") return {
-				since: ymd(mondayOf(now)),
-				until: ymd(now)
-			};
-			if (range === "month") return {
-				since: ymd(new Date(now.getFullYear(), now.getMonth(), 1)),
-				until: ymd(now)
-			};
-			if (range === "year") {
-				const start = new Date(now);
-				start.setDate(start.getDate() - 365);
-				return {
-					since: ymd(start),
-					until: ymd(now)
-				};
-			}
-			return {};
-		}
-		/** 任务行是否落在时间范围内（在办侧在浏览器里筛；无创建时间的行按「不带时间过滤」处理）。 */
-		function withinRange(created, since, until) {
-			if (since === void 0 && until === void 0) return true;
-			if (created === null || created === void 0 || created === "") return false;
-			const day = created.slice(0, 10);
-			if (since !== void 0 && day < since) return false;
-			if (until !== void 0 && day > until) return false;
-			return true;
-		}
 		let state = {
 			status: "loading",
 			board: null,
 			error: null,
-			history: [],
-			historyStatus: "idle",
-			historyError: null,
-			filters: null,
 			query: {
-				bucket: "all",
-				range: "all",
-				tag: "",
-				keyword: "",
-				limit: 500
+				scope: "all",
+				status: "all",
+				workspace: "",
+				keyword: ""
 			},
 			refreshing: false
 		};
@@ -169,7 +102,7 @@ window.__ModuleLoader__.load({
 				listeners.delete(listener);
 			};
 		}
-		/** 重读：在办快照 + 筛选项 +（已结案档时）历史列表。 */
+		/** 重读：在办快照 + 完成类统计与近 8 周趋势（一次 `/board` 全带回）。 */
 		async function refresh() {
 			const token = ++runToken;
 			set({ refreshing: true });
@@ -181,8 +114,6 @@ window.__ModuleLoader__.load({
 					board,
 					error: null
 				});
-				loadFilters(token);
-				if (state.query.bucket === "closed") await loadHistory(token);
 			} catch (error) {
 				if (token !== runToken) return;
 				set({
@@ -193,102 +124,20 @@ window.__ModuleLoader__.load({
 				if (token === runToken) set({ refreshing: false });
 			}
 		}
-		async function loadFilters(token) {
-			try {
-				const filters = await fetchFilters();
-				if (token === runToken) set({ filters });
-			} catch {}
-		}
-		async function loadHistory(token) {
-			const { range, tag, limit } = state.query;
-			const dates = rangeToDates(range);
-			set({
-				historyStatus: "loading",
-				historyError: null
-			});
-			try {
-				const records = await fetchHistory({
-					...dates,
-					tag,
-					limit
-				});
-				if (token !== runToken) return;
-				set({
-					history: records,
-					historyStatus: "ready"
-				});
-			} catch (error) {
-				if (token !== runToken) return;
-				set({
-					historyStatus: "error",
-					historyError: error instanceof Error ? error.message : String(error)
-				});
-			}
-		}
-		/** 改筛选：已结案档要重取历史（服务端过滤）；在办档只在浏览器里重筛（数据已全）。 */
+		/** 改筛选：全部在浏览器里完成（快照已含全部在办），不发请求。 */
 		function setQuery(patch) {
-			const query = {
+			set({ query: {
 				...state.query,
 				...patch
-			};
-			set({ query });
-			if (query.bucket === "closed") loadHistory(++runToken);
-		}
-		/** 「加载更多」：加大 limit 重取（skill 脚本无 offset，笨办法；500 条一页无感）。 */
-		function loadMoreHistory() {
-			setQuery({ limit: state.query.limit + 500 });
+			} });
 		}
 		//#endregion
 		//#region src/client/rows.ts
-		/**
-		* 列表行的筛选 / 排序（**唯一**实现，纯函数、不碰网络）：页面只渲染，不各写一份过滤。
-		*
-		* 单独成文件是为了能被冒烟直测（store.ts 引 api.ts，Node 剥类型解析不了无扩展名相对导入）。
-		*/
 		/** 关键字命中（标题 / 任务号 / 人 / 分类 / 标签；已结案另含「完成了什么」）。 */
 		function hitKeyword(keyword, parts) {
 			const needle = keyword.trim().toLowerCase();
 			if (needle === "") return true;
 			return parts.some((part) => part?.toLowerCase().includes(needle) === true);
-		}
-		/**
-		* 当前筛选下的列表行：
-		*  - 已结案档：history 由服务端按窗口 / 标签 / 分页过滤，浏览器只补关键字；
-		*  - 在办三档：快照已含全部在办 ⇒ 全在浏览器里筛（档位 / 时间 / 标签 / 关键字）。
-		*/
-		function selectRows(current) {
-			const { board, history, query } = current;
-			if (query.bucket === "closed") return history.filter((record) => hitKeyword(query.keyword, [
-				record.summary,
-				record.workpackage,
-				record.owner,
-				record.category,
-				...record.tags ?? []
-			])).map((record, index) => ({
-				kind: "closed",
-				key: `${record.src ?? ""}:${record.time ?? ""}:${index}`,
-				record
-			}));
-			const dates = rangeToDates(query.range);
-			return (board?.tasks ?? []).filter((task) => {
-				if (query.bucket === "open" && task.status !== "open") return false;
-				if (query.bucket === "mine" && !isMine(task, board)) return false;
-				if (!withinRange(task.created, dates.since, dates.until)) return false;
-				if (query.tag !== "" && !(task.tags ?? []).includes(query.tag)) return false;
-				return hitKeyword(query.keyword, [
-					task.title,
-					task.id,
-					task.owner,
-					task.creator,
-					task.category,
-					...task.tags ?? []
-				]);
-			}).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
-				kind: "task",
-				key: `${task.workspace.id}:${task.id}`,
-				task,
-				mine: isMine(task, board)
-			}));
 		}
 		/** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是 doing / blocked（与 host 统计同口径）。 */
 		function isMine(task, board) {
@@ -297,16 +146,113 @@ window.__ModuleLoader__.load({
 			if (identity === null || identity === "") return false;
 			return task.owner === identity && (task.status === "doing" || task.status === "blocked");
 		}
+		/** 状态档命中（停滞由 host 标记，前端不判阈值）。 */
+		function statusHit(task, status) {
+			if (status === "all") return true;
+			if (status === "active") return task.status === "doing" || task.status === "blocked";
+			if (status === "open") return task.status === "open";
+			if (status === "blocked") return task.status === "blocked";
+			return task.stale === true;
+		}
+		/** 组内排序：别人的 doing/blocked 在前、待认领在后；各自按创建 / 开始时间倒序。 */
+		function inGroupOrder(a, b) {
+			if (a.kind !== "task" || b.kind !== "task") return 0;
+			const rank = (task) => task.status === "open" ? 1 : 0;
+			if (rank(a.task) !== rank(b.task)) return rank(a.task) - rank(b.task);
+			return String(b.task.created ?? b.task.started ?? "").localeCompare(String(a.task.created ?? a.task.started ?? ""));
+		}
+		/**
+		* 当前筛选下的两区视图：
+		*  - 第一区「我的待办」= 我名下 doing/blocked（命中状态档 / 工作区 / 关键字）；
+		*  - 第二区「按工作区」= 其余任务（别人的 doing/blocked + 全部待认领），按工作区分组；
+		*  - 范围=「我的」时只出第一区。
+		*/
+		function selectView(current) {
+			const { board, query } = current;
+			if (board === null) return {
+				mine: [],
+				groups: [],
+				total: 0
+			};
+			const tasks = board.tasks.filter((task) => {
+				if (!statusHit(task, query.status)) return false;
+				if (query.workspace !== "" && task.workspace.id !== query.workspace) return false;
+				return hitKeyword(query.keyword, [
+					task.title,
+					task.id,
+					task.owner,
+					task.creator,
+					task.category,
+					...task.tags ?? []
+				]);
+			});
+			const mineRows = tasks.filter((task) => isMine(task, board)).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
+				kind: "task",
+				key: `${task.workspace.id}:${task.id}`,
+				task,
+				mine: true
+			}));
+			const rest = query.scope === "mine" ? [] : tasks.filter((task) => !isMine(task, board));
+			const byWorkspace = /* @__PURE__ */ new Map();
+			for (const task of rest) {
+				const entry = byWorkspace.get(task.workspace.id) ?? {
+					title: task.workspace.title,
+					rows: []
+				};
+				entry.rows.push({
+					kind: "task",
+					key: `${task.workspace.id}:${task.id}`,
+					task,
+					mine: false
+				});
+				byWorkspace.set(task.workspace.id, entry);
+			}
+			const groups = [...byWorkspace.entries()].map(([workspaceId, entry]) => ({
+				workspaceId,
+				title: entry.title,
+				doingCount: entry.rows.filter((row) => row.kind === "task" && row.task.status !== "open").length,
+				openCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "open").length,
+				rows: entry.rows.sort(inGroupOrder)
+			})).sort((a, b) => a.title.localeCompare(b.title, "zh-Hans-CN"));
+			return {
+				mine: mineRows,
+				groups,
+				total: mineRows.length + groups.reduce((sum, group) => sum + group.rows.length, 0)
+			};
+		}
+		//#endregion
+		//#region src/client/format.ts
+		/**
+		* 客户端时间口径**单源**：补零 / 时刻串（本机时区）。
+		* 解析失败按调用方给的兜底返回（不编造时间）。
+		*
+		* 2026-10-17 改版后首页不再做时间范围过滤（时间只作用于统计卡与趋势图，由 host 聚合）
+		* ⇒ 原来的 `rangeToDates` / `withinRange` / `RangeKey` 一并删除；统计 tab 要做时间筛选时
+		* 按当时口径在此重建，别处不许再写一份。
+		*/
+		function pad2(value) {
+			return String(value).padStart(2, "0");
+		}
+		/** ISO → `YYYY-MM-DD HH:mm`（`seconds: true` 时补 `:ss`）；解析失败返回 `fallback`（缺省原串）。 */
+		function formatDateTime(iso, opts) {
+			const ms = Date.parse(iso);
+			if (Number.isNaN(ms)) return opts?.fallback ?? iso;
+			const d = new Date(ms);
+			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
+		}
 		//#endregion
 		//#region src/client/tokens.ts
 		/**
 		* 语义 token 层：`--dtl-*`（dtl = dsh-task-ledger）。
 		*
-		* 规矩（与 docs/design/ui-style.md 两条硬约束一致）：
+		* 规矩（docs/design/ui-style.md §三，2026-10-17 对齐 dispatch 表后收严）：
 		*  - **只有本文件定义 `--dtl-*`**；其它文件一律 `var(--dtl-*)` 消费，不许直接写 `var(--dsw-*)`；
 		*  - 每个 token 都带兜底值 ⇒ 宿主升级换名时不炸（最坏退到兜底色，不会白屏）；
 		*  - 明暗差异只写在本文件末尾的 `body[data-ds-dark-theme]` 段：能靠宿主 alias 表达的
 		*    一律不写覆盖（alias 自己随主题变），只有「固定中性面 / 半透明底」这类 alias 表达不了的才进该段。
+		*  - **离散刻度**：圆角 4/8/12/16/20/28、间距 4/8/12/16、控件高 24/28/32、字号 11/12/13/14/16
+		*    ——业务文件不许出现 5/7/9px、不许自造高度档（要加档位改本文件）。
 		*
 		* 明暗判据 = `body[data-ds-dark-theme]`（宿主 0.2.0-rc.2 源码核实：启动脚本 toggleAttribute 写入）。
 		* 插件**禁用** `prefers-color-scheme`（它跟系统、不跟用户在宿主里的选择）。
@@ -316,11 +262,12 @@ window.__ModuleLoader__.load({
 		*/
 		const UI_TOKENS_CSS = `
 body{
-  /* ── 文字四档 ─────────────────────────────────────────────────── */
+  /* ── 文字四档 + 反色面 ───────────────────────────────────────── */
   --dtl-fg:var(--dsw-alias-label-primary,#1f2328);
   --dtl-fg-2:var(--dsw-alias-label-secondary,#5c6370);
   --dtl-fg-3:var(--dsw-alias-label-tertiary,#767d87);
   --dtl-fg-4:var(--dsw-alias-label-caption,#9aa1ab);
+  --dtl-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);
   /* 反色面上的字（角标 / 实心钮）：暗色下是 bluish-1000 ⇒ 用 -foreground 而非 -inverted */
   --dtl-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);
 
@@ -328,24 +275,36 @@ body{
   --dtl-surface-1:var(--dsw-alias-bg-layer-1,#fff);
   --dtl-surface-2:var(--dsw-alias-bg-layer-2,#fff);
   --dtl-surface-base:var(--dsw-alias-bg-base,#fff);
+  /* 「选中亮片」底盘（配 shadow-raised 用） */
+  --dtl-surface-raised:var(--dsw-alias-bg-layer-1,#fff);
   /* 固定中性实面（自绘浮标 / 角标这类必须自己变的东西） */
   --dtl-solid:var(--dsw-static-neutral-00,#fff);
   --dtl-on-solid:var(--dsw-alias-label-primary,#1f2328);
+  /* 斑马纹 / 次层面（浅色下近白、深色下深一档） */
+  --dtl-plate:var(--dsw-static-neutral-50,#fafafa);
+  --dtl-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);
+  /* 表头底：浅色比斑马纹再深一档（两者不能撞色） */
+  --dtl-head-bg:var(--dsw-static-neutral-100,#f5f5f5);
 
-  /* ── 描边 ────────────────────────────────────────────────────── */
+  /* ── 描边四档（宿主真值 l1 4% / l2 10% / l3 12% / l4 16%）────── */
+  --dtl-border-faint:var(--dsw-alias-border-l1,#0000000a);
   --dtl-border:var(--dsw-alias-border-l2,#0000001a);
   --dtl-border-strong:var(--dsw-alias-border-l3,#0000001f);
+  --dtl-border-heavy:var(--dsw-alias-border-l4,#00000029);
 
   /* ── 语义色 ──────────────────────────────────────────────────── */
-  /* 蓝色强调 / 选中一律走这条（不是 --dsw-alias-brand-primary：它明色近黑、暗色近白） */
+  /* 品牌「面」色：明色近黑、暗色近白（实心钮选中态即此），不是蓝 */
+  --dtl-accent:var(--dsw-alias-brand-primary,#0f1115);
+  /* 蓝色强调 / 选中 / 焦点一律走这条 */
   --dtl-business:var(--dsw-alias-state-business-primary,#3b5bdb);
   --dtl-success:var(--dsw-alias-state-success-primary,#22c55e);
   /* ⚠️ 宿主是 state-warn（不是 state-warning，后者无此定义） */
   --dtl-warning:var(--dsw-alias-state-warn-primary,#f59e0b);
   --dtl-danger:var(--dsw-alias-state-error-primary,#ec1313);
-  /* 语义色实面上的字（角标）：红绿黄都是中调 ⇒ 白字两个主题都可读 */
+  --dtl-link:var(--dsw-alias-link,#3b5bdb);
+  /* 语义色实面上的字（角标 / 实心提示）：红绿黄都是中调 ⇒ 白字两个主题都可读 */
   --dtl-on-signal:#fff;
-  /* 语义色浅底：用 color-mix 现算 ⇒ 状态色跟随宿主 alias，主题一换自动成立 */
+  /* 语义色浅底：color-mix 现算 ⇒ 跟随宿主 alias，主题一换自动成立 */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 8%,transparent);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 8%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 8%,transparent);
@@ -353,6 +312,9 @@ body{
 
   /* ── 交互底 ──────────────────────────────────────────────────── */
   --dtl-hover:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));
+  --dtl-active:var(--dsw-alias-interactive-bg-active,#2631481a);
+  /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */
+  --dtl-card-hover:rgba(37,99,235,.07);
   /* 展开行底：带透明度的蓝，透出卡片底色（灰底跟斑马纹分不出来） */
   --dtl-open-bg:rgba(37,99,235,.10);
   --dtl-open-bg-soft:rgba(37,99,235,.05);
@@ -360,28 +322,44 @@ body{
   --dtl-chip-bg:rgba(15,15,15,.07);
   --dtl-chip-bg-hover:rgba(15,15,15,.14);
 
-  /* ── 圆角 / 间距 / 控件高度 / 字号 ────────────────────────────── */
+  /* ── 圆角（宿主真值 4/8/12/16/20/28）──────────────────────────── */
+  --dtl-radius-xs:var(--dsw-radius-xs,4px);
   --dtl-radius-sm:var(--dsw-radius-sm,8px);
   --dtl-radius-md:var(--dsw-radius-md,12px);
   --dtl-radius-lg:var(--dsw-radius-lg,16px);
+  --dtl-radius-xl:var(--dsw-radius-xl,20px);
+  --dtl-radius-panel:var(--dsw-radius-panel,28px);
+
+  /* ── 间距四拍（只许这四档）────────────────────────────────────── */
   --dtl-space-1:4px;
   --dtl-space-2:8px;
   --dtl-space-3:12px;
   --dtl-space-4:16px;
+
+  /* ── 控件高度：离散三档（调用点不许自定义高度）────────────────── */
   --dtl-control-h-sm:24px;
   --dtl-control-h-md:28px;
   --dtl-control-h-lg:32px;
+
+  /* ── 字号 / 行高（直绑宿主字号族 11/12/13/14/16）──────────────── */
   --dtl-font-xs:var(--dsw-font-xxxs-11-font-size,11px);
   --dtl-font-sm:var(--dsw-font-xxs-12-font-size,12px);
   --dtl-font-md:var(--dsw-font-xs-13-font-size,13px);
   --dtl-font-lg:var(--dsw-font-s-14-font-size,14px);
   --dtl-font-xl:var(--dsw-font-base-16-font-size,16px);
+  --dtl-line-xs:var(--dsw-font-xxxs-11-line-height,14px);
+  --dtl-line-sm:var(--dsw-font-xxs-12-line-height,18px);
+  --dtl-line-md:var(--dsw-font-xs-13-line-height,20px);
+  --dtl-line-lg:var(--dsw-font-s-14-line-height,22px);
+  --dtl-line-xl:var(--dsw-font-base-16-line-height,24px);
   --dtl-font-mono:var(--ds-font-family-code,monospace);
 
   /* ── 投影 / 动效 / 层级 ──────────────────────────────────────── */
   --dtl-shadow-1:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);
+  --dtl-shadow-raised:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);
   --dtl-shadow-2:var(--dsw-shadow-lv3,0 12px 32px 0 #00000014);
   --dtl-dur:var(--ds-transition-duration,.2s);
+  --dtl-dur-fast:var(--ds-transition-duration-fast,.12s);
   --dtl-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));
   --dtl-z-badge:20;
 }
@@ -391,9 +369,14 @@ body{
 body[data-ds-dark-theme]{
   --dtl-solid:var(--dsw-static-neutral-900,#0f0f0f);
   --dtl-on-solid:var(--dsw-static-neutral-00,#fff);
+  --dtl-plate:var(--dsw-static-neutral-850,#212123);
+  --dtl-plate-hover:var(--dsw-static-neutral-800,#292929);
+  /* 暗色表头反过来：比卡片面亮、比斑马纹浅一档 */
+  --dtl-head-bg:var(--dtl-surface-2);
   /* 暗色下蓝要更亮、透明度更高才压得住深底 */
   --dtl-open-bg:rgba(96,165,250,.18);
   --dtl-open-bg-soft:rgba(96,165,250,.08);
+  --dtl-card-hover:rgba(96,165,250,.13);
   /* 暗色 chip 底板反过来掺白 */
   --dtl-chip-bg:rgba(255,255,255,.08);
   --dtl-chip-bg-hover:rgba(255,255,255,.16);
@@ -404,128 +387,213 @@ body[data-ds-dark-theme]{
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
 }
 `;
+		/**
+		* 控件皮肤（L2）：**一类控件唯一实现**，抄 dispatch 表 controls-css 的规矩——
+		* 只消费 var(--dtl-*)，一个颜色 / 尺寸 / 圆角 / 字号字面量都不许出现；
+		* 高度只取三档，有边框的变体用 1px 真边框 + 内部 padding 补回 ⇒ 有边 / 无边同高。
+		*/
+		const UI_CONTROLS_CSS = `
+/* ── 分段控件（滑动块）────────────────────────────────────────────
+   结构一套 + 两个受控轴：size(sm|md|lg) × variant(default|inset)。
+   变体只覆盖两个颜色变量（--seg-track / --seg-thumb），结构 / 尺寸 / 交互零重复。 */
+.dtl-seg{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:var(--dtl-radius-md);background:var(--seg-track);}
+.dtl-seg--default{--seg-track:var(--dtl-surface-2);--seg-thumb:var(--dtl-surface-raised);border:1px solid var(--dtl-border);}
+.dtl-seg--inset{--seg-track:var(--dtl-hover);--seg-thumb:var(--dtl-surface-raised);border:0;padding:3px;}
+.dtl-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;
+  height:calc(var(--dtl-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dtl-radius-sm);
+  background:transparent;color:var(--dtl-fg-2);font-family:inherit;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  font-weight:400;white-space:nowrap;cursor:pointer;
+  transition:color var(--dtl-dur-fast) var(--dtl-ease),background-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-seg--md .dtl-seg__item{height:calc(var(--dtl-control-h-md) - 6px);}
+.dtl-seg--lg .dtl-seg__item{height:calc(var(--dtl-control-h-lg) - 6px);}
+.dtl-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dtl-fg);}
+.dtl-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dtl-shadow-raised);color:var(--dtl-fg);font-weight:600;}
+.dtl-seg__item:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+.dtl-seg__item:disabled{cursor:default;opacity:.4;}
+/* 段内角标（如「待认领 3」）：语义色实面 + 反白字，0 不渲染；必须是正圆 */
+.dtl-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;
+  background:var(--dtl-danger);color:var(--dtl-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}
+
+/* ── 按钮 / 图标钮 ───────────────────────────────────────────────
+   与 Segmented 同一条高度纪律；variant 只换颜色，结构 / 尺寸 / 交互只此一份。 */
+.dtl-btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--dtl-space-1);
+  box-sizing:border-box;border:1px solid transparent;border-radius:var(--dtl-radius-md);
+  background:transparent;color:var(--dtl-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease),border-color var(--dtl-dur-fast) var(--dtl-ease),color var(--dtl-dur-fast) var(--dtl-ease),opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-btn--sm{height:var(--dtl-control-h-sm);padding:0 10px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
+.dtl-btn--md{height:var(--dtl-control-h-md);padding:0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+.dtl-btn--lg{height:var(--dtl-control-h-lg);padding:0 14px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+.dtl-btn--primary{background:var(--dtl-accent);color:var(--dtl-fg-inverse);}
+.dtl-btn--primary:hover:not(:disabled){opacity:.9;}
+.dtl-btn--outline{background:var(--dtl-surface-1);border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
+.dtl-btn--outline:hover:not(:disabled){background:var(--dtl-hover);}
+.dtl-btn--ghost{color:var(--dtl-fg-2);}
+.dtl-btn--ghost:hover:not(:disabled){background:var(--dtl-hover);color:var(--dtl-fg);}
+.dtl-btn:focus-visible{outline:2px solid var(--dtl-business);outline-offset:2px;}
+.dtl-btn:disabled{cursor:default;opacity:.5;}
+.dtl-iconbtn{appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;
+  border:1px solid transparent;border-radius:var(--dtl-radius-sm);background:transparent;color:var(--dtl-fg-2);
+  font-family:inherit;cursor:pointer;flex:none;
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease),border-color var(--dtl-dur-fast) var(--dtl-ease),color var(--dtl-dur-fast) var(--dtl-ease),opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-iconbtn--sm{width:var(--dtl-control-h-sm);height:var(--dtl-control-h-sm);font-size:var(--dtl-font-sm);}
+.dtl-iconbtn--md{width:var(--dtl-control-h-md);height:var(--dtl-control-h-md);font-size:var(--dtl-font-md);}
+.dtl-iconbtn--lg{width:var(--dtl-control-h-lg);height:var(--dtl-control-h-lg);font-size:var(--dtl-font-md);}
+.dtl-iconbtn--outline{background:var(--dtl-surface-1);border-color:var(--dtl-border);color:var(--dtl-fg-2);}
+.dtl-iconbtn:hover:not(:disabled){background:var(--dtl-hover);color:var(--dtl-fg);}
+.dtl-iconbtn:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
+.dtl-iconbtn:disabled{cursor:default;opacity:.4;}
+
+/* ── 输入 / 搜索框 / 下拉 ──────────────────────────────────────── */
+.dtl-input{box-sizing:border-box;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
+  background:var(--dtl-surface-1);color:var(--dtl-fg);font-family:inherit;outline:none;
+  transition:border-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-input--sm{height:var(--dtl-control-h-sm);padding:0 8px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
+.dtl-input--md{height:var(--dtl-control-h-md);padding:0 10px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+.dtl-input--lg{height:var(--dtl-control-h-lg);padding:0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+.dtl-input::placeholder{color:var(--dtl-fg-dim);}
+.dtl-input:focus{border-color:var(--dtl-business);box-shadow:0 0 0 1px var(--dtl-business);}
+.dtl-input:disabled{cursor:default;opacity:.5;}
+/* 原生 select： appearance:none + 自绘箭头 ⇒ 与输入框同宗（宿主没有廉价下拉件） */
+.dtl-select{appearance:none;-webkit-appearance:none;box-sizing:border-box;
+  border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);background:var(--dtl-surface-1);color:var(--dtl-fg);
+  font-family:inherit;outline:none;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23767d87' stroke-width='1.5'><path d='M4 6.5 8 10.5 12 6.5'/></svg>");
+  background-repeat:no-repeat;background-position:right 8px center;background-size:14px;
+  transition:border-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-select--sm{height:var(--dtl-control-h-sm);padding:0 26px 0 8px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
+.dtl-select--md{height:var(--dtl-control-h-md);padding:0 26px 0 10px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+.dtl-select--lg{height:var(--dtl-control-h-lg);padding:0 26px 0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+.dtl-select:focus{border-color:var(--dtl-business);box-shadow:0 0 0 1px var(--dtl-business);}
+.dtl-select:disabled{cursor:default;opacity:.5;}
+
+/* ── 卡 / chip / 空态 / 列表行（业务壳，皮肤仍只消费 token）────── */
+.dtl-card{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-card--clickable{cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;}
+.dtl-card--clickable:hover{background:var(--dtl-card-hover);}
+.dtl-card--clickable[data-active='true']{border-color:var(--dtl-business);}
+.dtl-card--clickable:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
+.dtl-chip{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-chip-bg);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);white-space:nowrap;}
+.dtl-row{display:flex;align-items:center;gap:var(--dtl-space-2);width:100%;box-sizing:border-box;
+  padding:var(--dtl-space-2) var(--dtl-space-3);border:0;border-bottom:1px solid var(--dtl-border-faint);
+  background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-row:hover{background:var(--dtl-card-hover);}
+.dtl-row:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+.dtl-row[data-open='true']{background:var(--dtl-open-bg);}
+.dtl-row-body{padding:var(--dtl-space-2) var(--dtl-space-3) var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);
+  background:var(--dtl-open-bg-soft);font-size:var(--dtl-font-md);}
+.dtl-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+@media (prefers-reduced-motion: reduce){
+  .dtl-seg__item,.dtl-btn,.dtl-iconbtn,.dtl-input,.dtl-select,.dtl-card,.dtl-row{transition:none;}
+}
+`;
 		//#endregion
 		//#region src/client/ui.ts
 		/**
-		* UI 基础层：样式单源 + 共用元件。
+		* UI 基础层：样式单源 + 共用元件（**一类控件只有一份实现**）。
 		*
-		* 两条纪律（用户 2026-10-17 要求「该抽象的必须抽象」）：
-		*  1. **样式**：所有颜色 / 圆角 / 字号一律 `var(--dtl-*)`（定义只在 tokens.ts），
-		*     任何文件不许再写第二份 `var(--dsw-*)`、也不许自造 `--dtl-*`；
-		*     需要 hover / focus / 动画的（内联样式表达不了）才有资格进这里的 `UI_BASE_CSS`。
-		*  2. **元件**：卡 / chip / 下拉 / 空态 / 搜索框各只有一份实现，页面与浮标共用。
+		* 纪律（用户 2026-10-17「样式与方法一律抽象，不要反复重写」；形态抄本机
+		* `dsh-task-dispatch-table` 的 `ui/tokens.ts` + `ui/controls-css.ts` + `ui/*.tsx`）：
+		*  1. **样式**：颜色 / 圆角 / 字号 / 高度一律 `var(--dtl-*)`（定义只在 tokens.ts），
+		*     业务文件不许再写第二份 `var(--dsw-*)`、不许自造 `--dtl-*`、不许自造高度档；
+		*  2. **元件**：分段 / 按钮 / 图标钮 / 输入 / 下拉 / 卡 / chip / 空态 / 图表各一份，
+		*     页面与浮标共用。官方 primitives 只留「官方做得更好」的（StateDot / MarkdownText / 图标）。
 		*/
-		/** 基础层样式（幂等注入；只装 hover / focus / 动画这些内联样式写不了的部分）。 */
+		/** 基础层样式（tokens + 控件皮肤；幂等注入）。 */
 		const UI_BASE_CSS = `
-/* 统计卡：可点、hover 抬底、选中走蓝描边 + 浅蓝底 */
-.dtl-card{
-  display:flex;flex-direction:column;gap:var(--dtl-space-1);
-  padding:var(--dtl-space-3) var(--dtl-space-4);
-  border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
-  background:var(--dtl-surface-1);color:var(--dtl-fg);
-  cursor:pointer;text-align:left;font:inherit;
-  transition:background var(--dtl-dur) var(--dtl-ease),border-color var(--dtl-dur) var(--dtl-ease);
-}
-.dtl-card:hover{background:var(--dtl-hover)}
-.dtl-card[aria-pressed="true"]{border-color:var(--dtl-business);background:var(--dtl-business-soft)}
-.dtl-card:focus-visible{outline:2px solid var(--dtl-business);outline-offset:2px}
+/* 统计卡：可点、hover 淡蓝、选中蓝描边 */
+.dtl-stat{display:flex;flex-direction:column;gap:var(--dtl-space-1);
+  padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;}
+.dtl-stat__value{font-size:var(--dtl-font-xl);font-weight:600;line-height:var(--dtl-line-xl);font-variant-numeric:tabular-nums;}
+.dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
 
-/* 列表行：头部可点，hover 抬底；展开行走 --dtl-open-bg */
-.dtl-row{border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);overflow:hidden}
-.dtl-row + .dtl-row{margin-top:var(--dtl-space-2)}
-.dtl-row-head{
-  display:flex;align-items:center;gap:var(--dtl-space-2);
-  width:100%;padding:var(--dtl-space-3);border:0;background:transparent;
+/* 列表行：头部可点，hover 淡蓝；展开行走 --dtl-open-bg */
+.dtl-row-head{display:flex;align-items:center;gap:var(--dtl-space-2);
+  width:100%;padding:var(--dtl-space-2) var(--dtl-space-3);border:0;background:transparent;
   color:inherit;font:inherit;text-align:left;cursor:pointer;
-  transition:background var(--dtl-dur) var(--dtl-ease);
-}
-.dtl-row-head:hover{background:var(--dtl-hover)}
-.dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px}
-.dtl-row[data-open="true"]{background:var(--dtl-open-bg)}
-.dtl-row-body{padding:0 var(--dtl-space-3) var(--dtl-space-3);border-top:1px solid var(--dtl-border)}
-
-/* chip（分类 / 标签）：小底板走 --dtl-chip-bg，hover 加深 */
-.dtl-chip{
-  display:inline-flex;align-items:center;gap:var(--dtl-space-1);
-  padding:0 var(--dtl-space-2);height:20px;border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-chip-bg);color:var(--dtl-fg-2);
-  font-size:var(--dtl-font-xs);white-space:nowrap;max-width:20ch;overflow:hidden;text-overflow:ellipsis;
-}
-
-/* 原生下拉 / 输入框：宿主没有廉价的选择器，用原生控件 + token 配色（不用自绘菜单） */
-.dtl-select,.dtl-input{
-  height:var(--dtl-control-h-md);box-sizing:border-box;
-  padding:0 var(--dtl-space-2);border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);color:var(--dtl-fg);
-  font-family:inherit;font-size:var(--dtl-font-md);
-}
-.dtl-input{padding-left:var(--dtl-space-3);min-width:220px}
-.dtl-select:focus-visible,.dtl-input:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px}
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-row-head:hover{background:var(--dtl-card-hover);}
+.dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+.dtl-row[data-open="true"]{background:var(--dtl-open-bg);}
+.dtl-row-body{padding:var(--dtl-space-2) var(--dtl-space-3) var(--dtl-space-3);
+  background:var(--dtl-open-bg-soft);font-size:var(--dtl-font-md);}
 
 /* 空态：真空 = 虚线引导卡；筛选空 = 小字 */
-.dtl-empty-guide{
-  padding:var(--dtl-space-4);border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);
-  background:transparent;
-}
+.dtl-empty-guide{padding:var(--dtl-space-4);border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
 .dtl-empty-filtered{padding:var(--dtl-space-4) 0;color:var(--dtl-fg-3);font-size:var(--dtl-font-md)}
 
 /* 浮标角标：0→n 跳变时一次脉冲，不自动消失 */
-.dtl-badge{
-  position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;
+.dtl-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;
   border-radius:8px;background:var(--dtl-danger);color:var(--dtl-on-signal);
-  font-size:10px;line-height:16px;text-align:center;font-weight:600;
-}
+  font-size:10px;line-height:16px;text-align:center;font-weight:600;}
 .dtl-badge[data-pulse="true"]{animation:dtl-pulse 900ms var(--dtl-ease) 1}
 @keyframes dtl-pulse{0%{transform:scale(.6);opacity:.4}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 
 /* 过程正文：宽度受限、长行折行 */
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
+
+/* 趋势柱状图：div 柱 + token 色，无新依赖 */
+.dtl-chart{display:flex;align-items:flex-end;gap:var(--dtl-space-2);height:120px;}
+.dtl-chart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:var(--dtl-space-1);flex:1 1 0;height:100%;min-width:0;}
+.dtl-chart__bar{width:100%;max-width:28px;min-height:2px;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;
+  background:var(--dtl-business);transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-chart__col:hover .dtl-chart__bar{background:var(--dtl-accent);}
+.dtl-chart__val{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;}
+.dtl-chart__label{font-size:10px;line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);white-space:nowrap;}
 `;
 		const STYLE_ID = "dtl-ui-base";
-		/** 幂等注入 token 层 + 基础层（面板与浮标谁先挂载都只注入一次）。 */
+		/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。 */
 		function ensureUiBase() {
 			if (typeof document === "undefined") return;
 			if (document.getElementById(STYLE_ID) !== null) return;
 			const style = document.createElement("style");
 			style.id = STYLE_ID;
-			style.textContent = `${UI_TOKENS_CSS}\n${UI_BASE_CSS}`;
+			style.textContent = `${UI_TOKENS_CSS}\n${UI_CONTROLS_CSS}\n${UI_BASE_CSS}`;
 			document.head.appendChild(style);
 		}
-		/** 统计卡：点一下联动下方列表筛选（aria-pressed = 选中态）。 */
-		function StatCard(props) {
+		/** 分段控件（单选）：同一份结构 + size 轴；外观差异只由 variant 的两个颜色变量表达。 */
+		function Segmented(props) {
+			ensureUiBase();
+			const size = props.size ?? "md";
+			const variant = props.variant ?? "default";
+			return (0, react.createElement)("div", {
+				role: "group",
+				"aria-label": props.label,
+				id: props.id,
+				className: `dtl-seg dtl-seg--${variant} dtl-seg--${size}`,
+				style: props.style
+			}, props.items.map((item) => (0, react.createElement)("button", {
+				key: item.value,
+				type: "button",
+				className: "dtl-seg__item",
+				"aria-pressed": item.value === props.value,
+				onClick: () => {
+					props.onChange(item.value);
+				}
+			}, item.label, item.badge !== void 0 && item.badge > 0 ? (0, react.createElement)("span", { className: "dtl-seg__badge" }, String(item.badge)) : null)));
+		}
+		function Button(props) {
+			ensureUiBase();
 			return (0, react.createElement)("button", {
 				type: "button",
-				className: "dtl-card",
-				"aria-pressed": props.active,
+				className: `dtl-btn dtl-btn--${props.variant ?? "outline"} dtl-btn--${props.size ?? "md"}`,
+				disabled: props.disabled === true,
 				title: props.title,
 				onClick: props.onClick
-			}, (0, react.createElement)("span", { style: {
-				fontSize: "var(--dtl-font-sm)",
-				color: "var(--dtl-fg-2)"
-			} }, props.label), (0, react.createElement)("span", { style: {
-				fontSize: "24px",
-				fontWeight: 600,
-				lineHeight: 1.2
-			} }, props.value));
+			}, props.icon, props.children);
 		}
-		/** chip（分类 / 标签 / 工作区名）。 */
-		function Chip(props) {
-			const style = {};
-			if (props.tone === "signal" && props.color !== void 0) {
-				style.background = props.color;
-				style.color = "var(--dtl-on-signal)";
-			}
-			return (0, react.createElement)("span", {
-				className: "dtl-chip",
-				style,
-				title: props.text
-			}, props.text);
-		}
-		/** 原生下拉（时间 / 标签筛选共用一份）。 */
+		/** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。 */
 		function Select(props) {
+			ensureUiBase();
+			const size = props.size ?? "md";
 			return (0, react.createElement)("select", {
-				className: "dtl-select",
+				className: `dtl-select dtl-select--${size}`,
 				"aria-label": props.ariaLabel,
+				style: props.width === void 0 ? void 0 : { width: `${props.width}px` },
 				value: props.value,
 				onChange: (event) => {
 					props.onChange(event.target.value);
@@ -535,10 +603,12 @@ body[data-ds-dark-theme]{
 				value: option.value
 			}, option.label)));
 		}
-		/** 搜索框（关键字过滤）。 */
+		/** 搜索框（关键字过滤；占满剩余宽度由调用方的 flex 决定）。 */
 		function SearchInput(props) {
+			ensureUiBase();
+			const size = props.size ?? "md";
 			return (0, react.createElement)("input", {
-				className: "dtl-input",
+				className: `dtl-input dtl-input--${size}`,
 				type: "search",
 				"aria-label": props.ariaLabel,
 				placeholder: props.placeholder,
@@ -549,8 +619,35 @@ body[data-ds-dark-theme]{
 				}
 			});
 		}
+		/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。 */
+		function StatCard(props) {
+			ensureUiBase();
+			return (0, react.createElement)("button", {
+				type: "button",
+				className: "dtl-card dtl-card--clickable dtl-stat",
+				"data-active": props.active,
+				title: props.title,
+				onClick: props.onClick
+			}, (0, react.createElement)("span", { style: {
+				fontSize: "var(--dtl-font-sm)",
+				color: "var(--dtl-fg-2)"
+			} }, props.label), (0, react.createElement)("span", { className: "dtl-stat__value" }, props.value), props.hint === void 0 || props.hint === "" ? null : (0, react.createElement)("span", { className: "dtl-stat__hint" }, props.hint));
+		}
+		/** chip（分类 / 标签 / 工作区名）。 */
+		function Chip(props) {
+			ensureUiBase();
+			return (0, react.createElement)("span", {
+				className: "dtl-chip",
+				style: props.color === void 0 ? void 0 : {
+					background: props.color,
+					color: "var(--dtl-on-signal)"
+				},
+				title: props.text
+			}, props.text);
+		}
 		/** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
 		function EmptyState(props) {
+			ensureUiBase();
 			if (props.tone === "filtered") return (0, react.createElement)("div", { className: "dtl-empty-filtered" }, props.title);
 			return (0, react.createElement)("div", { className: "dtl-empty-guide" }, (0, react.createElement)("div", { style: {
 				fontSize: "var(--dtl-font-lg)",
@@ -561,6 +658,26 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-2)"
 			} }, props.hint));
 		}
+		/**
+		* 柱状图（div 柱，无新依赖）：每桶一柱，柱高按最大值归一；
+		* 数值常显（10px 灰），具体时刻走 title。零值的桶画 2px 矮桩，避免「这一周不存在」的误读。
+		*/
+		function BarChart(props) {
+			ensureUiBase();
+			const max = props.buckets.reduce((peak, bucket) => Math.max(peak, bucket.value), 0);
+			return (0, react.createElement)("div", {
+				className: "dtl-chart",
+				role: "img",
+				"aria-label": props.ariaLabel
+			}, props.buckets.map((bucket) => (0, react.createElement)("div", {
+				key: bucket.label,
+				className: "dtl-chart__col",
+				title: bucket.title
+			}, (0, react.createElement)("span", { className: "dtl-chart__val" }, bucket.value === 0 ? "" : String(bucket.value)), (0, react.createElement)("span", {
+				className: "dtl-chart__bar",
+				style: { height: `${max === 0 ? 2 : Math.max(2, Math.round(bucket.value / max * 100))}%` }
+			}), (0, react.createElement)("span", { className: "dtl-chart__label" }, bucket.label))));
+		}
 		//#endregion
 		//#region src/client/task-row.ts
 		/**
@@ -570,6 +687,9 @@ body[data-ds-dark-theme]{
 		*
 		* 行展开 = 过程文档路径 + 过程正文（在办走 `GET /task` 取正文；已结案只有路径——
 		* host 没有按历史行取正文的路由，不编造内容）。
+		*
+		* `showWorkspace`：第一区「我的待办」是跨工作区平铺 ⇒ 工作区升为一列（定宽，不再是
+		* 和标签混在一起的小 chip）；第二区分组行由分组标题说明归属，行内不再重复。
 		*/
 		/** 行的状态点语义（在办三态 + 已结案）。 */
 		function dotOf(row) {
@@ -588,6 +708,36 @@ body[data-ds-dark-theme]{
 		function whoOf(row) {
 			if (row.kind === "task") return row.task.owner ?? row.task.creator ?? null;
 			return row.record.owner ?? null;
+		}
+		/** 工作区徽标（第一区专用列）：色块首字母 + 标题，定宽、超出省略（不猜官方图标名）。 */
+		function WorkspaceTag(props) {
+			if (props.workspace === void 0) return null;
+			const initial = props.workspace.title.trim().slice(0, 1);
+			return (0, react.createElement)("span", {
+				className: "dtl-ellipsis",
+				style: {
+					display: "inline-flex",
+					alignItems: "center",
+					gap: "var(--dtl-space-1)",
+					flex: "0 0 140px",
+					minWidth: 0,
+					color: "var(--dtl-fg-2)",
+					fontSize: "var(--dtl-font-xs)"
+				},
+				title: props.workspace.title
+			}, (0, react.createElement)("span", { style: {
+				display: "inline-flex",
+				alignItems: "center",
+				justifyContent: "center",
+				flex: "none",
+				width: "16px",
+				height: "16px",
+				borderRadius: "var(--dtl-radius-xs)",
+				background: "var(--dtl-business-soft)",
+				color: "var(--dtl-business)",
+				fontSize: "10px",
+				fontWeight: 600
+			} }, initial === "" ? "·" : initial), props.workspace.title);
 		}
 		function TaskRowView(props) {
 			const { t, row } = props;
@@ -627,13 +777,11 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					setOpen(!open);
 				}
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: dotOf(row) }), (0, react.createElement)("span", {
+			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: dotOf(row) }), props.showWorkspace === true ? (0, react.createElement)(WorkspaceTag, { workspace }) : null, (0, react.createElement)("span", {
+				className: "dtl-ellipsis",
 				style: {
 					flex: "1 1 auto",
 					minWidth: 0,
-					overflow: "hidden",
-					textOverflow: "ellipsis",
-					whiteSpace: "nowrap",
 					fontSize: "var(--dtl-font-md)"
 				},
 				title: titleOf(row)
@@ -644,10 +792,11 @@ body[data-ds-dark-theme]{
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-2)",
+				flex: "none",
 				color: "var(--dtl-fg-3)",
 				fontSize: "var(--dtl-font-xs)",
 				whiteSpace: "nowrap"
-			} }, workspace === void 0 ? null : (0, react.createElement)("span", null, workspace.title), (0, react.createElement)("span", { title: stamp.value ?? void 0 }, `${stamp.label} ${when}`), (0, react.createElement)("span", null, who === null || who === "" ? t("ownerUnclaimed") : `@${who}`)), (0, react.createElement)(open ? _deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 16 })), open ? (0, react.createElement)("div", { className: "dtl-row-body" }, (0, react.createElement)("div", { style: {
+			} }, (0, react.createElement)("span", { title: stamp.value ?? void 0 }, `${stamp.label} ${when}`), (0, react.createElement)("span", null, who === null || who === "" ? t("ownerUnclaimed") : `@${who}`)), (0, react.createElement)(open ? _deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 16 })), open ? (0, react.createElement)("div", { className: "dtl-row-body" }, (0, react.createElement)("div", { style: {
 				margin: "var(--dtl-space-2) 0",
 				fontSize: "var(--dtl-font-sm)",
 				color: "var(--dtl-fg-2)"
@@ -698,11 +847,12 @@ body[data-ds-dark-theme]{
 		//#endregion
 		//#region src/client/board-home.ts
 		/**
-		* 看板首页（`main` 槽整页内容）：4 统计卡（可点联动筛选）+ 筛选行 + 统一任务列表。
-		* 定稿见 docs/design/features/board-home.md §二；按钮矩阵归「任务按钮与会话交接」任务（写入路径 A/B 未拍板），
-		* 本页**不画**任务动作按钮——不先斩后奏。
+		* 看板首页（`main` 槽整页内容）：6 统计卡 + 近 8 周趋势图 + 两区任务列表。
+		* 定稿见 docs/design/features/board-home.md §二（2026-10-17 专家组改版）；
+		* 按钮矩阵归「任务按钮与会话交接」任务（写入路径 A/B 未拍板），本页**不画**任务动作按钮。
 		*
-		* 刷新纪律（2026-10-17 拍板）：挂载首读 + 手动刷新按钮，**不轮询**；空态三分（未就绪不渲染 / 真空引导卡 / 筛选空小字）。
+		* 刷新纪律（2026-10-17 拍板）：挂载首读 + 手动刷新按钮，**不轮询**；空态三分
+		* （未就绪不渲染 / 真空引导卡 / 筛选空小字）。
 		*/
 		/** 整页容器：占满中栏、自己滚动。 */
 		const pageStyle = {
@@ -725,11 +875,23 @@ body[data-ds-dark-theme]{
 			fontSize: "var(--dtl-font-xl)",
 			fontWeight: 600
 		};
-		const statsGridStyle = {
+		/** 统计区：左 2/3 卡网格 + 右 1/3 趋势图（窄屏堆叠）。 */
+		const statsAreaStyle = {
 			display: "grid",
-			gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))",
+			gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)",
 			gap: "var(--dtl-space-3)",
 			marginBottom: "var(--dtl-space-4)"
+		};
+		const cardsGridStyle = {
+			display: "grid",
+			gridTemplateColumns: "repeat(auto-fit,minmax(148px,1fr))",
+			gap: "var(--dtl-space-3)"
+		};
+		const chartCardStyle = {
+			display: "flex",
+			flexDirection: "column",
+			gap: "var(--dtl-space-2)",
+			padding: "var(--dtl-space-3) var(--dtl-space-4)"
 		};
 		const filterRowStyle = {
 			display: "flex",
@@ -738,10 +900,43 @@ body[data-ds-dark-theme]{
 			flexWrap: "wrap",
 			marginBottom: "var(--dtl-space-3)"
 		};
+		const searchWrapStyle = {
+			flex: "1 1 220px",
+			minWidth: 0
+		};
 		const hintStyle = {
 			fontSize: "var(--dtl-font-sm)",
 			color: "var(--dtl-fg-2)"
 		};
+		const regionHeadStyle = {
+			display: "flex",
+			alignItems: "baseline",
+			gap: "var(--dtl-space-2)",
+			margin: "var(--dtl-space-4) 0 var(--dtl-space-2)",
+			fontSize: "var(--dtl-font-lg)",
+			fontWeight: 600
+		};
+		const groupHeadStyle = {
+			display: "flex",
+			alignItems: "center",
+			gap: "var(--dtl-space-2)",
+			width: "100%",
+			padding: "var(--dtl-space-2) var(--dtl-space-3)",
+			border: 0,
+			borderRadius: "var(--dtl-radius-md)",
+			background: "var(--dtl-surface-2)",
+			color: "inherit",
+			font: "inherit",
+			textAlign: "left",
+			cursor: "pointer"
+		};
+		const groupCountStyle = {
+			fontSize: "var(--dtl-font-xs)",
+			color: "var(--dtl-fg-3)",
+			fontWeight: 400
+		};
+		/** 分组默认折叠阈值（组内太多条时先收起，用户点开）。 */
+		const GROUP_COLLAPSE_OVER = 30;
 		function BoardHome(props) {
 			const { t, onBack } = props;
 			ensureUiBase();
@@ -751,27 +946,27 @@ body[data-ds-dark-theme]{
 				refresh();
 			}, []);
 			const board = state.board;
-			const rows = (0, react.useMemo)(() => selectRows(state), [state]);
-			const tagOptions = (0, react.useMemo)(() => [{
-				value: "",
-				label: t("tagAll")
-			}, ...(state.filters?.tags ?? []).map((tag) => ({
-				value: tag,
-				label: `#${tag}`
-			}))], [state.filters, t]);
-			/** 统计卡 → 筛选联动（点第二下不反选：档位语义是「切到这一档」，不是开关）。 */
-			const card = (label, value, bucket, range) => (0, react.createElement)(StatCard, {
+			const view = (0, react.useMemo)(() => selectView(state), [state]);
+			const stats = board?.stats;
+			const days = (value) => value === null || value === void 0 ? t("daysNone") : t("daysValue", { n: value });
+			/** 统计卡 → 筛选联动（卡即入口：点一下跳到对应视角）。 */
+			const card = (label, value, hint, patch) => (0, react.createElement)(StatCard, {
 				label: t(label),
 				value,
-				active: state.query.bucket === bucket && (bucket !== "closed" || state.query.range === range),
+				hint,
+				active: isActive(state.query, patch),
 				onClick: () => {
-					setQuery({
-						bucket,
-						range,
-						limit: 500
-					});
+					setQuery(patch);
 				}
 			});
+			const chartBuckets = (0, react.useMemo)(() => (board?.closed.weekly ?? []).map((bucket) => ({
+				label: bucket.week.slice(5),
+				value: bucket.count,
+				title: t("chartBucket", {
+					week: bucket.week,
+					n: bucket.count
+				})
+			})), [board, t]);
 			return (0, react.createElement)("div", { style: pageStyle }, (0, react.createElement)("div", { style: {
 				display: "flex",
 				justifyContent: "center"
@@ -785,7 +980,7 @@ body[data-ds-dark-theme]{
 				alignItems: "center",
 				gap: "var(--dtl-space-3)",
 				minWidth: 0
-			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+			} }, (0, react.createElement)(Button, {
 				variant: "outline",
 				size: "md",
 				onClick: onBack
@@ -793,11 +988,11 @@ body[data-ds-dark-theme]{
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-2)"
-			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.SegmentedControl, {
+			} }, (0, react.createElement)(Segmented, {
 				id: "dtl-tab",
 				value: tab,
 				label: t("panelTitle"),
-				options: [{
+				items: [{
 					value: "tasks",
 					label: t("tabTasks")
 				}, {
@@ -805,95 +1000,126 @@ body[data-ds-dark-theme]{
 					label: t("tabStats")
 				}],
 				onChange: setTab
-			}), (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+			}), (0, react.createElement)(Button, {
 				variant: "outline",
 				size: "md",
 				icon: (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
-				title: t("refresh"),
 				disabled: state.refreshing,
+				title: t("refresh"),
 				onClick: () => {
 					refresh();
 				}
-			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, board === null ? null : (0, react.createElement)("div", { style: statsGridStyle }, card("statMyActive", String(board.stats.myActive), "mine", "all"), card("statOpen", String(board.stats.open), "open", "all"), card("statWeekDone", String(board.closed.weekDone), "closed", "week"), card("statYearDone", board.closed.yearCapped ? t("countCapped") : String(board.closed.yearDone), "closed", "year")), (0, react.createElement)("div", { style: filterRowStyle }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.SegmentedControl, {
-				id: "dtl-bucket",
-				value: state.query.bucket,
-				label: t("bucketLabel"),
-				options: [
+			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", { style: statsAreaStyle }, (0, react.createElement)("div", { style: cardsGridStyle }, card("statMyActive", String(stats.myActive), t("statMyActiveHint", { n: stats.myBlocked }), {
+				scope: "mine",
+				status: "all",
+				workspace: ""
+			}), card("statOpen", String(stats.open), t("statOpenHint", { n: days(stats.oldestOpenDays) }), {
+				scope: "all",
+				status: "open",
+				workspace: ""
+			}), card("statDoing", String(stats.doing), t("statDoingHint", { n: stats.doing - stats.myActive + stats.myBlocked }), {
+				scope: "all",
+				status: "active",
+				workspace: ""
+			}), card("statBlocked", String(stats.blocked), t("statBlockedHint", { n: days(stats.longestBlockedDays) }), {
+				scope: "all",
+				status: "blocked",
+				workspace: ""
+			}), card("statWeekDone", String(board?.closed.weekDone ?? 0), t("statWeekDoneHint"), {
+				scope: "all",
+				status: "all",
+				workspace: ""
+			}), card("statStale", String(stats.stale), t("statStaleHint", { n: stats.staleDays }), {
+				scope: "all",
+				status: "stale",
+				workspace: ""
+			})), (0, react.createElement)("div", {
+				className: "dtl-card",
+				style: chartCardStyle
+			}, (0, react.createElement)("div", { style: {
+				fontSize: "var(--dtl-font-md)",
+				fontWeight: 600
+			} }, t("chartTitle")), chartBuckets.every((bucket) => bucket.value === 0) ? (0, react.createElement)("div", { style: {
+				...hintStyle,
+				padding: "var(--dtl-space-4) 0"
+			} }, t("chartEmpty")) : (0, react.createElement)(BarChart, {
+				buckets: chartBuckets,
+				ariaLabel: t("chartTitle")
+			}), (0, react.createElement)("div", { style: {
+				fontSize: "var(--dtl-font-xs)",
+				color: "var(--dtl-fg-3)"
+			} }, t("chartCaption")))), (0, react.createElement)("div", { style: filterRowStyle }, (0, react.createElement)(Segmented, {
+				id: "dtl-scope",
+				value: state.query.scope,
+				label: t("scopeLabel"),
+				items: [{
+					value: "mine",
+					label: t("scopeMine")
+				}, {
+					value: "all",
+					label: t("scopeAll")
+				}],
+				onChange: (next) => {
+					setQuery({ scope: next });
+				}
+			}), (0, react.createElement)(Segmented, {
+				id: "dtl-status",
+				value: state.query.status,
+				label: t("statusLabel"),
+				items: [
 					{
 						value: "all",
-						label: t("bucketAll")
+						label: t("statusAll")
 					},
 					{
-						value: "mine",
-						label: t("bucketMine")
+						value: "active",
+						label: t("statusActive")
 					},
 					{
 						value: "open",
-						label: t("bucketOpen")
+						label: t("statusOpen")
 					},
 					{
-						value: "closed",
-						label: t("bucketClosed")
+						value: "blocked",
+						label: t("statusBlocked")
+					},
+					{
+						value: "stale",
+						label: t("statusStale")
 					}
 				],
 				onChange: (next) => {
-					setQuery({
-						bucket: next,
-						limit: 500
-					});
+					setQuery({ status: next });
 				}
 			}), (0, react.createElement)(Select, {
-				value: state.query.range,
-				ariaLabel: t("rangeLabel"),
-				options: [
-					{
-						value: "all",
-						label: t("rangeAll")
-					},
-					{
-						value: "week",
-						label: t("rangeWeek")
-					},
-					{
-						value: "month",
-						label: t("rangeMonth")
-					},
-					{
-						value: "year",
-						label: t("rangeYear")
-					}
-				],
+				value: state.query.workspace,
+				ariaLabel: t("workspaceLabel"),
+				width: 180,
+				options: [{
+					value: "",
+					label: t("workspaceAll")
+				}, ...(board?.workspaces ?? []).map((workspace) => ({
+					value: workspace.id,
+					label: workspace.title
+				}))],
 				onChange: (next) => {
-					setQuery({
-						range: next,
-						limit: 500
-					});
+					setQuery({ workspace: next });
 				}
-			}), (0, react.createElement)(Select, {
-				value: state.query.tag,
-				ariaLabel: t("tagAll"),
-				options: tagOptions,
-				onChange: (next) => {
-					setQuery({
-						tag: next,
-						limit: 500
-					});
-				}
-			}), (0, react.createElement)(SearchInput, {
+			}), (0, react.createElement)("div", { style: searchWrapStyle }, (0, react.createElement)(SearchInput, {
 				value: state.query.keyword,
 				placeholder: t("searchPlaceholder"),
 				ariaLabel: t("searchPlaceholder"),
 				onChange: (next) => {
 					setQuery({ keyword: next });
 				}
-			})), state.status === "loading" && board === null ? null : state.status === "error" && board === null ? (0, react.createElement)("div", { style: {
+			}))), state.status === "loading" && board === null ? null : state.status === "error" && board === null ? (0, react.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-2)"
 			} }, (0, react.createElement)("span", { style: {
 				color: "var(--dtl-danger)",
 				fontSize: "var(--dtl-font-md)"
-			} }, `${t("loadFailed")}：${state.error ?? ""}`), (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+			} }, `${t("loadFailed")}：${state.error ?? ""}`), (0, react.createElement)(Button, {
 				variant: "outline",
 				size: "sm",
 				onClick: () => {
@@ -903,49 +1129,205 @@ body[data-ds-dark-theme]{
 				tone: "guide",
 				title: t("emptyNoWorkspace"),
 				hint: t("emptyNoWorkspaceHint")
-			}) : state.query.bucket === "closed" && state.historyStatus === "loading" && state.history.length === 0 ? (0, react.createElement)("div", { style: hintStyle }, t("loading")) : state.query.bucket === "closed" && state.historyStatus === "error" ? (0, react.createElement)("div", { style: {
-				display: "flex",
-				alignItems: "center",
-				gap: "var(--dtl-space-2)"
-			} }, (0, react.createElement)("span", { style: {
-				color: "var(--dtl-danger)",
-				fontSize: "var(--dtl-font-md)"
-			} }, `${t("loadFailed")}：${state.historyError ?? ""}`), (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-				variant: "outline",
-				size: "sm",
+			}) : view.total === 0 ? (0, react.createElement)(EmptyState, {
+				tone: isPristine(state.query) ? "guide" : "filtered",
+				title: isPristine(state.query) ? t("emptyNoTask") : t("emptyFiltered"),
+				hint: isPristine(state.query) ? t("emptyNoTaskHint") : void 0
+			}) : (0, react.createElement)("div", null, view.mine.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", null, `${t("regionMine")} ${view.mine.length}`), (0, react.createElement)("span", { style: {
+				fontSize: "var(--dtl-font-xs)",
+				color: "var(--dtl-fg-3)",
+				fontWeight: 400
+			} }, t("regionMineHint"))), view.mine.map((row) => (0, react.createElement)(TaskRowView, {
+				key: row.key,
+				t,
+				row,
+				showWorkspace: true
+			}))), view.groups.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", null, t("regionWorkspaces")), (0, react.createElement)("span", { style: {
+				fontSize: "var(--dtl-font-xs)",
+				color: "var(--dtl-fg-3)",
+				fontWeight: 400
+			} }, t("showingCount", { n: view.total - view.mine.length }))), view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
+				key: group.workspaceId,
+				t,
+				group
+			}))))))));
+		}
+		/** 一个工作区分组：标题行（可点折叠）+ 行列表。 */
+		function WorkspaceGroupView(props) {
+			const { t, group } = props;
+			const [open, setOpen] = (0, react.useState)(group.rows.length <= GROUP_COLLAPSE_OVER);
+			return (0, react.createElement)("div", { style: { marginBottom: "var(--dtl-space-3)" } }, (0, react.createElement)("button", {
+				type: "button",
+				className: "dtl-row-head",
+				style: groupHeadStyle,
+				"aria-expanded": open,
+				title: open ? t("collapseAria") : t("expandAria"),
 				onClick: () => {
-					setQuery({});
+					setOpen(!open);
 				}
-			}, t("retry"))) : rows.length === 0 ? (0, react.createElement)(EmptyState, {
-				tone: isPristine(state) ? "guide" : "filtered",
-				title: isPristine(state) ? t("emptyNoTask") : t("emptyFiltered"),
-				hint: isPristine(state) ? t("emptyNoTaskHint") : void 0
-			}) : (0, react.createElement)("div", null, rows.map((row) => (0, react.createElement)(TaskRowView, {
+			}, (0, react.createElement)("span", {
+				className: "dtl-ellipsis",
+				style: {
+					flex: "1 1 auto",
+					fontSize: "var(--dtl-font-md)",
+					fontWeight: 600
+				}
+			}, group.title), (0, react.createElement)("span", { style: groupCountStyle }, t("groupHint", {
+				doing: group.doingCount,
+				open: group.openCount
+			}))), open ? (0, react.createElement)("div", { style: { marginTop: "var(--dtl-space-2)" } }, group.rows.map((row) => (0, react.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row
-			})), (0, react.createElement)("div", { style: {
-				...filterRowStyle,
-				marginTop: "var(--dtl-space-3)",
-				color: "var(--dtl-fg-3)",
-				fontSize: "var(--dtl-font-xs)"
-			} }, (0, react.createElement)("span", null, t("showingCount", { n: rows.length })), state.query.bucket === "closed" && state.history.length >= state.query.limit ? (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-				variant: "outline",
-				size: "sm",
-				disabled: state.historyStatus === "loading",
-				onClick: () => {
-					loadMoreHistory();
-				}
-			}, state.historyStatus === "loading" ? t("loading") : t("loadMore")) : null))))));
+			}))) : null);
+		}
+		/** 卡片高亮：当前 query 是否正好落在该卡对应的视角上。 */
+		function isActive(query, patch) {
+			return Object.entries(patch).every(([key, value]) => query[key] === value);
 		}
 		/** 是否「什么都没筛」：真空才给引导卡，一有筛选就只能是「筛选空」。 */
-		function isPristine(state) {
-			const { query } = state;
-			return query.bucket === "all" && query.range === "all" && query.tag === "" && query.keyword.trim() === "";
+		function isPristine(query) {
+			return query.scope === "all" && query.status === "all" && query.workspace === "" && query.keyword.trim() === "";
 		}
 		//#endregion
 		//#region src/client/locales.ts
-		/** 把宿主给的无参 t 包成带占位符替换的 t（官方模板一律 `{name}`）。 */
+		/** 中文（默认档）。 */
+		const zh = {
+			backToConversation: "返回会话",
+			panelTitle: "任务台账",
+			tabTasks: "任务",
+			tabStats: "统计",
+			refresh: "刷新",
+			refreshing: "刷新中",
+			loading: "读取中…",
+			retry: "重试",
+			loadFailed: "读取失败",
+			statsPlaceholder: "统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。",
+			statMyActive: "我的待办",
+			statMyActiveHint: "其中阻塞 {n}",
+			statOpen: "待认领",
+			statOpenHint: "最老一条躺了 {n}",
+			statDoing: "进行中",
+			statDoingHint: "别人在做 {n}",
+			statBlocked: "阻塞中",
+			statBlockedHint: "卡住最久 {n}",
+			statWeekDone: "本周完成",
+			statWeekDoneHint: "按结案时间",
+			statStale: "停滞任务",
+			statStaleHint: "超过 {n} 天没动",
+			daysNone: "—",
+			daysValue: "{n} 天",
+			chartTitle: "近 8 周完成",
+			chartCaption: "按结案时间、周一起桶；悬停看该周条数",
+			chartBucket: "{week} 那一周：完成 {n} 条",
+			chartEmpty: "近 8 周没有已结案记录",
+			scopeLabel: "范围",
+			scopeMine: "我的",
+			scopeAll: "全部工作区",
+			statusLabel: "状态",
+			statusAll: "全部",
+			statusActive: "进行中",
+			statusOpen: "待认领",
+			statusBlocked: "阻塞",
+			statusStale: "停滞",
+			workspaceLabel: "工作区",
+			workspaceAll: "全部工作区",
+			searchPlaceholder: "搜索标题 / 任务号 / 人 / 分类 / 标签",
+			regionMine: "我的待办",
+			regionMineHint: "跨工作区，按创建时间倒序",
+			regionWorkspaces: "按工作区",
+			groupHint: "进行中 {doing} ｜ 待认领 {open}",
+			showingCount: "显示 {n} 条",
+			expandAria: "展开过程文档",
+			collapseAria: "收起",
+			ownerUnclaimed: "待认领",
+			fieldCreated: "创建",
+			fieldStarted: "开始",
+			fieldFinished: "结案",
+			timeUnknown: "时间未知",
+			worklogTitle: "过程文档",
+			worklogPath: "路径",
+			worklogMissing: "（缺失）",
+			mdCopy: "复制",
+			mdCopied: "已复制",
+			mdFootnotes: "脚注",
+			emptyNoWorkspace: "还没有台账工作区",
+			emptyNoWorkspaceHint: "在某个项目里跑 task-ledger skill 的 init 建档（生成 ledger/progress.json），这里就会出现它。",
+			emptyNoTask: "一条任务都没有",
+			emptyNoTaskHint: "用 task-ledger skill 的 new 开一个任务，或让别人开在这里等你认领。",
+			emptyFiltered: "没有符合当前筛选的任务",
+			badgeTitle: "我名下待办",
+			openBoard: "打开任务台账"
+		};
+		/** English（与 zh 键完全对齐）。 */
+		const en = {
+			backToConversation: "Back to chat",
+			panelTitle: "Task ledger",
+			tabTasks: "Tasks",
+			tabStats: "Stats",
+			refresh: "Refresh",
+			refreshing: "Refreshing",
+			loading: "Loading…",
+			retry: "Retry",
+			loadFailed: "Load failed",
+			statsPlaceholder: "Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.",
+			statMyActive: "My todos",
+			statMyActiveHint: "{n} blocked",
+			statOpen: "Unclaimed",
+			statOpenHint: "oldest waiting {n}",
+			statDoing: "In progress",
+			statDoingHint: "{n} by others",
+			statBlocked: "Blocked",
+			statBlockedHint: "stuck for {n}",
+			statWeekDone: "Done this week",
+			statWeekDoneHint: "by close time",
+			statStale: "Stale tasks",
+			statStaleHint: "no movement for {n}+ days",
+			daysNone: "—",
+			daysValue: "{n}d",
+			chartTitle: "Last 8 weeks",
+			chartCaption: "by close time, weeks start Monday; hover a bar for its count",
+			chartBucket: "week of {week}: {n} done",
+			chartEmpty: "Nothing closed in the last 8 weeks",
+			scopeLabel: "Scope",
+			scopeMine: "Mine",
+			scopeAll: "All workspaces",
+			statusLabel: "Status",
+			statusAll: "All",
+			statusActive: "Active",
+			statusOpen: "Unclaimed",
+			statusBlocked: "Blocked",
+			statusStale: "Stale",
+			workspaceLabel: "Workspace",
+			workspaceAll: "All workspaces",
+			searchPlaceholder: "Search title / id / person / category / tag",
+			regionMine: "My todos",
+			regionMineHint: "across workspaces, newest first",
+			regionWorkspaces: "By workspace",
+			groupHint: "{doing} active ｜ {open} unclaimed",
+			showingCount: "{n} shown",
+			expandAria: "Expand worklog",
+			collapseAria: "Collapse",
+			ownerUnclaimed: "unclaimed",
+			fieldCreated: "created",
+			fieldStarted: "started",
+			fieldFinished: "closed",
+			timeUnknown: "unknown time",
+			worklogTitle: "Worklog",
+			worklogPath: "path",
+			worklogMissing: "(missing)",
+			mdCopy: "Copy",
+			mdCopied: "Copied",
+			mdFootnotes: "Footnotes",
+			emptyNoWorkspace: "No ledger workspace yet",
+			emptyNoWorkspaceHint: "Run the task-ledger skill init in a project (creates ledger/progress.json) and it shows up here.",
+			emptyNoTask: "No tasks yet",
+			emptyNoTaskHint: "Create one with the task-ledger skill new, or leave one here for others to claim.",
+			emptyFiltered: "No tasks match the current filters",
+			badgeTitle: "my todos",
+			openBoard: "Open task ledger"
+		};
+		/** 把宿主给的无参 t 包成带占位符替换的 t（模板一律 `{name}`，不依赖宿主是否支持 params）。 */
 		function interpolateTranslate(base) {
 			return (key, params) => {
 				const raw = base(key);
@@ -953,132 +1335,10 @@ body[data-ds-dark-theme]{
 				return raw.replace(/\{(\w+)\}/g, (match, name) => name in params ? String(params[name]) : match);
 			};
 		}
-		const zh = {
-			panelTitle: "任务台账",
-			backToConversation: "返回会话",
-			tabTasks: "任务",
-			tabStats: "统计",
-			statsPlaceholder: "统计报表尚未开建（本版只有任务首页）",
-			statMyActive: "我的待办",
-			statOpen: "待认领",
-			statWeekDone: "本周已完成",
-			statYearDone: "近一年完成",
-			countCapped: "1万+",
-			bucketLabel: "状态档",
-			bucketAll: "全部",
-			bucketMine: "我的待办",
-			bucketOpen: "待认领",
-			bucketClosed: "已结案",
-			rangeLabel: "时间",
-			rangeAll: "全部时间",
-			rangeWeek: "本周",
-			rangeMonth: "本月",
-			rangeYear: "近一年",
-			tagAll: "全部标签",
-			searchPlaceholder: "搜索标题 / 负责人 / 任务号",
-			refresh: "刷新",
-			refreshing: "读取中…",
-			loading: "加载中…",
-			retry: "重试",
-			loadFailed: "读取失败",
-			emptyNoWorkspace: "没有检测到台账工作区",
-			emptyNoWorkspaceHint: "宿主已添加的工作区里，还没有含 ledger/progress.json 的目录。",
-			emptyNoTask: "还没有任务",
-			emptyNoTaskHint: "在任一工作区里用 task-ledger skill 建任务（/ledger），这里就会看到它。",
-			emptyFiltered: "当前筛选下没有任务",
-			showingCount: "显示 {n} 条",
-			loadMore: "加载更多",
-			noMore: "没有更多了",
-			expandAria: "展开详情",
-			collapseAria: "收起详情",
-			fieldOwner: "负责人",
-			fieldCreator: "创建人",
-			fieldCreated: "创建",
-			fieldStarted: "开始",
-			fieldFinished: "结案",
-			fieldWorkspace: "工作区",
-			fieldCategory: "分类",
-			ownerUnclaimed: "未认领",
-			timeUnknown: "时间未知",
-			statusOpen: "待认领",
-			statusDoing: "进行中",
-			statusBlocked: "受阻",
-			statusClosed: "已结案",
-			worklogTitle: "过程文档",
-			worklogMissing: "过程文档缺失（文件已不在盘上）",
-			worklogPath: "路径",
-			badgeTitle: "我名下进行中 + 受阻的任务数",
-			openBoard: "打开任务台账",
-			mdCopy: "复制",
-			mdCopied: "已复制",
-			mdFootnotes: "脚注"
-		};
-		const en = {
-			panelTitle: "Task ledger",
-			backToConversation: "Back to conversation",
-			tabTasks: "Tasks",
-			tabStats: "Stats",
-			statsPlaceholder: "The stats report is not built yet (this release ships the task home only)",
-			statMyActive: "My active",
-			statOpen: "Unclaimed",
-			statWeekDone: "Closed this week",
-			statYearDone: "Closed in the last year",
-			countCapped: "10k+",
-			bucketLabel: "Status",
-			bucketAll: "All",
-			bucketMine: "My active",
-			bucketOpen: "Unclaimed",
-			bucketClosed: "Closed",
-			rangeLabel: "Time",
-			rangeAll: "Any time",
-			rangeWeek: "This week",
-			rangeMonth: "This month",
-			rangeYear: "Last year",
-			tagAll: "All tags",
-			searchPlaceholder: "Search title / owner / task id",
-			refresh: "Refresh",
-			refreshing: "Loading…",
-			loading: "Loading…",
-			retry: "Retry",
-			loadFailed: "Failed to load",
-			emptyNoWorkspace: "No ledger workspace detected",
-			emptyNoWorkspaceHint: "None of the workspaces added to the host contains ledger/progress.json.",
-			emptyNoTask: "No tasks yet",
-			emptyNoTaskHint: "Create one with the task-ledger skill (/ledger) in any workspace and it shows up here.",
-			emptyFiltered: "No task matches the current filters",
-			showingCount: "Showing {n}",
-			loadMore: "Load more",
-			noMore: "No more",
-			expandAria: "Expand details",
-			collapseAria: "Collapse details",
-			fieldOwner: "Owner",
-			fieldCreator: "Creator",
-			fieldCreated: "Created",
-			fieldStarted: "Started",
-			fieldFinished: "Closed",
-			fieldWorkspace: "Workspace",
-			fieldCategory: "Category",
-			ownerUnclaimed: "unclaimed",
-			timeUnknown: "unknown time",
-			statusOpen: "Unclaimed",
-			statusDoing: "In progress",
-			statusBlocked: "Blocked",
-			statusClosed: "Closed",
-			worklogTitle: "Process log",
-			worklogMissing: "Process log is missing (the file is no longer on disk)",
-			worklogPath: "Path",
-			badgeTitle: "Tasks I own that are in progress or blocked",
-			openBoard: "Open the task ledger",
-			mdCopy: "Copy",
-			mdCopied: "Copied",
-			mdFootnotes: "Footnotes"
-		};
-		/** 宿主未提供 t 时的兜底（保持中文：宿主语言服务缺席不该让界面变键名）。 */
-		const fallbackTranslate = (key, params) => {
-			const raw = zh[key];
-			if (params === void 0) return raw;
-			return raw.replace(/\{(\w+)\}/g, (match, name) => name in params ? String(params[name]) : match);
-		};
+		/** 键名兜底：宿主没给 t 席位时用（键名绝不上界面）。 */
+		function fallbackTranslate(key, params) {
+			return interpolateTranslate((name) => zh[name] ?? name)(key, params);
+		}
 		//#endregion
 		//#region src/client/overlay-entry.ts
 		/**

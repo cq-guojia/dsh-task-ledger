@@ -12,4 +12,4 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 ## Status
 
 - `task-ledger@1.0.2` published (2026-10-17): `history` JSON mode now emits JSON even when a workspace has no history files (fixes a 500 that blanked the whole board).
-- `dsh-task-ledger@0.0.7` published (2026-10-17): board home page client half — panel (4 stat cards + filter row + list) + overlay badge, dark/light follows the host, zh/en follows the host. Fixes the 500 above (the plugin embeds the fixed script) and surfaces the server's error text instead of a bare `HTTP 500`.
+- `dsh-task-ledger@0.0.8` published (2026-10-17): board home redesign — 6 decision-grade stat cards + 8-week trend chart, two-region task list (my todos / grouped by workspace, closed tasks moved out of the home page), filter row unified (scope × status × workspace select × keyword search), and the whole control skin aligned with `dsh-task-dispatch-table`.

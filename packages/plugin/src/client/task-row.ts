@@ -5,17 +5,21 @@
  *
  * 行展开 = 过程文档路径 + 过程正文（在办走 `GET /task` 取正文；已结案只有路径——
  * host 没有按历史行取正文的路由，不编造内容）。
+ *
+ * `showWorkspace`：第一区「我的待办」是跨工作区平铺 ⇒ 工作区升为一列（定宽，不再是
+ * 和标签混在一起的小 chip）；第二区分组行由分组标题说明归属，行内不再重复。
  */
 import { createElement as h, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, MarkdownText, StateDot,
+  IconChevronDownOutlineRegular, IconChevronRightOutlineRegular,
+  MarkdownText, StateDot,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { fetchTaskDetail } from './api'
 import { formatDateTime } from './format'
 import type { Translate } from './locales'
 import type { Row } from './rows'
 import { Chip } from './ui'
-import type { TaskDetail } from './types'
+import type { TaskDetail, Workspace } from './types'
 
 /** 行的状态点语义（在办三态 + 已结案）。 */
 function dotOf(row: Row): 'idle' | 'ongoing' | 'warning' | 'done' {
@@ -38,7 +42,27 @@ function whoOf(row: Row): string | null {
   return row.record.owner ?? null
 }
 
-export function TaskRowView(props: { t: Translate; row: Row }): ReactNode {
+/** 工作区徽标（第一区专用列）：色块首字母 + 标题，定宽、超出省略（不猜官方图标名）。 */
+function WorkspaceTag(props: { workspace: Workspace | undefined }): ReactNode {
+  if (props.workspace === undefined) return null
+  const initial = props.workspace.title.trim().slice(0, 1)
+  return h('span', {
+    className: 'dtl-ellipsis',
+    style: { display: 'inline-flex', alignItems: 'center', gap: 'var(--dtl-space-1)', flex: '0 0 140px', minWidth: 0, color: 'var(--dtl-fg-2)', fontSize: 'var(--dtl-font-xs)' },
+    title: props.workspace.title,
+  },
+    h('span', {
+      style: {
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
+        width: '16px', height: '16px', borderRadius: 'var(--dtl-radius-xs)',
+        background: 'var(--dtl-business-soft)', color: 'var(--dtl-business)', fontSize: '10px', fontWeight: 600,
+      },
+    }, initial === '' ? '·' : initial),
+    props.workspace.title,
+  )
+}
+
+export function TaskRowView(props: { t: Translate; row: Row; showWorkspace?: boolean }): ReactNode {
   const { t, row } = props
   const [open, setOpen] = useState(false)
 
@@ -69,16 +93,22 @@ export function TaskRowView(props: { t: Translate; row: Row }): ReactNode {
       onClick: () => { setOpen(!open) },
     },
       h(StateDot, { state: dotOf(row) }),
+      props.showWorkspace === true ? h(WorkspaceTag, { workspace }) : null,
       h('span', {
-        style: { flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 'var(--dtl-font-md)' },
+        className: 'dtl-ellipsis',
+        style: { flex: '1 1 auto', minWidth: 0, fontSize: 'var(--dtl-font-md)' },
         title: titleOf(row),
       }, titleOf(row)),
       category === null || category === undefined || category === ''
         ? null
         : h(Chip, { text: category }),
       tags.slice(0, 2).map(tag => h(Chip, { key: tag, text: `#${tag}` })),
-      h('span', { style: { display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)', color: 'var(--dtl-fg-3)', fontSize: 'var(--dtl-font-xs)', whiteSpace: 'nowrap' } },
-        workspace === undefined ? null : h('span', null, workspace.title),
+      h('span', {
+        style: {
+          display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)', flex: 'none',
+          color: 'var(--dtl-fg-3)', fontSize: 'var(--dtl-font-xs)', whiteSpace: 'nowrap',
+        },
+      },
         h('span', { title: stamp.value ?? undefined }, `${stamp.label} ${when}`),
         h('span', null, who === null || who === '' ? t('ownerUnclaimed') : `@${who}`),
       ),
@@ -92,7 +122,6 @@ export function TaskRowView(props: { t: Translate; row: Row }): ReactNode {
             logPath === null || logPath === undefined || logPath === '' ? t('worklogMissing') : logPath
           }`,
         ),
-        // 已结案：host 没有「按历史行取正文」的路由 ⇒ 只渲染已有的「完成了什么」，不编造正文。
         row.kind === 'closed'
           ? h('div', { style: { fontSize: 'var(--dtl-font-md)', color: 'var(--dtl-fg-2)' } }, row.record.summary ?? '')
           : h(WorklogBody, { t, workspaceId: row.task.workspace.id, taskId: row.task.id, labels: mdLabels }),

@@ -1,12 +1,13 @@
 import { spawn } from 'node:child_process';
 import { readHistory, readTasks } from './ledger-read.js';
-import { runLedgerScript } from './script.js';
 /** 历史窗口：只读最近 13 个月的文件（2026-10-17 拍板；脚本默认读全部，窗口由插件显式传）。 */
 const RECENT_MONTHS = 13;
 /** 已结案列表默认分页大小（「加载更多」= 调用方加大 limit 重取）。 */
-export const DEFAULT_HISTORY_LIMIT = 500;
-/** 完成类统计的封顶值：超出显示「1万+」（2026-10-17 拍板，显示级封顶，精确值走搜索）。 */
-const COUNT_CAP = 10_000;
+const DEFAULT_HISTORY_LIMIT = 500;
+/** 停滞判定阈值：doing / blocked 且 created 至今超过这么多天（2026-10-17 拍板，显示级）。 */
+export const STALE_DAYS = 14;
+/** 趋势图桶数：近 8 周（2026-10-17 定稿，与 dsh-context「近 7 天」同思路，按周更耐看）。 */
+export const WEEKLY_WEEKS = 8;
 /** 周一所在日期（YYYY-MM-DD）。skill 的 --since 只给日期按当天 00:00 解析。 */
 function mondayDateString(now) {
     const date = new Date(now);
@@ -14,6 +15,16 @@ function mondayDateString(now) {
     date.setDate(date.getDate() - mondayOffset);
     const pad = (value) => String(value).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+/** 「YYYY-MM-DD HH:mm:ss」→ 距今天数（解析不了 / 未来都按 0；不编造）。 */
+function daysSince(stamp, now) {
+    if (stamp === null || stamp === undefined || stamp === '')
+        return null;
+    const parsed = new Date(stamp.replace(' ', 'T'));
+    if (Number.isNaN(parsed.getTime()))
+        return null;
+    const days = Math.floor((now.getTime() - parsed.getTime()) / 86_400_000);
+    return days > 0 ? days : 0;
 }
 /**
  * 当前 git 身份（cwd = 该工作区）——「我的待办」判定源。
@@ -37,41 +48,80 @@ export function getCurrentIdentity(workspace) {
  * 与历史量彻底无关——progress.json 只装没结案的任务（close 会移走），永远有界。
  */
 export async function getBoardSnapshot(workspaces) {
+    const now = new Date();
     const perWorkspace = await Promise.all(workspaces.map(async (workspace) => ({
         workspace,
         tasks: await readTasks(workspace),
         identity: await getCurrentIdentity(workspace),
     })));
-    const tasks = perWorkspace.flatMap((entry) => entry.tasks);
+    const withMeta = perWorkspace.flatMap((entry) => entry.tasks.map((task) => {
+        const working = task.status === 'doing' || task.status === 'blocked';
+        const ageDays = working ? daysSince(task.started ?? task.created, now) : null;
+        return { ...task, ageDays, stale: ageDays !== null && ageDays > STALE_DAYS };
+    }));
     const myActive = perWorkspace.reduce((sum, entry) => sum + entry.tasks.filter((task) => task.owner === entry.identity && (task.status === 'doing' || task.status === 'blocked')).length, 0);
-    const open = tasks.filter((task) => task.status === 'open').length;
+    const myBlocked = perWorkspace.reduce((sum, entry) => sum + entry.tasks.filter((task) => task.owner === entry.identity && task.status === 'blocked').length, 0);
+    const openTasks = withMeta.filter((task) => task.status === 'open');
+    const blockedTasks = withMeta.filter((task) => task.status === 'blocked');
+    const oldestOpenDays = openTasks.length === 0
+        ? null
+        : openTasks.reduce((max, task) => Math.max(max, daysSince(task.created, now) ?? 0), 0);
+    const longestBlockedDays = blockedTasks.length === 0
+        ? null
+        : blockedTasks.reduce((max, task) => Math.max(max, task.ageDays ?? 0), 0);
     const identities = {};
     for (const entry of perWorkspace)
         identities[entry.workspace.id] = entry.identity;
-    return { at: new Date().toISOString(), workspaces, tasks, stats: { myActive, open }, identities };
+    return {
+        at: now.toISOString(),
+        workspaces,
+        tasks: withMeta,
+        stats: {
+            myActive,
+            myBlocked,
+            open: openTasks.length,
+            doing: withMeta.filter((task) => task.status === 'doing').length,
+            blocked: blockedTasks.length,
+            stale: withMeta.filter((task) => task.stale).length,
+            staleDays: STALE_DAYS,
+            oldestOpenDays,
+            longestBlockedDays,
+        },
+        identities,
+    };
+}
+/** 取一条记录的结案日期部分（history 首列 `time`；旧行 / 缺列返回 null）。 */
+function closedDateOf(record) {
+    const value = record.time;
+    if (value === undefined || value === null || value === '')
+        return null;
+    return String(value).slice(0, 10);
 }
 /**
- * 完成类统计（数行封顶，与总量脱钩）：本周 = 最近 2 个月文件 + 创建时间落在本周；
- * 近一年 = 最近 13 个月文件行数。任一工作区失败即抛（聚合数部分失败 = 错数，不兜）。
+ * 完成类统计 + 近 8 周趋势：读一次 13 个月窗口的 history，按**结案时间**落周桶。
+ * 任一工作区失败即抛（聚合数部分失败 = 错数，不兜）。
  */
-export async function getClosedCounts(workspaces) {
-    const monday = mondayDateString(new Date());
-    const perWorkspace = await Promise.all(workspaces.map(async (workspace) => {
-        const [week, year] = await Promise.all([
-            runLedgerScript('history', ['--repo', workspace.path, '--json', '--count-only', '--months', '2', '--since', monday]),
-            runLedgerScript('history', ['--repo', workspace.path, '--json', '--count-only', '--months', String(RECENT_MONTHS)]),
-        ]);
-        if (!week.ok)
-            throw new Error(`${workspace.title}: ${week.error}`);
-        if (!year.ok)
-            throw new Error(`${workspace.title}: ${year.error}`);
-        return { week: week.data.count ?? 0, year: year.data.count ?? 0, yearCapped: year.data.capped === true };
-    }));
-    const yearCapped = perWorkspace.some((entry) => entry.yearCapped);
+export async function getClosedSummary(workspaces) {
+    const now = new Date();
+    const thisMonday = mondayDateString(now);
+    const weeks = [];
+    for (let offset = WEEKLY_WEEKS - 1; offset >= 0; offset -= 1) {
+        weeks.push(mondayDateString(new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset * 7)));
+    }
+    const perWorkspace = await Promise.all(workspaces.map((workspace) => readHistory(workspace, { months: RECENT_MONTHS })));
+    const counts = new Map(weeks.map((week) => [week, 0]));
+    for (const record of perWorkspace.flat()) {
+        const date = closedDateOf(record);
+        if (date === null)
+            continue;
+        const monday = mondayDateString(new Date(`${date}T00:00:00`));
+        const bucket = counts.get(monday);
+        if (bucket !== undefined)
+            counts.set(monday, bucket + 1);
+    }
     return {
-        weekDone: perWorkspace.reduce((sum, entry) => sum + entry.week, 0),
-        yearDone: yearCapped ? COUNT_CAP : perWorkspace.reduce((sum, entry) => sum + entry.year, 0),
-        yearCapped,
+        weekDone: counts.get(thisMonday) ?? 0,
+        weekly: weeks.map((week) => ({ week, count: counts.get(week) ?? 0 })),
     };
 }
 /**

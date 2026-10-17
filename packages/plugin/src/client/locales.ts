@@ -1,39 +1,197 @@
 /**
- * 看板文案字典（zh / en）。命名空间 = 'dsh-task-ledger'，经 ctx.locale.register 注册；
- * slot 注册项声明 `locale:` 后，宿主渲染器把 `t` 席位合成进组件 props ⇒ **切宿主语言即切界面语言**，
- * 插件不自备语言开关（与姊妹仓 dsh-task-dispatch-table 同款：界面语言跟随宿主）。
+ * 文案唯一真源：命名空间 `dsh-task-ledger`，zh / en 两档。
  *
- * ⚠️ 界面上**不许出现未登记的硬编码中文**：新增文案先在此加键，两档都要写。
+ * 规矩（docs/design/ui-style.md §五）：
+ *  - 两档**键必须完全对齐**（冒烟有断言），漏一种语言界面就露键名；
+ *  - 界面上不许出现未登记的硬编码中文；
+ *  - 占位符一律 `{name}`，由 `interpolateTranslate` 自己替换（不依赖宿主是否支持 params）；
+ *  - 语言切换**跟随宿主**：插件不自备语言开关（注册字典 + 注册项声明 `locale:` ⇒ 宿主渲染器合成 `t` 席位）。
  */
+
+/** 文案键全集（增删键必须同时改 zh / en）。 */
 export type LocaleKey =
-  // 头部
-  | 'panelTitle' | 'backToConversation' | 'tabTasks' | 'tabStats' | 'statsPlaceholder'
-  // 统计卡
-  | 'statMyActive' | 'statOpen' | 'statWeekDone' | 'statYearDone' | 'countCapped'
-  // 筛选行
-  | 'bucketLabel' | 'bucketAll' | 'bucketMine' | 'bucketOpen' | 'bucketClosed'
-  | 'rangeLabel' | 'rangeAll' | 'rangeWeek' | 'rangeMonth' | 'rangeYear'
-  | 'tagAll' | 'searchPlaceholder'
-  // 状态与按钮
+  | 'backToConversation' | 'panelTitle' | 'tabTasks' | 'tabStats'
   | 'refresh' | 'refreshing' | 'loading' | 'retry' | 'loadFailed'
-  // 空态三分
+  | 'statsPlaceholder'
+  // 统计卡
+  | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint'
+  | 'statDoing' | 'statDoingHint' | 'statBlocked' | 'statBlockedHint'
+  | 'statWeekDone' | 'statWeekDoneHint' | 'statStale' | 'statStaleHint'
+  | 'daysNone' | 'daysValue'
+  // 趋势图
+  | 'chartTitle' | 'chartCaption' | 'chartBucket' | 'chartEmpty'
+  // 筛选行
+  | 'scopeLabel' | 'scopeMine' | 'scopeAll'
+  | 'statusLabel' | 'statusAll' | 'statusActive' | 'statusOpen' | 'statusBlocked' | 'statusStale'
+  | 'workspaceLabel' | 'workspaceAll'
+  | 'searchPlaceholder'
+  // 列表分区
+  | 'regionMine' | 'regionMineHint' | 'regionWorkspaces' | 'groupHint' | 'showingCount'
+  | 'expandAria' | 'collapseAria'
+  | 'ownerUnclaimed' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
+  | 'worklogTitle' | 'worklogPath' | 'worklogMissing'
+  | 'mdCopy' | 'mdCopied' | 'mdFootnotes'
+  // 空态
   | 'emptyNoWorkspace' | 'emptyNoWorkspaceHint' | 'emptyNoTask' | 'emptyNoTaskHint' | 'emptyFiltered'
-  // 列表
-  | 'showingCount' | 'loadMore' | 'noMore' | 'expandAria' | 'collapseAria'
-  | 'fieldOwner' | 'fieldCreator' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished'
-  | 'fieldWorkspace' | 'fieldCategory' | 'ownerUnclaimed' | 'timeUnknown'
-  | 'statusOpen' | 'statusDoing' | 'statusBlocked' | 'statusClosed'
-  // 过程文档
-  | 'worklogTitle' | 'worklogMissing' | 'worklogPath'
   // 浮标入口
   | 'badgeTitle' | 'openBoard'
-  // markdown 正文（官方 MarkdownText 的文案席位）
-  | 'mdCopy' | 'mdCopied' | 'mdFootnotes'
 
-/** 翻译席位：`{name}` 占位符由 {@link interpolateTranslate} 自己替换（不依赖宿主是否支持 params）。 */
+/** 中文（默认档）。 */
+export const zh: Record<LocaleKey, string> = {
+  backToConversation: '返回会话',
+  panelTitle: '任务台账',
+  tabTasks: '任务',
+  tabStats: '统计',
+  refresh: '刷新',
+  refreshing: '刷新中',
+  loading: '读取中…',
+  retry: '重试',
+  loadFailed: '读取失败',
+  statsPlaceholder: '统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。',
+
+  statMyActive: '我的待办',
+  statMyActiveHint: '其中阻塞 {n}',
+  statOpen: '待认领',
+  statOpenHint: '最老一条躺了 {n}',
+  statDoing: '进行中',
+  statDoingHint: '别人在做 {n}',
+  statBlocked: '阻塞中',
+  statBlockedHint: '卡住最久 {n}',
+  statWeekDone: '本周完成',
+  statWeekDoneHint: '按结案时间',
+  statStale: '停滞任务',
+  statStaleHint: '超过 {n} 天没动',
+  daysNone: '—',
+  daysValue: '{n} 天',
+
+  chartTitle: '近 8 周完成',
+  chartCaption: '按结案时间、周一起桶；悬停看该周条数',
+  chartBucket: '{week} 那一周：完成 {n} 条',
+  chartEmpty: '近 8 周没有已结案记录',
+
+  scopeLabel: '范围',
+  scopeMine: '我的',
+  scopeAll: '全部工作区',
+  statusLabel: '状态',
+  statusAll: '全部',
+  statusActive: '进行中',
+  statusOpen: '待认领',
+  statusBlocked: '阻塞',
+  statusStale: '停滞',
+  workspaceLabel: '工作区',
+  workspaceAll: '全部工作区',
+  searchPlaceholder: '搜索标题 / 任务号 / 人 / 分类 / 标签',
+
+  regionMine: '我的待办',
+  regionMineHint: '跨工作区，按创建时间倒序',
+  regionWorkspaces: '按工作区',
+  groupHint: '进行中 {doing} ｜ 待认领 {open}',
+  showingCount: '显示 {n} 条',
+  expandAria: '展开过程文档',
+  collapseAria: '收起',
+
+  ownerUnclaimed: '待认领',
+  fieldCreated: '创建',
+  fieldStarted: '开始',
+  fieldFinished: '结案',
+  timeUnknown: '时间未知',
+  worklogTitle: '过程文档',
+  worklogPath: '路径',
+  worklogMissing: '（缺失）',
+  mdCopy: '复制',
+  mdCopied: '已复制',
+  mdFootnotes: '脚注',
+
+  emptyNoWorkspace: '还没有台账工作区',
+  emptyNoWorkspaceHint: '在某个项目里跑 task-ledger skill 的 init 建档（生成 ledger/progress.json），这里就会出现它。',
+  emptyNoTask: '一条任务都没有',
+  emptyNoTaskHint: '用 task-ledger skill 的 new 开一个任务，或让别人开在这里等你认领。',
+  emptyFiltered: '没有符合当前筛选的任务',
+
+  badgeTitle: '我名下待办',
+  openBoard: '打开任务台账',
+}
+
+/** English（与 zh 键完全对齐）。 */
+export const en: Record<LocaleKey, string> = {
+  backToConversation: 'Back to chat',
+  panelTitle: 'Task ledger',
+  tabTasks: 'Tasks',
+  tabStats: 'Stats',
+  refresh: 'Refresh',
+  refreshing: 'Refreshing',
+  loading: 'Loading…',
+  retry: 'Retry',
+  loadFailed: 'Load failed',
+  statsPlaceholder: 'Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.',
+
+  statMyActive: 'My todos',
+  statMyActiveHint: '{n} blocked',
+  statOpen: 'Unclaimed',
+  statOpenHint: 'oldest waiting {n}',
+  statDoing: 'In progress',
+  statDoingHint: '{n} by others',
+  statBlocked: 'Blocked',
+  statBlockedHint: 'stuck for {n}',
+  statWeekDone: 'Done this week',
+  statWeekDoneHint: 'by close time',
+  statStale: 'Stale tasks',
+  statStaleHint: 'no movement for {n}+ days',
+  daysNone: '—',
+  daysValue: '{n}d',
+
+  chartTitle: 'Last 8 weeks',
+  chartCaption: 'by close time, weeks start Monday; hover a bar for its count',
+  chartBucket: 'week of {week}: {n} done',
+  chartEmpty: 'Nothing closed in the last 8 weeks',
+
+  scopeLabel: 'Scope',
+  scopeMine: 'Mine',
+  scopeAll: 'All workspaces',
+  statusLabel: 'Status',
+  statusAll: 'All',
+  statusActive: 'Active',
+  statusOpen: 'Unclaimed',
+  statusBlocked: 'Blocked',
+  statusStale: 'Stale',
+  workspaceLabel: 'Workspace',
+  workspaceAll: 'All workspaces',
+  searchPlaceholder: 'Search title / id / person / category / tag',
+
+  regionMine: 'My todos',
+  regionMineHint: 'across workspaces, newest first',
+  regionWorkspaces: 'By workspace',
+  groupHint: '{doing} active ｜ {open} unclaimed',
+  showingCount: '{n} shown',
+  expandAria: 'Expand worklog',
+  collapseAria: 'Collapse',
+
+  ownerUnclaimed: 'unclaimed',
+  fieldCreated: 'created',
+  fieldStarted: 'started',
+  fieldFinished: 'closed',
+  timeUnknown: 'unknown time',
+  worklogTitle: 'Worklog',
+  worklogPath: 'path',
+  worklogMissing: '(missing)',
+  mdCopy: 'Copy',
+  mdCopied: 'Copied',
+  mdFootnotes: 'Footnotes',
+
+  emptyNoWorkspace: 'No ledger workspace yet',
+  emptyNoWorkspaceHint: 'Run the task-ledger skill init in a project (creates ledger/progress.json) and it shows up here.',
+  emptyNoTask: 'No tasks yet',
+  emptyNoTaskHint: 'Create one with the task-ledger skill new, or leave one here for others to claim.',
+  emptyFiltered: 'No tasks match the current filters',
+
+  badgeTitle: 'my todos',
+  openBoard: 'Open task ledger',
+}
+
+/** 翻译函数类型（宿主渲染器按 `locale:` 声明合成的 `t` 席位同形）。 */
 export type Translate = (key: LocaleKey, params?: Record<string, string | number>) => string
 
-/** 把宿主给的无参 t 包成带占位符替换的 t（官方模板一律 `{name}`）。 */
+/** 把宿主给的无参 t 包成带占位符替换的 t（模板一律 `{name}`，不依赖宿主是否支持 params）。 */
 export function interpolateTranslate(base: Translate): Translate {
   return (key, params) => {
     const raw = base(key)
@@ -42,149 +200,7 @@ export function interpolateTranslate(base: Translate): Translate {
   }
 }
 
-export const zh: Record<LocaleKey, string> = {
-  panelTitle: '任务台账',
-  backToConversation: '返回会话',
-  tabTasks: '任务',
-  tabStats: '统计',
-  statsPlaceholder: '统计报表尚未开建（本版只有任务首页）',
-
-  statMyActive: '我的待办',
-  statOpen: '待认领',
-  statWeekDone: '本周已完成',
-  statYearDone: '近一年完成',
-  countCapped: '1万+',
-
-  bucketLabel: '状态档',
-  bucketAll: '全部',
-  bucketMine: '我的待办',
-  bucketOpen: '待认领',
-  bucketClosed: '已结案',
-  rangeLabel: '时间',
-  rangeAll: '全部时间',
-  rangeWeek: '本周',
-  rangeMonth: '本月',
-  rangeYear: '近一年',
-  tagAll: '全部标签',
-  searchPlaceholder: '搜索标题 / 负责人 / 任务号',
-
-  refresh: '刷新',
-  refreshing: '读取中…',
-  loading: '加载中…',
-  retry: '重试',
-  loadFailed: '读取失败',
-
-  emptyNoWorkspace: '没有检测到台账工作区',
-  emptyNoWorkspaceHint: '宿主已添加的工作区里，还没有含 ledger/progress.json 的目录。',
-  emptyNoTask: '还没有任务',
-  emptyNoTaskHint: '在任一工作区里用 task-ledger skill 建任务（/ledger），这里就会看到它。',
-  emptyFiltered: '当前筛选下没有任务',
-
-  showingCount: '显示 {n} 条',
-  loadMore: '加载更多',
-  noMore: '没有更多了',
-  expandAria: '展开详情',
-  collapseAria: '收起详情',
-
-  fieldOwner: '负责人',
-  fieldCreator: '创建人',
-  fieldCreated: '创建',
-  fieldStarted: '开始',
-  fieldFinished: '结案',
-  fieldWorkspace: '工作区',
-  fieldCategory: '分类',
-  ownerUnclaimed: '未认领',
-  timeUnknown: '时间未知',
-  statusOpen: '待认领',
-  statusDoing: '进行中',
-  statusBlocked: '受阻',
-  statusClosed: '已结案',
-
-  worklogTitle: '过程文档',
-  worklogMissing: '过程文档缺失（文件已不在盘上）',
-  worklogPath: '路径',
-
-  badgeTitle: '我名下进行中 + 受阻的任务数',
-  openBoard: '打开任务台账',
-
-  mdCopy: '复制',
-  mdCopied: '已复制',
-  mdFootnotes: '脚注',
-}
-
-export const en: Record<LocaleKey, string> = {
-  panelTitle: 'Task ledger',
-  backToConversation: 'Back to conversation',
-  tabTasks: 'Tasks',
-  tabStats: 'Stats',
-  statsPlaceholder: 'The stats report is not built yet (this release ships the task home only)',
-
-  statMyActive: 'My active',
-  statOpen: 'Unclaimed',
-  statWeekDone: 'Closed this week',
-  statYearDone: 'Closed in the last year',
-  countCapped: '10k+',
-
-  bucketLabel: 'Status',
-  bucketAll: 'All',
-  bucketMine: 'My active',
-  bucketOpen: 'Unclaimed',
-  bucketClosed: 'Closed',
-  rangeLabel: 'Time',
-  rangeAll: 'Any time',
-  rangeWeek: 'This week',
-  rangeMonth: 'This month',
-  rangeYear: 'Last year',
-  tagAll: 'All tags',
-  searchPlaceholder: 'Search title / owner / task id',
-
-  refresh: 'Refresh',
-  refreshing: 'Loading…',
-  loading: 'Loading…',
-  retry: 'Retry',
-  loadFailed: 'Failed to load',
-
-  emptyNoWorkspace: 'No ledger workspace detected',
-  emptyNoWorkspaceHint: 'None of the workspaces added to the host contains ledger/progress.json.',
-  emptyNoTask: 'No tasks yet',
-  emptyNoTaskHint: 'Create one with the task-ledger skill (/ledger) in any workspace and it shows up here.',
-  emptyFiltered: 'No task matches the current filters',
-
-  showingCount: 'Showing {n}',
-  loadMore: 'Load more',
-  noMore: 'No more',
-  expandAria: 'Expand details',
-  collapseAria: 'Collapse details',
-
-  fieldOwner: 'Owner',
-  fieldCreator: 'Creator',
-  fieldCreated: 'Created',
-  fieldStarted: 'Started',
-  fieldFinished: 'Closed',
-  fieldWorkspace: 'Workspace',
-  fieldCategory: 'Category',
-  ownerUnclaimed: 'unclaimed',
-  timeUnknown: 'unknown time',
-  statusOpen: 'Unclaimed',
-  statusDoing: 'In progress',
-  statusBlocked: 'Blocked',
-  statusClosed: 'Closed',
-
-  worklogTitle: 'Process log',
-  worklogMissing: 'Process log is missing (the file is no longer on disk)',
-  worklogPath: 'Path',
-
-  badgeTitle: 'Tasks I own that are in progress or blocked',
-  openBoard: 'Open the task ledger',
-
-  mdCopy: 'Copy',
-  mdCopied: 'Copied',
-  mdFootnotes: 'Footnotes',
-}
-
-/** 宿主未提供 t 时的兜底（保持中文：宿主语言服务缺席不该让界面变键名）。 */
-export const fallbackTranslate: Translate = (key, params) => {
-  const raw = zh[key]
-  if (params === undefined) return raw
-  return raw.replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match))
+/** 键名兜底：宿主没给 t 席位时用（键名绝不上界面）。 */
+export function fallbackTranslate(key: LocaleKey, params?: Record<string, string | number>): string {
+  return interpolateTranslate((name) => zh[name] ?? name)(key, params)
 }

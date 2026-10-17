@@ -7,46 +7,37 @@
  * ⚠️ `getSnapshot` 必须返回**稳定引用**（每次新建对象会被判定为「一直在变」⇒ 无限重渲染），
  * 故只在真变了时才换 `state` 对象。
  */
-import { fetchBoard, fetchFilters, fetchHistory } from './api'
-import { rangeToDates, type RangeKey } from './format'
-import type { BoardPayload, FilterOptions, HistoryRecord } from './types'
+import { fetchBoard } from './api'
+import type { BoardPayload } from './types'
 
-/** 状态档（历史查询 = 「已结案」档，不单开 tab）。 */
-export type Bucket = 'all' | 'mine' | 'open' | 'closed'
-/** 已结案列表分页大小（「加载更多」= 加大 limit 重取）。 */
-export const HISTORY_PAGE = 500
+/** 范围：我的 / 全部工作区。 */
+export type Scope = 'mine' | 'all'
+/** 状态档：进行中 = doing+blocked；停滞 = host 已标记的 stale。 */
+export type StatusFilter = 'all' | 'active' | 'open' | 'blocked' | 'stale'
 
 export interface Query {
-  bucket: Bucket
-  range: RangeKey
-  tag: string
+  scope: Scope
+  status: StatusFilter
+  /** 工作区 id；'' = 全部工作区。 */
+  workspace: string
   keyword: string
-  limit: number
 }
 
 export interface BoardState {
   status: 'loading' | 'ready' | 'error'
   board: BoardPayload | null
   error: string | null
-  history: readonly HistoryRecord[]
-  historyStatus: 'idle' | 'loading' | 'ready' | 'error'
-  historyError: string | null
-  filters: FilterOptions | null
   query: Query
   /** 手动刷新在途（按钮转圈 / 禁用）。 */
   refreshing: boolean
 }
 
-const INITIAL_QUERY: Query = { bucket: 'all', range: 'all', tag: '', keyword: '', limit: HISTORY_PAGE }
+const INITIAL_QUERY: Query = { scope: 'all', status: 'all', workspace: '', keyword: '' }
 
 let state: BoardState = {
   status: 'loading',
   board: null,
   error: null,
-  history: [],
-  historyStatus: 'idle',
-  historyError: null,
-  filters: null,
   query: INITIAL_QUERY,
   refreshing: false,
 }
@@ -79,7 +70,7 @@ export function boardSubscribe(listener: () => void): () => void {
   return () => { listeners.delete(listener) }
 }
 
-/** 重读：在办快照 + 筛选项 +（已结案档时）历史列表。 */
+/** 重读：在办快照 + 完成类统计与近 8 周趋势（一次 `/board` 全带回）。 */
 export async function refresh(): Promise<void> {
   const token = ++runToken
   set({ refreshing: true })
@@ -87,9 +78,6 @@ export async function refresh(): Promise<void> {
     const board = await fetchBoard()
     if (token !== runToken) return
     set({ status: 'ready', board, error: null })
-    // 筛选项非首屏必需：失败不影响首页（下拉显示「全部标签」即可），故不进 error 态。
-    void loadFilters(token)
-    if (state.query.bucket === 'closed') await loadHistory(token)
   } catch (error) {
     if (token !== runToken) return
     set({ status: 'error', error: error instanceof Error ? error.message : String(error) })
@@ -98,37 +86,7 @@ export async function refresh(): Promise<void> {
   }
 }
 
-async function loadFilters(token: number): Promise<void> {
-  try {
-    const filters = await fetchFilters()
-    if (token === runToken) set({ filters })
-  } catch { /* 候选拿不到就保持 null：下拉只有「全部标签」，不谎报选项 */ }
-}
-
-async function loadHistory(token: number): Promise<void> {
-  const { range, tag, limit } = state.query
-  const dates = rangeToDates(range)
-  set({ historyStatus: 'loading', historyError: null })
-  try {
-    const records = await fetchHistory({ ...dates, tag, limit })
-    if (token !== runToken) return
-    set({ history: records, historyStatus: 'ready' })
-  } catch (error) {
-    if (token !== runToken) return
-    set({ historyStatus: 'error', historyError: error instanceof Error ? error.message : String(error) })
-  }
-}
-
-/** 改筛选：已结案档要重取历史（服务端过滤）；在办档只在浏览器里重筛（数据已全）。 */
+/** 改筛选：全部在浏览器里完成（快照已含全部在办），不发请求。 */
 export function setQuery(patch: Partial<Query>): void {
-  const query: Query = { ...state.query, ...patch }
-  set({ query })
-  if (query.bucket === 'closed') void loadHistory(++runToken)
+  set({ query: { ...state.query, ...patch } })
 }
-
-/** 「加载更多」：加大 limit 重取（skill 脚本无 offset，笨办法；500 条一页无感）。 */
-export function loadMoreHistory(): void {
-  setQuery({ limit: state.query.limit + HISTORY_PAGE })
-}
-
-

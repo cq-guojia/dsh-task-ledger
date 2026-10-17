@@ -1,6 +1,6 @@
 {
   "name": "dsh-task-ledger",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Task ledger board for dsh (DeepSeek Harness): read-only board over task-ledger skill workspaces. The task-ledger skill is bundled — install the plugin, get the skill globally.",
   "keywords": [
     "deepseek",

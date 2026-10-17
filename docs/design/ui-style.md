@@ -1,7 +1,7 @@
 # 样式规范
 
-> **状态**：🔵 落码（2026-10-16 初建；2026-10-17 首页落码后补全：token 层 / i18n / 复用官方元件）
-> **来源**：姊妹仓 `dsh-task-dispatch-table` 已核实事实（0.2.0-rc.2）+ 本仓 [`external/client-ui-layout.md`](external/client-ui-layout.md)
+> **状态**：🔵 落码（2026-10-16 初建；2026-10-17 首页落码后补全 token 层 / i18n / 元件分工；下午改版按用户要求「样式全抄 dispatch 表」收严控件皮肤与离散刻度）
+> **来源**：姊妹仓 `dsh-task-dispatch-table` 已核实事实（0.2.0-rc.2，`ui/tokens.ts` + `ui/controls-css.ts` 逐条对照）+ 本仓 [`external/client-ui-layout.md`](external/client-ui-layout.md)
 > **配套**：外部事实详见 [`external/client-ui-layout.md`](external/client-ui-layout.md)；代码落点见 [`code-conventions.md`](code-conventions.md)
 
 ## 一、两条硬约束（违反即出 bug）
@@ -36,11 +36,14 @@
 
 | 用途 | 用哪个 |
 |---|---|
-| 按钮（返回 / 刷新 / 加载更多） | `Button`（variant: primary / ghost / outline / toolbar；size: md 36px / sm 28px） |
-| 分段控件（任务 / 统计 tab、状态档） | `SegmentedControl` |
 | 状态点 | `StateDot` |
 | 过程正文（markdown） | `MarkdownText`（`labels` 必须引用稳定 ⇒ `useMemo`） |
-| 下拉 / 搜索框 | 宿主没有廉价选择器 ⇒ 原生 `select` / `input` + token 配色（`.dtl-select` / `.dtl-input`） |
+| 图标 | `Icon*`（约 370 个，色随 currentColor） |
+| 分段 / 按钮 / 图标钮 / 输入 / 下拉 / 卡 / chip / 空态 / 图表 | **自绘一套皮肤**（`ui.ts` + `tokens.ts` 的 `UI_CONTROLS_CSS`），形态抄 dispatch 表 `controls-css.ts` |
+
+**为什么这几个自绘**（2026-10-17 改版定稿）：官方 `Button` / `SegmentedControl` / `Input` 各自的高度、内距、圆角口径不一（姊妹仓踩过「搜索框比下拉高 2px」「官方 Input 默认 32px」），而用户要求「一行控件全同高、样式全统一」⇒ 收成一套 `.dtl-*` 皮肤：高度只取 24/28/32 三档、有边变体用 1px 真边框 + 内部 padding 补回（有边 / 无边同高）、变体只换颜色变量。官方件继续用在它确实更好的地方（StateDot / MarkdownText / 图标）。
+
+宿主**没有**图表件 ⇒ 趋势图自绘（`ui.ts::BarChart`，div 柱 + token 色，无新依赖）；宿主**没有**廉价下拉件 ⇒ 原生 `select` + `appearance:none` 自绘箭头，与输入框同宗同高。
 
 ## 五、文案唯一真源：`src/client/locales.ts`
 

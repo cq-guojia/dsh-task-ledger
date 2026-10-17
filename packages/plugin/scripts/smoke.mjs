@@ -9,7 +9,7 @@ const repoRoot = path.resolve(here, '../../..')
 
 const { resolveWorkspaces } = await import('../dist/host/workspace.js')
 const { readTasks, getTask, readWorklog } = await import('../dist/host/ledger-read.js')
-const { getBoardSnapshot, getClosedCounts, queryClosed, getFilterOptions } = await import('../dist/host/board.js')
+const { getBoardSnapshot, getClosedSummary, queryClosed, getFilterOptions } = await import('../dist/host/board.js')
 const { runLedgerScript } = await import('../dist/host/script.js')
 
 let passed = 0
@@ -64,17 +64,28 @@ await check('getBoardSnapshot：统计与任务行（与历史量无关的热路
   assert.ok(snapshot.tasks.length >= 6)
   assert.ok(Number.isInteger(snapshot.stats.myActive) && snapshot.stats.myActive >= 0)
   assert.ok(snapshot.stats.open >= 4)
+  assert.equal(snapshot.stats.staleDays, 14, '停滞阈值应随响应下发（14 天）')
+  for (const task of snapshot.tasks) {
+    assert.equal(typeof task.stale, 'boolean', '每行都应带 host 判好的 stale 标记')
+    if (task.status === 'open') assert.equal(task.ageDays, null, '待认领不算「认领后未动」')
+  }
   assert.ok(elapsed < 2000, `热路径应 <2s，实际 ${elapsed}ms`)
 })
 
-await check('getClosedCounts：本周/近一年（含 5 万行合成仓封顶 1 万）', async () => {
-  const real = await getClosedCounts([{ id: 'ws-self', title: 'self', path: repoRoot }])
-  assert.ok(real.yearDone >= 8, `近一年应 ≥8，实际 ${real.yearDone}`)
-  assert.equal(real.yearCapped, false)
-  const big = await getClosedCounts([{ id: 'ws-big', title: 'big', path: '/tmp/perf2' }])
-  assert.equal(big.yearDone, 10000)
-  assert.equal(big.yearCapped, true)
-  console.log(`    （真实仓：本周 ${real.weekDone} / 近一年 ${real.yearDone}；合成 5 万行仓：封顶 ${big.yearDone} capped=${big.yearCapped}）`)
+await check('getClosedSummary：近 8 周按**结案时间**落桶（口径修正：旧实现按创建时间数）', async () => {
+  const real = await getClosedSummary([{ id: 'ws-self', title: 'self', path: repoRoot }])
+  assert.equal(real.weekly.length, 8, '固定 8 桶')
+  assert.deepEqual(real.weekly.map((b) => b.week), [...real.weekly.map((b) => b.week)].sort(), '桶按周升序')
+  assert.equal(real.weekDone, real.weekly[7].count, 'weekDone = 最后一桶（本周）')
+  const sum = real.weekly.reduce((total, b) => total + b.count, 0)
+  assert.ok(sum >= 8, `近 8 周合计应 ≥8，实际 ${sum}`)
+  // 最后一桶必须是本周一（host 同口径：周一为一周之始）
+  const now = new Date()
+  const monday = new Date(now); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
+  const pad = (n) => String(n).padStart(2, '0')
+  const expect = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`
+  assert.equal(real.weekly[7].week, expect, `最后一桶应是本周一 ${expect}`)
+  console.log(`    （近 8 周：${real.weekly.map((b) => b.count).join('/')}；本周 ${real.weekDone}）`)
 })
 
 await check('queryClosed：近 13 个月窗口 + 创建时间倒序 + limit', async () => {
@@ -145,8 +156,10 @@ await check('空台账工作区不炸 /board（真机 500 回归：history 无�
     // 关键路径：这两个正是 /board 路由 Promise.all 里的两次调用，任一抛就是整条 500
     const snapshot = await getBoardSnapshot(ws)
     assert.equal(snapshot.tasks.length, 1, '有 progress.json 就应读到在办')
-    const closed = await getClosedCounts(ws)
-    assert.deepEqual(closed, { weekDone: 0, yearDone: 0, yearCapped: false }, '无历史 ⇒ 两个完成类计数都是 0，不是抛错')
+    const closed = await getClosedSummary(ws)
+    assert.equal(closed.weekDone, 0, '无历史 ⇒ 本周完成 0，不是抛错')
+    assert.equal(closed.weekly.length, 8)
+    assert.ok(closed.weekly.every((bucket) => bucket.count === 0), '无历史 ⇒ 8 个桶全 0')
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
@@ -185,44 +198,43 @@ await check('dist/client.js：模块加载器契约 + 只 require 平台模块',
 
 // 筛选是首页的核心逻辑，且**只在浏览器里跑** ⇒ 冒烟直测这两个纯函数（无 DOM 依赖；
 // 剥类型直读源码，client 单文件产物不可 import）。
-await check('客户端筛选逻辑：档位 / 时间窗 / 标签 / 关键字', async () => {
-  const { rangeToDates } = await import(path.resolve(here, '../src/client/format.ts'))
-  const { selectRows } = await import(path.resolve(here, '../src/client/rows.ts'))
+await check('客户端两区视图：我的待办 / 按工作区分组 + 状态档 + 工作区下拉 + 关键字', async () => {
+  const { selectView } = await import(path.resolve(here, '../src/client/rows.ts'))
   const pad = (n) => String(n).padStart(2, '0')
   const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
   const now = new Date()
-  const monday = new Date(now)
-  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
-  assert.deepEqual(rangeToDates('week'), { since: ymd(monday), until: ymd(now) }, '本周 = 周一 ~ 今天')
-  assert.deepEqual(rangeToDates('all'), {}, '全部时间不拼参数')
-
-  const ws = { id: 'w1', title: 'w1', path: '/tmp' }
+  const wsA = { id: 'w1', title: 'A 项目', path: '/tmp/a' }
+  const wsB = { id: 'w2', title: 'B 项目', path: '/tmp/b' }
   const today = `${ymd(now)} 10:00:00`
-  const old = '2020-01-02 10:00:00'
   const tasks = [
-    { id: 't1', workspace: ws, title: '甲任务', status: 'doing', owner: 'me', creator: 'me', created: today, tags: ['DSH'] },
-    { id: 't2', workspace: ws, title: '乙任务', status: 'open', owner: null, created: old, tags: [] },
-    { id: 't3', workspace: ws, title: '丙任务', status: 'blocked', owner: 'other', created: today, tags: [] },
+    { id: 't1', workspace: wsA, title: '甲任务', status: 'doing', owner: 'me', creator: 'me', created: today, tags: ['DSH'], ageDays: 0, stale: false },
+    { id: 't2', workspace: wsB, title: '乙任务', status: 'open', owner: null, created: '2020-01-02 10:00:00', tags: [], ageDays: null, stale: false },
+    { id: 't3', workspace: wsB, title: '丙任务', status: 'blocked', owner: 'other', created: today, tags: [], ageDays: 30, stale: true },
   ]
   const state = (query) => ({
-    board: { identities: { w1: 'me' }, tasks, workspaces: [ws], stats: {}, closed: {} },
-    history: [],
+    board: { identities: { w1: 'me', w2: null }, tasks, workspaces: [wsA, wsB], stats: {}, closed: {} },
     query,
   })
-  const base = { range: 'all', tag: '', keyword: '', limit: 500 }
-  const ids = (rows) => rows.map(r => (r.kind === 'task' ? r.task.id : r.record.id))
-  // 默认按创建时间倒序（t1 / t3 今天、t2 是 2020 年）
-  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'all' }))), ['t1', 't3', 't2'])
-  // 「我的」= owner 命中该工作区身份 且 doing/blocked
-  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'mine' }))), ['t1'])
-  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'open' }))), ['t2'])
-  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'all', tag: 'DSH' }))), ['t1'])
-  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'all', keyword: '乙' }))), ['t2'])
-  // 时间窗只留今天的（t2 是 2020 年的）
-  assert.deepEqual(ids(selectRows(state({ ...base, bucket: 'all', range: 'week' }))), ['t1', 't3'])
-  // 已结案档走 history，行 kind = closed
-  const closed = selectRows({ ...state({ ...base, bucket: 'closed' }), history: [{ id: 'h1', summary: '完工' }] })
-  assert.deepEqual(closed.map(r => r.kind), ['closed'])
+  const base = { scope: 'all', status: 'all', workspace: '', keyword: '' }
+  const ids = (rows) => rows.map(r => r.task.id)
+  // 第一区 = 我的（跨工作区）；第二区 = 别人的 + 待认领，按工作区分组
+  let view = selectView(state(base))
+  assert.deepEqual(ids(view.mine), ['t1'], '第一区只有我名下的 doing/blocked')
+  assert.deepEqual(view.groups.map(g => g.workspaceId), ['w2'], '第二区只剩 B 项目（A 的我那款已进第一区，不重复）')
+  assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '组内：别人在做的在前、待认领在后')
+  assert.equal(view.total, 3)
+  // 范围 = 我的 ⇒ 不出第二区
+  view = selectView(state({ ...base, scope: 'mine' }))
+  assert.deepEqual(ids(view.mine), ['t1'])
+  assert.deepEqual(view.groups, [], '「我的」不掺第二区')
+  // 状态档：待认领 / 阻塞 / 停滞（停滞由 host 标记，前端不判阈值）
+  assert.deepEqual(ids(selectView(state({ ...base, status: 'open' })).groups[0].rows), ['t2'])
+  assert.deepEqual(ids(selectView(state({ ...base, status: 'blocked' })).groups[0].rows), ['t3'])
+  assert.deepEqual(ids(selectView(state({ ...base, status: 'stale' })).groups[0].rows), ['t3'])
+  // 工作区下拉 + 关键字
+  const onlyA = selectView(state({ ...base, workspace: 'w1' }))
+  assert.equal(onlyA.mine.length + onlyA.groups.length, 1, '选了 A 就只剩 A 的')
+  assert.deepEqual(ids(selectView(state({ ...base, keyword: '乙' })).groups[0].rows), ['t2'])
 })
 
 await check('文案字典：zh / en 键完全对齐（漏一种语言界面就露键名）', async () => {
