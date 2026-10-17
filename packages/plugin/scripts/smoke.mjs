@@ -83,7 +83,18 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
       assert.ok(Number.isInteger(bucket.done) && bucket.done >= 0)
       assert.ok(Number.isInteger(bucket.created) && bucket.created >= 0)
       assert.ok(Number.isInteger(bucket.remaining) && bucket.remaining >= 0, `${scope} remaining 应是非负整数`)
+      // x 轴标注 = 周截止日：历史周 = 周一+6（周日）；当前周 = 今天。数据按截止日判，故标它。
+      assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(bucket.end), `${scope} end 应为 YYYY-MM-DD`)
+      assert.ok(bucket.end >= bucket.week, `${scope} end 应不早于周一`)
     }
+    // 末桶（当前周）end = 今天；其余 end = 周一 + 6 天（host 用本地日期，测试同步本地，避免 toISOString 的 UTC 偏移）
+    const ymdLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const addDays = (ymdStr, n) => { const d = new Date(`${ymdStr}T00:00:00`); d.setDate(d.getDate() + n); return ymdLocal(d) }
+    const today = ymdLocal(new Date())
+    buckets.forEach((bucket, i) => {
+      if (i === buckets.length - 1) assert.equal(bucket.end, today, `${scope} 当前周 end 应为今天`)
+      else assert.equal(bucket.end, addDays(bucket.week, 6), `${scope} 历史周 end 应为周一+6（周日）`)
+    })
     // remaining 自洽不变量（严谨版）：定义基线_i = remaining_i − Σcreated[0..i] + Σdone[0..i]
     // = 窗口前创建、且到周末 i 仍未结案的任务数。该集合只减不增 ⇒ 基线_i 单调不增且 ≥ 0。
     // （旧版断言「恒定」只在「无窗口前任务在窗口内结案」时巧合成立，并非一般正确。）

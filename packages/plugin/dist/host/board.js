@@ -201,8 +201,8 @@ export async function getHomeAggregate(workspaces) {
     }
     const closed = {
         weekly: {
-            all: weeks.map((week) => ({ week, ...bucketsAll.get(week) ?? { done: 0, created: 0, remaining: 0 } })),
-            mine: weeks.map((week) => ({ week, ...bucketsMine.get(week) ?? { done: 0, created: 0, remaining: 0 } })),
+            all: weeks.map((week, i) => ({ week, end: weekEnds[i], ...bucketsAll.get(week) ?? { done: 0, created: 0, remaining: 0 } })),
+            mine: weeks.map((week, i) => ({ week, end: weekEnds[i], ...bucketsMine.get(week) ?? { done: 0, created: 0, remaining: 0 } })),
         },
     };
     // ── 统计台：四个自然周期（只算「全部工作区」范围；图表切换不带动卡片）────

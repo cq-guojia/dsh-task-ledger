@@ -78,6 +78,8 @@ export interface TrendPeriods {
 export interface WeeklyBucket {
   /** 该周周一（YYYY-MM-DD）。 */
   readonly week: string
+  /** 该周截止日（YYYY-MM-DD）：x 轴标它，数据按截止日判。 */
+  readonly end: string
   readonly done: number
   readonly created: number
   /** 该周截止时仍未完成（在办）的任务数。 */

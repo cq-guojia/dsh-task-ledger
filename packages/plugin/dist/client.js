@@ -1111,11 +1111,11 @@ body[data-ds-dark-theme]{
 			});
 			const [chartScope, setChartScope] = (0, react.useState)("all");
 			const chartWeeks = (0, react.useMemo)(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => ({
-				label: bucket.week.slice(5),
+				label: bucket.end.slice(5),
 				done: bucket.done,
 				remaining: bucket.remaining,
 				created: bucket.created,
-				title: `${bucket.week}｜${t("chartLegendDone")} ${bucket.done}｜${t("chartLegendRemaining")} ${bucket.remaining}｜${t("chartLegendCreated")} ${bucket.created}`
+				title: `截至 ${bucket.end}｜${t("chartLegendDone")} ${bucket.done}｜${t("chartLegendRemaining")} ${bucket.remaining}｜${t("chartLegendCreated")} ${bucket.created}`
 			})), [
 				board,
 				chartScope,
