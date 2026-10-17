@@ -100,7 +100,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
       done: bucket.done,
       remaining: bucket.remaining,
       created: bucket.created,
-      title: `截至 ${end}｜${t('chartLegendDone')} ${bucket.done}｜${t('chartLegendRemaining')} ${bucket.remaining}｜${t('chartLegendCreated')} ${bucket.created}`,
+      title: chartScope === 'mine' ? `截至 ${end}（${t('chartOnlyMine')}）` : `截至 ${end}`,
     }
   }), [board, chartScope, t])
   const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0 && week.remaining === 0)

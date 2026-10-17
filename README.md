@@ -12,4 +12,4 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 ## Status
 
 - `task-ledger@1.0.2` published (2026-10-17): `history` JSON mode now emits JSON even when a workspace has no history files (fixes a 500 that blanked the whole board).
-- `dsh-task-ledger@0.0.16` published (2026-10-17): hardened the board so a client/host version mismatch can never black-screen it — chart buckets read `end` with a fallback to `week` (a hot-update left an old host without the `end` field and `bucket.end.slice(5)` threw, crashing the whole panel). 0.0.15 already emits `end`; 0.0.16 just makes the client crash-proof.
+- `dsh-task-ledger@0.0.17` published (2026-10-17): chart hover tooltip cleaned up — top line now only shows the week-end date (e.g. '截至 2026-10-17'), with the three colored rows below carrying the numbers; when '只看我的' is checked the date line shows '(只看我的)' so the scope is obvious.

@@ -1117,7 +1117,7 @@ body[data-ds-dark-theme]{
 					done: bucket.done,
 					remaining: bucket.remaining,
 					created: bucket.created,
-					title: `截至 ${end}｜${t("chartLegendDone")} ${bucket.done}｜${t("chartLegendRemaining")} ${bucket.remaining}｜${t("chartLegendCreated")} ${bucket.created}`
+					title: chartScope === "mine" ? `截至 ${end}（${t("chartOnlyMine")}）` : `截至 ${end}`
 				};
 			}), [
 				board,
