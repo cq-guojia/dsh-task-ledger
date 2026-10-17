@@ -12,4 +12,4 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 ## Status
 
 - `task-ledger@1.0.2` published (2026-10-17): `history` JSON mode now emits JSON even when a workspace has no history files (fixes a 500 that blanked the whole board).
-- `dsh-task-ledger@0.0.13` published (2026-10-17): chart reworked to 3 thin bars per week — 完成 (blue) / 没完成 (amber, = open-at-week-end) / 新增 (grey), 5px wide, no rounded tops; hover now brightens all 3 bars in a column (was only the blue one); left 8-block grid narrowed slightly and the chart widened (1.7fr/1fr) so bars have more room; left-card copy re-verified (待认领 hint → '待认领最久 N 天'). '没完成' is computed accurately from create/close timestamps with no snapshot DB.
+- `dsh-task-ledger@0.0.14` published (2026-10-17): fixed a real bug where 待认领 hint showed a doubled unit ('24 天 天') — `days()` already appends 天, so the hint string no longer does; card copy made formal (最长未认领 / 其他成员负责); the chart's third bar renamed from the colloquial '没完成' to the professional '未结' (Outstanding), consistent with the plugin's 结案/已结案 terminology.
