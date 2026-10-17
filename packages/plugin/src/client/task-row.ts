@@ -97,7 +97,7 @@ export function TaskRowView(props: {
     const ownerText = owner === null || owner === undefined || owner === '' ? t('ownerUnclaimed') : `@${owner}`
     return h('div', { className: 'dtl-taskrow dtl-taskrow--others' },
       h('div', { className: 'dtl-taskrow__row' },
-        h('span', { className: `dtl-dot dtl-dot--${tone}` }),
+        h('span', { className: `dtl-bar dtl-bar--${tone}` }),
         h('div', { className: 'dtl-tcell dtl-tcell--title' },
           titleLine,
           h('div', { className: 'dtl-taskrow__l2' },

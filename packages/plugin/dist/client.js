@@ -309,7 +309,7 @@ window.__ModuleLoader__.load({
 				const owner = isTask ? row.task.owner : null;
 				const creatorText = creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`;
 				const ownerText = owner === null || owner === void 0 || owner === "" ? t("ownerUnclaimed") : `@${owner}`;
-				return (0, react.createElement)("div", { className: "dtl-taskrow dtl-taskrow--others" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, titleLine, (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, tags.map((tag) => (0, react.createElement)("span", {
+				return (0, react.createElement)("div", { className: "dtl-taskrow dtl-taskrow--others" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-bar dtl-bar--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, titleLine, (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, tags.map((tag) => (0, react.createElement)("span", {
 					key: tag,
 					className: "dtl-minitag",
 					title: `#${tag}`
@@ -392,6 +392,8 @@ body{
   --dtl-on-solid:var(--dsw-alias-label-primary,#1f2328);
   /* 斑马纹 / 次层面（浅色下近白、深色下深一档） */
   --dtl-plate:var(--dsw-static-neutral-50,#fafafa);
+  /* 斑马纹：很浅的一层（其他待办表格用） */
+  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 3%,transparent);
   --dtl-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);
   /* 表头底：浅色比斑马纹再深一档（两者不能撞色） */
   --dtl-head-bg:var(--dsw-static-neutral-100,#f5f5f5);
@@ -488,6 +490,7 @@ body[data-ds-dark-theme]{
   --dtl-solid:var(--dsw-static-neutral-900,#0f0f0f);
   --dtl-on-solid:var(--dsw-static-neutral-00,#fff);
   --dtl-plate:var(--dsw-static-neutral-850,#212123);
+  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 4%,transparent);
   --dtl-plate-hover:var(--dsw-static-neutral-800,#292929);
   /* 暗色表头反过来：比卡片面亮、比斑马纹浅一档 */
   --dtl-head-bg:var(--dtl-surface-2);
@@ -531,10 +534,9 @@ body[data-ds-dark-theme]{
 .dtl-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dtl-shadow-raised);color:var(--dtl-fg);font-weight:600;}
 .dtl-seg__item:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 .dtl-seg__item:disabled{cursor:default;opacity:.4;}
-/* 段内角标（如「待认领 3」）：语义色实面 + 反白字，0 不渲染；必须是正圆 */
+/* 段内角标（如「待认领 3」）：**纯小数字、无圆无底**（用户 2026-10-18：圆圈取了、字再小点）；0 不渲染 */
 .dtl-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;
-  width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;
-  background:var(--dtl-danger);color:var(--dtl-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}
+  margin-left:3px;color:var(--dtl-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}
 
 /* ── 按钮 / 图标钮 ───────────────────────────────────────────────
    与 Segmented 同一条高度纪律；variant 只换颜色，结构 / 尺寸 / 交互只此一份。 */
@@ -640,21 +642,24 @@ body[data-ds-dark-theme]{
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 其他待办 = 真表格（参考 Stripe Payments，用户 2026-10-18）：**无外框、无竖线**，
-   一行一格 = 一条淡分隔线；每段：段头（点+名+统计）→ 列头行 → 任务行。 */
+/* 其他待办表格（照参考图，用户 2026-10-18）：**无外框、无竖线**，段与段连着排；
+   每段 = 淡色段头（左：点+工作区名；右：共/待办/进行…统计）→ 淡色列头行 → 任务行；
+   任务行：细状态杠 + 标题两行 + 创建人/执行人/状态/时长 + 查看；行下一条线 + 很浅斑马纹。 */
 .dtl-group{margin-bottom:var(--dtl-space-4);}
+/* 段头：有一点颜色但不深（business-soft 淡蓝） */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
-  padding:10px 2px 6px;border:0;background:transparent;color:inherit;font:inherit;
-  text-align:left;cursor:pointer;}
+  padding:7px var(--dtl-space-3);border:0;border-radius:var(--dtl-radius-sm) var(--dtl-radius-sm) 0 0;
+  background:var(--dtl-business-soft);color:inherit;font:inherit;text-align:left;cursor:pointer;}
 .dtl-group__dot{width:8px;height:8px;border-radius:50%;background:var(--dtl-fg-3);flex:none;}
 .dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
 /* 列头行：小字灰，与任务行同列宽（同一套 .dtl-tcell） */
-.dtl-thead{display:flex;align-items:center;gap:10px;padding:6px 2px;
+.dtl-thead{display:flex;align-items:center;gap:10px;padding:6px var(--dtl-space-3);
   border-bottom:1px solid var(--dtl-border-faint);font-size:10px;color:var(--dtl-fg-3);}
 
-/* 任务行：一条淡线格；hover 整行淡蓝 */
-.dtl-taskrow--others{padding:8px 2px;border-bottom:1px solid var(--dtl-border-faint);}
+/* 任务行：一条淡线格；很浅斑马纹；hover 淡蓝 */
+.dtl-taskrow--others{padding:8px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-taskrow--others:nth-of-type(odd){background:var(--dtl-zebra);}
 .dtl-taskrow--others:hover{background:var(--dtl-card-hover);}
 .dtl-taskrow--others .dtl-taskrow__row{gap:10px;}
 .dtl-taskrow--others .dtl-taskrow__l2{margin-top:1px;}
@@ -675,6 +680,13 @@ body[data-ds-dark-theme]{
 .dtl-dot--blocked{background:var(--dtl-warning);}
 .dtl-dot--stale{background:var(--dtl-danger);}
 .dtl-dot--open,.dtl-dot--closed{background:var(--dtl-fg-3);}
+
+/* 表格行首细状态杠（照参考图：行左竖条，3px 随行高）：同色系口径 */
+.dtl-bar{width:3px;align-self:stretch;flex:none;border-radius:2px;}
+.dtl-bar--doing{background:var(--dtl-business-dim);}
+.dtl-bar--blocked{background:var(--dtl-warning);}
+.dtl-bar--stale{background:var(--dtl-danger);}
+.dtl-bar--open,.dtl-bar--closed{background:var(--dtl-fg-3);}
 
 /* 「查看」钮：放大镜、常驻最右、无文字（用户 2026-10-17） */
 .dtl-viewbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;

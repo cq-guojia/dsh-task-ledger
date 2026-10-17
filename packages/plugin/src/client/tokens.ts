@@ -37,6 +37,8 @@ body{
   --dtl-on-solid:var(--dsw-alias-label-primary,#1f2328);
   /* 斑马纹 / 次层面（浅色下近白、深色下深一档） */
   --dtl-plate:var(--dsw-static-neutral-50,#fafafa);
+  /* 斑马纹：很浅的一层（其他待办表格用） */
+  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 3%,transparent);
   --dtl-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);
   /* 表头底：浅色比斑马纹再深一档（两者不能撞色） */
   --dtl-head-bg:var(--dsw-static-neutral-100,#f5f5f5);
@@ -133,6 +135,7 @@ body[data-ds-dark-theme]{
   --dtl-solid:var(--dsw-static-neutral-900,#0f0f0f);
   --dtl-on-solid:var(--dsw-static-neutral-00,#fff);
   --dtl-plate:var(--dsw-static-neutral-850,#212123);
+  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 4%,transparent);
   --dtl-plate-hover:var(--dsw-static-neutral-800,#292929);
   /* 暗色表头反过来：比卡片面亮、比斑马纹浅一档 */
   --dtl-head-bg:var(--dtl-surface-2);
@@ -177,10 +180,9 @@ export const UI_CONTROLS_CSS = `
 .dtl-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dtl-shadow-raised);color:var(--dtl-fg);font-weight:600;}
 .dtl-seg__item:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 .dtl-seg__item:disabled{cursor:default;opacity:.4;}
-/* 段内角标（如「待认领 3」）：语义色实面 + 反白字，0 不渲染；必须是正圆 */
+/* 段内角标（如「待认领 3」）：**纯小数字、无圆无底**（用户 2026-10-18：圆圈取了、字再小点）；0 不渲染 */
 .dtl-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;
-  width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;
-  background:var(--dtl-danger);color:var(--dtl-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}
+  margin-left:3px;color:var(--dtl-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}
 
 /* ── 按钮 / 图标钮 ───────────────────────────────────────────────
    与 Segmented 同一条高度纪律；variant 只换颜色，结构 / 尺寸 / 交互只此一份。 */
