@@ -74,12 +74,14 @@ export interface TrendPeriods {
   readonly lastMonth: PeriodCounts
 }
 
-/** 趋势图一桶（一周）：完成 + 新增。 */
+/** 趋势图一桶（一周）：完成 + 新增 + 截止时未完成。 */
 export interface WeeklyBucket {
   /** 该周周一（YYYY-MM-DD）。 */
   readonly week: string
   readonly done: number
   readonly created: number
+  /** 该周截止时仍未完成（在办）的任务数。 */
+  readonly remaining: number
 }
 
 /** 趋势图数据（按范围各一份，切换零请求）。 */

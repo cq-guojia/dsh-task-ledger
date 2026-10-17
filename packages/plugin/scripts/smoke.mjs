@@ -82,12 +82,25 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
     for (const bucket of buckets) {
       assert.ok(Number.isInteger(bucket.done) && bucket.done >= 0)
       assert.ok(Number.isInteger(bucket.created) && bucket.created >= 0)
+      assert.ok(Number.isInteger(bucket.remaining) && bucket.remaining >= 0, `${scope} remaining 应是非负整数`)
     }
+    // remaining 自洽不变量：remaining_i = 基线 + Σ(created) - Σ(done) 到 i 周 ⇒ 该差值对所有 i 恒定
+    let baseline = null
+    let cumCreated = 0
+    let cumDone = 0
+    buckets.forEach((bucket, i) => {
+      cumCreated += bucket.created
+      cumDone += bucket.done
+      const b = bucket.remaining - cumCreated + cumDone
+      if (baseline === null) baseline = b
+      else assert.equal(b, baseline, `${scope} remaining 自洽（基线恒定）@周${i}`)
+    })
   }
   // 「我的」不可能超过「所有」
   for (let i = 0; i < 8; i += 1) {
     assert.ok(home.closed.weekly.mine[i].done <= home.closed.weekly.all[i].done, 'mine 不应超过 all')
     assert.ok(home.closed.weekly.mine[i].created <= home.closed.weekly.all[i].created, 'mine 不应超过 all')
+    assert.ok(home.closed.weekly.mine[i].remaining <= home.closed.weekly.all[i].remaining, 'mine 不应超过 all')
   }
   // 最后一桶 = 本周一（host 同口径）
   const now = new Date()

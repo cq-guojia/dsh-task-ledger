@@ -32,12 +32,14 @@ export interface TrendPeriods {
   readonly lastMonth: PeriodCounts
 }
 
-/** 趋势图一桶（一周）：完成 + 新增。 */
+/** 趋势图一桶（一周）：完成 + 新增 + 截止时仍未完成。 */
 export interface WeeklyBucket {
   /** 该周周一（YYYY-MM-DD）。 */
   readonly week: string
   readonly done: number
   readonly created: number
+  /** 该周截止时仍未完成（在办）的任务数：cumulative(创建 - 完成) 到该周末，含窗口前遗留。 */
+  readonly remaining: number
 }
 
 /** 趋势图数据按范围各一份（切换零请求）。 */
@@ -244,19 +246,40 @@ export async function getHomeAggregate(workspaces: readonly LedgerWorkspace[]): 
   // 在办的只在 progress.json 里。两者不相交（close 是移动），合并即全集、不会重复计。
   const weeks: string[] = []
   for (let offset = WEEKLY_WEEKS - 1; offset >= 0; offset -= 1) weeks.push(weekWindow(-offset, now).from)
-  const bucketsAll = new Map<string, { done: number; created: number }>(weeks.map((week) => [week, { done: 0, created: 0 }]))
-  const bucketsMine = new Map<string, { done: number; created: number }>(weeks.map((week) => [week, { done: 0, created: 0 }]))
-  const bump = (map: Map<string, { done: number; created: number }>, week: string, field: 'done' | 'created'): void => {
+  // 每周截止日：历史周 = 当周周日；当前周（最后一项）只到今天（周没结束，否则截止日撒谎）
+  const weekEnds = weeks.map((week, i) => {
+    const monday = new Date(`${week}T00:00:00`)
+    const sunday = new Date(monday)
+    sunday.setDate(sunday.getDate() + 6)
+    return i === weeks.length - 1 ? ymd(now) : ymd(sunday)
+  })
+  const bucketsAll = new Map<string, { done: number; created: number; remaining: number }>(weeks.map((week) => [week, { done: 0, created: 0, remaining: 0 }]))
+  const bucketsMine = new Map<string, { done: number; created: number; remaining: number }>(weeks.map((week) => [week, { done: 0, created: 0, remaining: 0 }]))
+  const bump = (map: Map<string, { done: number; created: number; remaining: number }>, week: string, field: 'done' | 'created'): void => {
     const bucket = map.get(week)
     if (bucket !== undefined) map.set(week, { ...bucket, [field]: bucket[field] + 1 })
+  }
+  // remaining：某任务在「第 i 周截止时」仍未完成 ⇔ 创建 ≤ weekEnd_i 且（未结案 或 结案 > weekEnd_i）。
+  // 窗口前创建、至今仍在办的任务会自然计入每一周 ⇒ 无需单独基线，口径自洽。
+  const bumpRemaining = (map: Map<string, { done: number; created: number; remaining: number }>, createdDay: string | null, closeDay: string | null): void => {
+    if (createdDay === null) return
+    for (let i = 0; i < weeks.length; i++) {
+      if (createdDay <= weekEnds[i] && (closeDay === null || closeDay > weekEnds[i])) {
+        const bucket = map.get(weeks[i])
+        if (bucket !== undefined) bucket.remaining += 1
+      }
+    }
   }
   for (const entry of perWorkspace) {
     for (const task of entry.tasks) {
       const created = dayOf(task.created)
       if (created === null) continue
       const week = ymd(mondayOf(created))
+      const isMine = entry.identity !== null && task.owner === entry.identity
       bump(bucketsAll, week, 'created')
-      if (entry.identity !== null && task.owner === entry.identity) bump(bucketsMine, week, 'created')
+      if (isMine) bump(bucketsMine, week, 'created')
+      bumpRemaining(bucketsAll, created, null)
+      if (isMine) bumpRemaining(bucketsMine, created, null)
     }
     for (const record of entry.history) {
       const closed = dayOf(record.time)
@@ -271,12 +294,15 @@ export async function getHomeAggregate(workspaces: readonly LedgerWorkspace[]): 
         bump(bucketsAll, week, 'created')
         if (entry.identity !== null && record.owner === entry.identity) bump(bucketsMine, week, 'created')
       }
+      const isMine = entry.identity !== null && record.owner === entry.identity
+      bumpRemaining(bucketsAll, created, closed)
+      if (isMine) bumpRemaining(bucketsMine, created, closed)
     }
   }
   const closed: ClosedSummary = {
     weekly: {
-      all: weeks.map((week) => ({ week, ...bucketsAll.get(week) ?? { done: 0, created: 0 } })),
-      mine: weeks.map((week) => ({ week, ...bucketsMine.get(week) ?? { done: 0, created: 0 } })),
+      all: weeks.map((week) => ({ week, ...bucketsAll.get(week) ?? { done: 0, created: 0, remaining: 0 } })),
+      mine: weeks.map((week) => ({ week, ...bucketsMine.get(week) ?? { done: 0, created: 0, remaining: 0 } })),
     },
   }
 

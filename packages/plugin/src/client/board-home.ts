@@ -95,10 +95,11 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
   const chartWeeks = useMemo(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => ({
     label: bucket.week.slice(5),
     done: bucket.done,
+    remaining: bucket.remaining,
     created: bucket.created,
-    title: `${bucket.week}｜${t('chartLegendDone')} ${bucket.done}｜${t('chartLegendCreated')} ${bucket.created}`,
+    title: `${bucket.week}｜${t('chartLegendDone')} ${bucket.done}｜${t('chartLegendRemaining')} ${bucket.remaining}｜${t('chartLegendCreated')} ${bucket.created}`,
   })), [board, chartScope, t])
-  const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0)
+  const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0 && week.remaining === 0)
 
   return h('div', { style: pageStyle },
     h('div', { style: { display: 'flex', justifyContent: 'center' } },
@@ -181,9 +182,10 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                       weeks: chartWeeks,
                       ariaLabel: t('chartTitle'),
                       doneLabel: t('chartLegendDone'),
+                      remainingLabel: t('chartLegendRemaining'),
                       createdLabel: t('chartLegendCreated'),
                     }),
-                  h(ChartLegend, { doneLabel: t('chartLegendDone'), createdLabel: t('chartLegendCreated') }),
+                  h(ChartLegend, { doneLabel: t('chartLegendDone'), remainingLabel: t('chartLegendRemaining'), createdLabel: t('chartLegendCreated') }),
                 ),
               ),
 

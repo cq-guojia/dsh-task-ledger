@@ -323,6 +323,8 @@ body{
   --dtl-chip-bg-hover:rgba(15,15,15,.14);
   /* 图表「新增」柱：**实底**中性灰。半透明底压在卡上会发糊（用户 2026-10-17：「模模糊糊」） */
   --dtl-chart-created:var(--dsw-static-neutral-300,#d4d4d8);
+  /* 图表「没完成」柱：醒目琥珀，与蓝（完成）/ 灰（新增）区分（host 无此件，fallback 兜底） */
+  --dtl-chart-remaining:var(--dsw-static-amber-400,#f59e0b);
 
   /* ── 圆角（宿主真值 4/8/12/16/20/28）──────────────────────────── */
   --dtl-radius-xs:var(--dsw-radius-xs,4px);
@@ -385,6 +387,7 @@ body[data-ds-dark-theme]{
   --dtl-chip-bg:rgba(255,255,255,.08);
   --dtl-chip-bg-hover:rgba(255,255,255,.16);
   --dtl-chart-created:var(--dsw-static-neutral-600,#525252);
+  --dtl-chart-remaining:var(--dsw-static-amber-500,#fbbf24);
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 5%,transparent);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
@@ -541,7 +544,8 @@ body[data-ds-dark-theme]{
 /* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
    ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
    两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
-.dtl-stats{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
+/* 左 8 块略收窄、右图表略放宽（用户 2026-10-17：左再短一丢丢、右长一丢丢） */
+.dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
 .dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
   gap:var(--dtl-space-3);}
 .dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
@@ -565,11 +569,14 @@ body[data-ds-dark-theme]{
    子元素的 height:% 没有可解析的包含块 ⇒ 整根柱子塌成 0（2026-10-17 真机教训：
    改百分比柱高后「一个柱子都看不见，只剩数字」）。 */
 .dtl-gchart__pair{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);
-  display:flex;align-items:flex-end;gap:2px;}
-.dtl-gchart__bar{width:10px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
+  display:flex;align-items:flex-end;gap:1px;}
+/* 三柱：完成(蓝) / 没完成(琥珀) / 新增(灰)，每根 5px、无圆角（用户 2026-10-17：太粗、不要圆弧） */
+.dtl-gchart__bar{width:5px;min-height:0;}
 .dtl-gchart__bar--done{background:var(--dtl-business);}
+.dtl-gchart__bar--remaining{background:var(--dtl-chart-remaining);}
 .dtl-gchart__bar--created{background:var(--dtl-chart-created);}
-.dtl-gchart__col:hover .dtl-gchart__bar--done{background:var(--dtl-accent);}
+/* hover：整列三根柱一起提亮（用户 2026-10-17：移上去应该两个都变色，不是只蓝的一根） */
+.dtl-gchart__col:hover .dtl-gchart__bar{filter:brightness(1.18);}
 .dtl-gchart__val{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:12px;
   color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .dtl-gchart__label{position:absolute;left:0;right:0;bottom:-16px;text-align:center;
@@ -738,15 +745,15 @@ body[data-ds-dark-theme]{
 			if (value >= 1e3) return `${(value / 1e3).toFixed(1)}k`;
 			return String(value);
 		}
-		/** 分组柱状图（div 柱，无新依赖）：完成（蓝）/ 新增（灰）各一细柱。
+		/** 分组柱状图（div 柱，无新依赖）：完成（蓝）/ 没完成（琥珀）/ 新增（灰）各一细柱。
 		*  - 高度全用百分比 ⇒ 绘图区随卡片拉伸，图表卡与左边 8 块**完全等高**；
-		*  - y 轴三档刻度 + 淡网格线；柱顶只标「完成」（16 个数值标签会糊成一片）；
-		*  - hover 出浮卡（日期 + 两个数）——参考图同款，原生 title 太慢；
+		*  - y 轴三档刻度 + 淡网格线；柱顶只标「完成」（3 系列 × 8 周数值会糊成一片）；
+		*  - hover 整列提亮 + 浮卡（日期 + 三个数）——原生 title 太慢；
 		*  - **没有**均值线与长注释（用户 2026-10-17：均值不要、注释太长不要）。 */
 		function GroupedBarChart(props) {
 			ensureUiBase();
 			const [hover, setHover] = (0, react.useState)(null);
-			const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0));
+			const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.remaining, week.created), 0));
 			const ticks = [
 				0,
 				top / 2,
@@ -794,6 +801,12 @@ body[data-ds-dark-theme]{
 					minHeight: week.done > 0 ? "2px" : void 0
 				}
 			}), (0, react.createElement)("span", {
+				className: "dtl-gchart__bar dtl-gchart__bar--remaining",
+				style: {
+					height: pct(week.remaining),
+					minHeight: week.remaining > 0 ? "2px" : void 0
+				}
+			}), (0, react.createElement)("span", {
 				className: "dtl-gchart__bar dtl-gchart__bar--created",
 				style: {
 					height: pct(week.created),
@@ -805,12 +818,12 @@ body[data-ds-dark-theme]{
 			}, String(week.done)), (0, react.createElement)("span", { className: "dtl-gchart__label" }, week.label))), hover === null ? null : (0, react.createElement)("div", {
 				className: "dtl-gchart__tip",
 				style: tipStyle(hover)
-			}, (0, react.createElement)("b", null, props.weeks[hover].title), (0, react.createElement)("div", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), `${props.doneLabel} ${props.weeks[hover].done}`), (0, react.createElement)("div", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-created)" } }), `${props.createdLabel} ${props.weeks[hover].created}`))));
+			}, (0, react.createElement)("b", null, props.weeks[hover].title), (0, react.createElement)("div", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), `${props.doneLabel} ${props.weeks[hover].done}`), (0, react.createElement)("div", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-remaining)" } }), `${props.remainingLabel} ${props.weeks[hover].remaining}`), (0, react.createElement)("div", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-created)" } }), `${props.createdLabel} ${props.weeks[hover].created}`))));
 		}
-		/** 图例（完成 / 新增 两个色块）。 */
+		/** 图例（完成 / 没完成 / 新增 三个色块）。 */
 		function ChartLegend(props) {
 			ensureUiBase();
-			return (0, react.createElement)("div", { className: "dtl-gchart-legend" }, (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), props.doneLabel), (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-created)" } }), props.createdLabel));
+			return (0, react.createElement)("div", { className: "dtl-gchart-legend" }, (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), props.doneLabel), (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-remaining)" } }), props.remainingLabel), (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-created)" } }), props.createdLabel));
 		}
 		//#endregion
 		//#region src/client/task-row.ts
@@ -1100,14 +1113,15 @@ body[data-ds-dark-theme]{
 			const chartWeeks = (0, react.useMemo)(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => ({
 				label: bucket.week.slice(5),
 				done: bucket.done,
+				remaining: bucket.remaining,
 				created: bucket.created,
-				title: `${bucket.week}｜${t("chartLegendDone")} ${bucket.done}｜${t("chartLegendCreated")} ${bucket.created}`
+				title: `${bucket.week}｜${t("chartLegendDone")} ${bucket.done}｜${t("chartLegendRemaining")} ${bucket.remaining}｜${t("chartLegendCreated")} ${bucket.created}`
 			})), [
 				board,
 				chartScope,
 				t
 			]);
-			const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0);
+			const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0 && week.remaining === 0);
 			return (0, react.createElement)("div", { style: pageStyle }, (0, react.createElement)("div", { style: {
 				display: "flex",
 				justifyContent: "center"
@@ -1205,9 +1219,11 @@ body[data-ds-dark-theme]{
 				weeks: chartWeeks,
 				ariaLabel: t("chartTitle"),
 				doneLabel: t("chartLegendDone"),
+				remainingLabel: t("chartLegendRemaining"),
 				createdLabel: t("chartLegendCreated")
 			}), (0, react.createElement)(ChartLegend, {
 				doneLabel: t("chartLegendDone"),
+				remainingLabel: t("chartLegendRemaining"),
 				createdLabel: t("chartLegendCreated")
 			}))), (0, react.createElement)("div", { style: filterRowStyle }, (0, react.createElement)(Segmented, {
 				id: "dtl-scope",
@@ -1367,7 +1383,7 @@ body[data-ds-dark-theme]{
 			statMyActive: "我的待办",
 			statMyActiveHint: "阻塞 {n} 条",
 			statOpen: "待认领",
-			statOpenHint: "最久未认领 {n} 天",
+			statOpenHint: "待认领最久 {n} 天",
 			statDoing: "进行中",
 			statDoingHint: "他人负责 {n} 条",
 			statBlockedStale: "阻塞 · 停滞",
@@ -1390,6 +1406,7 @@ body[data-ds-dark-theme]{
 			chartOnlyMine: "只看我的",
 			chartLegendDone: "完成",
 			chartLegendCreated: "新增",
+			chartLegendRemaining: "没完成",
 			chartAvg: "周均 {n}",
 			periodRange: "{from} ~ {to}",
 			scopeLabel: "范围",
@@ -1468,6 +1485,7 @@ body[data-ds-dark-theme]{
 			chartOnlyMine: "Mine only",
 			chartLegendDone: "Done",
 			chartLegendCreated: "Created",
+			chartLegendRemaining: "Remaining",
 			chartAvg: "avg {n}/wk",
 			periodRange: "{from} ~ {to}",
 			scopeLabel: "Scope",

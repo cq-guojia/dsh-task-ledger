@@ -44,7 +44,8 @@ const UI_BASE_CSS = `
 /* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
    ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
    两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
-.dtl-stats{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
+/* 左 8 块略收窄、右图表略放宽（用户 2026-10-17：左再短一丢丢、右长一丢丢） */
+.dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
 .dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
   gap:var(--dtl-space-3);}
 .dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
@@ -68,11 +69,14 @@ const UI_BASE_CSS = `
    子元素的 height:% 没有可解析的包含块 ⇒ 整根柱子塌成 0（2026-10-17 真机教训：
    改百分比柱高后「一个柱子都看不见，只剩数字」）。 */
 .dtl-gchart__pair{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);
-  display:flex;align-items:flex-end;gap:2px;}
-.dtl-gchart__bar{width:10px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
+  display:flex;align-items:flex-end;gap:1px;}
+/* 三柱：完成(蓝) / 没完成(琥珀) / 新增(灰)，每根 5px、无圆角（用户 2026-10-17：太粗、不要圆弧） */
+.dtl-gchart__bar{width:5px;min-height:0;}
 .dtl-gchart__bar--done{background:var(--dtl-business);}
+.dtl-gchart__bar--remaining{background:var(--dtl-chart-remaining);}
 .dtl-gchart__bar--created{background:var(--dtl-chart-created);}
-.dtl-gchart__col:hover .dtl-gchart__bar--done{background:var(--dtl-accent);}
+/* hover：整列三根柱一起提亮（用户 2026-10-17：移上去应该两个都变色，不是只蓝的一根） */
+.dtl-gchart__col:hover .dtl-gchart__bar{filter:brightness(1.18);}
 .dtl-gchart__val{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:12px;
   color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .dtl-gchart__label{position:absolute;left:0;right:0;bottom:-16px;text-align:center;
@@ -296,11 +300,12 @@ export function LedgerIcon(props: { size?: number }): ReactNode {
 
 /* ── 趋势分组柱状图 ───────────────────────────────────────────────────── */
 
-/** 一周两根柱（完成 / 新增）。 */
+/** 一周三根柱（完成 / 没完成 / 新增）。 */
 export interface GroupedBarWeek {
   /** 轴标签（MM-DD）。 */
   readonly label: string
   readonly done: number
+  readonly remaining: number
   readonly created: number
   /** 悬停文案。 */
   readonly title: string
@@ -313,20 +318,21 @@ function compactCount(value: number): string {
   return String(value)
 }
 
-/** 分组柱状图（div 柱，无新依赖）：完成（蓝）/ 新增（灰）各一细柱。
+/** 分组柱状图（div 柱，无新依赖）：完成（蓝）/ 没完成（琥珀）/ 新增（灰）各一细柱。
  *  - 高度全用百分比 ⇒ 绘图区随卡片拉伸，图表卡与左边 8 块**完全等高**；
- *  - y 轴三档刻度 + 淡网格线；柱顶只标「完成」（16 个数值标签会糊成一片）；
- *  - hover 出浮卡（日期 + 两个数）——参考图同款，原生 title 太慢；
+ *  - y 轴三档刻度 + 淡网格线；柱顶只标「完成」（3 系列 × 8 周数值会糊成一片）；
+ *  - hover 整列提亮 + 浮卡（日期 + 三个数）——原生 title 太慢；
  *  - **没有**均值线与长注释（用户 2026-10-17：均值不要、注释太长不要）。 */
 export function GroupedBarChart(props: {
   weeks: readonly GroupedBarWeek[]
   ariaLabel: string
   doneLabel: string
+  remainingLabel: string
   createdLabel: string
 }): ReactNode {
   ensureUiBase()
   const [hover, setHover] = useState<number | null>(null)
-  const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0))
+  const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.remaining, week.created), 0))
   const ticks = [0, top / 2, top]
   const pct = (value: number): string => `${(value / top) * 100}%`
   const columnStyle = (index: number): Record<string, string | number> => ({
@@ -356,6 +362,7 @@ export function GroupedBarChart(props: {
       },
         h('div', { className: 'dtl-gchart__pair' },
           h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: pct(week.done), minHeight: week.done > 0 ? '2px' : undefined } }),
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--remaining', style: { height: pct(week.remaining), minHeight: week.remaining > 0 ? '2px' : undefined } }),
           h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: pct(week.created), minHeight: week.created > 0 ? '2px' : undefined } }),
         ),
         week.done === 0
@@ -368,17 +375,19 @@ export function GroupedBarChart(props: {
         : h('div', { className: 'dtl-gchart__tip', style: tipStyle(hover) },
           h('b', null, props.weeks[hover].title),
           h('div', null, h('i', { style: { background: 'var(--dtl-business)' } }), `${props.doneLabel} ${props.weeks[hover].done}`),
+          h('div', null, h('i', { style: { background: 'var(--dtl-chart-remaining)' } }), `${props.remainingLabel} ${props.weeks[hover].remaining}`),
           h('div', null, h('i', { style: { background: 'var(--dtl-chart-created)' } }), `${props.createdLabel} ${props.weeks[hover].created}`),
         ),
     ),
   )
 }
 
-/** 图例（完成 / 新增 两个色块）。 */
-export function ChartLegend(props: { doneLabel: string; createdLabel: string }): ReactNode {
+/** 图例（完成 / 没完成 / 新增 三个色块）。 */
+export function ChartLegend(props: { doneLabel: string; remainingLabel: string; createdLabel: string }): ReactNode {
   ensureUiBase()
   return h('div', { className: 'dtl-gchart-legend' },
     h('span', null, h('i', { style: { background: 'var(--dtl-business)' } }), props.doneLabel),
+    h('span', null, h('i', { style: { background: 'var(--dtl-chart-remaining)' } }), props.remainingLabel),
     h('span', null, h('i', { style: { background: 'var(--dtl-chart-created)' } }), props.createdLabel),
   )
 }

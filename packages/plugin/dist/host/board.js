@@ -137,12 +137,32 @@ export async function getHomeAggregate(workspaces) {
     const weeks = [];
     for (let offset = WEEKLY_WEEKS - 1; offset >= 0; offset -= 1)
         weeks.push(weekWindow(-offset, now).from);
-    const bucketsAll = new Map(weeks.map((week) => [week, { done: 0, created: 0 }]));
-    const bucketsMine = new Map(weeks.map((week) => [week, { done: 0, created: 0 }]));
+    // 每周截止日：历史周 = 当周周日；当前周（最后一项）只到今天（周没结束，否则截止日撒谎）
+    const weekEnds = weeks.map((week, i) => {
+        const monday = new Date(`${week}T00:00:00`);
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+        return i === weeks.length - 1 ? ymd(now) : ymd(sunday);
+    });
+    const bucketsAll = new Map(weeks.map((week) => [week, { done: 0, created: 0, remaining: 0 }]));
+    const bucketsMine = new Map(weeks.map((week) => [week, { done: 0, created: 0, remaining: 0 }]));
     const bump = (map, week, field) => {
         const bucket = map.get(week);
         if (bucket !== undefined)
             map.set(week, { ...bucket, [field]: bucket[field] + 1 });
+    };
+    // remaining：某任务在「第 i 周截止时」仍未完成 ⇔ 创建 ≤ weekEnd_i 且（未结案 或 结案 > weekEnd_i）。
+    // 窗口前创建、至今仍在办的任务会自然计入每一周 ⇒ 无需单独基线，口径自洽。
+    const bumpRemaining = (map, createdDay, closeDay) => {
+        if (createdDay === null)
+            return;
+        for (let i = 0; i < weeks.length; i++) {
+            if (createdDay <= weekEnds[i] && (closeDay === null || closeDay > weekEnds[i])) {
+                const bucket = map.get(weeks[i]);
+                if (bucket !== undefined)
+                    bucket.remaining += 1;
+            }
+        }
     };
     for (const entry of perWorkspace) {
         for (const task of entry.tasks) {
@@ -150,9 +170,13 @@ export async function getHomeAggregate(workspaces) {
             if (created === null)
                 continue;
             const week = ymd(mondayOf(created));
+            const isMine = entry.identity !== null && task.owner === entry.identity;
             bump(bucketsAll, week, 'created');
-            if (entry.identity !== null && task.owner === entry.identity)
+            if (isMine)
                 bump(bucketsMine, week, 'created');
+            bumpRemaining(bucketsAll, created, null);
+            if (isMine)
+                bumpRemaining(bucketsMine, created, null);
         }
         for (const record of entry.history) {
             const closed = dayOf(record.time);
@@ -169,12 +193,16 @@ export async function getHomeAggregate(workspaces) {
                 if (entry.identity !== null && record.owner === entry.identity)
                     bump(bucketsMine, week, 'created');
             }
+            const isMine = entry.identity !== null && record.owner === entry.identity;
+            bumpRemaining(bucketsAll, created, closed);
+            if (isMine)
+                bumpRemaining(bucketsMine, created, closed);
         }
     }
     const closed = {
         weekly: {
-            all: weeks.map((week) => ({ week, ...bucketsAll.get(week) ?? { done: 0, created: 0 } })),
-            mine: weeks.map((week) => ({ week, ...bucketsMine.get(week) ?? { done: 0, created: 0 } })),
+            all: weeks.map((week) => ({ week, ...bucketsAll.get(week) ?? { done: 0, created: 0, remaining: 0 } })),
+            mine: weeks.map((week) => ({ week, ...bucketsMine.get(week) ?? { done: 0, created: 0, remaining: 0 } })),
         },
     };
     // ── 统计台：四个自然周期（只算「全部工作区」范围；图表切换不带动卡片）────

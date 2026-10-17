@@ -20,7 +20,7 @@ export type LocaleKey =
   | 'daysNone' | 'daysValue'
   // 趋势图
   | 'chartTitle' | 'chartCaption' | 'chartBucket' | 'chartEmpty'
-  | 'chartScopeAll' | 'chartScopeMine' | 'chartOnlyMine' | 'chartLegendDone' | 'chartLegendCreated' | 'chartAvg'
+  | 'chartScopeAll' | 'chartScopeMine' | 'chartOnlyMine' | 'chartLegendDone' | 'chartLegendCreated' | 'chartLegendRemaining' | 'chartAvg'
   | 'periodRange'
   // 筛选行
   | 'scopeLabel' | 'scopeMine' | 'scopeAll'
@@ -54,7 +54,7 @@ export const zh: Record<LocaleKey, string> = {
   statMyActive: '我的待办',
   statMyActiveHint: '阻塞 {n} 条',
   statOpen: '待认领',
-  statOpenHint: '最久未认领 {n} 天',
+  statOpenHint: '待认领最久 {n} 天',
   statDoing: '进行中',
   statDoingHint: '他人负责 {n} 条',
   statBlockedStale: '阻塞 · 停滞',
@@ -78,6 +78,7 @@ export const zh: Record<LocaleKey, string> = {
   chartOnlyMine: '只看我的',
   chartLegendDone: '完成',
   chartLegendCreated: '新增',
+  chartLegendRemaining: '没完成',
   chartAvg: '周均 {n}',
   periodRange: '{from} ~ {to}',
 
@@ -164,6 +165,7 @@ export const en: Record<LocaleKey, string> = {
   chartOnlyMine: 'Mine only',
   chartLegendDone: 'Done',
   chartLegendCreated: 'Created',
+  chartLegendRemaining: 'Remaining',
   chartAvg: 'avg {n}/wk',
   periodRange: '{from} ~ {to}',
 
