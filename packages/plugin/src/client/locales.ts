@@ -14,7 +14,7 @@ export type LocaleKey =
   | 'refresh' | 'refreshing' | 'loading' | 'retry' | 'loadFailed'
   | 'statsPlaceholder'
   // 统计卡
-  | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint'
+  | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint' | 'statStaleTitle'
   | 'statDoing' | 'statDoingHint' | 'statBlockedStale' | 'statStaleWord' | 'statStaleHint'
   | 'statWeekDone' | 'statLastWeekDone' | 'statMonthDone' | 'statLastMonthDone' | 'statCreatedHint'
   | 'daysNone' | 'daysValue'
@@ -52,14 +52,15 @@ export const zh: Record<LocaleKey, string> = {
   statsPlaceholder: '统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。',
 
   statMyActive: '我的待办',
-  statMyActiveHint: '其中阻塞 {n}',
+  statMyActiveHint: '阻塞 {n} 条',
   statOpen: '待认领',
-  statOpenHint: '最老一条躺了 {n}',
+  statOpenHint: '最久未认领 {n} 天',
   statDoing: '进行中',
-  statDoingHint: '别人在做 {n}',
+  statDoingHint: '他人负责 {n} 条',
   statBlockedStale: '阻塞 · 停滞',
   statStaleWord: '停滞',
   statStaleHint: '{n} 条',
+  statStaleTitle: '停滞 = 进行中或阻塞超过 {n} 天未更新',
   statWeekDone: '本周完成',
   statLastWeekDone: '上周完成',
   statMonthDone: '本月完成',
@@ -70,7 +71,7 @@ export const zh: Record<LocaleKey, string> = {
 
   chartTitle: '近 8 周',
   chartCaption: '完成（按结案时间）/ 新增（按创建时间），周一起桶；我的 = owner 是我',
-  chartBucket: '{week} 那一周：完成 {done} 条，新增 {created} 条',
+  chartBucket: '{week} 当周：完成 {done} 条，新增 {created} 条',
   chartEmpty: '近 8 周没有记录',
   chartScopeAll: '所有',
   chartScopeMine: '我的',
@@ -137,14 +138,15 @@ export const en: Record<LocaleKey, string> = {
   statsPlaceholder: 'Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.',
 
   statMyActive: 'My todos',
-  statMyActiveHint: '{n} blocked',
+  statMyActiveHint: 'blocked {n}',
   statOpen: 'Unclaimed',
-  statOpenHint: 'oldest waiting {n}',
+  statOpenHint: 'unclaimed {n}d at most',
   statDoing: 'In progress',
-  statDoingHint: '{n} by others',
+  statDoingHint: 'owned by others: {n}',
   statBlockedStale: 'Blocked · Stale',
   statStaleWord: 'Stale',
   statStaleHint: '{n}',
+  statStaleTitle: 'stale = active or blocked with no update for {n}+ days',
   statWeekDone: 'Done this week',
   statLastWeekDone: 'Done last week',
   statMonthDone: 'Done this month',

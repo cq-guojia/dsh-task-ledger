@@ -16,7 +16,7 @@ const UI_BASE_CSS = `
 /* 统计卡：可点、hover 淡蓝、选中蓝描边 */
 .dtl-stat{display:flex;flex-direction:column;gap:var(--dtl-space-1);
   padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;}
-.dtl-stat__value{font-size:var(--dtl-font-xl);font-weight:600;line-height:var(--dtl-line-xl);font-variant-numeric:tabular-nums;}
+.dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
 .dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
 
 /* 列表行：头部可点，hover 淡蓝；展开行走 --dtl-open-bg */
@@ -52,10 +52,10 @@ const UI_BASE_CSS = `
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
 /* 「只看我的」小复选框（替掉右上角的分段切换） */
-.dtl-check{display:inline-flex;align-items:center;gap:6px;height:var(--dtl-control-h-md);
-  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);cursor:pointer;user-select:none;white-space:nowrap;}
-.dtl-check input{width:14px;height:14px;margin:0;accent-color:var(--dtl-business);cursor:pointer;}
-.dtl-check:hover{color:var(--dtl-fg);}
+.dtl-check{display:inline-flex;align-items:center;gap:5px;height:20px;margin-top:-2px;
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);cursor:pointer;user-select:none;white-space:nowrap;}
+.dtl-check input{width:12px;height:12px;margin:0;accent-color:var(--dtl-business);cursor:pointer;}
+.dtl-check:hover{color:var(--dtl-fg-2);}
 
 /* 趋势分组柱状图：绘图区高度**随卡拉伸**（flex），柱 / 刻度 / 网格全用百分比 ⇒ 与卡等高 */
 .dtl-gchart-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding-left:30px;padding-bottom:18px;}
@@ -64,7 +64,10 @@ const UI_BASE_CSS = `
 .dtl-gchart__ytick{position:absolute;left:-30px;width:26px;text-align:right;font-size:10px;line-height:12px;
   color:var(--dtl-fg-3);transform:translateY(50%);font-variant-numeric:tabular-nums;}
 .dtl-gchart__col{position:absolute;top:0;bottom:0;min-width:0;}
-.dtl-gchart__pair{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+/* ⚠️ pair 必须 top/bottom 双锚（或 height:100%）：绝对定位 + 只给 bottom 时高度是 auto，
+   子元素的 height:% 没有可解析的包含块 ⇒ 整根柱子塌成 0（2026-10-17 真机教训：
+   改百分比柱高后「一个柱子都看不见，只剩数字」）。 */
+.dtl-gchart__pair{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);
   display:flex;align-items:flex-end;gap:2px;}
 .dtl-gchart__bar{width:10px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
 .dtl-gchart__bar--done{background:var(--dtl-business);}
@@ -352,8 +355,8 @@ export function GroupedBarChart(props: {
         onMouseEnter: () => { setHover(index) },
       },
         h('div', { className: 'dtl-gchart__pair' },
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: pct(week.done) } }),
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: pct(week.created) } }),
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: pct(week.done), minHeight: week.done > 0 ? '2px' : undefined } }),
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: pct(week.created), minHeight: week.created > 0 ? '2px' : undefined } }),
         ),
         week.done === 0
           ? null

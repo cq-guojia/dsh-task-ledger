@@ -110,6 +110,8 @@ body{
   --dtl-line-lg:var(--dsw-font-s-14-line-height,22px);
   --dtl-line-xl:var(--dsw-font-base-16-line-height,24px);
   --dtl-font-mono:var(--ds-font-family-code,monospace);
+  /* 统计卡主数字：宿主字号族最大 16px，看板主数字要更大 ⇒ 单开一档（别处不许直接写 px） */
+  --dtl-font-stat:26px;
 
   /* ── 投影 / 动效 / 层级 ──────────────────────────────────────── */
   --dtl-shadow-1:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);

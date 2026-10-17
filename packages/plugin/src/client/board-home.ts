@@ -34,7 +34,7 @@ const titleStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-
  *  绝不给 3 列——3 列会排出 3+1 的非对称（用户 2026-10-17：必须上下对称）。 */
 const statsRowStyle: Record<string, string | number> = { marginBottom: 'var(--dtl-space-4)' }
 const chartCardStyle: Record<string, string | number> = {
-  display: 'flex', flexDirection: 'column', gap: 'var(--dtl-space-2)', padding: 'var(--dtl-space-3) var(--dtl-space-4)',
+  display: 'flex', flexDirection: 'column', gap: 'var(--dtl-space-2)', padding: 'var(--dtl-space-2) var(--dtl-space-3)',
 }
 const filterRowStyle: Record<string, string | number> = {
   display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)', flexWrap: 'wrap',
@@ -154,7 +154,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                         ` ${t('statStaleHint', { n: stats.stale })}`,
                       ),
                     active: isActive(state.query, { scope: 'all', status: 'blocked', workspace: '' }),
-                    title: t('statStaleHint', { n: stats.staleDays }),
+                    title: t('statStaleTitle', { n: stats.staleDays }),
                     onClick: () => { setQuery({ scope: 'all', status: 'blocked', workspace: '' }) },
                   }),
                   // 第二行 · 统计台（自然周期，不可点）
