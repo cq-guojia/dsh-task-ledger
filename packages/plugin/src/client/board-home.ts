@@ -7,7 +7,9 @@
  * （未就绪不渲染 / 真空引导卡 / 筛选空小字）。
  */
 import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react'
-import { IconChecklistOutlineRegular, IconFlatListOutlineRegular, IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import {
+  IconChecklistOutlineRegular, IconFlatListOutlineRegular, IconFolderOpenOutlineRegular, IconRefreshOutlineRegular,
+} from '@deepseek-ai/dsh-client-ui-primitives'
 import type { LocaleKey, Translate } from './locales'
 import { boardSnapshot, boardSubscribe, refresh, setQuery, type StatusFilter } from './store'
 import { isMine, selectView, type WorkspaceGroup } from './rows'
@@ -314,7 +316,11 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup; staleD
       title: open ? t('collapseAria') : t('expandAria'),
       onClick: () => { setOpen(!open) },
     },
-      h('span', { className: 'dtl-group__dot' }),
+      // 段头标识：工作区的官方图标就是文件夹（用户 2026-10-18）；包里没有 ⇒ 回落成竖线
+      IconFolderOpenOutlineRegular === undefined
+        ? h('span', { className: 'dtl-group__bar' })
+        : h('span', { style: { display: 'inline-flex', flex: 'none', color: 'var(--dtl-business)' } },
+            h(IconFolderOpenOutlineRegular, { size: 14 })),
       h('span', { className: 'dtl-group__name dtl-ellipsis' }, group.title),
       h('span', { style: { flex: '1 1 auto' } }),
       h('span', { className: 'dtl-group__stats' }, stats),

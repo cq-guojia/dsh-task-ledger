@@ -27,33 +27,42 @@ const UI_BASE_CSS = `
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 其他待办表格（照参考图，用户 2026-10-18）：**无外框、无竖线**，段与段连着排；
-   每段 = 淡色段头（左：点+工作区名；右：共/待办/进行…统计）→ 淡色列头行 → 任务行；
-   任务行：细状态杠 + 标题两行 + 创建人/执行人/状态/时长 + 查看；行下一条线 + 很浅斑马纹。 */
-.dtl-group{margin-bottom:var(--dtl-space-4);}
-/* 段头：有一点颜色但不深（business-soft 淡蓝） */
+/* 其他待办 = 一张**连体长表**（用户 2026-10-18）：段与段**零间距、无圆角**，
+   上一段最后一条行线之下直接接下一段段头；行 = 一条底部分隔线 + 极浅斑马纹。 */
+.dtl-group{margin-bottom:0;}
+/* 段头：提亮的浅蓝底；高度 ≈1.7×（padding 7→12 且 min-height 40）；四角全方 */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
-  padding:7px var(--dtl-space-3);border:0;border-radius:var(--dtl-radius-sm) var(--dtl-radius-sm) 0 0;
-  background:var(--dtl-business-soft);color:inherit;font:inherit;text-align:left;cursor:pointer;}
-.dtl-group__dot{width:8px;height:8px;border-radius:50%;background:var(--dtl-fg-3);flex:none;}
-.dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
-.dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
+  min-height:40px;padding:12px var(--dtl-space-3);border:0;border-radius:0;
+  background:var(--dtl-group-head-bg);color:inherit;font:inherit;text-align:left;cursor:pointer;}
+.dtl-group__name{font-size:var(--dtl-font-md);font-weight:600;color:var(--dtl-fg);}
+.dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
+/* 段头标识：官方文件夹图标；图标缺席时回落成竖线（任务行用圆点，两处要区隔） */
+.dtl-group__bar{width:3px;height:14px;flex:none;border-radius:2px;background:var(--dtl-business);}
 /* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
    一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
-.dtl-orow{padding:8px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-orow{padding:10px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
 .dtl-orow:nth-of-type(odd){background:var(--dtl-zebra);}
 .dtl-orow:hover{background:var(--dtl-card-hover);}
-.dtl-orow__row{display:flex;align-items:center;gap:10px;}
+.dtl-orow__row{display:flex;align-items:center;gap:12px;}
 .dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
 .dtl-orow__name{font-size:var(--dtl-font-md);font-weight:500;line-height:var(--dtl-line-md);min-width:0;}
-.dtl-orow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
-.dtl-orow__tags{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;min-width:0;}
-/* 列：任务（弹性）/ 创建人 / 执行人 / 状态 / 时长 / 查看 */
+/* 第二行：执行人 + #标签（与标题行间距拉开，用户 2026-10-18） */
+.dtl-orow__tags{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:7px;min-width:0;}
+/* 执行人：别人在做 ⇒ @名字 摆标签行最前（「待认领」只在状态列出现一次，不再重复） */
+.dtl-orow__owner{flex:none;padding:0 6px;border-radius:999px;background:var(--dtl-open-bg-soft);
+  color:var(--dtl-fg-2);font-size:10px;line-height:16px;white-space:nowrap;}
+/* 列：任务（弹性）/ 状态 / 创建信息 / 操作 / 查看 */
 .dtl-tcell{min-width:0;}
 .dtl-tcell--title{flex:1 1 auto;}
-.dtl-tcell--who{flex:none;width:104px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
-.dtl-tcell--status{flex:none;width:72px;}
-.dtl-tcell--time{flex:none;width:64px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);text-align:right;}
+.dtl-tcell--status{flex:none;width:76px;}
+.dtl-tcell--created{flex:none;display:flex;align-items:center;justify-content:flex-end;
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+/* 悬停：时分秒让位给操作钮（与「我的待办」的 时间⇄按钮 同款互换） */
+.dtl-orow__created-short{display:none;}
+.dtl-orow:hover .dtl-orow__created-long{display:none;}
+.dtl-orow:hover .dtl-orow__created-short{display:inline;}
+.dtl-orow__actions{display:none;flex:none;gap:6px;}
+.dtl-orow:hover .dtl-orow__actions{display:inline-flex;}
 /* 状态列文字（待认领灰 / 进行中浅蓝；阻塞停滞仍是 pill） */
 .dtl-statustext{font-size:var(--dtl-font-xs);white-space:nowrap;}
 .dtl-statustext--doing{color:var(--dtl-business-dim);}
@@ -66,18 +75,13 @@ const UI_BASE_CSS = `
 .dtl-dot--stale{background:var(--dtl-danger);}
 .dtl-dot--open,.dtl-dot--closed{background:var(--dtl-fg-3);}
 
-/* 表格行首细状态杠（照参考图：行左竖条，3px 随行高）：同色系口径 */
-.dtl-bar{width:3px;align-self:stretch;flex:none;border-radius:2px;}
-.dtl-bar--doing{background:var(--dtl-business-dim);}
-.dtl-bar--blocked{background:var(--dtl-warning);}
-.dtl-bar--stale{background:var(--dtl-danger);}
-.dtl-bar--open,.dtl-bar--closed{background:var(--dtl-fg-3);}
-
-/* 「查看」钮：放大镜、常驻最右、无文字（用户 2026-10-17） */
-.dtl-viewbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;
-  width:24px;height:24px;flex:none;padding:0;border:0;border-radius:var(--dtl-radius-sm);
-  background:transparent;color:var(--dtl-fg-3);cursor:default;line-height:0;}
-.dtl-viewbtn:hover{color:var(--dtl-fg);background:var(--dtl-surface-2);}
+/* 「查看」钮：**与行内动作钮（.dtl-minibtn）同款皮肤**，只是没有文字（用户 2026-10-18：
+   原来透明底无描边，一开始根本看不出是个按钮） */
+.dtl-viewbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  flex:none;padding:4px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-sm);
+  line-height:18px;white-space:nowrap;cursor:default;}
+.dtl-viewbtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
 .dtl-viewbtn::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;z-index:5;
   padding:4px 8px;border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-2);
   box-shadow:var(--dtl-shadow-2);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);white-space:nowrap;
@@ -146,8 +150,11 @@ const UI_BASE_CSS = `
   opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-minibtn:hover::after{opacity:1;}
 
-/* 空态：真空 = 虚线引导卡；筛选空 = 小字 */
-.dtl-empty-guide{padding:var(--dtl-space-4);border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
+/* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
+   它贴在滚动条最底下，太窄用户根本看不见） */
+.dtl-empty-guide{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--dtl-space-2);min-height:180px;padding:var(--dtl-space-4);text-align:center;
+  border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
 .dtl-empty-filtered{padding:var(--dtl-space-4) 0;color:var(--dtl-fg-3);font-size:var(--dtl-font-md)}
 
 /* 浮标角标：0→n 跳变时一次脉冲，不自动消失 */

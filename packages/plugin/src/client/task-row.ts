@@ -6,10 +6,12 @@
  *    左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出
  *    「继续 / 结束 / 释放」；最右常驻「查看」放大镜钮。
  *
- * B. `others`（其他待办）= 真表格行（参考 Stripe Payments 表）：**无卡片、无外框**，
- *    行 = 一条淡分隔线格：状态圆点 + 任务（标题+标签两行）+ 创建人 + 执行人 +
- *    状态 + 时长 + 查看。圆点颜色：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/
- *    黄=阻塞 / 红=停滞；停滞 pill 悬停给**配置出来的**阈值解释（staleDays 由 host 下发）。
+ * B. `others`（其他待办）= 连体长表里的一行（用户 2026-10-18 定稿）：**无卡片、无外框**，
+ *    行 = 一条淡分隔线格：上下居中的状态圆点 + 任务（标题行 + 标签行；标签行最前是执行人
+ *    `@名字`，未认领则不摆）+ 状态列（阻塞/停滞 pill，待认领/进行中文字；「待认领」只出现一次）
+ *    + 最右「@创建人 创建于 年-月-日 时:分:秒」（悬停掉时分秒并让位给操作钮：没人在做 ⇒ 认领）
+ *    + 查看。圆点颜色：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞；
+ *    停滞 pill 悬停给**配置出来的**阈值解释（staleDays 由 host 下发）。
  *
  * 按钮点击行为（含查看）归「任务按钮与会话交接」任务，本文件只做样子与提示。
  */
@@ -85,35 +87,30 @@ export function TaskRowView(props: {
   )
 
   // 第一行（「其他待办」表格行）：独立类族，不沾卡片基类（用户 2026-10-18）。
+  // 只有标题 —— 创建信息挪到最右、异常 pill 归状态列，标题行不再重复一遍。
   const orowTitleLine = h('div', { className: 'dtl-orow__title' },
     h('span', { className: 'dtl-orow__name dtl-ellipsis', title: titleOf(row) }, titleOf(row)),
-    createdDay === null ? null : h('span', { className: 'dtl-orow__stamp' }, `[${t('fieldCreatedStamp', { day: createdDay })}]`),
-    blockedPill,
-    stalePill,
   )
-
-  // 时长（表格行「时长」列）：已进行 N 天 / 今天。
-  const duration = !isTask || row.task.ageDays === null || row.task.ageDays === undefined
-    ? '—'
-    : row.task.ageDays === 0 ? t('ageToday') : t('ageDaysText', { n: row.task.ageDays })
 
   // ── 形态 B：其他待办 = 真表格行（无卡片、无外框，一行一格）──
   if (variant === 'others') {
     const creator = isTask ? row.task.creator : row.record.owner
     const owner = isTask ? row.task.owner : null
-    const creatorText = creator === null || creator === undefined || creator === '' ? '—' : `@${creator}`
-    const ownerText = owner === null || owner === undefined || owner === '' ? t('ownerUnclaimed') : `@${owner}`
+    const hasOwner = !(owner === null || owner === undefined || owner === '')
+    const who = creator === null || creator === undefined || creator === '' ? '—' : `@${creator}`
+    const createdOk = created !== null && created !== undefined && Date.parse(created) >= 0
     return h('div', { className: 'dtl-orow' },
       h('div', { className: 'dtl-orow__row' },
-        h('span', { className: `dtl-bar dtl-bar--${tone}` }),
+        // 行标识：上下居中圆点（段头是文件夹/竖线，两处刻意不同）
+        h('span', { className: `dtl-dot dtl-dot--${tone}` }),
         h('div', { className: 'dtl-tcell dtl-tcell--title' },
           orowTitleLine,
           h('div', { className: 'dtl-orow__tags' },
+            // 执行人：别人在做 ⇒ @名字 摆标签行最前；未认领的不摆（「待认领」只在状态列出现一次）
+            hasOwner ? h('span', { className: 'dtl-orow__owner', title: t('fieldOwner') }, `@${String(owner)}`) : null,
             tags.map(tag => h('span', { key: tag, className: 'dtl-minitag', title: `#${tag}` }, `#${tag}`)),
           ),
         ),
-        h('span', { className: 'dtl-tcell dtl-tcell--who', title: creatorText }, creatorText),
-        h('span', { className: 'dtl-tcell dtl-tcell--who', title: ownerText }, ownerText),
         h('span', { className: 'dtl-tcell dtl-tcell--status' },
           tone === 'blocked' ? blockedPill : tone === 'stale' ? stalePill : null,
           tone === 'doing' || tone === 'open'
@@ -121,7 +118,18 @@ export function TaskRowView(props: {
                 tone === 'open' ? t('statusOpen') : t('statusActive'))
             : null,
         ),
-        h('span', { className: 'dtl-tcell dtl-tcell--time' }, duration),
+        // 最右：@创建人 创建于 年-月-日 时:分:秒（悬停掉掉时分秒，让位给操作钮）
+        h('span', { className: 'dtl-tcell dtl-tcell--created' },
+          h('span', { className: 'dtl-orow__created-long' },
+            t('createdAt', { who, when: createdOk ? formatDateTime(String(created), { seconds: true }) : t('timeUnknown') })),
+          h('span', { className: 'dtl-orow__created-short' },
+            t('createdAt', { who, when: createdOk ? formatDateTime(String(created)) : t('timeUnknown') })),
+        ),
+        h('span', { className: 'dtl-orow__actions' },
+          // 没人在做 ⇒ 「认领」（与状态列的「待认领」同词族，书面、不口语）
+          hasOwner ? null
+            : h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipClaim') }, t('actionClaim')),
+        ),
         viewButton,
       ),
     )

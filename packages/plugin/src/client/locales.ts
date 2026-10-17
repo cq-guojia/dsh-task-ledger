@@ -35,8 +35,9 @@ export type LocaleKey =
   | 'expandAria' | 'collapseAria'
   | 'ownerUnclaimed' | 'fieldCreator' | 'fieldOwner' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
   | 'ageDaysText' | 'ageToday'
-  | 'actionResume' | 'actionFinish' | 'actionRelease'
-  | 'tipResume' | 'tipFinish' | 'tipRelease' | 'viewDetail'
+  | 'actionResume' | 'actionFinish' | 'actionRelease' | 'actionClaim'
+  | 'tipResume' | 'tipFinish' | 'tipRelease' | 'tipClaim' | 'viewDetail'
+  | 'createdAt'
   | 'fieldCreatedStamp' | 'mineEmpty' | 'mineEmptyHint' | 'mineCount'
   | 'worklogTitle' | 'worklogPath' | 'worklogMissing'
   | 'mdCopy' | 'mdCopied' | 'mdFootnotes'
@@ -137,6 +138,9 @@ export const zh: Record<LocaleKey, string> = {
   tipResume: '继续推进这个任务',
   tipFinish: '结案并写入历史',
   tipRelease: '释放认领，让别人接手',
+  actionClaim: '认领',
+  tipClaim: '认领这个任务，变成我在做',
+  createdAt: '{who} 创建于 {when}',
   viewDetail: '查看详情',
   fieldCreatedStamp: '{day} 创建',
   mineEmpty: '您现在没有正在进行的工作',
@@ -251,6 +255,9 @@ export const en: Record<LocaleKey, string> = {
   tipResume: 'keep working on this task',
   tipFinish: 'close and archive it',
   tipRelease: 'release the claim for others',
+  actionClaim: 'Claim',
+  tipClaim: 'claim this task for yourself',
+  createdAt: 'created by {who} on {when}',
   viewDetail: 'View details',
   fieldCreatedStamp: 'created {day}',
   mineEmpty: 'Nothing in progress right now',
