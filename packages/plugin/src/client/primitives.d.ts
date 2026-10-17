@@ -77,4 +77,6 @@ declare module '@deepseek-ai/dsh-client-ui-primitives' {
   export const IconFlatListOutlineRegular: ComponentType<{ size?: number; className?: string }>
   /** 文件夹（工作区官方图标）：`IconFolderOpenOutlineRegular` —— 2026-10-18 解包 lib/index.js 亲验存在。 */
   export const IconFolderOpenOutlineRegular: ComponentType<{ size?: number; className?: string }>
+  /** 「认领」图标（库里最接近「接进来」的：箭头入盘）——2026-10-18 解包 lib/index.js 亲验存在。 */
+  export const IconDownloadOutlineRegular: ComponentType<{ size?: number; className?: string }>
 }

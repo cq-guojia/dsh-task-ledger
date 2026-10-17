@@ -315,14 +315,16 @@ window.__ModuleLoader__.load({
 				const hasOwner = !(owner === null || owner === void 0 || owner === "");
 				const who = creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`;
 				const createdOk = created !== null && created !== void 0 && Date.parse(created) >= 0;
-				return (0, react.createElement)("div", { className: "dtl-orow" }, (0, react.createElement)("div", { className: "dtl-orow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, orowTitleLine, (0, react.createElement)("div", { className: "dtl-orow__tags" }, hasOwner ? (0, react.createElement)("span", {
+				const ownerChip = hasOwner ? (0, react.createElement)("span", {
 					className: "dtl-orow__owner",
 					title: t("fieldOwner")
-				}, `@${String(owner)}`) : null, tags.map((tag) => (0, react.createElement)("span", {
+				}, `@${String(owner)}`) : null;
+				const tagLine = hasOwner || tags.length > 0 ? (0, react.createElement)("div", { className: "dtl-orow__tags" }, ownerChip, tags.map((tag) => (0, react.createElement)("span", {
 					key: tag,
 					className: "dtl-minitag",
 					title: `#${tag}`
-				}, `#${tag}`)))), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, tone === "blocked" ? blockedPill : tone === "stale" ? stalePill : null, tone === "doing" || tone === "open" ? (0, react.createElement)("span", { className: `dtl-statustext dtl-statustext--${tone}` }, tone === "open" ? t("statusOpen") : t("statusActive")) : null), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--created" }, (0, react.createElement)("span", { className: "dtl-orow__created-long" }, t("createdAt", {
+				}, `#${tag}`))) : null;
+				return (0, react.createElement)("div", { className: "dtl-orow" }, (0, react.createElement)("div", { className: "dtl-orow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, orowTitleLine, tagLine), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, tone === "blocked" ? blockedPill : tone === "stale" ? stalePill : null, tone === "doing" || tone === "open" ? (0, react.createElement)("span", { className: `dtl-statustext dtl-statustext--${tone}` }, tone === "open" ? t("statusOpen") : t("statusActive")) : null), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--created" }, (0, react.createElement)("span", { className: "dtl-orow__created-long" }, t("createdAt", {
 					who,
 					when: createdOk ? formatDateTime(String(created), { seconds: true }) : t("timeUnknown")
 				})), (0, react.createElement)("span", { className: "dtl-orow__created-short" }, t("createdAt", {
@@ -332,7 +334,7 @@ window.__ModuleLoader__.load({
 					type: "button",
 					className: "dtl-minibtn",
 					"data-tip": t("tipClaim")
-				}, t("actionClaim"))), viewButton));
+				}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 14 }), t("actionClaim"))), viewButton));
 			}
 			const parts = [];
 			if (isTask) {
@@ -405,8 +407,8 @@ body{
   --dtl-on-solid:var(--dsw-alias-label-primary,#1f2328);
   /* 斑马纹 / 次层面（浅色下近白、深色下深一档） */
   --dtl-plate:var(--dsw-static-neutral-50,#fafafa);
-  /* 斑马纹：很浅的一层（其他待办表格用） */
-  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 3%,transparent);
+  /* 斑马纹：几乎贴着原色的一层（用户 2026-10-18：3% 还是太明显） */
+  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 2%,transparent);
   --dtl-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);
   /* 表头底：浅色比斑马纹再深一档（两者不能撞色） */
   --dtl-head-bg:var(--dsw-static-neutral-100,#f5f5f5);
@@ -433,8 +435,8 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   /* 他人任务的 doing 色：比「我的」蓝灰一档（用户 2026-10-17：要和我的蓝区分） */
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
-  /* 段头底：**提亮的浅蓝**（用户 2026-10-18：原来又暗又灰）——在亮面上掺白，不掺灰 */
-  --dtl-group-head-bg:color-mix(in srgb,var(--dtl-business) 16%,#fff);
+  /* 段头底：**提亮的浅蓝**（用户 2026-10-18：原来又暗又灰）——亮面上掺白提亮，不掺灰 */
+  --dtl-group-head-bg:color-mix(in srgb,var(--dtl-business) 18%,#fff);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 8%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 8%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
@@ -505,7 +507,7 @@ body[data-ds-dark-theme]{
   --dtl-solid:var(--dsw-static-neutral-900,#0f0f0f);
   --dtl-on-solid:var(--dsw-static-neutral-00,#fff);
   --dtl-plate:var(--dsw-static-neutral-850,#212123);
-  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 4%,transparent);
+  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 2.5%,transparent);
   --dtl-plate-hover:var(--dsw-static-neutral-800,#292929);
   /* 暗色表头反过来：比卡片面亮、比斑马纹浅一档 */
   --dtl-head-bg:var(--dtl-surface-2);
@@ -521,8 +523,8 @@ body[data-ds-dark-theme]{
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
-  /* 段头底（暗）：深底上要「亮出来」⇒ 亮蓝半透明，不掺灰面 */
-  --dtl-group-head-bg:rgba(96,165,250,.20);
+  /* 段头底（暗）：深底上要「亮出来」⇒ 亮蓝半透明，且加浓到 .32（20% 压不住深底，会发灰） */
+  --dtl-group-head-bg:rgba(96,165,250,.32);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 5%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
@@ -673,8 +675,9 @@ body[data-ds-dark-theme]{
 .dtl-group__bar{width:3px;height:14px;flex:none;border-radius:2px;background:var(--dtl-business);}
 /* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
    一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
-.dtl-orow{padding:10px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
-.dtl-orow:nth-of-type(odd){background:var(--dtl-zebra);}
+.dtl-orow{padding:13px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
+/* 斑马纹落在 2、4、6 行（用户 2026-10-18：原来 1、3、5 看着像从第一行就开始断层） */
+.dtl-orow:nth-of-type(even){background:var(--dtl-zebra);}
 .dtl-orow:hover{background:var(--dtl-card-hover);}
 .dtl-orow__row{display:flex;align-items:center;gap:12px;}
 .dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
@@ -701,20 +704,22 @@ body[data-ds-dark-theme]{
 .dtl-statustext--doing{color:var(--dtl-business-dim);}
 .dtl-statustext--open{color:var(--dtl-fg-3);}
 
-/* 状态圆点（替代卡片形态的色条）：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞 */
-.dtl-dot{display:inline-block;width:8px;height:8px;flex:none;border-radius:50%;}
+/* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞；
+   6px（用户 2026-10-18：8px 太大） */
+.dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
 .dtl-dot--doing{background:var(--dtl-business-dim);}
 .dtl-dot--blocked{background:var(--dtl-warning);}
 .dtl-dot--stale{background:var(--dtl-danger);}
 .dtl-dot--open,.dtl-dot--closed{background:var(--dtl-fg-3);}
 
-/* 「查看」钮：**与行内动作钮（.dtl-minibtn）同款皮肤**，只是没有文字（用户 2026-10-18：
-   原来透明底无描边，一开始根本看不出是个按钮） */
-.dtl-viewbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  flex:none;padding:4px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-sm);
-  line-height:18px;white-space:nowrap;cursor:default;}
+/* 「查看」钮：与行内动作钮（.dtl-minibtn）同款皮肤、**正方形（26×26，宽=高）**、
+   **默认不显、悬停才出来**（用户 2026-10-18：跟认领/继续那几个一起浮现） */
+.dtl-viewbtn{position:relative;display:none;align-items:center;justify-content:center;gap:5px;
+  flex:none;width:26px;height:26px;padding:0;border:1px solid var(--dtl-border);
+  border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-1);color:var(--dtl-fg-2);
+  font:inherit;font-size:var(--dtl-font-sm);line-height:18px;white-space:nowrap;cursor:default;}
 .dtl-viewbtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
+.dtl-taskrow__row:hover .dtl-viewbtn,.dtl-orow:hover .dtl-viewbtn{display:inline-flex;}
 .dtl-viewbtn::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;z-index:5;
   padding:4px 8px;border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-2);
   box-shadow:var(--dtl-shadow-2);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);white-space:nowrap;

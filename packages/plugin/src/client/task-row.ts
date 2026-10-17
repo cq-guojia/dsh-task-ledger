@@ -17,7 +17,7 @@
  */
 import { createElement as h, type ReactNode } from 'react'
 import {
-  IconCheckOutlineRegular, IconChevronRightOutlineRegular, IconSearchOutlineRegular,
+  IconCheckOutlineRegular, IconChevronRightOutlineRegular, IconDownloadOutlineRegular, IconSearchOutlineRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatDateTime } from './format'
 import type { Translate } from './locales'
@@ -99,17 +99,24 @@ export function TaskRowView(props: {
     const hasOwner = !(owner === null || owner === undefined || owner === '')
     const who = creator === null || creator === undefined || creator === '' ? '—' : `@${creator}`
     const createdOk = created !== null && created !== undefined && Date.parse(created) >= 0
+    // 第二行（标签行）：没执行人又没标签就**整行不渲染**——标题下面不许留一排空的
+    // （用户 2026-10-18：「你的标题紧接着第一个是空的」）
+    const ownerChip = hasOwner
+      ? h('span', { className: 'dtl-orow__owner', title: t('fieldOwner') }, `@${String(owner)}`)
+      : null
+    const tagLine = hasOwner || tags.length > 0
+      ? h('div', { className: 'dtl-orow__tags' },
+          ownerChip,
+          tags.map(tag => h('span', { key: tag, className: 'dtl-minitag', title: `#${tag}` }, `#${tag}`)),
+        )
+      : null
     return h('div', { className: 'dtl-orow' },
       h('div', { className: 'dtl-orow__row' },
         // 行标识：上下居中圆点（段头是文件夹/竖线，两处刻意不同）
         h('span', { className: `dtl-dot dtl-dot--${tone}` }),
         h('div', { className: 'dtl-tcell dtl-tcell--title' },
           orowTitleLine,
-          h('div', { className: 'dtl-orow__tags' },
-            // 执行人：别人在做 ⇒ @名字 摆标签行最前；未认领的不摆（「待认领」只在状态列出现一次）
-            hasOwner ? h('span', { className: 'dtl-orow__owner', title: t('fieldOwner') }, `@${String(owner)}`) : null,
-            tags.map(tag => h('span', { key: tag, className: 'dtl-minitag', title: `#${tag}` }, `#${tag}`)),
-          ),
+          tagLine,
         ),
         h('span', { className: 'dtl-tcell dtl-tcell--status' },
           tone === 'blocked' ? blockedPill : tone === 'stale' ? stalePill : null,
@@ -126,9 +133,10 @@ export function TaskRowView(props: {
             t('createdAt', { who, when: createdOk ? formatDateTime(String(created)) : t('timeUnknown') })),
         ),
         h('span', { className: 'dtl-orow__actions' },
-          // 没人在做 ⇒ 「认领」（与状态列的「待认领」同词族，书面、不口语）
+          // 没人在做 ⇒ 「认领」（与状态列的「待认领」同词族，书面、不口语）；带图标
           hasOwner ? null
-            : h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipClaim') }, t('actionClaim')),
+            : h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipClaim') },
+                h(IconDownloadOutlineRegular, { size: 14 }), t('actionClaim')),
         ),
         viewButton,
       ),
