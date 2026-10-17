@@ -28,11 +28,12 @@ export type LocaleKey =
   | 'workspaceLabel' | 'workspaceAll'
   | 'searchPlaceholder'
   // 列表分区
-  | 'regionMine' | 'regionMineHint' | 'regionWorkspaces' | 'groupHint' | 'showingCount'
+  | 'regionMine' | 'regionWorkspaces' | 'groupHint' | 'showingCount'
   | 'expandAria' | 'collapseAria'
   | 'ownerUnclaimed' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
-  | 'rowAge'
-  | 'actionResume' | 'actionFinish' | 'actionTransfer'
+  | 'ageDaysText' | 'ageToday'
+  | 'actionResume' | 'actionFinish' | 'actionRelease'
+  | 'tipResume' | 'tipFinish' | 'tipRelease'
   | 'fieldCreatedStamp' | 'mineEmpty' | 'mineEmptyHint'
   | 'worklogTitle' | 'worklogPath' | 'worklogMissing'
   | 'mdCopy' | 'mdCopied' | 'mdFootnotes'
@@ -96,10 +97,9 @@ export const zh: Record<LocaleKey, string> = {
   statusStale: '停滞',
   workspaceLabel: '工作区',
   workspaceAll: '全部工作区',
-  searchPlaceholder: '搜索标题 / 任务号 / 人 / 分类 / 标签',
+  searchPlaceholder: '搜索任务',
 
   regionMine: '我的待办',
-  regionMineHint: '跨工作区，按创建时间倒序',
   regionWorkspaces: '按工作区',
   groupHint: '进行中 {doing} ｜ 待认领 {open}',
   showingCount: '显示 {n} 条',
@@ -111,10 +111,14 @@ export const zh: Record<LocaleKey, string> = {
   fieldStarted: '开始',
   fieldFinished: '结案',
   timeUnknown: '时间未知',
-  rowAge: '已做 {n} 天',
+  ageDaysText: '已进行 {n} 天',
+  ageToday: '今天',
   actionResume: '继续',
   actionFinish: '结束',
-  actionTransfer: '转移',
+  actionRelease: '释放',
+  tipResume: '继续推进这个任务',
+  tipFinish: '结案并写入历史',
+  tipRelease: '释放认领，让别人接手',
   fieldCreatedStamp: '{day} 创建',
   mineEmpty: '您现在没有正在进行的工作',
   mineEmptyHint: '在某个工作区 new 一个任务，或到下面认领一条待认领任务，这里就会出现。',
@@ -190,10 +194,9 @@ export const en: Record<LocaleKey, string> = {
   statusStale: 'Stale',
   workspaceLabel: 'Workspace',
   workspaceAll: 'All workspaces',
-  searchPlaceholder: 'Search title / id / person / category / tag',
+  searchPlaceholder: 'Search tasks',
 
   regionMine: 'My todos',
-  regionMineHint: 'across workspaces, newest first',
   regionWorkspaces: 'By workspace',
   groupHint: '{doing} active ｜ {open} unclaimed',
   showingCount: '{n} shown',
@@ -205,10 +208,14 @@ export const en: Record<LocaleKey, string> = {
   fieldStarted: 'started',
   fieldFinished: 'closed',
   timeUnknown: 'unknown time',
-  rowAge: 'active for {n}d',
+  ageDaysText: 'active {n}d',
+  ageToday: 'today',
   actionResume: 'Resume',
   actionFinish: 'Close',
-  actionTransfer: 'Transfer',
+  actionRelease: 'Release',
+  tipResume: 'keep working on this task',
+  tipFinish: 'close and archive it',
+  tipRelease: 'release the claim for others',
   fieldCreatedStamp: 'created {day}',
   mineEmpty: 'Nothing in progress right now',
   mineEmptyHint: 'Create a task in a workspace or claim one below, and it shows up here.',

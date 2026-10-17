@@ -63,9 +63,12 @@ declare module '@deepseek-ai/dsh-client-ui-primitives' {
     variant?: 'body' | 'compact'
   }>
 
-  /** 图标：色随 currentColor。 */
+  /** 图标：色随 currentColor。（2026-10-17 rc.2 icons/index.d.ts 亲验新增三个） */
   export const IconRefreshOutlineRegular: ComponentType<{ size?: number; className?: string }>
   export const IconSearchOutlineRegular: ComponentType<{ size?: number; className?: string }>
   export const IconChevronRightOutlineRegular: ComponentType<{ size?: number; className?: string }>
   export const IconChevronDownOutlineRegular: ComponentType<{ size?: number; className?: string }>
+  export const IconPlayOutlineRegular: ComponentType<{ size?: number; className?: string }>
+  export const IconCheckOutlineRegular: ComponentType<{ size?: number; className?: string }>
+  export const IconUsersOutlineRegular: ComponentType<{ size?: number; className?: string }>
 }

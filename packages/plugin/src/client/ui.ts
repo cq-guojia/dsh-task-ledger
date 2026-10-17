@@ -47,15 +47,14 @@ const UI_BASE_CSS = `
 .dtl-taskrow__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);min-width:0;flex:0 1 auto;}
 .dtl-taskrow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-/* 第二行小字：工作区 · #标签 */
-.dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;
+/* 第二行小字：工作区 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
+.dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
-/* 右侧：绿底 pill（仿 dispatch「N 天前」）⇄ 悬停按钮排 */
-.dtl-taskrow__age{flex:none;padding:1px 8px;border-radius:999px;background:var(--dtl-business-soft);
-  color:var(--dtl-business);font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;
+/* 右侧灰字：2026-10-17 开始丨已进行 12 天（用户 2026-10-17：不要蓝，一行灰字） */
+.dtl-taskrow__when{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-.dtl-taskrow__actions{display:none;flex:none;gap:4px;}
-.dtl-taskrow__row:hover .dtl-taskrow__age{display:none;}
+.dtl-taskrow__actions{display:none;flex:none;gap:6px;}
+.dtl-taskrow__row:hover .dtl-taskrow__when{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
 
 /* 异常 pill：阻塞=黄 / 停滞=红（进行中无标记，只有色条） */
@@ -68,11 +67,23 @@ const UI_BASE_CSS = `
   color:var(--dtl-fg-3);font-size:10px;line-height:16px;white-space:nowrap;max-width:120px;
   overflow:hidden;text-overflow:ellipsis;}
 
-/* 行内迷你按钮（样子先行，点击行为归「任务按钮与会话交接」任务） */
-.dtl-minibtn{padding:1px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-xs);
-  line-height:16px;white-space:nowrap;cursor:default;}
+/* 分区标题里的计数徽：很小、圆套起来（用户 2026-10-17） */
+.dtl-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;
+  padding:0 4px;border:1px solid var(--dtl-border-strong);border-radius:999px;
+  font-size:10px;line-height:14px;color:var(--dtl-fg-3);font-weight:400;font-variant-numeric:tabular-nums;}
+
+/* 行内动作按钮（icon + 字，加大；悬停立刻浮出说明——CSS ::after，不用慢半拍的原生 title）。
+   样子先行，点击行为归「任务按钮与会话交接」任务 */
+.dtl-minibtn{position:relative;display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+  border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-sm);
+  line-height:18px;white-space:nowrap;cursor:default;}
 .dtl-minibtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
+.dtl-minibtn::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;z-index:5;
+  padding:4px 8px;border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-2);
+  box-shadow:var(--dtl-shadow-2);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-minibtn:hover::after{opacity:1;}
 
 /* 空态：真空 = 虚线引导卡；筛选空 = 小字 */
 .dtl-empty-guide{padding:var(--dtl-space-4);border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}

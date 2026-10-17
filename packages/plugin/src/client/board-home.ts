@@ -191,18 +191,6 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                 ),
               ),
 
-            // ── 搜索行：贴在统计块下（用户 2026-10-17 定稿），只作用于下方第三区，不碰「我的待办」──
-            h('div', { style: filterRowStyle },
-              h('div', { style: searchWrapStyle },
-                h(SearchInput, {
-                  value: state.query.keyword,
-                  placeholder: t('searchPlaceholder'),
-                  ariaLabel: t('searchPlaceholder'),
-                  onChange: (next) => { setQuery({ keyword: next }) },
-                }),
-              ),
-            ),
-
             // ── 列表 ──
             state.status === 'loading' && board === null
               ? null // 未就绪：不渲染
@@ -214,14 +202,28 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                 : board !== null && board.workspaces.length === 0
                   ? h(EmptyState, { tone: 'guide', title: t('emptyNoWorkspace'), hint: t('emptyNoWorkspaceHint') })
                   : h('div', null,
-                      // 第一区：我的待办——定死全量、不过滤（用户 2026-10-17），空了给引导卡
+                      // 第一区：我的待办——定死全量、不过滤（用户 2026-10-17），空了给引导卡；
+                      // 标题行右侧挂搜索框（只作用第三区），计数用小圆徽
                       h('div', { style: regionHeadStyle },
-                        h('span', null, `${t('regionMine')} ${view.mine.length}`),
-                        h('span', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)', fontWeight: 400 } }, t('regionMineHint')),
+                        h('span', null, t('regionMine')),
+                        h('span', { className: 'dtl-count' }, String(view.mine.length)),
+                        h('span', { style: { flex: '1 1 auto' } }),
+                        h('div', { style: { width: '220px', display: 'flex' } },
+                          h(SearchInput, {
+                            value: state.query.keyword,
+                            placeholder: t('searchPlaceholder'),
+                            ariaLabel: t('searchPlaceholder'),
+                            onChange: (next) => { setQuery({ keyword: next }) },
+                          }),
+                        ),
                       ),
                       view.mine.length === 0
                         ? h(EmptyState, { tone: 'guide', title: t('mineEmpty'), hint: t('mineEmptyHint') })
-                        : view.mine.map(row => h(TaskRowView, { key: row.key, t, row, showWorkspace: true })),
+                        // ⚠️ 模拟数据（用户要求先看效果，非真实状态）：第一行强显「阻塞」、第二行强显「停滞」，验收后删 mockTone
+                        : view.mine.map((row, index) => h(TaskRowView, {
+                          key: row.key, t, row, showWorkspace: true,
+                          mockTone: index === 0 ? 'blocked' : index === 1 ? 'stale' : undefined,
+                        })),
                       // 第二区：按工作区分组（组可折叠；第三区改造前的过渡形态，吃关键字过滤）
                       view.groups.length === 0
                         ? null
