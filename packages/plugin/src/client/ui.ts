@@ -29,11 +29,16 @@ const UI_BASE_CSS = `
 
 /* 其他待办 = 一张**连体长表**（用户 2026-10-18）：段与段**零间距、无圆角**，
    上一段最后一条行线之下直接接下一段段头；行 = 一条底部分隔线 + 极浅斑马纹。 */
-.dtl-group{margin-bottom:0;}
-/* 段头：提亮的浅蓝底；高度 ≈1.7×（padding 7→12 且 min-height 40）；四角全方 */
+/* 每一段 = 一张**有左右边框的整表**（用户 2026-10-18：外面包起来，看着才像表格）；
+   段与段零间距：上一段的底边直接就是下一段的顶边。 */
+.dtl-group{margin-bottom:0;
+  border-left:1px solid var(--dtl-border);border-right:1px solid var(--dtl-border);
+  border-bottom:1px solid var(--dtl-border);}
+/* 段头底：改用「我的待办」卡面那种**稍亮的中性灰**（用户 2026-10-18：蓝不好看）；
+   高度 ≈1.7×（padding 7→12 且 min-height 40）；四角全方 */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
   min-height:40px;padding:12px var(--dtl-space-3);border:0;border-radius:0;
-  background:var(--dtl-group-head-bg);color:inherit;font:inherit;text-align:left;cursor:pointer;}
+  background:var(--dtl-surface-1);color:inherit;font:inherit;text-align:left;cursor:pointer;}
 .dtl-group__name{font-size:var(--dtl-font-md);font-weight:600;color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
 /* 段头标识：官方文件夹图标；图标缺席时回落成竖线（任务行用圆点，两处要区隔） */
@@ -43,6 +48,8 @@ const UI_BASE_CSS = `
 .dtl-orow{padding:13px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
 /* 斑马纹落在 2、4、6 行（用户 2026-10-18：原来 1、3、5 看着像从第一行就开始断层） */
 .dtl-orow:nth-of-type(even){background:var(--dtl-zebra);}
+/* 末行不画线：段的底边由 .dtl-group 自己收口，避免叠成 2px */
+.dtl-orow:last-of-type{border-bottom:0;}
 .dtl-orow:hover{background:var(--dtl-card-hover);}
 .dtl-orow__row{display:flex;align-items:center;gap:12px;}
 .dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
