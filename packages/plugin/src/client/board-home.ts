@@ -10,11 +10,11 @@ import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore,
 import { IconChecklistOutlineRegular, IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { LocaleKey, Translate } from './locales'
 import { boardSnapshot, boardSubscribe, refresh, setQuery } from './store'
-import { selectView, type WorkspaceGroup } from './rows'
+import { isMine, selectView, type WorkspaceGroup } from './rows'
 import type { PeriodCounts } from './types'
 import { TaskRowView } from './task-row'
 import {
-  Button, ChartLegend, EmptyState, ensureUiBase, GroupedBarChart, SearchInput, Segmented, StatCard,
+  Button, ChartLegend, EmptyState, ensureUiBase, FilterBar, GroupedBarChart, Segmented, StatCard,
 } from './ui'
 
 type Tab = 'tasks' | 'stats'
@@ -36,11 +36,6 @@ const statsRowStyle: Record<string, string | number> = { marginBottom: 'var(--dt
 const chartCardStyle: Record<string, string | number> = {
   display: 'flex', flexDirection: 'column', gap: 'var(--dtl-space-2)', padding: 'var(--dtl-space-2) var(--dtl-space-3)',
 }
-const filterRowStyle: Record<string, string | number> = {
-  display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)', flexWrap: 'wrap',
-  marginBottom: 'var(--dtl-space-3)',
-}
-const searchWrapStyle: Record<string, string | number> = { flex: '1 1 220px', minWidth: 0 }
 const hintStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-sm)', color: 'var(--dtl-fg-2)' }
 /** 分区标题行：垂直居中（用户 2026-10-17：图标 / 标题 / 计数不许像下楼梯一样逐个低）。 */
 const regionHeadRowStyle: Record<string, string | number> = {
@@ -48,7 +43,6 @@ const regionHeadRowStyle: Record<string, string | number> = {
   margin: 'var(--dtl-space-4) 0 var(--dtl-space-2)',
 }
 const regionHeadTitleStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-lg)', fontWeight: 600 }
-const searchBoxStyle: Record<string, string | number> = { width: '220px', flex: 'none' }
 const groupHeadStyle: Record<string, string | number> = {
   display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)', width: '100%',
   padding: 'var(--dtl-space-2) var(--dtl-space-3)', border: 0, borderRadius: 'var(--dtl-radius-md)',
@@ -71,6 +65,15 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
   const board = state.board
   const view = useMemo(() => selectView(state), [state])
   const stats = board?.stats
+  // 工作区下拉候选（用户 2026-10-17）：不读系统全量工作区，只从「我的」任务里提取工作区并排重
+  // ⇒ 没有我任务的工作区不出现；口径与第一区一致（isMine 同源）。
+  const workspaceOptions = useMemo(() => [
+    { value: '', label: t('workspaceAll') },
+    ...[...new Map((board?.tasks ?? [])
+      .filter((task) => isMine(task, board))
+      .map((task) => [task.workspace.id, task.workspace.title]))]
+      .map(([id, title]) => ({ value: id, label: title })),
+  ], [board, t])
   const days = (value: number | null | undefined): string =>
     value === null || value === undefined ? t('daysNone') : t('daysValue', { n: value })
 
@@ -215,14 +218,17 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                           ? h('span', { className: 'dtl-count' }, t('mineCount', { n: view.mine.length }))
                           : null,
                         h('span', { style: { flex: '1 1 auto' } }),
-                        h('div', { style: searchBoxStyle },
-                          h(SearchInput, {
-                            value: state.query.keyword,
-                            placeholder: t('searchPlaceholder'),
-                            ariaLabel: t('searchPlaceholder'),
-                            onChange: (next) => { setQuery({ keyword: next }) },
-                          }),
-                        ),
+                        h(FilterBar, {
+                          width: 360,
+                          selectValue: state.query.workspace,
+                          selectOptions: workspaceOptions,
+                          selectPlaceholder: t('workspaceAll'),
+                          onSelectChange: (next) => { setQuery({ workspace: next }) },
+                          searchValue: state.query.keyword,
+                          searchPlaceholder: t('searchPlaceholder'),
+                          onSearchChange: (next) => { setQuery({ keyword: next }) },
+                          ariaLabel: t('regionMine'),
+                        }),
                       ),
                       view.mine.length === 0
                         ? h(EmptyState, { tone: 'guide', title: t('mineEmpty'), hint: t('mineEmptyHint') })

@@ -64,6 +64,7 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
   if (board === null) return { mine: [], groups: [], total: 0 }
   const mineRows: Row[] = board.tasks
     .filter((task) => isMine(task, board))
+    .filter((task) => query.workspace === '' || task.workspace.id === query.workspace)
     .filter((task) => hitKeyword(query.keyword, [task.title, task.id, task.owner, task.creator, task.category, ...(task.tags ?? [])]))
     .sort((a, b) => String(b.created ?? b.started ?? '').localeCompare(String(a.created ?? a.started ?? '')))
     .map((task): Row => ({ kind: 'task', key: `${task.workspace.id}:${task.id}`, task, mine: true }))

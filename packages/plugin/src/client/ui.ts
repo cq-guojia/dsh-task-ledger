@@ -111,6 +111,11 @@ const UI_BASE_CSS = `
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
+/* 过滤条：左下拉（定宽）+ 右搜索（撑满），控件同高 28 */
+.dtl-filterbar{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;}
+.dtl-filterbar > .dtl-select{flex:none;width:140px;}
+.dtl-filterbar > .dtl-input{flex:1 1 auto;min-width:0;}
+
 /* 「只看我的」小复选框（替掉右上角的分段切换） */
 .dtl-check{display:inline-flex;align-items:center;gap:5px;height:20px;margin-top:-2px;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);cursor:pointer;user-select:none;white-space:nowrap;}
@@ -290,6 +295,46 @@ export function SearchInput(props: {
     spellCheck: false,
     onChange: (event: ChangeEvent<HTMLInputElement>) => { props.onChange(event.target.value) },
   })
+}
+
+/* ── 顶栏过滤组合（下拉 + 搜索）──────────────────────────────────── */
+
+/**
+ * 过滤条（用户 2026-10-17：与 dispatch-table 顶排同思路——「一类控件一处抽象」，
+ * 下拉与搜索的组合只在这一处实现，页面只喂选项与回调，不各写一份布局）。
+ * 高度走同一档 28（`Select` / `SearchInput` 内部同 `--dtl-control-h-md`），左下拉右搜索。
+ */
+export function FilterBar(props: {
+  selectValue: string
+  selectOptions: readonly { value: string; label: string }[]
+  selectPlaceholder: string
+  onSelectChange: (next: string) => void
+  searchValue: string
+  searchPlaceholder: string
+  onSearchChange: (next: string) => void
+  /** 无障碍名（下拉与搜索共用同一语义前缀）。 */
+  ariaLabel: string
+  /** 定宽（px）；不给就撑满父容器。 */
+  width?: number
+}): ReactNode {
+  ensureUiBase()
+  return h('div', {
+    className: 'dtl-filterbar',
+    style: props.width === undefined ? undefined : { width: `${props.width}px` },
+  },
+    h(Select<string>, {
+      value: props.selectValue,
+      options: props.selectOptions,
+      onChange: props.onSelectChange,
+      ariaLabel: `${props.ariaLabel}·${props.selectPlaceholder}`,
+    }),
+    h(SearchInput, {
+      value: props.searchValue,
+      placeholder: props.searchPlaceholder,
+      ariaLabel: `${props.ariaLabel}·${props.searchPlaceholder}`,
+      onChange: props.onSearchChange,
+    }),
+  )
 }
 
 /* ── 卡 / chip / 空态 ─────────────────────────────────────────────── */

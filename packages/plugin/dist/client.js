@@ -160,7 +160,7 @@ window.__ModuleLoader__.load({
 				groups: [],
 				total: 0
 			};
-			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => hitKeyword(query.keyword, [
+			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => query.workspace === "" || task.workspace.id === query.workspace).filter((task) => hitKeyword(query.keyword, [
 				task.title,
 				task.id,
 				task.owner,
@@ -667,6 +667,11 @@ body[data-ds-dark-theme]{
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
+/* 过滤条：左下拉（定宽）+ 右搜索（撑满），控件同高 28 */
+.dtl-filterbar{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;}
+.dtl-filterbar > .dtl-select{flex:none;width:140px;}
+.dtl-filterbar > .dtl-input{flex:1 1 auto;min-width:0;}
+
 /* 「只看我的」小复选框（替掉右上角的分段切换） */
 .dtl-check{display:inline-flex;align-items:center;gap:5px;height:20px;margin-top:-2px;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);cursor:pointer;user-select:none;white-space:nowrap;}
@@ -750,6 +755,23 @@ body[data-ds-dark-theme]{
 				onClick: props.onClick
 			}, props.icon, props.children);
 		}
+		/** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。 */
+		function Select(props) {
+			ensureUiBase();
+			const size = props.size ?? "md";
+			return (0, react.createElement)("select", {
+				className: `dtl-select dtl-select--${size}`,
+				"aria-label": props.ariaLabel,
+				style: props.width === void 0 ? void 0 : { width: `${props.width}px` },
+				value: props.value,
+				onChange: (event) => {
+					props.onChange(event.target.value);
+				}
+			}, props.options.map((option) => (0, react.createElement)("option", {
+				key: option.value,
+				value: option.value
+			}, option.label)));
+		}
 		/** 搜索框（关键字过滤；占满剩余宽度由调用方的 flex 决定）。 */
 		function SearchInput(props) {
 			ensureUiBase();
@@ -765,6 +787,28 @@ body[data-ds-dark-theme]{
 					props.onChange(event.target.value);
 				}
 			});
+		}
+		/**
+		* 过滤条（用户 2026-10-17：与 dispatch-table 顶排同思路——「一类控件一处抽象」，
+		* 下拉与搜索的组合只在这一处实现，页面只喂选项与回调，不各写一份布局）。
+		* 高度走同一档 28（`Select` / `SearchInput` 内部同 `--dtl-control-h-md`），左下拉右搜索。
+		*/
+		function FilterBar(props) {
+			ensureUiBase();
+			return (0, react.createElement)("div", {
+				className: "dtl-filterbar",
+				style: props.width === void 0 ? void 0 : { width: `${props.width}px` }
+			}, (0, react.createElement)(Select, {
+				value: props.selectValue,
+				options: props.selectOptions,
+				onChange: props.onSelectChange,
+				ariaLabel: `${props.ariaLabel}·${props.selectPlaceholder}`
+			}), (0, react.createElement)(SearchInput, {
+				value: props.searchValue,
+				placeholder: props.searchPlaceholder,
+				ariaLabel: `${props.ariaLabel}·${props.searchPlaceholder}`,
+				onChange: props.onSearchChange
+			}));
 		}
 		/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。
 		*  `value` 为 0 时显示「—」（用户 2026-10-17 定稿：0 会被读成「没数据 / 出错了」）；
@@ -967,10 +1011,6 @@ body[data-ds-dark-theme]{
 			fontSize: "var(--dtl-font-lg)",
 			fontWeight: 600
 		};
-		const searchBoxStyle = {
-			width: "220px",
-			flex: "none"
-		};
 		const groupHeadStyle = {
 			display: "flex",
 			alignItems: "center",
@@ -1003,6 +1043,13 @@ body[data-ds-dark-theme]{
 			const board = state.board;
 			const view = (0, react.useMemo)(() => selectView(state), [state]);
 			const stats = board?.stats;
+			const workspaceOptions = (0, react.useMemo)(() => [{
+				value: "",
+				label: t("workspaceAll")
+			}, ...[...new Map((board?.tasks ?? []).filter((task) => isMine(task, board)).map((task) => [task.workspace.id, task.workspace.title]))].map(([id, title]) => ({
+				value: id,
+				label: title
+			}))], [board, t]);
 			const days = (value) => value === null || value === void 0 ? t("daysNone") : t("daysValue", { n: value });
 			/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
 			const card = (label, value, hint) => (0, react.createElement)(StatCard, {
@@ -1139,14 +1186,21 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-3)",
 				display: "inline-flex",
 				flex: "none"
-			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: regionHeadTitleStyle }, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, t("mineCount", { n: view.mine.length })) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: searchBoxStyle }, (0, react.createElement)(SearchInput, {
-				value: state.query.keyword,
-				placeholder: t("searchPlaceholder"),
-				ariaLabel: t("searchPlaceholder"),
-				onChange: (next) => {
+			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: regionHeadTitleStyle }, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, t("mineCount", { n: view.mine.length })) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)(FilterBar, {
+				width: 360,
+				selectValue: state.query.workspace,
+				selectOptions: workspaceOptions,
+				selectPlaceholder: t("workspaceAll"),
+				onSelectChange: (next) => {
+					setQuery({ workspace: next });
+				},
+				searchValue: state.query.keyword,
+				searchPlaceholder: t("searchPlaceholder"),
+				onSearchChange: (next) => {
 					setQuery({ keyword: next });
-				}
-			}))), view.mine.length === 0 ? (0, react.createElement)(EmptyState, {
+				},
+				ariaLabel: t("regionMine")
+			})), view.mine.length === 0 ? (0, react.createElement)(EmptyState, {
 				tone: "guide",
 				title: t("mineEmpty"),
 				hint: t("mineEmptyHint")

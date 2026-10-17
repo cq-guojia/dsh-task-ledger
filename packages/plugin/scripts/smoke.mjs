@@ -304,13 +304,16 @@ await check('客户端两区视图：我的待办吃标题搜索 / 按工作区�
   assert.deepEqual(view.groups.map(g => g.workspaceId), ['w2'], '第二区只剩 B 项目（A 的我那款已进第一区，不重复）')
   assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '组内：别人在做的在前、待认领在后')
   assert.equal(view.total, 3)
-  // 搜索只归第一区（用户 2026-10-17 二次定稿）：我的待办吃标题关键字，第二区原样不动
+  // 搜索 / 工作区只归第一区（用户 2026-10-17 二次定稿）：第二区原样不动（第三区过滤未建）
   view = selectView(state({ ...base, keyword: '甲' }))
   assert.deepEqual(ids(view.mine), ['t1'], '我的待办吃标题搜索')
   assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '搜索不影响第二区（第三区过滤未建）')
   view = selectView(state({ ...base, keyword: '不存在的词' }))
   assert.deepEqual(view.mine, [], '我的待办搜空即空')
   assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '搜空也不影响第二区')
+  view = selectView(state({ ...base, workspace: 'w2' }))
+  assert.deepEqual(view.mine, [], '我的待办吃工作区过滤（w2 没有我的任务 ⇒ 空）')
+  assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '工作区过滤也不影响第二区')
   // 范围 = 我的 ⇒ 不出第二区（query 保留字段，界面暂无控件）
   view = selectView(state({ ...base, scope: 'mine' }))
   assert.deepEqual(ids(view.mine), ['t1'])
