@@ -12,4 +12,4 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 ## Status
 
 - `task-ledger@1.0.2` published (2026-10-17): `history` JSON mode now emits JSON even when a workspace has no history files (fixes a 500 that blanked the whole board).
-- `dsh-task-ledger@0.0.10` published (2026-10-17): stats area now matches the reference layout — 8 blocks on the left (2 rows × 4 columns: operation console + stats console) with the trend chart card stretched to the same height on the right; chart gained y-axis ticks, gridlines, value labels on top of bars, legend and average line.
+- `dsh-task-ledger@0.0.11` published (2026-10-17): added a left sidebar entry (`sidebar.panellist`) next to the existing right overlay badge; chart reworked to match the reference — solid-grey created bars, y-axis ticks + gridlines, hover tooltip per week, a small "mine only" checkbox instead of the segmented toggle, no average line / long caption / redundant title, and the chart card is now exactly as tall as the 8 blocks; page max-width 1120 → 1280.

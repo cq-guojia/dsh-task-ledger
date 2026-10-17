@@ -8,7 +8,7 @@
  *  2. **元件**：分段 / 按钮 / 图标钮 / 输入 / 下拉 / 卡 / chip / 空态 / 图表各一份，
  *     页面与浮标共用。官方 primitives 只留「官方做得更好」的（StateDot / MarkdownText / 图标）。
  */
-import { createElement as h, type ChangeEvent, type CSSProperties, type ReactNode } from 'react'
+import { createElement as h, useState, type ChangeEvent, type CSSProperties, type ReactNode } from 'react'
 import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from './tokens'
 
 /** 基础层样式（tokens + 控件皮肤；幂等注入）。 */
@@ -41,50 +41,51 @@ const UI_BASE_CSS = `
 .dtl-badge[data-pulse="true"]{animation:dtl-pulse 900ms var(--dtl-ease) 1}
 @keyframes dtl-pulse{0%{transform:scale(.6);opacity:.4}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 
-/* 过程正文：宽度受限、长行折行 */
-.dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
-
-/* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图（参考图同款分栏）。
-   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。 */
+/* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
+   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
+   两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
 .dtl-stats{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
-.dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,auto);
-  gap:var(--dtl-space-3);align-content:start;}
+.dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:var(--dtl-space-3);}
+.dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
-@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
-/* 趋势分组柱状图：细柱 + y 轴刻度 + 网格线 + 柱顶数值 + 均值虚线（参考图信息密度） */
-.dtl-gchart{position:relative;height:104px;border-bottom:1px solid var(--dtl-border);}
+/* 「只看我的」小复选框（替掉右上角的分段切换） */
+.dtl-check{display:inline-flex;align-items:center;gap:6px;height:var(--dtl-control-h-md);
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);cursor:pointer;user-select:none;white-space:nowrap;}
+.dtl-check input{width:14px;height:14px;margin:0;accent-color:var(--dtl-business);cursor:pointer;}
+.dtl-check:hover{color:var(--dtl-fg);}
+
+/* 趋势分组柱状图：绘图区高度**随卡拉伸**（flex），柱 / 刻度 / 网格全用百分比 ⇒ 与卡等高 */
+.dtl-gchart-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding-left:30px;padding-bottom:18px;}
+.dtl-gchart{position:relative;flex:1 1 auto;min-height:96px;border-bottom:1px solid var(--dtl-border);}
 .dtl-gchart__grid{position:absolute;left:0;right:0;border-top:1px solid var(--dtl-border-faint);pointer-events:none;}
-.dtl-gchart__ytick{position:absolute;left:0;width:26px;text-align:right;font-size:10px;line-height:12px;
+.dtl-gchart__ytick{position:absolute;left:-30px;width:26px;text-align:right;font-size:10px;line-height:12px;
   color:var(--dtl-fg-3);transform:translateY(50%);font-variant-numeric:tabular-nums;}
-.dtl-gchart__avg{position:absolute;left:0;right:0;border-top:1px dashed var(--dtl-border-strong);pointer-events:none;}
-.dtl-gchart__avgtag{position:absolute;right:0;font-size:10px;line-height:12px;color:var(--dtl-fg-3);
-  background:var(--dtl-surface-1);padding:0 2px;transform:translateY(-100%);}
 .dtl-gchart__col{position:absolute;top:0;bottom:0;min-width:0;}
 .dtl-gchart__pair{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
   display:flex;align-items:flex-end;gap:2px;}
-.dtl-gchart__bar{width:8px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
+.dtl-gchart__bar{width:10px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
 .dtl-gchart__bar--done{background:var(--dtl-business);}
-.dtl-gchart__bar--created{background:var(--dtl-chip-bg);}
+.dtl-gchart__bar--created{background:var(--dtl-chart-created);}
 .dtl-gchart__col:hover .dtl-gchart__bar--done{background:var(--dtl-accent);}
 .dtl-gchart__val{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:12px;
   color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .dtl-gchart__label{position:absolute;left:0;right:0;bottom:-16px;text-align:center;
   font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
+/* hover 浮卡（参考图同款：日期 + 两个数；原生 title 太慢、长相不一） */
+.dtl-gchart__tip{position:absolute;top:0;z-index:2;min-width:104px;box-sizing:border-box;
+  padding:6px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);box-shadow:var(--dtl-shadow-2);
+  font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);pointer-events:none;}
+.dtl-gchart__tip b{display:block;color:var(--dtl-fg);font-weight:600;}
+.dtl-gchart__tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
 .dtl-gchart-legend{display:flex;align-items:center;gap:var(--dtl-space-3);font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);}
 .dtl-gchart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
 
 /* 过程正文：宽度受限、长行折行 */
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
-
-/* 趋势柱状图：div 柱 + token 色，无新依赖 */
-.dtl-chart{display:flex;align-items:flex-end;gap:var(--dtl-space-2);height:120px;}
-.dtl-chart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:var(--dtl-space-1);flex:1 1 0;height:100%;min-width:0;}
-.dtl-chart__bar{width:100%;max-width:28px;min-height:2px;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;
-  background:var(--dtl-business);transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-chart__col:hover .dtl-chart__bar{background:var(--dtl-accent);}
-.dtl-chart__val{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;}
-.dtl-chart__label{font-size:10px;line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);white-space:nowrap;}
 `
 
 const STYLE_ID = 'dtl-ui-base'
@@ -278,6 +279,18 @@ export function EmptyState(props: { tone: 'guide' | 'filtered'; title: string; h
   )
 }
 
+/** 台账图标（黑白线条，描边走 currentColor ⇒ 随主题 / 选中态反色）。
+ *  侧栏条目与右上浮标共用这一份（图标只画一次，别处不许再画第二个）。 */
+export function LedgerIcon(props: { size?: number }): ReactNode {
+  const size = props.size ?? 18
+  const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 7, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
+  return h('svg', { width: size, height: size, viewBox: '0 0 128 128', 'aria-hidden': true },
+    h('path', { d: 'M96 34 A10 10 0 0 1 106 44 V102 A10 10 0 0 1 96 112 H32 A10 10 0 0 1 22 102 V44 A10 10 0 0 1 32 34 Z', ...stroke }),
+    h('path', { d: 'M50 22 V46 M78 22 V46', ...stroke }),
+    h('path', { d: 'M44 66 H84 M44 86 H70', ...stroke }),
+  )
+}
+
 /* ── 趋势分组柱状图 ───────────────────────────────────────────────────── */
 
 /** 一周两根柱（完成 / 新增）。 */
@@ -297,43 +310,63 @@ function compactCount(value: number): string {
   return String(value)
 }
 
-/** 分组柱状图（div 柱，无新依赖）：完成 / 新增各一细柱，y 轴三档刻度 + 网格线 + 柱顶数值 + 均值虚线。
- *  列 / 柱 / 标签全部相对 104px 绘图区绝对定位 ⇒ 与刻度同一基准，不会各算各的高度。 */
+/** 分组柱状图（div 柱，无新依赖）：完成（蓝）/ 新增（灰）各一细柱。
+ *  - 高度全用百分比 ⇒ 绘图区随卡片拉伸，图表卡与左边 8 块**完全等高**；
+ *  - y 轴三档刻度 + 淡网格线；柱顶只标「完成」（16 个数值标签会糊成一片）；
+ *  - hover 出浮卡（日期 + 两个数）——参考图同款，原生 title 太慢；
+ *  - **没有**均值线与长注释（用户 2026-10-17：均值不要、注释太长不要）。 */
 export function GroupedBarChart(props: {
   weeks: readonly GroupedBarWeek[]
   ariaLabel: string
-  avgLabel: string
+  doneLabel: string
+  createdLabel: string
 }): ReactNode {
   ensureUiBase()
-  const plotHeight = 104
+  const [hover, setHover] = useState<number | null>(null)
   const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0))
-  const doneTotal = props.weeks.reduce((sum, week) => sum + week.done, 0)
-  const avg = props.weeks.length === 0 ? 0 : doneTotal / props.weeks.length
   const ticks = [0, top / 2, top]
-  const heightOf = (value: number): number => Math.round((value / top) * plotHeight)
+  const pct = (value: number): string => `${(value / top) * 100}%`
   const columnStyle = (index: number): Record<string, string | number> => ({
     left: `${(index / props.weeks.length) * 100}%`,
     right: `${((props.weeks.length - index - 1) / props.weeks.length) * 100}%`,
   })
-  return h('div', { style: { position: 'relative', paddingLeft: '30px', paddingBottom: '18px' } },
-    h('div', { className: 'dtl-gchart', role: 'img', 'aria-label': props.ariaLabel },
-      ticks.map((tick) => h('div', { key: `grid-${String(tick)}`, className: 'dtl-gchart__grid', style: { bottom: `${heightOf(tick)}px` } })),
-      ticks.map((tick) => h('span', { key: `tick-${String(tick)}`, className: 'dtl-gchart__ytick', style: { bottom: `${heightOf(tick)}px` } }, compactCount(Math.round(tick)))),
-      avg > 0
-        ? h('div', { className: 'dtl-gchart__avg', style: { bottom: `${heightOf(avg)}px` } },
-          h('span', { className: 'dtl-gchart__avgtag' }, props.avgLabel))
-        : null,
-      props.weeks.map((week, index) => h('div', { key: week.label, className: 'dtl-gchart__col', style: columnStyle(index), title: week.title },
+  // 浮卡定位：贴边两列向内收，其余居中（否则溢出图表卡）
+  const tipStyle = (index: number): Record<string, string | number> => {
+    if (index <= 1) return { left: 0 }
+    if (index >= props.weeks.length - 2) return { right: 0 }
+    return { left: `${((index + 0.5) / props.weeks.length) * 100}%`, transform: 'translateX(-50%)' }
+  }
+  return h('div', { className: 'dtl-gchart-wrap' },
+    h('div', {
+      className: 'dtl-gchart',
+      role: 'img',
+      'aria-label': props.ariaLabel,
+      onMouseLeave: () => { setHover(null) },
+    },
+      ticks.map((tick) => h('div', { key: `grid-${String(tick)}`, className: 'dtl-gchart__grid', style: { bottom: pct(tick) } })),
+      ticks.map((tick) => h('span', { key: `tick-${String(tick)}`, className: 'dtl-gchart__ytick', style: { bottom: pct(tick) } }, compactCount(Math.round(tick)))),
+      props.weeks.map((week, index) => h('div', {
+        key: week.label,
+        className: 'dtl-gchart__col',
+        style: columnStyle(index),
+        onMouseEnter: () => { setHover(index) },
+      },
         h('div', { className: 'dtl-gchart__pair' },
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: `${heightOf(week.done)}px` } }),
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: `${heightOf(week.created)}px` } }),
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: pct(week.done) } }),
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: pct(week.created) } }),
         ),
-        // 柱顶数值只标「完成」（核心指标）；新增的数走 hover（16 个数值标签会糊成一片）
         week.done === 0
           ? null
-          : h('span', { className: 'dtl-gchart__val', style: { bottom: `${heightOf(week.done) + 3}px` } }, String(week.done)),
+          : h('span', { className: 'dtl-gchart__val', style: { bottom: `calc(${pct(week.done)} + 3px)` } }, String(week.done)),
         h('span', { className: 'dtl-gchart__label' }, week.label),
       )),
+      hover === null
+        ? null
+        : h('div', { className: 'dtl-gchart__tip', style: tipStyle(hover) },
+          h('b', null, props.weeks[hover].title),
+          h('div', null, h('i', { style: { background: 'var(--dtl-business)' } }), `${props.doneLabel} ${props.weeks[hover].done}`),
+          h('div', null, h('i', { style: { background: 'var(--dtl-chart-created)' } }), `${props.createdLabel} ${props.weeks[hover].created}`),
+        ),
     ),
   )
 }
@@ -343,6 +376,6 @@ export function ChartLegend(props: { doneLabel: string; createdLabel: string }):
   ensureUiBase()
   return h('div', { className: 'dtl-gchart-legend' },
     h('span', null, h('i', { style: { background: 'var(--dtl-business)' } }), props.doneLabel),
-    h('span', null, h('i', { style: { background: 'var(--dtl-chip-bg)' } }), props.createdLabel),
+    h('span', null, h('i', { style: { background: 'var(--dtl-chart-created)' } }), props.createdLabel),
   )
 }

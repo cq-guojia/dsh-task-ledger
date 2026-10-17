@@ -6,7 +6,7 @@
  * 刷新纪律（2026-10-17 拍板）：挂载首读 + 手动刷新按钮，**不轮询**；空态三分
  * （未就绪不渲染 / 真空引导卡 / 筛选空小字）。
  */
-import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react'
 import { IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { LocaleKey, Translate } from './locales'
 import { boardSnapshot, boardSubscribe, refresh, setQuery, type Query, type Scope, type StatusFilter } from './store'
@@ -96,14 +96,13 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
     label: bucket.week.slice(5),
     done: bucket.done,
     created: bucket.created,
-    title: t('chartBucket', { week: bucket.week, done: bucket.done, created: bucket.created }),
+    title: `${bucket.week}｜${t('chartLegendDone')} ${bucket.done}｜${t('chartLegendCreated')} ${bucket.created}`,
   })), [board, chartScope, t])
-  const chartDoneTotal = chartWeeks.reduce((sum, week) => sum + week.done, 0)
   const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0)
 
   return h('div', { style: pageStyle },
     h('div', { style: { display: 'flex', justifyContent: 'center' } },
-      h('div', { style: { width: '100%', maxWidth: '1120px', minWidth: 0, boxSizing: 'border-box' } },
+      h('div', { style: { width: '100%', maxWidth: '1280px', minWidth: 0, boxSizing: 'border-box' } },
         h('div', { style: headerStyle },
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-3)', minWidth: 0 } },
             h(Button, { variant: 'outline', size: 'md', onClick: onBack }, `← ${t('backToConversation')}`),
@@ -165,30 +164,26 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                   periodCard('statLastMonthDone', board?.trend.lastMonth),
                 ),
                 h('div', { className: 'dtl-card', style: chartCardStyle },
-                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--dtl-space-2)' } },
-                    h('span', { style: { fontSize: 'var(--dtl-font-md)', fontWeight: 600 } }, t('chartTitle')),
-                    h(Segmented<'all' | 'mine'>, {
-                      id: 'dtl-chart-scope',
-                      value: chartScope,
-                      label: t('scopeLabel'),
-                      size: 'sm',
-                      variant: 'inset',
-                      items: [
-                        { value: 'all', label: t('chartScopeAll') },
-                        { value: 'mine', label: t('chartScopeMine') },
-                      ],
-                      onChange: setChartScope,
-                    }),
+                  // 右上角只留一个「只看我的」小复选框：勾上 = 我的，不勾 = 所有（用户 2026-10-17）
+                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end' } },
+                    h('label', { className: 'dtl-check' },
+                      h('input', {
+                        type: 'checkbox',
+                        checked: chartScope === 'mine',
+                        onChange: (event: ChangeEvent<HTMLInputElement>) => { setChartScope(event.target.checked ? 'mine' : 'all') },
+                      }),
+                      t('chartOnlyMine'),
+                    ),
                   ),
                   chartEmpty
                     ? h('div', { style: { ...hintStyle, padding: 'var(--dtl-space-4) 0' } }, t('chartEmpty'))
                     : h(GroupedBarChart, {
                       weeks: chartWeeks,
                       ariaLabel: t('chartTitle'),
-                      avgLabel: t('chartAvg', { n: Math.round((chartDoneTotal / Math.max(1, chartWeeks.length)) * 10) / 10 }),
+                      doneLabel: t('chartLegendDone'),
+                      createdLabel: t('chartLegendCreated'),
                     }),
                   h(ChartLegend, { doneLabel: t('chartLegendDone'), createdLabel: t('chartLegendCreated') }),
-                  h('div', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)' } }, t('chartCaption')),
                 ),
               ),
 

@@ -9,18 +9,7 @@
 import { createElement as h, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import type { Translate } from './locales'
 import { boardSnapshot, boardSubscribe } from './store'
-import { ensureUiBase } from './ui'
-
-/** 台账图标（黑白线条，描边走 currentColor ⇒ 随主题反色）。 */
-function LedgerIcon(props: { size?: number }): ReactNode {
-  const size = props.size ?? 18
-  const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 7, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
-  return h('svg', { width: size, height: size, viewBox: '0 0 128 128', 'aria-hidden': true },
-    h('path', { d: 'M96 34 A10 10 0 0 1 106 44 V102 A10 10 0 0 1 96 112 H32 A10 10 0 0 1 22 102 V44 A10 10 0 0 1 32 34 Z', ...stroke }),
-    h('path', { d: 'M50 22 V46 M78 22 V46', ...stroke }),
-    h('path', { d: 'M44 66 H84 M44 86 H70', ...stroke }),
-  )
-}
+import { ensureUiBase, LedgerIcon } from './ui'
 
 export function OverlayEntry(props: { t: Translate; onOpen: () => void }): ReactNode {
   const { t, onOpen } = props

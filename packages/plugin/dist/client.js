@@ -321,6 +321,8 @@ body{
   /* chip / 标签小底板：浅色下要看得见 ⇒ 掺 7% 近黑；hover 加倍 */
   --dtl-chip-bg:rgba(15,15,15,.07);
   --dtl-chip-bg-hover:rgba(15,15,15,.14);
+  /* 图表「新增」柱：**实底**中性灰。半透明底压在卡上会发糊（用户 2026-10-17：「模模糊糊」） */
+  --dtl-chart-created:var(--dsw-static-neutral-300,#d4d4d8);
 
   /* ── 圆角（宿主真值 4/8/12/16/20/28）──────────────────────────── */
   --dtl-radius-xs:var(--dsw-radius-xs,4px);
@@ -380,6 +382,7 @@ body[data-ds-dark-theme]{
   /* 暗色 chip 底板反过来掺白 */
   --dtl-chip-bg:rgba(255,255,255,.08);
   --dtl-chip-bg-hover:rgba(255,255,255,.16);
+  --dtl-chart-created:var(--dsw-static-neutral-600,#525252);
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 5%,transparent);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
@@ -533,50 +536,51 @@ body[data-ds-dark-theme]{
 .dtl-badge[data-pulse="true"]{animation:dtl-pulse 900ms var(--dtl-ease) 1}
 @keyframes dtl-pulse{0%{transform:scale(.6);opacity:.4}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 
-/* 过程正文：宽度受限、长行折行 */
-.dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
-
-/* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图（参考图同款分栏）。
-   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。 */
+/* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
+   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
+   两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
 .dtl-stats{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
-.dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,auto);
-  gap:var(--dtl-space-3);align-content:start;}
+.dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:var(--dtl-space-3);}
+.dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
-@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
-/* 趋势分组柱状图：细柱 + y 轴刻度 + 网格线 + 柱顶数值 + 均值虚线（参考图信息密度） */
-.dtl-gchart{position:relative;height:104px;border-bottom:1px solid var(--dtl-border);}
+/* 「只看我的」小复选框（替掉右上角的分段切换） */
+.dtl-check{display:inline-flex;align-items:center;gap:6px;height:var(--dtl-control-h-md);
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);cursor:pointer;user-select:none;white-space:nowrap;}
+.dtl-check input{width:14px;height:14px;margin:0;accent-color:var(--dtl-business);cursor:pointer;}
+.dtl-check:hover{color:var(--dtl-fg);}
+
+/* 趋势分组柱状图：绘图区高度**随卡拉伸**（flex），柱 / 刻度 / 网格全用百分比 ⇒ 与卡等高 */
+.dtl-gchart-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding-left:30px;padding-bottom:18px;}
+.dtl-gchart{position:relative;flex:1 1 auto;min-height:96px;border-bottom:1px solid var(--dtl-border);}
 .dtl-gchart__grid{position:absolute;left:0;right:0;border-top:1px solid var(--dtl-border-faint);pointer-events:none;}
-.dtl-gchart__ytick{position:absolute;left:0;width:26px;text-align:right;font-size:10px;line-height:12px;
+.dtl-gchart__ytick{position:absolute;left:-30px;width:26px;text-align:right;font-size:10px;line-height:12px;
   color:var(--dtl-fg-3);transform:translateY(50%);font-variant-numeric:tabular-nums;}
-.dtl-gchart__avg{position:absolute;left:0;right:0;border-top:1px dashed var(--dtl-border-strong);pointer-events:none;}
-.dtl-gchart__avgtag{position:absolute;right:0;font-size:10px;line-height:12px;color:var(--dtl-fg-3);
-  background:var(--dtl-surface-1);padding:0 2px;transform:translateY(-100%);}
 .dtl-gchart__col{position:absolute;top:0;bottom:0;min-width:0;}
 .dtl-gchart__pair{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
   display:flex;align-items:flex-end;gap:2px;}
-.dtl-gchart__bar{width:8px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
+.dtl-gchart__bar{width:10px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
 .dtl-gchart__bar--done{background:var(--dtl-business);}
-.dtl-gchart__bar--created{background:var(--dtl-chip-bg);}
+.dtl-gchart__bar--created{background:var(--dtl-chart-created);}
 .dtl-gchart__col:hover .dtl-gchart__bar--done{background:var(--dtl-accent);}
 .dtl-gchart__val{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:12px;
   color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .dtl-gchart__label{position:absolute;left:0;right:0;bottom:-16px;text-align:center;
   font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
+/* hover 浮卡（参考图同款：日期 + 两个数；原生 title 太慢、长相不一） */
+.dtl-gchart__tip{position:absolute;top:0;z-index:2;min-width:104px;box-sizing:border-box;
+  padding:6px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);box-shadow:var(--dtl-shadow-2);
+  font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);pointer-events:none;}
+.dtl-gchart__tip b{display:block;color:var(--dtl-fg);font-weight:600;}
+.dtl-gchart__tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
 .dtl-gchart-legend{display:flex;align-items:center;gap:var(--dtl-space-3);font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);}
 .dtl-gchart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
 
 /* 过程正文：宽度受限、长行折行 */
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
-
-/* 趋势柱状图：div 柱 + token 色，无新依赖 */
-.dtl-chart{display:flex;align-items:flex-end;gap:var(--dtl-space-2);height:120px;}
-.dtl-chart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:var(--dtl-space-1);flex:1 1 0;height:100%;min-width:0;}
-.dtl-chart__bar{width:100%;max-width:28px;min-height:2px;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;
-  background:var(--dtl-business);transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-chart__col:hover .dtl-chart__bar{background:var(--dtl-accent);}
-.dtl-chart__val{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;}
-.dtl-chart__label{font-size:10px;line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);white-space:nowrap;}
 `;
 		const STYLE_ID = "dtl-ui-base";
 		/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。 */
@@ -696,69 +700,106 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-2)"
 			} }, props.hint));
 		}
+		/** 台账图标（黑白线条，描边走 currentColor ⇒ 随主题 / 选中态反色）。
+		*  侧栏条目与右上浮标共用这一份（图标只画一次，别处不许再画第二个）。 */
+		function LedgerIcon(props) {
+			const size = props.size ?? 18;
+			const stroke = {
+				fill: "none",
+				stroke: "currentColor",
+				strokeWidth: 7,
+				strokeLinecap: "round",
+				strokeLinejoin: "round"
+			};
+			return (0, react.createElement)("svg", {
+				width: size,
+				height: size,
+				viewBox: "0 0 128 128",
+				"aria-hidden": true
+			}, (0, react.createElement)("path", {
+				d: "M96 34 A10 10 0 0 1 106 44 V102 A10 10 0 0 1 96 112 H32 A10 10 0 0 1 22 102 V44 A10 10 0 0 1 32 34 Z",
+				...stroke
+			}), (0, react.createElement)("path", {
+				d: "M50 22 V46 M78 22 V46",
+				...stroke
+			}), (0, react.createElement)("path", {
+				d: "M44 66 H84 M44 86 H70",
+				...stroke
+			}));
+		}
 		/** 千位压缩（1.2k / 12k）：y 轴刻度与柱顶数值用，避免 4 位数把刻度挤宽。 */
 		function compactCount(value) {
 			if (value >= 1e4) return `${Math.round(value / 1e3)}k`;
 			if (value >= 1e3) return `${(value / 1e3).toFixed(1)}k`;
 			return String(value);
 		}
-		/** 分组柱状图（div 柱，无新依赖）：完成 / 新增各一细柱，y 轴三档刻度 + 网格线 + 柱顶数值 + 均值虚线。
-		*  列 / 柱 / 标签全部相对 104px 绘图区绝对定位 ⇒ 与刻度同一基准，不会各算各的高度。 */
+		/** 分组柱状图（div 柱，无新依赖）：完成（蓝）/ 新增（灰）各一细柱。
+		*  - 高度全用百分比 ⇒ 绘图区随卡片拉伸，图表卡与左边 8 块**完全等高**；
+		*  - y 轴三档刻度 + 淡网格线；柱顶只标「完成」（16 个数值标签会糊成一片）；
+		*  - hover 出浮卡（日期 + 两个数）——参考图同款，原生 title 太慢；
+		*  - **没有**均值线与长注释（用户 2026-10-17：均值不要、注释太长不要）。 */
 		function GroupedBarChart(props) {
 			ensureUiBase();
-			const plotHeight = 104;
+			const [hover, setHover] = (0, react.useState)(null);
 			const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0));
-			const doneTotal = props.weeks.reduce((sum, week) => sum + week.done, 0);
-			const avg = props.weeks.length === 0 ? 0 : doneTotal / props.weeks.length;
 			const ticks = [
 				0,
 				top / 2,
 				top
 			];
-			const heightOf = (value) => Math.round(value / top * plotHeight);
+			const pct = (value) => `${value / top * 100}%`;
 			const columnStyle = (index) => ({
 				left: `${index / props.weeks.length * 100}%`,
 				right: `${(props.weeks.length - index - 1) / props.weeks.length * 100}%`
 			});
-			return (0, react.createElement)("div", { style: {
-				position: "relative",
-				paddingLeft: "30px",
-				paddingBottom: "18px"
-			} }, (0, react.createElement)("div", {
+			const tipStyle = (index) => {
+				if (index <= 1) return { left: 0 };
+				if (index >= props.weeks.length - 2) return { right: 0 };
+				return {
+					left: `${(index + .5) / props.weeks.length * 100}%`,
+					transform: "translateX(-50%)"
+				};
+			};
+			return (0, react.createElement)("div", { className: "dtl-gchart-wrap" }, (0, react.createElement)("div", {
 				className: "dtl-gchart",
 				role: "img",
-				"aria-label": props.ariaLabel
+				"aria-label": props.ariaLabel,
+				onMouseLeave: () => {
+					setHover(null);
+				}
 			}, ticks.map((tick) => (0, react.createElement)("div", {
 				key: `grid-${String(tick)}`,
 				className: "dtl-gchart__grid",
-				style: { bottom: `${heightOf(tick)}px` }
+				style: { bottom: pct(tick) }
 			})), ticks.map((tick) => (0, react.createElement)("span", {
 				key: `tick-${String(tick)}`,
 				className: "dtl-gchart__ytick",
-				style: { bottom: `${heightOf(tick)}px` }
-			}, compactCount(Math.round(tick)))), avg > 0 ? (0, react.createElement)("div", {
-				className: "dtl-gchart__avg",
-				style: { bottom: `${heightOf(avg)}px` }
-			}, (0, react.createElement)("span", { className: "dtl-gchart__avgtag" }, props.avgLabel)) : null, props.weeks.map((week, index) => (0, react.createElement)("div", {
+				style: { bottom: pct(tick) }
+			}, compactCount(Math.round(tick)))), props.weeks.map((week, index) => (0, react.createElement)("div", {
 				key: week.label,
 				className: "dtl-gchart__col",
 				style: columnStyle(index),
-				title: week.title
+				onMouseEnter: () => {
+					setHover(index);
+				}
 			}, (0, react.createElement)("div", { className: "dtl-gchart__pair" }, (0, react.createElement)("span", {
 				className: "dtl-gchart__bar dtl-gchart__bar--done",
-				style: { height: `${heightOf(week.done)}px` }
+				style: { height: pct(week.done) }
 			}), (0, react.createElement)("span", {
 				className: "dtl-gchart__bar dtl-gchart__bar--created",
-				style: { height: `${heightOf(week.created)}px` }
+				style: { height: pct(week.created) }
 			})), week.done === 0 ? null : (0, react.createElement)("span", {
 				className: "dtl-gchart__val",
-				style: { bottom: `${heightOf(week.done) + 3}px` }
-			}, String(week.done)), (0, react.createElement)("span", { className: "dtl-gchart__label" }, week.label)))));
+				style: { bottom: `calc(${pct(week.done)} + 3px)` }
+			}, String(week.done)), (0, react.createElement)("span", { className: "dtl-gchart__label" }, week.label))), hover === null ? null : (0, react.createElement)("div", {
+				className: "dtl-gchart__tip",
+				style: tipStyle(hover)
+			}, (0, react.createElement)("b", null, props.weeks[hover].title), (0, react.createElement)("div", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), `${props.doneLabel} ${props.weeks[hover].done}`), (0, react.createElement)("div", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-created)" } }), `${props.createdLabel} ${props.weeks[hover].created}`))));
 		}
 		/** 图例（完成 / 新增 两个色块）。 */
 		function ChartLegend(props) {
 			ensureUiBase();
-			return (0, react.createElement)("div", { className: "dtl-gchart-legend" }, (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), props.doneLabel), (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chip-bg)" } }), props.createdLabel));
+			return (0, react.createElement)("div", { className: "dtl-gchart-legend" }, (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), props.doneLabel), (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-created)" } }), props.createdLabel));
 		}
 		//#endregion
 		//#region src/client/task-row.ts
@@ -1049,24 +1090,19 @@ body[data-ds-dark-theme]{
 				label: bucket.week.slice(5),
 				done: bucket.done,
 				created: bucket.created,
-				title: t("chartBucket", {
-					week: bucket.week,
-					done: bucket.done,
-					created: bucket.created
-				})
+				title: `${bucket.week}｜${t("chartLegendDone")} ${bucket.done}｜${t("chartLegendCreated")} ${bucket.created}`
 			})), [
 				board,
 				chartScope,
 				t
 			]);
-			const chartDoneTotal = chartWeeks.reduce((sum, week) => sum + week.done, 0);
 			const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0);
 			return (0, react.createElement)("div", { style: pageStyle }, (0, react.createElement)("div", { style: {
 				display: "flex",
 				justifyContent: "center"
 			} }, (0, react.createElement)("div", { style: {
 				width: "100%",
-				maxWidth: "1120px",
+				maxWidth: "1280px",
 				minWidth: 0,
 				boxSizing: "border-box"
 			} }, (0, react.createElement)("div", { style: headerStyle }, (0, react.createElement)("div", { style: {
@@ -1144,39 +1180,25 @@ body[data-ds-dark-theme]{
 			}, (0, react.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
-				justifyContent: "space-between",
-				gap: "var(--dtl-space-2)"
-			} }, (0, react.createElement)("span", { style: {
-				fontSize: "var(--dtl-font-md)",
-				fontWeight: 600
-			} }, t("chartTitle")), (0, react.createElement)(Segmented, {
-				id: "dtl-chart-scope",
-				value: chartScope,
-				label: t("scopeLabel"),
-				size: "sm",
-				variant: "inset",
-				items: [{
-					value: "all",
-					label: t("chartScopeAll")
-				}, {
-					value: "mine",
-					label: t("chartScopeMine")
-				}],
-				onChange: setChartScope
-			})), chartEmpty ? (0, react.createElement)("div", { style: {
+				justifyContent: "flex-end"
+			} }, (0, react.createElement)("label", { className: "dtl-check" }, (0, react.createElement)("input", {
+				type: "checkbox",
+				checked: chartScope === "mine",
+				onChange: (event) => {
+					setChartScope(event.target.checked ? "mine" : "all");
+				}
+			}), t("chartOnlyMine"))), chartEmpty ? (0, react.createElement)("div", { style: {
 				...hintStyle,
 				padding: "var(--dtl-space-4) 0"
 			} }, t("chartEmpty")) : (0, react.createElement)(GroupedBarChart, {
 				weeks: chartWeeks,
 				ariaLabel: t("chartTitle"),
-				avgLabel: t("chartAvg", { n: Math.round(chartDoneTotal / Math.max(1, chartWeeks.length) * 10) / 10 })
+				doneLabel: t("chartLegendDone"),
+				createdLabel: t("chartLegendCreated")
 			}), (0, react.createElement)(ChartLegend, {
 				doneLabel: t("chartLegendDone"),
 				createdLabel: t("chartLegendCreated")
-			}), (0, react.createElement)("div", { style: {
-				fontSize: "var(--dtl-font-xs)",
-				color: "var(--dtl-fg-3)"
-			} }, t("chartCaption")))), (0, react.createElement)("div", { style: filterRowStyle }, (0, react.createElement)(Segmented, {
+			}))), (0, react.createElement)("div", { style: filterRowStyle }, (0, react.createElement)(Segmented, {
 				id: "dtl-scope",
 				value: state.query.scope,
 				label: t("scopeLabel"),
@@ -1353,6 +1375,7 @@ body[data-ds-dark-theme]{
 			chartEmpty: "近 8 周没有记录",
 			chartScopeAll: "所有",
 			chartScopeMine: "我的",
+			chartOnlyMine: "只看我的",
 			chartLegendDone: "完成",
 			chartLegendCreated: "新增",
 			chartAvg: "周均 {n}",
@@ -1429,6 +1452,7 @@ body[data-ds-dark-theme]{
 			chartEmpty: "Nothing in the last 8 weeks",
 			chartScopeAll: "All",
 			chartScopeMine: "Mine",
+			chartOnlyMine: "Mine only",
 			chartLegendDone: "Done",
 			chartLegendCreated: "Created",
 			chartAvg: "avg {n}/wk",
@@ -1493,32 +1517,6 @@ body[data-ds-dark-theme]{
 		* 角标 = 我名下 `doing` + `blocked` 计数（host 统计真值，SSE 已否 ⇒ 取自同一份快照，>0 才画）；
 		* 0→n 跳变时一次脉冲动画，不自动消失。宿主**无**通知 API ⇒ 「通知」就是这个角标。
 		*/
-		/** 台账图标（黑白线条，描边走 currentColor ⇒ 随主题反色）。 */
-		function LedgerIcon(props) {
-			const size = props.size ?? 18;
-			const stroke = {
-				fill: "none",
-				stroke: "currentColor",
-				strokeWidth: 7,
-				strokeLinecap: "round",
-				strokeLinejoin: "round"
-			};
-			return (0, react.createElement)("svg", {
-				width: size,
-				height: size,
-				viewBox: "0 0 128 128",
-				"aria-hidden": true
-			}, (0, react.createElement)("path", {
-				d: "M96 34 A10 10 0 0 1 106 44 V102 A10 10 0 0 1 96 112 H32 A10 10 0 0 1 22 102 V44 A10 10 0 0 1 32 34 Z",
-				...stroke
-			}), (0, react.createElement)("path", {
-				d: "M50 22 V46 M78 22 V46",
-				...stroke
-			}), (0, react.createElement)("path", {
-				d: "M44 66 H84 M44 86 H70",
-				...stroke
-			}));
-		}
 		function OverlayEntry(props) {
 			const { t, onOpen } = props;
 			ensureUiBase();
@@ -1577,6 +1575,8 @@ body[data-ds-dark-theme]{
 		* `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
 		*/
 		/** 命名空间（settings / locale / 面板 id 同名，便于对应）。 */
+		/** 模块级 t 席位（侧栏 label 渲染期求值用；绑不上就回落键名，绝不上界面）。 */
+		let runtimeT = (key) => key;
 		const NS = "dsh-task-ledger";
 		/** `main` 槽的 key（非 `conversation` ⇒ 不绑 Session）。 */
 		const PANEL_ID = NS;
@@ -1590,6 +1590,9 @@ body[data-ds-dark-theme]{
 					zh,
 					en
 				}));
+				try {
+					runtimeT = localeCtx.locale?.bind(NS) ?? runtimeT;
+				} catch {}
 			});
 			let selectPanel = () => {};
 			ctx.inject(["layout"], (sub) => {
@@ -1599,6 +1602,13 @@ body[data-ds-dark-theme]{
 				};
 			});
 			ctx.inject(["slots"], (sub) => {
+				sub.slots.inject("sidebar.panellist", () => sub.slots.register({
+					name: "sidebar.panellist",
+					id: PANEL_ID,
+					order: 30,
+					label: () => runtimeT("panelTitle"),
+					locale: NS
+				}, (props) => (0, react.createElement)(LedgerIcon, { size: props.size ?? 18 })));
 				sub.slots.inject("main", () => sub.slots.register({
 					name: "main",
 					key: PANEL_ID,

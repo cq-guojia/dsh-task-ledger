@@ -20,7 +20,7 @@ export type LocaleKey =
   | 'daysNone' | 'daysValue'
   // 趋势图
   | 'chartTitle' | 'chartCaption' | 'chartBucket' | 'chartEmpty'
-  | 'chartScopeAll' | 'chartScopeMine' | 'chartLegendDone' | 'chartLegendCreated' | 'chartAvg'
+  | 'chartScopeAll' | 'chartScopeMine' | 'chartOnlyMine' | 'chartLegendDone' | 'chartLegendCreated' | 'chartAvg'
   | 'periodRange'
   // 筛选行
   | 'scopeLabel' | 'scopeMine' | 'scopeAll'
@@ -74,6 +74,7 @@ export const zh: Record<LocaleKey, string> = {
   chartEmpty: '近 8 周没有记录',
   chartScopeAll: '所有',
   chartScopeMine: '我的',
+  chartOnlyMine: '只看我的',
   chartLegendDone: '完成',
   chartLegendCreated: '新增',
   chartAvg: '周均 {n}',
@@ -158,6 +159,7 @@ export const en: Record<LocaleKey, string> = {
   chartEmpty: 'Nothing in the last 8 weeks',
   chartScopeAll: 'All',
   chartScopeMine: 'Mine',
+  chartOnlyMine: 'Mine only',
   chartLegendDone: 'Done',
   chartLegendCreated: 'Created',
   chartAvg: 'avg {n}/wk',

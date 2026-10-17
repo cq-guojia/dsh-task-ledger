@@ -76,6 +76,8 @@ body{
   /* chip / 标签小底板：浅色下要看得见 ⇒ 掺 7% 近黑；hover 加倍 */
   --dtl-chip-bg:rgba(15,15,15,.07);
   --dtl-chip-bg-hover:rgba(15,15,15,.14);
+  /* 图表「新增」柱：**实底**中性灰。半透明底压在卡上会发糊（用户 2026-10-17：「模模糊糊」） */
+  --dtl-chart-created:var(--dsw-static-neutral-300,#d4d4d8);
 
   /* ── 圆角（宿主真值 4/8/12/16/20/28）──────────────────────────── */
   --dtl-radius-xs:var(--dsw-radius-xs,4px);
@@ -135,6 +137,7 @@ body[data-ds-dark-theme]{
   /* 暗色 chip 底板反过来掺白 */
   --dtl-chip-bg:rgba(255,255,255,.08);
   --dtl-chip-bg-hover:rgba(255,255,255,.16);
+  --dtl-chart-created:var(--dsw-static-neutral-600,#525252);
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 5%,transparent);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);

@@ -18,7 +18,8 @@
 | `shell.leading` | single / root | ❌ 被 ui-sidebar 占用 | 左上窗口 chrome（重开 / 新会话控件） |
 | `sidebar.toggle.badge` | single / root | 可注册但**仅折叠侧栏展开钮内、不可交互** | — |
 
-**本插件入口定论 = `shell.overlay` 浮标**（2026-10-16 深夜拍板，详见 [`../../features/board-home.md`](../../features/board-home.md) §一）；`sidebar.panellist` 为备选未采用。
+**本插件入口定论 = 双入口**（2026-10-17 深夜改）：左侧 `sidebar.panellist` 条目 + 右侧 `shell.overlay` 浮标并存，
+右侧浮标带「我的待办」角标暂不删，最终取舍待用户真机用一段再定。详见 [`../../features/board-home.md`](../../features/board-home.md) §一。
 
 入口三件套结论（仍有效）：
 
