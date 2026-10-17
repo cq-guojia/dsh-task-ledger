@@ -151,16 +151,11 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                   card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myBlocked })),
                   card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) })),
                   card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive + stats.myBlocked })),
-                  // 阻塞 · 停滞合并卡：主数字 = 阻塞数；有停滞时小字把「停滞」标红
+                  // 阻塞 · 停滞合并卡：主数字 = 阻塞 + 停滞合计，小字拆开报数（用户 2026-10-18）
                   h(StatCard, {
                     label: t('statBlockedStale'),
-                    value: stats.blocked,
-                    hint: stats.stale === 0
-                      ? undefined
-                      : h('span', null,
-                        h('span', { style: { color: 'var(--dtl-danger)', fontWeight: 600 } }, t('statStaleWord')),
-                        ` ${t('statStaleHint', { n: stats.stale })}`,
-                      ),
+                    value: stats.blocked + stats.stale,
+                    hint: t('statBlockedSplit', { blocked: stats.blocked, stale: stats.stale }),
                     title: t('statStaleTitle', { n: stats.staleDays }),
                     interactive: false,
                   }),
@@ -238,46 +233,54 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                       ),
                       view.mine.length === 0
                         ? h(EmptyState, { tone: 'guide', title: t('mineEmpty'), hint: t('mineEmptyHint') })
-                        : view.mine.map(row => h(TaskRowView, { key: row.key, t, row, variant: 'mine' })),
-                      // 第二区：其他待办 —— 一个整表（外框连着），段头行在表内；过滤只作用本区
-                      view.groups.length === 0
-                        ? null
-                        : h('div', null,
-                          h('div', { style: regionHeadRowStyle },
-                            h('span', { style: { color: 'var(--dtl-fg-3)', display: 'inline-flex', flex: 'none' } },
-                              h(IconFlatListOutlineRegular, { size: 16 })),
-                            h('span', { style: { ...regionHeadTitleStyle, fontSize: 'var(--dtl-font-md)' } }, t('regionOthers')),
-                            h('span', { style: { flex: '1 1 auto' } }),
-                            h('div', { style: { width: `${SEARCH_WIDTH}px`, flex: 'none' } },
-                              h(SearchInput, {
-                                value: state.query.othersKeyword,
-                                placeholder: t('searchPlaceholder'),
-                                ariaLabel: t('searchPlaceholder'),
-                                onChange: (next) => { setQuery({ othersKeyword: next }) },
-                              }),
-                            ),
-                          ),
-                          // 状态过滤行（segmented 回归，用户 2026-10-17：只过滤其他待办）
-                          h('div', { style: { marginBottom: 'var(--dtl-space-2)' } },
-                            h(Segmented<StatusFilter>, {
-                              id: 'dtl-others-status',
-                              value: state.query.status,
-                              label: t('statusLabel'),
-                              items: [
-                                { value: 'all', label: t('statusAll') },
-                                { value: 'active', label: t('statusActive') },
-                                { value: 'open', label: t('statusOpen') },
-                                { value: 'blocked', label: t('statusBlocked') },
-                                { value: 'stale', label: t('statusStale') },
-                              ],
-                              onChange: (next) => { setQuery({ status: next }) },
+                        : view.mine.map(row => h(TaskRowView, {
+                          key: row.key, t, row, variant: 'mine', staleDays: board?.stats.staleDays ?? null,
+                        })),
+                      // 第二区：其他待办 —— **永远渲染**（用户 2026-10-18：选「进行中」没数据也不能整块消失）；
+                      // 标题行：图标 + 名 + 状态滑轨（带全量角标）+ 搜索（最右）；表格区无数据给虚线空态
+                      h('div', null,
+                        h('div', { style: regionHeadRowStyle },
+                          h('span', { style: { color: 'var(--dtl-fg-3)', display: 'inline-flex', flex: 'none' } },
+                            h(IconFlatListOutlineRegular, { size: 16 })),
+                          h('span', { style: { ...regionHeadTitleStyle, fontSize: 'var(--dtl-font-md)' } }, t('regionOthers')),
+                          h('span', { style: { flex: '1 1 auto' } }),
+                          // 状态滑轨：角标 = 第二区**全量**计数（不受滑轨自身影响）；0 不标数字
+                          h(Segmented<StatusFilter>, {
+                            id: 'dtl-others-status',
+                            value: state.query.status,
+                            label: t('statusLabel'),
+                            items: [
+                              { value: 'all', label: t('statusAll'), badge: orZero(view.othersCounts.total) },
+                              { value: 'active', label: t('statusActive'), badge: orZero(view.othersCounts.doing) },
+                              { value: 'open', label: t('statusOpen'), badge: orZero(view.othersCounts.open) },
+                              { value: 'blocked', label: t('statusBlocked'), badge: orZero(view.othersCounts.blocked) },
+                              { value: 'stale', label: t('statusStale'), badge: orZero(view.othersCounts.stale) },
+                            ],
+                            onChange: (next) => { setQuery({ status: next }) },
+                          }),
+                          h('div', { style: { width: `${SEARCH_WIDTH}px`, flex: 'none' } },
+                            h(SearchInput, {
+                              value: state.query.othersKeyword,
+                              placeholder: t('searchPlaceholder'),
+                              ariaLabel: t('searchPlaceholder'),
+                              onChange: (next) => { setQuery({ othersKeyword: next }) },
                             }),
                           ),
-                          // 整表：所有工作区段在同一张表内（不是一块一块的盒子）
-                          h('div', { className: 'dtl-table' },
-                            view.groups.map(group => h(WorkspaceGroupView, { key: group.workspaceId, t, group })),
-                          ),
                         ),
+                        view.groups.length === 0
+                          // 空态：虚线框 + 两排字 + 按钮（参考 dispatch 空态；按钮先接「回会话」，
+                          // 真正的「起会话建任务」归会话交接任务）
+                          ? h('div', { className: 'dtl-empty-guide', style: { marginTop: 'var(--dtl-space-2)' } },
+                            h('div', { style: { fontSize: 'var(--dtl-font-lg)', fontWeight: 600, marginBottom: 'var(--dtl-space-1)' } }, t('othersEmptyTitle')),
+                            h('div', { style: { fontSize: 'var(--dtl-font-md)', color: 'var(--dtl-fg-2)', marginBottom: 'var(--dtl-space-3)' } }, t('othersEmptyHint')),
+                            h(Button, { variant: 'primary', size: 'md', onClick: onBack }, t('othersEmptyAction')),
+                          )
+                          : h('div', { style: { marginTop: 'var(--dtl-space-2)' } },
+                            view.groups.map(group => h(WorkspaceGroupView, {
+                              key: group.workspaceId, t, group, staleDays: board?.stats.staleDays ?? null,
+                            })),
+                          ),
+                      ),
                     ),
           ),
       ),
@@ -285,10 +288,16 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
   )
 }
 
-/** 一个工作区分组（其他待办表格段头）：左工作区名 + 右统计
- *  （共 N｜待办 N｜进行中 N 常显；阻塞 / 停滞**只在 >0 时出现**——用户 2026-10-17），可点折叠。 */
-function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup }): ReactNode {
-  const { t, group } = props
+/** 角标：>0 才给数字，0 = undefined（不标）。 */
+function orZero(n: number): number | undefined {
+  return n > 0 ? n : undefined
+}
+
+/** 一个工作区分组（其他待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
+ *  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
+ *  阻塞 / 停滞**只在 >0 时出现**。 */
+function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup; staleDays?: number | null }): ReactNode {
+  const { t, group, staleDays } = props
   const [open, setOpen] = useState(group.rows.length <= GROUP_COLLAPSE_OVER)
   const stats = [
     t('groupTotal', { n: group.total }),
@@ -297,7 +306,7 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup }): Rea
     ...(group.blockedCount > 0 ? [t('groupBlocked', { n: group.blockedCount })] : []),
     ...(group.staleCount > 0 ? [t('groupStale', { n: group.staleCount })] : []),
   ].join(' ｜ ')
-  return h('div', null,
+  return h('div', { className: 'dtl-group' },
     h('button', {
       type: 'button',
       className: 'dtl-group__head',
@@ -305,13 +314,24 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup }): Rea
       title: open ? t('collapseAria') : t('expandAria'),
       onClick: () => { setOpen(!open) },
     },
+      h('span', { className: 'dtl-group__dot' }),
       h('span', { className: 'dtl-group__name dtl-ellipsis' }, group.title),
       h('span', { style: { flex: '1 1 auto' } }),
       h('span', { className: 'dtl-group__stats' }, stats),
     ),
     open
       ? h('div', null,
-        group.rows.map(row => h(TaskRowView, { key: row.key, t, row, variant: 'others' })),
+        // 列头行：与任务行同列宽（同一套 .dtl-tcell）
+        h('div', { className: 'dtl-thead' },
+          h('span', { className: 'dtl-tcell dtl-tcell--title' }, t('colTask')),
+          h('span', { className: 'dtl-tcell dtl-tcell--who' }, t('colCreator')),
+          h('span', { className: 'dtl-tcell dtl-tcell--who' }, t('colOwner')),
+          h('span', { className: 'dtl-tcell dtl-tcell--status' }, t('colStatus')),
+          h('span', { className: 'dtl-tcell dtl-tcell--time' }, t('colTime')),
+        ),
+        group.rows.map(row => h(TaskRowView, {
+          key: row.key, t, row, variant: 'others', staleDays,
+        })),
       )
       : null,
   )

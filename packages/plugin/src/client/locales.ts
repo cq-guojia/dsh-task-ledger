@@ -15,7 +15,7 @@ export type LocaleKey =
   | 'statsPlaceholder'
   // 统计卡
   | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint' | 'statStaleTitle'
-  | 'statDoing' | 'statDoingHint' | 'statBlockedStale' | 'statStaleWord' | 'statStaleHint'
+  | 'statDoing' | 'statDoingHint' | 'statBlockedStale' | 'statStaleWord' | 'statStaleHint' | 'statBlockedSplit'
   | 'statWeekDone' | 'statLastWeekDone' | 'statMonthDone' | 'statLastMonthDone' | 'statCreatedHint'
   | 'daysNone' | 'daysValue'
   // 趋势图
@@ -30,6 +30,8 @@ export type LocaleKey =
   // 列表分区
   | 'regionMine' | 'regionOthers' | 'showingCount'
   | 'groupTotal' | 'groupOpen' | 'groupDoing' | 'groupBlocked' | 'groupStale'
+  | 'colTask' | 'colCreator' | 'colOwner' | 'colStatus' | 'colTime'
+  | 'othersEmptyTitle' | 'othersEmptyHint' | 'othersEmptyAction'
   | 'expandAria' | 'collapseAria'
   | 'ownerUnclaimed' | 'fieldCreator' | 'fieldOwner' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
   | 'ageDaysText' | 'ageToday'
@@ -65,6 +67,7 @@ export const zh: Record<LocaleKey, string> = {
   statBlockedStale: '阻塞 · 停滞',
   statStaleWord: '停滞',
   statStaleHint: '{n} 条',
+  statBlockedSplit: '阻塞 {blocked} ｜ 停滞 {stale}',
   statStaleTitle: '停滞 = 进行中或阻塞超过 {n} 天未更新',
   statWeekDone: '本周完成',
   statLastWeekDone: '上周完成',
@@ -108,6 +111,14 @@ export const zh: Record<LocaleKey, string> = {
   groupDoing: '进行中 {n} 条',
   groupBlocked: '阻塞 {n} 条',
   groupStale: '停滞 {n} 条',
+  colTask: '任务',
+  colCreator: '创建人',
+  colOwner: '执行人',
+  colStatus: '状态',
+  colTime: '时长',
+  othersEmptyTitle: '没有可显示的事项',
+  othersEmptyHint: '切换上面的状态过滤试试，或新建一个任务。',
+  othersEmptyAction: '新建任务',
   expandAria: '展开过程文档',
   collapseAria: '收起',
 
@@ -170,6 +181,7 @@ export const en: Record<LocaleKey, string> = {
   statBlockedStale: 'Blocked · Stale',
   statStaleWord: 'Stale',
   statStaleHint: '{n}',
+  statBlockedSplit: '{blocked} blocked ｜ {stale} stale',
   statStaleTitle: 'stale = active or blocked with no update for {n}+ days',
   statWeekDone: 'Done this week',
   statLastWeekDone: 'Done last week',
@@ -213,6 +225,14 @@ export const en: Record<LocaleKey, string> = {
   groupDoing: '{n} active',
   groupBlocked: '{n} blocked',
   groupStale: '{n} stale',
+  colTask: 'Task',
+  colCreator: 'Created by',
+  colOwner: 'Owner',
+  colStatus: 'Status',
+  colTime: 'Duration',
+  othersEmptyTitle: 'Nothing to show',
+  othersEmptyHint: 'Try another status filter above, or create a task.',
+  othersEmptyAction: 'New task',
   expandAria: 'Expand worklog',
   collapseAria: 'Collapse',
 

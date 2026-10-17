@@ -27,23 +27,34 @@ const UI_BASE_CSS = `
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 其他待办 = **一个整表**（用户 2026-10-17：外框连着一块儿，不是一段一段的盒子）：
-   一张 1px 边框表，段头行与任务行都在表内，行间只留淡分隔线。 */
-.dtl-table{border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);overflow:hidden;}
-.dtl-group__head{display:flex;align-items:center;gap:var(--dtl-space-2);width:100%;
-  padding:var(--dtl-space-2) var(--dtl-space-3);border:0;border-bottom:1px solid var(--dtl-border-faint);
-  background:var(--dtl-surface-2);color:inherit;font:inherit;text-align:left;cursor:pointer;}
+/* 其他待办 = 真表格（参考 Stripe Payments，用户 2026-10-18）：**无外框、无竖线**，
+   一行一格 = 一条淡分隔线；每段：段头（点+名+统计）→ 列头行 → 任务行。 */
+.dtl-group{margin-bottom:var(--dtl-space-4);}
+.dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
+  padding:10px 2px 6px;border:0;background:transparent;color:inherit;font:inherit;
+  text-align:left;cursor:pointer;}
+.dtl-group__dot{width:8px;height:8px;border-radius:50%;background:var(--dtl-fg-3);flex:none;}
 .dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
+/* 列头行：小字灰，与任务行同列宽（同一套 .dtl-tcell） */
+.dtl-thead{display:flex;align-items:center;gap:10px;padding:6px 2px;
+  border-bottom:1px solid var(--dtl-border-faint);font-size:10px;color:var(--dtl-fg-3);}
 
-/* 表格行：无卡底；行间距紧；hover 整行淡蓝；行间淡分隔线（最后一行由表框收口） */
-.dtl-taskrow--others{padding:var(--dtl-space-2) var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
-.dtl-taskrow--others:last-child{border-bottom:0;}
+/* 任务行：一条淡线格；hover 整行淡蓝 */
+.dtl-taskrow--others{padding:8px 2px;border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-taskrow--others:hover{background:var(--dtl-card-hover);}
 .dtl-taskrow--others .dtl-taskrow__row{gap:10px;}
-.dtl-taskrow--others .dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
 .dtl-taskrow--others .dtl-taskrow__l2{margin-top:1px;}
-/* 右列：创建人 / 执行人（定宽省略，控住总宽） */
-.dtl-taskrow__who{flex:none;width:104px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
+/* 列：任务（弹性）/ 创建人 / 执行人 / 状态 / 时长 / 查看 */
+.dtl-tcell{min-width:0;}
+.dtl-tcell--title{flex:1 1 auto;}
+.dtl-tcell--who{flex:none;width:104px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+.dtl-tcell--status{flex:none;width:72px;}
+.dtl-tcell--time{flex:none;width:64px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);text-align:right;}
+/* 状态列文字（待认领灰 / 进行中浅蓝；阻塞停滞仍是 pill） */
+.dtl-statustext{font-size:var(--dtl-font-xs);white-space:nowrap;}
+.dtl-statustext--doing{color:var(--dtl-business-dim);}
+.dtl-statustext--open{color:var(--dtl-fg-3);}
 
 /* 状态圆点（替代卡片形态的色条）：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞 */
 .dtl-dot{display:inline-block;width:8px;height:8px;flex:none;border-radius:50%;}

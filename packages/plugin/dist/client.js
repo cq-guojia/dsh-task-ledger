@@ -166,7 +166,22 @@ window.__ModuleLoader__.load({
 			if (board === null) return {
 				mine: [],
 				groups: [],
-				total: 0
+				total: 0,
+				othersCounts: {
+					total: 0,
+					doing: 0,
+					open: 0,
+					blocked: 0,
+					stale: 0
+				}
+			};
+			const othersAll = board.tasks.filter((task) => !isMine(task, board));
+			const othersCounts = {
+				total: othersAll.length,
+				doing: othersAll.filter((task) => task.status === "doing").length,
+				open: othersAll.filter((task) => task.status === "open").length,
+				blocked: othersAll.filter((task) => task.status === "blocked").length,
+				stale: othersAll.filter((task) => task.stale === true).length
 			};
 			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => query.workspace === "" || task.workspace.id === query.workspace).filter((task) => hitKeyword(query.keyword, [
 				task.title,
@@ -209,7 +224,8 @@ window.__ModuleLoader__.load({
 			return {
 				mine: mineRows,
 				groups,
-				total: mineRows.length + groups.reduce((sum, group) => sum + group.rows.length, 0)
+				total: mineRows.length + groups.reduce((sum, group) => sum + group.rows.length, 0),
+				othersCounts
 			};
 		}
 		//#endregion
@@ -236,17 +252,17 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region src/client/task-row.ts
 		/**
-		* 任务行（宿主**无表格件** ⇒ 自绘），**两种形态**（用户 2026-10-17 定稿：两区视觉必须不同）：
+		* 任务行（宿主**无表格件** ⇒ 自绘），**两种形态**（用户 2026-10-17 定稿：两区视觉必须不同，
+		* 且**互不重用**）：
 		*
 		* A. `mine`（我的待办）= 整行一张卡，样式照抄 dispatch-table 任务配置卡：
 		*    左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出
 		*    「继续 / 结束 / 释放」；最右常驻「查看」放大镜钮。
 		*
-		* B. `others`（其他待办）= 表格行（参考 GitHub 通知列表）：
-		*    **无卡片、无色条**，状态用 8px 圆点（灰=待认领 / 浅蓝=进行中[比「我的」蓝灰一档] /
-		*    黄=阻塞 / 红=停滞）；标题 + [创建] 徽 + 异常 pill；第二行分类/标签；
-		*    右列显示**创建人 / 执行人**（定宽省略）；最右常驻「查看」。别人的任务不出「继续」
-		*    （我的任务在第一区，天然不会出现在这里）。
+		* B. `others`（其他待办）= 真表格行（参考 Stripe Payments 表）：**无卡片、无外框**，
+		*    行 = 一条淡分隔线格：状态圆点 + 任务（标题+标签两行）+ 创建人 + 执行人 +
+		*    状态 + 时长 + 查看。圆点颜色：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/
+		*    黄=阻塞 / 红=停滞；停滞 pill 悬停给**配置出来的**阈值解释（staleDays 由 host 下发）。
 		*
 		* 按钮点击行为（含查看）归「任务按钮与会话交接」任务，本文件只做样子与提示。
 		*/
@@ -264,60 +280,64 @@ window.__ModuleLoader__.load({
 			if (row.task.status === "open") return "open";
 			return "doing";
 		}
-		/** 工作区徽标：蓝底胶囊（只铺底，字色回正文）。 */
-		function WorkspaceTag(props) {
-			if (props.workspace === void 0) return null;
-			return (0, react.createElement)("span", {
-				className: "dtl-wstag dtl-ellipsis",
-				title: props.workspace.title
-			}, props.workspace.title);
-		}
 		function TaskRowView(props) {
-			const { t, row, variant } = props;
-			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
+			const { t, row, variant, staleDays } = props;
 			const tone = toneOf(row);
 			const isTask = row.kind === "task";
+			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
 			const created = row.kind === "task" ? row.task.created ?? null : row.record.created ?? null;
 			const createdDay = created !== null && created !== void 0 && Date.parse(created) >= 0 ? formatDateTime(created).slice(0, 10) : null;
-			const parts = [];
-			if (isTask) {
-				const startRaw = row.task.started ?? row.task.created;
-				if (startRaw !== void 0 && startRaw !== null && startRaw !== "" && Date.parse(startRaw) >= 0) parts.push(`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`);
-				if (row.task.ageDays !== null && row.task.ageDays !== void 0) parts.push(row.task.ageDays === 0 ? t("ageToday") : t("ageDaysText", { n: row.task.ageDays }));
-			} else parts.push(`${t("fieldFinished")} ${formatDateTime(row.record.time ?? row.record.created ?? "", { fallback: t("timeUnknown") })}`);
+			const staleTip = staleDays === null || staleDays === void 0 ? void 0 : t("statStaleTitle", { n: staleDays });
 			const viewButton = (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-viewbtn",
 				"data-tip": t("viewDetail"),
 				title: t("viewDetail")
 			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 14 }));
+			const blockedPill = tone === "blocked" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--blocked" }, t("statusBlocked")) : null;
+			const stalePill = tone === "stale" ? (0, react.createElement)("span", {
+				className: "dtl-pill dtl-pill--stale",
+				title: staleTip
+			}, t("statusStale")) : null;
 			const titleLine = (0, react.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react.createElement)("span", {
 				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
-			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-taskrow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), tone === "blocked" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--blocked" }, t("statusBlocked")) : null, tone === "stale" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--stale" }, t("statusStale")) : null);
-			const metaLine = (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, variant === "mine" && isTask ? (0, react.createElement)(WorkspaceTag, { workspace: row.task.workspace }) : null, tags.map((tag) => (0, react.createElement)("span", {
-				key: tag,
-				className: "dtl-minitag",
-				title: `#${tag}`
-			}, `#${tag}`)));
+			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-taskrow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), blockedPill, stalePill);
+			const duration = !isTask || row.task.ageDays === null || row.task.ageDays === void 0 ? "—" : row.task.ageDays === 0 ? t("ageToday") : t("ageDaysText", { n: row.task.ageDays });
 			if (variant === "others") {
 				const creator = isTask ? row.task.creator : row.record.owner;
 				const owner = isTask ? row.task.owner : null;
-				return (0, react.createElement)("div", { className: "dtl-taskrow dtl-taskrow--others" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { style: {
-					flex: "1 1 auto",
-					minWidth: 0
-				} }, titleLine, metaLine), (0, react.createElement)("span", {
-					className: "dtl-taskrow__who dtl-ellipsis",
-					title: `${t("fieldCreator")} ${creator ?? "—"}`
-				}, `${t("fieldCreator")} ${creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`}`), (0, react.createElement)("span", {
-					className: "dtl-taskrow__who dtl-ellipsis",
-					title: `${t("fieldOwner")} ${owner ?? "—"}`
-				}, `${t("fieldOwner")} ${owner === null || owner === void 0 || owner === "" ? t("ownerUnclaimed") : `@${owner}`}`), viewButton));
+				const creatorText = creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`;
+				const ownerText = owner === null || owner === void 0 || owner === "" ? t("ownerUnclaimed") : `@${owner}`;
+				return (0, react.createElement)("div", { className: "dtl-taskrow dtl-taskrow--others" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, titleLine, (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, tags.map((tag) => (0, react.createElement)("span", {
+					key: tag,
+					className: "dtl-minitag",
+					title: `#${tag}`
+				}, `#${tag}`)))), (0, react.createElement)("span", {
+					className: "dtl-tcell dtl-tcell--who",
+					title: creatorText
+				}, creatorText), (0, react.createElement)("span", {
+					className: "dtl-tcell dtl-tcell--who",
+					title: ownerText
+				}, ownerText), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, tone === "blocked" ? blockedPill : tone === "stale" ? stalePill : null, tone === "doing" || tone === "open" ? (0, react.createElement)("span", { className: `dtl-statustext dtl-statustext--${tone}` }, tone === "open" ? t("statusOpen") : t("statusActive")) : null), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--time" }, duration), viewButton));
 			}
+			const parts = [];
+			if (isTask) {
+				const startRaw = row.task.started ?? row.task.created;
+				if (startRaw !== void 0 && startRaw !== null && startRaw !== "" && Date.parse(startRaw) >= 0) parts.push(`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`);
+				if (row.task.ageDays !== null && row.task.ageDays !== void 0) parts.push(row.task.ageDays === 0 ? t("ageToday") : t("ageDaysText", { n: row.task.ageDays }));
+			} else parts.push(`${t("fieldFinished")} ${formatDateTime(row.record.time ?? row.record.created ?? "", { fallback: t("timeUnknown") })}`);
 			return (0, react.createElement)("div", { className: "dtl-taskrow" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0
-			} }, titleLine, metaLine), (0, react.createElement)("span", { className: "dtl-taskrow__when" }, parts.length === 0 ? t("timeUnknown") : parts.join("丨")), isTask ? (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, (0, react.createElement)("button", {
+			} }, titleLine, (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, (0, react.createElement)("span", {
+				className: "dtl-wstag dtl-ellipsis",
+				title: row.kind === "task" ? row.task.workspace.title : ""
+			}, row.kind === "task" ? row.task.workspace.title : ""), tags.map((tag) => (0, react.createElement)("span", {
+				key: tag,
+				className: "dtl-minitag",
+				title: `#${tag}`
+			}, `#${tag}`)))), (0, react.createElement)("span", { className: "dtl-taskrow__when" }, parts.length === 0 ? t("timeUnknown") : parts.join("丨")), isTask ? (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-minibtn",
 				"data-tip": t("tipResume")
@@ -620,23 +640,34 @@ body[data-ds-dark-theme]{
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 其他待办 = **一个整表**（用户 2026-10-17：外框连着一块儿，不是一段一段的盒子）：
-   一张 1px 边框表，段头行与任务行都在表内，行间只留淡分隔线。 */
-.dtl-table{border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);overflow:hidden;}
-.dtl-group__head{display:flex;align-items:center;gap:var(--dtl-space-2);width:100%;
-  padding:var(--dtl-space-2) var(--dtl-space-3);border:0;border-bottom:1px solid var(--dtl-border-faint);
-  background:var(--dtl-surface-2);color:inherit;font:inherit;text-align:left;cursor:pointer;}
+/* 其他待办 = 真表格（参考 Stripe Payments，用户 2026-10-18）：**无外框、无竖线**，
+   一行一格 = 一条淡分隔线；每段：段头（点+名+统计）→ 列头行 → 任务行。 */
+.dtl-group{margin-bottom:var(--dtl-space-4);}
+.dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
+  padding:10px 2px 6px;border:0;background:transparent;color:inherit;font:inherit;
+  text-align:left;cursor:pointer;}
+.dtl-group__dot{width:8px;height:8px;border-radius:50%;background:var(--dtl-fg-3);flex:none;}
 .dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
+/* 列头行：小字灰，与任务行同列宽（同一套 .dtl-tcell） */
+.dtl-thead{display:flex;align-items:center;gap:10px;padding:6px 2px;
+  border-bottom:1px solid var(--dtl-border-faint);font-size:10px;color:var(--dtl-fg-3);}
 
-/* 表格行：无卡底；行间距紧；hover 整行淡蓝；行间淡分隔线（最后一行由表框收口） */
-.dtl-taskrow--others{padding:var(--dtl-space-2) var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
-.dtl-taskrow--others:last-child{border-bottom:0;}
+/* 任务行：一条淡线格；hover 整行淡蓝 */
+.dtl-taskrow--others{padding:8px 2px;border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-taskrow--others:hover{background:var(--dtl-card-hover);}
 .dtl-taskrow--others .dtl-taskrow__row{gap:10px;}
-.dtl-taskrow--others .dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
 .dtl-taskrow--others .dtl-taskrow__l2{margin-top:1px;}
-/* 右列：创建人 / 执行人（定宽省略，控住总宽） */
-.dtl-taskrow__who{flex:none;width:104px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
+/* 列：任务（弹性）/ 创建人 / 执行人 / 状态 / 时长 / 查看 */
+.dtl-tcell{min-width:0;}
+.dtl-tcell--title{flex:1 1 auto;}
+.dtl-tcell--who{flex:none;width:104px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+.dtl-tcell--status{flex:none;width:72px;}
+.dtl-tcell--time{flex:none;width:64px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);text-align:right;}
+/* 状态列文字（待认领灰 / 进行中浅蓝；阻塞停滞仍是 pill） */
+.dtl-statustext{font-size:var(--dtl-font-xs);white-space:nowrap;}
+.dtl-statustext--doing{color:var(--dtl-business-dim);}
+.dtl-statustext--open{color:var(--dtl-fg-3);}
 
 /* 状态圆点（替代卡片形态的色条）：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞 */
 .dtl-dot{display:inline-block;width:8px;height:8px;flex:none;border-radius:50%;}
@@ -1165,11 +1196,11 @@ body[data-ds-dark-theme]{
 				style: statsRowStyle
 			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myBlocked })), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) })), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive + stats.myBlocked })), (0, react.createElement)(StatCard, {
 				label: t("statBlockedStale"),
-				value: stats.blocked,
-				hint: stats.stale === 0 ? void 0 : (0, react.createElement)("span", null, (0, react.createElement)("span", { style: {
-					color: "var(--dtl-danger)",
-					fontWeight: 600
-				} }, t("statStaleWord")), ` ${t("statStaleHint", { n: stats.stale })}`),
+				value: stats.blocked + stats.stale,
+				hint: t("statBlockedSplit", {
+					blocked: stats.blocked,
+					stale: stats.stale
+				}),
 				title: t("statStaleTitle", { n: stats.staleDays }),
 				interactive: false
 			}), periodCard("statWeekDone", board?.trend.thisWeek), periodCard("statLastWeekDone", board?.trend.lastWeek), periodCard("statMonthDone", board?.trend.thisMonth), periodCard("statLastMonthDone", board?.trend.lastMonth)), (0, react.createElement)("div", {
@@ -1245,15 +1276,50 @@ body[data-ds-dark-theme]{
 				key: row.key,
 				t,
 				row,
-				variant: "mine"
-			})), view.groups.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadRowStyle }, (0, react.createElement)("span", { style: {
+				variant: "mine",
+				staleDays: board?.stats.staleDays ?? null
+			})), (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadRowStyle }, (0, react.createElement)("span", { style: {
 				color: "var(--dtl-fg-3)",
 				display: "inline-flex",
 				flex: "none"
 			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: {
 				...regionHeadTitleStyle,
 				fontSize: "var(--dtl-font-md)"
-			} }, t("regionOthers")), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: {
+			} }, t("regionOthers")), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)(Segmented, {
+				id: "dtl-others-status",
+				value: state.query.status,
+				label: t("statusLabel"),
+				items: [
+					{
+						value: "all",
+						label: t("statusAll"),
+						badge: orZero(view.othersCounts.total)
+					},
+					{
+						value: "active",
+						label: t("statusActive"),
+						badge: orZero(view.othersCounts.doing)
+					},
+					{
+						value: "open",
+						label: t("statusOpen"),
+						badge: orZero(view.othersCounts.open)
+					},
+					{
+						value: "blocked",
+						label: t("statusBlocked"),
+						badge: orZero(view.othersCounts.blocked)
+					},
+					{
+						value: "stale",
+						label: t("statusStale"),
+						badge: orZero(view.othersCounts.stale)
+					}
+				],
+				onChange: (next) => {
+					setQuery({ status: next });
+				}
+			}), (0, react.createElement)("div", { style: {
 				width: `${SEARCH_WIDTH}px`,
 				flex: "none"
 			} }, (0, react.createElement)(SearchInput, {
@@ -1263,45 +1329,37 @@ body[data-ds-dark-theme]{
 				onChange: (next) => {
 					setQuery({ othersKeyword: next });
 				}
-			}))), (0, react.createElement)("div", { style: { marginBottom: "var(--dtl-space-2)" } }, (0, react.createElement)(Segmented, {
-				id: "dtl-others-status",
-				value: state.query.status,
-				label: t("statusLabel"),
-				items: [
-					{
-						value: "all",
-						label: t("statusAll")
-					},
-					{
-						value: "active",
-						label: t("statusActive")
-					},
-					{
-						value: "open",
-						label: t("statusOpen")
-					},
-					{
-						value: "blocked",
-						label: t("statusBlocked")
-					},
-					{
-						value: "stale",
-						label: t("statusStale")
-					}
-				],
-				onChange: (next) => {
-					setQuery({ status: next });
-				}
-			})), (0, react.createElement)("div", { className: "dtl-table" }, view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
+			}))), view.groups.length === 0 ? (0, react.createElement)("div", {
+				className: "dtl-empty-guide",
+				style: { marginTop: "var(--dtl-space-2)" }
+			}, (0, react.createElement)("div", { style: {
+				fontSize: "var(--dtl-font-lg)",
+				fontWeight: 600,
+				marginBottom: "var(--dtl-space-1)"
+			} }, t("othersEmptyTitle")), (0, react.createElement)("div", { style: {
+				fontSize: "var(--dtl-font-md)",
+				color: "var(--dtl-fg-2)",
+				marginBottom: "var(--dtl-space-3)"
+			} }, t("othersEmptyHint")), (0, react.createElement)(Button, {
+				variant: "primary",
+				size: "md",
+				onClick: onBack
+			}, t("othersEmptyAction"))) : (0, react.createElement)("div", { style: { marginTop: "var(--dtl-space-2)" } }, view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
 				key: group.workspaceId,
 				t,
-				group
+				group,
+				staleDays: board?.stats.staleDays ?? null
 			})))))))));
 		}
-		/** 一个工作区分组（其他待办表格段头）：左工作区名 + 右统计
-		*  （共 N｜待办 N｜进行中 N 常显；阻塞 / 停滞**只在 >0 时出现**——用户 2026-10-17），可点折叠。 */
+		/** 角标：>0 才给数字，0 = undefined（不标）。 */
+		function orZero(n) {
+			return n > 0 ? n : void 0;
+		}
+		/** 一个工作区分组（其他待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
+		*  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
+		*  阻塞 / 停滞**只在 >0 时出现**。 */
 		function WorkspaceGroupView(props) {
-			const { t, group } = props;
+			const { t, group, staleDays } = props;
 			const [open, setOpen] = (0, react.useState)(group.rows.length <= GROUP_COLLAPSE_OVER);
 			const stats = [
 				t("groupTotal", { n: group.total }),
@@ -1310,7 +1368,7 @@ body[data-ds-dark-theme]{
 				...group.blockedCount > 0 ? [t("groupBlocked", { n: group.blockedCount })] : [],
 				...group.staleCount > 0 ? [t("groupStale", { n: group.staleCount })] : []
 			].join(" ｜ ");
-			return (0, react.createElement)("div", null, (0, react.createElement)("button", {
+			return (0, react.createElement)("div", { className: "dtl-group" }, (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-group__head",
 				"aria-expanded": open,
@@ -1318,11 +1376,12 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					setOpen(!open);
 				}
-			}, (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, group.rows.map((row) => (0, react.createElement)(TaskRowView, {
+			}, (0, react.createElement)("span", { className: "dtl-group__dot" }), (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, (0, react.createElement)("div", { className: "dtl-thead" }, (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--title" }, t("colTask")), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--who" }, t("colCreator")), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--who" }, t("colOwner")), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, t("colStatus")), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--time" }, t("colTime"))), group.rows.map((row) => (0, react.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,
-				variant: "others"
+				variant: "others",
+				staleDays
 			}))) : null);
 		}
 		//#endregion
@@ -1348,6 +1407,7 @@ body[data-ds-dark-theme]{
 			statBlockedStale: "阻塞 · 停滞",
 			statStaleWord: "停滞",
 			statStaleHint: "{n} 条",
+			statBlockedSplit: "阻塞 {blocked} ｜ 停滞 {stale}",
 			statStaleTitle: "停滞 = 进行中或阻塞超过 {n} 天未更新",
 			statWeekDone: "本周完成",
 			statLastWeekDone: "上周完成",
@@ -1388,6 +1448,14 @@ body[data-ds-dark-theme]{
 			groupDoing: "进行中 {n} 条",
 			groupBlocked: "阻塞 {n} 条",
 			groupStale: "停滞 {n} 条",
+			colTask: "任务",
+			colCreator: "创建人",
+			colOwner: "执行人",
+			colStatus: "状态",
+			colTime: "时长",
+			othersEmptyTitle: "没有可显示的事项",
+			othersEmptyHint: "切换上面的状态过滤试试，或新建一个任务。",
+			othersEmptyAction: "新建任务",
 			expandAria: "展开过程文档",
 			collapseAria: "收起",
 			ownerUnclaimed: "待认领",
@@ -1445,6 +1513,7 @@ body[data-ds-dark-theme]{
 			statBlockedStale: "Blocked · Stale",
 			statStaleWord: "Stale",
 			statStaleHint: "{n}",
+			statBlockedSplit: "{blocked} blocked ｜ {stale} stale",
 			statStaleTitle: "stale = active or blocked with no update for {n}+ days",
 			statWeekDone: "Done this week",
 			statLastWeekDone: "Done last week",
@@ -1485,6 +1554,14 @@ body[data-ds-dark-theme]{
 			groupDoing: "{n} active",
 			groupBlocked: "{n} blocked",
 			groupStale: "{n} stale",
+			colTask: "Task",
+			colCreator: "Created by",
+			colOwner: "Owner",
+			colStatus: "Status",
+			colTime: "Duration",
+			othersEmptyTitle: "Nothing to show",
+			othersEmptyHint: "Try another status filter above, or create a task.",
+			othersEmptyAction: "New task",
 			expandAria: "Expand worklog",
 			collapseAria: "Collapse",
 			ownerUnclaimed: "unclaimed",

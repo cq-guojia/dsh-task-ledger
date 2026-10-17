@@ -30,6 +30,14 @@ export interface BoardView {
   readonly mine: readonly Row[]
   readonly groups: readonly WorkspaceGroup[]
   readonly total: number
+  /** 第二区全量计数（**不受状态过滤影响**，供 segmented 角标；停滞是独立标记）。 */
+  readonly othersCounts: {
+    readonly total: number
+    readonly doing: number
+    readonly open: number
+    readonly blocked: number
+    readonly stale: number
+  }
 }
 
 /** 关键字命中（标题 / 任务号 / 人 / 分类 / 标签；已结案另含「完成了什么」）。 */
@@ -72,7 +80,17 @@ function inGroupOrder(a: Row, b: Row): number {
  */
 export function selectView(current: { board: BoardPayload | null; query: Query }): BoardView {
   const { board, query } = current
-  if (board === null) return { mine: [], groups: [], total: 0 }
+  if (board === null) {
+    return { mine: [], groups: [], total: 0, othersCounts: { total: 0, doing: 0, open: 0, blocked: 0, stale: 0 } }
+  }
+  const othersAll = board.tasks.filter((task) => !isMine(task, board))
+  const othersCounts = {
+    total: othersAll.length,
+    doing: othersAll.filter((task) => task.status === 'doing').length,
+    open: othersAll.filter((task) => task.status === 'open').length,
+    blocked: othersAll.filter((task) => task.status === 'blocked').length,
+    stale: othersAll.filter((task) => task.stale === true).length,
+  }
   const mineRows: Row[] = board.tasks
     .filter((task) => isMine(task, board))
     .filter((task) => query.workspace === '' || task.workspace.id === query.workspace)
@@ -103,7 +121,7 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
       rows: entry.rows.sort(inGroupOrder),
     }))
     .sort((a, b) => a.title.localeCompare(b.title, 'zh-Hans-CN'))
-  return { mine: mineRows, groups, total: mineRows.length + groups.reduce((sum, group) => sum + group.rows.length, 0) }
+  return { mine: mineRows, groups, total: mineRows.length + groups.reduce((sum, group) => sum + group.rows.length, 0), othersCounts }
 }
 
 /**
