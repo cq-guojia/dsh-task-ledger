@@ -255,33 +255,14 @@ window.__ModuleLoader__.load({
 			if (row.task.status === "open") return "open";
 			return "doing";
 		}
-		/** 工作区徽标：色块首字母 + 名（第二行小字用，随内容定宽）。 */
+		/** 工作区徽标：蓝底纹胶囊（UI 设计师 2026-10-17 建议：首字母方块太弱，胶囊在卡片底上更醒目；
+		* 取消视字母色块，整名随内容定宽、超出省略）。 */
 		function WorkspaceTag(props) {
 			if (props.workspace === void 0) return null;
-			const initial = props.workspace.title.trim().slice(0, 1);
 			return (0, react.createElement)("span", {
-				className: "dtl-ellipsis",
-				style: {
-					display: "inline-flex",
-					alignItems: "center",
-					gap: "var(--dtl-space-1)",
-					minWidth: 0,
-					maxWidth: "200px"
-				},
+				className: "dtl-wstag dtl-ellipsis",
 				title: props.workspace.title
-			}, (0, react.createElement)("span", { style: {
-				display: "inline-flex",
-				alignItems: "center",
-				justifyContent: "center",
-				flex: "none",
-				width: "14px",
-				height: "14px",
-				borderRadius: "var(--dtl-radius-xs)",
-				background: "var(--dtl-business-soft)",
-				color: "var(--dtl-business)",
-				fontSize: "9px",
-				fontWeight: 600
-			} }, initial === "" ? "·" : initial), props.workspace.title);
+			}, props.workspace.title);
 		}
 		function TaskRowView(props) {
 			const { t, row, mockTone } = props;
@@ -645,10 +626,13 @@ body[data-ds-dark-theme]{
   color:var(--dtl-fg-3);font-size:10px;line-height:16px;white-space:nowrap;max-width:120px;
   overflow:hidden;text-overflow:ellipsis;}
 
-/* 分区标题里的计数徽：很小、圆套起来（用户 2026-10-17） */
-.dtl-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;
-  padding:0 4px;border:1px solid var(--dtl-border-strong);border-radius:999px;
-  font-size:10px;line-height:14px;color:var(--dtl-fg-3);font-weight:400;font-variant-numeric:tabular-nums;}
+/* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
+.dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
+
+/* 工作区徽标：蓝底纹胶囊（UI 设计师 2026-10-17：卡片底上最醒目又不抢标题） */
+.dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-business-soft);color:var(--dtl-fg);font-size:var(--dtl-font-xs);
+  line-height:16px;white-space:nowrap;}
 
 /* 行内动作按钮（icon + 字，加大；悬停立刻浮出说明——CSS ::after，不用慢半拍的原生 title）。
    样子先行，点击行为归「任务按钮与会话交接」任务 */
@@ -1146,7 +1130,11 @@ body[data-ds-dark-theme]{
 				tone: "guide",
 				title: t("emptyNoWorkspace"),
 				hint: t("emptyNoWorkspaceHint")
-			}) : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", null, t("regionMine")), (0, react.createElement)("span", { className: "dtl-count" }, String(view.mine.length)), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: {
+			}) : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", { style: {
+				color: "var(--dtl-fg-3)",
+				display: "inline-flex",
+				flex: "none"
+			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", null, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, `[${view.mine.length}]`) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: {
 				width: "220px",
 				display: "flex"
 			} }, (0, react.createElement)(SearchInput, {

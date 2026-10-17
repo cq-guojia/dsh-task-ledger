@@ -7,7 +7,7 @@
  * （未就绪不渲染 / 真空引导卡 / 筛选空小字）。
  */
 import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react'
-import { IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconChecklistOutlineRegular, IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { LocaleKey, Translate } from './locales'
 import { boardSnapshot, boardSubscribe, refresh, setQuery } from './store'
 import { selectView, type WorkspaceGroup } from './rows'
@@ -205,8 +205,12 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                       // 第一区：我的待办——定死全量、不过滤（用户 2026-10-17），空了给引导卡；
                       // 标题行右侧挂搜索框（只作用第三区），计数用小圆徽
                       h('div', { style: regionHeadStyle },
+                        h('span', { style: { color: 'var(--dtl-fg-3)', display: 'inline-flex', flex: 'none' } },
+                          h(IconChecklistOutlineRegular, { size: 16 })),
                         h('span', null, t('regionMine')),
-                        h('span', { className: 'dtl-count' }, String(view.mine.length)),
+                        view.mine.length > 0
+                          ? h('span', { className: 'dtl-count' }, `[${view.mine.length}]`)
+                          : null,
                         h('span', { style: { flex: '1 1 auto' } }),
                         h('div', { style: { width: '220px', display: 'flex' } },
                           h(SearchInput, {

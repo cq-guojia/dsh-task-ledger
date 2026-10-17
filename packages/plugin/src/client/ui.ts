@@ -67,10 +67,13 @@ const UI_BASE_CSS = `
   color:var(--dtl-fg-3);font-size:10px;line-height:16px;white-space:nowrap;max-width:120px;
   overflow:hidden;text-overflow:ellipsis;}
 
-/* 分区标题里的计数徽：很小、圆套起来（用户 2026-10-17） */
-.dtl-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;
-  padding:0 4px;border:1px solid var(--dtl-border-strong);border-radius:999px;
-  font-size:10px;line-height:14px;color:var(--dtl-fg-3);font-weight:400;font-variant-numeric:tabular-nums;}
+/* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
+.dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
+
+/* 工作区徽标：蓝底纹胶囊（UI 设计师 2026-10-17：卡片底上最醒目又不抢标题） */
+.dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-business-soft);color:var(--dtl-fg);font-size:var(--dtl-font-xs);
+  line-height:16px;white-space:nowrap;}
 
 /* 行内动作按钮（icon + 字，加大；悬停立刻浮出说明——CSS ::after，不用慢半拍的原生 title）。
    样子先行，点击行为归「任务按钮与会话交接」任务 */

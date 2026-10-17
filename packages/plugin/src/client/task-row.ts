@@ -39,24 +39,14 @@ function toneOf(row: Row, mockTone?: 'blocked' | 'stale'): Tone {
   return 'doing'
 }
 
-/** 工作区徽标：色块首字母 + 名（第二行小字用，随内容定宽）。 */
+/** 工作区徽标：蓝底纹胶囊（UI 设计师 2026-10-17 建议：首字母方块太弱，胶囊在卡片底上更醒目；
+ * 取消视字母色块，整名随内容定宽、超出省略）。 */
 function WorkspaceTag(props: { workspace: Workspace | undefined }): ReactNode {
   if (props.workspace === undefined) return null
-  const initial = props.workspace.title.trim().slice(0, 1)
   return h('span', {
-    className: 'dtl-ellipsis',
-    style: { display: 'inline-flex', alignItems: 'center', gap: 'var(--dtl-space-1)', minWidth: 0, maxWidth: '200px' },
+    className: 'dtl-wstag dtl-ellipsis',
     title: props.workspace.title,
-  },
-    h('span', {
-      style: {
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
-        width: '14px', height: '14px', borderRadius: 'var(--dtl-radius-xs)',
-        background: 'var(--dtl-business-soft)', color: 'var(--dtl-business)', fontSize: '9px', fontWeight: 600,
-      },
-    }, initial === '' ? '·' : initial),
-    props.workspace.title,
-  )
+  }, props.workspace.title)
 }
 
 export function TaskRowView(props: {
