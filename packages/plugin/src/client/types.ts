@@ -47,6 +47,8 @@ export interface HistoryRecord {
   readonly category?: string | null
   readonly tags?: string[] | null
   readonly owner?: string
+  /** 发起人（creator）：任务创建者，与 owner 区分（owner 可被 claim 改走）。 */
+  readonly creator?: string | null
   /** 「完成了什么」列。 */
   readonly summary?: string
   /** 过程文档路径列。 */

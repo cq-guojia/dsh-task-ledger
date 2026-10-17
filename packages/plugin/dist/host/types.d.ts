@@ -40,6 +40,8 @@ export interface HistoryRecord {
     category?: string | null;
     tags?: string[] | null;
     owner?: string;
+    /** 发起人（creator）：任务的「创建者」，与 owner 区分（owner 可被 claim 改走）。历史 9 列新增；旧 8 列由 skill 回链 worklog 头部补。 */
+    creator?: string | null;
     /** 「完成了什么」列。 */
     summary?: string;
     /** 过程文档链接列。 */

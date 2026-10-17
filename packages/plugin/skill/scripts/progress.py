@@ -5,7 +5,7 @@
   ledger/progress.json                在办任务的状态
   ledger/worklog/<年月>/<日>-<时分>-<说明>-<随机码>.md
                                      单个任务的过程（路径另记在状态表 worklog 字段）
-  ledger/history/<年月>.md            已结案任务，一行一条（8 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / 完成了什么 / 过程文档）；
+  ledger/history/<年月>.md            已结案任务，一行一条（9 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / creator / 完成了什么 / 过程文档）；
                                      按结案时间分月归档。存量 ledger/PROGRESS-HISTORY.md 只读兼容、永不重写
 
 只用标准库，无第三方依赖。
@@ -46,13 +46,12 @@ HISTORY_DIR = Path(
 )  # 新历史层：按结案时间分月，ledger/history/<YYYYMM>.md
 WORKLOG_DIR = Path("ledger/worklog")
 HISTORY_TITLE = "# 进度历史（已结案）"
-# 8 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / 完成了什么 / 过程文档。
+# 9 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / creator / 完成了什么 / 过程文档。
 # owner 独立成列 —— 按人检索是精确列比较，不靠文本切分。
-# 分类/标签列（2026-10-15 存量改造时加入）：close 从 task 直写；旧 4/5/6 列由
-# upgrade_history 升级为 8 列（回链 worklog 头部补值），parse_history 三时代兼容读取。
-HISTORY_HEADER = (
-    "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | 完成了什么 | 过程文档 |"
-)
+# creator（2026-10-17 加）：任务的「发起人」——与 owner 区分（owner 可被 claim 改走，
+# 但「谁建的」不变）。看板「新增（我的）= 我创建的」要它；旧 8 列无此列，
+# upgrade_history / cmd_history 回链 worklog 头部「创建」行补（与 created 同一来源，不丢）。
+HISTORY_HEADER = "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |"
 HISTORY_SEP = "|---|---|---|---|---|---|---|---|"
 FROZEN_MARK = "✅ 完成封卷"
 ID_RE = re.compile(r"[a-z0-9\u4e00-\u9fff][a-z0-9\u4e00-\u9fff-]*\Z")
@@ -403,6 +402,11 @@ def owner_cell(owner: str | None) -> str:
     return f"@{owner}" if owner else ""
 
 
+def creator_cell(creator: str | None) -> str:
+    """creator 列展示值（与 owner_cell 同一 @ 约定）。"""
+    return f"@{creator}" if creator else ""
+
+
 def history_line(
     finished: str,
     created: str | None,
@@ -412,17 +416,19 @@ def history_line(
     log_rel: str,
     category: str | None = None,
     tags: list[str] | None = None,
+    creator: str | None = None,
 ) -> str:
-    """历史层的一行（8 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / 完成了什么 / 过程文档）。
+    """历史层的一行（9 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / creator / 完成了什么 / 过程文档）。
 
-    close 专用，避免两处格式漂移。owner 是独立列、单独过 esc_cell ——
-    它来自 git config user.name，含 `|` 也不稀奇。分类/标签由 close 传 task 终值。
+    close 专用，避免两处格式漂移。owner / creator 是独立列、单独过 esc_cell ——
+    它们来自 git config user.name，含 `|` 也不稀奇。分类/标签由 close 传 task 终值。
     """
     cat_cell = esc_cell(category or "")
     tag_cell = esc_cell("、".join(tags) if tags else "")
     return (
         f"| {finished} | {created or ''} | {esc_cell(title)} | {cat_cell} | {tag_cell} "
-        f"| {esc_cell(owner_cell(owner))} | {esc_cell(summary)} | [{log_rel}]({log_rel}) |\n"
+        f"| {esc_cell(owner_cell(owner))} | {esc_cell(creator_cell(creator))} "
+        f"| {esc_cell(summary)} | [{log_rel}]({log_rel}) |\n"
     )
 
 
@@ -436,12 +442,13 @@ def history_line_for_cols(
     log_rel: str,
     category: str | None = None,
     tags: list[str] | None = None,
+    creator: str | None = None,
 ) -> str:
     """「历史层有无法解析的行、不敢整体升级」时，按现有列数追加一行，避免列错位。
 
     GFM 按首行列数渲染，列数写错会被静默丢弃 / 错位。cols<=4 ⇒ 旧 4 列（owner 缝在
     工作包末尾）；5 ⇒ 无创建时间列；6 ⇒ 无分类/标签列（存量改造前的最后形态）；
-    否则 8 列。分类/标签只在 8 列里出现 —— 少列的文件硬塞会把整行挤歪。
+    否则 9 列。分类/标签/creator 只在 9 列里出现 —— 少列的文件硬塞会把整行挤歪。
     """
     if cols <= 4:
         who = f" @{owner}" if owner else ""
@@ -460,7 +467,7 @@ def history_line_for_cols(
             f"| {esc_cell(owner_cell(owner))} | {esc_cell(summary)} | [{log_rel}]({log_rel}) |\n"
         )
     return history_line(
-        finished, created, title, owner, summary, log_rel, category, tags
+        finished, created, title, owner, summary, log_rel, category, tags, creator
     )
 
 
@@ -509,11 +516,13 @@ def _looks_like_header(cells: list[str]) -> bool:
 def parse_history(text: str) -> tuple[list[dict[str, Any]], list[str]]:
     """解析历史层，返回 (records, warnings)。
 
-    多格式兼容：8 列 = v8（结案时间 / 创建时间 / 工作包 / 分类 / 标签 / …）；6 列 = v6
+    多格式兼容：9 列 = v9（结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / creator / …）；
+    8 列 = v8（存量改造后、2026-10-17 前，无 creator）；6 列 = v6
     （存量改造前最后形态，无分类/标签）；5 列且第 2 列是时间 = 旧 ledger 格式
     （有创建时间列、无 owner 列）；5 列 = 无创建时间列；4 列 = 最旧（owner 缝在工作包末尾）。
     **逐行按自己的列数判别**，表头只用来跳过 —— 旧文件追加新列
-    后是混排态，按表头判列数会切错。坏行（列数不在 4/5/6/8、时间列不合法）不中断：跳过 + 警告。
+    后是混排态，按表头判列数会切错。坏行（列数不在 4/5/6/8/9、时间列不合法）不中断：跳过 + 警告。
+    8 列行无 creator 列 ⇒ creator 留 None，cmd_history 回链 worklog 头部「创建」行补（与 created 同源）。
     """
     records: list[dict[str, Any]] = []
     warnings: list[str] = []
@@ -526,13 +535,31 @@ def parse_history(text: str) -> tuple[list[dict[str, Any]], list[str]]:
         created = ""
         category: str | None = None
         tags: list[str] = []
-        if len(cells) == 8:
+        creator: str | None = None
+        if len(cells) == 9:
+            (
+                finished,
+                created,
+                workpackage,
+                category,
+                tag_cell,
+                owner,
+                creator,
+                summary,
+                doc,
+            ) = cells
+            fmt = "v9"
+            category = category.strip() or None
+            tags = [t.strip() for t in re.split(r"[,，、]", tag_cell) if t.strip()]
+            creator = creator.strip().removeprefix("@") or None
+        elif len(cells) == 8:
             finished, created, workpackage, category, tag_cell, owner, summary, doc = (
                 cells
             )
             fmt = "v8"
             category = category.strip() or None
             tags = [t.strip() for t in re.split(r"[,，、]", tag_cell) if t.strip()]
+            # 旧 8 列无 creator 列：留 None，cmd_history 回链 worklog 头部补（不丢）
         elif len(cells) == 6:
             finished, created, workpackage, owner, summary, doc = cells
             fmt = "v6"
@@ -555,7 +582,7 @@ def parse_history(text: str) -> tuple[list[dict[str, Any]], list[str]]:
                 owner = ""
             fmt = "v4"
         else:
-            warnings.append(f"第 {lineno} 行列数不是 4 / 5 / 6 / 8，已跳过")
+            warnings.append(f"第 {lineno} 行列数不是 4 / 5 / 6 / 8 / 9，已跳过")
             continue
         if not TIME_RE.fullmatch(finished):
             warnings.append(f"第 {lineno} 行时间列 {finished!r} 不合法，已跳过")
@@ -572,6 +599,7 @@ def parse_history(text: str) -> tuple[list[dict[str, Any]], list[str]]:
                 "category": category,
                 "tags": tags,
                 "owner": own or None,
+                "creator": creator,
                 "summary": summary,
                 "log": log or None,
                 "fmt": fmt,
@@ -581,11 +609,14 @@ def parse_history(text: str) -> tuple[list[dict[str, Any]], list[str]]:
     return records, warnings
 
 
-# worklog 头部「创建」行：`> **创建**：2026-10-06 00:00（@某人）`。用于给旧历史行回填创建时间。
+# worklog 头部「创建」行：`> **创建**：2026-10-06 00:00（@某人）`。
+# 时间给旧历史行回填创建时间；括号内 @某人 即 creator（发起人）。
 WORKLOG_CREATED_RE = re.compile(
     r"^\s*>\s*\*\*创建\*\*\s*[：:]\s*"
     r"(\d{4}-\d{2}-\d{2}(?: +\d{1,2}:\d{1,2}(?::\d{1,2})?)?)"
 )
+# 同一行的发起人（@某人）——creator 列来源。
+WORKLOG_CREATOR_RE = re.compile(r"^\s*>\s*\*\*创建\*\*\s*[：:].*?（@(.+?)）")
 
 
 def created_for_history(log_cell: str, history_path: Path) -> str | None:
@@ -611,6 +642,28 @@ def created_for_history(log_cell: str, history_path: Path) -> str | None:
     return None
 
 
+def creator_for_history(log_cell: str | None, history_path: Path) -> str | None:
+    """顺着历史行的文档链接找到 worklog，读它头部「创建」行的发起人（@某人）；找不到返回 None。
+
+    旧 8 列历史行没有 creator 列，迁移 / 只读回填都靠它 —— 与 created 同源，不丢数据。
+    """
+    if not log_cell:
+        return None
+    m = re.fullmatch(r"\[[^\]]*\]\(([^)]*)\)", log_cell.strip())
+    rel = (m.group(1) if m else log_cell).strip()
+    if not rel:
+        return None
+    try:
+        text = (history_path.parent / rel).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+    for ln in text.splitlines():
+        mm = WORKLOG_CREATOR_RE.match(ln)
+        if mm:
+            return mm.group(1).strip()
+    return None
+
+
 def labels_for_log(
     log_cell: str | None, history_path: Path
 ) -> tuple[str | None, list[str]]:
@@ -633,11 +686,13 @@ def labels_for_log(
 
 
 def upgrade_history(text: str, history_path: Path) -> tuple[str, int] | None:
-    """旧格式（4 / 5 / 6 列）→ v8（8 列）。全部数据行可解析才返回 (新文本, 转换行数)，否则 None。
+    """旧格式（4 / 5 / 6 / 8 列）→ v9（9 列）。全部数据行可解析才返回 (新文本, 转换行数)，否则 None。
 
     None 的语义是「不敢动」：调用方必须退回按原列数追加并明示，绝不半升级、绝不猜。
     分类/标签列：回链每行的 worklog 头部读「分类/标签」行（读不到留空，不编造）——
     与 created 的回填同一模式，依赖 Step 2 已给存量 worklog 补行。
+    creator 列（2026-10-17 加）：旧 8 列无此列，同样回链 worklog 头部「创建」行的
+    （@发起人）补 —— **与 created 同源，迁移不丢发起人**。读不到留空。
     缺创建时间的旧行：先读它链接的 worklog 头部「创建」行，找不到用升级时刻 —— 不允许留空。
     5 列有两种（判别与 parse_history 一致，靠「第 2 列是不是时间」）：旧 ledger 格式
     （结案 / 创建 / 工作包 / 摘要 / 文档，无 owner）行内自带创建时间，优先用它；
@@ -662,13 +717,33 @@ def upgrade_history(text: str, history_path: Path) -> tuple[str, int] | None:
         if _looks_like_header(cells):
             out.append(HISTORY_HEADER)
             continue
-        if len(cells) == 8:
-            # v8 行原样回写：内容已是最终格式（含分类/标签）
+        if len(cells) == 9:
+            # v9 行原样回写：已含 creator
             if time_key(cells[0]) is None:
                 return None
             out.append("| " + " | ".join(cells) + " |")
             continue
         explicit_created: str | None = None
+        creator: str | None = None
+        if len(cells) == 8:
+            # v8 → v9：补 creator 列（回链 worklog 头部「创建」行的 @发起人；读不到留空不编造）
+            finished, created, workpackage, category, tag_cell, owner, summary, doc = (
+                cells
+            )
+            if time_key(finished) is None:
+                return None
+            created_key = time_key(created.strip())
+            cat = category.strip() or None
+            tags = [t.strip() for t in re.split(r"[,，、]", tag_cell) if t.strip()]
+            creator = creator_for_history(doc, history_path) or ""
+            out.append(
+                f"| {finished} | {created_key or ''} | {esc_cell(workpackage)} "
+                f"| {esc_cell(cat or '')} | {esc_cell('、'.join(tags) if tags else '')} "
+                f"| {esc_cell(owner_cell(owner.lstrip('@')))} | {esc_cell(creator_cell(creator))} "
+                f"| {esc_cell(summary)} | {doc} |"
+            )
+            converted += 1
+            continue
         if len(cells) == 6:
             finished, created, workpackage, owner, summary, doc = cells
             # v6 升级：owner 单元格已是展示格式（带 @），剥掉再走 owner_cell，否则升级出 @@
@@ -698,10 +773,12 @@ def upgrade_history(text: str, history_path: Path) -> tuple[str, int] | None:
             return None
         created = explicit_created or created_for_history(doc, history_path) or fallback
         cat, tags = labels_for_log(doc, history_path)
+        creator = creator_for_history(doc, history_path) or ""
         out.append(
             f"| {finished_key} | {created} | {esc_cell(workpackage)} "
             f"| {esc_cell(cat or '')} | {esc_cell('、'.join(tags) if tags else '')} "
-            f"| {esc_cell(owner_cell(owner))} | {esc_cell(summary)} | {doc} |"
+            f"| {esc_cell(owner_cell(owner))} | {esc_cell(creator_cell(creator))} "
+            f"| {esc_cell(summary)} | {doc} |"
         )
         converted += 1
     return "\n".join(out) + "\n", converted
@@ -796,18 +873,27 @@ def append_history_line(
     log_rel: str,
     category: str | None = None,
     tags: list[str] | None = None,
+    creator: str | None = None,
 ) -> tuple[str, int]:
     """把一行历史追加到指定历史文件，返回 (新全文, 升级行数)。
 
-    读目标 → upgrade_history → 解析不了就按现有列数追加（绝不把 8 列写进少列表头）
-    → 文件不存在则带 8 列表头新建。close 专用：「行落哪个月」之外，
-    历史行的落盘逻辑只此一处。分类/标签由 close 传 task 终值。
+    读目标 → upgrade_history → 解析不了就按现有列数追加（绝不把 9 列写进少列表头）
+    → 文件不存在则带 9 列表头新建。close 专用：「行落哪个月」之外，
+    历史行的落盘逻辑只此一处。分类/标签/creator 由 close 传 task 终值。
     """
     if not history_path.exists():
         return (
             f"{HISTORY_TITLE}\n\n{HISTORY_HEADER}\n{HISTORY_SEP}\n"
             + history_line(
-                finished, created, title, owner, summary, log_rel, category, tags
+                finished,
+                created,
+                title,
+                owner,
+                summary,
+                log_rel,
+                category,
+                tags,
+                creator,
             ),
             0,
         )
@@ -836,6 +922,7 @@ def append_history_line(
                 log_rel,
                 category,
                 tags,
+                creator,
             ),
             0,
         )
@@ -843,7 +930,7 @@ def append_history_line(
     return (
         new_text
         + history_line(
-            finished, created, title, owner, summary, log_rel, category, tags
+            finished, created, title, owner, summary, log_rel, category, tags, creator
         ),
         n,
     )
@@ -1308,6 +1395,7 @@ def cmd_close(args: argparse.Namespace) -> None:
             log_rel,
             final_cat,
             final_tags,
+            task.get("creator"),
         )
 
         if log_path.exists():
@@ -1788,6 +1876,9 @@ def cmd_history(args: argparse.Namespace) -> None:
             # 8 列行自带分类/标签；旧 4/5/6 列行没有，回链读 worklog 头部兜底
             if not r.get("category") and not r.get("tags"):
                 r["category"], r["tags"] = labels_for_log(r["log"], hp)
+            # v8 行（无 creator 列）回链 worklog 头部「创建」行取发起人，不丢
+            if not r.get("creator"):
+                r["creator"] = creator_for_history(r["log"], hp)
         records.extend(recs)
         warnings.extend(f"{rel} {w}" for w in warns)
 

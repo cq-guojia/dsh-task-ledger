@@ -273,32 +273,41 @@ export async function getHomeAggregate(workspaces: readonly LedgerWorkspace[]): 
     }
   }
   for (const entry of perWorkspace) {
+    const identity = entry.identity
     for (const task of entry.tasks) {
       const created = dayOf(task.created)
       if (created === null) continue
       const week = ymd(mondayOf(created))
-      const isMine = entry.identity !== null && task.owner === entry.identity
+      // 新增（我的）= 我创建的（creator）；在办任务自带 creator 字段
+      const createdMine = identity !== null && (task.creator ?? null) === identity
       bump(bucketsAll, week, 'created')
-      if (isMine) bump(bucketsMine, week, 'created')
+      if (createdMine) bump(bucketsMine, week, 'created')
+      // 未结（我的）= 我负责且未结案（owner）
+      const ownedMine = identity !== null && (task.owner ?? null) === identity
       bumpRemaining(bucketsAll, created, null)
-      if (isMine) bumpRemaining(bucketsMine, created, null)
+      if (ownedMine) bumpRemaining(bucketsMine, created, null)
     }
     for (const record of entry.history) {
       const closed = dayOf(record.time)
       if (closed !== null) {
         const week = ymd(mondayOf(closed))
         bump(bucketsAll, week, 'done')
-        if (entry.identity !== null && record.owner === entry.identity) bump(bucketsMine, week, 'done')
+        if (identity !== null && (record.owner ?? null) === identity) bump(bucketsMine, week, 'done')
       }
       const created = dayOf(record.created)
       if (created !== null) {
         const week = ymd(mondayOf(created))
         bump(bucketsAll, week, 'created')
-        if (entry.identity !== null && record.owner === entry.identity) bump(bucketsMine, week, 'created')
+        // 新增（我的）= 我创建的（creator）；旧 8 列历史无 creator 列 ⇒ 兜底 owner
+        const createdMine = identity !== null && (
+          (record.creator ?? null) === identity
+          || ((record.creator ?? null) === null && (record.owner ?? null) === identity)
+        )
+        if (createdMine) bump(bucketsMine, week, 'created')
       }
-      const isMine = entry.identity !== null && record.owner === entry.identity
+      const ownedMine = identity !== null && (record.owner ?? null) === identity
       bumpRemaining(bucketsAll, created, closed)
-      if (isMine) bumpRemaining(bucketsMine, created, closed)
+      if (ownedMine) bumpRemaining(bucketsMine, created, closed)
     }
   }
   const closed: ClosedSummary = {

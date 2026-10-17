@@ -7,3 +7,4 @@ node_modules/
 # 构建产物中不入仓的（dist/ 与 packages/plugin/skill/ 按 DSH 规则必须入仓，不忽略）
 *.log
 .DS_Store
+.ruff_cache/

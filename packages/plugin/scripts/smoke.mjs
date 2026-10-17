@@ -2,6 +2,8 @@
 // 跑法：先 npm run build（tsc + copy-skill），再 node scripts/smoke.mjs——打的是 dist 产物。
 import assert from 'node:assert/strict'
 import path from 'node:path'
+import fs from 'node:fs'
+import os from 'node:os'
 import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -9,7 +11,7 @@ const repoRoot = path.resolve(here, '../../..')
 
 const { resolveWorkspaces } = await import('../dist/host/workspace.js')
 const { readTasks, getTask, readWorklog } = await import('../dist/host/ledger-read.js')
-const { getHomeAggregate, getBoardSnapshot, queryClosed, getFilterOptions } = await import('../dist/host/board.js')
+const { getHomeAggregate, getBoardSnapshot, queryClosed, getFilterOptions, getCurrentIdentity } = await import('../dist/host/board.js')
 const { runLedgerScript } = await import('../dist/host/script.js')
 
 let passed = 0
@@ -98,17 +100,21 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
     // remaining 自洽不变量（严谨版）：定义基线_i = remaining_i − Σcreated[0..i] + Σdone[0..i]
     // = 窗口前创建、且到周末 i 仍未结案的任务数。该集合只减不增 ⇒ 基线_i 单调不增且 ≥ 0。
     // （旧版断言「恒定」只在「无窗口前任务在窗口内结案」时巧合成立，并非一般正确。）
-    let prevBaseline = null
-    let cumCreated = 0
-    let cumDone = 0
-    buckets.forEach((bucket, i) => {
-      cumCreated += bucket.created
-      cumDone += bucket.done
-      const baseline = bucket.remaining - cumCreated + cumDone
-      assert.ok(baseline >= 0, `${scope} remaining 自洽：基线 ≥ 0 @周${i}`)
-      if (prevBaseline !== null) assert.ok(baseline <= prevBaseline, `${scope} remaining 自洽：基线单调不增 @周${i}`)
-      prevBaseline = baseline
-    })
+    // ⚠️ 仅对 all 口径校验：all 下 created/remaining/done 同口径（全工作区），基线有意义；
+    // mine 下 created 是 creator 口径、remaining/done 是 owner 口径（不同集合），三者不可混算同一基线。
+    if (scope === 'all') {
+      let prevBaseline = null
+      let cumCreated = 0
+      let cumDone = 0
+      buckets.forEach((bucket, i) => {
+        cumCreated += bucket.created
+        cumDone += bucket.done
+        const baseline = bucket.remaining - cumCreated + cumDone
+        assert.ok(baseline >= 0, `${scope} remaining 自洽：基线 ≥ 0 @周${i}`)
+        if (prevBaseline !== null) assert.ok(baseline <= prevBaseline, `${scope} remaining 自洽：基线单调不增 @周${i}`)
+        prevBaseline = baseline
+      })
+    }
   }
   // 「我的」不可能超过「所有」
   for (let i = 0; i < 8; i += 1) {
@@ -116,6 +122,31 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
     assert.ok(home.closed.weekly.mine[i].created <= home.closed.weekly.all[i].created, 'mine 不应超过 all')
     assert.ok(home.closed.weekly.mine[i].remaining <= home.closed.weekly.all[i].remaining, 'mine 不应超过 all')
   }
+  // 口径分叉校验：新增(mine) 按 creator，完成/未结(mine) 按 owner
+  await check('口径分叉：新增(mine)=我创建的，完成/未结(mine)=我负责的', async () => {
+    const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'dtl-creator-'))
+    // identity 取合成台账目录的 git user.name（无本地 .git ⇒ 读 global，与聚合口径一致）
+    const me = await getCurrentIdentity({ id: 'syn', title: 'syn', path: dir })
+    assert.ok(me !== null, '需有 git user.name 才能判定 owner 口径')
+    const other = `___not_${me}___`
+    await fs.promises.mkdir(path.join(dir, 'ledger', 'history'), { recursive: true })
+    // 在办：creator=me、owner=other、本周创建且未结
+    await fs.promises.writeFile(path.join(dir, 'ledger', 'progress.json'),
+      JSON.stringify({ tasks: { x1: { title: 'open', creator: me, owner: other, created: '2026-10-14 09:00:00', status: 'doing' } } }))
+    // 已结：creator=me、owner=other、本周创建且本周结案（9 列历史，creator 列直接带）
+    await fs.promises.writeFile(path.join(dir, 'ledger', 'history', '202610.md'),
+      '| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |\n' +
+      '|---|---|---|---|---|---|---|---|---|\n' +
+      `| 2026-10-15 10:00:00 | 2026-10-12 09:00:00 | done |  |  | @${other} | @${me} | ok | [x](x) |\n`)
+    const agg = await getHomeAggregate([{ id: 'syn', title: 'syn', path: dir }])
+    const sum = (rows) => rows.reduce((s, w) => s + w, 0)
+    const all = agg.closed.weekly.all
+    const mine = agg.closed.weekly.mine
+    assert.equal(sum(all.map((w) => w.created)), 2, 'all 新增应为 2（x1+x2 本周创建）')
+    assert.equal(sum(mine.map((w) => w.created)), 2, 'mine 新增应为 2（两者 creator=me）')
+    assert.equal(sum(mine.map((w) => w.done)), 0, 'mine 完成应为 0（x2 owner=other，非我完成）')
+    assert.equal(sum(mine.map((w) => w.remaining)), 0, 'mine 未结应为 0（x1 owner=other，非我负责）')
+  })
   // 最后一桶 = 本周一（host 同口径）
   const now = new Date()
   const monday = new Date(now); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
