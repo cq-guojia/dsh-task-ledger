@@ -139,14 +139,6 @@ window.__ModuleLoader__.load({
 			if (identity === null || identity === "") return false;
 			return task.owner === identity && (task.status === "doing" || task.status === "blocked");
 		}
-		/** 状态档命中（停滞由 host 标记，前端不判阈值）。 */
-		function statusHit(task, status) {
-			if (status === "all") return true;
-			if (status === "active") return task.status === "doing" || task.status === "blocked";
-			if (status === "open") return task.status === "open";
-			if (status === "blocked") return task.status === "blocked";
-			return task.stale === true;
-		}
 		/** 组内排序：别人的 doing/blocked 在前、待认领在后；各自按创建 / 开始时间倒序。 */
 		function inGroupOrder(a, b) {
 			if (a.kind !== "task" || b.kind !== "task") return 0;
@@ -155,10 +147,10 @@ window.__ModuleLoader__.load({
 			return String(b.task.created ?? b.task.started ?? "").localeCompare(String(a.task.created ?? a.task.started ?? ""));
 		}
 		/**
-		* 当前筛选下的两区视图：
-		*  - 第一区「我的待办」= 我名下 doing/blocked（命中状态档 / 工作区 / 关键字）；
-		*  - 第二区「按工作区」= 其余任务（别人的 doing/blocked + 全部待认领），按工作区分组；
-		*  - 范围=「我的」时只出第一区。
+		* 当前筛选下的两区视图（用户 2026-10-17 定稿：**「我的待办」定死不过滤**——它永远全量出
+		* 我名下 doing/blocked，空了给引导卡；筛选（现在只剩关键字）只作用于第二区）：
+		*  - 第一区「我的待办」= 我名下全部 doing/blocked，按创建时间倒序；
+		*  - 第二区「按工作区」= 其余任务（别人的 doing/blocked + 全部待认领），按工作区分组，吃筛选。
 		*/
 		function selectView(current) {
 			const { board, query } = current;
@@ -167,8 +159,13 @@ window.__ModuleLoader__.load({
 				groups: [],
 				total: 0
 			};
+			const mineRows = board.tasks.filter((task) => isMine(task, board)).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
+				kind: "task",
+				key: `${task.workspace.id}:${task.id}`,
+				task,
+				mine: true
+			}));
 			const tasks = board.tasks.filter((task) => {
-				if (!statusHit(task, query.status)) return false;
 				if (query.workspace !== "" && task.workspace.id !== query.workspace) return false;
 				return hitKeyword(query.keyword, [
 					task.title,
@@ -179,12 +176,6 @@ window.__ModuleLoader__.load({
 					...task.tags ?? []
 				]);
 			});
-			const mineRows = tasks.filter((task) => isMine(task, board)).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
-				kind: "task",
-				key: `${task.workspace.id}:${task.id}`,
-				task,
-				mine: true
-			}));
 			const rest = query.scope === "mine" ? [] : tasks.filter((task) => !isMine(task, board));
 			const byWorkspace = /* @__PURE__ */ new Map();
 			for (const task of rest) {
@@ -233,6 +224,97 @@ window.__ModuleLoader__.load({
 			const d = new Date(ms);
 			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
+		}
+		//#endregion
+		//#region src/client/task-row.ts
+		/**
+		* 任务列表行（宿主**无表格件** ⇒ 自绘）：两行式，视觉对齐参考图（会话列表 / 定时任务器）：
+		*  - 左侧 3px 状态色条：doing=蓝 / blocked=黄 / stale=红 / open=灰（替代一切状态图标，无转圈）；
+		*  - 第一行：标题加粗（上来就是标题）+ [YYYY-MM-DD 创建] 小徽 + 阻塞/停滞 pill + 标签（10px 小 chip）；
+		*    右侧「已做 N 天」绿底软 pill，悬停整排换成动作按钮（继续 / 结束 / 转移——**只做样子**，
+		*    点击行为归「任务按钮与会话交接」任务）；
+		*  - 第二行小字灰：工作区 · #任务号 · 创建时刻。
+		* 详情侧栏归「任务按钮与会话交接」任务，本行不做展开、不做点击。
+		*/
+		/** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
+		function titleOf(row) {
+			if (row.kind === "task") return row.task.title ?? row.task.id;
+			const title = row.record.workpackage ?? row.record.summary;
+			return title !== void 0 && title !== "" ? title : row.record.src ?? "—";
+		}
+		/** 左侧色条语义：异常优先（stale 盖过 blocked），doing 是默认态。 */
+		function toneOf(row) {
+			if (row.kind !== "task") return "closed";
+			if (row.task.stale === true) return "stale";
+			if (row.task.status === "blocked") return "blocked";
+			if (row.task.status === "open") return "open";
+			return "doing";
+		}
+		/** 工作区徽标（第一区专用列）：色块首字母 + 标题，定宽、超出省略（不猜官方图标名）。 */
+		function WorkspaceTag(props) {
+			if (props.workspace === void 0) return null;
+			const initial = props.workspace.title.trim().slice(0, 1);
+			return (0, react.createElement)("span", {
+				className: "dtl-ellipsis",
+				style: {
+					display: "inline-flex",
+					alignItems: "center",
+					gap: "var(--dtl-space-1)",
+					flex: "0 0 140px",
+					minWidth: 0,
+					color: "var(--dtl-fg-2)"
+				},
+				title: props.workspace.title
+			}, (0, react.createElement)("span", { style: {
+				display: "inline-flex",
+				alignItems: "center",
+				justifyContent: "center",
+				flex: "none",
+				width: "14px",
+				height: "14px",
+				borderRadius: "var(--dtl-radius-xs)",
+				background: "var(--dtl-business-soft)",
+				color: "var(--dtl-business)",
+				fontSize: "9px",
+				fontWeight: 600
+			} }, initial === "" ? "·" : initial), props.workspace.title);
+		}
+		function TaskRowView(props) {
+			const { t, row } = props;
+			const category = row.kind === "task" ? row.task.category : row.record.category;
+			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
+			const id = row.kind === "task" ? row.task.id : row.record.src ?? "";
+			const tone = toneOf(row);
+			const created = row.kind === "task" ? row.task.created ?? null : row.record.created ?? null;
+			const createdDay = created !== null && created !== void 0 && Date.parse(created) >= 0 ? formatDateTime(created).slice(0, 10) : null;
+			const when = row.kind === "task" ? row.task.ageDays === null || row.task.ageDays === void 0 ? t("timeUnknown") : t("rowAge", { n: row.task.ageDays }) : `${t("fieldFinished")} ${formatDateTime(row.record.time ?? row.record.created ?? "", { fallback: t("timeUnknown") })}`;
+			const isTask = row.kind === "task";
+			return (0, react.createElement)("div", {
+				className: "dtl-taskrow",
+				"data-tone": tone
+			}, (0, react.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react.createElement)("span", {
+				className: "dtl-taskrow__title dtl-ellipsis",
+				title: titleOf(row)
+			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-taskrow__stamp" }, t("fieldCreatedStamp", { day: createdDay })), tone === "blocked" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--blocked" }, t("statusBlocked")) : null, tone === "stale" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--stale" }, t("statusStale")) : null, tags.map((tag) => (0, react.createElement)("span", {
+				key: tag,
+				className: "dtl-minitag",
+				title: `#${tag}`
+			}, `#${tag}`)), (0, react.createElement)("span", { style: {
+				flex: "1 1 auto",
+				minWidth: 0
+			} }), (0, react.createElement)("span", { className: "dtl-taskrow__age" }, when), isTask ? (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, (0, react.createElement)("button", {
+				type: "button",
+				className: "dtl-minibtn",
+				title: t("actionResume")
+			}, t("actionResume")), (0, react.createElement)("button", {
+				type: "button",
+				className: "dtl-minibtn",
+				title: t("actionFinish")
+			}, t("actionFinish")), (0, react.createElement)("button", {
+				type: "button",
+				className: "dtl-minibtn",
+				title: t("actionTransfer")
+			}, t("actionTransfer"))) : null), (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, props.showWorkspace === true ? (0, react.createElement)(WorkspaceTag, { workspace: row.kind === "task" ? row.task.workspace : row.record.workspace }) : null, (0, react.createElement)("span", { className: "dtl-ellipsis" }, `#${id}`), created === null || created === void 0 || created === "" ? null : (0, react.createElement)("span", { style: { whiteSpace: "nowrap" } }, `${t("fieldCreated")} ${formatDateTime(created, { fallback: t("timeUnknown") })}`), category === null || category === void 0 || category === "" ? null : (0, react.createElement)("span", { className: "dtl-ellipsis" }, category)));
 		}
 		//#endregion
 		//#region src/client/tokens.ts
@@ -520,26 +602,37 @@ body[data-ds-dark-theme]{
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 任务行（两行式，用户 2026-10-17 定稿）：hover 整行提亮；右侧 时间⇄按钮排 互换 */
+/* 任务行（两行式，视觉对齐参考图）：左色条标状态 + hover 提亮；右侧 时间⇄按钮排 互换 */
 .dtl-taskrow{padding:var(--dtl-space-2) var(--dtl-space-3);border-radius:var(--dtl-radius-md);
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+  border-left:3px solid var(--dtl-border);transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-taskrow[data-tone="doing"]{border-left-color:var(--dtl-business);}
+.dtl-taskrow[data-tone="blocked"]{border-left-color:var(--dtl-warning);}
+.dtl-taskrow[data-tone="stale"]{border-left-color:var(--dtl-danger);}
+.dtl-taskrow[data-tone="open"]{border-left-color:var(--dtl-border-strong);}
+.dtl-taskrow[data-tone="closed"]{border-left-color:var(--dtl-border);}
 .dtl-taskrow:hover{background:var(--dtl-card-hover);}
-.dtl-taskrow__top{display:flex;align-items:center;gap:var(--dtl-space-2);min-width:0;}
-.dtl-taskrow__id{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);
-  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
-.dtl-taskrow__title{margin-top:2px;font-size:var(--dtl-font-md);font-weight:600;line-height:var(--dtl-line-md);}
-.dtl-taskrow__meta{display:flex;align-items:center;gap:var(--dtl-space-1);margin-top:var(--dtl-space-1);flex-wrap:wrap;}
-.dtl-taskrow__age{flex:none;color:var(--dtl-fg-3);font-size:var(--dtl-font-xs);white-space:nowrap;
+.dtl-taskrow__l1{display:flex;align-items:center;gap:var(--dtl-space-2);min-width:0;}
+.dtl-taskrow__title{font-size:var(--dtl-font-md);font-weight:600;min-width:0;flex:0 1 auto;}
+.dtl-taskrow__stamp{flex:none;font-size:10px;color:var(--dtl-fg-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+.dtl-taskrow__age{flex:none;padding:1px 8px;border-radius:999px;background:var(--dtl-business-soft);
+  color:var(--dtl-business);font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;
   font-variant-numeric:tabular-nums;}
 .dtl-taskrow__actions{display:none;flex:none;gap:4px;}
 .dtl-taskrow:hover .dtl-taskrow__age{display:none;}
 .dtl-taskrow:hover .dtl-taskrow__actions{display:inline-flex;}
+.dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);min-width:0;}
 
-/* 状态 pill：只有异常态出标记 —— 阻塞=黄 / 停滞=红 / 待认领=灰描边；进行中无标记 */
+/* 异常 pill：阻塞=黄 / 停滞=红（进行中无标记，只有色条） */
 .dtl-pill{flex:none;padding:1px 8px;border-radius:999px;font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;}
 .dtl-pill--blocked{background:var(--dtl-warning);color:var(--dtl-on-signal);}
 .dtl-pill--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);}
-.dtl-pill--open{border:1px solid var(--dtl-border-strong);color:var(--dtl-fg-3);}
+
+/* 标签迷你 chip（用户 2026-10-17：标签再小点儿）——10px、无边框、灰底 */
+.dtl-minitag{flex:none;padding:0 5px;border-radius:999px;background:var(--dtl-surface-2);
+  color:var(--dtl-fg-3);font-size:10px;line-height:16px;white-space:nowrap;max-width:120px;
+  overflow:hidden;text-overflow:ellipsis;}
 
 /* 行内迷你按钮（样子先行，点击行为归「任务按钮与会话交接」任务） */
 .dtl-minibtn{padding:1px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
@@ -652,23 +745,6 @@ body[data-ds-dark-theme]{
 				onClick: props.onClick
 			}, props.icon, props.children);
 		}
-		/** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。 */
-		function Select(props) {
-			ensureUiBase();
-			const size = props.size ?? "md";
-			return (0, react.createElement)("select", {
-				className: `dtl-select dtl-select--${size}`,
-				"aria-label": props.ariaLabel,
-				style: props.width === void 0 ? void 0 : { width: `${props.width}px` },
-				value: props.value,
-				onChange: (event) => {
-					props.onChange(event.target.value);
-				}
-			}, props.options.map((option) => (0, react.createElement)("option", {
-				key: option.value,
-				value: option.value
-			}, option.label)));
-		}
 		/** 搜索框（关键字过滤；占满剩余宽度由调用方的 flex 决定）。 */
 		function SearchInput(props) {
 			ensureUiBase();
@@ -703,18 +779,6 @@ body[data-ds-dark-theme]{
 				fontSize: "var(--dtl-font-sm)",
 				color: "var(--dtl-fg-2)"
 			} }, props.label), (0, react.createElement)("span", { className: "dtl-stat__value" }, shown), props.hint === void 0 || props.hint === null || props.hint === "" ? null : (0, react.createElement)("span", { className: "dtl-stat__hint" }, props.hint));
-		}
-		/** chip（分类 / 标签 / 工作区名）。 */
-		function Chip(props) {
-			ensureUiBase();
-			return (0, react.createElement)("span", {
-				className: "dtl-chip",
-				style: props.color === void 0 ? void 0 : {
-					background: props.color,
-					color: "var(--dtl-on-signal)"
-				},
-				title: props.text
-			}, props.text);
 		}
 		/** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
 		function EmptyState(props) {
@@ -841,98 +905,6 @@ body[data-ds-dark-theme]{
 		function ChartLegend(props) {
 			ensureUiBase();
 			return (0, react.createElement)("div", { className: "dtl-gchart-legend" }, (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), props.doneLabel), (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-remaining)" } }), props.remainingLabel), (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chart-created)" } }), props.createdLabel));
-		}
-		//#endregion
-		//#region src/client/task-row.ts
-		/**
-		* 任务列表行（宿主**无表格件** ⇒ 自绘）：两行式（用户 2026-10-17 定稿，参照 GitHub 通知列表）：
-		*  - 上行小字：工作区徽标（第一区专用列）+ 任务号 + 状态 pill（**只有** 阻塞=黄 / 停滞=红 / 待认领=灰；
-		*    进行中是默认态不出任何标记，**没有转圈**）+ 右侧「已做 N 天」；
-		*  - 下行主字：标题加粗；第三小行：分类 + 标签 chip。
-		* 悬停时右侧 时间⇄按钮排 互换（继续 / 结束 / 转移）——按钮**先只做样子**，
-		* 点击行为归「任务按钮与会话交接」任务（写入路径 A/B 未拍板）；详情侧栏也归该任务，本行不做展开。
-		*/
-		/** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
-		function titleOf(row) {
-			if (row.kind === "task") return row.task.title ?? row.task.id;
-			const title = row.record.workpackage ?? row.record.summary;
-			return title !== void 0 && title !== "" ? title : row.record.src ?? "—";
-		}
-		/** 状态 pill：blocked=黄 / stale=红 / open=灰；doing 是默认态不出标记。 */
-		function pillsOf(row) {
-			if (row.kind !== "task") return [];
-			const pills = [];
-			if (row.task.status === "blocked") pills.push("blocked");
-			if (row.task.stale === true) pills.push("stale");
-			if (row.task.status === "open") pills.push("open");
-			return pills;
-		}
-		/** 工作区徽标（第一区专用列）：色块首字母 + 标题，定宽、超出省略（不猜官方图标名）。 */
-		function WorkspaceTag(props) {
-			if (props.workspace === void 0) return null;
-			const initial = props.workspace.title.trim().slice(0, 1);
-			return (0, react.createElement)("span", {
-				className: "dtl-ellipsis",
-				style: {
-					display: "inline-flex",
-					alignItems: "center",
-					gap: "var(--dtl-space-1)",
-					flex: "0 0 140px",
-					minWidth: 0,
-					color: "var(--dtl-fg-2)",
-					fontSize: "var(--dtl-font-xs)"
-				},
-				title: props.workspace.title
-			}, (0, react.createElement)("span", { style: {
-				display: "inline-flex",
-				alignItems: "center",
-				justifyContent: "center",
-				flex: "none",
-				width: "16px",
-				height: "16px",
-				borderRadius: "var(--dtl-radius-xs)",
-				background: "var(--dtl-business-soft)",
-				color: "var(--dtl-business)",
-				fontSize: "10px",
-				fontWeight: 600
-			} }, initial === "" ? "·" : initial), props.workspace.title);
-		}
-		function TaskRowView(props) {
-			const { t, row } = props;
-			const category = row.kind === "task" ? row.task.category : row.record.category;
-			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
-			const id = row.kind === "task" ? row.task.id : row.record.src ?? "";
-			const pills = pillsOf(row);
-			const days = row.kind === "task" ? row.task.ageDays : null;
-			const when = row.kind === "task" ? days === null ? t("timeUnknown") : t("rowAge", { n: days }) : `${t("fieldFinished")} ${formatDateTime(row.record.time ?? row.record.created ?? "", { fallback: t("timeUnknown") })}`;
-			return (0, react.createElement)("div", { className: "dtl-taskrow" }, (0, react.createElement)("div", { className: "dtl-taskrow__top" }, props.showWorkspace === true ? (0, react.createElement)(WorkspaceTag, { workspace: row.kind === "task" ? row.task.workspace : row.record.workspace }) : null, (0, react.createElement)("span", {
-				className: "dtl-taskrow__id",
-				title: id
-			}, id), pills.map((pill) => (0, react.createElement)("span", {
-				key: pill,
-				className: `dtl-pill dtl-pill--${pill}`
-			}, t(pill === "blocked" ? "statusBlocked" : pill === "stale" ? "statusStale" : "statusOpen"))), (0, react.createElement)("span", { style: {
-				flex: "1 1 auto",
-				minWidth: 0
-			} }), (0, react.createElement)("span", { className: "dtl-taskrow__age" }, when), row.kind === "task" ? (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-minibtn",
-				title: t("actionResume")
-			}, t("actionResume")), (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-minibtn",
-				title: t("actionFinish")
-			}, t("actionFinish")), (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-minibtn",
-				title: t("actionTransfer")
-			}, t("actionTransfer"))) : null), (0, react.createElement)("div", {
-				className: "dtl-taskrow__title dtl-ellipsis",
-				title: titleOf(row)
-			}, titleOf(row)), (category === null || category === void 0 || category === "") && tags.length === 0 ? null : (0, react.createElement)("div", { className: "dtl-taskrow__meta" }, category === null || category === void 0 || category === "" ? null : (0, react.createElement)(Chip, { text: category }), tags.map((tag) => (0, react.createElement)(Chip, {
-				key: tag,
-				text: `#${tag}`
-			}))));
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -1145,64 +1117,7 @@ body[data-ds-dark-theme]{
 				doneLabel: t("chartLegendDone"),
 				remainingLabel: t("chartLegendRemaining"),
 				createdLabel: t("chartLegendCreated")
-			}))), (0, react.createElement)("div", { style: filterRowStyle }, (0, react.createElement)(Segmented, {
-				id: "dtl-scope",
-				value: state.query.scope,
-				label: t("scopeLabel"),
-				items: [{
-					value: "mine",
-					label: t("scopeMine")
-				}, {
-					value: "all",
-					label: t("scopeAll")
-				}],
-				onChange: (next) => {
-					setQuery({ scope: next });
-				}
-			}), (0, react.createElement)(Segmented, {
-				id: "dtl-status",
-				value: state.query.status,
-				label: t("statusLabel"),
-				items: [
-					{
-						value: "all",
-						label: t("statusAll")
-					},
-					{
-						value: "active",
-						label: t("statusActive")
-					},
-					{
-						value: "open",
-						label: t("statusOpen")
-					},
-					{
-						value: "blocked",
-						label: t("statusBlocked")
-					},
-					{
-						value: "stale",
-						label: t("statusStale")
-					}
-				],
-				onChange: (next) => {
-					setQuery({ status: next });
-				}
-			}), (0, react.createElement)(Select, {
-				value: state.query.workspace,
-				ariaLabel: t("workspaceLabel"),
-				width: 180,
-				options: [{
-					value: "",
-					label: t("workspaceAll")
-				}, ...(board?.workspaces ?? []).map((workspace) => ({
-					value: workspace.id,
-					label: workspace.title
-				}))],
-				onChange: (next) => {
-					setQuery({ workspace: next });
-				}
-			}), (0, react.createElement)("div", { style: searchWrapStyle }, (0, react.createElement)(SearchInput, {
+			}))), (0, react.createElement)("div", { style: filterRowStyle }, (0, react.createElement)("div", { style: searchWrapStyle }, (0, react.createElement)(SearchInput, {
 				value: state.query.keyword,
 				placeholder: t("searchPlaceholder"),
 				ariaLabel: t("searchPlaceholder"),
@@ -1226,20 +1141,20 @@ body[data-ds-dark-theme]{
 				tone: "guide",
 				title: t("emptyNoWorkspace"),
 				hint: t("emptyNoWorkspaceHint")
-			}) : view.total === 0 ? (0, react.createElement)(EmptyState, {
-				tone: isPristine(state.query) ? "guide" : "filtered",
-				title: isPristine(state.query) ? t("emptyNoTask") : t("emptyFiltered"),
-				hint: isPristine(state.query) ? t("emptyNoTaskHint") : void 0
-			}) : (0, react.createElement)("div", null, view.mine.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", null, `${t("regionMine")} ${view.mine.length}`), (0, react.createElement)("span", { style: {
+			}) : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", null, `${t("regionMine")} ${view.mine.length}`), (0, react.createElement)("span", { style: {
 				fontSize: "var(--dtl-font-xs)",
 				color: "var(--dtl-fg-3)",
 				fontWeight: 400
-			} }, t("regionMineHint"))), view.mine.map((row) => (0, react.createElement)(TaskRowView, {
+			} }, t("regionMineHint"))), view.mine.length === 0 ? (0, react.createElement)(EmptyState, {
+				tone: "guide",
+				title: t("mineEmpty"),
+				hint: t("mineEmptyHint")
+			}) : view.mine.map((row) => (0, react.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,
 				showWorkspace: true
-			}))), view.groups.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", null, t("regionWorkspaces")), (0, react.createElement)("span", { style: {
+			})), view.groups.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", null, t("regionWorkspaces")), (0, react.createElement)("span", { style: {
 				fontSize: "var(--dtl-font-xs)",
 				color: "var(--dtl-fg-3)",
 				fontWeight: 400
@@ -1277,10 +1192,6 @@ body[data-ds-dark-theme]{
 				t,
 				row
 			}))) : null);
-		}
-		/** 是否「什么都没筛」：真空才给引导卡，一有筛选就只能是「筛选空」。 */
-		function isPristine(query) {
-			return query.scope === "all" && query.status === "all" && query.workspace === "" && query.keyword.trim() === "";
 		}
 		//#endregion
 		//#region src/client/locales.ts
@@ -1353,6 +1264,9 @@ body[data-ds-dark-theme]{
 			actionResume: "继续",
 			actionFinish: "结束",
 			actionTransfer: "转移",
+			fieldCreatedStamp: "{day} 创建",
+			mineEmpty: "您现在没有正在进行的工作",
+			mineEmptyHint: "在某个工作区 new 一个任务，或到下面认领一条待认领任务，这里就会出现。",
 			worklogTitle: "过程文档",
 			worklogPath: "路径",
 			worklogMissing: "（缺失）",
@@ -1436,6 +1350,9 @@ body[data-ds-dark-theme]{
 			actionResume: "Resume",
 			actionFinish: "Close",
 			actionTransfer: "Transfer",
+			fieldCreatedStamp: "created {day}",
+			mineEmpty: "Nothing in progress right now",
+			mineEmptyHint: "Create a task in a workspace or claim one below, and it shows up here.",
 			worklogTitle: "Worklog",
 			worklogPath: "path",
 			worklogMissing: "(missing)",

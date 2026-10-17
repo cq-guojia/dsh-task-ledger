@@ -33,6 +33,7 @@ export type LocaleKey =
   | 'ownerUnclaimed' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
   | 'rowAge'
   | 'actionResume' | 'actionFinish' | 'actionTransfer'
+  | 'fieldCreatedStamp' | 'mineEmpty' | 'mineEmptyHint'
   | 'worklogTitle' | 'worklogPath' | 'worklogMissing'
   | 'mdCopy' | 'mdCopied' | 'mdFootnotes'
   // 空态
@@ -114,6 +115,9 @@ export const zh: Record<LocaleKey, string> = {
   actionResume: '继续',
   actionFinish: '结束',
   actionTransfer: '转移',
+  fieldCreatedStamp: '{day} 创建',
+  mineEmpty: '您现在没有正在进行的工作',
+  mineEmptyHint: '在某个工作区 new 一个任务，或到下面认领一条待认领任务，这里就会出现。',
   worklogTitle: '过程文档',
   worklogPath: '路径',
   worklogMissing: '（缺失）',
@@ -205,6 +209,9 @@ export const en: Record<LocaleKey, string> = {
   actionResume: 'Resume',
   actionFinish: 'Close',
   actionTransfer: 'Transfer',
+  fieldCreatedStamp: 'created {day}',
+  mineEmpty: 'Nothing in progress right now',
+  mineEmptyHint: 'Create a task in a workspace or claim one below, and it shows up here.',
   worklogTitle: 'Worklog',
   worklogPath: 'path',
   worklogMissing: '(missing)',

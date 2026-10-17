@@ -27,26 +27,37 @@ const UI_BASE_CSS = `
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 任务行（两行式，用户 2026-10-17 定稿）：hover 整行提亮；右侧 时间⇄按钮排 互换 */
+/* 任务行（两行式，视觉对齐参考图）：左色条标状态 + hover 提亮；右侧 时间⇄按钮排 互换 */
 .dtl-taskrow{padding:var(--dtl-space-2) var(--dtl-space-3);border-radius:var(--dtl-radius-md);
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+  border-left:3px solid var(--dtl-border);transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-taskrow[data-tone="doing"]{border-left-color:var(--dtl-business);}
+.dtl-taskrow[data-tone="blocked"]{border-left-color:var(--dtl-warning);}
+.dtl-taskrow[data-tone="stale"]{border-left-color:var(--dtl-danger);}
+.dtl-taskrow[data-tone="open"]{border-left-color:var(--dtl-border-strong);}
+.dtl-taskrow[data-tone="closed"]{border-left-color:var(--dtl-border);}
 .dtl-taskrow:hover{background:var(--dtl-card-hover);}
-.dtl-taskrow__top{display:flex;align-items:center;gap:var(--dtl-space-2);min-width:0;}
-.dtl-taskrow__id{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);
-  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
-.dtl-taskrow__title{margin-top:2px;font-size:var(--dtl-font-md);font-weight:600;line-height:var(--dtl-line-md);}
-.dtl-taskrow__meta{display:flex;align-items:center;gap:var(--dtl-space-1);margin-top:var(--dtl-space-1);flex-wrap:wrap;}
-.dtl-taskrow__age{flex:none;color:var(--dtl-fg-3);font-size:var(--dtl-font-xs);white-space:nowrap;
+.dtl-taskrow__l1{display:flex;align-items:center;gap:var(--dtl-space-2);min-width:0;}
+.dtl-taskrow__title{font-size:var(--dtl-font-md);font-weight:600;min-width:0;flex:0 1 auto;}
+.dtl-taskrow__stamp{flex:none;font-size:10px;color:var(--dtl-fg-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+.dtl-taskrow__age{flex:none;padding:1px 8px;border-radius:999px;background:var(--dtl-business-soft);
+  color:var(--dtl-business);font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;
   font-variant-numeric:tabular-nums;}
 .dtl-taskrow__actions{display:none;flex:none;gap:4px;}
 .dtl-taskrow:hover .dtl-taskrow__age{display:none;}
 .dtl-taskrow:hover .dtl-taskrow__actions{display:inline-flex;}
+.dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);min-width:0;}
 
-/* 状态 pill：只有异常态出标记 —— 阻塞=黄 / 停滞=红 / 待认领=灰描边；进行中无标记 */
+/* 异常 pill：阻塞=黄 / 停滞=红（进行中无标记，只有色条） */
 .dtl-pill{flex:none;padding:1px 8px;border-radius:999px;font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;}
 .dtl-pill--blocked{background:var(--dtl-warning);color:var(--dtl-on-signal);}
 .dtl-pill--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);}
-.dtl-pill--open{border:1px solid var(--dtl-border-strong);color:var(--dtl-fg-3);}
+
+/* 标签迷你 chip（用户 2026-10-17：标签再小点儿）——10px、无边框、灰底 */
+.dtl-minitag{flex:none;padding:0 5px;border-radius:999px;background:var(--dtl-surface-2);
+  color:var(--dtl-fg-3);font-size:10px;line-height:16px;white-space:nowrap;max-width:120px;
+  overflow:hidden;text-overflow:ellipsis;}
 
 /* 行内迷你按钮（样子先行，点击行为归「任务按钮与会话交接」任务） */
 .dtl-minibtn{padding:1px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);

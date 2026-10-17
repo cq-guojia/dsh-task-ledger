@@ -279,7 +279,7 @@ await check('dist/client.js：模块加载器契约 + 只 require 平台模块',
 
 // 筛选是首页的核心逻辑，且**只在浏览器里跑** ⇒ 冒烟直测这两个纯函数（无 DOM 依赖；
 // 剥类型直读源码，client 单文件产物不可 import）。
-await check('客户端两区视图：我的待办 / 按工作区分组 + 状态档 + 工作区下拉 + 关键字', async () => {
+await check('客户端两区视图：我的待办定死全量（不过滤）+ 按工作区分组吃关键字（用户 2026-10-17 定稿）', async () => {
   const { selectView } = await import(path.resolve(here, '../src/client/rows.ts'))
   const pad = (n) => String(n).padStart(2, '0')
   const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -304,18 +304,17 @@ await check('客户端两区视图：我的待办 / 按工作区分组 + 状态�
   assert.deepEqual(view.groups.map(g => g.workspaceId), ['w2'], '第二区只剩 B 项目（A 的我那款已进第一区，不重复）')
   assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '组内：别人在做的在前、待认领在后')
   assert.equal(view.total, 3)
-  // 范围 = 我的 ⇒ 不出第二区
+  // 「我的待办」定死不过滤：关键字 / 工作区都奈何不了它（用户 2026-10-17：没有过滤，不过滤它）
+  view = selectView(state({ ...base, keyword: '乙' }))
+  assert.deepEqual(ids(view.mine), ['t1'], '我的待办不吃关键字过滤')
+  assert.deepEqual(ids(view.groups[0].rows), ['t2'], '关键字只作用第二区')
+  view = selectView(state({ ...base, workspace: 'w2' }))
+  assert.deepEqual(ids(view.mine), ['t1'], '我的待办不吃工作区过滤')
+  assert.deepEqual(view.groups.map(g => g.workspaceId), ['w2'], '工作区只作用第二区')
+  // 范围 = 我的 ⇒ 不出第二区（query 保留字段，界面暂无控件）
   view = selectView(state({ ...base, scope: 'mine' }))
   assert.deepEqual(ids(view.mine), ['t1'])
   assert.deepEqual(view.groups, [], '「我的」不掺第二区')
-  // 状态档：待认领 / 阻塞 / 停滞（停滞由 host 标记，前端不判阈值）
-  assert.deepEqual(ids(selectView(state({ ...base, status: 'open' })).groups[0].rows), ['t2'])
-  assert.deepEqual(ids(selectView(state({ ...base, status: 'blocked' })).groups[0].rows), ['t3'])
-  assert.deepEqual(ids(selectView(state({ ...base, status: 'stale' })).groups[0].rows), ['t3'])
-  // 工作区下拉 + 关键字
-  const onlyA = selectView(state({ ...base, workspace: 'w1' }))
-  assert.equal(onlyA.mine.length + onlyA.groups.length, 1, '选了 A 就只剩 A 的')
-  assert.deepEqual(ids(selectView(state({ ...base, keyword: '乙' })).groups[0].rows), ['t2'])
 })
 
 await check('文案字典：zh / en 键完全对齐（漏一种语言界面就露键名）', async () => {

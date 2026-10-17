@@ -9,12 +9,12 @@
 import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react'
 import { IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { LocaleKey, Translate } from './locales'
-import { boardSnapshot, boardSubscribe, refresh, setQuery, type Query, type Scope, type StatusFilter } from './store'
+import { boardSnapshot, boardSubscribe, refresh, setQuery } from './store'
 import { selectView, type WorkspaceGroup } from './rows'
 import type { PeriodCounts } from './types'
 import { TaskRowView } from './task-row'
 import {
-  Button, ChartLegend, EmptyState, ensureUiBase, GroupedBarChart, SearchInput, Segmented, Select, StatCard,
+  Button, ChartLegend, EmptyState, ensureUiBase, GroupedBarChart, SearchInput, Segmented, StatCard,
 } from './ui'
 
 type Tab = 'tasks' | 'stats'
@@ -191,41 +191,8 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                 ),
               ),
 
-            // ── 筛选行（控件全同高 28px）──
+            // ── 搜索行：贴在统计块下（用户 2026-10-17 定稿），只作用于下方第三区，不碰「我的待办」──
             h('div', { style: filterRowStyle },
-              h(Segmented<Scope>, {
-                id: 'dtl-scope',
-                value: state.query.scope,
-                label: t('scopeLabel'),
-                items: [
-                  { value: 'mine', label: t('scopeMine') },
-                  { value: 'all', label: t('scopeAll') },
-                ],
-                onChange: (next) => { setQuery({ scope: next }) },
-              }),
-              h(Segmented<StatusFilter>, {
-                id: 'dtl-status',
-                value: state.query.status,
-                label: t('statusLabel'),
-                items: [
-                  { value: 'all', label: t('statusAll') },
-                  { value: 'active', label: t('statusActive') },
-                  { value: 'open', label: t('statusOpen') },
-                  { value: 'blocked', label: t('statusBlocked') },
-                  { value: 'stale', label: t('statusStale') },
-                ],
-                onChange: (next) => { setQuery({ status: next }) },
-              }),
-              h(Select<string>, {
-                value: state.query.workspace,
-                ariaLabel: t('workspaceLabel'),
-                width: 180,
-                options: [
-                  { value: '', label: t('workspaceAll') },
-                  ...(board?.workspaces ?? []).map((workspace) => ({ value: workspace.id, label: workspace.title })),
-                ],
-                onChange: (next) => { setQuery({ workspace: next }) },
-              }),
               h('div', { style: searchWrapStyle },
                 h(SearchInput, {
                   value: state.query.keyword,
@@ -236,7 +203,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
               ),
             ),
 
-            // ── 列表（两区；空态三分）──
+            // ── 列表 ──
             state.status === 'loading' && board === null
               ? null // 未就绪：不渲染
               : state.status === 'error' && board === null
@@ -246,24 +213,16 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                 )
                 : board !== null && board.workspaces.length === 0
                   ? h(EmptyState, { tone: 'guide', title: t('emptyNoWorkspace'), hint: t('emptyNoWorkspaceHint') })
-                  : view.total === 0
-                    ? h(EmptyState, {
-                      tone: isPristine(state.query) ? 'guide' : 'filtered',
-                      title: isPristine(state.query) ? t('emptyNoTask') : t('emptyFiltered'),
-                      hint: isPristine(state.query) ? t('emptyNoTaskHint') : undefined,
-                    })
-                    : h('div', null,
-                      // 第一区：我的待办（跨工作区平铺，工作区为一列）
+                  : h('div', null,
+                      // 第一区：我的待办——定死全量、不过滤（用户 2026-10-17），空了给引导卡
+                      h('div', { style: regionHeadStyle },
+                        h('span', null, `${t('regionMine')} ${view.mine.length}`),
+                        h('span', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)', fontWeight: 400 } }, t('regionMineHint')),
+                      ),
                       view.mine.length === 0
-                        ? null
-                        : h('div', null,
-                          h('div', { style: regionHeadStyle },
-                            h('span', null, `${t('regionMine')} ${view.mine.length}`),
-                            h('span', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)', fontWeight: 400 } }, t('regionMineHint')),
-                          ),
-                          view.mine.map(row => h(TaskRowView, { key: row.key, t, row, showWorkspace: true })),
-                        ),
-                      // 第二区：按工作区分组（组可折叠）
+                        ? h(EmptyState, { tone: 'guide', title: t('mineEmpty'), hint: t('mineEmptyHint') })
+                        : view.mine.map(row => h(TaskRowView, { key: row.key, t, row, showWorkspace: true })),
+                      // 第二区：按工作区分组（组可折叠；第三区改造前的过渡形态，吃关键字过滤）
                       view.groups.length === 0
                         ? null
                         : h('div', null,
@@ -304,7 +263,3 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup }): Rea
   )
 }
 
-/** 是否「什么都没筛」：真空才给引导卡，一有筛选就只能是「筛选空」。 */
-function isPristine(query: Query): boolean {
-  return query.scope === 'all' && query.status === 'all' && query.workspace === '' && query.keyword.trim() === ''
-}

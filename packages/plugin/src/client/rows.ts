@@ -44,15 +44,6 @@ export function isMine(task: BoardTask, board: BoardPayload | null): boolean {
   return task.owner === identity && (task.status === 'doing' || task.status === 'blocked')
 }
 
-/** 状态档命中（停滞由 host 标记，前端不判阈值）。 */
-function statusHit(task: BoardTask, status: Query['status']): boolean {
-  if (status === 'all') return true
-  if (status === 'active') return task.status === 'doing' || task.status === 'blocked'
-  if (status === 'open') return task.status === 'open'
-  if (status === 'blocked') return task.status === 'blocked'
-  return task.stale === true
-}
-
 /** 组内排序：别人的 doing/blocked 在前、待认领在后；各自按创建 / 开始时间倒序。 */
 function inGroupOrder(a: Row, b: Row): number {
   if (a.kind !== 'task' || b.kind !== 'task') return 0
@@ -62,23 +53,22 @@ function inGroupOrder(a: Row, b: Row): number {
 }
 
 /**
- * 当前筛选下的两区视图：
- *  - 第一区「我的待办」= 我名下 doing/blocked（命中状态档 / 工作区 / 关键字）；
- *  - 第二区「按工作区」= 其余任务（别人的 doing/blocked + 全部待认领），按工作区分组；
- *  - 范围=「我的」时只出第一区。
+ * 当前筛选下的两区视图（用户 2026-10-17 定稿：**「我的待办」定死不过滤**——它永远全量出
+ * 我名下 doing/blocked，空了给引导卡；筛选（现在只剩关键字）只作用于第二区）：
+ *  - 第一区「我的待办」= 我名下全部 doing/blocked，按创建时间倒序；
+ *  - 第二区「按工作区」= 其余任务（别人的 doing/blocked + 全部待认领），按工作区分组，吃筛选。
  */
 export function selectView(current: { board: BoardPayload | null; query: Query }): BoardView {
   const { board, query } = current
   if (board === null) return { mine: [], groups: [], total: 0 }
-  const tasks = board.tasks.filter((task) => {
-    if (!statusHit(task, query.status)) return false
-    if (query.workspace !== '' && task.workspace.id !== query.workspace) return false
-    return hitKeyword(query.keyword, [task.title, task.id, task.owner, task.creator, task.category, ...(task.tags ?? [])])
-  })
-  const mineRows: Row[] = tasks
+  const mineRows: Row[] = board.tasks
     .filter((task) => isMine(task, board))
     .sort((a, b) => String(b.created ?? b.started ?? '').localeCompare(String(a.created ?? a.started ?? '')))
     .map((task): Row => ({ kind: 'task', key: `${task.workspace.id}:${task.id}`, task, mine: true }))
+  const tasks = board.tasks.filter((task) => {
+    if (query.workspace !== '' && task.workspace.id !== query.workspace) return false
+    return hitKeyword(query.keyword, [task.title, task.id, task.owner, task.creator, task.category, ...(task.tags ?? [])])
+  })
   const rest = query.scope === 'mine'
     ? []
     : tasks.filter((task) => !isMine(task, board))
