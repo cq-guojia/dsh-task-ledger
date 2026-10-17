@@ -132,13 +132,14 @@ export function TaskRowView(props: {
           h('span', { className: 'dtl-orow__created-short' },
             t('createdAt', { who, when: createdOk ? formatDateTime(String(created)) : t('timeUnknown') })),
         ),
+        // 动作排：认领 + 查看 —— **同一排、同一间距**（用户 2026-10-18：查看钮不许单独一档间距）
         h('span', { className: 'dtl-orow__actions' },
           // 没人在做 ⇒ 「认领」（与状态列的「待认领」同词族，书面、不口语）；带图标
           hasOwner ? null
             : h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipClaim') },
                 h(IconDownloadOutlineRegular, { size: 14 }), t('actionClaim')),
+          viewButton,
         ),
-        viewButton,
       ),
     )
   }
@@ -168,17 +169,18 @@ export function TaskRowView(props: {
         ),
       ),
       h('span', { className: 'dtl-taskrow__when' }, parts.length === 0 ? t('timeUnknown') : parts.join('丨')),
-      isTask
-        ? h('span', { className: 'dtl-taskrow__actions' },
-          h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipResume') },
-            h(IconChevronRightOutlineRegular, { size: 14 }), t('actionResume')),
-          h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipFinish') },
-            h(IconCheckOutlineRegular, { size: 14 }), t('actionFinish')),
-          // 释放：官方 rc.2 无断链图标（已全量核实）⇒ 纯文字，不用叉
-          h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipRelease') }, t('actionRelease')),
-        )
-        : null,
-      viewButton,
+      // 动作排：继续 / 结束 / 释放 + 查看 —— **同一排、同一间距**
+      // （用户 2026-10-18：查看钮原来是独立的一格，离前面的按钮远一档）
+      h('span', { className: 'dtl-taskrow__actions' },
+        isTask ? h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipResume') },
+          h(IconChevronRightOutlineRegular, { size: 14 }), t('actionResume')) : null,
+        isTask ? h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipFinish') },
+          h(IconCheckOutlineRegular, { size: 14 }), t('actionFinish')) : null,
+        // 释放：官方 rc.2 无断链图标（已全量核实）⇒ 纯文字，不用叉
+        isTask ? h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipRelease') },
+          t('actionRelease')) : null,
+        viewButton,
+      ),
     ),
   )
 }

@@ -8,7 +8,8 @@
  */
 import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react'
 import {
-  IconChecklistOutlineRegular, IconFlatListOutlineRegular, IconFolderOpenOutlineRegular, IconRefreshOutlineRegular,
+  IconChecklistOutlineRegular, IconFlatListOutlineRegular, IconFolderCloseRegular, IconFolderOpenRegular,
+  IconRefreshOutlineRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { LocaleKey, Translate } from './locales'
 import { boardSnapshot, boardSubscribe, refresh, setQuery, type StatusFilter } from './store'
@@ -39,10 +40,11 @@ const chartCardStyle: Record<string, string | number> = {
   display: 'flex', flexDirection: 'column', gap: 'var(--dtl-space-2)', padding: 'var(--dtl-space-2) var(--dtl-space-3)',
 }
 const hintStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-sm)', color: 'var(--dtl-fg-2)' }
-/** 分区标题行：垂直居中（用户 2026-10-17：图标 / 标题 / 计数不许像下楼梯一样逐个低）。 */
+/** 分区标题行：垂直居中（用户 2026-10-17：图标 / 标题 / 计数不许像下楼梯一样逐个低）；
+ *  上下留白**翻倍**（用户 2026-10-18：两个大标题太挤）。 */
 const regionHeadRowStyle: Record<string, string | number> = {
   display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)',
-  margin: 'var(--dtl-space-4) 0 var(--dtl-space-2)',
+  margin: 'calc(var(--dtl-space-4) * 2) 0 calc(var(--dtl-space-2) * 2)',
 }
 const regionHeadTitleStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-lg)', fontWeight: 600 }
 /** 工作区下拉最小宽度（用户 2026-10-17：内容自适应，下限 = 旧定宽 175 的 3/4 ≈ 131）。 */
@@ -316,11 +318,12 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup; staleD
       title: open ? t('collapseAria') : t('expandAria'),
       onClick: () => { setOpen(!open) },
     },
-      // 段头标识：工作区的官方图标就是文件夹（用户 2026-10-18）；包里没有 ⇒ 回落成竖线
-      IconFolderOpenOutlineRegular === undefined
+      // 段头标识：展开 = 打开的文件夹、收起 = 合上的文件夹（跟官方工作区显示逻辑一致）；
+      // 包里没有这对图标 ⇒ 回落成竖线
+      IconFolderOpenRegular === undefined || IconFolderCloseRegular === undefined
         ? h('span', { className: 'dtl-group__bar' })
-        : h('span', { style: { display: 'inline-flex', flex: 'none', color: 'var(--dtl-business)' } },
-            h(IconFolderOpenOutlineRegular, { size: 14 })),
+        : h('span', { style: { display: 'inline-flex', flex: 'none', color: 'var(--dtl-fg-3)' } },
+            h(open ? IconFolderOpenRegular : IconFolderCloseRegular, { size: 14 })),
       h('span', { className: 'dtl-group__name dtl-ellipsis' }, group.title),
       h('span', { style: { flex: '1 1 auto' } }),
       h('span', { className: 'dtl-group__stats' }, stats),

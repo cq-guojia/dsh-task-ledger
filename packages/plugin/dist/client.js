@@ -334,7 +334,7 @@ window.__ModuleLoader__.load({
 					type: "button",
 					className: "dtl-minibtn",
 					"data-tip": t("tipClaim")
-				}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 14 }), t("actionClaim"))), viewButton));
+				}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 14 }), t("actionClaim")), viewButton)));
 			}
 			const parts = [];
 			if (isTask) {
@@ -352,19 +352,19 @@ window.__ModuleLoader__.load({
 				key: tag,
 				className: "dtl-minitag",
 				title: `#${tag}`
-			}, `#${tag}`)))), (0, react.createElement)("span", { className: "dtl-taskrow__when" }, parts.length === 0 ? t("timeUnknown") : parts.join("丨")), isTask ? (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, (0, react.createElement)("button", {
+			}, `#${tag}`)))), (0, react.createElement)("span", { className: "dtl-taskrow__when" }, parts.length === 0 ? t("timeUnknown") : parts.join("丨")), (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, isTask ? (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-minibtn",
 				"data-tip": t("tipResume")
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), t("actionResume")), (0, react.createElement)("button", {
+			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), t("actionResume")) : null, isTask ? (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-minibtn",
 				"data-tip": t("tipFinish")
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), t("actionFinish")), (0, react.createElement)("button", {
+			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), t("actionFinish")) : null, isTask ? (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-minibtn",
 				"data-tip": t("tipRelease")
-			}, t("actionRelease"))) : null, viewButton));
+			}, t("actionRelease")) : null, viewButton)));
 		}
 		//#endregion
 		//#region src/client/tokens.ts
@@ -660,11 +660,9 @@ body[data-ds-dark-theme]{
 
 /* 其他待办 = 一张**连体长表**（用户 2026-10-18）：段与段**零间距、无圆角**，
    上一段最后一条行线之下直接接下一段段头；行 = 一条底部分隔线 + 极浅斑马纹。 */
-/* 每一段 = 一张**有左右边框的整表**（用户 2026-10-18：外面包起来，看着才像表格）；
-   段与段零间距：上一段的底边直接就是下一段的顶边。 */
-.dtl-group{margin-bottom:0;
-  border-left:1px solid var(--dtl-border);border-right:1px solid var(--dtl-border);
-  border-bottom:1px solid var(--dtl-border);}
+/* 每一段：段与段零间距、只留底边收口（用户 2026-10-18：左右边框加上不好看 ⇒ 撤掉，
+   靠"行下一条线 + 段尾一条底边"连成一张表） */
+.dtl-group{margin-bottom:0;border-bottom:1px solid var(--dtl-border);}
 /* 段头底：改用「我的待办」卡面那种**稍亮的中性灰**（用户 2026-10-18：蓝不好看）；
    高度 ≈1.7×（padding 7→12 且 min-height 40）；四角全方 */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
@@ -794,7 +792,7 @@ body[data-ds-dark-theme]{
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
 .dtl-empty-guide{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:var(--dtl-space-2);min-height:180px;padding:var(--dtl-space-4);text-align:center;
+  gap:var(--dtl-space-2);min-height:270px;padding:var(--dtl-space-4);text-align:center;
   border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
 .dtl-empty-filtered{padding:var(--dtl-space-4) 0;color:var(--dtl-fg-3);font-size:var(--dtl-font-md)}
 
@@ -1131,12 +1129,13 @@ body[data-ds-dark-theme]{
 			fontSize: "var(--dtl-font-sm)",
 			color: "var(--dtl-fg-2)"
 		};
-		/** 分区标题行：垂直居中（用户 2026-10-17：图标 / 标题 / 计数不许像下楼梯一样逐个低）。 */
+		/** 分区标题行：垂直居中（用户 2026-10-17：图标 / 标题 / 计数不许像下楼梯一样逐个低）；
+		*  上下留白**翻倍**（用户 2026-10-18：两个大标题太挤）。 */
 		const regionHeadRowStyle = {
 			display: "flex",
 			alignItems: "center",
 			gap: "var(--dtl-space-2)",
-			margin: "var(--dtl-space-4) 0 var(--dtl-space-2)"
+			margin: "calc(var(--dtl-space-4) * 2) 0 calc(var(--dtl-space-2) * 2)"
 		};
 		const regionHeadTitleStyle = {
 			fontSize: "var(--dtl-font-lg)",
@@ -1428,11 +1427,11 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					setOpen(!open);
 				}
-			}, _deepseek_ai_dsh_client_ui_primitives.IconFolderOpenOutlineRegular === void 0 ? (0, react.createElement)("span", { className: "dtl-group__bar" }) : (0, react.createElement)("span", { style: {
+			}, _deepseek_ai_dsh_client_ui_primitives.IconFolderOpenRegular === void 0 || _deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular === void 0 ? (0, react.createElement)("span", { className: "dtl-group__bar" }) : (0, react.createElement)("span", { style: {
 				display: "inline-flex",
 				flex: "none",
-				color: "var(--dtl-business)"
-			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFolderOpenOutlineRegular, { size: 14 })), (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, group.rows.map((row) => (0, react.createElement)(TaskRowView, {
+				color: "var(--dtl-fg-3)"
+			} }, (0, react.createElement)(open ? _deepseek_ai_dsh_client_ui_primitives.IconFolderOpenRegular : _deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 14 })), (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, group.rows.map((row) => (0, react.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,

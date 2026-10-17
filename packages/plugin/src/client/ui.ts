@@ -29,11 +29,9 @@ const UI_BASE_CSS = `
 
 /* 其他待办 = 一张**连体长表**（用户 2026-10-18）：段与段**零间距、无圆角**，
    上一段最后一条行线之下直接接下一段段头；行 = 一条底部分隔线 + 极浅斑马纹。 */
-/* 每一段 = 一张**有左右边框的整表**（用户 2026-10-18：外面包起来，看着才像表格）；
-   段与段零间距：上一段的底边直接就是下一段的顶边。 */
-.dtl-group{margin-bottom:0;
-  border-left:1px solid var(--dtl-border);border-right:1px solid var(--dtl-border);
-  border-bottom:1px solid var(--dtl-border);}
+/* 每一段：段与段零间距、只留底边收口（用户 2026-10-18：左右边框加上不好看 ⇒ 撤掉，
+   靠"行下一条线 + 段尾一条底边"连成一张表） */
+.dtl-group{margin-bottom:0;border-bottom:1px solid var(--dtl-border);}
 /* 段头底：改用「我的待办」卡面那种**稍亮的中性灰**（用户 2026-10-18：蓝不好看）；
    高度 ≈1.7×（padding 7→12 且 min-height 40）；四角全方 */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
@@ -163,7 +161,7 @@ const UI_BASE_CSS = `
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
 .dtl-empty-guide{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:var(--dtl-space-2);min-height:180px;padding:var(--dtl-space-4);text-align:center;
+  gap:var(--dtl-space-2);min-height:270px;padding:var(--dtl-space-4);text-align:center;
   border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
 .dtl-empty-filtered{padding:var(--dtl-space-4) 0;color:var(--dtl-fg-3);font-size:var(--dtl-font-md)}
 
