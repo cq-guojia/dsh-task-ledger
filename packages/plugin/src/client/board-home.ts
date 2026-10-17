@@ -321,14 +321,7 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup; staleD
     ),
     open
       ? h('div', null,
-        // 列头行：与任务行同列宽（同一套 .dtl-tcell）
-        h('div', { className: 'dtl-thead' },
-          h('span', { className: 'dtl-tcell dtl-tcell--title' }, t('colTask')),
-          h('span', { className: 'dtl-tcell dtl-tcell--who' }, t('colCreator')),
-          h('span', { className: 'dtl-tcell dtl-tcell--who' }, t('colOwner')),
-          h('span', { className: 'dtl-tcell dtl-tcell--status' }, t('colStatus')),
-          h('span', { className: 'dtl-tcell dtl-tcell--time' }, t('colTime')),
-        ),
+        // 无列头行（用户 2026-10-18：表头就是段头——左工作区名、右统计，不放「任务/创建人」那排）
         group.rows.map(row => h(TaskRowView, {
           key: row.key, t, row, variant: 'others', staleDays,
         })),

@@ -38,16 +38,16 @@ const UI_BASE_CSS = `
 .dtl-group__dot{width:8px;height:8px;border-radius:50%;background:var(--dtl-fg-3);flex:none;}
 .dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
-/* 列头行：小字灰，与任务行同列宽（同一套 .dtl-tcell） */
-.dtl-thead{display:flex;align-items:center;gap:10px;padding:6px var(--dtl-space-3);
-  border-bottom:1px solid var(--dtl-border-faint);font-size:10px;color:var(--dtl-fg-3);}
-
-/* 任务行：一条淡线格；很浅斑马纹；hover 淡蓝 */
-.dtl-taskrow--others{padding:8px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
-.dtl-taskrow--others:nth-of-type(odd){background:var(--dtl-zebra);}
-.dtl-taskrow--others:hover{background:var(--dtl-card-hover);}
-.dtl-taskrow--others .dtl-taskrow__row{gap:10px;}
-.dtl-taskrow--others .dtl-taskrow__l2{margin-top:1px;}
+/* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
+   一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
+.dtl-orow{padding:8px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-orow:nth-of-type(odd){background:var(--dtl-zebra);}
+.dtl-orow:hover{background:var(--dtl-card-hover);}
+.dtl-orow__row{display:flex;align-items:center;gap:10px;}
+.dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
+.dtl-orow__name{font-size:var(--dtl-font-md);font-weight:500;line-height:var(--dtl-line-md);min-width:0;}
+.dtl-orow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.dtl-orow__tags{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;min-width:0;}
 /* 列：任务（弹性）/ 创建人 / 执行人 / 状态 / 时长 / 查看 */
 .dtl-tcell{min-width:0;}
 .dtl-tcell--title{flex:1 1 auto;}

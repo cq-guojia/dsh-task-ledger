@@ -76,10 +76,18 @@ export function TaskRowView(props: {
     ? h('span', { className: 'dtl-pill dtl-pill--stale', title: staleTip }, t('statusStale'))
     : null
 
-  // 第一行公共：标题 + 创建徽 + 异常 pill。
+  // 第一行公共（「我的待办」卡）：标题 + 创建徽 + 异常 pill。
   const titleLine = h('div', { className: 'dtl-taskrow__l1' },
     h('span', { className: 'dtl-taskrow__title dtl-ellipsis', title: titleOf(row) }, titleOf(row)),
     createdDay === null ? null : h('span', { className: 'dtl-taskrow__stamp' }, `[${t('fieldCreatedStamp', { day: createdDay })}]`),
+    blockedPill,
+    stalePill,
+  )
+
+  // 第一行（「其他待办」表格行）：独立类族，不沾卡片基类（用户 2026-10-18）。
+  const orowTitleLine = h('div', { className: 'dtl-orow__title' },
+    h('span', { className: 'dtl-orow__name dtl-ellipsis', title: titleOf(row) }, titleOf(row)),
+    createdDay === null ? null : h('span', { className: 'dtl-orow__stamp' }, `[${t('fieldCreatedStamp', { day: createdDay })}]`),
     blockedPill,
     stalePill,
   )
@@ -95,12 +103,12 @@ export function TaskRowView(props: {
     const owner = isTask ? row.task.owner : null
     const creatorText = creator === null || creator === undefined || creator === '' ? '—' : `@${creator}`
     const ownerText = owner === null || owner === undefined || owner === '' ? t('ownerUnclaimed') : `@${owner}`
-    return h('div', { className: 'dtl-taskrow dtl-taskrow--others' },
-      h('div', { className: 'dtl-taskrow__row' },
+    return h('div', { className: 'dtl-orow' },
+      h('div', { className: 'dtl-orow__row' },
         h('span', { className: `dtl-bar dtl-bar--${tone}` }),
         h('div', { className: 'dtl-tcell dtl-tcell--title' },
-          titleLine,
-          h('div', { className: 'dtl-taskrow__l2' },
+          orowTitleLine,
+          h('div', { className: 'dtl-orow__tags' },
             tags.map(tag => h('span', { key: tag, className: 'dtl-minitag', title: `#${tag}` }, `#${tag}`)),
           ),
         ),

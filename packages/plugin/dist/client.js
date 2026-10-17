@@ -303,13 +303,17 @@ window.__ModuleLoader__.load({
 				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
 			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-taskrow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), blockedPill, stalePill);
+			const orowTitleLine = (0, react.createElement)("div", { className: "dtl-orow__title" }, (0, react.createElement)("span", {
+				className: "dtl-orow__name dtl-ellipsis",
+				title: titleOf(row)
+			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-orow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), blockedPill, stalePill);
 			const duration = !isTask || row.task.ageDays === null || row.task.ageDays === void 0 ? "—" : row.task.ageDays === 0 ? t("ageToday") : t("ageDaysText", { n: row.task.ageDays });
 			if (variant === "others") {
 				const creator = isTask ? row.task.creator : row.record.owner;
 				const owner = isTask ? row.task.owner : null;
 				const creatorText = creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`;
 				const ownerText = owner === null || owner === void 0 || owner === "" ? t("ownerUnclaimed") : `@${owner}`;
-				return (0, react.createElement)("div", { className: "dtl-taskrow dtl-taskrow--others" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-bar dtl-bar--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, titleLine, (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, tags.map((tag) => (0, react.createElement)("span", {
+				return (0, react.createElement)("div", { className: "dtl-orow" }, (0, react.createElement)("div", { className: "dtl-orow__row" }, (0, react.createElement)("span", { className: `dtl-bar dtl-bar--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, orowTitleLine, (0, react.createElement)("div", { className: "dtl-orow__tags" }, tags.map((tag) => (0, react.createElement)("span", {
 					key: tag,
 					className: "dtl-minitag",
 					title: `#${tag}`
@@ -654,16 +658,16 @@ body[data-ds-dark-theme]{
 .dtl-group__dot{width:8px;height:8px;border-radius:50%;background:var(--dtl-fg-3);flex:none;}
 .dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
-/* 列头行：小字灰，与任务行同列宽（同一套 .dtl-tcell） */
-.dtl-thead{display:flex;align-items:center;gap:10px;padding:6px var(--dtl-space-3);
-  border-bottom:1px solid var(--dtl-border-faint);font-size:10px;color:var(--dtl-fg-3);}
-
-/* 任务行：一条淡线格；很浅斑马纹；hover 淡蓝 */
-.dtl-taskrow--others{padding:8px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
-.dtl-taskrow--others:nth-of-type(odd){background:var(--dtl-zebra);}
-.dtl-taskrow--others:hover{background:var(--dtl-card-hover);}
-.dtl-taskrow--others .dtl-taskrow__row{gap:10px;}
-.dtl-taskrow--others .dtl-taskrow__l2{margin-top:1px;}
+/* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
+   一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
+.dtl-orow{padding:8px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-orow:nth-of-type(odd){background:var(--dtl-zebra);}
+.dtl-orow:hover{background:var(--dtl-card-hover);}
+.dtl-orow__row{display:flex;align-items:center;gap:10px;}
+.dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
+.dtl-orow__name{font-size:var(--dtl-font-md);font-weight:500;line-height:var(--dtl-line-md);min-width:0;}
+.dtl-orow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.dtl-orow__tags{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;min-width:0;}
 /* 列：任务（弹性）/ 创建人 / 执行人 / 状态 / 时长 / 查看 */
 .dtl-tcell{min-width:0;}
 .dtl-tcell--title{flex:1 1 auto;}
@@ -1396,7 +1400,7 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					setOpen(!open);
 				}
-			}, (0, react.createElement)("span", { className: "dtl-group__dot" }), (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, (0, react.createElement)("div", { className: "dtl-thead" }, (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--title" }, t("colTask")), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--who" }, t("colCreator")), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--who" }, t("colOwner")), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, t("colStatus")), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--time" }, t("colTime"))), group.rows.map((row) => (0, react.createElement)(TaskRowView, {
+			}, (0, react.createElement)("span", { className: "dtl-group__dot" }), (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, group.rows.map((row) => (0, react.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,
