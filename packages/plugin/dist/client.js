@@ -10,6 +10,18 @@ window.__ModuleLoader__.load({
 		/** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
 		const API_PREFIX = "api/task-ledger";
 		const DEFAULT_TIMEOUT_MS = 8e3;
+		/**
+		* 错误响应榨人话：host 路由（routes.ts）发的是 `{ error: "..." }`，那里的话是**能直接上界面的**
+		* （带工作区名、python3 起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
+		*/
+		function httpErrorMessage(status, body) {
+			try {
+				const parsed = JSON.parse(body);
+				if (typeof parsed.error === "string" && parsed.error !== "") return `HTTP ${status}：${parsed.error}`;
+			} catch {}
+			const text = body.trim().slice(0, 200);
+			return text === "" ? `HTTP ${String(status)}` : `HTTP ${String(status)}：${text}`;
+		}
 		/** 带超时的 JSON 取数（相对路径，同源）。 */
 		async function fetchJson(path, init = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
 			const controller = new AbortController();
@@ -22,7 +34,7 @@ window.__ModuleLoader__.load({
 					signal: controller.signal,
 					cache: "no-store"
 				});
-				if (!res.ok) throw new Error(`HTTP ${res.status}`);
+				if (!res.ok) throw new Error(httpErrorMessage(res.status, await res.text().catch(() => "")));
 				return await res.json();
 			} finally {
 				clearTimeout(timer);

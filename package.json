@@ -1,6 +1,5 @@
 {
   "name": "dsh-task-ledger",
-  "version": "0.0.0",
   "private": true,
   "description": "Monorepo: dsh-task-ledger (DSH plugin) + task-ledger (standalone skill). The root is private and never published — each package is published on its own tag prefix.",
   "license": "MIT",

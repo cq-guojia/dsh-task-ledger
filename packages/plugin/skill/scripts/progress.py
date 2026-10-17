@@ -1732,7 +1732,35 @@ def cmd_history(args: argparse.Namespace) -> None:
 
     repo = find_repo(args.repo)
     sources = history_sources(repo)
+    want_owner = (
+        args.owner.strip().lstrip("@") if args.owner else None
+    )  # 容忍「@名字」写法
+    me = git_user() if args.mine else None
+    filter_echo = {
+        "owner": want_owner,
+        "mine": args.mine,
+        "since": since,
+        "until": until,
+        "limit": args.limit,
+        "category": args.category.strip() if args.category else None,
+        "tag": args.tag.strip() if args.tag else None,
+    }
     if not sources:
+        # JSON / 计数模式必须**始终**机器可读：空台账也给 JSON，人话只走 stderr。
+        # （2026-10-17 真机教训：这里原先直接 print 人话后 return，--json 调用方
+        # 拿到非 JSON 输出 ⇒ dsh-task-ledger 看板 /board 整条 500。）
+        if args.count_only:
+            print(json.dumps({"count": 0, "capped": False}, ensure_ascii=False))
+            return
+        if args.json:
+            print(
+                json.dumps(
+                    {"count": 0, "filters": filter_echo, "records": []},
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            return
         print(
             f"没有已结案记录：ledger/history/ 还没有文件（存量 {HISTORY_REL} 也没有）。"
         )
@@ -1763,10 +1791,6 @@ def cmd_history(args: argparse.Namespace) -> None:
         records.extend(recs)
         warnings.extend(f"{rel} {w}" for w in warns)
 
-    me = git_user() if args.mine else None
-    want_owner = (
-        args.owner.strip().lstrip("@") if args.owner else None
-    )  # 容忍「@名字」写法
     rows = []
     undated = 0
     for r in records:
@@ -1807,15 +1831,7 @@ def cmd_history(args: argparse.Namespace) -> None:
             json.dumps(
                 {
                     "count": len(rows),
-                    "filters": {
-                        "owner": want_owner,
-                        "mine": args.mine,
-                        "since": since,
-                        "until": until,
-                        "limit": args.limit,
-                        "category": args.category.strip() if args.category else None,
-                        "tag": args.tag.strip() if args.tag else None,
-                    },
+                    "filters": filter_echo,
                     "records": rows,
                 },
                 ensure_ascii=False,

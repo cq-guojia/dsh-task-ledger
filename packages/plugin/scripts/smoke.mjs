@@ -126,6 +126,32 @@ await check('runLedgerScript 错误路径：不存在的仓库 → 人话错误'
   if (!result.ok) assert.match(result.error, /repo|目录|不存在/)
 })
 
+await check('空台账工作区不炸 /board（真机 500 回归：history 无文件时 --json 也必须出 JSON）', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const root = mkdtempSync(path.join(tmpdir(), 'dsh-empty-ledger-'))
+  try {
+    mkdirSync(path.join(root, 'ledger'), { recursive: true })
+    writeFileSync(path.join(root, 'ledger', 'progress.json'), JSON.stringify({
+      version: 6,
+      tasks: {
+        '20261017-1000-fresh-1': {
+          title: '空台账工作区', status: 'open', creator: 'tester',
+          created: '2026-10-17 10:00:00', worklog: 'worklog/202610/17-1000-fresh-1.md',
+        },
+      },
+    }))
+    const ws = [{ id: 'ws-empty', title: '空台账', path: root }]
+    // 关键路径：这两个正是 /board 路由 Promise.all 里的两次调用，任一抛就是整条 500
+    const snapshot = await getBoardSnapshot(ws)
+    assert.equal(snapshot.tasks.length, 1, '有 progress.json 就应读到在办')
+    const closed = await getClosedCounts(ws)
+    assert.deepEqual(closed, { weekDone: 0, yearDone: 0, yearCapped: false }, '无历史 ⇒ 两个完成类计数都是 0，不是抛错')
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
 await check('getBoardSnapshot：identities 按工作区 id 给出当前 git 身份（前端「我的待办」判定源）', async () => {
   const snapshot = await getBoardSnapshot([{ id: 'ws-self', title: 'self', path: repoRoot }])
   const ids = Object.keys(snapshot.identities)

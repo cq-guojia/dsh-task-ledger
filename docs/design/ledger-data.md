@@ -50,3 +50,15 @@
 - 历史 = `history/<年月>.md` 8 列（owner 列即「创建人 / 提交人」筛选面）；
 - 报表 = 同源聚合（category 计数、时间线、按人工作日志）；
 - skill 的 `list` / `history` 子命令已有 `--json` 结构化输出，插件可评估「调脚本」与「自解析文件」两条路（未拍板）。
+
+## 六、跨包契约：JSON 模式必须**始终**输出 JSON
+
+插件调 skill 脚本只有一个出口（`host/script.ts::runLedgerScript`），它把「输出不是 JSON」当失败。因此：
+
+| 规则 | 反例（2026-10-17 真机 500） |
+|---|---|
+| 带 `--json` / `--count-only` 时，**空结果也要出 JSON**（`{"count":0,"records":[]}`） | `history` 在「没有任何历史文件」时直接 print 人话后 return ⇒ 插件 `getClosedCounts` 抛错 ⇒ `/board` 整条 500。**一个空台账工作区就能让整个看板打不开** |
+| 人话只走 stdout 的非 JSON 模式，或 stderr | 提示类信息本来就在 stderr，别混进 stdout |
+| 真失败照旧非零退出 + stderr 原文（不伪装成空 JSON） | 空 ≠ 错：空是合法数据，错才是错 |
+
+改动 skill 脚本 = 动这条契约 ⇒ 冒烟必须带上「空台账工作区」用例（`smoke.mjs` 已有，勿删）。

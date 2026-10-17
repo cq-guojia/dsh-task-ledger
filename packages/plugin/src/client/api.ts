@@ -15,6 +15,19 @@ export const API_PREFIX = 'api/task-ledger'
 
 const DEFAULT_TIMEOUT_MS = 8_000
 
+/**
+ * 错误响应榨人话：host 路由（routes.ts）发的是 `{ error: "..." }`，那里的话是**能直接上界面的**
+ * （带工作区名、python3 起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
+ */
+export function httpErrorMessage(status: number, body: string): string {
+  try {
+    const parsed = JSON.parse(body) as { error?: unknown }
+    if (typeof parsed.error === 'string' && parsed.error !== '') return `HTTP ${status}：${parsed.error}`
+  } catch { /* 不是 JSON：走原文 */ }
+  const text = body.trim().slice(0, 200)
+  return text === '' ? `HTTP ${String(status)}` : `HTTP ${String(status)}：${text}`
+}
+
 /** 带超时的 JSON 取数（相对路径，同源）。 */
 export async function fetchJson<T>(path: string, init: RequestInit = {}, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<T> {
   const controller = new AbortController()
@@ -23,7 +36,7 @@ export async function fetchJson<T>(path: string, init: RequestInit = {}, timeout
   }, timeoutMs)
   try {
     const res = await fetch(`${API_PREFIX}${path}`, { ...init, signal: controller.signal, cache: 'no-store' })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    if (!res.ok) throw new Error(httpErrorMessage(res.status, await res.text().catch(() => '')))
     return await res.json() as T
   } finally {
     clearTimeout(timer)
