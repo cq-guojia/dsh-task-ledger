@@ -44,20 +44,33 @@ const UI_BASE_CSS = `
 /* 过程正文：宽度受限、长行折行 */
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
 
-/* 趋势分组柱状图：细柱（8px）+ 底部基线 + 均值虚线；「精细」靠细柱与参考线 */
-.dtl-gchart{position:relative;display:flex;align-items:flex-end;gap:10px;height:104px;
-  border-bottom:1px solid var(--dtl-border);}
-.dtl-gchart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
-  flex:1 1 0;height:100%;min-width:0;}
-.dtl-gchart__pair{display:flex;align-items:flex-end;gap:2px;height:100%;justify-content:center;}
+/* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图（参考图同款分栏）。
+   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。 */
+.dtl-stats{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
+.dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,auto);
+  gap:var(--dtl-space-3);align-content:start;}
+@media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
+@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+/* 趋势分组柱状图：细柱 + y 轴刻度 + 网格线 + 柱顶数值 + 均值虚线（参考图信息密度） */
+.dtl-gchart{position:relative;height:104px;border-bottom:1px solid var(--dtl-border);}
+.dtl-gchart__grid{position:absolute;left:0;right:0;border-top:1px solid var(--dtl-border-faint);pointer-events:none;}
+.dtl-gchart__ytick{position:absolute;left:0;width:26px;text-align:right;font-size:10px;line-height:12px;
+  color:var(--dtl-fg-3);transform:translateY(50%);font-variant-numeric:tabular-nums;}
+.dtl-gchart__avg{position:absolute;left:0;right:0;border-top:1px dashed var(--dtl-border-strong);pointer-events:none;}
+.dtl-gchart__avgtag{position:absolute;right:0;font-size:10px;line-height:12px;color:var(--dtl-fg-3);
+  background:var(--dtl-surface-1);padding:0 2px;transform:translateY(-100%);}
+.dtl-gchart__col{position:absolute;top:0;bottom:0;min-width:0;}
+.dtl-gchart__pair{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  display:flex;align-items:flex-end;gap:2px;}
 .dtl-gchart__bar{width:8px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
 .dtl-gchart__bar--done{background:var(--dtl-business);}
 .dtl-gchart__bar--created{background:var(--dtl-chip-bg);}
 .dtl-gchart__col:hover .dtl-gchart__bar--done{background:var(--dtl-accent);}
-.dtl-gchart__label{font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
-.dtl-gchart__avg{position:absolute;left:0;right:0;border-top:1px dashed var(--dtl-border-strong);pointer-events:none;}
-.dtl-gchart__avgtag{position:absolute;right:0;font-size:10px;line-height:12px;color:var(--dtl-fg-3);
-  background:var(--dtl-surface-1);padding:0 2px;transform:translateY(-100%);}
+.dtl-gchart__val{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:12px;
+  color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dtl-gchart__label{position:absolute;left:0;right:0;bottom:-16px;text-align:center;
+  font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
 .dtl-gchart-legend{display:flex;align-items:center;gap:var(--dtl-space-3);font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);}
 .dtl-gchart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
 
@@ -277,8 +290,15 @@ export interface GroupedBarWeek {
   readonly title: string
 }
 
-/** 分组柱状图（div 柱，无新依赖）：完成 / 新增各一细柱，底部基线 + 完成数平均值虚线。
- *  「精细」= 细柱 + 基线 + 均值线，不是粗柱堆高度（用户 2026-10-17）。 */
+/** 千位压缩（1.2k / 12k）：y 轴刻度与柱顶数值用，避免 4 位数把刻度挤宽。 */
+function compactCount(value: number): string {
+  if (value >= 10_000) return `${Math.round(value / 1000)}k`
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}k`
+  return String(value)
+}
+
+/** 分组柱状图（div 柱，无新依赖）：完成 / 新增各一细柱，y 轴三档刻度 + 网格线 + 柱顶数值 + 均值虚线。
+ *  列 / 柱 / 标签全部相对 104px 绘图区绝对定位 ⇒ 与刻度同一基准，不会各算各的高度。 */
 export function GroupedBarChart(props: {
   weeks: readonly GroupedBarWeek[]
   ariaLabel: string
@@ -286,21 +306,32 @@ export function GroupedBarChart(props: {
 }): ReactNode {
   ensureUiBase()
   const plotHeight = 104
-  const max = props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0)
+  const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0))
   const doneTotal = props.weeks.reduce((sum, week) => sum + week.done, 0)
   const avg = props.weeks.length === 0 ? 0 : doneTotal / props.weeks.length
-  const barHeight = (value: number): number => (max === 0 ? 0 : Math.round((value / max) * plotHeight))
-  return h('div', { style: { position: 'relative', paddingBottom: '18px' } },
+  const ticks = [0, top / 2, top]
+  const heightOf = (value: number): number => Math.round((value / top) * plotHeight)
+  const columnStyle = (index: number): Record<string, string | number> => ({
+    left: `${(index / props.weeks.length) * 100}%`,
+    right: `${((props.weeks.length - index - 1) / props.weeks.length) * 100}%`,
+  })
+  return h('div', { style: { position: 'relative', paddingLeft: '30px', paddingBottom: '18px' } },
     h('div', { className: 'dtl-gchart', role: 'img', 'aria-label': props.ariaLabel },
+      ticks.map((tick) => h('div', { key: `grid-${String(tick)}`, className: 'dtl-gchart__grid', style: { bottom: `${heightOf(tick)}px` } })),
+      ticks.map((tick) => h('span', { key: `tick-${String(tick)}`, className: 'dtl-gchart__ytick', style: { bottom: `${heightOf(tick)}px` } }, compactCount(Math.round(tick)))),
       avg > 0
-        ? h('div', { className: 'dtl-gchart__avg', style: { bottom: `${barHeight(avg)}px` } },
+        ? h('div', { className: 'dtl-gchart__avg', style: { bottom: `${heightOf(avg)}px` } },
           h('span', { className: 'dtl-gchart__avgtag' }, props.avgLabel))
         : null,
-      props.weeks.map(week => h('div', { key: week.label, className: 'dtl-gchart__col', title: week.title },
+      props.weeks.map((week, index) => h('div', { key: week.label, className: 'dtl-gchart__col', style: columnStyle(index), title: week.title },
         h('div', { className: 'dtl-gchart__pair' },
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: `${barHeight(week.done)}px` } }),
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: `${barHeight(week.created)}px` } }),
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: `${heightOf(week.done)}px` } }),
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: `${heightOf(week.created)}px` } }),
         ),
+        // 柱顶数值只标「完成」（核心指标）；新增的数走 hover（16 个数值标签会糊成一片）
+        week.done === 0
+          ? null
+          : h('span', { className: 'dtl-gchart__val', style: { bottom: `${heightOf(week.done) + 3}px` } }, String(week.done)),
         h('span', { className: 'dtl-gchart__label' }, week.label),
       )),
     ),

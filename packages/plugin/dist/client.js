@@ -536,20 +536,33 @@ body[data-ds-dark-theme]{
 /* 过程正文：宽度受限、长行折行 */
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
 
-/* 趋势分组柱状图：细柱（8px）+ 底部基线 + 均值虚线；「精细」靠细柱与参考线 */
-.dtl-gchart{position:relative;display:flex;align-items:flex-end;gap:10px;height:104px;
-  border-bottom:1px solid var(--dtl-border);}
-.dtl-gchart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
-  flex:1 1 0;height:100%;min-width:0;}
-.dtl-gchart__pair{display:flex;align-items:flex-end;gap:2px;height:100%;justify-content:center;}
+/* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图（参考图同款分栏）。
+   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。 */
+.dtl-stats{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
+.dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,auto);
+  gap:var(--dtl-space-3);align-content:start;}
+@media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
+@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+/* 趋势分组柱状图：细柱 + y 轴刻度 + 网格线 + 柱顶数值 + 均值虚线（参考图信息密度） */
+.dtl-gchart{position:relative;height:104px;border-bottom:1px solid var(--dtl-border);}
+.dtl-gchart__grid{position:absolute;left:0;right:0;border-top:1px solid var(--dtl-border-faint);pointer-events:none;}
+.dtl-gchart__ytick{position:absolute;left:0;width:26px;text-align:right;font-size:10px;line-height:12px;
+  color:var(--dtl-fg-3);transform:translateY(50%);font-variant-numeric:tabular-nums;}
+.dtl-gchart__avg{position:absolute;left:0;right:0;border-top:1px dashed var(--dtl-border-strong);pointer-events:none;}
+.dtl-gchart__avgtag{position:absolute;right:0;font-size:10px;line-height:12px;color:var(--dtl-fg-3);
+  background:var(--dtl-surface-1);padding:0 2px;transform:translateY(-100%);}
+.dtl-gchart__col{position:absolute;top:0;bottom:0;min-width:0;}
+.dtl-gchart__pair{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  display:flex;align-items:flex-end;gap:2px;}
 .dtl-gchart__bar{width:8px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
 .dtl-gchart__bar--done{background:var(--dtl-business);}
 .dtl-gchart__bar--created{background:var(--dtl-chip-bg);}
 .dtl-gchart__col:hover .dtl-gchart__bar--done{background:var(--dtl-accent);}
-.dtl-gchart__label{font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
-.dtl-gchart__avg{position:absolute;left:0;right:0;border-top:1px dashed var(--dtl-border-strong);pointer-events:none;}
-.dtl-gchart__avgtag{position:absolute;right:0;font-size:10px;line-height:12px;color:var(--dtl-fg-3);
-  background:var(--dtl-surface-1);padding:0 2px;transform:translateY(-100%);}
+.dtl-gchart__val{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:12px;
+  color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dtl-gchart__label{position:absolute;left:0;right:0;bottom:-16px;text-align:center;
+  font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
 .dtl-gchart-legend{display:flex;align-items:center;gap:var(--dtl-space-3);font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);}
 .dtl-gchart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
 
@@ -683,36 +696,64 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-2)"
 			} }, props.hint));
 		}
-		/** 分组柱状图（div 柱，无新依赖）：完成 / 新增各一细柱，底部基线 + 完成数平均值虚线。
-		*  「精细」= 细柱 + 基线 + 均值线，不是粗柱堆高度（用户 2026-10-17）。 */
+		/** 千位压缩（1.2k / 12k）：y 轴刻度与柱顶数值用，避免 4 位数把刻度挤宽。 */
+		function compactCount(value) {
+			if (value >= 1e4) return `${Math.round(value / 1e3)}k`;
+			if (value >= 1e3) return `${(value / 1e3).toFixed(1)}k`;
+			return String(value);
+		}
+		/** 分组柱状图（div 柱，无新依赖）：完成 / 新增各一细柱，y 轴三档刻度 + 网格线 + 柱顶数值 + 均值虚线。
+		*  列 / 柱 / 标签全部相对 104px 绘图区绝对定位 ⇒ 与刻度同一基准，不会各算各的高度。 */
 		function GroupedBarChart(props) {
 			ensureUiBase();
 			const plotHeight = 104;
-			const max = props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0);
+			const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0));
 			const doneTotal = props.weeks.reduce((sum, week) => sum + week.done, 0);
 			const avg = props.weeks.length === 0 ? 0 : doneTotal / props.weeks.length;
-			const barHeight = (value) => max === 0 ? 0 : Math.round(value / max * plotHeight);
+			const ticks = [
+				0,
+				top / 2,
+				top
+			];
+			const heightOf = (value) => Math.round(value / top * plotHeight);
+			const columnStyle = (index) => ({
+				left: `${index / props.weeks.length * 100}%`,
+				right: `${(props.weeks.length - index - 1) / props.weeks.length * 100}%`
+			});
 			return (0, react.createElement)("div", { style: {
 				position: "relative",
+				paddingLeft: "30px",
 				paddingBottom: "18px"
 			} }, (0, react.createElement)("div", {
 				className: "dtl-gchart",
 				role: "img",
 				"aria-label": props.ariaLabel
-			}, avg > 0 ? (0, react.createElement)("div", {
+			}, ticks.map((tick) => (0, react.createElement)("div", {
+				key: `grid-${String(tick)}`,
+				className: "dtl-gchart__grid",
+				style: { bottom: `${heightOf(tick)}px` }
+			})), ticks.map((tick) => (0, react.createElement)("span", {
+				key: `tick-${String(tick)}`,
+				className: "dtl-gchart__ytick",
+				style: { bottom: `${heightOf(tick)}px` }
+			}, compactCount(Math.round(tick)))), avg > 0 ? (0, react.createElement)("div", {
 				className: "dtl-gchart__avg",
-				style: { bottom: `${barHeight(avg)}px` }
-			}, (0, react.createElement)("span", { className: "dtl-gchart__avgtag" }, props.avgLabel)) : null, props.weeks.map((week) => (0, react.createElement)("div", {
+				style: { bottom: `${heightOf(avg)}px` }
+			}, (0, react.createElement)("span", { className: "dtl-gchart__avgtag" }, props.avgLabel)) : null, props.weeks.map((week, index) => (0, react.createElement)("div", {
 				key: week.label,
 				className: "dtl-gchart__col",
+				style: columnStyle(index),
 				title: week.title
 			}, (0, react.createElement)("div", { className: "dtl-gchart__pair" }, (0, react.createElement)("span", {
 				className: "dtl-gchart__bar dtl-gchart__bar--done",
-				style: { height: `${barHeight(week.done)}px` }
+				style: { height: `${heightOf(week.done)}px` }
 			}), (0, react.createElement)("span", {
 				className: "dtl-gchart__bar dtl-gchart__bar--created",
-				style: { height: `${barHeight(week.created)}px` }
-			})), (0, react.createElement)("span", { className: "dtl-gchart__label" }, week.label)))));
+				style: { height: `${heightOf(week.created)}px` }
+			})), week.done === 0 ? null : (0, react.createElement)("span", {
+				className: "dtl-gchart__val",
+				style: { bottom: `${heightOf(week.done) + 3}px` }
+			}, String(week.done)), (0, react.createElement)("span", { className: "dtl-gchart__label" }, week.label)))));
 		}
 		/** 图例（完成 / 新增 两个色块）。 */
 		function ChartLegend(props) {
@@ -916,29 +957,10 @@ body[data-ds-dark-theme]{
 			fontSize: "var(--dtl-font-xl)",
 			fontWeight: 600
 		};
-		/** 操作台：全宽 4 列。列数**写死 4**，不用 auto-fit——那会排出 3+1 的非对称
-		*  （用户 2026-10-17：必须上下对称；窄屏由 statsRowStyle 的堆叠兜底，仍是 2+2）。 */
-		const cardsGridStyle = {
-			display: "grid",
-			gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-			gap: "var(--dtl-space-3)"
-		};
-		/** 第二行：统计台（2×2）+ 趋势图（右 1/3）。 */
-		const statsRowStyle = {
-			display: "grid",
-			gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)",
-			gap: "var(--dtl-space-3)"
-		};
-		const statsCardsStyle = {
-			display: "grid",
-			gridTemplateColumns: "repeat(2,minmax(0,1fr))",
-			gap: "var(--dtl-space-3)"
-		};
-		const regionCaptionStyle = {
-			fontSize: "var(--dtl-font-xs)",
-			color: "var(--dtl-fg-3)",
-			margin: "var(--dtl-space-4) 0 var(--dtl-space-2)"
-		};
+		/** 统计区：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
+		*  列数写死 4 → 2（媒体查询在 ui.ts 的 .dtl-stats / .dtl-stats__cards 里），
+		*  绝不给 3 列——3 列会排出 3+1 的非对称（用户 2026-10-17：必须上下对称）。 */
+		const statsRowStyle = { marginBottom: "var(--dtl-space-4)" };
 		const chartCardStyle = {
 			display: "flex",
 			flexDirection: "column",
@@ -1081,7 +1103,10 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					refresh();
 				}
-			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", { style: cardsGridStyle }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myBlocked }), {
+			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", {
+				className: "dtl-stats",
+				style: statsRowStyle
+			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myBlocked }), {
 				scope: "mine",
 				status: "all",
 				workspace: ""
@@ -1113,7 +1138,7 @@ body[data-ds-dark-theme]{
 						workspace: ""
 					});
 				}
-			})), (0, react.createElement)("div", { style: regionCaptionStyle }, t("tabStats")), (0, react.createElement)("div", { style: statsRowStyle }, (0, react.createElement)("div", { style: statsCardsStyle }, periodCard("statWeekDone", board?.trend.thisWeek), periodCard("statLastWeekDone", board?.trend.lastWeek), periodCard("statMonthDone", board?.trend.thisMonth), periodCard("statLastMonthDone", board?.trend.lastMonth)), (0, react.createElement)("div", {
+			}), periodCard("statWeekDone", board?.trend.thisWeek), periodCard("statLastWeekDone", board?.trend.lastWeek), periodCard("statMonthDone", board?.trend.thisMonth), periodCard("statLastMonthDone", board?.trend.lastMonth)), (0, react.createElement)("div", {
 				className: "dtl-card",
 				style: chartCardStyle
 			}, (0, react.createElement)("div", { style: {

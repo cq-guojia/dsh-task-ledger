@@ -12,4 +12,4 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 ## Status
 
 - `task-ledger@1.0.2` published (2026-10-17): `history` JSON mode now emits JSON even when a workspace has no history files (fixes a 500 that blanked the whole board).
-- `dsh-task-ledger@0.0.9` published (2026-10-17): stats area reworked per user review — operation console (4 cards, my todos / unclaimed / active / blocked·stale merged with red stale marker) + stats console (this/last week, this/last month done with created as sub-line, `—` instead of 0) + grouped-bar trend chart (done + created per week, all/mine toggle, thin bars, baseline, average line).
+- `dsh-task-ledger@0.0.10` published (2026-10-17): stats area now matches the reference layout — 8 blocks on the left (2 rows × 4 columns: operation console + stats console) with the trend chart card stretched to the same height on the right; chart gained y-axis ticks, gridlines, value labels on top of bars, legend and average line.
