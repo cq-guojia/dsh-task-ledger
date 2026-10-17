@@ -92,13 +92,17 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
     })
 
   const [chartScope, setChartScope] = useState<'all' | 'mine'>('all')
-  const chartWeeks = useMemo(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => ({
-    label: bucket.end.slice(5),
-    done: bucket.done,
-    remaining: bucket.remaining,
-    created: bucket.created,
-    title: `截至 ${bucket.end}｜${t('chartLegendDone')} ${bucket.done}｜${t('chartLegendRemaining')} ${bucket.remaining}｜${t('chartLegendCreated')} ${bucket.created}`,
-  })), [board, chartScope, t])
+  const chartWeeks = useMemo(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => {
+    // 容错：host 旧版可能不带 end（客户端/宿主版本错配时），退回用 week，绝不崩面板。
+    const end = bucket.end ?? bucket.week ?? ''
+    return {
+      label: end.slice(5) || bucket.week?.slice(5) || '',
+      done: bucket.done,
+      remaining: bucket.remaining,
+      created: bucket.created,
+      title: `截至 ${end}｜${t('chartLegendDone')} ${bucket.done}｜${t('chartLegendRemaining')} ${bucket.remaining}｜${t('chartLegendCreated')} ${bucket.created}`,
+    }
+  }), [board, chartScope, t])
   const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0 && week.remaining === 0)
 
   return h('div', { style: pageStyle },
