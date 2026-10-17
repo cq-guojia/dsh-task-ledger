@@ -279,7 +279,7 @@ await check('dist/client.js：模块加载器契约 + 只 require 平台模块',
 
 // 筛选是首页的核心逻辑，且**只在浏览器里跑** ⇒ 冒烟直测这两个纯函数（无 DOM 依赖；
 // 剥类型直读源码，client 单文件产物不可 import）。
-await check('客户端两区视图：我的待办定死全量（不过滤）+ 按工作区分组吃关键字（用户 2026-10-17 定稿）', async () => {
+await check('客户端两区视图：我的待办吃标题搜索 / 按工作区分组暂不过滤（用户 2026-10-17 二次定稿）', async () => {
   const { selectView } = await import(path.resolve(here, '../src/client/rows.ts'))
   const pad = (n) => String(n).padStart(2, '0')
   const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -304,13 +304,13 @@ await check('客户端两区视图：我的待办定死全量（不过滤）+ �
   assert.deepEqual(view.groups.map(g => g.workspaceId), ['w2'], '第二区只剩 B 项目（A 的我那款已进第一区，不重复）')
   assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '组内：别人在做的在前、待认领在后')
   assert.equal(view.total, 3)
-  // 「我的待办」定死不过滤：关键字 / 工作区都奈何不了它（用户 2026-10-17：没有过滤，不过滤它）
-  view = selectView(state({ ...base, keyword: '乙' }))
-  assert.deepEqual(ids(view.mine), ['t1'], '我的待办不吃关键字过滤')
-  assert.deepEqual(ids(view.groups[0].rows), ['t2'], '关键字只作用第二区')
-  view = selectView(state({ ...base, workspace: 'w2' }))
-  assert.deepEqual(ids(view.mine), ['t1'], '我的待办不吃工作区过滤')
-  assert.deepEqual(view.groups.map(g => g.workspaceId), ['w2'], '工作区只作用第二区')
+  // 搜索只归第一区（用户 2026-10-17 二次定稿）：我的待办吃标题关键字，第二区原样不动
+  view = selectView(state({ ...base, keyword: '甲' }))
+  assert.deepEqual(ids(view.mine), ['t1'], '我的待办吃标题搜索')
+  assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '搜索不影响第二区（第三区过滤未建）')
+  view = selectView(state({ ...base, keyword: '不存在的词' }))
+  assert.deepEqual(view.mine, [], '我的待办搜空即空')
+  assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '搜空也不影响第二区')
   // 范围 = 我的 ⇒ 不出第二区（query 保留字段，界面暂无控件）
   view = selectView(state({ ...base, scope: 'mine' }))
   assert.deepEqual(ids(view.mine), ['t1'])

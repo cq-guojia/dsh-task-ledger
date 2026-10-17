@@ -60,7 +60,7 @@ body{
   /* 语义色实面上的字（角标 / 实心提示）：红绿黄都是中调 ⇒ 白字两个主题都可读 */
   --dtl-on-signal:#fff;
   /* 语义色浅底：color-mix 现算 ⇒ 跟随宿主 alias，主题一换自动成立 */
-  --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 8%,transparent);
+  --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 8%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 8%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
@@ -144,7 +144,7 @@ body[data-ds-dark-theme]{
   --dtl-chart-created:var(--dsw-static-neutral-600,#525252);
   --dtl-chart-remaining:var(--dsw-static-amber-500,#fbbf24);
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
-  --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 5%,transparent);
+  --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 5%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);

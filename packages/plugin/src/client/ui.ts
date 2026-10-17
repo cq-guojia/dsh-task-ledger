@@ -70,9 +70,10 @@ const UI_BASE_CSS = `
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 
-/* 工作区徽标：蓝描边胶囊（用户 2026-10-17：只铺 soft 底在暗色下等于没有 ⇒ 加 1px 蓝描边 + 蓝字）。 */
+/* 工作区徽标：只铺蓝底（用户 2026-10-17：描边框太抢 ⇒ 去掉；底色已提亮一档见 tokens.ts
+   business-soft 8%→14% / 5%→12%），字色回正文。 */
 .dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border-radius:var(--dtl-radius-sm);
-  border:1px solid var(--dtl-business);background:var(--dtl-business-soft);color:var(--dtl-business);
+  background:var(--dtl-business-soft);color:var(--dtl-fg);
   font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;}
 
 /* 行内动作按钮（icon + 字，加大；悬停立刻浮出说明——CSS ::after，不用慢半拍的原生 title）。

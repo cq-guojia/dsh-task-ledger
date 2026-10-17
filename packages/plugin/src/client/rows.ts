@@ -53,25 +53,23 @@ function inGroupOrder(a: Row, b: Row): number {
 }
 
 /**
- * 当前筛选下的两区视图（用户 2026-10-17 定稿：**「我的待办」定死不过滤**——它永远全量出
- * 我名下 doing/blocked，空了给引导卡；筛选（现在只剩关键字）只作用于第二区）：
- *  - 第一区「我的待办」= 我名下全部 doing/blocked，按创建时间倒序；
- *  - 第二区「按工作区」= 其余任务（别人的 doing/blocked + 全部待认领），按工作区分组，吃筛选。
+ * 当前筛选下的两区视图（用户 2026-10-17 二次定稿）：
+ *  - 第一区「我的待办」= 我名下 doing/blocked，**吃标题搜索**（标题行那个搜索框只归它管），
+ *    按创建时间倒序；空了给引导卡；
+ *  - 第二区「按工作区」= 其余任务按工作区分组，**暂不过滤**——它的状态 / 工作区 / 搜索
+ *    等过滤归「第三区（所有任务）」改造，未建之前不装。
  */
 export function selectView(current: { board: BoardPayload | null; query: Query }): BoardView {
   const { board, query } = current
   if (board === null) return { mine: [], groups: [], total: 0 }
   const mineRows: Row[] = board.tasks
     .filter((task) => isMine(task, board))
+    .filter((task) => hitKeyword(query.keyword, [task.title, task.id, task.owner, task.creator, task.category, ...(task.tags ?? [])]))
     .sort((a, b) => String(b.created ?? b.started ?? '').localeCompare(String(a.created ?? a.started ?? '')))
     .map((task): Row => ({ kind: 'task', key: `${task.workspace.id}:${task.id}`, task, mine: true }))
-  const tasks = board.tasks.filter((task) => {
-    if (query.workspace !== '' && task.workspace.id !== query.workspace) return false
-    return hitKeyword(query.keyword, [task.title, task.id, task.owner, task.creator, task.category, ...(task.tags ?? [])])
-  })
   const rest = query.scope === 'mine'
     ? []
-    : tasks.filter((task) => !isMine(task, board))
+    : board.tasks.filter((task) => !isMine(task, board))
   const byWorkspace = new Map<string, { title: string; rows: Row[] }>()
   for (const task of rest) {
     const entry = byWorkspace.get(task.workspace.id) ?? { title: task.workspace.title, rows: [] }

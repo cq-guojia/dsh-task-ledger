@@ -147,10 +147,11 @@ window.__ModuleLoader__.load({
 			return String(b.task.created ?? b.task.started ?? "").localeCompare(String(a.task.created ?? a.task.started ?? ""));
 		}
 		/**
-		* 当前筛选下的两区视图（用户 2026-10-17 定稿：**「我的待办」定死不过滤**——它永远全量出
-		* 我名下 doing/blocked，空了给引导卡；筛选（现在只剩关键字）只作用于第二区）：
-		*  - 第一区「我的待办」= 我名下全部 doing/blocked，按创建时间倒序；
-		*  - 第二区「按工作区」= 其余任务（别人的 doing/blocked + 全部待认领），按工作区分组，吃筛选。
+		* 当前筛选下的两区视图（用户 2026-10-17 二次定稿）：
+		*  - 第一区「我的待办」= 我名下 doing/blocked，**吃标题搜索**（标题行那个搜索框只归它管），
+		*    按创建时间倒序；空了给引导卡；
+		*  - 第二区「按工作区」= 其余任务按工作区分组，**暂不过滤**——它的状态 / 工作区 / 搜索
+		*    等过滤归「第三区（所有任务）」改造，未建之前不装。
 		*/
 		function selectView(current) {
 			const { board, query } = current;
@@ -159,24 +160,20 @@ window.__ModuleLoader__.load({
 				groups: [],
 				total: 0
 			};
-			const mineRows = board.tasks.filter((task) => isMine(task, board)).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
+			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => hitKeyword(query.keyword, [
+				task.title,
+				task.id,
+				task.owner,
+				task.creator,
+				task.category,
+				...task.tags ?? []
+			])).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
 				kind: "task",
 				key: `${task.workspace.id}:${task.id}`,
 				task,
 				mine: true
 			}));
-			const tasks = board.tasks.filter((task) => {
-				if (query.workspace !== "" && task.workspace.id !== query.workspace) return false;
-				return hitKeyword(query.keyword, [
-					task.title,
-					task.id,
-					task.owner,
-					task.creator,
-					task.category,
-					...task.tags ?? []
-				]);
-			});
-			const rest = query.scope === "mine" ? [] : tasks.filter((task) => !isMine(task, board));
+			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => !isMine(task, board));
 			const byWorkspace = /* @__PURE__ */ new Map();
 			for (const task of rest) {
 				const entry = byWorkspace.get(task.workspace.id) ?? {
@@ -364,7 +361,7 @@ body{
   /* 语义色实面上的字（角标 / 实心提示）：红绿黄都是中调 ⇒ 白字两个主题都可读 */
   --dtl-on-signal:#fff;
   /* 语义色浅底：color-mix 现算 ⇒ 跟随宿主 alias，主题一换自动成立 */
-  --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 8%,transparent);
+  --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 8%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 8%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
@@ -448,7 +445,7 @@ body[data-ds-dark-theme]{
   --dtl-chart-created:var(--dsw-static-neutral-600,#525252);
   --dtl-chart-remaining:var(--dsw-static-amber-500,#fbbf24);
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
-  --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 5%,transparent);
+  --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 5%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
@@ -629,9 +626,10 @@ body[data-ds-dark-theme]{
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 
-/* 工作区徽标：蓝描边胶囊（用户 2026-10-17：只铺 soft 底在暗色下等于没有 ⇒ 加 1px 蓝描边 + 蓝字）。 */
+/* 工作区徽标：只铺蓝底（用户 2026-10-17：描边框太抢 ⇒ 去掉；底色已提亮一档见 tokens.ts
+   business-soft 8%→14% / 5%→12%），字色回正文。 */
 .dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border-radius:var(--dtl-radius-sm);
-  border:1px solid var(--dtl-business);background:var(--dtl-business-soft);color:var(--dtl-business);
+  background:var(--dtl-business-soft);color:var(--dtl-fg);
   font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;}
 
 /* 行内动作按钮（icon + 字，加大；悬停立刻浮出说明——CSS ::after，不用慢半拍的原生 title）。
@@ -1141,7 +1139,7 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-3)",
 				display: "inline-flex",
 				flex: "none"
-			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: regionHeadTitleStyle }, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, `[${view.mine.length}]`) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: searchBoxStyle }, (0, react.createElement)(SearchInput, {
+			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: regionHeadTitleStyle }, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, t("mineCount", { n: view.mine.length })) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: searchBoxStyle }, (0, react.createElement)(SearchInput, {
 				value: state.query.keyword,
 				placeholder: t("searchPlaceholder"),
 				ariaLabel: t("searchPlaceholder"),
@@ -1273,6 +1271,7 @@ body[data-ds-dark-theme]{
 			fieldCreatedStamp: "{day} 创建",
 			mineEmpty: "您现在没有正在进行的工作",
 			mineEmptyHint: "在某个工作区 new 一个任务，或到下面认领一条待认领任务，这里就会出现。",
+			mineCount: "{n} 条",
 			worklogTitle: "过程文档",
 			worklogPath: "路径",
 			worklogMissing: "（缺失）",
@@ -1362,6 +1361,7 @@ body[data-ds-dark-theme]{
 			fieldCreatedStamp: "created {day}",
 			mineEmpty: "Nothing in progress right now",
 			mineEmptyHint: "Create a task in a workspace or claim one below, and it shows up here.",
+			mineCount: "{n} items",
 			worklogTitle: "Worklog",
 			worklogPath: "path",
 			worklogMissing: "(missing)",

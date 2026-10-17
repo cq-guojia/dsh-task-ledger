@@ -212,7 +212,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                           h(IconChecklistOutlineRegular, { size: 16 })),
                         h('span', { style: regionHeadTitleStyle }, t('regionMine')),
                         view.mine.length > 0
-                          ? h('span', { className: 'dtl-count' }, `[${view.mine.length}]`)
+                          ? h('span', { className: 'dtl-count' }, t('mineCount', { n: view.mine.length }))
                           : null,
                         h('span', { style: { flex: '1 1 auto' } }),
                         h('div', { style: searchBoxStyle },
