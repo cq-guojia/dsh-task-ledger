@@ -14,7 +14,7 @@ import { isMine, selectView, type WorkspaceGroup } from './rows'
 import type { PeriodCounts } from './types'
 import { TaskRowView } from './task-row'
 import {
-  Button, ChartLegend, EmptyState, ensureUiBase, FilterBar, GroupedBarChart, Segmented, StatCard,
+  Button, ChartLegend, EmptyState, ensureUiBase, GroupedBarChart, SearchInput, Segmented, Select, StatCard,
 } from './ui'
 
 type Tab = 'tasks' | 'stats'
@@ -218,16 +218,23 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                           ? h('span', { className: 'dtl-count' }, t('mineCount', { n: view.mine.length }))
                           : null,
                         h('span', { style: { flex: '1 1 auto' } }),
-                        h(FilterBar, {
-                          width: 360,
-                          selectValue: state.query.workspace,
-                          selectOptions: workspaceOptions,
-                          selectPlaceholder: t('workspaceAll'),
-                          onSelectChange: (next) => { setQuery({ workspace: next }) },
-                          searchValue: state.query.keyword,
-                          searchPlaceholder: t('searchPlaceholder'),
-                          onSearchChange: (next) => { setQuery({ keyword: next }) },
-                          ariaLabel: t('regionMine'),
+                        h(Select<string>, {
+                          value: workspaceOptions.some((option) => option.value === state.query.workspace)
+                            ? state.query.workspace
+                            : '',
+                          options: workspaceOptions,
+                          ariaLabel: t('workspaceLabel'),
+                          width: 140,
+                          onChange: (next) => { setQuery({ workspace: next }) },
+                        }),
+                      ),
+                      // 搜索独立窄行（用户 2026-10-17：别和下拉挤一排、别拉那么宽）
+                      h('div', { style: { width: '240px', marginBottom: 'var(--dtl-space-3)' } },
+                        h(SearchInput, {
+                          value: state.query.keyword,
+                          placeholder: t('searchPlaceholder'),
+                          ariaLabel: t('searchPlaceholder'),
+                          onChange: (next) => { setQuery({ keyword: next }) },
                         }),
                       ),
                       view.mine.length === 0

@@ -667,11 +667,6 @@ body[data-ds-dark-theme]{
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
-/* 过滤条：左下拉（定宽）+ 右搜索（撑满），控件同高 28 */
-.dtl-filterbar{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;}
-.dtl-filterbar > .dtl-select{flex:none;width:140px;}
-.dtl-filterbar > .dtl-input{flex:1 1 auto;min-width:0;}
-
 /* 「只看我的」小复选框（替掉右上角的分段切换） */
 .dtl-check{display:inline-flex;align-items:center;gap:5px;height:20px;margin-top:-2px;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);cursor:pointer;user-select:none;white-space:nowrap;}
@@ -787,28 +782,6 @@ body[data-ds-dark-theme]{
 					props.onChange(event.target.value);
 				}
 			});
-		}
-		/**
-		* 过滤条（用户 2026-10-17：与 dispatch-table 顶排同思路——「一类控件一处抽象」，
-		* 下拉与搜索的组合只在这一处实现，页面只喂选项与回调，不各写一份布局）。
-		* 高度走同一档 28（`Select` / `SearchInput` 内部同 `--dtl-control-h-md`），左下拉右搜索。
-		*/
-		function FilterBar(props) {
-			ensureUiBase();
-			return (0, react.createElement)("div", {
-				className: "dtl-filterbar",
-				style: props.width === void 0 ? void 0 : { width: `${props.width}px` }
-			}, (0, react.createElement)(Select, {
-				value: props.selectValue,
-				options: props.selectOptions,
-				onChange: props.onSelectChange,
-				ariaLabel: `${props.ariaLabel}·${props.selectPlaceholder}`
-			}), (0, react.createElement)(SearchInput, {
-				value: props.searchValue,
-				placeholder: props.searchPlaceholder,
-				ariaLabel: `${props.ariaLabel}·${props.searchPlaceholder}`,
-				onChange: props.onSearchChange
-			}));
 		}
 		/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。
 		*  `value` 为 0 时显示「—」（用户 2026-10-17 定稿：0 会被读成「没数据 / 出错了」）；
@@ -1186,20 +1159,24 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-3)",
 				display: "inline-flex",
 				flex: "none"
-			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: regionHeadTitleStyle }, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, t("mineCount", { n: view.mine.length })) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)(FilterBar, {
-				width: 360,
-				selectValue: state.query.workspace,
-				selectOptions: workspaceOptions,
-				selectPlaceholder: t("workspaceAll"),
-				onSelectChange: (next) => {
+			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: regionHeadTitleStyle }, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, t("mineCount", { n: view.mine.length })) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)(Select, {
+				value: workspaceOptions.some((option) => option.value === state.query.workspace) ? state.query.workspace : "",
+				options: workspaceOptions,
+				ariaLabel: t("workspaceLabel"),
+				width: 140,
+				onChange: (next) => {
 					setQuery({ workspace: next });
-				},
-				searchValue: state.query.keyword,
-				searchPlaceholder: t("searchPlaceholder"),
-				onSearchChange: (next) => {
+				}
+			})), (0, react.createElement)("div", { style: {
+				width: "240px",
+				marginBottom: "var(--dtl-space-3)"
+			} }, (0, react.createElement)(SearchInput, {
+				value: state.query.keyword,
+				placeholder: t("searchPlaceholder"),
+				ariaLabel: t("searchPlaceholder"),
+				onChange: (next) => {
 					setQuery({ keyword: next });
-				},
-				ariaLabel: t("regionMine")
+				}
 			})), view.mine.length === 0 ? (0, react.createElement)(EmptyState, {
 				tone: "guide",
 				title: t("mineEmpty"),
