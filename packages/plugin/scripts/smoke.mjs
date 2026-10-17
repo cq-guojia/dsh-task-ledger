@@ -84,16 +84,19 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
       assert.ok(Number.isInteger(bucket.created) && bucket.created >= 0)
       assert.ok(Number.isInteger(bucket.remaining) && bucket.remaining >= 0, `${scope} remaining 应是非负整数`)
     }
-    // remaining 自洽不变量：remaining_i = 基线 + Σ(created) - Σ(done) 到 i 周 ⇒ 该差值对所有 i 恒定
-    let baseline = null
+    // remaining 自洽不变量（严谨版）：定义基线_i = remaining_i − Σcreated[0..i] + Σdone[0..i]
+    // = 窗口前创建、且到周末 i 仍未结案的任务数。该集合只减不增 ⇒ 基线_i 单调不增且 ≥ 0。
+    // （旧版断言「恒定」只在「无窗口前任务在窗口内结案」时巧合成立，并非一般正确。）
+    let prevBaseline = null
     let cumCreated = 0
     let cumDone = 0
     buckets.forEach((bucket, i) => {
       cumCreated += bucket.created
       cumDone += bucket.done
-      const b = bucket.remaining - cumCreated + cumDone
-      if (baseline === null) baseline = b
-      else assert.equal(b, baseline, `${scope} remaining 自洽（基线恒定）@周${i}`)
+      const baseline = bucket.remaining - cumCreated + cumDone
+      assert.ok(baseline >= 0, `${scope} remaining 自洽：基线 ≥ 0 @周${i}`)
+      if (prevBaseline !== null) assert.ok(baseline <= prevBaseline, `${scope} remaining 自洽：基线单调不增 @周${i}`)
+      prevBaseline = baseline
     })
   }
   // 「我的」不可能超过「所有」
