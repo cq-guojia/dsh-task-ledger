@@ -56,17 +56,38 @@ export interface HistoryRecord {
   readonly workspace?: Workspace
 }
 
-/** 趋势图一桶（近 8 周）。 */
+/** 一个自然周期内的两个计数（核心永远是「完成」，新增只作对照）。 */
+export interface PeriodCounts {
+  readonly done: number
+  readonly created: number
+  /** 周期起（YYYY-MM-DD，含）。 */
+  readonly from: string
+  /** 周期止（YYYY-MM-DD，含）。 */
+  readonly to: string
+}
+
+/** 统计台四个自然周期。 */
+export interface TrendPeriods {
+  readonly thisWeek: PeriodCounts
+  readonly lastWeek: PeriodCounts
+  readonly thisMonth: PeriodCounts
+  readonly lastMonth: PeriodCounts
+}
+
+/** 趋势图一桶（一周）：完成 + 新增。 */
 export interface WeeklyBucket {
   /** 该周周一（YYYY-MM-DD）。 */
   readonly week: string
-  readonly count: number
+  readonly done: number
+  readonly created: number
 }
 
-/** 首页完成类统计（**按结案时间**落桶）。 */
+/** 趋势图数据（按范围各一份，切换零请求）。 */
 export interface ClosedSummary {
-  readonly weekDone: number
-  readonly weekly: readonly WeeklyBucket[]
+  readonly weekly: {
+    readonly all: readonly WeeklyBucket[]
+    readonly mine: readonly WeeklyBucket[]
+  }
 }
 
 /** 首页统计卡的六个面。 */
@@ -90,6 +111,7 @@ export interface BoardPayload {
   readonly tasks: readonly BoardTask[]
   readonly stats: BoardStats
   readonly closed: ClosedSummary
+  readonly trend: TrendPeriods
   /** 工作区 id → 该工作区的当前 git 身份（`git config user.name`，取不到为 null）——「我的待办」判定源。 */
   readonly identities: Readonly<Record<string, string | null>>
 }

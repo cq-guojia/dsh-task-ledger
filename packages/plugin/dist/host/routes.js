@@ -1,4 +1,4 @@
-import { getBoardSnapshot, getClosedSummary, getFilterOptions, queryClosed } from './board.js';
+import { getHomeAggregate, getFilterOptions, queryClosed } from './board.js';
 import { getTask, readTasks, readWorklog } from './ledger-read.js';
 import { resolveWorkspaces } from './workspace.js';
 /** API 前缀（唯一真源就在这一处）。 */
@@ -57,15 +57,14 @@ export function registerRoutes(webServer, deps) {
         path: `${API_PREFIX}/workspaces`,
         handler: (_req, res) => { sendJson(res, 200, { workspaces: workspacesOf(deps) }); },
     });
-    // 首页一次拿全：在办快照（含停滞 / 天数 / 身份）+ 完成类统计与近 8 周趋势。
+    // 首页一次拿全：在办快照 + 近 8 周趋势 + 四个自然周期计数（host 每个工作区只读一次）。
     webServer.register({
         kind: 'exact',
         path: `${API_PREFIX}/board`,
         handler: async (_req, res) => {
             try {
-                const workspaces = workspacesOf(deps);
-                const [snapshot, closed] = await Promise.all([getBoardSnapshot(workspaces), getClosedSummary(workspaces)]);
-                sendJson(res, 200, { ...snapshot, closed });
+                const home = await getHomeAggregate(workspacesOf(deps));
+                sendJson(res, 200, { ...home.snapshot, closed: home.closed, trend: home.trend });
             }
             catch (error) {
                 sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });

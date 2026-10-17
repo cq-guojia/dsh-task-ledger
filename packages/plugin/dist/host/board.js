@@ -6,21 +6,57 @@ const RECENT_MONTHS = 13;
 const DEFAULT_HISTORY_LIMIT = 500;
 /** 停滞判定阈值：doing / blocked 且 created 至今超过这么多天（2026-10-17 拍板，显示级）。 */
 export const STALE_DAYS = 14;
-/** 趋势图桶数：近 8 周（2026-10-17 定稿，与 dsh-context「近 7 天」同思路，按周更耐看）。 */
+/** 趋势图桶数：近 8 周（2026-10-17 定稿）。 */
 export const WEEKLY_WEEKS = 8;
-/** 周一所在日期（YYYY-MM-DD）。skill 的 --since 只给日期按当天 00:00 解析。 */
-function mondayDateString(now) {
-    const date = new Date(now);
-    const mondayOffset = (date.getDay() + 6) % 7;
-    date.setDate(date.getDate() - mondayOffset);
-    const pad = (value) => String(value).padStart(2, '0');
+/* ── 日期工具（本机时区；skill 脚本同口径：周一为一周之始）───────────────── */
+function pad(value) {
+    return String(value).padStart(2, '0');
+}
+/** Date → `YYYY-MM-DD`。 */
+function ymd(date) {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+/** 时刻串（`YYYY-MM-DD HH:mm:ss` / `YYYY-MM-DD`）→ 日期部分；解析不了回 null。 */
+function dayOf(stamp) {
+    if (stamp === null || stamp === undefined || stamp === '')
+        return null;
+    const day = String(stamp).slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+}
+/** 某日期所在周的周一（00:00）。 */
+function mondayOf(day) {
+    const date = new Date(`${day}T00:00:00`);
+    date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+    return date;
+}
+/** 第 offset 周的起止（offset 0 = 本周，-1 = 上周；返回日期串，含边界）。
+ *  ⚠️ 本周只到今天（周还没结束），上周才是完整周一~周日——否则「本周」会把明天之后的
+ *  日子也画进区间，tooltip 里的截止日撒谎。 */
+function weekWindow(offset, now) {
+    const monday = mondayOf(ymd(now));
+    monday.setDate(monday.getDate() + offset * 7);
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    const last = offset === 0 ? now : sunday;
+    return { from: ymd(monday), to: ymd(last < sunday ? last : sunday) };
+}
+/** 第 offset 月的起止（offset 0 = 本月，-1 = 上月；含边界）。
+ *  同 {@link weekWindow}：本月只到今天，上月才是完整自然月。 */
+function monthWindow(offset, now) {
+    const first = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const last = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+    const end = offset === 0 ? now : last;
+    return { from: ymd(first), to: ymd(end < last ? end : last) };
+}
+/** 日期是否落在 [from, to]（含边界，字符串比较即可——ISO 字典序即时间序）。 */
+function inWindow(day, window) {
+    return day !== null && day >= window.from && day <= window.to;
 }
 /** 「YYYY-MM-DD HH:mm:ss」→ 距今天数（解析不了 / 未来都按 0；不编造）。 */
 function daysSince(stamp, now) {
     if (stamp === null || stamp === undefined || stamp === '')
         return null;
-    const parsed = new Date(stamp.replace(' ', 'T'));
+    const parsed = new Date(String(stamp).replace(' ', 'T'));
     if (Number.isNaN(parsed.getTime()))
         return null;
     const days = Math.floor((now.getTime() - parsed.getTime()) / 86_400_000);
@@ -43,36 +79,41 @@ export function getCurrentIdentity(workspace) {
         });
     });
 }
+/** 一个工作区读全（list + history + git 身份）——首页所有数字的共同原料。 */
+async function readWorkspace(workspace) {
+    const [tasks, history, identity] = await Promise.all([
+        readTasks(workspace),
+        readHistory(workspace, { months: RECENT_MONTHS }),
+        getCurrentIdentity(workspace),
+    ]);
+    return { workspace, tasks, history, identity };
+}
+/** 计数一批记录 / 任务（按范围过滤 owner；`mine` 时 identity 为 null 的一律不计）。 */
+function countPeriod(entries, window) {
+    return entries.filter((entry) => inWindow(entry.day, window)).length;
+}
 /**
- * 首页快照（在办路径）：并发跑全部工作区的 list + 身份解析。
- * 与历史量彻底无关——progress.json 只装没结案的任务（close 会移走），永远有界。
+ * 首页一次拿全：在办快照（含停滞 / 天数 / 身份）+ 近 8 周趋势（完成 / 新增 × 所有 / 我的）
+ * + 四个自然周期计数。**每个工作区只读一次**（list + history + git 身份），
+ * 避免「快照读一遍、统计再读一遍」把 5 万行级工作区的 history 解析翻倍。
  */
-export async function getBoardSnapshot(workspaces) {
+export async function getHomeAggregate(workspaces) {
     const now = new Date();
-    const perWorkspace = await Promise.all(workspaces.map(async (workspace) => ({
-        workspace,
-        tasks: await readTasks(workspace),
-        identity: await getCurrentIdentity(workspace),
-    })));
+    const perWorkspace = await Promise.all(workspaces.map(readWorkspace));
+    // ── 快照（在办路径，与历史量无关）────────────────────────────────────
     const withMeta = perWorkspace.flatMap((entry) => entry.tasks.map((task) => {
         const working = task.status === 'doing' || task.status === 'blocked';
         const ageDays = working ? daysSince(task.started ?? task.created, now) : null;
         return { ...task, ageDays, stale: ageDays !== null && ageDays > STALE_DAYS };
     }));
-    const myActive = perWorkspace.reduce((sum, entry) => sum + entry.tasks.filter((task) => task.owner === entry.identity && (task.status === 'doing' || task.status === 'blocked')).length, 0);
-    const myBlocked = perWorkspace.reduce((sum, entry) => sum + entry.tasks.filter((task) => task.owner === entry.identity && task.status === 'blocked').length, 0);
     const openTasks = withMeta.filter((task) => task.status === 'open');
     const blockedTasks = withMeta.filter((task) => task.status === 'blocked');
-    const oldestOpenDays = openTasks.length === 0
-        ? null
-        : openTasks.reduce((max, task) => Math.max(max, daysSince(task.created, now) ?? 0), 0);
-    const longestBlockedDays = blockedTasks.length === 0
-        ? null
-        : blockedTasks.reduce((max, task) => Math.max(max, task.ageDays ?? 0), 0);
+    const myActive = perWorkspace.reduce((sum, entry) => sum + entry.tasks.filter((task) => task.owner === entry.identity && (task.status === 'doing' || task.status === 'blocked')).length, 0);
+    const myBlocked = perWorkspace.reduce((sum, entry) => sum + entry.tasks.filter((task) => task.owner === entry.identity && task.status === 'blocked').length, 0);
     const identities = {};
     for (const entry of perWorkspace)
         identities[entry.workspace.id] = entry.identity;
-    return {
+    const snapshot = {
         at: now.toISOString(),
         workspaces,
         tasks: withMeta,
@@ -84,45 +125,87 @@ export async function getBoardSnapshot(workspaces) {
             blocked: blockedTasks.length,
             stale: withMeta.filter((task) => task.stale).length,
             staleDays: STALE_DAYS,
-            oldestOpenDays,
-            longestBlockedDays,
+            oldestOpenDays: openTasks.length === 0
+                ? null
+                : openTasks.reduce((max, task) => Math.max(max, daysSince(task.created, now) ?? 0), 0),
         },
         identities,
     };
-}
-/** 取一条记录的结案日期部分（history 首列 `time`；旧行 / 缺列返回 null）。 */
-function closedDateOf(record) {
-    const value = record.time;
-    if (value === undefined || value === null || value === '')
-        return null;
-    return String(value).slice(0, 10);
-}
-/**
- * 完成类统计 + 近 8 周趋势：读一次 13 个月窗口的 history，按**结案时间**落周桶。
- * 任一工作区失败即抛（聚合数部分失败 = 错数，不兜）。
- */
-export async function getClosedSummary(workspaces) {
-    const now = new Date();
-    const thisMonday = mondayDateString(now);
+    // ── 趋势：近 8 周（完成按结案时间、新增按创建时间）× 所有 / 我的 ────────
+    // 新增必须**合并两个来源**：已结案的任务被 close 移出 progress.json，只在 history 里；
+    // 在办的只在 progress.json 里。两者不相交（close 是移动），合并即全集、不会重复计。
     const weeks = [];
-    for (let offset = WEEKLY_WEEKS - 1; offset >= 0; offset -= 1) {
-        weeks.push(mondayDateString(new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset * 7)));
-    }
-    const perWorkspace = await Promise.all(workspaces.map((workspace) => readHistory(workspace, { months: RECENT_MONTHS })));
-    const counts = new Map(weeks.map((week) => [week, 0]));
-    for (const record of perWorkspace.flat()) {
-        const date = closedDateOf(record);
-        if (date === null)
-            continue;
-        const monday = mondayDateString(new Date(`${date}T00:00:00`));
-        const bucket = counts.get(monday);
+    for (let offset = WEEKLY_WEEKS - 1; offset >= 0; offset -= 1)
+        weeks.push(weekWindow(-offset, now).from);
+    const bucketsAll = new Map(weeks.map((week) => [week, { done: 0, created: 0 }]));
+    const bucketsMine = new Map(weeks.map((week) => [week, { done: 0, created: 0 }]));
+    const bump = (map, week, field) => {
+        const bucket = map.get(week);
         if (bucket !== undefined)
-            counts.set(monday, bucket + 1);
-    }
-    return {
-        weekDone: counts.get(thisMonday) ?? 0,
-        weekly: weeks.map((week) => ({ week, count: counts.get(week) ?? 0 })),
+            map.set(week, { ...bucket, [field]: bucket[field] + 1 });
     };
+    for (const entry of perWorkspace) {
+        for (const task of entry.tasks) {
+            const created = dayOf(task.created);
+            if (created === null)
+                continue;
+            const week = ymd(mondayOf(created));
+            bump(bucketsAll, week, 'created');
+            if (entry.identity !== null && task.owner === entry.identity)
+                bump(bucketsMine, week, 'created');
+        }
+        for (const record of entry.history) {
+            const closed = dayOf(record.time);
+            if (closed !== null) {
+                const week = ymd(mondayOf(closed));
+                bump(bucketsAll, week, 'done');
+                if (entry.identity !== null && record.owner === entry.identity)
+                    bump(bucketsMine, week, 'done');
+            }
+            const created = dayOf(record.created);
+            if (created !== null) {
+                const week = ymd(mondayOf(created));
+                bump(bucketsAll, week, 'created');
+                if (entry.identity !== null && record.owner === entry.identity)
+                    bump(bucketsMine, week, 'created');
+            }
+        }
+    }
+    const closed = {
+        weekly: {
+            all: weeks.map((week) => ({ week, ...bucketsAll.get(week) ?? { done: 0, created: 0 } })),
+            mine: weeks.map((week) => ({ week, ...bucketsMine.get(week) ?? { done: 0, created: 0 } })),
+        },
+    };
+    // ── 统计台：四个自然周期（只算「全部工作区」范围；图表切换不带动卡片）────
+    const windows = {
+        thisWeek: weekWindow(0, now),
+        lastWeek: weekWindow(-1, now),
+        thisMonth: monthWindow(0, now),
+        lastMonth: monthWindow(-1, now),
+    };
+    const doneEntries = perWorkspace.flatMap((entry) => entry.history.map((record) => ({ day: dayOf(record.time), owner: record.owner ?? null })));
+    const createdEntries = perWorkspace.flatMap((entry) => [
+        ...entry.tasks.map((task) => ({ day: dayOf(task.created), owner: task.owner ?? null })),
+        ...entry.history.map((record) => ({ day: dayOf(record.created), owner: record.owner ?? null })),
+    ]);
+    const period = (window) => ({
+        done: countPeriod(doneEntries, window),
+        created: countPeriod(createdEntries, window),
+        from: window.from,
+        to: window.to,
+    });
+    const trend = {
+        thisWeek: period(windows.thisWeek),
+        lastWeek: period(windows.lastWeek),
+        thisMonth: period(windows.thisMonth),
+        lastMonth: period(windows.lastMonth),
+    };
+    return { snapshot, closed, trend };
+}
+/** 只拿在办快照（薄封装：测试 / 其它调用方用；首页走 {@link getHomeAggregate} 一次读全）。 */
+export async function getBoardSnapshot(workspaces) {
+    return (await getHomeAggregate(workspaces)).snapshot;
 }
 /**
  * 已结案列表：默认近 13 个月 + limit 500，跨工作区合并后按创建时间倒序。

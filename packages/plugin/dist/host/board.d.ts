@@ -1,18 +1,37 @@
 import type { HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRow } from './types.js';
 /** 停滞判定阈值：doing / blocked 且 created 至今超过这么多天（2026-10-17 拍板，显示级）。 */
 export declare const STALE_DAYS = 14;
-/** 趋势图桶数：近 8 周（2026-10-17 定稿，与 dsh-context「近 7 天」同思路，按周更耐看）。 */
+/** 趋势图桶数：近 8 周（2026-10-17 定稿）。 */
 export declare const WEEKLY_WEEKS = 8;
-/** 完成类统计（**按结案时间**落桶；旧实现走 `--since` 按创建时间过滤，数的是「本周创建且已结案」，口径错）。 */
-export interface ClosedSummary {
-    /** 本周（周一至今）完成数。 */
-    readonly weekDone: number;
-    /** 近 8 周分周完成数，旧 → 新；`week` = 该周周一（YYYY-MM-DD）。 */
-    readonly weekly: readonly WeeklyBucket[];
+/** 一个自然周期内的两个计数（核心永远是「完成」，新增只作对照）。 */
+export interface PeriodCounts {
+    readonly done: number;
+    readonly created: number;
+    /** 周期起（YYYY-MM-DD，含）。 */
+    readonly from: string;
+    /** 周期止（YYYY-MM-DD，含）。 */
+    readonly to: string;
 }
+/** 统计台四个自然周期（用户 2026-10-17 定稿：本周 / 上周 / 本月 / 上月，不用 7/30 天）。 */
+export interface TrendPeriods {
+    readonly thisWeek: PeriodCounts;
+    readonly lastWeek: PeriodCounts;
+    readonly thisMonth: PeriodCounts;
+    readonly lastMonth: PeriodCounts;
+}
+/** 趋势图一桶（一周）：完成 + 新增。 */
 export interface WeeklyBucket {
+    /** 该周周一（YYYY-MM-DD）。 */
     readonly week: string;
-    readonly count: number;
+    readonly done: number;
+    readonly created: number;
+}
+/** 趋势图数据按范围各一份（切换零请求）。 */
+export interface ClosedSummary {
+    readonly weekly: {
+        readonly all: readonly WeeklyBucket[];
+        readonly mine: readonly WeeklyBucket[];
+    };
 }
 /** 首页统计卡的六个面（阈值 / 天数全在 host 算，前端只渲染——单一真源）。 */
 export interface BoardStats {
@@ -32,8 +51,6 @@ export interface BoardStats {
     readonly staleDays: number;
     /** 最老一条待认领躺了多少天（没有待认领 = null）。 */
     readonly oldestOpenDays: number | null;
-    /** 卡住最久的 blocked 多少天（没有 blocked = null）。 */
-    readonly longestBlockedDays: number | null;
 }
 /** 列表行附加工资字段（host 算，前端不判阈值）。 */
 export interface BoardTask extends TaskRow {
@@ -55,6 +72,12 @@ export interface BoardSnapshot {
      */
     readonly identities: Readonly<Record<string, string | null>>;
 }
+/** 首页一次 `/board` 的全部聚合（**每个工作区只读一次** list + history + git 身份）。 */
+export interface HomeAggregate {
+    readonly snapshot: BoardSnapshot;
+    readonly closed: ClosedSummary;
+    readonly trend: TrendPeriods;
+}
 /**
  * 当前 git 身份（cwd = 该工作区）——「我的待办」判定源。
  * 与 agent 在会话里跑 skill 时的取值环境一致；取不到回 null（非 git 目录 / 没配身份），
@@ -62,15 +85,13 @@ export interface BoardSnapshot {
  */
 export declare function getCurrentIdentity(workspace: LedgerWorkspace): Promise<string | null>;
 /**
- * 首页快照（在办路径）：并发跑全部工作区的 list + 身份解析。
- * 与历史量彻底无关——progress.json 只装没结案的任务（close 会移走），永远有界。
+ * 首页一次拿全：在办快照（含停滞 / 天数 / 身份）+ 近 8 周趋势（完成 / 新增 × 所有 / 我的）
+ * + 四个自然周期计数。**每个工作区只读一次**（list + history + git 身份），
+ * 避免「快照读一遍、统计再读一遍」把 5 万行级工作区的 history 解析翻倍。
  */
+export declare function getHomeAggregate(workspaces: readonly LedgerWorkspace[]): Promise<HomeAggregate>;
+/** 只拿在办快照（薄封装：测试 / 其它调用方用；首页走 {@link getHomeAggregate} 一次读全）。 */
 export declare function getBoardSnapshot(workspaces: readonly LedgerWorkspace[]): Promise<BoardSnapshot>;
-/**
- * 完成类统计 + 近 8 周趋势：读一次 13 个月窗口的 history，按**结案时间**落周桶。
- * 任一工作区失败即抛（聚合数部分失败 = 错数，不兜）。
- */
-export declare function getClosedSummary(workspaces: readonly LedgerWorkspace[]): Promise<ClosedSummary>;
 /**
  * 已结案列表：默认近 13 个月 + limit 500，跨工作区合并后按创建时间倒序。
  * shortcut: 分页用「加大 limit 重取」的笨办法（skill 脚本无 offset）；

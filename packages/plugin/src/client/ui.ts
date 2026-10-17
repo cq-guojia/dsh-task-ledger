@@ -44,6 +44,26 @@ const UI_BASE_CSS = `
 /* 过程正文：宽度受限、长行折行 */
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
 
+/* 趋势分组柱状图：细柱（8px）+ 底部基线 + 均值虚线；「精细」靠细柱与参考线 */
+.dtl-gchart{position:relative;display:flex;align-items:flex-end;gap:10px;height:104px;
+  border-bottom:1px solid var(--dtl-border);}
+.dtl-gchart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  flex:1 1 0;height:100%;min-width:0;}
+.dtl-gchart__pair{display:flex;align-items:flex-end;gap:2px;height:100%;justify-content:center;}
+.dtl-gchart__bar{width:8px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
+.dtl-gchart__bar--done{background:var(--dtl-business);}
+.dtl-gchart__bar--created{background:var(--dtl-chip-bg);}
+.dtl-gchart__col:hover .dtl-gchart__bar--done{background:var(--dtl-accent);}
+.dtl-gchart__label{font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
+.dtl-gchart__avg{position:absolute;left:0;right:0;border-top:1px dashed var(--dtl-border-strong);pointer-events:none;}
+.dtl-gchart__avgtag{position:absolute;right:0;font-size:10px;line-height:12px;color:var(--dtl-fg-3);
+  background:var(--dtl-surface-1);padding:0 2px;transform:translateY(-100%);}
+.dtl-gchart-legend{display:flex;align-items:center;gap:var(--dtl-space-3);font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);}
+.dtl-gchart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
+
+/* 过程正文：宽度受限、长行折行 */
+.dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
+
 /* 趋势柱状图：div 柱 + token 色，无新依赖 */
 .dtl-chart{display:flex;align-items:flex-end;gap:var(--dtl-space-2);height:120px;}
 .dtl-chart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:var(--dtl-space-1);flex:1 1 0;height:100%;min-width:0;}
@@ -194,26 +214,32 @@ export function SearchInput(props: {
 
 /* ── 卡 / chip / 空态 ─────────────────────────────────────────────── */
 
-/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。 */
+/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。
+ *  `value` 为 0 时显示「—」（用户 2026-10-17 定稿：0 会被读成「没数据 / 出错了」）；
+ *  `hint` 可以是富文本（如把「停滞」两字标红）；
+ *  `interactive: false` = 纯展示卡（统计台：首页没有已结案可筛，不装可点）。 */
 export function StatCard(props: {
   label: string
-  value: string
-  hint?: string
-  active: boolean
+  value: string | number
+  hint?: ReactNode
+  active?: boolean
+  interactive?: boolean
   title?: string
-  onClick: () => void
+  onClick?: () => void
 }): ReactNode {
   ensureUiBase()
-  return h('button', {
-    type: 'button',
-    className: 'dtl-card dtl-card--clickable dtl-stat',
-    'data-active': props.active,
+  const interactive = props.interactive !== false && props.onClick !== undefined
+  const shown = props.value === 0 || props.value === '0' ? '—' : String(props.value)
+  return h(interactive ? 'button' : 'div', {
+    type: interactive ? 'button' : undefined,
+    className: `dtl-card dtl-stat${interactive ? ' dtl-card--clickable' : ''}`,
+    'data-active': props.active === true,
     title: props.title,
-    onClick: props.onClick,
+    onClick: interactive ? props.onClick : undefined,
   },
   h('span', { style: { fontSize: 'var(--dtl-font-sm)', color: 'var(--dtl-fg-2)' } }, props.label),
-  h('span', { className: 'dtl-stat__value' }, props.value),
-  props.hint === undefined || props.hint === ''
+  h('span', { className: 'dtl-stat__value' }, shown),
+  props.hint === undefined || props.hint === null || props.hint === ''
     ? null
     : h('span', { className: 'dtl-stat__hint' }, props.hint),
   )
@@ -239,26 +265,53 @@ export function EmptyState(props: { tone: 'guide' | 'filtered'; title: string; h
   )
 }
 
-/* ── 趋势柱状图 ───────────────────────────────────────────────────── */
+/* ── 趋势分组柱状图 ───────────────────────────────────────────────────── */
 
-/**
- * 柱状图（div 柱，无新依赖）：每桶一柱，柱高按最大值归一；
- * 数值常显（10px 灰），具体时刻走 title。零值的桶画 2px 矮桩，避免「这一周不存在」的误读。
- */
-export function BarChart(props: {
-  buckets: readonly { label: string; value: number; title: string }[]
+/** 一周两根柱（完成 / 新增）。 */
+export interface GroupedBarWeek {
+  /** 轴标签（MM-DD）。 */
+  readonly label: string
+  readonly done: number
+  readonly created: number
+  /** 悬停文案。 */
+  readonly title: string
+}
+
+/** 分组柱状图（div 柱，无新依赖）：完成 / 新增各一细柱，底部基线 + 完成数平均值虚线。
+ *  「精细」= 细柱 + 基线 + 均值线，不是粗柱堆高度（用户 2026-10-17）。 */
+export function GroupedBarChart(props: {
+  weeks: readonly GroupedBarWeek[]
   ariaLabel: string
+  avgLabel: string
 }): ReactNode {
   ensureUiBase()
-  const max = props.buckets.reduce((peak, bucket) => Math.max(peak, bucket.value), 0)
-  return h('div', { className: 'dtl-chart', role: 'img', 'aria-label': props.ariaLabel },
-    props.buckets.map(bucket => h('div', { key: bucket.label, className: 'dtl-chart__col', title: bucket.title },
-      h('span', { className: 'dtl-chart__val' }, bucket.value === 0 ? '' : String(bucket.value)),
-      h('span', {
-        className: 'dtl-chart__bar',
-        style: { height: `${max === 0 ? 2 : Math.max(2, Math.round((bucket.value / max) * 100))}%` },
-      }),
-      h('span', { className: 'dtl-chart__label' }, bucket.label),
-    )),
+  const plotHeight = 104
+  const max = props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0)
+  const doneTotal = props.weeks.reduce((sum, week) => sum + week.done, 0)
+  const avg = props.weeks.length === 0 ? 0 : doneTotal / props.weeks.length
+  const barHeight = (value: number): number => (max === 0 ? 0 : Math.round((value / max) * plotHeight))
+  return h('div', { style: { position: 'relative', paddingBottom: '18px' } },
+    h('div', { className: 'dtl-gchart', role: 'img', 'aria-label': props.ariaLabel },
+      avg > 0
+        ? h('div', { className: 'dtl-gchart__avg', style: { bottom: `${barHeight(avg)}px` } },
+          h('span', { className: 'dtl-gchart__avgtag' }, props.avgLabel))
+        : null,
+      props.weeks.map(week => h('div', { key: week.label, className: 'dtl-gchart__col', title: week.title },
+        h('div', { className: 'dtl-gchart__pair' },
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: `${barHeight(week.done)}px` } }),
+          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: `${barHeight(week.created)}px` } }),
+        ),
+        h('span', { className: 'dtl-gchart__label' }, week.label),
+      )),
+    ),
+  )
+}
+
+/** 图例（完成 / 新增 两个色块）。 */
+export function ChartLegend(props: { doneLabel: string; createdLabel: string }): ReactNode {
+  ensureUiBase()
+  return h('div', { className: 'dtl-gchart-legend' },
+    h('span', null, h('i', { style: { background: 'var(--dtl-business)' } }), props.doneLabel),
+    h('span', null, h('i', { style: { background: 'var(--dtl-chip-bg)' } }), props.createdLabel),
   )
 }

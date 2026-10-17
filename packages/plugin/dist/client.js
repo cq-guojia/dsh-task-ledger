@@ -536,6 +536,26 @@ body[data-ds-dark-theme]{
 /* 过程正文：宽度受限、长行折行 */
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
 
+/* 趋势分组柱状图：细柱（8px）+ 底部基线 + 均值虚线；「精细」靠细柱与参考线 */
+.dtl-gchart{position:relative;display:flex;align-items:flex-end;gap:10px;height:104px;
+  border-bottom:1px solid var(--dtl-border);}
+.dtl-gchart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  flex:1 1 0;height:100%;min-width:0;}
+.dtl-gchart__pair{display:flex;align-items:flex-end;gap:2px;height:100%;justify-content:center;}
+.dtl-gchart__bar{width:8px;min-height:0;border-radius:var(--dtl-radius-xs) var(--dtl-radius-xs) 0 0;}
+.dtl-gchart__bar--done{background:var(--dtl-business);}
+.dtl-gchart__bar--created{background:var(--dtl-chip-bg);}
+.dtl-gchart__col:hover .dtl-gchart__bar--done{background:var(--dtl-accent);}
+.dtl-gchart__label{font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
+.dtl-gchart__avg{position:absolute;left:0;right:0;border-top:1px dashed var(--dtl-border-strong);pointer-events:none;}
+.dtl-gchart__avgtag{position:absolute;right:0;font-size:10px;line-height:12px;color:var(--dtl-fg-3);
+  background:var(--dtl-surface-1);padding:0 2px;transform:translateY(-100%);}
+.dtl-gchart-legend{display:flex;align-items:center;gap:var(--dtl-space-3);font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);}
+.dtl-gchart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
+
+/* 过程正文：宽度受限、长行折行 */
+.dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
+
 /* 趋势柱状图：div 柱 + token 色，无新依赖 */
 .dtl-chart{display:flex;align-items:flex-end;gap:var(--dtl-space-2);height:120px;}
 .dtl-chart__col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:var(--dtl-space-1);flex:1 1 0;height:100%;min-width:0;}
@@ -619,19 +639,24 @@ body[data-ds-dark-theme]{
 				}
 			});
 		}
-		/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。 */
+		/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。
+		*  `value` 为 0 时显示「—」（用户 2026-10-17 定稿：0 会被读成「没数据 / 出错了」）；
+		*  `hint` 可以是富文本（如把「停滞」两字标红）；
+		*  `interactive: false` = 纯展示卡（统计台：首页没有已结案可筛，不装可点）。 */
 		function StatCard(props) {
 			ensureUiBase();
-			return (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-card dtl-card--clickable dtl-stat",
-				"data-active": props.active,
+			const interactive = props.interactive !== false && props.onClick !== void 0;
+			const shown = props.value === 0 || props.value === "0" ? "—" : String(props.value);
+			return (0, react.createElement)(interactive ? "button" : "div", {
+				type: interactive ? "button" : void 0,
+				className: `dtl-card dtl-stat${interactive ? " dtl-card--clickable" : ""}`,
+				"data-active": props.active === true,
 				title: props.title,
-				onClick: props.onClick
+				onClick: interactive ? props.onClick : void 0
 			}, (0, react.createElement)("span", { style: {
 				fontSize: "var(--dtl-font-sm)",
 				color: "var(--dtl-fg-2)"
-			} }, props.label), (0, react.createElement)("span", { className: "dtl-stat__value" }, props.value), props.hint === void 0 || props.hint === "" ? null : (0, react.createElement)("span", { className: "dtl-stat__hint" }, props.hint));
+			} }, props.label), (0, react.createElement)("span", { className: "dtl-stat__value" }, shown), props.hint === void 0 || props.hint === null || props.hint === "" ? null : (0, react.createElement)("span", { className: "dtl-stat__hint" }, props.hint));
 		}
 		/** chip（分类 / 标签 / 工作区名）。 */
 		function Chip(props) {
@@ -658,25 +683,41 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-2)"
 			} }, props.hint));
 		}
-		/**
-		* 柱状图（div 柱，无新依赖）：每桶一柱，柱高按最大值归一；
-		* 数值常显（10px 灰），具体时刻走 title。零值的桶画 2px 矮桩，避免「这一周不存在」的误读。
-		*/
-		function BarChart(props) {
+		/** 分组柱状图（div 柱，无新依赖）：完成 / 新增各一细柱，底部基线 + 完成数平均值虚线。
+		*  「精细」= 细柱 + 基线 + 均值线，不是粗柱堆高度（用户 2026-10-17）。 */
+		function GroupedBarChart(props) {
 			ensureUiBase();
-			const max = props.buckets.reduce((peak, bucket) => Math.max(peak, bucket.value), 0);
-			return (0, react.createElement)("div", {
-				className: "dtl-chart",
+			const plotHeight = 104;
+			const max = props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.created), 0);
+			const doneTotal = props.weeks.reduce((sum, week) => sum + week.done, 0);
+			const avg = props.weeks.length === 0 ? 0 : doneTotal / props.weeks.length;
+			const barHeight = (value) => max === 0 ? 0 : Math.round(value / max * plotHeight);
+			return (0, react.createElement)("div", { style: {
+				position: "relative",
+				paddingBottom: "18px"
+			} }, (0, react.createElement)("div", {
+				className: "dtl-gchart",
 				role: "img",
 				"aria-label": props.ariaLabel
-			}, props.buckets.map((bucket) => (0, react.createElement)("div", {
-				key: bucket.label,
-				className: "dtl-chart__col",
-				title: bucket.title
-			}, (0, react.createElement)("span", { className: "dtl-chart__val" }, bucket.value === 0 ? "" : String(bucket.value)), (0, react.createElement)("span", {
-				className: "dtl-chart__bar",
-				style: { height: `${max === 0 ? 2 : Math.max(2, Math.round(bucket.value / max * 100))}%` }
-			}), (0, react.createElement)("span", { className: "dtl-chart__label" }, bucket.label))));
+			}, avg > 0 ? (0, react.createElement)("div", {
+				className: "dtl-gchart__avg",
+				style: { bottom: `${barHeight(avg)}px` }
+			}, (0, react.createElement)("span", { className: "dtl-gchart__avgtag" }, props.avgLabel)) : null, props.weeks.map((week) => (0, react.createElement)("div", {
+				key: week.label,
+				className: "dtl-gchart__col",
+				title: week.title
+			}, (0, react.createElement)("div", { className: "dtl-gchart__pair" }, (0, react.createElement)("span", {
+				className: "dtl-gchart__bar dtl-gchart__bar--done",
+				style: { height: `${barHeight(week.done)}px` }
+			}), (0, react.createElement)("span", {
+				className: "dtl-gchart__bar dtl-gchart__bar--created",
+				style: { height: `${barHeight(week.created)}px` }
+			})), (0, react.createElement)("span", { className: "dtl-gchart__label" }, week.label)))));
+		}
+		/** 图例（完成 / 新增 两个色块）。 */
+		function ChartLegend(props) {
+			ensureUiBase();
+			return (0, react.createElement)("div", { className: "dtl-gchart-legend" }, (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-business)" } }), props.doneLabel), (0, react.createElement)("span", null, (0, react.createElement)("i", { style: { background: "var(--dtl-chip-bg)" } }), props.createdLabel));
 		}
 		//#endregion
 		//#region src/client/task-row.ts
@@ -875,17 +916,28 @@ body[data-ds-dark-theme]{
 			fontSize: "var(--dtl-font-xl)",
 			fontWeight: 600
 		};
-		/** 统计区：左 2/3 卡网格 + 右 1/3 趋势图（窄屏堆叠）。 */
-		const statsAreaStyle = {
-			display: "grid",
-			gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)",
-			gap: "var(--dtl-space-3)",
-			marginBottom: "var(--dtl-space-4)"
-		};
+		/** 操作台：全宽 4 列。列数**写死 4**，不用 auto-fit——那会排出 3+1 的非对称
+		*  （用户 2026-10-17：必须上下对称；窄屏由 statsRowStyle 的堆叠兜底，仍是 2+2）。 */
 		const cardsGridStyle = {
 			display: "grid",
-			gridTemplateColumns: "repeat(auto-fit,minmax(148px,1fr))",
+			gridTemplateColumns: "repeat(4,minmax(0,1fr))",
 			gap: "var(--dtl-space-3)"
+		};
+		/** 第二行：统计台（2×2）+ 趋势图（右 1/3）。 */
+		const statsRowStyle = {
+			display: "grid",
+			gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)",
+			gap: "var(--dtl-space-3)"
+		};
+		const statsCardsStyle = {
+			display: "grid",
+			gridTemplateColumns: "repeat(2,minmax(0,1fr))",
+			gap: "var(--dtl-space-3)"
+		};
+		const regionCaptionStyle = {
+			fontSize: "var(--dtl-font-xs)",
+			color: "var(--dtl-fg-3)",
+			margin: "var(--dtl-space-4) 0 var(--dtl-space-2)"
 		};
 		const chartCardStyle = {
 			display: "flex",
@@ -959,14 +1011,34 @@ body[data-ds-dark-theme]{
 					setQuery(patch);
 				}
 			});
-			const chartBuckets = (0, react.useMemo)(() => (board?.closed.weekly ?? []).map((bucket) => ({
+			/** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。 */
+			const periodCard = (label, period) => (0, react.createElement)(StatCard, {
+				label: t(label),
+				value: period?.done ?? 0,
+				hint: t("statCreatedHint", { n: period?.created ?? 0 }),
+				interactive: false,
+				title: period === void 0 ? void 0 : t("periodRange", {
+					from: period.from,
+					to: period.to
+				})
+			});
+			const [chartScope, setChartScope] = (0, react.useState)("all");
+			const chartWeeks = (0, react.useMemo)(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => ({
 				label: bucket.week.slice(5),
-				value: bucket.count,
+				done: bucket.done,
+				created: bucket.created,
 				title: t("chartBucket", {
 					week: bucket.week,
-					n: bucket.count
+					done: bucket.done,
+					created: bucket.created
 				})
-			})), [board, t]);
+			})), [
+				board,
+				chartScope,
+				t
+			]);
+			const chartDoneTotal = chartWeeks.reduce((sum, week) => sum + week.done, 0);
+			const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0);
 			return (0, react.createElement)("div", { style: pageStyle }, (0, react.createElement)("div", { style: {
 				display: "flex",
 				justifyContent: "center"
@@ -1009,42 +1081,73 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					refresh();
 				}
-			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", { style: statsAreaStyle }, (0, react.createElement)("div", { style: cardsGridStyle }, card("statMyActive", String(stats.myActive), t("statMyActiveHint", { n: stats.myBlocked }), {
+			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", { style: cardsGridStyle }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myBlocked }), {
 				scope: "mine",
 				status: "all",
 				workspace: ""
-			}), card("statOpen", String(stats.open), t("statOpenHint", { n: days(stats.oldestOpenDays) }), {
+			}), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) }), {
 				scope: "all",
 				status: "open",
 				workspace: ""
-			}), card("statDoing", String(stats.doing), t("statDoingHint", { n: stats.doing - stats.myActive + stats.myBlocked }), {
+			}), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive + stats.myBlocked }), {
 				scope: "all",
 				status: "active",
 				workspace: ""
-			}), card("statBlocked", String(stats.blocked), t("statBlockedHint", { n: days(stats.longestBlockedDays) }), {
-				scope: "all",
-				status: "blocked",
-				workspace: ""
-			}), card("statWeekDone", String(board?.closed.weekDone ?? 0), t("statWeekDoneHint"), {
-				scope: "all",
-				status: "all",
-				workspace: ""
-			}), card("statStale", String(stats.stale), t("statStaleHint", { n: stats.staleDays }), {
-				scope: "all",
-				status: "stale",
-				workspace: ""
-			})), (0, react.createElement)("div", {
+			}), (0, react.createElement)(StatCard, {
+				label: t("statBlockedStale"),
+				value: stats.blocked,
+				hint: stats.stale === 0 ? void 0 : (0, react.createElement)("span", null, (0, react.createElement)("span", { style: {
+					color: "var(--dtl-danger)",
+					fontWeight: 600
+				} }, t("statStaleWord")), ` ${t("statStaleHint", { n: stats.stale })}`),
+				active: isActive(state.query, {
+					scope: "all",
+					status: "blocked",
+					workspace: ""
+				}),
+				title: t("statStaleHint", { n: stats.staleDays }),
+				onClick: () => {
+					setQuery({
+						scope: "all",
+						status: "blocked",
+						workspace: ""
+					});
+				}
+			})), (0, react.createElement)("div", { style: regionCaptionStyle }, t("tabStats")), (0, react.createElement)("div", { style: statsRowStyle }, (0, react.createElement)("div", { style: statsCardsStyle }, periodCard("statWeekDone", board?.trend.thisWeek), periodCard("statLastWeekDone", board?.trend.lastWeek), periodCard("statMonthDone", board?.trend.thisMonth), periodCard("statLastMonthDone", board?.trend.lastMonth)), (0, react.createElement)("div", {
 				className: "dtl-card",
 				style: chartCardStyle
 			}, (0, react.createElement)("div", { style: {
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "space-between",
+				gap: "var(--dtl-space-2)"
+			} }, (0, react.createElement)("span", { style: {
 				fontSize: "var(--dtl-font-md)",
 				fontWeight: 600
-			} }, t("chartTitle")), chartBuckets.every((bucket) => bucket.value === 0) ? (0, react.createElement)("div", { style: {
+			} }, t("chartTitle")), (0, react.createElement)(Segmented, {
+				id: "dtl-chart-scope",
+				value: chartScope,
+				label: t("scopeLabel"),
+				size: "sm",
+				variant: "inset",
+				items: [{
+					value: "all",
+					label: t("chartScopeAll")
+				}, {
+					value: "mine",
+					label: t("chartScopeMine")
+				}],
+				onChange: setChartScope
+			})), chartEmpty ? (0, react.createElement)("div", { style: {
 				...hintStyle,
 				padding: "var(--dtl-space-4) 0"
-			} }, t("chartEmpty")) : (0, react.createElement)(BarChart, {
-				buckets: chartBuckets,
-				ariaLabel: t("chartTitle")
+			} }, t("chartEmpty")) : (0, react.createElement)(GroupedBarChart, {
+				weeks: chartWeeks,
+				ariaLabel: t("chartTitle"),
+				avgLabel: t("chartAvg", { n: Math.round(chartDoneTotal / Math.max(1, chartWeeks.length) * 10) / 10 })
+			}), (0, react.createElement)(ChartLegend, {
+				doneLabel: t("chartLegendDone"),
+				createdLabel: t("chartLegendCreated")
 			}), (0, react.createElement)("div", { style: {
 				fontSize: "var(--dtl-font-xs)",
 				color: "var(--dtl-fg-3)"
@@ -1209,18 +1312,26 @@ body[data-ds-dark-theme]{
 			statOpenHint: "最老一条躺了 {n}",
 			statDoing: "进行中",
 			statDoingHint: "别人在做 {n}",
-			statBlocked: "阻塞中",
-			statBlockedHint: "卡住最久 {n}",
+			statBlockedStale: "阻塞 · 停滞",
+			statStaleWord: "停滞",
+			statStaleHint: "{n} 条",
 			statWeekDone: "本周完成",
-			statWeekDoneHint: "按结案时间",
-			statStale: "停滞任务",
-			statStaleHint: "超过 {n} 天没动",
+			statLastWeekDone: "上周完成",
+			statMonthDone: "本月完成",
+			statLastMonthDone: "上月完成",
+			statCreatedHint: "新增 {n} 条",
 			daysNone: "—",
 			daysValue: "{n} 天",
-			chartTitle: "近 8 周完成",
-			chartCaption: "按结案时间、周一起桶；悬停看该周条数",
-			chartBucket: "{week} 那一周：完成 {n} 条",
-			chartEmpty: "近 8 周没有已结案记录",
+			chartTitle: "近 8 周",
+			chartCaption: "完成（按结案时间）/ 新增（按创建时间），周一起桶；我的 = owner 是我",
+			chartBucket: "{week} 那一周：完成 {done} 条，新增 {created} 条",
+			chartEmpty: "近 8 周没有记录",
+			chartScopeAll: "所有",
+			chartScopeMine: "我的",
+			chartLegendDone: "完成",
+			chartLegendCreated: "新增",
+			chartAvg: "周均 {n}",
+			periodRange: "{from} ~ {to}",
 			scopeLabel: "范围",
 			scopeMine: "我的",
 			scopeAll: "全部工作区",
@@ -1277,18 +1388,26 @@ body[data-ds-dark-theme]{
 			statOpenHint: "oldest waiting {n}",
 			statDoing: "In progress",
 			statDoingHint: "{n} by others",
-			statBlocked: "Blocked",
-			statBlockedHint: "stuck for {n}",
+			statBlockedStale: "Blocked · Stale",
+			statStaleWord: "Stale",
+			statStaleHint: "{n}",
 			statWeekDone: "Done this week",
-			statWeekDoneHint: "by close time",
-			statStale: "Stale tasks",
-			statStaleHint: "no movement for {n}+ days",
+			statLastWeekDone: "Done last week",
+			statMonthDone: "Done this month",
+			statLastMonthDone: "Done last month",
+			statCreatedHint: "{n} created",
 			daysNone: "—",
 			daysValue: "{n}d",
 			chartTitle: "Last 8 weeks",
-			chartCaption: "by close time, weeks start Monday; hover a bar for its count",
-			chartBucket: "week of {week}: {n} done",
-			chartEmpty: "Nothing closed in the last 8 weeks",
+			chartCaption: "done (by close time) / created (by create time), weeks start Monday; mine = owner is me",
+			chartBucket: "week of {week}: {done} done, {created} created",
+			chartEmpty: "Nothing in the last 8 weeks",
+			chartScopeAll: "All",
+			chartScopeMine: "Mine",
+			chartLegendDone: "Done",
+			chartLegendCreated: "Created",
+			chartAvg: "avg {n}/wk",
+			periodRange: "{from} ~ {to}",
 			scopeLabel: "Scope",
 			scopeMine: "Mine",
 			scopeAll: "All workspaces",

@@ -15,11 +15,13 @@ export type LocaleKey =
   | 'statsPlaceholder'
   // 统计卡
   | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint'
-  | 'statDoing' | 'statDoingHint' | 'statBlocked' | 'statBlockedHint'
-  | 'statWeekDone' | 'statWeekDoneHint' | 'statStale' | 'statStaleHint'
+  | 'statDoing' | 'statDoingHint' | 'statBlockedStale' | 'statStaleWord' | 'statStaleHint'
+  | 'statWeekDone' | 'statLastWeekDone' | 'statMonthDone' | 'statLastMonthDone' | 'statCreatedHint'
   | 'daysNone' | 'daysValue'
   // 趋势图
   | 'chartTitle' | 'chartCaption' | 'chartBucket' | 'chartEmpty'
+  | 'chartScopeAll' | 'chartScopeMine' | 'chartLegendDone' | 'chartLegendCreated' | 'chartAvg'
+  | 'periodRange'
   // 筛选行
   | 'scopeLabel' | 'scopeMine' | 'scopeAll'
   | 'statusLabel' | 'statusAll' | 'statusActive' | 'statusOpen' | 'statusBlocked' | 'statusStale'
@@ -55,19 +57,27 @@ export const zh: Record<LocaleKey, string> = {
   statOpenHint: '最老一条躺了 {n}',
   statDoing: '进行中',
   statDoingHint: '别人在做 {n}',
-  statBlocked: '阻塞中',
-  statBlockedHint: '卡住最久 {n}',
+  statBlockedStale: '阻塞 · 停滞',
+  statStaleWord: '停滞',
+  statStaleHint: '{n} 条',
   statWeekDone: '本周完成',
-  statWeekDoneHint: '按结案时间',
-  statStale: '停滞任务',
-  statStaleHint: '超过 {n} 天没动',
+  statLastWeekDone: '上周完成',
+  statMonthDone: '本月完成',
+  statLastMonthDone: '上月完成',
+  statCreatedHint: '新增 {n} 条',
   daysNone: '—',
   daysValue: '{n} 天',
 
-  chartTitle: '近 8 周完成',
-  chartCaption: '按结案时间、周一起桶；悬停看该周条数',
-  chartBucket: '{week} 那一周：完成 {n} 条',
-  chartEmpty: '近 8 周没有已结案记录',
+  chartTitle: '近 8 周',
+  chartCaption: '完成（按结案时间）/ 新增（按创建时间），周一起桶；我的 = owner 是我',
+  chartBucket: '{week} 那一周：完成 {done} 条，新增 {created} 条',
+  chartEmpty: '近 8 周没有记录',
+  chartScopeAll: '所有',
+  chartScopeMine: '我的',
+  chartLegendDone: '完成',
+  chartLegendCreated: '新增',
+  chartAvg: '周均 {n}',
+  periodRange: '{from} ~ {to}',
 
   scopeLabel: '范围',
   scopeMine: '我的',
@@ -131,19 +141,27 @@ export const en: Record<LocaleKey, string> = {
   statOpenHint: 'oldest waiting {n}',
   statDoing: 'In progress',
   statDoingHint: '{n} by others',
-  statBlocked: 'Blocked',
-  statBlockedHint: 'stuck for {n}',
+  statBlockedStale: 'Blocked · Stale',
+  statStaleWord: 'Stale',
+  statStaleHint: '{n}',
   statWeekDone: 'Done this week',
-  statWeekDoneHint: 'by close time',
-  statStale: 'Stale tasks',
-  statStaleHint: 'no movement for {n}+ days',
+  statLastWeekDone: 'Done last week',
+  statMonthDone: 'Done this month',
+  statLastMonthDone: 'Done last month',
+  statCreatedHint: '{n} created',
   daysNone: '—',
   daysValue: '{n}d',
 
   chartTitle: 'Last 8 weeks',
-  chartCaption: 'by close time, weeks start Monday; hover a bar for its count',
-  chartBucket: 'week of {week}: {n} done',
-  chartEmpty: 'Nothing closed in the last 8 weeks',
+  chartCaption: 'done (by close time) / created (by create time), weeks start Monday; mine = owner is me',
+  chartBucket: 'week of {week}: {done} done, {created} created',
+  chartEmpty: 'Nothing in the last 8 weeks',
+  chartScopeAll: 'All',
+  chartScopeMine: 'Mine',
+  chartLegendDone: 'Done',
+  chartLegendCreated: 'Created',
+  chartAvg: 'avg {n}/wk',
+  periodRange: '{from} ~ {to}',
 
   scopeLabel: 'Scope',
   scopeMine: 'Mine',

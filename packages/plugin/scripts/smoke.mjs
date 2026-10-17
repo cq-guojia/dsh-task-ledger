@@ -9,7 +9,7 @@ const repoRoot = path.resolve(here, '../../..')
 
 const { resolveWorkspaces } = await import('../dist/host/workspace.js')
 const { readTasks, getTask, readWorklog } = await import('../dist/host/ledger-read.js')
-const { getBoardSnapshot, getClosedSummary, queryClosed, getFilterOptions } = await import('../dist/host/board.js')
+const { getHomeAggregate, getBoardSnapshot, queryClosed, getFilterOptions } = await import('../dist/host/board.js')
 const { runLedgerScript } = await import('../dist/host/script.js')
 
 let passed = 0
@@ -65,6 +65,7 @@ await check('getBoardSnapshot：统计与任务行（与历史量无关的热路
   assert.ok(Number.isInteger(snapshot.stats.myActive) && snapshot.stats.myActive >= 0)
   assert.ok(snapshot.stats.open >= 4)
   assert.equal(snapshot.stats.staleDays, 14, '停滞阈值应随响应下发（14 天）')
+  assert.equal(typeof snapshot.stats.oldestOpenDays, 'number', '最老待认领天数应是数字')
   for (const task of snapshot.tasks) {
     assert.equal(typeof task.stale, 'boolean', '每行都应带 host 判好的 stale 标记')
     if (task.status === 'open') assert.equal(task.ageDays, null, '待认领不算「认领后未动」')
@@ -72,20 +73,40 @@ await check('getBoardSnapshot：统计与任务行（与历史量无关的热路
   assert.ok(elapsed < 2000, `热路径应 <2s，实际 ${elapsed}ms`)
 })
 
-await check('getClosedSummary：近 8 周按**结案时间**落桶（口径修正：旧实现按创建时间数）', async () => {
-  const real = await getClosedSummary([{ id: 'ws-self', title: 'self', path: repoRoot }])
-  assert.equal(real.weekly.length, 8, '固定 8 桶')
-  assert.deepEqual(real.weekly.map((b) => b.week), [...real.weekly.map((b) => b.week)].sort(), '桶按周升序')
-  assert.equal(real.weekDone, real.weekly[7].count, 'weekDone = 最后一桶（本周）')
-  const sum = real.weekly.reduce((total, b) => total + b.count, 0)
-  assert.ok(sum >= 8, `近 8 周合计应 ≥8，实际 ${sum}`)
-  // 最后一桶必须是本周一（host 同口径：周一为一周之始）
+await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 / 我的）+ 四个自然周期', async () => {
+  const home = await getHomeAggregate([{ id: 'ws-self', title: 'self', path: repoRoot }])
+  for (const scope of ['all', 'mine']) {
+    const buckets = home.closed.weekly[scope]
+    assert.equal(buckets.length, 8, `${scope} 应 8 桶`)
+    assert.deepEqual(buckets.map((b) => b.week), [...buckets.map((b) => b.week)].sort(), '桶按周升序')
+    for (const bucket of buckets) {
+      assert.ok(Number.isInteger(bucket.done) && bucket.done >= 0)
+      assert.ok(Number.isInteger(bucket.created) && bucket.created >= 0)
+    }
+  }
+  // 「我的」不可能超过「所有」
+  for (let i = 0; i < 8; i += 1) {
+    assert.ok(home.closed.weekly.mine[i].done <= home.closed.weekly.all[i].done, 'mine 不应超过 all')
+    assert.ok(home.closed.weekly.mine[i].created <= home.closed.weekly.all[i].created, 'mine 不应超过 all')
+  }
+  // 最后一桶 = 本周一（host 同口径）
   const now = new Date()
   const monday = new Date(now); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
   const pad = (n) => String(n).padStart(2, '0')
-  const expect = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`
-  assert.equal(real.weekly[7].week, expect, `最后一桶应是本周一 ${expect}`)
-  console.log(`    （近 8 周：${real.weekly.map((b) => b.count).join('/')}；本周 ${real.weekDone}）`)
+  assert.equal(home.closed.weekly.all[7].week, `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`)
+  // 四个自然周期：done / created / from / to 齐备，且区间合法
+  const trend = home.trend
+  for (const [name, period] of Object.entries(trend)) {
+    assert.ok(Number.isInteger(period.done) && period.done >= 0, `${name}.done 应是非负整数`)
+    assert.ok(Number.isInteger(period.created) && period.created >= 0, `${name}.created 应是非负整数`)
+    assert.ok(period.from <= period.to, `${name} 区间应 from <= to（${period.from} ~ ${period.to}）`)
+  }
+  assert.equal(trend.thisWeek.to, trend.thisMonth.to, '本周 / 本月都截止到今天')
+  assert.ok(trend.lastWeek.to < trend.thisWeek.from, '上周应结束在本周开始之前')
+  assert.ok(trend.lastMonth.to < trend.thisMonth.from, '上月应结束在本月开始之前')
+  // 新增必须合并两个来源：本仓有在办（progress.json）+ 已结案（history），两者都该被数到
+  assert.ok(trend.thisMonth.created >= trend.thisWeek.created, '本月新增 ≥ 本周新增')
+  console.log(`    （近 8 周完成 all=${home.closed.weekly.all.map((b) => b.done).join('/')}；本周/上周/本月/上月完成=${trend.thisWeek.done}/${trend.lastWeek.done}/${trend.thisMonth.done}/${trend.lastMonth.done}）`)
 })
 
 await check('queryClosed：近 13 个月窗口 + 创建时间倒序 + limit', async () => {
@@ -153,13 +174,15 @@ await check('空台账工作区不炸 /board（真机 500 回归：history 无�
       },
     }))
     const ws = [{ id: 'ws-empty', title: '空台账', path: root }]
-    // 关键路径：这两个正是 /board 路由 Promise.all 里的两次调用，任一抛就是整条 500
-    const snapshot = await getBoardSnapshot(ws)
-    assert.equal(snapshot.tasks.length, 1, '有 progress.json 就应读到在办')
-    const closed = await getClosedSummary(ws)
-    assert.equal(closed.weekDone, 0, '无历史 ⇒ 本周完成 0，不是抛错')
-    assert.equal(closed.weekly.length, 8)
-    assert.ok(closed.weekly.every((bucket) => bucket.count === 0), '无历史 ⇒ 8 个桶全 0')
+    // 关键路径：这正是 /board 路由的那一次聚合调用，抛就是整条 500
+    const home = await getHomeAggregate(ws)
+    assert.equal(home.snapshot.tasks.length, 1, '有 progress.json 就应读到在办')
+    assert.equal(home.trend.thisWeek.done, 0, '无历史 ⇒ 本周完成 0，不是抛错')
+    assert.equal(home.closed.weekly.all.length, 8)
+    // 无历史 ⇒ 完成全 0；新增只有 synthetic 任务自己那一条（它的 created 可能不在本周）
+    assert.ok(home.closed.weekly.all.every((bucket) => bucket.done === 0), '无历史 ⇒ 8 个桶完成全 0')
+    const createdTotal = home.closed.weekly.all.reduce((sum, bucket) => sum + bucket.created, 0)
+    assert.ok(createdTotal <= 1, `无历史 ⇒ 新增只该有 synthetic 那一条，实际 ${createdTotal}`)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

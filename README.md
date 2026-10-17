@@ -12,4 +12,4 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 ## Status
 
 - `task-ledger@1.0.2` published (2026-10-17): `history` JSON mode now emits JSON even when a workspace has no history files (fixes a 500 that blanked the whole board).
-- `dsh-task-ledger@0.0.8` published (2026-10-17): board home redesign — 6 decision-grade stat cards + 8-week trend chart, two-region task list (my todos / grouped by workspace, closed tasks moved out of the home page), filter row unified (scope × status × workspace select × keyword search), and the whole control skin aligned with `dsh-task-dispatch-table`.
+- `dsh-task-ledger@0.0.9` published (2026-10-17): stats area reworked per user review — operation console (4 cards, my todos / unclaimed / active / blocked·stale merged with red stale marker) + stats console (this/last week, this/last month done with created as sub-line, `—` instead of 0) + grouped-bar trend chart (done + created per week, all/mine toggle, thin bars, baseline, average line).

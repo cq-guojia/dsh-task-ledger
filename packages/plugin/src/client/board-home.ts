@@ -11,8 +11,11 @@ import { IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives
 import type { LocaleKey, Translate } from './locales'
 import { boardSnapshot, boardSubscribe, refresh, setQuery, type Query, type Scope, type StatusFilter } from './store'
 import { selectView, type WorkspaceGroup } from './rows'
+import type { PeriodCounts } from './types'
 import { TaskRowView } from './task-row'
-import { BarChart, Button, EmptyState, ensureUiBase, SearchInput, Segmented, Select, StatCard } from './ui'
+import {
+  Button, ChartLegend, EmptyState, ensureUiBase, GroupedBarChart, SearchInput, Segmented, Select, StatCard,
+} from './ui'
 
 type Tab = 'tasks' | 'stats'
 
@@ -26,13 +29,20 @@ const headerStyle: Record<string, string | number> = {
   marginBottom: 'var(--dtl-space-4)',
 }
 const titleStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-xl)', fontWeight: 600 }
-/** 统计区：左 2/3 卡网格 + 右 1/3 趋势图（窄屏堆叠）。 */
-const statsAreaStyle: Record<string, string | number> = {
-  display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr)', gap: 'var(--dtl-space-3)',
-  marginBottom: 'var(--dtl-space-4)',
-}
+/** 操作台：全宽 4 列。列数**写死 4**，不用 auto-fit——那会排出 3+1 的非对称
+ *  （用户 2026-10-17：必须上下对称；窄屏由 statsRowStyle 的堆叠兜底，仍是 2+2）。 */
 const cardsGridStyle: Record<string, string | number> = {
-  display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(148px,1fr))', gap: 'var(--dtl-space-3)',
+  display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 'var(--dtl-space-3)',
+}
+/** 第二行：统计台（2×2）+ 趋势图（右 1/3）。 */
+const statsRowStyle: Record<string, string | number> = {
+  display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr)', gap: 'var(--dtl-space-3)',
+}
+const statsCardsStyle: Record<string, string | number> = {
+  display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 'var(--dtl-space-3)',
+}
+const regionCaptionStyle: Record<string, string | number> = {
+  fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)', margin: 'var(--dtl-space-4) 0 var(--dtl-space-2)',
 }
 const chartCardStyle: Record<string, string | number> = {
   display: 'flex', flexDirection: 'column', gap: 'var(--dtl-space-2)', padding: 'var(--dtl-space-3) var(--dtl-space-4)',
@@ -73,7 +83,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
     value === null || value === undefined ? t('daysNone') : t('daysValue', { n: value })
 
   /** 统计卡 → 筛选联动（卡即入口：点一下跳到对应视角）。 */
-  const card = (label: LocaleKey, value: string, hint: string, patch: Partial<Query>): ReactNode =>
+  const card = (label: LocaleKey, value: number, hint: string, patch: Partial<Query>): ReactNode =>
     h(StatCard, {
       label: t(label),
       value,
@@ -82,11 +92,25 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
       onClick: () => { setQuery(patch) },
     })
 
-  const chartBuckets = useMemo(() => (board?.closed.weekly ?? []).map((bucket) => ({
+  /** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。 */
+  const periodCard = (label: LocaleKey, period: PeriodCounts | undefined): ReactNode =>
+    h(StatCard, {
+      label: t(label),
+      value: period?.done ?? 0,
+      hint: t('statCreatedHint', { n: period?.created ?? 0 }),
+      interactive: false,
+      title: period === undefined ? undefined : t('periodRange', { from: period.from, to: period.to }),
+    })
+
+  const [chartScope, setChartScope] = useState<'all' | 'mine'>('all')
+  const chartWeeks = useMemo(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => ({
     label: bucket.week.slice(5),
-    value: bucket.count,
-    title: t('chartBucket', { week: bucket.week, n: bucket.count }),
-  })), [board, t])
+    done: bucket.done,
+    created: bucket.created,
+    title: t('chartBucket', { week: bucket.week, done: bucket.done, created: bucket.created }),
+  })), [board, chartScope, t])
+  const chartDoneTotal = chartWeeks.reduce((sum, week) => sum + week.done, 0)
+  const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0)
 
   return h('div', { style: pageStyle },
     h('div', { style: { display: 'flex', justifyContent: 'center' } },
@@ -122,26 +146,65 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
           // 统计报表尚未开建（另立任务）：占位说明，不画假图表。
           ? h('div', { style: hintStyle }, t('statsPlaceholder'))
           : h('div', null,
-            // ── 统计卡 + 趋势图 ──
+            // ── 第一行 · 操作台（4 张，可点联动）──
             stats === undefined
               ? null
-              : h('div', { style: statsAreaStyle },
-                h('div', { style: cardsGridStyle },
-                  card('statMyActive', String(stats.myActive), t('statMyActiveHint', { n: stats.myBlocked }), { scope: 'mine', status: 'all', workspace: '' }),
-                  card('statOpen', String(stats.open), t('statOpenHint', { n: days(stats.oldestOpenDays) }), { scope: 'all', status: 'open', workspace: '' }),
-                  card('statDoing', String(stats.doing), t('statDoingHint', { n: stats.doing - stats.myActive + stats.myBlocked }), { scope: 'all', status: 'active', workspace: '' }),
-                  card('statBlocked', String(stats.blocked), t('statBlockedHint', { n: days(stats.longestBlockedDays) }), { scope: 'all', status: 'blocked', workspace: '' }),
-                  card('statWeekDone', String(board?.closed.weekDone ?? 0), t('statWeekDoneHint'), { scope: 'all', status: 'all', workspace: '' }),
-                  card('statStale', String(stats.stale), t('statStaleHint', { n: stats.staleDays }), { scope: 'all', status: 'stale', workspace: '' }),
-                ),
-                h('div', { className: 'dtl-card', style: chartCardStyle },
-                  h('div', { style: { fontSize: 'var(--dtl-font-md)', fontWeight: 600 } }, t('chartTitle')),
-                  chartBuckets.every((bucket) => bucket.value === 0)
-                    ? h('div', { style: { ...hintStyle, padding: 'var(--dtl-space-4) 0' } }, t('chartEmpty'))
-                    : h(BarChart, { buckets: chartBuckets, ariaLabel: t('chartTitle') }),
-                  h('div', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)' } }, t('chartCaption')),
-                ),
+              : h('div', { style: cardsGridStyle },
+                card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myBlocked }), { scope: 'mine', status: 'all', workspace: '' }),
+                card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) }), { scope: 'all', status: 'open', workspace: '' }),
+                card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive + stats.myBlocked }), { scope: 'all', status: 'active', workspace: '' }),
+                // 阻塞 · 停滞合并卡：主数字 = 阻塞数；有停滞时小字把「停滞」标红
+                h(StatCard, {
+                  label: t('statBlockedStale'),
+                  value: stats.blocked,
+                  hint: stats.stale === 0
+                    ? undefined
+                    : h('span', null,
+                      h('span', { style: { color: 'var(--dtl-danger)', fontWeight: 600 } }, t('statStaleWord')),
+                      ` ${t('statStaleHint', { n: stats.stale })}`,
+                    ),
+                  active: isActive(state.query, { scope: 'all', status: 'blocked', workspace: '' }),
+                  title: t('statStaleHint', { n: stats.staleDays }),
+                  onClick: () => { setQuery({ scope: 'all', status: 'blocked', workspace: '' }) },
+                }),
               ),
+
+            // ── 第二行 · 统计台（4 张，不可点）+ 趋势图（可切范围）──
+            h('div', { style: regionCaptionStyle }, t('tabStats')),
+            h('div', { style: statsRowStyle },
+              h('div', { style: statsCardsStyle },
+                periodCard('statWeekDone', board?.trend.thisWeek),
+                periodCard('statLastWeekDone', board?.trend.lastWeek),
+                periodCard('statMonthDone', board?.trend.thisMonth),
+                periodCard('statLastMonthDone', board?.trend.lastMonth),
+              ),
+              h('div', { className: 'dtl-card', style: chartCardStyle },
+                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--dtl-space-2)' } },
+                  h('span', { style: { fontSize: 'var(--dtl-font-md)', fontWeight: 600 } }, t('chartTitle')),
+                  h(Segmented<'all' | 'mine'>, {
+                    id: 'dtl-chart-scope',
+                    value: chartScope,
+                    label: t('scopeLabel'),
+                    size: 'sm',
+                    variant: 'inset',
+                    items: [
+                      { value: 'all', label: t('chartScopeAll') },
+                      { value: 'mine', label: t('chartScopeMine') },
+                    ],
+                    onChange: setChartScope,
+                  }),
+                ),
+                chartEmpty
+                  ? h('div', { style: { ...hintStyle, padding: 'var(--dtl-space-4) 0' } }, t('chartEmpty'))
+                  : h(GroupedBarChart, {
+                    weeks: chartWeeks,
+                    ariaLabel: t('chartTitle'),
+                    avgLabel: t('chartAvg', { n: Math.round((chartDoneTotal / Math.max(1, chartWeeks.length)) * 10) / 10 }),
+                  }),
+                h(ChartLegend, { doneLabel: t('chartLegendDone'), createdLabel: t('chartLegendCreated') }),
+                h('div', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)' } }, t('chartCaption')),
+              ),
+            ),
 
             // ── 筛选行（控件全同高 28px）──
             h('div', { style: filterRowStyle },
