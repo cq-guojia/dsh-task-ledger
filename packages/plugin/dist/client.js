@@ -228,13 +228,14 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region src/client/task-row.ts
 		/**
-		* 任务列表行（宿主**无表格件** ⇒ 自绘）：两行式，视觉对齐参考图（会话列表 / 定时任务器）：
-		*  - 左侧 3px 状态色条：doing=蓝 / blocked=黄 / stale=红 / open=灰（替代一切状态图标，无转圈）；
-		*  - 第一行：标题加粗（上来就是标题）+ [YYYY-MM-DD 创建] 小徽 + 阻塞/停滞 pill + 标签（10px 小 chip）；
-		*    右侧「已做 N 天」绿底软 pill，悬停整排换成动作按钮（继续 / 结束 / 转移——**只做样子**，
-		*    点击行为归「任务按钮与会话交接」任务）；
-		*  - 第二行小字灰：工作区 · #任务号 · 创建时刻。
-		* 详情侧栏归「任务按钮与会话交接」任务，本行不做展开、不做点击。
+		* 任务列表行（宿主**无表格件** ⇒ 自绘）：**整行一张卡**，样式完全照抄 dispatch-table 任务配置卡
+		* （`dsh-task-dispatch-table/src/client/task-list.tsx` TaskCard：surface-1 底 + 1px 边框 +
+		* 左缘 6×36 状态条 + 标题行尾灰徽 + 第二行小字 + 右侧 pill）：
+		*  - 状态条：doing=蓝 / blocked=黄 / stale=红 / open=灰（无转圈、无图标）；
+		*  - 第一行：标题加粗（上来就是标题）+ `[YYYY-MM-DD 创建]` 灰徽 + 阻塞/停滞 pill；
+		*  - 第二行小字：工作区 · #标签（用户 2026-10-17：标签挪下来放工作区后面；任务号 / 创建时刻 / 分类不显示）；
+		*  - 右侧：「已做 N 天」绿底 pill，悬停整排换动作按钮（继续 / 结束 / 转移——只做样子，
+		*    点击行为归「任务按钮与会话交接」任务）；详情侧栏同归该任务。
 		*/
 		/** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
 		function titleOf(row) {
@@ -242,7 +243,7 @@ window.__ModuleLoader__.load({
 			const title = row.record.workpackage ?? row.record.summary;
 			return title !== void 0 && title !== "" ? title : row.record.src ?? "—";
 		}
-		/** 左侧色条语义：异常优先（stale 盖过 blocked），doing 是默认态。 */
+		/** 状态条语义（异常优先：stale 盖过 blocked）。 */
 		function toneOf(row) {
 			if (row.kind !== "task") return "closed";
 			if (row.task.stale === true) return "stale";
@@ -250,7 +251,7 @@ window.__ModuleLoader__.load({
 			if (row.task.status === "open") return "open";
 			return "doing";
 		}
-		/** 工作区徽标（第一区专用列）：色块首字母 + 标题，定宽、超出省略（不猜官方图标名）。 */
+		/** 工作区徽标：色块首字母 + 名（第二行小字用，随内容定宽）。 */
 		function WorkspaceTag(props) {
 			if (props.workspace === void 0) return null;
 			const initial = props.workspace.title.trim().slice(0, 1);
@@ -260,9 +261,8 @@ window.__ModuleLoader__.load({
 					display: "inline-flex",
 					alignItems: "center",
 					gap: "var(--dtl-space-1)",
-					flex: "0 0 140px",
 					minWidth: 0,
-					color: "var(--dtl-fg-2)"
+					maxWidth: "200px"
 				},
 				title: props.workspace.title
 			}, (0, react.createElement)("span", { style: {
@@ -281,28 +281,23 @@ window.__ModuleLoader__.load({
 		}
 		function TaskRowView(props) {
 			const { t, row } = props;
-			const category = row.kind === "task" ? row.task.category : row.record.category;
 			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
-			const id = row.kind === "task" ? row.task.id : row.record.src ?? "";
 			const tone = toneOf(row);
 			const created = row.kind === "task" ? row.task.created ?? null : row.record.created ?? null;
 			const createdDay = created !== null && created !== void 0 && Date.parse(created) >= 0 ? formatDateTime(created).slice(0, 10) : null;
 			const when = row.kind === "task" ? row.task.ageDays === null || row.task.ageDays === void 0 ? t("timeUnknown") : t("rowAge", { n: row.task.ageDays }) : `${t("fieldFinished")} ${formatDateTime(row.record.time ?? row.record.created ?? "", { fallback: t("timeUnknown") })}`;
 			const isTask = row.kind === "task";
-			return (0, react.createElement)("div", {
-				className: "dtl-taskrow",
-				"data-tone": tone
-			}, (0, react.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react.createElement)("span", {
+			return (0, react.createElement)("div", { className: "dtl-taskrow" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react.createElement)("div", { style: {
+				flex: "1 1 auto",
+				minWidth: 0
+			} }, (0, react.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react.createElement)("span", {
 				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
-			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-taskrow__stamp" }, t("fieldCreatedStamp", { day: createdDay })), tone === "blocked" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--blocked" }, t("statusBlocked")) : null, tone === "stale" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--stale" }, t("statusStale")) : null, tags.map((tag) => (0, react.createElement)("span", {
+			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-taskrow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), tone === "blocked" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--blocked" }, t("statusBlocked")) : null, tone === "stale" ? (0, react.createElement)("span", { className: "dtl-pill dtl-pill--stale" }, t("statusStale")) : null), (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, props.showWorkspace === true ? (0, react.createElement)(WorkspaceTag, { workspace: row.kind === "task" ? row.task.workspace : row.record.workspace }) : null, tags.map((tag) => (0, react.createElement)("span", {
 				key: tag,
 				className: "dtl-minitag",
 				title: `#${tag}`
-			}, `#${tag}`)), (0, react.createElement)("span", { style: {
-				flex: "1 1 auto",
-				minWidth: 0
-			} }), (0, react.createElement)("span", { className: "dtl-taskrow__age" }, when), isTask ? (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, (0, react.createElement)("button", {
+			}, `#${tag}`)))), (0, react.createElement)("span", { className: "dtl-taskrow__age" }, when), isTask ? (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-minibtn",
 				title: t("actionResume")
@@ -314,7 +309,7 @@ window.__ModuleLoader__.load({
 				type: "button",
 				className: "dtl-minibtn",
 				title: t("actionTransfer")
-			}, t("actionTransfer"))) : null), (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, props.showWorkspace === true ? (0, react.createElement)(WorkspaceTag, { workspace: row.kind === "task" ? row.task.workspace : row.record.workspace }) : null, (0, react.createElement)("span", { className: "dtl-ellipsis" }, `#${id}`), created === null || created === void 0 || created === "" ? null : (0, react.createElement)("span", { style: { whiteSpace: "nowrap" } }, `${t("fieldCreated")} ${formatDateTime(created, { fallback: t("timeUnknown") })}`), category === null || category === void 0 || category === "" ? null : (0, react.createElement)("span", { className: "dtl-ellipsis" }, category)));
+			}, t("actionTransfer"))) : null));
 		}
 		//#endregion
 		//#region src/client/tokens.ts
@@ -602,27 +597,36 @@ body[data-ds-dark-theme]{
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 任务行（两行式，视觉对齐参考图）：左色条标状态 + hover 提亮；右侧 时间⇄按钮排 互换 */
-.dtl-taskrow{padding:var(--dtl-space-2) var(--dtl-space-3);border-radius:var(--dtl-radius-md);
-  border-left:3px solid var(--dtl-border);transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-taskrow[data-tone="doing"]{border-left-color:var(--dtl-business);}
-.dtl-taskrow[data-tone="blocked"]{border-left-color:var(--dtl-warning);}
-.dtl-taskrow[data-tone="stale"]{border-left-color:var(--dtl-danger);}
-.dtl-taskrow[data-tone="open"]{border-left-color:var(--dtl-border-strong);}
-.dtl-taskrow[data-tone="closed"]{border-left-color:var(--dtl-border);}
-.dtl-taskrow:hover{background:var(--dtl-card-hover);}
-.dtl-taskrow__l1{display:flex;align-items:center;gap:var(--dtl-space-2);min-width:0;}
-.dtl-taskrow__title{font-size:var(--dtl-font-md);font-weight:600;min-width:0;flex:0 1 auto;}
-.dtl-taskrow__stamp{flex:none;font-size:10px;color:var(--dtl-fg-3);white-space:nowrap;
+/* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
+   hover 只亮主行；右侧 时间⇄按钮排 互换） */
+.dtl-taskrow{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);
+  border-radius:var(--dtl-radius-sm);margin-bottom:10px;}
+.dtl-taskrow__row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:inherit;
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
+
+/* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
+.dtl-rail{display:inline-block;width:6px;height:36px;flex:none;border-radius:var(--dtl-radius-xs);}
+.dtl-rail--doing{background:var(--dtl-business);}
+.dtl-rail--blocked{background:var(--dtl-warning);}
+.dtl-rail--stale{background:var(--dtl-danger);}
+.dtl-rail--open,.dtl-rail--closed{background:var(--dtl-fg-3);}
+
+/* 第一行：标题（上来就是标题）+ [YYYY-MM-DD 创建] 灰徽 + 异常 pill（baseline 对齐，dispatch 同款） */
+.dtl-taskrow__l1{display:flex;align-items:baseline;gap:6px;min-width:0;}
+.dtl-taskrow__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);min-width:0;flex:0 1 auto;}
+.dtl-taskrow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
+/* 第二行小字：工作区 · #标签 */
+.dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
+/* 右侧：绿底 pill（仿 dispatch「N 天前」）⇄ 悬停按钮排 */
 .dtl-taskrow__age{flex:none;padding:1px 8px;border-radius:999px;background:var(--dtl-business-soft);
   color:var(--dtl-business);font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;
   font-variant-numeric:tabular-nums;}
 .dtl-taskrow__actions{display:none;flex:none;gap:4px;}
-.dtl-taskrow:hover .dtl-taskrow__age{display:none;}
-.dtl-taskrow:hover .dtl-taskrow__actions{display:inline-flex;}
-.dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;
-  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);min-width:0;}
+.dtl-taskrow__row:hover .dtl-taskrow__age{display:none;}
+.dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
 
 /* 异常 pill：阻塞=黄 / 停滞=红（进行中无标记，只有色条） */
 .dtl-pill{flex:none;padding:1px 8px;border-radius:999px;font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;}

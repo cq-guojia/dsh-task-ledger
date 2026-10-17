@@ -27,27 +27,36 @@ const UI_BASE_CSS = `
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 任务行（两行式，视觉对齐参考图）：左色条标状态 + hover 提亮；右侧 时间⇄按钮排 互换 */
-.dtl-taskrow{padding:var(--dtl-space-2) var(--dtl-space-3);border-radius:var(--dtl-radius-md);
-  border-left:3px solid var(--dtl-border);transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-taskrow[data-tone="doing"]{border-left-color:var(--dtl-business);}
-.dtl-taskrow[data-tone="blocked"]{border-left-color:var(--dtl-warning);}
-.dtl-taskrow[data-tone="stale"]{border-left-color:var(--dtl-danger);}
-.dtl-taskrow[data-tone="open"]{border-left-color:var(--dtl-border-strong);}
-.dtl-taskrow[data-tone="closed"]{border-left-color:var(--dtl-border);}
-.dtl-taskrow:hover{background:var(--dtl-card-hover);}
-.dtl-taskrow__l1{display:flex;align-items:center;gap:var(--dtl-space-2);min-width:0;}
-.dtl-taskrow__title{font-size:var(--dtl-font-md);font-weight:600;min-width:0;flex:0 1 auto;}
-.dtl-taskrow__stamp{flex:none;font-size:10px;color:var(--dtl-fg-3);white-space:nowrap;
+/* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
+   hover 只亮主行；右侧 时间⇄按钮排 互换） */
+.dtl-taskrow{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);
+  border-radius:var(--dtl-radius-sm);margin-bottom:10px;}
+.dtl-taskrow__row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:inherit;
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
+
+/* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
+.dtl-rail{display:inline-block;width:6px;height:36px;flex:none;border-radius:var(--dtl-radius-xs);}
+.dtl-rail--doing{background:var(--dtl-business);}
+.dtl-rail--blocked{background:var(--dtl-warning);}
+.dtl-rail--stale{background:var(--dtl-danger);}
+.dtl-rail--open,.dtl-rail--closed{background:var(--dtl-fg-3);}
+
+/* 第一行：标题（上来就是标题）+ [YYYY-MM-DD 创建] 灰徽 + 异常 pill（baseline 对齐，dispatch 同款） */
+.dtl-taskrow__l1{display:flex;align-items:baseline;gap:6px;min-width:0;}
+.dtl-taskrow__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);min-width:0;flex:0 1 auto;}
+.dtl-taskrow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
+/* 第二行小字：工作区 · #标签 */
+.dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
+/* 右侧：绿底 pill（仿 dispatch「N 天前」）⇄ 悬停按钮排 */
 .dtl-taskrow__age{flex:none;padding:1px 8px;border-radius:999px;background:var(--dtl-business-soft);
   color:var(--dtl-business);font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;
   font-variant-numeric:tabular-nums;}
 .dtl-taskrow__actions{display:none;flex:none;gap:4px;}
-.dtl-taskrow:hover .dtl-taskrow__age{display:none;}
-.dtl-taskrow:hover .dtl-taskrow__actions{display:inline-flex;}
-.dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:2px;
-  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);min-width:0;}
+.dtl-taskrow__row:hover .dtl-taskrow__age{display:none;}
+.dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
 
 /* 异常 pill：阻塞=黄 / 停滞=红（进行中无标记，只有色条） */
 .dtl-pill{flex:none;padding:1px 8px;border-radius:999px;font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;}
