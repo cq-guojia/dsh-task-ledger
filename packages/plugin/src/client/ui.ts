@@ -213,13 +213,20 @@ const UI_BASE_CSS = `
 
 const STYLE_ID = 'dtl-ui-base'
 
-/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。 */
+/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。
+ *  已挂载时**就地比对刷新**：插件升级后宿主若复用旧面板 DOM，旧样式表会一直挂着，
+ *  导致新版本样式不生效（用户 2026-10-18：0.0.31 装上了圆圈还在）—— 内容变了就原位替换，不必重启。 */
 export function ensureUiBase(): void {
   if (typeof document === 'undefined') return
-  if (document.getElementById(STYLE_ID) !== null) return
+  const css = `${UI_TOKENS_CSS}\n${UI_CONTROLS_CSS}\n${UI_BASE_CSS}`
+  const existing = document.getElementById(STYLE_ID)
+  if (existing !== null) {
+    if (existing.textContent !== css) existing.textContent = css
+    return
+  }
   const style = document.createElement('style')
   style.id = STYLE_ID
-  style.textContent = `${UI_TOKENS_CSS}\n${UI_CONTROLS_CSS}\n${UI_BASE_CSS}`
+  style.textContent = css
   document.head.appendChild(style)
 }
 
@@ -260,7 +267,7 @@ export function Segmented<Value extends string>(props: {
     'aria-pressed': item.value === props.value,
     onClick: () => { props.onChange(item.value) },
   }, item.label, item.badge !== undefined && item.badge > 0
-    ? h('span', { className: 'dtl-seg__badge' }, String(item.badge))
+    ? h('span', { className: 'dtl-seg__num' }, String(item.badge))
     : null)))
 }
 

@@ -180,9 +180,10 @@ export const UI_CONTROLS_CSS = `
 .dtl-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dtl-shadow-raised);color:var(--dtl-fg);font-weight:600;}
 .dtl-seg__item:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 .dtl-seg__item:disabled{cursor:default;opacity:.4;}
-/* 段内角标（如「待认领 3」）：**纯小数字、无圆无底**（用户 2026-10-18：圆圈取了、字再小点）；0 不渲染 */
-.dtl-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;
-  margin-left:3px;color:var(--dtl-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}
+/* 段内计数（如「待认领 3」）：**纯文字，无底、无边、无圆角**（用户 2026-10-18：圆圈取了、字再小点）。
+   类名用 num 而不是旧 badge —— 万一宿主 DOM 里残留旧版 .dtl-seg__badge 圆圈规则，也匹配不中；0 不渲染 */
+.dtl-seg__num{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;
+  background:none;color:var(--dtl-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}
 
 /* ── 按钮 / 图标钮 ───────────────────────────────────────────────
    与 Segmented 同一条高度纪律；variant 只换颜色，结构 / 尺寸 / 交互只此一份。 */

@@ -534,9 +534,10 @@ body[data-ds-dark-theme]{
 .dtl-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dtl-shadow-raised);color:var(--dtl-fg);font-weight:600;}
 .dtl-seg__item:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 .dtl-seg__item:disabled{cursor:default;opacity:.4;}
-/* 段内角标（如「待认领 3」）：**纯小数字、无圆无底**（用户 2026-10-18：圆圈取了、字再小点）；0 不渲染 */
-.dtl-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;
-  margin-left:3px;color:var(--dtl-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}
+/* 段内计数（如「待认领 3」）：**纯文字，无底、无边、无圆角**（用户 2026-10-18：圆圈取了、字再小点）。
+   类名用 num 而不是旧 badge —— 万一宿主 DOM 里残留旧版 .dtl-seg__badge 圆圈规则，也匹配不中；0 不渲染 */
+.dtl-seg__num{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;
+  background:none;color:var(--dtl-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}
 
 /* ── 按钮 / 图标钮 ───────────────────────────────────────────────
    与 Segmented 同一条高度纪律；variant 只换颜色，结构 / 尺寸 / 交互只此一份。 */
@@ -826,13 +827,20 @@ body[data-ds-dark-theme]{
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
 `;
 		const STYLE_ID = "dtl-ui-base";
-		/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。 */
+		/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。
+		*  已挂载时**就地比对刷新**：插件升级后宿主若复用旧面板 DOM，旧样式表会一直挂着，
+		*  导致新版本样式不生效（用户 2026-10-18：0.0.31 装上了圆圈还在）—— 内容变了就原位替换，不必重启。 */
 		function ensureUiBase() {
 			if (typeof document === "undefined") return;
-			if (document.getElementById(STYLE_ID) !== null) return;
+			const css = `${UI_TOKENS_CSS}\n${UI_CONTROLS_CSS}\n${UI_BASE_CSS}`;
+			const existing = document.getElementById(STYLE_ID);
+			if (existing !== null) {
+				if (existing.textContent !== css) existing.textContent = css;
+				return;
+			}
 			const style = document.createElement("style");
 			style.id = STYLE_ID;
-			style.textContent = `${UI_TOKENS_CSS}\n${UI_CONTROLS_CSS}\n${UI_BASE_CSS}`;
+			style.textContent = css;
 			document.head.appendChild(style);
 		}
 		/** 分段控件（单选）：同一份结构 + size 轴；外观差异只由 variant 的两个颜色变量表达。 */
@@ -854,7 +862,7 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					props.onChange(item.value);
 				}
-			}, item.label, item.badge !== void 0 && item.badge > 0 ? (0, react.createElement)("span", { className: "dtl-seg__badge" }, String(item.badge)) : null)));
+			}, item.label, item.badge !== void 0 && item.badge > 0 ? (0, react.createElement)("span", { className: "dtl-seg__num" }, String(item.badge)) : null)));
 		}
 		function Button(props) {
 			ensureUiBase();
