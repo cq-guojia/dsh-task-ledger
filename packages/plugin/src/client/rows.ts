@@ -13,12 +13,14 @@ export type Row =
   | { kind: 'task'; key: string; task: BoardTask; mine: boolean }
   | { kind: 'closed'; key: string; record: HistoryRecord }
 
-/** 一个工作区分组。 */
+/** 一个工作区分组（计数口径：待认领 / 进行中 / 阻塞 / 总，供「其他待办」段头统计）。 */
 export interface WorkspaceGroup {
   readonly workspaceId: string
   readonly title: string
   readonly doingCount: number
+  readonly blockedCount: number
   readonly openCount: number
+  readonly total: number
   readonly rows: readonly Row[]
 }
 
@@ -81,8 +83,10 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
     .map(([workspaceId, entry]) => ({
       workspaceId,
       title: entry.title,
-      doingCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status !== 'open').length,
+      doingCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'doing').length,
+      blockedCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'blocked').length,
       openCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'open').length,
+      total: entry.rows.length,
       rows: entry.rows.sort(inGroupOrder),
     }))
     .sort((a, b) => a.title.localeCompare(b.title, 'zh-Hans-CN'))

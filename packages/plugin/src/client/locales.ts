@@ -28,12 +28,12 @@ export type LocaleKey =
   | 'workspaceLabel' | 'workspaceAll'
   | 'searchPlaceholder'
   // 列表分区
-  | 'regionMine' | 'regionWorkspaces' | 'groupHint' | 'showingCount'
+  | 'regionMine' | 'regionOthers' | 'groupHint' | 'showingCount'
   | 'expandAria' | 'collapseAria'
-  | 'ownerUnclaimed' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
+  | 'ownerUnclaimed' | 'fieldCreator' | 'fieldOwner' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
   | 'ageDaysText' | 'ageToday'
   | 'actionResume' | 'actionFinish' | 'actionRelease'
-  | 'tipResume' | 'tipFinish' | 'tipRelease'
+  | 'tipResume' | 'tipFinish' | 'tipRelease' | 'viewDetail'
   | 'fieldCreatedStamp' | 'mineEmpty' | 'mineEmptyHint' | 'mineCount'
   | 'worklogTitle' | 'worklogPath' | 'worklogMissing'
   | 'mdCopy' | 'mdCopied' | 'mdFootnotes'
@@ -97,16 +97,18 @@ export const zh: Record<LocaleKey, string> = {
   statusStale: '停滞',
   workspaceLabel: '工作区',
   workspaceAll: '全部工作区',
-  searchPlaceholder: '搜索任务',
+  searchPlaceholder: '搜索',
 
   regionMine: '我的待办',
-  regionWorkspaces: '按工作区',
-  groupHint: '进行中 {doing} ｜ 待认领 {open}',
+  regionOthers: '其他待办',
+  groupHint: '待办 {open} ｜ 进行 {doing} ｜ 阻塞 {blocked} ｜ 共 {total}',
   showingCount: '显示 {n} 条',
   expandAria: '展开过程文档',
   collapseAria: '收起',
 
   ownerUnclaimed: '待认领',
+  fieldCreator: '创建',
+  fieldOwner: '执行',
   fieldCreated: '创建',
   fieldStarted: '开始',
   fieldFinished: '结案',
@@ -119,6 +121,7 @@ export const zh: Record<LocaleKey, string> = {
   tipResume: '继续推进这个任务',
   tipFinish: '结案并写入历史',
   tipRelease: '释放认领，让别人接手',
+  viewDetail: '查看详情',
   fieldCreatedStamp: '{day} 创建',
   mineEmpty: '您现在没有正在进行的工作',
   mineEmptyHint: '在某个工作区 new 一个任务，或到下面认领一条待认领任务，这里就会出现。',
@@ -195,16 +198,18 @@ export const en: Record<LocaleKey, string> = {
   statusStale: 'Stale',
   workspaceLabel: 'Workspace',
   workspaceAll: 'All workspaces',
-  searchPlaceholder: 'Search tasks',
+  searchPlaceholder: 'Search',
 
   regionMine: 'My todos',
-  regionWorkspaces: 'By workspace',
-  groupHint: '{doing} active ｜ {open} unclaimed',
+  regionOthers: 'Other tasks',
+  groupHint: '{open} open ｜ {doing} active ｜ {blocked} blocked ｜ {total} total',
   showingCount: '{n} shown',
   expandAria: 'Expand worklog',
   collapseAria: 'Collapse',
 
   ownerUnclaimed: 'unclaimed',
+  fieldCreator: 'created by',
+  fieldOwner: 'owner',
   fieldCreated: 'created',
   fieldStarted: 'started',
   fieldFinished: 'closed',
@@ -217,6 +222,7 @@ export const en: Record<LocaleKey, string> = {
   tipResume: 'keep working on this task',
   tipFinish: 'close and archive it',
   tipRelease: 'release the claim for others',
+  viewDetail: 'View details',
   fieldCreatedStamp: 'created {day}',
   mineEmpty: 'Nothing in progress right now',
   mineEmptyHint: 'Create a task in a workspace or claim one below, and it shows up here.',

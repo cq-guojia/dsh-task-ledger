@@ -43,12 +43,10 @@ const regionHeadRowStyle: Record<string, string | number> = {
   margin: 'var(--dtl-space-4) 0 var(--dtl-space-2)',
 }
 const regionHeadTitleStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-lg)', fontWeight: 600 }
-const groupHeadStyle: Record<string, string | number> = {
-  display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)', width: '100%',
-  padding: 'var(--dtl-space-2) var(--dtl-space-3)', border: 0, borderRadius: 'var(--dtl-radius-md)',
-  background: 'var(--dtl-surface-2)', color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer',
-}
-const groupCountStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)', fontWeight: 400 }
+/** 工作区下拉宽度（用户 2026-10-17：140 稍短，+1/4 = 175）。 */
+const WORKSPACE_SELECT_WIDTH = 175
+/** 搜索框宽度（用户 2026-10-17：原来太长，收到约 1/4 量级的窄框）。 */
+const SEARCH_WIDTH = 96
 
 /** 分组默认折叠阈值（组内太多条时先收起，用户点开）。 */
 const GROUP_COLLAPSE_OVER = 30
@@ -224,12 +222,12 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                             : '',
                           options: workspaceOptions,
                           ariaLabel: t('workspaceLabel'),
-                          width: 140,
+                          width: WORKSPACE_SELECT_WIDTH,
                           onChange: (next) => { setQuery({ workspace: next }) },
                         }),
                       ),
                       // 搜索独立窄行（用户 2026-10-17：别和下拉挤一排、别拉那么宽）
-                      h('div', { style: { width: '240px', marginBottom: 'var(--dtl-space-3)' } },
+                      h('div', { style: { width: `${SEARCH_WIDTH}px`, marginBottom: 'var(--dtl-space-3)' } },
                         h(SearchInput, {
                           value: state.query.keyword,
                           placeholder: t('searchPlaceholder'),
@@ -239,17 +237,14 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                       ),
                       view.mine.length === 0
                         ? h(EmptyState, { tone: 'guide', title: t('mineEmpty'), hint: t('mineEmptyHint') })
-                        // ⚠️ 模拟数据（用户要求先看效果，非真实状态）：第一行强显「阻塞」、第二行强显「停滞」，验收后删 mockTone
-                        : view.mine.map((row, index) => h(TaskRowView, {
-                          key: row.key, t, row, showWorkspace: true,
-                          mockTone: index === 0 ? 'blocked' : index === 1 ? 'stale' : undefined,
-                        })),
+                        : view.mine.map(row => h(TaskRowView, { key: row.key, t, row, variant: 'mine' })),
                       // 第二区：按工作区分组（组可折叠；第三区改造前的过渡形态，吃关键字过滤）
                       view.groups.length === 0
                         ? null
                         : h('div', null,
                           h('div', { style: regionHeadRowStyle },
-                            h('span', { style: regionHeadTitleStyle }, t('regionWorkspaces')),
+                            h('span', { style: { ...regionHeadTitleStyle, fontSize: 'var(--dtl-font-md)' } }, t('regionOthers')),
+                            h('span', { style: { flex: '1 1 auto' } }),
                             h('span', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)' } }, t('showingCount', { n: view.total - view.mine.length })),
                           ),
                           view.groups.map(group => h(WorkspaceGroupView, { key: group.workspaceId, t, group })),
@@ -261,25 +256,27 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
   )
 }
 
-/** 一个工作区分组：标题行（可点折叠）+ 行列表。 */
+/** 一个工作区分组（其他待办表格段）：段头 = 左工作区名 + 右四计数（待办/进行/阻塞/共），可点折叠。 */
 function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup }): ReactNode {
   const { t, group } = props
   const [open, setOpen] = useState(group.rows.length <= GROUP_COLLAPSE_OVER)
-  return h('div', { style: { marginBottom: 'var(--dtl-space-3)' } },
+  return h('div', { className: 'dtl-group' },
     h('button', {
       type: 'button',
-      className: 'dtl-row-head',
-      style: groupHeadStyle,
+      className: 'dtl-group__head',
       'aria-expanded': open,
       title: open ? t('collapseAria') : t('expandAria'),
       onClick: () => { setOpen(!open) },
     },
-      h('span', { className: 'dtl-ellipsis', style: { flex: '1 1 auto', fontSize: 'var(--dtl-font-md)', fontWeight: 600 } }, group.title),
-      h('span', { style: groupCountStyle }, t('groupHint', { doing: group.doingCount, open: group.openCount })),
+      h('span', { className: 'dtl-group__name dtl-ellipsis' }, group.title),
+      h('span', { style: { flex: '1 1 auto' } }),
+      h('span', { className: 'dtl-group__stats' }, t('groupHint', {
+        open: group.openCount, doing: group.doingCount, blocked: group.blockedCount, total: group.total,
+      })),
     ),
     open
-      ? h('div', { style: { marginTop: 'var(--dtl-space-2)' } },
-        group.rows.map(row => h(TaskRowView, { key: row.key, t, row })),
+      ? h('div', null,
+        group.rows.map(row => h(TaskRowView, { key: row.key, t, row, variant: 'others' })),
       )
       : null,
   )

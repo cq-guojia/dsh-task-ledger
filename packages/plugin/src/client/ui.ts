@@ -27,6 +27,40 @@ const UI_BASE_CSS = `
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
+/* 其他待办表格段（用户 2026-10-17：与「我的」绝对区分 —— 无卡片、无色条、间距更紧） */
+.dtl-group{margin-bottom:var(--dtl-space-4);}
+.dtl-group__head{display:flex;align-items:center;gap:var(--dtl-space-2);width:100%;
+  padding:var(--dtl-space-1) 0;border:0;background:transparent;color:inherit;font:inherit;
+  text-align:left;cursor:pointer;}
+.dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
+.dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
+
+/* 表格行：无卡底；行间距紧；hover 整行淡蓝 */
+.dtl-taskrow--others{padding:var(--dtl-space-1) 0;border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-taskrow--others .dtl-taskrow__row{gap:10px;}
+.dtl-taskrow--others .dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
+.dtl-taskrow--others .dtl-taskrow__l2{margin-top:1px;}
+/* 右列：创建人 / 执行人（定宽省略，控住总宽） */
+.dtl-taskrow__who{flex:none;width:104px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
+
+/* 状态圆点（替代卡片形态的色条）：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞 */
+.dtl-dot{display:inline-block;width:8px;height:8px;flex:none;border-radius:50%;}
+.dtl-dot--doing{background:var(--dtl-business-dim);}
+.dtl-dot--blocked{background:var(--dtl-warning);}
+.dtl-dot--stale{background:var(--dtl-danger);}
+.dtl-dot--open,.dtl-dot--closed{background:var(--dtl-fg-3);}
+
+/* 「查看」钮：放大镜、常驻最右、无文字（用户 2026-10-17） */
+.dtl-viewbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;flex:none;padding:0;border:0;border-radius:var(--dtl-radius-sm);
+  background:transparent;color:var(--dtl-fg-3);cursor:default;line-height:0;}
+.dtl-viewbtn:hover{color:var(--dtl-fg);background:var(--dtl-surface-2);}
+.dtl-viewbtn::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;z-index:5;
+  padding:4px 8px;border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-2);
+  box-shadow:var(--dtl-shadow-2);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-viewbtn:hover::after{opacity:1;}
+
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
 .dtl-taskrow{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);
