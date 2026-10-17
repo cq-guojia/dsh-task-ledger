@@ -71,14 +71,13 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
   const days = (value: number | null | undefined): string =>
     value === null || value === undefined ? t('daysNone') : t('daysValue', { n: value })
 
-  /** 统计卡 → 筛选联动（卡即入口：点一下跳到对应视角）。 */
-  const card = (label: LocaleKey, value: number, hint: string, patch: Partial<Query>): ReactNode =>
+  /** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
+  const card = (label: LocaleKey, value: number, hint: string): ReactNode =>
     h(StatCard, {
       label: t(label),
       value,
       hint,
-      active: isActive(state.query, patch),
-      onClick: () => { setQuery(patch) },
+      interactive: false,
     })
 
   /** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。 */
@@ -144,10 +143,10 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
               ? null
               : h('div', { className: 'dtl-stats', style: statsRowStyle },
                 h('div', { className: 'dtl-stats__cards' },
-                  // 第一行 · 操作台（可点联动筛选）
-                  card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myBlocked }), { scope: 'mine', status: 'all', workspace: '' }),
-                  card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) }), { scope: 'all', status: 'open', workspace: '' }),
-                  card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive + stats.myBlocked }), { scope: 'all', status: 'active', workspace: '' }),
+                  // 第一行 · 操作台（纯展示）
+                  card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myBlocked })),
+                  card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) })),
+                  card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive + stats.myBlocked })),
                   // 阻塞 · 停滞合并卡：主数字 = 阻塞数；有停滞时小字把「停滞」标红
                   h(StatCard, {
                     label: t('statBlockedStale'),
@@ -158,9 +157,8 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                         h('span', { style: { color: 'var(--dtl-danger)', fontWeight: 600 } }, t('statStaleWord')),
                         ` ${t('statStaleHint', { n: stats.stale })}`,
                       ),
-                    active: isActive(state.query, { scope: 'all', status: 'blocked', workspace: '' }),
                     title: t('statStaleTitle', { n: stats.staleDays }),
-                    onClick: () => { setQuery({ scope: 'all', status: 'blocked', workspace: '' }) },
+                    interactive: false,
                   }),
                   // 第二行 · 统计台（自然周期，不可点）
                   periodCard('statWeekDone', board?.trend.thisWeek),
@@ -304,11 +302,6 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup }): Rea
       )
       : null,
   )
-}
-
-/** 卡片高亮：当前 query 是否正好落在该卡对应的视角上。 */
-function isActive(query: Query, patch: Partial<Query>): boolean {
-  return Object.entries(patch).every(([key, value]) => query[key as keyof Query] === value)
 }
 
 /** 是否「什么都没筛」：真空才给引导卡，一有筛选就只能是「筛选空」。 */

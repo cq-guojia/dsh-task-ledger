@@ -1,33 +1,17 @@
 /**
- * 任务列表行（宿主**无表格件** ⇒ 自绘，几何参照官方 `DisclosureRow`，状态走官方 `StateDot`）。
- * 定稿见 docs/design/features/board-home.md §二 与 docs/design/ui-style.md：
- * 状态语义 open=idle / doing=ongoing / blocked=warning / 已结案=done。
- *
- * 行展开 = 过程文档路径 + 过程正文（在办走 `GET /task` 取正文；已结案只有路径——
- * host 没有按历史行取正文的路由，不编造内容）。
- *
- * `showWorkspace`：第一区「我的待办」是跨工作区平铺 ⇒ 工作区升为一列（定宽，不再是
- * 和标签混在一起的小 chip）；第二区分组行由分组标题说明归属，行内不再重复。
+ * 任务列表行（宿主**无表格件** ⇒ 自绘）：两行式（用户 2026-10-17 定稿，参照 GitHub 通知列表）：
+ *  - 上行小字：工作区徽标（第一区专用列）+ 任务号 + 状态 pill（**只有** 阻塞=黄 / 停滞=红 / 待认领=灰；
+ *    进行中是默认态不出任何标记，**没有转圈**）+ 右侧「已做 N 天」；
+ *  - 下行主字：标题加粗；第三小行：分类 + 标签 chip。
+ * 悬停时右侧 时间⇄按钮排 互换（继续 / 结束 / 转移）——按钮**先只做样子**，
+ * 点击行为归「任务按钮与会话交接」任务（写入路径 A/B 未拍板）；详情侧栏也归该任务，本行不做展开。
  */
-import { createElement as h, useEffect, useMemo, useState, type ReactNode } from 'react'
-import {
-  IconChevronDownOutlineRegular, IconChevronRightOutlineRegular,
-  MarkdownText, StateDot,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import { fetchTaskDetail } from './api'
+import { createElement as h, type ReactNode } from 'react'
 import { formatDateTime } from './format'
 import type { Translate } from './locales'
 import type { Row } from './rows'
 import { Chip } from './ui'
-import type { TaskDetail, Workspace } from './types'
-
-/** 行的状态点语义（在办三态 + 已结案）。 */
-function dotOf(row: Row): 'idle' | 'ongoing' | 'warning' | 'done' {
-  if (row.kind === 'closed') return 'done'
-  if (row.task.status === 'blocked') return 'warning'
-  if (row.task.status === 'doing') return 'ongoing'
-  return 'idle'
-}
+import type { Workspace } from './types'
 
 /** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
 function titleOf(row: Row): string {
@@ -36,10 +20,14 @@ function titleOf(row: Row): string {
   return title !== undefined && title !== '' ? title : row.record.src ?? '—'
 }
 
-/** 行的「谁」：负责人优先，没有就创建人，都没有 = 未认领。 */
-function whoOf(row: Row): string | null {
-  if (row.kind === 'task') return row.task.owner ?? row.task.creator ?? null
-  return row.record.owner ?? null
+/** 状态 pill：blocked=黄 / stale=红 / open=灰；doing 是默认态不出标记。 */
+function pillsOf(row: Row): ('blocked' | 'stale' | 'open')[] {
+  if (row.kind !== 'task') return []
+  const pills: ('blocked' | 'stale' | 'open')[] = []
+  if (row.task.status === 'blocked') pills.push('blocked')
+  if (row.task.stale === true) pills.push('stale')
+  if (row.task.status === 'open') pills.push('open')
+  return pills
 }
 
 /** 工作区徽标（第一区专用列）：色块首字母 + 标题，定宽、超出省略（不猜官方图标名）。 */
@@ -64,98 +52,41 @@ function WorkspaceTag(props: { workspace: Workspace | undefined }): ReactNode {
 
 export function TaskRowView(props: { t: Translate; row: Row; showWorkspace?: boolean }): ReactNode {
   const { t, row } = props
-  const [open, setOpen] = useState(false)
-
-  // 官方 MarkdownText 要求 labels 引用稳定（新身份会丢弃渲染缓存）⇒ 按 t 记忆一次。
-  const mdLabels = useMemo(() => ({ code: { copyLabel: t('mdCopy'), copiedLabel: t('mdCopied') }, footnotes: t('mdFootnotes') }), [t])
-
-  /** 行的时间：在办 doing/blocked 看开始、其余看创建；已结案看结案。 */
-  const stamp = row.kind === 'closed'
-    ? { value: row.record.time ?? row.record.created ?? null, label: t('fieldFinished') }
-    : row.task.status === 'open'
-      ? { value: row.task.created ?? null, label: t('fieldCreated') }
-      : { value: row.task.started ?? row.task.created ?? null, label: t('fieldStarted') }
-  const when = stamp.value === null || stamp.value === undefined || stamp.value === ''
-    ? t('timeUnknown')
-    : formatDateTime(stamp.value, { fallback: t('timeUnknown') })
-  const who = whoOf(row)
-  const workspace = row.kind === 'task' ? row.task.workspace : row.record.workspace
   const category = row.kind === 'task' ? row.task.category : row.record.category
   const tags = (row.kind === 'task' ? row.task.tags : row.record.tags) ?? []
-  const logPath = row.kind === 'task' ? row.task.worklog : row.record.log
+  const id = row.kind === 'task' ? row.task.id : row.record.src ?? ''
+  const pills = pillsOf(row)
 
-  return h('div', { className: 'dtl-row', 'data-open': open },
-    h('button', {
-      type: 'button',
-      className: 'dtl-row-head',
-      'aria-expanded': open,
-      title: open ? t('collapseAria') : t('expandAria'),
-      onClick: () => { setOpen(!open) },
-    },
-      h(StateDot, { state: dotOf(row) }),
-      props.showWorkspace === true ? h(WorkspaceTag, { workspace }) : null,
-      h('span', {
-        className: 'dtl-ellipsis',
-        style: { flex: '1 1 auto', minWidth: 0, fontSize: 'var(--dtl-font-md)' },
-        title: titleOf(row),
-      }, titleOf(row)),
-      category === null || category === undefined || category === ''
-        ? null
-        : h(Chip, { text: category }),
-      tags.slice(0, 2).map(tag => h(Chip, { key: tag, text: `#${tag}` })),
-      h('span', {
-        style: {
-          display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)', flex: 'none',
-          color: 'var(--dtl-fg-3)', fontSize: 'var(--dtl-font-xs)', whiteSpace: 'nowrap',
-        },
-      },
-        h('span', { title: stamp.value ?? undefined }, `${stamp.label} ${when}`),
-        h('span', null, who === null || who === '' ? t('ownerUnclaimed') : `@${who}`),
-      ),
-      h(open ? IconChevronDownOutlineRegular : IconChevronRightOutlineRegular, { size: 16 }),
+  // 右侧时间：在办 = 「已做 N 天」（host 算的 ageDays，前端不重复判时）；已结案 = 结案时刻。
+  const days = row.kind === 'task' ? row.task.ageDays : null
+  const when = row.kind === 'task'
+    ? (days === null ? t('timeUnknown') : t('rowAge', { n: days }))
+    : `${t('fieldFinished')} ${formatDateTime(row.record.time ?? row.record.created ?? '', { fallback: t('timeUnknown') })}`
+
+  return h('div', { className: 'dtl-taskrow' },
+    h('div', { className: 'dtl-taskrow__top' },
+      props.showWorkspace === true ? h(WorkspaceTag, { workspace: row.kind === 'task' ? row.task.workspace : row.record.workspace }) : null,
+      h('span', { className: 'dtl-taskrow__id', title: id }, id),
+      pills.map(pill => h('span', {
+        key: pill,
+        className: `dtl-pill dtl-pill--${pill}`,
+      }, t(pill === 'blocked' ? 'statusBlocked' : pill === 'stale' ? 'statusStale' : 'statusOpen'))),
+      h('span', { style: { flex: '1 1 auto', minWidth: 0 } }),
+      h('span', { className: 'dtl-taskrow__age' }, when),
+      row.kind === 'task'
+        ? h('span', { className: 'dtl-taskrow__actions' },
+          h('button', { type: 'button', className: 'dtl-minibtn', title: t('actionResume') }, t('actionResume')),
+          h('button', { type: 'button', className: 'dtl-minibtn', title: t('actionFinish') }, t('actionFinish')),
+          h('button', { type: 'button', className: 'dtl-minibtn', title: t('actionTransfer') }, t('actionTransfer')),
+        )
+        : null,
     ),
-    open
-      ? h('div', { className: 'dtl-row-body' },
-        // 过程文档路径（真实值；没有工作区文件服务可点开 ⇒ 只展示路径，不假装能跳转）
-        h('div', { style: { margin: 'var(--dtl-space-2) 0', fontSize: 'var(--dtl-font-sm)', color: 'var(--dtl-fg-2)' } },
-          `${t('worklogTitle')}·${t('worklogPath')}：${
-            logPath === null || logPath === undefined || logPath === '' ? t('worklogMissing') : logPath
-          }`,
-        ),
-        row.kind === 'closed'
-          ? h('div', { style: { fontSize: 'var(--dtl-font-md)', color: 'var(--dtl-fg-2)' } }, row.record.summary ?? '')
-          : h(WorklogBody, { t, workspaceId: row.task.workspace.id, taskId: row.task.id, labels: mdLabels }),
-      )
-      : null,
+    h('div', { className: 'dtl-taskrow__title dtl-ellipsis', title: titleOf(row) }, titleOf(row)),
+    (category === null || category === undefined || category === '') && tags.length === 0
+      ? null
+      : h('div', { className: 'dtl-taskrow__meta' },
+        category === null || category === undefined || category === '' ? null : h(Chip, { text: category }),
+        tags.map(tag => h(Chip, { key: tag, text: `#${tag}` })),
+      ),
   )
-}
-
-/** 在办行的过程正文：**展开才取**（首屏不为正文付代价），且只在挂载时取一次（不随重渲染重取）。 */
-function WorklogBody(props: {
-  t: Translate
-  workspaceId: string
-  taskId: string
-  labels: { code: { copyLabel: string; copiedLabel: string }; footnotes: string }
-}): ReactNode {
-  const { t, workspaceId, taskId, labels } = props
-  const [detail, setDetail] = useState<TaskDetail | null>(null)
-  const [failed, setFailed] = useState<string | null>(null)
-  useEffect(() => {
-    let alive = true
-    fetchTaskDetail(workspaceId, taskId)
-      .then((body) => { if (alive) setDetail(body) })
-      .catch((error: unknown) => {
-        if (alive) setFailed(error instanceof Error ? error.message : String(error))
-      })
-    return () => { alive = false }
-  }, [workspaceId, taskId])
-
-  if (failed !== null) {
-    return h('div', { style: { color: 'var(--dtl-danger)', fontSize: 'var(--dtl-font-sm)' } }, `${t('loadFailed')}：${failed}`)
-  }
-  if (detail === null) return h('div', { style: { color: 'var(--dtl-fg-3)', fontSize: 'var(--dtl-font-sm)' } }, t('loading'))
-  if (detail.worklog === null) {
-    return h('div', { style: { color: 'var(--dtl-fg-3)', fontSize: 'var(--dtl-font-sm)' } }, t('worklogMissing'))
-  }
-  return h('div', { className: 'dtl-worklog' }, h(MarkdownText, { text: detail.worklog, labels, variant: 'compact' }))
 }

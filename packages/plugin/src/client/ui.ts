@@ -19,16 +19,40 @@ const UI_BASE_CSS = `
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
 .dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
 
-/* 列表行：头部可点，hover 淡蓝；展开行走 --dtl-open-bg */
+/* 列表行：分组标题头仍走 .dtl-row-head（可点折叠）；任务行走 .dtl-taskrow（两行式，不可点） */
 .dtl-row-head{display:flex;align-items:center;gap:var(--dtl-space-2);
   width:100%;padding:var(--dtl-space-2) var(--dtl-space-3);border:0;background:transparent;
   color:inherit;font:inherit;text-align:left;cursor:pointer;
   transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
-.dtl-row[data-open="true"]{background:var(--dtl-open-bg);}
-.dtl-row-body{padding:var(--dtl-space-2) var(--dtl-space-3) var(--dtl-space-3);
-  background:var(--dtl-open-bg-soft);font-size:var(--dtl-font-md);}
+
+/* 任务行（两行式，用户 2026-10-17 定稿）：hover 整行提亮；右侧 时间⇄按钮排 互换 */
+.dtl-taskrow{padding:var(--dtl-space-2) var(--dtl-space-3);border-radius:var(--dtl-radius-md);
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-taskrow:hover{background:var(--dtl-card-hover);}
+.dtl-taskrow__top{display:flex;align-items:center;gap:var(--dtl-space-2);min-width:0;}
+.dtl-taskrow__id{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+.dtl-taskrow__title{margin-top:2px;font-size:var(--dtl-font-md);font-weight:600;line-height:var(--dtl-line-md);}
+.dtl-taskrow__meta{display:flex;align-items:center;gap:var(--dtl-space-1);margin-top:var(--dtl-space-1);flex-wrap:wrap;}
+.dtl-taskrow__age{flex:none;color:var(--dtl-fg-3);font-size:var(--dtl-font-xs);white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+.dtl-taskrow__actions{display:none;flex:none;gap:4px;}
+.dtl-taskrow:hover .dtl-taskrow__age{display:none;}
+.dtl-taskrow:hover .dtl-taskrow__actions{display:inline-flex;}
+
+/* 状态 pill：只有异常态出标记 —— 阻塞=黄 / 停滞=红 / 待认领=灰描边；进行中无标记 */
+.dtl-pill{flex:none;padding:1px 8px;border-radius:999px;font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;}
+.dtl-pill--blocked{background:var(--dtl-warning);color:var(--dtl-on-signal);}
+.dtl-pill--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);}
+.dtl-pill--open{border:1px solid var(--dtl-border-strong);color:var(--dtl-fg-3);}
+
+/* 行内迷你按钮（样子先行，点击行为归「任务按钮与会话交接」任务） */
+.dtl-minibtn{padding:1px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-xs);
+  line-height:16px;white-space:nowrap;cursor:default;}
+.dtl-minibtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
 
 /* 空态：真空 = 虚线引导卡；筛选空 = 小字 */
 .dtl-empty-guide{padding:var(--dtl-space-4);border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}

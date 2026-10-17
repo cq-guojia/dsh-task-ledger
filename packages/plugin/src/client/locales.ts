@@ -31,6 +31,8 @@ export type LocaleKey =
   | 'regionMine' | 'regionMineHint' | 'regionWorkspaces' | 'groupHint' | 'showingCount'
   | 'expandAria' | 'collapseAria'
   | 'ownerUnclaimed' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
+  | 'rowAge'
+  | 'actionResume' | 'actionFinish' | 'actionTransfer'
   | 'worklogTitle' | 'worklogPath' | 'worklogMissing'
   | 'mdCopy' | 'mdCopied' | 'mdFootnotes'
   // 空态
@@ -108,6 +110,10 @@ export const zh: Record<LocaleKey, string> = {
   fieldStarted: '开始',
   fieldFinished: '结案',
   timeUnknown: '时间未知',
+  rowAge: '已做 {n} 天',
+  actionResume: '继续',
+  actionFinish: '结束',
+  actionTransfer: '转移',
   worklogTitle: '过程文档',
   worklogPath: '路径',
   worklogMissing: '（缺失）',
@@ -195,6 +201,10 @@ export const en: Record<LocaleKey, string> = {
   fieldStarted: 'started',
   fieldFinished: 'closed',
   timeUnknown: 'unknown time',
+  rowAge: 'active for {n}d',
+  actionResume: 'Resume',
+  actionFinish: 'Close',
+  actionTransfer: 'Transfer',
   worklogTitle: 'Worklog',
   worklogPath: 'path',
   worklogMissing: '(missing)',

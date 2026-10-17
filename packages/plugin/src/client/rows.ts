@@ -5,12 +5,12 @@
  *
  * 单独成文件是为了能被冒烟直测（store.ts 引 api.ts，Node 剥类型解析不了无扩展名相对导入）。
  */
-import type { BoardPayload, BoardTask, HistoryRecord, TaskRow } from './types'
+import type { BoardPayload, BoardTask, HistoryRecord } from './types'
 import type { Query } from './store'
 
 /** 列表行：在办与已结案两套形状，行件按 kind 分支（不做「统一成一个假结构」的归一化）。 */
 export type Row =
-  | { kind: 'task'; key: string; task: TaskRow; mine: boolean }
+  | { kind: 'task'; key: string; task: BoardTask; mine: boolean }
   | { kind: 'closed'; key: string; record: HistoryRecord }
 
 /** 一个工作区分组。 */
@@ -37,7 +37,7 @@ function hitKeyword(keyword: string, parts: readonly (string | null | undefined)
 }
 
 /** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是 doing / blocked（与 host 统计同口径）。 */
-export function isMine(task: TaskRow, board: BoardPayload | null): boolean {
+export function isMine(task: BoardTask, board: BoardPayload | null): boolean {
   if (board === null) return false
   const identity = board.identities[task.workspace.id] ?? null
   if (identity === null || identity === '') return false
@@ -56,7 +56,7 @@ function statusHit(task: BoardTask, status: Query['status']): boolean {
 /** 组内排序：别人的 doing/blocked 在前、待认领在后；各自按创建 / 开始时间倒序。 */
 function inGroupOrder(a: Row, b: Row): number {
   if (a.kind !== 'task' || b.kind !== 'task') return 0
-  const rank = (task: TaskRow): number => (task.status === 'open' ? 1 : 0)
+  const rank = (task: BoardTask): number => (task.status === 'open' ? 1 : 0)
   if (rank(a.task) !== rank(b.task)) return rank(a.task) - rank(b.task)
   return String(b.task.created ?? b.task.started ?? '').localeCompare(String(a.task.created ?? a.task.started ?? ''))
 }

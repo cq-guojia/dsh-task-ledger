@@ -44,13 +44,6 @@ window.__ModuleLoader__.load({
 		function fetchBoard() {
 			return fetchJson("/board");
 		}
-		/** 单条在办 + 过程文档正文（展开行用）。 */
-		function fetchTaskDetail(workspaceId, taskId) {
-			return fetchJson(`/task?${new URLSearchParams({
-				ws: workspaceId,
-				id: taskId
-			}).toString()}`);
-		}
 		//#endregion
 		//#region src/client/store.ts
 		/**
@@ -519,16 +512,40 @@ body[data-ds-dark-theme]{
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
 .dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
 
-/* 列表行：头部可点，hover 淡蓝；展开行走 --dtl-open-bg */
+/* 列表行：分组标题头仍走 .dtl-row-head（可点折叠）；任务行走 .dtl-taskrow（两行式，不可点） */
 .dtl-row-head{display:flex;align-items:center;gap:var(--dtl-space-2);
   width:100%;padding:var(--dtl-space-2) var(--dtl-space-3);border:0;background:transparent;
   color:inherit;font:inherit;text-align:left;cursor:pointer;
   transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
-.dtl-row[data-open="true"]{background:var(--dtl-open-bg);}
-.dtl-row-body{padding:var(--dtl-space-2) var(--dtl-space-3) var(--dtl-space-3);
-  background:var(--dtl-open-bg-soft);font-size:var(--dtl-font-md);}
+
+/* 任务行（两行式，用户 2026-10-17 定稿）：hover 整行提亮；右侧 时间⇄按钮排 互换 */
+.dtl-taskrow{padding:var(--dtl-space-2) var(--dtl-space-3);border-radius:var(--dtl-radius-md);
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-taskrow:hover{background:var(--dtl-card-hover);}
+.dtl-taskrow__top{display:flex;align-items:center;gap:var(--dtl-space-2);min-width:0;}
+.dtl-taskrow__id{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+.dtl-taskrow__title{margin-top:2px;font-size:var(--dtl-font-md);font-weight:600;line-height:var(--dtl-line-md);}
+.dtl-taskrow__meta{display:flex;align-items:center;gap:var(--dtl-space-1);margin-top:var(--dtl-space-1);flex-wrap:wrap;}
+.dtl-taskrow__age{flex:none;color:var(--dtl-fg-3);font-size:var(--dtl-font-xs);white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+.dtl-taskrow__actions{display:none;flex:none;gap:4px;}
+.dtl-taskrow:hover .dtl-taskrow__age{display:none;}
+.dtl-taskrow:hover .dtl-taskrow__actions{display:inline-flex;}
+
+/* 状态 pill：只有异常态出标记 —— 阻塞=黄 / 停滞=红 / 待认领=灰描边；进行中无标记 */
+.dtl-pill{flex:none;padding:1px 8px;border-radius:999px;font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;}
+.dtl-pill--blocked{background:var(--dtl-warning);color:var(--dtl-on-signal);}
+.dtl-pill--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);}
+.dtl-pill--open{border:1px solid var(--dtl-border-strong);color:var(--dtl-fg-3);}
+
+/* 行内迷你按钮（样子先行，点击行为归「任务按钮与会话交接」任务） */
+.dtl-minibtn{padding:1px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-xs);
+  line-height:16px;white-space:nowrap;cursor:default;}
+.dtl-minibtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
 
 /* 空态：真空 = 虚线引导卡；筛选空 = 小字 */
 .dtl-empty-guide{padding:var(--dtl-space-4);border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
@@ -828,33 +845,27 @@ body[data-ds-dark-theme]{
 		//#endregion
 		//#region src/client/task-row.ts
 		/**
-		* 任务列表行（宿主**无表格件** ⇒ 自绘，几何参照官方 `DisclosureRow`，状态走官方 `StateDot`）。
-		* 定稿见 docs/design/features/board-home.md §二 与 docs/design/ui-style.md：
-		* 状态语义 open=idle / doing=ongoing / blocked=warning / 已结案=done。
-		*
-		* 行展开 = 过程文档路径 + 过程正文（在办走 `GET /task` 取正文；已结案只有路径——
-		* host 没有按历史行取正文的路由，不编造内容）。
-		*
-		* `showWorkspace`：第一区「我的待办」是跨工作区平铺 ⇒ 工作区升为一列（定宽，不再是
-		* 和标签混在一起的小 chip）；第二区分组行由分组标题说明归属，行内不再重复。
+		* 任务列表行（宿主**无表格件** ⇒ 自绘）：两行式（用户 2026-10-17 定稿，参照 GitHub 通知列表）：
+		*  - 上行小字：工作区徽标（第一区专用列）+ 任务号 + 状态 pill（**只有** 阻塞=黄 / 停滞=红 / 待认领=灰；
+		*    进行中是默认态不出任何标记，**没有转圈**）+ 右侧「已做 N 天」；
+		*  - 下行主字：标题加粗；第三小行：分类 + 标签 chip。
+		* 悬停时右侧 时间⇄按钮排 互换（继续 / 结束 / 转移）——按钮**先只做样子**，
+		* 点击行为归「任务按钮与会话交接」任务（写入路径 A/B 未拍板）；详情侧栏也归该任务，本行不做展开。
 		*/
-		/** 行的状态点语义（在办三态 + 已结案）。 */
-		function dotOf(row) {
-			if (row.kind === "closed") return "done";
-			if (row.task.status === "blocked") return "warning";
-			if (row.task.status === "doing") return "ongoing";
-			return "idle";
-		}
 		/** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
 		function titleOf(row) {
 			if (row.kind === "task") return row.task.title ?? row.task.id;
 			const title = row.record.workpackage ?? row.record.summary;
 			return title !== void 0 && title !== "" ? title : row.record.src ?? "—";
 		}
-		/** 行的「谁」：负责人优先，没有就创建人，都没有 = 未认领。 */
-		function whoOf(row) {
-			if (row.kind === "task") return row.task.owner ?? row.task.creator ?? null;
-			return row.record.owner ?? null;
+		/** 状态 pill：blocked=黄 / stale=红 / open=灰；doing 是默认态不出标记。 */
+		function pillsOf(row) {
+			if (row.kind !== "task") return [];
+			const pills = [];
+			if (row.task.status === "blocked") pills.push("blocked");
+			if (row.task.stale === true) pills.push("stale");
+			if (row.task.status === "open") pills.push("open");
+			return pills;
 		}
 		/** 工作区徽标（第一区专用列）：色块首字母 + 标题，定宽、超出省略（不猜官方图标名）。 */
 		function WorkspaceTag(props) {
@@ -888,108 +899,40 @@ body[data-ds-dark-theme]{
 		}
 		function TaskRowView(props) {
 			const { t, row } = props;
-			const [open, setOpen] = (0, react.useState)(false);
-			const mdLabels = (0, react.useMemo)(() => ({
-				code: {
-					copyLabel: t("mdCopy"),
-					copiedLabel: t("mdCopied")
-				},
-				footnotes: t("mdFootnotes")
-			}), [t]);
-			/** 行的时间：在办 doing/blocked 看开始、其余看创建；已结案看结案。 */
-			const stamp = row.kind === "closed" ? {
-				value: row.record.time ?? row.record.created ?? null,
-				label: t("fieldFinished")
-			} : row.task.status === "open" ? {
-				value: row.task.created ?? null,
-				label: t("fieldCreated")
-			} : {
-				value: row.task.started ?? row.task.created ?? null,
-				label: t("fieldStarted")
-			};
-			const when = stamp.value === null || stamp.value === void 0 || stamp.value === "" ? t("timeUnknown") : formatDateTime(stamp.value, { fallback: t("timeUnknown") });
-			const who = whoOf(row);
-			const workspace = row.kind === "task" ? row.task.workspace : row.record.workspace;
 			const category = row.kind === "task" ? row.task.category : row.record.category;
 			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
-			const logPath = row.kind === "task" ? row.task.worklog : row.record.log;
-			return (0, react.createElement)("div", {
-				className: "dtl-row",
-				"data-open": open
-			}, (0, react.createElement)("button", {
+			const id = row.kind === "task" ? row.task.id : row.record.src ?? "";
+			const pills = pillsOf(row);
+			const days = row.kind === "task" ? row.task.ageDays : null;
+			const when = row.kind === "task" ? days === null ? t("timeUnknown") : t("rowAge", { n: days }) : `${t("fieldFinished")} ${formatDateTime(row.record.time ?? row.record.created ?? "", { fallback: t("timeUnknown") })}`;
+			return (0, react.createElement)("div", { className: "dtl-taskrow" }, (0, react.createElement)("div", { className: "dtl-taskrow__top" }, props.showWorkspace === true ? (0, react.createElement)(WorkspaceTag, { workspace: row.kind === "task" ? row.task.workspace : row.record.workspace }) : null, (0, react.createElement)("span", {
+				className: "dtl-taskrow__id",
+				title: id
+			}, id), pills.map((pill) => (0, react.createElement)("span", {
+				key: pill,
+				className: `dtl-pill dtl-pill--${pill}`
+			}, t(pill === "blocked" ? "statusBlocked" : pill === "stale" ? "statusStale" : "statusOpen"))), (0, react.createElement)("span", { style: {
+				flex: "1 1 auto",
+				minWidth: 0
+			} }), (0, react.createElement)("span", { className: "dtl-taskrow__age" }, when), row.kind === "task" ? (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, (0, react.createElement)("button", {
 				type: "button",
-				className: "dtl-row-head",
-				"aria-expanded": open,
-				title: open ? t("collapseAria") : t("expandAria"),
-				onClick: () => {
-					setOpen(!open);
-				}
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: dotOf(row) }), props.showWorkspace === true ? (0, react.createElement)(WorkspaceTag, { workspace }) : null, (0, react.createElement)("span", {
-				className: "dtl-ellipsis",
-				style: {
-					flex: "1 1 auto",
-					minWidth: 0,
-					fontSize: "var(--dtl-font-md)"
-				},
+				className: "dtl-minibtn",
+				title: t("actionResume")
+			}, t("actionResume")), (0, react.createElement)("button", {
+				type: "button",
+				className: "dtl-minibtn",
+				title: t("actionFinish")
+			}, t("actionFinish")), (0, react.createElement)("button", {
+				type: "button",
+				className: "dtl-minibtn",
+				title: t("actionTransfer")
+			}, t("actionTransfer"))) : null), (0, react.createElement)("div", {
+				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
-			}, titleOf(row)), category === null || category === void 0 || category === "" ? null : (0, react.createElement)(Chip, { text: category }), tags.slice(0, 2).map((tag) => (0, react.createElement)(Chip, {
+			}, titleOf(row)), (category === null || category === void 0 || category === "") && tags.length === 0 ? null : (0, react.createElement)("div", { className: "dtl-taskrow__meta" }, category === null || category === void 0 || category === "" ? null : (0, react.createElement)(Chip, { text: category }), tags.map((tag) => (0, react.createElement)(Chip, {
 				key: tag,
 				text: `#${tag}`
-			})), (0, react.createElement)("span", { style: {
-				display: "flex",
-				alignItems: "center",
-				gap: "var(--dtl-space-2)",
-				flex: "none",
-				color: "var(--dtl-fg-3)",
-				fontSize: "var(--dtl-font-xs)",
-				whiteSpace: "nowrap"
-			} }, (0, react.createElement)("span", { title: stamp.value ?? void 0 }, `${stamp.label} ${when}`), (0, react.createElement)("span", null, who === null || who === "" ? t("ownerUnclaimed") : `@${who}`)), (0, react.createElement)(open ? _deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 16 })), open ? (0, react.createElement)("div", { className: "dtl-row-body" }, (0, react.createElement)("div", { style: {
-				margin: "var(--dtl-space-2) 0",
-				fontSize: "var(--dtl-font-sm)",
-				color: "var(--dtl-fg-2)"
-			} }, `${t("worklogTitle")}·${t("worklogPath")}：${logPath === null || logPath === void 0 || logPath === "" ? t("worklogMissing") : logPath}`), row.kind === "closed" ? (0, react.createElement)("div", { style: {
-				fontSize: "var(--dtl-font-md)",
-				color: "var(--dtl-fg-2)"
-			} }, row.record.summary ?? "") : (0, react.createElement)(WorklogBody, {
-				t,
-				workspaceId: row.task.workspace.id,
-				taskId: row.task.id,
-				labels: mdLabels
-			})) : null);
-		}
-		/** 在办行的过程正文：**展开才取**（首屏不为正文付代价），且只在挂载时取一次（不随重渲染重取）。 */
-		function WorklogBody(props) {
-			const { t, workspaceId, taskId, labels } = props;
-			const [detail, setDetail] = (0, react.useState)(null);
-			const [failed, setFailed] = (0, react.useState)(null);
-			(0, react.useEffect)(() => {
-				let alive = true;
-				fetchTaskDetail(workspaceId, taskId).then((body) => {
-					if (alive) setDetail(body);
-				}).catch((error) => {
-					if (alive) setFailed(error instanceof Error ? error.message : String(error));
-				});
-				return () => {
-					alive = false;
-				};
-			}, [workspaceId, taskId]);
-			if (failed !== null) return (0, react.createElement)("div", { style: {
-				color: "var(--dtl-danger)",
-				fontSize: "var(--dtl-font-sm)"
-			} }, `${t("loadFailed")}：${failed}`);
-			if (detail === null) return (0, react.createElement)("div", { style: {
-				color: "var(--dtl-fg-3)",
-				fontSize: "var(--dtl-font-sm)"
-			} }, t("loading"));
-			if (detail.worklog === null) return (0, react.createElement)("div", { style: {
-				color: "var(--dtl-fg-3)",
-				fontSize: "var(--dtl-font-sm)"
-			} }, t("worklogMissing"));
-			return (0, react.createElement)("div", { className: "dtl-worklog" }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.MarkdownText, {
-				text: detail.worklog,
-				labels,
-				variant: "compact"
-			}));
+			}))));
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -1088,15 +1031,12 @@ body[data-ds-dark-theme]{
 			const view = (0, react.useMemo)(() => selectView(state), [state]);
 			const stats = board?.stats;
 			const days = (value) => value === null || value === void 0 ? t("daysNone") : t("daysValue", { n: value });
-			/** 统计卡 → 筛选联动（卡即入口：点一下跳到对应视角）。 */
-			const card = (label, value, hint, patch) => (0, react.createElement)(StatCard, {
+			/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
+			const card = (label, value, hint) => (0, react.createElement)(StatCard, {
 				label: t(label),
 				value,
 				hint,
-				active: isActive(state.query, patch),
-				onClick: () => {
-					setQuery(patch);
-				}
+				interactive: false
 			});
 			/** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。 */
 			const periodCard = (label, period) => (0, react.createElement)(StatCard, {
@@ -1170,38 +1110,15 @@ body[data-ds-dark-theme]{
 			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", {
 				className: "dtl-stats",
 				style: statsRowStyle
-			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myBlocked }), {
-				scope: "mine",
-				status: "all",
-				workspace: ""
-			}), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) }), {
-				scope: "all",
-				status: "open",
-				workspace: ""
-			}), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive + stats.myBlocked }), {
-				scope: "all",
-				status: "active",
-				workspace: ""
-			}), (0, react.createElement)(StatCard, {
+			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myBlocked })), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) })), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive + stats.myBlocked })), (0, react.createElement)(StatCard, {
 				label: t("statBlockedStale"),
 				value: stats.blocked,
 				hint: stats.stale === 0 ? void 0 : (0, react.createElement)("span", null, (0, react.createElement)("span", { style: {
 					color: "var(--dtl-danger)",
 					fontWeight: 600
 				} }, t("statStaleWord")), ` ${t("statStaleHint", { n: stats.stale })}`),
-				active: isActive(state.query, {
-					scope: "all",
-					status: "blocked",
-					workspace: ""
-				}),
 				title: t("statStaleTitle", { n: stats.staleDays }),
-				onClick: () => {
-					setQuery({
-						scope: "all",
-						status: "blocked",
-						workspace: ""
-					});
-				}
+				interactive: false
 			}), periodCard("statWeekDone", board?.trend.thisWeek), periodCard("statLastWeekDone", board?.trend.lastWeek), periodCard("statMonthDone", board?.trend.thisMonth), periodCard("statLastMonthDone", board?.trend.lastMonth)), (0, react.createElement)("div", {
 				className: "dtl-card",
 				style: chartCardStyle
@@ -1361,10 +1278,6 @@ body[data-ds-dark-theme]{
 				row
 			}))) : null);
 		}
-		/** 卡片高亮：当前 query 是否正好落在该卡对应的视角上。 */
-		function isActive(query, patch) {
-			return Object.entries(patch).every(([key, value]) => query[key] === value);
-		}
 		/** 是否「什么都没筛」：真空才给引导卡，一有筛选就只能是「筛选空」。 */
 		function isPristine(query) {
 			return query.scope === "all" && query.status === "all" && query.workspace === "" && query.keyword.trim() === "";
@@ -1436,6 +1349,10 @@ body[data-ds-dark-theme]{
 			fieldStarted: "开始",
 			fieldFinished: "结案",
 			timeUnknown: "时间未知",
+			rowAge: "已做 {n} 天",
+			actionResume: "继续",
+			actionFinish: "结束",
+			actionTransfer: "转移",
 			worklogTitle: "过程文档",
 			worklogPath: "路径",
 			worklogMissing: "（缺失）",
@@ -1515,6 +1432,10 @@ body[data-ds-dark-theme]{
 			fieldStarted: "started",
 			fieldFinished: "closed",
 			timeUnknown: "unknown time",
+			rowAge: "active for {n}d",
+			actionResume: "Resume",
+			actionFinish: "Close",
+			actionTransfer: "Transfer",
 			worklogTitle: "Worklog",
 			worklogPath: "path",
 			worklogMissing: "(missing)",
