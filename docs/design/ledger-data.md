@@ -33,6 +33,8 @@
 
 ## 三、history/<年月>.md（已结案，9 列）
 
+> 存量 8 列文件的手动升级步骤（逐文件清单 + 一键命令）：见 [`docs/history-creator-upgrade.md`](../history-creator-upgrade.md)。
+
 | 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-16 09:18:12 | 2026-10-16 08:22:40 | koc-ledger-progress 改造为 DSH 插件调研… | 调研 | DSH、台账、NPM | @GuoJia-Agent | @GuoJia-Agent | 调研完成并落地：… | [../worklog/202610/16-0822-….md](../worklog/202610/16-0822-….md) |
