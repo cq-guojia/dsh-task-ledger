@@ -27,16 +27,18 @@ const UI_BASE_CSS = `
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 其他待办表格段（用户 2026-10-17：与「我的」绝对区分 —— 无卡片、无色条、间距更紧） */
-.dtl-group{margin-bottom:var(--dtl-space-4);}
+/* 其他待办 = **一个整表**（用户 2026-10-17：外框连着一块儿，不是一段一段的盒子）：
+   一张 1px 边框表，段头行与任务行都在表内，行间只留淡分隔线。 */
+.dtl-table{border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);overflow:hidden;}
 .dtl-group__head{display:flex;align-items:center;gap:var(--dtl-space-2);width:100%;
-  padding:var(--dtl-space-1) 0;border:0;background:transparent;color:inherit;font:inherit;
-  text-align:left;cursor:pointer;}
+  padding:var(--dtl-space-2) var(--dtl-space-3);border:0;border-bottom:1px solid var(--dtl-border-faint);
+  background:var(--dtl-surface-2);color:inherit;font:inherit;text-align:left;cursor:pointer;}
 .dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
 
-/* 表格行：无卡底；行间距紧；hover 整行淡蓝 */
-.dtl-taskrow--others{padding:var(--dtl-space-1) 0;border-bottom:1px solid var(--dtl-border-faint);}
+/* 表格行：无卡底；行间距紧；hover 整行淡蓝；行间淡分隔线（最后一行由表框收口） */
+.dtl-taskrow--others{padding:var(--dtl-space-2) var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-taskrow--others:last-child{border-bottom:0;}
 .dtl-taskrow--others .dtl-taskrow__row{gap:10px;}
 .dtl-taskrow--others .dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
 .dtl-taskrow--others .dtl-taskrow__l2{margin-top:1px;}
@@ -284,7 +286,8 @@ export function IconButton(props: {
 
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 
-/** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。 */
+/** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。
+ *  `width` 定宽（px）；只给 `minWidth` = 内容自适应但有下限（工作区名长短不一时用）。 */
 export function Select<Value extends string>(props: {
   value: Value
   options: readonly { value: Value; label: string }[]
@@ -292,14 +295,19 @@ export function Select<Value extends string>(props: {
   ariaLabel: string
   /** 定宽（px）；不给就按内容。 */
   width?: number
+  /** 最小宽度（px）；内容自适应时的下限。 */
+  minWidth?: number
   size?: 'sm' | 'md' | 'lg'
 }): ReactNode {
   ensureUiBase()
   const size = props.size ?? 'md'
+  const style: CSSProperties | undefined = props.width === undefined
+    ? (props.minWidth === undefined ? undefined : { minWidth: `${props.minWidth}px` })
+    : { width: `${props.width}px` }
   return h('select', {
     className: `dtl-select dtl-select--${size}`,
     'aria-label': props.ariaLabel,
-    style: props.width === undefined ? undefined : { width: `${props.width}px` },
+    style,
     value: props.value,
     onChange: (event: ChangeEvent<HTMLSelectElement>) => { props.onChange(event.target.value as Value) },
   }, props.options.map(option => h('option', { key: option.value, value: option.value }, option.label)))

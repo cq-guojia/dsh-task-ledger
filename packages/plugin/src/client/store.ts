@@ -17,10 +17,14 @@ export type StatusFilter = 'all' | 'active' | 'open' | 'blocked' | 'stale'
 
 export interface Query {
   scope: Scope
+  /** 「其他待办」的状态档过滤（segmented）。 */
   status: StatusFilter
-  /** 工作区 id；'' = 全部工作区。 */
+  /** 工作区 id；'' = 全部工作区（只作用于「我的待办」）。 */
   workspace: string
+  /** 「我的待办」的标题搜索。 */
   keyword: string
+  /** 「其他待办」的搜索（标题 / 执行人）。 */
+  othersKeyword: string
 }
 
 export interface BoardState {
@@ -32,7 +36,7 @@ export interface BoardState {
   refreshing: boolean
 }
 
-const INITIAL_QUERY: Query = { scope: 'all', status: 'all', workspace: '', keyword: '' }
+const INITIAL_QUERY: Query = { scope: 'all', status: 'all', workspace: '', keyword: '', othersKeyword: '' }
 
 let state: BoardState = {
   status: 'loading',

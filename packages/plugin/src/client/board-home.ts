@@ -7,9 +7,9 @@
  * （未就绪不渲染 / 真空引导卡 / 筛选空小字）。
  */
 import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react'
-import { IconChecklistOutlineRegular, IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconChecklistOutlineRegular, IconFlatListOutlineRegular, IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { LocaleKey, Translate } from './locales'
-import { boardSnapshot, boardSubscribe, refresh, setQuery } from './store'
+import { boardSnapshot, boardSubscribe, refresh, setQuery, type StatusFilter } from './store'
 import { isMine, selectView, type WorkspaceGroup } from './rows'
 import type { PeriodCounts } from './types'
 import { TaskRowView } from './task-row'
@@ -43,10 +43,10 @@ const regionHeadRowStyle: Record<string, string | number> = {
   margin: 'var(--dtl-space-4) 0 var(--dtl-space-2)',
 }
 const regionHeadTitleStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-lg)', fontWeight: 600 }
-/** 工作区下拉宽度（用户 2026-10-17：140 稍短，+1/4 = 175）。 */
-const WORKSPACE_SELECT_WIDTH = 175
-/** 搜索框宽度（用户 2026-10-17：原来太长，收到约 1/4 量级的窄框）。 */
-const SEARCH_WIDTH = 96
+/** 工作区下拉最小宽度（用户 2026-10-17：内容自适应，下限 = 旧定宽 175 的 3/4 ≈ 131）。 */
+const WORKSPACE_SELECT_MIN = 131
+/** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
+const SEARCH_WIDTH = 192
 
 /** 分组默认折叠阈值（组内太多条时先收起，用户点开）。 */
 const GROUP_COLLAPSE_OVER = 30
@@ -216,38 +216,67 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                           ? h('span', { className: 'dtl-count' }, t('mineCount', { n: view.mine.length }))
                           : null,
                         h('span', { style: { flex: '1 1 auto' } }),
+                        // 工作区下拉：内容自适应、下限 131（用户 2026-10-17）
                         h(Select<string>, {
                           value: workspaceOptions.some((option) => option.value === state.query.workspace)
                             ? state.query.workspace
                             : '',
                           options: workspaceOptions,
                           ariaLabel: t('workspaceLabel'),
-                          width: WORKSPACE_SELECT_WIDTH,
+                          minWidth: WORKSPACE_SELECT_MIN,
                           onChange: (next) => { setQuery({ workspace: next }) },
                         }),
-                      ),
-                      // 搜索独立窄行（用户 2026-10-17：别和下拉挤一排、别拉那么宽）
-                      h('div', { style: { width: `${SEARCH_WIDTH}px`, marginBottom: 'var(--dtl-space-3)' } },
-                        h(SearchInput, {
-                          value: state.query.keyword,
-                          placeholder: t('searchPlaceholder'),
-                          ariaLabel: t('searchPlaceholder'),
-                          onChange: (next) => { setQuery({ keyword: next }) },
-                        }),
+                        // 搜索框：在下拉右边、与「其他待办」同宽 192（用户 2026-10-17）
+                        h('div', { style: { width: `${SEARCH_WIDTH}px`, flex: 'none' } },
+                          h(SearchInput, {
+                            value: state.query.keyword,
+                            placeholder: t('searchPlaceholder'),
+                            ariaLabel: t('searchPlaceholder'),
+                            onChange: (next) => { setQuery({ keyword: next }) },
+                          }),
+                        ),
                       ),
                       view.mine.length === 0
                         ? h(EmptyState, { tone: 'guide', title: t('mineEmpty'), hint: t('mineEmptyHint') })
                         : view.mine.map(row => h(TaskRowView, { key: row.key, t, row, variant: 'mine' })),
-                      // 第二区：按工作区分组（组可折叠；第三区改造前的过渡形态，吃关键字过滤）
+                      // 第二区：其他待办 —— 一个整表（外框连着），段头行在表内；过滤只作用本区
                       view.groups.length === 0
                         ? null
                         : h('div', null,
                           h('div', { style: regionHeadRowStyle },
+                            h('span', { style: { color: 'var(--dtl-fg-3)', display: 'inline-flex', flex: 'none' } },
+                              h(IconFlatListOutlineRegular, { size: 16 })),
                             h('span', { style: { ...regionHeadTitleStyle, fontSize: 'var(--dtl-font-md)' } }, t('regionOthers')),
                             h('span', { style: { flex: '1 1 auto' } }),
-                            h('span', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)' } }, t('showingCount', { n: view.total - view.mine.length })),
+                            h('div', { style: { width: `${SEARCH_WIDTH}px`, flex: 'none' } },
+                              h(SearchInput, {
+                                value: state.query.othersKeyword,
+                                placeholder: t('searchPlaceholder'),
+                                ariaLabel: t('searchPlaceholder'),
+                                onChange: (next) => { setQuery({ othersKeyword: next }) },
+                              }),
+                            ),
                           ),
-                          view.groups.map(group => h(WorkspaceGroupView, { key: group.workspaceId, t, group })),
+                          // 状态过滤行（segmented 回归，用户 2026-10-17：只过滤其他待办）
+                          h('div', { style: { marginBottom: 'var(--dtl-space-2)' } },
+                            h(Segmented<StatusFilter>, {
+                              id: 'dtl-others-status',
+                              value: state.query.status,
+                              label: t('statusLabel'),
+                              items: [
+                                { value: 'all', label: t('statusAll') },
+                                { value: 'active', label: t('statusActive') },
+                                { value: 'open', label: t('statusOpen') },
+                                { value: 'blocked', label: t('statusBlocked') },
+                                { value: 'stale', label: t('statusStale') },
+                              ],
+                              onChange: (next) => { setQuery({ status: next }) },
+                            }),
+                          ),
+                          // 整表：所有工作区段在同一张表内（不是一块一块的盒子）
+                          h('div', { className: 'dtl-table' },
+                            view.groups.map(group => h(WorkspaceGroupView, { key: group.workspaceId, t, group })),
+                          ),
                         ),
                     ),
           ),
@@ -256,11 +285,19 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
   )
 }
 
-/** 一个工作区分组（其他待办表格段）：段头 = 左工作区名 + 右四计数（待办/进行/阻塞/共），可点折叠。 */
+/** 一个工作区分组（其他待办表格段头）：左工作区名 + 右统计
+ *  （共 N｜待办 N｜进行中 N 常显；阻塞 / 停滞**只在 >0 时出现**——用户 2026-10-17），可点折叠。 */
 function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup }): ReactNode {
   const { t, group } = props
   const [open, setOpen] = useState(group.rows.length <= GROUP_COLLAPSE_OVER)
-  return h('div', { className: 'dtl-group' },
+  const stats = [
+    t('groupTotal', { n: group.total }),
+    t('groupOpen', { n: group.openCount }),
+    t('groupDoing', { n: group.doingCount }),
+    ...(group.blockedCount > 0 ? [t('groupBlocked', { n: group.blockedCount })] : []),
+    ...(group.staleCount > 0 ? [t('groupStale', { n: group.staleCount })] : []),
+  ].join(' ｜ ')
+  return h('div', null,
     h('button', {
       type: 'button',
       className: 'dtl-group__head',
@@ -270,9 +307,7 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup }): Rea
     },
       h('span', { className: 'dtl-group__name dtl-ellipsis' }, group.title),
       h('span', { style: { flex: '1 1 auto' } }),
-      h('span', { className: 'dtl-group__stats' }, t('groupHint', {
-        open: group.openCount, doing: group.doingCount, blocked: group.blockedCount, total: group.total,
-      })),
+      h('span', { className: 'dtl-group__stats' }, stats),
     ),
     open
       ? h('div', null,

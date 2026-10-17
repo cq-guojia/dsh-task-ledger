@@ -28,7 +28,8 @@ export type LocaleKey =
   | 'workspaceLabel' | 'workspaceAll'
   | 'searchPlaceholder'
   // 列表分区
-  | 'regionMine' | 'regionOthers' | 'groupHint' | 'showingCount'
+  | 'regionMine' | 'regionOthers' | 'showingCount'
+  | 'groupTotal' | 'groupOpen' | 'groupDoing' | 'groupBlocked' | 'groupStale'
   | 'expandAria' | 'collapseAria'
   | 'ownerUnclaimed' | 'fieldCreator' | 'fieldOwner' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
   | 'ageDaysText' | 'ageToday'
@@ -101,8 +102,12 @@ export const zh: Record<LocaleKey, string> = {
 
   regionMine: '我的待办',
   regionOthers: '其他待办',
-  groupHint: '待办 {open} ｜ 进行 {doing} ｜ 阻塞 {blocked} ｜ 共 {total}',
   showingCount: '显示 {n} 条',
+  groupTotal: '共 {n} 条',
+  groupOpen: '待办 {n} 条',
+  groupDoing: '进行中 {n} 条',
+  groupBlocked: '阻塞 {n} 条',
+  groupStale: '停滞 {n} 条',
   expandAria: '展开过程文档',
   collapseAria: '收起',
 
@@ -202,8 +207,12 @@ export const en: Record<LocaleKey, string> = {
 
   regionMine: 'My todos',
   regionOthers: 'Other tasks',
-  groupHint: '{open} open ｜ {doing} active ｜ {blocked} blocked ｜ {total} total',
   showingCount: '{n} shown',
+  groupTotal: '{n} total',
+  groupOpen: '{n} open',
+  groupDoing: '{n} active',
+  groupBlocked: '{n} blocked',
+  groupStale: '{n} stale',
   expandAria: 'Expand worklog',
   collapseAria: 'Collapse',
 

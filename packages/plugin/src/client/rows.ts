@@ -13,12 +13,13 @@ export type Row =
   | { kind: 'task'; key: string; task: BoardTask; mine: boolean }
   | { kind: 'closed'; key: string; record: HistoryRecord }
 
-/** 一个工作区分组（计数口径：待认领 / 进行中 / 阻塞 / 总，供「其他待办」段头统计）。 */
+/** 一个工作区分组（计数口径：待认领 / 进行中 / 阻塞 / 停滞 / 总，供「其他待办」段头统计）。 */
 export interface WorkspaceGroup {
   readonly workspaceId: string
   readonly title: string
   readonly doingCount: number
   readonly blockedCount: number
+  readonly staleCount: number
   readonly openCount: number
   readonly total: number
   readonly rows: readonly Row[]
@@ -46,6 +47,15 @@ export function isMine(task: BoardTask, board: BoardPayload | null): boolean {
   return task.owner === identity && (task.status === 'doing' || task.status === 'blocked')
 }
 
+/** 状态档命中（停滞由 host 标记，前端不判阈值）——只作用于「其他待办」。 */
+function statusHit(task: BoardTask, status: Query['status']): boolean {
+  if (status === 'all') return true
+  if (status === 'active') return task.status === 'doing' || task.status === 'blocked'
+  if (status === 'open') return task.status === 'open'
+  if (status === 'blocked') return task.status === 'blocked'
+  return task.stale === true
+}
+
 /** 组内排序：别人的 doing/blocked 在前、待认领在后；各自按创建 / 开始时间倒序。 */
 function inGroupOrder(a: Row, b: Row): number {
   if (a.kind !== 'task' || b.kind !== 'task') return 0
@@ -55,11 +65,10 @@ function inGroupOrder(a: Row, b: Row): number {
 }
 
 /**
- * 当前筛选下的两区视图（用户 2026-10-17 二次定稿）：
- *  - 第一区「我的待办」= 我名下 doing/blocked，**吃标题搜索**（标题行那个搜索框只归它管），
- *    按创建时间倒序；空了给引导卡；
- *  - 第二区「按工作区」= 其余任务按工作区分组，**暂不过滤**——它的状态 / 工作区 / 搜索
- *    等过滤归「第三区（所有任务）」改造，未建之前不装。
+ * 当前筛选下的两区视图（用户 2026-10-17 定稿）：
+ *  - 第一区「我的待办」= 我名下 doing/blocked，吃工作区下拉 + 标题搜索，按创建时间倒序；
+ *  - 第二区「其他待办」= 其余任务按工作区分组，吃**状态档**（segmented）+
+ *    **标题 / 执行人搜索**（usersKeyword）；一个整表（外框连着），不是一块一块的。
  */
 export function selectView(current: { board: BoardPayload | null; query: Query }): BoardView {
   const { board, query } = current
@@ -72,7 +81,10 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
     .map((task): Row => ({ kind: 'task', key: `${task.workspace.id}:${task.id}`, task, mine: true }))
   const rest = query.scope === 'mine'
     ? []
-    : board.tasks.filter((task) => !isMine(task, board))
+    : board.tasks
+      .filter((task) => !isMine(task, board))
+      .filter((task) => statusHit(task, query.status))
+      .filter((task) => hitKeyword(query.othersKeyword, [task.title, task.owner]))
   const byWorkspace = new Map<string, { title: string; rows: Row[] }>()
   for (const task of rest) {
     const entry = byWorkspace.get(task.workspace.id) ?? { title: task.workspace.title, rows: [] }
@@ -85,6 +97,7 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
       title: entry.title,
       doingCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'doing').length,
       blockedCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'blocked').length,
+      staleCount: entry.rows.filter((row) => row.kind === 'task' && row.task.stale === true).length,
       openCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'open').length,
       total: entry.rows.length,
       rows: entry.rows.sort(inGroupOrder),

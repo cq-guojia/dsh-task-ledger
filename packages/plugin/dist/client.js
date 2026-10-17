@@ -63,7 +63,8 @@ window.__ModuleLoader__.load({
 				scope: "all",
 				status: "all",
 				workspace: "",
-				keyword: ""
+				keyword: "",
+				othersKeyword: ""
 			},
 			refreshing: false
 		};
@@ -139,6 +140,14 @@ window.__ModuleLoader__.load({
 			if (identity === null || identity === "") return false;
 			return task.owner === identity && (task.status === "doing" || task.status === "blocked");
 		}
+		/** 状态档命中（停滞由 host 标记，前端不判阈值）——只作用于「其他待办」。 */
+		function statusHit(task, status) {
+			if (status === "all") return true;
+			if (status === "active") return task.status === "doing" || task.status === "blocked";
+			if (status === "open") return task.status === "open";
+			if (status === "blocked") return task.status === "blocked";
+			return task.stale === true;
+		}
 		/** 组内排序：别人的 doing/blocked 在前、待认领在后；各自按创建 / 开始时间倒序。 */
 		function inGroupOrder(a, b) {
 			if (a.kind !== "task" || b.kind !== "task") return 0;
@@ -147,11 +156,10 @@ window.__ModuleLoader__.load({
 			return String(b.task.created ?? b.task.started ?? "").localeCompare(String(a.task.created ?? a.task.started ?? ""));
 		}
 		/**
-		* 当前筛选下的两区视图（用户 2026-10-17 二次定稿）：
-		*  - 第一区「我的待办」= 我名下 doing/blocked，**吃标题搜索**（标题行那个搜索框只归它管），
-		*    按创建时间倒序；空了给引导卡；
-		*  - 第二区「按工作区」= 其余任务按工作区分组，**暂不过滤**——它的状态 / 工作区 / 搜索
-		*    等过滤归「第三区（所有任务）」改造，未建之前不装。
+		* 当前筛选下的两区视图（用户 2026-10-17 定稿）：
+		*  - 第一区「我的待办」= 我名下 doing/blocked，吃工作区下拉 + 标题搜索，按创建时间倒序；
+		*  - 第二区「其他待办」= 其余任务按工作区分组，吃**状态档**（segmented）+
+		*    **标题 / 执行人搜索**（usersKeyword）；一个整表（外框连着），不是一块一块的。
 		*/
 		function selectView(current) {
 			const { board, query } = current;
@@ -173,7 +181,7 @@ window.__ModuleLoader__.load({
 				task,
 				mine: true
 			}));
-			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => !isMine(task, board));
+			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => !isMine(task, board)).filter((task) => statusHit(task, query.status)).filter((task) => hitKeyword(query.othersKeyword, [task.title, task.owner]));
 			const byWorkspace = /* @__PURE__ */ new Map();
 			for (const task of rest) {
 				const entry = byWorkspace.get(task.workspace.id) ?? {
@@ -193,6 +201,7 @@ window.__ModuleLoader__.load({
 				title: entry.title,
 				doingCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "doing").length,
 				blockedCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "blocked").length,
+				staleCount: entry.rows.filter((row) => row.kind === "task" && row.task.stale === true).length,
 				openCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "open").length,
 				total: entry.rows.length,
 				rows: entry.rows.sort(inGroupOrder)
@@ -611,16 +620,18 @@ body[data-ds-dark-theme]{
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 其他待办表格段（用户 2026-10-17：与「我的」绝对区分 —— 无卡片、无色条、间距更紧） */
-.dtl-group{margin-bottom:var(--dtl-space-4);}
+/* 其他待办 = **一个整表**（用户 2026-10-17：外框连着一块儿，不是一段一段的盒子）：
+   一张 1px 边框表，段头行与任务行都在表内，行间只留淡分隔线。 */
+.dtl-table{border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);overflow:hidden;}
 .dtl-group__head{display:flex;align-items:center;gap:var(--dtl-space-2);width:100%;
-  padding:var(--dtl-space-1) 0;border:0;background:transparent;color:inherit;font:inherit;
-  text-align:left;cursor:pointer;}
+  padding:var(--dtl-space-2) var(--dtl-space-3);border:0;border-bottom:1px solid var(--dtl-border-faint);
+  background:var(--dtl-surface-2);color:inherit;font:inherit;text-align:left;cursor:pointer;}
 .dtl-group__name{font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;}
 
-/* 表格行：无卡底；行间距紧；hover 整行淡蓝 */
-.dtl-taskrow--others{padding:var(--dtl-space-1) 0;border-bottom:1px solid var(--dtl-border-faint);}
+/* 表格行：无卡底；行间距紧；hover 整行淡蓝；行间淡分隔线（最后一行由表框收口） */
+.dtl-taskrow--others{padding:var(--dtl-space-2) var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
+.dtl-taskrow--others:last-child{border-bottom:0;}
 .dtl-taskrow--others .dtl-taskrow__row{gap:10px;}
 .dtl-taskrow--others .dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
 .dtl-taskrow--others .dtl-taskrow__l2{margin-top:1px;}
@@ -812,14 +823,16 @@ body[data-ds-dark-theme]{
 				onClick: props.onClick
 			}, props.icon, props.children);
 		}
-		/** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。 */
+		/** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。
+		*  `width` 定宽（px）；只给 `minWidth` = 内容自适应但有下限（工作区名长短不一时用）。 */
 		function Select(props) {
 			ensureUiBase();
 			const size = props.size ?? "md";
+			const style = props.width === void 0 ? props.minWidth === void 0 ? void 0 : { minWidth: `${props.minWidth}px` } : { width: `${props.width}px` };
 			return (0, react.createElement)("select", {
 				className: `dtl-select dtl-select--${size}`,
 				"aria-label": props.ariaLabel,
-				style: props.width === void 0 ? void 0 : { width: `${props.width}px` },
+				style,
 				value: props.value,
 				onChange: (event) => {
 					props.onChange(event.target.value);
@@ -1046,10 +1059,10 @@ body[data-ds-dark-theme]{
 			fontSize: "var(--dtl-font-lg)",
 			fontWeight: 600
 		};
-		/** 工作区下拉宽度（用户 2026-10-17：140 稍短，+1/4 = 175）。 */
-		const WORKSPACE_SELECT_WIDTH = 175;
-		/** 搜索框宽度（用户 2026-10-17：原来太长，收到约 1/4 量级的窄框）。 */
-		const SEARCH_WIDTH = 96;
+		/** 工作区下拉最小宽度（用户 2026-10-17：内容自适应，下限 = 旧定宽 175 的 3/4 ≈ 131）。 */
+		const WORKSPACE_SELECT_MIN = 131;
+		/** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
+		const SEARCH_WIDTH = 192;
 		/** 分组默认折叠阈值（组内太多条时先收起，用户点开）。 */
 		const GROUP_COLLAPSE_OVER = 30;
 		function BoardHome(props) {
@@ -1210,13 +1223,13 @@ body[data-ds-dark-theme]{
 				value: workspaceOptions.some((option) => option.value === state.query.workspace) ? state.query.workspace : "",
 				options: workspaceOptions,
 				ariaLabel: t("workspaceLabel"),
-				width: WORKSPACE_SELECT_WIDTH,
+				minWidth: WORKSPACE_SELECT_MIN,
 				onChange: (next) => {
 					setQuery({ workspace: next });
 				}
-			})), (0, react.createElement)("div", { style: {
+			}), (0, react.createElement)("div", { style: {
 				width: `${SEARCH_WIDTH}px`,
-				marginBottom: "var(--dtl-space-3)"
+				flex: "none"
 			} }, (0, react.createElement)(SearchInput, {
 				value: state.query.keyword,
 				placeholder: t("searchPlaceholder"),
@@ -1224,7 +1237,7 @@ body[data-ds-dark-theme]{
 				onChange: (next) => {
 					setQuery({ keyword: next });
 				}
-			})), view.mine.length === 0 ? (0, react.createElement)(EmptyState, {
+			}))), view.mine.length === 0 ? (0, react.createElement)(EmptyState, {
 				tone: "guide",
 				title: t("mineEmpty"),
 				hint: t("mineEmptyHint")
@@ -1234,22 +1247,70 @@ body[data-ds-dark-theme]{
 				row,
 				variant: "mine"
 			})), view.groups.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadRowStyle }, (0, react.createElement)("span", { style: {
+				color: "var(--dtl-fg-3)",
+				display: "inline-flex",
+				flex: "none"
+			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: {
 				...regionHeadTitleStyle,
 				fontSize: "var(--dtl-font-md)"
-			} }, t("regionOthers")), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { style: {
-				fontSize: "var(--dtl-font-xs)",
-				color: "var(--dtl-fg-3)"
-			} }, t("showingCount", { n: view.total - view.mine.length }))), view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
+			} }, t("regionOthers")), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: {
+				width: `${SEARCH_WIDTH}px`,
+				flex: "none"
+			} }, (0, react.createElement)(SearchInput, {
+				value: state.query.othersKeyword,
+				placeholder: t("searchPlaceholder"),
+				ariaLabel: t("searchPlaceholder"),
+				onChange: (next) => {
+					setQuery({ othersKeyword: next });
+				}
+			}))), (0, react.createElement)("div", { style: { marginBottom: "var(--dtl-space-2)" } }, (0, react.createElement)(Segmented, {
+				id: "dtl-others-status",
+				value: state.query.status,
+				label: t("statusLabel"),
+				items: [
+					{
+						value: "all",
+						label: t("statusAll")
+					},
+					{
+						value: "active",
+						label: t("statusActive")
+					},
+					{
+						value: "open",
+						label: t("statusOpen")
+					},
+					{
+						value: "blocked",
+						label: t("statusBlocked")
+					},
+					{
+						value: "stale",
+						label: t("statusStale")
+					}
+				],
+				onChange: (next) => {
+					setQuery({ status: next });
+				}
+			})), (0, react.createElement)("div", { className: "dtl-table" }, view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
 				key: group.workspaceId,
 				t,
 				group
-			}))))))));
+			})))))))));
 		}
-		/** 一个工作区分组（其他待办表格段）：段头 = 左工作区名 + 右四计数（待办/进行/阻塞/共），可点折叠。 */
+		/** 一个工作区分组（其他待办表格段头）：左工作区名 + 右统计
+		*  （共 N｜待办 N｜进行中 N 常显；阻塞 / 停滞**只在 >0 时出现**——用户 2026-10-17），可点折叠。 */
 		function WorkspaceGroupView(props) {
 			const { t, group } = props;
 			const [open, setOpen] = (0, react.useState)(group.rows.length <= GROUP_COLLAPSE_OVER);
-			return (0, react.createElement)("div", { className: "dtl-group" }, (0, react.createElement)("button", {
+			const stats = [
+				t("groupTotal", { n: group.total }),
+				t("groupOpen", { n: group.openCount }),
+				t("groupDoing", { n: group.doingCount }),
+				...group.blockedCount > 0 ? [t("groupBlocked", { n: group.blockedCount })] : [],
+				...group.staleCount > 0 ? [t("groupStale", { n: group.staleCount })] : []
+			].join(" ｜ ");
+			return (0, react.createElement)("div", null, (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-group__head",
 				"aria-expanded": open,
@@ -1257,12 +1318,7 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					setOpen(!open);
 				}
-			}, (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, t("groupHint", {
-				open: group.openCount,
-				doing: group.doingCount,
-				blocked: group.blockedCount,
-				total: group.total
-			}))), open ? (0, react.createElement)("div", null, group.rows.map((row) => (0, react.createElement)(TaskRowView, {
+			}, (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, group.rows.map((row) => (0, react.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,
@@ -1326,8 +1382,12 @@ body[data-ds-dark-theme]{
 			searchPlaceholder: "搜索",
 			regionMine: "我的待办",
 			regionOthers: "其他待办",
-			groupHint: "待办 {open} ｜ 进行 {doing} ｜ 阻塞 {blocked} ｜ 共 {total}",
 			showingCount: "显示 {n} 条",
+			groupTotal: "共 {n} 条",
+			groupOpen: "待办 {n} 条",
+			groupDoing: "进行中 {n} 条",
+			groupBlocked: "阻塞 {n} 条",
+			groupStale: "停滞 {n} 条",
 			expandAria: "展开过程文档",
 			collapseAria: "收起",
 			ownerUnclaimed: "待认领",
@@ -1419,8 +1479,12 @@ body[data-ds-dark-theme]{
 			searchPlaceholder: "Search",
 			regionMine: "My todos",
 			regionOthers: "Other tasks",
-			groupHint: "{open} open ｜ {doing} active ｜ {blocked} blocked ｜ {total} total",
 			showingCount: "{n} shown",
+			groupTotal: "{n} total",
+			groupOpen: "{n} open",
+			groupDoing: "{n} active",
+			groupBlocked: "{n} blocked",
+			groupStale: "{n} stale",
 			expandAria: "Expand worklog",
 			collapseAria: "Collapse",
 			ownerUnclaimed: "unclaimed",
