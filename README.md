@@ -11,5 +11,5 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 
 ## Status
 
-- `task-ledger@1.0.0` published (2026-10-16).
-- `dsh-task-ledger@0.0.6` published (2026-10-17): board home page client half — panel (4 stat cards + filter row + list) + overlay badge, dark/light follows the host, zh/en follows the host.
+- `task-ledger@1.0.2` published (2026-10-17): `history` JSON mode now emits JSON even when a workspace has no history files (fixes a 500 that blanked the whole board).
+- `dsh-task-ledger@0.0.7` published (2026-10-17): board home page client half — panel (4 stat cards + filter row + list) + overlay badge, dark/light follows the host, zh/en follows the host. Fixes the 500 above (the plugin embeds the fixed script) and surfaces the server's error text instead of a bare `HTTP 500`.
