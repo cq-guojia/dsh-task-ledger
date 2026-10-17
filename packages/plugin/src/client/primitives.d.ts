@@ -72,4 +72,5 @@ declare module '@deepseek-ai/dsh-client-ui-primitives' {
   export const IconCheckOutlineRegular: ComponentType<{ size?: number; className?: string }>
   export const IconUsersOutlineRegular: ComponentType<{ size?: number; className?: string }>
   export const IconChecklistOutlineRegular: ComponentType<{ size?: number; className?: string }>
+  export const IconCloseOutlineRegular: ComponentType<{ size?: number; className?: string }>
 }

@@ -13,7 +13,7 @@
  */
 import { createElement as h, type ReactNode } from 'react'
 import {
-  IconCheckOutlineRegular, IconPlayOutlineRegular, IconUsersOutlineRegular,
+  IconCheckOutlineRegular, IconChevronRightOutlineRegular, IconCloseOutlineRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatDateTime } from './format'
 import type { Translate } from './locales'
@@ -97,15 +97,17 @@ export function TaskRowView(props: {
         ),
       ),
       h('span', { className: 'dtl-taskrow__when' }, parts.length === 0 ? t('timeUnknown') : parts.join('丨')),
-      // 悬停按钮排：icon + 字，hover 立刻浮出说明（CSS ::after，不用慢半拍的原生 title）
+      // 悬停按钮排：icon + 字，hover 立刻浮出说明（CSS ::after，不用慢半拍的原生 title）。
+      // 图标口径（用户 2026-10-17 定）：继续=右箭头（不用播放键）、结束=✓、释放=解除（官方无 unlink，
+      // 取「断开」意象的 close，确切语义由 tooltip 文字给）。
       row.kind === 'task'
         ? h('span', { className: 'dtl-taskrow__actions' },
           h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipResume') },
-            h(IconPlayOutlineRegular, { size: 14 }), t('actionResume')),
+            h(IconChevronRightOutlineRegular, { size: 14 }), t('actionResume')),
           h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipFinish') },
             h(IconCheckOutlineRegular, { size: 14 }), t('actionFinish')),
           h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipRelease') },
-            h(IconUsersOutlineRegular, { size: 14 }), t('actionRelease')),
+            h(IconCloseOutlineRegular, { size: 14 }), t('actionRelease')),
         )
         : null,
     ),

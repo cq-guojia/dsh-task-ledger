@@ -209,7 +209,7 @@ export const UI_CONTROLS_CSS = `
 .dtl-iconbtn:disabled{cursor:default;opacity:.4;}
 
 /* ── 输入 / 搜索框 / 下拉 ──────────────────────────────────────── */
-.dtl-input{box-sizing:border-box;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
+.dtl-input{box-sizing:border-box;width:100%;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
   background:var(--dtl-surface-1);color:var(--dtl-fg);font-family:inherit;outline:none;
   transition:border-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-input--sm{height:var(--dtl-control-h-sm);padding:0 8px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}

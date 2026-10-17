@@ -42,10 +42,13 @@ const filterRowStyle: Record<string, string | number> = {
 }
 const searchWrapStyle: Record<string, string | number> = { flex: '1 1 220px', minWidth: 0 }
 const hintStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-sm)', color: 'var(--dtl-fg-2)' }
-const regionHeadStyle: Record<string, string | number> = {
-  display: 'flex', alignItems: 'baseline', gap: 'var(--dtl-space-2)',
-  margin: 'var(--dtl-space-4) 0 var(--dtl-space-2)', fontSize: 'var(--dtl-font-lg)', fontWeight: 600,
+/** 分区标题行：垂直居中（用户 2026-10-17：图标 / 标题 / 计数不许像下楼梯一样逐个低）。 */
+const regionHeadRowStyle: Record<string, string | number> = {
+  display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)',
+  margin: 'var(--dtl-space-4) 0 var(--dtl-space-2)',
 }
+const regionHeadTitleStyle: Record<string, string | number> = { fontSize: 'var(--dtl-font-lg)', fontWeight: 600 }
+const searchBoxStyle: Record<string, string | number> = { width: '220px', flex: 'none' }
 const groupHeadStyle: Record<string, string | number> = {
   display: 'flex', alignItems: 'center', gap: 'var(--dtl-space-2)', width: '100%',
   padding: 'var(--dtl-space-2) var(--dtl-space-3)', border: 0, borderRadius: 'var(--dtl-radius-md)',
@@ -204,15 +207,15 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                   : h('div', null,
                       // 第一区：我的待办——定死全量、不过滤（用户 2026-10-17），空了给引导卡；
                       // 标题行右侧挂搜索框（只作用第三区），计数用小圆徽
-                      h('div', { style: regionHeadStyle },
+                      h('div', { style: regionHeadRowStyle },
                         h('span', { style: { color: 'var(--dtl-fg-3)', display: 'inline-flex', flex: 'none' } },
                           h(IconChecklistOutlineRegular, { size: 16 })),
-                        h('span', null, t('regionMine')),
+                        h('span', { style: regionHeadTitleStyle }, t('regionMine')),
                         view.mine.length > 0
                           ? h('span', { className: 'dtl-count' }, `[${view.mine.length}]`)
                           : null,
                         h('span', { style: { flex: '1 1 auto' } }),
-                        h('div', { style: { width: '220px', display: 'flex' } },
+                        h('div', { style: searchBoxStyle },
                           h(SearchInput, {
                             value: state.query.keyword,
                             placeholder: t('searchPlaceholder'),
@@ -232,9 +235,9 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                       view.groups.length === 0
                         ? null
                         : h('div', null,
-                          h('div', { style: regionHeadStyle },
-                            h('span', null, t('regionWorkspaces')),
-                            h('span', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)', fontWeight: 400 } }, t('showingCount', { n: view.total - view.mine.length })),
+                          h('div', { style: regionHeadRowStyle },
+                            h('span', { style: regionHeadTitleStyle }, t('regionWorkspaces')),
+                            h('span', { style: { fontSize: 'var(--dtl-font-xs)', color: 'var(--dtl-fg-3)' } }, t('showingCount', { n: view.total - view.mine.length })),
                           ),
                           view.groups.map(group => h(WorkspaceGroupView, { key: group.workspaceId, t, group })),
                         ),

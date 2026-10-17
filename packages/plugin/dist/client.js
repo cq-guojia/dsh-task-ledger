@@ -290,7 +290,7 @@ window.__ModuleLoader__.load({
 				type: "button",
 				className: "dtl-minibtn",
 				"data-tip": t("tipResume")
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconPlayOutlineRegular, { size: 14 }), t("actionResume")), (0, react.createElement)("button", {
+			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), t("actionResume")), (0, react.createElement)("button", {
 				type: "button",
 				className: "dtl-minibtn",
 				"data-tip": t("tipFinish")
@@ -298,7 +298,7 @@ window.__ModuleLoader__.load({
 				type: "button",
 				className: "dtl-minibtn",
 				"data-tip": t("tipRelease")
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconUsersOutlineRegular, { size: 14 }), t("actionRelease"))) : null));
+			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }), t("actionRelease"))) : null));
 		}
 		//#endregion
 		//#region src/client/tokens.ts
@@ -512,7 +512,7 @@ body[data-ds-dark-theme]{
 .dtl-iconbtn:disabled{cursor:default;opacity:.4;}
 
 /* ── 输入 / 搜索框 / 下拉 ──────────────────────────────────────── */
-.dtl-input{box-sizing:border-box;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
+.dtl-input{box-sizing:border-box;width:100%;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
   background:var(--dtl-surface-1);color:var(--dtl-fg);font-family:inherit;outline:none;
   transition:border-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-input--sm{height:var(--dtl-control-h-sm);padding:0 8px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
@@ -629,10 +629,10 @@ body[data-ds-dark-theme]{
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 
-/* 工作区徽标：蓝底纹胶囊（UI 设计师 2026-10-17：卡片底上最醒目又不抢标题） */
+/* 工作区徽标：蓝描边胶囊（用户 2026-10-17：只铺 soft 底在暗色下等于没有 ⇒ 加 1px 蓝描边 + 蓝字）。 */
 .dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-business-soft);color:var(--dtl-fg);font-size:var(--dtl-font-xs);
-  line-height:16px;white-space:nowrap;}
+  border:1px solid var(--dtl-business);background:var(--dtl-business-soft);color:var(--dtl-business);
+  font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;}
 
 /* 行内动作按钮（icon + 字，加大；悬停立刻浮出说明——CSS ::after，不用慢半拍的原生 title）。
    样子先行，点击行为归「任务按钮与会话交接」任务 */
@@ -958,13 +958,20 @@ body[data-ds-dark-theme]{
 			fontSize: "var(--dtl-font-sm)",
 			color: "var(--dtl-fg-2)"
 		};
-		const regionHeadStyle = {
+		/** 分区标题行：垂直居中（用户 2026-10-17：图标 / 标题 / 计数不许像下楼梯一样逐个低）。 */
+		const regionHeadRowStyle = {
 			display: "flex",
-			alignItems: "baseline",
+			alignItems: "center",
 			gap: "var(--dtl-space-2)",
-			margin: "var(--dtl-space-4) 0 var(--dtl-space-2)",
+			margin: "var(--dtl-space-4) 0 var(--dtl-space-2)"
+		};
+		const regionHeadTitleStyle = {
 			fontSize: "var(--dtl-font-lg)",
 			fontWeight: 600
+		};
+		const searchBoxStyle = {
+			width: "220px",
+			flex: "none"
 		};
 		const groupHeadStyle = {
 			display: "flex",
@@ -1130,14 +1137,11 @@ body[data-ds-dark-theme]{
 				tone: "guide",
 				title: t("emptyNoWorkspace"),
 				hint: t("emptyNoWorkspaceHint")
-			}) : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", { style: {
+			}) : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadRowStyle }, (0, react.createElement)("span", { style: {
 				color: "var(--dtl-fg-3)",
 				display: "inline-flex",
 				flex: "none"
-			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", null, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, `[${view.mine.length}]`) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: {
-				width: "220px",
-				display: "flex"
-			} }, (0, react.createElement)(SearchInput, {
+			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: regionHeadTitleStyle }, t("regionMine")), view.mine.length > 0 ? (0, react.createElement)("span", { className: "dtl-count" }, `[${view.mine.length}]`) : null, (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("div", { style: searchBoxStyle }, (0, react.createElement)(SearchInput, {
 				value: state.query.keyword,
 				placeholder: t("searchPlaceholder"),
 				ariaLabel: t("searchPlaceholder"),
@@ -1154,10 +1158,9 @@ body[data-ds-dark-theme]{
 				row,
 				showWorkspace: true,
 				mockTone: index === 0 ? "blocked" : index === 1 ? "stale" : void 0
-			})), view.groups.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadStyle }, (0, react.createElement)("span", null, t("regionWorkspaces")), (0, react.createElement)("span", { style: {
+			})), view.groups.length === 0 ? null : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadRowStyle }, (0, react.createElement)("span", { style: regionHeadTitleStyle }, t("regionWorkspaces")), (0, react.createElement)("span", { style: {
 				fontSize: "var(--dtl-font-xs)",
-				color: "var(--dtl-fg-3)",
-				fontWeight: 400
+				color: "var(--dtl-fg-3)"
 			} }, t("showingCount", { n: view.total - view.mine.length }))), view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
 				key: group.workspaceId,
 				t,
