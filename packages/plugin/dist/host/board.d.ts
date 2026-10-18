@@ -83,12 +83,6 @@ export interface HomeAggregate {
     readonly trend: TrendPeriods;
 }
 /**
- * 当前 git 身份（cwd = 该工作区）——「我的待办」判定源。
- * 与 agent 在会话里跑 skill 时的取值环境一致；取不到回 null（非 git 目录 / 没配身份），
- * 该工作区的「我的」统计按 0 计（不谎报）。
- */
-export declare function getCurrentIdentity(workspace: LedgerWorkspace): Promise<string | null>;
-/**
  * 首页一次拿全：在办快照（含停滞 / 天数 / 身份）+ 近 8 周趋势（完成 / 新增 × 所有 / 我的）
  * + 四个自然周期计数。**每个工作区只读一次**（list + history + git 身份），
  * 避免「快照读一遍、统计再读一遍」把 5 万行级工作区的 history 解析翻倍。

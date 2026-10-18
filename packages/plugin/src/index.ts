@@ -10,7 +10,7 @@
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
 import { registerRoutes, type WebServerLike, type WorkspaceRegistryLike } from './host/routes.js'
-import { buildSkillRegistration, type SkillsRegistry } from './host/skill-registration.js'
+import { buildSkillRegistration, type SkillsRegistry } from './host/skill/registration.js'
 
 export const name = 'dsh-task-ledger'
 

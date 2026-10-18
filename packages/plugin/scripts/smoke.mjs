@@ -10,9 +10,10 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(here, '../../..')
 
 const { resolveWorkspaces } = await import('../dist/host/workspace.js')
-const { readTasks, getTask, readWorklog } = await import('../dist/host/ledger-read.js')
-const { getHomeAggregate, getBoardSnapshot, queryClosed, getFilterOptions, getCurrentIdentity } = await import('../dist/host/board.js')
-const { runLedgerScript } = await import('../dist/host/script.js')
+const { readTasks, getTask, readWorklog } = await import('../dist/host/repositories/ledger.repository.js')
+const { getHomeAggregate, getBoardSnapshot, queryClosed, getFilterOptions } = await import('../dist/host/board.js')
+const { getCurrentIdentity } = await import('../dist/host/repositories/identity.repository.js')
+const { runLedgerScript } = await import('../dist/host/repositories/runner.js')
 const { ensurePerfFixture } = await import('./fixtures/generate-perf.mjs')
 
 let passed = 0
@@ -357,7 +358,7 @@ await check('文案字典：zh / en 键完全对齐（漏一种语言界面就�
 
 await check('buildSkillRegistration：name/description/正文 + 占位符替换为绝对路径', async () => {
   const { existsSync } = await import('node:fs')
-  const { buildSkillRegistration } = await import('../dist/host/skill-registration.js')
+  const { buildSkillRegistration } = await import('../dist/host/skill/registration.js')
   const registration = buildSkillRegistration()
   assert.equal(registration.name, 'task-ledger')
   assert.ok(registration.description.length > 20, 'description 应非空（取自 SKILL.md frontmatter）')

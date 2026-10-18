@@ -10,7 +10,7 @@
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
 import { registerRoutes } from './host/routes.js';
-import { buildSkillRegistration } from './host/skill-registration.js';
+import { buildSkillRegistration } from './host/skill/registration.js';
 export const name = 'dsh-task-ledger';
 export function apply(ctx) {
     // ── 数据面（任务 3） ──

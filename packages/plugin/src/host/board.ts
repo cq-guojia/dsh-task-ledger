@@ -1,5 +1,5 @@
-import { spawn } from 'node:child_process'
-import { readHistory, readTasks } from './ledger-read.js'
+import { readHistory, readTasks } from './repositories/ledger.repository.js'
+import { getCurrentIdentity } from './repositories/identity.repository.js'
 import type { HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRow } from './types.js'
 
 /** 历史窗口：只读最近 13 个月的文件（2026-10-17 拍板；脚本默认读全部，窗口由插件显式传）。 */
@@ -159,24 +159,6 @@ function daysSince(stamp: string | null | undefined, now: Date): number | null {
   if (Number.isNaN(parsed.getTime())) return null
   const days = Math.floor((now.getTime() - parsed.getTime()) / 86_400_000)
   return days > 0 ? days : 0
-}
-
-/**
- * 当前 git 身份（cwd = 该工作区）——「我的待办」判定源。
- * 与 agent 在会话里跑 skill 时的取值环境一致；取不到回 null（非 git 目录 / 没配身份），
- * 该工作区的「我的」统计按 0 计（不谎报）。
- */
-export function getCurrentIdentity(workspace: LedgerWorkspace): Promise<string | null> {
-  return new Promise((resolve) => {
-    const child = spawn('git', ['config', 'user.name'], { cwd: workspace.path, stdio: ['ignore', 'pipe', 'ignore'] })
-    let stdout = ''
-    child.stdout.on('data', (chunk: Buffer) => { stdout += chunk.toString() })
-    child.on('error', () => { resolve(null) })
-    child.on('close', (code) => {
-      const name = stdout.trim()
-      resolve(code === 0 && name !== '' ? name : null)
-    })
-  })
 }
 
 /** 一个工作区读全（list + history + git 身份）——首页所有数字的共同原料。 */

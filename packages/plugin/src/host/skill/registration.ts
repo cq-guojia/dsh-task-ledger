@@ -5,8 +5,9 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-/** 内嵌 skill 目录：dist/host/skill-registration.js → 包根 skill/（copy-skill 产物）。 */
-const SKILL_DIR = fileURLToPath(new URL('../../skill', import.meta.url))
+/** 内嵌 skill 目录：dist/host/skill/registration.js → 包根 skill/（copy-skill 产物；
+ *  比原 host/skill-registration.js 深一层 ⇒ 相对路径多一级 `../`）。 */
+const SKILL_DIR = fileURLToPath(new URL('../../../skill', import.meta.url))
 
 /** SKILL.md 里指示脚本位置的占位符（注册时替换为绝对路径，模型据此找到脚本）。 */
 const SKILL_DIR_TOKEN = '<本 SKILL.md 所在目录>'

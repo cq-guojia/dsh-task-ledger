@@ -1,5 +1,5 @@
 import { getHomeAggregate, getFilterOptions, queryClosed } from './board.js';
-import { getTask, readTasks, readWorklog } from './ledger-read.js';
+import { getTask, readTasks, readWorklog } from './repositories/ledger.repository.js';
 import { resolveWorkspaces } from './workspace.js';
 /** API 前缀（唯一真源就在这一处）。 */
 const API_PREFIX = '/api/task-ledger';
@@ -47,7 +47,7 @@ function filterFromQuery(url) {
         filter.months = months;
     return filter;
 }
-/** 每请求重新解析工作区（registry 可能刚变；existsSync × N 是微秒级，不缓存）。 */
+/** 每请求重新解析工作区（registry 可能刚变；探测走 hasLedger()，微秒级，不缓存）。 */
 function workspacesOf(deps) {
     return resolveWorkspaces(deps.registry.list());
 }

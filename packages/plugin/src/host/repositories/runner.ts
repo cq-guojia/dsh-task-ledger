@@ -2,10 +2,11 @@ import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 /**
- * 内嵌 skill 脚本的默认路径：dist/host/script.js → 包根 skill/scripts/progress.py。
+ * 内嵌 skill 脚本的默认路径：dist/host/repositories/runner.js → 包根 skill/scripts/progress.py
+ * （比原 host/script.js 深一层 ⇒ 相对路径多一级 `../`）。
  * 构建时 scripts/copy-skill.mjs 把 packages/skill 拷到 packages/plugin/skill/。
  */
-const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL('../../skill/scripts/progress.py', import.meta.url))
+const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL('../../../skill/scripts/progress.py', import.meta.url))
 
 /** 单次脚本调用超时上限（ms）。实测单仓 5 万行全量 1.2s，10s 是宽松上限。 */
 const DEFAULT_TIMEOUT_MS = 10_000

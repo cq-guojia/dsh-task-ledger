@@ -1,7 +1,11 @@
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { runLedgerScript } from './script.js'
-import type { HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRecord, TaskRow } from './types.js'
+import { runLedgerScript } from './runner.js'
+import type { HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRecord, TaskRow } from '../types.js'
+
+/** 台账目录名（各工作区根下的这一个目录；布局知识只在本文件出现一次）。 */
+const LEDGER_DIR = 'ledger'
 
 /**
  * LedgerFilter → skill 脚本参数（只拼调用方给了的；undefined 一律不拼，
@@ -18,6 +22,14 @@ export function filterArgs(filter: LedgerFilter): string[] {
   if (filter.limit !== undefined) args.push('--limit', String(filter.limit))
   if (filter.months !== undefined) args.push('--months', String(filter.months))
   return args
+}
+
+/**
+ * 台账工作区探测：`<path>/ledger/progress.json` 在才算（未初始化 = 后端不可见，
+ * 2026-10-17 拍板）。全 host 对台账目录的 IO 只在本文件——别处再写 existsSync 即为分层倒退。
+ */
+export function hasLedger(workspacePath: string): boolean {
+  return existsSync(path.join(workspacePath, LEDGER_DIR, 'progress.json'))
 }
 
 /**
@@ -51,7 +63,7 @@ export async function readWorklog(workspace: LedgerWorkspace, task: TaskRow): Pr
   const relative = task.worklog
   if (relative === undefined || relative === null || relative === '') return null
   try {
-    return await readFile(path.join(workspace.path, 'ledger', relative), 'utf-8')
+    return await readFile(path.join(workspace.path, LEDGER_DIR, relative), 'utf-8')
   } catch {
     return null
   }

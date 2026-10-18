@@ -6,7 +6,7 @@
  */
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { getHomeAggregate, getFilterOptions, queryClosed } from './board.js'
-import { getTask, readTasks, readWorklog } from './ledger-read.js'
+import { getTask, readTasks, readWorklog } from './repositories/ledger.repository.js'
 import type { LedgerFilter } from './types.js'
 import { resolveWorkspaces, type RegistryWorkspace } from './workspace.js'
 
@@ -60,7 +60,7 @@ function filterFromQuery(url: URL): LedgerFilter {
   return filter
 }
 
-/** 每请求重新解析工作区（registry 可能刚变；existsSync × N 是微秒级，不缓存）。 */
+/** 每请求重新解析工作区（registry 可能刚变；探测走 hasLedger()，微秒级，不缓存）。 */
 function workspacesOf(deps: RouteDeps) {
   return resolveWorkspaces(deps.registry.list())
 }
