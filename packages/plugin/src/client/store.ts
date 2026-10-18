@@ -7,8 +7,8 @@
  * ⚠️ `getSnapshot` 必须返回**稳定引用**（每次新建对象会被判定为「一直在变」⇒ 无限重渲染），
  * 故只在真变了时才换 `state` 对象。
  */
-import { fetchBoard } from './api'
-import type { BoardPayload } from './types'
+import { fetchBoardSnapshot, fetchTrend } from './api'
+import type { BoardPayload, TrendPayload } from './types'
 
 /** 范围：我的 / 全部工作区。 */
 export type Scope = 'mine' | 'all'
@@ -34,6 +34,11 @@ export interface BoardState {
   query: Query
   /** 手动刷新在途（按钮转圈 / 禁用）。 */
   refreshing: boolean
+  /** 趋势（慢路径，`/board/trend`）：null = 还没回来 / 旧宿主没有该端点。 */
+  trend: TrendPayload | null
+  /** 趋势加载态：首屏不阻塞列表，图表区自己显示占位 / 兜底文案。 */
+  trendStatus: 'idle' | 'loading' | 'ready' | 'error'
+  trendError: string | null
 }
 
 const INITIAL_QUERY: Query = { scope: 'all', status: 'all', workspace: '', keyword: '', othersKeyword: '' }
@@ -44,6 +49,9 @@ let state: BoardState = {
   error: null,
   query: INITIAL_QUERY,
   refreshing: false,
+  trend: null,
+  trendStatus: 'idle',
+  trendError: null,
 }
 
 const listeners = new Set<() => void>()
@@ -74,19 +82,32 @@ export function boardSubscribe(listener: () => void): () => void {
   return () => { listeners.delete(listener) }
 }
 
-/** 重读：在办快照 + 完成类统计与近 8 周趋势（一次 `/board` 全带回）。 */
+/**
+ * 重读（2026-10-18 拆端点）：**两段**——先快路径 `/board/snapshot`（只读在办，首屏立即可渲染），
+ * 再慢路径 `/board/trend`（读 history，后台拉；迟到按 token 丢弃，不盖新快照）。
+ * 趋势失败（含旧宿主 404）不阻塞列表：trendStatus 置 error，图表区显示兜底文案。
+ */
 export async function refresh(): Promise<void> {
   const token = ++runToken
   set({ refreshing: true })
   try {
-    const board = await fetchBoard()
+    const board = await fetchBoardSnapshot()
     if (token !== runToken) return
-    set({ status: 'ready', board, error: null })
+    set({ status: 'ready', board, error: null, trendStatus: 'loading', trendError: null })
   } catch (error) {
     if (token !== runToken) return
     set({ status: 'error', error: error instanceof Error ? error.message : String(error) })
+    return
   } finally {
     if (token === runToken) set({ refreshing: false })
+  }
+  try {
+    const trend = await fetchTrend()
+    if (token !== runToken) return
+    set({ trend, trendStatus: 'ready', trendError: null })
+  } catch (error) {
+    if (token !== runToken) return
+    set({ trend: null, trendStatus: 'error', trendError: error instanceof Error ? error.message : String(error) })
   }
 }
 

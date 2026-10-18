@@ -67,6 +67,12 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
   const board = state.board
   const view = useMemo(() => selectView(state), [state])
   const stats = board?.stats
+  // 趋势走慢路径（`/board/trend`，读 history）：晚到不影响列表；未到 / 失败时由统计卡与图表区各自兜底。
+  const trend = state.trend
+  const periods = trend?.trend
+  const trendPending = state.trendStatus === 'idle' || state.trendStatus === 'loading'
+  /** 快照 + 趋势两段各自的降级工作区（op 不同，合并展示，别装没看见）。 */
+  const degraded = [...(board?.degraded ?? []), ...(trend?.degraded ?? [])]
   // 工作区下拉候选（用户 2026-10-17）：不读系统全量工作区，只从「我的」任务里提取工作区并排重
   // ⇒ 没有我任务的工作区不出现；口径与第一区一致（isMine 同源）。
   const workspaceOptions = useMemo(() => [
@@ -88,18 +94,19 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
       interactive: false,
     })
 
-  /** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。 */
+  /** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。
+   *  趋势未到 / 读挂 ⇒ 数字留 '—'（StatCard 对 0 的处理）、小字整条不显示，**不拿 0 充数**。 */
   const periodCard = (label: LocaleKey, period: PeriodCounts | undefined): ReactNode =>
     h(StatCard, {
       label: t(label),
       value: period?.done ?? 0,
-      hint: t('statCreatedHint', { n: period?.created ?? 0 }),
+      hint: period === undefined ? undefined : t('statCreatedHint', { n: period.created }),
       interactive: false,
       title: period === undefined ? undefined : t('periodRange', { from: period.from, to: period.to }),
     })
 
   const [chartScope, setChartScope] = useState<'all' | 'mine'>('all')
-  const chartWeeks = useMemo(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => {
+  const chartWeeks = useMemo(() => (trend?.closed.weekly[chartScope] ?? []).map((bucket) => {
     // 容错：host 旧版可能不带 end（客户端/宿主版本错配时），退回用 week，绝不崩面板。
     const end = bucket.end ?? bucket.week ?? ''
     return {
@@ -109,7 +116,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
       created: bucket.created,
       title: chartScope === 'mine' ? `截至 ${end}（${t('chartOnlyMine')}）` : `截至 ${end}`,
     }
-  }), [board, chartScope, t])
+  }), [trend, chartScope, t])
   const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0 && week.remaining === 0)
 
   return h('div', { style: pageStyle },
@@ -164,10 +171,10 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                     interactive: false,
                   }),
                   // 第二行 · 统计台（自然周期，不可点）
-                  periodCard('statWeekDone', board?.trend.thisWeek),
-                  periodCard('statLastWeekDone', board?.trend.lastWeek),
-                  periodCard('statMonthDone', board?.trend.thisMonth),
-                  periodCard('statLastMonthDone', board?.trend.lastMonth),
+                  periodCard('statWeekDone', periods?.thisWeek),
+                  periodCard('statLastWeekDone', periods?.lastWeek),
+                  periodCard('statMonthDone', periods?.thisMonth),
+                  periodCard('statLastMonthDone', periods?.lastMonth),
                 ),
                 h('div', { className: 'dtl-card', style: chartCardStyle },
                   // 右上角只留一个「只看我的」小复选框：勾上 = 我的，不勾 = 所有（用户 2026-10-17）
@@ -181,15 +188,21 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                       t('chartOnlyMine'),
                     ),
                   ),
-                  chartEmpty
-                    ? h('div', { style: { ...hintStyle, padding: 'var(--dtl-space-4) 0' } }, t('chartEmpty'))
-                    : h(GroupedBarChart, {
-                      weeks: chartWeeks,
-                      ariaLabel: t('chartTitle'),
-                      doneLabel: t('chartLegendDone'),
-                      remainingLabel: t('chartLegendRemaining'),
-                      createdLabel: t('chartLegendCreated'),
-                    }),
+                  // 趋势是慢路径：未到给占位、读挂给兜底文案（带原因），就绪才画图——绝不画空图冒充「没有记录」。
+                  trendPending
+                    ? h('div', { style: { ...hintStyle, padding: 'var(--dtl-space-4) 0' } }, t('chartLoading'))
+                    : state.trendStatus === 'error'
+                      ? h('div', { style: { ...hintStyle, padding: 'var(--dtl-space-4) 0' } },
+                        `${t('chartUnavailable')}${state.trendError === null ? '' : `：${state.trendError}`}`)
+                      : chartEmpty
+                        ? h('div', { style: { ...hintStyle, padding: 'var(--dtl-space-4) 0' } }, t('chartEmpty'))
+                        : h(GroupedBarChart, {
+                          weeks: chartWeeks,
+                          ariaLabel: t('chartTitle'),
+                          doneLabel: t('chartLegendDone'),
+                          remainingLabel: t('chartLegendRemaining'),
+                          createdLabel: t('chartLegendCreated'),
+                        }),
                   h(ChartLegend, { doneLabel: t('chartLegendDone'), remainingLabel: t('chartLegendRemaining'), createdLabel: t('chartLegendCreated') }),
                 ),
               ),
@@ -217,7 +230,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                           },
                         },
                           h('span', { style: { color: 'var(--dtl-danger)', flex: 'none', fontWeight: 600 } }, t('degradedTitle')),
-                          h('span', null, (board.degraded ?? []).map(item => t('degradedItem', {
+                          h('span', null, degraded.map(item => t('degradedItem', {
                             title: item.workspaceTitle, message: item.message,
                           })).join('；')),
                         )

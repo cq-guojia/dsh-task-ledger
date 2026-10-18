@@ -10,6 +10,8 @@ window.__ModuleLoader__.load({
 		/** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
 		const API_PREFIX = "api/task-ledger";
 		const DEFAULT_TIMEOUT_MS = 8e3;
+		/** 趋势端点读 history，比快路径慢一个量级（20 万条实测 4s+），超时单给。 */
+		const TREND_TIMEOUT_MS = 3e4;
 		/**
 		* 错误响应榨人话：host 路由（routes.ts）发的是 `{ error: "..." }`，那里的话是**能直接上界面的**
 		* （带工作区名、python3 起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
@@ -40,9 +42,17 @@ window.__ModuleLoader__.load({
 				clearTimeout(timer);
 			}
 		}
-		/** 首页快照（在办全量 + 两个完成类统计 + 各工作区身份）。 */
-		function fetchBoard() {
-			return fetchJson("/board");
+		/** 首页快照（快路径：在办全量 + 统计 + 各工作区身份；**不含趋势**）。 */
+		function fetchBoardSnapshot() {
+			return fetchJson("/board/snapshot");
+		}
+		/**
+		* 趋势（慢路径：近 8 周 + 四个自然周期，host 侧要读 history）。
+		* 超时给得比默认宽：历史量大时读得久（实测 20 万条量级 4s+）；
+		* 旧宿主没有该端点 ⇒ 404，直接抛给调用方兜底，不阻塞列表。
+		*/
+		function fetchTrend() {
+			return fetchJson("/board/trend", {}, TREND_TIMEOUT_MS);
 		}
 		//#endregion
 		//#region src/client/store.ts
@@ -66,7 +76,10 @@ window.__ModuleLoader__.load({
 				keyword: "",
 				othersKeyword: ""
 			},
-			refreshing: false
+			refreshing: false,
+			trend: null,
+			trendStatus: "idle",
+			trendError: null
 		};
 		const listeners = /* @__PURE__ */ new Set();
 		/** 首读只触发一次（谁先订阅谁触发），之后一律靠 `refresh()` / `setQuery()`。 */
@@ -96,17 +109,23 @@ window.__ModuleLoader__.load({
 				listeners.delete(listener);
 			};
 		}
-		/** 重读：在办快照 + 完成类统计与近 8 周趋势（一次 `/board` 全带回）。 */
+		/**
+		* 重读（2026-10-18 拆端点）：**两段**——先快路径 `/board/snapshot`（只读在办，首屏立即可渲染），
+		* 再慢路径 `/board/trend`（读 history，后台拉；迟到按 token 丢弃，不盖新快照）。
+		* 趋势失败（含旧宿主 404）不阻塞列表：trendStatus 置 error，图表区显示兜底文案。
+		*/
 		async function refresh() {
 			const token = ++runToken;
 			set({ refreshing: true });
 			try {
-				const board = await fetchBoard();
+				const board = await fetchBoardSnapshot();
 				if (token !== runToken) return;
 				set({
 					status: "ready",
 					board,
-					error: null
+					error: null,
+					trendStatus: "loading",
+					trendError: null
 				});
 			} catch (error) {
 				if (token !== runToken) return;
@@ -114,8 +133,25 @@ window.__ModuleLoader__.load({
 					status: "error",
 					error: error instanceof Error ? error.message : String(error)
 				});
+				return;
 			} finally {
 				if (token === runToken) set({ refreshing: false });
+			}
+			try {
+				const trend = await fetchTrend();
+				if (token !== runToken) return;
+				set({
+					trend,
+					trendStatus: "ready",
+					trendError: null
+				});
+			} catch (error) {
+				if (token !== runToken) return;
+				set({
+					trend: null,
+					trendStatus: "error",
+					trendError: error instanceof Error ? error.message : String(error)
+				});
 			}
 		}
 		/** 改筛选：全部在浏览器里完成（快照已含全部在办），不发请求。 */
@@ -1166,6 +1202,11 @@ body[data-ds-dark-theme]{
 			const board = state.board;
 			const view = (0, react.useMemo)(() => selectView(state), [state]);
 			const stats = board?.stats;
+			const trend = state.trend;
+			const periods = trend?.trend;
+			const trendPending = state.trendStatus === "idle" || state.trendStatus === "loading";
+			/** 快照 + 趋势两段各自的降级工作区（op 不同，合并展示，别装没看见）。 */
+			const degraded = [...board?.degraded ?? [], ...trend?.degraded ?? []];
 			const workspaceOptions = (0, react.useMemo)(() => [{
 				value: "",
 				label: t("workspaceAll")
@@ -1181,11 +1222,12 @@ body[data-ds-dark-theme]{
 				hint,
 				interactive: false
 			});
-			/** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。 */
+			/** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。
+			*  趋势未到 / 读挂 ⇒ 数字留 '—'（StatCard 对 0 的处理）、小字整条不显示，**不拿 0 充数**。 */
 			const periodCard = (label, period) => (0, react.createElement)(StatCard, {
 				label: t(label),
 				value: period?.done ?? 0,
-				hint: t("statCreatedHint", { n: period?.created ?? 0 }),
+				hint: period === void 0 ? void 0 : t("statCreatedHint", { n: period.created }),
 				interactive: false,
 				title: period === void 0 ? void 0 : t("periodRange", {
 					from: period.from,
@@ -1193,7 +1235,7 @@ body[data-ds-dark-theme]{
 				})
 			});
 			const [chartScope, setChartScope] = (0, react.useState)("all");
-			const chartWeeks = (0, react.useMemo)(() => (board === null ? [] : board.closed.weekly[chartScope]).map((bucket) => {
+			const chartWeeks = (0, react.useMemo)(() => (trend?.closed.weekly[chartScope] ?? []).map((bucket) => {
 				const end = bucket.end ?? bucket.week ?? "";
 				return {
 					label: end.slice(5) || bucket.week?.slice(5) || "",
@@ -1203,7 +1245,7 @@ body[data-ds-dark-theme]{
 					title: chartScope === "mine" ? `截至 ${end}（${t("chartOnlyMine")}）` : `截至 ${end}`
 				};
 			}), [
-				board,
+				trend,
 				chartScope,
 				t
 			]);
@@ -1262,7 +1304,7 @@ body[data-ds-dark-theme]{
 				}),
 				title: t("statStaleTitle", { n: stats.staleDays }),
 				interactive: false
-			}), periodCard("statWeekDone", board?.trend.thisWeek), periodCard("statLastWeekDone", board?.trend.lastWeek), periodCard("statMonthDone", board?.trend.thisMonth), periodCard("statLastMonthDone", board?.trend.lastMonth)), (0, react.createElement)("div", {
+			}), periodCard("statWeekDone", periods?.thisWeek), periodCard("statLastWeekDone", periods?.lastWeek), periodCard("statMonthDone", periods?.thisMonth), periodCard("statLastMonthDone", periods?.lastMonth)), (0, react.createElement)("div", {
 				className: "dtl-card",
 				style: chartCardStyle
 			}, (0, react.createElement)("div", { style: {
@@ -1275,7 +1317,13 @@ body[data-ds-dark-theme]{
 				onChange: (event) => {
 					setChartScope(event.target.checked ? "mine" : "all");
 				}
-			}), t("chartOnlyMine"))), chartEmpty ? (0, react.createElement)("div", { style: {
+			}), t("chartOnlyMine"))), trendPending ? (0, react.createElement)("div", { style: {
+				...hintStyle,
+				padding: "var(--dtl-space-4) 0"
+			} }, t("chartLoading")) : state.trendStatus === "error" ? (0, react.createElement)("div", { style: {
+				...hintStyle,
+				padding: "var(--dtl-space-4) 0"
+			} }, `${t("chartUnavailable")}${state.trendError === null ? "" : `：${state.trendError}`}`) : chartEmpty ? (0, react.createElement)("div", { style: {
 				...hintStyle,
 				padding: "var(--dtl-space-4) 0"
 			} }, t("chartEmpty")) : (0, react.createElement)(GroupedBarChart, {
@@ -1321,7 +1369,7 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-danger)",
 				flex: "none",
 				fontWeight: 600
-			} }, t("degradedTitle")), (0, react.createElement)("span", null, (board.degraded ?? []).map((item) => t("degradedItem", {
+			} }, t("degradedTitle")), (0, react.createElement)("span", null, degraded.map((item) => t("degradedItem", {
 				title: item.workspaceTitle,
 				message: item.message
 			})).join("；"))) : null, (0, react.createElement)("div", { style: regionHeadRowStyle }, (0, react.createElement)("span", { style: {
@@ -1504,6 +1552,8 @@ body[data-ds-dark-theme]{
 			chartCaption: "完成（按结案时间）/ 新增（按创建时间），周一起桶；我的 = owner 是我",
 			chartBucket: "{week} 当周：完成 {done} 条，新增 {created} 条",
 			chartEmpty: "近 8 周没有记录",
+			chartLoading: "趋势读取中…（列表已就绪，统计稍后到）",
+			chartUnavailable: "趋势暂时读不到（不影响上面的任务列表）",
 			chartScopeAll: "所有",
 			chartScopeMine: "我的",
 			chartOnlyMine: "只看我的",
@@ -1615,6 +1665,8 @@ body[data-ds-dark-theme]{
 			chartCaption: "done (by close time) / created (by create time), weeks start Monday; mine = owner is me",
 			chartBucket: "week of {week}: {done} done, {created} created",
 			chartEmpty: "Nothing in the last 8 weeks",
+			chartLoading: "Loading trend… (list is ready, stats will follow)",
+			chartUnavailable: "Trend is unavailable right now (the task lists above are unaffected)",
 			chartScopeAll: "All",
 			chartScopeMine: "Mine",
 			chartOnlyMine: "Mine only",

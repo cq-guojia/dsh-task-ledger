@@ -110,17 +110,26 @@ export interface BoardStats {
   readonly longestBlockedDays: number | null
 }
 
-/** `GET /board` 响应。 */
+/**
+ * `GET /board/snapshot` 响应（**快路径**：只读在办 + 身份，不含趋势）。
+ * 兼容端点 `GET /board` 在此之上追加 closed / trend，但客户端已不走它（2026-10-18 拆端点）。
+ */
 export interface BoardPayload {
   readonly at: string
   readonly workspaces: readonly Workspace[]
   readonly tasks: readonly BoardTask[]
   readonly stats: BoardStats
-  readonly closed: ClosedSummary
-  readonly trend: TrendPeriods
   /** 工作区 id → 该工作区的当前 git 身份（`git config user.name`，取不到为 null）——「我的待办」判定源。 */
   readonly identities: Readonly<Record<string, string | null>>
   /** 降级信息：哪些工作区读挂了、为什么（单工作区坏不拖垮其余；空 = 全部正常）。 */
+  readonly degraded?: readonly DegradedInfo[]
+}
+
+/** `GET /board/trend` 响应（**慢路径**：读 history；与快路径分开拉，首屏不等它）。 */
+export interface TrendPayload {
+  readonly closed: ClosedSummary
+  readonly trend: TrendPeriods
+  /** 降级信息（op 恒为 history）：哪些工作区历史读挂了。 */
   readonly degraded?: readonly DegradedInfo[]
 }
 

@@ -8,12 +8,14 @@
  * 而不带 reason 时浏览器把 error.message 填成「signal is aborted without reason」，
  * 看不出是超时（姊妹仓 2026-10-07 真机教训）。
  */
-import type { BoardPayload, FilterOptions, HistoryRecord, TaskDetail } from './types'
+import type { BoardPayload, FilterOptions, HistoryRecord, TaskDetail, TrendPayload } from './types'
 
 /** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
 export const API_PREFIX = 'api/task-ledger'
 
 const DEFAULT_TIMEOUT_MS = 8_000
+/** 趋势端点读 history，比快路径慢一个量级（20 万条实测 4s+），超时单给。 */
+const TREND_TIMEOUT_MS = 30_000
 
 /**
  * 错误响应榨人话：host 路由（routes.ts）发的是 `{ error: "..." }`，那里的话是**能直接上界面的**
@@ -43,9 +45,18 @@ export async function fetchJson<T>(path: string, init: RequestInit = {}, timeout
   }
 }
 
-/** 首页快照（在办全量 + 两个完成类统计 + 各工作区身份）。 */
-export function fetchBoard(): Promise<BoardPayload> {
-  return fetchJson<BoardPayload>('/board')
+/** 首页快照（快路径：在办全量 + 统计 + 各工作区身份；**不含趋势**）。 */
+export function fetchBoardSnapshot(): Promise<BoardPayload> {
+  return fetchJson<BoardPayload>('/board/snapshot')
+}
+
+/**
+ * 趋势（慢路径：近 8 周 + 四个自然周期，host 侧要读 history）。
+ * 超时给得比默认宽：历史量大时读得久（实测 20 万条量级 4s+）；
+ * 旧宿主没有该端点 ⇒ 404，直接抛给调用方兜底，不阻塞列表。
+ */
+export function fetchTrend(): Promise<TrendPayload> {
+  return fetchJson<TrendPayload>('/board/trend', {}, TREND_TIMEOUT_MS)
 }
 
 /** 已结案列表（服务端按窗口 / 标签 / 分页过滤）。 */

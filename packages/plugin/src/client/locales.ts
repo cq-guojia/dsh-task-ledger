@@ -20,7 +20,7 @@ export type LocaleKey =
   | 'statWeekDone' | 'statLastWeekDone' | 'statMonthDone' | 'statLastMonthDone' | 'statCreatedHint'
   | 'daysNone' | 'daysValue'
   // 趋势图
-  | 'chartTitle' | 'chartCaption' | 'chartBucket' | 'chartEmpty'
+  | 'chartTitle' | 'chartCaption' | 'chartBucket' | 'chartEmpty' | 'chartLoading' | 'chartUnavailable'
   | 'chartScopeAll' | 'chartScopeMine' | 'chartOnlyMine' | 'chartLegendDone' | 'chartLegendCreated' | 'chartLegendRemaining' | 'chartAvg'
   | 'periodRange'
   // 筛选行
@@ -85,6 +85,8 @@ export const zh: Record<LocaleKey, string> = {
   chartCaption: '完成（按结案时间）/ 新增（按创建时间），周一起桶；我的 = owner 是我',
   chartBucket: '{week} 当周：完成 {done} 条，新增 {created} 条',
   chartEmpty: '近 8 周没有记录',
+  chartLoading: '趋势读取中…（列表已就绪，统计稍后到）',
+  chartUnavailable: '趋势暂时读不到（不影响上面的任务列表）',
   chartScopeAll: '所有',
   chartScopeMine: '我的',
   chartOnlyMine: '只看我的',
@@ -204,6 +206,8 @@ export const en: Record<LocaleKey, string> = {
   chartCaption: 'done (by close time) / created (by create time), weeks start Monday; mine = owner is me',
   chartBucket: 'week of {week}: {done} done, {created} created',
   chartEmpty: 'Nothing in the last 8 weeks',
+  chartLoading: 'Loading trend… (list is ready, stats will follow)',
+  chartUnavailable: 'Trend is unavailable right now (the task lists above are unaffected)',
   chartScopeAll: 'All',
   chartScopeMine: 'Mine',
   chartOnlyMine: 'Mine only',

@@ -17,17 +17,11 @@ const { runLedgerScript } = await import('../dist/host/repositories/runner.js')
 const { ensurePerfFixture } = await import('./fixtures/generate-perf.mjs')
 
 let passed = 0
-let skipped = 0
 function check(name, fn) {
   return Promise.resolve().then(fn).then(
     () => { passed += 1; console.log(`  ✓ ${name}`) },
     (error) => { console.error(`  ✗ ${name}\n    ${error.message}`); process.exitCode = 1 },
   )
-}
-/** 环境缺依赖（如同事机器上没有姊妹工作区）⇒ 记 SKIP，不计失败——否则「全绿才推」会因环境差异变假红灯。 */
-function skip(name, reason) {
-  skipped += 1
-  console.log(`  ○ ${name}（SKIP：${reason}）`)
 }
 
 // 合成大库 fixture（os.tmpdir()/dtl-fixtures/perf-50k，脚本现生成；不再硬编码某人 /tmp/perf2）
@@ -459,6 +453,19 @@ await check('路由层：/board/snapshot 瘦身 + /board/trend 独立 + 旧 /boa
   assert.ok(Array.isArray(board.body.degraded), '旧 /board 也恒带 degraded')
 })
 
+// 客户端数据面（步骤 4b）：取数只走拆后的两个端点，页面不许再从快照上读趋势。
+// 这是「首屏不等 history」的前端一半——host 拆了端点但页面还读 board.trend，等于白拆。
+await check('客户端数据面：只走 /board/snapshot + /board/trend，趋势不再挂在快照上（步骤 4b）', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const apiSrc = await readFile(path.resolve(here, '../src/client/api.ts'), 'utf-8')
+  assert.ok(apiSrc.includes("'/board/snapshot'"), 'api.ts 应有快路径取数（/board/snapshot）')
+  assert.ok(apiSrc.includes("'/board/trend'"), 'api.ts 应有慢路径取数（/board/trend）')
+  assert.ok(!/fetchJson<\s*BoardPayload\s*>\('\/board'\)/.test(apiSrc), 'api.ts 不得再取全量 /board（兼容端点只留给旧 client）')
+  const home = await readFile(path.resolve(here, '../src/client/board-home.ts'), 'utf-8')
+  assert.ok(home.includes('state.trend'), '页面趋势应来自 store 的 trend（慢路径）')
+  assert.ok(!/\bboard\??\.(?:closed|trend)\b/.test(home), '页面不得再从快照读 closed / trend（快路径已瘦身）')
+})
+
 // 分层铁律的结构断言（重构护栏）：IO 只在 repositories/ 与 skill/，依赖方向单向。
 // 这条挡住「以后再写一处 existsSync('ledger/...')」或「service 反向 import routes」。
 await check('结构断言：IO 唯一出口 + 依赖方向单向 + host/client 隔离', async () => {
@@ -506,4 +513,4 @@ await check('结构断言：IO 唯一出口 + 依赖方向单向 + host/client �
   }
 })
 
-console.log(`\n${passed} 项通过${skipped > 0 ? `，${skipped} 项 SKIP（环境缺依赖）` : ''}${process.exitCode ? '（有失败）' : ''}`)
+console.log(`\n${passed} 项通过${process.exitCode ? '（有失败）' : ''}`)

@@ -14,7 +14,7 @@
 | 中间层 | `ledger-read.ts` | `readTasks/readHistory/getTask/readWorklog/filterArgs` | ✅ |
 | 聚合层 | `board.ts` | 统计/趋势/周期，纯计算 | ⚠️ 含第 5 处 IO（spawn git） |
 | 路由薄壳 | `routes.ts` | 只做协议 | ✅ |
-| 工作区发现 | `workspace.ts` | ❌ 自己 `existsSync('ledger/progress.json')`，没走中间层 |
+| 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（原自己 `existsSync('ledger/progress.json')`，已收敛） | ✅ |
 
 ### 1.2 IO 散点（勘查实锤）
 
@@ -109,6 +109,8 @@ fixture：10 个工作区，每个 `progress.json` + 按月 history 文件（真
 | 新 client + 旧 host | 新 client 调 `/board/trend` 得 404 ⇒ **前端兜底**：趋势区显示「后端版本过旧，趋势不可用」，首屏其余部分正常渲染，不白屏 |
 
 `/board` 全量端点标记为「兼容期专用」，下个大版本（1.x）删除，删除时在 CHANGELOG/README 明示。
+
+**实施状态**：4a（host 三端点 + 冒烟路由层断言）、4b（client 两段刷新：快照先渲染、趋势后台拉，未到/读挂各自兜底）已落地；冒烟另加客户端数据面断言防回退（页面不许再从快照读 `closed` / `trend`）。
 
 ## 六、分期
 
