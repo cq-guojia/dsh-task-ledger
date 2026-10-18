@@ -317,6 +317,9 @@ await check('客户端两区视图：我的待办吃标题搜索 / 按工作区�
   assert.deepEqual(view.groups.map(g => g.workspaceId), ['w1', 'w2'], '第二区含全部工作区（我的 t1 也进来，不再被过滤掉）')
   assert.deepEqual(ids(view.groups[0].rows), ['t1'], '组内 w1：只有我的 doing')
   assert.equal(view.total, 3, 'total = 全部待办任务数')
+  // 第二区含我的任务 ⇒ mine 必须说实话（不然按钮权限在第一区/第二区会判出两套）
+  assert.equal(view.groups[0].rows[0].mine, true, '第二区里我的任务 mine=true')
+  assert.equal(view.groups[1].rows.every(r => !r.mine), true, '第二区里别人的任务 mine=false')
   // 搜索 / 工作区只归第一区；第二区吃状态档 + 自己的搜索（标题 / 执行人）
   view = selectView(state({ ...base, keyword: '甲' }))
   assert.deepEqual(ids(view.mine), ['t1'], '我的待办吃标题搜索')
@@ -338,6 +341,32 @@ await check('客户端两区视图：我的待办吃标题搜索 / 按工作区�
   view = selectView(state({ ...base, scope: 'mine' }))
   assert.deepEqual(ids(view.mine), ['t1'])
   assert.deepEqual(view.groups, [], '「我的」不掺第二区')
+})
+
+// 动作权限是两区**共用**的唯一判定（用户 2026-10-18：不许各判各的 ⇒ 第二区里我的任务也要有
+// 继续 / 结束 / 释放）。纯函数、无 DOM ⇒ 直读源码测。
+await check('任务动作权限：统一方法 resolveActions（我的=继续/结束/释放，待认领=认领，别人的=只看）', async () => {
+  const { resolveActions } = await import(path.resolve(here, '../src/client/rows.ts'))
+  const board = { identities: { w1: 'me' }, tasks: [], workspaces: [], stats: {}, closed: {} }
+  const task = (over) => ({
+    id: 'x', workspace: { id: 'w1', title: 'A 项目', path: '/tmp/a' }, title: '甲任务',
+    status: 'doing', owner: 'me', creator: 'me', tags: [], stale: false, ...over,
+  })
+  const flat = (a) => ({ view: a.view, claim: a.claim, resume: a.resume, finish: a.finish, release: a.release })
+  // 我的（doing / blocked）⇒ 继续 + 结束 + 释放 + 查看；不能认领（已经是我的了）
+  assert.deepEqual(flat(resolveActions(task({}), board)),
+    { view: true, claim: false, resume: true, finish: true, release: true }, '我的 doing：继续/结束/释放')
+  assert.deepEqual(flat(resolveActions(task({ status: 'blocked' }), board)),
+    { view: true, claim: false, resume: true, finish: true, release: true }, '我的 blocked：同上')
+  // 别人在做 ⇒ 只有查看（不给人家的任务乱操作）
+  assert.deepEqual(flat(resolveActions(task({ owner: 'other' }), board)),
+    { view: true, claim: false, resume: false, finish: false, release: false }, '别人的 doing：只有查看')
+  // 待认领 ⇒ 认领 + 查看
+  assert.deepEqual(flat(resolveActions(task({ status: 'open', owner: null }), board)),
+    { view: true, claim: true, resume: false, finish: false, release: false }, '待认领：认领 + 查看')
+  // 快照没到 ⇒ 一律不当「我的」（绝不凭空给权限）
+  assert.deepEqual(flat(resolveActions(task({}), null)),
+    { view: true, claim: false, resume: false, finish: false, release: false }, 'board=null：不装作是我的')
 })
 
 await check('文案字典：zh / en 键完全对齐（漏一种语言界面就露键名）', async () => {

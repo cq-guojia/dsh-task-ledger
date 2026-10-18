@@ -14,7 +14,7 @@ import {
 import type { LocaleKey, Translate } from './locales'
 import { boardSnapshot, boardSubscribe, refresh, setQuery, type StatusFilter } from './store'
 import { isMine, selectView, type WorkspaceGroup } from './rows'
-import type { PeriodCounts } from './types'
+import type { BoardPayload, PeriodCounts } from './types'
 import { TaskRowView } from './task-row'
 import {
   Button, ChartLegend, EmptyState, ensureUiBase, GroupedBarChart, SearchInput, Segmented, Select, StatCard,
@@ -268,7 +268,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                       view.mine.length === 0
                         ? h(EmptyState, { tone: 'guide', title: t('mineEmpty'), hint: t('mineEmptyHint') })
                         : view.mine.map(row => h(TaskRowView, {
-                          key: row.key, t, row, variant: 'mine', staleDays: board?.stats.staleDays ?? null,
+                          key: row.key, t, row, variant: 'mine', staleDays: board?.stats.staleDays ?? null, board,
                         })),
                       // 第二区：全部待办 —— **永远渲染**（用户 2026-10-18：选「进行中」没数据也不能整块消失；
                       // 且不要过滤掉自己，所以含我的任务，会与第一区重叠——顶部快看 / 底部全量）；
@@ -312,7 +312,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                           )
                           : h('div', { style: { marginTop: 'var(--dtl-space-2)' } },
                             view.groups.map(group => h(WorkspaceGroupView, {
-                              key: group.workspaceId, t, group, staleDays: board?.stats.staleDays ?? null,
+                              key: group.workspaceId, t, group, staleDays: board?.stats.staleDays ?? null, board,
                             })),
                           ),
                       ),
@@ -331,8 +331,14 @@ function orZero(n: number): number | undefined {
 /** 一个工作区分组（全部待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
  *  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
  *  阻塞 / 停滞**只在 >0 时出现**。 */
-function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup; staleDays?: number | null }): ReactNode {
-  const { t, group, staleDays } = props
+function WorkspaceGroupView(props: {
+  t: Translate
+  group: WorkspaceGroup
+  staleDays?: number | null
+  /** 传下去只为问动作权限（是不是我的）——第二区含我的任务，按钮得跟第一区一致。 */
+  board: BoardPayload | null
+}): ReactNode {
+  const { t, group, staleDays, board } = props
   const [open, setOpen] = useState(group.rows.length <= GROUP_COLLAPSE_OVER)
   const stats = [
     t('groupTotal', { n: group.total }),
@@ -363,7 +369,7 @@ function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup; staleD
       ? h('div', null,
         // 无列头行（用户 2026-10-18：表头就是段头——左工作区名、右统计，不放「任务/创建人」那排）
         group.rows.map(row => h(TaskRowView, {
-          key: row.key, t, row, variant: 'others', staleDays,
+          key: row.key, t, row, variant: 'others', staleDays, board,
         })),
       )
       : null,

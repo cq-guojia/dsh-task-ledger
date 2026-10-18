@@ -56,15 +56,16 @@ const UI_BASE_CSS = `
 .dtl-orow__row{display:flex;align-items:center;gap:12px;}
 .dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
 .dtl-orow__name{font-size:var(--dtl-font-md);font-weight:500;line-height:var(--dtl-line-md);min-width:0;}
-/* 第二行：执行人 + #标签（与标题行间距拉开，用户 2026-10-18） */
+/* 第二行：状态标签 + #标签（与标题行间距拉开，用户 2026-10-18；状态位与执行人**互换**后，
+   状态搬到这里、且永远有 ⇒ 这一行不再有「空一排」的情况） */
 .dtl-orow__tags{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:7px;min-width:0;}
-/* 执行人：别人在做 ⇒ @名字 摆标签行最前（「待认领」只在状态列出现一次，不再重复） */
-.dtl-orow__owner{flex:none;padding:0 6px;border-radius:999px;background:var(--dtl-open-bg-soft);
-  color:var(--dtl-fg-2);font-size:10px;line-height:16px;white-space:nowrap;}
-/* 列：任务（弹性）/ 状态 / 创建信息 / 操作 / 查看 */
+/* 列：任务（弹性）/ 执行人 / 创建信息 / 操作 / 查看 */
 .dtl-tcell{min-width:0;}
 .dtl-tcell--title{flex:1 1 auto;}
-.dtl-tcell--status{flex:none;width:76px;}
+/* 执行人列（原状态列，用户 2026-10-18 互换）：标签最宽 20ch ⇒ 列宽按它给，标签再自己收到 100%
+   （名字过长时由标签自己的省略号兜住，不许溢出压到创建信息列） */
+.dtl-tcell--status{flex:none;width:110px;}
+.dtl-tcell--status .dtl-tag{max-width:100%;}
 .dtl-tcell--created{flex:none;display:flex;align-items:center;justify-content:flex-end;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
 /* 悬停：时分秒让位给操作钮（与「我的待办」的 时间⇄按钮 同款互换） */
@@ -73,11 +74,6 @@ const UI_BASE_CSS = `
 .dtl-orow:hover .dtl-orow__created-short{display:inline;}
 .dtl-orow__actions{display:none;flex:none;gap:6px;}
 .dtl-orow:hover .dtl-orow__actions{display:inline-flex;}
-/* 状态列文字（待认领灰 / 进行中浅蓝；阻塞停滞仍是 pill） */
-.dtl-statustext{font-size:var(--dtl-font-xs);white-space:nowrap;}
-.dtl-statustext--doing{color:var(--dtl-business-dim);}
-.dtl-statustext--open{color:var(--dtl-fg-3);}
-
 /* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞；
    6px（用户 2026-10-18：8px 太大） */
 .dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
@@ -130,15 +126,25 @@ const UI_BASE_CSS = `
 .dtl-taskrow__row:hover .dtl-taskrow__when{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
 
-/* 异常 pill：阻塞=黄 / 停滞=红（进行中无标记，只有色条） */
-.dtl-pill{flex:none;padding:1px 8px;border-radius:999px;font-size:10px;line-height:16px;font-weight:600;white-space:nowrap;}
-.dtl-pill--blocked{background:var(--dtl-warning);color:var(--dtl-on-signal);}
-.dtl-pill--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);}
-
-/* 标签迷你 chip（用户 2026-10-17：标签再小点儿）——10px、无边框、灰底 */
-.dtl-minitag{flex:none;padding:0 5px;border-radius:999px;background:var(--dtl-surface-2);
-  color:var(--dtl-fg-3);font-size:10px;line-height:16px;white-space:nowrap;max-width:120px;
-  overflow:hidden;text-overflow:ellipsis;}
+/* 标签（用户 2026-10-18）：状态 / 执行人 / #标签 **共用一枚件**，只换色调；
+   最大宽度 20ch（≈10 个中文或 20 个字符），超出省略号、悬停跑马灯把全文滚出来。 */
+.dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
+  background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
+/* 状态四色：待认领灰 / 进行中蓝 / 阻塞黄 / 停滞红（与行首圆点同色系） */
+.dtl-tag--open{color:var(--dtl-fg-2);font-weight:600;}
+.dtl-tag--doing{background:var(--dtl-business-soft);color:var(--dtl-business);font-weight:600;}
+.dtl-tag--blocked{background:var(--dtl-warning-soft);color:var(--dtl-warning);font-weight:600;}
+.dtl-tag--stale{background:var(--dtl-danger-soft);color:var(--dtl-danger);font-weight:600;}
+/* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
+.dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
+/* 内层撑满真实宽度（inline-block ⇒ transform 才生效），外层负责裁切与省略号 */
+.dtl-tag__text{display:inline-block;}
+/* 跑马灯只挂在**真溢出**的标签上（短的挂上去会白飘一段） */
+.dtl-tag--long:hover{text-overflow:clip;}
+.dtl-tag--long:hover .dtl-tag__text{animation:dtl-marquee 6s linear infinite;}
+@keyframes dtl-marquee{0%,12%{transform:translateX(0);}
+  88%,100%{transform:translateX(calc(-100% + 20ch - 12px));}}
 
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
@@ -422,6 +428,35 @@ export function Chip(props: { text: string; color?: string }): ReactNode {
     style: props.color === undefined ? undefined : { background: props.color, color: 'var(--dtl-on-signal)' },
     title: props.text,
   }, props.text)
+}
+
+/** 标签上限宽度（字符数）：1 个中文按 2 计 ⇒ 10 个中文 = 20 个字符（与 CSS 的 20ch 对齐）。 */
+const TAG_MAX_WIDTH = 20
+
+/** 显示宽度：全角（中 / 日 / 韩 / 全角符号）一个顶两个英文字符。 */
+function displayWidth(text: string): number {
+  let width = 0
+  for (const char of text) width += (char.codePointAt(0) ?? 0) > 0x2e80 ? 2 : 1
+  return width
+}
+
+/**
+ * 标签（**唯一**一枚件，用户 2026-10-18）：状态 / 执行人 / #标签 都走它，只换 tone。
+ * 超宽 ⇒ 省略号；悬停 ⇒ 跑马灯滚出全文（溢出时不挂 title，免得原生提示盖住滚动）。
+ */
+export function Tag(props: {
+  text: string
+  tone?: 'neutral' | 'open' | 'doing' | 'blocked' | 'stale' | 'person'
+  /** 悬停提示（默认 = 文本本身）。 */
+  title?: string
+}): ReactNode {
+  ensureUiBase()
+  const { text, tone = 'neutral', title } = props
+  const long = displayWidth(text) > TAG_MAX_WIDTH
+  return h('span', {
+    className: `dtl-tag dtl-tag--${tone}${long ? ' dtl-tag--long' : ''}`,
+    title: long ? undefined : (title ?? text),
+  }, h('span', { className: 'dtl-tag__text' }, text))
 }
 
 /** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */

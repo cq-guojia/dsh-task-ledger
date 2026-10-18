@@ -56,7 +56,36 @@ export function isMine(task: BoardTask, board: BoardPayload | null): boolean {
   return task.owner === identity && (task.status === 'doing' || task.status === 'blocked')
 }
 
-/** 状态档命中（停滞由 host 标记，前端不判阈值）——只作用于「其他待办」。 */
+/**
+ * 任务动作权限（**唯一**判定，两区共用——用户 2026-10-18：不许各判各的）。
+ * 传任务 + 快照进去，返回「能做哪些动作」；界面只按返回值画按钮，不再自己判断是不是我的。
+ * ⇒ 第二区（全部待办）里**我的**任务也能继续 / 结束 / 释放，跟第一区一模一样。
+ */
+export interface TaskActions {
+  /** 查看详情（两区、所有任务都有）。 */
+  readonly view: boolean
+  /** 认领：只有**没人认领**（待认领）的任务能认领。 */
+  readonly claim: boolean
+  readonly resume: boolean
+  readonly finish: boolean
+  readonly release: boolean
+}
+
+export function resolveActions(task: BoardTask, board: BoardPayload | null): TaskActions {
+  const mine = isMine(task, board)
+  return {
+    view: true,
+    claim: !mine && task.status === 'open',
+    resume: mine,
+    finish: mine,
+    release: mine,
+  }
+}
+
+/** 已结案行（统计 tab）：只有查看，没有在办动作。 */
+export const CLOSED_ACTIONS: TaskActions = { view: true, claim: false, resume: false, finish: false, release: false }
+
+/** 状态档命中（停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
 function statusHit(task: BoardTask, status: Query['status']): boolean {
   if (status === 'all') return true
   if (status === 'active') return task.status === 'doing' || task.status === 'blocked'
@@ -107,7 +136,9 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
   const byWorkspace = new Map<string, { title: string; rows: Row[] }>()
   for (const task of rest) {
     const entry = byWorkspace.get(task.workspace.id) ?? { title: task.workspace.title, rows: [] }
-    entry.rows.push({ kind: 'task', key: `${task.workspace.id}:${task.id}`, task, mine: false })
+    // mine 必须说实话（第二区现在含全部任务，连我的也在里面）：按钮权限由 resolveActions 判，
+    // 但这一位同样是数据面，不许一律写 false。
+    entry.rows.push({ kind: 'task', key: `${task.workspace.id}:${task.id}`, task, mine: isMine(task, board) })
     byWorkspace.set(task.workspace.id, entry)
   }
   const groups: WorkspaceGroup[] = [...byWorkspace.entries()]
