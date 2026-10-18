@@ -8,7 +8,6 @@
 import { settleWorkspaces } from './errors.js';
 import { computeSnapshot } from './services/home.service.js';
 import { computeClosedSummary, computeTrendPeriods, readTrendScope } from './services/trend.service.js';
-import { getFilterOptions, queryClosed } from './services/history.service.js';
 /**
  * 首页一次拿全：在办快照（含停滞 / 天数 / 身份）+ 近 8 周趋势（完成 / 新增 × 所有 / 我的）
  * + 四个自然周期计数。**每个工作区只读一次**（list + history + git 身份），

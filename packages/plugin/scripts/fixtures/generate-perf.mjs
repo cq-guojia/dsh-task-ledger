@@ -39,7 +39,7 @@ export function ensurePerfFixture() {
   return PERF_ROOT
 }
 
-if (process.argv[1] !== undefined && process.argv[1].endsWith('generate-perf.mjs')) {
+if (process.argv[1]?.endsWith('generate-perf.mjs')) {
   const root = ensurePerfFixture()
   console.log(`fixture 就绪：${root}（${PERF_ROWS} 行合成 history）`)
 }

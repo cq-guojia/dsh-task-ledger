@@ -8,8 +8,8 @@
 import { settleWorkspaces, type DegradedInfo } from './errors.js'
 import { computeSnapshot } from './services/home.service.js'
 import { computeClosedSummary, computeTrendPeriods, readTrendScope } from './services/trend.service.js'
-import { getFilterOptions, queryClosed } from './services/history.service.js'
-import type { HomeAggregate, LedgerWorkspace, TrendScope } from './types.js'
+// getFilterOptions / queryClosed 只在下面「透传 re-export」里出现（export ... from 不需要先 import）
+import type { HomeAggregate, LedgerWorkspace } from './types.js'
 
 /**
  * 首页一次拿全：在办快照（含停滞 / 天数 / 身份）+ 近 8 周趋势（完成 / 新增 × 所有 / 我的）

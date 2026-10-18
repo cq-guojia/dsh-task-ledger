@@ -1,7 +1,7 @@
 /**
  * 已结案列表 / 筛选项候选用例（history tab 与筛选控件用；非首屏，按需调用）。
  */
-import { readHistory, readTasks } from '../repositories/ledger.repository.js'
+import { readHistory } from '../repositories/ledger.repository.js'
 import { settleWorkspaces, type DegradedInfo } from '../errors.js'
 import { RECENT_MONTHS, readTrendScope } from './trend.service.js'
 import type { FilterOptions, HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRow, TrendScope } from '../types.js'

@@ -8,7 +8,7 @@ import { readTasks } from '../repositories/ledger.repository.js'
 import { getCurrentIdentity } from '../repositories/identity.repository.js'
 import { settleWorkspaces, type DegradedInfo } from '../errors.js'
 import { daysSince } from './dates.js'
-import type { BoardSnapshot, BoardStats, BoardTask, LedgerWorkspace, TaskRow, TaskScope } from '../types.js'
+import type { BoardSnapshot, BoardStats, BoardTask, LedgerWorkspace, TaskScope } from '../types.js'
 
 /** 停滞判定阈值：doing / blocked 且 created 至今超过这么多天（2026-10-17 拍板，显示级）。 */
 export const STALE_DAYS = 14
