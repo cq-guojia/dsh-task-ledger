@@ -668,12 +668,16 @@ body[data-ds-dark-theme]{
 /* 组与组**零外距**、连体（用户 2026-10-18：上间距去掉，和上面连在一起） */
 .dtl-group{margin-bottom:0;}
 /* 组标题（照参考图）：**左侧深蓝竖条 + 浅蓝底（实色）**；行高保持（≈42px）；
-   工作区名稍小一号（14px）；**上缘无边、下缘一条 1px 灰线**（用户 2026-10-18：
-   与每行的分割线同色同粗，不再用蓝/蓝灰线——那样和左侧蓝竖条交接处会显假斜角） */
-.dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;
+   工作区名稍小一号（14px）；上缘无边 */
+.dtl-group__head{position:relative;display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;
   padding:10px var(--dtl-space-3);border:0;border-left:5px solid var(--dtl-business);
-  border-bottom:1px solid var(--dtl-border-faint);border-radius:0;
-  background:var(--dtl-group-head-bg);color:inherit;font:inherit;text-align:left;cursor:pointer;}
+  border-radius:0;background:var(--dtl-group-head-bg);
+  color:inherit;font:inherit;text-align:left;cursor:pointer;}
+/* 下缘那条线**绝不用 border 画**：border-left(5px) 与 border-bottom(1px) 在左下角
+   按 miter 斜接，会切出一个斜缺角（用户 2026-10-18 实锤，不是视觉误差）⇒ 改用伪元素
+   独立 1px；定位基于 padding box ⇒ 自动从竖条内缘起笔，竖条保持整直。 */
+.dtl-group__head::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:var(--dtl-border-faint);pointer-events:none;}
 .dtl-group__name{font-size:var(--dtl-font-lg);font-weight:700;line-height:var(--dtl-line-lg);color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
 /* 组标题标识：官方文件夹图标（展开=开、收起=合）；图标缺席时回落成竖线 */
