@@ -33,10 +33,11 @@ const UI_BASE_CSS = `
 /* 组与组**零外距**、连体（用户 2026-10-18：上间距去掉，和上面连在一起） */
 .dtl-group{margin-bottom:0;}
 /* 组标题（照参考图）：**左侧深蓝竖条 + 浅蓝底（实色）**；行高保持（≈42px）；
-   工作区名稍小一号（14px）；**上缘无边、下缘一条 1px 边框**（用户 2026-10-18） */
+   工作区名稍小一号（14px）；**上缘无边、下缘一条 1px 灰线**（用户 2026-10-18：
+   与每行的分割线同色同粗，不再用蓝/蓝灰线——那样和左侧蓝竖条交接处会显假斜角） */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;
   padding:10px var(--dtl-space-3);border:0;border-left:5px solid var(--dtl-business);
-  border-bottom:1px solid var(--dtl-border);border-radius:0;
+  border-bottom:1px solid var(--dtl-border-faint);border-radius:0;
   background:var(--dtl-group-head-bg);color:inherit;font:inherit;text-align:left;cursor:pointer;}
 .dtl-group__name{font-size:var(--dtl-font-lg);font-weight:700;line-height:var(--dtl-line-lg);color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
