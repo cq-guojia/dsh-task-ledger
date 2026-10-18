@@ -4,6 +4,9 @@ node_modules/
 # IDE 本地状态（不入仓、不删）
 .codebuddy/
 
+# dsh 本地缓存 / 安装产物（不入仓）
+.dsh/
+
 # 构建产物中不入仓的（dist/ 与 packages/plugin/skill/ 按 DSH 规则必须入仓，不忽略）
 *.log
 .DS_Store
