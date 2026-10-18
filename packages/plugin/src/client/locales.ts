@@ -12,6 +12,7 @@
 export type LocaleKey =
   | 'backToConversation' | 'panelTitle' | 'tabTasks' | 'tabStats'
   | 'refresh' | 'refreshing' | 'loading' | 'retry' | 'loadFailed'
+  | 'degradedTitle' | 'degradedItem'
   | 'statsPlaceholder'
   // 统计卡
   | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint' | 'statStaleTitle'
@@ -57,6 +58,8 @@ export const zh: Record<LocaleKey, string> = {
   loading: '读取中…',
   retry: '重试',
   loadFailed: '读取失败',
+  degradedTitle: '部分工作区读取失败',
+  degradedItem: '{title}：{message}',
   statsPlaceholder: '统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。',
 
   statMyActive: '我的待办',
@@ -174,6 +177,8 @@ export const en: Record<LocaleKey, string> = {
   loading: 'Loading…',
   retry: 'Retry',
   loadFailed: 'Load failed',
+  degradedTitle: 'Some workspaces failed to load',
+  degradedItem: '{title}: {message}',
   statsPlaceholder: 'Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.',
 
   statMyActive: 'My todos',

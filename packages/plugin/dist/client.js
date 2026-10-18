@@ -1305,7 +1305,26 @@ body[data-ds-dark-theme]{
 				tone: "guide",
 				title: t("emptyNoWorkspace"),
 				hint: t("emptyNoWorkspaceHint")
-			}) : (0, react.createElement)("div", null, (0, react.createElement)("div", { style: regionHeadRowStyle }, (0, react.createElement)("span", { style: {
+			}) : (0, react.createElement)("div", null, board !== null && (board.degraded?.length ?? 0) > 0 ? (0, react.createElement)("div", { style: {
+				display: "flex",
+				alignItems: "flex-start",
+				gap: "var(--dtl-space-2)",
+				padding: "var(--dtl-space-2) var(--dtl-space-3)",
+				marginBottom: "var(--dtl-space-3)",
+				border: "1px solid var(--dtl-danger)",
+				borderRadius: "var(--dtl-radius-md)",
+				background: "var(--dtl-danger-soft)",
+				color: "var(--dtl-fg)",
+				fontSize: "var(--dtl-font-sm)",
+				lineHeight: "var(--dtl-line-sm)"
+			} }, (0, react.createElement)("span", { style: {
+				color: "var(--dtl-danger)",
+				flex: "none",
+				fontWeight: 600
+			} }, t("degradedTitle")), (0, react.createElement)("span", null, (board.degraded ?? []).map((item) => t("degradedItem", {
+				title: item.workspaceTitle,
+				message: item.message
+			})).join("；"))) : null, (0, react.createElement)("div", { style: regionHeadRowStyle }, (0, react.createElement)("span", { style: {
 				color: "var(--dtl-fg-3)",
 				display: "inline-flex",
 				flex: "none"
@@ -1460,6 +1479,8 @@ body[data-ds-dark-theme]{
 			loading: "读取中…",
 			retry: "重试",
 			loadFailed: "读取失败",
+			degradedTitle: "部分工作区读取失败",
+			degradedItem: "{title}：{message}",
 			statsPlaceholder: "统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。",
 			statMyActive: "我的待办",
 			statMyActiveHint: "阻塞 {n} 条",
@@ -1569,6 +1590,8 @@ body[data-ds-dark-theme]{
 			loading: "Loading…",
 			retry: "Retry",
 			loadFailed: "Load failed",
+			degradedTitle: "Some workspaces failed to load",
+			degradedItem: "{title}: {message}",
 			statsPlaceholder: "Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.",
 			statMyActive: "My todos",
 			statMyActiveHint: "blocked {n}",

@@ -205,6 +205,23 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                 : board !== null && board.workspaces.length === 0
                   ? h(EmptyState, { tone: 'guide', title: t('emptyNoWorkspace'), hint: t('emptyNoWorkspaceHint') })
                   : h('div', null,
+                      // 降级横幅：有工作区读挂 ⇒ 红色警告 + 人话原因（单工作区坏不拖垮其余，别装没看见）
+                      board !== null && (board.degraded?.length ?? 0) > 0
+                        ? h('div', {
+                          style: {
+                            display: 'flex', alignItems: 'flex-start', gap: 'var(--dtl-space-2)',
+                            padding: 'var(--dtl-space-2) var(--dtl-space-3)', marginBottom: 'var(--dtl-space-3)',
+                            border: '1px solid var(--dtl-danger)', borderRadius: 'var(--dtl-radius-md)',
+                            background: 'var(--dtl-danger-soft)', color: 'var(--dtl-fg)',
+                            fontSize: 'var(--dtl-font-sm)', lineHeight: 'var(--dtl-line-sm)',
+                          },
+                        },
+                          h('span', { style: { color: 'var(--dtl-danger)', flex: 'none', fontWeight: 600 } }, t('degradedTitle')),
+                          h('span', null, (board.degraded ?? []).map(item => t('degradedItem', {
+                            title: item.workspaceTitle, message: item.message,
+                          })).join('；')),
+                        )
+                        : null,
                       // 第一区：我的待办——定死全量、不过滤（用户 2026-10-17），空了给引导卡；
                       // 标题行右侧挂搜索框（只作用第三区），计数用小圆徽
                       h('div', { style: regionHeadRowStyle },

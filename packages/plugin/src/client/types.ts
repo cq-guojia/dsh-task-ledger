@@ -120,6 +120,17 @@ export interface BoardPayload {
   readonly trend: TrendPeriods
   /** 工作区 id → 该工作区的当前 git 身份（`git config user.name`，取不到为 null）——「我的待办」判定源。 */
   readonly identities: Readonly<Record<string, string | null>>
+  /** 降级信息：哪些工作区读挂了、为什么（单工作区坏不拖垮其余；空 = 全部正常）。 */
+  readonly degraded?: readonly DegradedInfo[]
+}
+
+/** 一个读失败的工作区（host `degraded` 条目；UI 标红 + 人话原因）。 */
+export interface DegradedInfo {
+  readonly workspaceId: string
+  readonly workspaceTitle: string
+  readonly op: 'list' | 'history'
+  readonly code: string
+  readonly message: string
 }
 
 /** `GET /filters` 响应：去重候选。 */
