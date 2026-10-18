@@ -66,3 +66,97 @@ export interface LedgerFilter {
     /** 只读最近 N 个月的历史文件（插件传 13；不传 = 脚本默认读全部）。 */
     months?: number;
 }
+/** 一个自然周期内的两个计数（核心永远是「完成」，新增只作对照）。 */
+export interface PeriodCounts {
+    readonly done: number;
+    readonly created: number;
+    /** 周期起（YYYY-MM-DD，含）。 */
+    readonly from: string;
+    /** 周期止（YYYY-MM-DD，含）。 */
+    readonly to: string;
+}
+/** 统计台四个自然周期（用户 2026-10-17 定稿：本周 / 上周 / 本月 / 上月，不用 7/30 天）。 */
+export interface TrendPeriods {
+    readonly thisWeek: PeriodCounts;
+    readonly lastWeek: PeriodCounts;
+    readonly thisMonth: PeriodCounts;
+    readonly lastMonth: PeriodCounts;
+}
+/** 趋势图一桶（一周）：完成 + 新增 + 截止时仍未完成。 */
+export interface WeeklyBucket {
+    /** 该周周一（YYYY-MM-DD）。 */
+    readonly week: string;
+    /** 该周截止日（YYYY-MM-DD）：历史周=当周周日，当前周=今天——图表 x 轴标它，因为数据是按截止日判的。 */
+    readonly end: string;
+    readonly done: number;
+    readonly created: number;
+    /** 该周截止时仍未完成（在办）的任务数：cumulative(创建 - 完成) 到该周末，含窗口前遗留。 */
+    readonly remaining: number;
+}
+/** 趋势图数据按范围各一份（切换零请求）。 */
+export interface ClosedSummary {
+    readonly weekly: {
+        readonly all: readonly WeeklyBucket[];
+        readonly mine: readonly WeeklyBucket[];
+    };
+}
+/** 首页统计卡的六个面（阈值 / 天数全在 host 算，前端只渲染——单一真源）。 */
+export interface BoardStats {
+    /** 我的 doing + blocked。 */
+    readonly myActive: number;
+    /** 我的 blocked。 */
+    readonly myBlocked: number;
+    /** 待认领（open）。 */
+    readonly open: number;
+    /** 全部 doing。 */
+    readonly doing: number;
+    /** 全部 blocked。 */
+    readonly blocked: number;
+    /** 停滞 = doing|blocked 且 ageDays > STALE_DAYS。 */
+    readonly stale: number;
+    /** 停滞阈值（天）——随响应下发，界面文案不硬编码（单一真源）。 */
+    readonly staleDays: number;
+    /** 最老一条待认领躺了多少天（没有待认领 = null）。 */
+    readonly oldestOpenDays: number | null;
+}
+/** 列表行附加工资字段（host 算，前端不判阈值）。 */
+export interface BoardTask extends TaskRow {
+    /** 认领后未动天数（doing / blocked；open 与解析不了的时间为 null）。 */
+    readonly ageDays: number | null;
+    /** 停滞标记。 */
+    readonly stale: boolean;
+}
+export interface BoardSnapshot {
+    readonly at: string;
+    readonly workspaces: readonly LedgerWorkspace[];
+    /** 全部在办任务（UI 自己筛「我的 / 待认领」——筛选是前端的事）。 */
+    readonly tasks: readonly BoardTask[];
+    readonly stats: BoardStats;
+    /**
+     * 工作区 id → 该工作区的当前 git 身份（取不到为 null）。
+     * 「我的待办」在前端按 `owner === identities[workspace.id]` 筛——身份只在 host 侧取得到
+     * （cwd = 该工作区跑 `git config user.name`），UI 不摸 git。
+     */
+    readonly identities: Readonly<Record<string, string | null>>;
+}
+/** 首页一次 `/board` 的全部聚合（**每个工作区只读一次** list + history + git 身份）。 */
+export interface HomeAggregate {
+    readonly snapshot: BoardSnapshot;
+    readonly closed: ClosedSummary;
+    readonly trend: TrendPeriods;
+}
+/** 快路径作用域：在办 + 身份。**没有 history 字段**——想从它算趋势，编译器直接拦住。 */
+export interface TaskScope {
+    readonly workspace: LedgerWorkspace;
+    readonly tasks: readonly TaskRow[];
+    readonly identity: string | null;
+}
+/** 慢路径作用域：快路径 + history。趋势 / 筛选候选的原料。 */
+export interface TrendScope extends TaskScope {
+    readonly history: readonly HistoryRecord[];
+}
+export interface FilterOptions {
+    readonly owners: string[];
+    readonly categories: string[];
+    readonly tags: string[];
+}

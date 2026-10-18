@@ -372,4 +372,51 @@ await check('buildSkillRegistration：name/description/正文 + 占位符替换�
   console.log(`    （${registration.name}｜正文 ${registration.content.length} 字｜脚本 ${match[1]}）`)
 })
 
+// 分层铁律的结构断言（重构护栏）：IO 只在 repositories/ 与 skill/，依赖方向单向。
+// 这条挡住「以后再写一处 existsSync('ledger/...')」或「service 反向 import routes」。
+await check('结构断言：IO 唯一出口 + 依赖方向单向 + host/client 隔离', async () => {
+  const { readdirSync, readFileSync, statSync } = await import('node:fs')
+  const hostDir = path.resolve(here, '../dist/host')
+  const files = []
+  const walk = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const target = path.join(dir, name)
+      if (statSync(target).isDirectory()) walk(target)
+      else if (name.endsWith('.js')) files.push(target)
+    }
+  }
+  walk(hostDir)
+  const rel = (file) => path.relative(hostDir, file).split(path.sep).join('/')
+  // tsc 保留注释 ⇒ 先剥注释再匹配（「唯一 spawn python3」这类注释会造成假阳性）
+  const strip = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
+  const PROC = /\b(?:spawn|execFile|execSync|fork)\s*\(|node:child_process/
+  const FS = /\b(?:readFile|readFileSync|writeFile|writeFileSync|existsSync|mkdir|rm|opendir|appendFile)\s*\(|node:fs/
+  // 台账 IO 白名单：runner=python3、identity.repository=git、ledger.repository=fs、skill/registration=读内嵌 SKILL.md
+  const ALLOW = new Set([
+    'repositories/runner.js',
+    'repositories/identity.repository.js',
+    'repositories/ledger.repository.js',
+    'skill/registration.js',
+  ])
+  for (const file of files) {
+    const r = rel(file)
+    const code = strip(readFileSync(file, 'utf-8'))
+    if (ALLOW.has(r)) {
+      // 反向：白名单内也不许多出第二种 IO
+      if (r === 'repositories/runner.js' || r === 'repositories/identity.repository.js') {
+        assert.ok(!FS.test(code), `${r} 只许起进程，不许碰 fs`)
+      } else {
+        assert.ok(!PROC.test(code), `${r} 只许碰 fs，不许起进程`)
+      }
+    } else {
+      assert.ok(!PROC.test(code) && !FS.test(code), `${r} 出现 IO——唯一出口在 repositories/ 与 skill/`)
+    }
+    const requires = [...code.matchAll(/require\("([^"]+)"\)/g)].map((m) => m[1])
+    if (r.startsWith('services/') || r.startsWith('repositories/')) {
+      assert.ok(!requires.some((x) => x.includes('routes')), `${r} 不得 import routes（依赖方向单向）`)
+    }
+    assert.ok(!requires.some((x) => x.includes('client')), `${r} 不得 import client（host/client 隔离）`)
+  }
+})
+
 console.log(`\n${passed} 项通过${skipped > 0 ? `，${skipped} 项 SKIP（环境缺依赖）` : ''}${process.exitCode ? '（有失败）' : ''}`)
