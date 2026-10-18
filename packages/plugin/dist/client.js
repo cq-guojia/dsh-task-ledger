@@ -435,6 +435,8 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   /* 他人任务的 doing 色：比「我的」蓝灰一档（用户 2026-10-17：要和我的蓝区分） */
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
+  /* 组标题底：左深蓝竖条后面的那层**浅蓝**（用户 2026-10-18 照参考图） */
+  --dtl-group-head-bg:#eaf1ff;
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 8%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 8%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
@@ -521,6 +523,8 @@ body[data-ds-dark-theme]{
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
+  /* 组标题底（暗）：亮蓝半透，配深色竖条 */
+  --dtl-group-head-bg:rgba(96,165,250,.18);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 5%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
@@ -661,15 +665,14 @@ body[data-ds-dark-theme]{
 /* 其他待办 = **一组一张表**（用户 2026-10-18 照参考图 Stripe Payments：Pending / Archived /
    Completed 各一组）：组标题是**独立一行**——透明无底、远离上一组、贴近自己的表，
    文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
-/* 组与组分家：下面留一档间距，不再"上下连着" */
-.dtl-group{margin-bottom:var(--dtl-space-2);}
-/* 组标题：无背景、无竖边；**上距远、下距近**——贴着自家表格；
-   整行高 = 1.5×（用户 2026-10-18：原来太矮）：上行距 32、下行距 10 + 24 行高 ≈ 66px；
-   标题行下缘一条 **3px 蓝线**，用来把每个工作区"标"出来 */
-.dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
-  padding:32px 0 10px;border:0;border-bottom:3px solid var(--dtl-business);
-  border-radius:0;background:transparent;
-  color:inherit;font:inherit;text-align:left;cursor:pointer;}
+/* 组与组分家：与上一段留一档间距（用户 2026-10-18：照参考图，各组分家） */
+.dtl-group{margin-bottom:var(--dtl-space-3);}
+/* 组标题（用户 2026-10-18 照参考图）：**左侧深蓝竖条 + 浅蓝底**；与自家表格**零间距贴着**；
+   表格最上面那条线 = 表头下缘的 3px 蓝线 */
+.dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;
+  padding:10px var(--dtl-space-3);border:0;border-bottom:3px solid var(--dtl-business);
+  border-left:5px solid var(--dtl-business);border-radius:0;
+  background:var(--dtl-group-head-bg);color:inherit;font:inherit;text-align:left;cursor:pointer;}
 .dtl-group__name{font-size:var(--dtl-font-xl);font-weight:700;line-height:var(--dtl-line-xl);color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
 /* 组标题标识：官方文件夹图标（展开=开、收起=合）；图标缺席时回落成竖线 */

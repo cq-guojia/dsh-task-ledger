@@ -65,6 +65,8 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   /* 他人任务的 doing 色：比「我的」蓝灰一档（用户 2026-10-17：要和我的蓝区分） */
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
+  /* 组标题底：左深蓝竖条后面的那层**浅蓝**（用户 2026-10-18 照参考图） */
+  --dtl-group-head-bg:#eaf1ff;
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 8%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 8%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
@@ -151,6 +153,8 @@ body[data-ds-dark-theme]{
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
+  /* 组标题底（暗）：亮蓝半透，配深色竖条 */
+  --dtl-group-head-bg:rgba(96,165,250,.18);
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 5%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
