@@ -36,6 +36,7 @@ export type LocaleKey =
   | 'expandAria' | 'collapseAria'
   | 'ownerUnclaimed' | 'fieldCreator' | 'fieldOwner' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
   | 'ageDaysText' | 'ageToday'
+  | 'startedAt'
   | 'actionResume' | 'actionFinish' | 'actionRelease' | 'actionClaim'
   | 'tipResume' | 'tipFinish' | 'tipRelease' | 'tipClaim' | 'viewDetail'
   | 'createdAt'
@@ -146,6 +147,7 @@ export const zh: Record<LocaleKey, string> = {
   actionClaim: '认领',
   tipClaim: '认领这个任务，变成我在做',
   createdAt: '{who} 创建于 {when}',
+  startedAt: '{who} 开始于 {when}',
   viewDetail: '查看详情',
   fieldCreatedStamp: '{day} 创建',
   mineEmpty: '您现在没有正在进行的工作',
@@ -267,6 +269,7 @@ export const en: Record<LocaleKey, string> = {
   actionClaim: 'Claim',
   tipClaim: 'claim this task for yourself',
   createdAt: 'created by {who} on {when}',
+  startedAt: '{who} started on {when}',
   viewDetail: 'View details',
   fieldCreatedStamp: 'created {day}',
   mineEmpty: 'Nothing in progress right now',

@@ -640,21 +640,26 @@ body[data-ds-dark-theme]{
 /* 第二行：状态标签 + #标签（与标题行间距拉开，用户 2026-10-18；状态位与执行人**互换**后，
    状态搬到这里、且永远有 ⇒ 这一行不再有「空一排」的情况） */
 .dtl-orow__tags{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:7px;min-width:0;}
-/* 列：任务（弹性）/ 执行人 / 创建信息 / 操作 / 查看 */
+/* 列：任务（弹性）/ 执行人 / 右侧槽（创建信息 ⇄ 操作钮） */
 .dtl-tcell{min-width:0;}
 .dtl-tcell--title{flex:1 1 auto;}
 /* 执行人列（原状态列，用户 2026-10-18 互换）：标签最宽 20ch ⇒ 列宽按它给，标签再自己收到 100%
-   （名字过长时由标签自己的省略号兜住，不许溢出压到创建信息列） */
+   （名字过长时由标签自己的省略号兜住，不许溢出压到右边的槽） */
 .dtl-tcell--status{flex:none;width:110px;}
 .dtl-tcell--status .dtl-tag{max-width:100%;}
-.dtl-tcell--created{flex:none;display:flex;align-items:center;justify-content:flex-end;
+/* 悬停：**创建信息整条让位给操作钮**（用户 2026-10-18：不要「掉掉时分秒」那种半吊子，
+   要整条换掉）。两个都**常驻布局**（visibility 切换、不用 display），格子宽度 = 两者较宽的
+   那个 ⇒ hover 时行宽不变、**页面不跳**（跳了执行人的悬停提示就跟着飘） */
+.dtl-orow__slot{display:grid;align-items:center;justify-items:end;flex:none;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
-/* 悬停：时分秒让位给操作钮（与「我的待办」的 时间⇄按钮 同款互换） */
-.dtl-orow__created-short{display:none;}
-.dtl-orow:hover .dtl-orow__created-long{display:none;}
-.dtl-orow:hover .dtl-orow__created-short{display:inline;}
-.dtl-orow__actions{display:none;flex:none;gap:6px;}
-.dtl-orow:hover .dtl-orow__actions{display:inline-flex;}
+.dtl-orow__slot>*{grid-area:1/1;}
+.dtl-orow__created{visibility:visible;}
+.dtl-orow__actions{visibility:hidden;display:flex;align-items:center;gap:6px;}
+.dtl-orow:hover .dtl-orow__created{visibility:hidden;}
+.dtl-orow:hover .dtl-orow__actions{visibility:visible;}
+/* 「查看」钮在表格行里也要常驻布局（display:none 会不算宽度 ⇒ hover 一出就又把行撑开） */
+.dtl-orow .dtl-viewbtn{display:inline-flex;visibility:hidden;}
+.dtl-orow:hover .dtl-viewbtn{visibility:visible;}
 /* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞；
    6px（用户 2026-10-18：8px 太大） */
 .dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
@@ -712,11 +717,13 @@ body[data-ds-dark-theme]{
 .dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
   background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
-/* 状态四色：待认领灰 / 进行中蓝 / 阻塞黄 / 停滞红（与行首圆点同色系） */
-.dtl-tag--open{color:var(--dtl-fg-2);font-weight:600;}
-.dtl-tag--doing{background:var(--dtl-business-soft);color:var(--dtl-business);font-weight:600;}
-.dtl-tag--blocked{background:var(--dtl-warning-soft);color:var(--dtl-warning);font-weight:600;}
-.dtl-tag--stale{background:var(--dtl-danger-soft);color:var(--dtl-danger);font-weight:600;}
+/* 状态四色 = **实心色块**（用户 2026-10-18：彩色字看不清 ⇒ 改色块 + 反色字）：
+   待认领灰 / 进行中蓝 / 阻塞黄 / 停滞红（与行首圆点同色系）。
+   红黄蓝都是中调 ⇒ 白字两个主题都可读；灰块用「字色底 + 面色字」⇒ 明暗自动反过来 */
+.dtl-tag--open{background:var(--dtl-fg-3);color:var(--dtl-surface-1);font-weight:600;}
+.dtl-tag--doing{background:var(--dtl-business);color:var(--dtl-on-signal);font-weight:600;}
+.dtl-tag--blocked{background:var(--dtl-warning);color:var(--dtl-on-signal);font-weight:600;}
+.dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
 /* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
 .dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
 /* 内层撑满真实宽度（inline-block ⇒ transform 才生效），外层负责裁切与省略号 */
@@ -1101,6 +1108,17 @@ body[data-ds-dark-theme]{
 			if (row.task.status === "open") return "open";
 			return "doing";
 		}
+		/**
+		* ⚠️ 调试态（用户 2026-10-18）：第二区标签行把**四种状态全部写死**摆出来、不走 tone 判断，
+		* 好一次看全四枚色块长什么样（第一个「进行中」，其后阻塞 / 停滞 / 待认领）。
+		* 定稿后：删掉这个常量，标签行换回按 `tone` 取一枚。
+		*/
+		const DEBUG_TONES = [
+			"doing",
+			"blocked",
+			"stale",
+			"open"
+		];
 		/** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 		function statusLabel(tone, t) {
 			if (tone === "stale") return t("statusStale");
@@ -1144,12 +1162,6 @@ body[data-ds-dark-theme]{
 				className: "dtl-minibtn",
 				"data-tip": t("tipRelease")
 			}, t("actionRelease"));
-			const statusText = statusLabel(tone, t);
-			const statusTag = statusText === null || tone === "closed" ? null : (0, react.createElement)(Tag, {
-				text: statusText,
-				tone,
-				title: tone === "stale" ? staleTip ?? statusText : statusText
-			});
 			const alarmTag = tone === "blocked" || tone === "stale" ? (0, react.createElement)(Tag, {
 				text: statusLabel(tone, t) ?? "",
 				tone,
@@ -1169,21 +1181,27 @@ body[data-ds-dark-theme]{
 				const hasOwner = !(owner === null || owner === void 0 || owner === "");
 				const who = creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`;
 				const createdOk = created !== null && created !== void 0 && Date.parse(created) >= 0;
-				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, statusTag, tags.map((tag) => (0, react.createElement)(Tag, {
+				const startedOk = isTask && row.task.started !== null && row.task.started !== void 0 && Date.parse(row.task.started) >= 0;
+				const ownerTip = t("startedAt", {
+					who: String(owner),
+					when: startedOk ? formatDateTime(String(row.task.started)) : t("timeUnknown")
+				});
+				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, DEBUG_TONES.map((tone) => (0, react.createElement)(Tag, {
+					key: tone,
+					text: statusLabel(tone, t) ?? "",
+					tone
+				})), tags.map((tag) => (0, react.createElement)(Tag, {
 					key: tag,
 					text: `#${tag}`
 				})));
 				return (0, react.createElement)("div", { className: "dtl-orow" }, (0, react.createElement)("div", { className: "dtl-orow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, orowTitleLine, tagLine), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, hasOwner ? (0, react.createElement)(Tag, {
 					text: `@${String(owner)}`,
 					tone: "person",
-					title: t("fieldOwner")
-				}) : null), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--created" }, (0, react.createElement)("span", { className: "dtl-orow__created-long" }, t("createdAt", {
-					who,
-					when: createdOk ? formatDateTime(String(created), { seconds: true }) : t("timeUnknown")
-				})), (0, react.createElement)("span", { className: "dtl-orow__created-short" }, t("createdAt", {
+					title: ownerTip
+				}) : null), (0, react.createElement)("span", { className: "dtl-orow__slot" }, (0, react.createElement)("span", { className: "dtl-orow__created" }, t("createdAt", {
 					who,
 					when: createdOk ? formatDateTime(String(created)) : t("timeUnknown")
-				}))), (0, react.createElement)("span", { className: "dtl-orow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.view ? viewButton : null)));
+				})), (0, react.createElement)("span", { className: "dtl-orow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.view ? viewButton : null))));
 			}
 			const parts = [];
 			if (isTask) {
@@ -1687,6 +1705,7 @@ body[data-ds-dark-theme]{
 			actionClaim: "认领",
 			tipClaim: "认领这个任务，变成我在做",
 			createdAt: "{who} 创建于 {when}",
+			startedAt: "{who} 开始于 {when}",
 			viewDetail: "查看详情",
 			fieldCreatedStamp: "{day} 创建",
 			mineEmpty: "您现在没有正在进行的工作",
@@ -1800,6 +1819,7 @@ body[data-ds-dark-theme]{
 			actionClaim: "Claim",
 			tipClaim: "claim this task for yourself",
 			createdAt: "created by {who} on {when}",
+			startedAt: "{who} started on {when}",
 			viewDetail: "View details",
 			fieldCreatedStamp: "created {day}",
 			mineEmpty: "Nothing in progress right now",

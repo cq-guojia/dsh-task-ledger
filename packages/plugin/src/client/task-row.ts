@@ -46,6 +46,13 @@ function toneOf(row: Row): Tone {
   return 'doing'
 }
 
+/**
+ * ⚠️ 调试态（用户 2026-10-18）：第二区标签行把**四种状态全部写死**摆出来、不走 tone 判断，
+ * 好一次看全四枚色块长什么样（第一个「进行中」，其后阻塞 / 停滞 / 待认领）。
+ * 定稿后：删掉这个常量，标签行换回按 `tone` 取一枚。
+ */
+const DEBUG_TONES = ['doing', 'blocked', 'stale', 'open'] as const
+
 /** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 function statusLabel(tone: Tone, t: Translate): string | null {
   if (tone === 'stale') return t('statusStale')
@@ -99,11 +106,8 @@ export function TaskRowView(props: {
   const releaseButton = h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipRelease') },
     t('actionRelease'))
 
-  // 状态标签（四色，用户 2026-10-18）：已结案没有在办状态 ⇒ 不摆。
-  const statusText = statusLabel(tone, t)
-  const statusTag = statusText === null || tone === 'closed'
-    ? null
-    : h(Tag, { text: statusText, tone, title: tone === 'stale' ? (staleTip ?? statusText) : statusText })
+  // 状态标签：调试态下第二区**不走判断**（见 DEBUG_TONES），这里只留「我的待办」卡用的异常标签。
+  // 恢复判断式展示时：把 `statusLabel(tone, t)` 按 tone 取一枚摆进标签行即可（tone==='closed' 不摆）。
   // 「我的待办」卡的异常标签（阻塞=黄 / 停滞=红；进行中只靠左缘色条，不再重复一枚）
   const alarmTag = tone === 'blocked' || tone === 'stale'
     ? h(Tag, { text: statusLabel(tone, t) ?? '', tone, title: tone === 'stale' ? staleTip : undefined })
@@ -129,9 +133,18 @@ export function TaskRowView(props: {
     const hasOwner = !(owner === null || owner === undefined || owner === '')
     const who = creator === null || creator === undefined || creator === '' ? '—' : `@${creator}`
     const createdOk = created !== null && created !== undefined && Date.parse(created) >= 0
-    // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）
+    // 执行人的悬停提示：**什么时候开始执行**（任务上的 started；没有就报「时间未知」，不编）
+    const startedOk = isTask && row.task.started !== null && row.task.started !== undefined
+      && Date.parse(row.task.started) >= 0
+    const ownerTip = t('startedAt', {
+      who: String(owner),
+      when: startedOk ? formatDateTime(String(row.task.started)) : t('timeUnknown'),
+    })
+    // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）。
+    // ⚠️ 调试态（用户 2026-10-18）：状态**全量写死**四枚摆出来、不走 tone 判断 ——
+    // 先看全四种长什么样；定下来之后这里换回按 tone 取一枚（statusTag）。
     const tagLine = h('div', { className: 'dtl-orow__tags' },
-      statusTag,
+      DEBUG_TONES.map(tone => h(Tag, { key: tone, text: statusLabel(tone, t) ?? '', tone })),
       tags.map(tag => h(Tag, { key: tag, text: `#${tag}` })),
     )
     return h('div', { className: 'dtl-orow' },
@@ -142,25 +155,24 @@ export function TaskRowView(props: {
           orowTitleLine,
           tagLine,
         ),
-        // 执行人列（原状态位）：有执行人 ⇒ 一枚 @名字 标签；没人在做 ⇒ 空着
-        // （状态已由标签行的「待认领」报了，不重复）
+        // 执行人列（原状态位）：有执行人 ⇒ 一枚 @名字 标签，悬停给「谁 什么时候开始执行」
+        // （页面不许跳：右侧槽位宽度是常驻的，hover 只换可见性 ⇒ 这个提示不会跟着飘）
         h('span', { className: 'dtl-tcell dtl-tcell--status' },
-          hasOwner ? h(Tag, { text: `@${String(owner)}`, tone: 'person', title: t('fieldOwner') }) : null),
-        // 最右：@创建人 创建于 年-月-日 时:分:秒（悬停掉掉时分秒，让位给操作钮）
-        h('span', { className: 'dtl-tcell dtl-tcell--created' },
-          h('span', { className: 'dtl-orow__created-long' },
-            t('createdAt', { who, when: createdOk ? formatDateTime(String(created), { seconds: true }) : t('timeUnknown') })),
-          h('span', { className: 'dtl-orow__created-short' },
+          hasOwner ? h(Tag, { text: `@${String(owner)}`, tone: 'person', title: ownerTip }) : null),
+        // 最右**一个槽**：创建信息 ⇄ 操作钮二选一（用户 2026-10-18：悬停就把创建信息整条干掉，
+        // 按钮顶上那一格；两个都常驻布局 ⇒ 行宽不变、页面不跳）
+        h('span', { className: 'dtl-orow__slot' },
+          h('span', { className: 'dtl-orow__created' },
             t('createdAt', { who, when: createdOk ? formatDateTime(String(created)) : t('timeUnknown') })),
-        ),
-        // 动作排：**同一排、同一间距**（用户 2026-10-18：查看钮不许单独一档间距）；
-        // 谁出来由 resolveActions 说了算 —— 我的 ⇒ 继续/结束/释放，待认领 ⇒ 认领
-        h('span', { className: 'dtl-orow__actions' },
-          actions.claim ? claimButton : null,
-          actions.resume ? resumeButton : null,
-          actions.finish ? finishButton : null,
-          actions.release ? releaseButton : null,
-          actions.view ? viewButton : null,
+          // 动作排：**同一排、同一间距**（用户 2026-10-18：查看钮不许单独一档间距）；
+          // 谁出来由 resolveActions 说了算 —— 我的 ⇒ 继续/结束/释放，待认领 ⇒ 认领
+          h('span', { className: 'dtl-orow__actions' },
+            actions.claim ? claimButton : null,
+            actions.resume ? resumeButton : null,
+            actions.finish ? finishButton : null,
+            actions.release ? releaseButton : null,
+            actions.view ? viewButton : null,
+          ),
         ),
       ),
     )
