@@ -658,27 +658,24 @@ body[data-ds-dark-theme]{
 .dtl-row-head:hover{background:var(--dtl-card-hover);}
 .dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
 
-/* 其他待办 = 一张**连体长表**（用户 2026-10-18）：段与段**零间距、无圆角**，
-   上一段最后一条行线之下直接接下一段段头；行 = 一条底部分隔线 + 极浅斑马纹。 */
-/* 每一段：段与段零间距、只留底边收口（用户 2026-10-18：左右边框加上不好看 ⇒ 撤掉，
-   靠"行下一条线 + 段尾一条底边"连成一张表） */
-.dtl-group{margin-bottom:0;border-bottom:1px solid var(--dtl-border);}
-/* 段头底：改用「我的待办」卡面那种**稍亮的中性灰**（用户 2026-10-18：蓝不好看）；
-   高度 ≈1.7×（padding 7→12 且 min-height 40）；四角全方 */
+/* 其他待办 = **一组一张表**（用户 2026-10-18 照参考图 Stripe Payments：Pending / Archived /
+   Completed 各一组）：组标题是**独立一行**——透明无底、远离上一组、贴近自己的表，
+   文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
+/* 组与组分家：下面留一档间距，不再"上下连着" */
+.dtl-group{margin-bottom:var(--dtl-space-2);}
+/* 组标题：无背景、无边框；**上距远、下距近**（18 / 6）——贴着自家表格 */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
-  min-height:40px;padding:12px var(--dtl-space-3);border:0;border-radius:0;
-  background:var(--dtl-surface-1);color:inherit;font:inherit;text-align:left;cursor:pointer;}
-.dtl-group__name{font-size:var(--dtl-font-md);font-weight:600;color:var(--dtl-fg);}
+  padding:18px 0 6px;border:0;border-radius:0;background:transparent;
+  color:inherit;font:inherit;text-align:left;cursor:pointer;}
+.dtl-group__name{font-size:var(--dtl-font-lg);font-weight:700;color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
-/* 段头标识：官方文件夹图标；图标缺席时回落成竖线（任务行用圆点，两处要区隔） */
+/* 组标题标识：官方文件夹图标（展开=开、收起=合）；图标缺席时回落成竖线 */
 .dtl-group__bar{width:3px;height:14px;flex:none;border-radius:2px;background:var(--dtl-business);}
 /* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
    一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
 .dtl-orow{padding:13px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
 /* 斑马纹落在 2、4、6 行（用户 2026-10-18：原来 1、3、5 看着像从第一行就开始断层） */
 .dtl-orow:nth-of-type(even){background:var(--dtl-zebra);}
-/* 末行不画线：段的底边由 .dtl-group 自己收口，避免叠成 2px */
-.dtl-orow:last-of-type{border-bottom:0;}
 .dtl-orow:hover{background:var(--dtl-card-hover);}
 .dtl-orow__row{display:flex;align-items:center;gap:12px;}
 .dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
