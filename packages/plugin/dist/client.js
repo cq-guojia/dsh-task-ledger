@@ -663,13 +663,14 @@ body[data-ds-dark-theme]{
    文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
 /* 组与组分家：下面留一档间距，不再"上下连着" */
 .dtl-group{margin-bottom:var(--dtl-space-2);}
-/* 组标题：无背景、无竖边；**上距远、下距近**（18 / 6）——贴着自家表格；
-   标题行下缘一条 **3px 蓝线**，用来把每个工作区"标"出来（用户 2026-10-18） */
+/* 组标题：无背景、无竖边；**上距远、下距近**——贴着自家表格；
+   整行高 = 1.5×（用户 2026-10-18：原来太矮）：上行距 32、下行距 10 + 24 行高 ≈ 66px；
+   标题行下缘一条 **3px 蓝线**，用来把每个工作区"标"出来 */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
-  padding:18px 0 6px;border:0;border-bottom:3px solid var(--dtl-business);
+  padding:32px 0 10px;border:0;border-bottom:3px solid var(--dtl-business);
   border-radius:0;background:transparent;
   color:inherit;font:inherit;text-align:left;cursor:pointer;}
-.dtl-group__name{font-size:var(--dtl-font-lg);font-weight:700;color:var(--dtl-fg);}
+.dtl-group__name{font-size:var(--dtl-font-xl);font-weight:700;line-height:var(--dtl-line-xl);color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
 /* 组标题标识：官方文件夹图标（展开=开、收起=合）；图标缺席时回落成竖线 */
 .dtl-group__bar{width:3px;height:14px;flex:none;border-radius:2px;background:var(--dtl-business);}
