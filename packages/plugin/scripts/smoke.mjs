@@ -13,19 +13,32 @@ const { resolveWorkspaces } = await import('../dist/host/workspace.js')
 const { readTasks, getTask, readWorklog } = await import('../dist/host/ledger-read.js')
 const { getHomeAggregate, getBoardSnapshot, queryClosed, getFilterOptions, getCurrentIdentity } = await import('../dist/host/board.js')
 const { runLedgerScript } = await import('../dist/host/script.js')
+const { ensurePerfFixture } = await import('./fixtures/generate-perf.mjs')
 
 let passed = 0
+let skipped = 0
 function check(name, fn) {
   return Promise.resolve().then(fn).then(
     () => { passed += 1; console.log(`  ✓ ${name}`) },
     (error) => { console.error(`  ✗ ${name}\n    ${error.message}`); process.exitCode = 1 },
   )
 }
+/** 环境缺依赖（如同事机器上没有姊妹工作区）⇒ 记 SKIP，不计失败——否则「全绿才推」会因环境差异变假红灯。 */
+function skip(name, reason) {
+  skipped += 1
+  console.log(`  ○ ${name}（SKIP：${reason}）`)
+}
+
+// 合成大库 fixture（os.tmpdir()/dtl-fixtures/perf-50k，脚本现生成；不再硬编码某人 /tmp/perf2）
+const PERF_PATH = ensurePerfFixture()
+// 姊妹工作区（真机用例用）：缺它只降级真机断言，合成用例不受影响
+const DISPATCH_PATH = path.resolve(repoRoot, '../dsh-task-dispatch-table')
+const hasDispatch = fs.existsSync(path.join(DISPATCH_PATH, 'ledger', 'progress.json'))
 
 const registry = [
   { id: 'ws-self', title: 'dsh-task-ledger（本仓）', path: repoRoot },
-  { id: 'ws-dispatch', title: 'dsh-task-dispatch-table', path: path.resolve(repoRoot, '../dsh-task-dispatch-table') },
-  { id: 'ws-big', title: 'perf-50k（合成）', path: '/tmp/perf2' },
+  ...(hasDispatch ? [{ id: 'ws-dispatch', title: 'dsh-task-dispatch-table', path: DISPATCH_PATH }] : []),
+  { id: 'ws-big', title: 'perf-50k（合成）', path: PERF_PATH },
   { id: 'ws-none', title: '无台账（/tmp）', path: '/tmp' },
 ]
 
@@ -34,7 +47,7 @@ console.log('smoke: 后端方法抽象')
 await check('resolveWorkspaces：只返回有 progress.json 的（未初始化/无台账被过滤）', async () => {
   const found = resolveWorkspaces(registry)
   const ids = found.map((w) => w.id)
-  assert.deepEqual(ids, ['ws-self', 'ws-dispatch'])
+  assert.deepEqual(ids, hasDispatch ? ['ws-self', 'ws-dispatch'] : ['ws-self'])
 })
 
 await check('readTasks：在办任务带 id 与 workspace', async () => {
@@ -59,13 +72,15 @@ await check('getBoardSnapshot：统计与任务行（与历史量无关的热路
   const started = Date.now()
   const snapshot = await getBoardSnapshot([
     { id: 'ws-self', title: 'self', path: repoRoot },
-    { id: 'ws-dispatch', title: 'dispatch', path: path.resolve(repoRoot, '../dsh-task-dispatch-table') },
+    ...(hasDispatch ? [{ id: 'ws-dispatch', title: 'dispatch', path: DISPATCH_PATH }] : []),
   ])
   const elapsed = Date.now() - started
   console.log(`    （耗时 ${elapsed}ms；在办 ${snapshot.tasks.length} 条，我的 ${snapshot.stats.myActive}，待认领 ${snapshot.stats.open}）`)
-  assert.ok(snapshot.tasks.length >= 6)
+  // 合并口径只在姊妹工作区在位时卡（缺它退化为「本仓独跑」断言，条数是数据不是契约）
+  if (hasDispatch) assert.ok(snapshot.tasks.length >= 6)
+  else assert.ok(snapshot.tasks.length >= 1)
   assert.ok(Number.isInteger(snapshot.stats.myActive) && snapshot.stats.myActive >= 0)
-  assert.ok(snapshot.stats.open >= 4)
+  if (hasDispatch) assert.ok(snapshot.stats.open >= 4)
   assert.equal(snapshot.stats.staleDays, 14, '停滞阈值应随响应下发（14 天）')
   assert.equal(typeof snapshot.stats.oldestOpenDays, 'number', '最老待认领天数应是数字')
   for (const task of snapshot.tasks) {
@@ -170,9 +185,10 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
 await check('queryClosed：近 13 个月窗口 + 创建时间倒序 + limit', async () => {
   const records = await queryClosed([
     { id: 'ws-self', title: 'self', path: repoRoot },
-    { id: 'ws-dispatch', title: 'dispatch', path: path.resolve(repoRoot, '../dsh-task-dispatch-table') },
+    ...(hasDispatch ? [{ id: 'ws-dispatch', title: 'dispatch', path: DISPATCH_PATH }] : []),
   ])
-  assert.ok(records.length > 8, `两仓合并应 >8，实际 ${records.length}`)
+  // 合并生效的口径只在姊妹工作区在位时卡；缺它退化为「至少本仓自己的历史」
+  assert.ok(records.length > (hasDispatch ? 8 : 0), `历史应非空，实际 ${records.length}`)
   for (const record of records) assert.ok(record.workspace !== undefined)
   const keys = records.map((r) => String(r.created ?? r.time ?? ''))
   assert.deepEqual(keys, [...keys].sort().reverse(), '应按创建时间倒序')
@@ -202,7 +218,7 @@ await check('getTask + readWorklog：详情与过程正文', async () => {
 })
 
 await check('runLedgerScript：直调 count-only（合成 5 万行封顶）', async () => {
-  const result = await runLedgerScript('history', ['--repo', '/tmp/perf2', '--json', '--count-only', '--months', '13'])
+  const result = await runLedgerScript('history', ['--repo', PERF_PATH, '--json', '--count-only', '--months', '13'])
   assert.equal(result.ok, true)
   if (result.ok) {
     assert.equal(result.data.count, 10000)
@@ -355,4 +371,4 @@ await check('buildSkillRegistration：name/description/正文 + 占位符替换�
   console.log(`    （${registration.name}｜正文 ${registration.content.length} 字｜脚本 ${match[1]}）`)
 })
 
-console.log(`\n${passed} 项通过${process.exitCode ? '（有失败）' : ''}`)
+console.log(`\n${passed} 项通过${skipped > 0 ? `，${skipped} 项 SKIP（环境缺依赖）` : ''}${process.exitCode ? '（有失败）' : ''}`)
