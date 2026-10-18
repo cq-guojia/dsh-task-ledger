@@ -18,6 +18,7 @@
 | 数据库说明 | `docs/design/ledger-data.md`（本项目的「数据」= 各工作区台账文件，插件只读、不自建数据库） |
 | 样式规范 | `docs/design/ui-style.md` |
 | 方法规范 | `docs/design/code-conventions.md`（client 半分层与「单源」清单；宿主接口核实方法仍写在 `external/` 各文档的「复核方式」节） |
+| 后端数据面 | `docs/design/host-data-plane.md`（host 三层架构、降级/缓存语义、性能实测基线与优化路线） |
 | 样例 | 不适用（初建期无样例产出；台账文件真实样例见 `ledger-data.md` 引用的工作区路径） |
 
 ## 二、本项目补充的写作约定
