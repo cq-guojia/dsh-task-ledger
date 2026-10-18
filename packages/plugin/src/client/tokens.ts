@@ -153,8 +153,8 @@ body[data-ds-dark-theme]{
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
-  /* 组标题底（暗）：亮蓝半透，配深色竖条 */
-  --dtl-group-head-bg:rgba(96,165,250,.18);
+  /* 组标题底（暗）：**实色**蓝（参考图不是半透明叠加出来的） */
+  --dtl-group-head-bg:#1e3a5f;
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 5%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);

@@ -32,12 +32,12 @@ const UI_BASE_CSS = `
    文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
 /* 组与组分家：与上一段留一档间距（用户 2026-10-18：照参考图，各组分家） */
 .dtl-group{margin-bottom:var(--dtl-space-3);}
-/* 组标题（用户 2026-10-18 照参考图）：**左侧深蓝竖条 + 浅蓝底**；与自家表格**零间距贴着**；
-   表格最上面那条线 = 表头下缘的 3px 蓝线 */
+/* 组标题（用户 2026-10-18 照参考图）：**左侧深蓝竖条 + 浅蓝底（实色，不半透明）**；
+   与自家表格**零间距贴着**；表头下缘**无边**（用户 2026-10-18：下面那条边取掉） */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;
-  padding:10px var(--dtl-space-3);border:0;border-bottom:3px solid var(--dtl-business);
-  border-left:5px solid var(--dtl-business);border-radius:0;
-  background:var(--dtl-group-head-bg);color:inherit;font:inherit;text-align:left;cursor:pointer;}
+  padding:10px var(--dtl-space-3);border:0;border-left:5px solid var(--dtl-business);
+  border-radius:0;background:var(--dtl-group-head-bg);
+  color:inherit;font:inherit;text-align:left;cursor:pointer;}
 .dtl-group__name{font-size:var(--dtl-font-xl);font-weight:700;line-height:var(--dtl-line-xl);color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
 /* 组标题标识：官方文件夹图标（展开=开、收起=合）；图标缺席时回落成竖线 */
