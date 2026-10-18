@@ -73,7 +73,6 @@ declare module '@deepseek-ai/dsh-client-ui-primitives' {
   export const IconUsersOutlineRegular: ComponentType<{ size?: number; className?: string }>
   export const IconChecklistOutlineRegular: ComponentType<{ size?: number; className?: string }>
   export const IconCloseOutlineRegular: ComponentType<{ size?: number; className?: string }>
-  export const IconSearchOutlineRegular: ComponentType<{ size?: number; className?: string }>
   export const IconFlatListOutlineRegular: ComponentType<{ size?: number; className?: string }>
   /** 文件夹开 / 合（工作区官方图标，同一套 Artwork 的一对）：
    *  `lib/index.js:1801` IconFolderOpenRegular、`lib/index.js:1811` IconFolderCloseRegular（2026-10-18 亲验）。 */
