@@ -29,10 +29,10 @@ export type LocaleKey =
   | 'workspaceLabel' | 'workspaceAll'
   | 'searchPlaceholder'
   // 列表分区
-  | 'regionMine' | 'regionOthers' | 'showingCount'
+  | 'regionMine' | 'regionAll' | 'showingCount'
   | 'groupTotal' | 'groupOpen' | 'groupDoing' | 'groupBlocked' | 'groupStale'
   | 'colTask' | 'colCreator' | 'colOwner' | 'colStatus' | 'colTime'
-  | 'othersEmptyTitle' | 'othersEmptyHint' | 'othersEmptyAction'
+  | 'allEmptyTitle' | 'allEmptyHint' | 'allEmptyAction'
   | 'expandAria' | 'collapseAria'
   | 'ownerUnclaimed' | 'fieldCreator' | 'fieldOwner' | 'fieldCreated' | 'fieldStarted' | 'fieldFinished' | 'timeUnknown'
   | 'ageDaysText' | 'ageToday'
@@ -110,7 +110,7 @@ export const zh: Record<LocaleKey, string> = {
   searchPlaceholder: '搜索',
 
   regionMine: '我的待办',
-  regionOthers: '其他待办',
+  regionAll: '全部待办',
   showingCount: '显示 {n} 条',
   groupTotal: '共 {n} 条',
   groupOpen: '待办 {n} 条',
@@ -122,9 +122,9 @@ export const zh: Record<LocaleKey, string> = {
   colOwner: '执行人',
   colStatus: '状态',
   colTime: '时长',
-  othersEmptyTitle: '没有可显示的事项',
-  othersEmptyHint: '切换上面的状态过滤试试，或新建一个任务。',
-  othersEmptyAction: '新建任务',
+  allEmptyTitle: '没有可显示的事项',
+  allEmptyHint: '切换上面的状态过滤试试，或新建一个任务。',
+  allEmptyAction: '新建任务',
   expandAria: '展开过程文档',
   collapseAria: '收起',
 
@@ -231,7 +231,7 @@ export const en: Record<LocaleKey, string> = {
   searchPlaceholder: 'Search',
 
   regionMine: 'My todos',
-  regionOthers: 'Other tasks',
+  regionAll: 'All tasks',
   showingCount: '{n} shown',
   groupTotal: '{n} total',
   groupOpen: '{n} open',
@@ -243,9 +243,9 @@ export const en: Record<LocaleKey, string> = {
   colOwner: 'Owner',
   colStatus: 'Status',
   colTime: 'Duration',
-  othersEmptyTitle: 'Nothing to show',
-  othersEmptyHint: 'Try another status filter above, or create a task.',
-  othersEmptyAction: 'New task',
+  allEmptyTitle: 'Nothing to show',
+  allEmptyHint: 'Try another status filter above, or create a task.',
+  allEmptyAction: 'New task',
   expandAria: 'Expand worklog',
   collapseAria: 'Collapse',
 

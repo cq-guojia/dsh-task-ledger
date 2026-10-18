@@ -270,13 +270,14 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                         : view.mine.map(row => h(TaskRowView, {
                           key: row.key, t, row, variant: 'mine', staleDays: board?.stats.staleDays ?? null,
                         })),
-                      // 第二区：其他待办 —— **永远渲染**（用户 2026-10-18：选「进行中」没数据也不能整块消失）；
+                      // 第二区：全部待办 —— **永远渲染**（用户 2026-10-18：选「进行中」没数据也不能整块消失；
+                      // 且不要过滤掉自己，所以含我的任务，会与第一区重叠——顶部快看 / 底部全量）；
                       // 标题行：图标 + 名 + 状态滑轨（带全量角标）+ 搜索（最右）；表格区无数据给虚线空态
                       h('div', null,
                         h('div', { style: regionHeadRowStyle },
                           h('span', { style: { color: 'var(--dtl-fg-3)', display: 'inline-flex', flex: 'none' } },
                             h(IconFlatListOutlineRegular, { size: 16 })),
-                          h('span', { style: { ...regionHeadTitleStyle, fontSize: 'var(--dtl-font-md)' } }, t('regionOthers')),
+                          h('span', { style: { ...regionHeadTitleStyle, fontSize: 'var(--dtl-font-md)' } }, t('regionAll')),
                           h('span', { style: { flex: '1 1 auto' } }),
                           // 状态滑轨：角标 = 第二区**全量**计数（不受滑轨自身影响）；0 不标数字
                           h(Segmented<StatusFilter>, {
@@ -284,11 +285,11 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                             value: state.query.status,
                             label: t('statusLabel'),
                             items: [
-                              { value: 'all', label: t('statusAll'), badge: orZero(view.othersCounts.total) },
-                              { value: 'active', label: t('statusActive'), badge: orZero(view.othersCounts.doing) },
-                              { value: 'open', label: t('statusOpen'), badge: orZero(view.othersCounts.open) },
-                              { value: 'blocked', label: t('statusBlocked'), badge: orZero(view.othersCounts.blocked) },
-                              { value: 'stale', label: t('statusStale'), badge: orZero(view.othersCounts.stale) },
+                              { value: 'all', label: t('statusAll'), badge: orZero(view.allCounts.total) },
+                              { value: 'active', label: t('statusActive'), badge: orZero(view.allCounts.doing) },
+                              { value: 'open', label: t('statusOpen'), badge: orZero(view.allCounts.open) },
+                              { value: 'blocked', label: t('statusBlocked'), badge: orZero(view.allCounts.blocked) },
+                              { value: 'stale', label: t('statusStale'), badge: orZero(view.allCounts.stale) },
                             ],
                             onChange: (next) => { setQuery({ status: next }) },
                           }),
@@ -305,9 +306,9 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                           // 空态：虚线框 + 两排字 + 按钮（参考 dispatch 空态；按钮先接「回会话」，
                           // 真正的「起会话建任务」归会话交接任务）
                           ? h('div', { className: 'dtl-empty-guide', style: { marginTop: 'var(--dtl-space-2)' } },
-                            h('div', { style: { fontSize: 'var(--dtl-font-lg)', fontWeight: 600, marginBottom: 'var(--dtl-space-1)' } }, t('othersEmptyTitle')),
-                            h('div', { style: { fontSize: 'var(--dtl-font-md)', color: 'var(--dtl-fg-2)', marginBottom: 'var(--dtl-space-3)' } }, t('othersEmptyHint')),
-                            h(Button, { variant: 'primary', size: 'md', onClick: onBack }, t('othersEmptyAction')),
+                            h('div', { style: { fontSize: 'var(--dtl-font-lg)', fontWeight: 600, marginBottom: 'var(--dtl-space-1)' } }, t('allEmptyTitle')),
+                            h('div', { style: { fontSize: 'var(--dtl-font-md)', color: 'var(--dtl-fg-2)', marginBottom: 'var(--dtl-space-3)' } }, t('allEmptyHint')),
+                            h(Button, { variant: 'primary', size: 'md', onClick: onBack }, t('allEmptyAction')),
                           )
                           : h('div', { style: { marginTop: 'var(--dtl-space-2)' } },
                             view.groups.map(group => h(WorkspaceGroupView, {
@@ -327,7 +328,7 @@ function orZero(n: number): number | undefined {
   return n > 0 ? n : undefined
 }
 
-/** 一个工作区分组（其他待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
+/** 一个工作区分组（全部待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
  *  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
  *  阻塞 / 停滞**只在 >0 时出现**。 */
 function WorkspaceGroupView(props: { t: Translate; group: WorkspaceGroup; staleDays?: number | null }): ReactNode {

@@ -200,10 +200,11 @@ window.__ModuleLoader__.load({
 			return String(b.task.created ?? b.task.started ?? "").localeCompare(String(a.task.created ?? a.task.started ?? ""));
 		}
 		/**
-		* 当前筛选下的两区视图（用户 2026-10-17 定稿）：
+		* 当前筛选下的两区视图（用户 2026-10-18 调整）：
 		*  - 第一区「我的待办」= 我名下 doing/blocked，吃工作区下拉 + 标题搜索，按创建时间倒序；
-		*  - 第二区「其他待办」= 其余任务按工作区分组，吃**状态档**（segmented）+
-		*    **标题 / 执行人搜索**（usersKeyword）；一个整表（外框连着），不是一块一块的。
+		*  - 第二区「全部待办」= **所有**在办任务按工作区分组（含我的——用户明确不要过滤掉自己），
+		*    吃**状态档**（segmented）+ **标题 / 执行人搜索**（othersKeyword）；一个整表（外框连着）。
+		*    ⇒ 我的任务会同时出现在两个区，这是预期（顶部快看 / 底部全量）。
 		*/
 		function selectView(current) {
 			const { board, query } = current;
@@ -211,7 +212,7 @@ window.__ModuleLoader__.load({
 				mine: [],
 				groups: [],
 				total: 0,
-				othersCounts: {
+				allCounts: {
 					total: 0,
 					doing: 0,
 					open: 0,
@@ -219,13 +220,13 @@ window.__ModuleLoader__.load({
 					stale: 0
 				}
 			};
-			const othersAll = board.tasks.filter((task) => !isMine(task, board));
-			const othersCounts = {
-				total: othersAll.length,
-				doing: othersAll.filter((task) => task.status === "doing").length,
-				open: othersAll.filter((task) => task.status === "open").length,
-				blocked: othersAll.filter((task) => task.status === "blocked").length,
-				stale: othersAll.filter((task) => task.stale === true).length
+			const allTasks = board.tasks;
+			const allCounts = {
+				total: allTasks.length,
+				doing: allTasks.filter((task) => task.status === "doing").length,
+				open: allTasks.filter((task) => task.status === "open").length,
+				blocked: allTasks.filter((task) => task.status === "blocked").length,
+				stale: allTasks.filter((task) => task.stale === true).length
 			};
 			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => query.workspace === "" || task.workspace.id === query.workspace).filter((task) => hitKeyword(query.keyword, [
 				task.title,
@@ -240,7 +241,7 @@ window.__ModuleLoader__.load({
 				task,
 				mine: true
 			}));
-			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => !isMine(task, board)).filter((task) => statusHit(task, query.status)).filter((task) => hitKeyword(query.othersKeyword, [task.title, task.owner]));
+			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => statusHit(task, query.status)).filter((task) => hitKeyword(query.othersKeyword, [task.title, task.owner]));
 			const byWorkspace = /* @__PURE__ */ new Map();
 			for (const task of rest) {
 				const entry = byWorkspace.get(task.workspace.id) ?? {
@@ -268,8 +269,8 @@ window.__ModuleLoader__.load({
 			return {
 				mine: mineRows,
 				groups,
-				total: mineRows.length + groups.reduce((sum, group) => sum + group.rows.length, 0),
-				othersCounts
+				total: groups.reduce((sum, group) => sum + group.rows.length, 0),
+				allCounts
 			};
 		}
 		//#endregion
@@ -1419,7 +1420,7 @@ body[data-ds-dark-theme]{
 			} }, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 16 })), (0, react.createElement)("span", { style: {
 				...regionHeadTitleStyle,
 				fontSize: "var(--dtl-font-md)"
-			} }, t("regionOthers")), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)(Segmented, {
+			} }, t("regionAll")), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)(Segmented, {
 				id: "dtl-others-status",
 				value: state.query.status,
 				label: t("statusLabel"),
@@ -1427,27 +1428,27 @@ body[data-ds-dark-theme]{
 					{
 						value: "all",
 						label: t("statusAll"),
-						badge: orZero(view.othersCounts.total)
+						badge: orZero(view.allCounts.total)
 					},
 					{
 						value: "active",
 						label: t("statusActive"),
-						badge: orZero(view.othersCounts.doing)
+						badge: orZero(view.allCounts.doing)
 					},
 					{
 						value: "open",
 						label: t("statusOpen"),
-						badge: orZero(view.othersCounts.open)
+						badge: orZero(view.allCounts.open)
 					},
 					{
 						value: "blocked",
 						label: t("statusBlocked"),
-						badge: orZero(view.othersCounts.blocked)
+						badge: orZero(view.allCounts.blocked)
 					},
 					{
 						value: "stale",
 						label: t("statusStale"),
-						badge: orZero(view.othersCounts.stale)
+						badge: orZero(view.allCounts.stale)
 					}
 				],
 				onChange: (next) => {
@@ -1470,15 +1471,15 @@ body[data-ds-dark-theme]{
 				fontSize: "var(--dtl-font-lg)",
 				fontWeight: 600,
 				marginBottom: "var(--dtl-space-1)"
-			} }, t("othersEmptyTitle")), (0, react.createElement)("div", { style: {
+			} }, t("allEmptyTitle")), (0, react.createElement)("div", { style: {
 				fontSize: "var(--dtl-font-md)",
 				color: "var(--dtl-fg-2)",
 				marginBottom: "var(--dtl-space-3)"
-			} }, t("othersEmptyHint")), (0, react.createElement)(Button, {
+			} }, t("allEmptyHint")), (0, react.createElement)(Button, {
 				variant: "primary",
 				size: "md",
 				onClick: onBack
-			}, t("othersEmptyAction"))) : (0, react.createElement)("div", { style: { marginTop: "var(--dtl-space-2)" } }, view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
+			}, t("allEmptyAction"))) : (0, react.createElement)("div", { style: { marginTop: "var(--dtl-space-2)" } }, view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
 				key: group.workspaceId,
 				t,
 				group,
@@ -1489,7 +1490,7 @@ body[data-ds-dark-theme]{
 		function orZero(n) {
 			return n > 0 ? n : void 0;
 		}
-		/** 一个工作区分组（其他待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
+		/** 一个工作区分组（全部待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
 		*  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
 		*  阻塞 / 停滞**只在 >0 时出现**。 */
 		function WorkspaceGroupView(props) {
@@ -1583,7 +1584,7 @@ body[data-ds-dark-theme]{
 			workspaceAll: "全部工作区",
 			searchPlaceholder: "搜索",
 			regionMine: "我的待办",
-			regionOthers: "其他待办",
+			regionAll: "全部待办",
 			showingCount: "显示 {n} 条",
 			groupTotal: "共 {n} 条",
 			groupOpen: "待办 {n} 条",
@@ -1595,9 +1596,9 @@ body[data-ds-dark-theme]{
 			colOwner: "执行人",
 			colStatus: "状态",
 			colTime: "时长",
-			othersEmptyTitle: "没有可显示的事项",
-			othersEmptyHint: "切换上面的状态过滤试试，或新建一个任务。",
-			othersEmptyAction: "新建任务",
+			allEmptyTitle: "没有可显示的事项",
+			allEmptyHint: "切换上面的状态过滤试试，或新建一个任务。",
+			allEmptyAction: "新建任务",
 			expandAria: "展开过程文档",
 			collapseAria: "收起",
 			ownerUnclaimed: "待认领",
@@ -1696,7 +1697,7 @@ body[data-ds-dark-theme]{
 			workspaceAll: "All workspaces",
 			searchPlaceholder: "Search",
 			regionMine: "My todos",
-			regionOthers: "Other tasks",
+			regionAll: "All tasks",
 			showingCount: "{n} shown",
 			groupTotal: "{n} total",
 			groupOpen: "{n} open",
@@ -1708,9 +1709,9 @@ body[data-ds-dark-theme]{
 			colOwner: "Owner",
 			colStatus: "Status",
 			colTime: "Duration",
-			othersEmptyTitle: "Nothing to show",
-			othersEmptyHint: "Try another status filter above, or create a task.",
-			othersEmptyAction: "New task",
+			allEmptyTitle: "Nothing to show",
+			allEmptyHint: "Try another status filter above, or create a task.",
+			allEmptyAction: "New task",
 			expandAria: "Expand worklog",
 			collapseAria: "Collapse",
 			ownerUnclaimed: "unclaimed",

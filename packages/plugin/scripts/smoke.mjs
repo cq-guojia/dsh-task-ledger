@@ -311,22 +311,22 @@ await check('客户端两区视图：我的待办吃标题搜索 / 按工作区�
   })
   const base = { scope: 'all', status: 'all', workspace: '', keyword: '', othersKeyword: '' }
   const ids = (rows) => rows.map(r => r.task.id)
-  // 第一区 = 我的（跨工作区）；第二区 = 别人的 + 待认领，按工作区分组
+  // 第一区 = 我的（跨工作区）；第二区 = 全部任务按工作区分组（含我的——会与第一区重叠，用户 2026-10-18）
   let view = selectView(state(base))
   assert.deepEqual(ids(view.mine), ['t1'], '第一区只有我名下的 doing/blocked')
-  assert.deepEqual(view.groups.map(g => g.workspaceId), ['w2'], '第二区只剩 B 项目（A 的我那款已进第一区，不重复）')
-  assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '组内：别人在做的在前、待认领在后')
-  assert.equal(view.total, 3)
+  assert.deepEqual(view.groups.map(g => g.workspaceId), ['w1', 'w2'], '第二区含全部工作区（我的 t1 也进来，不再被过滤掉）')
+  assert.deepEqual(ids(view.groups[0].rows), ['t1'], '组内 w1：只有我的 doing')
+  assert.equal(view.total, 3, 'total = 全部待办任务数')
   // 搜索 / 工作区只归第一区；第二区吃状态档 + 自己的搜索（标题 / 执行人）
   view = selectView(state({ ...base, keyword: '甲' }))
   assert.deepEqual(ids(view.mine), ['t1'], '我的待办吃标题搜索')
-  assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '我的搜索不影响第二区')
+  assert.deepEqual(ids(view.groups[0].rows), ['t1'], '我的搜索不影响第二区')
   view = selectView(state({ ...base, keyword: '不存在的词' }))
   assert.deepEqual(view.mine, [], '我的待办搜空即空')
-  assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '搜空也不影响第二区')
+  assert.deepEqual(ids(view.groups[0].rows), ['t1'], '搜空也不影响第二区')
   view = selectView(state({ ...base, workspace: 'w2' }))
   assert.deepEqual(view.mine, [], '我的待办吃工作区过滤（w2 没有我的任务 ⇒ 空）')
-  assert.deepEqual(ids(view.groups[0].rows), ['t3', 't2'], '工作区过滤也不影响第二区')
+  assert.deepEqual(ids(view.groups[0].rows), ['t1'], '工作区过滤只作用于第一区；第二区仍含全部工作区（含 w1 的 t1）')
   // 第二区：状态档（阻塞 / 停滞 / 待认领）+ othersKeyword（标题 / 执行人）
   assert.deepEqual(ids(selectView(state({ ...base, status: 'open' })).groups[0].rows), ['t2'])
   assert.deepEqual(ids(selectView(state({ ...base, status: 'blocked' })).groups[0].rows), ['t3'])
