@@ -665,15 +665,15 @@ body[data-ds-dark-theme]{
 /* 其他待办 = **一组一张表**（用户 2026-10-18 照参考图 Stripe Payments：Pending / Archived /
    Completed 各一组）：组标题是**独立一行**——透明无底、远离上一组、贴近自己的表，
    文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
-/* 组与组分家：与上一段留一档间距（用户 2026-10-18：照参考图，各组分家） */
-.dtl-group{margin-bottom:var(--dtl-space-3);}
-/* 组标题（用户 2026-10-18 照参考图）：**左侧深蓝竖条 + 浅蓝底（实色，不半透明）**；
-   与自家表格**零间距贴着**；表头下缘**无边**（用户 2026-10-18：下面那条边取掉） */
+/* 组与组**零外距**、连体（用户 2026-10-18：上间距去掉，和上面连在一起） */
+.dtl-group{margin-bottom:0;}
+/* 组标题（照参考图）：**左侧深蓝竖条 + 浅蓝底（实色）**；行高保持（≈42px）；
+   工作区名稍小一号（14px）；**上缘无边、下缘一条 1px 边框**（用户 2026-10-18） */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;
   padding:10px var(--dtl-space-3);border:0;border-left:5px solid var(--dtl-business);
-  border-radius:0;background:var(--dtl-group-head-bg);
-  color:inherit;font:inherit;text-align:left;cursor:pointer;}
-.dtl-group__name{font-size:var(--dtl-font-xl);font-weight:700;line-height:var(--dtl-line-xl);color:var(--dtl-fg);}
+  border-bottom:1px solid var(--dtl-border);border-radius:0;
+  background:var(--dtl-group-head-bg);color:inherit;font:inherit;text-align:left;cursor:pointer;}
+.dtl-group__name{font-size:var(--dtl-font-lg);font-weight:700;line-height:var(--dtl-line-lg);color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
 /* 组标题标识：官方文件夹图标（展开=开、收起=合）；图标缺席时回落成竖线 */
 .dtl-group__bar{width:3px;height:14px;flex:none;border-radius:2px;background:var(--dtl-business);}
