@@ -1109,16 +1109,15 @@ body[data-ds-dark-theme]{
 			return "doing";
 		}
 		/**
-		* ⚠️ 调试态（用户 2026-10-18）：第二区标签行把**四种状态全部写死**摆出来、不走 tone 判断，
-		* 好一次看全四枚色块长什么样（第一个「进行中」，其后阻塞 / 停滞 / 待认领）。
-		* 定稿后：删掉这个常量，标签行换回按 `tone` 取一枚。
+		* ⚠️ 调试态（用户 2026-10-19）：创建人 / 执行人（GitHub 账号）的名字**补到 20 个字符**，
+		* 好看清「满 20 字」时标签的截断 + 悬停跑马灯到底是什么效果。
+		* **真实数据一个字没动** —— 只在渲染这一刻把名字补长（mock 仅此一处，用 `-` 当填充，一眼看得出是假的）。
+		* 定稿后：删掉本常量与 `debugName()`，两处调用换回原始名字。
 		*/
-		const DEBUG_TONES = [
-			"doing",
-			"blocked",
-			"stale",
-			"open"
-		];
+		const DEBUG_NAME_CHARS = 20;
+		function debugName(name) {
+			return name.length >= DEBUG_NAME_CHARS ? name : name + "-".repeat(DEBUG_NAME_CHARS - name.length);
+		}
 		/** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 		function statusLabel(tone, t) {
 			if (tone === "stale") return t("statusStale");
@@ -1162,6 +1161,12 @@ body[data-ds-dark-theme]{
 				className: "dtl-minibtn",
 				"data-tip": t("tipRelease")
 			}, t("actionRelease"));
+			const statusText = statusLabel(tone, t);
+			const statusTag = statusText === null || tone === "closed" ? null : (0, react.createElement)(Tag, {
+				text: statusText,
+				tone,
+				title: tone === "stale" ? staleTip ?? statusText : statusText
+			});
 			const alarmTag = tone === "blocked" || tone === "stale" ? (0, react.createElement)(Tag, {
 				text: statusLabel(tone, t) ?? "",
 				tone,
@@ -1179,23 +1184,19 @@ body[data-ds-dark-theme]{
 				const creator = isTask ? row.task.creator : row.record.owner;
 				const owner = isTask ? row.task.owner : null;
 				const hasOwner = !(owner === null || owner === void 0 || owner === "");
-				const who = creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`;
+				const who = creator === null || creator === void 0 || creator === "" ? "—" : `@${debugName(creator)}`;
 				const createdOk = created !== null && created !== void 0 && Date.parse(created) >= 0;
 				const startedOk = isTask && row.task.started !== null && row.task.started !== void 0 && Date.parse(row.task.started) >= 0;
 				const ownerTip = t("startedAt", {
-					who: String(owner),
+					who: debugName(String(owner)),
 					when: startedOk ? formatDateTime(String(row.task.started)) : t("timeUnknown")
 				});
-				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, DEBUG_TONES.map((tone) => (0, react.createElement)(Tag, {
-					key: tone,
-					text: statusLabel(tone, t) ?? "",
-					tone
-				})), tags.map((tag) => (0, react.createElement)(Tag, {
+				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, statusTag, tags.map((tag) => (0, react.createElement)(Tag, {
 					key: tag,
 					text: `#${tag}`
 				})));
 				return (0, react.createElement)("div", { className: "dtl-orow" }, (0, react.createElement)("div", { className: "dtl-orow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, orowTitleLine, tagLine), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, hasOwner ? (0, react.createElement)(Tag, {
-					text: `@${String(owner)}`,
+					text: `@${debugName(String(owner))}`,
 					tone: "person",
 					title: ownerTip
 				}) : null), (0, react.createElement)("span", { className: "dtl-orow__slot" }, (0, react.createElement)("span", { className: "dtl-orow__created" }, t("createdAt", {

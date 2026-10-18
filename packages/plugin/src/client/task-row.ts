@@ -47,11 +47,16 @@ function toneOf(row: Row): Tone {
 }
 
 /**
- * ⚠️ 调试态（用户 2026-10-18）：第二区标签行把**四种状态全部写死**摆出来、不走 tone 判断，
- * 好一次看全四枚色块长什么样（第一个「进行中」，其后阻塞 / 停滞 / 待认领）。
- * 定稿后：删掉这个常量，标签行换回按 `tone` 取一枚。
+ * ⚠️ 调试态（用户 2026-10-19）：创建人 / 执行人（GitHub 账号）的名字**补到 20 个字符**，
+ * 好看清「满 20 字」时标签的截断 + 悬停跑马灯到底是什么效果。
+ * **真实数据一个字没动** —— 只在渲染这一刻把名字补长（mock 仅此一处，用 `-` 当填充，一眼看得出是假的）。
+ * 定稿后：删掉本常量与 `debugName()`，两处调用换回原始名字。
  */
-const DEBUG_TONES = ['doing', 'blocked', 'stale', 'open'] as const
+const DEBUG_NAME_CHARS = 20
+
+function debugName(name: string): string {
+  return name.length >= DEBUG_NAME_CHARS ? name : name + '-'.repeat(DEBUG_NAME_CHARS - name.length)
+}
 
 /** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 function statusLabel(tone: Tone, t: Translate): string | null {
@@ -106,8 +111,12 @@ export function TaskRowView(props: {
   const releaseButton = h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipRelease') },
     t('actionRelease'))
 
-  // 状态标签：调试态下第二区**不走判断**（见 DEBUG_TONES），这里只留「我的待办」卡用的异常标签。
-  // 恢复判断式展示时：把 `statusLabel(tone, t)` 按 tone 取一枚摆进标签行即可（tone==='closed' 不摆）。
+  // 状态标签（四色实心块，用户 2026-10-18 定稿）：已结案没有在办状态 ⇒ 不摆；
+  // 停滞那枚带 host 配置的阈值解释（staleDays；没配就不解释，不编）。
+  const statusText = statusLabel(tone, t)
+  const statusTag = statusText === null || tone === 'closed'
+    ? null
+    : h(Tag, { text: statusText, tone, title: tone === 'stale' ? (staleTip ?? statusText) : statusText })
   // 「我的待办」卡的异常标签（阻塞=黄 / 停滞=红；进行中只靠左缘色条，不再重复一枚）
   const alarmTag = tone === 'blocked' || tone === 'stale'
     ? h(Tag, { text: statusLabel(tone, t) ?? '', tone, title: tone === 'stale' ? staleTip : undefined })
@@ -131,20 +140,19 @@ export function TaskRowView(props: {
     const creator = isTask ? row.task.creator : row.record.owner
     const owner = isTask ? row.task.owner : null
     const hasOwner = !(owner === null || owner === undefined || owner === '')
-    const who = creator === null || creator === undefined || creator === '' ? '—' : `@${creator}`
+    // ⚠️ 调试态：名字补到 20 字（见 DEBUG_NAME_CHARS），定稿后换回 `${creator}` / `${owner}`
+    const who = creator === null || creator === undefined || creator === '' ? '—' : `@${debugName(creator)}`
     const createdOk = created !== null && created !== undefined && Date.parse(created) >= 0
     // 执行人的悬停提示：**什么时候开始执行**（任务上的 started；没有就报「时间未知」，不编）
     const startedOk = isTask && row.task.started !== null && row.task.started !== undefined
       && Date.parse(row.task.started) >= 0
     const ownerTip = t('startedAt', {
-      who: String(owner),
+      who: debugName(String(owner)),
       when: startedOk ? formatDateTime(String(row.task.started)) : t('timeUnknown'),
     })
-    // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）。
-    // ⚠️ 调试态（用户 2026-10-18）：状态**全量写死**四枚摆出来、不走 tone 判断 ——
-    // 先看全四种长什么样；定下来之后这里换回按 tone 取一枚（statusTag）。
+    // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）
     const tagLine = h('div', { className: 'dtl-orow__tags' },
-      DEBUG_TONES.map(tone => h(Tag, { key: tone, text: statusLabel(tone, t) ?? '', tone })),
+      statusTag,
       tags.map(tag => h(Tag, { key: tag, text: `#${tag}` })),
     )
     return h('div', { className: 'dtl-orow' },
@@ -158,7 +166,8 @@ export function TaskRowView(props: {
         // 执行人列（原状态位）：有执行人 ⇒ 一枚 @名字 标签，悬停给「谁 什么时候开始执行」
         // （页面不许跳：右侧槽位宽度是常驻的，hover 只换可见性 ⇒ 这个提示不会跟着飘）
         h('span', { className: 'dtl-tcell dtl-tcell--status' },
-          hasOwner ? h(Tag, { text: `@${String(owner)}`, tone: 'person', title: ownerTip }) : null),
+          // ⚠️ 调试态：名字补到 20 字（见 DEBUG_NAME_CHARS），定稿后换回 `@${String(owner)}`
+          hasOwner ? h(Tag, { text: `@${debugName(String(owner))}`, tone: 'person', title: ownerTip }) : null),
         // 最右**一个槽**：创建信息 ⇄ 操作钮二选一（用户 2026-10-18：悬停就把创建信息整条干掉，
         // 按钮顶上那一格；两个都常驻布局 ⇒ 行宽不变、页面不跳）
         h('span', { className: 'dtl-orow__slot' },
