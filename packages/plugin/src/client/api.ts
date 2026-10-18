@@ -45,9 +45,12 @@ export async function fetchJson<T>(path: string, init: RequestInit = {}, timeout
   }
 }
 
-/** 首页快照（快路径：在办全量 + 统计 + 各工作区身份；**不含趋势**）。 */
-export function fetchBoardSnapshot(): Promise<BoardPayload> {
-  return fetchJson<BoardPayload>('/board/snapshot')
+/**
+ * 首页快照（快路径：在办全量 + 统计 + 各工作区身份；**不含趋势**）。
+ * `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
+ */
+export function fetchBoardSnapshot(opts: { fresh?: boolean } = {}): Promise<BoardPayload> {
+  return fetchJson<BoardPayload>(`/board/snapshot${freshSuffix(opts)}`)
 }
 
 /**
@@ -55,8 +58,13 @@ export function fetchBoardSnapshot(): Promise<BoardPayload> {
  * 超时给得比默认宽：历史量大时读得久（实测 20 万条量级 4s+）；
  * 旧宿主没有该端点 ⇒ 404，直接抛给调用方兜底，不阻塞列表。
  */
-export function fetchTrend(): Promise<TrendPayload> {
-  return fetchJson<TrendPayload>('/board/trend', {}, TREND_TIMEOUT_MS)
+export function fetchTrend(opts: { fresh?: boolean } = {}): Promise<TrendPayload> {
+  return fetchJson<TrendPayload>(`/board/trend${freshSuffix(opts)}`, {}, TREND_TIMEOUT_MS)
+}
+
+/** `?fresh=1` 只在真要最新值时带；不带就吃 host 的 1.5s 缓存。 */
+function freshSuffix(opts: { fresh?: boolean }): string {
+  return opts.fresh === true ? '?fresh=1' : ''
 }
 
 /** 已结案列表（服务端按窗口 / 标签 / 分页过滤）。 */

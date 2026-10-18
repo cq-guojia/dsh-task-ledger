@@ -12,10 +12,10 @@ export declare function hasLedger(workspacePath: string): boolean;
 /**
  * 在办任务（包 `list --json`；结果过 records 入口校验后打上 workspace）。
  * 脚本失败 / 形状不符抛错——由 service 层捕获进 degraded，路由层转 500 + 人话，
- * 不静默返空（空 = 撒谎）。
+ * 不静默返空（空 = 撒谎）。**过 1.5s 读缓存**（同屏多端点会反复读同一份在办）。
  */
 export declare function readTasks(workspace: LedgerWorkspace, filter?: LedgerFilter): Promise<TaskRow[]>;
-/** 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。 */
+/** 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。同样过读缓存。 */
 export declare function readHistory(workspace: LedgerWorkspace, filter?: LedgerFilter): Promise<HistoryRecord[]>;
 /** 单条在办（展开行 / 详情用）。取不到回 null，不抛。 */
 export declare function getTask(workspace: LedgerWorkspace, taskId: string): Promise<TaskRow | null>;

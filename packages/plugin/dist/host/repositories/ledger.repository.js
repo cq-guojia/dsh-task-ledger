@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { runLedgerScript } from './runner.js';
 import { parseHistoryRecords, parseTaskList } from './records.js';
+import { cacheKey, cached } from './cache.js';
 /** 台账目录名（各工作区根下的这一个目录；布局知识只在本文件出现一次）。 */
 const LEDGER_DIR = 'ledger';
 /**
@@ -39,20 +40,28 @@ export function hasLedger(workspacePath) {
 /**
  * 在办任务（包 `list --json`；结果过 records 入口校验后打上 workspace）。
  * 脚本失败 / 形状不符抛错——由 service 层捕获进 degraded，路由层转 500 + 人话，
- * 不静默返空（空 = 撒谎）。
+ * 不静默返空（空 = 撒谎）。**过 1.5s 读缓存**（同屏多端点会反复读同一份在办）。
  */
 export async function readTasks(workspace, filter = {}) {
-    const result = await runLedgerScript('list', ['--repo', workspace.path, '--json', ...filterArgs(filter)]);
-    if (!result.ok)
-        throw new Error(`${workspace.title}: ${result.error}`);
-    return parseTaskList(result.data, workspace);
+    return await cached(cacheKey(workspace.id, 'list', argsKey(filter)), async () => {
+        const result = await runLedgerScript('list', ['--repo', workspace.path, '--json', ...filterArgs(filter)]);
+        if (!result.ok)
+            throw new Error(`${workspace.title}: ${result.error}`);
+        return parseTaskList(result.data, workspace);
+    });
 }
-/** 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。 */
+/** 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。同样过读缓存。 */
 export async function readHistory(workspace, filter = {}) {
-    const result = await runLedgerScript('history', ['--repo', workspace.path, '--json', ...filterArgs(filter)]);
-    if (!result.ok)
-        throw new Error(`${workspace.title}: ${result.error}`);
-    return parseHistoryRecords(result.data, workspace);
+    return await cached(cacheKey(workspace.id, 'history', argsKey(filter)), async () => {
+        const result = await runLedgerScript('history', ['--repo', workspace.path, '--json', ...filterArgs(filter)]);
+        if (!result.ok)
+            throw new Error(`${workspace.title}: ${result.error}`);
+        return parseHistoryRecords(result.data, workspace);
+    });
+}
+/** 缓存键的 filter 段：脚本参数原样序列化（分隔符取不可见字符，值里带空格也不会串）。 */
+function argsKey(filter) {
+    return filterArgs(filter).join('\u0001');
 }
 /** 单条在办（展开行 / 详情用）。取不到回 null，不抛。 */
 export async function getTask(workspace, taskId) {

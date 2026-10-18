@@ -418,16 +418,66 @@ await check('降级：单工作区坏 ⇒ degraded + 其余照常；全坏 ⇒ �
   }
 })
 
+// 读缓存（方案 B 三条口径）：时钟注入 ⇒ TTL 断言不靠 sleep；单飞用「慢 load + 并发三连」验。
+await check('读缓存：TTL 命中 + 单飞 + 按工作区 invalidate + 失败不缓存（方案 B）', async () => {
+  const { cached, invalidate, cacheKey, CACHE_TTL_MS } = await import('../dist/host/repositories/cache.js')
+  invalidate()
+  const key = cacheKey('ws-smoke', 'list', 'no-filter')
+  let loads = 0
+  const load = async () => { loads += 1; return { n: loads } }
+  const t = Date.now()
+  const first = await cached(key, load, t)
+  assert.equal(loads, 1)
+  const withinTtl = await cached(key, load, t + CACHE_TTL_MS - 1)
+  assert.equal(loads, 1, 'TTL 内命中：不该再起脚本进程')
+  assert.equal(withinTtl, first, '命中返回同一引用（便宜，但调用方只许读）')
+  const expired = await cached(key, load, t + CACHE_TTL_MS + 1)
+  assert.equal(loads, 2, 'TTL 过期应重读')
+  assert.notEqual(expired, first)
+  // key 三段都要：换工作区 / 换 op 都得各自一份，不许串味
+  await cached(cacheKey('ws-other', 'list', 'no-filter'), load, t)
+  await cached(cacheKey('ws-smoke', 'history', 'no-filter'), load, t)
+  assert.equal(loads, 4, '工作区与 op 都在 key 里')
+  // 按工作区失效：只清自己的，别的工作区还命中
+  invalidate('ws-smoke')
+  await cached(key, load, t)
+  assert.equal(loads, 5, 'invalidate(workspaceId) 后该工作区应重读')
+  await cached(cacheKey('ws-other', 'list', 'no-filter'), load, t)
+  assert.equal(loads, 5, '别的工作区不受影响')
+  // 全清
+  invalidate()
+  await cached(key, load, t)
+  assert.equal(loads, 6, 'invalidate() 应全清')
+  // 失败不入缓存：错就是错，重试必须真重跑
+  const failKey = cacheKey('ws-smoke', 'history', 'fail')
+  let attempts = 0
+  const flaky = async () => {
+    attempts += 1
+    if (attempts === 1) throw new Error('boom')
+    return 'ok'
+  }
+  await assert.rejects(() => cached(failKey, flaky, t), /boom/)
+  assert.equal(await cached(failKey, flaky, t), 'ok', '失败不该被缓存成结果')
+  assert.equal(attempts, 2)
+  // 单飞：同 key 三个并发只跑一次
+  const single = cacheKey('ws-smoke', 'list', 'inflight')
+  let runs = 0
+  const slow = () => new Promise((resolve) => { setTimeout(() => { runs += 1; resolve(runs) }, 16) })
+  const results = await Promise.all([cached(single, slow, t), cached(single, slow, t), cached(single, slow, t)])
+  assert.equal(runs, 1, '同 key 并发应单飞（只起一次脚本）')
+  assert.deepEqual(results, [1, 1, 1], '三个调用方拿到同一份结果')
+})
+
 await check('路由层：/board/snapshot 瘦身 + /board/trend 独立 + 旧 /board 仍全量（兼容期不许砍）', async () => {
   const { registerRoutes } = await import('../dist/host/routes.js')
   const routes = new Map()
   const fakeServer = { register: (route) => { routes.set(route.path, route.handler) } }
   registerRoutes(fakeServer, { registry: { list: () => [{ id: 'ws-self', title: 'self', path: repoRoot }] } })
-  const call = async (suffix) => {
+  const call = async (suffix, query = '') => {
     const handler = routes.get(`/api/task-ledger${suffix}`)
     assert.ok(handler !== undefined, `路由应存在：${suffix}`)
     const out = { status: 0, body: '' }
-    await handler({ url: suffix }, {
+    await handler({ url: `${suffix}${query}` }, {
       writeHead: (status) => { out.status = status },
       end: (text) => { out.body = text },
     })
@@ -451,6 +501,10 @@ await check('路由层：/board/snapshot 瘦身 + /board/trend 独立 + 旧 /boa
   const board = await call('/board')
   assert.ok(board.body.trend !== undefined, '旧 /board（兼容期）仍须带 trend')
   assert.ok(Array.isArray(board.body.degraded), '旧 /board 也恒带 degraded')
+  // fresh=1：每个读端点都认（先清缓存再算），不能因为缓存层把手动刷新变成「看旧数」
+  const fresh = await call('/board/snapshot', '?fresh=1')
+  assert.equal(fresh.status, 200, 'fresh=1 应正常返回')
+  assert.ok(Array.isArray(fresh.body.tasks), 'fresh=1 也要带在办')
 })
 
 // 客户端数据面（步骤 4b）：取数只走拆后的两个端点，页面不许再从快照上读趋势。
@@ -458,9 +512,10 @@ await check('路由层：/board/snapshot 瘦身 + /board/trend 独立 + 旧 /boa
 await check('客户端数据面：只走 /board/snapshot + /board/trend，趋势不再挂在快照上（步骤 4b）', async () => {
   const { readFile } = await import('node:fs/promises')
   const apiSrc = await readFile(path.resolve(here, '../src/client/api.ts'), 'utf-8')
-  assert.ok(apiSrc.includes("'/board/snapshot'"), 'api.ts 应有快路径取数（/board/snapshot）')
-  assert.ok(apiSrc.includes("'/board/trend'"), 'api.ts 应有慢路径取数（/board/trend）')
-  assert.ok(!/fetchJson<\s*BoardPayload\s*>\('\/board'\)/.test(apiSrc), 'api.ts 不得再取全量 /board（兼容端点只留给旧 client）')
+  assert.ok(apiSrc.includes('/board/snapshot'), 'api.ts 应有快路径取数（/board/snapshot）')
+  assert.ok(apiSrc.includes('/board/trend'), 'api.ts 应有慢路径取数（/board/trend）')
+  assert.ok(apiSrc.includes('fresh=1'), '手动刷新应带 fresh=1（不吃 host 的 1.5s 读缓存）')
+  assert.ok(!/fetchJson<\s*BoardPayload\s*>\(\s*'\/board'\s*\)/.test(apiSrc), 'api.ts 不得再取全量 /board（兼容端点只留给旧 client）')
   const home = await readFile(path.resolve(here, '../src/client/board-home.ts'), 'utf-8')
   assert.ok(home.includes('state.trend'), '页面趋势应来自 store 的 trend（慢路径）')
   assert.ok(!/\bboard\??\.(?:closed|trend)\b/.test(home), '页面不得再从快照读 closed / trend（快路径已瘦身）')

@@ -42,17 +42,24 @@ window.__ModuleLoader__.load({
 				clearTimeout(timer);
 			}
 		}
-		/** 首页快照（快路径：在办全量 + 统计 + 各工作区身份；**不含趋势**）。 */
-		function fetchBoardSnapshot() {
-			return fetchJson("/board/snapshot");
+		/**
+		* 首页快照（快路径：在办全量 + 统计 + 各工作区身份；**不含趋势**）。
+		* `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
+		*/
+		function fetchBoardSnapshot(opts = {}) {
+			return fetchJson(`/board/snapshot${freshSuffix(opts)}`);
 		}
 		/**
 		* 趋势（慢路径：近 8 周 + 四个自然周期，host 侧要读 history）。
 		* 超时给得比默认宽：历史量大时读得久（实测 20 万条量级 4s+）；
 		* 旧宿主没有该端点 ⇒ 404，直接抛给调用方兜底，不阻塞列表。
 		*/
-		function fetchTrend() {
-			return fetchJson("/board/trend", {}, TREND_TIMEOUT_MS);
+		function fetchTrend(opts = {}) {
+			return fetchJson(`/board/trend${freshSuffix(opts)}`, {}, TREND_TIMEOUT_MS);
+		}
+		/** `?fresh=1` 只在真要最新值时带；不带就吃 host 的 1.5s 缓存。 */
+		function freshSuffix(opts) {
+			return opts.fresh === true ? "?fresh=1" : "";
 		}
 		//#endregion
 		//#region src/client/store.ts
@@ -113,12 +120,13 @@ window.__ModuleLoader__.load({
 		* 重读（2026-10-18 拆端点）：**两段**——先快路径 `/board/snapshot`（只读在办，首屏立即可渲染），
 		* 再慢路径 `/board/trend`（读 history，后台拉；迟到按 token 丢弃，不盖新快照）。
 		* 趋势失败（含旧宿主 404）不阻塞列表：trendStatus 置 error，图表区显示兜底文案。
+		* 两段都带 `fresh=1`：本函数只由首读与手动刷新触发，都要最新值（host 缓存清两次无害，清是全局的）。
 		*/
 		async function refresh() {
 			const token = ++runToken;
 			set({ refreshing: true });
 			try {
-				const board = await fetchBoardSnapshot();
+				const board = await fetchBoardSnapshot({ fresh: true });
 				if (token !== runToken) return;
 				set({
 					status: "ready",
@@ -138,7 +146,7 @@ window.__ModuleLoader__.load({
 				if (token === runToken) set({ refreshing: false });
 			}
 			try {
-				const trend = await fetchTrend();
+				const trend = await fetchTrend({ fresh: true });
 				if (token !== runToken) return;
 				set({
 					trend,

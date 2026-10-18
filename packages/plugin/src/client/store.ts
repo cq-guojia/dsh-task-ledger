@@ -86,12 +86,13 @@ export function boardSubscribe(listener: () => void): () => void {
  * 重读（2026-10-18 拆端点）：**两段**——先快路径 `/board/snapshot`（只读在办，首屏立即可渲染），
  * 再慢路径 `/board/trend`（读 history，后台拉；迟到按 token 丢弃，不盖新快照）。
  * 趋势失败（含旧宿主 404）不阻塞列表：trendStatus 置 error，图表区显示兜底文案。
+ * 两段都带 `fresh=1`：本函数只由首读与手动刷新触发，都要最新值（host 缓存清两次无害，清是全局的）。
  */
 export async function refresh(): Promise<void> {
   const token = ++runToken
   set({ refreshing: true })
   try {
-    const board = await fetchBoardSnapshot()
+    const board = await fetchBoardSnapshot({ fresh: true })
     if (token !== runToken) return
     set({ status: 'ready', board, error: null, trendStatus: 'loading', trendError: null })
   } catch (error) {
@@ -102,7 +103,7 @@ export async function refresh(): Promise<void> {
     if (token === runToken) set({ refreshing: false })
   }
   try {
-    const trend = await fetchTrend()
+    const trend = await fetchTrend({ fresh: true })
     if (token !== runToken) return
     set({ trend, trendStatus: 'ready', trendError: null })
   } catch (error) {
