@@ -48,22 +48,6 @@
       "title": "插件基础建设：工程化 + 入口 + 图标 + 元信息 + 设置页",
       "worklog": "worklog/202610/16-2338-插件基础建设-工程化-入口-图标-元信息-设置页-6a2e.md"
     },
-    "20261016-2338-看板首页-9372": {
-      "category": "建设",
-      "created": "2026-10-16 23:38:13",
-      "creator": "GuoJia-Agent",
-      "finished": null,
-      "owner": "GuoJia-Agent",
-      "started": "2026-10-17 02:41:37",
-      "status": "doing",
-      "tags": [
-        "DSH",
-        "看板",
-        "UI"
-      ],
-      "title": "看板首页",
-      "worklog": "worklog/202610/16-2338-看板首页-9372.md"
-    },
     "20261016-2338-统计报表-073b": {
       "category": "建设",
       "created": "2026-10-16 23:38:14",
