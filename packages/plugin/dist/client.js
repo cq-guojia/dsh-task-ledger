@@ -663,9 +663,11 @@ body[data-ds-dark-theme]{
    文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
 /* 组与组分家：下面留一档间距，不再"上下连着" */
 .dtl-group{margin-bottom:var(--dtl-space-2);}
-/* 组标题：无背景、无边框；**上距远、下距近**（18 / 6）——贴着自家表格 */
+/* 组标题：无背景、无竖边；**上距远、下距近**（18 / 6）——贴着自家表格；
+   标题行下缘一条 **3px 蓝线**，用来把每个工作区"标"出来（用户 2026-10-18） */
 .dtl-group__head{display:flex;align-items:center;gap:8px;width:100%;
-  padding:18px 0 6px;border:0;border-radius:0;background:transparent;
+  padding:18px 0 6px;border:0;border-bottom:3px solid var(--dtl-business);
+  border-radius:0;background:transparent;
   color:inherit;font:inherit;text-align:left;cursor:pointer;}
 .dtl-group__name{font-size:var(--dtl-font-lg);font-weight:700;color:var(--dtl-fg);}
 .dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
