@@ -2,7 +2,8 @@
  * 已结案列表 / 筛选项候选用例（history tab 与筛选控件用；非首屏，按需调用）。
  */
 import { readHistory, readTasks } from '../repositories/ledger.repository.js'
-import { RECENT_MONTHS } from './trend.service.js'
+import { settleWorkspaces, type DegradedInfo } from '../errors.js'
+import { RECENT_MONTHS, readTrendScope } from './trend.service.js'
 import type { FilterOptions, HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRow, TrendScope } from '../types.js'
 
 /** 已结案列表默认分页大小（「加载更多」= 调用方加大 limit 重取）。 */
@@ -14,12 +15,18 @@ export const DEFAULT_HISTORY_LIMIT = 500
  * 单工作区内 limit 已生效，合并边界的全局精确排序暂不保证（500 条一页无感）。
  * 要全量老数据：调用方显式传 months: undefined（不拼 --months，脚本读全部，按秒计）。
  */
-export async function queryClosed(workspaces: readonly LedgerWorkspace[], filter: LedgerFilter = {}): Promise<HistoryRecord[]> {
+export async function queryClosed(workspaces: readonly LedgerWorkspace[], filter: LedgerFilter = {}): Promise<{
+  records: HistoryRecord[]
+  degraded: readonly DegradedInfo[]
+}> {
   const windowed: LedgerFilter = { months: RECENT_MONTHS, ...filter }
-  const perWorkspace = await Promise.all(workspaces.map((workspace) => readHistory(workspace, windowed)))
-  return perWorkspace.flat()
-    .sort((a, b) => String(b.created ?? b.time ?? '').localeCompare(String(a.created ?? a.time ?? '')))
-    .slice(0, filter.limit ?? DEFAULT_HISTORY_LIMIT)
+  const { data, degraded } = await settleWorkspaces(
+    workspaces, 'history', (workspace) => readHistory(workspace, windowed),
+    (rows) => rows.flat()
+      .sort((a, b) => String(b.created ?? b.time ?? '').localeCompare(String(a.created ?? a.time ?? '')))
+      .slice(0, filter.limit ?? DEFAULT_HISTORY_LIMIT),
+  )
+  return { records: data, degraded }
 }
 
 /** 候选值收集（纯函数）：owner/category/tag 去重 + 排序。 */
@@ -48,14 +55,12 @@ export function collectFilterOptions(scopes: readonly TrendScope[]): FilterOptio
 
 /**
  * 筛选项候选：在办（全量）+ 近 13 个月历史的去重值（owner / category / tag）。
- * 按需调用（/filters 路由），非首屏——历史侧在极端量级下是百毫秒级。
+ * 按需调用（/filters 路由），非首屏——历史侧在极端量级下是百毫秒级。单工作区坏 ⇒ 进 degraded。
  */
-export async function getFilterOptions(workspaces: readonly LedgerWorkspace[]): Promise<FilterOptions> {
-  const scopes: TrendScope[] = await Promise.all(workspaces.map(async (workspace) => ({
-    workspace,
-    tasks: await readTasks(workspace),
-    history: await readHistory(workspace, { months: RECENT_MONTHS }),
-    identity: null,
-  })))
-  return collectFilterOptions(scopes)
+export async function getFilterOptions(workspaces: readonly LedgerWorkspace[]): Promise<{
+  options: FilterOptions
+  degraded: readonly DegradedInfo[]
+}> {
+  const { data, degraded } = await settleWorkspaces(workspaces, 'history', readTrendScope, collectFilterOptions)
+  return { options: data, degraded }
 }

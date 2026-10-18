@@ -64,7 +64,7 @@ export function registerRoutes(webServer, deps) {
         handler: async (_req, res) => {
             try {
                 const home = await getHomeAggregate(workspacesOf(deps));
-                sendJson(res, 200, { ...home.snapshot, closed: home.closed, trend: home.trend });
+                sendJson(res, 200, { ...home.snapshot, closed: home.closed, trend: home.trend, degraded: home.degraded });
             }
             catch (error) {
                 sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
@@ -116,7 +116,8 @@ export function registerRoutes(webServer, deps) {
         handler: async (req, res) => {
             try {
                 const filter = filterFromQuery(new URL(req.url ?? '/', 'http://localhost'));
-                sendJson(res, 200, { records: await queryClosed(workspacesOf(deps), filter) });
+                const result = await queryClosed(workspacesOf(deps), filter);
+                sendJson(res, 200, { records: result.records, degraded: result.degraded });
             }
             catch (error) {
                 sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
@@ -128,7 +129,8 @@ export function registerRoutes(webServer, deps) {
         path: `${API_PREFIX}/filters`,
         handler: async (_req, res) => {
             try {
-                sendJson(res, 200, await getFilterOptions(workspacesOf(deps)));
+                const result = await getFilterOptions(workspacesOf(deps));
+                sendJson(res, 200, { ...result.options, degraded: result.degraded });
             }
             catch (error) {
                 sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });

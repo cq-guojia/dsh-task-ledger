@@ -71,11 +71,12 @@ await check('readTasks 错误路径：无 progress.json 的工作区抛人话错
 
 await check('getBoardSnapshot：统计与任务行（与历史量无关的热路径）', async () => {
   const started = Date.now()
-  const snapshot = await getBoardSnapshot([
+  const board = await getBoardSnapshot([
     { id: 'ws-self', title: 'self', path: repoRoot },
     ...(hasDispatch ? [{ id: 'ws-dispatch', title: 'dispatch', path: DISPATCH_PATH }] : []),
   ])
   const elapsed = Date.now() - started
+  const snapshot = board.snapshot
   console.log(`    （耗时 ${elapsed}ms；在办 ${snapshot.tasks.length} 条，我的 ${snapshot.stats.myActive}，待认领 ${snapshot.stats.open}）`)
   // 合并口径只在姊妹工作区在位时卡（缺它退化为「本仓独跑」断言，条数是数据不是契约）
   if (hasDispatch) assert.ok(snapshot.tasks.length >= 6)
@@ -92,7 +93,7 @@ await check('getBoardSnapshot：统计与任务行（与历史量无关的热路
 })
 
 await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 / 我的）+ 四个自然周期', async () => {
-  const home = await getHomeAggregate([{ id: 'ws-self', title: 'self', path: repoRoot }])
+  const home = (await getHomeAggregate([{ id: 'ws-self', title: 'self', path: repoRoot }]))
   for (const scope of ['all', 'mine']) {
     const buckets = home.closed.weekly[scope]
     assert.equal(buckets.length, 8, `${scope} 应 8 桶`)
@@ -154,7 +155,7 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
       '| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |\n' +
       '|---|---|---|---|---|---|---|---|---|\n' +
       `| 2026-10-15 10:00:00 | 2026-10-12 09:00:00 | done |  |  | @${other} | @${me} | ok | [x](x) |\n`)
-    const agg = await getHomeAggregate([{ id: 'syn', title: 'syn', path: dir }])
+    const agg = (await getHomeAggregate([{ id: 'syn', title: 'syn', path: dir }]))
     const sum = (rows) => rows.reduce((s, w) => s + w, 0)
     const all = agg.closed.weekly.all
     const mine = agg.closed.weekly.mine
@@ -184,21 +185,22 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
 })
 
 await check('queryClosed：近 13 个月窗口 + 创建时间倒序 + limit', async () => {
-  const records = await queryClosed([
+  const history = await queryClosed([
     { id: 'ws-self', title: 'self', path: repoRoot },
     ...(hasDispatch ? [{ id: 'ws-dispatch', title: 'dispatch', path: DISPATCH_PATH }] : []),
   ])
   // 合并生效的口径只在姊妹工作区在位时卡；缺它退化为「至少本仓自己的历史」
+  const records = history.records
   assert.ok(records.length > (hasDispatch ? 8 : 0), `历史应非空，实际 ${records.length}`)
   for (const record of records) assert.ok(record.workspace !== undefined)
   const keys = records.map((r) => String(r.created ?? r.time ?? ''))
   assert.deepEqual(keys, [...keys].sort().reverse(), '应按创建时间倒序')
-  const limited = await queryClosed([{ id: 'ws-self', title: 'self', path: repoRoot }], { limit: 3 })
+  const limited = (await queryClosed([{ id: 'ws-self', title: 'self', path: repoRoot }], { limit: 3 })).records
   assert.equal(limited.length, 3)
 })
 
 await check('getFilterOptions：owner/category/tag 去重候选', async () => {
-  const options = await getFilterOptions([{ id: 'ws-self', title: 'self', path: repoRoot }])
+  const options = (await getFilterOptions([{ id: 'ws-self', title: 'self', path: repoRoot }])).options
   assert.ok(options.owners.includes('GuoJia-Agent'), `owners 应含 GuoJia-Agent，实际 ${options.owners.join(',')}`)
   assert.ok(options.categories.includes('建设'))
   assert.ok(options.tags.length > 0)
@@ -250,7 +252,7 @@ await check('空台账工作区不炸 /board（真机 500 回归：history 无�
     }))
     const ws = [{ id: 'ws-empty', title: '空台账', path: root }]
     // 关键路径：这正是 /board 路由的那一次聚合调用，抛就是整条 500
-    const home = await getHomeAggregate(ws)
+    const home = (await getHomeAggregate(ws))
     assert.equal(home.snapshot.tasks.length, 1, '有 progress.json 就应读到在办')
     assert.equal(home.trend.thisWeek.done, 0, '无历史 ⇒ 本周完成 0，不是抛错')
     assert.equal(home.closed.weekly.all.length, 8)
@@ -264,7 +266,7 @@ await check('空台账工作区不炸 /board（真机 500 回归：history 无�
 })
 
 await check('getBoardSnapshot：identities 按工作区 id 给出当前 git 身份（前端「我的待办」判定源）', async () => {
-  const snapshot = await getBoardSnapshot([{ id: 'ws-self', title: 'self', path: repoRoot }])
+  const snapshot = (await getBoardSnapshot([{ id: 'ws-self', title: 'self', path: repoRoot }])).snapshot
   const ids = Object.keys(snapshot.identities)
   assert.deepEqual(ids, ['ws-self'], `identities 应按工作区 id 建键，实际 ${JSON.stringify(ids)}`)
   // 本仓有 git 身份 ⇒ 非 null；取不到（非 git 目录）时必须是 null，不许编造。
@@ -370,6 +372,56 @@ await check('buildSkillRegistration：name/description/正文 + 占位符替换�
   assert.ok(match !== null, '正文应含 python3 <路径>/progress.py 命令')
   assert.ok(existsSync(match[1]), `替换后的脚本路径应真实存在：${match[1]}`)
   console.log(`    （${registration.name}｜正文 ${registration.content.length} 字｜脚本 ${match[1]}）`)
+})
+
+await check('records 入口校验：容器形状不对 ⇒ LedgerDataError（不静默返空/返空历史）', async () => {
+  const { parseTaskList, parseHistoryRecords } = await import('../dist/host/repositories/records.js')
+  const ws = { id: 'x', title: 'x', path: '/tmp' }
+  assert.throws(() => parseTaskList([], ws), /list 输出不是/)
+  assert.throws(() => parseTaskList({ a: 'string' }, ws), /不是对象/)
+  assert.throws(() => parseTaskList({ '': { title: 'x' } }, ws), /空任务号/)
+  assert.throws(() => parseHistoryRecords({ count: 1 }, ws), /缺 records/)
+  // 元素级宽松：坏行跳过不炸；合法数据照常收（旧 8 列、缺可选字段不被误杀）
+  assert.deepEqual(parseHistoryRecords({ count: 1, records: [] }, ws), [])
+  assert.equal(parseHistoryRecords({ count: 1, records: ['坏行', { time: '2026-10-01 00:00:00' }] }, ws).length, 1)
+  assert.equal(parseTaskList({ t1: { title: 'x' } }, ws).length, 1)
+})
+
+await check('降级：单工作区坏 ⇒ degraded + 其余照常；全坏 ⇒ 抛（500 路径，不许绿色空板）', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const root = mkdtempSync(path.join(tmpdir(), 'dtl-degraded-'))
+  try {
+    const history = '| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |\n' +
+      '|---|---|---|---|---|---|---|---|---|\n' +
+      '| 2026-10-15 10:00:00 | 2026-10-12 09:00:00 | done |  |  | @me | @me | ok | [x](x) |\n'
+    for (const name of ['good', 'bad']) {
+      const dir = path.join(root, name)
+      mkdirSync(path.join(dir, 'ledger', 'history'), { recursive: true })
+      writeFileSync(path.join(dir, 'ledger', 'history', '202610.md'), history)
+    }
+    writeFileSync(path.join(root, 'good', 'ledger', 'progress.json'),
+      JSON.stringify({ tasks: { t1: { title: '好库任务', status: 'open', creator: 'me', created: '2026-10-14 09:00:00' } } }))
+    writeFileSync(path.join(root, 'bad', 'ledger', 'progress.json'), '{ 这不是合法 JSON')
+    const ws = [
+      { id: 'ws-good', title: '好库', path: path.join(root, 'good') },
+      { id: 'ws-bad', title: '坏库', path: path.join(root, 'bad') },
+    ]
+    const home = await getHomeAggregate(ws)
+    assert.equal(home.snapshot.tasks.length, 1, '好库的在办应照常返回')
+    assert.equal(home.degraded.length, 1, '应恰好一条降级')
+    assert.equal(home.degraded[0].workspaceId, 'ws-bad')
+    assert.equal(home.degraded[0].op, 'history')
+    assert.ok(home.degraded[0].message.length > 0, '降级要带人话原因（可直接上界面）')
+    // 好库单独跑与混合跑一致（坏库没有污染好库的数值）
+    const alone = await getBoardSnapshot([ws[0]])
+    assert.equal(alone.snapshot.tasks.length, 1, '好库单独跑结果应与混合跑一致')
+    assert.equal(alone.degraded.length, 0, '好库单独跑不应有降级')
+    // 全坏 ⇒ 抛（routes 转 500 + 人话）——防 python3 缺失被集体降级成绿色空板
+    await assert.rejects(() => getHomeAggregate([ws[1]]), /JSON|progress/)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
 })
 
 // 分层铁律的结构断言（重构护栏）：IO 只在 repositories/ 与 skill/，依赖方向单向。

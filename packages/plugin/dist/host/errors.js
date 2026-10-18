@@ -1,0 +1,55 @@
+/**
+ * 横切：错误模型与降级语义（2026-10-18 重构步骤 3 落地）。
+ *
+ * 两种失败分开表达：
+ * - **已知失败**（坏数据 / 脚本非零 / python3 起不来 / 超时）：service 层捕获进 `degraded`，
+ *   接口仍 200，该工作区被前端标红，其他工作区不受影响（不再一抛全板 500）；
+ * - **全局失败**（所有工作区都读不到 / 编程错误）：照旧抛，路由转 500 + 人话。
+ *   防止「python3 根本没装」被集体降级成一片绿色空板——那等于界面撒谎。
+ */
+/** 台账数据形状不符（容器级校验失败）。message 带工作区名 + 人话，可直接上界面。 */
+export class LedgerDataError extends Error {
+    code = 'LEDGER_DATA_INVALID';
+    workspaceId;
+    constructor(workspaceId, message) {
+        super(message);
+        this.name = 'LedgerDataError';
+        this.workspaceId = workspaceId;
+    }
+}
+/** 从任意抛出物取错误码（无 code 的按 LEDGER_SCRIPT_FAILED 兜底——那正是脚本非零的主路径）。 */
+export function codeOf(error) {
+    if (error !== null && typeof error === 'object' && 'code' in error) {
+        const code = error.code;
+        if (typeof code === 'string' && code.startsWith('LEDGER_'))
+            return code;
+    }
+    return 'LEDGER_SCRIPT_FAILED';
+}
+/** 人话（优先 Error.message；其余 String()，不吞）。 */
+export function messageOf(error) {
+    return error instanceof Error ? error.message : String(error);
+}
+/**
+ * 多工作区 fan-out：逐个读，坏的进 `degraded`，好的交给 `merge` 合成。
+ * **全部失败** ⇒ 抛首个错误（路由转 500 + 人话）——部分失败才 200 + degraded。
+ */
+export async function settleWorkspaces(workspaces, op, read, merge) {
+    const settled = await Promise.allSettled(workspaces.map(read));
+    const rows = [];
+    const degraded = [];
+    let firstError = null;
+    settled.forEach((result, i) => {
+        const workspace = workspaces[i];
+        if (result.status === 'fulfilled') {
+            rows.push(result.value);
+            return;
+        }
+        if (firstError === null)
+            firstError = result.reason;
+        degraded.push({ workspaceId: workspace.id, workspaceTitle: workspace.title, op, code: codeOf(result.reason), message: messageOf(result.reason) });
+    });
+    if (rows.length === 0 && workspaces.length > 0)
+        throw firstError;
+    return { data: merge(rows), degraded };
+}

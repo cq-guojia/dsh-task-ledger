@@ -6,19 +6,17 @@
  */
 import { readTasks } from '../repositories/ledger.repository.js'
 import { getCurrentIdentity } from '../repositories/identity.repository.js'
+import { settleWorkspaces, type DegradedInfo } from '../errors.js'
 import { daysSince } from './dates.js'
 import type { BoardSnapshot, BoardStats, BoardTask, LedgerWorkspace, TaskRow, TaskScope } from '../types.js'
 
 /** 停滞判定阈值：doing / blocked 且 created 至今超过这么多天（2026-10-17 拍板，显示级）。 */
 export const STALE_DAYS = 14
 
-/** 快路径读法：每工作区 readTasks + git 身份（并行）。 */
-export async function readTaskScopes(workspaces: readonly LedgerWorkspace[]): Promise<TaskScope[]> {
-  return Promise.all(workspaces.map(async (workspace) => ({
-    workspace,
-    tasks: await readTasks(workspace),
-    identity: await getCurrentIdentity(workspace),
-  })))
+/** 快路径读法：单工作区 readTasks + git 身份（并行；供 settle 逐工作区调）。 */
+export async function readTaskScope(workspace: LedgerWorkspace): Promise<TaskScope> {
+  const [tasks, identity] = await Promise.all([readTasks(workspace), getCurrentIdentity(workspace)])
+  return { workspace, tasks, identity }
 }
 
 /** 在办行加工 + 六个统计面 + identities（纯函数；`now` 显式传入）。 */
@@ -53,7 +51,11 @@ export function computeSnapshot(scopes: readonly TaskScope[], now: Date): BoardS
   return { at: now.toISOString(), workspaces: scopes.map((scope) => scope.workspace), tasks: withMeta, stats, identities }
 }
 
-/** 快路径端点：在办快照（统计卡 + 身份 + 行加工）。任一行抛即整端点抛（路由转 500 + 人话）。 */
-export async function getSnapshot(workspaces: readonly LedgerWorkspace[]): Promise<BoardSnapshot> {
-  return computeSnapshot(await readTaskScopes(workspaces), new Date())
+/** 快路径端点：在办快照（统计卡 + 身份 + 行加工）。单工作区坏 ⇒ 进 degraded，其余照常。 */
+export async function getSnapshot(workspaces: readonly LedgerWorkspace[]): Promise<{
+  snapshot: BoardSnapshot
+  degraded: readonly DegradedInfo[]
+}> {
+  const { data: scopes, degraded } = await settleWorkspaces(workspaces, 'list', readTaskScope, (rows) => rows)
+  return { snapshot: computeSnapshot(scopes, new Date()), degraded }
 }
