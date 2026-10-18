@@ -9,8 +9,9 @@
  * 满足不了的依赖会令 entry 一直 pending、卡死整个 dsh 启动）；两条注入线
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
-import { registerRoutes, type WebServerLike, type WorkspaceRegistryLike } from './host/routes.js'
+import { registerRoutes, registerSessionRoutes, type WebServerLike, type WorkspaceRegistryLike } from './host/routes.js'
 import { buildSkillRegistration, type SkillsRegistry } from './host/skill/registration.js'
+import type { AgentsLike } from './host/services/session.service.js'
 
 export const name = 'dsh-task-ledger'
 
@@ -19,6 +20,19 @@ interface PluginContext {
   inject(deps: readonly string[], callback: (ctx: Record<string, unknown>) => void): void
   /** 组合内副作用：进入时 setup、离开时执行返回的清理函数（cordis 核心面）。 */
   effect(setup: () => (() => void) | undefined): void
+}
+
+/**
+ * 惰性服务读取：cordis ctx 的属性是 getter，**没 inject 的服务读一下就 throw**
+ * （参考插件真机实证：`cannot get property "agentTeams" without inject`）。
+ * 探测语义是「有就用、没有就降级」，所以把 throw 归一成 undefined。
+ */
+function readService(services: Record<string, unknown>, name: string): unknown {
+  try {
+    return services[name]
+  } catch {
+    return undefined
+  }
 }
 
 export function apply(ctx: PluginContext): void {
@@ -32,6 +46,23 @@ export function apply(ctx: PluginContext): void {
     }
     registerRoutes(webServer, { registry })
     console.info('[task-ledger] 数据面路由已注册（/api/task-ledger/*）')
+  })
+
+  // ── 会话交接（按钮侧「结束任务」，2026-10-18 拍板 B 案：只有结束走会话） ──
+  // 单独一条注入线：agents 缺席只影响这一个端点，不该拖累数据面（上一条线只等 registry + webServer）。
+  ctx.inject(['agents', 'workspaceRegistry', 'webServer'], (services) => {
+    const registry = services.workspaceRegistry as WorkspaceRegistryLike | undefined
+    const webServer = services.webServer as WebServerLike | undefined
+    if (registry === undefined || webServer === undefined) {
+      console.warn('[task-ledger] workspaceRegistry / webServer 未就位，「结束任务」端点不注册')
+      return
+    }
+    registerSessionRoutes(webServer, {
+      registry,
+      agents: services.agents as AgentsLike | undefined,
+      getService: (name) => readService(services, name),
+    })
+    console.info('[task-ledger] 「结束任务」端点已注册（POST /api/task-ledger/close）')
   })
 
   // ── skill 全局注册（任务 2） ──

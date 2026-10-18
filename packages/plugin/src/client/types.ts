@@ -142,6 +142,13 @@ export interface DegradedInfo {
   readonly message: string
 }
 
+/** `POST /close` 响应：会话已建，`sessionId` 给 `openSession` 跳转。 */
+export interface CloseHandoff {
+  readonly sessionId: string
+  /** 非致命问题（如会话没挂进工作区列表 / 宿主没有 attachSession 面），如实展示，不吞。 */
+  readonly warning?: string
+}
+
 /** `GET /filters` 响应：去重候选。 */
 export interface FilterOptions {
   readonly owners: string[]

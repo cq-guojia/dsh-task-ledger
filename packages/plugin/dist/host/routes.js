@@ -3,6 +3,7 @@ import { getSnapshot } from './services/home.service.js';
 import { getTrend } from './services/trend.service.js';
 import { getTask, readTasks, readWorklog } from './repositories/ledger.repository.js';
 import { invalidate } from './repositories/cache.js';
+import { HandoffError, startCloseSession, } from './services/session.service.js';
 import { resolveWorkspaces } from './workspace.js';
 /** API 前缀（唯一真源就在这一处）。 */
 const API_PREFIX = '/api/task-ledger';
@@ -153,5 +154,137 @@ export function registerRoutes(webServer, deps) {
             sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
         }
     });
-    // POST /sessions（按钮会话交接）归「任务按钮与会话交接」任务——写入路径 A/B 拍板后再接。
+}
+// ───────────────────────── 会话交接（按钮侧 · 写类端点） ─────────────────────────
+/** 写端点请求体上限：只收一小段用户留言，别让人往这塞文件。 */
+const BODY_LIMIT = 64 * 1024;
+/** 读请求体（宿主 handler 收原始 req，没有 body parser；超上限直接拒，不缓冲垃圾）。 */
+async function readJsonBody(req) {
+    const chunks = [];
+    let size = 0;
+    for await (const chunk of req) {
+        const buffer = chunk;
+        size += buffer.length;
+        if (size > BODY_LIMIT)
+            throw new Error('body-too-large');
+        chunks.push(buffer);
+    }
+    const text = Buffer.concat(chunks).toString('utf8');
+    if (text.trim() === '')
+        return {};
+    return JSON.parse(text);
+}
+/**
+ * 同源守卫（architecture 不变量 6 的落地）：浏览器 fetch 必带与 Host 同源的 `Origin`；
+ * 没有 `Origin` 的（本机脚本 / Desktop IPC）只放行回环地址。
+ * 读端点保持现状（只读无副作用）；**会起会话的写端点必须过这道**。
+ */
+function isTrustedRequest(req) {
+    const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+    const host = typeof req.headers.host === 'string' ? req.headers.host : undefined;
+    if (origin === undefined) {
+        const address = req.socket.remoteAddress;
+        return address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1';
+    }
+    if (host === undefined)
+        return false;
+    try {
+        return new URL(origin).host === host;
+    }
+    catch {
+        return false;
+    }
+}
+/**
+ * 注册「结束任务」端点：`POST /close`。
+ *
+ * 为什么只有这一条走会话（2026-10-18 用户拍板）：认领 / 释放没有判断量，host 直写即可；
+ * **结束**要带用户留言、要模型读过程文档后写真摘要 —— 只能交给会话里的 Agent 做。
+ *
+ * 请求体：`{ ws, id, message?, provider?, model? }`；响应：`{ sessionId, warning? }`。
+ */
+export function registerSessionRoutes(webServer, deps) {
+    webServer.register({
+        kind: 'exact',
+        path: `${API_PREFIX}/close`,
+        handler: async (req, res) => {
+            if (req.method !== 'POST') {
+                sendJson(res, 405, { error: '「结束任务」只支持 POST' });
+                return;
+            }
+            if (!isTrustedRequest(req)) {
+                sendJson(res, 403, { error: '只接受同源请求' });
+                return;
+            }
+            let body;
+            try {
+                body = await readJsonBody(req);
+            }
+            catch (error) {
+                const tooLarge = error instanceof Error && error.message === 'body-too-large';
+                sendJson(res, tooLarge ? 413 : 400, { error: tooLarge ? '请求体过大' : '请求体不是合法 JSON' });
+                return;
+            }
+            const fields = typeof body === 'object' && body !== null ? body : {};
+            const str = (key) => (typeof fields[key] === 'string' ? fields[key] : '');
+            const workspaceId = str('ws');
+            const taskId = str('id');
+            if (workspaceId === '' || taskId === '') {
+                sendJson(res, 400, { error: '缺少 ws / id 参数' });
+                return;
+            }
+            const provider = str('provider');
+            const model = str('model');
+            if ((provider === '') !== (model === '')) {
+                sendJson(res, 400, { error: 'provider 与 model 必须成对给出' });
+                return;
+            }
+            const workspace = workspacesOf(deps).find((item) => item.id === workspaceId);
+            if (workspace === undefined) {
+                sendJson(res, 404, { error: '工作区不存在或不含台账' });
+                return;
+            }
+            try {
+                const result = await startCloseSession({
+                    agents: deps.agents,
+                    presets: deps.getService('agentPresets'),
+                    defaultModel: deps.getService('agentDefaultModel'),
+                }, {
+                    workspace,
+                    taskId,
+                    message: str('message'),
+                    model: provider === '' ? undefined : { provider, model },
+                });
+                const warning = await attachSession(deps, workspaceId, result.sessionId) ?? result.warning;
+                sendJson(res, 200, warning === undefined ? { sessionId: result.sessionId } : { sessionId: result.sessionId, warning });
+            }
+            catch (error) {
+                if (error instanceof HandoffError) {
+                    const status = error.code === 'task-missing'
+                        ? 404
+                        : error.code === 'no-agents' || error.code === 'no-preset' || error.code === 'no-model' ? 503 : 500;
+                    sendJson(res, status, { error: error.message, code: error.code });
+                    return;
+                }
+                sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
+            }
+        },
+    });
+}
+/**
+ * 会话归组（best effort）：登记进工作区 `sessionIds`，否则侧栏里找不到这个会话。
+ * 缺失 / 失败都不算致命——会话本身已经建好、跳转可用，只如实回一条 warning。
+ */
+async function attachSession(deps, workspaceId, sessionId) {
+    const entity = deps.registry.list().find((item) => item.id === workspaceId);
+    if (entity === undefined || typeof entity.attachSession !== 'function') {
+        return '会话已建，但宿主该工作区没有 attachSession 面：会话不会出现在工作区列表里';
+    }
+    try {
+        await entity.attachSession(sessionId);
+        return undefined;
+    }
+    catch (error) {
+        return `会话已建，但没能挂进工作区列表：${error instanceof Error ? error.message : String(error)}`;
+    }
 }

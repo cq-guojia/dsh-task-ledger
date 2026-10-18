@@ -59,10 +59,21 @@
 
 ## 四、关键约束（不变量）
 
-1. **台账写路径（⚠️ 待定，2026-10-16 深夜挂起）**：
-   - **冲突**：本条原口径 = 插件对台账**只读**，`progress.json` / `history` / worklog 的写入真源是 `task-ledger` skill 的 `scripts/progress.py`、由会话里的 Agent 执行；而 [`features/board-home.md`](features/board-home.md) §三 按钮矩阵曾按「host 代跑脚本」设计（认领 / 移交 / 放弃 / blocked 解阻由 host 直接跑脚本、状态立即生效）—— 与只读口径冲突。
-   - **两案**：**A 全会话制**（保持只读：五个按钮全部只起会话发预置提示词，写台账由会话里的 Agent 经 skill 脚本完成，代价是状态延迟几秒、SSE 刷新兜底）；**B 混合制**（host 代跑 + 会话：确定性写立即生效，但引入第二条写路径，且宿主进程的 git 身份 / `--repo` 传参未验证）。
-   - **定案时点**：「任务按钮与会话交接」任务开工时拍板；拍板前本节及 board-home.md §三 中涉及代跑的落点均视为未定稿，实现不得先斩后奏。
+1. **台账写路径（✅ 2026-10-18 用户拍板：B 混合制，按动作分流）**：
+   - **底线不变**：写台账**只经 skill 脚本**（`scripts/progress.py`），插件与 host **都不许手改** `progress.json` / `history` / worklog。所谓「host 直写」= host 代跑同一个脚本，不是自己动文件。
+   - **按动作分流**（用户原话：「认领是要直接认领，只要别人没认领他就应该自己认领」「释放了就完了，就没有人了」「这个不能让他再开多少框，太麻烦了」）：
+
+     | 动作 | 谁执行 | 要不要起会话 |
+     |---|---|---|
+     | 认领 | host 代跑脚本（前置：任务 `open` 且无人认领，否则报错） | **否** |
+     | 释放（owner 置空） | host 代跑脚本 | **否** |
+     | 移交（owner 换人） | 按同一口径 host 代跑（用户未单独表态，实现时按其字面确认） | 否（待确认） |
+     | 结束 | **起会话**：弹框收用户留言 + 可选模型 ⇒ 首条消息 = 预置提示词 + 留言 | **是** |
+     | 继续 | 起会话，首条 = 「读过程文档『下一步』接着做」 | 是 |
+
+     - **为什么结束必须走会话**：要带用户留言、要读过程文档判断「待办是否真做完、结论怎么写」，还需要模型自己执行 close —— 这几件事没有判断量之外的确定性，不能由 host 代跑。
+   - **会话侧两条硬约束**（实测结论，详见 [`external/dsh-session-handoff.md`](external/dsh-session-handoff.md)）：① `agents.create` 必须 mount preset，否则会话没有 fs/bash 工具、模型跑不了脚本；② `provider + model` 必须成对显式给，不填不等于走宿主默认（用户不选模型时由插件读 `agentDefaultModel` 补）。
+   - **实现状态**：结束任务的**方法**已落地（`POST /api/task-ledger/close` + 预置提示词，界面未做）；认领 / 释放的 host 直写待接（需先核实宿主进程下的 git 身份取法）。
 2. **skill 内容单一真源**：`packages/skill/` 是唯一真源；插件内嵌副本由构建纳入，独立 npm 包 `task-ledger` 同源发布 —— 两处内容必须一致（这是单仓双包、而非两仓的根本理由）。
 3. **开发基线 = 宿主 0.2.0-rc.2**（用户 2026-10-16 拍板；npm `next` 线，勿用 `latest`）：宿主 rc 接口会无声变，所有宿主能力以 [`external/`](external/) 文档为准（带适用版本），升级后按各文档「复核方式」重跑；不得凭方法名猜签名。
 4. **dist 入仓**：DSH 生态 git 直装、pnpm 不跑构建脚本；推送前必须 build + 冒烟（发布链路见 [`external/publish-oidc.md`](external/publish-oidc.md)）。
@@ -74,4 +85,4 @@
 - 工作区**补充源**（宿主 registry 未收录的目录，如从未在 dsh 里添加过的项目）的配置形态 —— 主来源已定 = `ctx.workspaceRegistry.list()`（见 [`external/dsh-workspace-registry.md`](external/dsh-workspace-registry.md)）；
 - UI API 路由的鉴权方案；
 - Desktop（Electron）表面真机表现；
-- （仅当不变量 1 拍板为混合制 B 才涉及）host 代跑 `progress.py` 的环境：`--repo` 传参来源、宿主进程的 git 身份（owner 取 `git config user.name`）。
+- （不变量 1 已拍板 B ⇒ 落地前须核实）host 代跑 `progress.py` 时的**身份来源**：脚本的 `claim` 用 `git config user.name`（吃进程 cwd），而宿主进程 cwd 不可信 ⇒ 需要以该工作区为 cwd 起进程（`--repo` 只解决路径，不解决身份）。

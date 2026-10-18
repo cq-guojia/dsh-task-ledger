@@ -5,6 +5,7 @@
  * 见 external/host-webserver.md。
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { type AgentsLike } from './services/session.service.js';
 import { type RegistryWorkspace } from './workspace.js';
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 external/host-webserver.md）。 */
 export interface WebServerLike {
@@ -22,3 +23,19 @@ export interface RouteDeps {
     readonly registry: WorkspaceRegistryLike;
 }
 export declare function registerRoutes(webServer: WebServerLike, deps: RouteDeps): void;
+export interface SessionRouteDeps {
+    readonly registry: WorkspaceRegistryLike;
+    /** 起会话的服务面；宿主缺就回 503 人话（端点照常注册，前端不用按版本分支）。 */
+    readonly agents: AgentsLike | undefined;
+    /** 惰性服务读取：`agentPresets` / `agentDefaultModel` 可能整条不存在，或被 ctx 的 inject 门挡住。 */
+    readonly getService: (name: string) => unknown;
+}
+/**
+ * 注册「结束任务」端点：`POST /close`。
+ *
+ * 为什么只有这一条走会话（2026-10-18 用户拍板）：认领 / 释放没有判断量，host 直写即可；
+ * **结束**要带用户留言、要模型读过程文档后写真摘要 —— 只能交给会话里的 Agent 做。
+ *
+ * 请求体：`{ ws, id, message?, provider?, model? }`；响应：`{ sessionId, warning? }`。
+ */
+export declare function registerSessionRoutes(webServer: WebServerLike, deps: SessionRouteDeps): void;

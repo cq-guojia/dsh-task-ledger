@@ -8,7 +8,7 @@
  * 而不带 reason 时浏览器把 error.message 填成「signal is aborted without reason」，
  * 看不出是超时（姊妹仓 2026-10-07 真机教训）。
  */
-import type { BoardPayload, FilterOptions, HistoryRecord, TaskDetail, TrendPayload } from './types'
+import type { BoardPayload, CloseHandoff, FilterOptions, HistoryRecord, TaskDetail, TrendPayload } from './types'
 
 /** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
 export const API_PREFIX = 'api/task-ledger'
@@ -88,4 +88,24 @@ export function fetchTaskDetail(workspaceId: string, taskId: string): Promise<Ta
 /** 筛选项候选（在办全量 + 近 13 个月历史的去重 owner / category / tag）。 */
 export function fetchFilters(): Promise<FilterOptions> {
   return fetchJson<FilterOptions>('/filters')
+}
+
+/**
+ * 结束任务：请 host 起一个会话（首条 = 预置提示词 + 用户留言），返回 `sessionId` 供跳转。
+ *
+ * `message` 是用户在弹框里留的话（可空）；`provider` / `model` 成对给 = 用用户选的模型，
+ * 都不给 = 用宿主默认模型（只给一半会被 host 400 拒，不做猜测）。
+ */
+export function requestClose(body: {
+  ws: string
+  id: string
+  message: string
+  provider?: string
+  model?: string
+}): Promise<CloseHandoff> {
+  return fetchJson<CloseHandoff>('/close', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
 }

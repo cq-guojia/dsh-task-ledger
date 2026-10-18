@@ -9,9 +9,22 @@
  * 满足不了的依赖会令 entry 一直 pending、卡死整个 dsh 启动）；两条注入线
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
-import { registerRoutes } from './host/routes.js';
+import { registerRoutes, registerSessionRoutes } from './host/routes.js';
 import { buildSkillRegistration } from './host/skill/registration.js';
 export const name = 'dsh-task-ledger';
+/**
+ * 惰性服务读取：cordis ctx 的属性是 getter，**没 inject 的服务读一下就 throw**
+ * （参考插件真机实证：`cannot get property "agentTeams" without inject`）。
+ * 探测语义是「有就用、没有就降级」，所以把 throw 归一成 undefined。
+ */
+function readService(services, name) {
+    try {
+        return services[name];
+    }
+    catch {
+        return undefined;
+    }
+}
 export function apply(ctx) {
     // ── 数据面（任务 3） ──
     ctx.inject(['workspaceRegistry', 'webServer'], (services) => {
@@ -23,6 +36,22 @@ export function apply(ctx) {
         }
         registerRoutes(webServer, { registry });
         console.info('[task-ledger] 数据面路由已注册（/api/task-ledger/*）');
+    });
+    // ── 会话交接（按钮侧「结束任务」，2026-10-18 拍板 B 案：只有结束走会话） ──
+    // 单独一条注入线：agents 缺席只影响这一个端点，不该拖累数据面（上一条线只等 registry + webServer）。
+    ctx.inject(['agents', 'workspaceRegistry', 'webServer'], (services) => {
+        const registry = services.workspaceRegistry;
+        const webServer = services.webServer;
+        if (registry === undefined || webServer === undefined) {
+            console.warn('[task-ledger] workspaceRegistry / webServer 未就位，「结束任务」端点不注册');
+            return;
+        }
+        registerSessionRoutes(webServer, {
+            registry,
+            agents: services.agents,
+            getService: (name) => readService(services, name),
+        });
+        console.info('[task-ledger] 「结束任务」端点已注册（POST /api/task-ledger/close）');
     });
     // ── skill 全局注册（任务 2） ──
     // unscoped 注册落全局层，模型可 load；disposer 随插件 dispose 自动注销。

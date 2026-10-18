@@ -507,6 +507,102 @@ await check('路由层：/board/snapshot 瘦身 + /board/trend 独立 + 旧 /boa
   assert.ok(Array.isArray(fresh.body.tasks), 'fresh=1 也要带在办')
 })
 
+// 结束任务交接（2026-10-18 拍板 B 案：只有「结束」走会话，认领 / 释放由 host 直写）。
+// fake agents / presets / defaultModel —— 不碰真模型，只钉「建会话的参数」与「首条消息长什么样」。
+await check('结束任务交接：提示词三段约束 + POST /close（建会话 / preset / 首条消息 / 守卫）', async () => {
+  const { registerSessionRoutes } = await import('../dist/host/routes.js')
+  const { buildClosePrompt } = await import('../dist/host/services/session.service.js')
+
+  // ① 提示词：任务号 / 过程文档绝对路径 / 用户留言（放最末）/ 三条硬约束
+  const prompt = buildClosePrompt({
+    title: '示例任务',
+    taskId: '20260101-0000-示例-abcd',
+    workspacePath: '/tmp/ws',
+    worklogPath: 'worklog/202601/01-0000-示例-abcd.md',
+    message: '先把 X 修完再关',
+  })
+  assert.ok(prompt.includes('20260101-0000-示例-abcd'), '提示词要带任务号')
+  assert.ok(prompt.includes('/tmp/ws/ledger/worklog/202601/01-0000-示例-abcd.md'), '过程文档给绝对路径，模型不用猜')
+  assert.ok(prompt.trimEnd().endsWith('先把 X 修完再关'), '用户留言放最末（越靠后遵守率越高）')
+  assert.ok(prompt.includes('不要新建会话'), '必须有「不要新建会话」这条硬约束')
+  assert.ok(prompt.includes('close'), '必须点名执行 close')
+  assert.ok(prompt.includes('不要停下来反问'), '用户已留言 ⇒ 不许回头提问')
+  assert.ok(buildClosePrompt({ title: 't', taskId: 'i', workspacePath: '/tmp', worklogPath: null, message: '' })
+    .includes('（用户没有留具体内容）'), '空留言给大人话，不塞空段落')
+
+  // ② 路由：用自仓真任务跑一次，断言建会话的每个参数
+  const workspaces = resolveWorkspaces([{ id: 'ws-self', title: 'self', path: repoRoot }])
+  assert.equal(workspaces.length, 1, '自仓应含台账')
+  const rows = await readTasks(workspaces[0])
+  assert.ok(rows.length > 0, '自仓应有在办任务')
+  const task = rows[0]
+
+  let created = null
+  let sent = null
+  let mounted = null
+  let attached = null
+  const presets = { resolve: async () => ({ id: 'preset-default' }), mount: async (_ctx, id) => { mounted = id } }
+  const defaultModel = { currentSelection: () => ({ provider: 'provider-x', model: 'model-y' }) }
+  const routes = new Map()
+  registerSessionRoutes({ register: (route) => { routes.set(route.path, route.handler) } }, {
+    registry: { list: () => [{ id: 'ws-self', title: 'self', path: repoRoot, attachSession: async (id) => { attached = id } }] },
+    agents: { create: async (options) => { created = options; return { agent: { send: (message, target, wakeup) => { sent = { message, target, wakeup } } } } } },
+    getService: (name) => ({ agentPresets: presets, agentDefaultModel: defaultModel })[name],
+  })
+
+  const handler = routes.get('/api/task-ledger/close')
+  assert.ok(handler !== undefined, '/close 应注册')
+  const call = async (method, body, headers = {}) => {
+    const out = { status: 0, body: '' }
+    await handler({
+      method,
+      url: '/close',
+      headers,
+      socket: { remoteAddress: '127.0.0.1' },
+      async *[Symbol.asyncIterator]() { if (body !== undefined) yield Buffer.from(JSON.stringify(body)) },
+    }, { writeHead: (status) => { out.status = status }, end: (text) => { out.body = text } })
+    return { status: out.status, body: out.body === '' ? {} : JSON.parse(out.body) }
+  }
+  assert.equal((await call('GET')).status, 405, '只接 POST')
+  assert.equal((await call('POST', {})).status, 400, '缺 ws / id 应 400')
+  assert.equal((await call('POST', { ws: 'ws-self', id: task.id, provider: 'only-provider' })).status, 400, 'provider 只给一半应 400')
+  assert.equal((await call('POST', { ws: 'ws-none', id: task.id })).status, 404, '工作区不存在应 404')
+  assert.equal((await call('POST', { ws: 'ws-self', id: task.id }, { origin: 'https://evil.example', host: '127.0.0.1:1' })).status, 403, '跨源应 403')
+
+  const ok = await call('POST', { ws: 'ws-self', id: task.id, message: '就到这里吧' })
+  assert.equal(ok.status, 200, `正常结束应 200，实际 ${ok.status} ${JSON.stringify(ok.body)}`)
+  assert.match(ok.body.sessionId, /^[0-9a-f-]{36}$/, 'sessionId 应是 uuid')
+  assert.equal(created.meta.cwd, repoRoot, '会话 cwd 必须是该工作区真实路径')
+  assert.equal(created.meta.agentPreset, 'preset-default', 'preset 要落进会话身份（否则模型没有工具）')
+  assert.deepEqual(created.agentOptions, { provider: 'provider-x', model: 'model-y' }, '没选模型 ⇒ 用宿主默认，且必须成对显式传')
+  // 真宿主由工厂调 setup；这里手动跑一次，验证它确实把 preset 挂上（不挂 = 会话没有 fs/bash 工具）
+  await created.setup({})
+  assert.equal(mounted, 'preset-default', 'setup 里要 mount preset')
+  assert.equal(attached, ok.body.sessionId, '会话要挂进工作区列表')
+  assert.equal(sent.target, 'next-turn')
+  assert.equal(sent.wakeup, true, '要唤醒 driver，否则没人跑')
+  assert.equal(sent.message.role, 'user')
+  assert.equal(sent.message.source.kind, 'task-ledger', 'source.kind 用生产者自有 kind')
+  assert.ok(sent.message.content[0].text.includes(task.id), '首条消息要带任务号')
+  assert.ok(sent.message.content[0].text.includes('就到这里吧'), '首条消息要带用户留言')
+
+  // 宿主缺 agents ⇒ 503 人话，不半建会话
+  routes.clear()
+  registerSessionRoutes({ register: (route) => { routes.set(route.path, route.handler) } }, {
+    registry: { list: () => [{ id: 'ws-self', title: 'self', path: repoRoot }] },
+    agents: undefined,
+    getService: () => undefined,
+  })
+  let missingStatus = 0
+  let missingBody = ''
+  await routes.get('/api/task-ledger/close')({
+    method: 'POST', url: '/close', headers: {}, socket: { remoteAddress: '127.0.0.1' },
+    async *[Symbol.asyncIterator]() { yield Buffer.from(JSON.stringify({ ws: 'ws-self', id: task.id })) },
+  }, { writeHead: (status) => { missingStatus = status }, end: (text) => { missingBody = text } })
+  assert.equal(missingStatus, 503, '没 agents 服务应 503（人话），不是 500')
+  assert.ok(missingBody.includes('agents'), '503 要带人话原因')
+})
+
 // 客户端数据面（步骤 4b）：取数只走拆后的两个端点，页面不许再从快照上读趋势。
 // 这是「首屏不等 history」的前端一半——host 拆了端点但页面还读 board.trend，等于白拆。
 await check('客户端数据面：只走 /board/snapshot + /board/trend，趋势不再挂在快照上（步骤 4b）', async () => {

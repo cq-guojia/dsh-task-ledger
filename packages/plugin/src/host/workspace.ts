@@ -6,6 +6,12 @@ export interface RegistryWorkspace {
   readonly id: string
   readonly title: string
   readonly path: string
+  /**
+   * 把会话登记进本工作区的 `sessionIds`（会话归组的唯一途径）。
+   * ⚠️ 只设 `meta.cwd` **不会**自动归组（reference: dsh-task-dispatch-table 决策 22 真机结论）；
+   * 宿主旧版本可能没有该面 ⇒ optional，调用方按缺失降级并如实回报。
+   */
+  readonly attachSession?: (sessionId: string) => Promise<void>
 }
 
 /**
