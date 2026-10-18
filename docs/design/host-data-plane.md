@@ -1,6 +1,6 @@
 # 后端数据面：host 分层架构与性能基线
 
-> **状态**：📝 待拍板（分层方案用户已暂时接受；性能路线待 history 讨论定稿后一起实施）
+> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施
 > **来源**：任务「后端方法抽象：台账读取查询与会话交接」用户要求（2026-10-18）：①所有与台账交互的后端能力抽象成方法；②一个地方统一读；③其他一律调用抽象方法；④架构要健壮、合理、成熟，参考业界成熟分层
 > **配套**：`architecture.md`（运行逻辑）、`code-conventions.md`（方法规范）、`ledger-data.md`（跨包数据契约）、`features/board-home.md`
 
@@ -97,6 +97,18 @@ fixture：10 个工作区，每个 `progress.json` + 按月 history 文件（真
 | D | `RECENT_MONTHS 13 → 2`（首页趋势窗口） | 老库场景有效 | 无 | 顺手改 |
 
 缓存实现口径（三条，无黑魔法）：①进程内 `Map`，key = `op:workspace:filter`，值 = 结果 + 时间戳；②命中且 1.5s 内直接返回不起进程，同 key 并发单飞；③`fresh=1` 绕过缓存，写路径成功后 `invalidate(workspaceId)`。
+
+## 五点五、版本错配兜底（拆端点的必配项）
+
+新旧 host/client 混装是常态（git 直装、用户可能只更一半），v0.0.15 有黑屏教训：
+
+| 组合 | 行为 |
+|---|---|
+| 新 client + 新 host | 首屏 `/board/snapshot`（快）+ `/board/trend`（后台） |
+| 旧 client + 新 host | 旧 client 调 `/board` 全量 ⇒ host **保留 `/board` 全量端点**（含 trend 字段）继续服务，不删 |
+| 新 client + 旧 host | 新 client 调 `/board/trend` 得 404 ⇒ **前端兜底**：趋势区显示「后端版本过旧，趋势不可用」，首屏其余部分正常渲染，不白屏 |
+
+`/board` 全量端点标记为「兼容期专用」，下个大版本（1.x）删除，删除时在 CHANGELOG/README 明示。
 
 ## 六、分期
 
