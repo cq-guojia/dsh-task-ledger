@@ -1,3 +1,5 @@
+/** skill 脚本绝对路径（提示词里直接给「原样执行这一条」的命令用；与注册共用同一份目录知识）。 */
+export declare const SKILL_SCRIPT: string;
 /** 宿主 ctx.skills.register 的最小面（外部事实文档的结构面）。 */
 export interface SkillRegistration {
     name: string;

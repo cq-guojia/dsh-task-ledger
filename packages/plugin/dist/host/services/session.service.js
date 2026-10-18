@@ -16,6 +16,7 @@
  */
 import { randomUUID } from 'node:crypto';
 import { getTask } from '../repositories/ledger.repository.js';
+import { SKILL_SCRIPT } from '../skill/registration.js';
 export class HandoffError extends Error {
     code;
     constructor(code, message) {
@@ -46,14 +47,15 @@ export function buildClosePrompt(input) {
         '',
         '请按顺序做完这三件，然后停下：',
         '1. 读过程文档的「背景 / 待办 / 下一步」，核对这次到底做了什么、还留了什么坑。',
-        '2. 按 task-ledger skill 的规范执行 close：摘要写清「做成了什么、留了什么坑」，不要空话套话。',
+        `2. 用 task-ledger skill 的脚本结案（在工作区目录下、原样执行这一条命令）：`,
+        `   python3 ${SKILL_SCRIPT} close --id ${input.taskId} --repo ${input.workspacePath} --summary "<一句话说清做成了什么、留了什么坑>"`,
+        '   `--summary` 是必填参数，不许编套话；命令报错就原样报告错误，不要自己绕过、不要手改台账文件。',
         '3. 收尾即结束——这就是本条消息的全部要求。',
         '',
         '【硬约束】',
         '- 不要在会话里继续派活，**不要新建会话或子 agent**：这是收尾动作，不是新任务的开始。',
         '- 用户已经明确要结束，不会再回答提问：信息不足就按留言与过程文档如实写进摘要/结论，**不要停下来反问**。',
-        '- 只动这一个任务，不顺带改别的记录；不要手改 progress.json / history / worklog，写台账一律经 skill 脚本。',
-        '- 脚本报错就原样报告错误，不要自己绕过。',
+        '- 只动这一个任务，不顺带改别的记录；写台账只经上面那个 skill 脚本。',
         '',
         '用户现在处理结束，以下是用户的留言：',
         message,
