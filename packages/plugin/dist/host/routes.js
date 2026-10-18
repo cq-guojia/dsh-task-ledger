@@ -1,4 +1,6 @@
 import { getHomeAggregate, getFilterOptions, queryClosed } from './board.js';
+import { getSnapshot } from './services/home.service.js';
+import { getTrend } from './services/trend.service.js';
 import { getTask, readTasks, readWorklog } from './repositories/ledger.repository.js';
 import { resolveWorkspaces } from './workspace.js';
 /** API 前缀（唯一真源就在这一处）。 */
@@ -65,6 +67,36 @@ export function registerRoutes(webServer, deps) {
             try {
                 const home = await getHomeAggregate(workspacesOf(deps));
                 sendJson(res, 200, { ...home.snapshot, closed: home.closed, trend: home.trend, degraded: home.degraded });
+            }
+            catch (error) {
+                sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
+            }
+        },
+    });
+    // ── 拆端点（2026-10-18 步骤 4a：纯加法，旧 /board 全量原样保留）──
+    // 快路径：首屏。只读 progress.json + git 身份，**不碰 history** ⇒ 耗时与历史总量解耦
+    // （20 万条量级实测 527ms vs 合并端点 4.4s）。
+    webServer.register({
+        kind: 'exact',
+        path: `${API_PREFIX}/board/snapshot`,
+        handler: async (_req, res) => {
+            try {
+                const result = await getSnapshot(workspacesOf(deps));
+                sendJson(res, 200, { ...result.snapshot, degraded: result.degraded });
+            }
+            catch (error) {
+                sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
+            }
+        },
+    });
+    // 慢路径：趋势（近 8 周 + 四个自然周期）。读 history ⇒ 异步/按需拉，首屏不等它。
+    webServer.register({
+        kind: 'exact',
+        path: `${API_PREFIX}/board/trend`,
+        handler: async (_req, res) => {
+            try {
+                const result = await getTrend(workspacesOf(deps));
+                sendJson(res, 200, { closed: result.closed, trend: result.trend, degraded: result.degraded });
             }
             catch (error) {
                 sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });

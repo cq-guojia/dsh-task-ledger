@@ -424,6 +424,41 @@ await check('降级：单工作区坏 ⇒ degraded + 其余照常；全坏 ⇒ �
   }
 })
 
+await check('路由层：/board/snapshot 瘦身 + /board/trend 独立 + 旧 /board 仍全量（兼容期不许砍）', async () => {
+  const { registerRoutes } = await import('../dist/host/routes.js')
+  const routes = new Map()
+  const fakeServer = { register: (route) => { routes.set(route.path, route.handler) } }
+  registerRoutes(fakeServer, { registry: { list: () => [{ id: 'ws-self', title: 'self', path: repoRoot }] } })
+  const call = async (suffix) => {
+    const handler = routes.get(`/api/task-ledger${suffix}`)
+    assert.ok(handler !== undefined, `路由应存在：${suffix}`)
+    const out = { status: 0, body: '' }
+    await handler({ url: suffix }, {
+      writeHead: (status) => { out.status = status },
+      end: (text) => { out.body = text },
+    })
+    return { status: out.status, body: JSON.parse(out.body) }
+  }
+  // 端点白名单：新增/漏注册立刻红
+  assert.deepEqual([...routes.keys()].sort(), [
+    '/api/task-ledger/board', '/api/task-ledger/board/snapshot', '/api/task-ledger/board/trend',
+    '/api/task-ledger/filters', '/api/task-ledger/history', '/api/task-ledger/task',
+    '/api/task-ledger/tasks', '/api/task-ledger/workspaces',
+  ].sort())
+  const snapshot = await call('/board/snapshot')
+  assert.equal(snapshot.status, 200)
+  assert.ok(Array.isArray(snapshot.body.tasks), '快路径应带在办')
+  assert.ok(snapshot.body.trend === undefined, '快路径**不得**带 trend（瘦身的可断言判据）')
+  assert.ok(Array.isArray(snapshot.body.degraded), '快路径恒带 degraded')
+  const trend = await call('/board/trend')
+  assert.equal(trend.status, 200)
+  assert.equal(trend.body.closed.weekly.all.length, 8, '慢路径应带 8 桶')
+  assert.ok(trend.body.tasks === undefined, '慢路径**不得**带在办明细')
+  const board = await call('/board')
+  assert.ok(board.body.trend !== undefined, '旧 /board（兼容期）仍须带 trend')
+  assert.ok(Array.isArray(board.body.degraded), '旧 /board 也恒带 degraded')
+})
+
 // 分层铁律的结构断言（重构护栏）：IO 只在 repositories/ 与 skill/，依赖方向单向。
 // 这条挡住「以后再写一处 existsSync('ledger/...')」或「service 反向 import routes」。
 await check('结构断言：IO 唯一出口 + 依赖方向单向 + host/client 隔离', async () => {
