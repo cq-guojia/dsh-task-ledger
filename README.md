@@ -11,6 +11,8 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 
 ## Status
 
+- `task-ledger@1.2.2` published (2026-10-19): every edit to a worklog must now be followed by exactly one `log` call — an edit without a matching execution record counts as unfinished work.
+- `dsh-task-ledger@0.0.56` published (2026-10-19): bundles the updated skill text; no host behaviour change.
 - `task-ledger@1.2.1` published (2026-10-19): prompt slimmed from ~26 KB to ~9 KB (details moved to `references/`, loaded on demand); `description` rewritten as pure routing (three intent clusters + explicit-only close/release) — no commands, paths or workflow text; handover removed from the prompt (release → claim only, `set --owner` kept for a future UI); history table separator fixed to 9 columns; older worklogs without the 执行记录 section get one appended automatically.
 - `dsh-task-ledger@0.0.55` published (2026-10-19): bundles the slimmed skill and its references; no host behaviour change beyond `0.0.54`.
 - `task-ledger@1.2.0` published (2026-10-19): worklog gains a script-maintained **执行记录** section (`- 时间 · 类型 · @谁 · 说明`, types `new`/`claim`/`set`/`release`/`log`/`close`, append-only) and a new `log` subcommand; `progress.json` gains `updated` (last-progress time); **`blocked` state removed** — blocked/stale are now time-derived flags (7 days since start / 3 days since last update), old `blocked` rows stay readable as in-progress.

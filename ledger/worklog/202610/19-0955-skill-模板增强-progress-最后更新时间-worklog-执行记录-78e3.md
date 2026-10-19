@@ -120,6 +120,15 @@
 - 校验：`npm run verify` 25 项通过；codelint 23 个文件全过。
 - 发版：`task-ledger` 1.2.0 → **1.2.1**、`dsh-task-ledger` 0.0.54 → **0.0.55**；frontmatter `version` 同步 1.2.1；tag `skill-v1.2.1` / `plugin-v0.0.55`。
 
+### 硬规则：改正文必配一条日志（2026-10-19）
+
+用户要求：只要更新 worklog，就必须调用一次脚本写日志。
+
+- SKILL.md 铁律新增：动过 worklog 正文（改一句 / 补一节 / 改标题 / 修错字都算）→ **必须立刻跑一次 `log`**；没有对应日志的正文改动 = 这轮没做完。
+- 生命周期「推进」与「收工三步」同步：每改一轮正文配一条日志；同一次编辑动作里连改多处只记一条（避免一条 note 里塞多个节点）。
+- `references/worklog.md` 同步该硬规则。
+- 发版：`task-ledger` 1.2.1 → **1.2.2**、`dsh-task-ledger` 0.0.55 → **0.0.56**；tag `skill-v1.2.2` / `plugin-v0.0.56`。
+
 ### 专家团讨论（2026-10-19，3 个子代理并行评审，只读）
 
 共识结论：
@@ -148,3 +157,4 @@
 - 2026-10-19 13:07:10 · log · @GuoJia-Agent · SKILL.md 瘦身到 9.2KB 并拆出 references（技能评审）
 - 2026-10-19 13:32:58 · log · @GuoJia-Agent · description 重写为纯触发条件（168 字符）
 - 2026-10-19 13:35:13 · log · @GuoJia-Agent · 发版 skill 1.2.1 / plugin 0.0.55
+- 2026-10-19 13:47:57 · log · @GuoJia-Agent · 改正文必配日志写进铁律，发版 1.2.2 / 0.0.56
