@@ -46,18 +46,6 @@ function toneOf(row: Row): Tone {
   return 'doing'
 }
 
-/**
- * ⚠️ 调试态（用户 2026-10-19）：创建人 / 执行人（GitHub 账号）的名字**补到 20 个字符**，
- * 好看清「满 20 字」时标签的截断 + 悬停跑马灯到底是什么效果。
- * **真实数据一个字没动** —— 只在渲染这一刻把名字补长（mock 仅此一处，用 `-` 当填充，一眼看得出是假的）。
- * 定稿后：删掉本常量与 `debugName()`，两处调用换回原始名字。
- */
-const DEBUG_NAME_CHARS = 20
-
-function debugName(name: string): string {
-  return name.length >= DEBUG_NAME_CHARS ? name : name + '-'.repeat(DEBUG_NAME_CHARS - name.length)
-}
-
 /** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 function statusLabel(tone: Tone, t: Translate): string | null {
   if (tone === 'stale') return t('statusStale')
@@ -140,14 +128,14 @@ export function TaskRowView(props: {
     const creator = isTask ? row.task.creator : row.record.owner
     const owner = isTask ? row.task.owner : null
     const hasOwner = !(owner === null || owner === undefined || owner === '')
-    // ⚠️ 调试态：名字补到 20 字（见 DEBUG_NAME_CHARS），定稿后换回 `${creator}` / `${owner}`
-    const who = creator === null || creator === undefined || creator === '' ? '—' : `@${debugName(creator)}`
+    const who = creator === null || creator === undefined || creator === '' ? '—' : `@${creator}`
     const createdOk = created !== null && created !== undefined && Date.parse(created) >= 0
-    // 执行人的悬停提示：**什么时候开始执行**（任务上的 started；没有就报「时间未知」，不编）
+    // 执行人的悬停提示（**只在名字被截断时才显示**，见 Tag）：全名 + **什么时候开始执行**
+    // （任务上的 started；没有就报「时间未知」，不编）
     const startedOk = isTask && row.task.started !== null && row.task.started !== undefined
       && Date.parse(row.task.started) >= 0
     const ownerTip = t('startedAt', {
-      who: debugName(String(owner)),
+      who: String(owner),
       when: startedOk ? formatDateTime(String(row.task.started)) : t('timeUnknown'),
     })
     // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）
@@ -166,8 +154,8 @@ export function TaskRowView(props: {
         // 执行人列（原状态位）：有执行人 ⇒ 一枚 @名字 标签，悬停给「谁 什么时候开始执行」
         // （页面不许跳：右侧槽位宽度是常驻的，hover 只换可见性 ⇒ 这个提示不会跟着飘）
         h('span', { className: 'dtl-tcell dtl-tcell--status' },
-          // ⚠️ 调试态：名字补到 20 字（见 DEBUG_NAME_CHARS），定稿后换回 `@${String(owner)}`
-          hasOwner ? h(Tag, { text: `@${debugName(String(owner))}`, tone: 'person', title: ownerTip }) : null),
+          // 名字上限 20 字（Tag 的 20ch）；超了 ⇒ 省略号 + 悬停补全名（ownerTip）
+          hasOwner ? h(Tag, { text: `@${String(owner)}`, tone: 'person', title: ownerTip }) : null),
         // 最右**一个槽**：创建信息 ⇄ 操作钮二选一（用户 2026-10-18：悬停就把创建信息整条干掉，
         // 按钮顶上那一格；两个都常驻布局 ⇒ 行宽不变、页面不跳）
         h('span', { className: 'dtl-orow__slot' },

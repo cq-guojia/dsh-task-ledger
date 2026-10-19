@@ -62,9 +62,9 @@ const UI_BASE_CSS = `
 /* 列：任务（弹性）/ 执行人 / 右侧槽（创建信息 ⇄ 操作钮） */
 .dtl-tcell{min-width:0;}
 .dtl-tcell--title{flex:1 1 auto;}
-/* 执行人列（原状态列，用户 2026-10-18 互换）：标签最宽 20ch ⇒ 列宽按它给，标签再自己收到 100%
-   （名字过长时由标签自己的省略号兜住，不许溢出压到右边的槽） */
-.dtl-tcell--status{flex:none;width:110px;}
+/* 执行人列（原状态列，用户 2026-10-18 互换）：稍放宽一档（用户 2026-10-19：原来有点挤），
+   20 字的名字能基本摆全；再长由标签自己的省略号兜住，不许溢出压到右边的槽 */
+.dtl-tcell--status{flex:none;width:136px;}
 .dtl-tcell--status .dtl-tag{max-width:100%;}
 /* 悬停：**创建信息整条让位给操作钮**（用户 2026-10-18：不要「掉掉时分秒」那种半吊子，
    要整条换掉）。两个都**常驻布局**（visibility 切换、不用 display），格子宽度 = 两者较宽的
@@ -131,8 +131,10 @@ const UI_BASE_CSS = `
 .dtl-taskrow__row:hover .dtl-taskrow__when{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
 
-/* 标签（用户 2026-10-18）：状态 / 执行人 / #标签 **共用一枚件**，只换色调；
-   最大宽度 20ch（≈10 个中文或 20 个字符），超出省略号、悬停跑马灯把全文滚出来。 */
+/* 标签（用户 2026-10-18）：状态 / 执行人 / #标签 **共用一枚件**，只换色调。
+   最大宽度 20ch（≈10 个中文或 20 个字符）⇒ 名字上限 20 字；超出**省略号（3 个点）**，
+   悬停把全名补出来（用户 2026-10-19：不跑马灯了）。**没被截 ⇒ 悬停无反应**
+   （提示由 Tag 元件按实际宽度决定挂不挂，这里只管裁切）。 */
 .dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
   background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
@@ -145,13 +147,6 @@ const UI_BASE_CSS = `
 .dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
 /* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
 .dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
-/* 内层撑满真实宽度（inline-block ⇒ transform 才生效），外层负责裁切与省略号 */
-.dtl-tag__text{display:inline-block;}
-/* 跑马灯只挂在**真溢出**的标签上（短的挂上去会白飘一段） */
-.dtl-tag--long:hover{text-overflow:clip;}
-.dtl-tag--long:hover .dtl-tag__text{animation:dtl-marquee 6s linear infinite;}
-@keyframes dtl-marquee{0%,12%{transform:translateX(0);}
-  88%,100%{transform:translateX(calc(-100% + 20ch - 12px));}}
 
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
@@ -449,21 +444,22 @@ function displayWidth(text: string): number {
 
 /**
  * 标签（**唯一**一枚件，用户 2026-10-18）：状态 / 执行人 / #标签 都走它，只换 tone。
- * 超宽 ⇒ 省略号；悬停 ⇒ 跑马灯滚出全文（溢出时不挂 title，免得原生提示盖住滚动）。
+ * 超过 20 个字符宽 ⇒ 省略号，**且只在被截时**挂悬停提示补出全文（用户 2026-10-19：
+ * 不跑马灯；没被截 ⇒ 悬停无反应）。
  */
 export function Tag(props: {
   text: string
   tone?: 'neutral' | 'open' | 'doing' | 'blocked' | 'stale' | 'person'
-  /** 悬停提示（默认 = 文本本身）。 */
+  /** 悬停提示（被截时才显示；默认 = 文本本身）。 */
   title?: string
 }): ReactNode {
   ensureUiBase()
   const { text, tone = 'neutral', title } = props
   const long = displayWidth(text) > TAG_MAX_WIDTH
   return h('span', {
-    className: `dtl-tag dtl-tag--${tone}${long ? ' dtl-tag--long' : ''}`,
-    title: long ? undefined : (title ?? text),
-  }, h('span', { className: 'dtl-tag__text' }, text))
+    className: `dtl-tag dtl-tag--${tone}`,
+    title: long ? (title ?? text) : undefined,
+  }, text)
 }
 
 /** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */

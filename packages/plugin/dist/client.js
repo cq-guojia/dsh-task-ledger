@@ -643,9 +643,9 @@ body[data-ds-dark-theme]{
 /* 列：任务（弹性）/ 执行人 / 右侧槽（创建信息 ⇄ 操作钮） */
 .dtl-tcell{min-width:0;}
 .dtl-tcell--title{flex:1 1 auto;}
-/* 执行人列（原状态列，用户 2026-10-18 互换）：标签最宽 20ch ⇒ 列宽按它给，标签再自己收到 100%
-   （名字过长时由标签自己的省略号兜住，不许溢出压到右边的槽） */
-.dtl-tcell--status{flex:none;width:110px;}
+/* 执行人列（原状态列，用户 2026-10-18 互换）：稍放宽一档（用户 2026-10-19：原来有点挤），
+   20 字的名字能基本摆全；再长由标签自己的省略号兜住，不许溢出压到右边的槽 */
+.dtl-tcell--status{flex:none;width:136px;}
 .dtl-tcell--status .dtl-tag{max-width:100%;}
 /* 悬停：**创建信息整条让位给操作钮**（用户 2026-10-18：不要「掉掉时分秒」那种半吊子，
    要整条换掉）。两个都**常驻布局**（visibility 切换、不用 display），格子宽度 = 两者较宽的
@@ -712,8 +712,10 @@ body[data-ds-dark-theme]{
 .dtl-taskrow__row:hover .dtl-taskrow__when{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
 
-/* 标签（用户 2026-10-18）：状态 / 执行人 / #标签 **共用一枚件**，只换色调；
-   最大宽度 20ch（≈10 个中文或 20 个字符），超出省略号、悬停跑马灯把全文滚出来。 */
+/* 标签（用户 2026-10-18）：状态 / 执行人 / #标签 **共用一枚件**，只换色调。
+   最大宽度 20ch（≈10 个中文或 20 个字符）⇒ 名字上限 20 字；超出**省略号（3 个点）**，
+   悬停把全名补出来（用户 2026-10-19：不跑马灯了）。**没被截 ⇒ 悬停无反应**
+   （提示由 Tag 元件按实际宽度决定挂不挂，这里只管裁切）。 */
 .dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
   background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
@@ -726,13 +728,6 @@ body[data-ds-dark-theme]{
 .dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
 /* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
 .dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
-/* 内层撑满真实宽度（inline-block ⇒ transform 才生效），外层负责裁切与省略号 */
-.dtl-tag__text{display:inline-block;}
-/* 跑马灯只挂在**真溢出**的标签上（短的挂上去会白飘一段） */
-.dtl-tag--long:hover{text-overflow:clip;}
-.dtl-tag--long:hover .dtl-tag__text{animation:dtl-marquee 6s linear infinite;}
-@keyframes dtl-marquee{0%,12%{transform:translateX(0);}
-  88%,100%{transform:translateX(calc(-100% + 20ch - 12px));}}
 
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
@@ -935,16 +930,17 @@ body[data-ds-dark-theme]{
 		}
 		/**
 		* 标签（**唯一**一枚件，用户 2026-10-18）：状态 / 执行人 / #标签 都走它，只换 tone。
-		* 超宽 ⇒ 省略号；悬停 ⇒ 跑马灯滚出全文（溢出时不挂 title，免得原生提示盖住滚动）。
+		* 超过 20 个字符宽 ⇒ 省略号，**且只在被截时**挂悬停提示补出全文（用户 2026-10-19：
+		* 不跑马灯；没被截 ⇒ 悬停无反应）。
 		*/
 		function Tag(props) {
 			ensureUiBase();
 			const { text, tone = "neutral", title } = props;
 			const long = displayWidth(text) > TAG_MAX_WIDTH;
 			return (0, react.createElement)("span", {
-				className: `dtl-tag dtl-tag--${tone}${long ? " dtl-tag--long" : ""}`,
-				title: long ? void 0 : title ?? text
-			}, (0, react.createElement)("span", { className: "dtl-tag__text" }, text));
+				className: `dtl-tag dtl-tag--${tone}`,
+				title: long ? title ?? text : void 0
+			}, text);
 		}
 		/** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
 		function EmptyState(props) {
@@ -1108,16 +1104,6 @@ body[data-ds-dark-theme]{
 			if (row.task.status === "open") return "open";
 			return "doing";
 		}
-		/**
-		* ⚠️ 调试态（用户 2026-10-19）：创建人 / 执行人（GitHub 账号）的名字**补到 20 个字符**，
-		* 好看清「满 20 字」时标签的截断 + 悬停跑马灯到底是什么效果。
-		* **真实数据一个字没动** —— 只在渲染这一刻把名字补长（mock 仅此一处，用 `-` 当填充，一眼看得出是假的）。
-		* 定稿后：删掉本常量与 `debugName()`，两处调用换回原始名字。
-		*/
-		const DEBUG_NAME_CHARS = 20;
-		function debugName(name) {
-			return name.length >= DEBUG_NAME_CHARS ? name : name + "-".repeat(DEBUG_NAME_CHARS - name.length);
-		}
 		/** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 		function statusLabel(tone, t) {
 			if (tone === "stale") return t("statusStale");
@@ -1184,11 +1170,11 @@ body[data-ds-dark-theme]{
 				const creator = isTask ? row.task.creator : row.record.owner;
 				const owner = isTask ? row.task.owner : null;
 				const hasOwner = !(owner === null || owner === void 0 || owner === "");
-				const who = creator === null || creator === void 0 || creator === "" ? "—" : `@${debugName(creator)}`;
+				const who = creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`;
 				const createdOk = created !== null && created !== void 0 && Date.parse(created) >= 0;
 				const startedOk = isTask && row.task.started !== null && row.task.started !== void 0 && Date.parse(row.task.started) >= 0;
 				const ownerTip = t("startedAt", {
-					who: debugName(String(owner)),
+					who: String(owner),
 					when: startedOk ? formatDateTime(String(row.task.started)) : t("timeUnknown")
 				});
 				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, statusTag, tags.map((tag) => (0, react.createElement)(Tag, {
@@ -1196,7 +1182,7 @@ body[data-ds-dark-theme]{
 					text: `#${tag}`
 				})));
 				return (0, react.createElement)("div", { className: "dtl-orow" }, (0, react.createElement)("div", { className: "dtl-orow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, orowTitleLine, tagLine), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, hasOwner ? (0, react.createElement)(Tag, {
-					text: `@${debugName(String(owner))}`,
+					text: `@${String(owner)}`,
 					tone: "person",
 					title: ownerTip
 				}) : null), (0, react.createElement)("span", { className: "dtl-orow__slot" }, (0, react.createElement)("span", { className: "dtl-orow__created" }, t("createdAt", {
