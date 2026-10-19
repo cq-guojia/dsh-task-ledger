@@ -21,6 +21,7 @@
 import { createElement as h, type ReactNode } from 'react'
 import {
   IconCheckOutlineRegular, IconChevronRightOutlineRegular, IconDownloadOutlineRegular, IconSearchOutlineRegular,
+  Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatDateTime } from './format'
 import type { Translate } from './locales'
@@ -116,20 +117,22 @@ export function TaskRowView(props: {
   // 动作权限：**唯一**判定（用户 2026-10-18）——两区同一套，不许各判各的；本文件只按返回值画。
   const actions = isTask ? resolveActions(row.task, board) : CLOSED_ACTIONS
 
-  // 动作钮：四个 + 查看，各一份（两区共用，不许各画一套）
+  // 动作钮：四个 + 查看，各一份（两区共用，不许各画一套）。
+  // 悬停说明统一走官方 Tooltip（portal 逃逸裁切、hover 即出），不在 CSS 里手搓 ::after 浮层。
   // 「查看」：两区都有、统一最右、放大镜图标（用户 2026-10-17）。
-  const viewButton = h('button', {
-    type: 'button', className: 'dtl-viewbtn', 'data-tip': t('viewDetail'), title: t('viewDetail'),
-  }, h(IconSearchOutlineRegular, { size: 14 }))
-  const claimButton = h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipClaim') },
-    h(IconDownloadOutlineRegular, { size: 14 }), t('actionClaim'))
-  const resumeButton = h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipResume') },
-    h(IconChevronRightOutlineRegular, { size: 14 }), t('actionResume'))
-  const finishButton = h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipFinish') },
-    h(IconCheckOutlineRegular, { size: 14 }), t('actionFinish'))
+  const viewButton = h(Tooltip, { label: t('viewDetail'), side: 'bottom', portal: true, maxWidth: 240,
+    children: h('button', { type: 'button', className: 'dtl-viewbtn' }, h(IconSearchOutlineRegular, { size: 14 })) })
+  const tipBtn = (
+    icon: ReactNode, actionKey: 'actionClaim' | 'actionResume' | 'actionFinish' | 'actionRelease',
+    tipKey: 'tipClaim' | 'tipResume' | 'tipFinish' | 'tipRelease',
+  ): ReactNode =>
+    h(Tooltip, { label: t(tipKey), side: 'bottom', portal: true, maxWidth: 240,
+      children: h('button', { type: 'button', className: 'dtl-minibtn' }, ...(icon ? [icon, t(actionKey)] : [t(actionKey)])) })
+  const claimButton = tipBtn(h(IconDownloadOutlineRegular, { size: 14 }), 'actionClaim', 'tipClaim')
+  const resumeButton = tipBtn(h(IconChevronRightOutlineRegular, { size: 14 }), 'actionResume', 'tipResume')
+  const finishButton = tipBtn(h(IconCheckOutlineRegular, { size: 14 }), 'actionFinish', 'tipFinish')
   // 释放：官方 rc.2 无断链图标（已全量核实）⇒ 纯文字，不用叉
-  const releaseButton = h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipRelease') },
-    t('actionRelease'))
+  const releaseButton = tipBtn(null, 'actionRelease', 'tipRelease')
 
   // 状态标签（五色实心块，用户 2026-10-18 定稿）：已结案没有在办状态 ⇒ 不摆；
   // 三枚异常标签带 host 配置的阈值解释（没配就不解释，不编）。

@@ -684,11 +684,6 @@ body[data-ds-dark-theme]{
   font:inherit;font-size:var(--dtl-font-sm);line-height:18px;white-space:nowrap;cursor:default;}
 .dtl-viewbtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
 .dtl-taskrow__row:hover .dtl-viewbtn,.dtl-orow:hover .dtl-viewbtn{display:inline-flex;}
-.dtl-viewbtn::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;z-index:5;
-  padding:4px 8px;border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-2);
-  box-shadow:var(--dtl-shadow-2);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);white-space:nowrap;
-  opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-viewbtn:hover::after{opacity:1;}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -747,18 +742,13 @@ body[data-ds-dark-theme]{
   background:var(--dtl-business-soft);color:var(--dtl-fg);
   font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;}
 
-/* 行内动作按钮（icon + 字，加大；悬停立刻浮出说明——CSS ::after，不用慢半拍的原生 title）。
+/* 行内动作按钮（icon + 字，加大；悬停说明走官方 Tooltip，不在 CSS 里手搓浮层）。
    样子先行，点击行为归「任务按钮与会话交接」任务 */
-.dtl-minibtn{position:relative;display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+.dtl-minibtn{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
   border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
   background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-sm);
   line-height:18px;white-space:nowrap;cursor:default;}
 .dtl-minibtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
-.dtl-minibtn::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;z-index:5;
-  padding:4px 8px;border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-2);
-  box-shadow:var(--dtl-shadow-2);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);white-space:nowrap;
-  opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-minibtn:hover::after{opacity:1;}
 
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
@@ -1191,32 +1181,30 @@ body[data-ds-dark-theme]{
 				return statusLabel(which, t) ?? "";
 			};
 			const actions = isTask ? resolveActions(row.task, board) : CLOSED_ACTIONS;
-			const viewButton = (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-viewbtn",
-				"data-tip": t("viewDetail"),
-				title: t("viewDetail")
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 14 }));
-			const claimButton = (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-minibtn",
-				"data-tip": t("tipClaim")
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 14 }), t("actionClaim"));
-			const resumeButton = (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-minibtn",
-				"data-tip": t("tipResume")
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), t("actionResume"));
-			const finishButton = (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-minibtn",
-				"data-tip": t("tipFinish")
-			}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), t("actionFinish"));
-			const releaseButton = (0, react.createElement)("button", {
-				type: "button",
-				className: "dtl-minibtn",
-				"data-tip": t("tipRelease")
-			}, t("actionRelease"));
+			const viewButton = (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+				label: t("viewDetail"),
+				side: "bottom",
+				portal: true,
+				maxWidth: 240,
+				children: (0, react.createElement)("button", {
+					type: "button",
+					className: "dtl-viewbtn"
+				}, (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 14 }))
+			});
+			const tipBtn = (icon, actionKey, tipKey) => (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+				label: t(tipKey),
+				side: "bottom",
+				portal: true,
+				maxWidth: 240,
+				children: (0, react.createElement)("button", {
+					type: "button",
+					className: "dtl-minibtn"
+				}, ...icon ? [icon, t(actionKey)] : [t(actionKey)])
+			});
+			const claimButton = tipBtn((0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 14 }), "actionClaim", "tipClaim");
+			const resumeButton = tipBtn((0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), "actionResume", "tipResume");
+			const finishButton = tipBtn((0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), "actionFinish", "tipFinish");
+			const releaseButton = tipBtn(null, "actionRelease", "tipRelease");
 			const tagOf = (which, tip) => {
 				const text = statusLabel(which, t) ?? "";
 				return (0, react.createElement)(Tag, {
