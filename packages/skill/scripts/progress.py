@@ -1144,9 +1144,14 @@ def find_worklog(
     return None
 
 
-def exec_line(when: str, who: str | None, note: str) -> str:
-    """一条执行记录的正文：`- 时间 @某人 做了什么`。"""
-    return f"- {when} @{who} {note}" if who else f"- {when} {note}"
+def exec_line(when: str, who: str | None, kind: str, note: str) -> str:
+    """一条执行记录：`- 时间 · 类型 · @某人 · 说明`。
+
+    类型取脚本子命令名（new / claim / set / log / close），纯 ASCII、可 grep 统计；
+    记录只追加不改写 —— 移交后旧记录仍记在原来那个人名下。
+    """
+    head = f"- {when} · {kind}"
+    return f"{head} · @{who} · {note}" if who else f"{head} · {note}"
 
 
 def append_exec_log(text: str, line: str) -> str:
@@ -1165,8 +1170,10 @@ def append_exec_log(text: str, line: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def record_exec(repo: Path, tid: str, task: dict[str, Any], note: str) -> None:
-    """给任务的过程文档补一条执行记录。
+def record_exec(
+    repo: Path, tid: str, task: dict[str, Any], who: str | None, kind: str, note: str
+) -> None:
+    """给任务的过程文档补一条执行记录（`who` = 这次动手的人，不是任务现 owner）。
 
     调用方必须已经持有 progress_lock —— 与 close 的封卷（读全文→改写→落盘）互斥，
     否则两条记录并发追加会互相覆盖。
@@ -1178,7 +1185,7 @@ def record_exec(repo: Path, tid: str, task: dict[str, Any], note: str) -> None:
         text = log.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return
-    line = exec_line(now(), task.get("owner") or task.get("creator"), note)
+    line = exec_line(now(), who, kind, note)
     new_text = append_exec_log(text, line)
     if new_text != text:
         write_text_atomic(log, new_text)
@@ -1287,7 +1294,7 @@ def cmd_new(args: argparse.Namespace) -> None:
             except Fail:
                 pass
             raise Fail(f"创建失败，已从状态表撤销该任务：{exc}")
-        record_exec(repo, tid, task, "创建任务")
+        record_exec(repo, tid, task, creator, "new", f"创建任务（{task['status']}）")
     print(f"已创建任务 {tid}")
     print(f"  标题    {task['title']}")
     print(f"  状态    {task['status']}")
@@ -1329,7 +1336,7 @@ def cmd_claim(args: argparse.Namespace) -> None:
         task["started"] = task.get("started") or stamp
         task["updated"] = stamp
         commit_guarded(path, before, data)
-        record_exec(repo, tid, task, "认领 → doing")
+        record_exec(repo, tid, task, owner, "claim", "认领 → doing")
     print(f"已认领 {tid} → doing，owner = @{owner}")
     print_worklog(repo, tid, task)
 
@@ -1385,7 +1392,7 @@ def cmd_set(args: argparse.Namespace) -> None:
 
         task["updated"] = now()
         commit_guarded(path, before, data)
-        record_exec(repo, tid, task, "变更：" + "，".join(changed))
+        record_exec(repo, tid, task, me, "set", "，".join(changed))
     print(f"已更新 {tid}：" + "，".join(changed))
     print_worklog(repo, tid, task)
 
@@ -1406,7 +1413,7 @@ def cmd_log(args: argparse.Namespace) -> None:
         require_owner(task, tid, me)
         task["updated"] = now()
         commit_guarded(path, before, data)
-        record_exec(repo, tid, task, note)
+        record_exec(repo, tid, task, me, "log", note)
     print(f"已记入 {tid} 的执行记录：{note}")
 
 
@@ -1511,7 +1518,10 @@ def cmd_close(args: argparse.Namespace) -> None:
             )
         # 结案本身是最后一个节点：封卷前补上这条记录，封卷后不再追加
         new_log = stamp_frozen(
-            append_exec_log(log_text, exec_line(finished, owner, f"结案：{summary}")),
+            append_exec_log(
+                log_text,
+                exec_line(finished, me, "close", f"结案：{summary}"),
+            ),
             finished,
             owner,
         )
