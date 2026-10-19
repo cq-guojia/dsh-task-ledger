@@ -354,9 +354,17 @@ def commit_guarded(
     write_json(path, data)
 
 
-def _git(*args: str, timeout: int | None = None) -> subprocess.CompletedProcess:
-    """跑一条 git 命令，吞掉输出（同步用，不污染 stdout）。"""
-    return subprocess.run(list(args), capture_output=True, text=True, timeout=timeout)
+def _git(
+    *args: str, timeout: int | None = None, check: bool = False
+) -> subprocess.CompletedProcess:
+    """跑一条 git 命令，吞掉输出（同步用，不污染 stdout）。
+
+    check=True 让失败抛异常（推送要能被下面的兜底捕获）；提交则靠返回码分辨，
+    因为不同仓库的提交检查（commitlint 等）会拒掉消息，需要看 stderr 原文。
+    """
+    return subprocess.run(
+        list(args), capture_output=True, text=True, timeout=timeout, check=check
+    )
 
 
 def _git_actor(repo_root: str) -> str:
@@ -369,7 +377,8 @@ def git_sync(action: str) -> None:
     """写成功后调用一次：把本次改动的台账文件提交；有上游跟踪分支则推送。
 
     纯脚本、确定性，不依赖大模型。无 git / 无上游 / 全被 ignore / 无实际变更 都静默跳过。
-    同步是尽力而为：任何异常都不影响已完成的台账写入（只打印提示）。
+    同步失败（提交被仓库钩子拒后连 --no-verify 也失败、推送被拒、意外异常）一律打到
+    stderr 提示，绝不静默；但退出码不变 —— 台账本身已经写成功，别让调用方误判去重做。
     """
     if os.environ.get("TASK_LEDGER_NO_SYNC"):
         return
@@ -382,29 +391,49 @@ def git_sync(action: str) -> None:
         if top.returncode != 0:
             return  # 不是 git 项目 → 跳过（规则1：有才提交）
         root = top.stdout.strip()
+        g = ("git", "-C", root)
         # 只 add 本次真实改动、且未被 ignore 的文件
         to_add = [
             str(f)
             for f in files
-            if _git("git", "-C", root, "check-ignore", "-q", str(f)).returncode != 0
+            if _git(*g, "check-ignore", "-q", str(f)).returncode != 0
         ]
         if not to_add:
             return  # 全被 ignore → 尊重用户选择，不强行提交
-        _git("git", "-C", root, "add", *to_add)
-        if _git("git", "-C", root, "diff", "--cached", "--quiet").returncode == 0:
+        _git(*g, "add", *to_add)
+        if _git(*g, "diff", "--cached", "--quiet").returncode == 0:
             return  # 无实际变更
         actor = _git_actor(root)
-        _git("git", "-C", root, "commit", "-m", f"ledger({action}): {actor}")
+        # 消息按 conventional commits 写：多数仓库装了 commitlint，只认白名单里的 type
+        msg = f"chore(ledger): {action} {actor}"
+        done = _git(*g, "commit", "-m", msg)
+        if done.returncode != 0:
+            # 各仓库提交规则各不相同（type 白名单、大小写、scope 枚举……），台账是数据文件，
+            # 过不了就让这一次跳过钩子提交，别把台账永久锁在本地暂存区。
+            done = _git(*g, "commit", "--no-verify", "-m", msg)
+            if done.returncode == 0:
+                print(
+                    f"提示：仓库提交检查拒绝了消息「{msg}」，已用 --no-verify 提交本次台账改动。",
+                    file=sys.stderr,
+                )
+        if done.returncode != 0:
+            print(
+                "提示：台账已写入本地，但自动提交失败，请手动提交 ledger/："
+                f"{(done.stderr or done.stdout or '').strip()}",
+                file=sys.stderr,
+            )
+            return
         # 规则2：有上游跟踪分支才推
-        if _git("git", "-C", root, "rev-parse", "--abbrev-ref", "@{upstream}").returncode != 0:
+        upstream = _git(*g, "rev-parse", "--abbrev-ref", "@{upstream}")
+        if upstream.returncode != 0:
             return
         try:
-            _git("git", "-C", root, "push", timeout=30)
+            _git(*g, "push", timeout=30, check=True)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             # 非快进：自动 rebase 一次再推；冲突 / 超时则放弃，绝不 --force
             try:
-                _git("git", "-C", root, "pull", "--rebase", "--autostash", timeout=30)
-                _git("git", "-C", root, "push", timeout=30)
+                _git(*g, "pull", "--rebase", "--autostash", timeout=30, check=True)
+                _git(*g, "push", timeout=30, check=True)
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
                 print(
                     "提示：本地已提交，但推送被拒（他人已推 / 需认证 / 超时）。"
@@ -412,8 +441,10 @@ def git_sync(action: str) -> None:
                     file=sys.stderr,
                 )
     except Exception as exc:  # noqa: BLE001 —— 同步失败不应污染台账主流程
-        print(f"提示：写后自动同步未执行（{type(exc).__name__}: {exc}）。数据已写入本地。",
-              file=sys.stderr)
+        print(
+            f"提示：写后自动同步未执行（{type(exc).__name__}: {exc}）。数据已写入本地。",
+            file=sys.stderr,
+        )
 
 
 def require_task_id(tid: str) -> str:
