@@ -91,6 +91,35 @@
 - 一次性脚本（临时目录执行，未入库）扫描 `/code/dsh-plugins/*`、`/code/open-lab/*`、`/code/koc/koc-weapp/koc-weapp-zuche`、`/workspace/*` 下的 `ledger/progress.json`，命中 9 个仓库：补 `updated = created` 共 24 条（仍缺 `created` 的跳过；本次无一例）。只填缺失、幂等；写前把原文件备份到 `/tmp/ledger-updated-bak-0w1hv1rm/`；按 skill 同款格式（`sort_keys` + 2 空格 + 原子替换）落盘。9 个仓库 `validate` 全部通过。
 - 版本：`task-ledger` 1.1.0 → **1.2.0**，`dsh-task-ledger` 0.0.53 → **0.0.54**；根 README 的 Status 补两条发布说明；tag `skill-v1.2.0` / `plugin-v0.0.54`。
 
+### 历史分隔符 bug + 老 worklog 自动补节（2026-10-19）
+
+- **bug**：`progress.py` 的 `HISTORY_SEP` 只有 8 段 `---`，而 `HISTORY_HEADER` 是 9 列（2026-10-17 加 `creator` 时漏改），GFM 下这张历史表可能整块不渲染。改为 9 段；存量 10 份 `ledger/history/*.md` 同步修分隔符（备份 `/tmp/history-sep-bak-7h39fo2h/`），下次 `close` 也会经 `upgrade_history` 自动归一。
+- **老任务写不进执行记录**：升级前建的 worklog 没有「## 执行记录」节，`log` 原先静默不写却照回「已记入」。改为：缺节时在**文末自动补一节**再追加（正文一个字不动，4K 正文照样追加）；过程文档丢失则 `log` 报错退出（`updated` 已刷新），提示用 `show` 查路径、不许手写。
+- SKILL.md / ledger-data.md 同步改为「老文档不用 agent 补节，脚本自动补」。
+- 验证：4K+ 正文的老文档追加成功；删掉 worklog 后 `log` 退出 1 并给正确提示；新建历史文件分隔符 9 段。
+
+### 提示词瘦身 + 交接下线（2026-10-19）
+
+用户反馈：整份 SKILL.md 都是注入成本、摊得太大；skill 不该做交接（随便写个名字都不对，交接留给以后的 UI）；bug 要在所有项目一起修；备份全删。
+
+- **瘦身**：3 位 skill/prompt 专家并行评审，结论一致——常驻注入只留「不做就会写错」的规则与路由，细节进 `references/` 按需读。SKILL.md **251 行 / 25.9 KB → 129 行 / 9.2 KB（约 3000 汉字，-65%）**；拆出 5 个 reference：`state-model` / `worklog` / `log-note` / `taxonomy` / `troubleshooting`，SKILL.md 末尾给「何时读哪个」索引。参数表、退出码、时间格式、任务号规则改为看 `--help` / reference。
+- **交接下线（提示词层）**：SKILL.md 不再出现 `--owner` 换人；意图表把「转给某人」改成「先释放、对方自己 claim」，铁律写明「skill 不提供交接，随便写的名字都是假的」。脚本 `set --owner` **保留**（`--help` 注明仅供 UI / 维护者），供将来的 UI 交接用。
+- **备份清理**：`/tmp/ledger-updated-bak-*`、`/tmp/history-sep-bak-*` 已删除。
+- **分隔符 bug 全仓修复**：9 个仓库共 10 份 `ledger/history/*.md` 的 8 段分隔符已修成 9 段，复查无残留（不只是本仓）。
+- 验证：`npm run verify` 25 项通过；codelint 22 个文件六层全过；`packages/plugin/skill` 内嵌副本已随 build 同步（含 references）。
+
+### description 重写：只做路由，不做教学（2026-10-19）
+
+用户指出 description 把「什么时候加载」和「加载后干什么」混在一起，还堆了 26 个口语触发词；要求：结案 / 退回必须用户明确说，推进记录类可放宽。
+
+- 3 位专家 + 本地同类 skill 校准（同机合格样本 `koc-codelint` 约 106 字符；没有样本超过 180）。共识：description 只放「定性一句 + 触发场景 + 排除句」，命令、路径、字段、天数、做法一律不进。
+- 新 description **168 字符**（原 315）：按三个意图簇触发——登记新事 / 记录已有任务进展 / 查任务状态与历史；结案、退回写成「只认用户对该具体任务的明确指令」；末尾加排除句「只是改代码、讨论方案时不要用」。
+- 删掉的触发词及理由：`我要做 X` `开始做 X` `推进一下`（普通编码会话的默认说法，几乎必误伤）、`立项`（常指公司审批流程）、`先放一放`（只是调优先级）、`卡住了` `这活我不做了`（情绪 / 状态词，容易误触发；且台账没加载时本来就不该由它接管）。
+- 保留但加名词锚点：`记一条进展`（不是裸「记一下」）、`接着做`（不是「继续做」）、`这活谁在做`、`上周做过什么`。
+- 新建 / 记一条 / 结案 的路由仍然只在正文「意图 → 命令」表里，description 不承担。
+- 校验：`npm run verify` 25 项通过；codelint 23 个文件全过。
+- 发版：`task-ledger` 1.2.0 → **1.2.1**、`dsh-task-ledger` 0.0.54 → **0.0.55**；frontmatter `version` 同步 1.2.1；tag `skill-v1.2.1` / `plugin-v0.0.55`。
+
 ### 专家团讨论（2026-10-19，3 个子代理并行评审，只读）
 
 共识结论：
@@ -110,3 +139,12 @@
 
 <!-- 收尾时填：做成了什么、留了什么坑。
      例：已修复，但只覆盖 UTF-8；GBK 另开任务 -->
+
+## 执行记录
+
+<!-- 本节由脚本维护：new / claim / set / close / log 自动追加，请勿手改。
+     要补一条就跑 progress.py log --id <任务号> --note "做了什么"。 -->
+
+- 2026-10-19 13:07:10 · log · @GuoJia-Agent · SKILL.md 瘦身到 9.2KB 并拆出 references（技能评审）
+- 2026-10-19 13:32:58 · log · @GuoJia-Agent · description 重写为纯触发条件（168 字符）
+- 2026-10-19 13:35:13 · log · @GuoJia-Agent · 发版 skill 1.2.1 / plugin 0.0.55

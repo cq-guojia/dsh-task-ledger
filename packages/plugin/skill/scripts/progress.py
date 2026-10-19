@@ -55,7 +55,7 @@ HISTORY_TITLE = "# 进度历史（已结案）"
 # 但「谁建的」不变）。看板「新增（我的）= 我创建的」要它；旧 8 列无此列，
 # upgrade_history / cmd_history 回链 worklog 头部「创建」行补（与 created 同一来源，不丢）。
 HISTORY_HEADER = "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |"
-HISTORY_SEP = "|---|---|---|---|---|---|---|---|"
+HISTORY_SEP = "|---|---|---|---|---|---|---|---|---|"
 FROZEN_MARK = "✅ 完成封卷"
 ID_RE = re.compile(r"[a-z0-9\u4e00-\u9fff][a-z0-9\u4e00-\u9fff-]*\Z")
 # 读侧兼容：秒可有可无（旧数据只到分）。写侧一律到秒，见 normalize_time。
@@ -1158,11 +1158,14 @@ def exec_line(when: str, who: str | None, kind: str, note: str) -> str:
 
 
 def append_exec_log(text: str, line: str) -> str:
-    """把一条记录追加到「执行记录」节末尾；文档没有这一节（老 worklog）原样返回。"""
+    """把一条记录追加到「执行记录」节末尾。
+
+    升级前建的老 worklog 没有这一节：在文末补一节再写（不迁移正文，也不让记录静默丢掉）。
+    """
     lines = text.splitlines()
     at = next((i for i, ln in enumerate(lines) if ln.strip() == EXEC_HEAD), None)
     if at is None:
-        return text
+        return text.rstrip() + f"\n\n{EXEC_HEAD}\n\n{EXEC_HINT}\n\n{line}\n"
     end = next(
         (i for i in range(at + 1, len(lines)) if lines[i].startswith("## ")), len(lines)
     )
@@ -1175,23 +1178,25 @@ def append_exec_log(text: str, line: str) -> str:
 
 def record_exec(
     repo: Path, tid: str, task: dict[str, Any], who: str | None, kind: str, note: str
-) -> None:
+) -> bool:
     """给任务的过程文档补一条执行记录（`who` = 这次动手的人，不是任务现 owner）。
 
-    调用方必须已经持有 progress_lock —— 与 close 的封卷（读全文→改写→落盘）互斥，
-    否则两条记录并发追加会互相覆盖。
+    返回是否真的落盘；`log` 用它判断要不要报错。调用方必须已经持有 progress_lock ——
+    与 close 的封卷（读全文→改写→落盘）互斥，否则两条记录并发追加会互相覆盖。
     """
     log = find_worklog(repo, tid, task)
     if log is None:
-        return
+        return False
     try:
         text = log.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
-        return
+        return False
     line = exec_line(now(), who, kind, note)
-    new_text = append_exec_log(text, line)
-    if new_text != text:
-        write_text_atomic(log, new_text)
+    try:
+        write_text_atomic(log, append_exec_log(text, line))
+    except OSError:
+        return False
+    return True
 
 
 def write_worklog(repo: Path, tid: str, task: dict[str, Any]) -> Path:
@@ -1423,7 +1428,12 @@ def cmd_log(args: argparse.Namespace) -> None:
         require_owner(task, tid, me)
         task["updated"] = now()
         commit_guarded(path, before, data)
-        record_exec(repo, tid, task, me, "log", note)
+        written = record_exec(repo, tid, task, me, "log", note)
+    if not written:
+        raise Fail(
+            f"没写进 {tid} 的过程文档（文件不存在或不可读）；progress.json 的 updated 已刷新。"
+            "先用 show --id 确认 worklog 路径，不要手写「执行记录」。"
+        )
     print(f"已记入 {tid} 的执行记录：{note}")
 
 
@@ -2099,7 +2109,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("set", help="改状态 / 交接（结案请用 close）")
     p.add_argument("--id", required=True)
     p.add_argument("--status", help=f"{' / '.join(STATUSES)}（done 请走 close）")
-    p.add_argument("--owner", help="交接给谁")
+    p.add_argument("--owner", help="交接给谁（仅供 UI / 维护者；agent 提示词不暴露）")
     add_repo(p)
     p.set_defaults(func=cmd_set)
 

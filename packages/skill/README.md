@@ -11,7 +11,7 @@
 |---|---|---|
 | 在办任务的状态 | `ledger/progress.json` | **只由脚本写** |
 | 每个任务的过程正文 | `ledger/worklog/<年月>/<日>-<时分>-<说明>-<随机码>.md` | **建档只由脚本按模板做**，之后正文 **agent 直接编辑** |
-| 已结案任务，一行一条（8 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / 摘要 / 过程文档） | `ledger/history/<年月>.md`（按**结案时间**分月；存量 `ledger/PROGRESS-HISTORY.md` 只读兼容、永不重写） | **只由脚本写**；查询走 `history` 子命令 |
+| 已结案任务，一行一条（9 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / creator / 摘要 / 过程文档） | `ledger/history/<年月>.md`（按**结案时间**分月；存量 `ledger/PROGRESS-HISTORY.md` 只读兼容、永不重写） | **只由脚本写**；查询走 `history` 子命令 |
 
 覆盖的动作：建任务、认领、交接、改状态、结案、查在办、查历史、体检。
 
@@ -102,7 +102,7 @@
 
 ### 只能改自己的任务
 
-`set` 和 `close` 都先取身份，再校验「这个任务的 owner 是不是你」：**不是就拒绝**；任务还没人认领（`open`）也拒绝，提示先 `claim`。要接手就走 `set --owner` 交接 —— 一次显式动作。
+`set`、`close` 和 `log` 都先取身份，再校验「这个任务的 owner 是不是你」：**不是就拒绝**；任务还没人认领（`open`）也拒绝，提示先 `claim`。要接手就走 `set --owner` 交接 —— 一次显式动作。
 
 理由有两层：一是别人替你结案，你会失去对进度的掌控；二是如果只取了身份却不校验归属，`owner` 这个字段就只是个装饰品。
 
@@ -199,7 +199,7 @@ stateDiagram-v2
 
 - `done` **只能由 `close` 产生**；`set --status done` 会被拒绝
 - **退回未认领**：owner 用 `set --status open` 把任务退回去，owner 清空、之后别人可以重新 `claim`；这条不能与 `--owner` 同时给
-- `set --owner <某人>` 是**交接**，由当前 owner 执行，执行后 owner 换成那个人
+- `set --owner <某人>` 是**交接**，由当前 owner 执行，执行后 owner 换成那个人。**该能力只为将来的 UI 保留**：SKILL.md 不向 agent 暴露它，换人一律走「释放 → 认领」，避免随便编一个名字挂上去
 - 状态表里不允许残留 `done`（`validate` 会报）
 
 ### 命令一览
@@ -209,11 +209,13 @@ stateDiagram-v2
 | `init` | 建状态表 | 否 | 否 |
 | `new` | 建任务并建档 | **是**（记 creator） | 是 |
 | `claim` | 认领待认领任务 | **是** | 是 |
-| `set` | 改状态 / 交接 | **是**（且必须是该任务的 owner） | 是 |
+| `set` | 改状态 / 交接 / 释放认领（`--status open`） | **是**（且必须是该任务的 owner） | 是 |
+| `log` | 往 worklog「执行记录」补一条 | **是**（且必须是该任务的 owner） | 否（只回一行确认） |
 | `close` | 结案归档 | **是**（且必须是该任务的 owner） | 否 |
 | `list` | 查在办任务 | 仅 `--mine` | 否 |
 | `history` | 查已结案任务（只读） | 仅 `--mine` | 否（只给过程文档链接） |
 | `show` | 单任务详情 | 否 | 是 |
+| `tags` | 分类/标签巡检（`--all` 只读）/ 归并（`--rename` 批量写） | 否 | 否 |
 | `validate` | 校验一致性 | 否 | 否 |
 
 参数细节看 `SKILL.md`，或直接跑 `<子命令> --help`。
@@ -223,6 +225,7 @@ stateDiagram-v2
 | 命令 | 返回 |
 |---|---|
 | `new` / `claim` / `set` / `show` | 状态行 + 该任务过程文档的**路径与全文** |
+| `log` | 一行确认（记了什么） |
 | `close` | 结案结果与摘要 |
 | `list` | 在办任务列表（不含正文，避免撑爆上下文） |
 | `history` | 已结案紧凑列表（默认不含摘要，避免撑爆上下文） |
@@ -247,3 +250,9 @@ stateDiagram-v2
 
 1. 本 skill 位于工作区 `_Skills/task-ledger/`；是否安装到全局 skill 目录由使用者决定 —— 未安装时其它项目不会自动触发。
 2. `scripts/progress.py` 里的 `FALLBACK_TEMPLATE` 是**无注释的最小骨架**，只在 `assets/worklog.md` 读不到时启用 —— 两处注释多寡不同不是缺陷，**正例只放模板文件**。
+
+## 五、维护者须知
+
+- `SKILL.md` 的 frontmatter `version` 与 `package.json` 的 `version` 保持同值；发版时一起改，打 `skill-v<version>` tag。
+- **`SKILL.md` 是每次会话整份注入的**：只放「不做就会写错数据」的规则与路由，细节进 `references/`（按需读，索引在 SKILL.md 末尾）。加体积前先自问「脚本或 `--help` 能不能兜住」。
+- 改完跑 `cd packages/plugin && npm run verify`（build + typecheck + smoke）；`copy-skill` 会把 `scripts/` `assets/` `references/` 一并拷进插件内嵌副本，不要直接改那份拷贝。
