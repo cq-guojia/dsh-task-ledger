@@ -106,18 +106,22 @@ export interface ClosedSummary {
 export interface BoardStats {
     /** 我的 doing（旧数据里的 blocked 也算进行中）。 */
     readonly myActive: number;
-    /** 我的阻塞（接任务至今满 OVERDUE_DAYS 天未结案）。 */
+    /** 我的超期（接任务至今满 OVERDUE_DAYS 天未结案）。 */
     readonly myOverdue: number;
     /** 待认领（open）。 */
     readonly open: number;
     /** 全部 doing（旧数据里的 blocked 也算进行中）。 */
     readonly doing: number;
-    /** 全部阻塞——按时间判定，不是状态。 */
+    /** 全部超期——按时间判定，不是状态。 */
     readonly overdue: number;
     /** 停滞 = 进行中且 updated 至今满 STALE_DAYS 天没更新。 */
     readonly stale: number;
-    /** 停滞阈值（天）——随响应下发，界面文案不硬编码（单一真源）。 */
+    /** 积压 = 待认领且 created 至今满 BACKLOG_DAYS 天没人接。 */
+    readonly backlog: number;
+    /** 停滞 / 超期 / 积压阈值（天）——随响应下发，界面文案不硬编码（单一真源）。 */
     readonly staleDays: number;
+    readonly overdueDays: number;
+    readonly backlogDays: number;
     /** 最老一条待认领躺了多少天（没有待认领 = null）。 */
     readonly oldestOpenDays: number | null;
 }
@@ -127,8 +131,10 @@ export interface BoardTask extends TaskRow {
     readonly ageDays: number | null;
     /** 停滞标记：updated 至今满 STALE_DAYS 天没更新（与 ageDays 无关）。 */
     readonly stale: boolean;
-    /** 阻塞标记：接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */
+    /** 超期标记：接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */
     readonly overdue: boolean;
+    /** 积压标记：待认领且创建至今满 BACKLOG_DAYS 天没人接。 */
+    readonly backlog: boolean;
 }
 export interface BoardSnapshot {
     readonly at: string;

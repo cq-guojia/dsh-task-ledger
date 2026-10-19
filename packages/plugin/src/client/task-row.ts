@@ -10,9 +10,9 @@
  *    行 = 一条淡分隔线格：上下居中的状态圆点 + 任务（标题行 + 标签行；**标签行最前是状态标签**）
  *    + **执行人列**（原状态位，有执行人才摆 `@名字` 标签）+ 最右「@创建人 创建于 年-月-日 时:分:秒」
  *    （悬停掉时分秒并让位给操作钮）+ 查看。
- *    状态一律**标签型、四色**（用户 2026-10-18：原来是一排素字 / pill，现在与人员**位置互换**）：
- *    灰=待认领 / 蓝=进行中 / 黄=阻塞 / 红=停滞；停滞标签悬停给**配置出来的**阈值解释
- *    （staleDays 由 host 下发）。圆点颜色同色系。
+ *    状态一律**标签型、五色**（用户 2026-10-18：原来是一排素字 / pill，现在与人员**位置互换**）：
+ *    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=超期 / 红=停滞；三个异常标签悬停给**配置出来的**
+ *    阈值解释（staleDays / overdueDays / backlogDays 由 host 下发）。圆点颜色同色系。
  *
  * 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
  *
@@ -28,7 +28,13 @@ import { CLOSED_ACTIONS, resolveActions, type Row } from './rows'
 import type { BoardPayload } from './types'
 import { Tag } from './ui'
 
-type Tone = 'doing' | 'blocked' | 'stale' | 'open' | 'closed'
+type Tone = 'doing' | 'overdue' | 'stale' | 'backlog' | 'open' | 'closed'
+
+/**
+ * ⚠️ 调试态（用户 2026-10-19）：第二区**第一条**把全部状态标签一次摆出来，看全五枚色块。
+ * 定稿后：删掉本常量与 `debugAllTones` 这一路，标签行回到按 `tone` 取一枚。
+ */
+const DEBUG_TONES = ['open', 'backlog', 'doing', 'overdue', 'stale'] as const
 
 /** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
 function titleOf(row: Row): string {
@@ -37,11 +43,12 @@ function titleOf(row: Row): string {
   return title !== undefined && title !== '' ? title : row.record.src ?? '—'
 }
 
-/** 状态语义（异常优先：stale 盖过 blocked；blocked 是 host 按 7 天算出来的，不是状态）。 */
+/** 状态语义（异常优先：停滞 > 超期 > 积压；三者都是 host 按时间算出来的，不是状态）。 */
 function toneOf(row: Row): Tone {
   if (row.kind !== 'task') return 'closed'
   if (row.task.stale === true) return 'stale'
-  if (row.task.overdue === true) return 'blocked'
+  if (row.task.overdue === true) return 'overdue'
+  if (row.task.backlog === true) return 'backlog'
   if (row.task.status === 'open') return 'open'
   return 'doing'
 }
@@ -49,7 +56,8 @@ function toneOf(row: Row): Tone {
 /** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 function statusLabel(tone: Tone, t: Translate): string | null {
   if (tone === 'stale') return t('statusStale')
-  if (tone === 'blocked') return t('statusBlocked')
+  if (tone === 'overdue') return t('statusOverdue')
+  if (tone === 'backlog') return t('statusBacklog')
   if (tone === 'open') return t('statusOpen')
   if (tone === 'doing') return t('statusActive')
   return null
@@ -60,12 +68,12 @@ export function TaskRowView(props: {
   row: Row
   /** 形态：我的待办（卡片）/ 全部待办（表格行）——两区视觉必须不同、互不重用。 */
   variant: 'mine' | 'others'
-  /** 停滞阈值天数（host 配置值，供停滞标签的悬停解释；null = 不解释，不编造）。 */
-  staleDays?: number | null
-  /** 快照：**只**用来问动作权限（是不是我的 / 能不能认领），判定一律走 `resolveActions`。 */
+  /** 快照：问动作权限（是不是我的 / 能不能认领），并取 host 下发的三个阈值做悬停解释。 */
   board: BoardPayload | null
+  /** ⚠️ 调试态：把全部状态标签摆出来（见 DEBUG_TONES）。 */
+  debugAllTones?: boolean
 }): ReactNode {
-  const { t, row, variant, staleDays, board } = props
+  const { t, row, variant, board, debugAllTones } = props
   const tone = toneOf(row)
   const isTask = row.kind === 'task'
   const tags = (row.kind === 'task' ? row.task.tags : row.record.tags) ?? []
@@ -76,10 +84,15 @@ export function TaskRowView(props: {
     ? formatDateTime(created).slice(0, 10)
     : null
 
-  // 停滞标签的悬停解释：内容来自 host 配置（STALE_DAYS），不是前端拍脑袋。
-  const staleTip = staleDays === null || staleDays === undefined
-    ? undefined
-    : t('statStaleTitle', { n: staleDays })
+  // 异常标签的悬停解释：天数来自 host 配置（阈值单一真源），不是前端拍脑袋；快照没到就不解释。
+  const stats = board?.stats
+  const tipOf = (tone: Tone): string | undefined => {
+    if (stats === undefined) return undefined
+    if (tone === 'stale') return t('statStaleTitle', { n: stats.staleDays })
+    if (tone === 'overdue') return t('statOverdueTitle', { n: stats.overdueDays })
+    if (tone === 'backlog') return t('statBacklogTitle', { n: stats.backlogDays })
+    return undefined
+  }
 
   // 动作权限：**唯一**判定（用户 2026-10-18）——两区同一套，不许各判各的；本文件只按返回值画。
   const actions = isTask ? resolveActions(row.task, board) : CLOSED_ACTIONS
@@ -99,16 +112,15 @@ export function TaskRowView(props: {
   const releaseButton = h('button', { type: 'button', className: 'dtl-minibtn', 'data-tip': t('tipRelease') },
     t('actionRelease'))
 
-  // 状态标签（四色实心块，用户 2026-10-18 定稿）：已结案没有在办状态 ⇒ 不摆；
-  // 停滞那枚带 host 配置的阈值解释（staleDays；没配就不解释，不编）。
-  const statusText = statusLabel(tone, t)
-  const statusTag = statusText === null || tone === 'closed'
-    ? null
-    : h(Tag, { text: statusText, tone, title: tone === 'stale' ? (staleTip ?? statusText) : statusText })
-  // 「我的待办」卡的异常标签（阻塞=黄 / 停滞=红；进行中只靠左缘色条，不再重复一枚）
-  const alarmTag = tone === 'blocked' || tone === 'stale'
-    ? h(Tag, { text: statusLabel(tone, t) ?? '', tone, title: tone === 'stale' ? staleTip : undefined })
-    : null
+  // 状态标签（五色实心块，用户 2026-10-18 定稿）：已结案没有在办状态 ⇒ 不摆；
+  // 三枚异常标签带 host 配置的阈值解释（没配就不解释，不编）。
+  const tagOf = (which: Exclude<Tone, 'closed'>): ReactNode => {
+    const text = statusLabel(which, t) ?? ''
+    return h(Tag, { key: which, text, tone: which, title: tipOf(which) ?? text })
+  }
+  const statusTag = tone === 'closed' ? null : tagOf(tone)
+  // 「我的待办」卡的异常标签（积压 / 超期 / 停滞；进行中只靠左缘色条，不再重复一枚）
+  const alarmTag = tone === 'backlog' || tone === 'overdue' || tone === 'stale' ? tagOf(tone) : null
 
   // 第一行（「我的待办」卡）：标题 + 创建徽 + 异常标签
   const titleLine = h('div', { className: 'dtl-taskrow__l1' },
@@ -140,7 +152,7 @@ export function TaskRowView(props: {
     })
     // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）
     const tagLine = h('div', { className: 'dtl-orow__tags' },
-      statusTag,
+      debugAllTones === true ? DEBUG_TONES.map(tagOf) : statusTag,
       tags.map(tag => h(Tag, { key: tag, text: `#${tag}` })),
     )
     return h('div', { className: 'dtl-orow' },

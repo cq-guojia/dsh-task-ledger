@@ -10,8 +10,10 @@ import { settleWorkspaces } from '../errors.js';
 import { daysSince } from './dates.js';
 /** 停滞阈值：进行中且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
 export const STALE_DAYS = 3;
-/** 阻塞阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板）。 */
-export const OVERDUE_DAYS = 7;
+/** 超期阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板 7 → 14 天）。 */
+export const OVERDUE_DAYS = 14;
+/** 积压阈值：待认领且 created 至今满这么多天还没人接（2026-10-19 拍板）。 */
+export const BACKLOG_DAYS = 30;
 /** 快路径读法：单工作区 readTasks + git 身份（并行；供 settle 逐工作区调）。 */
 export async function readTaskScope(workspace) {
     const [tasks, identity] = await Promise.all([readTasks(workspace), getCurrentIdentity(workspace)]);
@@ -23,13 +25,15 @@ export function computeSnapshot(scopes, now) {
         // blocked 只是旧数据（新任务不可能再有）；读侧一律当进行中
         const working = task.status === 'doing' || task.status === 'blocked';
         const ageDays = working ? daysSince(task.started ?? task.created, now) : null;
-        // 停滞看「最后更新」，阻塞看「接任务至今」——两个不同的问题，互不覆盖
+        // 停滞看「最后更新」，超期看「接任务至今」，积压看「创建至今还没人认领」——三个不同的问题，互不覆盖
         const idleDays = working ? daysSince(task.updated ?? task.started ?? task.created, now) : null;
+        const idleOpen = task.status === 'open' ? daysSince(task.created, now) : null;
         return {
             ...task,
             ageDays,
             stale: idleDays !== null && idleDays >= STALE_DAYS,
             overdue: ageDays !== null && ageDays >= OVERDUE_DAYS,
+            backlog: idleOpen !== null && idleOpen >= BACKLOG_DAYS,
         };
     }));
     const openTasks = withMeta.filter((task) => task.status === 'open');
@@ -45,7 +49,10 @@ export function computeSnapshot(scopes, now) {
         doing: withMeta.filter((task) => task.status === 'doing' || task.status === 'blocked').length,
         overdue: withMeta.filter((task) => task.overdue).length,
         stale: withMeta.filter((task) => task.stale).length,
+        backlog: withMeta.filter((task) => task.backlog).length,
         staleDays: STALE_DAYS,
+        overdueDays: OVERDUE_DAYS,
+        backlogDays: BACKLOG_DAYS,
         oldestOpenDays: openTasks.length === 0
             ? null
             : openTasks.reduce((max, task) => Math.max(max, daysSince(task.created, now) ?? 0), 0),

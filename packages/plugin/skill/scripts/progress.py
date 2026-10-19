@@ -38,7 +38,7 @@ except ImportError:
     msvcrt = None
 
 STATUSES = ("open", "doing")
-# 旧数据只读兼容：早期版本有 blocked 状态（手动标「卡住」）。现在阻塞按时间判定
+# 旧数据只读兼容：早期版本有 blocked 状态（手动标「卡住」）。现在超期按时间判定
 # （接任务满 7 天），不再允许新写入；list / validate / 看板仍能吃老文件。
 LEGACY_STATUSES = ("blocked",)
 PROGRESS_REL = Path("ledger/progress.json")
@@ -1364,7 +1364,7 @@ def cmd_set(args: argparse.Namespace) -> None:
         )
     if status == "blocked":
         raise Fail(
-            "没有 blocked 状态：阻塞由时间自动判定（接任务满 7 天仍未结案），"
+            "没有 blocked 状态：超期由时间自动判定（接任务满 14 天仍未结案），"
             "状态只有 open / doing；卡在哪里请写进 worklog。"
         )
     if status == "done":

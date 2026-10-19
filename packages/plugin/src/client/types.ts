@@ -35,8 +35,10 @@ export interface TaskMeta {
   readonly ageDays: number | null
   /** 停滞 = 进行中且 updated 至今满 STALE_DAYS 天没更新。 */
   readonly stale: boolean
-  /** 阻塞 = 进行中且接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */
+  /** 超期 = 进行中且接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */
   readonly overdue: boolean
+  /** 积压 = 待认领且 created 至今满 BACKLOG_DAYS 天没人接。 */
+  readonly backlog: boolean
 }
 
 /** 在办行 = 任务 + host 附加字段。 */
@@ -106,11 +108,15 @@ export interface BoardStats {
   readonly myOverdue: number
   readonly open: number
   readonly doing: number
-  /** 阻塞（按时间判定，不是状态）。 */
+  /** 超期（按时间判定，不是状态）。 */
   readonly overdue: number
   readonly stale: number
-  /** 停滞阈值（天）——界面文案用它，不硬编码。 */
+  /** 积压（待认领超期，按时间判定）。 */
+  readonly backlog: number
+  /** 三个阈值（天）——界面文案用它，不硬编码。 */
   readonly staleDays: number
+  readonly overdueDays: number
+  readonly backlogDays: number
   readonly oldestOpenDays: number | null
 }
 

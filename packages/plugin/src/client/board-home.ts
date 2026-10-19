@@ -162,12 +162,17 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                   card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myOverdue })),
                   card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) })),
                   card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive })),
-                  // 阻塞 · 停滞合并卡：主数字 = 阻塞 + 停滞合计，小字拆开报数（用户 2026-10-18）
+                  // 异常合并卡：主数字 = 积压 + 超期 + 停滞合计，小字拆开报数（用户 2026-10-18；
+                  // 2026-10-19 加积压。保持 4 张一行 ⇒ 绝不拆成 5 张）
                   h(StatCard, {
-                    label: t('statBlockedStale'),
-                    value: stats.overdue + stats.stale,
-                    hint: t('statBlockedSplit', { blocked: stats.overdue, stale: stats.stale }),
-                    title: t('statStaleTitle', { n: stats.staleDays }),
+                    label: t('statAlarm'),
+                    value: stats.backlog + stats.overdue + stats.stale,
+                    hint: t('statAlarmSplit', { backlog: stats.backlog, overdue: stats.overdue, stale: stats.stale }),
+                    title: [
+                      t('statBacklogTitle', { n: stats.backlogDays }),
+                      t('statOverdueTitle', { n: stats.overdueDays }),
+                      t('statStaleTitle', { n: stats.staleDays }),
+                    ].join('；'),
                     interactive: false,
                   }),
                   // 第二行 · 统计台（自然周期，不可点）
@@ -268,7 +273,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                       view.mine.length === 0
                         ? h(EmptyState, { tone: 'guide', title: t('mineEmpty'), hint: t('mineEmptyHint') })
                         : view.mine.map(row => h(TaskRowView, {
-                          key: row.key, t, row, variant: 'mine', staleDays: board?.stats.staleDays ?? null, board,
+                          key: row.key, t, row, variant: 'mine', board,
                         })),
                       // 第二区：全部待办 —— **永远渲染**（用户 2026-10-18：选「进行中」没数据也不能整块消失；
                       // 且不要过滤掉自己，所以含我的任务，会与第一区重叠——顶部快看 / 底部全量）；
@@ -288,7 +293,8 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                               { value: 'all', label: t('statusAll'), badge: orZero(view.allCounts.total) },
                               { value: 'active', label: t('statusActive'), badge: orZero(view.allCounts.doing) },
                               { value: 'open', label: t('statusOpen'), badge: orZero(view.allCounts.open) },
-                              { value: 'overdue', label: t('statusBlocked'), badge: orZero(view.allCounts.overdue) },
+                              { value: 'backlog', label: t('statusBacklog'), badge: orZero(view.allCounts.backlog) },
+                              { value: 'overdue', label: t('statusOverdue'), badge: orZero(view.allCounts.overdue) },
                               { value: 'stale', label: t('statusStale'), badge: orZero(view.allCounts.stale) },
                             ],
                             onChange: (next) => { setQuery({ status: next }) },
@@ -311,8 +317,8 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                             h(Button, { variant: 'primary', size: 'md', onClick: onBack }, t('allEmptyAction')),
                           )
                           : h('div', { style: { marginTop: 'var(--dtl-space-2)' } },
-                            view.groups.map(group => h(WorkspaceGroupView, {
-                              key: group.workspaceId, t, group, staleDays: board?.stats.staleDays ?? null, board,
+                            view.groups.map((group, index) => h(WorkspaceGroupView, {
+                              key: group.workspaceId, t, group, board, debugFirstRow: index === 0,
                             })),
                           ),
                       ),
@@ -330,21 +336,23 @@ function orZero(n: number): number | undefined {
 
 /** 一个工作区分组（全部待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
  *  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
- *  阻塞 / 停滞**只在 >0 时出现**。 */
+ *  积压 / 超期 / 停滞**只在 >0 时出现**。 */
 function WorkspaceGroupView(props: {
   t: Translate
   group: WorkspaceGroup
-  staleDays?: number | null
   /** 传下去只为问动作权限（是不是我的）——第二区含我的任务，按钮得跟第一区一致。 */
   board: BoardPayload | null
+  /** ⚠️ 调试态：本组第一条把全部状态标签摆出来（见 task-row 的 DEBUG_TONES）。 */
+  debugFirstRow?: boolean
 }): ReactNode {
-  const { t, group, staleDays, board } = props
+  const { t, group, board, debugFirstRow } = props
   const [open, setOpen] = useState(group.rows.length <= GROUP_COLLAPSE_OVER)
   const stats = [
     t('groupTotal', { n: group.total }),
     t('groupOpen', { n: group.openCount }),
     t('groupDoing', { n: group.doingCount }),
-    ...(group.overdueCount > 0 ? [t('groupBlocked', { n: group.overdueCount })] : []),
+    ...(group.backlogCount > 0 ? [t('groupBacklog', { n: group.backlogCount })] : []),
+    ...(group.overdueCount > 0 ? [t('groupOverdue', { n: group.overdueCount })] : []),
     ...(group.staleCount > 0 ? [t('groupStale', { n: group.staleCount })] : []),
   ].join(' ｜ ')
   return h('div', { className: 'dtl-group' },
@@ -368,8 +376,9 @@ function WorkspaceGroupView(props: {
     open
       ? h('div', null,
         // 无列头行（用户 2026-10-18：表头就是段头——左工作区名、右统计，不放「任务/创建人」那排）
-        group.rows.map(row => h(TaskRowView, {
-          key: row.key, t, row, variant: 'others', staleDays, board,
+        group.rows.map((row, index) => h(TaskRowView, {
+          key: row.key, t, row, variant: 'others', board,
+          debugAllTones: debugFirstRow === true && index === 0,
         })),
       )
       : null,

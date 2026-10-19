@@ -13,13 +13,14 @@ export type Row =
   | { kind: 'task'; key: string; task: BoardTask; mine: boolean }
   | { kind: 'closed'; key: string; record: HistoryRecord }
 
-/** 一个工作区分组（计数口径：待认领 / 进行中 / 阻塞 / 停滞 / 总，供「全部待办」段头统计）。 */
+/** 一个工作区分组（计数口径：待认领 / 进行中 / 积压 / 超期 / 停滞 / 总，供「全部待办」段头统计）。 */
 export interface WorkspaceGroup {
   readonly workspaceId: string
   readonly title: string
   readonly doingCount: number
   readonly overdueCount: number
   readonly staleCount: number
+  readonly backlogCount: number
   readonly openCount: number
   readonly total: number
   readonly rows: readonly Row[]
@@ -31,13 +32,14 @@ export interface BoardView {
   readonly groups: readonly WorkspaceGroup[]
   /** 第二区（全部待办）任务数。 */
   readonly total: number
-  /** 第二区全量计数（**不受状态过滤影响**，供 segmented 角标；停滞是独立标记；含我的）。 */
+  /** 第二区全量计数（**不受状态过滤影响**，供 segmented 角标；异常标记相互独立；含我的）。 */
   readonly allCounts: {
     readonly total: number
     readonly doing: number
     readonly open: number
     readonly overdue: number
     readonly stale: number
+    readonly backlog: number
   }
 }
 
@@ -85,11 +87,12 @@ export function resolveActions(task: BoardTask, board: BoardPayload | null): Tas
 /** 已结案行（统计 tab）：只有查看，没有在办动作。 */
 export const CLOSED_ACTIONS: TaskActions = { view: true, claim: false, resume: false, finish: false, release: false }
 
-/** 状态档命中（停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
+/** 状态档命中（积压 / 超期 / 停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
 function statusHit(task: BoardTask, status: Query['status']): boolean {
   if (status === 'all') return true
   if (status === 'active') return task.status === 'doing' || task.status === 'blocked'
   if (status === 'open') return task.status === 'open'
+  if (status === 'backlog') return task.backlog === true
   if (status === 'overdue') return task.overdue === true
   return task.stale === true
 }
@@ -112,7 +115,7 @@ function inGroupOrder(a: Row, b: Row): number {
 export function selectView(current: { board: BoardPayload | null; query: Query }): BoardView {
   const { board, query } = current
   if (board === null) {
-    return { mine: [], groups: [], total: 0, allCounts: { total: 0, doing: 0, open: 0, overdue: 0, stale: 0 } }
+    return { mine: [], groups: [], total: 0, allCounts: { total: 0, doing: 0, open: 0, overdue: 0, stale: 0, backlog: 0 } }
   }
   const allTasks = board.tasks
   const allCounts = {
@@ -121,6 +124,7 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
     open: allTasks.filter((task) => task.status === 'open').length,
     overdue: allTasks.filter((task) => task.overdue === true).length,
     stale: allTasks.filter((task) => task.stale === true).length,
+    backlog: allTasks.filter((task) => task.backlog === true).length,
   }
   const mineRows: Row[] = board.tasks
     .filter((task) => isMine(task, board))
@@ -148,6 +152,7 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
       doingCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'doing').length,
       overdueCount: entry.rows.filter((row) => row.kind === 'task' && row.task.overdue === true).length,
       staleCount: entry.rows.filter((row) => row.kind === 'task' && row.task.stale === true).length,
+      backlogCount: entry.rows.filter((row) => row.kind === 'task' && row.task.backlog === true).length,
       openCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'open').length,
       total: entry.rows.length,
       rows: entry.rows.sort(inGroupOrder),

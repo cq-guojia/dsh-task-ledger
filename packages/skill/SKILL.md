@@ -34,7 +34,7 @@ allowed-tools: Read,Write,Bash,Grep
 | 「谁在做 X」「有哪些在办」 | `list`；在等认领的加 `--status open` |
 | 「这个任务到哪一步了」「这轮做了什么」 | `show --id`（任务 JSON + worklog 全文） |
 | 「某件老活什么时候做的」「谁做过哪些活」 | `history`（可按 `--owner` / `--since` 筛） |
-| 「哪些任务停太久」 | `list --json`：`updated` 满 3 天＝停滞、`started` 满 7 天＝阻塞（看板算，别改状态） |
+| 「哪些任务停太久」 | `list --json`：`updated` 满 3 天＝停滞、`started` 满 14 天＝超期、`created` 满 30 天仍 `open`＝积压（看板算，别改状态） |
 | 「新建一个任务」 | `new`（`--self` = 建完即认领） |
 | 「这活我领了」 | `claim`（只对 `open` 有效） |
 | 「开始做 / 接着做 X」 | 还是 `open` 就先 `claim`；已是 `doing` 就直接改正文 + `log` |
@@ -61,7 +61,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 
 ## 铁律
 
-- **状态只有 `open` / `doing`**；`done` 只能由 `close` 产生。**没有 `blocked` 状态**：阻塞 = `started` 满 7 天、停滞 = `updated` 满 3 天，都由看板按时间算，`progress.json` 里不存、不手改；卡在哪写进正文。
+- **状态只有 `open` / `doing`**；`done` 只能由 `close` 产生。**没有 `blocked` 状态**：超期 = `started` 满 14 天、停滞 = `updated` 满 3 天、积压 = `created` 满 30 天且仍 `open`，都由看板按时间算，`progress.json` 里不存、不手改；卡在哪写进正文。
 - **`log` 就是刷新 `updated` 的动作**：该记不记，任务会被看板标成停滞。
 - **owner = 当前 `git config user.name`**，不能由外部传入；读不到就报错（先让用户配 git）。**只能动自己名下**的任务（`open` 的先 `claim`），不是你的直接拒绝 —— 不要绕过脚本改 JSON。
 - **换人只能「释放 → 认领」**：skill 不提供交接，随便写的名字都是假的。

@@ -79,11 +79,12 @@ const UI_BASE_CSS = `
 /* 「查看」钮在表格行里也要常驻布局（display:none 会不算宽度 ⇒ hover 一出就又把行撑开） */
 .dtl-orow .dtl-viewbtn{display:inline-flex;visibility:hidden;}
 .dtl-orow:hover .dtl-viewbtn{visibility:visible;}
-/* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=阻塞 / 红=停滞；
+/* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=积压 / 橙=超期 / 红=停滞；
    6px（用户 2026-10-18：8px 太大） */
 .dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
 .dtl-dot--doing{background:var(--dtl-business-dim);}
-.dtl-dot--blocked{background:var(--dtl-warning);}
+.dtl-dot--backlog{background:var(--dtl-warning);}
+.dtl-dot--overdue{background:var(--dtl-overdue);}
 .dtl-dot--stale{background:var(--dtl-danger);}
 .dtl-dot--open,.dtl-dot--closed{background:var(--dtl-fg-3);}
 
@@ -112,7 +113,8 @@ const UI_BASE_CSS = `
 /* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
 .dtl-rail{display:inline-block;width:6px;height:36px;flex:none;border-radius:var(--dtl-radius-xs);}
 .dtl-rail--doing{background:var(--dtl-business);}
-.dtl-rail--blocked{background:var(--dtl-warning);}
+.dtl-rail--backlog{background:var(--dtl-warning);}
+.dtl-rail--overdue{background:var(--dtl-overdue);}
 .dtl-rail--stale{background:var(--dtl-danger);}
 .dtl-rail--open,.dtl-rail--closed{background:var(--dtl-fg-3);}
 
@@ -139,11 +141,12 @@ const UI_BASE_CSS = `
   background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
 /* 状态四色 = **实心色块**（用户 2026-10-18：彩色字看不清 ⇒ 改色块 + 反色字）：
-   待认领灰 / 进行中蓝 / 阻塞黄 / 停滞红（与行首圆点同色系）。
+   待认领灰 / 进行中蓝 / 积压黄 / 超期橙 / 停滞红（与行首圆点同色系）。
    红黄蓝都是中调 ⇒ 白字两个主题都可读；灰块用「字色底 + 面色字」⇒ 明暗自动反过来 */
 .dtl-tag--open{background:var(--dtl-fg-3);color:var(--dtl-surface-1);font-weight:600;}
 .dtl-tag--doing{background:var(--dtl-business);color:var(--dtl-on-signal);font-weight:600;}
-.dtl-tag--blocked{background:var(--dtl-warning);color:var(--dtl-on-signal);font-weight:600;}
+.dtl-tag--backlog{background:var(--dtl-warning);color:var(--dtl-on-signal);font-weight:600;}
+.dtl-tag--overdue{background:var(--dtl-overdue);color:var(--dtl-on-signal);font-weight:600;}
 .dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
 /* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
 .dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
@@ -449,7 +452,7 @@ function displayWidth(text: string): number {
  */
 export function Tag(props: {
   text: string
-  tone?: 'neutral' | 'open' | 'doing' | 'blocked' | 'stale' | 'person'
+  tone?: 'neutral' | 'open' | 'backlog' | 'doing' | 'overdue' | 'stale' | 'person'
   /** 悬停提示（被截时才显示；默认 = 文本本身）。 */
   title?: string
 }): ReactNode {

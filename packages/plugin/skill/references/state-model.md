@@ -1,6 +1,6 @@
 # 状态与时间模型
 
-> TL;DR：状态只有 `open` / `doing`；`done` 由 `close` 产生。阻塞 = `started` 满 7 天、停滞 = `updated` 满 3 天，看板算、不存字段。`updated` 由 `new/claim/set/log` 刷新。owner 只取当前 git 身份。
+> TL;DR：状态只有 `open` / `doing`；`done` 由 `close` 产生。超期 = `started` 满 14 天、停滞 = `updated` 满 3 天、积压 = `created` 满 30 天仍 `open`，看板算、不存字段。`updated` 由 `new/claim/set/log` 刷新。owner 只取当前 git 身份。
 
 ## 状态机
 
@@ -12,15 +12,16 @@ doing ──set --status open──> open          # 释放认领，执行记录
 - `open`：已建、等认领。`doing`：已认领、在做。`done` 只由 `close` 产生。
 - **没有 `blocked` 状态**（2026-10-19 取消）。旧数据里残留的 `blocked` 读侧当进行中：`list --status blocked` 可捞出，用 `set --status doing` 归位；新写入一律拒绝。
 
-## 两个标记（看板计算，不是状态）
+## 三个标记（看板计算，不是状态）
 
 | 标记 | 依据 | 阈值 |
 |---|---|---|
-| 阻塞 | `started`（接任务）至今，中途更新不影响 | 满 7 天 |
+| 积压 | `created`（建了）至今仍 `open`（没人认领） | 满 30 天 |
+| 超期 | `started`（接任务）至今，中途更新不影响 | 满 14 天 |
 | 停滞 | `updated`（最后推进）至今 | 满 3 天 |
 
-- 真源：`packages/plugin/src/host/services/home.service.ts` 的 `OVERDUE_DAYS = 7` / `STALE_DAYS = 3`；看板随响应下发 `staleDays`，界面文案不硬编码。
-- 脚本不算这两个值，`progress.json` 里也不存；agent 要回答「哪些停太久」时用 `list --json` 的 `updated` / `started` 与当前时间比。
+- 真源：`packages/plugin/src/host/services/home.service.ts` 的 `BACKLOG_DAYS = 30` / `OVERDUE_DAYS = 14` / `STALE_DAYS = 3`；看板随响应下发三个天数，界面文案不硬编码。
+- 脚本不算这三个值，`progress.json` 里也不存；agent 要回答「哪些停太久」时用 `list --json` 的 `created` / `updated` / `started` 与当前时间比。
 - 老数据没有 `updated` 时，读侧回退到 `started`，再到 `created`。
 
 ## 时间

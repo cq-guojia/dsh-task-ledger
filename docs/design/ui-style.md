@@ -13,7 +13,7 @@
 
 宿主 primitives **没有 Table / DataGrid / List / 排序 / 分页 / 虚拟滚动件**；最接近的行件是 `DisclosureRow`，状态件 `StateDot`，文件类型图标 `FileTypeIcon`，约 370 个 `Icon*`。
 
-台账看板的列表行按官方 token 与几何自绘 —— **已定稿并落码**，见 [`features/board-home.md`](features/board-home.md) §二（`StateDot` 状态语义 open=idle / doing=ongoing / 阻塞·停滞=warning·danger（按时间算）/ 已结案=done；空态三分）。
+台账看板的列表行按官方 token 与几何自绘 —— **已定稿并落码**，见 [`features/board-home.md`](features/board-home.md) §二（`StateDot` 状态语义 open=idle / doing=ongoing / 积压·超期·停滞=warning·overdue·danger（按时间算）/ 已结案=done；空态三分）。
 
 右上浮标入口（`shell.overlay`）两条注意：浮层默认 `pointer-events:none`、子元素自动恢复 ⇒ 自绘条目不挡下方应用；定位用宿主变量 `--dsh-frame-overlay-top`（标题栏净空 + 20px），不要写死 top 值。
 

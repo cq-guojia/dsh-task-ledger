@@ -16,7 +16,8 @@ export type LocaleKey =
   | 'statsPlaceholder'
   // 统计卡
   | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint' | 'statStaleTitle'
-  | 'statDoing' | 'statDoingHint' | 'statBlockedStale' | 'statStaleWord' | 'statStaleHint' | 'statBlockedSplit'
+  | 'statDoing' | 'statDoingHint' | 'statAlarm' | 'statStaleWord' | 'statStaleHint' | 'statAlarmSplit'
+  | 'statOverdueTitle' | 'statBacklogTitle'
   | 'statWeekDone' | 'statLastWeekDone' | 'statMonthDone' | 'statLastMonthDone' | 'statCreatedHint'
   | 'daysNone' | 'daysValue'
   // 趋势图
@@ -25,12 +26,12 @@ export type LocaleKey =
   | 'periodRange'
   // 筛选行
   | 'scopeLabel' | 'scopeMine' | 'scopeAll'
-  | 'statusLabel' | 'statusAll' | 'statusActive' | 'statusOpen' | 'statusBlocked' | 'statusStale'
+  | 'statusLabel' | 'statusAll' | 'statusActive' | 'statusOpen' | 'statusBacklog' | 'statusOverdue' | 'statusStale'
   | 'workspaceLabel' | 'workspaceAll'
   | 'searchPlaceholder'
   // 列表分区
   | 'regionMine' | 'regionAll' | 'showingCount'
-  | 'groupTotal' | 'groupOpen' | 'groupDoing' | 'groupBlocked' | 'groupStale'
+  | 'groupTotal' | 'groupOpen' | 'groupDoing' | 'groupBacklog' | 'groupOverdue' | 'groupStale'
   | 'colTask' | 'colCreator' | 'colOwner' | 'colStatus' | 'colTime'
   | 'allEmptyTitle' | 'allEmptyHint' | 'allEmptyAction'
   | 'expandAria' | 'collapseAria'
@@ -64,16 +65,18 @@ export const zh: Record<LocaleKey, string> = {
   statsPlaceholder: '统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。',
 
   statMyActive: '我的待办',
-  statMyActiveHint: '阻塞 {n} 条',
+  statMyActiveHint: '超期 {n} 条',
   statOpen: '待认领',
   statOpenHint: '最长未认领 {n}',
   statDoing: '进行中',
   statDoingHint: '其他成员负责 {n} 条',
-  statBlockedStale: '阻塞 · 停滞',
+  statAlarm: '积压 · 超期 · 停滞',
   statStaleWord: '停滞',
   statStaleHint: '{n} 条',
-  statBlockedSplit: '阻塞 {blocked} ｜ 停滞 {stale}',
-  statStaleTitle: '停滞 = 进行中或阻塞超过 {n} 天未更新',
+  statAlarmSplit: '积压 {backlog} ｜ 超期 {overdue} ｜ 停滞 {stale}',
+  statStaleTitle: '停滞 = 进行中满 {n} 天没更新',
+  statOverdueTitle: '超期 = 认领后满 {n} 天还没结案',
+  statBacklogTitle: '积压 = 待认领满 {n} 天没人接',
   statWeekDone: '本周完成',
   statLastWeekDone: '上周完成',
   statMonthDone: '本月完成',
@@ -104,7 +107,8 @@ export const zh: Record<LocaleKey, string> = {
   statusAll: '全部',
   statusActive: '进行中',
   statusOpen: '待认领',
-  statusBlocked: '阻塞',
+  statusBacklog: '积压',
+  statusOverdue: '超期',
   statusStale: '停滞',
   workspaceLabel: '工作区',
   workspaceAll: '全部工作区',
@@ -116,7 +120,8 @@ export const zh: Record<LocaleKey, string> = {
   groupTotal: '共 {n} 条',
   groupOpen: '待办 {n} 条',
   groupDoing: '进行中 {n} 条',
-  groupBlocked: '阻塞 {n} 条',
+  groupBacklog: '积压 {n} 条',
+  groupOverdue: '超期 {n} 条',
   groupStale: '停滞 {n} 条',
   colTask: '任务',
   colCreator: '创建人',
@@ -186,16 +191,18 @@ export const en: Record<LocaleKey, string> = {
   statsPlaceholder: 'Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.',
 
   statMyActive: 'My todos',
-  statMyActiveHint: 'blocked {n}',
+  statMyActiveHint: 'overdue {n}',
   statOpen: 'Unclaimed',
   statOpenHint: 'longest unclaimed {n}',
   statDoing: 'In progress',
   statDoingHint: 'owned by other members: {n}',
-  statBlockedStale: 'Blocked · Stale',
+  statAlarm: 'Backlog · Overdue · Stale',
   statStaleWord: 'Stale',
   statStaleHint: '{n}',
-  statBlockedSplit: '{blocked} blocked ｜ {stale} stale',
-  statStaleTitle: 'stale = active or blocked with no update for {n}+ days',
+  statAlarmSplit: '{backlog} backlog ｜ {overdue} overdue ｜ {stale} stale',
+  statStaleTitle: 'stale = active with no update for {n}+ days',
+  statOverdueTitle: 'overdue = claimed {n}+ days ago and still open',
+  statBacklogTitle: 'backlog = unclaimed for {n}+ days',
   statWeekDone: 'Done this week',
   statLastWeekDone: 'Done last week',
   statMonthDone: 'Done this month',
@@ -226,7 +233,8 @@ export const en: Record<LocaleKey, string> = {
   statusAll: 'All',
   statusActive: 'Active',
   statusOpen: 'Unclaimed',
-  statusBlocked: 'Blocked',
+  statusBacklog: 'Backlog',
+  statusOverdue: 'Overdue',
   statusStale: 'Stale',
   workspaceLabel: 'Workspace',
   workspaceAll: 'All workspaces',
@@ -238,7 +246,8 @@ export const en: Record<LocaleKey, string> = {
   groupTotal: '{n} total',
   groupOpen: '{n} open',
   groupDoing: '{n} active',
-  groupBlocked: '{n} blocked',
+  groupBacklog: '{n} backlog',
+  groupOverdue: '{n} overdue',
   groupStale: '{n} stale',
   colTask: 'Task',
   colCreator: 'Created by',

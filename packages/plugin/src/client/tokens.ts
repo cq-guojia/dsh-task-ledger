@@ -58,6 +58,9 @@ body{
   /* ⚠️ 宿主是 state-warn（不是 state-warning，后者无此定义） */
   --dtl-warning:var(--dsw-alias-state-warn-primary,#f59e0b);
   --dtl-danger:var(--dsw-alias-state-error-primary,#ec1313);
+  /* 超期橙：在「积压黄」与「停滞红」之间再取一档（语义阶梯 灰→黄→橙→红），
+     宿主没有现成的橙 token ⇒ 用 warn + error 两色现算，主题一换自动跟随 */
+  --dtl-overdue:color-mix(in srgb,var(--dtl-warning) 55%,var(--dtl-danger));
   --dtl-link:var(--dsw-alias-link,#3b5bdb);
   /* 语义色实面上的字（角标 / 实心提示）：红绿黄都是中调 ⇒ 白字两个主题都可读 */
   --dtl-on-signal:#fff;
