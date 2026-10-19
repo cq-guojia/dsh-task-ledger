@@ -317,8 +317,8 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                             h(Button, { variant: 'primary', size: 'md', onClick: onBack }, t('allEmptyAction')),
                           )
                           : h('div', { style: { marginTop: 'var(--dtl-space-2)' } },
-                            view.groups.map((group, index) => h(WorkspaceGroupView, {
-                              key: group.workspaceId, t, group, board, debugFirstRow: index === 0,
+                            view.groups.map(group => h(WorkspaceGroupView, {
+                              key: group.workspaceId, t, group, board,
                             })),
                           ),
                       ),
@@ -342,10 +342,8 @@ function WorkspaceGroupView(props: {
   group: WorkspaceGroup
   /** 传下去只为问动作权限（是不是我的）——第二区含我的任务，按钮得跟第一区一致。 */
   board: BoardPayload | null
-  /** ⚠️ 调试态：本组第一条把全部状态标签摆出来（见 task-row 的 DEBUG_TONES）。 */
-  debugFirstRow?: boolean
 }): ReactNode {
-  const { t, group, board, debugFirstRow } = props
+  const { t, group, board } = props
   const [open, setOpen] = useState(group.rows.length <= GROUP_COLLAPSE_OVER)
   const stats = [
     t('groupTotal', { n: group.total }),
@@ -376,9 +374,8 @@ function WorkspaceGroupView(props: {
     open
       ? h('div', null,
         // 无列头行（用户 2026-10-18：表头就是段头——左工作区名、右统计，不放「任务/创建人」那排）
-        group.rows.map((row, index) => h(TaskRowView, {
+        group.rows.map(row => h(TaskRowView, {
           key: row.key, t, row, variant: 'others', board,
-          debugAllTones: debugFirstRow === true && index === 0,
         })),
       )
       : null,

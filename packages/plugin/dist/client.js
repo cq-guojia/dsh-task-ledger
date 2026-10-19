@@ -1095,17 +1095,6 @@ body[data-ds-dark-theme]{
 		*
 		* 按钮点击行为（含查看）归「任务按钮与会话交接」任务，本文件只做样子与提示。
 		*/
-		/**
-		* ⚠️ 调试态（用户 2026-10-19）：第二区**第一条**把全部状态标签一次摆出来，看全五枚色块。
-		* 定稿后：删掉本常量与 `debugAllTones` 这一路，标签行回到按 `tone` 取一枚。
-		*/
-		const DEBUG_TONES = [
-			"open",
-			"backlog",
-			"doing",
-			"overdue",
-			"stale"
-		];
 		/** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
 		function titleOf(row) {
 			if (row.kind === "task") return row.task.title ?? row.task.id;
@@ -1131,7 +1120,7 @@ body[data-ds-dark-theme]{
 			return null;
 		}
 		function TaskRowView(props) {
-			const { t, row, variant, board, debugAllTones } = props;
+			const { t, row, variant, board } = props;
 			const tone = toneOf(row);
 			const isTask = row.kind === "task";
 			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
@@ -1171,14 +1160,6 @@ body[data-ds-dark-theme]{
 					updated,
 					d: dayText(task.idleDays)
 				});
-			};
-			const thresholdTip = (which) => {
-				const stats = board?.stats;
-				if (stats === void 0) return statusLabel(which, t) ?? "";
-				if (which === "backlog") return t("statBacklogTitle", { n: stats.backlogDays });
-				if (which === "overdue") return t("statOverdueTitle", { n: stats.overdueDays });
-				if (which === "stale") return t("statStaleTitle", { n: stats.staleDays });
-				return statusLabel(which, t) ?? "";
 			};
 			const actions = isTask ? resolveActions(row.task, board) : CLOSED_ACTIONS;
 			const viewButton = (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
@@ -1235,7 +1216,7 @@ body[data-ds-dark-theme]{
 					who: String(owner),
 					when: startedOk ? formatDateTime(String(row.task.started)) : t("timeUnknown")
 				});
-				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, debugAllTones === true ? DEBUG_TONES.map((which) => tagOf(which, thresholdTip(which))) : statusTag, tags.map((tag) => (0, react.createElement)(Tag, {
+				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, statusTag, tags.map((tag) => (0, react.createElement)(Tag, {
 					key: tag,
 					text: `#${tag}`
 				})));
@@ -1617,12 +1598,11 @@ body[data-ds-dark-theme]{
 				variant: "primary",
 				size: "md",
 				onClick: onBack
-			}, t("allEmptyAction"))) : (0, react.createElement)("div", { style: { marginTop: "var(--dtl-space-2)" } }, view.groups.map((group, index) => (0, react.createElement)(WorkspaceGroupView, {
+			}, t("allEmptyAction"))) : (0, react.createElement)("div", { style: { marginTop: "var(--dtl-space-2)" } }, view.groups.map((group) => (0, react.createElement)(WorkspaceGroupView, {
 				key: group.workspaceId,
 				t,
 				group,
-				board,
-				debugFirstRow: index === 0
+				board
 			})))))))));
 		}
 		/** 角标：>0 才给数字，0 = undefined（不标）。 */
@@ -1633,7 +1613,7 @@ body[data-ds-dark-theme]{
 		*  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
 		*  积压 / 超期 / 停滞**只在 >0 时出现**。 */
 		function WorkspaceGroupView(props) {
-			const { t, group, board, debugFirstRow } = props;
+			const { t, group, board } = props;
 			const [open, setOpen] = (0, react.useState)(group.rows.length <= GROUP_COLLAPSE_OVER);
 			const stats = [
 				t("groupTotal", { n: group.total }),
@@ -1655,13 +1635,12 @@ body[data-ds-dark-theme]{
 				display: "inline-flex",
 				flex: "none",
 				color: "var(--dtl-fg-3)"
-			} }, (0, react.createElement)(open ? _deepseek_ai_dsh_client_ui_primitives.IconFolderOpenRegular : _deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 14 })), (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, group.rows.map((row, index) => (0, react.createElement)(TaskRowView, {
+			} }, (0, react.createElement)(open ? _deepseek_ai_dsh_client_ui_primitives.IconFolderOpenRegular : _deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 14 })), (0, react.createElement)("span", { className: "dtl-group__name dtl-ellipsis" }, group.title), (0, react.createElement)("span", { style: { flex: "1 1 auto" } }), (0, react.createElement)("span", { className: "dtl-group__stats" }, stats)), open ? (0, react.createElement)("div", null, group.rows.map((row) => (0, react.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,
 				variant: "others",
-				board,
-				debugAllTones: debugFirstRow === true && index === 0
+				board
 			}))) : null);
 		}
 		//#endregion

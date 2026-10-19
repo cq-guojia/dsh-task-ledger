@@ -31,12 +31,6 @@ import { Tag } from './ui'
 
 type Tone = 'doing' | 'overdue' | 'stale' | 'backlog' | 'open' | 'closed'
 
-/**
- * ⚠️ 调试态（用户 2026-10-19）：第二区**第一条**把全部状态标签一次摆出来，看全五枚色块。
- * 定稿后：删掉本常量与 `debugAllTones` 这一路，标签行回到按 `tone` 取一枚。
- */
-const DEBUG_TONES = ['open', 'backlog', 'doing', 'overdue', 'stale'] as const
-
 /** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
 function titleOf(row: Row): string {
   if (row.kind === 'task') return row.task.title ?? row.task.id
@@ -71,10 +65,8 @@ export function TaskRowView(props: {
   variant: 'mine' | 'others'
   /** 快照：问动作权限（是不是我的 / 能不能认领），并取 host 下发的三个阈值做悬停解释。 */
   board: BoardPayload | null
-  /** ⚠️ 调试态：把全部状态标签摆出来（见 DEBUG_TONES）。 */
-  debugAllTones?: boolean
 }): ReactNode {
-  const { t, row, variant, board, debugAllTones } = props
+  const { t, row, variant, board } = props
   const tone = toneOf(row)
   const isTask = row.kind === 'task'
   const tags = (row.kind === 'task' ? row.task.tags : row.record.tags) ?? []
@@ -104,16 +96,6 @@ export function TaskRowView(props: {
     if (which === 'overdue') return t('tipOverdue', { who, started, updated, d: dayText(task.ageDays) })
     return t('tipStale', { who, started, updated, d: dayText(task.idleDays) })
   }
-  // 调试态那一行摆的不是本任务的状态 ⇒ 只在悬停时解释口径（阈值来自 host 配置，不硬编码）。
-  const thresholdTip = (which: Exclude<Tone, 'closed'>): string => {
-    const stats = board?.stats
-    if (stats === undefined) return statusLabel(which, t) ?? ''
-    if (which === 'backlog') return t('statBacklogTitle', { n: stats.backlogDays })
-    if (which === 'overdue') return t('statOverdueTitle', { n: stats.overdueDays })
-    if (which === 'stale') return t('statStaleTitle', { n: stats.staleDays })
-    return statusLabel(which, t) ?? ''
-  }
-
   // 动作权限：**唯一**判定（用户 2026-10-18）——两区同一套，不许各判各的；本文件只按返回值画。
   const actions = isTask ? resolveActions(row.task, board) : CLOSED_ACTIONS
 
@@ -174,7 +156,7 @@ export function TaskRowView(props: {
     })
     // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）
     const tagLine = h('div', { className: 'dtl-orow__tags' },
-      debugAllTones === true ? DEBUG_TONES.map(which => tagOf(which, thresholdTip(which))) : statusTag,
+      statusTag,
       tags.map(tag => h(Tag, { key: tag, text: `#${tag}` })),
     )
     return h('div', { className: 'dtl-orow' },
