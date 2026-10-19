@@ -1,5 +1,6 @@
 # 20261019-0955-skill-模板增强-progress-最后更新时间-worklog-执行记录-78e3：skill 模板增强：progress 最后更新时间 + worklog 执行记录
 
+> **✅ 完成封卷**：2026-10-19 14:08:30（@GuoJia-Agent）
 > **创建**：2026-10-19 09:55:09（@GuoJia-Agent）
 > **分类**：建设 ｜ **标签**：skill、task-ledger、worklog
 
@@ -158,3 +159,4 @@
 - 2026-10-19 13:32:58 · log · @GuoJia-Agent · description 重写为纯触发条件（168 字符）
 - 2026-10-19 13:35:13 · log · @GuoJia-Agent · 发版 skill 1.2.1 / plugin 0.0.55
 - 2026-10-19 13:47:57 · log · @GuoJia-Agent · 改正文必配日志写进铁律，发版 1.2.2 / 0.0.56
+- 2026-10-19 14:08:30 · close · @GuoJia-Agent · 结案：skill 1.2.2 / plugin 0.0.56 已发布：worklog 新增「执行记录」节（脚本维护、一行一事件带类型）、progress.json 新增 updated、取消 blocked 状态（阻塞 7 天/停滞 3 天改由看板按时间算）、新增 log 子命令与改正文必配日志的硬规则、老 worklog 自动补节；SKILL.md 瘦身 26KB→9.2KB 并拆出 references，description 改为纯路由，交接从提示词下线（脚本 set --owner 保留给 UI）；历史表 9 列分隔符 bug 修复，9 个仓库存量补 updated 并修分隔符。遗留：看板 UI（overdue 标记与统计卡）与阈值设置项。

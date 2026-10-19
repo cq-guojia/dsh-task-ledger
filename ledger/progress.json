@@ -67,23 +67,6 @@
       "title": "统计报表",
       "updated": "2026-10-16 23:38:14",
       "worklog": "worklog/202610/16-2338-统计报表-073b.md"
-    },
-    "20261019-0955-skill-模板增强-progress-最后更新时间-worklog-执行记录-78e3": {
-      "category": "建设",
-      "created": "2026-10-19 09:55:09",
-      "creator": "GuoJia-Agent",
-      "finished": null,
-      "owner": "GuoJia-Agent",
-      "started": "2026-10-19 09:55:09",
-      "status": "doing",
-      "tags": [
-        "skill",
-        "task-ledger",
-        "worklog"
-      ],
-      "title": "skill 模板增强：progress 最后更新时间 + worklog 执行记录",
-      "updated": "2026-10-19 13:47:57",
-      "worklog": "worklog/202610/19-0955-skill-模板增强-progress-最后更新时间-worklog-执行记录-78e3.md"
     }
   }
 }
