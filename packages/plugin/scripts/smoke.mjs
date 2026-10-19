@@ -302,9 +302,9 @@ await check('客户端两区视图：我的待办吃标题搜索 / 按工作区�
   const wsB = { id: 'w2', title: 'B 项目', path: '/tmp/b' }
   const today = `${ymd(now)} 10:00:00`
   const tasks = [
-    { id: 't1', workspace: wsA, title: '甲任务', status: 'doing', owner: 'me', creator: 'me', created: today, tags: ['DSH'], ageDays: 0, stale: false },
-    { id: 't2', workspace: wsB, title: '乙任务', status: 'open', owner: null, created: '2020-01-02 10:00:00', tags: [], ageDays: null, stale: false },
-    { id: 't3', workspace: wsB, title: '丙任务', status: 'blocked', owner: 'other', created: today, tags: [], ageDays: 30, stale: true },
+    { id: 't1', workspace: wsA, title: '甲任务', status: 'doing', owner: 'me', creator: 'me', created: today, tags: ['DSH'], ageDays: 0, stale: false, overdue: false },
+    { id: 't2', workspace: wsB, title: '乙任务', status: 'open', owner: null, created: '2020-01-02 10:00:00', tags: [], ageDays: null, stale: false, overdue: false },
+    { id: 't3', workspace: wsB, title: '丙任务', status: 'doing', owner: 'other', created: today, tags: [], ageDays: 30, stale: true, overdue: true },
   ]
   const state = (query) => ({
     board: { identities: { w1: 'me', w2: null }, tasks, workspaces: [wsA, wsB], stats: {}, closed: {} },
@@ -314,7 +314,7 @@ await check('客户端两区视图：我的待办吃标题搜索 / 按工作区�
   const ids = (rows) => rows.map(r => r.task.id)
   // 第一区 = 我的（跨工作区）；第二区 = 全部任务按工作区分组（含我的——会与第一区重叠，用户 2026-10-18）
   let view = selectView(state(base))
-  assert.deepEqual(ids(view.mine), ['t1'], '第一区只有我名下的 doing/blocked')
+  assert.deepEqual(ids(view.mine), ['t1'], '第一区只有我名下的进行中')
   assert.deepEqual(view.groups.map(g => g.workspaceId), ['w1', 'w2'], '第二区含全部工作区（我的 t1 也进来，不再被过滤掉）')
   assert.deepEqual(ids(view.groups[0].rows), ['t1'], '组内 w1：只有我的 doing')
   assert.equal(view.total, 3, 'total = 全部待办任务数')
@@ -333,7 +333,7 @@ await check('客户端两区视图：我的待办吃标题搜索 / 按工作区�
   assert.deepEqual(ids(view.groups[0].rows), ['t1'], '工作区过滤只作用于第一区；第二区仍含全部工作区（含 w1 的 t1）')
   // 第二区：状态档（阻塞 / 停滞 / 待认领）+ othersKeyword（标题 / 执行人）
   assert.deepEqual(ids(selectView(state({ ...base, status: 'open' })).groups[0].rows), ['t2'])
-  assert.deepEqual(ids(selectView(state({ ...base, status: 'blocked' })).groups[0].rows), ['t3'])
+  assert.deepEqual(ids(selectView(state({ ...base, status: 'overdue' })).groups[0].rows), ['t3'])
   assert.deepEqual(ids(selectView(state({ ...base, status: 'stale' })).groups[0].rows), ['t3'])
   assert.deepEqual(ids(selectView(state({ ...base, othersKeyword: '乙' })).groups[0].rows), ['t2'], '第二区搜索吃标题')
   assert.deepEqual(ids(selectView(state({ ...base, othersKeyword: 'other' })).groups[0].rows), ['t3'], '第二区搜索吃执行人')
@@ -351,14 +351,14 @@ await check('任务动作权限：统一方法 resolveActions（我的=继续/�
   const board = { identities: { w1: 'me' }, tasks: [], workspaces: [], stats: {}, closed: {} }
   const task = (over) => ({
     id: 'x', workspace: { id: 'w1', title: 'A 项目', path: '/tmp/a' }, title: '甲任务',
-    status: 'doing', owner: 'me', creator: 'me', tags: [], stale: false, ...over,
+    status: 'doing', owner: 'me', creator: 'me', tags: [], stale: false, overdue: false, ...over,
   })
   const flat = (a) => ({ view: a.view, claim: a.claim, resume: a.resume, finish: a.finish, release: a.release })
   // 我的（doing / blocked）⇒ 继续 + 结束 + 释放 + 查看；不能认领（已经是我的了）
   assert.deepEqual(flat(resolveActions(task({}), board)),
     { view: true, claim: false, resume: true, finish: true, release: true }, '我的 doing：继续/结束/释放')
-  assert.deepEqual(flat(resolveActions(task({ status: 'blocked' }), board)),
-    { view: true, claim: false, resume: true, finish: true, release: true }, '我的 blocked：同上')
+  assert.deepEqual(flat(resolveActions(task({ overdue: true }), board)),
+    { view: true, claim: false, resume: true, finish: true, release: true }, '我的阻塞（overdue）：同上')
   // 别人在做 ⇒ 只有查看（不给人家的任务乱操作）
   assert.deepEqual(flat(resolveActions(task({ owner: 'other' }), board)),
     { view: true, claim: false, resume: false, finish: false, release: false }, '别人的 doing：只有查看')

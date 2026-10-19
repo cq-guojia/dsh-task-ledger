@@ -75,6 +75,17 @@
 
 落点：`exec_line` / `record_exec` 增 `kind` 与 `who` 参数，`new` / `claim` / `set` / `log` / `close` 各自传入；模板注释、`SKILL.md`、`docs/design/ledger-data.md` 同步写清格式与「只追加」约束。
 
+### 状态模型修正：取消 blocked（2026-10-19，用户拍板）
+
+用户指出：不存在「卡住」这个状态，阻塞是按时间算出来的显示属性，没有任何契机去手动改状态；任务实际一直在 `doing`。
+
+- skill：`STATUSES` 收敛为 `open` / `doing`；`set --status blocked` 直接报错并提示「阻塞按时间判定、卡在哪里写进 worklog」；`LEGACY_STATUSES = ("blocked",)` 只读兼容旧数据（`list --status blocked` 仍可捞、`validate` 不报非法）；`set --status open` 记为 `release`。
+- host：`BoardStats.blocked` / `myBlocked` 换成按 7 天算的 `overdue` / `myOverdue`；行级 `overdue` 早已算好。旧数据里的 `blocked` 一律当进行中统计。
+- client：状态档 `blocked` → `overdue`（按行级 `overdue` 过滤）；标签文案仍是「阻塞」，但不再读 `status`；分组计数 `blockedCount` → `overdueCount`。
+- 文档：`SKILL.md` 状态取值与意图表、skill `README` 状态图、`ledger-data.md`、`features/board-home.md`、`ui-style.md` 同步。
+
+验证：`npm run verify` 25 项通过；临时仓库验证 `set --status blocked` 拒绝、旧 `blocked` 数据 `validate` 通过且 `list --status blocked` 可查。
+
 ### 专家团讨论（2026-10-19，3 个子代理并行评审，只读）
 
 共识结论：

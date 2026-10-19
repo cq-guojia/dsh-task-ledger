@@ -60,7 +60,7 @@ export interface HistoryRecord {
 
 /** list / history 共用的过滤面（与 skill 脚本参数一一对应）。 */
 export interface LedgerFilter {
-  /** 状态（open/doing/blocked；history 侧忽略）。 */
+  /** 状态（open/doing；旧数据可能残留 blocked，读侧当进行中处理）。 */
   status?: string
   owner?: string
   category?: string
@@ -116,17 +116,17 @@ export interface ClosedSummary {
 
 /** 首页统计卡的六个面（阈值 / 天数全在 host 算，前端只渲染——单一真源）。 */
 export interface BoardStats {
-  /** 我的 doing + blocked。 */
+  /** 我的 doing（旧数据里的 blocked 也算进行中）。 */
   readonly myActive: number
-  /** 我的 blocked。 */
-  readonly myBlocked: number
+  /** 我的阻塞（接任务至今满 OVERDUE_DAYS 天未结案）。 */
+  readonly myOverdue: number
   /** 待认领（open）。 */
   readonly open: number
-  /** 全部 doing。 */
+  /** 全部 doing（旧数据里的 blocked 也算进行中）。 */
   readonly doing: number
-  /** 全部 blocked。 */
-  readonly blocked: number
-  /** 停滞 = doing|blocked 且 updated 至今满 STALE_DAYS 天没更新。 */
+  /** 全部阻塞——按时间判定，不是状态。 */
+  readonly overdue: number
+  /** 停滞 = 进行中且 updated 至今满 STALE_DAYS 天没更新。 */
   readonly stale: number
   /** 停滞阈值（天）——随响应下发，界面文案不硬编码（单一真源）。 */
   readonly staleDays: number
@@ -136,7 +136,7 @@ export interface BoardStats {
 
 /** 列表行附加工资字段（host 算，前端不判阈值）。 */
 export interface BoardTask extends TaskRow {
-  /** 认领后未动天数（doing / blocked；open 与解析不了的时间为 null）。 */
+  /** 认领后未动天数（进行中；open 与解析不了的时间为 null）。 */
   readonly ageDays: number | null
   /** 停滞标记：updated 至今满 STALE_DAYS 天没更新（与 ageDays 无关）。 */
   readonly stale: boolean

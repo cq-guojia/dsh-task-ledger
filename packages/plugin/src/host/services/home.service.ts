@@ -10,10 +10,10 @@ import { settleWorkspaces, type DegradedInfo } from '../errors.js'
 import { daysSince } from './dates.js'
 import type { BoardSnapshot, BoardStats, BoardTask, LedgerWorkspace, TaskScope } from '../types.js'
 
-/** 停滞阈值：doing / blocked 且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
+/** 停滞阈值：进行中且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
 export const STALE_DAYS = 3
 
-/** 阻塞阈值：doing / blocked 且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板）。 */
+/** 阻塞阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板）。 */
 export const OVERDUE_DAYS = 7
 
 /** 快路径读法：单工作区 readTasks + git 身份（并行；供 settle 逐工作区调）。 */
@@ -25,6 +25,7 @@ export async function readTaskScope(workspace: LedgerWorkspace): Promise<TaskSco
 /** 在办行加工 + 六个统计面 + identities（纯函数；`now` 显式传入）。 */
 export function computeSnapshot(scopes: readonly TaskScope[], now: Date): BoardSnapshot {
   const withMeta = scopes.flatMap((scope) => scope.tasks.map((task): BoardTask => {
+    // blocked 只是旧数据（新任务不可能再有）；读侧一律当进行中
     const working = task.status === 'doing' || task.status === 'blocked'
     const ageDays = working ? daysSince(task.started ?? task.created, now) : null
     // 停滞看「最后更新」，阻塞看「接任务至今」——两个不同的问题，互不覆盖
@@ -37,21 +38,20 @@ export function computeSnapshot(scopes: readonly TaskScope[], now: Date): BoardS
     }
   }))
   const openTasks = withMeta.filter((task) => task.status === 'open')
-  const blockedTasks = withMeta.filter((task) => task.status === 'blocked')
   const myActive = scopes.reduce((sum, scope) => sum + scope.tasks.filter(
     (task) => task.owner === scope.identity && (task.status === 'doing' || task.status === 'blocked'),
   ).length, 0)
-  const myBlocked = scopes.reduce((sum, scope) => sum + scope.tasks.filter(
-    (task) => task.owner === scope.identity && task.status === 'blocked',
-  ).length, 0)
   const identities: Record<string, string | null> = {}
   for (const scope of scopes) identities[scope.workspace.id] = scope.identity
+  const myOverdue = withMeta.filter(
+    (task) => task.overdue && task.owner != null && task.owner === identities[task.workspace.id],
+  ).length
   const stats: BoardStats = {
     myActive,
-    myBlocked,
+    myOverdue,
     open: openTasks.length,
-    doing: withMeta.filter((task) => task.status === 'doing').length,
-    blocked: blockedTasks.length,
+    doing: withMeta.filter((task) => task.status === 'doing' || task.status === 'blocked').length,
+    overdue: withMeta.filter((task) => task.overdue).length,
     stale: withMeta.filter((task) => task.stale).length,
     staleDays: STALE_DAYS,
     oldestOpenDays: openTasks.length === 0

@@ -1,8 +1,8 @@
 import { type DegradedInfo } from '../errors.js';
 import type { BoardSnapshot, LedgerWorkspace, TaskScope } from '../types.js';
-/** 停滞阈值：doing / blocked 且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
+/** 停滞阈值：进行中且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
 export declare const STALE_DAYS = 3;
-/** 阻塞阈值：doing / blocked 且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板）。 */
+/** 阻塞阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板）。 */
 export declare const OVERDUE_DAYS = 7;
 /** 快路径读法：单工作区 readTasks + git 身份（并行；供 settle 逐工作区调）。 */
 export declare function readTaskScope(workspace: LedgerWorkspace): Promise<TaskScope>;

@@ -18,7 +18,7 @@ export interface WorkspaceGroup {
   readonly workspaceId: string
   readonly title: string
   readonly doingCount: number
-  readonly blockedCount: number
+  readonly overdueCount: number
   readonly staleCount: number
   readonly openCount: number
   readonly total: number
@@ -36,7 +36,7 @@ export interface BoardView {
     readonly total: number
     readonly doing: number
     readonly open: number
-    readonly blocked: number
+    readonly overdue: number
     readonly stale: number
   }
 }
@@ -48,7 +48,7 @@ function hitKeyword(keyword: string, parts: readonly (string | null | undefined)
   return parts.some(part => part?.toLowerCase().includes(needle) === true)
 }
 
-/** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是 doing / blocked（与 host 统计同口径）。 */
+/** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
 export function isMine(task: BoardTask, board: BoardPayload | null): boolean {
   if (board === null) return false
   const identity = board.identities[task.workspace.id] ?? null
@@ -90,11 +90,11 @@ function statusHit(task: BoardTask, status: Query['status']): boolean {
   if (status === 'all') return true
   if (status === 'active') return task.status === 'doing' || task.status === 'blocked'
   if (status === 'open') return task.status === 'open'
-  if (status === 'blocked') return task.status === 'blocked'
+  if (status === 'overdue') return task.overdue === true
   return task.stale === true
 }
 
-/** 组内排序：别人的 doing/blocked 在前、待认领在后；各自按创建 / 开始时间倒序。 */
+/** 组内排序：别人的进行中在前、待认领在后；各自按创建 / 开始时间倒序。 */
 function inGroupOrder(a: Row, b: Row): number {
   if (a.kind !== 'task' || b.kind !== 'task') return 0
   const rank = (task: BoardTask): number => (task.status === 'open' ? 1 : 0)
@@ -112,14 +112,14 @@ function inGroupOrder(a: Row, b: Row): number {
 export function selectView(current: { board: BoardPayload | null; query: Query }): BoardView {
   const { board, query } = current
   if (board === null) {
-    return { mine: [], groups: [], total: 0, allCounts: { total: 0, doing: 0, open: 0, blocked: 0, stale: 0 } }
+    return { mine: [], groups: [], total: 0, allCounts: { total: 0, doing: 0, open: 0, overdue: 0, stale: 0 } }
   }
   const allTasks = board.tasks
   const allCounts = {
     total: allTasks.length,
     doing: allTasks.filter((task) => task.status === 'doing').length,
     open: allTasks.filter((task) => task.status === 'open').length,
-    blocked: allTasks.filter((task) => task.status === 'blocked').length,
+    overdue: allTasks.filter((task) => task.overdue === true).length,
     stale: allTasks.filter((task) => task.stale === true).length,
   }
   const mineRows: Row[] = board.tasks
@@ -146,7 +146,7 @@ export function selectView(current: { board: BoardPayload | null; query: Query }
       workspaceId,
       title: entry.title,
       doingCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'doing').length,
-      blockedCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'blocked').length,
+      overdueCount: entry.rows.filter((row) => row.kind === 'task' && row.task.overdue === true).length,
       staleCount: entry.rows.filter((row) => row.kind === 'task' && row.task.stale === true).length,
       openCount: entry.rows.filter((row) => row.kind === 'task' && row.task.status === 'open').length,
       total: entry.rows.length,

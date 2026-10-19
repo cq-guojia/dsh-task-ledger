@@ -37,7 +37,10 @@ try:
 except ImportError:
     msvcrt = None
 
-STATUSES = ("open", "doing", "blocked", "done")
+STATUSES = ("open", "doing")
+# 旧数据只读兼容：早期版本有 blocked 状态（手动标「卡住」）。现在阻塞按时间判定
+# （接任务满 7 天），不再允许新写入；list / validate / 看板仍能吃老文件。
+LEGACY_STATUSES = ("blocked",)
 PROGRESS_REL = Path("ledger/progress.json")
 # 存量：改造前的单文件历史层，只读兼容、永不重写
 HISTORY_REL = Path("ledger/PROGRESS-HISTORY.md")
@@ -1354,12 +1357,17 @@ def cmd_set(args: argparse.Namespace) -> None:
         raise Fail(
             "--status open（退回未认领）不能同时给 --owner；要交给别人就别改回 open。"
         )
-    if status is not None and status not in STATUSES:
-        raise Fail(f"--status 只能是 {' / '.join(STATUSES)}；结案请用 close。")
+    if status == "blocked":
+        raise Fail(
+            "没有 blocked 状态：阻塞由时间自动判定（接任务满 7 天仍未结案），"
+            "状态只有 open / doing；卡在哪里请写进 worklog。"
+        )
     if status == "done":
         raise Fail(
             "不要把状态直接改成 done —— 用 close 结案（它会同时移出状态、追加历史、封卷 worklog）。"
         )
+    if status is not None and status not in STATUSES:
+        raise Fail(f"--status 只能是 {' / '.join(STATUSES)}；结案请用 close。")
 
     repo = find_repo(args.repo)
     tid = require_task_id(args.id)
@@ -1629,17 +1637,12 @@ def cmd_list(args: argparse.Namespace) -> None:
     if args.status is not None:
         wanted = [s.strip() for s in args.status.split(",") if s.strip()]
         if not wanted:
-            raise Fail("--status 不能为空；逗号分隔，如 doing,blocked")
-        bad = [s for s in wanted if s not in STATUSES]
+            raise Fail("--status 不能为空；逗号分隔，如 doing,open")
+        # blocked 只用于捞旧数据（新任务不可能再有这个值）
+        bad = [s for s in wanted if s not in STATUSES and s not in LEGACY_STATUSES]
         if bad:
             raise Fail(
                 f"--status 含非法值 {', '.join(bad)}；可选 {' / '.join(STATUSES)}"
-            )
-        if "done" in wanted:
-            print(
-                "提示：done 的任务已结案并移出状态表，用 history 子命令查"
-                "（已结案在 ledger/history/<年月>.md，存量在 ledger/PROGRESS-HISTORY.md）。",
-                file=sys.stderr,
             )
 
     since = normalize_time(args.since, field="--since") if args.since else None
@@ -1824,7 +1827,7 @@ def cmd_validate(args: argparse.Namespace) -> None:
         if not task.get("title"):
             problems.append(f"{tid}: 缺 title")
         status = task.get("status")
-        if status not in STATUSES:
+        if status not in STATUSES and status not in LEGACY_STATUSES:
             problems.append(f"{tid}: status={status!r} 非法")
         if status == "open" and task.get("owner"):
             problems.append(f"{tid}: status=open 却有 owner")
@@ -2120,7 +2123,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("list", help="查询在办任务")
     p.add_argument("--mine", action="store_true", help="只看自己的")
     p.add_argument("--owner", help="只看某个人的")
-    p.add_argument("--status", help="逗号分隔，如 doing,blocked")
+    p.add_argument("--status", help="逗号分隔，如 doing,open")
     p.add_argument("--category", help="按分类过滤（精确匹配）")
     p.add_argument("--tag", help="按标签过滤（包含匹配，命中任一面即算）")
     p.add_argument(

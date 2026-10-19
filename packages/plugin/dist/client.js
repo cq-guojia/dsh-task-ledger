@@ -177,7 +177,7 @@ window.__ModuleLoader__.load({
 			if (needle === "") return true;
 			return parts.some((part) => part?.toLowerCase().includes(needle) === true);
 		}
-		/** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是 doing / blocked（与 host 统计同口径）。 */
+		/** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
 		function isMine(task, board) {
 			if (board === null) return false;
 			const identity = board.identities[task.workspace.id] ?? null;
@@ -207,10 +207,10 @@ window.__ModuleLoader__.load({
 			if (status === "all") return true;
 			if (status === "active") return task.status === "doing" || task.status === "blocked";
 			if (status === "open") return task.status === "open";
-			if (status === "blocked") return task.status === "blocked";
+			if (status === "overdue") return task.overdue === true;
 			return task.stale === true;
 		}
-		/** 组内排序：别人的 doing/blocked 在前、待认领在后；各自按创建 / 开始时间倒序。 */
+		/** 组内排序：别人的进行中在前、待认领在后；各自按创建 / 开始时间倒序。 */
 		function inGroupOrder(a, b) {
 			if (a.kind !== "task" || b.kind !== "task") return 0;
 			const rank = (task) => task.status === "open" ? 1 : 0;
@@ -234,7 +234,7 @@ window.__ModuleLoader__.load({
 					total: 0,
 					doing: 0,
 					open: 0,
-					blocked: 0,
+					overdue: 0,
 					stale: 0
 				}
 			};
@@ -243,7 +243,7 @@ window.__ModuleLoader__.load({
 				total: allTasks.length,
 				doing: allTasks.filter((task) => task.status === "doing").length,
 				open: allTasks.filter((task) => task.status === "open").length,
-				blocked: allTasks.filter((task) => task.status === "blocked").length,
+				overdue: allTasks.filter((task) => task.overdue === true).length,
 				stale: allTasks.filter((task) => task.stale === true).length
 			};
 			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => query.workspace === "" || task.workspace.id === query.workspace).filter((task) => hitKeyword(query.keyword, [
@@ -278,7 +278,7 @@ window.__ModuleLoader__.load({
 				workspaceId,
 				title: entry.title,
 				doingCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "doing").length,
-				blockedCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "blocked").length,
+				overdueCount: entry.rows.filter((row) => row.kind === "task" && row.task.overdue === true).length,
 				staleCount: entry.rows.filter((row) => row.kind === "task" && row.task.stale === true).length,
 				openCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "open").length,
 				total: entry.rows.length,
@@ -1096,11 +1096,11 @@ body[data-ds-dark-theme]{
 			const title = row.record.workpackage ?? row.record.summary;
 			return title !== void 0 && title !== "" ? title : row.record.src ?? "—";
 		}
-		/** 状态语义（异常优先：stale 盖过 blocked）。 */
+		/** 状态语义（异常优先：stale 盖过 blocked；blocked 是 host 按 7 天算出来的，不是状态）。 */
 		function toneOf(row) {
 			if (row.kind !== "task") return "closed";
 			if (row.task.stale === true) return "stale";
-			if (row.task.status === "blocked") return "blocked";
+			if (row.task.overdue === true) return "blocked";
 			if (row.task.status === "open") return "open";
 			return "doing";
 		}
@@ -1374,11 +1374,11 @@ body[data-ds-dark-theme]{
 			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", {
 				className: "dtl-stats",
 				style: statsRowStyle
-			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myBlocked })), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) })), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive + stats.myBlocked })), (0, react.createElement)(StatCard, {
+			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myOverdue })), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) })), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive })), (0, react.createElement)(StatCard, {
 				label: t("statBlockedStale"),
-				value: stats.blocked + stats.stale,
+				value: stats.overdue + stats.stale,
 				hint: t("statBlockedSplit", {
-					blocked: stats.blocked,
+					blocked: stats.overdue,
 					stale: stats.stale
 				}),
 				title: t("statStaleTitle", { n: stats.staleDays }),
@@ -1512,9 +1512,9 @@ body[data-ds-dark-theme]{
 						badge: orZero(view.allCounts.open)
 					},
 					{
-						value: "blocked",
+						value: "overdue",
 						label: t("statusBlocked"),
-						badge: orZero(view.allCounts.blocked)
+						badge: orZero(view.allCounts.overdue)
 					},
 					{
 						value: "stale",
@@ -1572,7 +1572,7 @@ body[data-ds-dark-theme]{
 				t("groupTotal", { n: group.total }),
 				t("groupOpen", { n: group.openCount }),
 				t("groupDoing", { n: group.doingCount }),
-				...group.blockedCount > 0 ? [t("groupBlocked", { n: group.blockedCount })] : [],
+				...group.overdueCount > 0 ? [t("groupBlocked", { n: group.overdueCount })] : [],
 				...group.staleCount > 0 ? [t("groupStale", { n: group.staleCount })] : []
 			].join(" ｜ ");
 			return (0, react.createElement)("div", { className: "dtl-group" }, (0, react.createElement)("button", {
@@ -1845,7 +1845,7 @@ body[data-ds-dark-theme]{
 		* 定位用宿主变量 `--dsh-frame-overlay-top`（标题栏净空 + 20px），**不写死 top 值**；
 		* 浮层默认 `pointer-events:none`、子元素自动恢复 ⇒ 自绘条目不挡下方应用。
 		*
-		* 角标 = 我名下 `doing` + `blocked` 计数（host 统计真值，SSE 已否 ⇒ 取自同一份快照，>0 才画）；
+		* 角标 = 我名下进行中计数（host 统计真值，SSE 已否 ⇒ 取自同一份快照，>0 才画）；
 		* 0→n 跳变时一次脉冲动画，不自动消失。宿主**无**通知 API ⇒ 「通知」就是这个角标。
 		*/
 		function OverlayEntry(props) {

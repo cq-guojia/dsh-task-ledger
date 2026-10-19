@@ -24,7 +24,7 @@
 | 字段 | 值样例 | 说明 |
 |---|---|---|
 | `title` | 熟悉项目初衷并搭建初始文档架构 | 任务标题 |
-| `status` | `open` / `doing` / `blocked` | `done` 只能由 close 产生 |
+| `status` | `open` / `doing` | `done` 只能由 close 产生；`blocked` 是旧数据，读侧当进行中（2026-10-19 起阻塞改由时间判定） |
 | `creator` / `owner` | GuoJia-Agent | git 身份 |
 | `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | `finished` 结案前为 null；`updated` = 最后一次推进（建 / 认领 / 改状态 / 交接 / 补执行记录），老数据可能缺失（看板回退到 `started` / `created`） |
 | `category` | 建设 | 单值分类 |
@@ -50,7 +50,7 @@
 
 ## 五、插件消费方式（规划）
 
-- 待办 = 各工作区 `progress.json` 的 `open` / `doing` / `blocked`；
+- 待办 = 各工作区 `progress.json` 的 `open` / `doing`（`blocked` 旧数据按进行中收）；
 - 历史 = `history/<年月>.md` 9 列（owner = 负责人 / 提交人筛选面；creator = 发起人，2026-10-17 新增——
   owner 可被 claim 改走，「谁建的」不变；看板「新增（我的）= 我创建的」靠它，与完成/未结(mine) 的 owner 口径区分）；
 - 报表 = 同源聚合（category 计数、时间线、按人工作日志）；

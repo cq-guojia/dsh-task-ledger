@@ -35,7 +35,7 @@
 
 ### 状态用 JSON，不用 Markdown
 
-状态要频繁改（`doing` → `blocked` → `done`），Markdown 里改一个词很容易顺手改到别处。JSON 结构化、字段固定、一次只动一个值，改动面最小。
+状态要频繁改（`open` → `doing` → 结案），Markdown 里改一个词很容易顺手改到别处。JSON 结构化、字段固定、一次只动一个值，改动面最小。
 
 ### 状态与过程正文分离
 
@@ -187,15 +187,13 @@ stateDiagram-v2
     [*] --> open: new（不带 --self）
     [*] --> doing: new --self
     open --> doing: claim（认领，写 owner）
-    doing --> blocked: set --status blocked
-    blocked --> doing: set --status doing
-    doing --> open: set --status open（退回未认领，清空 owner）
-    blocked --> open: set --status open
+    doing --> open: set --status open（释放认领，清空 owner）
     doing --> [*]: close（进历史）
-    blocked --> [*]: close（进历史）
     note right of doing
         set --owner 交接：owner 换成别人
         （只有当前 owner 能执行）
+        阻塞 = 接任务满 7 天；停滞 = 最后更新满 3 天
+        （都由看板按时间算，不是状态）
     end note
 ```
 

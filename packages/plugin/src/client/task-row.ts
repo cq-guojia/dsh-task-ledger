@@ -37,11 +37,11 @@ function titleOf(row: Row): string {
   return title !== undefined && title !== '' ? title : row.record.src ?? '—'
 }
 
-/** 状态语义（异常优先：stale 盖过 blocked）。 */
+/** 状态语义（异常优先：stale 盖过 blocked；blocked 是 host 按 7 天算出来的，不是状态）。 */
 function toneOf(row: Row): Tone {
   if (row.kind !== 'task') return 'closed'
   if (row.task.stale === true) return 'stale'
-  if (row.task.status === 'blocked') return 'blocked'
+  if (row.task.overdue === true) return 'blocked'
   if (row.task.status === 'open') return 'open'
   return 'doing'
 }

@@ -159,14 +159,14 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
               : h('div', { className: 'dtl-stats', style: statsRowStyle },
                 h('div', { className: 'dtl-stats__cards' },
                   // 第一行 · 操作台（纯展示）
-                  card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myBlocked })),
+                  card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myOverdue })),
                   card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) })),
-                  card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive + stats.myBlocked })),
+                  card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive })),
                   // 阻塞 · 停滞合并卡：主数字 = 阻塞 + 停滞合计，小字拆开报数（用户 2026-10-18）
                   h(StatCard, {
                     label: t('statBlockedStale'),
-                    value: stats.blocked + stats.stale,
-                    hint: t('statBlockedSplit', { blocked: stats.blocked, stale: stats.stale }),
+                    value: stats.overdue + stats.stale,
+                    hint: t('statBlockedSplit', { blocked: stats.overdue, stale: stats.stale }),
                     title: t('statStaleTitle', { n: stats.staleDays }),
                     interactive: false,
                   }),
@@ -288,7 +288,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                               { value: 'all', label: t('statusAll'), badge: orZero(view.allCounts.total) },
                               { value: 'active', label: t('statusActive'), badge: orZero(view.allCounts.doing) },
                               { value: 'open', label: t('statusOpen'), badge: orZero(view.allCounts.open) },
-                              { value: 'blocked', label: t('statusBlocked'), badge: orZero(view.allCounts.blocked) },
+                              { value: 'overdue', label: t('statusBlocked'), badge: orZero(view.allCounts.overdue) },
                               { value: 'stale', label: t('statusStale'), badge: orZero(view.allCounts.stale) },
                             ],
                             onChange: (next) => { setQuery({ status: next }) },
@@ -344,7 +344,7 @@ function WorkspaceGroupView(props: {
     t('groupTotal', { n: group.total }),
     t('groupOpen', { n: group.openCount }),
     t('groupDoing', { n: group.doingCount }),
-    ...(group.blockedCount > 0 ? [t('groupBlocked', { n: group.blockedCount })] : []),
+    ...(group.overdueCount > 0 ? [t('groupBlocked', { n: group.overdueCount })] : []),
     ...(group.staleCount > 0 ? [t('groupStale', { n: group.staleCount })] : []),
   ].join(' ｜ ')
   return h('div', { className: 'dtl-group' },

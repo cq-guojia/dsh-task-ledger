@@ -31,11 +31,11 @@ export interface TaskRow {
 
 /** host 附加工资字段（阈值 / 天数在 host 算，前端只渲染）。 */
 export interface TaskMeta {
-  /** 认领后未动天数（doing / blocked；open 与解析不了为 null）。 */
+  /** 认领后未动天数（进行中；open 与解析不了为 null）。 */
   readonly ageDays: number | null
-  /** 停滞 = doing|blocked 且 updated 至今满 STALE_DAYS 天没更新。 */
+  /** 停滞 = 进行中且 updated 至今满 STALE_DAYS 天没更新。 */
   readonly stale: boolean
-  /** 阻塞 = doing|blocked 且接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */
+  /** 阻塞 = 进行中且接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */
   readonly overdue: boolean
 }
 
@@ -103,15 +103,15 @@ export interface ClosedSummary {
 /** 首页统计卡的六个面。 */
 export interface BoardStats {
   readonly myActive: number
-  readonly myBlocked: number
+  readonly myOverdue: number
   readonly open: number
   readonly doing: number
-  readonly blocked: number
+  /** 阻塞（按时间判定，不是状态）。 */
+  readonly overdue: number
   readonly stale: number
   /** 停滞阈值（天）——界面文案用它，不硬编码。 */
   readonly staleDays: number
   readonly oldestOpenDays: number | null
-  readonly longestBlockedDays: number | null
 }
 
 /**
