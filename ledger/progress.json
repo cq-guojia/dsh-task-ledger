@@ -50,22 +50,6 @@
       "title": "统计报表",
       "updated": "2026-10-16 23:38:14",
       "worklog": "worklog/202610/16-2338-统计报表-073b.md"
-    },
-    "20261019-1520-台账写入后自动提交并推送所在-git-仓库-5803": {
-      "category": "工具",
-      "created": "2026-10-19 15:20:55",
-      "creator": "GuoJia-Agent",
-      "finished": null,
-      "owner": "GuoJia-Agent",
-      "started": "2026-10-19 15:20:55",
-      "status": "doing",
-      "tags": [
-        "自动同步",
-        "git"
-      ],
-      "title": "台账写入后自动提交并推送所在 git 仓库",
-      "updated": "2026-10-19 16:40:53",
-      "worklog": "worklog/202610/19-1520-台账写入后自动提交并推送所在-git-仓库-5803.md"
     }
   }
 }
