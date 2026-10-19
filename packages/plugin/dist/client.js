@@ -728,7 +728,9 @@ body[data-ds-dark-theme]{
 .dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
   position:relative;
   background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
+  vertical-align:middle;}
+/* 省略号裁切放内层：外层不能 overflow:hidden，否则 ::after 悬浮提示被裁掉不显示 */
+.dtl-tag__txt{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
 /* 状态四色 = **实心色块**（用户 2026-10-18：彩色字看不清 ⇒ 改色块 + 反色字）：
    待认领灰 / 进行中蓝 / 积压黄 / 超期橙 / 停滞红（与行首圆点同色系）。
    红黄蓝都是中调 ⇒ 白字两个主题都可读；灰块用「字色底 + 面色字」⇒ 明暗自动反过来 */
@@ -959,7 +961,7 @@ body[data-ds-dark-theme]{
 			return (0, react.createElement)("span", {
 				className: `dtl-tag dtl-tag--${tone}`,
 				"data-tip": tip ?? (long ? title ?? text : void 0)
-			}, text);
+			}, (0, react.createElement)("span", { className: "dtl-tag__txt" }, text));
 		}
 		/** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
 		function EmptyState(props) {
