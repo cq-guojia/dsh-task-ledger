@@ -34,5 +34,5 @@
 
 <!-- 本节由脚本维护：new / claim / set / close / log 自动追加，请勿手改。
      要补一条就跑 progress.py log --id <任务号> --note "做了什么"。
-     每条一行：时间 · 类型 · @谁 · 说明（类型取 new / claim / set / log / close）；
+     每条一行：时间 · 类型 · @谁 · 说明（类型取 new / claim / set / release / log / close）；
      只追加、不改旧行 —— 移交后旧记录仍留在原负责人名下。 -->

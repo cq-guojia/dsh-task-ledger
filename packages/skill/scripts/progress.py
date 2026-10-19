@@ -1392,7 +1392,9 @@ def cmd_set(args: argparse.Namespace) -> None:
 
         task["updated"] = now()
         commit_guarded(path, before, data)
-        record_exec(repo, tid, task, me, "set", "，".join(changed))
+        # 释放认领（退回 open）单列一个类型，便于一眼看出「被释放过」
+        kind = "release" if status == "open" else "set"
+        record_exec(repo, tid, task, me, kind, "，".join(changed))
     print(f"已更新 {tid}：" + "，".join(changed))
     print_worklog(repo, tid, task)
 
