@@ -87,7 +87,7 @@ export function TaskRowView(props: {
   // 标签悬停解释（用户 2026-10-19）：一律「谁 / 何时开始 / 最后更新 / 多少天」，天数由 host 下发，
   // 前端不自行推算；缺时间就报「时间未知」，不编。
   const stamp = (value: string | null | undefined): string =>
-    value === null || value === undefined ? t('timeUnknown') : formatDateTime(value, { fallback: t('timeUnknown') })
+    value === null || value === undefined ? t('timeUnknown') : formatDateTime(value, { seconds: true, fallback: t('timeUnknown') })
   const dayText = (n: number | null | undefined): string =>
     n === null || n === undefined ? t('daysNone') : t('daysValue', { n })
   const detailTip = (which: Exclude<Tone, 'closed'>): string | undefined => {

@@ -138,6 +138,7 @@ const UI_BASE_CSS = `
    悬停把全名补出来（用户 2026-10-19：不跑马灯了）。**没被截 ⇒ 悬停无反应**
    （提示由 Tag 元件按实际宽度决定挂不挂，这里只管裁切）。 */
 .dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
+  position:relative;
   background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
 /* 状态四色 = **实心色块**（用户 2026-10-18：彩色字看不清 ⇒ 改色块 + 反色字）：
@@ -150,6 +151,14 @@ const UI_BASE_CSS = `
 .dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
 /* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
 .dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
+/* 标签悬停浮层：与按钮（.dtl-minibtn::after）同源的 CSS data-tip，鼠标一上去立刻出、
+   可多行（pre-line 认 \n）；不叠加原生 title（避免慢半拍 + 双提示）。只挂了 data-tip 的才出。 */
+.dtl-tag[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:0;z-index:6;
+  max-width:240px;padding:4px 8px;border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-2);
+  box-shadow:var(--dtl-shadow-2);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);line-height:1.5;
+  white-space:pre-line;text-align:left;opacity:0;pointer-events:none;
+  transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-tag[data-tip]:hover::after{opacity:1;}
 
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
@@ -455,15 +464,16 @@ export function Tag(props: {
   tone?: 'neutral' | 'open' | 'backlog' | 'doing' | 'overdue' | 'stale' | 'person'
   /** 悬停提示（**被截时**才显示；默认 = 文本本身）。 */
   title?: string
-  /** 悬停提示（**始终**显示，状态标记的解释走它；优先于 title）。 */
+  /** 悬停提示（**始终**显示，状态标记的解释走它；优先于 title）。经 data-tip 走 CSS 浮层。 */
   tip?: string
 }): ReactNode {
   ensureUiBase()
   const { text, tone = 'neutral', title, tip } = props
   const long = displayWidth(text) > TAG_MAX_WIDTH
+  // 用 CSS data-tip 浮层（与按钮同源），不再叠加原生 title（避免慢半拍 + 双提示）
   return h('span', {
     className: `dtl-tag dtl-tag--${tone}`,
-    title: tip ?? (long ? (title ?? text) : undefined),
+    'data-tip': tip ?? (long ? (title ?? text) : undefined),
   }, text)
 }
 
