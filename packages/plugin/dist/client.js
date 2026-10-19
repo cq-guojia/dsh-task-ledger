@@ -726,11 +726,8 @@ body[data-ds-dark-theme]{
    悬停把全名补出来（用户 2026-10-19：不跑马灯了）。**没被截 ⇒ 悬停无反应**
    （提示由 Tag 元件按实际宽度决定挂不挂，这里只管裁切）。 */
 .dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
-  position:relative;
   background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
-  vertical-align:middle;}
-/* 省略号裁切放内层：外层不能 overflow:hidden，否则 ::after 悬浮提示被裁掉不显示 */
-.dtl-tag__txt{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
 /* 状态四色 = **实心色块**（用户 2026-10-18：彩色字看不清 ⇒ 改色块 + 反色字）：
    待认领灰 / 进行中蓝 / 积压黄 / 超期橙 / 停滞红（与行首圆点同色系）。
    红黄蓝都是中调 ⇒ 白字两个主题都可读；灰块用「字色底 + 面色字」⇒ 明暗自动反过来 */
@@ -741,15 +738,6 @@ body[data-ds-dark-theme]{
 .dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
 /* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
 .dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
-/* 标签悬停浮层：与按钮（.dtl-minibtn::after）同源的 CSS data-tip，鼠标一上去立刻出、
-   可多行（pre-line 认 \n）；不叠加原生 title（避免慢半拍 + 双提示）。只挂了 data-tip 的才出。 */
-.dtl-tag[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:0;z-index:6;
-  max-width:240px;padding:4px 8px;border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-2);
-  box-shadow:var(--dtl-shadow-2);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);line-height:1.5;
-  white-space:pre-line;text-align:left;opacity:0;pointer-events:none;
-  transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-tag[data-tip]:hover::after{opacity:1;}
-
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 
@@ -958,10 +946,16 @@ body[data-ds-dark-theme]{
 			ensureUiBase();
 			const { text, tone = "neutral", title, tip } = props;
 			const long = displayWidth(text) > TAG_MAX_WIDTH;
-			return (0, react.createElement)("span", {
-				className: `dtl-tag dtl-tag--${tone}`,
-				"data-tip": tip ?? (long ? title ?? text : void 0)
-			}, (0, react.createElement)("span", { className: "dtl-tag__txt" }, text));
+			const label = tip ?? (long ? title ?? text : void 0);
+			const tag = (0, react.createElement)("span", { className: `dtl-tag dtl-tag--${tone}` }, text);
+			if (label === void 0) return tag;
+			return (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+				label,
+				side: "bottom",
+				portal: true,
+				maxWidth: 240,
+				children: tag
+			});
 		}
 		/** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
 		function EmptyState(props) {

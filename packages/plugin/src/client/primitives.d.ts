@@ -20,6 +20,21 @@ declare module '@deepseek-ai/dsh-client-ui-primitives' {
     children?: ReactNode
   } & import('react').ButtonHTMLAttributes<HTMLButtonElement> & import('react').RefAttributes<HTMLButtonElement>>
 
+  /** 官方悬停提示（气泡挂 body、悬停即出、支持 \n 多行；children 为单个被包裹元素）。 */
+  export function Tooltip(props: {
+    label: string
+    side?: 'right' | 'bottom' | 'top'
+    align?: 'center' | 'end'
+    delayMs?: number
+    focusDelayMs?: number
+    gap?: number
+    disabled?: boolean
+    portal?: boolean
+    maxWidth?: number
+    openOnClick?: boolean
+    children: import('react').ReactElement
+  }): ReactNode
+
   /** 官方状态点（done 绿 / warning 琥珀 / ongoing 灰蓝 / error 红 / idle 中性灰）。 */
   export function StateDot(props: {
     state: 'done' | 'warning' | 'ongoing' | 'error' | 'idle'

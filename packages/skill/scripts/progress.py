@@ -245,6 +245,10 @@ def read_json(path: Path) -> dict[str, Any]:
     return data
 
 
+# 本次进程内被台账写入的真实文件路径，供写成功后一次性自动同步（git commit/push）。
+CHANGED_FILES: list[Path] = []
+
+
 def write_text_atomic(path: Path, text: str) -> None:
     """原子写文本：同目录唯一临时名 + fsync + os.replace，写完清理临时文件。
 
@@ -265,6 +269,7 @@ def write_text_atomic(path: Path, text: str) -> None:
             fh.flush()
             os.fsync(fh.fileno())
         os.replace(tmp, path)
+        CHANGED_FILES.append(path)  # 记下本次改动，供写后自动同步
         tmp = None
     except OSError as exc:
         raise Fail(f"写 {path} 失败：{exc}")
@@ -347,6 +352,68 @@ def commit_guarded(
     if stat_key(path) != before:
         raise Fail(f"{path.name} 在操作期间被改动过，已中止。重新执行一次。")
     write_json(path, data)
+
+
+def _git(*args: str, timeout: int | None = None) -> subprocess.CompletedProcess:
+    """跑一条 git 命令，吞掉输出（同步用，不污染 stdout）。"""
+    return subprocess.run(list(args), capture_output=True, text=True, timeout=timeout)
+
+
+def _git_actor(repo_root: str) -> str:
+    """提交者：复用 git 身份；取不到用占位，不阻断提交。"""
+    out = _git("git", "-C", repo_root, "config", "user.name")
+    return out.stdout.strip() or "ledger-script"
+
+
+def git_sync(action: str) -> None:
+    """写成功后调用一次：把本次改动的台账文件提交；有上游跟踪分支则推送。
+
+    纯脚本、确定性，不依赖大模型。无 git / 无上游 / 全被 ignore / 无实际变更 都静默跳过。
+    同步是尽力而为：任何异常都不影响已完成的台账写入（只打印提示）。
+    """
+    if os.environ.get("TASK_LEDGER_NO_SYNC"):
+        return
+    try:
+        files = [p for p in CHANGED_FILES if p.exists()]
+        if not files:
+            return
+        # 从任一文件反查仓库根，不依赖调用方透传 --repo
+        top = _git("git", "-C", str(files[0].parent), "rev-parse", "--show-toplevel")
+        if top.returncode != 0:
+            return  # 不是 git 项目 → 跳过（规则1：有才提交）
+        root = top.stdout.strip()
+        # 只 add 本次真实改动、且未被 ignore 的文件
+        to_add = [
+            str(f)
+            for f in files
+            if _git("git", "-C", root, "check-ignore", "-q", str(f)).returncode != 0
+        ]
+        if not to_add:
+            return  # 全被 ignore → 尊重用户选择，不强行提交
+        _git("git", "-C", root, "add", *to_add)
+        if _git("git", "-C", root, "diff", "--cached", "--quiet").returncode == 0:
+            return  # 无实际变更
+        actor = _git_actor(root)
+        _git("git", "-C", root, "commit", "-m", f"ledger({action}): {actor}")
+        # 规则2：有上游跟踪分支才推
+        if _git("git", "-C", root, "rev-parse", "--abbrev-ref", "@{upstream}").returncode != 0:
+            return
+        try:
+            _git("git", "-C", root, "push", timeout=30)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            # 非快进：自动 rebase 一次再推；冲突 / 超时则放弃，绝不 --force
+            try:
+                _git("git", "-C", root, "pull", "--rebase", "--autostash", timeout=30)
+                _git("git", "-C", root, "push", timeout=30)
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                print(
+                    "提示：本地已提交，但推送被拒（他人已推 / 需认证 / 超时）。"
+                    "请手动 `git pull --rebase` 解决后重试；本次改动已安全留在本地。",
+                    file=sys.stderr,
+                )
+    except Exception as exc:  # noqa: BLE001 —— 同步失败不应污染台账主流程
+        print(f"提示：写后自动同步未执行（{type(exc).__name__}: {exc}）。数据已写入本地。",
+              file=sys.stderr)
 
 
 def require_task_id(tid: str) -> str:
@@ -2070,6 +2137,11 @@ def build_parser() -> argparse.ArgumentParser:
         prog="progress.py",
         description="管理项目任务进度（ledger/progress.json + worklog + 历史）",
     )
+    parser.add_argument(
+        "--no-sync",
+        action="store_true",
+        help="跳过写后自动 git 提交 / 推送（等价于 TASK_LEDGER_NO_SYNC=1）",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     def add_repo(p: argparse.ArgumentParser) -> None:
@@ -2202,6 +2274,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "no_sync", False):
+        os.environ["TASK_LEDGER_NO_SYNC"] = "1"
     try:
         args.func(args)
     except Fail as exc:
@@ -2221,6 +2295,7 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # noqa: BLE001 —— 兜底：未预期的失败用独立退出码，与业务错误区分
         print(f"错误：未预期的失败 {type(exc).__name__}: {exc}", file=sys.stderr)
         return 3
+    git_sync(args.command)  # 写成功后一次性自动同步（commit / push）
     return 0
 
 
