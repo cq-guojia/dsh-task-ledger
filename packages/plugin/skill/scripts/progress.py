@@ -65,6 +65,14 @@ LABEL_MAX_WORDS_EN = 3
 TAGS_MAX_COUNT = 5
 CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 
+# 执行记录：worklog 末尾由脚本维护的一节。老文档没有这一节就不动（不迁移）；
+# 有这一节时脚本按节点自动追加，agent 改完正文跑 log 补一条。
+EXEC_HEAD = "## 执行记录"
+EXEC_HINT = (
+    "<!-- 本节由脚本维护：new / claim / set / close / log 自动追加，请勿手改。\n"
+    '     要补一条就跑 progress.py log --id <任务号> --note "做了什么"。 -->'
+)
+
 SKILL_DIR = Path(__file__).resolve().parent.parent
 WORKLOG_TEMPLATE = SKILL_DIR / "assets" / "worklog.md"
 
@@ -81,6 +89,8 @@ FALLBACK_TEMPLATE = """# <id>：<title>
 ## 过程
 
 ## 结论
+
+## 执行记录
 """
 
 
@@ -1134,6 +1144,46 @@ def find_worklog(
     return None
 
 
+def exec_line(when: str, who: str | None, note: str) -> str:
+    """一条执行记录的正文：`- 时间 @某人 做了什么`。"""
+    return f"- {when} @{who} {note}" if who else f"- {when} {note}"
+
+
+def append_exec_log(text: str, line: str) -> str:
+    """把一条记录追加到「执行记录」节末尾；文档没有这一节（老 worklog）原样返回。"""
+    lines = text.splitlines()
+    at = next((i for i, ln in enumerate(lines) if ln.strip() == EXEC_HEAD), None)
+    if at is None:
+        return text
+    end = next(
+        (i for i in range(at + 1, len(lines)) if lines[i].startswith("## ")), len(lines)
+    )
+    insert = end
+    while insert > at + 1 and not lines[insert - 1].strip():
+        insert -= 1
+    lines.insert(insert, line)
+    return "\n".join(lines) + "\n"
+
+
+def record_exec(repo: Path, tid: str, task: dict[str, Any], note: str) -> None:
+    """给任务的过程文档补一条执行记录。
+
+    调用方必须已经持有 progress_lock —— 与 close 的封卷（读全文→改写→落盘）互斥，
+    否则两条记录并发追加会互相覆盖。
+    """
+    log = find_worklog(repo, tid, task)
+    if log is None:
+        return
+    try:
+        text = log.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return
+    line = exec_line(now(), task.get("owner") or task.get("creator"), note)
+    new_text = append_exec_log(text, line)
+    if new_text != text:
+        write_text_atomic(log, new_text)
+
+
 def write_worklog(repo: Path, tid: str, task: dict[str, Any]) -> Path:
     log = repo / worklog_dir_for(task) / worklog_name(tid)
     write_text_atomic(log, render_worklog(tid, task))
@@ -1218,6 +1268,7 @@ def cmd_new(args: argparse.Namespace) -> None:
             "status": "doing" if args.self else "open",
             "created": stamp,
             "started": stamp if args.self else None,
+            "updated": stamp,
             "finished": None,
             "category": category,
             "tags": tags,
@@ -1236,6 +1287,7 @@ def cmd_new(args: argparse.Namespace) -> None:
             except Fail:
                 pass
             raise Fail(f"创建失败，已从状态表撤销该任务：{exc}")
+        record_exec(repo, tid, task, "创建任务")
     print(f"已创建任务 {tid}")
     print(f"  标题    {task['title']}")
     print(f"  状态    {task['status']}")
@@ -1271,10 +1323,13 @@ def cmd_claim(args: argparse.Namespace) -> None:
                 f"任务 {tid} 当前状态是 {task.get('status')}，只有 open 才能认领。"
             )
 
+        stamp = now()
         task["owner"] = owner
         task["status"] = "doing"
-        task["started"] = task.get("started") or now()
+        task["started"] = task.get("started") or stamp
+        task["updated"] = stamp
         commit_guarded(path, before, data)
+        record_exec(repo, tid, task, "认领 → doing")
     print(f"已认领 {tid} → doing，owner = @{owner}")
     print_worklog(repo, tid, task)
 
@@ -1328,9 +1383,31 @@ def cmd_set(args: argparse.Namespace) -> None:
             task["started"] = task.get("started") or now()
             changed.append(f"owner {old or '（无）'} → {task['owner']}")
 
+        task["updated"] = now()
         commit_guarded(path, before, data)
+        record_exec(repo, tid, task, "变更：" + "，".join(changed))
     print(f"已更新 {tid}：" + "，".join(changed))
     print_worklog(repo, tid, task)
+
+
+def cmd_log(args: argparse.Namespace) -> None:
+    repo = find_repo(args.repo)
+    tid = require_task_id(args.id)
+    note = " ".join(args.note.split())
+    if not note:
+        raise Fail("--note 不能为空：一句话写清这轮做了什么。")
+    me = git_user()
+    path = repo / PROGRESS_REL
+    with progress_lock(path):
+        before, data = read_guarded(path)
+        task = data["tasks"].get(tid)
+        if task is None:
+            raise Fail(f"没有任务 {tid}（可能未建或已结案；封卷后不再记）。")
+        require_owner(task, tid, me)
+        task["updated"] = now()
+        commit_guarded(path, before, data)
+        record_exec(repo, tid, task, note)
+    print(f"已记入 {tid} 的执行记录：{note}")
 
 
 def cmd_close(args: argparse.Namespace) -> None:
@@ -1414,29 +1491,30 @@ def cmd_close(args: argparse.Namespace) -> None:
                     if close_tags is not None
                     else list(task.get("tags") or []),
                 )
-            new_log = stamp_frozen(log_text, finished, owner)
         else:
-            new_log = stamp_frozen(
-                render_worklog(
-                    tid,
-                    dict(
-                        task,
-                        status="done",
-                        category=(
-                            close_category
-                            if close_category is not None
-                            else task.get("category")
-                        ),
-                        tags=(
-                            close_tags
-                            if close_tags is not None
-                            else list(task.get("tags") or [])
-                        ),
+            log_text = render_worklog(
+                tid,
+                dict(
+                    task,
+                    status="done",
+                    category=(
+                        close_category
+                        if close_category is not None
+                        else task.get("category")
+                    ),
+                    tags=(
+                        close_tags
+                        if close_tags is not None
+                        else list(task.get("tags") or [])
                     ),
                 ),
-                finished,
-                owner,
             )
+        # 结案本身是最后一个节点：封卷前补上这条记录，封卷后不再追加
+        new_log = stamp_frozen(
+            append_exec_log(log_text, exec_line(finished, owner, f"结案：{summary}")),
+            finished,
+            owner,
+        )
 
         # 落盘前复查：三个文件都没被别人动过
         for p, mark in (
@@ -2009,6 +2087,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--owner", help="交接给谁")
     add_repo(p)
     p.set_defaults(func=cmd_set)
+
+    p = sub.add_parser("log", help="往 worklog 的「执行记录」节补一条记录")
+    p.add_argument("--id", required=True)
+    p.add_argument("--note", required=True, help="一句话：这轮做了什么")
+    add_repo(p)
+    p.set_defaults(func=cmd_log)
 
     p = sub.add_parser("close", help="结案：移出状态 + 追加历史 + 封卷 worklog")
     p.add_argument("--id", required=True)

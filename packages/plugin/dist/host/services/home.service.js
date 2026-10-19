@@ -8,8 +8,10 @@ import { readTasks } from '../repositories/ledger.repository.js';
 import { getCurrentIdentity } from '../repositories/identity.repository.js';
 import { settleWorkspaces } from '../errors.js';
 import { daysSince } from './dates.js';
-/** 停滞判定阈值：doing / blocked 且 created 至今超过这么多天（2026-10-17 拍板，显示级）。 */
-export const STALE_DAYS = 14;
+/** 停滞阈值：doing / blocked 且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
+export const STALE_DAYS = 3;
+/** 阻塞阈值：doing / blocked 且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板）。 */
+export const OVERDUE_DAYS = 7;
 /** 快路径读法：单工作区 readTasks + git 身份（并行；供 settle 逐工作区调）。 */
 export async function readTaskScope(workspace) {
     const [tasks, identity] = await Promise.all([readTasks(workspace), getCurrentIdentity(workspace)]);
@@ -20,7 +22,14 @@ export function computeSnapshot(scopes, now) {
     const withMeta = scopes.flatMap((scope) => scope.tasks.map((task) => {
         const working = task.status === 'doing' || task.status === 'blocked';
         const ageDays = working ? daysSince(task.started ?? task.created, now) : null;
-        return { ...task, ageDays, stale: ageDays !== null && ageDays > STALE_DAYS };
+        // 停滞看「最后更新」，阻塞看「接任务至今」——两个不同的问题，互不覆盖
+        const idleDays = working ? daysSince(task.updated ?? task.started ?? task.created, now) : null;
+        return {
+            ...task,
+            ageDays,
+            stale: idleDays !== null && idleDays >= STALE_DAYS,
+            overdue: ageDays !== null && ageDays >= OVERDUE_DAYS,
+        };
     }));
     const openTasks = withMeta.filter((task) => task.status === 'open');
     const blockedTasks = withMeta.filter((task) => task.status === 'blocked');

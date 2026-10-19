@@ -23,6 +23,8 @@ export interface TaskRecord {
   owner?: string | null
   created?: string | null
   started?: string | null
+  /** 最后一次推进（建 / 认领 / 改状态 / 交接 / 补执行记录）的时间；老数据可能没有。 */
+  updated?: string | null
   finished?: string | null
   category?: string | null
   tags?: string[] | null
@@ -124,7 +126,7 @@ export interface BoardStats {
   readonly doing: number
   /** 全部 blocked。 */
   readonly blocked: number
-  /** 停滞 = doing|blocked 且 ageDays > STALE_DAYS。 */
+  /** 停滞 = doing|blocked 且 updated 至今满 STALE_DAYS 天没更新。 */
   readonly stale: number
   /** 停滞阈值（天）——随响应下发，界面文案不硬编码（单一真源）。 */
   readonly staleDays: number
@@ -136,8 +138,10 @@ export interface BoardStats {
 export interface BoardTask extends TaskRow {
   /** 认领后未动天数（doing / blocked；open 与解析不了的时间为 null）。 */
   readonly ageDays: number | null
-  /** 停滞标记。 */
+  /** 停滞标记：updated 至今满 STALE_DAYS 天没更新（与 ageDays 无关）。 */
   readonly stale: boolean
+  /** 阻塞标记：接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */
+  readonly overdue: boolean
 }
 
 export interface BoardSnapshot {

@@ -77,10 +77,11 @@ await check('getBoardSnapshot：统计与任务行（与历史量无关的热路
   else assert.ok(snapshot.tasks.length >= 1)
   assert.ok(Number.isInteger(snapshot.stats.myActive) && snapshot.stats.myActive >= 0)
   if (hasDispatch) assert.ok(snapshot.stats.open >= 4)
-  assert.equal(snapshot.stats.staleDays, 14, '停滞阈值应随响应下发（14 天）')
+  assert.equal(snapshot.stats.staleDays, 3, '停滞阈值应随响应下发（3 天未更新）')
   assert.equal(typeof snapshot.stats.oldestOpenDays, 'number', '最老待认领天数应是数字')
   for (const task of snapshot.tasks) {
     assert.equal(typeof task.stale, 'boolean', '每行都应带 host 判好的 stale 标记')
+    assert.equal(typeof task.overdue, 'boolean', '每行都应带 host 判好的 overdue 标记')
     if (task.status === 'open') assert.equal(task.ageDays, null, '待认领不算「认领后未动」')
   }
   assert.ok(elapsed < 2000, `热路径应 <2s，实际 ${elapsed}ms`)

@@ -26,7 +26,7 @@
 | `title` | 熟悉项目初衷并搭建初始文档架构 | 任务标题 |
 | `status` | `open` / `doing` / `blocked` | `done` 只能由 close 产生 |
 | `creator` / `owner` | GuoJia-Agent | git 身份 |
-| `created` / `started` / `finished` | `2026-10-16 17:42:22` | `finished` 结案前为 null |
+| `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | `finished` 结案前为 null；`updated` = 最后一次推进（建 / 认领 / 改状态 / 交接 / 补执行记录），老数据可能缺失（看板回退到 `started` / `created`） |
 | `category` | 建设 | 单值分类 |
 | `tags` | ["文档架构","初始化","调研"] | 1~5 个 |
 | `worklog` | `worklog/202610/16-1742-…-5563.md` | 相对 `ledger/` 的过程文档路径 |
@@ -44,7 +44,9 @@
 
 ## 四、worklog 过程文档
 
-固定五节：**背景 / 待办 / 下一步 / 过程 / 结论**；头部带创建时间、分类 / 标签行；结案时脚本打封卷标记，此后不再修改。模板真源 = skill 的 `assets/worklog.md`。
+固定六节：**背景 / 待办 / 下一步 / 过程 / 结论 / 执行记录**；头部带创建时间、分类 / 标签行；结案时脚本打封卷标记，此后不再修改。模板真源 = skill 的 `assets/worklog.md`。
+
+末节「执行记录」**由脚本维护、禁手改**：`new` / `claim` / `set` / `close` 各自自动追加一行，agent 改完正文后用 `log --id <任务号> --note "…"` 补一条（格式 `- 时间 @谁 做了什么`）。老 worklog 没有这一节就不追加（不迁移）。
 
 ## 五、插件消费方式（规划）
 

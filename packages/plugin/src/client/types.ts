@@ -20,6 +20,8 @@ export interface TaskRow {
   readonly owner?: string | null
   readonly created?: string | null
   readonly started?: string | null
+  /** 最后一次推进的时间（老数据可能没有）。 */
+  readonly updated?: string | null
   readonly finished?: string | null
   readonly category?: string | null
   readonly tags?: string[] | null
@@ -31,8 +33,10 @@ export interface TaskRow {
 export interface TaskMeta {
   /** 认领后未动天数（doing / blocked；open 与解析不了为 null）。 */
   readonly ageDays: number | null
-  /** 停滞 = doing|blocked 且 ageDays > 14 天（STALE_DAYS）。 */
+  /** 停滞 = doing|blocked 且 updated 至今满 STALE_DAYS 天没更新。 */
   readonly stale: boolean
+  /** 阻塞 = doing|blocked 且接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */
+  readonly overdue: boolean
 }
 
 /** 在办行 = 任务 + host 附加字段。 */

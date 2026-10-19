@@ -114,7 +114,7 @@
 
 ### 并发策略
 
-- 所有写命令（`init` / `new` / `claim` / `set` / `close`）走同一套：**读 → 改内存 → 复查指纹 → 原子写**
+- 所有写命令（`init` / `new` / `claim` / `set` / `log` / `close`）走同一套：**读 → 改内存 → 复查指纹 → 原子写**
 - 临时文件名唯一（`mkstemp`），写完 `fsync` 再 `os.replace`，无论成败都清理临时文件
 - key 按字母序落盘，减少两人同时新增时的文本冲突
 - 冲突时**报错要求重跑**，不静默覆盖
@@ -171,7 +171,7 @@
 graph LR
     U[用户说一句话] --> A[agent 读 SKILL.md 判断意图]
     A -->|只读直接跑| R[list / show / validate / history]
-    A -->|先复述参数再确认| W[init / new / claim / set / close]
+    A -->|写操作| W[init / new / claim / set / log / close]
     W --> P[ledger/progress.json]
     W --> H[ledger/history/年月.md]
     W --> M[ledger/worklog/年月/日-时分-说明-码.md]
