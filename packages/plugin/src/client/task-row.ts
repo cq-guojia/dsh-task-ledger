@@ -11,7 +11,7 @@
  *    + **执行人列**（原状态位，有执行人才摆 `@名字` 标签）+ 最右「@创建人 创建于 年-月-日 时:分:秒」
  *    （悬停掉时分秒并让位给操作钮）+ 查看。
  *    状态一律**标签型、五色**（用户 2026-10-18：原来是一排素字 / pill，现在与人员**位置互换**）：
- *    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=超期 / 红=停滞；三个异常标签悬停给**配置出来的**
+ *    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 / 红=停滞；三个异常标签悬停给**配置出来的**
  *    阈值解释（staleDays / overdueDays / backlogDays 由 host 下发）。圆点颜色同色系。
  *
  * 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
@@ -38,7 +38,8 @@ function titleOf(row: Row): string {
   return title !== undefined && title !== '' ? title : row.record.src ?? '—'
 }
 
-/** 状态语义（异常优先：停滞 > 超期 > 积压；三者都是 host 按时间算出来的，不是状态）。 */
+/** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 host 按时间算出来的，不是状态）。
+ *  只决定圆点 / 左缘色条这类**单色位**——标签可以多枚，见 MARKS。 */
 function toneOf(row: Row): Tone {
   if (row.kind !== 'task') return 'closed'
   if (row.task.stale === true) return 'stale'
@@ -47,6 +48,10 @@ function toneOf(row: Row): Tone {
   if (row.task.status === 'open') return 'open'
   return 'doing'
 }
+
+/** 三个异常标记**可叠加**（用户 2026-10-19）：一条任务能同时逾期 + 停滞，两枚标签都要摆。
+ *  积压与逾期 / 停滞不会共存（前者是待认领，后两者是进行中），故最多 2 枚。 */
+const MARKS = ['backlog', 'overdue', 'stale'] as const
 
 /** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 function statusLabel(tone: Tone, t: Translate): string | null {
@@ -122,15 +127,19 @@ export function TaskRowView(props: {
     const text = statusLabel(which, t) ?? ''
     return h(Tag, { key: which, text, tone: which, tip: tip ?? detailTip(which) })
   }
-  const statusTag = tone === 'closed' ? null : tagOf(tone)
-  // 「我的待办」卡的异常标签（积压 / 超期 / 停滞；进行中只靠左缘色条，不再重复一枚）
-  const alarmTag = tone === 'backlog' || tone === 'overdue' || tone === 'stale' ? tagOf(tone) : null
+  const markTones = isTask ? MARKS.filter((which) => row.task[which] === true) : []
+  // 异常标记全部摆出来；一个都没有 ⇒ 退回归属状态（待认领 / 进行中）那一枚
+  const statusTags = tone === 'closed'
+    ? []
+    : (markTones.length > 0 ? markTones : [tone as Exclude<Tone, 'closed'>]).map((which) => tagOf(which))
+  // 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）
+  const alarmTags = markTones.map((which) => tagOf(which))
 
   // 第一行（「我的待办」卡）：标题 + 创建徽 + 异常标签
   const titleLine = h('div', { className: 'dtl-taskrow__l1' },
     h('span', { className: 'dtl-taskrow__title dtl-ellipsis', title: titleOf(row) }, titleOf(row)),
     createdDay === null ? null : h('span', { className: 'dtl-taskrow__stamp' }, `[${t('fieldCreatedStamp', { day: createdDay })}]`),
-    alarmTag,
+    ...alarmTags,
   )
 
   // 第一行（表格行）：独立类族，不沾卡片基类（用户 2026-10-18）。
@@ -156,7 +165,7 @@ export function TaskRowView(props: {
     })
     // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）
     const tagLine = h('div', { className: 'dtl-orow__tags' },
-      statusTag,
+      ...statusTags,
       tags.map(tag => h(Tag, { key: tag, text: `#${tag}` })),
     )
     return h('div', { className: 'dtl-orow' },

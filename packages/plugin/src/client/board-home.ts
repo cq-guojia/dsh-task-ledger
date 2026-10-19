@@ -82,9 +82,6 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
       .map((task) => [task.workspace.id, task.workspace.title]))]
       .map(([id, title]) => ({ value: id, label: title })),
   ], [board, t])
-  const days = (value: number | null | undefined): string =>
-    value === null || value === undefined ? t('daysNone') : t('daysValue', { n: value })
-
   /** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
   const card = (label: LocaleKey, value: number, hint: string, title?: string): ReactNode =>
     h(StatCard, {
@@ -160,14 +157,29 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
               : h('div', { className: 'dtl-stats', style: statsRowStyle },
                 h('div', { className: 'dtl-stats__cards' },
                   // 按列成对（用户 2026-10-19 选 A）：每列上下是同一对象的两个视角，
-                  // 子集关系一眼可见 —— 积压 ⊂ 待认领、超期 / 停滞 ⊂ 进行中。
+                  // 子集关系一眼可见 —— 积压 ⊂ 待认领、逾期 / 停滞 ⊂ 进行中。
                   // DOM 按**列序**写，CSS 的 grid-auto-flow:column 保证 4 列 / 2 列两种排布下都成对。
-                  card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myOverdue })),
-                  card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive })),
-                  card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) })),
-                  card('statBacklog', stats.backlog, t('statBacklogHint', { n: stats.open }), t('statBacklogTitle', { n: stats.backlogDays })),
-                  card('statOverdue', stats.overdue, t('statDoingTotalHint', { n: stats.doing }), t('statOverdueTitle', { n: stats.overdueDays })),
-                  card('statStale', stats.stale, t('statDoingTotalHint', { n: stats.doing }), t('statStaleTitle', { n: stats.staleDays })),
+                  // 小字一律给本卡独有的增量信息，**不重复全集**（用户 2026-10-19）：
+                  // 子集卡（积压 / 逾期 / 停滞）报占比或极值，0 条时整条不显示。
+                  card('statMyActive', stats.myActive, [
+                    stats.myOverdue > 0 ? t('statMyOverdueHint', { n: stats.myOverdue }) : null,
+                    stats.myStale > 0 ? t('statMyStaleHint', { n: stats.myStale }) : null,
+                  ].filter((part) => part !== null).join(' ｜ ')),
+                  card('statDoing', stats.doing, stats.doing - stats.myActive > 0
+                    ? t('statDoingHint', { n: stats.doing - stats.myActive })
+                    : t('statDoingAllMine')),
+                  card('statOpen', stats.open, stats.oldestOpenDays === null
+                    ? ''
+                    : t('statOpenHint', { n: stats.oldestOpenDays })),
+                  card('statBacklog', stats.backlog, stats.backlog > 0 && stats.open > 0
+                    ? t('statBacklogHint', { n: Math.round((stats.backlog / stats.open) * 100) })
+                    : '', t('statBacklogTitle', { n: stats.backlogDays })),
+                  card('statOverdue', stats.overdue, stats.maxOverdueAge === null
+                    ? ''
+                    : t('statOverdueHint', { n: stats.maxOverdueAge }), t('statOverdueTitle', { n: stats.overdueDays })),
+                  card('statStale', stats.stale, stats.maxStaleIdle === null
+                    ? ''
+                    : t('statStaleHint', { n: stats.maxStaleIdle }), t('statStaleTitle', { n: stats.staleDays })),
                   periodCard('statWeekDone', periods?.thisWeek),
                   periodCard('statLastWeekDone', periods?.lastWeek),
                 ),
@@ -326,7 +338,7 @@ function orZero(n: number): number | undefined {
 
 /** 一个工作区分组（全部待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
  *  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
- *  积压 / 超期 / 停滞**只在 >0 时出现**。 */
+ *  积压 / 逾期 / 停滞**只在 >0 时出现**。 */
 function WorkspaceGroupView(props: {
   t: Translate
   group: WorkspaceGroup

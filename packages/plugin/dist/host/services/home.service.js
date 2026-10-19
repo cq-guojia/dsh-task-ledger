@@ -10,7 +10,7 @@ import { settleWorkspaces } from '../errors.js';
 import { daysSince } from './dates.js';
 /** 停滞阈值：进行中且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
 export const STALE_DAYS = 3;
-/** 超期阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板 7 → 14 天）。 */
+/** 逾期阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板 7 → 14 天）。 */
 export const OVERDUE_DAYS = 14;
 /** 积压阈值：待认领且 created 至今满这么多天还没人接（2026-10-19 拍板）。 */
 export const BACKLOG_DAYS = 30;
@@ -25,7 +25,7 @@ export function computeSnapshot(scopes, now) {
         // blocked 只是旧数据（新任务不可能再有）；读侧一律当进行中
         const working = task.status === 'doing' || task.status === 'blocked';
         const ageDays = working ? daysSince(task.started ?? task.created, now) : null;
-        // 停滞看「最后更新」，超期看「接任务至今」，积压看「创建至今还没人认领」——三个不同的问题，互不覆盖
+        // 停滞看「最后更新」，逾期看「接任务至今」，积压看「创建至今还没人认领」——三个不同的问题，互不覆盖
         const idleDays = working ? daysSince(task.updated ?? task.started ?? task.created, now) : null;
         const idleOpen = task.status === 'open' ? daysSince(task.created, now) : null;
         return {
@@ -44,21 +44,29 @@ export function computeSnapshot(scopes, now) {
     const identities = {};
     for (const scope of scopes)
         identities[scope.workspace.id] = scope.identity;
-    const myOverdue = withMeta.filter((task) => task.overdue && task.owner != null && task.owner === identities[task.workspace.id]).length;
+    const mine = (task) => task.owner != null && task.owner === identities[task.workspace.id];
+    const backlogTasks = withMeta.filter((task) => task.backlog);
+    const overdueTasks = withMeta.filter((task) => task.overdue);
+    const staleTasks = withMeta.filter((task) => task.stale);
+    // 「最长 N 天」小字：本块 0 条时给 null（前端不显示小字），不拿 0 充数
+    const maxOf = (tasks, pick) => tasks.length === 0 ? null : tasks.reduce((max, task) => Math.max(max, pick(task) ?? 0), 0);
     const stats = {
         myActive,
-        myOverdue,
+        myOverdue: overdueTasks.filter(mine).length,
+        myStale: staleTasks.filter(mine).length,
         open: openTasks.length,
         doing: withMeta.filter((task) => task.status === 'doing' || task.status === 'blocked').length,
-        overdue: withMeta.filter((task) => task.overdue).length,
-        stale: withMeta.filter((task) => task.stale).length,
-        backlog: withMeta.filter((task) => task.backlog).length,
+        overdue: overdueTasks.length,
+        stale: staleTasks.length,
+        backlog: backlogTasks.length,
         staleDays: STALE_DAYS,
         overdueDays: OVERDUE_DAYS,
         backlogDays: BACKLOG_DAYS,
         oldestOpenDays: openTasks.length === 0
             ? null
             : openTasks.reduce((max, task) => Math.max(max, daysSince(task.created, now) ?? 0), 0),
+        maxOverdueAge: maxOf(overdueTasks, (task) => task.ageDays),
+        maxStaleIdle: maxOf(staleTasks, (task) => task.idleDays),
     };
     return { at: now.toISOString(), workspaces: scopes.map((scope) => scope.workspace), tasks: withMeta, stats, identities };
 }

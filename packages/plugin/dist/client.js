@@ -202,7 +202,7 @@ window.__ModuleLoader__.load({
 			finish: false,
 			release: false
 		};
-		/** 状态档命中（积压 / 超期 / 停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
+		/** 状态档命中（积压 / 逾期 / 停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
 		function statusHit(task, status) {
 			if (status === "all") return true;
 			if (status === "active") return task.status === "doing" || task.status === "blocked";
@@ -378,7 +378,7 @@ body{
   /* ⚠️ 宿主是 state-warn（不是 state-warning，后者无此定义） */
   --dtl-warning:var(--dsw-alias-state-warn-primary,#f59e0b);
   --dtl-danger:var(--dsw-alias-state-error-primary,#ec1313);
-  /* 超期橙：在「积压黄」与「停滞红」之间再取一档（语义阶梯 灰→黄→橙→红），
+  /* 逾期橙：在「积压黄」与「停滞红」之间再取一档（语义阶梯 灰→黄→橙→红），
      宿主没有现成的橙 token ⇒ 用 warn + error 两色现算，主题一换自动跟随 */
   --dtl-overdue:color-mix(in srgb,var(--dtl-warning) 55%,var(--dtl-danger));
   --dtl-link:var(--dsw-alias-link,#3b5bdb);
@@ -667,7 +667,7 @@ body[data-ds-dark-theme]{
 /* 「查看」钮在表格行里也要常驻布局（display:none 会不算宽度 ⇒ hover 一出就又把行撑开） */
 .dtl-orow .dtl-viewbtn{display:inline-flex;visibility:hidden;}
 .dtl-orow:hover .dtl-viewbtn{visibility:visible;}
-/* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=积压 / 橙=超期 / 红=停滞；
+/* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=积压 / 橙=逾期 / 红=停滞；
    6px（用户 2026-10-18：8px 太大） */
 .dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
 .dtl-dot--doing{background:var(--dtl-business-dim);}
@@ -724,7 +724,7 @@ body[data-ds-dark-theme]{
   background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
 /* 状态四色 = **实心色块**（用户 2026-10-18：彩色字看不清 ⇒ 改色块 + 反色字）：
-   待认领灰 / 进行中蓝 / 积压黄 / 超期橙 / 停滞红（与行首圆点同色系）。
+   待认领灰 / 进行中蓝 / 积压黄 / 逾期橙 / 停滞红（与行首圆点同色系）。
    红黄蓝都是中调 ⇒ 白字两个主题都可读；灰块用「字色底 + 面色字」⇒ 明暗自动反过来 */
 .dtl-tag--open{background:var(--dtl-fg-3);color:var(--dtl-surface-1);font-weight:600;}
 .dtl-tag--doing{background:var(--dtl-business);color:var(--dtl-on-signal);font-weight:600;}
@@ -1088,7 +1088,7 @@ body[data-ds-dark-theme]{
 		*    + **执行人列**（原状态位，有执行人才摆 `@名字` 标签）+ 最右「@创建人 创建于 年-月-日 时:分:秒」
 		*    （悬停掉时分秒并让位给操作钮）+ 查看。
 		*    状态一律**标签型、五色**（用户 2026-10-18：原来是一排素字 / pill，现在与人员**位置互换**）：
-		*    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=超期 / 红=停滞；三个异常标签悬停给**配置出来的**
+		*    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 / 红=停滞；三个异常标签悬停给**配置出来的**
 		*    阈值解释（staleDays / overdueDays / backlogDays 由 host 下发）。圆点颜色同色系。
 		*
 		* 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
@@ -1101,7 +1101,8 @@ body[data-ds-dark-theme]{
 			const title = row.record.workpackage ?? row.record.summary;
 			return title !== void 0 && title !== "" ? title : row.record.src ?? "—";
 		}
-		/** 状态语义（异常优先：停滞 > 超期 > 积压；三者都是 host 按时间算出来的，不是状态）。 */
+		/** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 host 按时间算出来的，不是状态）。
+		*  只决定圆点 / 左缘色条这类**单色位**——标签可以多枚，见 MARKS。 */
 		function toneOf(row) {
 			if (row.kind !== "task") return "closed";
 			if (row.task.stale === true) return "stale";
@@ -1110,6 +1111,13 @@ body[data-ds-dark-theme]{
 			if (row.task.status === "open") return "open";
 			return "doing";
 		}
+		/** 三个异常标记**可叠加**（用户 2026-10-19）：一条任务能同时逾期 + 停滞，两枚标签都要摆。
+		*  积压与逾期 / 停滞不会共存（前者是待认领，后两者是进行中），故最多 2 枚。 */
+		const MARKS = [
+			"backlog",
+			"overdue",
+			"stale"
+		];
 		/** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
 		function statusLabel(tone, t) {
 			if (tone === "stale") return t("statusStale");
@@ -1195,12 +1203,13 @@ body[data-ds-dark-theme]{
 					tip: tip ?? detailTip(which)
 				});
 			};
-			const statusTag = tone === "closed" ? null : tagOf(tone);
-			const alarmTag = tone === "backlog" || tone === "overdue" || tone === "stale" ? tagOf(tone) : null;
+			const markTones = isTask ? MARKS.filter((which) => row.task[which] === true) : [];
+			const statusTags = tone === "closed" ? [] : (markTones.length > 0 ? markTones : [tone]).map((which) => tagOf(which));
+			const alarmTags = markTones.map((which) => tagOf(which));
 			const titleLine = (0, react.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react.createElement)("span", {
 				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
-			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-taskrow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), alarmTag);
+			}, titleOf(row)), createdDay === null ? null : (0, react.createElement)("span", { className: "dtl-taskrow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), ...alarmTags);
 			const orowTitleLine = (0, react.createElement)("div", { className: "dtl-orow__title" }, (0, react.createElement)("span", {
 				className: "dtl-orow__name dtl-ellipsis",
 				title: titleOf(row)
@@ -1216,7 +1225,7 @@ body[data-ds-dark-theme]{
 					who: String(owner),
 					when: startedOk ? formatDateTime(String(row.task.started)) : t("timeUnknown")
 				});
-				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, statusTag, tags.map((tag) => (0, react.createElement)(Tag, {
+				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, ...statusTags, tags.map((tag) => (0, react.createElement)(Tag, {
 					key: tag,
 					text: `#${tag}`
 				})));
@@ -1332,7 +1341,6 @@ body[data-ds-dark-theme]{
 				value: id,
 				label: title
 			}))], [board, t]);
-			const days = (value) => value === null || value === void 0 ? t("daysNone") : t("daysValue", { n: value });
 			/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
 			const card = (label, value, hint, title) => (0, react.createElement)(StatCard, {
 				label: t(label),
@@ -1414,7 +1422,7 @@ body[data-ds-dark-theme]{
 			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", {
 				className: "dtl-stats",
 				style: statsRowStyle
-			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myOverdue })), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive })), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) })), card("statBacklog", stats.backlog, t("statBacklogHint", { n: stats.open }), t("statBacklogTitle", { n: stats.backlogDays })), card("statOverdue", stats.overdue, t("statDoingTotalHint", { n: stats.doing }), t("statOverdueTitle", { n: stats.overdueDays })), card("statStale", stats.stale, t("statDoingTotalHint", { n: stats.doing }), t("statStaleTitle", { n: stats.staleDays })), periodCard("statWeekDone", periods?.thisWeek), periodCard("statLastWeekDone", periods?.lastWeek)), (0, react.createElement)("div", {
+			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, [stats.myOverdue > 0 ? t("statMyOverdueHint", { n: stats.myOverdue }) : null, stats.myStale > 0 ? t("statMyStaleHint", { n: stats.myStale }) : null].filter((part) => part !== null).join(" ｜ ")), card("statDoing", stats.doing, stats.doing - stats.myActive > 0 ? t("statDoingHint", { n: stats.doing - stats.myActive }) : t("statDoingAllMine")), card("statOpen", stats.open, stats.oldestOpenDays === null ? "" : t("statOpenHint", { n: stats.oldestOpenDays })), card("statBacklog", stats.backlog, stats.backlog > 0 && stats.open > 0 ? t("statBacklogHint", { n: Math.round(stats.backlog / stats.open * 100) }) : "", t("statBacklogTitle", { n: stats.backlogDays })), card("statOverdue", stats.overdue, stats.maxOverdueAge === null ? "" : t("statOverdueHint", { n: stats.maxOverdueAge }), t("statOverdueTitle", { n: stats.overdueDays })), card("statStale", stats.stale, stats.maxStaleIdle === null ? "" : t("statStaleHint", { n: stats.maxStaleIdle }), t("statStaleTitle", { n: stats.staleDays })), periodCard("statWeekDone", periods?.thisWeek), periodCard("statLastWeekDone", periods?.lastWeek)), (0, react.createElement)("div", {
 				className: "dtl-card",
 				style: chartCardStyle
 			}, (0, react.createElement)("div", { style: {
@@ -1598,7 +1606,7 @@ body[data-ds-dark-theme]{
 		}
 		/** 一个工作区分组（全部待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
 		*  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
-		*  积压 / 超期 / 停滞**只在 >0 时出现**。 */
+		*  积压 / 逾期 / 停滞**只在 >0 时出现**。 */
 		function WorkspaceGroupView(props) {
 			const { t, group, board } = props;
 			const [open, setOpen] = (0, react.useState)(group.rows.length <= GROUP_COLLAPSE_OVER);
@@ -1647,22 +1655,25 @@ body[data-ds-dark-theme]{
 			degradedItem: "{title}：{message}",
 			statsPlaceholder: "统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。",
 			statMyActive: "我的待办",
-			statMyActiveHint: "超期 {n} 条",
+			statMyOverdueHint: "逾期 {n}",
+			statMyStaleHint: "停滞 {n}",
 			statOpen: "待认领",
-			statOpenHint: "最长未认领 {n}",
+			statOpenHint: "最长等待 {n} 天",
 			statDoing: "进行中",
-			statDoingHint: "其他成员负责 {n} 条",
+			statDoingHint: "他人在办 {n}",
+			statDoingAllMine: "均为我负责",
 			statBacklog: "积压",
-			statOverdue: "超期",
+			statOverdue: "逾期",
 			statStale: "停滞",
-			statBacklogHint: "待认领共 {n} 条",
-			statDoingTotalHint: "进行中共 {n} 条",
+			statBacklogHint: "占待认领 {n}%",
+			statOverdueHint: "最长 {n} 天未结",
+			statStaleHint: "最长 {n} 天未更新",
 			statStaleTitle: "停滞 = 进行中满 {n} 天没更新",
-			statOverdueTitle: "超期 = 认领后满 {n} 天还没结案",
+			statOverdueTitle: "逾期 = 认领后满 {n} 天还没结案",
 			statBacklogTitle: "积压 = 待认领满 {n} 天没人接",
 			statWeekDone: "本周完成",
 			statLastWeekDone: "上周完成",
-			statCreatedHint: "新增 {n} 条",
+			statCreatedHint: "新增 {n}",
 			daysNone: "—",
 			daysValue: "{n} 天",
 			chartTitle: "近 8 周",
@@ -1687,12 +1698,12 @@ body[data-ds-dark-theme]{
 			statusActive: "进行中",
 			statusOpen: "待认领",
 			statusBacklog: "积压",
-			statusOverdue: "超期",
+			statusOverdue: "逾期",
 			statusStale: "停滞",
 			tipOpen: "任务创建于 {created}\n尚未有人认领",
 			tipBacklog: "任务创建于 {created}\n无人认领已满 {d}",
 			tipDoing: "{who}\n开始执行：{started}\n最后更新：{updated}",
-			tipOverdue: "{who}\n开始执行：{started}\n最后更新：{updated}\n任务已开始 {d}",
+			tipOverdue: "{who}\n开始执行：{started}\n最后更新：{updated}\n已逾期 {d}",
 			tipStale: "{who}\n开始执行：{started}\n最后更新：{updated}\n已停滞 {d}",
 			workspaceLabel: "工作区",
 			workspaceAll: "全部工作区",
@@ -1704,7 +1715,7 @@ body[data-ds-dark-theme]{
 			groupOpen: "待办 {n} 条",
 			groupDoing: "进行中 {n} 条",
 			groupBacklog: "积压 {n} 条",
-			groupOverdue: "超期 {n} 条",
+			groupOverdue: "逾期 {n} 条",
 			groupStale: "停滞 {n} 条",
 			colTask: "任务",
 			colCreator: "创建人",
@@ -1769,16 +1780,19 @@ body[data-ds-dark-theme]{
 			degradedItem: "{title}: {message}",
 			statsPlaceholder: "Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.",
 			statMyActive: "My todos",
-			statMyActiveHint: "overdue {n}",
+			statMyOverdueHint: "overdue {n}",
+			statMyStaleHint: "stale {n}",
 			statOpen: "Unclaimed",
-			statOpenHint: "longest unclaimed {n}",
+			statOpenHint: "longest waiting {n} days",
 			statDoing: "In progress",
-			statDoingHint: "owned by other members: {n}",
+			statDoingHint: "others: {n}",
+			statDoingAllMine: "all mine",
 			statBacklog: "Backlog",
 			statOverdue: "Overdue",
 			statStale: "Stale",
-			statBacklogHint: "{n} unclaimed in total",
-			statDoingTotalHint: "{n} in progress in total",
+			statBacklogHint: "{n}% of unclaimed",
+			statOverdueHint: "longest {n} days open",
+			statStaleHint: "longest {n} days idle",
 			statStaleTitle: "stale = active with no update for {n}+ days",
 			statOverdueTitle: "overdue = claimed {n}+ days ago and still open",
 			statBacklogTitle: "backlog = unclaimed for {n}+ days",
@@ -1814,7 +1828,7 @@ body[data-ds-dark-theme]{
 			tipOpen: "Created on {created}\nNot claimed yet",
 			tipBacklog: "Created on {created}\nUnclaimed for {d}",
 			tipDoing: "{who}\nStarted: {started}\nLast updated: {updated}",
-			tipOverdue: "{who}\nStarted: {started}\nLast updated: {updated}\nActive for {d}",
+			tipOverdue: "{who}\nStarted: {started}\nLast updated: {updated}\nOverdue by {d}",
 			tipStale: "{who}\nStarted: {started}\nLast updated: {updated}\nStalled for {d}",
 			workspaceLabel: "Workspace",
 			workspaceAll: "All workspaces",

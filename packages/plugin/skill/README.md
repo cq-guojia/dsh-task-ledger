@@ -194,7 +194,7 @@ stateDiagram-v2
     note right of doing
         set --owner 交接：owner 换成别人
         （只有当前 owner 能执行）
-        超期 = 接任务满 14 天；停滞 = 最后更新满 3 天
+        逾期 = 接任务满 14 天；停滞 = 最后更新满 3 天
         积压 = 待认领满 30 天
         （都由看板按时间算，不是状态）
     end note

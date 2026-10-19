@@ -1,6 +1,6 @@
 # 状态与时间模型
 
-> TL;DR：状态只有 `open` / `doing`；`done` 由 `close` 产生。超期 = `started` 满 14 天、停滞 = `updated` 满 3 天、积压 = `created` 满 30 天仍 `open`，看板算、不存字段。`updated` 由 `new/claim/set/log` 刷新。owner 只取当前 git 身份。
+> TL;DR：状态只有 `open` / `doing`；`done` 由 `close` 产生。逾期 = `started` 满 14 天、停滞 = `updated` 满 3 天、积压 = `created` 满 30 天仍 `open`，看板算、不存字段。`updated` 由 `new/claim/set/log` 刷新。owner 只取当前 git 身份。
 
 ## 状态机
 
@@ -17,7 +17,7 @@ doing ──set --status open──> open          # 释放认领，执行记录
 | 标记 | 依据 | 阈值 |
 |---|---|---|
 | 积压 | `created`（建了）至今仍 `open`（没人认领） | 满 30 天 |
-| 超期 | `started`（接任务）至今，中途更新不影响 | 满 14 天 |
+| 逾期 | `started`（接任务）至今，中途更新不影响 | 满 14 天 |
 | 停滞 | `updated`（最后推进）至今 | 满 3 天 |
 
 - 真源：`packages/plugin/src/host/services/home.service.ts` 的 `BACKLOG_DAYS = 30` / `OVERDUE_DAYS = 14` / `STALE_DAYS = 3`；看板随响应下发三个天数，界面文案不硬编码。

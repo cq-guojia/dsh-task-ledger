@@ -12,7 +12,7 @@ import type { BoardPayload, TrendPayload } from './types'
 
 /** 范围：我的 / 全部工作区。 */
 export type Scope = 'mine' | 'all'
-/** 状态档：进行中 = doing；积压 / 超期 / 停滞 = host 按时间标记的 backlog / overdue / stale。 */
+/** 状态档：进行中 = doing；积压 / 逾期 / 停滞 = host 按时间标记的 backlog / overdue / stale。 */
 export type StatusFilter = 'all' | 'active' | 'open' | 'backlog' | 'overdue' | 'stale'
 
 export interface Query {

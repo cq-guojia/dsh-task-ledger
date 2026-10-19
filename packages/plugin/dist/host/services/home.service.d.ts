@@ -2,7 +2,7 @@ import { type DegradedInfo } from '../errors.js';
 import type { BoardSnapshot, LedgerWorkspace, TaskScope } from '../types.js';
 /** 停滞阈值：进行中且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
 export declare const STALE_DAYS = 3;
-/** 超期阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板 7 → 14 天）。 */
+/** 逾期阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板 7 → 14 天）。 */
 export declare const OVERDUE_DAYS = 14;
 /** 积压阈值：待认领且 created 至今满这么多天还没人接（2026-10-19 拍板）。 */
 export declare const BACKLOG_DAYS = 30;

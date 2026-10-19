@@ -13,7 +13,7 @@ export type Row =
   | { kind: 'task'; key: string; task: BoardTask; mine: boolean }
   | { kind: 'closed'; key: string; record: HistoryRecord }
 
-/** 一个工作区分组（计数口径：待认领 / 进行中 / 积压 / 超期 / 停滞 / 总，供「全部待办」段头统计）。 */
+/** 一个工作区分组（计数口径：待认领 / 进行中 / 积压 / 逾期 / 停滞 / 总，供「全部待办」段头统计）。 */
 export interface WorkspaceGroup {
   readonly workspaceId: string
   readonly title: string
@@ -87,7 +87,7 @@ export function resolveActions(task: BoardTask, board: BoardPayload | null): Tas
 /** 已结案行（统计 tab）：只有查看，没有在办动作。 */
 export const CLOSED_ACTIONS: TaskActions = { view: true, claim: false, resume: false, finish: false, release: false }
 
-/** 状态档命中（积压 / 超期 / 停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
+/** 状态档命中（积压 / 逾期 / 停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
 function statusHit(task: BoardTask, status: Query['status']): boolean {
   if (status === 'all') return true
   if (status === 'active') return task.status === 'doing' || task.status === 'blocked'

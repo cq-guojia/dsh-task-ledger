@@ -15,8 +15,9 @@ export type LocaleKey =
   | 'degradedTitle' | 'degradedItem'
   | 'statsPlaceholder'
   // 统计卡
-  | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint' | 'statDoing' | 'statDoingHint'
-  | 'statBacklog' | 'statOverdue' | 'statStale' | 'statBacklogHint' | 'statDoingTotalHint'
+  | 'statMyActive' | 'statOpen' | 'statOpenHint' | 'statDoing' | 'statDoingHint' | 'statDoingAllMine'
+  | 'statBacklog' | 'statOverdue' | 'statStale'
+  | 'statMyOverdueHint' | 'statMyStaleHint' | 'statBacklogHint' | 'statOverdueHint' | 'statStaleHint'
   | 'statStaleTitle' | 'statOverdueTitle' | 'statBacklogTitle'
   | 'statWeekDone' | 'statLastWeekDone' | 'statCreatedHint'
   | 'daysNone' | 'daysValue'
@@ -66,22 +67,25 @@ export const zh: Record<LocaleKey, string> = {
   statsPlaceholder: '统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。',
 
   statMyActive: '我的待办',
-  statMyActiveHint: '超期 {n} 条',
+  statMyOverdueHint: '逾期 {n}',
+  statMyStaleHint: '停滞 {n}',
   statOpen: '待认领',
-  statOpenHint: '最长未认领 {n}',
+  statOpenHint: '最长等待 {n} 天',
   statDoing: '进行中',
-  statDoingHint: '其他成员负责 {n} 条',
+  statDoingHint: '他人在办 {n}',
+  statDoingAllMine: '均为我负责',
   statBacklog: '积压',
-  statOverdue: '超期',
+  statOverdue: '逾期',
   statStale: '停滞',
-  statBacklogHint: '待认领共 {n} 条',
-  statDoingTotalHint: '进行中共 {n} 条',
+  statBacklogHint: '占待认领 {n}%',
+  statOverdueHint: '最长 {n} 天未结',
+  statStaleHint: '最长 {n} 天未更新',
   statStaleTitle: '停滞 = 进行中满 {n} 天没更新',
-  statOverdueTitle: '超期 = 认领后满 {n} 天还没结案',
+  statOverdueTitle: '逾期 = 认领后满 {n} 天还没结案',
   statBacklogTitle: '积压 = 待认领满 {n} 天没人接',
   statWeekDone: '本周完成',
   statLastWeekDone: '上周完成',
-  statCreatedHint: '新增 {n} 条',
+  statCreatedHint: '新增 {n}',
   daysNone: '—',
   daysValue: '{n} 天',
 
@@ -108,12 +112,12 @@ export const zh: Record<LocaleKey, string> = {
   statusActive: '进行中',
   statusOpen: '待认领',
   statusBacklog: '积压',
-  statusOverdue: '超期',
+  statusOverdue: '逾期',
   statusStale: '停滞',
   tipOpen: '任务创建于 {created}\n尚未有人认领',
   tipBacklog: '任务创建于 {created}\n无人认领已满 {d}',
   tipDoing: '{who}\n开始执行：{started}\n最后更新：{updated}',
-  tipOverdue: '{who}\n开始执行：{started}\n最后更新：{updated}\n任务已开始 {d}',
+  tipOverdue: '{who}\n开始执行：{started}\n最后更新：{updated}\n已逾期 {d}',
   tipStale: '{who}\n开始执行：{started}\n最后更新：{updated}\n已停滞 {d}',
   workspaceLabel: '工作区',
   workspaceAll: '全部工作区',
@@ -126,7 +130,7 @@ export const zh: Record<LocaleKey, string> = {
   groupOpen: '待办 {n} 条',
   groupDoing: '进行中 {n} 条',
   groupBacklog: '积压 {n} 条',
-  groupOverdue: '超期 {n} 条',
+  groupOverdue: '逾期 {n} 条',
   groupStale: '停滞 {n} 条',
   colTask: '任务',
   colCreator: '创建人',
@@ -196,16 +200,19 @@ export const en: Record<LocaleKey, string> = {
   statsPlaceholder: 'Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.',
 
   statMyActive: 'My todos',
-  statMyActiveHint: 'overdue {n}',
+  statMyOverdueHint: 'overdue {n}',
+  statMyStaleHint: 'stale {n}',
   statOpen: 'Unclaimed',
-  statOpenHint: 'longest unclaimed {n}',
+  statOpenHint: 'longest waiting {n} days',
   statDoing: 'In progress',
-  statDoingHint: 'owned by other members: {n}',
+  statDoingHint: 'others: {n}',
+  statDoingAllMine: 'all mine',
   statBacklog: 'Backlog',
   statOverdue: 'Overdue',
   statStale: 'Stale',
-  statBacklogHint: '{n} unclaimed in total',
-  statDoingTotalHint: '{n} in progress in total',
+  statBacklogHint: '{n}% of unclaimed',
+  statOverdueHint: 'longest {n} days open',
+  statStaleHint: 'longest {n} days idle',
   statStaleTitle: 'stale = active with no update for {n}+ days',
   statOverdueTitle: 'overdue = claimed {n}+ days ago and still open',
   statBacklogTitle: 'backlog = unclaimed for {n}+ days',
@@ -243,7 +250,7 @@ export const en: Record<LocaleKey, string> = {
   tipOpen: 'Created on {created}\nNot claimed yet',
   tipBacklog: 'Created on {created}\nUnclaimed for {d}',
   tipDoing: '{who}\nStarted: {started}\nLast updated: {updated}',
-  tipOverdue: '{who}\nStarted: {started}\nLast updated: {updated}\nActive for {d}',
+  tipOverdue: '{who}\nStarted: {started}\nLast updated: {updated}\nOverdue by {d}',
   tipStale: '{who}\nStarted: {started}\nLast updated: {updated}\nStalled for {d}',
   workspaceLabel: 'Workspace',
   workspaceAll: 'All workspaces',

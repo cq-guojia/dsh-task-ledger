@@ -78,10 +78,19 @@ await check('getBoardSnapshot：统计与任务行（与历史量无关的热路
   assert.ok(Number.isInteger(snapshot.stats.myActive) && snapshot.stats.myActive >= 0)
   if (hasDispatch) assert.ok(snapshot.stats.open >= 4)
   assert.equal(snapshot.stats.staleDays, 3, '停滞阈值应随响应下发（3 天未更新）')
-  assert.equal(snapshot.stats.overdueDays, 14, '超期阈值应随响应下发（认领满 14 天）')
+  assert.equal(snapshot.stats.overdueDays, 14, '逾期阈值应随响应下发（认领满 14 天）')
   assert.equal(snapshot.stats.backlogDays, 30, '积压阈值应随响应下发（待认领满 30 天）')
   assert.equal(typeof snapshot.stats.backlog, 'number', '积压条数应是数字')
   assert.equal(typeof snapshot.stats.oldestOpenDays, 'number', '最老待认领天数应是数字')
+  assert.equal(typeof snapshot.stats.myStale, 'number', '「我的停滞」条数应随响应下发（我的待办小字）')
+  // 「最长 N 天」小字：本块 0 条 ⇒ null（前端整条不显示，不拿 0 充数）
+  for (const [count, value, name] of [
+    [snapshot.stats.overdue, snapshot.stats.maxOverdueAge, 'maxOverdueAge'],
+    [snapshot.stats.stale, snapshot.stats.maxStaleIdle, 'maxStaleIdle'],
+  ]) {
+    if (count === 0) assert.equal(value, null, `${name}：0 条时应为 null`)
+    else assert.ok(Number.isInteger(value) && value >= 0, `${name} 应为整数天数`)
+  }
   for (const task of snapshot.tasks) {
     assert.equal(typeof task.stale, 'boolean', '每行都应带 host 判好的 stale 标记')
     assert.equal(typeof task.overdue, 'boolean', '每行都应带 host 判好的 overdue 标记')
