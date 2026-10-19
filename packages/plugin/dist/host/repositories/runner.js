@@ -9,22 +9,14 @@ const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL('../../../skill/scripts/progre
 /** 单次脚本调用超时上限（ms）。实测单仓 5 万行全量 1.2s，10s 是宽松上限。 */
 const DEFAULT_TIMEOUT_MS = 10_000;
 /**
- * 全插件唯一碰 Python 的地方：spawn python3 跑内嵌 skill 脚本，收 stdout JSON。
- * 不解析任何台账格式——解析真源只有 skill 脚本一份（2026-10-17 用户拍板）。
- *
- * 出错一律归一为 { ok:false, error }（人话，直接可上界面）：
- * 起不了 python3 / 超时（kill）/ 非零退出（stderr 原文）/ 输出不是 JSON。
- *
- * @param sub - 子命令（list / history / show…）
- * @param args - 参数数组，由调用方自拼（含 --repo / --json / --months 等）
- * @param opts.scriptPath - 测试用：覆盖脚本路径
- * @param opts.timeoutMs - 覆盖超时
+ * 起一次 python3、收 stdout / stderr。出错一律归一成人话（起不了 python3 / 超时 / 非零退出）。
+ * 解析留给调用方：读命令要 JSON，写命令要原文。
  */
-export function runLedgerScript(sub, args, opts) {
+function exec(sub, args, opts) {
     const scriptPath = opts?.scriptPath ?? DEFAULT_SCRIPT_PATH;
     const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     return new Promise((resolve) => {
-        const child = spawn('python3', [scriptPath, sub, ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
+        const child = spawn('python3', [scriptPath, sub, ...args], { cwd: opts?.cwd, stdio: ['ignore', 'pipe', 'pipe'] });
         let stdout = '';
         let stderr = '';
         let settled = false;
@@ -49,12 +41,36 @@ export function runLedgerScript(sub, args, opts) {
                 settle({ ok: false, error: stderr.trim() || `skill 脚本退出码 ${String(code)}` });
                 return;
             }
-            try {
-                settle({ ok: true, data: JSON.parse(stdout) });
-            }
-            catch {
-                settle({ ok: false, error: `skill 脚本输出不是 JSON：${stdout.slice(0, 200)}` });
-            }
+            settle({ ok: true, stdout });
         });
     });
+}
+/**
+ * 读命令：spawn python3 跑内嵌 skill 脚本，收 stdout JSON。
+ * 不解析任何台账格式——解析真源只有 skill 脚本一份（2026-10-17 用户拍板）。
+ *
+ * @param sub - 子命令（list / history / show…）
+ * @param args - 参数数组，由调用方自拼（含 --repo / --json / --months 等）
+ * @param opts.scriptPath - 测试用：覆盖脚本路径
+ * @param opts.timeoutMs - 覆盖超时
+ * @param opts.cwd - 子进程工作目录（写命令取 git 身份用）
+ */
+export async function runLedgerScript(sub, args, opts) {
+    const result = await exec(sub, args, opts);
+    if (!result.ok)
+        return result;
+    try {
+        return { ok: true, data: JSON.parse(result.stdout) };
+    }
+    catch {
+        return { ok: false, error: `skill 脚本输出不是 JSON：${result.stdout.slice(0, 200)}` };
+    }
+}
+/**
+ * 写命令（claim / set）：同样是 spawn python3，但**不解析 JSON**——这些子命令打的是人话，
+ * 成功与否看退出码，失败时 stderr 就是能直接上界面的人话。
+ */
+export async function runLedgerCommand(sub, args, opts) {
+    const result = await exec(sub, args, opts);
+    return result.ok ? { ok: true, output: result.stdout.trim() } : result;
 }

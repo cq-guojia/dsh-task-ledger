@@ -5,19 +5,38 @@ export type LedgerScriptResult<T> = {
     ok: false;
     error: string;
 };
+/** 写命令的返回：只收 stdout 原文（claim / set 打的是人话，不是 JSON）。 */
+export type LedgerCommandResult = {
+    ok: true;
+    output: string;
+} | {
+    ok: false;
+    error: string;
+};
+export interface RunOptions {
+    /** 测试用：覆盖脚本路径。 */
+    scriptPath?: string;
+    /** 覆盖超时。 */
+    timeoutMs?: number;
+    /**
+     * 子进程 cwd。写命令（claim / set）必须落在工作区：
+     * 脚本内的 owner 取 `git config user.name`，走进程 cwd 而不是 `--repo`。
+     */
+    cwd?: string;
+}
 /**
- * 全插件唯一碰 Python 的地方：spawn python3 跑内嵌 skill 脚本，收 stdout JSON。
+ * 读命令：spawn python3 跑内嵌 skill 脚本，收 stdout JSON。
  * 不解析任何台账格式——解析真源只有 skill 脚本一份（2026-10-17 用户拍板）。
- *
- * 出错一律归一为 { ok:false, error }（人话，直接可上界面）：
- * 起不了 python3 / 超时（kill）/ 非零退出（stderr 原文）/ 输出不是 JSON。
  *
  * @param sub - 子命令（list / history / show…）
  * @param args - 参数数组，由调用方自拼（含 --repo / --json / --months 等）
  * @param opts.scriptPath - 测试用：覆盖脚本路径
  * @param opts.timeoutMs - 覆盖超时
+ * @param opts.cwd - 子进程工作目录（写命令取 git 身份用）
  */
-export declare function runLedgerScript<T = unknown>(sub: string, args: readonly string[], opts?: {
-    scriptPath?: string;
-    timeoutMs?: number;
-}): Promise<LedgerScriptResult<T>>;
+export declare function runLedgerScript<T = unknown>(sub: string, args: readonly string[], opts?: RunOptions): Promise<LedgerScriptResult<T>>;
+/**
+ * 写命令（claim / set）：同样是 spawn python3，但**不解析 JSON**——这些子命令打的是人话，
+ * 成功与否看退出码，失败时 stderr 就是能直接上界面的人话。
+ */
+export declare function runLedgerCommand(sub: string, args: readonly string[], opts?: RunOptions): Promise<LedgerCommandResult>;

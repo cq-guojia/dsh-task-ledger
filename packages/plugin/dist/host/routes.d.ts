@@ -23,6 +23,13 @@ export interface RouteDeps {
     readonly registry: WorkspaceRegistryLike;
 }
 export declare function registerRoutes(webServer: WebServerLike, deps: RouteDeps): void;
+/**
+ * 注册认领 / 释放端点（2026-10-18 B 混合制：没有判断量的动作由 host 直跑脚本）。
+ *
+ * 这两条**会改磁盘上的台账文件**，所以和 `/close` 一样必须过同源守卫；
+ * 成功后就地清该工作区读缓存，避免按钮点完还看到上一屏的 owner。
+ */
+export declare function registerWriteRoutes(webServer: WebServerLike, deps: RouteDeps): void;
 export interface SessionRouteDeps {
     readonly registry: WorkspaceRegistryLike;
     /** 起会话的服务面；宿主缺就回 503 人话（端点照常注册，前端不用按版本分支）。 */

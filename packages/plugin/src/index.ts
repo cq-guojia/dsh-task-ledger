@@ -9,7 +9,7 @@
  * 满足不了的依赖会令 entry 一直 pending、卡死整个 dsh 启动）；两条注入线
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
-import { registerRoutes, registerSessionRoutes, type WebServerLike, type WorkspaceRegistryLike } from './host/routes.js'
+import { registerRoutes, registerSessionRoutes, registerWriteRoutes, type WebServerLike, type WorkspaceRegistryLike } from './host/routes.js'
 import { buildSkillRegistration, type SkillsRegistry } from './host/skill/registration.js'
 import type { AgentsLike } from './host/services/session.service.js'
 
@@ -45,7 +45,9 @@ export function apply(ctx: PluginContext): void {
       return
     }
     registerRoutes(webServer, { registry })
-    console.info('[task-ledger] 数据面路由已注册（/api/task-ledger/*）')
+    // 写端点（认领 / 释放）：B 混合制下由 host 直跑脚本，不依赖 agents ⇒ 与数据面同一条注入线。
+    registerWriteRoutes(webServer, { registry })
+    console.info('[task-ledger] 数据面路由已注册（读 /api/task-ledger/* + 写 /claim /release）')
   })
 
   // ── 会话交接（按钮侧「结束任务」，2026-10-18 拍板 B 案：只有结束走会话） ──

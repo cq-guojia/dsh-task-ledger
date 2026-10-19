@@ -8,12 +8,13 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { getHomeAggregate, getFilterOptions, queryClosed } from './board.js'
 import { getSnapshot } from './services/home.service.js'
 import { getTrend } from './services/trend.service.js'
+import { claimTask, releaseTask } from './services/ledger-write.service.js'
 import { getTask, readTasks, readWorklog } from './repositories/ledger.repository.js'
 import { invalidate } from './repositories/cache.js'
 import {
   HandoffError, startCloseSession, type AgentPresetsLike, type AgentsLike, type DefaultModelLike,
 } from './services/session.service.js'
-import type { LedgerFilter } from './types.js'
+import type { LedgerFilter, LedgerWorkspace } from './types.js'
 import { resolveWorkspaces, type RegistryWorkspace } from './workspace.js'
 
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 external/host-webserver.md）。 */
@@ -173,6 +174,67 @@ export function registerRoutes(webServer: WebServerLike, deps: RouteDeps): void 
     }
   })
 
+}
+
+// ───────────────────────── 台账写端点（host 直写 · 不开会话） ─────────────────────────
+
+/**
+ * 注册认领 / 释放端点（2026-10-18 B 混合制：没有判断量的动作由 host 直跑脚本）。
+ *
+ * 这两条**会改磁盘上的台账文件**，所以和 `/close` 一样必须过同源守卫；
+ * 成功后就地清该工作区读缓存，避免按钮点完还看到上一屏的 owner。
+ */
+export function registerWriteRoutes(webServer: WebServerLike, deps: RouteDeps): void {
+  const registerWrite = (
+    path: string,
+    action: (workspace: LedgerWorkspace, taskId: string) => Promise<void>,
+  ): void => {
+    webServer.register({
+      kind: 'exact',
+      path: `${API_PREFIX}${path}`,
+      handler: async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: '只支持 POST' })
+          return
+        }
+        if (!isTrustedRequest(req)) {
+          sendJson(res, 403, { error: '只接受同源请求' })
+          return
+        }
+        let body: unknown
+        try {
+          body = await readJsonBody(req)
+        } catch (error) {
+          const tooLarge = error instanceof Error && error.message === 'body-too-large'
+          sendJson(res, tooLarge ? 413 : 400, { error: tooLarge ? '请求体过大' : '请求体不是合法 JSON' })
+          return
+        }
+        const fields: Record<string, unknown> = typeof body === 'object' && body !== null ? body as Record<string, unknown> : {}
+        const str = (key: string): string => (typeof fields[key] === 'string' ? fields[key] as string : '')
+        const workspaceId = str('ws')
+        const taskId = str('id')
+        if (workspaceId === '' || taskId === '') {
+          sendJson(res, 400, { error: '缺少 ws / id 参数' })
+          return
+        }
+        const workspace = workspacesOf(deps).find((item) => item.id === workspaceId)
+        if (workspace === undefined) {
+          sendJson(res, 404, { error: '工作区不存在或不含台账' })
+          return
+        }
+        try {
+          await action(workspace, taskId)
+          invalidate(workspace.id)
+          sendJson(res, 200, { ok: true })
+        } catch (error) {
+          sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
+        }
+      },
+    })
+  }
+
+  registerWrite('/claim', claimTask)
+  registerWrite('/release', releaseTask)
 }
 
 // ───────────────────────── 会话交接（按钮侧 · 写类端点） ─────────────────────────

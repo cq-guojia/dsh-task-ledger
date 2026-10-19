@@ -109,3 +109,29 @@ export function requestClose(body: {
     body: JSON.stringify(body),
   })
 }
+
+/** 认领 / 释放的写结果；成功后由调用方自行刷新快照（host 已清该工作区读缓存）。 */
+export interface TaskMutationResult {
+  readonly ok: true
+}
+
+/**
+ * 认领：点一下即归当前用户（host 直跑脚本，不开会话）。
+ * 只有 `open` 且无人认领才允许，忙时 host 回 500 + 人话（脚本原文）。
+ */
+export function requestClaim(body: { ws: string; id: string }): Promise<TaskMutationResult> {
+  return fetchJson<TaskMutationResult>('/claim', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+/** 释放：退回待认领（owner 清空），只许当前 owner 本人（host 侧脚本校验）。 */
+export function requestRelease(body: { ws: string; id: string }): Promise<TaskMutationResult> {
+  return fetchJson<TaskMutationResult>('/release', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}

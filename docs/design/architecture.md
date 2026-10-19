@@ -85,5 +85,4 @@
 - 工作区**补充源**（宿主 registry 未收录的目录，如从未在 dsh 里添加过的项目）的配置形态 —— 主来源已定 = `ctx.workspaceRegistry.list()`（见 [`external/dsh-workspace-registry.md`](external/dsh-workspace-registry.md)）；
 - UI API 路由的鉴权方案；
 - Desktop（Electron）表面真机表现；
-- （不变量 1 已拍板 B ⇒ 落地前须核实）host 代跑 `progress.py` 时的**身份来源**：脚本的 `claim` 用 `git config user.name`（吃进程 cwd），而宿主进程 cwd 不可信 ⇒ 需要以该工作区为 cwd 起进程（`--repo` 只解决路径，不解决身份）。
 - **结束会话的收尾**（模型跑完 ⇒ 自动归档那个会话 + 通知用户）：需要「模型这一轮跑完了」的信号（宿主 `agent/status` 等事件），且通知位在界面侧。用户 2026-10-18：**先放着**，后面可能引入一个专门的「和模型会话」弹窗一并解决。

@@ -643,6 +643,61 @@ await check('结束任务交接：提示词三段约束 + POST /close（建会�
   assert.ok(missingBody.includes('agents'), '503 要带人话原因')
 })
 
+// 认领 / 释放（2026-10-18 B 混合制）：host 直跑脚本，不开会话；cwd 必须是工作区（owner 取 git 身份）。
+await check('认领 / 释放：host 直写（无会话 / cwd 取身份 / POST 守卫）', async () => {
+  const { registerWriteRoutes } = await import('../dist/host/routes.js')
+  const { claimTask, releaseTask } = await import('../dist/host/services/ledger-write.service.js')
+  const { execFileSync } = await import('node:child_process')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dtl-write-'))
+  try {
+    // 真 git 仓：脚本的 owner 只认 cwd 的 git config user.name（--repo 只解决路径）
+    execFileSync('git', ['init', '-q'], { cwd: root })
+    execFileSync('git', ['config', 'user.name', 'smoke-user'], { cwd: root })
+    execFileSync('git', ['config', 'user.email', 'smoke@example.com'], { cwd: root })
+    fs.mkdirSync(path.join(root, 'ledger'), { recursive: true })
+    const taskId = '20260101-0000-示例-abcd'
+    const progressPath = path.join(root, 'ledger', 'progress.json')
+    fs.writeFileSync(progressPath, JSON.stringify({
+      tasks: { [taskId]: { title: '示例', status: 'open', creator: 'smoke-user', created: '2026-01-01 00:00:00', worklog: null } },
+    }))
+    const readTask = () => JSON.parse(fs.readFileSync(progressPath, 'utf-8')).tasks[taskId]
+    const ws = { id: 'ws-tmp', title: 'tmp', path: root }
+
+    await claimTask(ws, taskId)
+    assert.equal(readTask().status, 'doing', '认领后应为 doing')
+    assert.equal(readTask().owner, 'smoke-user', 'owner 应取工作区 git 身份（不是宿主进程 cwd）')
+    await releaseTask(ws, taskId)
+    assert.equal(readTask().status, 'open', '释放后应回 open')
+    assert.equal(readTask().owner, null, '释放后 owner 应清空')
+
+    // 路由守卫：POST only / 缺参 / 未知工作区 / 跨源；正常认领要真落盘
+    const routes = new Map()
+    registerWriteRoutes({ register: (route) => { routes.set(route.path, route.handler) } }, {
+      registry: { list: () => [ws] },
+    })
+    assert.ok(routes.get('/api/task-ledger/claim') !== undefined, '/claim 应注册')
+    assert.ok(routes.get('/api/task-ledger/release') !== undefined, '/release 应注册')
+    const call = async (routePath, method, body, headers = {}) => {
+      const out = { status: 0, body: '' }
+      await routes.get(`/api/task-ledger${routePath}`)({
+        method, url: routePath, headers, socket: { remoteAddress: '127.0.0.1' },
+        async *[Symbol.asyncIterator]() { if (body !== undefined) yield Buffer.from(JSON.stringify(body)) },
+      }, { writeHead: (status) => { out.status = status }, end: (text) => { out.body = text } })
+      return { status: out.status, body: out.body === '' ? {} : JSON.parse(out.body) }
+    }
+    assert.equal((await call('/claim', 'GET')).status, 405, '只接 POST')
+    assert.equal((await call('/claim', 'POST', {})).status, 400, '缺 ws / id 应 400')
+    assert.equal((await call('/claim', 'POST', { ws: 'ws-none', id: taskId })).status, 404, '未知工作区应 404')
+    assert.equal((await call('/claim', 'POST', { ws: 'ws-tmp', id: taskId }, { origin: 'https://evil.example', host: '127.0.0.1:1' })).status, 403, '跨源应 403')
+    const ok = await call('/claim', 'POST', { ws: 'ws-tmp', id: taskId })
+    assert.equal(ok.status, 200, `正常认领应 200，实际 ${ok.status} ${JSON.stringify(ok.body)}`)
+    assert.deepEqual(ok.body, { ok: true }, '写端点只回 { ok: true }')
+    assert.equal(readTask().status, 'doing', '路由层认领也要真落盘')
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
 // 客户端数据面（步骤 4b）：取数只走拆后的两个端点，页面不许再从快照上读趋势。
 // 这是「首屏不等 history」的前端一半——host 拆了端点但页面还读 board.trend，等于白拆。
 await check('客户端数据面：只走 /board/snapshot + /board/trend，趋势不再挂在快照上（步骤 4b）', async () => {

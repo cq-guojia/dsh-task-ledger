@@ -145,6 +145,8 @@ host 是否还代跑 skill 脚本写台账 —— **已定：认领 / 释放 / �
 
 现成落点：`POST /api/task-ledger/close`（`host/routes.ts::registerSessionRoutes` + `host/services/session.service.ts`），请求体 `{ ws, id, message?, provider?, model? }`，响应 `{ sessionId, warning? }`；同源守卫 + 请求体 64KB 上限。
 
+认领 / 释放（不开会话）：`POST /api/task-ledger/claim` / `/release`（`host/routes.ts::registerWriteRoutes` + `host/services/ledger-write.service.ts`），请求体 `{ ws, id }`，响应 `{ ok: true }`；同样过同源守卫。host 以**该工作区为 cwd** 起 `progress.py`（owner 取 `git config user.name`），成功后清该工作区读缓存。客户端入口 `api.ts::requestClaim / requestRelease`。
+
 ## 五、数据与硬约束
 
 1. **数据全部真实**：界面任何数字 / 时间 / 状态来自各工作区 `ledger/` 真文件经 host 聚合，不编造、不占位（DSH 插件规则「数据真实」）。
