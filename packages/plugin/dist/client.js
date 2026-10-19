@@ -945,11 +945,11 @@ body[data-ds-dark-theme]{
 		*/
 		function Tag(props) {
 			ensureUiBase();
-			const { text, tone = "neutral", title } = props;
+			const { text, tone = "neutral", title, tip } = props;
 			const long = displayWidth(text) > TAG_MAX_WIDTH;
 			return (0, react.createElement)("span", {
 				className: `dtl-tag dtl-tag--${tone}`,
-				title: long ? title ?? text : void 0
+				title: tip ?? (long ? title ?? text : void 0)
 			}, text);
 		}
 		/** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
@@ -1142,12 +1142,45 @@ body[data-ds-dark-theme]{
 			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
 			const created = row.kind === "task" ? row.task.created ?? null : row.record.created ?? null;
 			const createdDay = created !== null && created !== void 0 && Date.parse(created) >= 0 ? formatDateTime(created).slice(0, 10) : null;
-			const stats = board?.stats;
-			const tipOf = (tone) => {
-				if (stats === void 0) return void 0;
-				if (tone === "stale") return t("statStaleTitle", { n: stats.staleDays });
-				if (tone === "overdue") return t("statOverdueTitle", { n: stats.overdueDays });
-				if (tone === "backlog") return t("statBacklogTitle", { n: stats.backlogDays });
+			const stamp = (value) => value === null || value === void 0 ? t("timeUnknown") : formatDateTime(value, { fallback: t("timeUnknown") });
+			const dayText = (n) => n === null || n === void 0 ? t("daysNone") : t("daysValue", { n });
+			const detailTip = (which) => {
+				if (row.kind !== "task") return void 0;
+				const { task } = row;
+				const owner = task.owner ?? "";
+				const who = owner === "" ? t("ownerUnclaimed") : `@${owner}`;
+				const started = stamp(task.started ?? task.created);
+				const updated = stamp(task.updated ?? task.started ?? task.created);
+				if (which === "open") return t("tipOpen", { created: stamp(task.created) });
+				if (which === "backlog") return t("tipBacklog", {
+					created: stamp(task.created),
+					d: dayText(task.waitingDays)
+				});
+				if (which === "doing") return t("tipDoing", {
+					who,
+					started,
+					updated
+				});
+				if (which === "overdue") return t("tipOverdue", {
+					who,
+					started,
+					updated,
+					d: dayText(task.ageDays)
+				});
+				return t("tipStale", {
+					who,
+					started,
+					updated,
+					d: dayText(task.idleDays)
+				});
+			};
+			const thresholdTip = (which) => {
+				const stats = board?.stats;
+				if (stats === void 0) return statusLabel(which, t) ?? "";
+				if (which === "backlog") return t("statBacklogTitle", { n: stats.backlogDays });
+				if (which === "overdue") return t("statOverdueTitle", { n: stats.overdueDays });
+				if (which === "stale") return t("statStaleTitle", { n: stats.staleDays });
+				return statusLabel(which, t) ?? "";
 			};
 			const actions = isTask ? resolveActions(row.task, board) : CLOSED_ACTIONS;
 			const viewButton = (0, react.createElement)("button", {
@@ -1176,13 +1209,13 @@ body[data-ds-dark-theme]{
 				className: "dtl-minibtn",
 				"data-tip": t("tipRelease")
 			}, t("actionRelease"));
-			const tagOf = (which) => {
+			const tagOf = (which, tip) => {
 				const text = statusLabel(which, t) ?? "";
 				return (0, react.createElement)(Tag, {
 					key: which,
 					text,
 					tone: which,
-					title: tipOf(which) ?? text
+					tip: tip ?? detailTip(which)
 				});
 			};
 			const statusTag = tone === "closed" ? null : tagOf(tone);
@@ -1206,7 +1239,7 @@ body[data-ds-dark-theme]{
 					who: String(owner),
 					when: startedOk ? formatDateTime(String(row.task.started)) : t("timeUnknown")
 				});
-				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, debugAllTones === true ? DEBUG_TONES.map(tagOf) : statusTag, tags.map((tag) => (0, react.createElement)(Tag, {
+				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, debugAllTones === true ? DEBUG_TONES.map((which) => tagOf(which, thresholdTip(which))) : statusTag, tags.map((tag) => (0, react.createElement)(Tag, {
 					key: tag,
 					text: `#${tag}`
 				})));
@@ -1695,6 +1728,11 @@ body[data-ds-dark-theme]{
 			statusBacklog: "积压",
 			statusOverdue: "超期",
 			statusStale: "停滞",
+			tipOpen: "任务创建于 {created}，尚未有人认领。",
+			tipBacklog: "任务创建于 {created}，无人认领已满 {d}。",
+			tipDoing: "{who} 于 {started} 开始执行，最后更新于 {updated}。",
+			tipOverdue: "{who} 于 {started} 开始执行，最后更新于 {updated}；任务已开始 {d}。",
+			tipStale: "{who} 于 {started} 开始执行，最后更新于 {updated}；已停滞 {d}。",
 			workspaceLabel: "工作区",
 			workspaceAll: "全部工作区",
 			searchPlaceholder: "搜索",
@@ -1813,6 +1851,11 @@ body[data-ds-dark-theme]{
 			statusBacklog: "Backlog",
 			statusOverdue: "Overdue",
 			statusStale: "Stale",
+			tipOpen: "Created on {created}; not claimed yet.",
+			tipBacklog: "Created on {created}; unclaimed for {d}.",
+			tipDoing: "{who} started on {started}; last updated {updated}.",
+			tipOverdue: "{who} started on {started}; last updated {updated}; active for {d}.",
+			tipStale: "{who} started on {started}; last updated {updated}; stalled for {d}.",
 			workspaceLabel: "Workspace",
 			workspaceAll: "All workspaces",
 			searchPlaceholder: "Search",

@@ -87,6 +87,9 @@ await check('getBoardSnapshot：统计与任务行（与历史量无关的热路
     assert.equal(typeof task.overdue, 'boolean', '每行都应带 host 判好的 overdue 标记')
     assert.equal(typeof task.backlog, 'boolean', '每行都应带 host 判好的 backlog 标记')
     if (task.status === 'open') assert.equal(task.ageDays, null, '待认领不算「认领后未动」')
+    // 悬停提示用的两个天数：进行中给 idleDays，待认领给 waitingDays，其余为 null
+    if (task.status === 'open') assert.ok(Number.isInteger(task.waitingDays), '待认领应带「已等待天数」')
+    else assert.equal(task.waitingDays, null, '非待认领不算「已等待」')
   }
   assert.ok(elapsed < 2000, `热路径应 <2s，实际 ${elapsed}ms`)
 })

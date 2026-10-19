@@ -37,6 +37,9 @@ export function computeSnapshot(scopes: readonly TaskScope[], now: Date): BoardS
     return {
       ...task,
       ageDays,
+      // 两个天数只供悬停提示说人话（「已进行 N 天」「已停滞 N 天」「已等待 N 天」），不参与判定
+      idleDays,
+      waitingDays: idleOpen,
       stale: idleDays !== null && idleDays >= STALE_DAYS,
       overdue: ageDays !== null && ageDays >= OVERDUE_DAYS,
       backlog: idleOpen !== null && idleOpen >= BACKLOG_DAYS,

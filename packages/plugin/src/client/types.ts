@@ -33,6 +33,10 @@ export interface TaskRow {
 export interface TaskMeta {
   /** 认领后未动天数（进行中；open 与解析不了为 null）。 */
   readonly ageDays: number | null
+  /** 最后更新至今的天数（进行中；open 与解析不了为 null）——停滞提示用。 */
+  readonly idleDays: number | null
+  /** 创建至今的天数（**只对待认领**有值）——积压提示用。 */
+  readonly waitingDays: number | null
   /** 停滞 = 进行中且 updated 至今满 STALE_DAYS 天没更新。 */
   readonly stale: boolean
   /** 超期 = 进行中且接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */

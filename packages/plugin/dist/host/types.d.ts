@@ -129,6 +129,10 @@ export interface BoardStats {
 export interface BoardTask extends TaskRow {
     /** 认领后未动天数（进行中；open 与解析不了的时间为 null）。 */
     readonly ageDays: number | null;
+    /** 最后更新至今的天数（进行中；open 与解析不了的时间为 null）——停滞提示用。 */
+    readonly idleDays: number | null;
+    /** 创建至今的天数（**只对待认领**有值；其余为 null）——积压提示用。 */
+    readonly waitingDays: number | null;
     /** 停滞标记：updated 至今满 STALE_DAYS 天没更新（与 ageDays 无关）。 */
     readonly stale: boolean;
     /** 超期标记：接任务至今满 OVERDUE_DAYS 天还没做完（不看中途更新）。 */

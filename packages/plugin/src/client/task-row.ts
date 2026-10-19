@@ -84,14 +84,33 @@ export function TaskRowView(props: {
     ? formatDateTime(created).slice(0, 10)
     : null
 
-  // 异常标签的悬停解释：天数来自 host 配置（阈值单一真源），不是前端拍脑袋；快照没到就不解释。
-  const stats = board?.stats
-  const tipOf = (tone: Tone): string | undefined => {
-    if (stats === undefined) return undefined
-    if (tone === 'stale') return t('statStaleTitle', { n: stats.staleDays })
-    if (tone === 'overdue') return t('statOverdueTitle', { n: stats.overdueDays })
-    if (tone === 'backlog') return t('statBacklogTitle', { n: stats.backlogDays })
-    return undefined
+  // 标签悬停解释（用户 2026-10-19）：一律「谁 / 何时开始 / 最后更新 / 多少天」，天数由 host 下发，
+  // 前端不自行推算；缺时间就报「时间未知」，不编。
+  const stamp = (value: string | null | undefined): string =>
+    value === null || value === undefined ? t('timeUnknown') : formatDateTime(value, { fallback: t('timeUnknown') })
+  const dayText = (n: number | null | undefined): string =>
+    n === null || n === undefined ? t('daysNone') : t('daysValue', { n })
+  const detailTip = (which: Exclude<Tone, 'closed'>): string | undefined => {
+    if (row.kind !== 'task') return undefined
+    const { task } = row
+    const owner = task.owner ?? ''
+    const who = owner === '' ? t('ownerUnclaimed') : `@${owner}`
+    const started = stamp(task.started ?? task.created)
+    const updated = stamp(task.updated ?? task.started ?? task.created)
+    if (which === 'open') return t('tipOpen', { created: stamp(task.created) })
+    if (which === 'backlog') return t('tipBacklog', { created: stamp(task.created), d: dayText(task.waitingDays) })
+    if (which === 'doing') return t('tipDoing', { who, started, updated })
+    if (which === 'overdue') return t('tipOverdue', { who, started, updated, d: dayText(task.ageDays) })
+    return t('tipStale', { who, started, updated, d: dayText(task.idleDays) })
+  }
+  // 调试态那一行摆的不是本任务的状态 ⇒ 只在悬停时解释口径（阈值来自 host 配置，不硬编码）。
+  const thresholdTip = (which: Exclude<Tone, 'closed'>): string => {
+    const stats = board?.stats
+    if (stats === undefined) return statusLabel(which, t) ?? ''
+    if (which === 'backlog') return t('statBacklogTitle', { n: stats.backlogDays })
+    if (which === 'overdue') return t('statOverdueTitle', { n: stats.overdueDays })
+    if (which === 'stale') return t('statStaleTitle', { n: stats.staleDays })
+    return statusLabel(which, t) ?? ''
   }
 
   // 动作权限：**唯一**判定（用户 2026-10-18）——两区同一套，不许各判各的；本文件只按返回值画。
@@ -114,9 +133,9 @@ export function TaskRowView(props: {
 
   // 状态标签（五色实心块，用户 2026-10-18 定稿）：已结案没有在办状态 ⇒ 不摆；
   // 三枚异常标签带 host 配置的阈值解释（没配就不解释，不编）。
-  const tagOf = (which: Exclude<Tone, 'closed'>): ReactNode => {
+  const tagOf = (which: Exclude<Tone, 'closed'>, tip?: string): ReactNode => {
     const text = statusLabel(which, t) ?? ''
-    return h(Tag, { key: which, text, tone: which, title: tipOf(which) ?? text })
+    return h(Tag, { key: which, text, tone: which, tip: tip ?? detailTip(which) })
   }
   const statusTag = tone === 'closed' ? null : tagOf(tone)
   // 「我的待办」卡的异常标签（积压 / 超期 / 停滞；进行中只靠左缘色条，不再重复一枚）
@@ -152,7 +171,7 @@ export function TaskRowView(props: {
     })
     // 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）
     const tagLine = h('div', { className: 'dtl-orow__tags' },
-      debugAllTones === true ? DEBUG_TONES.map(tagOf) : statusTag,
+      debugAllTones === true ? DEBUG_TONES.map(which => tagOf(which, thresholdTip(which))) : statusTag,
       tags.map(tag => h(Tag, { key: tag, text: `#${tag}` })),
     )
     return h('div', { className: 'dtl-orow' },

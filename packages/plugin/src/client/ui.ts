@@ -453,15 +453,17 @@ function displayWidth(text: string): number {
 export function Tag(props: {
   text: string
   tone?: 'neutral' | 'open' | 'backlog' | 'doing' | 'overdue' | 'stale' | 'person'
-  /** 悬停提示（被截时才显示；默认 = 文本本身）。 */
+  /** 悬停提示（**被截时**才显示；默认 = 文本本身）。 */
   title?: string
+  /** 悬停提示（**始终**显示，状态标记的解释走它；优先于 title）。 */
+  tip?: string
 }): ReactNode {
   ensureUiBase()
-  const { text, tone = 'neutral', title } = props
+  const { text, tone = 'neutral', title, tip } = props
   const long = displayWidth(text) > TAG_MAX_WIDTH
   return h('span', {
     className: `dtl-tag dtl-tag--${tone}`,
-    title: long ? (title ?? text) : undefined,
+    title: tip ?? (long ? (title ?? text) : undefined),
   }, text)
 }
 
