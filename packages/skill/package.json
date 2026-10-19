@@ -1,6 +1,6 @@
 {
   "name": "task-ledger",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Task-ledger skill for coding agents: per-workspace progress tracking (ledger/progress.json, history, worklog) driven by a CLI script. Standalone install for CodeBuddy and other agents; also bundled inside the dsh-task-ledger DSH plugin.",
   "keywords": [
     "skill",

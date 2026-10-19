@@ -86,6 +86,11 @@
 
 验证：`npm run verify` 25 项通过；临时仓库验证 `set --status blocked` 拒绝、旧 `blocked` 数据 `validate` 通过且 `list --status blocked` 可查。
 
+### 存量补 `updated` + 发版（2026-10-19）
+
+- 一次性脚本（临时目录执行，未入库）扫描 `/code/dsh-plugins/*`、`/code/open-lab/*`、`/code/koc/koc-weapp/koc-weapp-zuche`、`/workspace/*` 下的 `ledger/progress.json`，命中 9 个仓库：补 `updated = created` 共 24 条（仍缺 `created` 的跳过；本次无一例）。只填缺失、幂等；写前把原文件备份到 `/tmp/ledger-updated-bak-0w1hv1rm/`；按 skill 同款格式（`sort_keys` + 2 空格 + 原子替换）落盘。9 个仓库 `validate` 全部通过。
+- 版本：`task-ledger` 1.1.0 → **1.2.0**，`dsh-task-ledger` 0.0.53 → **0.0.54**；根 README 的 Status 补两条发布说明；tag `skill-v1.2.0` / `plugin-v0.0.54`。
+
 ### 专家团讨论（2026-10-19，3 个子代理并行评审，只读）
 
 共识结论：
