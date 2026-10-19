@@ -126,9 +126,6 @@ export interface BoardStats {
     readonly backlogDays: number;
     /** 最老一条待认领躺了多少天（没有待认领 = null）。 */
     readonly oldestOpenDays: number | null;
-    /** 逾期 / 停滞各自的最长天数（该异常 0 条 = null）——卡片小字「最长 N 天」。 */
-    readonly maxOverdueAge: number | null;
-    readonly maxStaleIdle: number | null;
 }
 /** 列表行附加工资字段（host 算，前端不判阈值）。 */
 export interface BoardTask extends TaskRow {

@@ -124,9 +124,6 @@ export interface BoardStats {
   readonly overdueDays: number
   readonly backlogDays: number
   readonly oldestOpenDays: number | null
-  /** 逾期 / 停滞各自的最长天数（0 条 = null）——卡片小字「最长 N 天」。 */
-  readonly maxOverdueAge: number | null
-  readonly maxStaleIdle: number | null
 }
 
 /**

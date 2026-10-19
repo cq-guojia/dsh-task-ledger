@@ -1349,6 +1349,8 @@ body[data-ds-dark-theme]{
 				title,
 				interactive: false
 			});
+			/** 子集卡占比小字：分母为 0 或自己没有 ⇒ 不显示（不拿 0% 充数）。 */
+			const share = (part, whole, key) => part > 0 && whole > 0 ? t(key, { n: Math.round(part / whole * 100) }) : "";
 			/** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。
 			*  趋势未到 / 读挂 ⇒ 数字留 '—'（StatCard 对 0 的处理）、小字整条不显示，**不拿 0 充数**。 */
 			const periodCard = (label, period) => (0, react.createElement)(StatCard, {
@@ -1422,7 +1424,7 @@ body[data-ds-dark-theme]{
 			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", {
 				className: "dtl-stats",
 				style: statsRowStyle
-			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, [stats.myOverdue > 0 ? t("statMyOverdueHint", { n: stats.myOverdue }) : null, stats.myStale > 0 ? t("statMyStaleHint", { n: stats.myStale }) : null].filter((part) => part !== null).join(" ｜ ")), card("statDoing", stats.doing, stats.doing - stats.myActive > 0 ? t("statDoingHint", { n: stats.doing - stats.myActive }) : t("statDoingAllMine")), card("statOpen", stats.open, stats.oldestOpenDays === null ? "" : t("statOpenHint", { n: stats.oldestOpenDays })), card("statBacklog", stats.backlog, stats.backlog > 0 && stats.open > 0 ? t("statBacklogHint", { n: Math.round(stats.backlog / stats.open * 100) }) : "", t("statBacklogTitle", { n: stats.backlogDays })), card("statOverdue", stats.overdue, stats.maxOverdueAge === null ? "" : t("statOverdueHint", { n: stats.maxOverdueAge }), t("statOverdueTitle", { n: stats.overdueDays })), card("statStale", stats.stale, stats.maxStaleIdle === null ? "" : t("statStaleHint", { n: stats.maxStaleIdle }), t("statStaleTitle", { n: stats.staleDays })), periodCard("statWeekDone", periods?.thisWeek), periodCard("statLastWeekDone", periods?.lastWeek)), (0, react.createElement)("div", {
+			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, [stats.myOverdue > 0 ? t("statMyOverdueHint", { n: stats.myOverdue }) : null, stats.myStale > 0 ? t("statMyStaleHint", { n: stats.myStale }) : null].filter((part) => part !== null).join(" ｜ ")), card("statDoing", stats.doing, stats.doing - stats.myActive > 0 ? t("statDoingHint", { n: stats.doing - stats.myActive }) : t("statDoingAllMine")), card("statOpen", stats.open, stats.oldestOpenDays === null ? "" : t("statOpenHint", { n: stats.oldestOpenDays })), card("statBacklog", stats.backlog, share(stats.backlog, stats.open, "statBacklogHint"), t("statBacklogTitle", { n: stats.backlogDays })), card("statOverdue", stats.overdue, share(stats.overdue, stats.doing, "statOverdueHint"), t("statOverdueTitle", { n: stats.overdueDays })), card("statStale", stats.stale, share(stats.stale, stats.doing, "statStaleHint"), t("statStaleTitle", { n: stats.staleDays })), periodCard("statWeekDone", periods?.thisWeek), periodCard("statLastWeekDone", periods?.lastWeek)), (0, react.createElement)("div", {
 				className: "dtl-card",
 				style: chartCardStyle
 			}, (0, react.createElement)("div", { style: {
@@ -1666,8 +1668,8 @@ body[data-ds-dark-theme]{
 			statOverdue: "逾期",
 			statStale: "停滞",
 			statBacklogHint: "占待认领 {n}%",
-			statOverdueHint: "最长 {n} 天未结",
-			statStaleHint: "最长 {n} 天未更新",
+			statOverdueHint: "占进行中 {n}%",
+			statStaleHint: "占进行中 {n}%",
 			statStaleTitle: "停滞 = 进行中满 {n} 天没更新",
 			statOverdueTitle: "逾期 = 认领后满 {n} 天还没结案",
 			statBacklogTitle: "积压 = 待认领满 {n} 天没人接",
@@ -1791,8 +1793,8 @@ body[data-ds-dark-theme]{
 			statOverdue: "Overdue",
 			statStale: "Stale",
 			statBacklogHint: "{n}% of unclaimed",
-			statOverdueHint: "longest {n} days open",
-			statStaleHint: "longest {n} days idle",
+			statOverdueHint: "{n}% of active",
+			statStaleHint: "{n}% of active",
 			statStaleTitle: "stale = active with no update for {n}+ days",
 			statOverdueTitle: "overdue = claimed {n}+ days ago and still open",
 			statBacklogTitle: "backlog = unclaimed for {n}+ days",

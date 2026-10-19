@@ -48,8 +48,6 @@ export function computeSnapshot(scopes, now) {
     const backlogTasks = withMeta.filter((task) => task.backlog);
     const overdueTasks = withMeta.filter((task) => task.overdue);
     const staleTasks = withMeta.filter((task) => task.stale);
-    // 「最长 N 天」小字：本块 0 条时给 null（前端不显示小字），不拿 0 充数
-    const maxOf = (tasks, pick) => tasks.length === 0 ? null : tasks.reduce((max, task) => Math.max(max, pick(task) ?? 0), 0);
     const stats = {
         myActive,
         myOverdue: overdueTasks.filter(mine).length,
@@ -65,8 +63,6 @@ export function computeSnapshot(scopes, now) {
         oldestOpenDays: openTasks.length === 0
             ? null
             : openTasks.reduce((max, task) => Math.max(max, daysSince(task.created, now) ?? 0), 0),
-        maxOverdueAge: maxOf(overdueTasks, (task) => task.ageDays),
-        maxStaleIdle: maxOf(staleTasks, (task) => task.idleDays),
     };
     return { at: now.toISOString(), workspaces: scopes.map((scope) => scope.workspace), tasks: withMeta, stats, identities };
 }

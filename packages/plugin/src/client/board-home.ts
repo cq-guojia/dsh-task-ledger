@@ -92,6 +92,10 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
       interactive: false,
     })
 
+  /** 子集卡占比小字：分母为 0 或自己没有 ⇒ 不显示（不拿 0% 充数）。 */
+  const share = (part: number, whole: number, key: LocaleKey): string =>
+    part > 0 && whole > 0 ? t(key, { n: Math.round((part / whole) * 100) }) : ''
+
   /** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。
    *  趋势未到 / 读挂 ⇒ 数字留 '—'（StatCard 对 0 的处理）、小字整条不显示，**不拿 0 充数**。 */
   const periodCard = (label: LocaleKey, period: PeriodCounts | undefined): ReactNode =>
@@ -160,7 +164,7 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                   // 子集关系一眼可见 —— 积压 ⊂ 待认领、逾期 / 停滞 ⊂ 进行中。
                   // DOM 按**列序**写，CSS 的 grid-auto-flow:column 保证 4 列 / 2 列两种排布下都成对。
                   // 小字一律给本卡独有的增量信息，**不重复全集**（用户 2026-10-19）：
-                  // 子集卡（积压 / 逾期 / 停滞）报占比或极值，0 条时整条不显示。
+                  // 三块子集卡一律报**占全集的比例**（用户 2026-10-19 二选一时定占比），0 条时整条不显示。
                   card('statMyActive', stats.myActive, [
                     stats.myOverdue > 0 ? t('statMyOverdueHint', { n: stats.myOverdue }) : null,
                     stats.myStale > 0 ? t('statMyStaleHint', { n: stats.myStale }) : null,
@@ -171,15 +175,9 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
                   card('statOpen', stats.open, stats.oldestOpenDays === null
                     ? ''
                     : t('statOpenHint', { n: stats.oldestOpenDays })),
-                  card('statBacklog', stats.backlog, stats.backlog > 0 && stats.open > 0
-                    ? t('statBacklogHint', { n: Math.round((stats.backlog / stats.open) * 100) })
-                    : '', t('statBacklogTitle', { n: stats.backlogDays })),
-                  card('statOverdue', stats.overdue, stats.maxOverdueAge === null
-                    ? ''
-                    : t('statOverdueHint', { n: stats.maxOverdueAge }), t('statOverdueTitle', { n: stats.overdueDays })),
-                  card('statStale', stats.stale, stats.maxStaleIdle === null
-                    ? ''
-                    : t('statStaleHint', { n: stats.maxStaleIdle }), t('statStaleTitle', { n: stats.staleDays })),
+                  card('statBacklog', stats.backlog, share(stats.backlog, stats.open, 'statBacklogHint'), t('statBacklogTitle', { n: stats.backlogDays })),
+                  card('statOverdue', stats.overdue, share(stats.overdue, stats.doing, 'statOverdueHint'), t('statOverdueTitle', { n: stats.overdueDays })),
+                  card('statStale', stats.stale, share(stats.stale, stats.doing, 'statStaleHint'), t('statStaleTitle', { n: stats.staleDays })),
                   periodCard('statWeekDone', periods?.thisWeek),
                   periodCard('statLastWeekDone', periods?.lastWeek),
                 ),
