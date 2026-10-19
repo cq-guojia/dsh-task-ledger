@@ -769,7 +769,7 @@ body[data-ds-dark-theme]{
    两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
 /* 左 8 块略收窄、右图表略放宽（用户 2026-10-17：左再短一丢丢、右长一丢丢） */
 .dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
-.dtl-stats__cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
+.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
   gap:var(--dtl-space-3);}
 .dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
@@ -1249,7 +1249,7 @@ body[data-ds-dark-theme]{
 		//#endregion
 		//#region src/client/board-home.ts
 		/**
-		* 看板首页（`main` 槽整页内容）：6 统计卡 + 近 8 周趋势图 + 两区任务列表。
+		* 看板首页（`main` 槽整页内容）：8 统计卡 + 近 8 周趋势图 + 两区任务列表。
 		* 定稿见 docs/design/features/board-home.md §二（2026-10-17 专家组改版）；
 		* 按钮矩阵归「任务按钮与会话交接」任务（写入路径 A/B 未拍板），本页**不画**任务动作按钮。
 		*
@@ -1334,10 +1334,11 @@ body[data-ds-dark-theme]{
 			}))], [board, t]);
 			const days = (value) => value === null || value === void 0 ? t("daysNone") : t("daysValue", { n: value });
 			/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
-			const card = (label, value, hint) => (0, react.createElement)(StatCard, {
+			const card = (label, value, hint, title) => (0, react.createElement)(StatCard, {
 				label: t(label),
 				value,
 				hint,
+				title,
 				interactive: false
 			});
 			/** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。
@@ -1413,21 +1414,7 @@ body[data-ds-dark-theme]{
 			}, state.refreshing ? t("refreshing") : t("refresh")))), tab === "stats" ? (0, react.createElement)("div", { style: hintStyle }, t("statsPlaceholder")) : (0, react.createElement)("div", null, stats === void 0 ? null : (0, react.createElement)("div", {
 				className: "dtl-stats",
 				style: statsRowStyle
-			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myOverdue })), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) })), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive })), (0, react.createElement)(StatCard, {
-				label: t("statAlarm"),
-				value: stats.backlog + stats.overdue + stats.stale,
-				hint: t("statAlarmSplit", {
-					backlog: stats.backlog,
-					overdue: stats.overdue,
-					stale: stats.stale
-				}),
-				title: [
-					t("statBacklogTitle", { n: stats.backlogDays }),
-					t("statOverdueTitle", { n: stats.overdueDays }),
-					t("statStaleTitle", { n: stats.staleDays })
-				].join("；"),
-				interactive: false
-			}), periodCard("statWeekDone", periods?.thisWeek), periodCard("statLastWeekDone", periods?.lastWeek), periodCard("statMonthDone", periods?.thisMonth), periodCard("statLastMonthDone", periods?.lastMonth)), (0, react.createElement)("div", {
+			}, (0, react.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", stats.myActive, t("statMyActiveHint", { n: stats.myOverdue })), card("statDoing", stats.doing, t("statDoingHint", { n: stats.doing - stats.myActive })), card("statOpen", stats.open, t("statOpenHint", { n: days(stats.oldestOpenDays) })), card("statBacklog", stats.backlog, t("statBacklogHint", { n: stats.open }), t("statBacklogTitle", { n: stats.backlogDays })), card("statOverdue", stats.overdue, t("statDoingTotalHint", { n: stats.doing }), t("statOverdueTitle", { n: stats.overdueDays })), card("statStale", stats.stale, t("statDoingTotalHint", { n: stats.doing }), t("statStaleTitle", { n: stats.staleDays })), periodCard("statWeekDone", periods?.thisWeek), periodCard("statLastWeekDone", periods?.lastWeek)), (0, react.createElement)("div", {
 				className: "dtl-card",
 				style: chartCardStyle
 			}, (0, react.createElement)("div", { style: {
@@ -1665,17 +1652,16 @@ body[data-ds-dark-theme]{
 			statOpenHint: "最长未认领 {n}",
 			statDoing: "进行中",
 			statDoingHint: "其他成员负责 {n} 条",
-			statAlarm: "积压 · 超期 · 停滞",
-			statStaleWord: "停滞",
-			statStaleHint: "{n} 条",
-			statAlarmSplit: "积压 {backlog} ｜ 超期 {overdue} ｜ 停滞 {stale}",
+			statBacklog: "积压",
+			statOverdue: "超期",
+			statStale: "停滞",
+			statBacklogHint: "待认领共 {n} 条",
+			statDoingTotalHint: "进行中共 {n} 条",
 			statStaleTitle: "停滞 = 进行中满 {n} 天没更新",
 			statOverdueTitle: "超期 = 认领后满 {n} 天还没结案",
 			statBacklogTitle: "积压 = 待认领满 {n} 天没人接",
 			statWeekDone: "本周完成",
 			statLastWeekDone: "上周完成",
-			statMonthDone: "本月完成",
-			statLastMonthDone: "上月完成",
 			statCreatedHint: "新增 {n} 条",
 			daysNone: "—",
 			daysValue: "{n} 天",
@@ -1788,17 +1774,16 @@ body[data-ds-dark-theme]{
 			statOpenHint: "longest unclaimed {n}",
 			statDoing: "In progress",
 			statDoingHint: "owned by other members: {n}",
-			statAlarm: "Backlog · Overdue · Stale",
-			statStaleWord: "Stale",
-			statStaleHint: "{n}",
-			statAlarmSplit: "{backlog} backlog ｜ {overdue} overdue ｜ {stale} stale",
+			statBacklog: "Backlog",
+			statOverdue: "Overdue",
+			statStale: "Stale",
+			statBacklogHint: "{n} unclaimed in total",
+			statDoingTotalHint: "{n} in progress in total",
 			statStaleTitle: "stale = active with no update for {n}+ days",
 			statOverdueTitle: "overdue = claimed {n}+ days ago and still open",
 			statBacklogTitle: "backlog = unclaimed for {n}+ days",
 			statWeekDone: "Done this week",
 			statLastWeekDone: "Done last week",
-			statMonthDone: "Done this month",
-			statLastMonthDone: "Done last month",
 			statCreatedHint: "{n} created",
 			daysNone: "—",
 			daysValue: "{n}d",

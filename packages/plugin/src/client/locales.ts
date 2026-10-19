@@ -15,10 +15,10 @@ export type LocaleKey =
   | 'degradedTitle' | 'degradedItem'
   | 'statsPlaceholder'
   // 统计卡
-  | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint' | 'statStaleTitle'
-  | 'statDoing' | 'statDoingHint' | 'statAlarm' | 'statStaleWord' | 'statStaleHint' | 'statAlarmSplit'
-  | 'statOverdueTitle' | 'statBacklogTitle'
-  | 'statWeekDone' | 'statLastWeekDone' | 'statMonthDone' | 'statLastMonthDone' | 'statCreatedHint'
+  | 'statMyActive' | 'statMyActiveHint' | 'statOpen' | 'statOpenHint' | 'statDoing' | 'statDoingHint'
+  | 'statBacklog' | 'statOverdue' | 'statStale' | 'statBacklogHint' | 'statDoingTotalHint'
+  | 'statStaleTitle' | 'statOverdueTitle' | 'statBacklogTitle'
+  | 'statWeekDone' | 'statLastWeekDone' | 'statCreatedHint'
   | 'daysNone' | 'daysValue'
   // 趋势图
   | 'chartTitle' | 'chartCaption' | 'chartBucket' | 'chartEmpty' | 'chartLoading' | 'chartUnavailable'
@@ -71,17 +71,16 @@ export const zh: Record<LocaleKey, string> = {
   statOpenHint: '最长未认领 {n}',
   statDoing: '进行中',
   statDoingHint: '其他成员负责 {n} 条',
-  statAlarm: '积压 · 超期 · 停滞',
-  statStaleWord: '停滞',
-  statStaleHint: '{n} 条',
-  statAlarmSplit: '积压 {backlog} ｜ 超期 {overdue} ｜ 停滞 {stale}',
+  statBacklog: '积压',
+  statOverdue: '超期',
+  statStale: '停滞',
+  statBacklogHint: '待认领共 {n} 条',
+  statDoingTotalHint: '进行中共 {n} 条',
   statStaleTitle: '停滞 = 进行中满 {n} 天没更新',
   statOverdueTitle: '超期 = 认领后满 {n} 天还没结案',
   statBacklogTitle: '积压 = 待认领满 {n} 天没人接',
   statWeekDone: '本周完成',
   statLastWeekDone: '上周完成',
-  statMonthDone: '本月完成',
-  statLastMonthDone: '上月完成',
   statCreatedHint: '新增 {n} 条',
   daysNone: '—',
   daysValue: '{n} 天',
@@ -202,17 +201,16 @@ export const en: Record<LocaleKey, string> = {
   statOpenHint: 'longest unclaimed {n}',
   statDoing: 'In progress',
   statDoingHint: 'owned by other members: {n}',
-  statAlarm: 'Backlog · Overdue · Stale',
-  statStaleWord: 'Stale',
-  statStaleHint: '{n}',
-  statAlarmSplit: '{backlog} backlog ｜ {overdue} overdue ｜ {stale} stale',
+  statBacklog: 'Backlog',
+  statOverdue: 'Overdue',
+  statStale: 'Stale',
+  statBacklogHint: '{n} unclaimed in total',
+  statDoingTotalHint: '{n} in progress in total',
   statStaleTitle: 'stale = active with no update for {n}+ days',
   statOverdueTitle: 'overdue = claimed {n}+ days ago and still open',
   statBacklogTitle: 'backlog = unclaimed for {n}+ days',
   statWeekDone: 'Done this week',
   statLastWeekDone: 'Done last week',
-  statMonthDone: 'Done this month',
-  statLastMonthDone: 'Done last month',
   statCreatedHint: '{n} created',
   daysNone: '—',
   daysValue: '{n}d',

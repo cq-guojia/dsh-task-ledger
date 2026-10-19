@@ -1,5 +1,5 @@
 /**
- * 看板首页（`main` 槽整页内容）：6 统计卡 + 近 8 周趋势图 + 两区任务列表。
+ * 看板首页（`main` 槽整页内容）：8 统计卡 + 近 8 周趋势图 + 两区任务列表。
  * 定稿见 docs/design/features/board-home.md §二（2026-10-17 专家组改版）；
  * 按钮矩阵归「任务按钮与会话交接」任务（写入路径 A/B 未拍板），本页**不画**任务动作按钮。
  *
@@ -86,11 +86,12 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
     value === null || value === undefined ? t('daysNone') : t('daysValue', { n: value })
 
   /** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
-  const card = (label: LocaleKey, value: number, hint: string): ReactNode =>
+  const card = (label: LocaleKey, value: number, hint: string, title?: string): ReactNode =>
     h(StatCard, {
       label: t(label),
       value,
       hint,
+      title,
       interactive: false,
     })
 
@@ -158,28 +159,17 @@ export function BoardHome(props: { t: Translate; onBack: () => void }): ReactNod
               ? null
               : h('div', { className: 'dtl-stats', style: statsRowStyle },
                 h('div', { className: 'dtl-stats__cards' },
-                  // 第一行 · 操作台（纯展示）
+                  // 按列成对（用户 2026-10-19 选 A）：每列上下是同一对象的两个视角，
+                  // 子集关系一眼可见 —— 积压 ⊂ 待认领、超期 / 停滞 ⊂ 进行中。
+                  // DOM 按**列序**写，CSS 的 grid-auto-flow:column 保证 4 列 / 2 列两种排布下都成对。
                   card('statMyActive', stats.myActive, t('statMyActiveHint', { n: stats.myOverdue })),
-                  card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) })),
                   card('statDoing', stats.doing, t('statDoingHint', { n: stats.doing - stats.myActive })),
-                  // 异常合并卡：主数字 = 积压 + 超期 + 停滞合计，小字拆开报数（用户 2026-10-18；
-                  // 2026-10-19 加积压。保持 4 张一行 ⇒ 绝不拆成 5 张）
-                  h(StatCard, {
-                    label: t('statAlarm'),
-                    value: stats.backlog + stats.overdue + stats.stale,
-                    hint: t('statAlarmSplit', { backlog: stats.backlog, overdue: stats.overdue, stale: stats.stale }),
-                    title: [
-                      t('statBacklogTitle', { n: stats.backlogDays }),
-                      t('statOverdueTitle', { n: stats.overdueDays }),
-                      t('statStaleTitle', { n: stats.staleDays }),
-                    ].join('；'),
-                    interactive: false,
-                  }),
-                  // 第二行 · 统计台（自然周期，不可点）
+                  card('statOpen', stats.open, t('statOpenHint', { n: days(stats.oldestOpenDays) })),
+                  card('statBacklog', stats.backlog, t('statBacklogHint', { n: stats.open }), t('statBacklogTitle', { n: stats.backlogDays })),
+                  card('statOverdue', stats.overdue, t('statDoingTotalHint', { n: stats.doing }), t('statOverdueTitle', { n: stats.overdueDays })),
+                  card('statStale', stats.stale, t('statDoingTotalHint', { n: stats.doing }), t('statStaleTitle', { n: stats.staleDays })),
                   periodCard('statWeekDone', periods?.thisWeek),
                   periodCard('statLastWeekDone', periods?.lastWeek),
-                  periodCard('statMonthDone', periods?.thisMonth),
-                  periodCard('statLastMonthDone', periods?.lastMonth),
                 ),
                 h('div', { className: 'dtl-card', style: chartCardStyle },
                   // 右上角只留一个「只看我的」小复选框：勾上 = 我的，不勾 = 所有（用户 2026-10-17）
