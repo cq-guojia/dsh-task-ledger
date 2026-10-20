@@ -33,23 +33,6 @@
       "title": "统计报表",
       "updated": "2026-10-16 23:38:14",
       "worklog": "worklog/202610/16-2338-统计报表-073b.md"
-    },
-    "20261020-1556-写前拉取-ledger-防过期读取覆盖-a16b": {
-      "category": null,
-      "created": "2026-10-20 15:56:33",
-      "creator": "GuoJia-Agent",
-      "finished": null,
-      "owner": "GuoJia-Agent",
-      "started": "2026-10-20 15:57:00",
-      "status": "doing",
-      "tags": [
-        "DSH",
-        "台账",
-        "同步"
-      ],
-      "title": "写前拉取 ledger/ 防过期读取覆盖",
-      "updated": "2026-10-20 15:57:18",
-      "worklog": "worklog/202610/20-1556-写前拉取-ledger-防过期读取覆盖-a16b.md"
     }
   }
 }
