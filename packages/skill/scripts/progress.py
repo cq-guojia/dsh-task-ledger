@@ -447,6 +447,77 @@ def git_sync(action: str) -> None:
         )
 
 
+# 只读命令不碰 git；其余（含写类与 tags）写前刷新 ledger/。
+READ_ONLY_COMMANDS = {"list", "show", "history", "validate"}
+
+
+def git_presync(action: str, args: argparse.Namespace) -> None:
+    """写命令执行前把 ledger/ 刷成远端最新，避免基于过期读取整文件回写。
+
+    只动 ledger/ 目录（不碰项目其余文件），与 git_sync 共用 --no-sync / TASK_LEDGER_NO_SYNC。
+    无 git / 无上游 / 远端尚无该路径 静默跳过；拉取失败只提示不中止（推送端 rebase 兜底）。
+    本地未提交的 ledger 改动会被远端覆盖——正是「取最新再改」语义，仅打提示。
+    """
+    if os.environ.get("TASK_LEDGER_NO_SYNC"):
+        return
+    if action in READ_ONLY_COMMANDS:
+        return
+    # tags --all 是纯读，不拉取
+    if action == "tags" and not getattr(args, "rename", None):
+        return
+    try:
+        repo = find_repo(getattr(args, "repo", None))
+    except Fail:
+        return
+    ledger_dir = repo / "ledger"
+    top = _git("git", "-C", str(repo), "rev-parse", "--show-toplevel")
+    if top.returncode != 0:
+        return
+    git_root = Path(top.stdout.strip())
+    try:
+        ledger_rel = str(ledger_dir.resolve().relative_to(git_root.resolve()))
+    except ValueError:
+        return  # ledger 不在 git 仓内
+    ups = _git("git", "-C", str(git_root), "rev-parse", "--abbrev-ref", "@{upstream}")
+    if ups.returncode != 0:
+        return  # 无上游跟踪分支
+    upstream = ups.stdout.strip()
+    remote = upstream.split("/", 1)[0]
+    try:
+        _git("git", "-C", str(git_root), "fetch", remote, timeout=30, check=True)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        print(
+            "提示：写前拉取失败（离线 / 无权限 / 超时），将基于本地当前内容写入；"
+            "若他人已改动，推送时可能冲突。",
+            file=sys.stderr,
+        )
+        return
+    if _git(
+        "git", "-C", str(git_root), "status", "--porcelain", ledger_rel
+    ).stdout.strip():
+        print(
+            "提示：本地 ledger/ 有未提交改动，写前拉取将用远端最新覆盖。",
+            file=sys.stderr,
+        )
+    # 只取远端 ledger/ 到工作树；该路径在远端不存在（全新台账）时忽略
+    try:
+        _git(
+            "git",
+            "-C",
+            str(git_root),
+            "checkout",
+            upstream,
+            "--",
+            ledger_rel,
+            timeout=30,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        pass
+    # 取消预暂存：只更新工作树，避免把他人改动混进本次提交（git_sync 只 add 本次改动的文件）
+    _git("git", "-C", str(git_root), "reset", "--", ledger_rel)
+
+
 def require_task_id(tid: str) -> str:
     """任务号会参与拼路径，任何命令拿到它都要先验一遍。"""
     if not ID_RE.fullmatch(tid):
@@ -2308,6 +2379,7 @@ def main(argv: list[str] | None = None) -> int:
     if getattr(args, "no_sync", False):
         os.environ["TASK_LEDGER_NO_SYNC"] = "1"
     try:
+        git_presync(args.command, args)  # 写前刷新 ledger/ 到远端最新
         args.func(args)
     except Fail as exc:
         print(f"错误：{exc}", file=sys.stderr)
