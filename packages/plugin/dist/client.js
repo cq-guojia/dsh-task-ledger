@@ -1905,59 +1905,6 @@ body[data-ds-dark-theme]{
 			return interpolateTranslate((name) => zh[name] ?? name)(key, params);
 		}
 		//#endregion
-		//#region src/client/overlay-entry.ts
-		/**
-		* 右上浮标入口（`shell.overlay` list 条目，全帧浮层，条目并排添加不替换）。
-		* 定位用宿主变量 `--dsh-frame-overlay-top`（标题栏净空 + 20px），**不写死 top 值**；
-		* 浮层默认 `pointer-events:none`、子元素自动恢复 ⇒ 自绘条目不挡下方应用。
-		*
-		* 角标 = 我名下进行中计数（host 统计真值，SSE 已否 ⇒ 取自同一份快照，>0 才画）；
-		* 0→n 跳变时一次脉冲动画，不自动消失。宿主**无**通知 API ⇒ 「通知」就是这个角标。
-		*/
-		function OverlayEntry(props) {
-			const { t, onOpen } = props;
-			ensureUiBase();
-			const count = (0, react.useSyncExternalStore)(boardSubscribe, boardSnapshot).board?.stats.myActive ?? 0;
-			const previous = (0, react.useRef)(0);
-			const [pulse, setPulse] = (0, react.useState)(0);
-			(0, react.useEffect)(() => {
-				if (count > previous.current) setPulse((value) => value + 1);
-				previous.current = count;
-			}, [count]);
-			return (0, react.createElement)("div", { style: {
-				position: "absolute",
-				top: "var(--dsh-frame-overlay-top,20px)",
-				right: "12px",
-				zIndex: "var(--dtl-z-badge,20)",
-				pointerEvents: "auto"
-			} }, (0, react.createElement)("button", {
-				type: "button",
-				title: t("openBoard"),
-				"aria-label": t("openBoard"),
-				onClick: onOpen,
-				style: {
-					position: "relative",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					width: "32px",
-					height: "32px",
-					padding: 0,
-					border: "1px solid var(--dtl-border)",
-					borderRadius: "var(--dtl-radius-sm)",
-					background: "var(--dtl-solid)",
-					color: "var(--dtl-on-solid)",
-					boxShadow: "var(--dtl-shadow-1)",
-					cursor: "pointer"
-				}
-			}, (0, react.createElement)(LedgerIcon, { size: 18 }), count > 0 ? (0, react.createElement)("span", {
-				key: pulse,
-				className: "dtl-badge",
-				"data-pulse": pulse > 0,
-				title: t("badgeTitle")
-			}, String(count)) : null));
-		}
-		//#endregion
 		//#region src/client/index.ts
 		/**
 		* 浏览器半入口（client bundle，产物 dist/client.js）：装配层，不写业务逻辑。
@@ -1965,8 +1912,7 @@ body[data-ds-dark-theme]{
 		* 三处注册各自挂进「服务就位才触发」的 slots 注入（参考插件真机教训：顶层 inject 声明
 		* 组合满足不了的依赖会让 entry 一直 pending、卡死整个 dsh 启动）：
 		*  · locale 字典（zh / en）——界面语言跟随宿主，插件不自备开关；
-		*  · `main` keyed 槽整页（看板首页）；
-		*  · `shell.overlay` list 槽浮标入口（点开 = `ctx.layout.selectPanel(<看板 id>)`）。
+		*  · `main` keyed 槽整页（看板首页）。
 		*
 		* 宿主能力一律**本地结构化声明**，不 import 官方包（rc 接口会无声变）；
 		* `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
@@ -1977,8 +1923,6 @@ body[data-ds-dark-theme]{
 		const NS = "dsh-task-ledger";
 		/** `main` 槽的 key（非 `conversation` ⇒ 不绑 Session）。 */
 		const PANEL_ID = NS;
-		/** `shell.overlay` list 条目的 id（新 id = 并排添加，不替换宿主条目）。 */
-		const OVERLAY_ID = `${NS}-badge`;
 		/** 宿主没给 t 席位时的兜底（键名绝不上界面）。 */
 		const t = interpolateTranslate((key, params) => fallbackTranslate(key, params));
 		function apply(ctx) {
@@ -2014,16 +1958,6 @@ body[data-ds-dark-theme]{
 					t: props.t ?? t,
 					onBack: () => {
 						selectPanel(null);
-					}
-				})));
-				sub.slots.inject("shell.overlay", () => sub.slots.register({
-					name: "shell.overlay",
-					id: OVERLAY_ID,
-					locale: NS
-				}, (props) => (0, react.createElement)(OverlayEntry, {
-					t: props.t ?? t,
-					onOpen: () => {
-						selectPanel(PANEL_ID);
 					}
 				})));
 			});

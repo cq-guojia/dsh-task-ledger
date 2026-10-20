@@ -4,8 +4,7 @@
  * 三处注册各自挂进「服务就位才触发」的 slots 注入（参考插件真机教训：顶层 inject 声明
  * 组合满足不了的依赖会让 entry 一直 pending、卡死整个 dsh 启动）：
  *  · locale 字典（zh / en）——界面语言跟随宿主，插件不自备开关；
- *  · `main` keyed 槽整页（看板首页）；
- *  · `shell.overlay` list 槽浮标入口（点开 = `ctx.layout.selectPanel(<看板 id>)`）。
+ *  · `main` keyed 槽整页（看板首页）。
  *
  * 宿主能力一律**本地结构化声明**，不 import 官方包（rc 接口会无声变）；
  * `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
@@ -14,7 +13,6 @@ import { createElement as h } from 'react'
 import { BoardHome } from './board-home'
 import { en, fallbackTranslate, interpolateTranslate, zh, type LocaleKey, type Translate } from './locales'
 import { LedgerIcon } from './ui'
-import { OverlayEntry } from './overlay-entry'
 
 /** 命名空间（settings / locale / 面板 id 同名，便于对应）。 */
 /** 模块级 t 席位（侧栏 label 渲染期求值用；绑不上就回落键名，绝不上界面）。 */
@@ -23,8 +21,6 @@ let runtimeT: Translate = (key) => key
 const NS = 'dsh-task-ledger'
 /** `main` 槽的 key（非 `conversation` ⇒ 不绑 Session）。 */
 const PANEL_ID = NS
-/** `shell.overlay` list 条目的 id（新 id = 并排添加，不替换宿主条目）。 */
-const OVERLAY_ID = `${NS}-badge`
 
 /** 浏览器插件上下文：只声明本文件实际用到的服务面。 */
 interface ClientContext {
@@ -80,15 +76,6 @@ export function apply(ctx: ClientContext): void {
         (props: { t?: Translate }) => h(BoardHome, {
           t: props.t ?? t,
           onBack: () => { selectPanel(null) },
-        }),
-      ),
-    )
-    sub.slots.inject('shell.overlay', () =>
-      sub.slots.register(
-        { name: 'shell.overlay', id: OVERLAY_ID, locale: NS },
-        (props: { t?: Translate }) => h(OverlayEntry, {
-          t: props.t ?? t,
-          onOpen: () => { selectPanel(PANEL_ID) },
         }),
       ),
     )
