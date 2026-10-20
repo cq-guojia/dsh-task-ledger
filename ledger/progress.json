@@ -22,16 +22,16 @@
       "created": "2026-10-16 23:38:13",
       "creator": "GuoJia-Agent",
       "finished": null,
-      "owner": null,
-      "started": null,
-      "status": "open",
+      "owner": "GuoJia-Agent",
+      "started": "2026-10-20 15:41:11",
+      "status": "doing",
       "tags": [
         "DSH",
         "插件",
         "基础"
       ],
       "title": "插件基础建设：工程化 + 入口 + 图标 + 元信息 + 设置页",
-      "updated": "2026-10-16 23:38:13",
+      "updated": "2026-10-20 15:41:11",
       "worklog": "worklog/202610/16-2338-插件基础建设-工程化-入口-图标-元信息-设置页-6a2e.md"
     },
     "20261016-2338-统计报表-073b": {
