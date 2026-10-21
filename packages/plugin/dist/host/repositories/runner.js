@@ -9,6 +9,12 @@ const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL('../../../skill/scripts/progre
 /** 单次脚本调用超时上限（ms）。实测单仓 5 万行全量 1.2s，10s 是宽松上限。 */
 const DEFAULT_TIMEOUT_MS = 10_000;
 /**
+ * 写命令的超时上限（ms）：脚本写完会顺手 fetch + commit + push，最坏 30×4 = 120s。
+ * 沿用读命令的 10s 会把「已经 commit、还没 push」那一步掐死 —— 界面报失败，台账其实
+ * 已经改了，用户一重试就是二次写入。
+ */
+export const WRITE_TIMEOUT_MS = 120_000;
+/**
  * 起一次 python3、收 stdout / stderr。出错一律归一成人话（起不了 python3 / 超时 / 非零退出）。
  * 解析留给调用方：读命令要 JSON，写命令要原文。
  */

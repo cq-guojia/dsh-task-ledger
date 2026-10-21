@@ -6,9 +6,12 @@
  *
  * 校验全在脚本里（认领要求 open 且无 owner；释放要求是当前 owner），本层不重复实现。
  */
-import { runLedgerCommand } from '../repositories/runner.js';
+import { WRITE_TIMEOUT_MS, runLedgerCommand } from '../repositories/runner.js';
 async function run(workspace, sub, args) {
-    const result = await runLedgerCommand(sub, [...args, '--repo', workspace.path], { cwd: workspace.path });
+    const result = await runLedgerCommand(sub, [...args, '--repo', workspace.path], {
+        cwd: workspace.path,
+        timeoutMs: WRITE_TIMEOUT_MS,
+    });
     if (!result.ok)
         throw new Error(`${workspace.title}：${result.error}`);
 }

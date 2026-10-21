@@ -116,6 +116,9 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 
 非 0 退出就停手、原样报告，**不要绕过脚本手改 `progress.json` 或历史层**。
 并发冲突（文件被改动）重跑一次即可，不要用 `git pull` / `rebase` 去「解决」。
+写前会**定向取最新**：只刷新 `ledger/progress.json` 与 `ledger/history/`，`worklog/` 里已有的正文一个字都不动；
+本地有未推送的台账提交、未提交改动或未入库的同名文件时会中止 —— 按提示先提交 / 推送，或加 `--no-sync` 继续本地写。
+同一仓库里写命令**排队**执行（最多等 60 秒），并发时不要重试轰炸，等前一个跑完再重跑。
 
 细节见 `references/troubleshooting.md`。
 

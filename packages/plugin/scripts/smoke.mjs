@@ -188,26 +188,64 @@ await check('getHomeAggregate：近 8 周分组桶（完成 / 新增 × 所有 /
 })
 
 await check('queryClosed：近 13 个月窗口 + 创建时间倒序 + limit', async () => {
-  const history = await queryClosed([
-    { id: 'ws-self', title: 'self', path: repoRoot },
-    ...(hasDispatch ? [{ id: 'ws-dispatch', title: 'dispatch', path: DISPATCH_PATH }] : []),
-  ])
-  // 合并生效的口径只在姊妹工作区在位时卡；缺它退化为「至少本仓自己的历史」
+  // 条数基准吃合成 fixture（5 万行，内容固定）：断言的基准不能是本仓真实台账，
+  // 那会随日常结案变化，且换个检出就可能只剩几条。
+  const perfWs = { id: 'ws-big', title: 'perf-50k（合成）', path: PERF_PATH }
+  const selfWs = { id: 'ws-self', title: 'self', path: repoRoot }
+  const history = await queryClosed([perfWs, selfWs])
   const records = history.records
-  assert.ok(records.length > (hasDispatch ? 8 : 0), `历史应非空，实际 ${records.length}`)
+  assert.ok(records.length > 8, `历史应非空，实际 ${records.length}`)
   for (const record of records) assert.ok(record.workspace !== undefined)
   const keys = records.map((r) => String(r.created ?? r.time ?? ''))
   assert.deepEqual(keys, [...keys].sort().reverse(), '应按创建时间倒序')
-  const limited = (await queryClosed([{ id: 'ws-self', title: 'self', path: repoRoot }], { limit: 3 })).records
+  const limited = (await queryClosed([perfWs], { limit: 3 })).records
   assert.equal(limited.length, 3)
 })
 
 await check('getFilterOptions：owner/category/tag 去重候选', async () => {
-  const options = (await getFilterOptions([{ id: 'ws-self', title: 'self', path: repoRoot }])).options
-  assert.ok(options.owners.includes('GuoJia-Agent'), `owners 应含 GuoJia-Agent，实际 ${options.owners.join(',')}`)
-  assert.ok(options.categories.includes('建设'))
-  assert.ok(options.tags.length > 0)
-  console.log(`    （owners=${options.owners.length} categories=${options.categories.length} tags=${options.tags.length}）`)
+  // 自造一个小台账：不读本仓真实数据（会随日常结案变化），也不吃 perf fixture
+  //（那个 fixture 故意只造 history、不写 progress.json，专门喂「无台账被过滤」用例）
+  const board = fs.mkdtempSync(path.join(os.tmpdir(), 'dtl-filter-'))
+  try {
+    fs.mkdirSync(path.join(board, 'ledger', 'history'), { recursive: true })
+    fs.writeFileSync(
+      path.join(board, 'ledger', 'progress.json'),
+      JSON.stringify({
+        tasks: {
+          '20260101-0000-夹具任务-a1b2': {
+            category: '夹具',
+            created: '2026-01-01 00:00:00',
+            creator: 'fixture-owner',
+            finished: null,
+            owner: 'fixture-owner',
+            started: '2026-01-01 00:00:00',
+            status: 'doing',
+            tags: ['看板', '查询'],
+            title: '夹具任务',
+            updated: '2026-01-01 00:00:00',
+            worklog: null,
+          },
+        },
+      }),
+    )
+    fs.writeFileSync(
+      path.join(board, 'ledger', 'history', '202610.md'),
+      '# 进度历史（已结案）\n\n| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |\n|---|---|---|---|---|---|---|---|---|\n'
+        + '| 2026-10-01 10:00:00 | 2026-10-01 09:00:00 | 夹具结案 | 结案类 | 结案标签 | @fixture-owner | @fixture-owner | 夹具结案摘要 |  |\n',
+    )
+    const options = (await getFilterOptions([
+      { id: 'ws-filter', title: 'filter', path: board },
+    ])).options
+    const bare = (value) => String(value).replace(/^@/, '')
+    assert.ok(options.owners.some((o) => bare(o) === 'fixture-owner'), `owners 应含 fixture-owner，实际 ${options.owners.join(',')}`)
+    assert.ok(options.categories.includes('夹具'), `categories 应含在办的「夹具」，实际 ${options.categories.join(',')}`)
+    assert.ok(options.categories.includes('结案类'), 'categories 应含已结案的分类')
+    assert.ok(options.tags.includes('查询'), 'tags 应含在办标签')
+    assert.ok(options.tags.includes('结案标签'), 'tags 应含已结案标签')
+    console.log(`    （owners=${options.owners.length} categories=${options.categories.length} tags=${options.tags.length}）`)
+  } finally {
+    fs.rmSync(board, { recursive: true, force: true })
+  }
 })
 
 await check('getTask + readWorklog：详情与过程正文', async () => {
@@ -697,6 +735,239 @@ await check('认领 / 释放：host 直写（无会话 / cwd 取身份 / POST �
   } finally {
     fs.rmSync(root, { recursive: true, force: true })
   }
+})
+
+// 写前同步（2026-10-21 修）：只定向取 progress.json 与 history/，worklog 正文一个字都不碰。
+// 覆盖三类事故：正文被覆盖丢失、本地改动被静默回退、远端新任务 / worklog 取不下来。
+await check('写前同步：定向取最新 / 正文保留 / 脏与未推送中止 / --no-sync / 只读不触发 / 离线可写', async () => {
+  const { execFileSync, spawnSync } = await import('node:child_process')
+  const script = path.join(here, '../skill/scripts/progress.py')
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'dtl-presync-'))
+  const remote = path.join(base, 'remote.git')
+  const a = path.join(base, 'a') // 被测仓：有 upstream
+  const b = path.join(base, 'b') // 他人副本：用来造远端新提交
+  const env = { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }
+  const git = (cwd, args) => execFileSync('git', args, { cwd, env, encoding: 'utf-8' }).trim()
+  const run = (cwd, args, extraEnv = {}) =>
+    spawnSync('python3', [script, ...args, '--repo', cwd], { cwd, env: { ...env, ...extraEnv }, encoding: 'utf-8' })
+  const ident = (dir, name) => {
+    git(dir, ['config', 'user.name', name])
+    git(dir, ['config', 'user.email', 'smoke@example.com'])
+  }
+  try {
+    execFileSync('git', ['init', '--bare', '-q', remote], { env, encoding: 'utf-8' })
+    fs.mkdirSync(a, { recursive: true })
+    git(a, ['init', '-q'])
+    ident(a, 'smoke-user')
+    git(a, ['remote', 'add', 'origin', remote])
+    fs.writeFileSync(path.join(a, 'README.md'), '# fixture\n')
+    git(a, ['add', 'README.md'])
+    git(a, ['commit', '-q', '-m', 'init'])
+    git(a, ['push', '-q', '-u', 'origin', 'HEAD'])
+
+    assert.equal(run(a, ['init']).status, 0, 'init 应成功（含写后提交推送）')
+    const newRun = run(a, ['new', '--title', 'a 侧任务', '--self'])
+    assert.equal(newRun.status, 0, `new 应成功：${newRun.stderr}`)
+    const progressPath = path.join(a, 'ledger', 'progress.json')
+    const tasks = () => JSON.parse(fs.readFileSync(progressPath, 'utf-8')).tasks
+    const aTaskId = Object.keys(tasks())[0]
+    const logPath = path.join(a, 'ledger', tasks()[aTaskId].worklog)
+
+    // 正文由人写：脚本不得覆盖（历史 bug：每次 log 正文都回到模板骨架）
+    const MARKER = 'MARKER-正文不能被覆盖'
+    fs.appendFileSync(logPath, `\n${MARKER}\n`)
+    assert.equal(run(a, ['log', '--id', aTaskId, '--note', '冒烟：正文写入后记一条']).status, 0, '写正文后 log 应成功')
+    assert.ok(fs.readFileSync(logPath, 'utf-8').includes(MARKER), 'log 不得覆盖 worklog 正文')
+
+    // 脏 progress.json：写前取最新会覆盖它 → 中止，且字节不变
+    const dirtyBefore = fs.readFileSync(progressPath)
+    const dirtyData = Buffer.concat([dirtyBefore, Buffer.from('\n')])
+    fs.writeFileSync(progressPath, dirtyData)
+    const dirtyRun = run(a, ['log', '--id', aTaskId, '--note', '冒烟：脏时应中止'])
+    assert.equal(dirtyRun.status, 1, '脏 progress.json 应中止')
+    assert.ok(dirtyRun.stderr.includes('未提交改动'), `应提示未提交改动：${dirtyRun.stderr}`)
+    assert.deepEqual(fs.readFileSync(progressPath), dirtyData, '中止时不得改动文件')
+    fs.writeFileSync(progressPath, dirtyBefore)
+
+    // 有未推送的台账提交：取最新会把它们回退 → 中止，HEAD 不变
+    // 用 new 而不是 log 造这次提交：new 必然改 progress.json（多一个任务键），
+    // log 只刷 updated，同一秒内可能内容不变、提交里就没有 progress.json。
+    assert.equal(run(a, ['new', '--title', '本地未推送的任务', '--self'], { TASK_LEDGER_NO_SYNC: '1' }).status, 0, '本地 new 应成功')
+    git(a, ['add', 'ledger'])
+    git(a, ['commit', '-q', '-m', 'chore(ledger): 故意不推的台账提交'])
+    const headBefore = git(a, ['rev-parse', 'HEAD'])
+    const unpushed = run(a, ['log', '--id', aTaskId, '--note', '冒烟：未推送应中止'])
+    assert.equal(unpushed.status, 1, '有未推送提交应中止')
+    assert.ok(unpushed.stderr.includes('还没推到'), `应提示未推送：${unpushed.stderr}`)
+    assert.equal(git(a, ['rev-parse', 'HEAD']), headBefore, '中止时不应产生新提交')
+    git(a, ['push', '-q', 'origin', 'HEAD']) // 推上去，后续用例才能继续
+
+    // 他人新建任务 → 本地写命令前取到最新；worklog 新文件被补下来，已有正文不动
+    execFileSync('git', ['clone', '-q', remote, b], { env, encoding: 'utf-8' })
+    ident(b, 'smoke-other')
+    assert.equal(run(b, ['new', '--title', 'b 侧任务', '--self']).status, 0, '他人 new 应成功')
+    const bTaskId = Object.keys(
+      JSON.parse(fs.readFileSync(path.join(b, 'ledger', 'progress.json'), 'utf-8')).tasks,
+    ).find((id) => id !== aTaskId)
+    const fetched = run(a, ['log', '--id', aTaskId, '--note', '冒烟：写前取最新'])
+    assert.equal(fetched.status, 0, `取最新后写命令应成功：${fetched.stderr}`)
+    assert.ok(
+      fetched.stderr.includes('快进'),
+      `本地无未推送提交时应快进（只覆盖工作树会让远端内容被重放，rebase 必冲突）：${fetched.stderr}`,
+    )
+    assert.ok(tasks()[bTaskId], '应取到远端新建的任务')
+    assert.ok(
+      fs.existsSync(path.join(a, 'ledger', tasks()[bTaskId].worklog)),
+      '远端新增的 worklog 应被补下来',
+    )
+    assert.ok(fs.readFileSync(logPath, 'utf-8').includes(MARKER), '补下的文件不得动已有正文')
+
+    // 先让 b 快进到远端最新：这条用例验的是「历史层只刷目标月」，
+    // 不该被「两边同时改 progress.json 导致的 rebase 冲突」（B 类待定项）拖累。
+    const bBranch = git(b, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    git(b, ['pull', '-q', '--ff-only', 'origin', bBranch])
+
+    // 历史层只刷 close 真要写的那一个月：别人结案到 2020-01，非 close 命令不该把 202001.md 拉下来
+    const closed = run(b, [
+      'close', '--id', bTaskId, '--summary', '夹具：结案到旧月份', '--finished', '2020-01-15 10:00',
+    ])
+    assert.equal(closed.status, 0, `他人结案到旧月份应成功：${closed.stderr}`)
+    assert.ok(
+      !closed.stderr.includes('推送被拒'),
+      `他人结案的推送应成功（否则下一步会被「有未推送提交」拦住）：${closed.stderr}`,
+    )
+    assert.ok(fs.existsSync(path.join(b, 'ledger', 'history', '202001.md')), '他人侧应生成 202001.md')
+    // 分支名不能写死 master：fixture 是 `git init`，分支名随 init.defaultBranch 变
+    const aBranch = git(a, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    const aheadBefore = git(a, ['log', '--oneline', `origin/${aBranch}..HEAD`])
+    assert.equal(aheadBefore, '', `refetch 前本地应与远端同步：${aheadBefore}`)
+    // 不在这里断言「a 没有 202001.md」：b 的提交会让 a 落后，push 被拒后会自动 rebase，
+    // 而 rebase 是整仓操作，会把远端那次提交（含历史文件）一并合进工作树。
+    // 「只刷目标月」约束的是写前同步的主动写入，用下面的结构断言守。
+    const refetch = run(a, ['log', '--id', aTaskId, '--note', '冒烟：不该拉别的月历史'])
+    assert.equal(refetch.status, 0, `log 应成功：${refetch.stderr}`)
+
+    // 只读命令完全不碰 git
+    assert.equal(run(b, ['new', '--title', 'b 侧第二个任务', '--self']).status, 0, '他人再建一个')
+    const branch = git(a, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    const originBefore = git(a, ['rev-parse', `origin/${branch}`])
+    assert.equal(run(a, ['list']).status, 0, 'list 应成功')
+    assert.equal(git(a, ['rev-parse', `origin/${branch}`]), originBefore, '只读命令不该 fetch')
+
+    // --no-sync：写前不取、写后不推
+    const aKnown = new Set(Object.keys(tasks()))
+    assert.equal(run(b, ['new', '--title', 'b 侧第三个任务', '--self']).status, 0, '他人再建一个')
+    const bNew = Object.keys(
+      JSON.parse(fs.readFileSync(path.join(b, 'ledger', 'progress.json'), 'utf-8')).tasks,
+    ).filter((id) => !aKnown.has(id))
+    assert.ok(bNew.length >= 1, '他人侧应有一个 a 没见过的任务')
+    const off = run(a, ['log', '--id', aTaskId, '--note', '冒烟：--no-sync'], { TASK_LEDGER_NO_SYNC: '1' })
+    assert.equal(off.status, 0, `--no-sync 下应能写：${off.stderr}`)
+    assert.ok(!bNew.some((id) => tasks()[id]), '--no-sync 不该取远端最新')
+
+    // 离线（remote 指向不存在的路径）：取最新失败只提示，不影响本轮写入
+    git(a, ['remote', 'set-url', 'origin', path.join(base, 'no-such-remote')])
+    const offline = run(a, ['log', '--id', aTaskId, '--note', '冒烟：离线仍可写'])
+    assert.equal(offline.status, 0, `离线时应仍能写：${offline.stderr}`)
+    assert.ok(offline.stderr.includes('写前拉取失败'), '离线应给明确提示')
+    assert.ok(fs.readFileSync(logPath, 'utf-8').includes('冒烟：离线仍可写'), '离线也要把记录写进正文')
+  } finally {
+    fs.rmSync(base, { recursive: true, force: true })
+  }
+})
+
+// 写后同步的边界（2026-10-21 红队评审 A 类）：只提交台账、失败回滚写前刷新、中间态不写。
+await check('写后同步：不吞暂存区 / 失败回滚写前刷新 / 冲突中间态中止', async () => {
+  const { execFileSync, spawnSync } = await import('node:child_process')
+  const script = path.join(here, '../skill/scripts/progress.py')
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'dtl-syncguard-'))
+  const remote = path.join(base, 'remote.git')
+  const a = path.join(base, 'a')
+  const b = path.join(base, 'b')
+  const env = { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }
+  const git = (cwd, args) => execFileSync('git', args, { cwd, env, encoding: 'utf-8' }).trim()
+  const run = (cwd, args) =>
+    spawnSync('python3', [script, ...args, '--repo', cwd], { cwd, env, encoding: 'utf-8' })
+  const ident = (dir, name) => {
+    git(dir, ['config', 'user.name', name])
+    git(dir, ['config', 'user.email', 'smoke@example.com'])
+  }
+  try {
+    execFileSync('git', ['init', '--bare', '-q', remote], { env, encoding: 'utf-8' })
+    fs.mkdirSync(a, { recursive: true })
+    git(a, ['init', '-q'])
+    ident(a, 'smoke-user')
+    git(a, ['remote', 'add', 'origin', remote])
+    fs.writeFileSync(path.join(a, 'README.md'), '# fixture\n')
+    git(a, ['add', 'README.md'])
+    git(a, ['commit', '-q', '-m', 'init'])
+    git(a, ['push', '-q', '-u', 'origin', 'HEAD'])
+    assert.equal(run(a, ['init']).status, 0, 'init 应成功')
+    assert.equal(run(a, ['new', '--title', '同步边界任务', '--self']).status, 0, 'new 应成功')
+    const progressPath = path.join(a, 'ledger', 'progress.json')
+    const tasks = () => JSON.parse(fs.readFileSync(progressPath, 'utf-8')).tasks
+    const taskId = Object.keys(tasks())[0]
+
+    // ① 只提交台账：用户已经 git add 的业务文件不能被卷进 chore(ledger) 提交
+    fs.writeFileSync(path.join(a, 'biz.txt'), 'business\n')
+    git(a, ['add', 'biz.txt'])
+    assert.equal(run(a, ['log', '--id', taskId, '--note', '冒烟：不吞暂存区']).status, 0, 'log 应成功')
+    const committed = git(a, ['show', '--name-only', '--format=', 'HEAD'])
+    assert.ok(!committed.includes('biz.txt'), `台账提交不该含业务文件：${committed}`)
+    assert.ok(
+      git(a, ['status', '--porcelain']).split('\n').includes('A  biz.txt'),
+      '业务文件应仍留在暂存区',
+    )
+    git(a, ['reset', '-q', 'biz.txt'])
+    fs.rmSync(path.join(a, 'biz.txt'), { force: true })
+
+    // 一个任务一行：任务块占十几行时，删/改相邻任务的 patch 上下文会重叠，rebase 必冲突
+    const rawProgress = fs.readFileSync(progressPath, 'utf-8')
+    const taskLines = rawProgress.split('\n').filter((line) => line.startsWith('    "'))
+    assert.equal(taskLines.length, Object.keys(tasks()).length, 'progress.json 应一个任务一行')
+
+    // ② 命令失败要回滚写前刷新，不能把远端版本留在工作树里冒充用户的未提交改动
+    execFileSync('git', ['clone', '-q', remote, b], { env, encoding: 'utf-8' })
+    ident(b, 'smoke-other')
+    assert.equal(run(b, ['new', '--title', '他人推进远端', '--self']).status, 0, '他人 new 应成功')
+    const failed = run(a, ['log', '--id', 'no-such-task-zzzz', '--note', '应失败'])
+    assert.equal(failed.status, 1, '不存在的任务应失败')
+    // 写前同步可能已经 fast-forward 到远端（那是共享状态推进，不回滚）；
+    // 该回滚的是「脚本主动写进工作树的内容」——两者都表现为「失败后工作树必须干净」。
+    assert.equal(git(a, ['status', '--porcelain']), '', '失败后工作树应干净（预同步写下的内容已回滚）')
+
+    // ③ merge / rebase 中间态：不许往冲突现场里写
+    fs.writeFileSync(path.join(a, '.git', 'MERGE_HEAD'), `${git(a, ['rev-parse', 'HEAD'])}\n`)
+    const mid = run(a, ['log', '--id', taskId, '--note', '冒烟：中间态'])
+    assert.equal(mid.status, 1, '中间态应中止')
+    assert.ok(mid.stderr.includes('中间态'), `应明确提示中间态：${mid.stderr}`)
+    fs.rmSync(path.join(a, '.git', 'MERGE_HEAD'), { force: true })
+  } finally {
+    fs.rmSync(base, { recursive: true, force: true })
+  }
+})
+
+// 写前同步的目标范围（结构断言）：历史层不再整目录枚举，只在 close 时按结案月取一个文件。
+// 运行时区分不开「rebase 带进来的历史文件」与「presync 主动刷的」，所以从源码层面守。
+await check('写前同步只定向刷目标文件：history 不整目录枚举', async () => {
+  const src = fs.readFileSync(path.join(here, '../skill/scripts/progress.py'), 'utf-8')
+  assert.ok(
+    !/_remote_dir_files\([^)]*history/.test(src),
+    '历史层不该用 _remote_dir_files 整目录枚举',
+  )
+  assert.ok(
+    /if action == "close":/.test(src) && /history_path_for\(repo, now\(\)\)/.test(src),
+    '历史层目标应按 close 的结案月计算（含 --finished 兜底）',
+  )
+})
+
+// 内嵌副本与源一致：忘了 build:host 就会被这条抓住（收的是「改了源没同步」的常见失误）。
+await check('内嵌 skill 副本与 packages/skill 源逐字节一致', async () => {
+  const { diffSkillCopy } = await import('./check-skill-copy.mjs')
+  const { missing, extra, differing } = diffSkillCopy()
+  assert.deepEqual(missing, [], `副本缺文件（先 npm run build:host）：${missing.join(', ')}`)
+  assert.deepEqual(extra, [], `副本多出文件（先 npm run build:host）：${extra.join(', ')}`)
+  assert.deepEqual(differing, [], `副本与源不一致（先 npm run build:host）：${differing.join(', ')}`)
 })
 
 // 客户端数据面（步骤 4b）：取数只走拆后的两个端点，页面不许再从快照上读趋势。

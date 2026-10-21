@@ -1,0 +1,43 @@
+name: Verify
+
+# 普通提交 / PR 上跑构建、类型检查与冒烟；发版链路（publish.yml）保持零依赖、零额外失败点。
+# 这里额外先查「内嵌 skill 副本与源一致」——副本是入库产物，CI 一旦先 build 就会把它悄悄修正，
+# 所以这一步必须在 build 之前跑，否则「改了源忘了 build」这类漏提交永远抓不到。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/verify.yml'
+  pull_request:
+    paths:
+      - 'packages/**'
+      - '.github/workflows/verify.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'   # packages/plugin 的 engines 要求 >=22.5
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # 必须在 build 之前：build:host 会用源覆盖副本，跑完就查不出漏提交了
+      - name: 内嵌 skill 副本与源一致
+        run: node packages/plugin/scripts/check-skill-copy.mjs
+
+      - name: build + typecheck + smoke
+        run: pnpm --filter dsh-task-ledger run verify

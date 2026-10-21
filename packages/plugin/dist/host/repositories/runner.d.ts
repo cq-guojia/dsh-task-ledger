@@ -1,3 +1,9 @@
+/**
+ * 写命令的超时上限（ms）：脚本写完会顺手 fetch + commit + push，最坏 30×4 = 120s。
+ * 沿用读命令的 10s 会把「已经 commit、还没 push」那一步掐死 —— 界面报失败，台账其实
+ * 已经改了，用户一重试就是二次写入。
+ */
+export declare const WRITE_TIMEOUT_MS = 120000;
 export type LedgerScriptResult<T> = {
     ok: true;
     data: T;

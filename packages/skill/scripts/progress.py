@@ -20,9 +20,11 @@ import json
 import os
 import re
 import secrets
+import stat
 import subprocess
 import sys
 import tempfile
+import time
 from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path
@@ -173,6 +175,11 @@ def find_repo(explicit: str | None) -> Path:
         p = Path(explicit).expanduser().resolve()
         if not p.is_dir():
             raise Fail(f"--repo 不是目录：{p}")
+        # 传进来的常是工作区子目录；向上找真正的台账根，否则写前同步会对着
+        # 不存在的 <子目录>/ledger 空转。都找不到就仍用传入目录（首次 init 需要它）。
+        for cand in (p, *p.parents):
+            if (cand / PROGRESS_REL).exists():
+                return cand
         return p
 
     bases: list[Path] = []
@@ -248,17 +255,55 @@ def read_json(path: Path) -> dict[str, Any]:
 # 本次进程内被台账写入的真实文件路径，供写成功后一次性自动同步（git commit/push）。
 CHANGED_FILES: list[Path] = []
 
+# 写前预同步从远端落盘的文件：不是本次命令的写入目标，但必须随本次提交入库
+# （否则会一直以未跟踪状态留在工作树里，把自动 rebase 挡在门口）。
+PRESYNC_FILES: list[Path] = []
 
-def write_text_atomic(path: Path, text: str) -> None:
+# 写前预同步覆盖前的内容（None = 覆盖前不存在）。命令失败时整体回滚，
+# 免得把「刚才从远端刷下来的版本」留在工作树里，下次又被 guard 当成用户未提交改动。
+PRESYNC_BACKUPS: dict[Path, bytes | None] = {}
+
+
+def presync_rollback() -> None:
+    """把写前预同步覆盖过的文件恢复原样。只在命令失败的路径上调用。"""
+    while PRESYNC_BACKUPS:
+        path, original = PRESYNC_BACKUPS.popitem()
+        try:
+            if original is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(original)
+        except OSError as exc:
+            print(
+                f"提示：写前刷新 {path} 的回滚未完成（{exc}），请手动检查该文件。",
+                file=sys.stderr,
+            )
+    PRESYNC_FILES.clear()
+
+
+def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
     """原子写文本：同目录唯一临时名 + fsync + os.replace，写完清理临时文件。
 
     整段都在 try 内 —— mkdir / mkstemp 的 OSError 同样要转成 Fail，
     否则会漏成裸异常，上层的「失败就撤销」也就收不到。
+
+    track=False 用于「从远端刷下来」的内容：那不是本次命令的改动，
+    不能进 CHANGED_FILES，否则会被写后自动提交当成本次台账变更。
+
+    两个属性都得保住：mkstemp 建的是 0600，直接 replace 会把文件权限从 644 降成
+    600（组内用户与 CI 读不到），所以写前继承原文件的 mode；符号链接一律拒绝，
+    否则 replace 会把链接本身换成普通文件。
     """
     fd = None
     tmp = None
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
+        if path.is_symlink():
+            raise Fail(f"拒绝写入 {path}：它是符号链接，写入会把它替换成普通文件")
+        try:
+            mode = stat.S_IMODE(path.stat().st_mode)
+        except OSError:
+            mode = 0o644  # 新文件：与 git 默认 644 对齐
         fd, tmp_name = tempfile.mkstemp(
             dir=str(path.parent), prefix=path.name + ".", suffix=".tmp"
         )
@@ -268,8 +313,10 @@ def write_text_atomic(path: Path, text: str) -> None:
             fh.write(text)
             fh.flush()
             os.fsync(fh.fileno())
+        os.chmod(tmp, mode)
         os.replace(tmp, path)
-        CHANGED_FILES.append(path)  # 记下本次改动，供写后自动同步
+        if track:
+            CHANGED_FILES.append(path)  # 记下本次改动，供写后自动同步
         tmp = None
     except OSError as exc:
         raise Fail(f"写 {path} 失败：{exc}")
@@ -287,11 +334,27 @@ def write_text_atomic(path: Path, text: str) -> None:
 
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
-    """原子写状态表。key 按字母序，减少并发新增时的文本冲突。"""
-    write_text_atomic(
-        path,
-        json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    """原子写状态表：一个任务一行，任务内 key 按字母序。
+
+    为什么压成一行一条：progress.json 是多 agent 共享的并发写点。任务块各占十几行时，
+    A 结案删掉一个任务、B 同时刷新相邻任务的 updated，两处改动间距不足 git 的 3 行
+    patch 上下文，rebase 必冲突（实测撞到过）。一行一条后，删任务只删一行、改任务只改
+    一行，只有相邻两个任务同时被改才可能撞上。
+
+    顶层不是 `{"tasks": {...}}` 形状时退回缩进格式：本函数只管状态表，不顺手改坏别的结构。
+    """
+    tasks = data.get("tasks")
+    if not isinstance(tasks, dict) or set(data) != {"tasks"}:
+        write_text_atomic(
+            path, json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+        )
+        return
+    rows = ",\n".join(
+        f"    {json.dumps(k, ensure_ascii=False)}: {json.dumps(v, ensure_ascii=False, sort_keys=True)}"
+        for k, v in sorted(tasks.items())
     )
+    body = '{\n  "tasks": {\n' + (rows + "\n" if rows else "") + "  }\n}\n"
+    write_text_atomic(path, body)
 
 
 def stat_key(path: Path) -> str | tuple[str, ...] | None:
@@ -340,6 +403,54 @@ def progress_lock(path: Path) -> Iterator[None]:
             os.close(fd)
 
 
+@contextlib.contextmanager
+def repo_sync_lock(git_dir: Path, timeout: float = 60.0) -> Iterator[None]:
+    """写命令的整段临界区：写前同步 → 命令写入 → 提交推送，同一 clone 只允许一个。
+
+    为什么必须整段：写前同步是「检查本地干净 → 覆盖 progress.json」两步，中间是敞开的。
+    另一个 agent 恰好在这几毫秒里写完，覆盖就会把它的改动静默抹掉，随后的提交还会把
+    错误内容推走 —— 事后只能靠人翻历史才发现。progress_lock 只管单文件的读改写，盖不住
+    这两步之间的缝。
+
+    锁文件放 git 目录里（不进仓库、不被 git 状态看见）；拿锁最多等 timeout 秒。
+    """
+    if fcntl is None and msvcrt is None:
+        yield
+        return
+    lock_path = git_dir / "dsh-task-ledger.sync.lock"
+    fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o644)
+    acquired = False
+    try:
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                if fcntl is not None:
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                elif msvcrt is not None:
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)  # pyright: ignore[reportAttributeAccessIssue]
+                acquired = True
+                break
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise Fail(
+                        f"另一个会话正在同步同一份台账（已等 {int(timeout)} 秒），请稍后重试。"
+                    )
+                time.sleep(0.1)
+        yield
+    finally:
+        if acquired:
+            try:
+                if fcntl is not None:
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+                elif msvcrt is not None:
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)  # pyright: ignore[reportAttributeAccessIssue]
+            except OSError:
+                pass
+        os.close(fd)
+
+
 def read_guarded(path: Path):
     """读状态表并记下指纹；配合 commit_guarded 做写前复查。"""
     return stat_key(path), read_json(path)
@@ -373,6 +484,52 @@ def _git_actor(repo_root: str) -> str:
     return out.stdout.strip() or "ledger-script"
 
 
+def _rebase_retry(g: tuple[str, ...]) -> bool:
+    """推送被拒后自动 rebase 一次；只在工作树干净时做，失败立刻 abort。
+
+    台账按任务分条存（progress.json 是按任务号 key 的对象、history 一行一条），
+    各自改各自的任务时 git 能按行自动合并。真冲突（同一条任务被两边改）就干净失败，
+    绝不把仓库留在 rebase 中间态，也绝不 --force。
+    """
+    if _git(*g, "fetch", timeout=30).returncode != 0:
+        return False
+    # --autostash：把工作树里未提交的改动（用户正在写的代码）临时收走、rebase 完自动放回。
+    # 不这样做的话，只要仓库里有一处未提交改动，自动合并就永久失效 —— 台账提交越堆越多，
+    # 直到下一次写被「有未推送提交」拦住，而提示跟用户的业务代码毫无关系。
+    rebase = _git(*g, "rebase", "--autostash", "@{upstream}", timeout=30)
+    if rebase.returncode == 0:
+        combined = f"{rebase.stdout or ''}{rebase.stderr or ''}"
+        if "autostash" in combined:
+            print(
+                "提示：自动合并前暂存了你的未提交改动，rebase 后已放回；"
+                "若 git 提示 autostash 冲突，跑 `git stash list` 手动处理。",
+                file=sys.stderr,
+            )
+        return True
+    conflict = (rebase.stderr or rebase.stdout or "").strip()
+    abort = _git(*g, "rebase", "--abort", timeout=30)
+    if abort.returncode != 0:
+        # abort 也失败：仓库现在真的停在 rebase 中间态，必须把真实状态原样交出去。
+        # 谎称「已回滚」最坏 —— 那时 progress.json 可能带冲突标记，继续写会全盘读坏。
+        status = _git(*g, "status", "--short", "--branch")
+        print(
+            "错误：自动 rebase 冲突后回滚也失败了，仓库可能停在 rebase 中间态。"
+            "在收拾干净之前不要再跑台账命令。\n"
+            f"  冲突：{conflict}\n"
+            f"  当前状态：{(status.stdout or '').strip()}\n"
+            "  处理：在仓库根执行 `git rebase --abort`；仍失败就先 `git status` 看清残留文件"
+            "（必要时删掉 .git/rebase-merge 或 .git/rebase-apply）再重试。",
+            file=sys.stderr,
+        )
+        return False
+    print(
+        "提示：自动 rebase 未成功（已回滚到 rebase 前），多半是同一条任务被两边同时改了，"
+        f"请手动合并：{conflict}",
+        file=sys.stderr,
+    )
+    return False
+
+
 def git_sync(action: str) -> None:
     """写成功后调用一次：把本次改动的台账文件提交；有上游跟踪分支则推送。
 
@@ -383,7 +540,10 @@ def git_sync(action: str) -> None:
     if os.environ.get("TASK_LEDGER_NO_SYNC"):
         return
     try:
-        files = [p for p in CHANGED_FILES if p.exists()]
+        # 本次写入目标 + 写前补下的 worklog：后者不是本次改动，但也得随这次提交入库
+        files = [
+            p for p in dict.fromkeys([*CHANGED_FILES, *PRESYNC_FILES]) if p.exists()
+        ]
         if not files:
             return
         # 从任一文件反查仓库根，不依赖调用方透传 --repo
@@ -400,17 +560,27 @@ def git_sync(action: str) -> None:
         ]
         if not to_add:
             return  # 全被 ignore → 尊重用户选择，不强行提交
-        _git(*g, "add", *to_add)
-        if _git(*g, "diff", "--cached", "--quiet").returncode == 0:
+        staged = _git(*g, "add", *to_add)
+        if staged.returncode != 0:
+            print(
+                "提示：台账已写入本地，但 git add 失败，请手动提交 ledger/："
+                f"{(staged.stderr or staged.stdout or '').strip()}",
+                file=sys.stderr,
+            )
+            return
+        # 只看本次要提交的路径：别人暂存的文件不该让这里误判成「有变更」
+        if _git(*g, "diff", "--cached", "--quiet", "--", *to_add).returncode == 0:
             return  # 无实际变更
         actor = _git_actor(root)
         # 消息按 conventional commits 写：多数仓库装了 commitlint，只认白名单里的 type
         msg = f"chore(ledger): {action} {actor}"
-        done = _git(*g, "commit", "-m", msg)
+        # 必须 --only + pathspec：git commit 默认提交整个 index，会把用户或别的 agent
+        # 已 git add 的业务文件一起卷进这条 chore(ledger) 提交并推走。
+        done = _git(*g, "commit", "--only", "-m", msg, "--", *to_add)
         if done.returncode != 0:
             # 各仓库提交规则各不相同（type 白名单、大小写、scope 枚举……），台账是数据文件，
             # 过不了就让这一次跳过钩子提交，别把台账永久锁在本地暂存区。
-            done = _git(*g, "commit", "--no-verify", "-m", msg)
+            done = _git(*g, "commit", "--only", "--no-verify", "-m", msg, "--", *to_add)
             if done.returncode == 0:
                 print(
                     f"提示：仓库提交检查拒绝了消息「{msg}」，已用 --no-verify 提交本次台账改动。",
@@ -430,16 +600,20 @@ def git_sync(action: str) -> None:
         try:
             _git(*g, "push", timeout=30, check=True)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-            # 非快进：自动 rebase 一次再推；冲突 / 超时则放弃，绝不 --force
-            try:
-                _git(*g, "pull", "--rebase", "--autostash", timeout=30, check=True)
-                _git(*g, "push", timeout=30, check=True)
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-                print(
-                    "提示：本地已提交，但推送被拒（他人已推 / 需认证 / 超时）。"
-                    "请手动 `git pull --rebase` 解决后重试；本次改动已安全留在本地。",
-                    file=sys.stderr,
-                )
+            # 非快进：只在台账工作树干净时自动 rebase 一次再推，冲突立刻 abort。
+            # 各自改各自的任务时 git 按行自动合并；同一条任务冲突就干净失败，绝不 --force。
+            if _rebase_retry(g):
+                try:
+                    _git(*g, "push", timeout=30, check=True)
+                    return
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                    pass
+            print(
+                "提示：本地已提交，但推送被拒（他人已推 / 需认证 / 超时）。"
+                "台账各自改各自的任务时能自动合并，冲突请手动处理；"
+                "本次改动已安全留在本地。",
+                file=sys.stderr,
+            )
     except Exception as exc:  # noqa: BLE001 —— 同步失败不应污染台账主流程
         print(
             f"提示：写后自动同步未执行（{type(exc).__name__}: {exc}）。数据已写入本地。",
@@ -451,12 +625,206 @@ def git_sync(action: str) -> None:
 READ_ONLY_COMMANDS = {"list", "show", "history", "validate"}
 
 
-def git_presync(action: str, args: argparse.Namespace) -> None:
-    """写命令执行前把 ledger/ 刷成远端最新，避免基于过期读取整文件回写。
+def _git_bytes(*args: str, timeout: int | None = None) -> bytes | None:
+    """跑 git 拿原始字节；失败返回 None。
 
-    只动 ledger/ 目录（不碰项目其余文件），与 git_sync 共用 --no-sync / TASK_LEDGER_NO_SYNC。
-    无 git / 无上游 / 远端尚无该路径 静默跳过；拉取失败只提示不中止（推送端 rebase 兜底）。
-    本地未提交的 ledger 改动会被远端覆盖——正是「取最新再改」语义，仅打提示。
+    不走 _git()：那里固定 text=True + 默认编码，会按 locale 解码并做换行归一，
+    中文路径与非 UTF-8 locale 都会出事。取台账内容必须字节保真。
+    """
+    try:
+        proc = subprocess.run(
+            list(args), capture_output=True, timeout=timeout, check=False
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return proc.stdout if proc.returncode == 0 else None
+
+
+def _split_z(out: bytes | None) -> list[str]:
+    """按 NUL 切 -z 输出（路径原样，不被 core.quotepath 转义）。"""
+    if not out:
+        return []
+    return [s.decode("utf-8", "surrogateescape") for s in out.split(b"\0") if s]
+
+
+def _remote_exists(root: str, upstream: str, rel: str) -> bool:
+    """远端是否有这个文件。"""
+    return (
+        subprocess.run(
+            ["git", "-C", root, "cat-file", "-e", f"{upstream}:{rel}"],
+            capture_output=True,
+            check=False,
+        ).returncode
+        == 0
+    )
+
+
+def _remote_dir_files(root: str, upstream: str, rel_dir: str) -> list[str]:
+    """列远端目录下的文件（相对仓库根，原样路径）。远端没有该目录时返回空。"""
+    return _split_z(
+        _git_bytes(
+            "git",
+            "-C",
+            root,
+            "ls-tree",
+            "-r",
+            "-z",
+            "--name-only",
+            upstream,
+            "--",
+            rel_dir + "/",
+        )
+    )
+
+
+def _git_midstate(git_root: str) -> str | None:
+    """仓库是否停在 merge / rebase 等冲突中间态；是就返回人话名字。
+
+    中间态下工作树里的台账可能是冲突版本（带 `<<<<<<<` 标记），
+    写前同步与写后提交都会往这个现场里写，必须先让用户收尾。
+    """
+    out = _git("git", "-C", git_root, "rev-parse", "--absolute-git-dir")
+    if out.returncode != 0:
+        return None
+    git_dir = Path(out.stdout.strip())
+    for marker, label in (
+        ("MERGE_HEAD", "merge"),
+        ("rebase-merge", "rebase"),
+        ("rebase-apply", "rebase/am"),
+        ("CHERRY_PICK_HEAD", "cherry-pick"),
+        ("REVERT_HEAD", "revert"),
+    ):
+        if (git_dir / marker).exists():
+            return label
+    return None
+
+
+def _presync_guard(
+    git_root: str, upstream: str, managed: list[str], remote_files: set[str]
+) -> None:
+    """取最新之前确认本地没有会被覆盖掉的东西；命中就中止，绝不静默覆盖。
+
+    三种命中：未推送的台账提交（取最新会把它们的内容回退掉）、已跟踪文件的
+    未提交改动、本地还没入库但远端已有同名文件。
+    """
+    ahead = _git_bytes(
+        "git",
+        "-C",
+        git_root,
+        "rev-list",
+        "--count",
+        f"{upstream}..HEAD",
+        "--",
+        *managed,
+    )
+    count = (ahead or b"").decode("ascii", "replace").strip()
+    if count and count != "0":
+        listing = _git_bytes(
+            "git",
+            "-C",
+            git_root,
+            "log",
+            "--oneline",
+            f"{upstream}..HEAD",
+            "--",
+            *managed,
+        )
+        recent = (listing or b"").decode("utf-8", "replace").strip().splitlines()[:3]
+        detail = ("\n  未推送：" + "；".join(recent)) if recent else ""
+        raise Fail(
+            f"本地有 {count} 个台账提交还没推到 {upstream}，写前取最新会把它们的内容"
+            f"回退掉，已中止本次操作。{detail}\n"
+            "  处理：有网络时先 `git push`；暂时离线可加 --no-sync 继续在本地写，"
+            "联网后再提交推送。"
+        )
+    dirty = _split_z(
+        _git_bytes(
+            "git", "-C", git_root, "diff", "--name-only", "-z", "HEAD", "--", *managed
+        )
+    )
+    if dirty:
+        raise Fail(
+            "本地台账有未提交改动，写前取最新会覆盖它，已中止本次操作：\n  "
+            + "\n  ".join(dirty)
+            + '\n  处理：先提交这份改动（`git add ledger/ && git commit -m "chore(ledger): ..."`）'
+            "再重跑；确认不要它可加 --no-sync。"
+        )
+    untracked = set(
+        _split_z(
+            _git_bytes(
+                "git",
+                "-C",
+                git_root,
+                "ls-files",
+                "--others",
+                "--exclude-standard",
+                "-z",
+                "--",
+                *managed,
+            )
+        )
+    )
+    clash = sorted(untracked & remote_files)
+    if clash:
+        raise Fail(
+            "这些台账文件本地还没入库、远端已有同名文件，写前取最新会覆盖它们，"
+            "已中止本次操作：\n  "
+            + "\n  ".join(clash)
+            + "\n  处理：先提交（或删掉）这些文件再重跑；确认不要远端版本可加 --no-sync。"
+        )
+
+
+def _presync_fetch_file(
+    git_root: str, upstream: str, rel: str, *, track: bool = False
+) -> bool:
+    """把远端某个文件的当前内容落到工作树；内容相同就不写。返回是否真的写了。
+
+    用 blob 内容自己落盘，而不是 checkout / restore：只碰工作树、不动 index，
+    不需要 git ≥2.23，也不会因为一个路径失败而整批失败。
+
+    track=False（默认）用于随后还要改写的脚本独占文件；track=True 用于补下来的
+    worklog 新文件——它不是本次改动，但必须随本次提交入库（记进 PRESYNC_FILES），
+    否则会一直以未跟踪状态留在工作树里，把「有没有未提交改动」的判断弄脏。
+    """
+    data = _git_bytes("git", "-C", git_root, "cat-file", "blob", f"{upstream}:{rel}")
+    if data is None:
+        return False
+    dest = Path(git_root) / rel
+    try:
+        if dest.is_file() and dest.read_bytes() == data:
+            return False
+    except OSError:
+        pass
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        print(f"提示：{rel} 不是 UTF-8，已跳过写前刷新。", file=sys.stderr)
+        return False
+    # 覆盖前留底：命令随后失败时回滚，别让远端版本留在工作树里冒充用户的未提交改动
+    if dest not in PRESYNC_BACKUPS:
+        try:
+            PRESYNC_BACKUPS[dest] = dest.read_bytes() if dest.is_file() else None
+        except OSError:
+            PRESYNC_BACKUPS[dest] = None
+    try:
+        write_text_atomic(dest, text, track=False)
+    except Fail as exc:
+        print(f"提示：写前刷新 {rel} 失败（{exc}），继续用本地版本。", file=sys.stderr)
+        return False
+    if track:
+        PRESYNC_FILES.append(dest)
+    return True
+
+
+def git_presync(action: str, args: argparse.Namespace) -> None:
+    """写命令执行前把「这条命令真的要写的那几个文件」刷成远端最新。
+
+    范围只到本次写入目标：`ledger/progress.json`（每条写命令都写），以及 `close`
+    时结案时间所在的那一个月历史文件（`--finished` 补录旧月份就刷那个月）——不是
+    整个 history 目录。`ledger/worklog/` 的正文由人写，这里只补「远端有、本地缺」
+    的新文件，已有文件一个字都不碰。本地有会被覆盖掉的东西（未推送提交 / 未提交
+    改动 / 未入库且远端同名）就中止，不静默覆盖。
+    无 git / 无上游 / 远端尚无该文件 静默跳过；拉取失败只提示不中止。
     """
     if os.environ.get("TASK_LEDGER_NO_SYNC"):
         return
@@ -475,13 +843,40 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
         return
     git_root = Path(top.stdout.strip())
     try:
-        ledger_rel = str(ledger_dir.resolve().relative_to(git_root.resolve()))
+        ledger_rel = ledger_dir.resolve().relative_to(git_root.resolve()).as_posix()
     except ValueError:
         return  # ledger 不在 git 仓内
+    midstate = _git_midstate(str(git_root))
+    if midstate:
+        raise Fail(
+            f"仓库正处于 {midstate} 中间态（有没收尾的冲突），此刻做写前同步和写后提交"
+            "都会把台账写进冲突现场，已中止本次操作。\n"
+            "  处理：先把这次 merge / rebase 收尾 —— `git merge --continue`、"
+            "`git rebase --continue`，要放弃就 `--abort`；然后重跑台账命令。"
+        )
     ups = _git("git", "-C", str(git_root), "rev-parse", "--abbrev-ref", "@{upstream}")
     if ups.returncode != 0:
-        return  # 无上游跟踪分支
+        head = _git("git", "-C", str(git_root), "rev-parse", "--abbrev-ref", "HEAD")
+        branch = (head.stdout or "").strip()
+        if branch == "HEAD":
+            print(
+                "提示：当前是 detached HEAD，台账只写本地文件，不会提交也不会推送。",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"提示：分支 {branch or '(未知)'} 没有上游跟踪分支，"
+                "台账只写本地文件，不会提交也不会推送。",
+                file=sys.stderr,
+            )
+        return
     upstream = ups.stdout.strip()
+    if "/" not in upstream:
+        print(
+            f"提示：上游 {upstream} 是本地分支而不是远端分支，无法取最新，已跳过写前同步。",
+            file=sys.stderr,
+        )
+        return
     remote = upstream.split("/", 1)[0]
     try:
         _git("git", "-C", str(git_root), "fetch", remote, timeout=30, check=True)
@@ -492,30 +887,75 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
             file=sys.stderr,
         )
         return
-    if _git(
-        "git", "-C", str(git_root), "status", "--porcelain", ledger_rel
-    ).stdout.strip():
+
+    # 本地没有未推送提交时先快进到远端（等价 `pull --ff-only`）。
+    # 只覆盖工作树会留个后患：本次写入提交会把「远端新增的内容」当成自己的改动一起提交，
+    # 推送被拒后 rebase 与远端那次提交撞车（同一段内容被重放两次）—— 实测必冲突。
+    # 有未推送提交就跳过：那是用户自己的时间线，脚本不碰。
+    def _rev_count(spec: str) -> int:
+        raw = _git_bytes("git", "-C", str(git_root), "rev-list", "--count", spec)
+        try:
+            return int((raw or b"-1").decode("ascii", "replace").strip())
+        except ValueError:
+            return -1
+
+    ahead_n = _rev_count(f"{upstream}..HEAD")
+    behind_n = _rev_count(f"HEAD..{upstream}")
+    if ahead_n == 0 and behind_n > 0:
+        ff = _git(
+            "git", "-C", str(git_root), "merge", "--ff-only", "-q", upstream, timeout=30
+        )
+        if ff.returncode == 0:
+            print(
+                f"提示：写前把本地快进到 {upstream}（{behind_n} 个提交，仅 fast-forward）。",
+                file=sys.stderr,
+            )
+
+    root = str(git_root)
+    progress_rel = f"{ledger_rel}/{PROGRESS_REL.name}"
+    worklog_rel = f"{ledger_rel}/{WORKLOG_DIR.name}"
+    # 只刷「这条命令真的要写」的文件：progress.json 人人都写；
+    # 历史层只有 close 写，而且只写结案时间所在的那一个月（--finished 可能补录旧月份）。
+    managed = [progress_rel]
+    if action == "close":
+        finished = ""
+        raw_finished = getattr(args, "finished", None)
+        if raw_finished:
+            try:
+                finished = normalize_time(raw_finished, field="--finished")
+            except Fail:
+                finished = ""  # 参数不合法交给 close 自己报错，这里按当前月兜底
+        target = (
+            history_path_for(repo, finished)
+            if finished
+            else history_path_for(repo, now())
+        )
+        try:
+            managed.append(target.resolve().relative_to(git_root.resolve()).as_posix())
+        except ValueError:
+            pass  # 历史文件不在仓内：跳过（写的时候自有报错）
+
+    remote_files = {rel for rel in managed if _remote_exists(root, upstream, rel)}
+
+    _presync_guard(root, upstream, managed, remote_files)
+
+    for rel in remote_files:
+        _presync_fetch_file(root, upstream, rel)
+
+    # worklog：只补本地缺的新文件，已有文件（正文由人写）一个字都不碰
+    added = 0
+    for rel in _remote_dir_files(root, upstream, worklog_rel):
+        if (git_root / rel).exists():
+            continue
+        # track=True：补下来的新文件要随本次提交入库，否则它会一直以未跟踪状态挡在
+        # 工作树里（后续 rebase 直接被它挡住）
+        if _presync_fetch_file(root, upstream, rel, track=True):
+            added += 1
+    if added:
         print(
-            "提示：本地 ledger/ 有未提交改动，写前拉取将用远端最新覆盖。",
+            f"提示：从 {upstream} 补下 {added} 个本地缺的 worklog 文件（没有动已有正文）。",
             file=sys.stderr,
         )
-    # 只取远端 ledger/ 到工作树；该路径在远端不存在（全新台账）时忽略
-    try:
-        _git(
-            "git",
-            "-C",
-            str(git_root),
-            "checkout",
-            upstream,
-            "--",
-            ledger_rel,
-            timeout=30,
-            check=True,
-        )
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        pass
-    # 取消预暂存：只更新工作树，避免把他人改动混进本次提交（git_sync 只 add 本次改动的文件）
-    _git("git", "-C", str(git_root), "reset", "--", ledger_rel)
 
 
 def require_task_id(tid: str) -> str:
@@ -811,7 +1251,7 @@ def created_for_history(log_cell: str, history_path: Path) -> str | None:
     if not rel:
         return None
     try:
-        text = (history_path.parent / rel).read_text(encoding="utf-8")
+        text = (history_path.parent / rel).read_text(encoding="utf-8-sig")
     except (OSError, UnicodeDecodeError):
         return None
     for ln in text.splitlines():
@@ -836,7 +1276,7 @@ def creator_for_history(log_cell: str | None, history_path: Path) -> str | None:
     if not rel:
         return None
     try:
-        text = (history_path.parent / rel).read_text(encoding="utf-8")
+        text = (history_path.parent / rel).read_text(encoding="utf-8-sig")
     except (OSError, UnicodeDecodeError):
         return None
     for ln in text.splitlines():
@@ -861,7 +1301,7 @@ def labels_for_log(
     if not rel:
         return (None, [])
     try:
-        text = (history_path.parent / rel).read_text(encoding="utf-8")
+        text = (history_path.parent / rel).read_text(encoding="utf-8-sig")
     except (OSError, UnicodeDecodeError):
         return (None, [])
     return parse_label_line(text)
@@ -1334,7 +1774,8 @@ def append_exec_log(text: str, line: str) -> str:
     lines = text.splitlines()
     at = next((i for i, ln in enumerate(lines) if ln.strip() == EXEC_HEAD), None)
     if at is None:
-        return text.rstrip() + f"\n\n{EXEC_HEAD}\n\n{EXEC_HINT}\n\n{line}\n"
+        # 只去文末多余空行：正文最后一行的行尾空格是人家写的，别顺手抹掉
+        return text.rstrip("\n") + f"\n\n{EXEC_HEAD}\n\n{EXEC_HINT}\n\n{line}\n"
     end = next(
         (i for i in range(at + 1, len(lines)) if lines[i].startswith("## ")), len(lines)
     )
@@ -1372,6 +1813,36 @@ def write_worklog(repo: Path, tid: str, task: dict[str, Any]) -> Path:
     log = repo / worklog_dir_for(task) / worklog_name(tid)
     write_text_atomic(log, render_worklog(tid, task))
     return log
+
+
+def worklog_is_skeleton(repo: Path, tid: str, task: dict[str, Any]) -> bool:
+    """正文是否还是模板骨架（「执行记录」之前只剩标题、引用行和注释占位）。
+
+    读不到文件返回 False（那是别处要报的错，不在这里重复）。只做体检、不改盘。
+    """
+    log = find_worklog(repo, tid, task)
+    if log is None:
+        return False
+    try:
+        text = log.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
+    in_comment = False
+    for line in text.splitlines():
+        s = line.strip()
+        if s == EXEC_HEAD:
+            break
+        if in_comment:
+            if "-->" in s:
+                in_comment = False
+            continue
+        if s.startswith("<!--"):
+            in_comment = "-->" not in s
+            continue
+        if not s or s.startswith(("#", ">")):
+            continue
+        return False
+    return True
 
 
 def print_worklog(repo: Path, tid: str, task: dict[str, Any] | None = None) -> None:
@@ -1470,6 +1941,8 @@ def cmd_new(args: argparse.Namespace) -> None:
                 write_json(path, data)
             except Fail:
                 pass
+            # 撤销完成：别让写后自动同步把这个「有任务、没文档」的半成品提交上去
+            CHANGED_FILES.clear()
             raise Fail(f"创建失败，已从状态表撤销该任务：{exc}")
         record_exec(repo, tid, task, creator, "new", f"创建任务（{task['status']}）")
     print(f"已创建任务 {tid}")
@@ -1638,9 +2111,17 @@ def cmd_close(args: argparse.Namespace) -> None:
 
         owner = task.get("owner") or me
         # 老文件留在平铺位置，新文件在按月子目录；找不到就按新规则推算目标路径。
-        log_path = find_worklog(repo, tid, task) or (
-            repo / worklog_dir_for(task) / worklog_name(tid)
-        )
+        log_path = find_worklog(repo, tid, task)
+        if log_path is None and task.get("worklog"):
+            # 记过路径却找不到文件：绝不能按模板新建一份空文档封卷 —— 那会把真正的
+            # 正文永久顶掉（封卷后不再改）。让调用方先把文件恢复回来。
+            raise Fail(
+                f"任务 {tid} 的过程文档找不到：ledger/{task['worklog']}。\n"
+                "不要新建同名空文档（会把正文顶掉）。先从 git 恢复再结案：\n"
+                f"  git checkout HEAD -- ledger/{task['worklog']}"
+            )
+        if log_path is None:
+            log_path = repo / worklog_dir_for(task) / worklog_name(tid)
         # 历史行按结案时间落月文件；文档链接相对该文件所在目录算（../worklog/…）。
         history_path = history_path_for(repo, finished)
         log_rel = worklog_link(log_path, history_path)
@@ -1995,6 +2476,7 @@ def cmd_validate(args: argparse.Namespace) -> None:
     repo = find_repo(args.repo)
     progress_path = repo / PROGRESS_REL
     problems: list[str] = []
+    blank: list[str] = []
 
     if not progress_path.exists():
         raise Fail(f"{PROGRESS_REL} 不存在，先跑 init。")
@@ -2038,6 +2520,18 @@ def cmd_validate(args: argparse.Namespace) -> None:
             problems.append(
                 f"{tid}: 缺 worklog 文件（状态表记的路径：{task.get('worklog') or '未记'}）"
             )
+        elif worklog_is_skeleton(repo, tid, task):
+            blank.append(tid)
+
+    if blank:
+        # 只提示、不算问题：正文写没写是人的事，脚本不替他下判断；
+        # 但「骨架」通常意味着忘了写、或曾被写前同步覆盖，给一条可见信号。
+        print(
+            f"提示：{len(blank)} 个在办任务的 worklog 正文还是模板骨架"
+            f"（背景/待办/下一步/过程/结论都是注释占位）：{'、'.join(blank)}\n"
+            '      补写正文后跑一次 log --id <任务号> --note "…"。',
+            file=sys.stderr,
+        )
 
     if problems:
         for p in problems:
@@ -2242,7 +2736,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-sync",
         action="store_true",
-        help="跳过写后自动 git 提交 / 推送（等价于 TASK_LEDGER_NO_SYNC=1）",
+        help="跳过写前取最新与写后自动 git 提交 / 推送（等价于 TASK_LEDGER_NO_SYNC=1）",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -2374,30 +2868,70 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _repo_lock_dir(args: argparse.Namespace) -> Path | None:
+    """写命令要仓级串行时返回 git 目录；只读 / 纯读 tags / --no-sync / 无 git 返回 None。"""
+    if os.environ.get("TASK_LEDGER_NO_SYNC"):
+        return None
+    action = getattr(args, "command", "")
+    if action in READ_ONLY_COMMANDS:
+        return None
+    if action == "tags" and not getattr(args, "rename", None):
+        return None
+    try:
+        repo = find_repo(getattr(args, "repo", None))
+    except Fail:
+        return None
+    out = _git("git", "-C", str(repo), "rev-parse", "--absolute-git-dir")
+    if out.returncode != 0:
+        return None
+    return Path(out.stdout.strip())
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if getattr(args, "no_sync", False):
         os.environ["TASK_LEDGER_NO_SYNC"] = "1"
+    lock_dir = _repo_lock_dir(args)
+    lock = (
+        repo_sync_lock(lock_dir) if lock_dir is not None else contextlib.nullcontext()
+    )
+    try:
+        # 整段持锁：写前同步的「检查 → 覆盖」与随后的写入、提交推送必须是同一段临界区
+        with lock:
+            return _run_once(args)
+    except Fail as exc:  # 这里只可能是等锁超时
+        print(f"错误：{exc}", file=sys.stderr)
+        return 1
+
+
+def _run_once(args: argparse.Namespace) -> int:
+    """一条命令的完整生命周期：写前同步 → 命令本身 → 写后提交推送。"""
     try:
         git_presync(args.command, args)  # 写前刷新 ledger/ 到远端最新
         args.func(args)
     except Fail as exc:
+        # 命令没成功：把写前刷新覆盖过的文件恢复原样，别让远端版本冒充用户改动
+        presync_rollback()
         print(f"错误：{exc}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
+        presync_rollback()
         print("已中断。", file=sys.stderr)
         return 130
     except BrokenPipeError:
-        # 输出被下游截断（如 | head）：静默退出，不打 traceback
+        # 输出被下游截断（如 | head）：命令本身已经写成功，不回滚
         devnull = os.open(os.devnull, os.O_WRONLY)
         os.dup2(devnull, sys.stdout.fileno())
         return 0
     except OSError as exc:
+        presync_rollback()
         print(f"错误：{exc}", file=sys.stderr)
         return 1
     except Exception as exc:  # noqa: BLE001 —— 兜底：未预期的失败用独立退出码，与业务错误区分
+        presync_rollback()
         print(f"错误：未预期的失败 {type(exc).__name__}: {exc}", file=sys.stderr)
         return 3
+    PRESYNC_BACKUPS.clear()  # 写成功：留底作废
     git_sync(args.command)  # 写成功后一次性自动同步（commit / push）
     return 0
 
