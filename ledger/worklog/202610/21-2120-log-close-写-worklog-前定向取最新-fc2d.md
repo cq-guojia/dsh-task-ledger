@@ -1,5 +1,6 @@
 # 20261021-2120-log-close-写-worklog-前定向取最新-fc2d：log/close 写 worklog 前定向取最新
 
+> **✅ 完成封卷**：2026-10-21 22:52:42（@GuoJia-Agent）
 > **创建**：2026-10-21 21:20:18（@GuoJia-Agent）
 > **分类**：修复 ｜ **标签**：同步、worklog
 
@@ -45,3 +46,4 @@
 - 2026-10-21 21:24:58 · log · @GuoJia-Agent · 写前对目标 worklog 走 stash 叠回，两边内容都保住；verify 31 项通过
 - 2026-10-21 21:26:29 · log · @GuoJia-Agent · 仅在落后远端时才提示未刷新，避免手写后每次 log 都吵
 - 2026-10-21 22:52:05 · log · @GuoJia-Agent · 结论补记：前提是同一 worklog 被多方改写，已由新方向接手，本任务封卷
+- 2026-10-21 22:52:42 · close · @GuoJia-Agent · 结案：worklog 写前定向刷新 + stash 叠回已落地（verify 31 项）；随单文件前提一并交新方向
