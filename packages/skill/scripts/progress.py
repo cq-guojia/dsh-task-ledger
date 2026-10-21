@@ -982,6 +982,28 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
                 file=sys.stderr,
             )
 
+    # 离线攒下的台账提交：联网后第一笔写先把它们推上去，别拿「有 N 个没推」挡住写入。
+    # 用户自己的业务提交不碰：push 会把它们一并带走，那个决定归用户（见 _rebase_retry）。
+    if ahead_n > 0:
+        g_tuple = ("git", "-C", str(git_root))
+        foreign_n, _ = _foreign_commits(g_tuple, upstream)
+        if foreign_n == 0:
+            pushed = _git(*g_tuple, "push", timeout=30)
+            if pushed.returncode != 0 and _rebase_retry(g_tuple):
+                pushed = _git(*g_tuple, "push", timeout=30)
+            if pushed.returncode == 0:
+                print(
+                    f"提示：写前把本地 {ahead_n} 个未推送的提交推上去了。",
+                    file=sys.stderr,
+                )
+                ahead_n = 0
+            else:
+                print(
+                    "提示：写前推送失败"
+                    f"（{_why(pushed.stderr or pushed.stdout, f'退出码 {pushed.returncode}')}）。",
+                    file=sys.stderr,
+                )
+
     root = str(git_root)
     progress_rel = f"{ledger_rel}/{PROGRESS_REL.name}"
     worklog_rel = f"{ledger_rel}/{WORKLOG_DIR.name}"

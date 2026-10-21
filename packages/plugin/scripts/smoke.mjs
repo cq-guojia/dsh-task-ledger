@@ -794,18 +794,21 @@ await check('写前同步：定向取最新 / 正文保留 / 脏与未推送中�
     assert.deepEqual(fs.readFileSync(progressPath), dirtyData, '中止时不得改动文件')
     fs.writeFileSync(progressPath, dirtyBefore)
 
-    // 有未推送的台账提交：取最新会把它们回退 → 中止，HEAD 不变
+    // 有未推送的台账提交：联网后第一笔写先把它们推上去再照常写（2026-10-21 改，不再中止等用户手动 push）
     // 用 new 而不是 log 造这次提交：new 必然改 progress.json（多一个任务键），
     // log 只刷 updated，同一秒内可能内容不变、提交里就没有 progress.json。
     assert.equal(run(a, ['new', '--title', '本地未推送的任务', '--self'], { TASK_LEDGER_NO_SYNC: '1' }).status, 0, '本地 new 应成功')
     git(a, ['add', 'ledger'])
     git(a, ['commit', '-q', '-m', 'chore(ledger): 故意不推的台账提交'])
-    const headBefore = git(a, ['rev-parse', 'HEAD'])
-    const unpushed = run(a, ['log', '--id', aTaskId, '--note', '冒烟：未推送应中止'])
-    assert.equal(unpushed.status, 1, '有未推送提交应中止')
-    assert.ok(unpushed.stderr.includes('还没推到'), `应提示未推送：${unpushed.stderr}`)
-    assert.equal(git(a, ['rev-parse', 'HEAD']), headBefore, '中止时不应产生新提交')
-    git(a, ['push', '-q', 'origin', 'HEAD']) // 推上去，后续用例才能继续
+    const unpushed = run(a, ['log', '--id', aTaskId, '--note', '冒烟：未推送先补推'])
+    assert.equal(unpushed.status, 0, `有未推送台账提交时应先补推再写：${unpushed.stderr}`)
+    assert.ok(unpushed.stderr.includes('推上去了'), `应先补推积压提交：${unpushed.stderr}`)
+    const unpushedBranch = git(a, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    assert.equal(
+      git(a, ['rev-parse', `origin/${unpushedBranch}`]),
+      git(a, ['rev-parse', 'HEAD']),
+      '补推后远端应与本地一致',
+    )
 
     // 他人新建任务 → 本地写命令前取到最新；worklog 新文件被补下来，已有正文不动
     execFileSync('git', ['clone', '-q', remote, b], { env, encoding: 'utf-8' })
@@ -870,9 +873,32 @@ await check('写前同步：定向取最新 / 正文保留 / 脏与未推送中�
     assert.equal(off.status, 0, `--no-sync 下应能写：${off.stderr}`)
     assert.ok(!bNew.some((id) => tasks()[id]), '--no-sync 不该取远端最新')
 
-    // 推送被拒：退出码仍是 0（台账已写成功），但必须带出 git 原话，不能只给一句「认证 / 超时」的猜测
-    // 先清掉上一条 --no-sync 留下的未提交改动，否则写前护栏会先拦住（那是另一个用例的职责）
-    git(a, ['commit', '-qam', 'chore(ledger): 冒烟：--no-sync 落盘'])
+    // 清掉 --no-sync 留下的未提交改动（该测的已测完），并把本地快进到远端，作为离线测试的干净起点
+    git(a, ['reset', '-q', '--hard', 'HEAD'])
+    const alignBranch = git(a, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    git(a, ['pull', '-q', '--ff-only', 'origin', alignBranch])
+
+    // 离线（remote 指向不存在的路径）：取最新失败只提示，写照常成功、只是推不上去
+    git(a, ['remote', 'set-url', 'origin', path.join(base, 'no-such-remote')])
+    const offline = run(a, ['log', '--id', aTaskId, '--note', '冒烟：离线仍可写'])
+    assert.equal(offline.status, 0, `离线时应仍能写：${offline.stderr}`)
+    assert.ok(offline.stderr.includes('写前拉取失败'), '离线应给明确提示')
+    assert.ok(fs.readFileSync(logPath, 'utf-8').includes('冒烟：离线仍可写'), '离线也要把记录写进正文')
+
+    // 联网恢复：写前先把离线攒下的台账提交推上去，不再拿「有 N 个没推」挡住写入
+    git(a, ['remote', 'set-url', 'origin', remote])
+    const online = run(a, ['log', '--id', aTaskId, '--note', '冒烟：联网后自动补推'])
+    assert.equal(online.status, 0, `联网后应能直接写（不该被「没推」挡住）：${online.stderr}`)
+    assert.ok(online.stderr.includes('推上去了'), `应先自动补推积压提交：${online.stderr}`)
+    const onlineBranch = git(a, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    assert.equal(
+      git(a, ['rev-parse', `origin/${onlineBranch}`]),
+      git(a, ['rev-parse', 'HEAD']),
+      '补推后远端应与本地一致',
+    )
+
+    // 推送被拒（放最后：换到只读远端，不再恢复）：退出码仍是 0（台账已写成功），
+    // 但必须带出 git 原话，不能只给一句「认证 / 超时」的猜测
     const rejecting = path.join(base, 'rejecting.git')
     execFileSync('git', ['init', '--bare', '-q', rejecting], { env, encoding: 'utf-8' })
     git(a, ['remote', 'set-url', 'origin', rejecting])
@@ -887,13 +913,6 @@ await check('写前同步：定向取最新 / 正文保留 / 脏与未推送中�
       rejected.stderr.includes('pre-receive hook declined'),
       `应带出 git 的 rejected 原话：${rejected.stderr}`,
     )
-
-    // 离线（remote 指向不存在的路径）：取最新失败只提示，不影响本轮写入
-    git(a, ['remote', 'set-url', 'origin', path.join(base, 'no-such-remote')])
-    const offline = run(a, ['log', '--id', aTaskId, '--note', '冒烟：离线仍可写'])
-    assert.equal(offline.status, 0, `离线时应仍能写：${offline.stderr}`)
-    assert.ok(offline.stderr.includes('写前拉取失败'), '离线应给明确提示')
-    assert.ok(fs.readFileSync(logPath, 'utf-8').includes('冒烟：离线仍可写'), '离线也要把记录写进正文')
   } finally {
     fs.rmSync(base, { recursive: true, force: true })
   }
