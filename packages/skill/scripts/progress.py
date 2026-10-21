@@ -266,6 +266,7 @@ PRESYNC_BACKUPS: dict[Path, bytes | None] = {}
 
 def presync_rollback() -> None:
     """把写前预同步覆盖过的文件恢复原样。只在命令失败的路径上调用。"""
+    restored = 0
     while PRESYNC_BACKUPS:
         path, original = PRESYNC_BACKUPS.popitem()
         try:
@@ -273,12 +274,19 @@ def presync_rollback() -> None:
                 path.unlink(missing_ok=True)
             else:
                 path.write_bytes(original)
+            restored += 1
         except OSError as exc:
             print(
                 f"提示：写前刷新 {path} 的回滚未完成（{exc}），请手动检查该文件。",
                 file=sys.stderr,
             )
     PRESYNC_FILES.clear()
+    # 失败路径也要说清工作树被还原成了什么：否则用户分不清「没被碰过」与「已被回退」
+    if restored:
+        print(
+            f"提示：已把写前刷新的 {restored} 个台账文件恢复成命令执行前的版本。",
+            file=sys.stderr,
+        )
 
 
 def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
@@ -339,7 +347,8 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     为什么压成一行一条：progress.json 是多 agent 共享的并发写点。任务块各占十几行时，
     A 结案删掉一个任务、B 同时刷新相邻任务的 updated，两处改动间距不足 git 的 3 行
     patch 上下文，rebase 必冲突（实测撞到过）。一行一条后，删任务只删一行、改任务只改
-    一行，只有相邻两个任务同时被改才可能撞上。
+    一行，冲突面缩到「3 行 patch 上下文之内」——也就是说，同一批（时间相近、排序相邻）
+    的任务被两边同时改仍会冲突，只是不再波及整块。
 
     顶层不是 `{"tasks": {...}}` 形状时退回缩进格式：本函数只管状态表，不顺手改坏别的结构。
     """
@@ -520,7 +529,9 @@ def _foreign_commits(
     那正是脚本声称绝不做的事（fail-closed）。
     """
     spec = f"{upstream}..HEAD"
-    exclude = f":(exclude){ledger_rel}"
+    # :(literal) 不能省：台账路径若含 `( ) ,` 会让 pathspec magic 解析报错（→ 永久
+    # 封锁自动 rebase），含 `* ? [` 会被当通配符，误把用户提交算成台账提交。
+    exclude = f":(exclude,literal){ledger_rel}"
     raw = _git_bytes(*g, "rev-list", "--count", spec, "--", ".", exclude)
     try:
         count = int((raw or b"").decode("ascii", "replace").strip())
@@ -538,6 +549,158 @@ def _foreign_commits(
         exclude,
     )
     return count, (listed or b"").decode("utf-8", "replace").strip().splitlines()[:3]
+
+
+def _merge_task_dicts(
+    base: dict[str, Any], ours: dict[str, Any], theirs: dict[str, Any]
+) -> tuple[dict[str, Any], list[str]]:
+    """按任务号做三方合并；返回 (合并结果, 两边都改过的任务号)。
+
+    合并单位是「任务」，不是文本行 —— 行级合并只认相邻上下文：不同任务各自新增 /
+    结案挤在文件末尾就会撞，而同一任务两边都改时它也判不出该留谁。这里按 id 对账：
+    只有一边动过的直接采纳，两边都动过的列进冲突，一个都不静默丢。
+    """
+    merged: dict[str, Any] = {}
+    conflicts: list[str] = []
+    for tid in sorted(set(base) | set(ours) | set(theirs)):
+        b, o, t = base.get(tid), ours.get(tid), theirs.get(tid)
+        if o == t:
+            if o is not None:
+                merged[tid] = o
+        elif o == b:
+            if t is not None:
+                merged[tid] = t
+        elif t == b:
+            merged[tid] = o
+        else:
+            conflicts.append(tid)
+            merged[tid] = o if o is not None else t
+    return merged, conflicts
+
+
+def _render_progress_conflict(
+    merged: dict[str, Any],
+    conflicts: list[str],
+    ours: dict[str, Any],
+    theirs: dict[str, Any],
+) -> str:
+    """按「一任务一行」渲染；两边都改过的任务用冲突标记包起来，同一份文件里给出两版。"""
+    rows: list[str] = []
+    for tid in sorted(merged):
+        key = json.dumps(tid, ensure_ascii=False)
+        if tid not in conflicts:
+            rows.append(
+                f"    {key}: {json.dumps(merged[tid], ensure_ascii=False, sort_keys=True)}"
+            )
+            continue
+        left = (
+            "(本地已删除)"
+            if ours.get(tid) is None
+            else json.dumps(ours[tid], ensure_ascii=False, sort_keys=True)
+        )
+        right = (
+            "(远端已删除)"
+            if theirs.get(tid) is None
+            else json.dumps(theirs[tid], ensure_ascii=False, sort_keys=True)
+        )
+        rows.append(
+            f"<<<<<<< 本地\n    {key}: {left}\n=======\n    {key}: {right}\n>>>>>>> 远端"
+        )
+    return '{\n  "tasks": {\n' + (",\n".join(rows) + "\n" if rows else "") + "  }\n}\n"
+
+
+def _union_merge(g: tuple[str, ...], root: str, rel: str) -> bool:
+    """把冲突文件按「两边都保留」合上 —— worklog 正文是追加式的，两边各加一条
+    执行记录没必要让人选，union 正好。返回是否真的写出去了。
+    """
+    staged: dict[int, bytes] = {}
+    for n in (1, 2, 3):
+        raw = _git_bytes(*g, "show", f":{n}:{rel}")
+        if raw is None:
+            return False
+        staged[n] = raw
+    with tempfile.TemporaryDirectory() as td:
+        order = (2, 1, 3)  # git merge-file 的顺序是 current / base / other
+        paths = []
+        for n in order:
+            p = Path(td) / str(n)
+            p.write_bytes(staged[n])
+            paths.append(str(p))
+        out = _git(*g, "merge-file", "--union", "-p", *paths)
+        if out.returncode != 0:
+            return False
+        try:
+            write_text_atomic(Path(root) / rel, out.stdout, track=False)
+        except Fail:
+            return False
+    return True
+
+
+def _resolve_ledger_conflict(
+    g: tuple[str, ...], root: str, ledger_rel: str
+) -> bool | str | None:
+    """rebase 卡在台账数据上时接管合并。
+
+    progress.json 按任务号对账（同一任务两边都改 → 保留冲突标记等人）；worklog 是
+    追加式正文，两边各加一条执行记录就 union 合上。业务代码的冲突一个字都不碰。
+    返回 True = 合上并继续 rebase；"conflict" = 有任务被两边改，标记已写好；
+    None = 不归这里管，走原有回滚路径。
+    """
+    conflicted = _split_z(
+        _git_bytes(*g, "diff", "--name-only", "--diff-filter=U", "-z")
+    )
+    if not conflicted:
+        return None
+    progress_rel = f"{ledger_rel}/progress.json"
+    worklog_prefix = f"{ledger_rel}/worklog/"
+    if any(
+        rel != progress_rel and not rel.startswith(worklog_prefix) for rel in conflicted
+    ):
+        return None
+
+    conflicts: list[str] = []
+    if progress_rel in conflicted:
+
+        def stage(n: int) -> dict[str, Any] | None:
+            raw = _git_bytes(*g, "show", f":{n}:{progress_rel}")
+            if raw is None:
+                return None
+            try:
+                data = json.loads(raw.decode("utf-8-sig"))
+            except ValueError:
+                return None
+            tasks = data.get("tasks") if isinstance(data, dict) else None
+            return tasks if isinstance(tasks, dict) else None
+
+        base, ours, theirs = stage(1), stage(2), stage(3)
+        if base is None or ours is None or theirs is None:
+            return None
+        merged, conflicts = _merge_task_dicts(base, ours, theirs)
+        try:
+            write_text_atomic(
+                Path(root) / progress_rel,
+                _render_progress_conflict(merged, conflicts, ours, theirs),
+                track=False,
+            )
+        except Fail:
+            return None
+
+    for rel in conflicted:
+        if rel == progress_rel:
+            continue
+        if not _union_merge(g, root, rel):
+            # 合不了就整体退回原路径：留半合并状态比不合更糟
+            return None
+
+    if conflicts:
+        return "conflict"
+    if _git(*g, "add", "--", *conflicted).returncode != 0:
+        return None
+    if _git(
+        *g, "-c", "core.editor=true", "rebase", "--continue", timeout=60
+    ).returncode:
+        return None
+    return True
 
 
 def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
@@ -620,6 +783,25 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
             )
         return True
     conflict = (rebase.stderr or rebase.stdout or "").strip()
+    # 行级冲突先按任务号对账一次：不同任务的改动本该自动合上，只有同一任务被两边
+    # 改过才真需要人。合上了就继续，不必让人去手写一坨 JSON 冲突标记。
+    resolved = _resolve_ledger_conflict(g, g[2], ledger_rel)
+    if resolved is True:
+        print(
+            "提示：合并时按任务号自动对账了台账（不同任务互不影响）。",
+            file=sys.stderr,
+        )
+        return True
+    if resolved == "conflict":
+        print(
+            f"提示：{ledger_rel}/progress.json 里有任务被两边同时改过，"
+            "已按任务逐个标出冲突（标记里左边是本机、右边是远端），没有替你选任何一个。\n"
+            "  处理：编辑该文件保留你要的版本 → `git add` → `git rebase --continue`；"
+            "不想合就 `git rebase --abort` 回到写之前。\n"
+            "  你的台账改动已提交在本地，不会丢。",
+            file=sys.stderr,
+        )
+        return False
     abort = _git(*g, "rebase", "--abort", timeout=30)
     if abort.returncode != 0:
         # abort 也失败：仓库现在真的停在 rebase 中间态，必须把真实状态原样交出去。
@@ -664,6 +846,17 @@ def git_sync(action: str) -> None:
     stderr 提示，绝不静默；但退出码不变 —— 台账本身已经写成功，别让调用方误判去重做。
     """
     if os.environ.get("TASK_LEDGER_NO_SYNC"):
+        # 这条以前是纯静默的：写成功了却一个字不提没签入，三天后没人知道那次没签上。
+        # 只在真有改动时说，纯只读式的写入（内容没变）不吵。
+        pending = [
+            p for p in dict.fromkeys([*CHANGED_FILES, *PRESYNC_FILES]) if p.exists()
+        ]
+        if pending:
+            print(
+                f"提示：本次按 --no-sync 未签入 git，{len(pending)} 个台账文件留在工作树里。"
+                "下次写命令会先要求你提交它们。",
+                file=sys.stderr,
+            )
         return
     try:
         # 本次写入目标 + 写前补下的 worklog：后者不是本次改动，但也得随这次提交入库
@@ -945,10 +1138,11 @@ def _presync_guard(
     dirty = _split_z(dirty_raw)
     if dirty:
         raise Fail(
-            "本地台账有未提交改动，写前取最新会覆盖它，已中止本次操作：\n  "
+            "本地台账有还没签入 git 的改动（多半是上次用了 --no-sync，或上次提交/推送没成功）。"
+            "写前取最新会覆盖它们，已中止本次操作：\n  "
             + "\n  ".join(dirty)
-            + '\n  处理：先提交这份改动（`git add ledger/ && git commit -m "chore(ledger): ..."`）'
-            "再重跑；确认不要它可加 --no-sync。"
+            + '\n  处理：先提交（`git add ledger/ && git commit -m "chore(ledger): ..."`）再重跑；'
+            "这些改动不要了就用 `git checkout -- <文件>`；确认要按原样继续可加 --no-sync。"
         )
     untracked_raw = _git_bytes(
         "git",
@@ -1018,6 +1212,80 @@ def _presync_fetch_file(
     if track:
         PRESYNC_FILES.append(dest)
     return True
+
+
+def _is_dirty(root: str, rel: str) -> bool:
+    """该文件相对 HEAD 有没有未提交改动。数不出来按「有」处理（fail-closed）。"""
+    raw = _git_bytes("git", "-C", root, "diff", "--name-only", "-z", "HEAD", "--", rel)
+    if raw is None:
+        return True
+    return bool(_split_z(raw))
+
+
+def _stash_ff_worklog(root: str, upstream: str, rel: str) -> None:
+    """worklog 有手写未提交改动时的「取最新」：收起来 → 快进 → 叠回去。
+
+    直接覆盖会吞掉手写内容；不覆盖则后面「读全文→追加→写回」基于旧版，把远端
+    那次改动整段写没（实测：两台机器各写过同一 worklog，远端内容直接消失）。
+    stash 是唯一两头都保住的走法，冲突就留给 git 标出来让人合。
+    """
+    st = _git("git", "-C", root, "stash", "push", "-q", "--", rel, timeout=30)
+    if st.returncode != 0:
+        print(f"提示：{rel} 暂时收起失败，本次没取它的最新版本。", file=sys.stderr)
+        return
+    ff = _git("git", "-C", root, "merge", "--ff-only", "-q", upstream, timeout=30)
+    if ff.returncode != 0:
+        _git("git", "-C", root, "stash", "pop", "-q", timeout=30)
+        print(
+            f"提示：{rel} 收起后仍没能快进到 {upstream}，手写内容已放回。",
+            file=sys.stderr,
+        )
+        return
+    pop = _git("git", "-C", root, "stash", "pop", "-q", timeout=30)
+    if pop.returncode != 0:
+        raise Fail(
+            f"{rel} 的手写改动与 {upstream} 的最新版本冲突，冲突标记已留在工作树里。\n"
+            f"  处理：编辑 {rel} 解决冲突 → `git add {rel}` → `git stash drop`，然后重跑这条命令。\n"
+            "  顺序不能反：先 drop 再解决，手写的那段就没了。"
+        )
+    print(f"提示：{rel} 的手写改动已叠到 {upstream} 的最新版本上。", file=sys.stderr)
+
+
+def _presync_worklog_rel(
+    repo: Path, git_root: Path, action: str, args: argparse.Namespace
+) -> str | None:
+    """本次写命令会改写的已有 worklog（相对仓根）；不写正文的返回 None。
+
+    `log` 必追加执行记录，`close` 只在覆盖分类/标签时才改正文 —— 两者都是
+    「读全文 → 改 → 写回」，不先刷成最新就是把别处那次改动整段写没。
+    路径取自当前 progress.json 即可：worklog 路径建档时定死，不随别人改别的
+    字段而变；本地根本没有这条任务，后面的命令自己会报错。
+    """
+    if action not in ("log", "close"):
+        return None
+    if action == "close" and not (
+        getattr(args, "category", None) or getattr(args, "tags", None)
+    ):
+        return None
+    tid = getattr(args, "id", None)
+    if not tid:
+        return None
+    try:
+        data = json.loads((repo / PROGRESS_REL).read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    task = (data.get("tasks") or {}).get(tid)
+    if not isinstance(task, dict):
+        return None
+    log = find_worklog(repo, tid, task)
+    if log is None:
+        return None
+    try:
+        return log.resolve().relative_to(git_root.resolve()).as_posix()
+    except ValueError:
+        return None
 
 
 def git_presync(action: str, args: argparse.Namespace) -> None:
@@ -1105,6 +1373,10 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
         except ValueError:
             return -1
 
+    # 本次要改写的 worklog（log 追加执行记录 / close 覆盖分类标签）。它比
+    # progress.json 麻烦：「脏」是常态 —— 人手写的正文就躺在那儿还没提交。
+    wl_rel = _presync_worklog_rel(repo, git_root, action, args)
+
     ahead_n = _rev_count(f"{upstream}..HEAD")
     behind_n = _rev_count(f"HEAD..{upstream}")
     if ahead_n == 0 and behind_n > 0:
@@ -1125,6 +1397,10 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
                 "改为只刷新本次要写的台账文件。",
                 file=sys.stderr,
             )
+            # 绝大多数 ff 失败就是「worklog 里有手写还没提交的正文」。不处理的话，
+            # 后面的 log 会基于旧版追加再写回，把远端那次改动整段写没。
+            if wl_rel and _is_dirty(str(git_root), wl_rel):
+                _stash_ff_worklog(str(git_root), upstream, wl_rel)
 
     root = str(git_root)
     progress_rel = f"{ledger_rel}/{PROGRESS_REL.name}"
@@ -1173,6 +1449,13 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
             )
             ahead_n = 0
         else:
+            mid = _git_midstate(str(git_root))
+            if mid:
+                raise Fail(
+                    f"写前合并卡在 {mid} 中间态，处理完才能继续写。\n"
+                    "  处理：按上面的提示编辑冲突文件 → `git add` → `git rebase --continue`；"
+                    "不想合就 `git rebase --abort` 回到写之前。台账改动已提交在本地。"
+                )
             print(
                 "提示：写前推送失败"
                 f"（{_why(pushed.stderr or pushed.stdout, f'退出码 {pushed.returncode}')}）。",
@@ -1200,6 +1483,21 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
             f"提示：从 {upstream} 补下 {added} 个本地缺的 worklog 文件（没有动已有正文）。",
             file=sys.stderr,
         )
+
+    # 本次要改写的那个 worklog：刷新到远端最新再动笔，与 progress.json 同一口径。
+    # 走到这里还有未提交改动，说明快进和 stash 叠回都没成（冲突已由上面报错中止），
+    # 这时只提示不刷 —— 覆盖会吞掉手写内容。
+    if wl_rel and behind_n > 0:
+        if _is_dirty(root, wl_rel):
+            print(
+                f"提示：{wl_rel} 有未提交的手写改动，本次没刷它的最新版本；"
+                "若远端也改过同一处，推送时会让你合并。",
+                file=sys.stderr,
+            )
+        elif _presync_fetch_file(root, upstream, wl_rel):
+            print(
+                f"提示：写前把 {wl_rel} 刷成 {upstream} 的最新版本。", file=sys.stderr
+            )
 
 
 def require_task_id(tid: str) -> str:
@@ -3179,14 +3477,25 @@ def _run_once(args: argparse.Namespace) -> int:
         print("已中断。", file=sys.stderr)
         return 130
     except BrokenPipeError:
-        # 输出被下游截断（如 | head）：命令本身已经写成功，不回滚。
+        # 输出被下游截断（如 | head）：命令本身可能已经写成功，不回滚。
         # 但写后同步必须照做 —— 早先这里直接 return 0，台账就停在「已写未提交」
         # 状态，下一笔写被 guard 拦成「本地台账有未提交改动」，用户只能手动提交。
         # stdout 先接到 /dev/null，免得 git_sync 里再碰这个断掉的管道。
         devnull = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull, sys.stdout.fileno())
+        try:
+            os.dup2(devnull, sys.stdout.fileno())
+        finally:
+            os.close(devnull)
+        wrote = bool(CHANGED_FILES or PRESYNC_FILES)
         PRESYNC_BACKUPS.clear()
-        git_sync(args.command)
+        if wrote:
+            git_sync(args.command)
+        else:
+            # 一个文件都没写就断了：此时提交只会把「什么都没做」记成一次写
+            print(
+                "提示：输出管道被下游关闭，命令没有完成写入，本次未做任何提交。",
+                file=sys.stderr,
+            )
         return 0
     except OSError as exc:
         presync_rollback()
