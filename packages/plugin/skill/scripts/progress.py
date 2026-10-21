@@ -490,26 +490,57 @@ def _why(raw: str | None, fallback: str) -> str:
     return " / ".join(lines[-3:]) if lines else fallback
 
 
-def _foreign_commits(g: tuple[str, ...], upstream: str) -> tuple[int, list[str]]:
-    """本地领先 upstream、但不在 `ledger/` 里的提交（用户自己的代码）：返回 (数量, 前几条摘要)。
+def _ledger_rel(files: list[Path], root: str) -> str:
+    """台账目录相对 git 根的路径：monorepo 子目录时是 `svc/api/ledger`，不是硬编码的 `ledger`。"""
+    for f in files:
+        for cand in (f.parent, *f.parents):
+            if (cand / PROGRESS_REL.name).is_file():
+                try:
+                    return cand.resolve().relative_to(Path(root).resolve()).as_posix()
+                except ValueError:
+                    break
+    return PROGRESS_REL.parent.as_posix()
 
-    git 按路径过滤，不看提交消息 —— 用户把台账提交改写成别的 message 也不会被误判成「业务提交」。
+
+def _push(
+    g: tuple[str, ...], upstream: str, *, check: bool = False
+) -> subprocess.CompletedProcess:
+    """显式 refspec：本地分支与上游分支不同名（main ↔ master）时，裸 `git push` 直接 fatal。"""
+    remote, _, branch = upstream.partition("/")
+    refspec = f"HEAD:{branch}" if branch else "HEAD"
+    return _git(*g, "push", remote, refspec, timeout=30, check=check)
+
+
+def _foreign_commits(
+    g: tuple[str, ...], upstream: str, ledger_rel: str
+) -> tuple[int, list[str]]:
+    """本地领先 upstream、但不在台账目录里的提交（用户自己的代码）：(数量, 前几条摘要)。
+
+    数量 -1 = 数不出来，调用方必须按「可能有」处理 —— 当成 0 就等于放行推送 / rebase，
+    那正是脚本声称绝不做的事（fail-closed）。
     """
     spec = f"{upstream}..HEAD"
-    raw = _git_bytes(*g, "rev-list", "--count", spec, "--", ".", ":(exclude)ledger")
+    exclude = f":(exclude){ledger_rel}"
+    raw = _git_bytes(*g, "rev-list", "--count", spec, "--", ".", exclude)
     try:
-        count = int((raw or b"-1").decode("ascii", "replace").strip())
+        count = int((raw or b"").decode("ascii", "replace").strip())
     except ValueError:
-        return 0, []  # 数不出来就当作没有：宁可少提示，不阻断台账写入
+        return -1, []
     if count <= 0:
-        return 0, []
+        return count, []
     listed = _git_bytes(
-        *g, "log", "--format=%h %s", spec, "--", ".", ":(exclude)ledger"
+        *g,
+        "log",
+        "--format=%h %s",
+        spec,
+        "--",
+        ".",
+        exclude,
     )
     return count, (listed or b"").decode("utf-8", "replace").strip().splitlines()[:3]
 
 
-def _rebase_retry(g: tuple[str, ...]) -> bool:
+def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
     """推送被拒后自动 rebase 一次；只在工作树干净时做，失败立刻 abort。
 
     台账按任务分条存（progress.json 是按任务号 key 的对象、history 一行一条），
@@ -527,12 +558,16 @@ def _rebase_retry(g: tuple[str, ...]) -> bool:
         return False
     # 用户自己 commit 的代码不动：rebase 会重放整支分支，把他们的提交号全改写。
     # 只在自己那几条台账提交上做，才是「只碰台账」这条边界的完整实现。
-    foreign, titles = _foreign_commits(g, "@{upstream}")
-    if foreign > 0:
-        detail = f"：{'；'.join(titles)}" if titles else ""
+    # foreign != 0：-1 表示数不出来，同样按「可能有」处理，宁可不动也不越权。
+    foreign, titles = _foreign_commits(g, "@{upstream}", ledger_rel)
+    if foreign != 0:
+        if foreign > 0:
+            detail = f"：{'；'.join(titles)}" if titles else ""
+            what = f"本地有 {foreign} 个你自己的提交还没推送{detail}"
+        else:
+            what = "没能确认本地有没有你自己的提交（git 数不出来）"
         print(
-            f"提示：本地有 {foreign} 个你自己的提交还没推送{detail}。"
-            "脚本不替你 rebase（那会改写它们的提交号），本次没有自动合并。\n"
+            f"提示：{what}。脚本不替你 rebase（那会改写提交号），本次没有自动合并。\n"
             "  处理：手动 `git pull --rebase` 或 `git merge` 后再 `git push`；"
             "台账改动已安全留在本地。",
             file=sys.stderr,
@@ -544,10 +579,29 @@ def _rebase_retry(g: tuple[str, ...]) -> bool:
     rebase = _git(*g, "rebase", "--autostash", "@{upstream}", timeout=30)
     if rebase.returncode == 0:
         combined = f"{rebase.stdout or ''}{rebase.stderr or ''}"
-        if "autostash" in combined:
+        # 判「改动放回时冲突了」不能认 git 的文案：2.27+ 的措辞是
+        # 「Your local changes are stashed, however applying them resulted in conflicts」，
+        # 跟旧版的「Applying autostash resulted in conflicts」不是一回事 —— 认字符串时
+        # 实测 git 2.55 会漏判，把「工作树里带着冲突标记」说成「已放回」（最坏的一种错）。
+        # rebase 本身成功（returncode 0）就说明冲突不来自 rebase，只可能来自 autostash，
+        # 于是直接看 index 有没有未合并项。
+        conflicted = _split_z(
+            _git_bytes(*g, "diff", "--name-only", "--diff-filter=U", "-z")
+        )
+        if conflicted:
+            # 必须点名文件：此刻这些文件带 `<<<<<<<` 标记，不写清楚就会有人把冲突标记
+            # 当成品提交上去（git 不会替你报错，它只当普通改动）。
             print(
-                "提示：自动合并前暂存了你的未提交改动，rebase 后已放回；"
-                "若 git 提示 autostash 冲突，跑 `git stash list` 手动处理。",
+                "提示：rebase 成功，但把你的未提交改动放回工作树时冲突了 —— "
+                "这些文件现在带着 `<<<<<<<` 冲突标记，别当成品提交：\n  "
+                + "\n  ".join(conflicted)
+                + "\n  改动同时还在 stash 里（`git stash list`）；解完冲突、确认内容没错"
+                "再 `git stash drop`。",
+                file=sys.stderr,
+            )
+        elif "autostash" in combined:
+            print(
+                "提示：自动合并前暂存了你的未提交改动，rebase 后已放回。",
                 file=sys.stderr,
             )
         return True
@@ -597,11 +651,14 @@ def git_sync(action: str) -> None:
             return  # 不是 git 项目 → 跳过（规则1：有才提交）
         root = top.stdout.strip()
         g = ("git", "-C", root)
-        # 只 add 本次真实改动、且未被 ignore 的文件
+        # 只 add 本次真实改动、且未被 ignore 的文件。
+        # --no-index 不能省：忽略规则对已跟踪文件同样生效（先提交过台账、之后才把
+        # ledger/ 写进 .gitignore 就是这种情形），而默认的 check-ignore 只报未跟踪
+        # 文件、漏判后 git add 会撞「paths are ignored」并打一句「请手动提交」的瞎提示。
         to_add = [
             str(f)
             for f in files
-            if _git(*g, "check-ignore", "-q", str(f)).returncode != 0
+            if _git(*g, "check-ignore", "--no-index", "-q", str(f)).returncode != 0
         ]
         if not to_add:
             return  # 全被 ignore → 尊重用户选择，不强行提交
@@ -644,7 +701,9 @@ def git_sync(action: str) -> None:
             return
         # push 是分支级的：本地有用户自己 commit 但没推的代码，会一并送到远端。
         # 脚本不替用户下这个决定，但必须说出来，别让它无声发生。
-        foreign, titles = _foreign_commits(g, upstream.stdout.strip())
+        up = upstream.stdout.strip()
+        ledger_rel = _ledger_rel(files, root)
+        foreign, titles = _foreign_commits(g, up, ledger_rel)
         if foreign > 0:
             detail = f"：{'；'.join(titles)}" if titles else ""
             print(
@@ -652,13 +711,13 @@ def git_sync(action: str) -> None:
                 file=sys.stderr,
             )
         try:
-            _git(*g, "push", timeout=30, check=True)
+            _push(g, up, check=True)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as push_exc:
             # 非快进：只在台账工作树干净时自动 rebase 一次再推，冲突立刻 abort。
             # 各自改各自的任务时 git 按行自动合并；同一条任务冲突就干净失败，绝不 --force。
-            if _rebase_retry(g):
+            if _rebase_retry(g, ledger_rel):
                 try:
-                    _git(*g, "push", timeout=30, check=True)
+                    _push(g, up, check=True)
                     return
                 except (
                     subprocess.CalledProcessError,
@@ -762,43 +821,54 @@ def _git_midstate(git_root: str) -> str | None:
 
 
 def _presync_guard(
-    git_root: str, upstream: str, managed: list[str], remote_files: set[str]
+    git_root: str,
+    upstream: str,
+    managed: list[str],
+    remote_files: set[str],
+    *,
+    check_ahead: bool = True,
 ) -> None:
     """取最新之前确认本地没有会被覆盖掉的东西；命中就中止，绝不静默覆盖。
 
     三种命中：未推送的台账提交（取最新会把它们的内容回退掉）、已跟踪文件的
     未提交改动、本地还没入库但远端已有同名文件。
+
+    check_ahead=False 用在自动补推之前：那时本地还领先，ahead 必然非 0；
+    补推完成后再跑一次完整检查。
     """
-    ahead = _git_bytes(
-        "git",
-        "-C",
-        git_root,
-        "rev-list",
-        "--count",
-        f"{upstream}..HEAD",
-        "--",
-        *managed,
-    )
-    count = (ahead or b"").decode("ascii", "replace").strip()
-    if count and count != "0":
-        listing = _git_bytes(
+    if check_ahead:
+        ahead = _git_bytes(
             "git",
             "-C",
             git_root,
-            "log",
-            "--oneline",
+            "rev-list",
+            "--count",
             f"{upstream}..HEAD",
             "--",
             *managed,
         )
-        recent = (listing or b"").decode("utf-8", "replace").strip().splitlines()[:3]
-        detail = ("\n  未推送：" + "；".join(recent)) if recent else ""
-        raise Fail(
-            f"本地有 {count} 个台账提交还没推到 {upstream}，写前取最新会把它们的内容"
-            f"回退掉，已中止本次操作。{detail}\n"
-            "  处理：有网络时先 `git push`；暂时离线可加 --no-sync 继续在本地写，"
-            "联网后再提交推送。"
-        )
+        count = (ahead or b"").decode("ascii", "replace").strip()
+        if count and count != "0":
+            listing = _git_bytes(
+                "git",
+                "-C",
+                git_root,
+                "log",
+                "--oneline",
+                f"{upstream}..HEAD",
+                "--",
+                *managed,
+            )
+            recent = (
+                (listing or b"").decode("utf-8", "replace").strip().splitlines()[:3]
+            )
+            detail = ("\n  未推送：" + "；".join(recent)) if recent else ""
+            raise Fail(
+                f"本地有 {count} 个台账提交还没推到 {upstream}，写前取最新会把它们的内容"
+                f"回退掉，已中止本次操作。{detail}\n"
+                "  处理：先 `git push` 补齐再重跑；暂时离线可加 --no-sync 继续在本地写，"
+                "联网后再提交推送。"
+            )
     dirty = _split_z(
         _git_bytes(
             "git", "-C", git_root, "diff", "--name-only", "-z", "HEAD", "--", *managed
@@ -982,28 +1052,6 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
                 file=sys.stderr,
             )
 
-    # 离线攒下的台账提交：联网后第一笔写先把它们推上去，别拿「有 N 个没推」挡住写入。
-    # 用户自己的业务提交不碰：push 会把它们一并带走，那个决定归用户（见 _rebase_retry）。
-    if ahead_n > 0:
-        g_tuple = ("git", "-C", str(git_root))
-        foreign_n, _ = _foreign_commits(g_tuple, upstream)
-        if foreign_n == 0:
-            pushed = _git(*g_tuple, "push", timeout=30)
-            if pushed.returncode != 0 and _rebase_retry(g_tuple):
-                pushed = _git(*g_tuple, "push", timeout=30)
-            if pushed.returncode == 0:
-                print(
-                    f"提示：写前把本地 {ahead_n} 个未推送的提交推上去了。",
-                    file=sys.stderr,
-                )
-                ahead_n = 0
-            else:
-                print(
-                    "提示：写前推送失败"
-                    f"（{_why(pushed.stderr or pushed.stdout, f'退出码 {pushed.returncode}')}）。",
-                    file=sys.stderr,
-                )
-
     root = str(git_root)
     progress_rel = f"{ledger_rel}/{PROGRESS_REL.name}"
     worklog_rel = f"{ledger_rel}/{WORKLOG_DIR.name}"
@@ -1030,6 +1078,35 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
 
     remote_files = {rel for rel in managed if _remote_exists(root, upstream, rel)}
 
+    # 先查本地有没有会被覆盖掉的东西（尤其未提交改动），必须排在自动补推之前：
+    # 补推里的 rebase --autostash 会先把改动收进 stash，abort 后工作树看起来「干净」，
+    # 后续覆盖就会把那一版改动弄丢。
+    _presync_guard(root, upstream, managed, remote_files, check_ahead=False)
+
+    # 离线攒下的台账提交：联网后第一笔写先把它们推上去，别拿「有 N 个没推」挡住写入。
+    # 用户自己的提交一并带走（push 是分支级的），但只提示、不 rebase —— 改写提交号才是越权。
+    if ahead_n > 0:
+        g_tuple = ("git", "-C", str(git_root))
+        foreign_n, _ = _foreign_commits(g_tuple, upstream, ledger_rel)
+        pushed = _push(g_tuple, upstream)
+        if pushed.returncode != 0 and _rebase_retry(g_tuple, ledger_rel):
+            pushed = _push(g_tuple, upstream)
+        if pushed.returncode == 0:
+            extra = f"（其中 {foreign_n} 个是你自己的提交）" if foreign_n > 0 else ""
+            print(
+                f"提示：写前把本地 {ahead_n} 个未推送的提交推上去了{extra}。",
+                file=sys.stderr,
+            )
+            ahead_n = 0
+        else:
+            print(
+                "提示：写前推送失败"
+                f"（{_why(pushed.stderr or pushed.stdout, f'退出码 {pushed.returncode}')}）。",
+                file=sys.stderr,
+            )
+
+    # 补推后复查：补推失败（多半是本地有你自己的提交，脚本不替你 rebase）时，
+    # 这里仍会把「台账提交领先」拦下来，避免写进过期数据。
     _presync_guard(root, upstream, managed, remote_files)
 
     for rel in remote_files:
@@ -2957,6 +3034,17 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("validate", help="校验状态表与 worklog")
     add_repo(p)
     p.set_defaults(func=cmd_validate)
+
+    # 每个子命令也认 --no-sync：人（和 agent）习惯把参数缀在子命令后面，
+    # 只挂在主 parser 上时 `new --no-sync` 会直接 usage 报错、命令根本跑不起来。
+    # default=SUPPRESS 是关键：否则解析子命令时会把主 parser 上已解析的 True 覆盖回 False。
+    for sub_parser in sub.choices.values():
+        sub_parser.add_argument(
+            "--no-sync",
+            action="store_true",
+            default=argparse.SUPPRESS,
+            help="跳过写前取最新与写后自动 git 提交 / 推送（等价于 TASK_LEDGER_NO_SYNC=1；写在子命令前后均可）",
+        )
 
     return parser
 

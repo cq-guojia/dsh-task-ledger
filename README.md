@@ -11,6 +11,8 @@ The skill content has a single source of truth at `packages/skill/`; the plugin 
 
 ## Status
 
+- `task-ledger@1.3.0` published (2026-10-21): `--no-sync` is accepted before **and** after the subcommand (appending it used to abort with a usage error); a `ledger/` that was committed first and only later added to `.gitignore` is now skipped silently instead of printing a "commit it manually" hint that git refuses to honour; autostash pop conflicts are detected from the index (git 2.27+ rewrote the message, so the old string check never fired and conflicts were reported as "restored") and the conflicted files are named.
+- `dsh-task-ledger@0.0.74` published (2026-10-21): bundles the updated skill; no host behaviour change.
 - `task-ledger@1.2.2` published (2026-10-19): every edit to a worklog must now be followed by exactly one `log` call — an edit without a matching execution record counts as unfinished work.
 - `dsh-task-ledger@0.0.56` published (2026-10-19): bundles the updated skill text; no host behaviour change.
 - `task-ledger@1.2.1` published (2026-10-19): prompt slimmed from ~26 KB to ~9 KB (details moved to `references/`, loaded on demand); `description` rewritten as pure routing (three intent clusters + explicit-only close/release) — no commands, paths or workflow text; handover removed from the prompt (release → claim only, `set --owner` kept for a future UI); history table separator fixed to 9 columns; older worklogs without the 执行记录 section get one appended automatically.
