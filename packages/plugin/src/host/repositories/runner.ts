@@ -20,8 +20,13 @@ export const WRITE_TIMEOUT_MS = 120_000
 
 export type LedgerScriptResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
-/** 写命令的返回：只收 stdout 原文（claim / set 打的是人话，不是 JSON）。 */
-export type LedgerCommandResult = { ok: true; output: string } | { ok: false; error: string }
+/**
+ * 写命令的返回：stdout 原文（claim / set 打的是人话，不是 JSON）+ 退出码 0 时的 stderr。
+ * `notice` 有值说明脚本写成功了、但同步（commit / push）没成功 —— 不能当失败抛，也不能吞掉。
+ */
+export type LedgerCommandResult =
+  | { ok: true; output: string; notice?: string }
+  | { ok: false; error: string }
 
 export interface RunOptions {
   /** 测试用：覆盖脚本路径。 */
@@ -35,7 +40,7 @@ export interface RunOptions {
   cwd?: string
 }
 
-type ExecResult = { ok: true; stdout: string } | { ok: false; error: string }
+type ExecResult = { ok: true; stdout: string; stderr: string } | { ok: false; error: string }
 
 /**
  * 起一次 python3、收 stdout / stderr。出错一律归一成人话（起不了 python3 / 超时 / 非零退出）。
@@ -69,7 +74,7 @@ function exec(sub: string, args: readonly string[], opts?: RunOptions): Promise<
         settle({ ok: false, error: stderr.trim() || `skill 脚本退出码 ${String(code)}` })
         return
       }
-      settle({ ok: true, stdout })
+      settle({ ok: true, stdout, stderr: stderr.trim() })
     })
   })
 }
@@ -108,5 +113,8 @@ export async function runLedgerCommand(
   opts?: RunOptions,
 ): Promise<LedgerCommandResult> {
   const result = await exec(sub, args, opts)
-  return result.ok ? { ok: true, output: result.stdout.trim() } : result
+  if (!result.ok) return result
+  const output = result.stdout.trim()
+  // 退出码 0 但 stderr 有字 = 写成功、同步失败（progress.py 的既定行为），必须带出去
+  return result.stderr ? { ok: true, output, notice: result.stderr } : { ok: true, output }
 }

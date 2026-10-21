@@ -484,6 +484,31 @@ def _git_actor(repo_root: str) -> str:
     return out.stdout.strip() or "ledger-script"
 
 
+def _why(raw: str | None, fallback: str) -> str:
+    """把 git 的 stderr / stdout 压成一行：取最后几行非空内容，够定位原因就行。"""
+    lines = [ln.strip() for ln in (raw or "").splitlines() if ln.strip()]
+    return " / ".join(lines[-3:]) if lines else fallback
+
+
+def _foreign_commits(g: tuple[str, ...], upstream: str) -> tuple[int, list[str]]:
+    """本地领先 upstream、但不在 `ledger/` 里的提交（用户自己的代码）：返回 (数量, 前几条摘要)。
+
+    git 按路径过滤，不看提交消息 —— 用户把台账提交改写成别的 message 也不会被误判成「业务提交」。
+    """
+    spec = f"{upstream}..HEAD"
+    raw = _git_bytes(*g, "rev-list", "--count", spec, "--", ".", ":(exclude)ledger")
+    try:
+        count = int((raw or b"-1").decode("ascii", "replace").strip())
+    except ValueError:
+        return 0, []  # 数不出来就当作没有：宁可少提示，不阻断台账写入
+    if count <= 0:
+        return 0, []
+    listed = _git_bytes(
+        *g, "log", "--format=%h %s", spec, "--", ".", ":(exclude)ledger"
+    )
+    return count, (listed or b"").decode("utf-8", "replace").strip().splitlines()[:3]
+
+
 def _rebase_retry(g: tuple[str, ...]) -> bool:
     """推送被拒后自动 rebase 一次；只在工作树干净时做，失败立刻 abort。
 
@@ -491,7 +516,27 @@ def _rebase_retry(g: tuple[str, ...]) -> bool:
     各自改各自的任务时 git 能按行自动合并。真冲突（同一条任务被两边改）就干净失败，
     绝不把仓库留在 rebase 中间态，也绝不 --force。
     """
-    if _git(*g, "fetch", timeout=30).returncode != 0:
+    fetched = _git(*g, "fetch", timeout=30)
+    if fetched.returncode != 0:
+        # 不静默：凭据过期 / 离线时这里就是唯一能说明「为什么没自动合并」的地方
+        print(
+            f"提示：推送被拒后重新取最新失败"
+            f"（{_why(fetched.stderr or fetched.stdout, f'退出码 {fetched.returncode}')}），未自动合并。",
+            file=sys.stderr,
+        )
+        return False
+    # 用户自己 commit 的代码不动：rebase 会重放整支分支，把他们的提交号全改写。
+    # 只在自己那几条台账提交上做，才是「只碰台账」这条边界的完整实现。
+    foreign, titles = _foreign_commits(g, "@{upstream}")
+    if foreign > 0:
+        detail = f"：{'；'.join(titles)}" if titles else ""
+        print(
+            f"提示：本地有 {foreign} 个你自己的提交还没推送{detail}。"
+            "脚本不替你 rebase（那会改写它们的提交号），本次没有自动合并。\n"
+            "  处理：手动 `git pull --rebase` 或 `git merge` 后再 `git push`；"
+            "台账改动已安全留在本地。",
+            file=sys.stderr,
+        )
         return False
     # --autostash：把工作树里未提交的改动（用户正在写的代码）临时收走、rebase 完自动放回。
     # 不这样做的话，只要仓库里有一处未提交改动，自动合并就永久失效 —— 台账提交越堆越多，
@@ -597,21 +642,38 @@ def git_sync(action: str) -> None:
         upstream = _git(*g, "rev-parse", "--abbrev-ref", "@{upstream}")
         if upstream.returncode != 0:
             return
+        # push 是分支级的：本地有用户自己 commit 但没推的代码，会一并送到远端。
+        # 脚本不替用户下这个决定，但必须说出来，别让它无声发生。
+        foreign, titles = _foreign_commits(g, upstream.stdout.strip())
+        if foreign > 0:
+            detail = f"：{'；'.join(titles)}" if titles else ""
+            print(
+                f"提示：本次推送会把本地 {foreign} 个你自己的提交一并推上去{detail}。",
+                file=sys.stderr,
+            )
         try:
             _git(*g, "push", timeout=30, check=True)
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as push_exc:
             # 非快进：只在台账工作树干净时自动 rebase 一次再推，冲突立刻 abort。
             # 各自改各自的任务时 git 按行自动合并；同一条任务冲突就干净失败，绝不 --force。
             if _rebase_retry(g):
                 try:
                     _git(*g, "push", timeout=30, check=True)
                     return
-                except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-                    pass
+                except (
+                    subprocess.CalledProcessError,
+                    subprocess.TimeoutExpired,
+                ) as retry_exc:
+                    print(
+                        "提示：自动合并后再次推送仍被拒"
+                        f"（{_why(getattr(retry_exc, 'stderr', '') or str(retry_exc), '推送失败')}）。",
+                        file=sys.stderr,
+                    )
+            # 必须带 git 原话：认证过期 / 分支保护 / 非快进只能从原文分辨，只给一句猜测等于没说
             print(
-                "提示：本地已提交，但推送被拒（他人已推 / 需认证 / 超时）。"
-                "台账各自改各自的任务时能自动合并，冲突请手动处理；"
-                "本次改动已安全留在本地。",
+                "提示：本地已提交，但推送被拒，本次改动已安全留在本地。\n"
+                f"  git：{_why(getattr(push_exc, 'stderr', '') or str(push_exc), '推送失败')}\n"
+                "  处理：`git push` 看原话；认证 / 权限问题找用户，不要反复重试。",
                 file=sys.stderr,
             )
     except Exception as exc:  # noqa: BLE001 —— 同步失败不应污染台账主流程
@@ -860,13 +922,13 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
         branch = (head.stdout or "").strip()
         if branch == "HEAD":
             print(
-                "提示：当前是 detached HEAD，台账只写本地文件，不会提交也不会推送。",
+                "提示：当前是 detached HEAD，台账只写本地文件并提交到当前 HEAD，不会推送。",
                 file=sys.stderr,
             )
         else:
             print(
                 f"提示：分支 {branch or '(未知)'} 没有上游跟踪分支，"
-                "台账只写本地文件，不会提交也不会推送。",
+                "台账只提交到本地、不会推送。",
                 file=sys.stderr,
             )
         return
@@ -908,6 +970,15 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
         if ff.returncode == 0:
             print(
                 f"提示：写前把本地快进到 {upstream}（{behind_n} 个提交，仅 fast-forward）。",
+                file=sys.stderr,
+            )
+        else:
+            # 不中止：工作区有未提交改动时 ff 必然失败，那是常态，后面还有脏检查兜底。
+            # 但必须说出来，否则「为什么没快进」无从查起。
+            print(
+                f"提示：写前快进到 {upstream} 没成功"
+                f"（{_why(ff.stderr or ff.stdout, f'退出码 {ff.returncode}')}），"
+                "改为只刷新本次要写的台账文件。",
                 file=sys.stderr,
             )
 

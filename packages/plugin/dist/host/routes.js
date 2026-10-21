@@ -200,9 +200,10 @@ export function registerWriteRoutes(webServer, deps) {
                     return;
                 }
                 try {
-                    await action(workspace, taskId);
+                    const notice = await action(workspace, taskId);
                     invalidate(workspace.id);
-                    sendJson(res, 200, { ok: true });
+                    // notice = 写成功但同步失败的人话：必须让界面看见，不能当成功静默吞掉
+                    sendJson(res, 200, notice ? { ok: true, notice } : { ok: true });
                 }
                 catch (error) {
                     sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });

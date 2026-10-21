@@ -47,7 +47,7 @@ function exec(sub, args, opts) {
                 settle({ ok: false, error: stderr.trim() || `skill 脚本退出码 ${String(code)}` });
                 return;
             }
-            settle({ ok: true, stdout });
+            settle({ ok: true, stdout, stderr: stderr.trim() });
         });
     });
 }
@@ -78,5 +78,9 @@ export async function runLedgerScript(sub, args, opts) {
  */
 export async function runLedgerCommand(sub, args, opts) {
     const result = await exec(sub, args, opts);
-    return result.ok ? { ok: true, output: result.stdout.trim() } : result;
+    if (!result.ok)
+        return result;
+    const output = result.stdout.trim();
+    // 退出码 0 但 stderr 有字 = 写成功、同步失败（progress.py 的既定行为），必须带出去
+    return result.stderr ? { ok: true, output, notice: result.stderr } : { ok: true, output };
 }

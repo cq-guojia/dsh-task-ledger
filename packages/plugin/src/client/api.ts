@@ -113,6 +113,8 @@ export function requestClose(body: {
 /** 认领 / 释放的写结果；成功后由调用方自行刷新快照（host 已清该工作区读缓存）。 */
 export interface TaskMutationResult {
   readonly ok: true
+  /** 写成功但同步（commit / push）没成功时的人话；同步正常时没有这个字段。 */
+  readonly notice?: string
 }
 
 /**

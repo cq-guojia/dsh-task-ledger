@@ -11,10 +11,14 @@ export type LedgerScriptResult<T> = {
     ok: false;
     error: string;
 };
-/** 写命令的返回：只收 stdout 原文（claim / set 打的是人话，不是 JSON）。 */
+/**
+ * 写命令的返回：stdout 原文（claim / set 打的是人话，不是 JSON）+ 退出码 0 时的 stderr。
+ * `notice` 有值说明脚本写成功了、但同步（commit / push）没成功 —— 不能当失败抛，也不能吞掉。
+ */
 export type LedgerCommandResult = {
     ok: true;
     output: string;
+    notice?: string;
 } | {
     ok: false;
     error: string;

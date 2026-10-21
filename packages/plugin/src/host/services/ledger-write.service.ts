@@ -9,20 +9,22 @@
 import { WRITE_TIMEOUT_MS, runLedgerCommand } from '../repositories/runner.js'
 import type { LedgerWorkspace } from '../types.js'
 
-async function run(workspace: LedgerWorkspace, sub: string, args: readonly string[]): Promise<void> {
+/** 返回脚本在退出码 0 时打到 stderr 的提示（同步失败等）；没有提示就是空串。 */
+async function run(workspace: LedgerWorkspace, sub: string, args: readonly string[]): Promise<string> {
   const result = await runLedgerCommand(sub, [...args, '--repo', workspace.path], {
     cwd: workspace.path,
     timeoutMs: WRITE_TIMEOUT_MS,
   })
   if (!result.ok) throw new Error(`${workspace.title}：${result.error}`)
+  return result.notice ?? ''
 }
 
 /** 认领：只有 open 且无人认领才能接（脚本内判定），owner = 当前工作区的 git 身份。 */
-export function claimTask(workspace: LedgerWorkspace, taskId: string): Promise<void> {
+export function claimTask(workspace: LedgerWorkspace, taskId: string): Promise<string> {
   return run(workspace, 'claim', ['--id', taskId])
 }
 
 /** 释放：退回待认领（owner / started 清空），只许当前 owner 本人（脚本内判定）。 */
-export function releaseTask(workspace: LedgerWorkspace, taskId: string): Promise<void> {
+export function releaseTask(workspace: LedgerWorkspace, taskId: string): Promise<string> {
   return run(workspace, 'set', ['--id', taskId, '--status', 'open'])
 }

@@ -730,7 +730,12 @@ await check('认领 / 释放：host 直写（无会话 / cwd 取身份 / POST �
     assert.equal((await call('/claim', 'POST', { ws: 'ws-tmp', id: taskId }, { origin: 'https://evil.example', host: '127.0.0.1:1' })).status, 403, '跨源应 403')
     const ok = await call('/claim', 'POST', { ws: 'ws-tmp', id: taskId })
     assert.equal(ok.status, 200, `正常认领应 200，实际 ${ok.status} ${JSON.stringify(ok.body)}`)
-    assert.deepEqual(ok.body, { ok: true }, '写端点只回 { ok: true }')
+    assert.equal(ok.body.ok, true, '写端点应回 ok: true')
+    // fixture 没有 upstream：脚本退出码 0 但同步不推送，这条提示必须一路带到响应里（不许当成功吞掉）
+    assert.ok(
+      typeof ok.body.notice === 'string' && ok.body.notice.includes('没有上游'),
+      `退出码 0 的同步提示必须随响应带出：${JSON.stringify(ok.body)}`,
+    )
     assert.equal(readTask().status, 'doing', '路由层认领也要真落盘')
   } finally {
     fs.rmSync(root, { recursive: true, force: true })
@@ -865,6 +870,24 @@ await check('写前同步：定向取最新 / 正文保留 / 脏与未推送中�
     assert.equal(off.status, 0, `--no-sync 下应能写：${off.stderr}`)
     assert.ok(!bNew.some((id) => tasks()[id]), '--no-sync 不该取远端最新')
 
+    // 推送被拒：退出码仍是 0（台账已写成功），但必须带出 git 原话，不能只给一句「认证 / 超时」的猜测
+    // 先清掉上一条 --no-sync 留下的未提交改动，否则写前护栏会先拦住（那是另一个用例的职责）
+    git(a, ['commit', '-qam', 'chore(ledger): 冒烟：--no-sync 落盘'])
+    const rejecting = path.join(base, 'rejecting.git')
+    execFileSync('git', ['init', '--bare', '-q', rejecting], { env, encoding: 'utf-8' })
+    git(a, ['remote', 'set-url', 'origin', rejecting])
+    git(a, ['push', '-q', '-u', 'origin', 'HEAD']) // 先建好 upstream，模拟「正常远端突然拒绝推送」
+    const hook = path.join(rejecting, 'hooks', 'pre-receive')
+    fs.writeFileSync(hook, '#!/bin/sh\necho "denied by smoke hook" >&2\nexit 1\n')
+    fs.chmodSync(hook, 0o755)
+    const rejected = run(a, ['log', '--id', aTaskId, '--note', '冒烟：推送被拒'])
+    assert.equal(rejected.status, 0, `推送被拒时台账已写成功，退出码应仍为 0：${rejected.stderr}`)
+    assert.ok(rejected.stderr.includes('推送被拒'), `应提示推送被拒：${rejected.stderr}`)
+    assert.ok(
+      rejected.stderr.includes('pre-receive hook declined'),
+      `应带出 git 的 rejected 原话：${rejected.stderr}`,
+    )
+
     // 离线（remote 指向不存在的路径）：取最新失败只提示，不影响本轮写入
     git(a, ['remote', 'set-url', 'origin', path.join(base, 'no-such-remote')])
     const offline = run(a, ['log', '--id', aTaskId, '--note', '冒烟：离线仍可写'])
@@ -936,7 +959,27 @@ await check('写后同步：不吞暂存区 / 失败回滚写前刷新 / 冲突�
     // 该回滚的是「脚本主动写进工作树的内容」——两者都表现为「失败后工作树必须干净」。
     assert.equal(git(a, ['status', '--porcelain']), '', '失败后工作树应干净（预同步写下的内容已回滚）')
 
-    // ③ merge / rebase 中间态：不许往冲突现场里写
+    // ③ 用户自己 commit 的代码不碰：本地有非台账提交 + 远端有新提交 ⇒ 不自动 rebase（会改写它们的提交号），
+    // 推送前把「会一并带走什么」说清楚，业务提交绝不进远端
+    fs.writeFileSync(path.join(a, 'biz.txt'), 'user business code\n')
+    git(a, ['add', 'biz.txt'])
+    git(a, ['commit', '-q', '-m', 'feat: 用户自己的业务提交'])
+    const branch = git(a, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    assert.equal(run(b, ['new', '--title', '他人再推一个', '--self']).status, 0, '他人应能再推')
+    const foreign = run(a, ['log', '--id', taskId, '--note', '冒烟：业务提交不被动'])
+    assert.equal(foreign.status, 0, `退出码仍应为 0（台账已写成功）：${foreign.stderr}`)
+    assert.ok(foreign.stderr.includes('你自己的提交'), `应说明不会 rebase 用户提交：${foreign.stderr}`)
+    assert.ok(foreign.stderr.includes('一并推上去'), `推送前应告知会带走什么：${foreign.stderr}`)
+    assert.ok(
+      !git(a, ['log', '--format=%s', `origin/${branch}`]).includes('feat: 用户自己的业务提交'),
+      '用户的业务提交不该被推到远端（推送已被拒，脚本也没替他 rebase 重试）',
+    )
+    assert.ok(
+      git(a, ['log', '--format=%s']).includes('feat: 用户自己的业务提交'),
+      '用户的业务提交应原样留在本地',
+    )
+
+    // ④ merge / rebase 中间态：不许往冲突现场里写
     fs.writeFileSync(path.join(a, '.git', 'MERGE_HEAD'), `${git(a, ['rev-parse', 'HEAD'])}\n`)
     const mid = run(a, ['log', '--id', taskId, '--note', '冒烟：中间态'])
     assert.equal(mid.status, 1, '中间态应中止')

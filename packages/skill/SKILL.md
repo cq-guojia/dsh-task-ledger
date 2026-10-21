@@ -1,7 +1,7 @@
 ---
 name: task-ledger
 description: 本地任务台账，跨会话记录在办任务的归属、进度与起止。当用户要登记一件新的事（新建任务 / 建个坑 / 这活我领了）、记录已有任务的进展（接着做 / 记一条进展 / 这轮先记下）、查看任务状态或历史（现在该做什么 / 这活谁在做 / 上周做过什么）时加载；对某个具体任务要求结案或退回时，只认用户的明确指令；只是改代码、讨论方案时不要用。
-version: 1.2.6
+version: 1.2.8
 allowed-tools: Read,Write,Bash,Grep
 ---
 
@@ -115,6 +115,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 ## 出错即停
 
 非 0 退出就停手、原样报告，**不要绕过脚本手改 `progress.json` 或历史层**。
+**退出码 0 不等于没事**：写命令之后的同步（commit / push）失败仍返回 0，原因只写在输出里。写命令跑完必看输出，出现 `提示：` / `错误：` / `警告：` 就先用一句话说清「发生了什么 + 你要做什么」，再附原文关键行，按 `references/troubleshooting.md` 对应条目给步骤；纯告知类（如已用 `--no-verify` 提交）一句话带过。只读命令只有 `错误：` 才需要转述。
 并发冲突（文件被改动）重跑一次即可，不要用 `git pull` / `rebase` 去「解决」。
 写前会**定向取最新**：只刷新 `ledger/progress.json` 与 `ledger/history/`，`worklog/` 里已有的正文一个字都不动；
 本地有未推送的台账提交、未提交改动或未入库的同名文件时会中止 —— 按提示先提交 / 推送，或加 `--no-sync` 继续本地写。
@@ -130,4 +131,4 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 | 填正文前、补老任务文档、`log` 报错找不到文档 | `references/worklog.md` |
 | 拿不准一条记录够不够格、`--note` 怎么写 | `references/log-note.md` |
 | 写分类/标签、用户说标签太乱要归并 | `references/taxonomy.md` |
-| 任何非 0 退出、并发冲突、`validate` 报错 | `references/troubleshooting.md` |
+| 任何非 0 退出、退出码 0 但有 `提示：` / `错误：`、并发冲突、`validate` 报错 | `references/troubleshooting.md` |
