@@ -31,6 +31,10 @@
 - 验证：新增 smoke 用例覆盖六类场景（`packages/plugin/scripts/smoke.mjs` 的「写前同步」）；`npm run verify` 28 项通过；`koc-codelint` 六层全过。ruff 报的 PLW1510 / PIE810 已修，`.ruff_cache` 已清。
 - 另有独立提交：上次失败中断留下的 `updated` 残留先补齐提交并推送，才继续后续写操作（新护栏要求台账先干净）。
 
+- 收窄历史层刷新范围（用户要求「只刷要写的那一个文件」）：不再枚举 `ledger/history/` 整个目录，只有 `close` 按结案月（`--finished` 补录旧月份就用那个月）刷一个文件；其他写命令完全不动历史层。
+- 收窄时踩到两个连带坑：① presync 补下的 worklog 新文件如果不入 `CHANGED_FILES`，会以未跟踪状态留在工作树，之后 `git rebase` 直接被它挡住（`untracked working tree files would be overwritten by checkout`）——改成 `track=True` 随本次提交入库；② `_rebase_retry` 的干净检查改为 `--untracked-files=no`，只看已跟踪文件的改动，避免无关未跟踪文件阻止自动合并。
+- 另一个认知：`rebase` 是整仓操作，会把远端那次提交里的其他月历史文件和别人的 worklog 一并合进工作树——所以「只刷目标月」只约束写前同步的主动写入，验证用结构断言（`smoke.mjs` 的「history 不整目录枚举」）守，不用运行时断言。
+
 ## 结论
 
 - 写前同步改为**定向取最新**：只刷 `ledger/progress.json` 与 `ledger/history/`，`worklog/` 只补本地缺的新文件。实测「手写正文 → log」正文原样保留、执行记录正常追加，原 bug 不再复现。
@@ -46,3 +50,4 @@
 - 2026-10-21 11:08:43 · new · @GuoJia-Agent · 创建任务（doing）
 - 2026-10-21 11:11:27 · log · @GuoJia-Agent · 重写写前预同步：只定向取 progress.json 与 history，worklog 只补缺失新文件，另加三道中止护栏
 - 2026-10-21 11:18:17 · log · @GuoJia-Agent · 补 smoke 六场景用例、verify.yml、副本一致性检查；verify 28 项与 codelint 全过，正文保留已验证
+- 2026-10-21 11:36:42 · log · @GuoJia-Agent · 历史层收窄为 close 只刷结案月文件；补下 worklog 改为入库、rebase 干净检查排除未跟踪；verify 29 项与 codelint 全过
