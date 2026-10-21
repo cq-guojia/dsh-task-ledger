@@ -13,11 +13,8 @@
 
 ## 待办
 
-- 补齐 smoke 用例（远端取最新 / 正文保留 / 脏中止 / 未推送中止 / worklog 补缺 / --no-sync / 只读不触发 / 离线）
-- 新增 `.github/workflows/verify.yml`（push/PR 跑 `npm run verify`），不动 publish.yml
-- 文档四份改口径：`packages/skill/README.md`、`SKILL.md`、`references/troubleshooting.md`、`--no-sync` help
-- `npm run build:host` 同步内嵌副本 → `npm run verify` + `koc-codelint`
-- 版本号与 tag 等用户统一指令，本轮不 bump
+- 待用户验收：看 `npm run verify` 的 28 项（新增「写前同步」与「内嵌副本一致」两条）、看 `packages/skill/scripts/progress.py` 里 `_presync_guard` 的三道中止条件
+- 版本号与 tag 等用户统一指令，本轮未 bump（`SKILL.md` 的 version 行仍是 1.2.6，统一升级时一并处理）
 
 ## 下一步
 
@@ -31,10 +28,16 @@
 - 三道中止护栏：有未推送的台账提交、已跟踪文件有未提交改动、本地未入库但远端同名——命中就报错，绝不静默覆盖。未推送提交那条防的是「取最新把上次 push 失败的提交内容回退掉」。
 - 连带修复：`cmd_close` 不再在 worklog 丢失时按模板造空骨架封卷；`validate` 对「正文仍是骨架」打印提示（不改退出码）；`cmd_new` 失败撤销时清空 `CHANGED_FILES`，避免提交半成品；`git add` 返回码补检查；`append_exec_log` 的 `rstrip()` 收窄为 `rstrip("\n")`；`find_repo` 对子目录入参向上找台账根。
 - `git_sync` 的推送兜底改成「工作树干净才自动 rebase，冲突立刻 abort」：各自改各自的任务时按行自动合并，同一条任务冲突就干净失败，不留 rebase 中间态。
+- 验证：新增 smoke 用例覆盖六类场景（`packages/plugin/scripts/smoke.mjs` 的「写前同步」）；`npm run verify` 28 项通过；`koc-codelint` 六层全过。ruff 报的 PLW1510 / PIE810 已修，`.ruff_cache` 已清。
+- 另有独立提交：上次失败中断留下的 `updated` 残留先补齐提交并推送，才继续后续写操作（新护栏要求台账先干净）。
 
 ## 结论
 
-核心改动已落地并通过语法检查与只读命令验证；待补测试与文档。**本轮尚未发版**，版本号与 tag 等用户统一指令。
+- 写前同步改为**定向取最新**：只刷 `ledger/progress.json` 与 `ledger/history/`，`worklog/` 只补本地缺的新文件。实测「手写正文 → log」正文原样保留、执行记录正常追加，原 bug 不再复现。
+- 三道中止护栏实测生效：脏 `progress.json` 时非 0 退出且文件字节不变；有未推送台账提交时非 0 退出且 HEAD 不变；`--no-sync` 与离线场景仍能正常写。
+- 连带修复：`cmd_close` 不再造空骨架封卷；`validate` 对骨架正文给提示；`cmd_new` 失败撤销时清 `CHANGED_FILES`；`git add` 返回码补检查；`find_repo` 对子目录入参向上找台账根。
+- 遗留：内嵌副本与源在 `SKILL.md` version 行上仍未对齐（等统一升版一并处理）；跨机同时改同一条任务仍需人工合并（已按用户口径写进 README / troubleshooting）。
+- **本轮未发版**，版本号与 tag 等用户统一指令。
 
 ## 执行记录
 
@@ -42,3 +45,4 @@
      补记用 progress.py log --id <任务号> --note "一句话"。 -->
 - 2026-10-21 11:08:43 · new · @GuoJia-Agent · 创建任务（doing）
 - 2026-10-21 11:11:27 · log · @GuoJia-Agent · 重写写前预同步：只定向取 progress.json 与 history，worklog 只补缺失新文件，另加三道中止护栏
+- 2026-10-21 11:18:17 · log · @GuoJia-Agent · 补 smoke 六场景用例、verify.yml、副本一致性检查；verify 28 项与 codelint 全过，正文保留已验证
