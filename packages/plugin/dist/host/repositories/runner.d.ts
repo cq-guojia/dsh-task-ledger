@@ -1,9 +1,10 @@
 /**
- * 写命令的超时上限（ms）：脚本写完会顺手 fetch + commit + push，最坏 30×4 = 120s。
- * 沿用读命令的 10s 会把「已经 commit、还没 push」那一步掐死 —— 界面报失败，台账其实
- * 已经改了，用户一重试就是二次写入。
+ * 写命令的超时上限（ms）：脚本每条 git 调用各自 30s 超时，写前（fetch / ff / push /
+ * rebase / push）与写后（push / fetch / rebase / push）串起来最坏约 270s。
+ * 低到 120s 会在网络挂死时先报「超时失败」——台账其实已写入，用户一重试就是二次写入。
+ * 180s 覆盖常见最坏组合，又不至于让真卡死的请求占着界面太久。
  */
-export declare const WRITE_TIMEOUT_MS = 120000;
+export declare const WRITE_TIMEOUT_MS = 180000;
 export type LedgerScriptResult<T> = {
     ok: true;
     data: T;

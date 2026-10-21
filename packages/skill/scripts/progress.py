@@ -41,7 +41,7 @@ except ImportError:
 
 STATUSES = ("open", "doing")
 # 旧数据只读兼容：早期版本有 blocked 状态（手动标「卡住」）。现在超期按时间判定
-# （接任务满 7 天），不再允许新写入；list / validate / 看板仍能吃老文件。
+# （接任务满 14 天），不再允许新写入；list / validate / 看板仍能吃老文件。
 LEGACY_STATUSES = ("blocked",)
 PROGRESS_REL = Path("ledger/progress.json")
 # 存量：改造前的单文件历史层，只读兼容、永不重写
@@ -576,7 +576,21 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
     # --autostash：把工作树里未提交的改动（用户正在写的代码）临时收走、rebase 完自动放回。
     # 不这样做的话，只要仓库里有一处未提交改动，自动合并就永久失效 —— 台账提交越堆越多，
     # 直到下一次写被「有未推送提交」拦住，而提示跟用户的业务代码毫无关系。
-    rebase = _git(*g, "rebase", "--autostash", "@{upstream}", timeout=30)
+    try:
+        rebase = _git(*g, "rebase", "--autostash", "@{upstream}", timeout=60)
+    except subprocess.TimeoutExpired:
+        # 超时会被 kill，仓库可能已经停在 rebase 中间态（autostash 也没 pop 回来）。
+        # 不在这里收拾，留给上层的 catch-all 只会打一句「写后自动同步未执行」——
+        # 仓库却卡住了，下一次写直接被中间态拦死。所以就地 abort 再报。
+        left = _git(*g, "rebase", "--abort", timeout=30)
+        print(
+            "提示：自动 rebase 超时（60 秒），已尝试回滚。\n"
+            f"  回滚结果：{'成功' if left.returncode == 0 else '失败，仓库可能停在 rebase 中间态'}\n"
+            "  处理：`git status` 看清状态；你的未提交改动若被 autostash 收走，"
+            "在 `git stash list` 里，解完冲突再 `git stash drop`。",
+            file=sys.stderr,
+        )
+        return False
     if rebase.returncode == 0:
         combined = f"{rebase.stdout or ''}{rebase.stderr or ''}"
         # 判「改动放回时冲突了」不能认 git 的文案：2.27+ 的措辞是
@@ -621,9 +635,22 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
             file=sys.stderr,
         )
         return False
+    # `--abort` 会把 autostash 重新 apply，这一步同样可能冲突。那时工作树里带着
+    # `<<<<<<<` 标记，只说「已回滚到 rebase 前」等于让人把冲突标记当成品提交。
+    left = _split_z(_git_bytes(*g, "diff", "--name-only", "--diff-filter=U", "-z"))
+    stash = _git(*g, "stash", "list", "--format=%gd")
+    stash_n = len([ln for ln in (stash.stdout or "").splitlines() if ln.strip()])
+    extra = ""
+    if left:
+        extra += (
+            "\n  注意：回滚时把你的未提交改动放回工作树也冲突了，这些文件带着 "
+            "`<<<<<<<` 标记，别当成品提交：\n  " + "\n  ".join(left)
+        )
+    if stash_n:
+        extra += f"\n  另外仓库里现有 {stash_n} 条 stash（可能含刚才的 autostash），先别 drop。"
     print(
         "提示：自动 rebase 未成功（已回滚到 rebase 前），多半是同一条任务被两边同时改了，"
-        f"请手动合并：{conflict}",
+        f"请手动合并：{conflict}{extra}",
         file=sys.stderr,
     )
     return False
@@ -661,7 +688,15 @@ def git_sync(action: str) -> None:
             if _git(*g, "check-ignore", "--no-index", "-q", str(f)).returncode != 0
         ]
         if not to_add:
-            return  # 全被 ignore → 尊重用户选择，不强行提交
+            # 全被 ignore → 尊重用户选择，不强行提交；但必须说一声：
+            # 不说的话台账从此永远「已写未提交」，下一次写会被 guard 报成
+            # 「本地台账有未提交改动」，用户根本猜不到根因在 .gitignore。
+            print(
+                "提示：台账目录被 .gitignore 排除，本次只写本地文件、没有提交也没有推送。"
+                "要从 .gitignore 里去掉 ledger/ 才会恢复自动同步。",
+                file=sys.stderr,
+            )
+            return
         staged = _git(*g, "add", *to_add)
         if staged.returncode != 0:
             print(
@@ -689,8 +724,12 @@ def git_sync(action: str) -> None:
                     file=sys.stderr,
                 )
         if done.returncode != 0:
+            # 把台账改动撤出暂存区：留着的话用户下一次裸 `git commit` 会把数据文件
+            # 卷进业务提交（脚本声称「只碰台账」，不能自己留下这个副作用）。
+            _git(*g, "reset", "-q", "--", *to_add)
             print(
-                "提示：台账已写入本地，但自动提交失败，请手动提交 ledger/："
+                "提示：台账已写入本地，但自动提交失败（台账改动已撤出暂存区），"
+                "请手动提交 ledger/："
                 f"{(done.stderr or done.stdout or '').strip()}",
                 file=sys.stderr,
             )
@@ -702,12 +741,29 @@ def git_sync(action: str) -> None:
         # push 是分支级的：本地有用户自己 commit 但没推的代码，会一并送到远端。
         # 脚本不替用户下这个决定，但必须说出来，别让它无声发生。
         up = upstream.stdout.strip()
+        if "/" not in up:
+            # 上游是本地分支（branch.x.remote="."）时，短名里没有 remote 段：
+            # _push 会把分支名当 remote 拼出 `git push main HEAD` 这种命令，
+            # 要么推错远端、要么报「不是 git repository」。与 git_presync 的守卫对齐。
+            print(
+                f"提示：上游 {up} 是本地分支而不是远端分支，本次只提交到本地、不会推送。",
+                file=sys.stderr,
+            )
+            return
         ledger_rel = _ledger_rel(files, root)
         foreign, titles = _foreign_commits(g, up, ledger_rel)
         if foreign > 0:
             detail = f"：{'；'.join(titles)}" if titles else ""
             print(
                 f"提示：本次推送会把本地 {foreign} 个你自己的提交一并推上去{detail}。",
+                file=sys.stderr,
+            )
+        elif foreign < 0:
+            # 数不出来（旧 git / 浅克隆 / rev-list 失败）时不能当成 0 静默：
+            # 推送是分支级的，用户自己的提交照样会被带走，只是说不清有几个。
+            print(
+                "提示：没能确认本地有没有你自己的提交（git 数不出来），"
+                "本次推送可能把它们一并推上去。",
                 file=sys.stderr,
             )
         try:
@@ -847,7 +903,16 @@ def _presync_guard(
             "--",
             *managed,
         )
-        count = (ahead or b"").decode("ascii", "replace").strip()
+        # 数不出来 ≠ 没有未推送提交。旧写法把 None 当成空串放行，紧接着就会用远端版本
+        # 覆盖本地未推送的台账 —— 正是「绝不静默覆盖」要防的那件事（与 _foreign_commits
+        # 的 -1 fail-closed 口径对齐）。
+        if ahead is None:
+            raise Fail(
+                "数不出本地台账是否领先上游（git rev-list 失败），为免覆盖未推送的内容，"
+                "已中止本次操作。\n  处理：先 `git status`、`git log @{u}..HEAD` 看清状态；"
+                "确认不要远端版本可加 --no-sync 继续本地写。"
+            )
+        count = ahead.decode("ascii", "replace").strip()
         if count and count != "0":
             listing = _git_bytes(
                 "git",
@@ -869,11 +934,15 @@ def _presync_guard(
                 "  处理：先 `git push` 补齐再重跑；暂时离线可加 --no-sync 继续在本地写，"
                 "联网后再提交推送。"
             )
-    dirty = _split_z(
-        _git_bytes(
-            "git", "-C", git_root, "diff", "--name-only", "-z", "HEAD", "--", *managed
-        )
+    dirty_raw = _git_bytes(
+        "git", "-C", git_root, "diff", "--name-only", "-z", "HEAD", "--", *managed
     )
+    if dirty_raw is None:
+        raise Fail(
+            "数不出本地台账有没有未提交改动（git diff 失败），为免覆盖，已中止本次操作。\n"
+            "  处理：先 `git status` 看清状态；确认要强行继续可加 --no-sync。"
+        )
+    dirty = _split_z(dirty_raw)
     if dirty:
         raise Fail(
             "本地台账有未提交改动，写前取最新会覆盖它，已中止本次操作：\n  "
@@ -881,21 +950,24 @@ def _presync_guard(
             + '\n  处理：先提交这份改动（`git add ledger/ && git commit -m "chore(ledger): ..."`）'
             "再重跑；确认不要它可加 --no-sync。"
         )
-    untracked = set(
-        _split_z(
-            _git_bytes(
-                "git",
-                "-C",
-                git_root,
-                "ls-files",
-                "--others",
-                "--exclude-standard",
-                "-z",
-                "--",
-                *managed,
-            )
-        )
+    untracked_raw = _git_bytes(
+        "git",
+        "-C",
+        git_root,
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "-z",
+        "--",
+        *managed,
     )
+    if untracked_raw is None and remote_files:
+        # 有远端同名文件要刷、却列不出本地未入库文件：同样按「可能有」处理，不放行覆盖。
+        raise Fail(
+            "数不出本地有哪些台账文件还没入库（git ls-files 失败），为免覆盖，已中止本次操作。\n"
+            "  处理：先 `git status` 看清状态；确认要强行继续可加 --no-sync。"
+        )
+    untracked = set(_split_z(untracked_raw))
     clash = sorted(untracked & remote_files)
     if clash:
         raise Fail(
@@ -992,7 +1064,9 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
         branch = (head.stdout or "").strip()
         if branch == "HEAD":
             print(
-                "提示：当前是 detached HEAD，台账只写本地文件并提交到当前 HEAD，不会推送。",
+                "提示：当前是 detached HEAD，台账只写本地文件并提交到当前 HEAD，不会推送。\n"
+                "  注意：这个提交挂在游离 HEAD 上，一旦 checkout 到别的分支，工作树会回到旧版，"
+                "这次的台账写入就看不到了。建议先切回分支再写。",
                 file=sys.stderr,
             )
         else:
@@ -2382,7 +2456,7 @@ def cmd_close(args: argparse.Namespace) -> None:
             bak_path = history_path.with_name(history_path.name + ".pre-upgrade.bak")
             write_text_atomic(bak_path, history_path.read_text(encoding="utf-8"))
             print(
-                f"历史层已升级为 8 列（补分类/标签，{history_upgrade_n} 行转换），原文件备份在 {bak_path.name}",
+                f"历史层已升级为 9 列（补分类/标签/creator，{history_upgrade_n} 行转换），原文件备份在 {bak_path.name}",
                 file=sys.stderr,
             )
 
@@ -3062,10 +3136,15 @@ def _repo_lock_dir(args: argparse.Namespace) -> Path | None:
         repo = find_repo(getattr(args, "repo", None))
     except Fail:
         return None
-    out = _git("git", "-C", str(repo), "rev-parse", "--absolute-git-dir")
+    # 用 --git-common-dir 而不是 --absolute-git-dir：链接工作树（git worktree）各有
+    # 独立 git dir，按它加锁等于两个工作树各拿一把锁，仍会并发同步同一分支。
+    out = _git("git", "-C", str(repo), "rev-parse", "--git-common-dir")
     if out.returncode != 0:
         return None
-    return Path(out.stdout.strip())
+    common = Path(out.stdout.strip())
+    if not common.is_absolute():
+        common = (repo / common).resolve()
+    return common
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -3100,9 +3179,14 @@ def _run_once(args: argparse.Namespace) -> int:
         print("已中断。", file=sys.stderr)
         return 130
     except BrokenPipeError:
-        # 输出被下游截断（如 | head）：命令本身已经写成功，不回滚
+        # 输出被下游截断（如 | head）：命令本身已经写成功，不回滚。
+        # 但写后同步必须照做 —— 早先这里直接 return 0，台账就停在「已写未提交」
+        # 状态，下一笔写被 guard 拦成「本地台账有未提交改动」，用户只能手动提交。
+        # stdout 先接到 /dev/null，免得 git_sync 里再碰这个断掉的管道。
         devnull = os.open(os.devnull, os.O_WRONLY)
         os.dup2(devnull, sys.stdout.fileno())
+        PRESYNC_BACKUPS.clear()
+        git_sync(args.command)
         return 0
     except OSError as exc:
         presync_rollback()
