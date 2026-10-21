@@ -2129,10 +2129,10 @@ await check("合并：不同任务自动合上 / 同一任务报冲突", async (
 			"utf-8",
 		);
 		assert.ok(
-			progressText.includes("<<<<<<< 本地"),
-			"冲突任务要标出来，不能静默选",
+			progressText.includes("<<<<<<< 远端"),
+			"冲突任务要标出来，不能静默选（rebase 下左边是上游/别人的版本）",
 		);
-		assert.ok(progressText.includes(">>>>>>> 远端"), "冲突任务要标出远端版本");
+		assert.ok(progressText.includes(">>>>>>> 本地"), "冲突任务要标出本机版本");
 		const wl = fs.readFileSync(path.join(B.a, "ledger", s2Log), "utf-8");
 		assert.ok(
 			wl.includes("家里改的") && wl.includes("公司改的"),

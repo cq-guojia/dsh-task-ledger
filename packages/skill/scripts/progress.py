@@ -552,39 +552,51 @@ def _foreign_commits(
 
 
 def _merge_task_dicts(
-    base: dict[str, Any], ours: dict[str, Any], theirs: dict[str, Any]
+    base: dict[str, Any], upstream: dict[str, Any], local: dict[str, Any]
 ) -> tuple[dict[str, Any], list[str]]:
     """按任务号做三方合并；返回 (合并结果, 两边都改过的任务号)。
 
     合并单位是「任务」，不是文本行 —— 行级合并只认相邻上下文：不同任务各自新增 /
     结案挤在文件末尾就会撞，而同一任务两边都改时它也判不出该留谁。这里按 id 对账：
     只有一边动过的直接采纳，两边都动过的列进冲突，一个都不静默丢。
+
+    命名照抄 git 的 stage 语义，不用 ours / theirs —— rebase 时 git 把「上游」当
+    作 ours、把「本机正在重放的提交」当作 theirs，跟字面直觉正好相反（实测：
+    :1=共同祖先、:2=上游别人的、:3=本机自己的）。用 upstream / local 才不会写反。
     """
     merged: dict[str, Any] = {}
     conflicts: list[str] = []
-    for tid in sorted(set(base) | set(ours) | set(theirs)):
-        b, o, t = base.get(tid), ours.get(tid), theirs.get(tid)
-        if o == t:
-            if o is not None:
-                merged[tid] = o
-        elif o == b:
-            if t is not None:
-                merged[tid] = t
-        elif t == b:
-            merged[tid] = o
+    for tid in sorted(set(base) | set(upstream) | set(local)):
+        b, up, loc = base.get(tid), upstream.get(tid), local.get(tid)
+        if up == loc:
+            if up is not None:
+                merged[tid] = up
+        elif up == b:
+            if loc is not None:
+                merged[tid] = loc
+        elif loc == b:
+            # 只有上游动过：上游删了就真删掉。这里若写成 merged[tid] = up，
+            # up 为 None 时会在文件里留一行 "<tid>": null 永久累积，
+            # 且读侧（cmd_list / parseTaskList）会因 null 崩掉或整区降级。
+            if up is not None:
+                merged[tid] = up
         else:
             conflicts.append(tid)
-            merged[tid] = o if o is not None else t
+            merged[tid] = up if up is not None else loc
     return merged, conflicts
 
 
 def _render_progress_conflict(
     merged: dict[str, Any],
     conflicts: list[str],
-    ours: dict[str, Any],
-    theirs: dict[str, Any],
+    upstream: dict[str, Any],
+    local: dict[str, Any],
 ) -> str:
-    """按「一任务一行」渲染；两边都改过的任务用冲突标记包起来，同一份文件里给出两版。"""
+    """按「一任务一行」渲染；两边都改过的任务用冲突标记包起来，同一份文件里给出两版。
+
+    左边给上游（别人的），右边给本机（自己的）—— 与 git rebase 的 stage2 / stage3
+    对应。标反了会让人照着标记把别人的版本当成自己的保留下来。
+    """
     rows: list[str] = []
     for tid in sorted(merged):
         key = json.dumps(tid, ensure_ascii=False)
@@ -594,17 +606,17 @@ def _render_progress_conflict(
             )
             continue
         left = (
-            "(本地已删除)"
-            if ours.get(tid) is None
-            else json.dumps(ours[tid], ensure_ascii=False, sort_keys=True)
+            "(远端已删除)"
+            if upstream.get(tid) is None
+            else json.dumps(upstream[tid], ensure_ascii=False, sort_keys=True)
         )
         right = (
-            "(远端已删除)"
-            if theirs.get(tid) is None
-            else json.dumps(theirs[tid], ensure_ascii=False, sort_keys=True)
+            "(本地已删除)"
+            if local.get(tid) is None
+            else json.dumps(local[tid], ensure_ascii=False, sort_keys=True)
         )
         rows.append(
-            f"<<<<<<< 本地\n    {key}: {left}\n=======\n    {key}: {right}\n>>>>>>> 远端"
+            f"<<<<<<< 远端\n    {key}: {left}\n=======\n    {key}: {right}\n>>>>>>> 本地"
         )
     return '{\n  "tasks": {\n' + (",\n".join(rows) + "\n" if rows else "") + "  }\n}\n"
 
@@ -672,14 +684,15 @@ def _resolve_ledger_conflict(
             tasks = data.get("tasks") if isinstance(data, dict) else None
             return tasks if isinstance(tasks, dict) else None
 
-        base, ours, theirs = stage(1), stage(2), stage(3)
-        if base is None or ours is None or theirs is None:
+        # stage(1)=共同祖先、stage(2)=上游别人的、stage(3)=本机正在重放的（rebase 语义，实测确认）
+        base, upstream, local = stage(1), stage(2), stage(3)
+        if base is None or upstream is None or local is None:
             return None
-        merged, conflicts = _merge_task_dicts(base, ours, theirs)
+        merged, conflicts = _merge_task_dicts(base, upstream, local)
         try:
             write_text_atomic(
                 Path(root) / progress_rel,
-                _render_progress_conflict(merged, conflicts, ours, theirs),
+                _render_progress_conflict(merged, conflicts, upstream, local),
                 track=False,
             )
         except Fail:
@@ -795,7 +808,7 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
     if resolved == "conflict":
         print(
             f"提示：{ledger_rel}/progress.json 里有任务被两边同时改过，"
-            "已按任务逐个标出冲突（标记里左边是本机、右边是远端），没有替你选任何一个。\n"
+            "已按任务逐个标出冲突（标记里左边是远端、右边是本机），没有替你选任何一个。\n"
             "  处理：编辑该文件保留你要的版本 → `git add` → `git rebase --continue`；"
             "不想合就 `git rebase --abort` 回到写之前。\n"
             "  你的台账改动已提交在本地，不会丢。",
