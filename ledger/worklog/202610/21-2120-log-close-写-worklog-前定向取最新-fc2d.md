@@ -42,3 +42,4 @@
      补记用 progress.py log --id <任务号> --note "一句话"。 -->
 - 2026-10-21 21:20:18 · new · @GuoJia-Agent · 创建任务（doing）
 - 2026-10-21 21:24:58 · log · @GuoJia-Agent · 写前对目标 worklog 走 stash 叠回，两边内容都保住；verify 31 项通过
+- 2026-10-21 21:26:29 · log · @GuoJia-Agent · 仅在落后远端时才提示未刷新，避免手写后每次 log 都吵
