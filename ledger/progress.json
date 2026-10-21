@@ -2,6 +2,6 @@
   "tasks": {
     "20261016-2338-发布到插件市场-6dbd": {"category": "建设", "created": "2026-10-16 23:38:14", "creator": "GuoJia-Agent", "finished": null, "owner": null, "started": null, "status": "open", "tags": ["DSH", "发布", "市场"], "title": "发布到插件市场", "updated": "2026-10-16 23:38:14", "worklog": "worklog/202610/16-2338-发布到插件市场-6dbd.md"},
     "20261016-2338-统计报表-073b": {"category": "建设", "created": "2026-10-16 23:38:14", "creator": "GuoJia-Agent", "finished": null, "owner": null, "started": null, "status": "open", "tags": ["DSH", "看板", "报表"], "title": "统计报表", "updated": "2026-10-16 23:38:14", "worklog": "worklog/202610/16-2338-统计报表-073b.md"},
-    "20261021-1147-修复台账同步链红队评审缺口-7b3c": {"category": "基建", "created": "2026-10-21 11:47:06", "creator": "GuoJia-Agent", "finished": null, "owner": "GuoJia-Agent", "started": "2026-10-21 11:47:06", "status": "doing", "tags": ["台账", "同步", "并发", "git"], "title": "修复台账同步链红队评审缺口", "updated": "2026-10-21 17:42:46", "worklog": "worklog/202610/21-1147-修复台账同步链红队评审缺口-7b3c.md"}
+    "20261021-1147-修复台账同步链红队评审缺口-7b3c": {"category": "基建", "created": "2026-10-21 11:47:06", "creator": "GuoJia-Agent", "finished": null, "owner": "GuoJia-Agent", "started": "2026-10-21 11:47:06", "status": "doing", "tags": ["台账", "同步", "并发", "git"], "title": "修复台账同步链红队评审缺口", "updated": "2026-10-21 17:59:03", "worklog": "worklog/202610/21-1147-修复台账同步链红队评审缺口-7b3c.md"}
   }
 }
