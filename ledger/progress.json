@@ -33,23 +33,6 @@
       "title": "统计报表",
       "updated": "2026-10-16 23:38:14",
       "worklog": "worklog/202610/16-2338-统计报表-073b.md"
-    },
-    "20261021-1108-修复写前预同步覆盖-worklog-正文-改为定向取最新-eca0": {
-      "category": "基建",
-      "created": "2026-10-21 11:08:43",
-      "creator": "GuoJia-Agent",
-      "finished": null,
-      "owner": "GuoJia-Agent",
-      "started": "2026-10-21 11:08:43",
-      "status": "doing",
-      "tags": [
-        "台账",
-        "同步",
-        "数据安全"
-      ],
-      "title": "修复写前预同步覆盖 worklog 正文（改为定向取最新）",
-      "updated": "2026-10-21 11:36:42",
-      "worklog": "worklog/202610/21-1108-修复写前预同步覆盖-worklog-正文-改为定向取最新-eca0.md"
     }
   }
 }

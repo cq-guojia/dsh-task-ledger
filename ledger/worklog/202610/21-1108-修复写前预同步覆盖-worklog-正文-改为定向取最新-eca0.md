@@ -1,5 +1,6 @@
 # 20261021-1108-修复写前预同步覆盖-worklog-正文-改为定向取最新-eca0：修复写前预同步覆盖 worklog 正文（改为定向取最新）
 
+> **✅ 完成封卷**：2026-10-21 11:46:55（@GuoJia-Agent）
 > **创建**：2026-10-21 11:08:43（@GuoJia-Agent）
 > **分类**：基建 ｜ **标签**：台账、同步、数据安全
 
@@ -51,3 +52,4 @@
 - 2026-10-21 11:11:27 · log · @GuoJia-Agent · 重写写前预同步：只定向取 progress.json 与 history，worklog 只补缺失新文件，另加三道中止护栏
 - 2026-10-21 11:18:17 · log · @GuoJia-Agent · 补 smoke 六场景用例、verify.yml、副本一致性检查；verify 28 项与 codelint 全过，正文保留已验证
 - 2026-10-21 11:36:42 · log · @GuoJia-Agent · 历史层收窄为 close 只刷结案月文件；补下 worklog 改为入库、rebase 干净检查排除未跟踪；verify 29 项与 codelint 全过
+- 2026-10-21 11:46:55 · close · @GuoJia-Agent · 结案：写前同步改为定向取最新：只刷 progress.json 与结案月历史，worklog 只补本地缺的新文件；三道护栏（未推送提交／未提交改动／未入库同名）命中即中止；29 项 smoke 通过，原 bug 不复现
