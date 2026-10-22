@@ -2,11 +2,16 @@
 # pyright: standard
 """task-ledger — 管理项目任务进度。
 
-  ledger/progress.json                在办任务的状态
+  ledger/pool.json                    公共池：只装还没人认领的任务
+  ledger/owners.json                  索引：身份（邮箱）→ 分片文件
+  ledger/owners/<sha256前12位>.json   每人一份分片：自己认领的任务
   ledger/worklog/<年月>/<日>-<时分>-<说明>-<随机码>.md
-                                     单个任务的过程（路径另记在状态表 worklog 字段）
+                                     单个任务的过程（路径另记在任务对象 worklog 字段）
   ledger/history/<年月>.md            已结案任务，一行一条（9 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / creator / 完成了什么 / 过程文档）；
                                      按结案时间分月归档。存量 ledger/PROGRESS-HISTORY.md 只读兼容、永不重写
+
+没有 init 子命令：任何写命令开头都会幂等地把台账建好并登记当前用户。
+只读命令（list / show / history / validate）不建台账、不写任何字节。
 
 只用标准库，无第三方依赖。
 """
@@ -26,7 +31,12 @@ import sys
 import tempfile
 import time
 from collections.abc import Iterator
-from datetime import datetime
+
+# datetime.UTC（3.11+）在本仓不能用：skill 跟着插件跑在用户的 python3 上，
+# macOS 自带的 /usr/bin/python3 仍是 3.9，换别名会直接 ImportError。
+from datetime import datetime, timezone
+
+_UTC = timezone.utc  # noqa: UP017 —— 见上：要兼容 3.9
 from pathlib import Path
 from typing import Any
 
@@ -43,7 +53,19 @@ STATUSES = ("open", "doing")
 # 旧数据只读兼容：早期版本有 blocked 状态（手动标「卡住」）。现在超期按时间判定
 # （接任务满 14 天），不再允许新写入；list / validate / 看板仍能吃老文件。
 LEGACY_STATUSES = ("blocked",)
-PROGRESS_REL = Path("ledger/progress.json")
+# 文件格式版本号：打包时定死，改数据结构必须同一次改动里升它（否则版本检查静默失效）。
+# 形态取「年月日时分秒」只为可读可比，语义是「第几版格式」，不是时间戳。
+FORMAT_VERSION = "2026-10-22 00:00:00"
+
+# 分片布局（2026-10-22 起）：
+#   ledger/pool.json           公共池：只装未认领的任务      {version, tasks}
+#   ledger/owners.json         索引：人 → 分片文件          {version, workers{email:{file,name,joined}}}
+#   ledger/owners/<hash>.json  每人分片                    {version, identity{email,name,joined}, tasks}
+POOL_REL = Path("ledger/pool.json")
+OWNERS_REL = Path("ledger/owners.json")
+OWNERS_DIR = Path("ledger/owners")
+SHA_LEN = 12
+
 # 存量：改造前的单文件历史层，只读兼容、永不重写
 HISTORY_REL = Path("ledger/PROGRESS-HISTORY.md")
 HISTORY_DIR = Path(
@@ -107,8 +129,43 @@ class Fail(Exception):
 
 
 def now() -> str:
-    """当前时刻，精确到秒：YYYY-MM-DD HH:MM:SS。"""
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    """当前时刻（**UTC**），精确到秒：YYYY-MM-DD HH:MM:SS。
+
+    存盘一律 UTC、不带偏移量后缀；要看本地时间用 fmt_local() 转。
+    """
+    return datetime.now(_UTC).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def to_utc(
+    value: str,
+    *,
+    field: str,
+    tid: str | None = None,
+    date_only_ref: str | None = None,
+) -> str:
+    """用户按**本地墙钟**给的时间 → 存盘用的 UTC 字符串。
+
+    `--created` / `--finished` / `--since` / `--until` 都走这里：人只会按自己表上的时间写。
+    """
+    wall = normalize_time(value, field=field, tid=tid, date_only_ref=date_only_ref)
+    naive = datetime.strptime(wall, "%Y-%m-%d %H:%M:%S")
+    return naive.astimezone(_UTC).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def fmt_local(stamp: object) -> str:
+    """存盘的 UTC 时间 → 查看者本地时间，**只用于人看的输出**（`--json` 原样给 UTC）。
+
+    存量老数据（2026-10-22 前写的是写入者本地时间）没有时区标记，无法区分，
+    按 UTC 转会把它们显示成偏后若干小时 —— 迁移手册里已记这条。
+    """
+    key = time_key(stamp)
+    if key is None:
+        return "" if stamp is None else str(stamp)
+    try:
+        dt = datetime.strptime(key, "%Y-%m-%d %H:%M:%S").replace(tzinfo=_UTC)
+    except ValueError:
+        return str(stamp)
+    return dt.astimezone().strftime("%Y-%m-%d %H:%M:%S")
 
 
 # 时间字面量：日期 + 可选「时:分[:秒]」。容忍 `/` 与 `T` 分隔（归一化后再匹配）。
@@ -166,8 +223,13 @@ def time_key(value: object) -> str | None:
     return value if len(value) == 19 else value + ":00"
 
 
+def _has_ledger(root: Path) -> bool:
+    """这个目录是不是台账根：pool.json 或 owners.json 在就算。"""
+    return (root / POOL_REL).exists() or (root / OWNERS_REL).exists()
+
+
 def find_repo(explicit: str | None) -> Path:
-    """项目根：--repo > 向上找含 ledger/progress.json 的目录 > 向上找含 ledger/ 的目录。
+    """项目根：--repo > 向上找含 ledger/pool.json（或 owners.json）的目录 > 含 docs/ 的目录。
 
     git 根只作为一个候选，不无条件优先 —— 否则 monorepo 子目录会定位到整个仓库根。
     """
@@ -176,9 +238,9 @@ def find_repo(explicit: str | None) -> Path:
         if not p.is_dir():
             raise Fail(f"--repo 不是目录：{p}")
         # 传进来的常是工作区子目录；向上找真正的台账根，否则写前同步会对着
-        # 不存在的 <子目录>/ledger 空转。都找不到就仍用传入目录（首次 init 需要它）。
+        # 不存在的 <子目录>/ledger 空转。都找不到就仍用传入目录（首次写入要在这里建台账）。
         for cand in (p, *p.parents):
-            if (cand / PROGRESS_REL).exists():
+            if _has_ledger(cand):
                 return cand
         return p
 
@@ -209,47 +271,96 @@ def find_repo(explicit: str | None) -> Path:
                 ordered.append(p)
 
     for p in ordered:
-        if (p / PROGRESS_REL).exists():
+        if _has_ledger(p):
             return p
     for p in ordered:
         if (p / "docs").is_dir():
             return p
     raise Fail(
-        "定位不到项目根：向上找不到 ledger/progress.json 或 ledger/。用 --repo 指定。"
+        "定位不到项目根：向上找不到 ledger/pool.json、ledger/owners.json 或 docs/。用 --repo 指定。"
     )
 
 
-def git_user() -> str:
-    """owner 身份：只认 git config user.name。取不到就报错，不做任何兜底。"""
-    try:
-        proc = subprocess.run(  # noqa: PLW1510 —— 要看 stdout，不抛异常
-            ["git", "config", "user.name"], capture_output=True, text=True
-        )
-    except FileNotFoundError:
-        raise Fail("需要用户名才能执行：本机没有 git，读不到 git config user.name。")
-    name = proc.stdout.strip()
-    if not name:
-        raise Fail(
-            "需要用户名才能执行：读不到本机 git 身份（git config user.name 为空）。\n"
-            '先配置：git config --global user.name "你的名字"'
-        )
-    return name
+def norm_identity(raw: str) -> str:
+    """身份归一化：去首尾空白 + 转小写。全仓只此一处。"""
+    return raw.strip().lower()
 
 
-def read_json(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {"tasks": {}}
+def shard_rel(identity: str) -> Path:
+    """某人分片的相对路径：sha256(归一化身份)[:12] + .json。"""
+    digest = hashlib.sha256(norm_identity(identity).encode("utf-8")).hexdigest()
+    return OWNERS_DIR / f"{digest[:SHA_LEN]}.json"
+
+
+def _git_email() -> str | None:
+    """git 身份里的 email：GIT_COMMITTER_IDENT 优先，退回 user.email。"""
+    ident = _git("git", "var", "GIT_COMMITTER_IDENT")
+    if ident.returncode == 0:
+        m = re.search(r"<([^>]*)>", ident.stdout)
+        if m and m.group(1).strip():
+            return m.group(1).strip()
+    cfg = _git("git", "config", "user.email")
+    if cfg.returncode == 0 and cfg.stdout.strip():
+        return cfg.stdout.strip()
+    return None
+
+
+def _fallback_identity() -> str:
+    """不在 git 仓库里时的兜底链：系统用户名 → 主机名 → 字面 default。"""
+    for key in ("USER", "LOGNAME"):
+        value = os.environ.get(key, "").strip()
+        if value:
+            return value
     try:
-        text = path.read_text(encoding="utf-8-sig")
-    except (OSError, UnicodeDecodeError) as exc:
-        raise Fail(f"读不了 {path}：{exc}")
+        import getpass
+
+        name = getpass.getuser().strip()
+    except Exception:  # noqa: BLE001 —— 拿不到用户名是正常分支，不该炸
+        name = ""
+    if name:
+        return name
     try:
-        data = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise Fail(f"{path} 不是合法 JSON：{exc}")
-    if not isinstance(data, dict) or not isinstance(data.get("tasks"), dict):
-        raise Fail(f'{path} 结构不对，顶层应为 {{"tasks": {{...}}}}')
-    return data
+        import socket
+
+        host = socket.gethostname().strip()
+    except OSError:
+        host = ""
+    return host or "default"
+
+
+def current_identity() -> dict[str, str]:
+    """当前操作者 {email, name}。
+
+    在 git 仓库里必须拿到 email（拿不到就等于 git 自己也提交不了，报错与之对齐）；
+    不在仓库里 / 没装 git 才走兜底链，并提示一次身份是猜的。
+    """
+    email = _git_email()
+    if not email:
+        if _git("git", "rev-parse", "--show-toplevel").returncode == 0:
+            raise Fail(
+                "读不到 git 邮箱，无法确定身份。\n"
+                '先配置：git config --global user.email "you@example.com"'
+            )
+        email = _fallback_identity()
+        print(
+            f"提示：不在 git 仓库里，身份用 {norm_identity(email)}（猜的，仅本机有效）。",
+            file=sys.stderr,
+        )
+    ident = norm_identity(email)
+    name = _git("git", "config", "user.name").stdout.strip() or ident
+    return {"email": ident, "name": name}
+
+
+def my_identity_keys() -> set[str]:
+    """我在台账里可能出现的标识：邮箱（新数据）与 git user.name（旧数据）。
+
+    只用于「我的」这类过滤；--owner 仍是针对单一标识的精确匹配。
+    """
+    keys = {current_identity()["email"]}
+    name = _git("git", "config", "user.name").stdout.strip()
+    if name:
+        keys.add(name)
+    return keys
 
 
 # 本次进程内被台账写入的真实文件路径，供写成功后一次性自动同步（git commit/push）。
@@ -341,29 +452,221 @@ def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
                 pass
 
 
-def write_json(path: Path, data: dict[str, Any]) -> None:
-    """原子写状态表：一个任务一行，任务内 key 按字母序。
+# ---- 分片存储层（pool / owners 索引 / 每人分片） ---------------------------
 
-    为什么压成一行一条：progress.json 是多 agent 共享的并发写点。任务块各占十几行时，
-    A 结案删掉一个任务、B 同时刷新相邻任务的 updated，两处改动间距不足 git 的 3 行
-    patch 上下文，rebase 必冲突（实测撞到过）。一行一条后，删任务只删一行、改任务只改
-    一行，冲突面缩到「3 行 patch 上下文之内」——也就是说，同一批（时间相近、排序相邻）
-    的任务被两边同时改仍会冲突，只是不再波及整块。
+# 版本不一致的提示同一个进程只打一次（一条命令可能读到三个文件）
+_VERSION_WARNED = False
+_VERSION_ISSUES: list[str] = []
 
-    顶层不是 `{"tasks": {...}}` 形状时退回缩进格式：本函数只管状态表，不顺手改坏别的结构。
+
+def _version_problem(path: Path, data: dict[str, Any]) -> str | None:
+    """版本不对就给一句人话；对就返回 None。"""
+    version = data.get("version")
+    if isinstance(version, str) and version == FORMAT_VERSION:
+        return None
+    rel = path.as_posix()
+    if not isinstance(version, str) or not TIME_RE.fullmatch(version):
+        return f"{rel} 的文件格式不对（version={version!r}）"
+    return f"{rel} 版本 {version}，skill 期望 {FORMAT_VERSION}"
+
+
+def note_version(path: Path, data: dict[str, Any]) -> None:
+    """读到台账文件就顺手比一次格式版本；不一致汇总提示，只报不改。
+
+    一致时立刻返回 —— 对了就没有再去看别的文件的必要。
     """
-    tasks = data.get("tasks")
-    if not isinstance(tasks, dict) or set(data) != {"tasks"}:
-        write_text_atomic(
-            path, json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-        )
+    global _VERSION_WARNED
+    problem = _version_problem(path, data)
+    if problem is None:
         return
-    rows = ",\n".join(
-        f"    {json.dumps(k, ensure_ascii=False)}: {json.dumps(v, ensure_ascii=False, sort_keys=True)}"
-        for k, v in sorted(tasks.items())
+    _VERSION_ISSUES.append(problem)
+    if _VERSION_WARNED:
+        return
+    _VERSION_WARNED = True
+    print(
+        "提示：台账文件版本与本次安装的 skill 不一致（只提示，不改任何文件）：\n  "
+        + "\n  ".join(_VERSION_ISSUES),
+        file=sys.stderr,
     )
-    body = '{\n  "tasks": {\n' + (rows + "\n" if rows else "") + "  }\n}\n"
-    write_text_atomic(path, body)
+
+
+def _load_shaped(path: Path, *, default: dict[str, Any]) -> dict[str, Any]:
+    """读一个台账 JSON；不存在给默认结构，形状不对直接报。"""
+    if not path.exists():
+        return default
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise Fail(f"读不了 {path}：{exc}")
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise Fail(f"{path} 不是合法 JSON：{exc}")
+    if not isinstance(data, dict):
+        raise Fail(f"{path} 结构不对：顶层应为对象")
+    if not isinstance(data.get("version"), str):
+        raise Fail(f"{path} 缺 version 字段（文件格式不对，需升级）")
+    if not isinstance(data.get("tasks", {}), dict):
+        raise Fail(f'{path} 结构不对：tasks 应为 {{"<任务号>": {{...}}}}')
+    return data
+
+
+def read_ledger(
+    path: Path, *, identity: dict[str, str] | None = None
+) -> dict[str, Any]:
+    """读一个**要写回去**的台账文件（pool.json / 自己的分片）；不存在给空表。
+
+    与 tasks_in 的区别只有一处：它返回整份结构（version、identity、tasks），
+    缺文件时按 FORMAT_VERSION 现造一份 —— 写回时直接落盘就是合法台账。
+    分片带上 identity 是为了索引丢了能自证；pool 没有这一层。
+    """
+    default: dict[str, Any] = {"version": FORMAT_VERSION, "tasks": {}}
+    if identity is not None:
+        default["identity"] = {
+            "email": norm_identity(identity["email"]),
+            "name": identity.get("name") or identity["email"],
+            "joined": now(),
+        }
+    data = _load_shaped(path, default=default)
+    if not isinstance(data.get("tasks", {}), dict):
+        raise Fail(f'{path} 结构不对：tasks 应为 {{"<任务号>": {{...}}}}')
+    note_version(path, data)
+    return data
+
+
+def tasks_in(path: Path) -> dict[str, Any]:
+    """读任意台账文件的 tasks 层（不存在给空）。只读用，不保证写回。"""
+    if not path.exists():
+        return {}
+    data = _load_shaped(path, default={"version": FORMAT_VERSION, "tasks": {}})
+    note_version(path, data)
+    return data.get("tasks", {})
+
+
+def load_pool(repo: Path) -> dict[str, Any]:
+    """公共池：只装未认领的任务。"""
+    return read_ledger(repo / POOL_REL)
+
+
+def load_owners(repo: Path) -> dict[str, Any]:
+    """索引：人 → 分片文件。"""
+    path = repo / OWNERS_REL
+    data = _load_shaped(path, default={"version": FORMAT_VERSION, "workers": {}})
+    if not isinstance(data.get("workers", {}), dict):
+        raise Fail(f"{path} 结构不对：workers 应为对象")
+    note_version(path, data)
+    return data
+
+
+def load_shard(repo: Path, identity: str) -> dict[str, Any]:
+    """某人分片：不存在给空表（第一次写时落盘）。"""
+    return read_ledger(
+        repo / shard_rel(identity),
+        identity={"email": identity, "name": identity},
+    )
+
+
+def registered_shards(repo: Path) -> dict[str, Path]:
+    """索引登记的全部分片：身份 → 绝对路径（以索引的 file 字段为准）。
+
+    只信索引、不扫目录：目录里有而索引没登记的文件由 validate 报出来，
+    读侧不替它兜底（否则「任务静默消失」这条风险就没人看得见了）。
+    """
+    workers = load_owners(repo).get("workers", {})
+    out: dict[str, Path] = {}
+    for ident, entry in workers.items():
+        name = entry.get("file") if isinstance(entry, dict) else None
+        out[norm_identity(ident)] = repo / OWNERS_DIR / (name or shard_rel(ident).name)
+    return out
+
+
+def write_ledger_json(
+    path: Path, data: dict[str, Any], *, expand: str = "tasks"
+) -> None:
+    """台账 JSON 的统一写入口：`expand` 指定的那个字典一个 key 一行，其余字段压成一行。
+
+    一行一条是多人合并的前提（改不同任务不动同一行），别在这里加缩进美化。
+    """
+    rows: list[str] = []
+    for key in sorted(data):
+        value = data[key]
+        if key == expand and isinstance(value, dict):
+            inner = [
+                f"    {json.dumps(k, ensure_ascii=False)}: "
+                f"{json.dumps(v, ensure_ascii=False, sort_keys=True)}"
+                for k, v in sorted(value.items())
+            ]
+            body = (",\n".join(inner) + "\n") if inner else ""
+            rows.append(f'  "{key}": {{\n{body}  }}')
+            continue
+        rows.append(
+            f"  {json.dumps(key, ensure_ascii=False)}: "
+            f"{json.dumps(value, ensure_ascii=False, sort_keys=True)}"
+        )
+    write_text_atomic(path, "{\n" + ",\n".join(rows) + "\n}\n")
+
+
+@contextlib.contextmanager
+def ledger_lock(repo: Path, *rels: Path) -> Iterator[None]:
+    """按路径排序依次加锁，避免两处写互相等死。"""
+    ordered = sorted({repo / rel for rel in rels})
+    with contextlib.ExitStack() as stack:
+        for path in ordered:
+            stack.enter_context(progress_lock(path))
+        yield
+
+
+def ensure_ledger(repo: Path) -> dict[str, str]:
+    """台账不在就建好，并确保「我」已登记；返回我的身份 {email, name}。
+
+    判据极轻：只读一次 owners.json —— 它本来就非读不可（查我登记没有），
+    存在性、workers、version 一次拿齐。已登记 ⇒ 零额外 IO 直接返回。
+    """
+    me = current_identity()
+    owners_path = repo / OWNERS_REL
+    pool_path = repo / POOL_REL
+    shard_path = repo / shard_rel(me["email"])
+
+    if not owners_path.exists() or not pool_path.exists():
+        # 并发首次建台账：锁内再确认一次，先建成者胜
+        with progress_lock(owners_path):
+            if not pool_path.exists():
+                write_ledger_json(pool_path, {"version": FORMAT_VERSION, "tasks": {}})
+            if not owners_path.exists():
+                write_ledger_json(
+                    owners_path,
+                    {"version": FORMAT_VERSION, "workers": {}},
+                    expand="workers",
+                )
+    (repo / OWNERS_DIR).mkdir(parents=True, exist_ok=True)
+
+    owners = load_owners(repo)
+    workers = owners.setdefault("workers", {})
+    if me["email"] not in workers or not shard_path.exists():
+        with progress_lock(owners_path):
+            owners = load_owners(repo)
+            workers = owners.setdefault("workers", {})
+            workers[me["email"]] = {
+                "file": shard_rel(me["email"]).name,
+                "name": me["name"],
+                "joined": now(),
+            }
+            owners["version"] = owners.get("version", FORMAT_VERSION)
+            write_ledger_json(owners_path, owners, expand="workers")
+            if not shard_path.exists():
+                write_ledger_json(
+                    shard_path,
+                    {
+                        "version": FORMAT_VERSION,
+                        "identity": {
+                            "email": me["email"],
+                            "name": me["name"],
+                            "joined": now(),
+                        },
+                        "tasks": {},
+                    },
+                )
+    return me
 
 
 def stat_key(path: Path) -> str | tuple[str, ...] | None:
@@ -416,7 +719,7 @@ def progress_lock(path: Path) -> Iterator[None]:
 def repo_sync_lock(git_dir: Path, timeout: float = 60.0) -> Iterator[None]:
     """写命令的整段临界区：写前同步 → 命令写入 → 提交推送，同一 clone 只允许一个。
 
-    为什么必须整段：写前同步是「检查本地干净 → 覆盖 progress.json」两步，中间是敞开的。
+    为什么必须整段：写前同步是「检查本地干净 → 覆盖台账文件」两步，中间是敞开的。
     另一个 agent 恰好在这几毫秒里写完，覆盖就会把它的改动静默抹掉，随后的提交还会把
     错误内容推走 —— 事后只能靠人翻历史才发现。progress_lock 只管单文件的读改写，盖不住
     这两步之间的缝。
@@ -460,20 +763,6 @@ def repo_sync_lock(git_dir: Path, timeout: float = 60.0) -> Iterator[None]:
         os.close(fd)
 
 
-def read_guarded(path: Path):
-    """读状态表并记下指纹；配合 commit_guarded 做写前复查。"""
-    return stat_key(path), read_json(path)
-
-
-def commit_guarded(
-    path: Path, before: str | tuple[str, ...] | None, data: dict[str, Any]
-) -> None:
-    """写前复查指纹：被并发改动过就报错，不覆盖别人的改动。"""
-    if stat_key(path) != before:
-        raise Fail(f"{path.name} 在操作期间被改动过，已中止。重新执行一次。")
-    write_json(path, data)
-
-
 def _git(
     *args: str, timeout: int | None = None, check: bool = False
 ) -> subprocess.CompletedProcess:
@@ -503,12 +792,12 @@ def _ledger_rel(files: list[Path], root: str) -> str:
     """台账目录相对 git 根的路径：monorepo 子目录时是 `svc/api/ledger`，不是硬编码的 `ledger`。"""
     for f in files:
         for cand in (f.parent, *f.parents):
-            if (cand / PROGRESS_REL.name).is_file():
+            if (cand / POOL_REL.name).is_file() or (cand / OWNERS_REL.name).is_file():
                 try:
                     return cand.resolve().relative_to(Path(root).resolve()).as_posix()
                 except ValueError:
                     break
-    return PROGRESS_REL.parent.as_posix()
+    return POOL_REL.parent.as_posix()
 
 
 def _push(
@@ -586,39 +875,68 @@ def _merge_task_dicts(
     return merged, conflicts
 
 
+def _render_ledger_conflict(
+    full: dict[str, Any],
+    key: str,
+    merged: dict[str, Any],
+    conflicts: list[str],
+    upstream: dict[str, Any],
+    local: dict[str, Any],
+) -> str:
+    """按「一条一行」渲染整份台账；两边都改过的条目用冲突标记包起来。
+
+    `full` 是本地那一侧的整份结构（version / identity / tasks），除 `key` 之外
+    原样保留 —— 分片文件里的 identity 丢了就没法自证。左边给上游（别人的）、
+    右边给本机（自己的），与 rebase 的 stage2 / stage3 对应；标反了会让人照着
+    标记把别人的版本留下来。
+    """
+    rows: list[str] = []
+    for field in sorted(full):
+        if field != key:
+            rows.append(
+                f"  {json.dumps(field, ensure_ascii=False)}: "
+                f"{json.dumps(full[field], ensure_ascii=False, sort_keys=True)}"
+            )
+            continue
+        inner: list[str] = []
+        for ident in sorted(merged):
+            label = json.dumps(ident, ensure_ascii=False)
+            if ident not in conflicts:
+                inner.append(
+                    f"    {label}: "
+                    f"{json.dumps(merged[ident], ensure_ascii=False, sort_keys=True)}"
+                )
+                continue
+            left = (
+                "(远端已删除)"
+                if upstream.get(ident) is None
+                else json.dumps(upstream[ident], ensure_ascii=False, sort_keys=True)
+            )
+            right = (
+                "(本地已删除)"
+                if local.get(ident) is None
+                else json.dumps(local[ident], ensure_ascii=False, sort_keys=True)
+            )
+            inner.append(
+                f"<<<<<<< 远端\n    {label}: {left}\n=======\n"
+                f"    {label}: {right}\n>>>>>>> 本地"
+            )
+        rows.append(
+            f'  "{key}": {{\n' + (",\n".join(inner) + "\n" if inner else "") + "  }"
+        )
+    return "{\n" + ",\n".join(rows) + "\n}\n"
+
+
 def _render_progress_conflict(
     merged: dict[str, Any],
     conflicts: list[str],
     upstream: dict[str, Any],
     local: dict[str, Any],
 ) -> str:
-    """按「一任务一行」渲染；两边都改过的任务用冲突标记包起来，同一份文件里给出两版。
-
-    左边给上游（别人的），右边给本机（自己的）—— 与 git rebase 的 stage2 / stage3
-    对应。标反了会让人照着标记把别人的版本当成自己的保留下来。
-    """
-    rows: list[str] = []
-    for tid in sorted(merged):
-        key = json.dumps(tid, ensure_ascii=False)
-        if tid not in conflicts:
-            rows.append(
-                f"    {key}: {json.dumps(merged[tid], ensure_ascii=False, sort_keys=True)}"
-            )
-            continue
-        left = (
-            "(远端已删除)"
-            if upstream.get(tid) is None
-            else json.dumps(upstream[tid], ensure_ascii=False, sort_keys=True)
-        )
-        right = (
-            "(本地已删除)"
-            if local.get(tid) is None
-            else json.dumps(local[tid], ensure_ascii=False, sort_keys=True)
-        )
-        rows.append(
-            f"<<<<<<< 远端\n    {key}: {left}\n=======\n    {key}: {right}\n>>>>>>> 本地"
-        )
-    return '{\n  "tasks": {\n' + (",\n".join(rows) + "\n" if rows else "") + "  }\n}\n"
+    """单个 `tasks` 文件的冲突渲染（保留给测试与旧路径用）。"""
+    return _render_ledger_conflict(
+        {"tasks": merged}, "tasks", merged, conflicts, upstream, local
+    )
 
 
 def _union_merge(g: tuple[str, ...], root: str, rel: str) -> bool:
@@ -653,8 +971,9 @@ def _resolve_ledger_conflict(
 ) -> bool | str | None:
     """rebase 卡在台账数据上时接管合并。
 
-    progress.json 按任务号对账（同一任务两边都改 → 保留冲突标记等人）；worklog 是
-    追加式正文，两边各加一条执行记录就 union 合上。业务代码的冲突一个字都不碰。
+    台账的 JSON（pool.json / owners/<hash>.json / owners.json）按条目做三方合并
+    （同一任务两边都改 → 保留冲突标记等人）；worklog 与 history 是追加式正文，
+    两边各加一条记录就 union 合上。业务代码的冲突一个字都不碰。
     返回 True = 合上并继续 rebase；"conflict" = 有任务被两边改，标记已写好；
     None = 不归这里管，走原有回滚路径。
     """
@@ -663,46 +982,69 @@ def _resolve_ledger_conflict(
     )
     if not conflicted:
         return None
-    progress_rel = f"{ledger_rel}/progress.json"
     worklog_prefix = f"{ledger_rel}/worklog/"
-    if any(
-        rel != progress_rel and not rel.startswith(worklog_prefix) for rel in conflicted
-    ):
+    history_prefix = f"{ledger_rel}/history/"
+    pool_rel = f"{ledger_rel}/pool.json"
+    index_rel = f"{ledger_rel}/owners.json"
+    owners_prefix = f"{ledger_rel}/owners/"
+
+    def json_key(rel: str) -> str | None:
+        """这份冲突文件按哪个字段做条目级合并；None = 不归这里管。"""
+        if rel == index_rel:
+            return "workers"
+        if rel == pool_rel or (rel.startswith(owners_prefix) and rel.endswith(".json")):
+            return "tasks"
         return None
 
-    conflicts: list[str] = []
-    if progress_rel in conflicted:
+    for rel in conflicted:
+        if json_key(rel) is not None:
+            continue
+        if rel.startswith((worklog_prefix, history_prefix)):
+            continue
+        return None  # 混进业务文件：整体交回原路径，不由脚本代劳
 
-        def stage(n: int) -> dict[str, Any] | None:
-            raw = _git_bytes(*g, "show", f":{n}:{progress_rel}")
+    conflicts: list[str] = []
+    for rel in conflicted:
+        key = json_key(rel)
+        if key is None:
+            if not _union_merge(g, root, rel):
+                # 合不了就整体退回原路径：留半合并状态比不合更糟
+                return None
+            continue
+
+        def stage(
+            n: int, rel: str = rel, key: str = key
+        ) -> tuple[dict[str, Any], dict[str, Any]] | None:
+            raw = _git_bytes(*g, "show", f":{n}:{rel}")
             if raw is None:
                 return None
             try:
                 data = json.loads(raw.decode("utf-8-sig"))
             except ValueError:
                 return None
-            tasks = data.get("tasks") if isinstance(data, dict) else None
-            return tasks if isinstance(tasks, dict) else None
+            if not isinstance(data, dict):
+                return None
+            rows = data.get(key)
+            if not isinstance(rows, dict):
+                return None
+            return data, rows
 
         # stage(1)=共同祖先、stage(2)=上游别人的、stage(3)=本机正在重放的（rebase 语义，实测确认）
-        base, upstream, local = stage(1), stage(2), stage(3)
-        if base is None or upstream is None or local is None:
+        s1, s2, s3 = stage(1), stage(2), stage(3)
+        if s1 is None or s2 is None or s3 is None:
             return None
-        merged, conflicts = _merge_task_dicts(base, upstream, local)
+        base, upstream, local = s1[1], s2[1], s3[1]
+        merged, file_conflicts = _merge_task_dicts(base, upstream, local)
+        conflicts.extend(file_conflicts)
         try:
             write_text_atomic(
-                Path(root) / progress_rel,
-                _render_progress_conflict(merged, conflicts, upstream, local),
+                Path(root) / rel,
+                _render_ledger_conflict(
+                    s3[0], key, merged, file_conflicts, upstream, local
+                ),
                 track=False,
             )
         except Fail:
-            return None
-
-    for rel in conflicted:
-        if rel == progress_rel:
-            continue
-        if not _union_merge(g, root, rel):
-            # 合不了就整体退回原路径：留半合并状态比不合更糟
             return None
 
     if conflicts:
@@ -719,7 +1061,7 @@ def _resolve_ledger_conflict(
 def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
     """推送被拒后自动 rebase 一次；只在工作树干净时做，失败立刻 abort。
 
-    台账按任务分条存（progress.json 是按任务号 key 的对象、history 一行一条），
+    台账按任务分条存（pool.json / 分片是按任务号 key 的对象，history 一行一条），
     各自改各自的任务时 git 能按行自动合并。真冲突（同一条任务被两边改）就干净失败，
     绝不把仓库留在 rebase 中间态，也绝不 --force。
     """
@@ -807,7 +1149,7 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
         return True
     if resolved == "conflict":
         print(
-            f"提示：{ledger_rel}/progress.json 里有任务被两边同时改过，"
+            f"提示：{ledger_rel} 下的台账文件里有任务被两边同时改过，"
             "已按任务逐个标出冲突（标记里左边是远端、右边是本机），没有替你选任何一个。\n"
             "  处理：编辑该文件保留你要的版本 → `git add` → `git rebase --continue`；"
             "不想合就 `git rebase --abort` 回到写之前。\n"
@@ -818,7 +1160,7 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
     abort = _git(*g, "rebase", "--abort", timeout=30)
     if abort.returncode != 0:
         # abort 也失败：仓库现在真的停在 rebase 中间态，必须把真实状态原样交出去。
-        # 谎称「已回滚」最坏 —— 那时 progress.json 可能带冲突标记，继续写会全盘读坏。
+        # 谎称「已回滚」最坏 —— 那时台账文件可能带冲突标记，继续写会全盘读坏。
         status = _git(*g, "status", "--short", "--branch")
         print(
             "错误：自动 rebase 冲突后回滚也失败了，仓库可能停在 rebase 中间态。"
@@ -1271,8 +1613,8 @@ def _presync_worklog_rel(
 
     `log` 必追加执行记录，`close` 只在覆盖分类/标签时才改正文 —— 两者都是
     「读全文 → 改 → 写回」，不先刷成最新就是把别处那次改动整段写没。
-    路径取自当前 progress.json 即可：worklog 路径建档时定死，不随别人改别的
-    字段而变；本地根本没有这条任务，后面的命令自己会报错。
+    路径取自自己分片（找不到再看公共池）即可：worklog 路径建档时定死，不随别人
+    改别的字段而变；本地根本没有这条任务，后面的命令自己会报错。
     """
     if action not in ("log", "close"):
         return None
@@ -1284,12 +1626,12 @@ def _presync_worklog_rel(
     if not tid:
         return None
     try:
-        data = json.loads((repo / PROGRESS_REL).read_text(encoding="utf-8-sig"))
-    except (OSError, ValueError):
+        email = current_identity()["email"]
+        task = tasks_in(repo / shard_rel(email)).get(tid) or tasks_in(
+            repo / POOL_REL
+        ).get(tid)
+    except Fail:
         return None
-    if not isinstance(data, dict):
-        return None
-    task = (data.get("tasks") or {}).get(tid)
     if not isinstance(task, dict):
         return None
     log = find_worklog(repo, tid, task)
@@ -1301,14 +1643,62 @@ def _presync_worklog_rel(
         return None
 
 
+def _write_targets(repo: Path, action: str, args: argparse.Namespace) -> list[Path]:
+    """本次写命令可能改写的台账文件（写前同步与脏检查的范围）。
+
+    宁宽勿窄：多刷一个本来不会改的文件只多一次 git 比对；漏刷一个就可能把
+    别人刚推到远端的内容当成自己的改动提交上去。
+    """
+    try:
+        email = current_identity()["email"]
+    except Fail:
+        return []  # 身份拿不到：命令自己会报错，这里不重复
+    pool = repo / POOL_REL
+    shard = repo / shard_rel(email)
+    targets: list[Path] = [repo / OWNERS_REL, shard]
+    if action == "new":
+        targets.append(shard if getattr(args, "self", False) else pool)
+    elif action == "claim":
+        targets.append(pool)
+    elif action == "set":
+        if getattr(args, "status", None) == "open":
+            targets.append(pool)
+        raw_owner = getattr(args, "owner", None)
+        if raw_owner:
+            who = norm_identity(str(raw_owner).strip().lstrip("@"))
+            if who != email:
+                try:
+                    shards = registered_shards(repo)
+                except Fail:
+                    shards = {}
+                targets.append(shards.get(who) or repo / shard_rel(who))
+    elif action == "close":
+        finished = ""
+        raw_finished = getattr(args, "finished", None)
+        if raw_finished:
+            try:
+                # 与 close 落盘口径一致（本地 → UTC），否则跨月补录会取错月份的历史文件
+                finished = to_utc(raw_finished, field="--finished")
+            except Fail:
+                finished = ""  # 参数不合法交给 close 自己报错，这里按当前月
+        targets.append(history_path_for(repo, finished or now()))
+
+    out: list[Path] = []
+    for path in targets:
+        if path not in out:
+            out.append(path)
+    return out
+
+
 def git_presync(action: str, args: argparse.Namespace) -> None:
     """写命令执行前把「这条命令真的要写的那几个文件」刷成远端最新。
 
-    范围只到本次写入目标：`ledger/progress.json`（每条写命令都写），以及 `close`
-    时结案时间所在的那一个月历史文件（`--finished` 补录旧月份就刷那个月）——不是
-    整个 history 目录。`ledger/worklog/` 的正文由人写，这里只补「远端有、本地缺」
-    的新文件，已有文件一个字都不碰。本地有会被覆盖掉的东西（未推送提交 / 未提交
-    改动 / 未入库且远端同名）就中止，不静默覆盖。
+    范围只到本次写入目标（由 _write_targets 按命令算）：索引 owners.json、自己的
+    分片、认领 / 释放涉及的 pool.json，以及 `close` 时结案时间所在的那个月 history
+    文件（`--finished` 补录旧月份就刷那个月）——不是整个 history 目录。
+    `ledger/worklog/` 的正文由人写，这里只补「远端有、本地缺」的新文件，已有文件
+    一个字都不碰。本地有会被覆盖掉的东西（未推送提交 / 未提交改动 / 未入库且远端
+    同名）就中止，不静默覆盖。
     无 git / 无上游 / 远端尚无该文件 静默跳过；拉取失败只提示不中止。
     """
     if os.environ.get("TASK_LEDGER_NO_SYNC"):
@@ -1387,7 +1777,7 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
             return -1
 
     # 本次要改写的 worklog（log 追加执行记录 / close 覆盖分类标签）。它比
-    # progress.json 麻烦：「脏」是常态 —— 人手写的正文就躺在那儿还没提交。
+    # worklog 比台账 JSON 麻烦：「脏」是常态 —— 人手写的正文就躺在那儿还没提交。
     wl_rel = _presync_worklog_rel(repo, git_root, action, args)
 
     ahead_n = _rev_count(f"{upstream}..HEAD")
@@ -1416,28 +1806,21 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
                 _stash_ff_worklog(str(git_root), upstream, wl_rel)
 
     root = str(git_root)
-    progress_rel = f"{ledger_rel}/{PROGRESS_REL.name}"
     worklog_rel = f"{ledger_rel}/{WORKLOG_DIR.name}"
-    # 只刷「这条命令真的要写」的文件：progress.json 人人都写；
-    # 历史层只有 close 写，而且只写结案时间所在的那一个月（--finished 可能补录旧月份）。
-    managed = [progress_rel]
-    if action == "close":
-        finished = ""
-        raw_finished = getattr(args, "finished", None)
-        if raw_finished:
-            try:
-                finished = normalize_time(raw_finished, field="--finished")
-            except Fail:
-                finished = ""  # 参数不合法交给 close 自己报错，这里按当前月兜底
-        target = (
-            history_path_for(repo, finished)
-            if finished
-            else history_path_for(repo, now())
-        )
+    # 只刷「这条命令真的要写」的文件（索引 / 自己的分片 / 池 / 当月的 history）。
+    # 由 _write_targets 统一算，避免这里和命令实现各写一份路径规则。
+    managed: list[str] = []
+    for path in _write_targets(repo, action, args):
         try:
-            managed.append(target.resolve().relative_to(git_root.resolve()).as_posix())
+            rel = path.resolve().relative_to(git_root.resolve()).as_posix()
         except ValueError:
-            pass  # 历史文件不在仓内：跳过（写的时候自有报错）
+            continue  # 不在仓内：跳过（写的时候自有报错）
+        if rel not in managed:
+            managed.append(rel)
+    if not managed:
+        # 算不出目标文件（身份拿不到等）：空 pathspec 会让 git 把整仓提交都算进来，
+        # 宁可不刷也不能误判成「有未推送的台账提交」。命令自己会把身份问题报出来。
+        return
 
     remote_files = {rel for rel in managed if _remote_exists(root, upstream, rel)}
 
@@ -1497,7 +1880,7 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
             file=sys.stderr,
         )
 
-    # 本次要改写的那个 worklog：刷新到远端最新再动笔，与 progress.json 同一口径。
+    # 本次要改写的那个 worklog：刷新到远端最新再动笔，与台账 JSON 同一口径。
     # 走到这里还有未提交改动，说明快进和 stash 叠回都没成（冲突已由上面报错中止），
     # 这时只提示不刷 —— 覆盖会吞掉手写内容。
     if wl_rel and behind_n > 0:
@@ -1573,7 +1956,7 @@ def esc_cell(text: str) -> str:
 def owner_cell(owner: str | None) -> str:
     """owner 列的展示值：人名前加 @（一眼看出这是个人），空给空串。
 
-    @ 只是展示层约定：存储（progress.json）与 --owner 匹配始终用裸名字，
+    @ 只是展示层约定：存储（台账 JSON）与 --owner 匹配始终用裸标识，
     parse_history 读回来时会把 @ 剥掉。
     """
     return f"@{owner}" if owner else ""
@@ -2136,7 +2519,7 @@ def make_id(title: str, tasks: dict[str, Any], created: str | None = None) -> st
     # 前置创建时间：年月日-时分（任务号 / 文件名只到分，与记录时间到秒分开）。随机码不能省
     # —— make_id 只在在办任务里去重，而 worklog 结案后仍留在磁盘上，去掉随机码会让新任务与
     # 已结案的过程文档同名、覆盖历史。
-    stamp = id_stamp(created) if created else datetime.now().strftime("%Y%m%d-%H%M")
+    stamp = id_stamp(created or now())
     for _ in range(20):
         tid = f"{stamp}-{slug}-{secrets.token_hex(2)}"
         if tid not in tasks:
@@ -2145,11 +2528,19 @@ def make_id(title: str, tasks: dict[str, Any], created: str | None = None) -> st
 
 
 def load_task(repo: Path, tid: str) -> dict[str, Any]:
-    data = read_json(repo / PROGRESS_REL)
-    task = data["tasks"].get(tid)
-    if task is None:
-        raise Fail(f"没有任务 {tid}（可能已被结案或删除）。用 list 看现有任务。")
-    return task
+    """按任务号在 pool + 索引登记的全部分片里找（只读）。
+
+    `show` 要的是「这条任务现在在哪」，与 `list` 的默认范围不同 —— 别人的任务
+    也得能看，所以这里按索引全扫一遍。
+    """
+    for path in (repo / POOL_REL, *registered_shards(repo).values()):
+        task = tasks_in(path).get(tid)
+        if task is not None:
+            return task
+    raise Fail(
+        f"没有任务 {tid}（在 pool.json 与所有已登记分片里都没找到；"
+        "可能已被结案或删除）。用 list 看现有任务。"
+    )
 
 
 def require_owner(task: dict, tid: str, me: str) -> None:
@@ -2256,7 +2647,7 @@ def worklog_dir_for(task: dict[str, Any]) -> Path:
     created = (task.get("created") or "").strip()
     month = re.sub(r"[^0-9]", "", created[:7])[:6]
     if len(month) != 6:
-        month = datetime.now().strftime("%Y%m")
+        month = re.sub(r"[^0-9]", "", now()[:7])[:6]
     return WORKLOG_DIR / month
 
 
@@ -2434,72 +2825,66 @@ def stamp_frozen(text: str, finished: str, finisher: str | None = "") -> str:
 # ---------- 子命令 ----------
 
 
-def cmd_init(args: argparse.Namespace) -> None:
-    repo = find_repo(args.repo)
-    progress = repo / PROGRESS_REL
-    with progress_lock(progress):
-        if progress.exists():
-            print(f"已存在，未改动：{progress.relative_to(repo)}")
-            return
-        before, data = read_guarded(progress)
-        data.setdefault("tasks", {})
-        commit_guarded(progress, before, data)
-    print(f"已创建 {progress.relative_to(repo)}")
-    print("按需创建的目录（worklog/、history/ 等）留到实际有内容时再建。")
-
-
 def cmd_new(args: argparse.Namespace) -> None:
     repo = find_repo(args.repo)
-    path = repo / PROGRESS_REL
-    if not path.exists():
-        raise Fail(f"{PROGRESS_REL} 不存在，先跑 init。")
-    creator = git_user()
-    created = normalize_time(args.created, field="--created") if args.created else now()
+    me = ensure_ledger(repo)
+    creator = me["email"]
+    created = to_utc(args.created, field="--created") if args.created else now()
     # 参数自检前移：分类/标签形态校验在锁外做，失败的调用不该占着锁
     category = (
         normalize_label(args.category, field="--category") if args.category else None
     )
     tags = parse_tags(args.tags, field="--tags") if args.tags else []
 
-    with progress_lock(path):
-        before, data = read_guarded(path)
-        tasks = data["tasks"]
+    shard_path = repo / shard_rel(me["email"])
+    pool_path = repo / POOL_REL
+    # 查重范围：公共池 + 自己分片（不看别人的分片，跨人同号交给 validate）
+    known = {
+        **load_pool(repo).get("tasks", {}),
+        **load_shard(repo, me["email"]).get("tasks", {}),
+    }
 
-        tid = args.id or make_id(args.title, tasks, created)
-        require_task_id(tid)
-        if tid in tasks:
+    tid = args.id or make_id(args.title, known, created)
+    require_task_id(tid)
+    if tid in known:
+        raise Fail(f"任务号 {tid} 已存在。")
+
+    stamp = created
+    task = {
+        "title": args.title,
+        "creator": creator,
+        "owner": creator if args.self else None,
+        "status": "doing" if args.self else "open",
+        "created": stamp,
+        "started": stamp if args.self else None,
+        "updated": stamp,
+        "finished": None,
+        "category": category,
+        "tags": tags,
+    }
+    # 路径先算好再落盘：文件名不等于任务号，文件里不记就只能靠约定去猜。
+    task["worklog"] = worklog_rel(tid, task)
+
+    target = shard_path if args.self else pool_path
+    target_rel = shard_rel(me["email"]) if args.self else POOL_REL
+    with ledger_lock(repo, target_rel):
+        current = read_ledger(target)
+        if tid in current.get("tasks", {}):
             raise Fail(f"任务号 {tid} 已存在。")
-
-        stamp = created
-        task = {
-            "title": args.title,
-            "creator": creator,
-            "owner": creator if args.self else None,
-            "status": "doing" if args.self else "open",
-            "created": stamp,
-            "started": stamp if args.self else None,
-            "updated": stamp,
-            "finished": None,
-            "category": category,
-            "tags": tags,
-        }
-        # 路径先算好再落盘：文件名不等于任务号，状态表不记就只能靠约定去猜。
-        task["worklog"] = worklog_rel(tid, task)
-        tasks[tid] = task
-        commit_guarded(path, before, data)
-        try:
-            log = write_worklog(repo, tid, task)
-        except Fail as exc:
-            # 过程文档建不出来就把刚写进去的任务撤掉，别留下「有任务、没文档」
-            tasks.pop(tid, None)
-            try:
-                write_json(path, data)
-            except Fail:
-                pass
-            # 撤销完成：别让写后自动同步把这个「有任务、没文档」的半成品提交上去
-            CHANGED_FILES.clear()
-            raise Fail(f"创建失败，已从状态表撤销该任务：{exc}")
-        record_exec(repo, tid, task, creator, "new", f"创建任务（{task['status']}）")
+        current.setdefault("tasks", {})[tid] = task
+        write_ledger_json(target, current)
+    try:
+        log = write_worklog(repo, tid, task)
+    except Fail as exc:
+        # 过程文档建不出来就把刚写进去的任务撤掉，别留下「有任务、没文档」
+        with ledger_lock(repo, target_rel):
+            rollback = read_ledger(target)
+            rollback.get("tasks", {}).pop(tid, None)
+            write_ledger_json(target, rollback)
+        # 撤销完成：别让写后自动同步把这个「有任务、没文档」的半成品提交上去
+        CHANGED_FILES.clear()
+        raise Fail(f"创建失败，已撤销该任务：{exc}")
+    record_exec(repo, tid, task, creator, "new", f"创建任务（{task['status']}）")
     print(f"已创建任务 {tid}")
     print(f"  标题    {task['title']}")
     print(f"  状态    {task['status']}")
@@ -2510,6 +2895,7 @@ def cmd_new(args: argparse.Namespace) -> None:
         print(f"  分类    {category or '—'}")
         if tags:
             print(f"  标签    {'、'.join(tags)}")
+    print(f"  落在    {target_rel.as_posix()}")
     print(f"  worklog {log.relative_to(repo)}")
     if not args.self:
         print(f"\n空开状态。谁做谁认领：progress.py claim --id {tid}")
@@ -2517,32 +2903,69 @@ def cmd_new(args: argparse.Namespace) -> None:
 
 
 def cmd_claim(args: argparse.Namespace) -> None:
+    """从公共池认领：先写进自己分片，再删池里那一行（顺序反了任务会凭空消失）。"""
     repo = find_repo(args.repo)
     tid = require_task_id(args.id)
-    owner = git_user()  # 先取身份：拿不到就直接报错，不进入后续判断
-    path = repo / PROGRESS_REL
-    with progress_lock(path):
-        before, data = read_guarded(path)
-        task = data["tasks"].get(tid)
-        if task is None:
-            raise Fail(f"没有任务 {tid}。")
-        if task.get("owner"):
-            raise Fail(
-                f"任务 {tid} 状态不一致：owner 已是 {task['owner']}，但 status 是 {task.get('status')}。先跑 validate。"
-            )
-        if task.get("status") != "open":
-            raise Fail(
-                f"任务 {tid} 当前状态是 {task.get('status')}，只有 open 才能认领。"
-            )
+    me = ensure_ledger(repo)
+    email = me["email"]
+    pool_path = repo / POOL_REL
+    shard_path = repo / shard_rel(email)
 
-        stamp = now()
-        task["owner"] = owner
-        task["status"] = "doing"
-        task["started"] = task.get("started") or stamp
-        task["updated"] = stamp
-        commit_guarded(path, before, data)
-        record_exec(repo, tid, task, owner, "claim", "认领 → doing")
-    print(f"已认领 {tid} → doing，owner = @{owner}")
+    with ledger_lock(repo, POOL_REL, shard_rel(email)):
+        pool = read_ledger(pool_path)
+        shard = read_ledger(shard_path, identity=me)
+        pool_task = pool.setdefault("tasks", {}).get(tid)
+        mine = shard.setdefault("tasks", {}).get(tid)
+
+        if pool_task is None and mine is None:
+            raise Fail(
+                f"没有任务 {tid}：pool.json 里不存在。它可能已被他人认领或已结案；"
+                "要确认请查 history，或问认领人。"
+            )
+        if pool_task is not None:
+            pool_owner = pool_task.get("owner")
+            pool_status = pool_task.get("status")
+            if pool_owner or pool_status != "open":
+                raise Fail(
+                    f"池里的任务 {tid} 状态不一致（owner={pool_owner or '空'}，"
+                    f"status={pool_status}），未认领任务应为 owner 空且 status=open。"
+                    "先跑 validate。"
+                )
+
+        wrote_shard = False
+        if mine is not None:
+            task = mine  # 上次搬移崩了一半：分片里已有，只补删池里那行
+        else:
+            stamp = now()
+            task = dict(pool_task or {})
+            task["owner"] = email
+            task["status"] = "doing"
+            task["started"] = task.get("started") or stamp
+            task["updated"] = stamp
+            shard["tasks"][tid] = task
+            write_ledger_json(shard_path, shard)
+            wrote_shard = True
+        if pool_task is not None:
+            pool["tasks"].pop(tid, None)
+            write_ledger_json(pool_path, pool)
+        if wrote_shard:
+            record_exec(repo, tid, task, email, "claim", "认领 → doing")
+
+    if wrote_shard:
+        print(
+            f"已认领 {tid}：已写入你的分片（{shard_rel(email).as_posix()}），"
+            "并从 pool.json 移除。"
+        )
+    elif pool_task is not None:
+        print(
+            f"任务 {tid} 已在你分片里，本次只补删 pool.json 里那一行（上次搬移未完成）。"
+        )
+    else:
+        print(
+            f"任务 {tid} 已在你的分片里（status={task.get('status')}），无需重复认领。"
+        )
+    if task.get("owner"):
+        print(f"  owner   @{task['owner']}")
     print_worklog(repo, tid, task)
 
 
@@ -2573,16 +2996,42 @@ def cmd_set(args: argparse.Namespace) -> None:
 
     repo = find_repo(args.repo)
     tid = require_task_id(args.id)
-    me = git_user()
-    path = repo / PROGRESS_REL
-    with progress_lock(path):
-        before, data = read_guarded(path)
-        task = data["tasks"].get(tid)
+    me = ensure_ledger(repo)
+    email = me["email"]
+    # 容忍「@名字」写法；存储与匹配用裸标识
+    new_owner = (
+        norm_identity(args.owner.lstrip("@")) if args.owner is not None else None
+    )
+
+    shard_path = repo / shard_rel(email)
+    pool_path = repo / POOL_REL
+    # 落盘位置随归属走：自己 → 自己的分片；别人 → 对方分片；没人 → 公共池
+    target_path = shard_path
+    target_rel = shard_rel(email)
+    target_identity: dict[str, str] | None = None
+    if new_owner is not None and new_owner != email:
+        shards = registered_shards(repo)
+        if new_owner not in shards:
+            raise Fail(
+                f"接管人 @{new_owner} 还没在台账里登记过（owners.json 里没有这个身份），"
+                "没法把任务放进对方分片。\n"
+                "  处理：让对方先跑一条写命令（例如 new --self）建出自己的分片，再交接。"
+            )
+        target_path = shards[new_owner]
+        target_rel = target_path.relative_to(repo)
+        target_identity = {"email": new_owner, "name": new_owner}
+
+    with ledger_lock(repo, shard_rel(email), POOL_REL, target_rel):
+        shard = read_ledger(shard_path, identity=me)
+        task = shard.get("tasks", {}).get(tid)
         if task is None:
-            raise Fail(f"没有任务 {tid}。")
-        require_owner(task, tid, me)
+            if tid in tasks_in(pool_path):
+                raise Fail(f"任务 {tid} 还没人认领（在 pool.json 里）。先 claim 再改。")
+            raise Fail(f"没有任务 {tid}：不在你的分片里（可能属于别人，或已结案）。")
+        require_owner(task, tid, email)
 
         changed = []
+        stamp = now()
         if status is not None:
             task["status"] = status
             if status == "open":
@@ -2590,22 +3039,41 @@ def cmd_set(args: argparse.Namespace) -> None:
                 task["started"] = None
             changed.append(f"status={status}")
 
-        if args.owner is not None:
+        if new_owner is not None:
             old = task.get("owner")
-            task["owner"] = args.owner.strip().lstrip(
-                "@"
-            )  # 容忍「@名字」写法；存储与匹配用裸名
+            task["owner"] = new_owner
             if task.get("status") == "open":
                 task["status"] = "doing"
-            task["started"] = task.get("started") or now()
-            changed.append(f"owner {old or '（无）'} → {task['owner']}")
+            task["started"] = task.get("started") or stamp
+            changed.append(f"owner {old or '（无）'} → {new_owner}")
 
-        task["updated"] = now()
-        commit_guarded(path, before, data)
+        task["updated"] = stamp
+        if not task.get("owner"):
+            # 释放：先写回 pool，再删自己分片那行（崩在中间最多两边都有，重跑即收敛）
+            pool = read_ledger(pool_path)
+            pool.setdefault("tasks", {}).setdefault(tid, task)
+            write_ledger_json(pool_path, pool)
+            shard["tasks"].pop(tid, None)
+            write_ledger_json(shard_path, shard)
+            where = POOL_REL.as_posix()
+        elif new_owner is not None and new_owner != email:
+            # 交接：先写对方分片，再从自己这删
+            other = read_ledger(target_path, identity=target_identity)
+            other.setdefault("tasks", {})[tid] = task
+            write_ledger_json(target_path, other)
+            shard["tasks"].pop(tid, None)
+            write_ledger_json(shard_path, shard)
+            where = target_rel.as_posix()
+        else:
+            shard.setdefault("tasks", {})[tid] = task
+            write_ledger_json(shard_path, shard)
+            where = shard_rel(email).as_posix()
+
         # 释放认领（退回 open）单列一个类型，便于一眼看出「被释放过」
         kind = "release" if status == "open" else "set"
-        record_exec(repo, tid, task, me, kind, "，".join(changed))
+        record_exec(repo, tid, task, email, kind, "，".join(changed))
     print(f"已更新 {tid}：" + "，".join(changed))
+    print(f"  落在    {where}")
     print_worklog(repo, tid, task)
 
 
@@ -2615,20 +3083,23 @@ def cmd_log(args: argparse.Namespace) -> None:
     note = " ".join(args.note.split())
     if not note:
         raise Fail("--note 不能为空：一句话写清这轮做了什么。")
-    me = git_user()
-    path = repo / PROGRESS_REL
-    with progress_lock(path):
-        before, data = read_guarded(path)
-        task = data["tasks"].get(tid)
+    me = ensure_ledger(repo)
+    email = me["email"]
+    shard_path = repo / shard_rel(email)
+    with ledger_lock(repo, shard_rel(email)):
+        shard = read_ledger(shard_path, identity=me)
+        task = shard.get("tasks", {}).get(tid)
         if task is None:
+            if tid in tasks_in(repo / POOL_REL):
+                raise Fail(f"任务 {tid} 还没人认领（在 pool.json 里）。先 claim 再记。")
             raise Fail(f"没有任务 {tid}（可能未建或已结案；封卷后不再记）。")
-        require_owner(task, tid, me)
+        require_owner(task, tid, email)
         task["updated"] = now()
-        commit_guarded(path, before, data)
-        written = record_exec(repo, tid, task, me, "log", note)
+        write_ledger_json(shard_path, shard)
+        written = record_exec(repo, tid, task, email, "log", note)
     if not written:
         raise Fail(
-            f"没写进 {tid} 的过程文档（文件不存在或不可读）；progress.json 的 updated 已刷新。"
+            f"没写进 {tid} 的过程文档（文件不存在或不可读）；分片里的 updated 已刷新。"
             "先用 show --id 确认 worklog 路径，不要手写「执行记录」。"
         )
     print(f"已记入 {tid} 的执行记录：{note}")
@@ -2637,25 +3108,31 @@ def cmd_log(args: argparse.Namespace) -> None:
 def cmd_close(args: argparse.Namespace) -> None:
     repo = find_repo(args.repo)
     tid = require_task_id(args.id)
-    me = git_user()
-    progress_path = repo / PROGRESS_REL
+    me = ensure_ledger(repo)
+    email = me["email"]
+    shard_path = repo / shard_rel(email)
     # 参数自检前移：--category / --tags 的形态校验在锁外做（None = 没传，沿用建档值）
     close_category = (
         normalize_label(args.category, field="--category") if args.category else None
     )
     close_tags = parse_tags(args.tags, field="--tags") if args.tags else None
 
-    with progress_lock(progress_path):
-        before, data = read_guarded(progress_path)
+    with ledger_lock(repo, shard_rel(email)):
+        before = stat_key(shard_path)
+        data = read_ledger(shard_path, identity=me)
         task = data["tasks"].get(tid)
         if task is None:
-            raise Fail(f"没有任务 {tid}（可能已结案）。")
-        require_owner(task, tid, me)
+            if tid in tasks_in(repo / POOL_REL):
+                raise Fail(
+                    f"任务 {tid} 还没人认领（在 pool.json 里）。先 claim 再结案。"
+                )
+            raise Fail(f"没有任务 {tid}（不在你的分片里；可能已结案或属于别人）。")
+        require_owner(task, tid, email)
         if task.get("finished"):
             raise Fail(f"任务 {tid} 已经结案过了。")
 
         finished = (
-            normalize_time(args.finished, field="--finished")
+            to_utc(args.finished, field="--finished", tid=tid)
             if args.finished
             else now()
         )
@@ -2664,7 +3141,7 @@ def cmd_close(args: argparse.Namespace) -> None:
         if not summary:
             raise Fail("--summary 不能为空：写清楚「做成了什么」。")
 
-        owner = task.get("owner") or me
+        owner = task.get("owner") or email
         # 老文件留在平铺位置，新文件在按月子目录；找不到就按新规则推算目标路径。
         log_path = find_worklog(repo, tid, task)
         if log_path is None and task.get("worklog"):
@@ -2745,7 +3222,7 @@ def cmd_close(args: argparse.Namespace) -> None:
         new_log = stamp_frozen(
             append_exec_log(
                 log_text,
-                exec_line(finished, me, "close", f"结案：{summary}"),
+                exec_line(finished, email, "close", f"结案：{summary}"),
             ),
             finished,
             owner,
@@ -2753,7 +3230,7 @@ def cmd_close(args: argparse.Namespace) -> None:
 
         # 落盘前复查：三个文件都没被别人动过
         for p, mark in (
-            (progress_path, before),
+            (shard_path, before),
             (history_path, hist_before),
             (log_path, log_before),
         ):
@@ -2773,7 +3250,7 @@ def cmd_close(args: argparse.Namespace) -> None:
 
         backups: dict[Path, bytes] = {}
         created: list[Path] = []
-        for p in (progress_path, history_path, log_path):
+        for p in (shard_path, history_path, log_path):
             try:
                 backups[p] = p.read_bytes()
             except FileNotFoundError:
@@ -2786,9 +3263,7 @@ def cmd_close(args: argparse.Namespace) -> None:
         try:
             write_text_atomic(history_path, new_history)
             write_text_atomic(log_path, new_log)
-            write_json(
-                progress_path, {"tasks": {k: v for k, v in sorted(new_tasks.items())}}
-            )
+            write_ledger_json(shard_path, dict(data, tasks=new_tasks))
         except (OSError, Fail) as exc:
             restored, failed = [], []
             history_restored = False
@@ -2831,7 +3306,7 @@ def cmd_close(args: argparse.Namespace) -> None:
                 pass
 
     print(f"已结案 {tid}")
-    print(f"  从 {PROGRESS_REL} 移出")
+    print(f"  从 {shard_rel(email).as_posix()} 移出")
     print(f"  追加到 {history_path.relative_to(repo)}")
     print(f"  封卷 {log_path.relative_to(repo)}")
     if final_cat or final_tags:
@@ -2842,11 +3317,16 @@ def cmd_close(args: argparse.Namespace) -> None:
 
 
 def cmd_list(args: argparse.Namespace) -> None:
+    """查询在办任务（只读，不建台账）。
+
+    取数范围由这次查询决定：默认 = 公共池 + 自己分片；`--owner <身份>` 看某人
+    （`me` 指自己）；`--all` 看索引登记的全量分片。同一任务号出现在多个文件里时
+    这里按「后读到的为准」只显示一次，重复由 validate 报出来。
+    """
     repo = find_repo(args.repo)
-    path = repo / PROGRESS_REL
-    if not path.exists():
-        raise Fail(f"{PROGRESS_REL} 不存在：这个项目还没初始化，先跑 init。")
-    data = read_json(path)
+    scopes = [bool(args.all), args.owner is not None, bool(args.mine)]
+    if sum(scopes) > 1:
+        raise Fail("--all / --owner / --mine 只能给一个。")
 
     wanted = None
     if args.status is not None:
@@ -2860,60 +3340,107 @@ def cmd_list(args: argparse.Namespace) -> None:
                 f"--status 含非法值 {', '.join(bad)}；可选 {' / '.join(STATUSES)}"
             )
 
-    since = normalize_time(args.since, field="--since") if args.since else None
+    # --since / --until 收本地墙钟，内部转 UTC 与存盘值比较
+    since = to_utc(args.since, field="--since") if args.since else None
     until = (
-        normalize_time(args.until, field="--until", date_only_ref="23:59:59")
+        to_utc(args.until, field="--until", date_only_ref="23:59:59")
         if args.until
         else None
     )
 
-    me = git_user() if args.mine else None
+    def my_email() -> str:
+        """只读命令按需取身份：认不出自己就少看自己那份，不该整条查询都失败。"""
+        try:
+            return current_identity()["email"]
+        except Fail as exc:
+            raise Fail(f"{exc}\n  --mine / --owner me / 默认范围都要先认出你是谁。")
 
-    rows = []
-    for tid, task in sorted(data["tasks"].items()):
-        if me is not None and task.get("owner") != me:
-            continue
-        if args.owner and task.get("owner") != args.owner.strip().lstrip("@"):
-            continue
-        if wanted is not None and task.get("status") not in wanted:
-            continue
-        # 分类精确匹配（统计轴，同值才能比较）；标签包含匹配（容错下钻，吃掉同义变体）
-        if args.category and (task.get("category") or "") != args.category.strip():
-            continue
-        if args.tag:
-            q = args.tag.strip()
-            if not any(q in t for t in (task.get("tags") or [])):
+    owner_filter: str | None = None
+    sources: list[tuple[str, dict[str, Any]]] = []
+    if args.owner is not None:
+        raw = args.owner.strip().lstrip("@")
+        who = my_email() if raw.lower() == "me" else norm_identity(raw)
+        owner_filter = who
+        path = registered_shards(repo).get(who) or (repo / shard_rel(who))
+        if not path.exists():
+            raise Fail(
+                f"没有 {who} 的分片（owners.json 里也没登记），看不到这个人名下的任务。\n"
+                "  要确认是谁：读 ledger/owners.json 的 workers 键。"
+            )
+        sources.append((path.relative_to(repo).as_posix(), tasks_in(path)))
+    elif args.all:
+        sources.append((POOL_REL.as_posix(), tasks_in(repo / POOL_REL)))
+        for who, path in registered_shards(repo).items():
+            sources.append((path.relative_to(repo).as_posix(), tasks_in(path)))
+    elif args.mine:
+        me = my_email()
+        sources.append((shard_rel(me).as_posix(), tasks_in(repo / shard_rel(me))))
+    else:
+        sources.append((POOL_REL.as_posix(), tasks_in(repo / POOL_REL)))
+        try:
+            me = current_identity()["email"]
+        except Fail as exc:
+            print(
+                f"提示：{exc}\n  本次只列公共池；要看自己分片请先配好 git 邮箱。",
+                file=sys.stderr,
+            )
+        else:
+            sources.append((shard_rel(me).as_posix(), tasks_in(repo / shard_rel(me))))
+
+    found: dict[str, dict[str, Any]] = {}
+    origin: dict[str, str] = {}
+    for src, tasks in sources:
+        for tid, task in tasks.items():
+            if owner_filter is not None and task.get("owner") != owner_filter:
                 continue
-        created = time_key(task.get("created"))
-        if since and (created is None or created < since):
-            continue
-        if until and (created is None or created > until):
-            continue
-        rows.append((tid, task))
+            if wanted is not None and task.get("status") not in wanted:
+                continue
+            # 分类精确匹配（统计轴，同值才能比较）；标签包含匹配（容错下钻，吃掉同义变体）
+            if args.category and (task.get("category") or "") != args.category.strip():
+                continue
+            if args.tag:
+                q = args.tag.strip()
+                if not any(q in t for t in (task.get("tags") or [])):
+                    continue
+            created = time_key(task.get("created"))
+            if since and (created is None or created < since):
+                continue
+            if until and (created is None or created > until):
+                continue
+            found[tid] = task
+            origin[tid] = src
 
     if args.json:
-        print(
-            json.dumps({tid: task for tid, task in rows}, ensure_ascii=False, indent=2)
-        )
+        print(json.dumps(found, ensure_ascii=False, indent=2))
         return
 
-    if not rows:
+    if not found:
+        if not _has_ledger(repo):
+            print(
+                "还没有台账（没有 pool.json / owners.json）。写一条任务就有了：new --title …"
+            )
+            return
         print("没有符合条件的在办任务。")
         return
 
+    rows = sorted(found.items())
     print(f"在办任务 {len(rows)} 条：\n")
     for tid, task in rows:
         who = f"@{task['owner']}" if task.get("owner") else "（待认领）"
         print(f"  [{task.get('status')}] {tid}")
-        print(f"      {task.get('title')} — owner={who}，created={task.get('created')}")
+        print(
+            f"      {task.get('title')} — owner={who}，"
+            f"created={fmt_local(task.get('created'))}"
+        )
         if task.get("category") or task.get("tags"):
             cat = task.get("category") or "—"
             line = f"      分类：{cat}"
             if task.get("tags"):
                 line += f" ｜ 标签：{'、'.join(task['tags'])}"
             print(line)
+        print(f"      落在：{origin[tid]}")
     print(
-        "\n细节在 worklog 里（路径记在状态表 worklog 字段）；已结案的用 history 子命令查"
+        "\n细节在 worklog 里（路径记在任务对象的 worklog 字段）；已结案的用 history 子命令查"
         "（ledger/history/<年月>.md）。"
     )
 
@@ -2943,9 +3470,11 @@ def cmd_tags(args: argparse.Namespace) -> None:
         old, new = args.rename
         old = old.strip()
         new_label = normalize_label(new, field="新标签")
-        path = repo / PROGRESS_REL
-        with progress_lock(path):
-            before, data = read_guarded(path)
+        me = ensure_ledger(repo)
+        email = me["email"]
+        shard_path = repo / shard_rel(email)
+        with ledger_lock(repo, shard_rel(email)):
+            data = read_ledger(shard_path, identity=me)
             tasks = data["tasks"]
             changed: list[str] = []
             for tid, task in tasks.items():
@@ -2958,9 +3487,12 @@ def cmd_tags(args: argparse.Namespace) -> None:
                     task["tags"] = new_tags
                     changed.append(tid)
             if not changed:
-                print(f"没有在办任务的分类/标签等于「{old}」。")
+                print(
+                    f"你分片里的在办任务没有分类/标签等于「{old}」。"
+                    "（池里与别人分片的任务一律不动：要动先认领）"
+                )
                 return
-            # 先改在办 worklog 头部（展示副本与真源同口径），最后才提交状态表：
+            # 先改在办 worklog 头部（展示副本与真源同口径），最后才写分片：
             # 中途失败时 json 未动、worklog 改写幂等，重跑一次即可收敛
             backups: dict[Path, bytes] = {}
             try:
@@ -2985,7 +3517,7 @@ def cmd_tags(args: argparse.Namespace) -> None:
                     except OSError:
                         pass
                 raise Fail(f"归并失败，已恢复已改文档，重跑一次即可：{exc}")
-            commit_guarded(path, before, data)
+            write_ledger_json(shard_path, data)
         print(f"已归并「{old}」→「{new_label}」，涉及 {len(changed)} 个在办任务：")
         for tid in changed:
             print(f"  {tid}")
@@ -3028,55 +3560,131 @@ def cmd_tags(args: argparse.Namespace) -> None:
 
 
 def cmd_validate(args: argparse.Namespace) -> None:
+    """校验台账（只读）：索引 ↔ 目录双向、跨文件任务号重复、池里只装未认领。
+
+    逐任务字段检查照旧，只是范围从「一份文件」扩到「pool + 所有分片」。
+    """
     repo = find_repo(args.repo)
-    progress_path = repo / PROGRESS_REL
     problems: list[str] = []
     blank: list[str] = []
 
-    if not progress_path.exists():
-        raise Fail(f"{PROGRESS_REL} 不存在，先跑 init。")
+    if not _has_ledger(repo):
+        print("✓ 还没有台账（没有 pool.json / owners.json），无需校验。")
+        return
 
-    data = read_json(progress_path)
-    for tid, task in sorted(data["tasks"].items()):
-        if not ID_RE.fullmatch(tid):
-            problems.append(f"{tid}: 任务号不合规（小写字母、数字、连字符、汉字）")
-        if not task.get("title"):
-            problems.append(f"{tid}: 缺 title")
-        status = task.get("status")
-        if status not in STATUSES and status not in LEGACY_STATUSES:
-            problems.append(f"{tid}: status={status!r} 非法")
-        if status == "open" and task.get("owner"):
-            problems.append(f"{tid}: status=open 却有 owner")
-        if status in ("doing", "blocked") and not task.get("owner"):
-            problems.append(f"{tid}: status={status} 却没有 owner")
-        if status == "done":
-            problems.append(f"{tid}: status=done 不该留在状态表（该用 close 结案）")
-        cat = task.get("category")
-        if cat is not None:
-            try:
-                normalize_label(cat, tid=tid)
-            except Fail as exc:
-                problems.append(str(exc))
-        raw_tags = task.get("tags")
-        if raw_tags is not None:
-            if not isinstance(raw_tags, list) or any(
-                not isinstance(t, str) for t in raw_tags
-            ):
-                problems.append(f"{tid}: tags 必须是字符串数组")
-            else:
-                for t in raw_tags:
-                    try:
-                        normalize_label(t, field="标签", tid=tid)
-                    except Fail as exc:
-                        problems.append(str(exc))
-                if len(raw_tags) > TAGS_MAX_COUNT:
-                    problems.append(f"{tid}: tags 超过 {TAGS_MAX_COUNT} 个")
-        if find_worklog(repo, tid, task) is None:
-            problems.append(
-                f"{tid}: 缺 worklog 文件（状态表记的路径：{task.get('worklog') or '未记'}）"
+    pool_path = repo / POOL_REL
+    if not pool_path.exists():
+        problems.append(
+            f"{POOL_REL} 不存在（索引在、公共池没了）：下一次写会重建空池，"
+            "旧内容需要从 git 恢复。"
+        )
+
+    # ① 索引 → 文件：登记了但文件不在
+    registered = registered_shards(repo)
+    for ident, path in sorted(registered.items()):
+        if not path.exists():
+            problems.append(f"owners.json 登记了 {ident} → {path.name}，但文件不存在")
+            continue
+        try:
+            shard_data = _load_shaped(
+                path, default={"version": FORMAT_VERSION, "tasks": {}}
             )
-        elif worklog_is_skeleton(repo, tid, task):
-            blank.append(tid)
+        except Fail as exc:
+            problems.append(str(exc))
+            continue
+        ident_in_file = (shard_data.get("identity") or {}).get("email")
+        if isinstance(ident_in_file, str) and norm_identity(ident_in_file) != ident:
+            problems.append(
+                f"{path.name}: 文件内 identity={ident_in_file} 与索引 key {ident} 不一致"
+                "（索引或文件被手改过）"
+            )
+
+    # ② 文件 → 索引：目录里有、索引没登记（里面的任务等于静默消失）
+    owner_dir = repo / OWNERS_DIR
+    on_disk = (
+        sorted(p for p in owner_dir.glob("*.json") if p.is_file())
+        if owner_dir.is_dir()
+        else []
+    )
+    registered_names = {p.name for p in registered.values()}
+    for path in on_disk:
+        if path.name not in registered_names:
+            problems.append(
+                f"{OWNERS_DIR.as_posix()}/{path.name} 没在 owners.json 里登记"
+                f"（里面 {len(tasks_in(path))} 个任务会静默消失）"
+            )
+
+    # ③ 同一任务号出现在多个文件 + ④ 池里只该装未认领 + 逐任务字段检查
+    files: list[tuple[str, dict[str, Any]]] = [
+        (POOL_REL.as_posix(), tasks_in(pool_path))
+    ]
+    for path in [*registered.values(), *on_disk]:
+        rel = path.relative_to(repo).as_posix()
+        if any(rel == known_rel for known_rel, _ in files):
+            continue
+        files.append((rel, tasks_in(path)))
+
+    seen: dict[str, str] = {}
+    total = 0
+    for rel, tasks in files:
+        for tid, task in sorted(tasks.items()):
+            total += 1
+            if tid in seen:
+                problems.append(
+                    f"{tid}: 同时出现在 {seen[tid]} 与 {rel}"
+                    "（认领 / 释放搬移崩了一半，手动删掉多余那份）"
+                )
+            else:
+                seen[tid] = rel
+            if rel == POOL_REL.as_posix():
+                if task.get("owner"):
+                    problems.append(
+                        f"{tid}: pool.json 里的任务不该有 owner（{task['owner']}）；先 claim 再改"
+                    )
+                if task.get("status") != "open":
+                    problems.append(
+                        f"{tid}: pool.json 里的任务 status 应为 open"
+                        f"（现在是 {task.get('status')!r}）"
+                    )
+            if not ID_RE.fullmatch(tid):
+                problems.append(f"{tid}: 任务号不合规（小写字母、数字、连字符、汉字）")
+            if not task.get("title"):
+                problems.append(f"{tid}: 缺 title")
+            status = task.get("status")
+            if status not in STATUSES and status not in LEGACY_STATUSES:
+                problems.append(f"{tid}: status={status!r} 非法")
+            if status == "open" and task.get("owner"):
+                problems.append(f"{tid}: status=open 却有 owner")
+            if status in ("doing", "blocked") and not task.get("owner"):
+                problems.append(f"{tid}: status={status} 却没有 owner")
+            if status == "done":
+                problems.append(f"{tid}: status=done 不该留在台账里（该用 close 结案）")
+            cat = task.get("category")
+            if cat is not None:
+                try:
+                    normalize_label(cat, tid=tid)
+                except Fail as exc:
+                    problems.append(str(exc))
+            raw_tags = task.get("tags")
+            if raw_tags is not None:
+                if not isinstance(raw_tags, list) or any(
+                    not isinstance(t, str) for t in raw_tags
+                ):
+                    problems.append(f"{tid}: tags 必须是字符串数组")
+                else:
+                    for t in raw_tags:
+                        try:
+                            normalize_label(t, field="标签", tid=tid)
+                        except Fail as exc:
+                            problems.append(str(exc))
+                    if len(raw_tags) > TAGS_MAX_COUNT:
+                        problems.append(f"{tid}: tags 超过 {TAGS_MAX_COUNT} 个")
+            if find_worklog(repo, tid, task) is None:
+                problems.append(
+                    f"{tid}: 缺 worklog 文件（记的路径：{task.get('worklog') or '未记'}）"
+                )
+            elif worklog_is_skeleton(repo, tid, task):
+                blank.append(tid)
 
     if blank:
         # 只提示、不算问题：正文写没写是人的事，脚本不替他下判断；
@@ -3093,7 +3701,7 @@ def cmd_validate(args: argparse.Namespace) -> None:
             print(f"✗ {p}", file=sys.stderr)
         raise Fail(f"校验失败：{len(problems)} 项问题。")
 
-    print(f"✓ 校验通过（在办 {len(data['tasks'])} 条）")
+    print(f"✓ 校验通过（在办 {total} 条，{len(files)} 个文件）")
 
     # 历史层只读体检：发现非 v6 只提示、不写盘 —— 「要不要升级」交给下一次真实写入，
     # validate 保持只读契约（原设计就不碰历史层，这里只补一条可见的迁移信号）。
@@ -3106,7 +3714,7 @@ def cmd_validate(args: argparse.Namespace) -> None:
             print(f"提示：读不了 {rel}：{exc}", file=sys.stderr)
             continue
         hrecords, hwarnings = parse_history(htext)
-        old_n = sum(1 for r in hrecords if r["fmt"] != "v8")
+        old_n = sum(1 for r in hrecords if r["fmt"] not in ("v8", "v9"))
         if old_n:
             print(
                 f"提示：{rel} 含 {old_n} 行旧格式（4 / 5 / 6 列）；"
@@ -3132,9 +3740,10 @@ def cmd_history(args: argparse.Namespace) -> None:
         raise Fail("--owner 不能为空。")
     if args.limit is not None and args.limit < 1:
         raise Fail("--limit 必须是正整数。")
-    since = normalize_time(args.since, field="--since") if args.since else None
+    # --since / --until 收本地墙钟，内部转 UTC 与存盘值比较
+    since = to_utc(args.since, field="--since") if args.since else None
     until = (
-        normalize_time(args.until, field="--until", date_only_ref="23:59:59")
+        to_utc(args.until, field="--until", date_only_ref="23:59:59")
         if args.until
         else None
     )
@@ -3144,7 +3753,8 @@ def cmd_history(args: argparse.Namespace) -> None:
     want_owner = (
         args.owner.strip().lstrip("@") if args.owner else None
     )  # 容忍「@名字」写法
-    me = git_user() if args.mine else None
+    me = current_identity()["email"] if args.mine else None
+    me_keys = my_identity_keys() if args.mine else None
     filter_echo = {
         "owner": want_owner,
         "mine": args.mine,
@@ -3208,7 +3818,7 @@ def cmd_history(args: argparse.Namespace) -> None:
     for r in records:
         if want_owner is not None and r["owner"] != want_owner:
             continue
-        if me is not None and r["owner"] != me:
+        if me_keys is not None and r["owner"] not in me_keys:
             continue
         # 分类精确、标签包含（与 list 同口径；值优先读列，列空回链 worklog 头部）
         if args.category and r.get("category") != args.category.strip():
@@ -3257,7 +3867,11 @@ def cmd_history(args: argparse.Namespace) -> None:
         return
     who_label = want_owner or me
     label = f"（owner=@{who_label}）" if who_label else ""
-    span = f"，创建 {since or '…'} ~ {until or '…'}" if (since or until) else ""
+    span = (
+        f"，创建 {fmt_local(since) or '…'} ~ {fmt_local(until) or '…'}"
+        if (since or until)
+        else ""
+    )
     print(f"已结案 {len(rows)} 条{label}{span}：\n")
 
     def _who(r: dict[str, Any]) -> str:
@@ -3267,7 +3881,7 @@ def cmd_history(args: argparse.Namespace) -> None:
     for r in rows:
         who = _who(r).ljust(width)
         print(
-            f"  {r['time']}  建 {r.get('created') or '—'}  {who}  "
+            f"  {fmt_local(r['time'])}  建 {fmt_local(r.get('created')) or '—'}  {who}  "
             f"[{r.get('category') or '—'}]  "
             f"{r['workpackage']}  → {r['log'] or '（无过程文档）'}（{r.get('src', '')}）"
         )
@@ -3286,7 +3900,7 @@ def cmd_history(args: argparse.Namespace) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="progress.py",
-        description="管理项目任务进度（ledger/progress.json + worklog + 历史）",
+        description="管理项目任务进度（ledger/pool.json + owners/ 分片 + worklog + 历史）",
     )
     parser.add_argument(
         "--no-sync",
@@ -3297,10 +3911,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     def add_repo(p: argparse.ArgumentParser) -> None:
         p.add_argument("--repo", help="当前工作区（项目根）。agent 调用时应显式传入")
-
-    p = sub.add_parser("init", help="建 ledger/progress.json")
-    add_repo(p)
-    p.set_defaults(func=cmd_init)
 
     p = sub.add_parser("new", help="新建任务")
     p.add_argument("--title", required=True, help="一句话标题")
@@ -3354,8 +3964,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_close)
 
     p = sub.add_parser("list", help="查询在办任务")
-    p.add_argument("--mine", action="store_true", help="只看自己的")
-    p.add_argument("--owner", help="只看某个人的")
+    p.add_argument("--mine", action="store_true", help="只看自己分片里的")
+    p.add_argument("--owner", help="只看某个人分片里的（写身份，如邮箱；me 指自己）")
+    p.add_argument(
+        "--all", action="store_true", help="看全量：公共池 + 索引里登记的所有分片"
+    )
     p.add_argument("--status", help="逗号分隔，如 doing,open")
     p.add_argument("--category", help="按分类过滤（精确匹配）")
     p.add_argument("--tag", help="按标签过滤（包含匹配，命中任一面即算）")

@@ -15,6 +15,8 @@ function walk(dir, base = dir) {
 	return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
 		// 运行脚本产生的字节码缓存不属于分发内容，不参与比较
 		if (entry.name === "__pycache__" || entry.name.endsWith(".pyc")) return [];
+		// 测试是开发产物，不进分发副本（copy-skill.mjs 同步排除）
+		if (base === dir && entry.name === "tests") return [];
 		const abs = path.join(dir, entry.name);
 		return entry.isDirectory()
 			? walk(abs, base)

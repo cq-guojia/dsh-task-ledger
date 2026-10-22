@@ -36,8 +36,8 @@ def make_task(title: str, owner: str | None = None) -> dict:
     }
 
 
-class WriteJsonLayoutTest(unittest.TestCase):
-    """write_json 的布局是合并行为的全部前提，先把它钉死。"""
+class WriteLedgerLayoutTest(unittest.TestCase):
+    """write_ledger_json 的布局是合并行为的全部前提，先把它钉死。"""
 
     def setUp(self) -> None:
         self.tmp = Path(tempfile.mkdtemp())
@@ -47,8 +47,11 @@ class WriteJsonLayoutTest(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_one_task_per_line(self) -> None:
-        data = {"tasks": {"t1": make_task("一"), "t2": make_task("二")}}
-        progress.write_json(self.path, data)
+        data = {
+            "version": progress.FORMAT_VERSION,
+            "tasks": {"t1": make_task("一"), "t2": make_task("二")},
+        }
+        progress.write_ledger_json(self.path, data)
         lines = self.path.read_text(encoding="utf-8").splitlines()
 
         self.assertEqual(lines[0], "{")
@@ -57,12 +60,16 @@ class WriteJsonLayoutTest(unittest.TestCase):
         self.assertTrue(lines[2].endswith(","))
         self.assertTrue(lines[3].startswith('    "t2": '))
         self.assertFalse(lines[3].endswith(","))
-        self.assertEqual(lines[4], "  }")
-        self.assertEqual(lines[5], "}")
+        self.assertEqual(lines[4], "  },")
+        self.assertTrue(lines[5].startswith('  "version": '))
+        self.assertEqual(lines[6], "}")
 
     def test_task_keys_sorted_and_values_inline(self) -> None:
-        data = {"tasks": {"b": make_task("后"), "a": make_task("前")}}
-        progress.write_json(self.path, data)
+        data = {
+            "version": progress.FORMAT_VERSION,
+            "tasks": {"b": make_task("后"), "a": make_task("前")},
+        }
+        progress.write_ledger_json(self.path, data)
         text = self.path.read_text(encoding="utf-8")
         self.assertLess(text.index('"a"'), text.index('"b"'))
         # 值不许折行：折行会让「一个任务」占多行，删改就不再是单行操作
@@ -72,14 +79,28 @@ class WriteJsonLayoutTest(unittest.TestCase):
                 self.assertTrue(line.rstrip().endswith((",", "}")))
 
     def test_round_trip(self) -> None:
-        data = {"tasks": {"t1": make_task("一", "a@example.com")}}
-        progress.write_json(self.path, data)
+        data = {
+            "version": progress.FORMAT_VERSION,
+            "tasks": {"t1": make_task("一", "a@example.com")},
+        }
+        progress.write_ledger_json(self.path, data)
         self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")), data)
 
     def test_empty_tasks(self) -> None:
-        progress.write_json(self.path, {"tasks": {}})
+        progress.write_ledger_json(
+            self.path, {"version": progress.FORMAT_VERSION, "tasks": {}}
+        )
         lines = self.path.read_text(encoding="utf-8").splitlines()
-        self.assertEqual(lines, ["{", '  "tasks": {', "  }", "}"])
+        self.assertEqual(
+            lines,
+            [
+                "{",
+                '  "tasks": {',
+                "  },",
+                f'  "version": "{progress.FORMAT_VERSION}"',
+                "}",
+            ],
+        )
 
 
 class GitMergeTest(unittest.TestCase):
@@ -126,7 +147,9 @@ class GitMergeTest(unittest.TestCase):
         return proc
 
     def write_pool(self, repo: Path, tasks: dict) -> None:
-        progress.write_json(repo / POOL_REL, {"tasks": tasks})
+        progress.write_ledger_json(
+            repo / POOL_REL, {"version": progress.FORMAT_VERSION, "tasks": tasks}
+        )
 
     def read_pool(self, repo: Path) -> dict:
         return json.loads((repo / POOL_REL).read_text(encoding="utf-8"))["tasks"]
@@ -295,10 +318,10 @@ class GitMergeTest(unittest.TestCase):
             self.write_pool(repo, tasks)
             shard = repo / "ledger" / "owners" / f"{owner}.json"
             shard.parent.mkdir(parents=True, exist_ok=True)
-            progress.write_json(
+            progress.write_ledger_json(
                 shard,
                 {
-                    "version": "2026-10-22 00:00:00",
+                    "version": progress.FORMAT_VERSION,
                     "tasks": {"t2": make_task("二", owner)},
                 },
             )

@@ -1,6 +1,6 @@
 # 数据说明：台账文件格式（插件唯一数据源）
 
-> **状态**：✅ 已核实（2026-10-16，对照真实工作区文件 + skill 源码）
+> **状态**：✅ 已核实（2026-10-16 初版；2026-10-22 按分片布局改写 pool / owners 两节，宿主侧适配待下一轮）
 > **来源**：`task-ledger` skill（`scripts/progress.py` + `assets/worklog.md`）为格式真源；样例取自 NAS-Docker 工作区与本仓 `ledger/`
 > **配套**：架构见 [`architecture.md`](architecture.md)；skill 分发见 [`external/dsh-skill-registration.md`](external/dsh-skill-registration.md)
 
@@ -11,25 +11,34 @@
 ```
 <工作区>/
 ├── ledger/
-│   ├── progress.json              # 在办任务状态表（只由 skill 脚本写）
+│   ├── pool.json                  # 公共池：未认领任务（owner 空、status=open；只由 skill 脚本写）
+│   ├── owners.json                # 索引：身份（git 邮箱）→ 分片文件（只由 skill 脚本写）
+│   ├── owners/<hash>.json         # 每人一份分片：自己认领的任务（只由 skill 脚本写）
 │   ├── history/<年月>.md          # 已结案索引，按结案时间分月（9 列，2026-10-17 起）
 │   └── worklog/<年月>/            # 过程正文，一任务一篇
 │       └── <日>-<时分>-<说明>-<随机码>.md
 ```
 
-## 二、progress.json（在办）
+2026-10-22 起改为**一人一份分片**（此前是单文件 `progress.json`，本仓旧数据按「老项目不写迁移程序」的口径由 agent 逐个手动迁）：自己只写自己那份，
+公共池放待认领的登记行，谁都不改它 —— 要动先 `claim`。
 
-`tasks` 对象，键 = 任务号（`年月日-时分-标题要素-随机码`）。真实样例（本仓 `ledger/progress.json`）：
+## 二、pool.json / owners/*.json（在办）
+
+两者形状相同：`version`（格式版本，读侧只告警不拦）+ 可选的 `identity`（仅分片有）+ `tasks` 对象，键 = 任务号
+（`年月日-时分-标题要素-随机码`）。任务字段：
 
 | 字段 | 值样例 | 说明 |
 |---|---|---|
 | `title` | 熟悉项目初衷并搭建初始文档架构 | 任务标题 |
-| `status` | `open` / `doing` | `done` 只能由 close 产生；`blocked` 是旧数据，读侧当进行中（2026-10-19 起逾期改由时间判定） |
-| `creator` / `owner` | GuoJia-Agent | git 身份 |
-| `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | `finished` 结案前为 null；`updated` = 最后一次推进（建 / 认领 / 改状态 / 交接 / 补执行记录），老数据可能缺失（看板回退到 `started` / `created`） |
+| `status` | `open` / `doing` | `done` 只能由 close 产生；`blocked` 是旧数据，读侧当进行中（2026-10-19 起逾期改由时间判定）。池里的行恒为 `open` |
+| `creator` / `owner` | `ming@example.com` | **git 邮箱**（归一化后的小写标识），不是 `user.name`；池里的行 `owner` 为 null |
+| `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | **UTC**、不带偏移量后缀（2026-10-22 起；之前写的是写入者本地时间，无标记、无法区分）；`finished` 结案前为 null；`updated` = 最后一次推进（建 / 认领 / 改状态 / 交接 / 补执行记录），老数据可能缺失（看板回退到 `started` / `created`） |
 | `category` | 建设 | 单值分类 |
 | `tags` | ["文档架构","初始化","调研"] | 1~5 个 |
 | `worklog` | `worklog/202610/16-1742-…-5563.md` | 相对 `ledger/` 的过程文档路径 |
+
+`owners.json` 是另一形状：`workers` 对象，键 = 归一化身份，值 = `{"file": "<sha256前12位>.json", "name": …, "joined": …}`。
+分片文件名 = `sha256(归一化身份)[:12] + ".json"`；**索引是唯一入口** —— 目录里有、索引没登记的分片对它人等于不存在（`validate` 报出来）。
 
 ## 三、history/<年月>.md（已结案，9 列）
 
@@ -50,11 +59,15 @@
 
 ## 五、插件消费方式（规划）
 
-- 待办 = 各工作区 `progress.json` 的 `open` / `doing`（`blocked` 旧数据按进行中收）；
+- 待办 = 各工作区 `pool.json` + 索引登记的全部分片里 `open` / `doing`（`blocked` 旧数据按进行中收）；
+  同一任务号出现在两个文件里是搬移中断的中间态，读侧按「后读到为准」只显示一次，去重与告警交给 `validate`；
 - 历史 = `history/<年月>.md` 9 列（owner = 负责人 / 提交人筛选面；creator = 发起人，2026-10-17 新增——
   owner 可被 claim 改走，「谁建的」不变；看板「新增（我的）= 我创建的」靠它，与完成/未结(mine) 的 owner 口径区分）；
 - 报表 = 同源聚合（category 计数、时间线、按人工作日志）；
 - skill 的 `list` / `history` 子命令已有 `--json` 结构化输出，插件可评估「调脚本」与「自解析文件」两条路（未拍板）。
+- ⚠️ **宿主侧尚未适配分片布局**（2026-10-22 分片改造第一轮只做核心脚本）：`resolveWorkspaces` 仍按
+  `ledger/progress.json` 判活跃、看板仍只解析进度表与 history，`smoke.mjs` 里按旧布局造的用例因此失败。
+  适配工作（`hasLedger` 判 pool/owners、跨分片去重、fixture 与冒烟）排在下一轮。
 
 ## 六、跨包契约：JSON 模式必须**始终**输出 JSON
 

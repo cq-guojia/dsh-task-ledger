@@ -24,7 +24,7 @@ sys.path.insert(0, str(SKILL / "scripts"))
 
 import progress
 
-PROGRESS_REL = Path("ledger") / "progress.json"
+POOL_REL = Path("ledger") / "pool.json"
 
 
 def task(title: str, owner: str | None = None) -> dict:
@@ -200,10 +200,12 @@ class ResolveLedgerConflictTest(unittest.TestCase):
         return proc
 
     def write(self, repo: Path, tasks: dict) -> None:
-        progress.write_json(Path(repo) / PROGRESS_REL, {"tasks": tasks})
+        progress.write_ledger_json(
+            Path(repo) / POOL_REL, {"version": progress.FORMAT_VERSION, "tasks": tasks}
+        )
 
     def read(self, repo: Path) -> dict:
-        return json.loads((repo / PROGRESS_REL).read_text(encoding="utf-8"))["tasks"]
+        return json.loads((repo / POOL_REL).read_text(encoding="utf-8"))["tasks"]
 
     def commit(self, repo: Path, msg: str) -> None:
         self.git("add", "-A", cwd=repo)
@@ -270,7 +272,7 @@ class ResolveLedgerConflictTest(unittest.TestCase):
         self.assertNotEqual(self.diverge_and_rebase(a, b).returncode, 0)
 
         self.assertEqual(self.resolve(), "conflict")
-        text = (self.b / PROGRESS_REL).read_text(encoding="utf-8")
+        text = (self.b / POOL_REL).read_text(encoding="utf-8")
         self.assertIn("<<<<<<< 远端", text)
         self.assertIn("本地改", text)
 

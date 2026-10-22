@@ -1,13 +1,20 @@
 # 状态与时间模型
 
-> TL;DR：状态只有 `open` / `doing`；`done` 由 `close` 产生。逾期 = `started` 满 14 天、停滞 = `updated` 满 3 天、积压 = `created` 满 30 天仍 `open`，看板算、不存字段。`updated` 由 `new/claim/set/log` 刷新。owner 只取当前 git 身份。
+> TL;DR：状态只有 `open` / `doing`；`done` 由 `close` 产生。逾期 = `started` 满 14 天、停滞 = `updated` 满 3 天、积压 = `created` 满 30 天仍 `open`，看板算、不存字段。`updated` 由 `new/claim/set/log` 刷新。owner = 当前 git 邮箱。
 
 ## 状态机
 
 ```
-open ──claim──> doing ──close──> ledger/history（移出状态表）
-doing ──set --status open──> open          # 释放认领，执行记录类型 release
+new              → ledger/pool.json（open，owner 空）
+pool ──claim──> 自己的分片（doing，owner = 我）──close──> ledger/history（移出分片）
+doing ──set --status open──> 搬回 pool.json（open，owner 空）   # 执行记录类型 release
 ```
+
+- **一人一份**：`ledger/owners/<hash>.json`。认领 / 释放一律**搬文件**（先写目标、再删原处），
+  所以同一任务号可能因中途崩溃短暂出现在两个文件里 —— 再跑一次同一条命令即可（幂等），
+  或者用 `validate` 报出来再手动删多余那份。
+- 池里的任务只读：要改先 `claim`。`tags --rename` / `set` 只作用于自己分片。
+- `new --self` 直接写进自己分片（doing）；`new` 不带 `--self` 写进 `pool.json`（open）。
 
 - `open`：已建、等认领。`doing`：已认领、在做。`done` 只由 `close` 产生。
 - **没有 `blocked` 状态**（2026-10-19 取消）。旧数据里残留的 `blocked` 读侧当进行中：`list --status blocked` 可捞出，用 `set --status doing` 归位；新写入一律拒绝。
@@ -21,7 +28,7 @@ doing ──set --status open──> open          # 释放认领，执行记录
 | 停滞 | `updated`（最后推进）至今 | 满 3 天 |
 
 - 真源：`packages/plugin/src/host/services/home.service.ts` 的 `BACKLOG_DAYS = 30` / `OVERDUE_DAYS = 14` / `STALE_DAYS = 3`；看板随响应下发三个天数，界面文案不硬编码。
-- 脚本不算这三个值，`progress.json` 里也不存；agent 要回答「哪些停太久」时用 `list --json` 的 `created` / `updated` / `started` 与当前时间比。
+- 脚本不算这三个值，台账里也不存；agent 要回答「哪些停太久」时用 `list --json` 的 `created` / `updated` / `started` 与当前时间比。
 - 老数据没有 `updated` 时，读侧回退到 `started`，再到 `created`。
 
 ## 时间
@@ -32,7 +39,10 @@ doing ──set --status open──> open          # 释放认领，执行记录
   **`new --created` 补录时 `updated` 会一并等于该时间**，之后记得补一条 `log`，否则看板算它停滞。
 - **筛选语义**：`list` / `history` 的 `--since` / `--until` 按**创建时间**；只给日期时，起 = 当天 `00:00:00`、止 = 当天 `23:59:59`（含整天）。
 - **history 列序**：第一列结案时间、第二列创建时间；排序按创建时间。
-- **时区**：所有时间都取**写入者本机的本地时间**，不带偏移量。多人跨时区共享同一台账时，停滞/逾期天数与 `--since`/`--until` 的字符串比较最多偏一天，跨月结案也可能落进“写入者时区”的月份文件；跨时区协作请先约定统一时区。
+- **时区：全链路 UTC**（2026-10-22 起）。存盘值（任务号 / worklog 文件名、分片与 `pool.json` 的 `created`/`started`/`updated`/`finished`、history 行、分月归档）一律 UTC，不带偏移量后缀 —— `2026-10-22 02:30:00` 语义即 UTC。
+  - **写**：`now()` 取 UTC；`--created` / `--finished` 按**本地墙钟**录入，脚本内部转 UTC 再存。
+  - **读/筛**：`--since` / `--until` 也收本地时间，内部转 UTC 比较；人看的输出（`list` / `history` 文本）转回本机时区显示，`--json` 原样给 UTC。
+  - **存量老数据**（2026-10-22 前）写的是写入者本地时间、无标记，无法与 UTC 区分：显示会偏后若干小时，按「无后缀 = 写入者本地」兼容读，迁移时以迁移手册为准。
 
 ## 任务号
 
@@ -40,6 +50,10 @@ doing ──set --status open──> open          # 释放认领，执行记录
 
 ## 身份
 
-- owner 恒取 `git config user.name`；读不到直接报错，**不做兜底**（先让用户配好 git）。
-- 取身份的命令：`new`（记 creator）、`claim`、`set`、`close`、`log`、`list --mine`、`history --mine`。`history --owner <别人>` 是只读查询，不校验身份。
-- `set` / `close` / `log` 都校验「owner 是不是你」；不是你的、或任务还没人认领，直接拒绝。
+- 身份主键 = **git 邮箱**（`git var GIT_COMMITTER_IDENT` 里的 email，取不到退回 `git config user.email`），
+  归一化（去空白 + 小写）；分片文件名 = `sha256(归一化身份)[:12] + ".json"`。
+- 目录在 git 仓库里却读不到邮箱 ⇒ 直接报错（git 自己也提交不了，报错与之对齐）；
+  不在仓库里 / 没装 git 才走兜底链（系统用户名 → 主机名 → `default`），并提示一次身份是猜的。
+- 取身份的命令：`new`（记 creator）、`claim`、`set`、`close`、`log`、`list --mine`、`history --mine`。
+  `list --owner <身份>` / `history --owner <身份>` 是只读查询，不校验身份。
+- `set` / `close` / `log` 只在自己分片里找任务：**不是你的、或还在 `pool.json` 里，直接拒绝**。

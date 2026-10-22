@@ -9,6 +9,9 @@ const pluginRoot = path.resolve(here, '..')
 const skillSrc = path.resolve(pluginRoot, '../skill')
 const skillDst = path.join(pluginRoot, 'skill')
 
+// 测试是开发产物，不进分发副本（check-skill-copy.mjs 同步排除这一目录）
+const skipTests = (src) => path.resolve(src) !== path.join(skillSrc, "tests")
+
 await rm(skillDst, { recursive: true, force: true })
-await cp(skillSrc, skillDst, { recursive: true })
+await cp(skillSrc, skillDst, { recursive: true, filter: skipTests })
 console.log('[copy-skill] packages/skill → packages/plugin/skill')
