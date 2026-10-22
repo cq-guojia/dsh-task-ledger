@@ -1076,18 +1076,39 @@ def _union_merge(g: tuple[str, ...], root: str, rel: str) -> bool:
 
 
 def _tidy_history_text(text: str) -> str:
-    """union 合并后的历史层正文整理：一份表头 + 数据行去重（保序）。"""
+    """union 合并后的历史层正文整理：一份表头 + 数据行去重（保序）。
+
+    表头**沿用原文那一份**，不无条件换成 9 列：少列文件（4/5/6/8 列，升级不了或还没升）
+    若硬套 9 列表头，GFM 会按 9 列渲染、把后面的行挤歪，这里还会多出一行表头。
+    分隔行按表头列数重生成，多余的（union 带来的第二份）一律丢弃。
+    """
     rows: list[str] = []
+    header: str | None = None
     for line in text.splitlines():
         row = line.strip()
         if not row.startswith("|"):
             continue
-        if row == HISTORY_HEADER.strip() or not row.strip("|-: "):
+        cells = split_row(row)
+        if not cells or _is_sep_row(cells):
+            continue
+        if _looks_like_header(cells):
+            if header is None:
+                header = row
             continue
         if row not in rows:
             rows.append(row)
+    if header is None:
+        header = HISTORY_HEADER
+    cols = len(split_row(header))
+    sep = "|" + "|".join(["---"] * cols) + "|"
     body = "\n".join(rows)
-    return f"{HISTORY_TITLE}\n\n{HISTORY_HEADER}\n{HISTORY_SEP}\n{body}\n"
+    return f"{HISTORY_TITLE}\n\n{header}\n{sep}\n{body}\n"
+
+
+def _drop_trailing_blank(out: list[str]) -> None:
+    """去掉已在结果里的尾部空行（丢弃重复表头时用）：中间的空行会把 GFM 表格截断。"""
+    while out and not out[-1].strip():
+        out.pop()
 
 
 def _resolve_ledger_conflict(
@@ -2437,6 +2458,9 @@ def upgrade_history(text: str, history_path: Path) -> tuple[str, int] | None:
     fallback = now()
     out: list[str] = []
     converted = 0
+    # 表头只留一份：union 合并 / 手工拼接会留下两份表头，两份都留着会被 GFM 当数据行渲染
+    seen_header = False
+    seen_sep = False
     for raw in text.splitlines():
         if not raw.strip().startswith("|"):
             out.append(raw)
@@ -2446,9 +2470,17 @@ def upgrade_history(text: str, history_path: Path) -> tuple[str, int] | None:
             out.append(raw)
             continue
         if _is_sep_row(cells):
+            if seen_sep:
+                _drop_trailing_blank(out)  # 拼接处的空行一并去掉，否则表格会被空行截断
+                continue
+            seen_sep = True
             out.append(HISTORY_SEP)
             continue
         if _looks_like_header(cells):
+            if seen_header:
+                _drop_trailing_blank(out)
+                continue
+            seen_header = True
             out.append(HISTORY_HEADER)
             continue
         if len(cells) == 9:
@@ -2926,6 +2958,10 @@ def append_exec_log(text: str, line: str) -> str:
     end = next(
         (i for i in range(at + 1, len(lines)) if lines[i].startswith("## ")), len(lines)
     )
+    # 同一条记录已经在节里了就跳过：close 崩在「文档已封卷、分片未删」之后重跑，
+    # 时间与内容逐字相同，重复追加等于伪造时间线。
+    if any(lines[i].strip() == line.strip() for i in range(at + 1, end)):
+        return text
     insert = end
     while insert > at + 1 and not lines[insert - 1].strip():
         insert -= 1
@@ -3011,7 +3047,13 @@ def print_worklog(repo: Path, tid: str, task: dict[str, Any] | None = None) -> N
 
 
 def stamp_frozen(text: str, finished: str, finisher: str | None = "") -> str:
-    """把 worklog 标成已封卷：封卷标记并进头部引用块。"""
+    """把 worklog 标成已封卷：封卷标记并进头部引用块。
+
+    已经封过卷就原样返回：`close` 崩在「文档已封卷、分片未删」之后重跑会再进来一次，
+    再插一条就是两个封卷时间。
+    """
+    if FROZEN_MARK in text:
+        return text
     lines = text.splitlines()
     who = f"（@{finisher}）" if finisher else ""
     marker = f"> **{FROZEN_MARK}**：{finished}{who}"
@@ -3349,7 +3391,14 @@ def cmd_close(args: argparse.Namespace) -> None:
     tags_in = _tags_arg(args.tags)  # 空串 / 全是空白 = 没传（留空不是「改成空标签」）
     close_tags = parse_tags(tags_in, field="--tags") if tags_in else None
 
-    with ledger_lock(repo, shard_rel(email)):
+    # 结案时间先定死（--finished 或现在），历史文件按它分月 —— 历史文件也归本次写：
+    # 同一个月两条 close 各追加一行，不锁就会丢行。
+    finished = (
+        to_utc(args.finished, field="--finished", tid=tid) if args.finished else now()
+    )
+    lock_history = history_path_for(repo, finished).relative_to(repo)
+
+    with ledger_lock(repo, shard_rel(email), lock_history):
         before = stat_key(shard_path)
         data = read_ledger(shard_path, identity=me)
         task = data["tasks"].get(tid)
@@ -3362,12 +3411,6 @@ def cmd_close(args: argparse.Namespace) -> None:
         require_owner(task, tid, email)
         if task.get("finished"):
             raise Fail(f"任务 {tid} 已经结案过了。")
-
-        finished = (
-            to_utc(args.finished, field="--finished", tid=tid)
-            if args.finished
-            else now()
-        )
         title = " ".join((task.get("title") or tid).split())
         summary = " ".join(args.summary.split())
         if not summary:
@@ -3387,7 +3430,7 @@ def cmd_close(args: argparse.Namespace) -> None:
         if log_path is None:
             log_path = repo / worklog_dir_for(task) / worklog_name(tid)
         # 历史行按结案时间落月文件；文档链接相对该文件所在目录算（../worklog/…）。
-        history_path = history_path_for(repo, finished)
+        history_path = repo / lock_history
         log_rel = worklog_link(log_path, history_path)
         created_key = time_key(task.get("created")) or ""
         hist_before = stat_key(history_path)
@@ -3475,6 +3518,10 @@ def cmd_close(args: argparse.Namespace) -> None:
             # 复查通过才落备份：并发中止时不留孤儿 .bak。成功后删除（内容没丢，只是 owner 换了列）。
             bak_path = history_path.with_name(history_path.name + ".pre-upgrade.bak")
             write_text_atomic(bak_path, history_path.read_text(encoding="utf-8"))
+            # 备份是「历史层没恢复成功时」的最后保障：别让它被失败收尾当成本次新建的
+            # 临时文件删掉（成功路径下面会主动删它）。
+            if bak_path in CREATED_FILES:
+                CREATED_FILES.remove(bak_path)
             print(
                 f"历史层已升级为 9 列（补分类/标签/creator，{history_upgrade_n} 行转换），原文件备份在 {bak_path.name}",
                 file=sys.stderr,
