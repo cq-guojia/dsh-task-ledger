@@ -479,7 +479,10 @@ def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
             CHANGED_FILES.append(path)  # 记下本次改动，供写后自动同步
         tmp = None
     except OSError as exc:
-        raise Fail(f"写 {path} 失败：{exc}")
+        raise Fail(
+            f"写 {path} 失败：{exc}\n"
+            "  处理：确认该路径可写、磁盘没满，然后重跑这条命令（文件是整份替换，不会写坏）。"
+        )
     finally:
         if fd is not None:
             try:
@@ -548,7 +551,11 @@ def _load_shaped(path: Path, *, default: dict[str, Any]) -> dict[str, Any]:
     try:
         text = path.read_text(encoding="utf-8-sig")
     except (OSError, UnicodeDecodeError) as exc:
-        raise Fail(f"读不了 {path}：{exc}")
+        raise Fail(
+            f"读不了 {path}：{exc}\n"
+            "  处理：确认文件权限与编码（应为 UTF-8）；内容被改坏就从 git 恢复："
+            f"`git checkout HEAD -- {path}`。"
+        )
     try:
         data = json.loads(text)
     except json.JSONDecodeError as exc:
@@ -705,8 +712,10 @@ def ensure_ledger(repo: Path) -> dict[str, str]:
         )
 
     if not owners_path.exists() or not pool_path.exists():
-        # 并发首次建台账：锁内再确认一次，先建成者胜
-        with progress_lock(owners_path):
+        # 并发首次建台账：锁内再确认一次，先建成者胜。
+        # 锁的是**要写的全部文件**（不是只有 owners.json）：别的命令都按 ledger_lock
+        # 锁 pool / 分片，这里只锁索引就等于让它们和建台账互相穿插。
+        with ledger_lock(repo, OWNERS_REL, POOL_REL, shard_rel(me["email"])):
             if not pool_path.exists():
                 write_ledger_json(pool_path, {"version": FORMAT_VERSION, "tasks": {}})
             if not owners_path.exists():
@@ -723,7 +732,8 @@ def ensure_ledger(repo: Path) -> dict[str, str]:
     # 显示名改了才写索引（规格：name 自动检测，但只在真变了时才落盘）
     name_changed = bool(entry) and entry.get("name") != me["name"]
     if me["email"] not in workers or not shard_path.exists() or name_changed:
-        with progress_lock(owners_path):
+        # 同上：写索引 + 分片，锁集合必须覆盖两者
+        with ledger_lock(repo, OWNERS_REL, POOL_REL, shard_rel(me["email"])):
             owners = load_owners(repo)
             workers = owners.setdefault("workers", {})
             joined = (workers.get(me["email"]) or {}).get("joined") or now()
@@ -821,7 +831,14 @@ def repo_sync_lock(git_dir: Path, timeout: float = 60.0) -> Iterator[None]:
         yield
         return
     lock_path = git_dir / "dsh-task-ledger.sync.lock"
-    fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o644)
+    try:
+        fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o644)
+    except OSError as exc:
+        # 拿不到锁就什么都不写：不能因为锁文件建不出来就无声地退化成「无锁并发」
+        raise Fail(
+            f"拿不到同步锁 {lock_path}（{exc}），本次未做任何写入。\n"
+            "  处理：确认 git 目录可写；只需写本地文件可加 --no-sync，之后手动提交。"
+        )
     acquired = False
     try:
         deadline = time.monotonic() + timeout
@@ -1418,13 +1435,24 @@ def git_sync(action: str) -> None:
         if done.returncode != 0:
             # 把台账改动撤出暂存区：留着的话用户下一次裸 `git commit` 会把数据文件
             # 卷进业务提交（脚本声称「只碰台账」，不能自己留下这个副作用）。
-            _git(*g, "reset", "-q", "--", *to_add)
-            print(
-                "提示：台账已写入本地，但自动提交失败（台账改动已撤出暂存区），"
-                "请手动提交 ledger/："
-                f"{(done.stderr or done.stdout or '').strip()}",
-                file=sys.stderr,
-            )
+            # reset 也可能失败：失败还照原话说「已撤出暂存区」就是骗人。
+            cleared = _git(*g, "reset", "-q", "--", *to_add).returncode == 0
+            reason = (done.stderr or done.stdout or "").strip()
+            if cleared:
+                print(
+                    "提示：台账已写入本地，但自动提交失败（台账改动已撤出暂存区），"
+                    "请手动提交 ledger/："
+                    f"{reason}",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    "提示：台账已写入本地，但自动提交失败，而且没能把台账改动撤出暂存区 ——"
+                    "这些改动仍停在 git 暂存区里，紧接着裸 `git commit` 会把 ledger/ 卷进你的业务提交。\n"
+                    f"  提交失败原因：{reason}\n"
+                    "  处理：先 `git reset -q -- ledger/` 把它们撤出暂存区，再手动提交 ledger/。",
+                    file=sys.stderr,
+                )
             return
         # 规则2：有上游跟踪分支才推
         upstream = _git(*g, "rev-parse", "--abbrev-ref", "@{upstream}")
@@ -1705,8 +1733,14 @@ def _presync_fetch_file(
     if dest not in PRESYNC_BACKUPS:
         try:
             PRESYNC_BACKUPS[dest] = dest.read_bytes() if dest.is_file() else None
-        except OSError:
-            PRESYNC_BACKUPS[dest] = None
+        except OSError as exc:
+            # 「读不出来」不能记成「原本不存在」：回滚时 None 会 unlink，把真实文件删掉。
+            # 拿不到底稿就不覆盖这个文件，继续用本地版本（后面会提示没刷到最新）。
+            print(
+                f"提示：{rel} 的旧内容读不出来（{exc}），本次不覆盖它，继续用本地版本。",
+                file=sys.stderr,
+            )
+            return False
     try:
         write_text_atomic(dest, text, track=False)
     except Fail as exc:
@@ -2977,20 +3011,25 @@ def record_exec(
 ) -> bool:
     """给任务的过程文档补一条执行记录（`who` = 这次动手的人，不是任务现 owner）。
 
-    返回是否真的落盘；`log` 用它判断要不要报错。调用方必须已经持有 progress_lock ——
-    与 close 的封卷（读全文→改写→落盘）互斥，否则两条记录并发追加会互相覆盖。
+    返回是否真的落盘；`log` 用它判断要不要报错。调用方必须已经持有该文件的
+    ledger_lock —— 与 close 的封卷（读全文→改写→落盘）互斥，否则两条记录并发追加
+    会互相覆盖。失败时这里只说**原因**，补救动作由调用方给（各自口径不同）。
     """
     log = find_worklog(repo, tid, task)
     if log is None:
         return False
     try:
         text = log.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+    except (OSError, UnicodeDecodeError) as exc:
+        print(f"提示：读不了 {log.name}，执行记录未写入（{exc}）。", file=sys.stderr)
         return False
     line = exec_line(now(), who, kind, note)
     try:
         write_text_atomic(log, append_exec_log(text, line))
-    except OSError:
+    except (OSError, Fail) as exc:
+        # write_text_atomic 把 OSError 包成 Fail：只捕 OSError 等于这条分支永远走不到，
+        # 结果就是「台账已改、文档没写」却以异常形式冒出去。
+        print(f"提示：执行记录没写进 {log.name}（{exc}）。", file=sys.stderr)
         return False
     return True
 
@@ -2999,6 +3038,35 @@ def write_worklog(repo: Path, tid: str, task: dict[str, Any]) -> Path:
     log = repo / worklog_dir_for(task) / worklog_name(tid)
     write_text_atomic(log, render_worklog(tid, task))
     return log
+
+
+def undo_new_task(
+    repo: Path, target: Path, target_rel: Path, tid: str, log: Path, log_existed: bool
+) -> list[str]:
+    """撤回 new 写了一半的东西，返回没撤干净的部分（空列表 = 已经干净）。
+
+    只是兜底：正常路径不调用。撤不干净的必须原样报出来 —— 悄悄留在工作树里，
+    下一次写就会被「本地有未提交改动」拦住，而用户不知道是谁留下的。
+    """
+    leftovers: list[str] = []
+    try:
+        with ledger_lock(repo, target_rel):
+            rollback = read_ledger(target)
+            if rollback.get("tasks", {}).pop(tid, None) is not None:
+                write_ledger_json(target, rollback)
+    except (OSError, Fail) as exc:
+        leftovers.append(f"{target_rel.as_posix()} 里可能还留着任务 {tid}：{exc}")
+    if not log_existed:
+        try:
+            log.unlink(missing_ok=True)
+        except OSError as exc:
+            leftovers.append(f"过程文档没删掉（{log}）：{exc}")
+        # 已经删掉的文件不能继续留在「本次写入 / 本次新建」清单里：
+        # 那份清单后续会被 git add、也会被失败收尾当成待删文件。
+        for bucket in (CHANGED_FILES, CREATED_FILES):
+            while log in bucket:
+                bucket.remove(log)
+    return leftovers
 
 
 def worklog_is_skeleton(repo: Path, tid: str, task: dict[str, Any]) -> bool:
@@ -3113,30 +3181,35 @@ def cmd_new(args: argparse.Namespace) -> None:
 
     target = shard_path if args.self else pool_path
     target_rel = shard_rel(me["email"]) if args.self else POOL_REL
+    log = repo / WORKLOG_DIR.parent / task["worklog"]
+    log_existed = log.exists()
     with ledger_lock(repo, target_rel):
         current = read_ledger(target, identity=me if args.self else None)
         if tid in current.get("tasks", {}):
             raise Fail(f"任务号 {tid} 已存在。")
-        current.setdefault("tasks", {})[tid] = task
-        write_ledger_json(target, current)
-    try:
-        log = write_worklog(repo, tid, task)
-    except Fail as exc:
-        # 过程文档建不出来就把刚写进去的任务撤掉，别留下「有任务、没文档」
-        with ledger_lock(repo, target_rel):
-            rollback = read_ledger(target)
-            rollback.get("tasks", {}).pop(tid, None)
-            write_ledger_json(target, rollback)
-        # 任务已从台账里撤回；本次新建的文件（首次建台账时的 pool.json / 索引 /
-        # 分片 / 空 worklog）由失败收尾统一删掉，工作树回到命令前的样子 ——
-        # 别在这里 clear()：那会把 ensure_ledger 建的文件也留在工作树里没人提交，
-        # 下一次写就被「本地有未提交改动」拦住。
-        raise Fail(f"创建失败，已撤销该任务：{exc}")
-    if not record_exec(
-        repo, tid, task, creator, "new", f"创建任务（{task['status']}）"
-    ):
+        # 文档与台账在**同一个**临界区里写，且先文档、后台账：崩在中间最多留一份孤儿
+        # 文档（重跑会把它盖掉），反过来则留下「有任务、没文档」，重跑被「已存在」挡住。
+        try:
+            write_worklog(repo, tid, task)
+            current.setdefault("tasks", {})[tid] = task
+            write_ledger_json(target, current)
+        except (OSError, Fail) as exc:
+            leftovers = undo_new_task(repo, target, target_rel, tid, log, log_existed)
+            raise Fail(
+                f"创建失败，已撤销该任务：{exc}"
+                + (
+                    "\n  下面这些没撤回干净，先手工处理再重跑：\n  "
+                    + "\n  ".join(leftovers)
+                    if leftovers
+                    else ""
+                )
+            )
+        logged = record_exec(
+            repo, tid, task, creator, "new", f"创建任务（{task['status']}）"
+        )
+    if not logged:
         print(
-            "提示：任务已建好，但执行记录没写进过程文档（路径不可读？）；"
+            "提示：任务已建好，但执行记录没写进过程文档；"
             "补一条：progress.py log --id " + tid,
             file=sys.stderr,
         )
@@ -3217,9 +3290,16 @@ def cmd_claim(args: argparse.Namespace) -> None:
         if pool_task is not None:
             pool["tasks"].pop(tid, None)
             write_ledger_json(pool_path, pool)
+        logged = True
         if wrote_shard:
-            record_exec(repo, tid, task, email, "claim", "认领 → doing")
+            logged = record_exec(repo, tid, task, email, "claim", "认领 → doing")
 
+    if not logged:
+        print(
+            "提示：任务已认领，但执行记录没写进过程文档；"
+            "补一条：progress.py log --id " + tid,
+            file=sys.stderr,
+        )
     if wrote_shard:
         print(
             f"已认领 {tid}：已写入你的分片（{shard_rel(email).as_posix()}），"
@@ -3236,6 +3316,17 @@ def cmd_claim(args: argparse.Namespace) -> None:
     if task.get("owner"):
         print(f"  owner   @{task['owner']}")
     print_worklog(repo, tid, task)
+
+
+def same_task_ignoring_stamp(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    """两份任务记录除了时间戳之外是否一致。
+
+    交接重跑会重算 updated / started，逐字段全比必然不等 —— 但那不代表内容不同，
+    按「内容不同」处理会把「上次交接崩在删自己分片之前」的重跑直接挡死。
+    """
+    return all(
+        a.get(k) == b.get(k) for k in set(a) | set(b) if k not in ("updated", "started")
+    )
 
 
 def cmd_set(args: argparse.Namespace) -> None:
@@ -3329,12 +3420,17 @@ def cmd_set(args: argparse.Namespace) -> None:
             # 交接：先写对方分片，再从自己这删
             other = read_ledger(target_path, identity=target_identity)
             other_tasks = other.setdefault("tasks", {})
-            if tid in other_tasks and other_tasks[tid] != task:
-                # 目标分片里已有同号（多半是上次交接崩了一半）：覆盖等于替人拍板
-                raise Fail(
-                    f"{target_rel.as_posix()} 里已经有任务号 {tid}，内容还不一样。\n"
-                    "  先跑 validate 看清哪份是真的，处理完再交接。"
-                )
+            if tid in other_tasks:
+                prior = other_tasks[tid]
+                if not same_task_ignoring_stamp(prior, task):
+                    # 目标分片里已有同号且内容真的不同：覆盖等于替人拍板
+                    raise Fail(
+                        f"{target_rel.as_posix()} 里已经有任务号 {tid}，内容还不一样。\n"
+                        "  先跑 validate 看清哪份是真的，处理完再交接。"
+                    )
+                # 上次交接崩在「写对方分片之后、删自己分片之前」：只补删自己那行，
+                # 对方那份是权威版本，别再按本次重算的 updated 覆盖一遍
+                task = prior
             other_tasks[tid] = task
             write_ledger_json(target_path, other)
             shard["tasks"].pop(tid, None)
@@ -3347,7 +3443,13 @@ def cmd_set(args: argparse.Namespace) -> None:
 
         # 释放认领（退回 open）单列一个类型，便于一眼看出「被释放过」
         kind = "release" if status == "open" else "set"
-        record_exec(repo, tid, task, email, kind, "，".join(changed))
+        logged = record_exec(repo, tid, task, email, kind, "，".join(changed))
+    if not logged:
+        print(
+            "提示：任务已更新，但执行记录没写进过程文档；"
+            "补一条：progress.py log --id " + tid,
+            file=sys.stderr,
+        )
     print(f"已更新 {tid}：" + "，".join(changed))
     print(f"  落在    {where}")
     print_worklog(repo, tid, task)
@@ -3466,7 +3568,11 @@ def cmd_close(args: argparse.Namespace) -> None:
             try:
                 log_text = log_path.read_text(encoding="utf-8")
             except (OSError, UnicodeDecodeError) as exc:
-                raise Fail(f"读不了 {log_path}：{exc}")
+                raise Fail(
+                    f"读不了 {log_path}：{exc}\n"
+                    "  处理：确认文件可读；内容被改坏就从 git 恢复"
+                    f"（`git checkout HEAD -- {log_path}`）后再重跑 close。"
+                )
             if close_category is not None or close_tags is not None:
                 # 覆盖走改写头部「分类/标签」行（在封卷之前），真源与展示副本同口径
                 log_text = rewrite_label_line(
@@ -3817,11 +3923,22 @@ def cmd_tags(args: argparse.Namespace) -> None:
                         ),
                     )
             except (OSError, Fail, UnicodeDecodeError) as exc:
-                for log, raw in backups.items():
+                failed: list[str] = []
+                for done_log, raw in backups.items():
                     try:
-                        log.write_bytes(raw)
-                    except OSError:
-                        pass
+                        done_log.write_bytes(raw)
+                    except OSError as back_exc:
+                        failed.append(f"{done_log.as_posix()}（{back_exc}）")
+                if failed:
+                    # 恢复失败还报「已恢复」等于骗人：这几份现在是半截状态，
+                    # 明说 + 给出恢复命令，比让用户以为没事强。
+                    raise Fail(
+                        f"归并失败，且有 {len(failed)} 份文档没能恢复到改写前：\n  "
+                        + "\n  ".join(failed)
+                        + f"\n  失败原因：{exc}\n"
+                        "  处理：用 `git checkout HEAD -- <上面这些文件>` 逐份恢复，"
+                        "确认正文没丢再重跑。"
+                    )
                 raise Fail(f"归并失败，已恢复已改文档，重跑一次即可：{exc}")
             write_ledger_json(shard_path, data)
         print(f"已归并「{old}」→「{new_label}」，涉及 {len(changed)} 个在办任务：")
@@ -4043,6 +4160,17 @@ def cmd_validate(args: argparse.Namespace) -> None:
     # 历史层只读体检：发现非 v6 只提示、不写盘 —— 「要不要升级」交给下一次真实写入，
     # validate 保持只读契约（原设计就不碰历史层，这里只补一条可见的迁移信号）。
     # 存量平铺文件是只读来源，不会被写入，故其中的旧格式行不会被自动升级。
+    # 在办任务的 worklog 绝对路径 → 任务号：拿它和历史行的文档链接比对，
+    # 找出「历史已结案、台账还在办」的残留（close 崩在「历史写完、分片没删」）。
+    live_logs: dict[Path, str] = {}
+    for _rel, tasks in files:
+        for tid, task in tasks.items():
+            if not isinstance(task, dict):
+                continue
+            found = find_worklog(repo, tid, task)
+            if found is not None:
+                live_logs[found.resolve()] = tid
+    both: dict[str, str] = {}
     for hp in history_sources(repo):
         rel = hp.relative_to(repo).as_posix()
         try:
@@ -4060,6 +4188,29 @@ def cmd_validate(args: argparse.Namespace) -> None:
             )
         for w in hwarnings:
             print(f"提示：{rel} {w}", file=sys.stderr)
+        for r in hrecords:
+            link = r.get("log")
+            if not link:
+                continue
+            try:
+                hit = (hp.parent / link).resolve()
+            except OSError:
+                continue  # 链接坏到 resolve 不出来：这不是本函数要报的问题
+            tid = live_logs.get(hit)
+            if tid is not None:
+                both.setdefault(tid, rel)
+    if both:
+        # 只告警、不进 problems：validate 的退出码不因它变红（这是需要人判断的残留，
+        # 不是明确违规 —— 也可能是有人故意用同一个任务号重开了活）。
+        print(
+            f"提示：{len(both)} 个任务历史层已有结案行、台账里却还在办"
+            "（close 崩在「历史写完、分片没删」时的典型残留）：\n  "
+            + "\n  ".join(f"{tid} ← {where}" for tid, where in sorted(both.items()))
+            + "\n  处理：确认确实已结案就重跑一次收尾"
+            '（`close --id <任务号> --summary "…"`；在池里先 claim）——'
+            "历史已有行不会重复追加，只补删分片那行。",
+            file=sys.stderr,
+        )
 
 
 def cmd_history(args: argparse.Namespace) -> None:
@@ -4427,7 +4578,11 @@ def main(argv: list[str] | None = None) -> int:
         # 整段持锁：写前同步的「检查 → 覆盖」与随后的写入、提交推送必须是同一段临界区
         with lock:
             return _run_once(args)
-    except Fail as exc:  # 这里只可能是等锁超时
+    except Fail as exc:  # 这里只可能是等锁 / 建锁失败
+        print(f"错误：{exc}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        # 进锁之前也可能碰 IO（建锁文件、算 git 目录）：别让它变成裸 traceback
         print(f"错误：{exc}", file=sys.stderr)
         return 1
 
