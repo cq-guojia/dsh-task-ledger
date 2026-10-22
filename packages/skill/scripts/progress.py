@@ -1193,6 +1193,11 @@ def _resolve_ledger_conflict(
         except Fail:
             return None
 
+    # 合并之后（不管有没有行级冲突）都要查一次跨文件重复：两人同时认领 / 释放同一个
+    # 任务号时，两份分片各写一份、pool 各删一次，git 会当成「不同文件不同行」静默合上，
+    # 结果同一个任务号在两个人的分片里都在，谁也发现不了。
+    conflicts.extend(_dup_task_ids(g, root, ledger_rel))
+
     if conflicts:
         return "conflict"
     if _git(*g, "add", "--", *conflicted).returncode != 0:
@@ -1204,20 +1209,60 @@ def _resolve_ledger_conflict(
     return True
 
 
-def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
+def _dup_task_ids(g: tuple[str, ...], root: str, ledger_rel: str) -> list[str]:
+    """工作树里同一任务号是否出现在多个台账文件（pool.json / 各分片）。返回人话列表。
+
+    两人同时认领 / 释放同一个任务号时，两份分片各写一份、pool 各删一次，git 会当成
+    「不同文件、不同行」静默合上 —— 同一个任务号于是在两个人的分片里都在，谁也发现不了。
+    """
+    ledger_dir = Path(root) / ledger_rel
+    files = [ledger_dir / "pool.json"]
+    owners_dir = ledger_dir / "owners"
+    if owners_dir.is_dir():
+        files.extend(sorted(p for p in owners_dir.glob("*.json") if p.is_file()))
+    seen: dict[str, str] = {}
+    dups: list[str] = []
+    for path in files:
+        try:
+            rel = path.relative_to(root).as_posix()
+        except ValueError:
+            continue
+        try:
+            rows = tasks_in(path)
+        except Fail:
+            continue  # 坏文件由 validate / 命令自己报，这里不重复报
+        for tid in rows:
+            prev = seen.get(tid)
+            if prev is not None and prev != rel:
+                dups.append(
+                    f"{tid}: 同时出现在 {prev} 与 {rel}"
+                    "（两个人同时认领 / 释放了它；保留该留的那份、删掉多余那份）"
+                )
+            else:
+                seen[tid] = rel
+    return dups
+
+
+def _rebase_retry(g: tuple[str, ...], ledger_rel: str, *, quiet: bool = False) -> bool:
     """推送被拒后自动 rebase 一次；只在工作树干净时做，失败立刻 abort。
 
     台账按任务分条存（pool.json / 分片是按任务号 key 的对象，history 一行一条），
     各自改各自的任务时 git 能按行自动合并。真冲突（同一条任务被两边改）就干净失败，
     绝不把仓库留在 rebase 中间态，也绝不 --force。
+
+    quiet=True 抑制过程提示（推送竞争里会连着重试几次，重复播同一句只会刷屏）。
     """
+
+    def note(msg: str) -> None:
+        if not quiet:
+            print(msg, file=sys.stderr)
+
     fetched = _git(*g, "fetch", timeout=30)
     if fetched.returncode != 0:
         # 不静默：凭据过期 / 离线时这里就是唯一能说明「为什么没自动合并」的地方
-        print(
+        note(
             f"提示：推送被拒后重新取最新失败"
             f"（{_why(fetched.stderr or fetched.stdout, f'退出码 {fetched.returncode}')}），未自动合并。",
-            file=sys.stderr,
         )
         return False
     # 用户自己 commit 的代码不动：rebase 会重放整支分支，把他们的提交号全改写。
@@ -1230,11 +1275,10 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
             what = f"本地有 {foreign} 个你自己的提交还没推送{detail}"
         else:
             what = "没能确认本地有没有你自己的提交（git 数不出来）"
-        print(
+        note(
             f"提示：{what}。脚本不替你 rebase（那会改写提交号），本次没有自动合并。\n"
             "  处理：手动 `git pull --rebase` 或 `git merge` 后再 `git push`；"
             "台账改动已安全留在本地。",
-            file=sys.stderr,
         )
         return False
     # --autostash：把工作树里未提交的改动（用户正在写的代码）临时收走、rebase 完自动放回。
@@ -1247,12 +1291,11 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
         # 不在这里收拾，留给上层的 catch-all 只会打一句「写后自动同步未执行」——
         # 仓库却卡住了，下一次写直接被中间态拦死。所以就地 abort 再报。
         left = _git(*g, "rebase", "--abort", timeout=30)
-        print(
+        note(
             "提示：自动 rebase 超时（60 秒），已尝试回滚。\n"
             f"  回滚结果：{'成功' if left.returncode == 0 else '失败，仓库可能停在 rebase 中间态'}\n"
             "  处理：`git status` 看清状态；你的未提交改动若被 autostash 收走，"
             "在 `git stash list` 里，解完冲突再 `git stash drop`。",
-            file=sys.stderr,
         )
         return False
     if rebase.returncode == 0:
@@ -1269,38 +1312,46 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
         if conflicted:
             # 必须点名文件：此刻这些文件带 `<<<<<<<` 标记，不写清楚就会有人把冲突标记
             # 当成品提交上去（git 不会替你报错，它只当普通改动）。
-            print(
+            note(
                 "提示：rebase 成功，但把你的未提交改动放回工作树时冲突了 —— "
                 "这些文件现在带着 `<<<<<<<` 冲突标记，别当成品提交：\n  "
                 + "\n  ".join(conflicted)
                 + "\n  改动同时还在 stash 里（`git stash list`）；解完冲突、确认内容没错"
                 "再 `git stash drop`。",
-                file=sys.stderr,
             )
         elif "autostash" in combined:
-            print(
+            note(
                 "提示：自动合并前暂存了你的未提交改动，rebase 后已放回。",
-                file=sys.stderr,
             )
+        # git 没报冲突也要查：同一任务号被两个人同时认领 / 释放时，两份分片各写一份、
+        # pool 各删一次，git 按「不同文件不同行」静默合上，任务号于是出现在两个分片里。
+        dups = _dup_task_ids(g, g[2], ledger_rel)
+        if dups:
+            left = _git(*g, "rebase", "--abort", timeout=30)
+            note(
+                "提示：合并后台账里出现重复的任务号，已回滚到 rebase 前"
+                f"（{'成功' if left.returncode == 0 else '失败，仓库可能停在 rebase 中间态'}）：\n  "
+                + "\n  ".join(dups)
+                + "\n  处理：`git status` 看清状态；确认哪份是该留的，删掉多余那份后重跑。",
+            )
+            return False
         return True
     conflict = (rebase.stderr or rebase.stdout or "").strip()
     # 行级冲突先按任务号对账一次：不同任务的改动本该自动合上，只有同一任务被两边
     # 改过才真需要人。合上了就继续，不必让人去手写一坨 JSON 冲突标记。
     resolved = _resolve_ledger_conflict(g, g[2], ledger_rel)
     if resolved is True:
-        print(
+        note(
             "提示：合并时按任务号自动对账了台账（不同任务互不影响）。",
-            file=sys.stderr,
         )
         return True
     if resolved == "conflict":
-        print(
+        note(
             f"提示：{ledger_rel} 下的台账文件里有任务被两边同时改过，"
             "已按任务逐个标出冲突（标记里左边是远端、右边是本机），没有替你选任何一个。\n"
             "  处理：编辑该文件保留你要的版本 → `git add` → `git rebase --continue`；"
             "不想合就 `git rebase --abort` 回到写之前。\n"
             "  你的台账改动已提交在本地，不会丢。",
-            file=sys.stderr,
         )
         return False
     abort = _git(*g, "rebase", "--abort", timeout=30)
@@ -1308,14 +1359,13 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
         # abort 也失败：仓库现在真的停在 rebase 中间态，必须把真实状态原样交出去。
         # 谎称「已回滚」最坏 —— 那时台账文件可能带冲突标记，继续写会全盘读坏。
         status = _git(*g, "status", "--short", "--branch")
-        print(
+        note(
             "错误：自动 rebase 冲突后回滚也失败了，仓库可能停在 rebase 中间态。"
             "在收拾干净之前不要再跑台账命令。\n"
             f"  冲突：{conflict}\n"
             f"  当前状态：{(status.stdout or '').strip()}\n"
             "  处理：在仓库根执行 `git rebase --abort`；仍失败就先 `git status` 看清残留文件"
             "（必要时删掉 .git/rebase-merge 或 .git/rebase-apply）再重试。",
-            file=sys.stderr,
         )
         return False
     # `--abort` 会把 autostash 重新 apply，这一步同样可能冲突。那时工作树里带着
@@ -1331,10 +1381,9 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str) -> bool:
         )
     if stash_n:
         extra += f"\n  另外仓库里现有 {stash_n} 条 stash（可能含刚才的 autostash），先别 drop。"
-    print(
+    note(
         "提示：自动 rebase 未成功（已回滚到 rebase 前），多半是同一条任务被两边同时改了，"
         f"请手动合并：{conflict}{extra}",
-        file=sys.stderr,
     )
     return False
 
@@ -1460,31 +1509,35 @@ def git_sync(action: str) -> None:
                 "本次推送可能把它们一并推上去。",
                 file=sys.stderr,
             )
-        try:
-            _push(g, up, check=True)
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as push_exc:
-            # 非快进：只在台账工作树干净时自动 rebase 一次再推，冲突立刻 abort。
-            # 各自改各自的任务时 git 按行自动合并；同一条任务冲突就干净失败，绝不 --force。
-            if _rebase_retry(g, ledger_rel):
-                try:
-                    _push(g, up, check=True)
-                    return
-                except (
-                    subprocess.CalledProcessError,
-                    subprocess.TimeoutExpired,
-                ) as retry_exc:
+        # 推送是分支级竞争：三个人同时结案时，第一个人推上去之后，另外两个的
+        # non-fast-forward 只是「慢了一步」，再合并一次就能进 —— 只重试一次会把
+        # 已写好的台账丢在本地（别人看不到，本人也以为推成功了）。给 3 次机会，
+        # 每次先 fetch + rebase；真冲突（同一条任务被两边改）走 _rebase_retry 的
+        # 干净失败，绝不 --force。
+        last_exc: subprocess.CalledProcessError | subprocess.TimeoutExpired | None = (
+            None
+        )
+        for attempt in range(3):
+            try:
+                _push(g, up, check=True)
+                return
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+                last_exc = exc
+                if not _rebase_retry(g, ledger_rel, quiet=attempt > 0):
+                    break
+                if attempt == 2:
                     print(
                         "提示：自动合并后再次推送仍被拒"
-                        f"（{_why(getattr(retry_exc, 'stderr', '') or str(retry_exc), '推送失败')}）。",
+                        f"（{_why(getattr(exc, 'stderr', '') or str(exc), '推送失败')}）。",
                         file=sys.stderr,
                     )
-            # 必须带 git 原话：认证过期 / 分支保护 / 非快进只能从原文分辨，只给一句猜测等于没说
-            print(
-                "提示：本地已提交，但推送被拒，本次改动已安全留在本地。\n"
-                f"  git：{_why(getattr(push_exc, 'stderr', '') or str(push_exc), '推送失败')}\n"
-                "  处理：`git push` 看原话；认证 / 权限问题找用户，不要反复重试。",
-                file=sys.stderr,
-            )
+        # 必须带 git 原话：认证过期 / 分支保护 / 非快进只能从原文分辨，只给一句猜测等于没说
+        print(
+            "提示：本地已提交，但推送被拒，本次改动已安全留在本地。\n"
+            f"  git：{_why(getattr(last_exc, 'stderr', '') or str(last_exc), '推送失败')}\n"
+            "  处理：`git push` 看原话；认证 / 权限问题找用户，不要反复重试。",
+            file=sys.stderr,
+        )
     except Exception as exc:  # noqa: BLE001 —— 同步失败不应污染台账主流程
         print(
             f"提示：写后自动同步未执行（{type(exc).__name__}: {exc}）。数据已写入本地。",
@@ -2264,8 +2317,9 @@ def _is_sep_row(cells: list[str]) -> bool:
 
 def _looks_like_header(cells: list[str]) -> bool:
     # 按内容判、不按位置判：无表头的老文件首行就是数据，位置判断会把第一条记录当表头删掉。
-    # v6 表头首列是「结案时间」，「工作包」在第 3 列；v4/v5 首列是「时间」、「工作包」在第 2 列。
-    return bool(cells) and (cells[0] in ("时间", "结案时间") or "工作包" in cells[:3])
+    # 只认首列字面「时间 / 结案时间」——数据行首列是时间戳，哪怕它的某一列字面写着
+    # 「工作包」也不是表头（那种宽松判据会把坏行当表头静默吞掉）。
+    return bool(cells) and cells[0] in ("时间", "结案时间")
 
 
 def parse_history(text: str) -> tuple[list[dict[str, Any]], list[str]]:
@@ -4429,9 +4483,31 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
+def _readonly_midstate_guard(args: argparse.Namespace) -> None:
+    """只读命令也要看中间态：rebase 卡住时台账文件带着 `<<<<<<<`，直接读只会报
+    「不是合法 JSON」，看着像数据坏了，其实是仓库还没收尾。写命令在 git_presync 里
+    已经拦了，只读命令原来不拦 —— 补上，报同样的人话。
+    """
+    try:
+        repo = find_repo(getattr(args, "repo", None))
+    except Fail:
+        return
+    top = _git("git", "-C", str(repo), "rev-parse", "--show-toplevel")
+    if top.returncode != 0:
+        return
+    mid = _git_midstate(top.stdout.strip())
+    if mid:
+        raise Fail(
+            f"仓库正处于 {mid} 中间态（有没收尾的冲突），台账文件可能带着冲突标记，"
+            "先收尾再查：`git rebase --continue`（解完冲突）或 `git rebase --abort`。"
+        )
+
+
 def _run_once(args: argparse.Namespace) -> int:
     """一条命令的完整生命周期：写前同步 → 命令本身 → 写后提交推送。"""
     try:
+        if args.command in READ_ONLY_COMMANDS:
+            _readonly_midstate_guard(args)
         git_presync(args.command, args)  # 写前刷新 ledger/ 到远端最新
         args.func(args)
     except Fail as exc:
