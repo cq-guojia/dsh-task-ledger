@@ -383,6 +383,14 @@ def my_identity_keys(repo: Path | None = None) -> set[str]:
 # 本次进程内被台账写入的真实文件路径，供写成功后一次性自动同步（git commit/push）。
 CHANGED_FILES: list[Path] = []
 
+# 改写已有文件前留的底（同一文件只留第一份 = 命令执行前的内容）。失败回滚用它，而不是
+# `git checkout --`：无 git 时也能回滚；`--no-sync` 下写前不查工作树、本地可能本来就有
+# 没提交的台账改动，checkout 会把用户自己的改动一起抹掉（那才是真丢数据）。
+CHANGED_BACKUPS: dict[Path, bytes] = {}
+
+# 写的时候没能留底的已有文件（读失败等）：失败路径要如实点名，不能假装回滚成功。
+UNBACKED_FILES: list[Path] = []
+
 # 写前预同步从远端落盘的文件：不是本次命令的写入目标，但必须随本次提交入库
 # （否则会一直以未跟踪状态留在工作树里，把自动 rebase 挡在门口）。
 PRESYNC_FILES: list[Path] = []
@@ -426,7 +434,7 @@ def discard_created_files() -> None:
     失败路径不会走到写后同步，所以「回滚了内容、文件却留在原地」等于给下一次
     写埋一个「本地台账有未提交改动」的地雷（首次建台账时尤其明显：pool.json /
     owners.json / 分片都是这一条命令里新建的）。只删本进程写出来的新文件，
-    已有文件的内容回滚由各命令自己负责。
+    已有文件的内容回滚由 `restore_changed_files` 负责。
     """
     for path in reversed(CREATED_FILES):
         try:
@@ -437,6 +445,69 @@ def discard_created_files() -> None:
     CREATED_FILES.clear()
 
 
+def restore_changed_files() -> None:
+    """命令失败时把本次**改写过的已有文件**写回命令执行前的内容。
+
+    新建的由 `discard_created_files` 删掉；已有文件若留着半成品，下一次写会被
+    「本地台账有未提交改动」拦住，而它给的处置是 `git add && commit` —— 照做就把
+    半成品固化了。只用内存里的留底（`CHANGED_BACKUPS`），不碰 git：无 git 也能回滚。
+
+    只看留底清单，不看 `CHANGED_FILES`：本次新建的文件也在那张表里，但它们没有留底
+    （删除归 `discard_created_files`），按留底清单走就不会把它们当成「恢复不了」。
+
+    写前刷新管过的文件跳过：同一文件可能「先被写前刷新成远端版本、随后被命令改写」，
+    这时留底拿到的是**刷新之后**的内容，写回去就等于把远端版本留在工作树里（正是写前
+    刷新要防的那件事）。那种文件的权威回滚源是 `PRESYNC_BACKUPS`（命令执行前的内容）。
+    """
+    presync_managed = set(PRESYNC_BACKUPS)
+    pending = list(dict.fromkeys([*CHANGED_BACKUPS, *UNBACKED_FILES]))
+    unbacked = set(UNBACKED_FILES)
+    CHANGED_FILES.clear()
+    UNBACKED_FILES.clear()
+    restored = 0
+    failed: list[str] = []
+    for path in pending:
+        original = CHANGED_BACKUPS.pop(path, None)
+        if original is None:
+            if path in unbacked and path.exists():
+                failed.append(f"{path.as_posix()}（写前没能留底，只能人工检查）")
+            continue
+        if path in presync_managed:
+            continue  # 交给 presync_rollback：它那份留底更早，才算「命令执行前」
+        if not path.exists():
+            continue  # 命令自己删掉了：内容无从写回，删了就删了
+        try:
+            path.write_bytes(original)
+            restored += 1
+        except OSError as exc:
+            failed.append(f"{path.as_posix()}（{exc}）")
+    CHANGED_BACKUPS.clear()
+    # 失败路径也要说清工作树被还原成了什么：否则用户分不清「没被碰过」与「已被回退」
+    if restored:
+        print(
+            f"提示：已把本次改写的 {restored} 个台账文件恢复成命令执行前的版本。",
+            file=sys.stderr,
+        )
+    if failed:
+        print(
+            "提示：这些台账文件没能恢复到命令执行前的版本，请人工检查：\n  "
+            + "\n  ".join(failed),
+            file=sys.stderr,
+        )
+
+
+def rollback_failed_command() -> None:
+    """命令失败后的统一收尾，顺序有讲究。
+
+    ① 先写回本次改写的已有文件（跳过写前刷新管过的那些），② 再退写前刷新 ——
+    刷新那份留底比命令的写入更早，必须最后写回才不会被打回「远端版本」，
+    ③ 最后删掉本次新建的文件。
+    """
+    restore_changed_files()
+    presync_rollback()
+    discard_created_files()
+
+
 def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
     """原子写文本：同目录唯一临时名 + fsync + os.replace，写完清理临时文件。
 
@@ -445,6 +516,8 @@ def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
 
     track=False 用于「从远端刷下来」的内容：那不是本次命令的改动，
     不能进 CHANGED_FILES，否则会被写后自动提交当成本次台账变更。
+
+    覆盖已有文件时顺带在内存里留一份底（`CHANGED_BACKUPS`），供命令失败时回滚。
 
     两个属性都得保住：mkstemp 建的是 0600，直接 replace 会把文件权限从 644 降成
     600（组内用户与 CI 读不到），所以写前继承原文件的 mode；符号链接一律拒绝，
@@ -462,6 +535,12 @@ def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
         except OSError:
             mode = 0o644  # 新文件：与 git 默认 644 对齐
             existed = False
+        if existed and track and path not in CHANGED_BACKUPS:
+            # 失败回滚要用：同一条命令可能对同一文件写多次，只留第一份（= 命令执行前的内容）
+            try:
+                CHANGED_BACKUPS[path] = path.read_bytes()
+            except OSError:
+                UNBACKED_FILES.append(path)  # 没留底：失败路径会点名让人工检查
         fd, tmp_name = tempfile.mkstemp(
             dir=str(path.parent), prefix=path.name + ".", suffix=".tmp"
         )
@@ -2521,10 +2600,12 @@ def upgrade_history(text: str, history_path: Path) -> tuple[str, int] | None:
             out.append(HISTORY_HEADER)
             continue
         if len(cells) == 9:
-            # v9 行原样回写：已含 creator
+            # v9 行原样回写：cells 已被 split_row 反转义，回写必须重新转义 ——
+            # 否则标题/摘要里原本的 `\|` 会重新变成列分隔符，这一行读回来就多一列、
+            # 被当成坏行跳过（等于升级把记录写丢了）。
             if time_key(cells[0]) is None:
                 return None
-            out.append("| " + " | ".join(cells) + " |")
+            out.append("| " + " | ".join(esc_cell(c) for c in cells) + " |")
             continue
         explicit_created: str | None = None
         creator: str | None = None
@@ -3228,6 +3309,16 @@ def cmd_new(args: argparse.Namespace) -> None:
         current = read_ledger(target, identity=me if args.self else None)
         if tid in current.get("tasks", {}):
             raise Fail(f"任务号 {tid} 已存在。")
+        if log_existed:
+            # 过程文档按任务号定名：同名文件已存在就绝不能写 —— write_worklog 是整篇
+            # 覆盖，而封卷后的正文不再有第二份。台账里查不到这个号不代表文档不存在
+            # （已结案的任务已从分片移除，它的文档还在）。
+            raise Fail(
+                f"任务 {tid} 的过程文档已经存在：{task['worklog']}\n"
+                "  再建会用空模板把它的正文整篇顶掉（已结案的正文找不回来）。\n"
+                "  处理：换一个任务号（去掉 --id 让脚本自己生成）；"
+                "那份文档确实是没用的残留，先删掉它再重建。"
+            )
         # 文档与台账在**同一个**临界区里写，且先文档、后台账：崩在中间最多留一份孤儿
         # 文档（重跑会把它盖掉），反过来则留下「有任务、没文档」，重跑被「已存在」挡住。
         try:
@@ -3528,8 +3619,9 @@ def cmd_log(args: argparse.Namespace) -> None:
         written = record_exec(repo, tid, task, email, "log", note, pre=pre)
     if not written:
         raise Fail(
-            f"没写进 {tid} 的过程文档（文件不存在或不可读）；分片里的 updated 已刷新。"
-            "先用 show --id 确认 worklog 路径，不要手写「执行记录」。"
+            f"没写进 {tid} 的过程文档（文件不存在或不可读）。"
+            "本次改动已全部回滚，盘上没留半成品；"
+            "先用 show --id 确认 worklog 路径，再重跑这条命令，不要手写「执行记录」。"
         )
     print(f"已记入 {tid} 的执行记录：{note}")
 
@@ -3730,6 +3822,7 @@ def cmd_close(args: argparse.Namespace) -> None:
             for p, content in backups.items():
                 try:
                     p.write_bytes(content)
+                    CHANGED_BACKUPS.pop(p, None)  # 这里已经恢复过，别让统一收尾再报一次
                     restored.append(str(p.relative_to(repo)))
                     if p == history_path:
                         history_restored = True
@@ -3993,6 +4086,9 @@ def cmd_tags(args: argparse.Namespace) -> None:
                 for done_log, raw in backups.items():
                     try:
                         done_log.write_bytes(raw)
+                        CHANGED_BACKUPS.pop(
+                            done_log, None
+                        )  # 已在此恢复，别让统一收尾再报一次
                     except OSError as back_exc:
                         failed.append(f"{done_log.as_posix()}（{back_exc}）")
                 if failed:
@@ -4659,14 +4755,13 @@ def _run_once(args: argparse.Namespace) -> int:
         git_presync(args.command, args)  # 写前刷新 ledger/ 到远端最新
         args.func(args)
     except Fail as exc:
-        # 命令没成功：把写前刷新覆盖过的文件恢复原样，别让远端版本冒充用户改动
-        presync_rollback()
-        discard_created_files()
+        # 命令没成功：把工作树还原成命令执行前的样子 —— 写前刷新覆盖过的、本次改写的、
+        # 本次新建的都不留下，别让半成品冒充用户改动（下一次写会被 guard 拦下来）
+        rollback_failed_command()
         print(f"错误：{exc}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
-        presync_rollback()
-        discard_created_files()
+        rollback_failed_command()
         print("已中断。", file=sys.stderr)
         return 130
     except BrokenPipeError:
@@ -4681,6 +4776,8 @@ def _run_once(args: argparse.Namespace) -> int:
             os.close(devnull)
         wrote = bool(CHANGED_FILES or PRESYNC_FILES)
         PRESYNC_BACKUPS.clear()
+        CHANGED_BACKUPS.clear()  # 写成功：留底作废
+        UNBACKED_FILES.clear()
         if wrote:
             git_sync(args.command)
         else:
@@ -4691,16 +4788,16 @@ def _run_once(args: argparse.Namespace) -> int:
             )
         return 0
     except OSError as exc:
-        presync_rollback()
-        discard_created_files()
+        rollback_failed_command()
         print(f"错误：{exc}", file=sys.stderr)
         return 1
     except Exception as exc:  # noqa: BLE001 —— 兜底：未预期的失败用独立退出码，与业务错误区分
-        presync_rollback()
-        discard_created_files()
+        rollback_failed_command()
         print(f"错误：未预期的失败 {type(exc).__name__}: {exc}", file=sys.stderr)
         return 3
     PRESYNC_BACKUPS.clear()  # 写成功：留底作废
+    CHANGED_BACKUPS.clear()  # 写成功：留底作废
+    UNBACKED_FILES.clear()  # 写成功：没留底也无所谓了
     CREATED_FILES.clear()  # 写成功：新建的就是要留的，别让后面的逻辑误删
     git_sync(args.command)  # 写成功后一次性自动同步（commit / push）
     return 0
