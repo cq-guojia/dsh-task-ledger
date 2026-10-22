@@ -2601,6 +2601,22 @@ def history_path_for(repo: Path, finished: str) -> Path:
     return repo / HISTORY_DIR / f"{month}.md"
 
 
+def history_has_log(history_path: Path, log_name: str) -> bool:
+    """当月历史里有没有这篇过程文档的结案行。
+
+    close 的每一步各自幂等：结案会删掉分片那行，重跑到「分片里已经没它」时，靠这个
+    判断「上次其实已经跑完了」，从而成功退出而不是报「没有这个任务」。
+    只看当月文件 —— 跨月那一行不找（用户 2026-10-22 明确：不许扫全年）。
+    """
+    if not history_path.exists():
+        return False
+    try:
+        text = history_path.read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError):
+        return False
+    return any(ln.startswith("| 2") and log_name in ln for ln in text.splitlines())
+
+
 def history_sources(repo: Path) -> list[Path]:
     """全部历史来源（读侧用）：存量平铺文件 + ledger/history/*.md，按路径排序。
 
@@ -2619,42 +2635,6 @@ def history_sources(repo: Path) -> list[Path]:
 # 数行计数的封顶值（2026-10-17 为 dsh-task-ledger 看板统计卡新增）：显示级统计封顶，
 # 超出即 capped，精确值走 history --json / 列表。
 COUNT_CAP = 10000
-
-
-def history_row_count(
-    sources: list[Path], since: str | None, until: str | None, cap: int = COUNT_CAP
-) -> dict[str, Any]:
-    """数行计数（只读；2026-10-17 新增，服务看板「本周 / 近一年完成」统计卡）。
-
-    只数数据行（`| 2` 开头 = 结案时间以年份开头），到 cap 封顶返回 capped=True。
-    给了 since/until 时按创建时间列（第 2 列）粗筛——取日期部分做字符串比较
-    （ISO 日期字典序即时间序），不建对象、不判格式，比 parse_history 便宜一个量级。
-    ⚠️ 显示级统计：坏行 / 旧格式行可能多数少数，精确数以 history --json 为准。
-    """
-    since_d = (since or "")[:10]
-    until_d = (until or "")[:10]
-    total = 0
-    for hp in sources:
-        try:
-            text = hp.read_text(encoding="utf-8-sig")
-        except (OSError, UnicodeDecodeError):
-            continue
-        for line in text.splitlines():
-            if not line.startswith("| 2"):
-                continue
-            if since_d or until_d:
-                cells = line.split("|")
-                if len(cells) < 4:
-                    continue
-                created = cells[2].strip()[:10]
-                if since_d and created < since_d:
-                    continue
-                if until_d and created > until_d:
-                    continue
-            total += 1
-            if total >= cap:
-                return {"count": total, "capped": True}
-    return {"count": total, "capped": False}
 
 
 def worklog_link(log_path: Path, history_path: Path) -> str:
@@ -3006,33 +2986,6 @@ def append_exec_log(text: str, line: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def guard_frozen(repo: Path, tid: str, task: dict[str, Any]) -> tuple[Path, str] | None:
-    """已封卷的任务不再接受写入；返回 (文档路径, 全文) 供调用方复用，避免二次读盘。
-
-    要判是因为 `close` 分三步落盘：写历史行 → 封卷文档 → 删分片那行。崩在最后一步时，
-    任务还在「在做」、文档却已带封卷标记；这时再 `log` / `set` / `claim` 就是往一份
-    已封卷的文档里追加内容，而且没有任何提示。
-
-    成本：这几个命令本来就要读这一篇文档来追加执行记录（`record_exec` 内部读），
-    这里只是**提前**读、并把文本交给 `record_exec(pre=…)` 复用 —— 不新增任何文件读取。
-    """
-    log = find_worklog(repo, tid, task)
-    if log is None:
-        return None
-    try:
-        text = log.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return None  # 读不了由 record_exec 报原因，不在这里重复
-    if FROZEN_MARK in text:
-        raise Fail(
-            f"任务 {tid} 的过程文档已经封卷（{log.name} 上有「{FROZEN_MARK}」），不能再写。\n"
-            "  多半是上次 close 崩在「文档已封卷、分片那行没删」留下的残留。\n"
-            f'  处理：确认确实已结案，重跑 `close --id {tid} --summary "…"` 收尾'
-            "（历史行不会重复写，只补删分片那行）；确实没结案，先查清文档为什么已被封卷。"
-        )
-    return log, text
-
-
 def record_exec(
     repo: Path,
     tid: str,
@@ -3040,30 +2993,21 @@ def record_exec(
     who: str | None,
     kind: str,
     note: str,
-    *,
-    pre: tuple[Path, str] | None = None,
 ) -> bool:
     """给任务的过程文档补一条执行记录（`who` = 这次动手的人，不是任务现 owner）。
 
     返回是否真的落盘；`log` 用它判断要不要报错。调用方必须已经持有该文件的
     ledger_lock —— 与 close 的封卷（读全文→改写→落盘）互斥，否则两条记录并发追加
     会互相覆盖。失败时这里只说**原因**，补救动作由调用方给（各自口径不同）。
-
-    `pre` = 调用方已经读过（并判过封卷）的 (路径, 全文)：给了就直接用，不再读第二遍。
     """
-    if pre is None:
-        log = find_worklog(repo, tid, task)
-        if log is None:
-            return False
-        try:
-            text = log.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as exc:
-            print(
-                f"提示：读不了 {log.name}，执行记录未写入（{exc}）。", file=sys.stderr
-            )
-            return False
-    else:
-        log, text = pre
+    log = find_worklog(repo, tid, task)
+    if log is None:
+        return False
+    try:
+        text = log.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        print(f"提示：读不了 {log.name}，执行记录未写入（{exc}）。", file=sys.stderr)
+        return False
     line = exec_line(now(), who, kind, note)
     try:
         write_text_atomic(log, append_exec_log(text, line))
@@ -3158,13 +3102,25 @@ def print_worklog(repo: Path, tid: str, task: dict[str, Any] | None = None) -> N
     print("--- 以上是该任务的过程文档，直接编辑这个文件即可 ---")
 
 
+def has_frozen_line(text: str) -> bool:
+    """文档里有没有**封卷那一行**（`> **<标记>**：时间（@人）`）。
+
+    只认这一行的形状，不搜全文散字：正文/标题/执行记录里提到这句话不算封卷。
+    （2026-10-22 教训：早先判 `FROZEN_MARK in text`，agent 记进展时顺口写一句
+    「这单已封卷」就把任务锁死了 —— 结案只该由 close 这个动作决定。）
+    """
+    return any(
+        ln.lstrip().startswith("> **") and FROZEN_MARK in ln for ln in text.splitlines()
+    )
+
+
 def stamp_frozen(text: str, finished: str, finisher: str | None = "") -> str:
     """把 worklog 标成已封卷：封卷标记并进头部引用块。
 
     已经封过卷就原样返回：`close` 崩在「文档已封卷、分片未删」之后重跑会再进来一次，
     再插一条就是两个封卷时间。
     """
-    if FROZEN_MARK in text:
+    if has_frozen_line(text):
         return text
     lines = text.splitlines()
     who = f"（@{finisher}）" if finisher else ""
@@ -3316,7 +3272,6 @@ def cmd_claim(args: argparse.Namespace) -> None:
                 )
 
         wrote_shard = False
-        pre: tuple[Path, str] | None = None
         if mine is not None:
             task = mine  # 上次搬移崩了一半：分片里已有，只补删池里那行
         else:
@@ -3326,9 +3281,6 @@ def cmd_claim(args: argparse.Namespace) -> None:
             task["status"] = "doing"
             task["started"] = task.get("started") or stamp
             task["updated"] = stamp
-            # 池里的任务也可能带着一份已封卷的文档（close 崩在半路的残留）：写之前判，
-            # 读的就是 record_exec 随后要读的那一份，次数不变。
-            pre = guard_frozen(repo, tid, task)
             shard["tasks"][tid] = task
             write_ledger_json(shard_path, shard)
             wrote_shard = True
@@ -3337,9 +3289,7 @@ def cmd_claim(args: argparse.Namespace) -> None:
             write_ledger_json(pool_path, pool)
         logged = True
         if wrote_shard:
-            logged = record_exec(
-                repo, tid, task, email, "claim", "认领 → doing", pre=pre
-            )
+            logged = record_exec(repo, tid, task, email, "claim", "认领 → doing")
 
     if not logged:
         print(
@@ -3436,8 +3386,6 @@ def cmd_set(args: argparse.Namespace) -> None:
                 raise Fail(f"任务 {tid} 还没人认领（在 pool.json 里）。先 claim 再改。")
             raise Fail(f"没有任务 {tid}：不在你的分片里（可能属于别人，或已结案）。")
         require_owner(task, tid, email)
-        # 封卷后不再接受写入；判在改任何文件之前（被拒时盘上什么都没动）
-        pre = guard_frozen(repo, tid, task)
 
         changed = []
         stamp = now()
@@ -3492,7 +3440,7 @@ def cmd_set(args: argparse.Namespace) -> None:
 
         # 释放认领（退回 open）单列一个类型，便于一眼看出「被释放过」
         kind = "release" if status == "open" else "set"
-        logged = record_exec(repo, tid, task, email, kind, "，".join(changed), pre=pre)
+        logged = record_exec(repo, tid, task, email, kind, "，".join(changed))
     if not logged:
         print(
             "提示：任务已更新，但执行记录没写进过程文档；"
@@ -3521,11 +3469,9 @@ def cmd_log(args: argparse.Namespace) -> None:
                 raise Fail(f"任务 {tid} 还没人认领（在 pool.json 里）。先 claim 再记。")
             raise Fail(f"没有任务 {tid}（可能未建或已结案；封卷后不再记）。")
         require_owner(task, tid, email)
-        # 封卷后不再接受写入；判在写分片之前，被拒时盘上什么都没动
-        pre = guard_frozen(repo, tid, task)
         task["updated"] = now()
         write_ledger_json(shard_path, shard)
-        written = record_exec(repo, tid, task, email, "log", note, pre=pre)
+        written = record_exec(repo, tid, task, email, "log", note)
     if not written:
         raise Fail(
             f"没写进 {tid} 的过程文档（文件不存在或不可读）；分片里的 updated 已刷新。"
@@ -3563,10 +3509,15 @@ def cmd_close(args: argparse.Namespace) -> None:
                 raise Fail(
                     f"任务 {tid} 还没人认领（在 pool.json 里）。先 claim 再结案。"
                 )
+            if history_has_log(repo / lock_history, worklog_name(tid)):
+                # 上一次 close 已经跑完（结案最后一步就是删掉分片那行）：再跑一次不算错
+                print(f"{tid} 已在 {lock_history.name} 里结案，无需重复操作。")
+                return
             raise Fail(f"没有任务 {tid}（不在你的分片里；可能已结案或属于别人）。")
         require_owner(task, tid, email)
-        # 「是否已经结案过」不看任务字段：结案即从分片移除，字段永远是空（原来那句判断
-        # 因此永远为假）。真正的判据是下面读到的封卷标记 + 当月历史行去重，见 log_frozen。
+        # 「是否已经结案过」不看任务字段：结案即从分片移除，字段永远是空。
+        # 幂等在每一步各自成立：历史行按当月文件去重、封卷认那一行的格式（has_frozen_line）、
+        # 分片那行删掉就没了。跨月重跑会在两个月各记一行 —— 2026-10-22 用户明确接受。
         title = " ".join((task.get("title") or tid).split())
         summary = " ".join(args.summary.split())
         if not summary:
@@ -3602,9 +3553,7 @@ def cmd_close(args: argparse.Namespace) -> None:
             close_category if close_category is not None else task.get("category")
         )
         final_tags = close_tags if close_tags is not None else (task.get("tags") or [])
-        # 先读过程文档：封卷标记要用来判「上次是否已经写过历史行」。这份读本来就有
-        # （下面要改写它封卷），只是提前 —— 不新增读盘。
-        log_frozen = False
+        # 先读过程文档：下面要改写它封卷（封卷那行由 stamp_frozen 自己判重），提前读一次。
         if log_path.exists():
             try:
                 log_text = log_path.read_text(encoding="utf-8")
@@ -3614,7 +3563,6 @@ def cmd_close(args: argparse.Namespace) -> None:
                     "  处理：确认文件可读；内容被改坏就从 git 恢复"
                     f"（`git checkout HEAD -- {log_path}`）后再重跑 close。"
                 )
-            log_frozen = FROZEN_MARK in log_text
             if close_category is not None or close_tags is not None:
                 # 覆盖走改写头部「分类/标签」行（在封卷之前），真源与展示副本同口径
                 log_text = rewrite_label_line(
@@ -3657,17 +3605,6 @@ def cmd_close(args: argparse.Namespace) -> None:
             final_tags,
             task.get("creator"),
         )
-        if log_frozen and not history_dup:
-            # 文档已封卷 ⇒ 上一次 close 已经走到「写历史」这一步。但当前月的文件里查不到
-            # 那一行，只可能是写到了别的月份。再追加就是同一件事记两次 —— 宁可停下问人。
-            # 这里不扫全部历史文件：判据只用手里这份文档 + 当月文件，零额外读盘。
-            raise Fail(
-                f"任务 {tid} 的过程文档已经封卷，但 {history_path.name} 里没有它的结案行 ——"
-                " 上次 close 多半把历史行写到了另一个月份的文件里。\n"
-                "  为免一次完成被记两次，本次不写任何文件。\n"
-                "  处理：先跑 `history` 确认它是否已经结案；确实已结案，就手工删掉分片里那一行，"
-                "不要重跑 close。"
-            )
         # 结案本身是最后一个节点：封卷前补上这条记录，封卷后不再追加
         new_log = stamp_frozen(
             append_exec_log(
@@ -4029,7 +3966,7 @@ def cmd_tags(args: argparse.Namespace) -> None:
             except (OSError, UnicodeDecodeError):
                 continue
             cat, tags = parse_label_line(text)
-            frozen = FROZEN_MARK in text
+            frozen = has_frozen_line(text)
             n_logs += 1
             n_frozen += 1 if frozen else 0
             live_cat = cat_frozen if frozen else cat_count
@@ -4344,11 +4281,12 @@ def cmd_history(args: argparse.Namespace) -> None:
         # 只取按月归档的文件（存量平铺文件不进了——它是改造前的历史，窗口模式用不到）
         monthly = [p for p in sources if p.parent.name == HISTORY_DIR.name]
         sources = monthly[-args.months :]
-    if args.count_only:
-        print(json.dumps(history_row_count(sources, since, until), ensure_ascii=False))
-        return
+    # --count-only 与 --json 走**同一条**过滤链（2026-10-22：早先是另一条只数行的快路径，
+    # 给了 --mine/--owner/--category/--tag/--limit 也照数，静默给出全仓数字）。
+    # 封顶仍在：数够 COUNT_CAP 就不再往下读，控制大仓的读盘与解析成本。
     records: list[dict[str, Any]] = []
     warnings: list[str] = []
+    capped = False
     for hp in sources:
         rel = hp.relative_to(repo).as_posix()
         try:
@@ -4361,8 +4299,9 @@ def cmd_history(args: argparse.Namespace) -> None:
             # 8 列行自带分类/标签；旧 4/5/6 列行没有，回链读 worklog 头部兜底
             if not r.get("category") and not r.get("tags"):
                 r["category"], r["tags"] = labels_for_log(r["log"], hp)
-            # v8 行（无 creator 列）回链 worklog 头部「创建」行取发起人，不丢
-            if not r.get("creator"):
+            # v8 行（无 creator 列）回链 worklog 头部「创建」行取发起人，不丢；
+            # 只数行时用不到 creator，跳过这趟回链
+            if not r.get("creator") and not args.count_only:
                 r["creator"] = creator_for_history(r["log"], hp)
         records.extend(recs)
         warnings.extend(f"{rel} {w}" for w in warns)
@@ -4391,12 +4330,20 @@ def cmd_history(args: argparse.Namespace) -> None:
             if until and c > until:
                 continue
         rows.append(r)
+        if args.count_only and len(rows) >= COUNT_CAP:
+            capped = True  # 数够一万就停：只数行时不必把剩下几万行也算完
+            break
     if undated:
         print(
             f"提示：{undated} 行没有创建时间（旧格式），未参与时间过滤；"
             "下次 close 写入后会自动补齐。",
             file=sys.stderr,
         )
+    if args.count_only:
+        # 同一个查询的两条出口必须同口径：过滤走完再数；排序对计数无用，跳过。
+        count = len(rows) if args.limit is None else min(len(rows), args.limit)
+        print(json.dumps({"count": count, "capped": capped}, ensure_ascii=False))
+        return
     # 倒序：最新创建在前（旧行无创建时间时退回按结案时间）；同一时刻稳定排序保持文件物理先后。
     rows.sort(key=lambda r: r.get("created") or r["time"], reverse=True)
     if args.limit is not None:
