@@ -97,8 +97,8 @@ CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 # 有这一节时脚本按节点自动追加，agent 改完正文跑 log 补一条。
 EXEC_HEAD = "## 执行记录"
 EXEC_HINT = (
-    "<!-- 本节由脚本维护：new / claim / set / close / log 自动追加，请勿手改。\n"
-    '     要补一条就跑 progress.py log --id <任务号> --note "做了什么"。 -->'
+    "<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。\n"
+    '     要补一条就跑 progress.py log --id <任务号> --note "一句话说清做了什么"。 -->'
 )
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
@@ -335,6 +335,7 @@ def _fallback_identity() -> str:
 
 
 _FALLBACK_WARNED = False
+_LEGACY_WARNED = False
 
 
 def current_identity(repo: Path | None = None) -> dict[str, str]:
@@ -588,6 +589,17 @@ def read_ledger(
     return data
 
 
+def _warn_unregistered_shard(repo: Path, email: str) -> None:
+    """自己那份分片没在索引里：读侧仍能看到（就是自己），但别人看不到，得说一声。"""
+    path = repo / shard_rel(email)
+    if path.is_file() and email not in registered_shards(repo):
+        print(
+            f"提示：{path.relative_to(repo).as_posix()} 没在 owners.json 里登记，"
+            "别人看不到你这份；跑一次任意写命令会自动补登记。",
+            file=sys.stderr,
+        )
+
+
 def tasks_in(path: Path) -> dict[str, Any]:
     """读任意台账文件的 tasks 层（不存在给空）。只读用，不保证写回。"""
     if not path.exists():
@@ -681,6 +693,17 @@ def ensure_ledger(repo: Path) -> dict[str, str]:
     pool_path = repo / POOL_REL
     shard_path = repo / shard_rel(me["email"])
 
+    global _LEGACY_WARNED
+    legacy = repo / "ledger" / "progress.json"
+    if not _LEGACY_WARNED and not pool_path.exists() and legacy.is_file():
+        _LEGACY_WARNED = True
+        print(
+            "提示：这个工作区还是旧布局（ledger/progress.json），新台账会从空的开始建 ——\n"
+            "  旧任务不会自动搬过来（本项目口径：不写迁移程序），"
+            "在手工迁完之前它们对脚本等于不存在。",
+            file=sys.stderr,
+        )
+
     if not owners_path.exists() or not pool_path.exists():
         # 并发首次建台账：锁内再确认一次，先建成者胜
         with progress_lock(owners_path):
@@ -696,14 +719,18 @@ def ensure_ledger(repo: Path) -> dict[str, str]:
 
     owners = load_owners(repo)
     workers = owners.setdefault("workers", {})
-    if me["email"] not in workers or not shard_path.exists():
+    entry = workers.get(me["email"]) or {}
+    # 显示名改了才写索引（规格：name 自动检测，但只在真变了时才落盘）
+    name_changed = bool(entry) and entry.get("name") != me["name"]
+    if me["email"] not in workers or not shard_path.exists() or name_changed:
         with progress_lock(owners_path):
             owners = load_owners(repo)
             workers = owners.setdefault("workers", {})
+            joined = (workers.get(me["email"]) or {}).get("joined") or now()
             workers[me["email"]] = {
                 "file": shard_rel(me["email"]).name,
                 "name": me["name"],
-                "joined": now(),
+                "joined": joined,
             }
             owners["version"] = owners.get("version", FORMAT_VERSION)
             write_ledger_json(owners_path, owners, expand="workers")
@@ -715,11 +742,21 @@ def ensure_ledger(repo: Path) -> dict[str, str]:
                         "identity": {
                             "email": me["email"],
                             "name": me["name"],
-                            "joined": now(),
+                            "joined": joined,
                         },
                         "tasks": {},
                     },
                 )
+            elif name_changed:
+                # 分片里的 identity.name 也跟着走，免得两处显示名打架
+                shard = read_ledger(shard_path, identity=me)
+                shard["identity"] = {
+                    **(shard.get("identity") or {}),
+                    "email": me["email"],
+                    "name": me["name"],
+                    "joined": joined,
+                }
+                write_ledger_json(shard_path, shard)
     return me
 
 
@@ -2052,6 +2089,19 @@ def normalize_label(value: str, *, field: str = "分类", tid: str | None = None
     return s
 
 
+def _tags_arg(raw: str | None) -> str | None:
+    """`--tags ""` / `--tags "  "` 一律当「没传」（0 个标签就是留空，不是写个空标签）。"""
+    if raw is None:
+        return None
+    return raw if raw.strip() else None
+
+
+def parse_tags_arg(raw: str | None, *, field: str = "标签") -> list[str]:
+    """命令行上的 `--tags`：空白串一律当「没传」（留空 = 不传，不是写个空标签）。"""
+    text = _tags_arg(raw)
+    return parse_tags(text, field=field) if text else []
+
+
 def parse_tags(raw: str, *, field: str = "标签", tid: str | None = None) -> list[str]:
     """标签串 → 列表：逗号 / 顿号切分（**不按空格**——空格留给英文多词标签自身），
     去空、去重保序；数量 ≤5，逐个过 normalize_label。"""
@@ -2668,10 +2718,25 @@ def load_task(repo: Path, tid: str) -> dict[str, Any]:
     `show` 要的是「这条任务现在在哪」，与 `list` 的默认范围不同 —— 别人的任务
     也得能看，所以这里按索引全扫一遍。
     """
+    found: dict[str, Any] | None = None
+    where: list[str] = []
     for path in (repo / POOL_REL, *registered_shards(repo).values()):
         task = tasks_in(path).get(tid)
         if task is not None:
-            return task
+            found = task  # 后读为准，与 list 的取舍保持一致
+            where.append(path.relative_to(repo).as_posix())
+    if found is not None:
+        if len(where) > 1:
+            # 同号两处：搬文件崩在中途或有人手改过。显示一份，但必须说出来。
+            print(
+                "提示：任务号 "
+                + tid
+                + " 在多个文件里出现（"
+                + "、".join(where)
+                + "），这里显示最后读到的那份；跑 validate 看全貌。",
+                file=sys.stderr,
+            )
+        return found
     raise Fail(
         f"没有任务 {tid}（在 pool.json 与所有已登记分片里都没找到；"
         "可能已被结案或删除）。用 list 看现有任务。"
@@ -2970,7 +3035,7 @@ def cmd_new(args: argparse.Namespace) -> None:
     category = (
         normalize_label(args.category, field="--category") if args.category else None
     )
-    tags = parse_tags(args.tags, field="--tags") if args.tags else []
+    tags = parse_tags_arg(args.tags, field="--tags")
 
     shard_path = repo / shard_rel(me["email"])
     pool_path = repo / POOL_REL
@@ -3004,7 +3069,7 @@ def cmd_new(args: argparse.Namespace) -> None:
     target = shard_path if args.self else pool_path
     target_rel = shard_rel(me["email"]) if args.self else POOL_REL
     with ledger_lock(repo, target_rel):
-        current = read_ledger(target)
+        current = read_ledger(target, identity=me if args.self else None)
         if tid in current.get("tasks", {}):
             raise Fail(f"任务号 {tid} 已存在。")
         current.setdefault("tasks", {})[tid] = task
@@ -3056,7 +3121,21 @@ def cmd_claim(args: argparse.Namespace) -> None:
     pool_path = repo / POOL_REL
     shard_path = repo / shard_rel(email)
 
-    with ledger_lock(repo, POOL_REL, shard_rel(email)):
+    # 别人分片里已经有这个号：说明池里那份被删之后又有人认领过一次（或搬移崩了一半）。
+    # 再追加一条只会让两边都以为自己拿到了，直接拒、交人裁决。
+    others = {
+        who: path
+        for who, path in registered_shards(repo).items()
+        if who != email and path != shard_path and path.is_file()
+    }
+    with ledger_lock(repo, POOL_REL, shard_rel(email), *others.values()):
+        for who, path in others.items():
+            if tid in tasks_in(path):
+                raise Fail(
+                    f"任务 {tid} 已经在 {who} 的分片里了（{path.name}），"
+                    "池里这份是残留或有人重复认领。\n"
+                    "  先跑 validate 看清两份，删掉多余那份；不要直接 claim。"
+                )
         pool = read_ledger(pool_path)
         shard = read_ledger(shard_path, identity=me)
         pool_task = pool.setdefault("tasks", {}).get(tid)
@@ -3204,7 +3283,14 @@ def cmd_set(args: argparse.Namespace) -> None:
         elif new_owner is not None and new_owner != email:
             # 交接：先写对方分片，再从自己这删
             other = read_ledger(target_path, identity=target_identity)
-            other.setdefault("tasks", {})[tid] = task
+            other_tasks = other.setdefault("tasks", {})
+            if tid in other_tasks and other_tasks[tid] != task:
+                # 目标分片里已有同号（多半是上次交接崩了一半）：覆盖等于替人拍板
+                raise Fail(
+                    f"{target_rel.as_posix()} 里已经有任务号 {tid}，内容还不一样。\n"
+                    "  先跑 validate 看清哪份是真的，处理完再交接。"
+                )
+            other_tasks[tid] = task
             write_ledger_json(target_path, other)
             shard["tasks"].pop(tid, None)
             write_ledger_json(shard_path, shard)
@@ -3260,7 +3346,8 @@ def cmd_close(args: argparse.Namespace) -> None:
     close_category = (
         normalize_label(args.category, field="--category") if args.category else None
     )
-    close_tags = parse_tags(args.tags, field="--tags") if args.tags else None
+    tags_in = _tags_arg(args.tags)  # 空串 / 全是空白 = 没传（留空不是「改成空标签」）
+    close_tags = parse_tags(tags_in, field="--tags") if tags_in else None
 
     with ledger_lock(repo, shard_rel(email)):
         before = stat_key(shard_path)
@@ -3512,11 +3599,13 @@ def cmd_list(args: argparse.Namespace) -> None:
         raw = args.owner.strip().lstrip("@")
         who = my_email() if raw.lower() == "me" else norm_identity(raw)
         owner_filter = who
-        path = registered_shards(repo).get(who) or (repo / shard_rel(who))
-        if not path.exists():
+        # 只认索引：目录里有、索引没登记的分片对它人等于不存在（validate 会报出来）
+        path = registered_shards(repo).get(who)
+        if path is None or not path.exists():
             raise Fail(
                 f"没有 {who} 的分片（owners.json 里也没登记），看不到这个人名下的任务。\n"
-                "  要确认是谁：读 ledger/owners.json 的 workers 键。"
+                "  要确认是谁：读 ledger/owners.json 的 workers 键；"
+                "自己刚建的分片如果没登记，跑一次任意写命令会自动补登记。"
             )
         sources.append((path.relative_to(repo).as_posix(), tasks_in(path)))
     elif args.all:
@@ -3525,6 +3614,7 @@ def cmd_list(args: argparse.Namespace) -> None:
             sources.append((path.relative_to(repo).as_posix(), tasks_in(path)))
     elif args.mine:
         me = my_email()
+        _warn_unregistered_shard(repo, me)
         sources.append((shard_rel(me).as_posix(), tasks_in(repo / shard_rel(me))))
     else:
         sources.append((POOL_REL.as_posix(), tasks_in(repo / POOL_REL)))
@@ -3536,6 +3626,7 @@ def cmd_list(args: argparse.Namespace) -> None:
                 file=sys.stderr,
             )
         else:
+            _warn_unregistered_shard(repo, me)
             sources.append((shard_rel(me).as_posix(), tasks_in(repo / shard_rel(me))))
 
     found: dict[str, dict[str, Any]] = {}
@@ -3544,7 +3635,12 @@ def cmd_list(args: argparse.Namespace) -> None:
         for tid, task in tasks.items():
             if owner_filter is not None and task.get("owner") != owner_filter:
                 continue
-            if wanted is not None and task.get("status") not in wanted:
+            status_now = task.get("status")
+            # 旧数据里的 blocked：读侧按进行中算（2026-10-19 起逾期由时间判定）
+            want_status = wanted
+            if status_now == "blocked" and wanted is not None and "doing" in wanted:
+                want_status = None
+            if want_status is not None and status_now not in want_status:
                 continue
             # 分类精确匹配（统计轴，同值才能比较）；标签包含匹配（容错下钻，吃掉同义变体）
             if args.category and (task.get("category") or "") != args.category.strip():
@@ -3643,6 +3739,15 @@ def cmd_tags(args: argparse.Namespace) -> None:
                     "（池里与别人分片的任务一律不动：要动先认领）"
                 )
                 return
+            if getattr(args, "dry_run", False):
+                # 预览：先把「会改哪些」摆出来给人确认，再决定要不要真改
+                print(
+                    f"预览（未改动任何文件）：「{old}」→「{new_label}」涉及 {len(changed)} 个任务："
+                )
+                for tid in changed:
+                    print(f"  {tid}")
+                print("确认无误后去掉 --dry-run 再跑一次。")
+                return
             # 先改在办 worklog 头部（展示副本与真源同口径），最后才写分片：
             # 中途失败时 json 未动、worklog 改写幂等，重跑一次即可收敛
             backups: dict[Path, bytes] = {}
@@ -3676,10 +3781,14 @@ def cmd_tags(args: argparse.Namespace) -> None:
 
     # --all：worklog 目录是唯一来源 —— 在办任务的 worklog 也在里面（new 建档即写），
     # 与在办任务合并会重复计数；已结案任务已从分片移除、只剩 worklog，天然只计一次。
+    # 在办 / 已封卷分开数：`--rename` 只动在办，两者合起来会把「影响条数」估高
     cat_count: dict[str, int] = {}
     tag_count: dict[str, int] = {}
+    cat_frozen: dict[str, int] = {}
+    tag_frozen: dict[str, int] = {}
     wdir = repo / WORKLOG_DIR
     n_logs = 0
+    n_frozen = 0
     if wdir.is_dir():
         for log in sorted(wdir.rglob("*.md")):
             try:
@@ -3687,21 +3796,35 @@ def cmd_tags(args: argparse.Namespace) -> None:
             except (OSError, UnicodeDecodeError):
                 continue
             cat, tags = parse_label_line(text)
+            frozen = FROZEN_MARK in text
             n_logs += 1
+            n_frozen += 1 if frozen else 0
+            live_cat = cat_frozen if frozen else cat_count
+            live_tag = tag_frozen if frozen else tag_count
             if cat:
-                cat_count[cat] = cat_count.get(cat, 0) + 1
+                live_cat[cat] = live_cat.get(cat, 0) + 1
             for t in tags:
-                tag_count[t] = tag_count.get(t, 0) + 1
+                live_tag[t] = live_tag.get(t, 0) + 1
     if not cat_count and not tag_count:
         print("还没有任何分类/标签：new 时用 --category / --tags 让 Agent 自行总结。")
         return
-    print(f"扫描 {n_logs} 份 worklog：\n")
-    print("分类（看板统计轴，精确匹配）：")
-    for cat, n in sorted(cat_count.items(), key=lambda kv: (-kv[1], kv[0])):
-        print(f"  {n:>4}  {cat}")
+    print(
+        f"扫描 {n_logs} 份 worklog（在办 {n_logs - n_frozen} / 已封卷 {n_frozen}）：\n"
+        "「在办」列才是 --rename 会动的；已封卷文档不可变，只在「已封卷」列里算。"
+    )
+    print("\n分类（看板统计轴，精确匹配）：")
+    for cat in sorted(
+        set(cat_count) | set(cat_frozen),
+        key=lambda c: (-(cat_count.get(c, 0) + cat_frozen.get(c, 0)), c),
+    ):
+        print(f"  {cat_count.get(cat, 0):>4}  {cat_frozen.get(cat, 0):>4}  {cat}")
     print("\n标签（下钻用，包含匹配）：")
-    for t, n in sorted(tag_count.items(), key=lambda kv: (-kv[1], kv[0])):
-        print(f"  {n:>4}  {t}")
+    for t in sorted(
+        set(tag_count) | set(tag_frozen),
+        key=lambda x: (-(tag_count.get(x, 0) + tag_frozen.get(x, 0)), x),
+    ):
+        print(f"  {tag_count.get(t, 0):>4}  {tag_frozen.get(t, 0):>4}  {t}")
+    print("   ↑在办  ↑已封卷")
     low = sorted(t for t, n in tag_count.items() if n <= 2)
     if low:
         print(
@@ -4162,6 +4285,11 @@ def build_parser() -> argparse.ArgumentParser:
         nargs=2,
         metavar=("旧", "新"),
         help="把在办任务里等于「旧」的分类/标签改为「新」，同步改在办 worklog 头部",
+    )
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="只列出 --rename 会改哪些任务、共几条，不动文件",
     )
     add_repo(p)
     p.set_defaults(func=cmd_tags)
