@@ -61,7 +61,7 @@
 ## 四、关键约束（不变量）
 
 1. **台账写路径（✅ 2026-10-18 用户拍板：B 混合制，按动作分流）**：
-   - **底线不变**：写台账**只经 skill 脚本**（`scripts/progress.py`），插件与 host **都不许手改** `progress.json` / `history` / worklog。所谓「host 直写」= host 代跑同一个脚本，不是自己动文件。
+   - **底线不变**：写台账**只经 skill 脚本**（`scripts/progress.py`），插件与 host **都不许手改** 台账 JSON（`pool.json` / `owners.json` / `owners/*.json`）/ `history` / worklog。所谓「host 直写」= host 代跑同一个脚本，不是自己动文件。
    - **按动作分流**（用户原话：「认领是要直接认领，只要别人没认领他就应该自己认领」「释放了就完了，就没有人了」「这个不能让他再开多少框，太麻烦了」）：
 
      | 动作 | 谁执行 | 要不要起会话 |

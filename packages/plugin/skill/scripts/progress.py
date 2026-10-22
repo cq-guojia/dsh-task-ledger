@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import argparse
+import atexit
 import contextlib
 import hashlib
 import json
@@ -415,6 +416,26 @@ def presync_rollback() -> None:
         )
 
 
+CREATED_FILES: list[Path] = []
+
+
+def discard_created_files() -> None:
+    """命令失败时收尾：把这次**新建**的文件删掉，让工作树回到命令前的样子。
+
+    失败路径不会走到写后同步，所以「回滚了内容、文件却留在原地」等于给下一次
+    写埋一个「本地台账有未提交改动」的地雷（首次建台账时尤其明显：pool.json /
+    owners.json / 分片都是这一条命令里新建的）。只删本进程写出来的新文件，
+    已有文件的内容回滚由各命令自己负责。
+    """
+    for path in reversed(CREATED_FILES):
+        try:
+            if path.exists() and not path.is_symlink():
+                path.unlink()
+        except OSError:
+            continue
+    CREATED_FILES.clear()
+
+
 def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
     """原子写文本：同目录唯一临时名 + fsync + os.replace，写完清理临时文件。
 
@@ -436,8 +457,10 @@ def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
             raise Fail(f"拒绝写入 {path}：它是符号链接，写入会把它替换成普通文件")
         try:
             mode = stat.S_IMODE(path.stat().st_mode)
+            existed = True
         except OSError:
             mode = 0o644  # 新文件：与 git 默认 644 对齐
+            existed = False
         fd, tmp_name = tempfile.mkstemp(
             dir=str(path.parent), prefix=path.name + ".", suffix=".tmp"
         )
@@ -449,6 +472,8 @@ def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
             os.fsync(fh.fileno())
         os.chmod(tmp, mode)
         os.replace(tmp, path)
+        if not existed and path not in CREATED_FILES:
+            CREATED_FILES.append(path)
         if track:
             CHANGED_FILES.append(path)  # 记下本次改动，供写后自动同步
         tmp = None
@@ -470,7 +495,6 @@ def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None:
 # ---- 分片存储层（pool / owners 索引 / 每人分片） ---------------------------
 
 # 版本不一致的提示同一个进程只打一次（一条命令可能读到三个文件）
-_VERSION_WARNED = False
 _VERSION_ISSUES: list[str] = []
 
 
@@ -485,24 +509,35 @@ def _version_problem(path: Path, data: dict[str, Any]) -> str | None:
     return f"{rel} 版本 {version}，skill 期望 {FORMAT_VERSION}"
 
 
+def _flush_version_issues() -> None:
+    """进程退出前把收集到的版本问题打**一条**汇总。
+
+    命令中途会陆陆续续读到几份台账文件（索引 / 池 / 分片），边读边打印会刷出
+    好几段几乎一样的提示；攒到退出时一次说完，也顺手把「这是我读到的那几份」讲清。
+    """
+    if not _VERSION_ISSUES:
+        return
+    print(
+        "提示：台账文件版本与本次安装的 skill 不一致（只提示，不改任何文件）：\n  "
+        + "\n  ".join(_VERSION_ISSUES)
+        + "\n  升级 skill 后第一次写常会看到；要看全仓情况跑 validate。",
+        file=sys.stderr,
+    )
+    _VERSION_ISSUES.clear()
+
+
+atexit.register(_flush_version_issues)
+
+
 def note_version(path: Path, data: dict[str, Any]) -> None:
-    """读到台账文件就顺手比一次格式版本；不一致汇总提示，只报不改。
+    """读到台账文件就顺手比一次格式版本；不一致攒进清单，退出时汇总提示、只报不改。
 
     一致时立刻返回 —— 对了就没有再去看别的文件的必要。
     """
-    global _VERSION_WARNED
     problem = _version_problem(path, data)
-    if problem is None:
+    if problem is None or problem in _VERSION_ISSUES:
         return
     _VERSION_ISSUES.append(problem)
-    if _VERSION_WARNED:
-        return
-    _VERSION_WARNED = True
-    print(
-        "提示：台账文件版本与本次安装的 skill 不一致（只提示，不改任何文件）：\n  "
-        + "\n  ".join(_VERSION_ISSUES),
-        file=sys.stderr,
-    )
 
 
 def _load_shaped(path: Path, *, default: dict[str, Any]) -> dict[str, Any]:
@@ -977,7 +1012,11 @@ def _union_merge(g: tuple[str, ...], root: str, rel: str) -> bool:
     for n in (1, 2, 3):
         raw = _git_bytes(*g, "show", f":{n}:{rel}")
         if raw is None:
-            return False
+            if n == 1:
+                # add/add：两边各自新建、没有共同祖先，用空 base 当三方合并的底
+                raw = b""
+            else:
+                return False
         staged[n] = raw
     with tempfile.TemporaryDirectory() as td:
         order = (2, 1, 3)  # git merge-file 的顺序是 current / base / other
@@ -989,11 +1028,29 @@ def _union_merge(g: tuple[str, ...], root: str, rel: str) -> bool:
         out = _git(*g, "merge-file", "--union", "-p", *paths)
         if out.returncode != 0:
             return False
+        text = out.stdout
+        if "/history/" in rel:
+            text = _tidy_history_text(text)  # 两边都带表头 → 去重合并成一份
         try:
-            write_text_atomic(Path(root) / rel, out.stdout, track=False)
+            write_text_atomic(Path(root) / rel, text, track=False)
         except Fail:
             return False
     return True
+
+
+def _tidy_history_text(text: str) -> str:
+    """union 合并后的历史层正文整理：一份表头 + 数据行去重（保序）。"""
+    rows: list[str] = []
+    for line in text.splitlines():
+        row = line.strip()
+        if not row.startswith("|"):
+            continue
+        if row == HISTORY_HEADER.strip() or not row.strip("|-: "):
+            continue
+        if row not in rows:
+            rows.append(row)
+    body = "\n".join(rows)
+    return f"{HISTORY_TITLE}\n\n{HISTORY_HEADER}\n{HISTORY_SEP}\n{body}\n"
 
 
 def _resolve_ledger_conflict(
@@ -1061,9 +1118,10 @@ def _resolve_ledger_conflict(
 
         # stage(1)=共同祖先、stage(2)=上游别人的、stage(3)=本机正在重放的（rebase 语义，实测确认）
         s1, s2, s3 = stage(1), stage(2), stage(3)
-        if s1 is None or s2 is None or s3 is None:
+        if s2 is None or s3 is None:
             return None
-        base, upstream, local = s1[1], s2[1], s3[1]
+        # add/add（两边各自新建同一份文件）没有 stage 1：用空 base，按条目并起来
+        base, upstream, local = (s1[1] if s1 else {}), s2[1], s3[1]
         merged, file_conflicts = _merge_task_dicts(base, upstream, local)
         conflicts.extend(file_conflicts)
         try:
@@ -1617,28 +1675,35 @@ def _rel_to_git(git_root: Path, path: Path | None) -> str | None:
         return None
 
 
-def _stash_ff_worklog(root: str, upstream: str, rels: list[str]) -> None:
+def _stash_ff_worklog(root: str, upstream: str, rels: list[str]) -> bool:
     """worklog 有手写未提交改动时的「取最新」：收起来 → 快进 → 叠回去。
 
     直接覆盖会吞掉手写内容；不覆盖则后面「读全文→追加→写回」基于旧版，把远端
     那次改动整段写没（实测：两台机器各写过同一 worklog，远端内容直接消失）。
     stash 是唯一两头都保住的走法，冲突就留给 git 标出来让人合。
+
+    返回「这些文件现在已是远端最新」—— 是就别再打「没刷最新」的提示了。
     """
     if not rels:
-        return
+        return False
     names = "、".join(rels)
     st = _git("git", "-C", root, "stash", "push", "-q", "--", *rels, timeout=30)
     if st.returncode != 0:
         print(f"提示：{names} 暂时收起失败，本次没取它们的最新版本。", file=sys.stderr)
-        return
+        return False
     ff = _git("git", "-C", root, "merge", "--ff-only", "-q", upstream, timeout=30)
     if ff.returncode != 0:
-        _git("git", "-C", root, "stash", "pop", "-q", timeout=30)
+        back = _git("git", "-C", root, "stash", "pop", "-q", timeout=30)
+        if back.returncode != 0:
+            raise Fail(
+                f"{names} 已从工作树收起，但快进失败、放回时又冲突了：改动在 stash 里没丢。\n"
+                f"  处理：`git stash list` 找到它 → `git stash pop` 解决冲突 → 重跑这条命令。"
+            )
         print(
             f"提示：{names} 收起后仍没能快进到 {upstream}，手写内容已放回。",
             file=sys.stderr,
         )
-        return
+        return False
     pop = _git("git", "-C", root, "stash", "pop", "-q", timeout=30)
     if pop.returncode != 0:
         raise Fail(
@@ -1647,6 +1712,7 @@ def _stash_ff_worklog(root: str, upstream: str, rels: list[str]) -> None:
             "  顺序不能反：先 drop 再解决，手写的那段就没了。"
         )
     print(f"提示：{names} 的手写改动已叠到 {upstream} 的最新版本上。", file=sys.stderr)
+    return True
 
 
 def _presync_worklog_rels(
@@ -1854,8 +1920,9 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
             # 绝大多数 ff 失败就是「worklog 里有手写还没提交的正文」。不处理的话，
             # 后面的写命令会基于旧版改写再写回，把远端那次改动整段写没。
             dirty_wl = [r for r in wl_rels if _is_dirty(str(git_root), r)]
-            if dirty_wl:
-                _stash_ff_worklog(str(git_root), upstream, dirty_wl)
+            if dirty_wl and _stash_ff_worklog(str(git_root), upstream, dirty_wl):
+                # 已经叠到远端最新上了，别再走下面「没刷最新」的提示
+                wl_rels = [r for r in wl_rels if r not in dirty_wl]
 
     root = str(git_root)
     worklog_rel = f"{ledger_rel}/{WORKLOG_DIR.name}"
@@ -1915,7 +1982,10 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
     _presync_guard(root, upstream, managed, remote_files)
 
     for rel in remote_files:
-        _presync_fetch_file(root, upstream, rel)
+        # track=True：刷下来的台账 JSON 要随本次提交入库。命令随后可能一个字段都没改
+        # （比如 release 到同状态），那时没有别的改动，这份刷新就会以「未提交改动」
+        # 留在工作树里，把下一次写的 guard 挡住。
+        _presync_fetch_file(root, upstream, rel, track=True)
 
     # worklog：只补本地缺的新文件，已有文件（正文由人写）一个字都不碰
     added = 0
@@ -2488,12 +2558,15 @@ def append_history_line(
     category: str | None = None,
     tags: list[str] | None = None,
     creator: str | None = None,
-) -> tuple[str, int]:
-    """把一行历史追加到指定历史文件，返回 (新全文, 升级行数)。
+) -> tuple[str, int, bool]:
+    """把一行历史追加到指定历史文件，返回 (新全文, 升级行数, 是否已存在)。
 
     读目标 → upgrade_history → 解析不了就按现有列数追加（绝不把 9 列写进少列表头）
     → 文件不存在则带 9 列表头新建。close 专用：「行落哪个月」之外，
     历史行的落盘逻辑只此一处。分类/标签/creator 由 close 传 task 终值。
+
+    幂等键 = 过程文档路径（任务号 + 随机码，天然唯一）：`close` 崩在「历史已写、
+    分片未删」之后重跑，同一篇文档对应的行不再追加第二条。
     """
     if not history_path.exists():
         return (
@@ -2510,11 +2583,17 @@ def append_history_line(
                 creator,
             ),
             0,
+            False,
         )
     try:
         text = history_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         raise Fail(f"读不了 {history_path}：{exc}")
+    # 幂等：这一篇过程文档已经有一行了（多半是上次崩在「历史写完、任务没删」）
+    want = Path(log_rel).name
+    rows, _warns = parse_history(text)
+    if any((r.get("log") or "").endswith(want) for r in rows):
+        return text, 0, True
     if not text.endswith("\n"):
         text += "\n"
     upgraded = upgrade_history(text, history_path)
@@ -2539,6 +2618,7 @@ def append_history_line(
                 creator,
             ),
             0,
+            False,
         )
     new_text, n = upgraded
     return (
@@ -2547,6 +2627,7 @@ def append_history_line(
             finished, created, title, owner, summary, log_rel, category, tags, creator
         ),
         n,
+        False,
     )
 
 
@@ -2936,14 +3017,19 @@ def cmd_new(args: argparse.Namespace) -> None:
             rollback = read_ledger(target)
             rollback.get("tasks", {}).pop(tid, None)
             write_ledger_json(target, rollback)
-        # 撤销后台账文件已回到「没有这条任务」的样子，可以随本次提交入库 ——
-        # 所以这里**不能**整体 clear()：ensure_ledger 刚建好的 pool.json / 索引 /
-        # 分片要是被一起丢掉，工作树会留下没人提交的台账，下一次写就被
-        # 「本地有未提交改动」拦住了。只保证目标文件仍在待提交集合里。
-        if target not in CHANGED_FILES:
-            CHANGED_FILES.append(target)
+        # 任务已从台账里撤回；本次新建的文件（首次建台账时的 pool.json / 索引 /
+        # 分片 / 空 worklog）由失败收尾统一删掉，工作树回到命令前的样子 ——
+        # 别在这里 clear()：那会把 ensure_ledger 建的文件也留在工作树里没人提交，
+        # 下一次写就被「本地有未提交改动」拦住。
         raise Fail(f"创建失败，已撤销该任务：{exc}")
-    record_exec(repo, tid, task, creator, "new", f"创建任务（{task['status']}）")
+    if not record_exec(
+        repo, tid, task, creator, "new", f"创建任务（{task['status']}）"
+    ):
+        print(
+            "提示：任务已建好，但执行记录没写进过程文档（路径不可读？）；"
+            "补一条：progress.py log --id " + tid,
+            file=sys.stderr,
+        )
     print(f"已创建任务 {tid}")
     print(f"  标题    {task['title']}")
     print(f"  状态    {task['status']}")
@@ -3230,7 +3316,7 @@ def cmd_close(args: argparse.Namespace) -> None:
             close_category if close_category is not None else task.get("category")
         )
         final_tags = close_tags if close_tags is not None else (task.get("tags") or [])
-        new_history, history_upgrade_n = append_history_line(
+        new_history, history_upgrade_n, history_dup = append_history_line(
             history_path,
             finished,
             created_key,
@@ -3319,6 +3405,12 @@ def cmd_close(args: argparse.Namespace) -> None:
 
         # 顺序：先写历史与过程文档，**最后**才从自己的分片移除。
         # 中途崩溃最坏是「历史多一行、任务还留着」，可重跑识别，不会丢记录。
+        if history_dup:
+            print(
+                "提示：历史层已有这篇过程文档的行，未重复追加"
+                "（上次可能崩在「历史写完、任务没删」）。",
+                file=sys.stderr,
+            )
         try:
             write_text_atomic(history_path, new_history)
             write_text_atomic(log_path, new_log)
@@ -3665,23 +3757,36 @@ def cmd_validate(args: argparse.Namespace) -> None:
         if owner_dir.is_dir()
         else []
     )
+
+    def tasks_or_problem(rel: str, path: Path) -> dict[str, Any]:
+        """读坏了就记一条问题并当空文件继续 —— 不能让一处坏 JSON 吞掉已收集的问题。"""
+        try:
+            return tasks_in(path)
+        except Fail as exc:
+            problems.append(f"{rel}: {exc}")
+            return {}
+
     registered_names = {p.name for p in registered.values()}
     for path in on_disk:
         if path.name not in registered_names:
+            rel = f"{OWNERS_DIR.as_posix()}/{path.name}"
+            try:
+                n_tasks = len(tasks_in(path))
+            except Fail:
+                n_tasks = 0  # 坏 JSON 会在 ③ 里作为独立问题报出来，这里不重复报
             problems.append(
-                f"{OWNERS_DIR.as_posix()}/{path.name} 没在 owners.json 里登记"
-                f"（里面 {len(tasks_in(path))} 个任务会静默消失）"
+                f"{rel} 没在 owners.json 里登记（里面 {n_tasks} 个任务会静默消失）"
             )
 
     # ③ 同一任务号出现在多个文件 + ④ 池里只该装未认领 + 逐任务字段检查
     files: list[tuple[str, dict[str, Any]]] = [
-        (POOL_REL.as_posix(), tasks_in(pool_path))
+        (POOL_REL.as_posix(), tasks_or_problem(POOL_REL.as_posix(), pool_path))
     ]
     for path in [*registered.values(), *on_disk]:
         rel = path.relative_to(repo).as_posix()
         if any(rel == known_rel for known_rel, _ in files):
             continue
-        files.append((rel, tasks_in(path)))
+        files.append((rel, tasks_or_problem(rel, path)))
 
     seen: dict[str, str] = {}
     total = 0
@@ -3998,7 +4103,9 @@ def build_parser() -> argparse.ArgumentParser:
     add_repo(p)
     p.set_defaults(func=cmd_claim)
 
-    p = sub.add_parser("set", help="改状态 / 交接（结案请用 close）")
+    p = sub.add_parser(
+        "set", help="改状态 / 释放认领（--status open）/ 交接（结案请用 close）"
+    )
     p.add_argument("--id", required=True)
     p.add_argument("--status", help=f"{' / '.join(STATUSES)}（done 请走 close）")
     p.add_argument("--owner", help="交接给谁（仅供 UI / 维护者；agent 提示词不暴露）")
@@ -4155,10 +4262,12 @@ def _run_once(args: argparse.Namespace) -> int:
     except Fail as exc:
         # 命令没成功：把写前刷新覆盖过的文件恢复原样，别让远端版本冒充用户改动
         presync_rollback()
+        discard_created_files()
         print(f"错误：{exc}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
         presync_rollback()
+        discard_created_files()
         print("已中断。", file=sys.stderr)
         return 130
     except BrokenPipeError:
@@ -4184,13 +4293,16 @@ def _run_once(args: argparse.Namespace) -> int:
         return 0
     except OSError as exc:
         presync_rollback()
+        discard_created_files()
         print(f"错误：{exc}", file=sys.stderr)
         return 1
     except Exception as exc:  # noqa: BLE001 —— 兜底：未预期的失败用独立退出码，与业务错误区分
         presync_rollback()
+        discard_created_files()
         print(f"错误：未预期的失败 {type(exc).__name__}: {exc}", file=sys.stderr)
         return 3
     PRESYNC_BACKUPS.clear()  # 写成功：留底作废
+    CREATED_FILES.clear()  # 写成功：新建的就是要留的，别让后面的逻辑误删
     git_sync(args.command)  # 写成功后一次性自动同步（commit / push）
     return 0
 

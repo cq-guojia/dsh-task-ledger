@@ -62,6 +62,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 ```
 
 子命令：`new` `claim` `set` `log` `close` `list` `history` `show` `tags` `validate`。
+定位项目：`--repo <目录>` 优先；不给就按「git 仓根 → 含 `docs/` 的上级」自己找，传子目录会抬到台账根。
 参数细节一律看 `<子命令> --help`（不要凭记忆编参数）。
 `new` / `claim` / `set` / `show` 返回 worklog 路径 + 全文；`log` 回一行确认、`close` 回结案摘要，`list` / `history` 只回摘要不吐正文。
 

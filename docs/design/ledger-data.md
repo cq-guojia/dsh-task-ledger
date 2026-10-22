@@ -75,7 +75,7 @@
 
 | 规则 | 反例（2026-10-17 真机 500） |
 |---|---|
-| 带 `--json` / `--count-only` 时，**空结果也要出 JSON**：`history --json` → `{"count":0,"filters":{…},"records":[]}`、`history --count-only` → `{"count":0,"capped":false}`、`list --json` → `{}`（`list` 是「任务号为键的对象」，见第三节） | `history` 在「没有任何历史文件」时直接 print 人话后 return ⇒ 插件 `getClosedCounts` 抛错 ⇒ `/board` 整条 500。**一个空台账工作区就能让整个看板打不开** |
+| 带 `--json` / `--count-only` 时，**空结果也要出 JSON**：`history --json` → `{"count":0,"filters":{…},"records":[]}`、`history --count-only` → `{"count":0,"capped":false}`、`list --json` → `{}`（`list` 是「任务号为键的对象」，见第二节） | `history` 在「没有任何历史文件」时直接 print 人话后 return ⇒ 插件 `getClosedCounts` 抛错 ⇒ `/board` 整条 500。**一个空台账工作区就能让整个看板打不开** |
 | 人话只走 stdout 的非 JSON 模式，或 stderr | 提示类信息本来就在 stderr，别混进 stdout |
 | 真失败照旧非零退出 + stderr 原文（不伪装成空 JSON） | 空 ≠ 错：空是合法数据，错才是错 |
 

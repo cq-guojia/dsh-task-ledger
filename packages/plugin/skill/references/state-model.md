@@ -43,6 +43,7 @@ doing ──set --status open──> 搬回 pool.json（open，owner 与 started
 - **history 列序**：第一列结案时间、第二列创建时间；排序按创建时间。
 - **时区：全链路 UTC**（2026-10-22 起）。存盘值（任务号 / worklog 文件名、分片与 `pool.json` 的 `created`/`started`/`updated`/`finished`、history 行、分月归档）一律 UTC，不带偏移量后缀 —— `2026-10-22 02:30:00` 语义即 UTC。
   - **写**：`now()` 取 UTC；`--created` / `--finished` 按**本地墙钟**录入，脚本内部转 UTC 再存。
+  - worklog 的「执行记录」行时间、封卷行时间、worklog 头部「创建时间」同样存 UTC。
   - **读/筛**：`--since` / `--until` 也收本地时间，内部转 UTC 比较；人看的输出（`list` / `history` 文本）转回本机时区显示，`--json` 原样给 UTC。
   - **存量老数据**（2026-10-22 前）写的是写入者本地时间、无标记，无法与 UTC 区分：显示会偏后若干小时、`--since` / `--until`
     也会整体偏一个时区，按「无后缀 = 写入者本地」兼容读；迁移口径见本仓工作日志「台账数据面改分片」那条的迁移注记。
