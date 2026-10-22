@@ -1,86 +1,119 @@
-# 数据说明：台账文件格式（插件唯一数据源）
+# 数据说明：台账文件格式
 
-> **状态**：✅ 已核实（2026-10-16 初版；2026-10-22 按分片布局改写 pool / owners 两节，宿主侧适配待下一轮）
-> **来源**：`task-ledger` skill（`scripts/progress.py` + `assets/worklog.md`）为格式真源；样例取自 NAS-Docker 工作区与本仓 `ledger/`
-> **配套**：架构见 [`architecture.md`](architecture.md)；skill 分发见 [`external/dsh-skill-registration.md`](external/dsh-skill-registration.md)
+> **状态**：🔵 落码（数据格式与写序均为现状；写序表里的**函数名**是 📝 计划）
+> **来源**：`task-ledger` skill（`packages/skill/scripts/progress.py` + `assets/worklog.md`）是格式真源
+> **配套**：运行逻辑见 [`architecture.md`](architecture.md)；脚本分层见 [`code-conventions.md`](code-conventions.md)
 
-本项目**不自建数据库**：插件只读各工作区的台账文件。格式真源在 skill 侧；history 列数等字面值若随 skill 调整，以 skill 代码为准回改本文。
+本项目**不自建数据库**：插件只读各工作区的台账文件。格式真源在 skill 代码，本文档只做索引级说明；字面值以代码为准。
 
 ## 一、目录布局（每个工作区根下）
 
 ```
 <工作区>/
 ├── ledger/
-│   ├── pool.json                  # 公共池：未认领任务（owner 空、status=open；只由 skill 脚本写）
-│   ├── owners.json                # 索引：身份（git 邮箱）→ 分片文件（只由 skill 脚本写）
-│   ├── owners/<hash>.json         # 每人一份分片：自己认领的任务（只由 skill 脚本写）
-│   ├── history/<年月>.md          # 已结案索引，按结案时间分月（9 列，2026-10-17 起）
+│   ├── pool.json                  # 公共池：未认领任务（owner=null、status=open）
+│   ├── owners.json                # 索引：身份（git 邮箱）→ 分片文件
+│   ├── owners/<hash12>.json       # 每人一份分片：自己名下的任务
+│   ├── history/<年月>.md          # 已结案索引，按结案时间分月（9 列）
 │   └── worklog/<年月>/            # 过程正文，一任务一篇
 │       └── <日>-<时分>-<说明>-<随机码>.md
 ```
 
-2026-10-22 起改为**一人一份分片**（此前是单文件 `progress.json`，本仓旧数据按「老项目不写迁移程序」的口径由 agent 逐个手动迁）：自己只写自己那份，
-公共池放待认领的登记行，**agent 不手改它**（要动先 `claim`；脚本释放时会把任务写回这里）。
+以上五类文件**只由脚本写**（📝 计划：L1 落盘、业务层定写序）。
 
-## 二、pool.json / owners/*.json（在办）
+⚠️ **本仓（`dsh-task-ledger` 自己）尚未迁到分片布局**：`history/`（按月文件、9 列）与 `worklog/`（按月目录）已是新布局，`owners/` 目录已建但为空；**缺 `pool.json`、`owners.json` 与各人分片**，在办任务仍记在 `ledger/progress.json`。按既定口径**不写迁移程序**，老工作区由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。存量扁平 `ledger/PROGRESS-HISTORY.md` 只读兼容、永不重写。
 
-两者形状相同：`version`（格式版本，读侧只告警不拦）+ 可选的 `identity`（仅分片有）+ `tasks` 对象，键 = 任务号
-（`年月日-时分-标题要素-随机码`）。任务字段：
+## 二、任务表：`pool.json` 与 `owners/*.json`
+
+**两者是同一张表（任务表）的两个落点**：`pool.json` = `owner` 为空的那个分区，分片 = 某人名下那个分区。所以「认领 / 释放 / 交接」都是**跨分区的搬移**，不是「新建一条 + 删除一条」两笔独立记录。
+
+形状：`version`（格式版本）+ 可选 `identity`（仅分片有）+ `tasks` 对象（键 = 任务号 `年月日-时分-标题要素-随机码`）。
+
+**写盘格式是契约**：`tasks` 里**一个任务一行**，其余字段各压一行（`write_ledger_json` 的 `expand` 参数）。这是多人合并与 git 行级 diff 的前提，不许改成缩进美化格式。
 
 | 字段 | 值样例 | 说明 |
 |---|---|---|
 | `title` | 熟悉项目初衷并搭建初始文档架构 | 任务标题 |
-| `status` | `open` / `doing` | `done` 只能由 close 产生；`blocked` 是旧数据，读侧当进行中（2026-10-19 起逾期改由时间判定）。池里的行恒为 `open` |
-| `creator` / `owner` | `ming@example.com` | **git 邮箱**（归一化后的小写标识），不是 `user.name`；池里的行 `owner` 为 null |
-| `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | **UTC**、不带偏移量后缀（2026-10-22 起；之前写的是写入者本地时间，无标记、无法区分）；`finished` 结案前为 null；`updated` = 最后一次推进（建 / 认领 / 改状态 / 交接 / 补执行记录），老数据可能缺失（看板回退到 `started` / `created`） |
+| `status` | `open` / `doing` | `done` 只能由 close 产生；`blocked` 是旧数据，读侧当进行中 |
+| `creator` / `owner` | `ming@example.com` | **git 邮箱**（归一化小写），不是 `user.name`；池里的行 `owner` 为 null |
+| `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | **2026-10-22 起才写 UTC、不带偏移量**；此前写的是写入者本地时间且无标记，两类无法区分。`finished` 结案前为 null；`updated` = 最后一次推进，老数据可能缺失（看板回退到 `started` / `created`） |
 | `category` | 建设 | 单值分类 |
-| `tags` | ["文档架构","初始化","调研"] | 0~5 个 |
+| `tags` | `["文档架构","初始化"]` | 0~5 个 |
 | `worklog` | `worklog/202610/16-1742-…-5563.md` | 相对 `ledger/` 的过程文档路径 |
 
-`owners.json` 是另一形状：`workers` 对象，键 = 归一化身份，值 = `{"file": "<sha256前12位>.json", "name": …, "joined": …}`。
-分片文件名 = `sha256(归一化身份)[:12] + ".json"`；**索引是唯一入口** —— 目录里有、索引没登记的分片对它人等于不存在（`validate` 报出来，
-自己读自己那份会提示「没登记」）。
-`identity.name` 取当前 git `user.name`，**变了才写**（索引与分片一起更新），`joined` 保留首次登记时间。
+版本字段 `version` 的处理：与当前格式不符**只告警不拦**（退出时汇总一条）；只有 `tasks` 不是对象才直接报错；要写回的文件缺 `version` 时补当前值。
+**落点写死在 `store/json_store.py`**：读盘发现版本与 `core/labels.py::FORMAT_VERSION` 不符 ⇒ `notices.note("提示：…")` 一次（进程级去重，不拦）；写盘一律带当前 `FORMAT_VERSION`（缺就补）。别在动作层各自判断。
 
-## 三、history/<年月>.md（已结案，9 列）
+不变量：池里的行恒为 `open` 且 `owner` 为空；分片里的行 `owner` 必须等于该分片主人（分区键与字段不能打架，`validate` 查）。
 
-> 存量 8 列文件的手动升级步骤（逐文件清单 + 一键命令）：见 [`docs/history-creator-upgrade.md`](../history-creator-upgrade.md)。
+## 三、索引：`owners.json`
+
+另一形状：`workers` 对象，键 = 归一化身份，值 = `{"file": "<sha256前12位>.json", "name": …, "joined": …, "aliases": […]}`（`aliases` 可选，见下）。
+
+- **`aliases` 是「同一个人还用过哪些邮箱」**（可选数组，元素为归一化身份）：判断「这条算不算我的」时用它（`core/identity.py` 的 `is_me(identity, who)`）。它是这份索引里**唯一**的身份别名来源——分片里不存别名，git 配置也猜不出来。写入只走 `OwnersIndex.ensure`（只增不删）。
+
+- 分片文件名 = `sha256(归一化身份)[:12] + ".json"`；**索引是唯一入口** —— 目录里有、索引没登记的分片对它人等于不存在（`validate` 报出来；自己读自己那份会提示「没登记」）。
+- `identity.name` 取当前 git `user.name`，**变了才写**（索引与分片一起更新）；`joined` 保留首次登记时间。
+
+## 四、已结案：`history/<年月>.md`
 
 | 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |
 |---|---|---|---|---|---|---|---|---|
-| 2026-10-16 09:18:12 | 2026-10-16 08:22:40 | koc-ledger-progress 改造为 DSH 插件调研… | 调研 | DSH、台账、NPM | @GuoJia-Agent | @GuoJia-Agent | 调研完成并落地：… | [../worklog/202610/16-0822-….md](../worklog/202610/16-0822-….md) |
+| 2026-10-16 18:22:00 | 2026-10-16 17:42:22 | 熟悉项目初衷并搭建初始文档架构 | 建设 | 文档架构、初始化、调研 | @GuoJia-Agent | @GuoJia-Agent | 初始文档架构建成… | `../worklog/202610/16-1742-…-5563.md` |
 
-- 按**结案时间**分月落文件；排序按创建时间；**首列是结案时间、次列才是创建时间**（筛选口径别搞反）。
-- 存量 `ledger/PROGRESS-HISTORY.md` 只读兼容、永不重写。
+末列是**相对 history 文件所在目录**算出的链接（不是相对 `docs/`），所以这里用代码格式展示，别当成本页的链接。
 
-## 四、worklog 过程文档
+**owner / creator 两列写「`@` + 裸标识」**：裸标识就是台账里那套归一化身份（`identity.normalize` 的结果，与 `task["owner"]` 同一个值），`@` 纯属展示约定。落行时由 `history_md.history_line` 加 `@`，`parse_history` 读回来时剥掉，所以 `--owner` / `--mine` 的比较一律在裸标识上做（**精确相等**，不做前缀或子串匹配）。
 
-固定六节：**背景 / 待办 / 下一步 / 过程 / 结论 / 执行记录**；头部带创建时间、分类 / 标签行；结案时脚本打封卷标记，此后不再修改。模板真源 = skill 的 `assets/worklog.md`。
+- 按**结案时间**分月落文件，行序按创建时间；**首列是结案时间、次列才是创建时间**（筛选口径别搞反）。
+- 这是**只追加**的表：没有删除、没有原地改行；唯一「更新」是 8 列 → 9 列的格式升级（属迁移，不是业务编辑），存量文件的升级步骤见 [`docs/history-creator-upgrade.md`](../history-creator-upgrade.md)。
+- 它是 markdown，不是 JSON：**只允许「尾部追加一行」+ 一次受控的整文件升级变换**，不做整表重排 —— 否则手写格式与 git 行级 diff 全坏。
 
-末节「执行记录」**由脚本维护、禁手改**：`new` / `claim` / `set` / `close` 各自自动追加一行，agent 改完正文后用 `log --id <任务号> --note "…"` 补一条。每行固定 `- 时间 · 类型 · @谁 · 说明`，类型取 `new` / `claim` / `set` / `release`（`set --status open` 单列）/ `log` / `close`；**只追加、不改旧行**，移交后旧记录仍记在原负责人名下。升级前建的老 worklog 没有这一节：首次记录时脚本在文末自动补一节（正文不迁移）；过程文档丢失则 `log` 报错，不静默成功。
+## 五、过程文档：`worklog/<年月>/*.md`
 
-## 五、插件消费方式（规划）
+固定六节：**背景 / 待办 / 下一步 / 过程 / 结论 / 执行记录**；头部带创建时间、分类 / 标签行。模板真源 = skill 的 `assets/worklog.md`。
 
-- 待办 = 各工作区 `pool.json` + 索引登记的全部分片里 `open` / `doing`（`blocked` 旧数据按进行中收）；
-  同一任务号出现在两个文件里是搬移中断的中间态，读侧按「后读到为准」只显示一次（`list` 与 `show` 同一取舍，
-  `show` 还会在 stderr 说明「这个号出现在多个文件」），结构性告警交给 `validate`；`claim` / `set --owner`
-  在写入前会挡一道（别人分片里已有同号 / 目标分片已有不同内容 ⇒ 拒绝），但跨机器同时抢仍有窗口；
-- 历史 = `history/<年月>.md` 9 列（owner = 负责人 / 提交人筛选面；creator = 发起人，2026-10-17 新增——
-  owner 可被 claim 改走，「谁建的」不变；看板「新增（我的）= 我创建的」靠它，与完成/未结(mine) 的 owner 口径区分）；
-- 报表 = 同源聚合（category 计数、时间线、按人工作日志）；
-- skill 的 `list` / `history` 子命令已有 `--json` 结构化输出，插件可评估「调脚本」与「自解析文件」两条路（未拍板）。
-- ⚠️ **宿主侧尚未适配分片布局**（2026-10-22 分片改造第一轮只做核心脚本）：`resolveWorkspaces` 仍按
-  `ledger/progress.json` 判活跃、看板仍只解析进度表与 history，`smoke.mjs` 里按旧布局造的用例因此失败。
-  适配工作（`hasLedger` 判 pool/owners、跨分片去重、fixture 与冒烟）排在下一轮。
+- 正文（前五节）由人 / agent 写；脚本只有「建篇」+ **三处锚点编辑**：往「执行记录」节追加一行、封卷时在头部打标记、改写头部「分类/标签」行。没有「整篇替换既有正文」这种能力，也不要给它加。
+- 末节「执行记录」**只由脚本追加**：一行固定 `- 时间 · 类型 · @谁 · 说明`，类型取 `new` / `claim` / `set` / `release` / `handoff` / `log` / `close`（`set` 只用于原地改字段；`release` / `handoff` 各有自己的取值）；只增不改。
+- 结案时封卷，此后不再修改。执行记录行用**本地时间**（与 JSON 里的 UTC 不同，别混）。
 
-## 六、跨包契约：JSON 模式必须**始终**输出 JSON
+## 六、写序 = 崩溃恢复协议（函数名为 📝 计划）
 
-插件调 skill 脚本只有一个出口（`packages/plugin/src/host/repositories/runner.ts`），它把「输出不是 JSON」当失败。因此：
+每个动作的写序不是实现细节，是数据契约。崩在中间留下的状态，必须能靠「重跑一次」收敛。「函数」列是重构后的业务函数名（计划）。
+
+| 动作 | 函数 | 写序 | 崩在中间 | 重跑怎么收敛 |
+|---|---|---|---|---|
+| 自举（登记自己） | `bootstrap` | 目录与池（缺则建）→ 索引 → 分片 | 已登记、什么都没做 | 已登记且 `name` 与 `aliases` 都没变 ⇒ 零写直接返回 |
+| 建任务 | `new_task` | 过程文档 → 台账 | 留孤儿文档 | 重跑覆盖文档；台账已有同号则拒 |
+| 认领 | `claim` | 我分片 → 删池那行 → 执行记录 | 两边都有 | 分片已有 ⇒ 只补删池 |
+| 改状态 | `set_field`（`set_task` 只路由，不写盘） | 我的分片（原地）→ 执行记录 | 分片已改、文档没记 | 重跑幂等（同样的值再写一次，内容不变） |
+| 释放 | `release` | 写回池 → 删我分片那行 → 执行记录 | 两边都有 | 池 `setdefault` 不覆盖 ⇒ 只补删我 |
+| 交接 | `handoff` | 对方分片 → 删我分片 → 执行记录 | 两边都有 | 内容一致 ⇒ 只补删我；内容不同 ⇒ 拒绝交人 |
+| 记进展 | `log_progress` | 分片 `updated` → worklog 追加 | 文档没写 | **不算失败**：警告一句 + 退出码 0，已刷的分片照常提交 |
+| 结案 | `close_task` | 改标签行（给了 `--category`/`--tags` 才做）→ 历史行 → 封卷 worklog → **最后**删分片 | 历史多一行 / 已封卷 | 历史按 worklog 名去重（末列为空的旧行改按「创建时间 + 工作包」两列判）、封卷认标记行、分片已删且历史有这行 ⇒ 返回「已结案，无需重复」、退出码 0；判不出来（`has_log` 回 `undecidable`）⇒ **Fail 并指到当月历史文件**，不猜不重复追加 |
+| 标签归并 | `rename_label` | 各篇 worklog → 分片 | 部分文档已改 | 重跑重算同一批 |
+
+已知且接受的例外：跨月重跑 `close` 会在两个月各记一行；交接撞上内容不同直接拒绝，不做自动裁决；重跑同一动作会在「执行记录」里再追加一行（日志行只增不改，不做去重）。
+
+## 七、跨包契约：JSON 模式必须**始终**输出 JSON
+
+插件调脚本的唯一出口把「输出不是 JSON」当失败，所以：
 
 | 规则 | 反例（2026-10-17 真机 500） |
 |---|---|
-| 带 `--json` / `--count-only` 时，**空结果也要出 JSON**：`history --json` → `{"count":0,"filters":{…},"records":[]}`、`history --count-only` → `{"count":0,"capped":false}`、`list --json` → `{}`（`list` 是「任务号为键的对象」，见第二节） | `history` 在「没有任何历史文件」时直接 print 人话后 return ⇒ 插件 `getClosedCounts` 抛错 ⇒ `/board` 整条 500。**一个空台账工作区就能让整个看板打不开** |
+| 带 `--json` / `--count-only` 时，**空结果也要出 JSON**：`history --json` → `{"count":0,"filters":{…},"records":[],"warnings":[],"capped":false}`、`history --count-only` → `{"count":0,"capped":false}`、`list --json` → `{}`（任务号为键的对象） | `history` 在「没有任何历史文件」时直接打人话就 return ⇒ 插件抛错 ⇒ 整条看板 500。**一个空台账工作区就能让看板打不开** |
 | 人话只走 stdout 的非 JSON 模式，或 stderr | 提示类信息本来就在 stderr，别混进 stdout |
 | 真失败照旧非零退出 + stderr 原文（不伪装成空 JSON） | 空 ≠ 错：空是合法数据，错才是错 |
 
-改动 skill 脚本 = 动这条契约 ⇒ 冒烟必须带上「空台账工作区」用例（`smoke.mjs` 已有，勿删）。
+`--count-only` 的两个键含义：`count` 是条数；`capped` 为 true 表示计数触到 `COUNT_CAP`（10000）被封顶，此时 `count` 只是下界，**不许当精确值用**（同样不许拿它算分页）。
+
+改动脚本 = 动这条契约 ⇒ 冒烟必须保留「空台账工作区」用例，`smoke.mjs` 已有，勿删。
+
+## 八、插件消费方式
+
+- 待办 = `pool.json` + 索引登记的全部分片里 `open` / `doing`；同一任务号出现在两个文件是搬移中断的中间态，读侧「后读到为准」只显示一次（`show` 会在 stderr 说明「这个号出现在多个文件」），结构性告警交给 `validate`。
+- **「后读到」的顺序是定死的**：先池、再按索引键排序后的各分片 ⇒ 同一号一定由分片那份胜出。顺序不确定会让同一份数据两次查给出不同结果。
+- 写入前的防撞：`claim` / `set --owner` 会在落盘前挡一道（别人分片里已有同号 / 目标分片已有不同内容 ⇒ 拒绝），但跨机同时抢仍有窗口。
+- 历史 = `history/<年月>.md` 9 列（owner = 负责人筛选面；creator = 发起人，`owner` 可被 claim 改走、「谁建的」不变）。
+- 报表只有两个来源：**必须读过程文档正文才知道的**（分类 / 标签 / 按人 / 按月计数）来自脚本的 `scan_worklogs`；**台账与历史里已有的**（时间线、按人工作日志、状态分布）由宿主从 `query_history` / `list_tasks` 的返回聚合。脚本不再开第三个入口。
+- 当前差异：宿主**历史侧已解析** `history/`，**待办侧仍按 `ledger/progress.json`** 判活跃、只解析旧进度表 —— 分片布局尚未适配完。
