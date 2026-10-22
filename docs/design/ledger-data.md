@@ -20,7 +20,7 @@
 ```
 
 2026-10-22 起改为**一人一份分片**（此前是单文件 `progress.json`，本仓旧数据按「老项目不写迁移程序」的口径由 agent 逐个手动迁）：自己只写自己那份，
-公共池放待认领的登记行，谁都不改它 —— 要动先 `claim`。
+公共池放待认领的登记行，**agent 不手改它**（要动先 `claim`；脚本释放时会把任务写回这里）。
 
 ## 二、pool.json / owners/*.json（在办）
 
@@ -34,7 +34,7 @@
 | `creator` / `owner` | `ming@example.com` | **git 邮箱**（归一化后的小写标识），不是 `user.name`；池里的行 `owner` 为 null |
 | `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | **UTC**、不带偏移量后缀（2026-10-22 起；之前写的是写入者本地时间，无标记、无法区分）；`finished` 结案前为 null；`updated` = 最后一次推进（建 / 认领 / 改状态 / 交接 / 补执行记录），老数据可能缺失（看板回退到 `started` / `created`） |
 | `category` | 建设 | 单值分类 |
-| `tags` | ["文档架构","初始化","调研"] | 1~5 个 |
+| `tags` | ["文档架构","初始化","调研"] | 0~5 个 |
 | `worklog` | `worklog/202610/16-1742-…-5563.md` | 相对 `ledger/` 的过程文档路径 |
 
 `owners.json` 是另一形状：`workers` 对象，键 = 归一化身份，值 = `{"file": "<sha256前12位>.json", "name": …, "joined": …}`。
@@ -71,11 +71,11 @@
 
 ## 六、跨包契约：JSON 模式必须**始终**输出 JSON
 
-插件调 skill 脚本只有一个出口（`host/script.ts::runLedgerScript`），它把「输出不是 JSON」当失败。因此：
+插件调 skill 脚本只有一个出口（`packages/plugin/src/host/repositories/runner.ts`），它把「输出不是 JSON」当失败。因此：
 
 | 规则 | 反例（2026-10-17 真机 500） |
 |---|---|
-| 带 `--json` / `--count-only` 时，**空结果也要出 JSON**（`{"count":0,"records":[]}`） | `history` 在「没有任何历史文件」时直接 print 人话后 return ⇒ 插件 `getClosedCounts` 抛错 ⇒ `/board` 整条 500。**一个空台账工作区就能让整个看板打不开** |
+| 带 `--json` / `--count-only` 时，**空结果也要出 JSON**：`history --json` → `{"count":0,"filters":{…},"records":[]}`、`history --count-only` → `{"count":0,"capped":false}`、`list --json` → `{}`（`list` 是「任务号为键的对象」，见第三节） | `history` 在「没有任何历史文件」时直接 print 人话后 return ⇒ 插件 `getClosedCounts` 抛错 ⇒ `/board` 整条 500。**一个空台账工作区就能让整个看板打不开** |
 | 人话只走 stdout 的非 JSON 模式，或 stderr | 提示类信息本来就在 stderr，别混进 stdout |
 | 真失败照旧非零退出 + stderr 原文（不伪装成空 JSON） | 空 ≠ 错：空是合法数据，错才是错 |
 

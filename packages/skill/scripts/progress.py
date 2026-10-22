@@ -292,14 +292,19 @@ def shard_rel(identity: str) -> Path:
     return OWNERS_DIR / f"{digest[:SHA_LEN]}.json"
 
 
-def _git_email() -> str | None:
-    """git 身份里的 email：GIT_COMMITTER_IDENT 优先，退回 user.email。"""
-    ident = _git("git", "var", "GIT_COMMITTER_IDENT")
+def _git_email(cwd: str | None = None) -> str | None:
+    """git 身份里的 email：GIT_COMMITTER_IDENT 优先，退回 user.email。
+
+    cwd 给定时按那个目录判身份 —— `--repo` 指向的仓库未必是当前目录所在的仓库，
+    拿当前目录的身份顶上去就会把任务记到别人名下。
+    """
+    base = ("git", "-C", cwd) if cwd else ("git",)
+    ident = _git(*base, "var", "GIT_COMMITTER_IDENT")
     if ident.returncode == 0:
         m = re.search(r"<([^>]*)>", ident.stdout)
         if m and m.group(1).strip():
             return m.group(1).strip()
-    cfg = _git("git", "config", "user.email")
+    cfg = _git(*base, "config", "user.email")
     if cfg.returncode == 0 and cfg.stdout.strip():
         return cfg.stdout.strip()
     return None
@@ -328,38 +333,48 @@ def _fallback_identity() -> str:
     return host or "default"
 
 
-def current_identity() -> dict[str, str]:
+_FALLBACK_WARNED = False
+
+
+def current_identity(repo: Path | None = None) -> dict[str, str]:
     """当前操作者 {email, name}。
 
-    在 git 仓库里必须拿到 email（拿不到就等于 git 自己也提交不了，报错与之对齐）；
-    不在仓库里 / 没装 git 才走兜底链，并提示一次身份是猜的。
+    repo 给定时按那个仓库判（`--repo` 与当前目录经常不是同一个仓库）。在 git 仓库里
+    必须拿到 email（拿不到就等于 git 自己也提交不了，报错与之对齐）；不在仓库里 /
+    没装 git 才走兜底链，并只提示一次身份是猜的。
     """
-    email = _git_email()
+    global _FALLBACK_WARNED
+    cwd = str(repo) if repo is not None else None
+    base = ("git", "-C", cwd) if cwd else ("git",)
+    email = _git_email(cwd)
     if not email:
-        if _git("git", "rev-parse", "--show-toplevel").returncode == 0:
+        if _git(*base, "rev-parse", "--show-toplevel").returncode == 0:
             raise Fail(
                 "读不到 git 邮箱，无法确定身份。\n"
                 '先配置：git config --global user.email "you@example.com"'
             )
         email = _fallback_identity()
-        print(
-            f"提示：不在 git 仓库里，身份用 {norm_identity(email)}（猜的，仅本机有效）。",
-            file=sys.stderr,
-        )
+        if not _FALLBACK_WARNED:
+            _FALLBACK_WARNED = True
+            print(
+                f"提示：不在 git 仓库里，身份用 {norm_identity(email)}"
+                "（猜的，仅本机有效）。",
+                file=sys.stderr,
+            )
     ident = norm_identity(email)
-    name = _git("git", "config", "user.name").stdout.strip() or ident
+    name = _git(*base, "config", "user.name").stdout.strip() or ident
     return {"email": ident, "name": name}
 
 
-def my_identity_keys() -> set[str]:
+def my_identity_keys(repo: Path | None = None) -> set[str]:
     """我在台账里可能出现的标识：邮箱（新数据）与 git user.name（旧数据）。
 
     只用于「我的」这类过滤；--owner 仍是针对单一标识的精确匹配。
     """
-    keys = {current_identity()["email"]}
-    name = _git("git", "config", "user.name").stdout.strip()
-    if name:
-        keys.add(name)
+    me = current_identity(repo)
+    keys = {me["email"]}
+    if me.get("name"):
+        keys.add(me["name"])  # 旧数据把 owner/creator 记成了 user.name
     return keys
 
 
@@ -504,8 +519,9 @@ def _load_shaped(path: Path, *, default: dict[str, Any]) -> dict[str, Any]:
         raise Fail(f"{path} 不是合法 JSON：{exc}")
     if not isinstance(data, dict):
         raise Fail(f"{path} 结构不对：顶层应为对象")
-    if not isinstance(data.get("version"), str):
-        raise Fail(f"{path} 缺 version 字段（文件格式不对，需升级）")
+    # version 缺失/不对**不拦**：文档口径是「只告警、能读的字段照读」。
+    # 一份手改丢字段的文件不该让 list --all / validate 整体不可用；
+    # 需要写回时由 read_ledger 补上当前格式版本。
     if not isinstance(data.get("tasks", {}), dict):
         raise Fail(f'{path} 结构不对：tasks 应为 {{"<任务号>": {{...}}}}')
     return data
@@ -531,6 +547,9 @@ def read_ledger(
     if not isinstance(data.get("tasks", {}), dict):
         raise Fail(f'{path} 结构不对：tasks 应为 {{"<任务号>": {{...}}}}')
     note_version(path, data)
+    # 要写回的文：version 缺了就补当前值（提示已由 note_version 打过），
+    # 否则这一写就把「缺 version」固化进文件。
+    data.setdefault("version", FORMAT_VERSION)
     return data
 
 
@@ -622,7 +641,7 @@ def ensure_ledger(repo: Path) -> dict[str, str]:
     判据极轻：只读一次 owners.json —— 它本来就非读不可（查我登记没有），
     存在性、workers、version 一次拿齐。已登记 ⇒ 零额外 IO 直接返回。
     """
-    me = current_identity()
+    me = current_identity(repo)
     owners_path = repo / OWNERS_REL
     pool_path = repo / POOL_REL
     shard_path = repo / shard_rel(me["email"])
@@ -686,7 +705,7 @@ def stat_key(path: Path) -> str | tuple[str, ...] | None:
 
 @contextlib.contextmanager
 def progress_lock(path: Path) -> Iterator[None]:
-    """把状态表的「读-改-写」串行化，避免并发丢更新。
+    """把台账文件的「读-改-写」串行化，避免并发丢更新。
 
     锁文件放系统临时目录（按项目绝对路径取名），不污染项目；进程退出时内核自动释放。
     无 fcntl / msvcrt 的平台上退化为不加锁。
@@ -770,10 +789,21 @@ def _git(
 
     check=True 让失败抛异常（推送要能被下面的兜底捕获）；提交则靠返回码分辨，
     因为不同仓库的提交检查（commitlint 等）会拒掉消息，需要看 stderr 原文。
+
+    **没装 git 不当崩溃**：返回 127 的 CompletedProcess（与 shell 的约定一致），
+    调用方照返回码处理 —— 身份走兜底链、同步静默跳过，而不是抛 FileNotFoundError。
     """
-    return subprocess.run(
-        list(args), capture_output=True, text=True, timeout=timeout, check=check
-    )
+    try:
+        return subprocess.run(
+            list(args), capture_output=True, text=True, timeout=timeout, check=check
+        )
+    except FileNotFoundError:
+        miss = subprocess.CompletedProcess(
+            list(args), 127, stdout="", stderr="git: command not found"
+        )
+        if check:  # check=True 的调用方靠异常分支兜底，这里补一个同样的
+            raise subprocess.CalledProcessError(127, list(args), "", miss.stderr)
+        return miss
 
 
 def _git_actor(repo_root: str) -> str:
@@ -1577,70 +1607,89 @@ def _is_dirty(root: str, rel: str) -> bool:
     return bool(_split_z(raw))
 
 
-def _stash_ff_worklog(root: str, upstream: str, rel: str) -> None:
+def _rel_to_git(git_root: Path, path: Path | None) -> str | None:
+    """仓内绝对路径 → 相对仓根的 posix 路径；不在仓内返回 None。"""
+    if path is None:
+        return None
+    try:
+        return path.resolve().relative_to(git_root.resolve()).as_posix()
+    except (OSError, ValueError):
+        return None
+
+
+def _stash_ff_worklog(root: str, upstream: str, rels: list[str]) -> None:
     """worklog 有手写未提交改动时的「取最新」：收起来 → 快进 → 叠回去。
 
     直接覆盖会吞掉手写内容；不覆盖则后面「读全文→追加→写回」基于旧版，把远端
     那次改动整段写没（实测：两台机器各写过同一 worklog，远端内容直接消失）。
     stash 是唯一两头都保住的走法，冲突就留给 git 标出来让人合。
     """
-    st = _git("git", "-C", root, "stash", "push", "-q", "--", rel, timeout=30)
+    if not rels:
+        return
+    names = "、".join(rels)
+    st = _git("git", "-C", root, "stash", "push", "-q", "--", *rels, timeout=30)
     if st.returncode != 0:
-        print(f"提示：{rel} 暂时收起失败，本次没取它的最新版本。", file=sys.stderr)
+        print(f"提示：{names} 暂时收起失败，本次没取它们的最新版本。", file=sys.stderr)
         return
     ff = _git("git", "-C", root, "merge", "--ff-only", "-q", upstream, timeout=30)
     if ff.returncode != 0:
         _git("git", "-C", root, "stash", "pop", "-q", timeout=30)
         print(
-            f"提示：{rel} 收起后仍没能快进到 {upstream}，手写内容已放回。",
+            f"提示：{names} 收起后仍没能快进到 {upstream}，手写内容已放回。",
             file=sys.stderr,
         )
         return
     pop = _git("git", "-C", root, "stash", "pop", "-q", timeout=30)
     if pop.returncode != 0:
         raise Fail(
-            f"{rel} 的手写改动与 {upstream} 的最新版本冲突，冲突标记已留在工作树里。\n"
-            f"  处理：编辑 {rel} 解决冲突 → `git add {rel}` → `git stash drop`，然后重跑这条命令。\n"
+            f"{names} 的手写改动与 {upstream} 的最新版本冲突，冲突标记已留在工作树里。\n"
+            f"  处理：逐个编辑解决冲突 → `git add <文件>` → `git stash drop`，然后重跑这条命令。\n"
             "  顺序不能反：先 drop 再解决，手写的那段就没了。"
         )
-    print(f"提示：{rel} 的手写改动已叠到 {upstream} 的最新版本上。", file=sys.stderr)
+    print(f"提示：{names} 的手写改动已叠到 {upstream} 的最新版本上。", file=sys.stderr)
 
 
-def _presync_worklog_rel(
+def _presync_worklog_rels(
     repo: Path, git_root: Path, action: str, args: argparse.Namespace
-) -> str | None:
-    """本次写命令会改写的已有 worklog（相对仓根）；不写正文的返回 None。
+) -> list[str]:
+    """本次写命令会「读全文 → 改 → 写回」的已有 worklog（相对仓根）。
 
-    `log` 必追加执行记录，`close` 只在覆盖分类/标签时才改正文 —— 两者都是
-    「读全文 → 改 → 写回」，不先刷成最新就是把别处那次改动整段写没。
+    `log` / `claim` / `set` 追加执行记录，`close` 还要封卷 + 追加，`tags --rename`
+    改分类/标签行 —— 全都改写已有正文，不先刷成最新就是把别处那次改动整段写没。
     路径取自自己分片（找不到再看公共池）即可：worklog 路径建档时定死，不随别人
     改别的字段而变；本地根本没有这条任务，后面的命令自己会报错。
     """
-    if action not in ("log", "close"):
-        return None
-    if action == "close" and not (
-        getattr(args, "category", None) or getattr(args, "tags", None)
-    ):
-        return None
+    if action == "tags":
+        if not getattr(args, "rename", None):
+            return []
+        try:
+            tasks = tasks_in(repo / shard_rel(current_identity(repo)["email"]))
+        except Fail:
+            return []
+        out: list[str] = []
+        for tid_, task in tasks.items():
+            if not isinstance(task, dict):
+                continue
+            rel = _rel_to_git(git_root, find_worklog(repo, tid_, task))
+            if rel and rel not in out:
+                out.append(rel)
+        return out
+    if action not in ("log", "claim", "set", "close"):
+        return []
     tid = getattr(args, "id", None)
     if not tid:
-        return None
+        return []
     try:
-        email = current_identity()["email"]
+        email = current_identity(repo)["email"]
         task = tasks_in(repo / shard_rel(email)).get(tid) or tasks_in(
             repo / POOL_REL
         ).get(tid)
     except Fail:
-        return None
+        return []
     if not isinstance(task, dict):
-        return None
-    log = find_worklog(repo, tid, task)
-    if log is None:
-        return None
-    try:
-        return log.resolve().relative_to(git_root.resolve()).as_posix()
-    except ValueError:
-        return None
+        return []
+    rel = _rel_to_git(git_root, find_worklog(repo, tid, task))
+    return [rel] if rel else []
 
 
 def _write_targets(repo: Path, action: str, args: argparse.Namespace) -> list[Path]:
@@ -1650,7 +1699,7 @@ def _write_targets(repo: Path, action: str, args: argparse.Namespace) -> list[Pa
     别人刚推到远端的内容当成自己的改动提交上去。
     """
     try:
-        email = current_identity()["email"]
+        email = current_identity(repo)["email"]
     except Fail:
         return []  # 身份拿不到：命令自己会报错，这里不重复
     pool = repo / POOL_REL
@@ -1696,8 +1745,9 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
     范围只到本次写入目标（由 _write_targets 按命令算）：索引 owners.json、自己的
     分片、认领 / 释放涉及的 pool.json，以及 `close` 时结案时间所在的那个月 history
     文件（`--finished` 补录旧月份就刷那个月）——不是整个 history 目录。
-    `ledger/worklog/` 的正文由人写，这里只补「远端有、本地缺」的新文件，已有文件
-    一个字都不碰。本地有会被覆盖掉的东西（未推送提交 / 未提交改动 / 未入库且远端
+    `ledger/worklog/` 的正文由人写：只补「远端有、本地缺」的新文件；本次命令真要
+    改写的那几篇（追加执行记录 / 封卷 / 改分类标签）另算，干净就刷成最新、脏了先
+    stash 再叠回。本地有会被覆盖掉的东西（未推送提交 / 未提交改动 / 未入库且远端
     同名）就中止，不静默覆盖。
     无 git / 无上游 / 远端尚无该文件 静默跳过；拉取失败只提示不中止。
     """
@@ -1776,9 +1826,10 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
         except ValueError:
             return -1
 
-    # 本次要改写的 worklog（log 追加执行记录 / close 覆盖分类标签）。它比
-    # worklog 比台账 JSON 麻烦：「脏」是常态 —— 人手写的正文就躺在那儿还没提交。
-    wl_rel = _presync_worklog_rel(repo, git_root, action, args)
+    # 本次要改写的 worklog（log / claim / set / close 追加执行记录、close 封卷、
+    # tags --rename 改分类标签）。它比台账 JSON 麻烦：「脏」是常态 —— 人手写的
+    # 正文就躺在那儿还没提交。
+    wl_rels = _presync_worklog_rels(repo, git_root, action, args)
 
     ahead_n = _rev_count(f"{upstream}..HEAD")
     behind_n = _rev_count(f"HEAD..{upstream}")
@@ -1801,9 +1852,10 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
                 file=sys.stderr,
             )
             # 绝大多数 ff 失败就是「worklog 里有手写还没提交的正文」。不处理的话，
-            # 后面的 log 会基于旧版追加再写回，把远端那次改动整段写没。
-            if wl_rel and _is_dirty(str(git_root), wl_rel):
-                _stash_ff_worklog(str(git_root), upstream, wl_rel)
+            # 后面的写命令会基于旧版改写再写回，把远端那次改动整段写没。
+            dirty_wl = [r for r in wl_rels if _is_dirty(str(git_root), r)]
+            if dirty_wl:
+                _stash_ff_worklog(str(git_root), upstream, dirty_wl)
 
     root = str(git_root)
     worklog_rel = f"{ledger_rel}/{WORKLOG_DIR.name}"
@@ -1880,20 +1932,22 @@ def git_presync(action: str, args: argparse.Namespace) -> None:
             file=sys.stderr,
         )
 
-    # 本次要改写的那个 worklog：刷新到远端最新再动笔，与台账 JSON 同一口径。
+    # 本次要改写的那些 worklog：刷新到远端最新再动笔，与台账 JSON 同一口径。
     # 走到这里还有未提交改动，说明快进和 stash 叠回都没成（冲突已由上面报错中止），
     # 这时只提示不刷 —— 覆盖会吞掉手写内容。
-    if wl_rel and behind_n > 0:
-        if _is_dirty(root, wl_rel):
-            print(
-                f"提示：{wl_rel} 有未提交的手写改动，本次没刷它的最新版本；"
-                "若远端也改过同一处，推送时会让你合并。",
-                file=sys.stderr,
-            )
-        elif _presync_fetch_file(root, upstream, wl_rel):
-            print(
-                f"提示：写前把 {wl_rel} 刷成 {upstream} 的最新版本。", file=sys.stderr
-            )
+    if behind_n > 0:
+        for wl_rel in wl_rels:
+            if _is_dirty(root, wl_rel):
+                print(
+                    f"提示：{wl_rel} 有未提交的手写改动，本次没刷它的最新版本；"
+                    "若远端也改过同一处，推送时会让你合并。",
+                    file=sys.stderr,
+                )
+            elif _presync_fetch_file(root, upstream, wl_rel):
+                print(
+                    f"提示：写前把 {wl_rel} 刷成 {upstream} 的最新版本。",
+                    file=sys.stderr,
+                )
 
 
 def require_task_id(tid: str) -> str:
@@ -1981,7 +2035,7 @@ def history_line(
     """历史层的一行（9 列：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / creator / 完成了什么 / 过程文档）。
 
     close 专用，避免两处格式漂移。owner / creator 是独立列、单独过 esc_cell ——
-    它们来自 git config user.name，含 `|` 也不稀奇。分类/标签由 close 传 task 终值。
+    它们来自 git 身份（新数据是邮箱，旧数据是 user.name），含 `|` 也不稀奇。分类/标签由 close 传 task 终值。
     """
     cat_cell = esc_cell(category or "")
     tag_cell = esc_cell("、".join(tags) if tags else "")
@@ -2524,7 +2578,7 @@ def make_id(title: str, tasks: dict[str, Any], created: str | None = None) -> st
         tid = f"{stamp}-{slug}-{secrets.token_hex(2)}"
         if tid not in tasks:
             return tid
-    raise Fail("任务号连续冲突 20 次，请检查状态表是否异常。")
+    raise Fail("任务号连续冲突 20 次，请检查台账是否异常。")
 
 
 def load_task(repo: Path, tid: str) -> dict[str, Any]:
@@ -2551,12 +2605,13 @@ def require_owner(task: dict, tid: str, me: str) -> None:
         if status == "open":
             raise Fail(f"任务 {tid} 还没人认领（open）。先认领再操作：claim --id {tid}")
         raise Fail(
-            f"任务 {tid} 的 status 是 {status} 却没有 owner，状态表不一致。先跑 validate。"
+            f"任务 {tid} 的 status 是 {status} 却没有 owner，台账不一致。先跑 validate。"
         )
     if owner != me:
         raise Fail(
             f"任务 {tid} 的 owner 是 {owner}，不是你（{me}）。\n"
-            f'要接手得让 {owner} 先交接：set --id {tid} --owner "{me}"'
+            f"要接手只能走「释放 → 认领」：让 {owner} 自己释放"
+            f"（set --id {tid} --status open），你再 claim；不要替别人改名。"
         )
 
 
@@ -2666,7 +2721,7 @@ def worklog_name(tid: str) -> str:
 
 
 def worklog_rel(tid: str, task: dict[str, Any]) -> str:
-    """过程文档相对 ledger/ 的路径。状态表记它，历史层也记它，两处同口径。"""
+    """过程文档相对 ledger/ 的路径。任务对象记它，历史层也记它，两处同口径。"""
     return (
         (worklog_dir_for(task) / worklog_name(tid))
         .relative_to(WORKLOG_DIR.parent)
@@ -2679,7 +2734,7 @@ def find_worklog(
 ) -> Path | None:
     """定位任务的过程文档。
 
-    先信状态表里记的路径（记了就不猜）；没记再按新命名推算；最后回退到
+    先信任务对象里记的路径（记了就不猜）；没记再按新命名推算；最后回退到
     「文件名就是任务号」的老命名，并兼顾平铺旧位置 —— 规则改动前建的文件
     留在原地不动，照样能读能封卷。
     """
@@ -2881,8 +2936,12 @@ def cmd_new(args: argparse.Namespace) -> None:
             rollback = read_ledger(target)
             rollback.get("tasks", {}).pop(tid, None)
             write_ledger_json(target, rollback)
-        # 撤销完成：别让写后自动同步把这个「有任务、没文档」的半成品提交上去
-        CHANGED_FILES.clear()
+        # 撤销后台账文件已回到「没有这条任务」的样子，可以随本次提交入库 ——
+        # 所以这里**不能**整体 clear()：ensure_ledger 刚建好的 pool.json / 索引 /
+        # 分片要是被一起丢掉，工作树会留下没人提交的台账，下一次写就被
+        # 「本地有未提交改动」拦住了。只保证目标文件仍在待提交集合里。
+        if target not in CHANGED_FILES:
+            CHANGED_FILES.append(target)
         raise Fail(f"创建失败，已撤销该任务：{exc}")
     record_exec(repo, tid, task, creator, "new", f"创建任务（{task['status']}）")
     print(f"已创建任务 {tid}")
@@ -3258,8 +3317,8 @@ def cmd_close(args: argparse.Namespace) -> None:
             except OSError as exc:
                 raise Fail(f"读不了 {p} 用于备份：{exc}")
 
-        # 顺序：先写历史与过程文档，**最后**才从状态表移除。
-        # 中途崩溃最坏是「历史多一行、状态还留着」，可重跑识别，不会丢记录。
+        # 顺序：先写历史与过程文档，**最后**才从自己的分片移除。
+        # 中途崩溃最坏是「历史多一行、任务还留着」，可重跑识别，不会丢记录。
         try:
             write_text_atomic(history_path, new_history)
             write_text_atomic(log_path, new_log)
@@ -3351,7 +3410,7 @@ def cmd_list(args: argparse.Namespace) -> None:
     def my_email() -> str:
         """只读命令按需取身份：认不出自己就少看自己那份，不该整条查询都失败。"""
         try:
-            return current_identity()["email"]
+            return current_identity(repo)["email"]
         except Fail as exc:
             raise Fail(f"{exc}\n  --mine / --owner me / 默认范围都要先认出你是谁。")
 
@@ -3378,7 +3437,7 @@ def cmd_list(args: argparse.Namespace) -> None:
     else:
         sources.append((POOL_REL.as_posix(), tasks_in(repo / POOL_REL)))
         try:
-            me = current_identity()["email"]
+            me = current_identity(repo)["email"]
         except Fail as exc:
             print(
                 f"提示：{exc}\n  本次只列公共池；要看自己分片请先配好 git 邮箱。",
@@ -3524,7 +3583,7 @@ def cmd_tags(args: argparse.Namespace) -> None:
         return
 
     # --all：worklog 目录是唯一来源 —— 在办任务的 worklog 也在里面（new 建档即写），
-    # 与状态表合并会重复计数；已结案任务状态表已移除、只剩 worklog，天然只计一次。
+    # 与在办任务合并会重复计数；已结案任务已从分片移除、只剩 worklog，天然只计一次。
     cat_count: dict[str, int] = {}
     tag_count: dict[str, int] = {}
     wdir = repo / WORKLOG_DIR
@@ -3718,7 +3777,7 @@ def cmd_validate(args: argparse.Namespace) -> None:
         if old_n:
             print(
                 f"提示：{rel} 含 {old_n} 行旧格式（4 / 5 / 6 列）；"
-                "只读文件不自动升级，新记录一律按 8 列写入 ledger/history/。",
+                "只读文件不自动升级，新记录一律按 9 列写入 ledger/history/。",
                 file=sys.stderr,
             )
         for w in hwarnings:
@@ -3753,8 +3812,8 @@ def cmd_history(args: argparse.Namespace) -> None:
     want_owner = (
         args.owner.strip().lstrip("@") if args.owner else None
     )  # 容忍「@名字」写法
-    me = current_identity()["email"] if args.mine else None
-    me_keys = my_identity_keys() if args.mine else None
+    me = current_identity(repo)["email"] if args.mine else None
+    me_keys = my_identity_keys(repo) if args.mine else None
     filter_echo = {
         "owner": want_owner,
         "mine": args.mine,
@@ -4029,7 +4088,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_repo(p)
     p.set_defaults(func=cmd_history)
 
-    p = sub.add_parser("validate", help="校验状态表与 worklog")
+    p = sub.add_parser("validate", help="校验台账（池 / 索引 / 分片）与 worklog")
     add_repo(p)
     p.set_defaults(func=cmd_validate)
 

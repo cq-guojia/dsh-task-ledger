@@ -10,7 +10,7 @@
 | 槽位 | 本项目落位 |
 |---|---|
 | 文档规范 | `docs/README.md`（本文件） |
-| 任务进度（在办 / 已结案 / 过程叙事） | **不入 `docs/`** —— 由 `task-ledger` skill 统一管理（`ledger/progress.json`、`ledger/history/<年月>.md`、`ledger/worklog/<年月>/`，路径以 skill 为准） |
+| 任务进度（在办 / 已结案 / 过程叙事） | **不入 `docs/`** —— 由 `task-ledger` skill 统一管理（`ledger/pool.json` + `ledger/owners.json` + `ledger/owners/<hash>.json`、`ledger/history/<年月>.md`、`ledger/worklog/<年月>/`，路径以 skill 为准） |
 | 运行逻辑 | `docs/design/architecture.md` |
 | 功能总索引 | `docs/design/features.md` |
 | 各功能 | `docs/design/features/`（一功能一文件，清单见功能总索引） |

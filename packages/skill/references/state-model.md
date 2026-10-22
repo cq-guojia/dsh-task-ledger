@@ -7,7 +7,7 @@
 ```
 new              → ledger/pool.json（open，owner 空）
 pool ──claim──> 自己的分片（doing，owner = 我）──close──> ledger/history（移出分片）
-doing ──set --status open──> 搬回 pool.json（open，owner 空）   # 执行记录类型 release
+doing ──set --status open──> 搬回 pool.json（open，owner 与 started 都清空）   # 执行记录类型 release
 ```
 
 - **一人一份**：`ledger/owners/<hash>.json`。认领 / 释放一律**搬文件**（先写目标、再删原处），
@@ -15,6 +15,8 @@ doing ──set --status open──> 搬回 pool.json（open，owner 空）   # 
   或者用 `validate` 报出来再手动删多余那份。
 - 池里的任务只读：要改先 `claim`。`tags --rename` / `set` 只作用于自己分片。
 - `new --self` 直接写进自己分片（doing）；`new` 不带 `--self` 写进 `pool.json`（open）。
+- **释放会连带清空 `started`**：别人重新 `claim` 时按新的接单时间重算 `started` —— 逾期 14 天从「他接的那天」算起，
+  不是从第一次接单算。要看任务总共搁了多久用 `created`。
 
 - `open`：已建、等认领。`doing`：已认领、在做。`done` 只由 `close` 产生。
 - **没有 `blocked` 状态**（2026-10-19 取消）。旧数据里残留的 `blocked` 读侧当进行中：`list --status blocked` 可捞出，用 `set --status doing` 归位；新写入一律拒绝。
@@ -42,7 +44,8 @@ doing ──set --status open──> 搬回 pool.json（open，owner 空）   # 
 - **时区：全链路 UTC**（2026-10-22 起）。存盘值（任务号 / worklog 文件名、分片与 `pool.json` 的 `created`/`started`/`updated`/`finished`、history 行、分月归档）一律 UTC，不带偏移量后缀 —— `2026-10-22 02:30:00` 语义即 UTC。
   - **写**：`now()` 取 UTC；`--created` / `--finished` 按**本地墙钟**录入，脚本内部转 UTC 再存。
   - **读/筛**：`--since` / `--until` 也收本地时间，内部转 UTC 比较；人看的输出（`list` / `history` 文本）转回本机时区显示，`--json` 原样给 UTC。
-  - **存量老数据**（2026-10-22 前）写的是写入者本地时间、无标记，无法与 UTC 区分：显示会偏后若干小时，按「无后缀 = 写入者本地」兼容读，迁移时以迁移手册为准。
+  - **存量老数据**（2026-10-22 前）写的是写入者本地时间、无标记，无法与 UTC 区分：显示会偏后若干小时、`--since` / `--until`
+    也会整体偏一个时区，按「无后缀 = 写入者本地」兼容读；迁移口径见本仓工作日志「台账数据面改分片」那条的迁移注记。
 
 ## 任务号
 
@@ -52,8 +55,16 @@ doing ──set --status open──> 搬回 pool.json（open，owner 空）   # 
 
 - 身份主键 = **git 邮箱**（`git var GIT_COMMITTER_IDENT` 里的 email，取不到退回 `git config user.email`），
   归一化（去空白 + 小写）；分片文件名 = `sha256(归一化身份)[:12] + ".json"`。
-- 目录在 git 仓库里却读不到邮箱 ⇒ 直接报错（git 自己也提交不了，报错与之对齐）；
+- 目录在 git 仓库里却读不到邮箱 ⇒ 直接报错（git 自己也提交不了，报错与之对齐）；判「在不在仓库里」用的是
+  `--repo` 指向的那个目录，不是当前工作目录。
   不在仓库里 / 没装 git 才走兜底链（系统用户名 → 主机名 → `default`），并提示一次身份是猜的。
-- 取身份的命令：`new`（记 creator）、`claim`、`set`、`close`、`log`、`list --mine`、`history --mine`。
+- 取身份的命令：`new`（记 creator）、`claim`、`set`、`close`、`log`、`tags --rename`、`list`（默认范围与 `--mine` / `--owner me`）、`history --mine`。
   `list --owner <身份>` / `history --owner <身份>` 是只读查询，不校验身份。
 - `set` / `close` / `log` 只在自己分片里找任务：**不是你的、或还在 `pool.json` 里，直接拒绝**。
+
+## 文件结构
+
+- `pool.json` = `{version, tasks}`；`owners.json` = `{version, workers{身份: {file, name, joined}}}`；
+  分片 = `{version, identity{email, name, joined}, tasks}` —— 分片自带 `identity` 是为了索引丢了能自证。
+- `version` = **文件格式版本号**（`FORMAT_VERSION`，形如 `2026-10-22 00:00:00`，语义是「第几版格式」，不是时间戳）：
+  建文件时原样抄常量，运行时永不自己算；读到不一致只提示不改，缺了也照读、写回时补当前值。

@@ -1,7 +1,7 @@
 ---
 name: task-ledger
 description: 本地任务台账，跨会话记录在办任务的归属、进度与起止。当用户要登记一件新的事（新建任务 / 建个坑 / 这活我领了）、记录已有任务的进展（接着做 / 记一条进展 / 这轮先记下）、查看任务状态或历史（现在该做什么 / 这活谁在做 / 上周做过什么）时加载；对某个具体任务要求结案或退回时，只认用户的明确指令；只是改代码、讨论方案时不要用。
-version: 1.2.9
+version: 1.3.0
 allowed-tools: Read,Write,Bash,Grep
 ---
 
@@ -19,7 +19,7 @@ allowed-tools: Read,Write,Bash,Grep
 | `ledger/worklog/…md` | 任务正文，六节：背景 / 待办 / 下一步 / 过程 / 结论 / **执行记录**（末节） |
 | `ledger/history/<年月>.md` | 已结案，一行一条。**只由脚本写** |
 
-任务字段：标题 / owner / 状态 / 时间（`created` `started` `updated` `finished`）/ 分类标签 / 过程文档路径。
+任务字段：标题 / creator / owner / 状态 / 时间（`created` `started` `updated` `finished`）/ 分类标签 / 过程文档路径。
 **一人一份**：自己只改自己分片；池里那条是「未认领的登记」，谁都不改它 —— 要动先 `claim`。
 
 前五节你直接编辑；**末节「执行记录」只由脚本追加，一个字都不许手写**。
@@ -40,7 +40,7 @@ allowed-tools: Read,Write,Bash,Grep
 | 「有哪些在办」 | `list`（默认 = 公共池 + 自己分片）；要全量加 `--all`；只看待认领加 `--status open` |
 | 「这个任务到哪一步了」「这轮做了什么」 | `show --id`（任务 JSON + worklog 全文） |
 | 「某件老活什么时候做的」「谁做过哪些活」 | `history`（可按 `--owner` / `--since` 筛） |
-| 「哪些任务停太久」 | `list --json`：`updated` 满 3 天＝停滞、`started` 满 14 天＝逾期、`created` 满 30 天仍 `open`＝积压（看板算，别改状态） |
+| 「哪些任务停太久」 | `list --json`（默认只看池 + 自己分片，要看所有人加 `--all`）：`updated` 满 3 天＝停滞、`started` 满 14 天＝逾期、`created` 满 30 天仍 `open`＝积压（看板算，别改状态） |
 | 「新建一个任务」 | `new`（`--self` = 建完即认领） |
 | 「这活我领了」 | `claim`（只对 `open` 有效） |
 | 「开始做 / 接着做 X」 | 还是 `open` 就先 `claim`；已是 `doing` 就直接改正文 + `log` |
@@ -63,14 +63,14 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 
 子命令：`new` `claim` `set` `log` `close` `list` `history` `show` `tags` `validate`。
 参数细节一律看 `<子命令> --help`（不要凭记忆编参数）。
-写类命令返回 worklog 路径 + 全文；`list` / `history` 只返回摘要，不吐正文。
+`new` / `claim` / `set` / `show` 返回 worklog 路径 + 全文；`log` 回一行确认、`close` 回结案摘要，`list` / `history` 只回摘要不吐正文。
 
 ## 铁律
 
 - **状态只有 `open` / `doing`**；`done` 只能由 `close` 产生。**没有 `blocked` 状态**：逾期 = `started` 满 14 天、停滞 = `updated` 满 3 天、积压 = `created` 满 30 天且仍 `open`，都由看板按时间算，台账里不存、不手改；卡在哪写进正文。
 - **`log` 就是刷新 `updated` 的动作**：该记不记，任务会被看板标成停滞。
 - **owner = 当前 git 邮箱**（`git var GIT_COMMITTER_IDENT`，退回 `git config user.email`），不能由外部传入；在 git 仓库里读不到就报错（与 git 自己提交不了对齐）。**只能动自己分片里**的任务（`open` 的先 `claim`），不在你分片里的直接拒绝 —— 不要绕过脚本改 JSON。
-- **换人只能「释放 → 认领」**：`set --status open` 把任务搬回 `pool.json`，对方自己 `claim`；随便写的名字都是假的（`set --owner` 只给看板/维护者用，agent 提示词不暴露）。
+- **换人只能「释放 → 认领」**：`set --status open` 把任务搬回 `pool.json`，对方自己 `claim`；不许替别人挂名字。（`set --owner` 是给看板 / 维护者的交接通道，**agent 不要用**，换人一律走释放 → 认领。）
 - **「执行记录」禁手改**：只由脚本按 `new / claim / set / release / log / close` 追加，只增不改；手写＝伪造时间线，且不刷新 `updated`。
 - **改正文必配一条日志**：只要动了 worklog 的正文（改一句、补一节、改标题、修错字都算），**必须立刻跑一次 `log`**。没有对应日志的正文改动 = 这轮没做完 —— 时间线上会留下你改过、但没人知道为什么改的空洞。
 - **升级前建的老 worklog 没有这一节**：不用你补，脚本第一次记时自动在文末补一节；文档丢失时 `log` 报错（`updated` 已刷新），用 `show` 查路径，**不要手写**。
@@ -91,7 +91,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 
 1. 改正文：这轮变化的事实都落笔，「下一步」写具体动作，不写「继续推进」。
 2. 跑 `log`：**这一轮只要改过正文就必须记**（一轮至少一条）；正文没变也能记一条推进，但要同时重写「下一步」。
-3. 回读末行（`tail -n 3 <路径>` 或 `show --id`）：时间 = 现在、说明 = 这轮的事。
+3. 回读末行（`tail -n 3 <路径>` 或 `show --id`）：说明 = 这轮的事；时间是**UTC**（北京时间就是「现在 − 8 小时」，别当成没记上）。
 
 交付前必须走完这三步；不走，这轮等于没发生，看板还会标停滞。
 
