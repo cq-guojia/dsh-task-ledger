@@ -1193,11 +1193,6 @@ def _resolve_ledger_conflict(
         except Fail:
             return None
 
-    # 合并之后（不管有没有行级冲突）都要查一次跨文件重复：两人同时认领 / 释放同一个
-    # 任务号时，两份分片各写一份、pool 各删一次，git 会当成「不同文件不同行」静默合上，
-    # 结果同一个任务号在两个人的分片里都在，谁也发现不了。
-    conflicts.extend(_dup_task_ids(g, root, ledger_rel))
-
     if conflicts:
         return "conflict"
     if _git(*g, "add", "--", *conflicted).returncode != 0:
@@ -1207,40 +1202,6 @@ def _resolve_ledger_conflict(
     ).returncode:
         return None
     return True
-
-
-def _dup_task_ids(g: tuple[str, ...], root: str, ledger_rel: str) -> list[str]:
-    """工作树里同一任务号是否出现在多个台账文件（pool.json / 各分片）。返回人话列表。
-
-    两人同时认领 / 释放同一个任务号时，两份分片各写一份、pool 各删一次，git 会当成
-    「不同文件、不同行」静默合上 —— 同一个任务号于是在两个人的分片里都在，谁也发现不了。
-    """
-    ledger_dir = Path(root) / ledger_rel
-    files = [ledger_dir / "pool.json"]
-    owners_dir = ledger_dir / "owners"
-    if owners_dir.is_dir():
-        files.extend(sorted(p for p in owners_dir.glob("*.json") if p.is_file()))
-    seen: dict[str, str] = {}
-    dups: list[str] = []
-    for path in files:
-        try:
-            rel = path.relative_to(root).as_posix()
-        except ValueError:
-            continue
-        try:
-            rows = tasks_in(path)
-        except Fail:
-            continue  # 坏文件由 validate / 命令自己报，这里不重复报
-        for tid in rows:
-            prev = seen.get(tid)
-            if prev is not None and prev != rel:
-                dups.append(
-                    f"{tid}: 同时出现在 {prev} 与 {rel}"
-                    "（两个人同时认领 / 释放了它；保留该留的那份、删掉多余那份）"
-                )
-            else:
-                seen[tid] = rel
-    return dups
 
 
 def _rebase_retry(g: tuple[str, ...], ledger_rel: str, *, quiet: bool = False) -> bool:
@@ -1323,18 +1284,6 @@ def _rebase_retry(g: tuple[str, ...], ledger_rel: str, *, quiet: bool = False) -
             note(
                 "提示：自动合并前暂存了你的未提交改动，rebase 后已放回。",
             )
-        # git 没报冲突也要查：同一任务号被两个人同时认领 / 释放时，两份分片各写一份、
-        # pool 各删一次，git 按「不同文件不同行」静默合上，任务号于是出现在两个分片里。
-        dups = _dup_task_ids(g, g[2], ledger_rel)
-        if dups:
-            left = _git(*g, "rebase", "--abort", timeout=30)
-            note(
-                "提示：合并后台账里出现重复的任务号，已回滚到 rebase 前"
-                f"（{'成功' if left.returncode == 0 else '失败，仓库可能停在 rebase 中间态'}）：\n  "
-                + "\n  ".join(dups)
-                + "\n  处理：`git status` 看清状态；确认哪份是该留的，删掉多余那份后重跑。",
-            )
-            return False
         return True
     conflict = (rebase.stderr or rebase.stdout or "").strip()
     # 行级冲突先按任务号对账一次：不同任务的改动本该自动合上，只有同一任务被两边
@@ -4483,31 +4432,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
-def _readonly_midstate_guard(args: argparse.Namespace) -> None:
-    """只读命令也要看中间态：rebase 卡住时台账文件带着 `<<<<<<<`，直接读只会报
-    「不是合法 JSON」，看着像数据坏了，其实是仓库还没收尾。写命令在 git_presync 里
-    已经拦了，只读命令原来不拦 —— 补上，报同样的人话。
-    """
-    try:
-        repo = find_repo(getattr(args, "repo", None))
-    except Fail:
-        return
-    top = _git("git", "-C", str(repo), "rev-parse", "--show-toplevel")
-    if top.returncode != 0:
-        return
-    mid = _git_midstate(top.stdout.strip())
-    if mid:
-        raise Fail(
-            f"仓库正处于 {mid} 中间态（有没收尾的冲突），台账文件可能带着冲突标记，"
-            "先收尾再查：`git rebase --continue`（解完冲突）或 `git rebase --abort`。"
-        )
-
-
 def _run_once(args: argparse.Namespace) -> int:
     """一条命令的完整生命周期：写前同步 → 命令本身 → 写后提交推送。"""
     try:
-        if args.command in READ_ONLY_COMMANDS:
-            _readonly_midstate_guard(args)
         git_presync(args.command, args)  # 写前刷新 ledger/ 到远端最新
         args.func(args)
     except Fail as exc:
