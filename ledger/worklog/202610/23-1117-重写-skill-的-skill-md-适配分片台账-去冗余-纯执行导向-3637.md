@@ -11,7 +11,8 @@
 
 ## 待办
 
-- 用户 review 新落的 4 个文件（种子 132 行 / 12.3 KB；references 3 个共 15.5 KB），按反馈改
+- 讨论轮（用户要求多轮再定）：① claim 回归——修代码恢复 doing，还是文档按「claim 只认领、doing 靠 set」新语义；② 命令参考内联种子还是拆 references（我倾内联）；③ 纪律三合一（铁律/授权/出错并一节）认不认；④ 生命周期与方法参考的分工线；⑤ 书写体改命令式祈使句
+- 用户 review 第一版 4 文件后的结构意见已进骨架草案 v2，定稿后重写
 - README.md 待同步：references 索引（6→3）、design.md 死链（用户明确「其他文件不用管」，暂未动）
 - design.md 的 WHY 论证（在 references.bak/design.md）要不要进仓库 docs/design/，待用户定
 - 重建插件内嵌副本前先删 SKILL.md.bak 与 references.bak/，否则会被 copy-skill 拷进插件、check-skill-copy 报 extra
@@ -19,7 +20,7 @@
 
 ## 下一步
 
-等用户对本轮梳理拍板 → 重写草稿先在对话里过一遍 → 落盘 → build:host → verify
+等用户对骨架草案 v2 的 5 个讨论点拍板 → 定稿 → 重写 4 文件 → build:host → verify
 
 ## 过程
 
@@ -40,6 +41,12 @@
 - 落盘 4 个文件：`SKILL.md`（种子，纯执行导向，20 处硬伤全修）+ `references/state-model.md` + `references/troubleshooting.md` + `references/log-note.md`（原样保留）；worklog.md / taxonomy.md 的必备内容并入种子；design.md 未重建（全部旧文件在 *.bak 里）
 - 验证：复刻 smoke.mjs:934-968 文档断言 8/8 过（name / description>20 / `# task-ledger` / progress.py / claim / 占位符全替换 / python3 行正则 + 脚本真实存在 / version 与 package.json 一致）；残留错误口径扫描 3 处命中均为校正后的否定句（`tags --all` 误报 / `--status blocked` 匹配不到 / 没有自动补推）
 - 体积：种子 143 行 13.4 KB → 132 行 12.3 KB；references 6 个 37.5 KB → 3 个 15.5 KB；design.md 17.8 KB 移出包。种子降幅有限是因为并入了 worklog / taxonomy 的每次必备内容 —— 赢在零重复规则 + 按需分支真的按需
+
+第四轮（用户对第一版提结构意见「写到哪算哪没逻辑」+ 外部调研 + 代码核实）：
+
+- 用户目标结构：文件结构（表 + 禁手改/可手写各一句）→ 命令参考（每方法：参数含义 / 一句话 / 举例）→ 怎么调用（纯机制）→ 纪律（只留脚本管不了的）→ 过程文档（唯一可手写 + 六节）→ 生命周期；分类标签并入命令参考当参数文档；「铁律 / 写操作红线 / 出错即停」三锅分清
+- 外部调研（GitHub 写得好的）：① nickolasclarke/writing-cli-skills —— SKILL.md 管工作流与判断、references 管命令语法；Explore→Query / Find→Inspect→Operate 两范式；<500 行；引 `--help` 不罗列 flag；② mgechev/skills-best-practices —— <500 行、祈使句、JIT 指针、反模式清单（散文式指令 / 冗余逻辑）；③ anthropics/skills 的 pdf —— 按频率拆分：高频操作内联 + Quick Reference 表、长尾外移；④ webapp-testing —— 决策树 + 脚本黑盒 + Common Pitfall
+- **代码核实（建 / 认领）**：`new` 无 `--self` → pool.json（open、owner 空、started 空）；`new --self` → 自己分片（owner=我、**status 仍是 open**）；`claim` → 搬进自己分片、补 started/updated，**status 不动**。旧版 progress.py:2148-2155 的 claim 会校验 open 并置 `doing` —— 新 claim.py 两样都丢了，是分片重构的静默回归（state-model.md:9 状态机图还写着 claim→doing；活证据：本任务 `status=open`、`started=None`）。待用户定：修代码还是文档按新语义
 
 ## 结论
 
@@ -77,3 +84,4 @@
 - 2026-10-23 19:30:51 · log · @cqguojia@hotmail.com · 专家组会诊+代码复核：SKILL.md 与分片台账 17 处硬伤（release 语义/时区/list 参数/自动补推/traceback 边…），定目标结构：正文 ~105 行纯执行、references 6→3、design.md 移出；等用户拍板后重写
 - 2026-10-23 19:48:28 · log · @cqguojia@hotmail.com · 备份+清空+通读 7 文件：结构定为 1 种子+3 分支共 4 个；新定性 3 处矛盾（身份兜底不报错/new --self=open/tags 计数）；design.md 6 处口径列了搬迁清单
 - 2026-10-23 20:00:58 · log · @cqguojia@hotmail.com · 落盘 4 文件：种子 132 行纯执行（20 处硬伤全修）+ references 6→3；smoke 等价断言 8/8 过；design.md 未重建等用户定去向；README/版本/插件副本按「其他文件不用管」未动
+- 2026-10-23 20:30:18 · log · @cqguojia@hotmail.com · 外部调研 4 源定骨架 v2（命令参考/生命周期/纪律三锅分清/分类标签并入参数）；代码核实：claim 不置 doing 是分片重构回归（旧 progress.py:2155 置 doing），待用户定修代码还是改语义
