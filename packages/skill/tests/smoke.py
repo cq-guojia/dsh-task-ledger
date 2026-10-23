@@ -23,7 +23,7 @@ FAILED: list[str] = []
 def run(repo: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         [PY, "-B", str(PROGRESS), "--repo", str(repo), "--no-sync", *args],
-        capture_output=True, text=True, cwd=str(repo),
+        capture_output=True, text=True, cwd=str(repo), check=False,
     )
 
 
@@ -83,7 +83,7 @@ def main() -> int:
         r = run(repo, "close", "--id", tid, "--summary", "冒烟结案")
         check("close 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "history", "--count-only")
-        check("history 计数 1", "已结案：1 条" in r.stdout, r.stdout)
+        check("history 计数 1", '"count": 1' in r.stdout and '"capped": false' in r.stdout, r.stdout)
         r = run(repo, "history", "--json")
         check("history json 有 records", '"records"' in r.stdout, r.stdout)
 

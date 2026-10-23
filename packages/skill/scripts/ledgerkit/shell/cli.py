@@ -220,9 +220,24 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _lock_dir(repo: Path) -> Path:
-    """整命令锁放 git 目录里（不进仓库、不被 git status 看见）；没有 `.git` 目录就放仓库根。"""
+    """整命令锁放 **git 公共目录**里（不进仓库、不被 git status 看见；worktree 之间共享）。
+
+    `repo/.git` 是目录 ⇒ 就是它；是文件 ⇒ 链接 worktree，按 `gitdir:` 指针反推公共目录
+    （`<common>/worktrees/<name>` 的上级的上级）；两者都不成 ⇒ 退回仓库根本身。
+    """
     dot = Path(repo) / ".git"
-    return dot if dot.is_dir() else Path(repo)
+    if dot.is_dir():
+        return dot
+    if dot.is_file():
+        try:
+            text = dot.read_text(encoding="utf-8").strip()
+        except OSError:
+            text = ""
+        if text.startswith("gitdir:"):
+            common = Path(text.split(":", 1)[1].strip()).parent.parent
+            if common.is_dir():
+                return common
+    return Path(repo)
 
 
 def _readonly(command: str) -> bool:

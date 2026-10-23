@@ -19,6 +19,7 @@ from ..actions import registry
 from ..actions.atom import atom
 from ..actions.guard import current_identity
 from ..core.ids import make_id
+from ..core.paths import to_repo_rel
 from ..core.time import now, to_utc
 from ..errors import (
     BUSINESS,
@@ -28,9 +29,11 @@ from ..errors import (
     Fail,
 )
 from ..store import dirty
+from ..store.atomic import snapshot
 from . import render
 from .gitops import GitRepo
 from .presync import presync_scope
+
 
 def run(command: str, args: argparse.Namespace) -> int:
     """跑一条命令，返回退出码。"""
@@ -66,6 +69,14 @@ def _run(command: str, args: argparse.Namespace, log: dirty.WriteLog) -> int:
     no_sync = bool(getattr(args, "no_sync", False))
     as_json = bool(getattr(args, "json", False))
 
+    git = GitRepo(repo)
+    syncing = not dry_run and not no_sync
+    if syncing:
+        # 中间态是**全局前提**，必须早于下面任何读台账的动作（`_params` 的 `new` 快照、
+        # `presync_scope` 的锁集都要读台账）：冲突标记下的台账不是合法 JSON，读它就抛
+        # 「未预期错误」（退出码 3），而文档要的是「仓库处于中间态」这句人话。
+        git.check_repo_state()
+
     params = _params(command, args, repo, me, spec)
 
     # 只读：不建 GitRepo、不进事务、不提交
@@ -77,14 +88,19 @@ def _run(command: str, args: argparse.Namespace, log: dirty.WriteLog) -> int:
         return OK
 
     boot_scope, act_scope = presync_scope(repo, me, spec.lock_action or command, params)
-    git = GitRepo(repo)
 
-    if not dry_run and not no_sync:
+    if syncing:
         git.guard_before_write(boot_scope | act_scope)
         for path, before in git.sync_down(boot_scope | act_scope):
             log.record_presync(path, before)
 
     if not dry_run:
+        # 自举会登记自己（改 owners.json、缺文件时建池与分片）。它碰过的文件按「命令前的字节」
+        # 记进记账本：成功时照常提交（登记必须进仓），失败时由 rollback_presync 一起还回去 ——
+        # 否则一条失败的命令会把台账留在「已写未提交」，下一条写命令被写前 guard 拦死
+        # （架构文档 §三.5 正是要避免这个）。登记是幂等的，还回去下次再登记，没有损失。
+        for rel in boot_scope.files:
+            log.record_presync(repo / to_repo_rel(rel), snapshot(repo / to_repo_rel(rel)))
         with atom(repo, *boot_scope.files):
             me = registry.bootstrap_func()(repo, me)
 
@@ -108,7 +124,7 @@ def _finalize(
     if broken:
         try:
             sys.stdout.close()
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: BLE001, S110  # 关 stdout 本就无信息可记
             pass
     if getattr(args, "dry_run", False) or getattr(args, "no_sync", False):
         if getattr(args, "no_sync", False) and log.has_writes():

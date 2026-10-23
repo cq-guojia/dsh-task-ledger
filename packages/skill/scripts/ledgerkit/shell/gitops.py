@@ -150,6 +150,19 @@ class GitRepo:
 
     # ---- 写前硬拦 ----
 
+    def check_repo_state(self) -> None:
+        """rebase / merge 中间态 ⇒ Fail。这是**全局前提**，必须早于任何读台账的动作。
+
+        冲突标记下的台账不是合法 JSON，`presync_scope` / `_params` 一读就抛，
+        命令会以「未预期错误」（退出码 3）崩掉，而不是给人话。
+        """
+        state = self._state()
+        if state:
+            raise Fail(
+                f"仓库处于中间态（{state}）：先跑 git status 看提示，"
+                "完成或中止它（git rebase --abort / git merge --abort）再跑本命令。"
+            )
+
     def guard_before_write(self, scope: Scope) -> None:
         """本地有未提交的台账改动 / 有未推送的台账提交 / 有未入库的同名文件 /
         处于 rebase 中间态 ⇒ Fail 并说明怎么处理。在 `sync_down` 之前调。
@@ -160,12 +173,7 @@ class GitRepo:
         if not self.upstream():
             # 没有上游：不存在"远端内容会盖掉本地"这回事，未提交 / 未入库都不拦
             return
-        state = self._state()
-        if state:
-            raise Fail(
-                f"仓库处于中间态（{state}）：先跑 git status 看提示，"
-                "完成或中止它（git rebase --abort / git merge --abort）再跑本命令。"
-            )
+        self.check_repo_state()
         # 手写的过程文档不算「本地脏」：它走 sync_down 的 stash → 快进 → 叠回，不硬拦
         dirty = [line for line in self._dirty(rels) if not _is_worklog(_porcelain_path(line))]
         if dirty:
@@ -251,7 +259,8 @@ class GitRepo:
             # 索引里那份脏会让下一条写命令被写前 guard 拦死 ⇒ 取完立刻把索引还原到 HEAD
             # （只动这一个路径，用户自己暂存的别的东西不受影响）。
             _git("git", "-C", str(self.repo), "reset", "--quiet", "--", rel)
-            out.append(entry)
+            if _changed(path, before):
+                out.append(entry)
         for rel, entry in stashed.items():
             pop = _git("git", "-C", str(self.repo), "stash", "pop", "--quiet")
             if pop.returncode != 0:
@@ -263,7 +272,8 @@ class GitRepo:
                 )
             # 叠回去了：索引里那份上游版本也该收干净（工作树已是「上游 + 手写」）
             _git("git", "-C", str(self.repo), "reset", "--quiet", "--", rel)
-            out.append(entry)
+            if _changed(entry[0], entry[1]):
+                out.append(entry)
         return out
 
     def _rev_count(self, spec: str) -> int:
@@ -290,6 +300,13 @@ class GitRepo:
                 f"git add 失败：{(add.stderr or '').strip()}\n"
                 "  处理：文件还在磁盘上（本次改动没丢），按提示处理后重跑。"
             )
+        # 一个字节都没变（重跑幂等：写下去的与 HEAD 相同）⇒ 没有可提交的内容，这不是错误。
+        # 不跳的话 git commit 会以 "nothing added to commit" 失败，把一条本该成功的重跑判红。
+        staged = _git(
+            "git", "-C", str(self.repo), "diff", "--cached", "--quiet", "--", *rels
+        )
+        if staged.returncode == 0:
+            return
         # 只提交台账那几个文件：不带 pathspec 会把用户自己暂存的别的东西一起卷进来
         commit = _git(
             "git", "-C", str(self.repo), "commit", "--no-verify", "-m", message,
@@ -480,10 +497,16 @@ class GitRepo:
         return proc.stdout if proc.returncode == 0 else None
 
     def _conflicts(self) -> list[str]:
-        proc = _git("git", "-C", str(self.repo), "diff", "--name-only", "--diff-filter=U")
+        # `-z`：非 ASCII 路径不做引号 / 八进制转义。中文任务名的过程文档一抓一个准，
+        # 不加 -z 时拿到的路径带引号，`git show :1:<path>` 取不到内容、owns() 也判否，
+        # 冲突接管会整个放弃（2026-10-23 场景测试抓到的真 bug）。
+        proc = _git(
+            "git", "-C", str(self.repo), "diff", "--name-only",
+            "--diff-filter=U", "-z",
+        )
         if proc.returncode != 0:
             return []
-        return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+        return [line for line in proc.stdout.split("\0") if line]
 
 
 def _porcelain_path(line: str) -> str:
@@ -503,6 +526,15 @@ def _porcelain_path(line: str) -> str:
 def _is_worklog(rel: str) -> bool:
     """是不是手写的过程文档（与台账文件区分：台账硬拦、过程文档放行叠回）。"""
     return rel.replace("\\", "/").startswith("ledger/worklog/")
+
+
+def _changed(path: Path, before: bytes | None) -> bool:
+    """取最新之后这个文件的内容是否真变了（没变就不该进记账本：重跑幂等时提交空改动必失败）。"""
+    try:
+        after = path.read_bytes()
+    except OSError:
+        after = None
+    return after != before
 
 
 def _rel(repo: Path, path: Path) -> str:

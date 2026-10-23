@@ -511,7 +511,8 @@ await check("getTask + readWorklog：详情与过程正文", async () => {
 });
 
 await check("runLedgerScript：直调 count-only（合成 5 万行封顶）", async () => {
-	// --json 与 --count-only 互斥（同时给 = 用法错退出码 2）；count-only 打的是人话，走 Command
+	// --json 与 --count-only 互斥（同时给 = 用法错退出码 2）；
+	// count-only 是计数口径：固定两个键的 JSON（ledger-api.md 第六节），不走人话
 	const result = await runLedgerCommand("history", [
 		"--repo",
 		PERF_PATH,
@@ -520,8 +521,10 @@ await check("runLedgerScript：直调 count-only（合成 5 万行封顶）", as
 		"13",
 	]);
 	assert.equal(result.ok, true, `count-only 应成功：${result.error ?? ""}`);
-	assert.match(result.output, /已结案：10000 条/);
-	assert.match(result.output, /计数已封顶/);
+	const payload = JSON.parse(result.output);
+	assert.equal(payload.count, 10000, "5 万行封顶后 count 触到 COUNT_CAP");
+	assert.equal(payload.capped, true, "capped 必须为 true（count 只是下界）");
+	assert.deepEqual(Object.keys(payload).sort(), ["capped", "count"], "只准这两个键");
 });
 
 // 不存在的仓库：只读命令按「空结果」处理（退出 0 + 合法 JSON），不是错误

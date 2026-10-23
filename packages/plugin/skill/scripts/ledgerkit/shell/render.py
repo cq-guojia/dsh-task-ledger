@@ -10,6 +10,7 @@ import sys
 from typing import Any
 
 from .. import notices
+from ..actions.query import HistoryQuery, ListQuery
 from ..actions.result import (
     Census,
     HistoryResult,
@@ -18,7 +19,6 @@ from ..actions.result import (
     ShowResult,
     ValidationReport,
 )
-from ..actions.query import HistoryQuery, ListQuery
 from ..core.time import fmt_local
 
 
@@ -113,10 +113,12 @@ def show_view(res: ShowResult, *, as_json: bool) -> None:
 
 
 def history_view(res: HistoryResult, q: HistoryQuery | None, *, as_json: bool) -> None:
+    # `--count-only` 是**计数口径**：固定两个键的 JSON（§六 / ledger-data.md 第七节）。
+    # 它与 `--json` 互斥（同给即用法错），所以这里不看 as_json —— 否则那个分支永远是死代码。
+    if q is not None and q.count_only:
+        _json({"count": res.count, "capped": res.capped})
+        return
     if as_json:
-        if q is not None and q.count_only:
-            _json({"count": res.count, "capped": res.capped})
-            return
         _json(
             {
                 "count": res.count,
@@ -126,9 +128,6 @@ def history_view(res: HistoryResult, q: HistoryQuery | None, *, as_json: bool) -
                 "capped": res.capped,
             }
         )
-        return
-    if q is not None and q.count_only:
-        _out(f"已结案：{res.count} 条{'（计数已封顶）' if res.capped else ''}")
         return
     if not res.records:
         _out("没有符合条件的结案记录。")

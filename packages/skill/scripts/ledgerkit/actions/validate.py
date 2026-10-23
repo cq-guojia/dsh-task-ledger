@@ -11,7 +11,7 @@ from pathlib import Path
 from ..core import history_md
 from ..core.identity import Identity
 from ..core.labels import STATUSES
-from ..core.paths import OWNERS_REL, POOL_REL, LEGACY_HISTORY_REL, to_repo_rel
+from ..core.paths import LEGACY_HISTORY_REL, OWNERS_REL, POOL_REL, to_repo_rel
 from ..core.worklog_md import is_skeleton
 from ..store.history_store import HistoryStore
 from ..store.owners_index import OwnersIndex
@@ -63,6 +63,22 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
     for path in index.disk_shards():
         if path.name not in registered:
             problems.append(f"owners/ 里的 {path.name} 没有在索引里登记（对它人等于不存在）。")
+
+    # 同一个任务号落在多个文件里（搬移中断的中间态）：读侧只显示一次，这里必须报出来
+    seen: dict[str, list[str]] = {}
+    for tid in pool.all():
+        seen.setdefault(tid, []).append("pool.json")
+    for key, path in index.shards().items():
+        if not path.exists():
+            continue
+        for tid in TaskStore(repo, Path(path).relative_to(repo / "ledger")).all():
+            seen.setdefault(tid, []).append(path.name)
+    for tid, where in sorted(seen.items()):
+        if len(where) > 1:
+            notices.append(
+                f"任务 {tid} 同时出现在 {'、'.join(where)}（搬移中断的中间态），"
+                "读的时候只显示一次；确认哪一份是对的，把另一份删掉。"
+            )
 
     # 历史：解析警告 + 「已结案但分片里还挂着」（按过程文档文件名对账，
     # 不从文件名反推任务号 —— 任务号的年月日在父目录里，反推必错）
