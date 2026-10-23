@@ -6,6 +6,132 @@ window.__ModuleLoader__.load({
 		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		let react = require("react");
 		let _deepseek_ai_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
+		//#region src/client/rows.ts
+		/** 关键字命中（标题 / 任务号 / 人 / 分类 / 标签；已结案另含「完成了什么」）。 */
+		function hitKeyword(keyword, parts) {
+			const needle = keyword.trim().toLowerCase();
+			if (needle === "") return true;
+			return parts.some((part) => part?.toLowerCase().includes(needle) === true);
+		}
+		/** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
+		function isMine(task, board) {
+			if (board === null) return false;
+			const identity = board.identities[task.workspace.id] ?? null;
+			if (identity === null || identity === "") return false;
+			return task.owner === identity && (task.status === "doing" || task.status === "blocked");
+		}
+		function resolveActions(task, board) {
+			const mine = isMine(task, board);
+			return {
+				view: true,
+				claim: !mine && task.status === "open",
+				resume: mine,
+				finish: mine,
+				release: mine
+			};
+		}
+		/** 已结案行（统计 tab）：只有查看，没有在办动作。 */
+		const CLOSED_ACTIONS = {
+			view: true,
+			claim: false,
+			resume: false,
+			finish: false,
+			release: false
+		};
+		/** 状态档命中（积压 / 逾期 / 停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
+		function statusHit(task, status) {
+			if (status === "all") return true;
+			if (status === "active") return task.status === "doing" || task.status === "blocked";
+			if (status === "open") return task.status === "open";
+			if (status === "backlog") return task.backlog === true;
+			if (status === "overdue") return task.overdue === true;
+			return task.stale === true;
+		}
+		/** 组内排序：别人的进行中在前、待认领在后；各自按创建 / 开始时间倒序。 */
+		function inGroupOrder(a, b) {
+			if (a.kind !== "task" || b.kind !== "task") return 0;
+			const rank = (task) => task.status === "open" ? 1 : 0;
+			if (rank(a.task) !== rank(b.task)) return rank(a.task) - rank(b.task);
+			return String(b.task.created ?? b.task.started ?? "").localeCompare(String(a.task.created ?? a.task.started ?? ""));
+		}
+		/**
+		* 当前筛选下的两区视图（用户 2026-10-18 调整）：
+		*  - 第一区「我的待办」= 我名下 doing/blocked，吃工作区下拉 + 标题搜索，按创建时间倒序；
+		*  - 第二区「全部待办」= **所有**在办任务按工作区分组（含我的——用户明确不要过滤掉自己），
+		*    吃**状态档**（segmented）+ **标题 / 执行人搜索**（othersKeyword）；一个整表（外框连着）。
+		*    ⇒ 我的任务会同时出现在两个区，这是预期（顶部快看 / 底部全量）。
+		*/
+		function selectView(current) {
+			const { board, query } = current;
+			if (board === null) return {
+				mine: [],
+				groups: [],
+				total: 0,
+				allCounts: {
+					total: 0,
+					doing: 0,
+					open: 0,
+					overdue: 0,
+					stale: 0,
+					backlog: 0
+				}
+			};
+			const allTasks = board.tasks;
+			const allCounts = {
+				total: allTasks.length,
+				doing: allTasks.filter((task) => task.status === "doing").length,
+				open: allTasks.filter((task) => task.status === "open").length,
+				overdue: allTasks.filter((task) => task.overdue === true).length,
+				stale: allTasks.filter((task) => task.stale === true).length,
+				backlog: allTasks.filter((task) => task.backlog === true).length
+			};
+			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => query.workspace === "" || task.workspace.id === query.workspace).filter((task) => hitKeyword(query.keyword, [
+				task.title,
+				task.id,
+				task.owner,
+				task.creator,
+				task.category,
+				...task.tags ?? []
+			])).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
+				kind: "task",
+				key: `${task.workspace.id}:${task.id}`,
+				task,
+				mine: true
+			}));
+			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => statusHit(task, query.status)).filter((task) => hitKeyword(query.othersKeyword, [task.title, task.owner]));
+			const byWorkspace = /* @__PURE__ */ new Map();
+			for (const task of rest) {
+				const entry = byWorkspace.get(task.workspace.id) ?? {
+					title: task.workspace.title,
+					rows: []
+				};
+				entry.rows.push({
+					kind: "task",
+					key: `${task.workspace.id}:${task.id}`,
+					task,
+					mine: isMine(task, board)
+				});
+				byWorkspace.set(task.workspace.id, entry);
+			}
+			const groups = [...byWorkspace.entries()].map(([workspaceId, entry]) => ({
+				workspaceId,
+				title: entry.title,
+				doingCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "doing").length,
+				overdueCount: entry.rows.filter((row) => row.kind === "task" && row.task.overdue === true).length,
+				staleCount: entry.rows.filter((row) => row.kind === "task" && row.task.stale === true).length,
+				backlogCount: entry.rows.filter((row) => row.kind === "task" && row.task.backlog === true).length,
+				openCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "open").length,
+				total: entry.rows.length,
+				rows: entry.rows.sort(inGroupOrder)
+			})).sort((a, b) => a.title.localeCompare(b.title, "zh-Hans-CN"));
+			return {
+				mine: mineRows,
+				groups,
+				total: groups.reduce((sum, group) => sum + group.rows.length, 0),
+				allCounts
+			};
+		}
+		//#endregion
 		//#region src/client/api.ts
 		/** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
 		const API_PREFIX = "api/task-ledger";
@@ -168,132 +294,6 @@ window.__ModuleLoader__.load({
 				...state.query,
 				...patch
 			} });
-		}
-		//#endregion
-		//#region src/client/rows.ts
-		/** 关键字命中（标题 / 任务号 / 人 / 分类 / 标签；已结案另含「完成了什么」）。 */
-		function hitKeyword(keyword, parts) {
-			const needle = keyword.trim().toLowerCase();
-			if (needle === "") return true;
-			return parts.some((part) => part?.toLowerCase().includes(needle) === true);
-		}
-		/** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
-		function isMine(task, board) {
-			if (board === null) return false;
-			const identity = board.identities[task.workspace.id] ?? null;
-			if (identity === null || identity === "") return false;
-			return task.owner === identity && (task.status === "doing" || task.status === "blocked");
-		}
-		function resolveActions(task, board) {
-			const mine = isMine(task, board);
-			return {
-				view: true,
-				claim: !mine && task.status === "open",
-				resume: mine,
-				finish: mine,
-				release: mine
-			};
-		}
-		/** 已结案行（统计 tab）：只有查看，没有在办动作。 */
-		const CLOSED_ACTIONS = {
-			view: true,
-			claim: false,
-			resume: false,
-			finish: false,
-			release: false
-		};
-		/** 状态档命中（积压 / 逾期 / 停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
-		function statusHit(task, status) {
-			if (status === "all") return true;
-			if (status === "active") return task.status === "doing" || task.status === "blocked";
-			if (status === "open") return task.status === "open";
-			if (status === "backlog") return task.backlog === true;
-			if (status === "overdue") return task.overdue === true;
-			return task.stale === true;
-		}
-		/** 组内排序：别人的进行中在前、待认领在后；各自按创建 / 开始时间倒序。 */
-		function inGroupOrder(a, b) {
-			if (a.kind !== "task" || b.kind !== "task") return 0;
-			const rank = (task) => task.status === "open" ? 1 : 0;
-			if (rank(a.task) !== rank(b.task)) return rank(a.task) - rank(b.task);
-			return String(b.task.created ?? b.task.started ?? "").localeCompare(String(a.task.created ?? a.task.started ?? ""));
-		}
-		/**
-		* 当前筛选下的两区视图（用户 2026-10-18 调整）：
-		*  - 第一区「我的待办」= 我名下 doing/blocked，吃工作区下拉 + 标题搜索，按创建时间倒序；
-		*  - 第二区「全部待办」= **所有**在办任务按工作区分组（含我的——用户明确不要过滤掉自己），
-		*    吃**状态档**（segmented）+ **标题 / 执行人搜索**（othersKeyword）；一个整表（外框连着）。
-		*    ⇒ 我的任务会同时出现在两个区，这是预期（顶部快看 / 底部全量）。
-		*/
-		function selectView(current) {
-			const { board, query } = current;
-			if (board === null) return {
-				mine: [],
-				groups: [],
-				total: 0,
-				allCounts: {
-					total: 0,
-					doing: 0,
-					open: 0,
-					overdue: 0,
-					stale: 0,
-					backlog: 0
-				}
-			};
-			const allTasks = board.tasks;
-			const allCounts = {
-				total: allTasks.length,
-				doing: allTasks.filter((task) => task.status === "doing").length,
-				open: allTasks.filter((task) => task.status === "open").length,
-				overdue: allTasks.filter((task) => task.overdue === true).length,
-				stale: allTasks.filter((task) => task.stale === true).length,
-				backlog: allTasks.filter((task) => task.backlog === true).length
-			};
-			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => query.workspace === "" || task.workspace.id === query.workspace).filter((task) => hitKeyword(query.keyword, [
-				task.title,
-				task.id,
-				task.owner,
-				task.creator,
-				task.category,
-				...task.tags ?? []
-			])).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
-				kind: "task",
-				key: `${task.workspace.id}:${task.id}`,
-				task,
-				mine: true
-			}));
-			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => statusHit(task, query.status)).filter((task) => hitKeyword(query.othersKeyword, [task.title, task.owner]));
-			const byWorkspace = /* @__PURE__ */ new Map();
-			for (const task of rest) {
-				const entry = byWorkspace.get(task.workspace.id) ?? {
-					title: task.workspace.title,
-					rows: []
-				};
-				entry.rows.push({
-					kind: "task",
-					key: `${task.workspace.id}:${task.id}`,
-					task,
-					mine: isMine(task, board)
-				});
-				byWorkspace.set(task.workspace.id, entry);
-			}
-			const groups = [...byWorkspace.entries()].map(([workspaceId, entry]) => ({
-				workspaceId,
-				title: entry.title,
-				doingCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "doing").length,
-				overdueCount: entry.rows.filter((row) => row.kind === "task" && row.task.overdue === true).length,
-				staleCount: entry.rows.filter((row) => row.kind === "task" && row.task.stale === true).length,
-				backlogCount: entry.rows.filter((row) => row.kind === "task" && row.task.backlog === true).length,
-				openCount: entry.rows.filter((row) => row.kind === "task" && row.task.status === "open").length,
-				total: entry.rows.length,
-				rows: entry.rows.sort(inGroupOrder)
-			})).sort((a, b) => a.title.localeCompare(b.title, "zh-Hans-CN"));
-			return {
-				mine: mineRows,
-				groups,
-				total: groups.reduce((sum, group) => sum + group.rows.length, 0),
-				allCounts
-			};
 		}
 		//#endregion
 		//#region src/client/format.ts

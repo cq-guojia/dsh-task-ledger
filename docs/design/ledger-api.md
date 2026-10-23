@@ -140,8 +140,6 @@ packages/skill/scripts/
     │   ├── __init__.py        ← 空的。跟 `ledgerkit/__init__.py` 一个道理：名册不放这里，
     │   │                         否则 `import actions.guard` 会被迫先把全部动作加载一遍。
     │   ├── registry.py        ← 动作名册：命令写法 → `ActionSpec(业务函数, 渲染函数名, 是否只读)` 三元组。
-    │   │                         一个命令有「只读子模式 + 写子模式」时**分键登记**（`"tags --all"` 只读、
-    │   │                         `"tags --rename"` 写），一个 `readonly` 布尔表示不了两种。
     │   │                         **渲染函数只存名字（字符串），不 import `shell/render.py`** —— 否则
     │   │                         actions → shell 的依赖就反了；由 runner 用 `getattr(render, name)` 取。
     │   │                         外壳靠它：只读决定跳过取最新/提交，渲染函数名决定第 ⑤ 步打哪个。
@@ -168,7 +166,6 @@ packages/skill/scripts/
     │   ├── log_progress.py    ← 记进展：刷分片的"最后更新"，再往过程文档追加一行。
     │   ├── close_task.py      ← 结案：写历史 → 封卷过程文档 → 最后删分片。
     │   │                         写之前先核对三个文件有没有被别人动过；失败按字节恢复。
-    │   ├── rename_label.py    ← 归并标签：改我名下在办任务的标签行，再改分片。已封卷的文档不动。
     │   │
     │   ├── list_tasks.py      ← 只读：查在办任务（池 + 分片，后读到的为准）
     │   ├── show_task.py       ← 只读：单任务详情 + 过程文档全文
@@ -209,7 +206,7 @@ packages/skill/scripts/
 |---|---|---|
 | `core/` | 标准库、`errors`、`notices`、同目录 | 读/写文件、跑子进程、加锁、打印；接收整条 task dict 当主参；单文件超 300 行 |
 | `store/` | `core`、`env`、`notices`、`errors`、同目录 | 打印、跑 git、**调用**锁（`locks.py` 只负责定义，调用权归 `atom.py`）、判断 `owner`/`status`、接收"要写哪些文件"的指示；单方法超 25 行 |
-| `actions/` | `store`、`core`、`env`、`notices`、`errors`、同目录；**唯一跨动作引用**：`set_task.py → release.py` / `handoff.py` / `claim.py` | `open`/`read_bytes`/`read_text`/`write_text_atomic`/`print`/`subprocess`/`git_`/`json.dumps`/自己拼锁（例外只有两处：`atom.py` 里的 `ledger_lock`；`atomic.snapshot`/`restore` 只许在 `close_task.py` / `rename_label.py` / `new_task.py` 里出现） |
+| `actions/` | `store`、`core`、`env`、`notices`、`errors`、同目录；**唯一跨动作引用**：`set_task.py → release.py` / `handoff.py` / `claim.py` | `open`/`read_bytes`/`read_text`/`write_text_atomic`/`print`/`subprocess`/`git_`/`json.dumps`/自己拼锁（例外只有两处：`atom.py` 里的 `ledger_lock`；`atomic.snapshot`/`restore` 只许在 `close_task.py` / `new_task.py` 里出现） |
 | `shell/` | 全部 | 做业务判断；在 `render.py` 之外打印；在 `runner.py` 与 `render.py` 之外读 `notices` |
 
 **为什么备份/恢复算 store 的活**：结案失败要「按字节还回去」，而 actions 不许碰文件。`atomic.snapshot/restore` 是唯一的还手之地 —— 别在 `close_task.py` 里自己 `read_bytes`。
@@ -230,6 +227,7 @@ packages/skill/scripts/
 ```python
 def write_text_atomic(path: Path, text: str, *, track: bool = True) -> None
 ```
+
 - **做什么**：把一段文字安全地写进一个文件。同目录建临时文件 → 写入 → 刷盘 → 改权限 → 改名替换 → 刷父目录。
 - **参数**：`path` 目标文件；`text` 完整的新内容；`track=True` 表示"这是我改的"，记进记账本的"本次改动"；`track=False` 只给 **`restore`** 与**外壳那两条受控通道**（见下条）用 —— 它们要么是在复原世界，要么由 git 自己提交。
 - **额外行为**：目标是符号链接就拒绝写；沿用原文件权限，新文件 0644；任何 IO 错误都包成 `Fail`；文件原本不存在时额外记"新建"。
@@ -242,6 +240,7 @@ def fingerprint(path: Path) -> str | None
 def snapshot(path: Path) -> bytes | None
 def restore(path: Path, before: bytes | None) -> None
 ```
+
 - **`ensure_dir` 是唯一建目录的地方**：`mkdir -p` 语义、已存在就什么都不做。`write_text_atomic` **不自动建父目录**（写文件就是写文件，建目录单独一步，出问题好查）。
 - **`fingerprint` 做什么**：算文件内容的 sha256，用来判断"我读完之后，别人有没有动过这个文件"。
 - **`fingerprint` 返回三种，互不相等**：正常 → sha256 串；文件不存在 → `None`；文件在但读不了 → `"unreadable"`。**三者比较时永远不相等**（结案「指纹变了就中止」靠这条）。
@@ -273,6 +272,7 @@ def bound(log: WriteLog) -> ContextManager   # 测试用；生产只在 runner �
 ```python
 def progress_lock(path: Path) -> ContextManager
 ```
+
 - **做什么**：给一个台账文件加互斥锁（`flock`），阻塞等待、**没有超时**、**不可重入**（同一进程同一路径第二次加锁会自己卡死）。
 - **锁的不是文件本身**：按该文件绝对路径的 hash 在系统临时目录开 `koc-progress-<16 位 hash>.lock` 再 `flock`。这样**目标文件还不存在也能锁**（锁集里本来就允许有"还不存在"的路径），仓库里也不会多出锁文件。
 - **降级**：系统没有 `fcntl`/`msvcrt` 时**直接不加锁**（只读、单人场景的取舍）。
@@ -280,6 +280,7 @@ def progress_lock(path: Path) -> ContextManager
 ```python
 def ledger_lock(repo: Path, *rels: Path) -> ContextManager
 ```
+
 - **做什么**：把多个文件路径去重、按字母排序，然后依次加锁（每个文件都走上一条的临时目录锁文件）——保证两个人同时改两个文件时不会互相等死。
 - **谁调它**：只有 `actions/atom.py`。
 
@@ -301,6 +302,7 @@ class JSONStore:
 
 def write_ledger_json(path: Path, data: dict, *, expand: str = "tasks") -> None
 ```
+
 - **`expand`**：指定哪个字典要"一条一行"（`tasks` 或 `workers`），其余字段各占一行。这是**格式契约**：多人同时改同一份台账时，git 才能按行合并。
 - 首次读盘后缓存在实例里；`put`/`drop` 写盘并更新缓存。
 - **`ensure_file` 是唯一建台账文件的地方**（建目录归 `atomic.ensure_dir`，建文件归它，各管一件事）：不存在就写一份 `default`，存在就一个字节都不写；业务层不必也不许为了"建个空文件"去碰 `write_ledger_json`。
@@ -311,6 +313,7 @@ def write_ledger_json(path: Path, data: dict, *, expand: str = "tasks") -> None
 class TaskStore(JSONStore):
     def __init__(self, repo: Path, rel: Path, *, identity: Identity | None = None)
 ```
+
 - **管什么**：公共池 `ledger/pool.json` 与某个人的分片 `ledger/owners/<hash>.json`——**同一个类，只是路径不同**（调用方传 `rel`）。
 - **`identity` 用来干什么**：只用于**写盘格式**——分片文件顶部有一个可选 `identity` 字段，补它 / 名字变了更新它。它**不参与任何判断**（不判归属、不改 `updated`、不判状态）。
 - **不管什么**：不改 `updated`、不判状态、不判归属（`owner` 判定归 `guard`）。
@@ -324,6 +327,7 @@ class OwnersIndex:
     def shards(self) -> dict[str, Path]                   # 身份 → 分片绝对路径（只信索引，不扫目录）
     def disk_shards(self) -> list[Path]                   # 扫 owners/ 下全部 *.json；只有 validate 用它比对索引
 ```
+
 - **`ensure` 是 `aliases` 的唯一写入点**：把 `me.aliases` 并进 `workers[<归一化邮箱>].aliases`（只增不删）。名字只在变了时才写，`joined` 保留首次值。
 - **`disk_shards()` 是全仓唯一扫目录的地方**：平时「分片只认索引」，只有 `validate` 拿它找「目录里有、索引没登记」的分片，别把它当发现机制用。
 
@@ -338,6 +342,7 @@ class HistoryStore:
                                                           # "hit" / "miss" / "undecidable"（见下条判重规则）
     def write(self, path: Path, text: str) -> None        # 受控写回：唯一调用点是结案第 2 步（升级后的全文也在那里落）
 ```
+
 - **`row` 的九个键**（与 `ledger-data.md` §四 的九列一一对应，顺序也一致）：
   `{"finished", "created", "title", "category", "tags", "owner", "creator", "summary", "worklog"}`
   ——`tags` 是 `tuple[str, …]`（拼成「、」分隔的一格），`worklog` 是**相对 `ledger/`** 的路径。
@@ -368,6 +373,7 @@ class WorklogStore:
     def write(self, path, text) -> None          # 写回的是「锚点编辑后的新全文」；不许用它替换前五节正文
     def append_exec(self, path, line) -> bool    # 写不进返回 False，不抛
 ```
+
 - **`template()` 是模板的唯一读者**：模板真源是 skill 的 `assets/worklog.md`（`core/paths.py` 给路径）。工具层不许读文件，所以「套模板」这个动作拆成两半：store 取文本，`core/worklog_md.render_worklog(...)` 只做字符串替换。
 - **`head_meta(path)`**：从一篇过程文档头部抽出 `created` / `creator` / 分类 / 标签四样，供历史回链与标签统计共用（这两个用途原本分散在两处，收成一个方法）。
 - **骨架检测不走 `head_meta`**：那是判定"正文有没有填"的文本问题，`validate` 用 `read()` 拿到全文后调 `core/worklog_md.is_skeleton(text)`。
@@ -391,14 +397,14 @@ class Result:                      # 写动作的返回
     changed: tuple[str, ...]       # 改了哪些**字段名**（不是文件名、不是任务号）；只用于显示
     where: str | None              # 主要落在哪个文件（**相对 repo**）
     already_done: bool             # 重跑发现已经做过 ⇒ 退出码仍是 0
-    dry_run: bool                  # 只预览没写盘 ⇒ 外壳跳过提交与推送；退出码 0
     message: str | None            # git 提交说明；None ⇒ 外壳用默认模板
     worklog: WorklogView | None    # 要顺手把过程文档全文打出来的动作才填
     payload: dict                  # 各动作自己的附加数据（见各动作条目）
     notices: tuple[str, ...]
 ```
+
 - **`already_done` 不改变提交/推送**：它只说"这次没有新的活"（`changed` 留空、退出码 0），但动作**照样可能补写了文件**（`release` 重跑就只补删我分片那行）。这些文件必须照常提交并推送，否则下一条写命令会被写前 guard 拦死。
-- **只有 `dry_run` 让外壳跳过「提交 + 推送」**：它整条命令零写，记账本必空。要不要提交，唯一判据是**记账本空不空**。
+- **要不要提交，唯一判据是记账本空不空**（`--no-sync` 才整段跳过提交与推送）。
 
 - `changed` / `where` / `worklog` / `payload` / `notices` **只用于显示**；`message` 只用于 git 提交说明。
 - **要提交哪些文件，只看记账本**（`commit_set()`），和 `changed` 无关。
@@ -444,8 +450,9 @@ class Scope:
 def lock_scope(repo, me, action: str, params: dict) -> Scope
 def atom(repo: Path, *rels: Path) -> ContextManager      # 20 行：按序锁住这次要碰的文件
 ```
+
 - **`Scope` 两个字段各管一头**：`files` 既给 `atom` 加锁、也给 `sync_down` 刷；`dirs` 只给 `sync_down`（目录本身不 flock，由它展开成目录里已存在的文件）。
-- **`action` 的取值域就七个**：`"bootstrap"` / `"new"` / `"claim"` / `"set"` / `"log"` / `"close"` / `"tags"`，与 §四 的刷取范围表逐行对应。传进来的不是命令行原文，而是 `ActionSpec.lock_action`（默认同命令名，`"tags --rename"` 传 `"tags"`）。`set` 的四个分支（`release`/`handoff`/`claim`+`set_field`/`set_field`）共用 `"set"` 这一行，按"宁可算宽"取并集。
+- **`action` 的取值域就六个**：`"bootstrap"` / `"new"` / `"claim"` / `"set"` / `"log"` / `"close"`，与 §四 的刷取范围表逐行对应。传进来的不是命令行原文，而是 `ActionSpec.lock_action`（默认同命令名）。`set` 的四个分支（`release`/`handoff`/`claim`+`set_field`/`set_field`）共用 `"set"` 这一行，按"宁可算宽"取并集。
 - **谁调它、什么时候调**：`runner` 在**第 ② 步「取最新」开头**调一次 `presync_scope`（见 §四），拿回**两份** `Scope`——自举那份与动作那份（`presync_scope` 内部各调一次 `lock_scope`，别处不许再调）：
   - 两份**合并**（`boot | act`）交给 `GitRepo.sync_down`；
   - 自举那份 `with atom(repo, *boot.files)` 包住第 ③ 步的自举；
@@ -474,6 +481,7 @@ def status_of(task) -> str                                   # 读 status 的唯
 def is_mine(task, me: Identity) -> bool                      # 归一化后比较（含 aliases）
 def in_scope(task, q: ListQuery, *, me: Identity) -> bool    # list 的过滤谓词
 ```
+
 - **`owner` / `status` 的读取只走这四个谓词**：`store/` 里一律不许出现 `get("owner")` / `get("status")`，`actions/` 里除 `guard.py` 之外也不许裸写字段名比较。业务动作要判归属就调 `is_mine` / `require_owner` / `owner_of`。
 - **任务号形态校验只在 `core/ids.py::require_task_id` 一处**，`guard` 不再提供同名函数（要校验就调 ids 那个）。
 
@@ -501,11 +509,11 @@ def in_scope(task, q: ListQuery, *, me: Identity) -> bool    # list 的过滤谓
 | `handoff` | 对方分片那份 `owner=to`、`updated=now()`；**`status`：传了就写目标值（`set --owner X --status doing` 走的就是这条路），`None` 才带原值**；`started` 原值带走 |
 | `log_progress` | 只改 `updated=now()` |
 | `close_task` | **不写任务字段**：终值直接进历史行，分片那行最后删掉；`finished` 只出现在历史行与封卷标记里 |
-| `rename_label` | 分片里改 `category` / `tags`（与文档头部行同一套规则），**`updated` / `started` / `status` / `owner` 一律不动**——这是标签整理，不是推进 |
 
 ```python
 def bootstrap(repo, me) -> Identity
 ```
+
 - 写集（最小）：索引 + 池 + 我的分片。
 - 写序：`atomic.ensure_dir(owners/)` → 池 `TaskStore(POOL_REL).ensure_file()`（缺则建空池、有则不动）→ `OwnersIndex.ensure(me)`（索引缺则建、登记自己并写回 aliases）→ 我的分片 `TaskStore(shard_rel(me)).ensure_file()`。**建目录只走 `atomic.ensure_dir`、建文件只走 `ensure_file`**，业务层不碰 `write_ledger_json`。三样由外壳用 `presync_scope` 返回的**自举那份** `Scope.files` 一次 `atom` 包住（机制同 §3.2 总则 2）；`bootstrap` 自己不开事务、不拿锁。
 - 重跑：已登记且 `name` 与 `aliases` 都没变 ⇒ 零写，直接返回。
@@ -515,17 +523,19 @@ def bootstrap(repo, me) -> Identity
 ```python
 def new_task(repo, me, *, title, tid, created, category=None, tags=(), mine=False) -> Result
 ```
+
 - 写集（最小）：目标台账（`mine ? 我的分片 : 池`）+ 本次新建的过程文档。
 - **`tid` / `created` 是必填 keyword，由外壳算好传进来**（见 §3.2 共用规则）：锁层要靠它们算出那篇过程文档的路径，业务层不许现算现用；缺了就是外壳的 bug，直接 `Fail`，不设"没给就自己算"的兜底。
 - 写序：`atomic.ensure_dir(当月文档目录)` → 过程文档（含首条执行记录，一次写完）→ 台账。
 - 重跑：任务号已存在就拒绝（这不是重跑，是重号；号是锁外定死的，不重算换号）。查重范围 = 池 + 我自己的分片（不看别人分片），**并且在锁内重读**。
 - 查重范围比写集宽是故意的：查重里那份**本次不写**的台账（`mine=True` 时是池，`mine=False` 时是我的分片）不进锁集，但读它不怕并发 —— 单文件写是原子替换，读到的要么是旧全文、要么是全新文，不会读到半截。**锁保护写，读靠重读。**
-- 失败：撤掉已写进台账那条（`TaskStore.drop(tid)`，那一条本来就是本次新建的，删掉即复原）+ 删本次新建的文档（`atomic.restore(path, None)`，原本不存在 ⇒ 删掉）。两者都在同一个 `atom` 内完成。**`new_task.py` 因此是第三个允许 `snapshot`/`restore` 的动作**（另两个是 `close_task` / `rename_label`，见 §八 白名单），且只用它删文档，台账那条走 store。
+- 失败：撤掉已写进台账那条（`TaskStore.drop(tid)`，那一条本来就是本次新建的，删掉即复原）+ 删本次新建的文档（`atomic.restore(path, None)`，原本不存在 ⇒ 删掉）。两者都在同一个 `atom` 内完成。**`new_task.py` 因此是第二个允许 `snapshot`/`restore` 的动作**（另一个是 `close_task`，见 §八 白名单），且只用它删文档，台账那条走 store。
 - `worklog`：填（新建后的全文）；`payload`：`{"tid": …}`。
 
 ```python
 def claim(repo, me, tid) -> Result
 ```
+
 - 写集（最小）：池 + 我的分片 + 过程文档。
 - 前置：他人分片里已有这个号 ⇒ 拒绝（别人正在改它）。他人分片**只读**：它在锁集与刷取范围里（锁内要重读），但不进写集。
 - 写序：我的分片 → 删池里那行 → 过程文档记一笔。
@@ -535,6 +545,7 @@ def claim(repo, me, tid) -> Result
 ```python
 def set_task(repo, me, tid, *, status=None, owner=None) -> Result
 ```
+
 - **只做参数校验和路由，自己不加锁、不改任何文件**（它 import `release` / `handoff` / `claim`，这是全树唯一的跨动作引用）：
   - **先看 `--owner` 给没给**，两个入口互斥，不存在"最终 owner"这种含糊说法：
     - **没给 `--owner`**（只给了 `--status`）⇒ 一律 `set_field(repo, me, tid, status=…)`；任务不在我名下由 `require_owner` 报错。**不拿现存 owner 反推分支**，否则池里的任务会被误判成"释放"。
@@ -549,6 +560,7 @@ def set_task(repo, me, tid, *, status=None, owner=None) -> Result
 ```python
 def set_field(repo, me, tid, *, status=None) -> Result     # set_task.py 内部函数，不单独成文件
 ```
+
 - 写集（最小）：我的分片 + 过程文档。
 - 写序：分片原地改 `status` + `updated` → 过程文档记一笔。
 - 重跑：幂等——目标 status 与现值相同 ⇒ 直接返回（`already_done=True`、退出码 0），**不刷 `updated`、不写过程文档**；否则必然要刷 `updated=now()`，那就不是"内容不变"而是"改了"。
@@ -557,6 +569,7 @@ def set_field(repo, me, tid, *, status=None) -> Result     # set_task.py 内部�
 ```python
 def release(repo, me, tid) -> Result
 ```
+
 - 写集（最小）：我的分片 + 池 + 过程文档。
 - 写序：写回池（已有同号就不覆盖）→ 删我分片那行 → 过程文档记一笔。
 - 重跑：**收敛**，不是报错——池里已有同号（上次崩了一半）⇒ 只补删我分片那行，`already_done=True`、退出码 0。
@@ -564,6 +577,7 @@ def release(repo, me, tid) -> Result
 ```python
 def handoff(repo, me, tid, *, to, status=None) -> Result
 ```
+
 - 写集（最小）：我的分片 + 对方分片 + 过程文档。
 - 前置：对方没在索引里登记 ⇒ 拒绝（否则写出一份对别人不存在的分片）。
 - 写序：先写对方分片 → 再删我分片那行 → 过程文档记一笔。
@@ -572,6 +586,7 @@ def handoff(repo, me, tid, *, to, status=None) -> Result
 ```python
 def log_progress(repo, me, tid, note) -> Result
 ```
+
 - 写集（最小）：我的分片 + 过程文档。
 - 写序：刷分片的"最后更新" → 过程文档追加一行。
 - 文档写不进（`append_exec` 回 `False`）⇒ **不算失败**：`changed` 照记分片那个字段、`notices.note("警告：分片的最后更新已刷，过程文档补不上")`、退出码 0，已写的分片照常提交（别在写完分片后抛错让外壳回滚，那会变成"改了又不提交"）。
@@ -579,6 +594,7 @@ def log_progress(repo, me, tid, note) -> Result
 ```python
 def close_task(repo, me, tid, *, summary, finished: str, category=None, tags=None) -> Result
 ```
+
 - 写集（最小）：我的分片 + 结案那个月的历史文件 + 过程文档。
 - **`finished` 必填、不接受 `None`**：外壳已经算好（`args.finished or now()`），同一个值也用于算锁集与刷取范围。业务层不许再调时钟 —— 这是跨月刷错月份的唯一根因。
 - 写前核对：分片 / 历史 / 过程文档三个文件的 `fingerprint`，任一变了就中止；同时 `snapshot` 三份字节备用。
@@ -593,21 +609,6 @@ def close_task(repo, me, tid, *, summary, finished: str, category=None, tags=Non
   - 这时 `has_log` 回 `"undecidable"`（表里有末列为空的行）⇒ 直接 `Fail`，消息里指到当月历史文件让人工确认（不猜、不重复追加）。
 - 失败：用 `atomic.restore` 把第 1~3 步碰过的文件按字节还原（`snapshot` 拿到的 `None` 表示原本不存在 ⇒ 删掉）。
 - `payload`：`{"history_path": …, "worklog_path": …, "fallback_cols": int | None}`（`fallback_cols` 非空时业务层要 `notices.note("警告：…")`）。
-
-```python
-def rename_label(repo, me, old, new, *, dry_run=False) -> Result
-```
-- 写集（最小）：我的分片 + **本次要改的全部在办文档**。
-- 写序：先逐篇改头部标签行（逐篇 `snapshot`，恢复失败要照实说，不许谎称已恢复）→ 再改分片。
-- 范围：只改我名下、分类或标签等于 `old` 的任务；已封卷的文档不动。
-- **`old` / `new` 怎么落到头部标签行（顺序定死）**：
-  1. 先比分类：`category == old` ⇒ 新行用 `new` 当分类，标签原样；
-  2. 分类没命中，再比标签：把 `tags` 里等于 `old` 的项就地换成 `new`（保持位置，去重），分类原样；
-  3. 两处都不命中 ⇒ 这条任务不在范围内，跳过；
-  4. 一条任务里分类和标签同时等于 `old` 时，**按第 1 条处理**（只改分类，标签不动）。
-- `dry_run=True`：**整条命令零写** —— runner 跳过「取最新」与「自举」（`me` 直接用 `guard.current_identity(repo)`，不登记、不同步名字），动作只按同样规则算出会改哪些任务，**不写文档、不写分片、不产生提交**。结果放 `payload["tids"]`（任务号列表），`changed` 保持空，`dry_run=True`。
-- `dry_run=True` 且**台账不存在**：直接 `Fail("还没有台账，没有可预览的任务")`，不许顺手把台账建出来。
-- 为什么连自举都要跳过：dry-run 一旦写了盘又不提交，下一个写命令会被写前 guard 拦死；而「名字 / aliases 变了要同步索引」这件事本来就不该在预览里做。
 
 ### 3.3 只读动作（5 个）
 
@@ -653,8 +654,6 @@ def main(argv=None) -> int                    # 唯一入口：解析 → 定位
                                               # 「整命令锁」只在这里拿一次；runner 内部不再拿
                                               # finally 里 **只调一次** render.flush_notices()：任何阶段的提示都不丢
 def build_parser() -> ArgumentParser          # 动作名与只读名单从 actions.registry 取
-                                              # 解析完统一 `args.dry_run = getattr(args, "dry_run", False)`
-                                              # —— 只有 `tags --rename` 定义了 `--dry-run`，runner 要能无条件读它
 def resolve_repo(arg: str | None) -> Path     # --repo 给了就用；没给就从 cwd 往上找含 ledger/ 的目录；
                                               # 找不到 ⇒ Fail（退出码 1），不自作主张在当前目录建台账
 def to_query(args) -> ListQuery | HistoryQuery  # 命令行参数 → 查询对象。**只有这里认识 argparse**
@@ -666,10 +665,7 @@ def run(action: str, args) -> int
 #   **取最新必须在自举之前** —— 否则自举读到的是本地旧索引，会把远端刚登记的人覆盖掉
 #   · 只读动作：跳过「取最新」与「自举」（也不拿整命令锁，见 §3.3）
 #   · --no-sync：跳过「刷盘 / 提交 / 推送」；presync_scope 照调（锁集要用它），只是不交给 sync_down；记账本照建
-#   · dry_run 的预览命令：连「取最新」与「自举」也跳过（整条命令零写），me 用 guard.current_identity(repo)
-#       —— **判据是 args.dry_run**（runner 自己读命令行，它本来就收 args）；业务函数的 `dry_run`
-#         参数只是让动作知道别写盘，别反过来等 `Result.dry_run` 才知道是不是预览
-#   · Result.dry_run ⇒ 跳过「提交 / 推送」；already_done **不**跳过（写没写只看记账本）
+#   · already_done **不**跳过「提交 / 推送」（写没写只看记账本）
 #   · 记账本为空 ⇒ 提交与推送都跳过（没脏文件就没得提交）
 #   · close：先算 finished = args.finished or now()，同一个值交给 lock_scope 与 close_task
 # 唯一创建记账本、唯一决定退出码、唯一统一回滚的地方
@@ -720,7 +716,7 @@ class ActionSpec:
     render: str             # 渲染函数**名**（`"result"` / `"list_view"` …）；actions 不 import shell，
                             # runner 用 `getattr(shell.render, spec.render)` 取到函数（第 ⑤ 步）
     readonly: bool
-    lock_action: str        # 交给 lock_scope 的动作名：默认 = 命令名；`"tags --rename"` 用 `"tags"`
+    lock_action: str        # 交给 lock_scope 的动作名：默认 = 命令名
 ```
 
 1. `GitRepo(repo)` 在写动作里构造一次；**只读动作不构造**。`--no-sync` 照样构造，只是 runner 不调 `sync_down` / `guard_before_write` / `commit` / `push`（`TASK_LEDGER_NO_SYNC` 只在 `cli.main` 读一次，折成 `args.no_sync` 往下传，别在别处再读环境变量）。
@@ -770,6 +766,7 @@ class ActionSpec:
 def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.email → user.name
                                # 读不到就给兜底身份，并 notices.note("提示：…")，绝不抛
 ```
+
 - 只有一个方法。它**只给本机的这一个身份**，不带 aliases —— 补 aliases 是 `guard.current_identity(repo)` 的活（要读索引）。
 - 它跑 `git config`（子进程），这是全仓唯一允许跑 git 的非 shell 文件；只读配置，不 pull / commit / push。
 
@@ -816,7 +813,6 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
 | `cmd_set` 3329 三分支 | `actions/set_task.py`（路由）+ `release.py` + `handoff.py` + `claim.py` |
 | `cmd_log` 3455 | `actions/log_progress.py` |
 | `cmd_close` 3483 | `actions/close_task.py` |
-| `cmd_tags --rename` 3875 | `actions/rename_label.py` |
 | `cmd_list` 3716 / `cmd_show` 3854 / `cmd_history` 4219 / `cmd_validate` 4006 / `cmd_tags --all` 3952 | `actions/list_tasks.py` / `show_task.py` / `query_history.py` / `validate.py` / `scan_worklogs.py` |
 | `git_presync` 1902 / `git_sync` 1357 / `_push` 922 / `_rebase_retry` 1224 / `repo_sync_lock` 820 | `shell/gitops.py` |
 | `_write_targets` 1855 | `shell/presync.py` 的 `presync_scope` |
@@ -830,7 +826,7 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
 | 判据 | 现状 | 目标 |
 |---|---|---|
 | `actions/` 里出现 `write_text_atomic\|read_ledger\|load_pool\|load_shard\|open(\|read_text(\|read_bytes` | 26 行（在 `cmd_*` 里） | **0** |
-| `snapshot(` / `restore(` 出现在 `actions/` 的 `close_task.py` / `rename_label.py` / `new_task.py` 之外 | — | **0**（只有"一次改多个文件、且半路失败要按字节退回"的动作才用；`new_task.py` 只用它删本次新建的那篇文档） |
+| `snapshot(` / `restore(` 出现在 `actions/` 的 `close_task.py` / `new_task.py` 之外 | — | **0**（只有"一次改多个文件、且半路失败要按字节退回"的动作才用；`new_task.py` 只用它删本次新建的那篇文档） |
 | `actions/` 里出现 `print(` | 73 处 | **0**（打印全在 `shell/render.py`） |
 | `actions/`+`store/` 里出现 `git_\|subprocess\|_push\|_rebase_retry` | 0 | **0**（唯一例外：顶层 `env.py` 读 `git config`，它不在这两个目录里） |
 | `json.dumps` 出现在 `store/json_store.py` 之外（查 `actions/`+`store/`） | — | **0**（序列化只有 `json_store.py` 一处） |
@@ -854,7 +850,6 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
 | `set` | `--id --status --owner` | `set_task(tid, status, owner)` → `release` / `handoff` / `claim`+`set_field` / `set_field` |
 | `log` | `--id --note` | `log_progress(tid, note)`（折叠空白，不限长度） |
 | `close` | `--id --summary --finished --category --tags` | `close_task(tid, summary, finished, category, tags)` |
-| `tags --rename` | `--rename OLD NEW --dry-run` | `rename_label(old, new, dry_run)` |
 | `tags --all` | `--all --json` | `scan_worklogs()` |
 | `list` | `--mine --owner --all --status --category --tag --since --until --json` | `list_tasks(q)` |
 | `show` | `--id --json` | `show_task(tid)` |
@@ -864,7 +859,7 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
 
 表里只列**命令带来的参数**：`repo` 与 `me` 由外壳自动注入（见 §四 的 `ActionSpec`）；**第三列括号里的参数名就是 `params` 的键**，外壳照它挑，多一个少一个都算契约破坏。
 
-**名册的键就是命令写法**：`tags` 拆成 `"tags --all"`（只读）与 `"tags --rename"`（写）**两个键、两个 `ActionSpec`**；其余命令一个键。两者的 `lock_action` 都写 `"tags"`（锁集表只有一行）。`--dry-run` 不另开键（写动作照旧登记），靠 `Result.dry_run` 让 runner 跳过提交/推送。
+**名册的键就是命令写法**：`tags` 只有一个键 `"tags --all"`（只读）；其余命令一个键。没有 `--dry-run` —— 写命令没有预览模式。
 
 **参数 → 查询对象的装配只在 `cli.to_query` 一处**：动作层拿到的永远是 `ListQuery` / `HistoryQuery`，不是 argparse 的 namespace。界面（看板）要复用同一个动作，自己构造这两个 dataclass 即可 —— 这是 §〇 第 39 行「业务函数要能被界面单独调」能成立的唯一方式。
 

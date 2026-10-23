@@ -3,7 +3,7 @@
 七步：绑记账本 → 取最新 → 自举 → 调动作 → 打印 → 提交 → 推送。
 （仓库定位在更前面，见 `run` 开头。）
 
-- `Result.dry_run` ⇒ 跳过「提交 / 推送」；`already_done` **不**跳过（写没写只看记账本）。
+- `already_done` **不**跳过提交与推送（写没写只看记账本）。
 - 记账本为空 ⇒ 提交与推送都跳过（没脏文件就没得提交）。
 - **唯一不回滚的失败分支是 `BrokenPipeError`**：文件已经写完，照常提交推送。
 """
@@ -43,6 +43,10 @@ def run(command: str, args: argparse.Namespace) -> int:
         with dirty.bound(log):
             return _run(command, args, log)
     except Fail as exc:
+        if log.commit_started:
+            # 提交阶段才失败：数据已落盘，回滚 = 吃掉刚写的台账（2026-10-24 修）
+            render.fail_message(exc)
+            return BUSINESS
         log.rollback_presync()
         log.discard_created()
         render.fail_message(exc)
@@ -52,10 +56,15 @@ def run(command: str, args: argparse.Namespace) -> int:
         _finalize(command, args, log, broken=True)
         return OK
     except KeyboardInterrupt:
+        if log.commit_started:
+            return INTERRUPTED
         log.rollback_presync()
         log.discard_created()
         return INTERRUPTED
     except Exception as exc:  # noqa: BLE001 —— 兜底：任何未预期异常都要留下可诊断信息
+        if log.commit_started:
+            render.fail_message(exc, title="未预期错误")
+            return UNEXPECTED
         log.rollback_presync()
         log.discard_created()
         render.fail_message(exc, title="未预期错误")
@@ -66,12 +75,11 @@ def _run(command: str, args: argparse.Namespace, log: dirty.WriteLog) -> int:
     spec = registry.spec_of(command)
     repo = _repo_of(args)
     me = current_identity(repo)
-    dry_run = bool(getattr(args, "dry_run", False))
     no_sync = bool(getattr(args, "no_sync", False))
     as_json = bool(getattr(args, "json", False))
 
     git = GitRepo(repo)
-    syncing = not dry_run and not no_sync
+    syncing = not no_sync
     if syncing:
         # 中间态是**全局前提**，必须早于下面任何读台账的动作（`_params` 的 `new` 快照、
         # `presync_scope` 的锁集都要读台账）：冲突标记下的台账不是合法 JSON，读它就抛
@@ -95,17 +103,14 @@ def _run(command: str, args: argparse.Namespace, log: dirty.WriteLog) -> int:
         for path, before in git.sync_down(boot_scope | act_scope):
             log.record_presync(path, before)
 
-    if not dry_run:
-        # 自举会登记自己（改 owners.json、缺文件时建池与分片）。它碰过的文件按「命令前的字节」
-        # 记进记账本：成功时照常提交（登记必须进仓），失败时由 rollback_presync 一起还回去 ——
-        # 否则一条失败的命令会把台账留在「已写未提交」，下一条写命令被写前 guard 拦死
-        # （架构文档 §三.5 正是要避免这个）。登记是幂等的，还回去下次再登记，没有损失。
-        for rel in boot_scope.files:
-            log.record_presync(
-                repo / to_repo_rel(rel), snapshot(repo / to_repo_rel(rel))
-            )
-        with atom(repo, *boot_scope.files):
-            me = registry.bootstrap_func()(repo, me)
+    # 自举会登记自己（改 owners.json、缺文件时建池与分片）。它碰过的文件按「命令前的字节」
+    # 记进记账本：成功时照常提交（登记必须进仓），失败时由 rollback_presync 一起还回去 ——
+    # 否则一条失败的命令会把台账留在「已写未提交」，下一条写命令被写前 guard 拦死
+    # （架构文档 §三.5 正是要避免这个）。登记是幂等的，还回去下次再登记，没有损失。
+    for rel in boot_scope.files:
+        log.record_presync(repo / to_repo_rel(rel), snapshot(repo / to_repo_rel(rel)))
+    with atom(repo, *boot_scope.files):
+        me = registry.bootstrap_func()(repo, me)
 
     with atom(repo, *act_scope.files):
         value = spec.func(repo, me, **params)
@@ -123,13 +128,13 @@ def _finalize(
     message: str | None = None,
     broken: bool = False,
 ) -> None:
-    """提交 + 推送：要不要做只看记账本（与 `already_done` 无关，`dry_run` / `--no-sync` 才整段跳过）。"""
+    """提交 + 推送：要不要做只看记账本（与 `already_done` 无关，只有 `--no-sync` 才整段跳过）。"""
     if broken:
         try:
             sys.stdout.close()
         except Exception:  # noqa: BLE001, S110  # 关 stdout 本就无信息可记
             pass
-    if getattr(args, "dry_run", False) or getattr(args, "no_sync", False):
+    if getattr(args, "no_sync", False):
         if getattr(args, "no_sync", False) and log.has_writes():
             # 以前这条路径一个字都不打，「已写未提交」就此静默腐烂
             notices.note(
@@ -154,6 +159,7 @@ def _finalize(
         )
         log.clear()
         return
+    log.commit_started = True
     message = message or f"chore(ledger): {command}"
     git.commit(log.commit_set(), message)
     git.push()

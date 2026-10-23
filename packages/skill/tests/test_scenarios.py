@@ -485,51 +485,30 @@ class OthersTaskTest(ScenarioCase):
         self.assertEqual(merged(fx.b)[tid]["owner"], "smoke-b@example.com")
 
 
-class DryRunZeroWriteTest(ScenarioCase):
-    """预览命令整条零写：一个字节都不落，也不建台账。"""
+class NoLedgerTest(ScenarioCase):
+    """没有台账时怎么找、怎么报错（SKILL.md「建台账」那条的实测依据）。"""
 
-    def test_rename_dry_run_writes_nothing(self):
+    def test_read_without_ledger_does_not_create(self):
         fx = self.fx
-        new_task(fx.a, "预览任务", env=NOSYNC)
-        fx.push(fx.a)
-        before = {
-            p: p.read_bytes() for p in (fx.a / "ledger").rglob("*") if p.is_file()
-        }
-        code, out, err = run(fx.a, "tags", "--rename", "旧标签", "新标签", "--dry-run")
-        self.assertEqual(code, 0, err)
-        self.assertIn("预览", out + err)
-        after = {p: p.read_bytes() for p in (fx.a / "ledger").rglob("*") if p.is_file()}
-        self.assertEqual(before, after, "dry-run 一个字节都不该动")
-        self.assertEqual(git(fx.a, "status", "--porcelain", "ledger"), "")
-
-    def test_dry_run_without_ledger_does_not_create(self):
-        fx = self.fx
-        code, _, _err = run(fx.a, "tags", "--rename", "a", "b", "--dry-run")
-        self.assertEqual(code, 1, "没有台账要明确报错")
-        self.assertFalse((fx.a / "ledger").exists(), "不许顺手把台账建出来")
-
-
-class RenameTagOnlyTest(ScenarioCase):
-    """只打了标签、没设分类的任务也要能归并（2026-10-24 修的漏判）。"""
-
-    def test_rename_hits_tag_only_task(self):
-        fx = self.fx
-        code, _, err = run(
-            fx.a, "new", "--title", "只有标签", "--self", "--tags", "旧标签", env=NOSYNC
+        code, _out, _err = run(fx.a, "list")
+        self.assertEqual(
+            code, 0, "指定了 --repo 就认这个目录：没有台账 = 空台账，不是错误"
         )
-        self.assertEqual(code, 0, err)
-        tid = task_id_of(fx.a, "只有标签")
-        code, out, err = run(
-            fx.a, "tags", "--rename", "旧标签", "新标签", "--dry-run", env=NOSYNC
+        self.assertFalse((fx.a / "ledger").exists(), "只读不许顺手把台账建出来")
+
+    def test_without_repo_arg_and_no_ledger_is_rejected(self):
+        """不带 --repo 又找不到 ledger/ ⇒ 退 1，绝不在当前目录就地建台账。"""
+        fx = self.fx
+        proc = subprocess.run(
+            [sys.executable, "-B", str(PROGRESS), "list"],
+            capture_output=True,
+            text=True,
+            cwd=str(fx.a),
+            env=BASE_ENV,
+            check=False,
         )
-        self.assertEqual(code, 0, err)
-        self.assertIn("有 1 条任务会改", out + err)
-        self.assertIn(tid, out + err, "dry-run 要报出任务号")
-        code, _, err = run(fx.a, "tags", "--rename", "旧标签", "新标签", env=NOSYNC)
-        self.assertEqual(code, 0, err)
-        task = merged(fx.a)[tid]
-        self.assertEqual(task["tags"], ["新标签"])
-        self.assertIsNone(task["category"], "没设分类的不该被顺手补上")
+        self.assertEqual(proc.returncode, 1, "找不到台账要明确报错")
+        self.assertIn("找不到台账", proc.stdout + proc.stderr)
 
 
 class NoGitRepoTest(unittest.TestCase):
@@ -593,6 +572,12 @@ class MonthsWindowTest(ScenarioCase):
         self.assertEqual(code, 0)
         self.assertIn("本月结案", out)
         self.assertNotIn("古早结案", out)
+        # 最近 2 个月：窗口是 {本月, 上个月}，古早的在 3 个月前 ⇒ 仍不该出现。
+        # 这一条是两种语义的分水岭：按文件数取尾 2 个会把古早那条一起裹进来
+        code, out, _ = run(fx.a, "history", "--months", "2", env=NOSYNC)
+        self.assertEqual(code, 0)
+        self.assertIn("本月结案", out)
+        self.assertNotIn("古早结案", out, "--months 2 是自然月窗口，不是数文件")
         # 最近 6 个月：两条都该在（窗口覆盖到 3 个月前）
         code, out, _ = run(fx.a, "history", "--months", "6", env=NOSYNC)
         self.assertEqual(code, 0)

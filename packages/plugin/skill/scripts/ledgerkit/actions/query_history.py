@@ -7,10 +7,33 @@ from typing import Any
 
 from ..core import history_md
 from ..core.identity import Identity, normalize
-from ..core.time import time_key
+from ..core.time import now, time_key
 from ..store.history_store import HistoryStore
 from .query import COUNT_CAP, HistoryQuery
 from .result import HistoryResult, rel
+
+
+def _recent_month_keys(count: int) -> set[str]:
+    """最近 count 个自然月的月份键（含当月），按当前 UTC 推。
+
+    用户说的是「最近 6 个月」，不是「最近 6 个有记录的月份」——
+    哪几个月有记录是查出来才知道的，不能反过来要求用户先知。
+    """
+    stamp = now()
+    year, month = int(stamp[0:4]), int(stamp[5:7])
+    keys: set[str] = set()
+    for _ in range(max(count, 0)):
+        keys.add(f"{year:04d}{month:02d}")
+        month -= 1
+        if month == 0:
+            year, month = year - 1, 12
+    return keys
+
+
+def _month_key_of(path: Path) -> str:
+    """按月文件的月份键；存量平铺文件没有月份键，返回空串。"""
+    stem = path.stem
+    return stem if len(stem) == 6 and stem.isdigit() else ""
 
 
 def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
@@ -18,7 +41,8 @@ def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
     store = HistoryStore(repo)
     sources = store.sources()
     if q.months:
-        sources = sources[-int(q.months) :]
+        wanted = _recent_month_keys(int(q.months))
+        sources = [p for p in sources if _month_key_of(p) in wanted]
 
     records: list[dict[str, Any]] = []
     warnings: list[str] = []

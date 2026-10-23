@@ -31,9 +31,17 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
 
     task = pool.get(tid)  # 锁内重读
     if task is None:
-        if mine.get(tid) is not None:
+        already = mine.get(tid)
+        if already is not None:
             # 重跑：分片里已有这个号（上次崩了一半）⇒ 只补删池里那行
             pool.drop(tid)
+            logs = WorklogStore(repo)
+            path = logs.find(tid, already.get("worklog"))
+            if path is not None:
+                logs.append_exec(
+                    path,
+                    exec_line(now(), me.email, "claim", "认领（补齐上次未完成的清理）"),
+                )
             return Result(
                 already_done=True,
                 where=rel(repo, mine.path),

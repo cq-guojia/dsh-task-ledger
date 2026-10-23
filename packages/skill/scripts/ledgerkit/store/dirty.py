@@ -22,6 +22,9 @@ class WriteLog:
     changed: list[Path] = field(default_factory=list)
     created: list[Path] = field(default_factory=list)
     presync: list[tuple[Path, bytes | None]] = field(default_factory=list)
+    # 进入提交阶段（_finalize 开始 git add/commit）后置位：此时台账数据已落盘，
+    # 失败 / 中断都不许回滚或删除 —— 那会吃掉刚写的台账（2026-10-24 修）。
+    commit_started: bool = False
 
     def record(self, path: Path, *, track: bool = True, created: bool = False) -> None:
         """记一次写。`track=False`（复原 / 外壳刷盘）不进改动集合。"""

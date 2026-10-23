@@ -11,10 +11,11 @@ from pathlib import Path
 from ..core.identity import Identity
 from ..core.ids import require_task_id
 from ..core.labels import normalize_label, parse_tags
-from ..core.paths import POOL_REL, shard_rel, to_repo_rel, worklog_rel
+from ..core.paths import POOL_REL, shard_rel, to_repo_rel, worklog_name, worklog_rel
 from ..core.worklog_md import exec_line
 from ..errors import Fail
 from ..store.atomic import ensure_dir, restore, snapshot
+from ..store.history_store import HIT, HistoryStore
 from ..store.task_store import TaskStore
 from ..store.worklog_store import WorklogStore
 from .result import Result, WorklogView, rel
@@ -55,6 +56,16 @@ def new_task(
     other = pool if mine else mine_store
     if other.get(tid) is not None:
         raise Fail(f"任务号 {tid} 已经存在了（这不是重跑，是重号）。")
+    # 已结案的号也不能复用：close 的判重只比过程文档名，复用会让重跑 close
+    # 命中「已经结过案」却永远移不出分片（2026-10-24 修）
+    log_name = worklog_name(tid)
+    history = HistoryStore(repo)
+    for path in history.sources():
+        if history.has_log(path, log_name=log_name, created=None, title=None) == HIT:
+            raise Fail(
+                f"任务号 {tid} 已经结过案了（过程文档名撞上历史行）⇒ 换一个 --id，"
+                "别复用历史号。"
+            )
 
     doc_rel = worklog_rel(tid, created)  # 别叫 rel：那是 result.rel 的函数名
     path = repo / to_repo_rel(doc_rel)

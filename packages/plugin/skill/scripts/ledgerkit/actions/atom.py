@@ -143,8 +143,8 @@ def lock_scope(repo: Path, me: Identity, action: str, params: dict[str, Any]) ->
         history = history_path_for(finished) if len(finished) >= 7 else HISTORY_DIR
         return Scope(files=(mine, history, *wfiles), dirs=wdirs)
 
-    # tags：我的分片 + 全部在办文档
-    return Scope(files=(mine,), dirs=(WORKLOG_DIR,))
+    # 六个分支已覆盖 ACTIONS 全集（入口校验在前），走到这里说明表与分支不同步
+    raise ValueError(f"lock_scope 没有处理 {action!r}")
 
 
 @contextlib.contextmanager

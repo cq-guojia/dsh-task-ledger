@@ -2,7 +2,6 @@
 
 - `--json` 与 `--count-only` 互斥（退出码 2）。
 - `TASK_LEDGER_NO_SYNC` **只在这里读一次**，折成 `args.no_sync` 往下传。
-- 解析完统一补 `args.dry_run`（只有 `tags --rename` 定义了 `--dry-run`，runner 要能无条件读）。
 """
 
 from __future__ import annotations
@@ -61,10 +60,8 @@ def build_parser() -> argparse.ArgumentParser:
     close.add_argument("--category")
     close.add_argument("--tags")
 
-    tags = sub.add_parser("tags", help="标签统计 / 归并")
+    tags = sub.add_parser("tags", help="标签统计")
     tags.add_argument("--all", action="store_true")
-    tags.add_argument("--rename", nargs=2, metavar=("OLD", "NEW"))
-    tags.add_argument("--dry-run", action="store_true")
     tags.add_argument("--json", action="store_true")
 
     listp = sub.add_parser("list", help="查在办任务")
@@ -160,18 +157,19 @@ def _utc_of(
 def command_of(args: argparse.Namespace) -> str:
     """命令行 → 名册的键（命令写法）。"""
     command = str(getattr(args, "command", ""))
-    if command == "tags":
-        if getattr(args, "all", False):
-            return "tags --all"
-        if getattr(args, "rename", None):
-            return "tags --rename"
+    if command == "tags" and getattr(args, "all", False):
+        return "tags --all"
     return command
 
 
 def _split_tags(value: str | None) -> tuple[str, ...]:
     if not value:
         return ()
-    return tuple(t.strip() for t in value.replace("，", ",").split(",") if t.strip())
+    # 分隔符与 core/labels._SPLIT_RE 保持一致：少一个「、」就会把
+    # 「甲、乙」静默合成一个标签（2026-10-24 修）
+    for sep in ("，", "、"):
+        value = value.replace(sep, ",")
+    return tuple(t.strip() for t in value.split(",") if t.strip())
 
 
 def resolve_repo(arg: str | None, start: Path | None = None) -> Path:
@@ -201,7 +199,6 @@ def _repo_of(args: argparse.Namespace) -> Path:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    args.dry_run = bool(getattr(args, "dry_run", False))
     if os.environ.get(NO_SYNC_ENV):
         args.no_sync = True
     if getattr(args, "json", False) and getattr(args, "count_only", False):
@@ -210,8 +207,6 @@ def main(argv: list[str] | None = None) -> int:
     for field in ("tags",):
         if hasattr(args, field):
             setattr(args, field, _split_tags(getattr(args, field)))
-    if getattr(args, "rename", None):
-        args.old, args.new = args.rename
     to_query(args)
 
     command = command_of(args)
@@ -233,7 +228,9 @@ def _lock_dir(repo: Path) -> Path:
     """整命令锁放 **git 公共目录**里（不进仓库、不被 git status 看见；worktree 之间共享）。
 
     `repo/.git` 是目录 ⇒ 就是它；是文件 ⇒ 链接 worktree，按 `gitdir:` 指针反推公共目录
-    （`<common>/worktrees/<name>` 的上级的上级）；两者都不成 ⇒ 退回仓库根本身。
+    （`<common>/worktrees/<name>` 的上级的上级）；两者都不成 ⇒ 不是 git 仓库，
+    锁文件放系统临时目录（按仓库绝对路径哈希）—— 落用户工作区会被日后
+    `git init && git add -A` 误提交（2026-10-24 修）。
     """
     dot = Path(repo) / ".git"
     if dot.is_dir():
@@ -247,7 +244,13 @@ def _lock_dir(repo: Path) -> Path:
             common = Path(text.split(":", 1)[1].strip()).parent.parent
             if common.is_dir():
                 return common
-    return Path(repo)
+    import hashlib
+    import tempfile
+
+    key = hashlib.sha256(str(Path(repo).resolve()).encode("utf-8")).hexdigest()[:16]
+    lock_dir = Path(tempfile.gettempdir()) / f"dsh-task-ledger-{key}"
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    return lock_dir
 
 
 def _readonly(command: str) -> bool:

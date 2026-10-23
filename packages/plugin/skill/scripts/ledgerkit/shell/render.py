@@ -23,11 +23,11 @@ from ..core.time import fmt_local
 
 
 def _out(text: str = "") -> None:
-    print(text)
+    sys.stdout.write(text + "\n")
 
 
 def _err(text: str) -> None:
-    print(text, file=sys.stderr)
+    sys.stderr.write(text + "\n")
 
 
 def flush_notices() -> None:
@@ -43,15 +43,13 @@ def fail_message(exc: BaseException, *, title: str = "错误") -> None:
 
 
 def _json(data: Any) -> None:
-    print(json.dumps(data, ensure_ascii=False, indent=2))
+    sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
 
 def result(res: Result, *, as_json: bool) -> None:
     """写动作：一律人话（`--json` 不挂写动作，传进来也按人话打）。"""
     del as_json
-    if res.dry_run:
-        _out("预览：本次没有写任何文件。")
-    elif res.already_done:
+    if res.already_done:
         _out("无需重复：这次没有新的改动。")
     else:
         _out(f"已改：{'、'.join(res.changed) if res.changed else '（无字段改动）'}")
@@ -131,6 +129,8 @@ def history_view(res: HistoryResult, q: HistoryQuery | None, *, as_json: bool) -
             }
         )
         return
+    for line in res.warnings:
+        _err(f"警告：{line}")
     if not res.records:
         _out("没有符合条件的结案记录。")
         return
@@ -140,8 +140,6 @@ def history_view(res: HistoryResult, q: HistoryQuery | None, *, as_json: bool) -
             f"  {fmt_local(row.get('finished'))}  "
             f"{row.get('owner') or '（无人）':<12} {row.get('title', '')}"
         )
-    for line in res.warnings:
-        _err(f"警告：{line}")
 
 
 def validate_view(rep: ValidationReport, *, as_json: bool) -> None:

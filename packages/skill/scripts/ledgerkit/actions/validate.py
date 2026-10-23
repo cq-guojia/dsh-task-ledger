@@ -21,6 +21,26 @@ from .guard import owner_of, status_of
 from .result import ValidationReport, rel
 
 
+def _read_tasks(repo: Path, store: TaskStore, problems: list[str]) -> dict:
+    """读一个任务文件；撞上**程序自留**的冲突标记 ⇒ 记一条 problem 继续。
+
+    推送被拒后 rebase 给 JSON 留的 `<<<<<<<` 是程序自己产的坏数据，validate
+    要能指出来（退 1 给清单），而不是整条命令退 3（2026-10-24 修）。
+    其余读错误（用户手改坏）不在此列，照旧抛出。
+    """
+    try:
+        return store.all()
+    except ValueError:
+        text = store.path.read_text(encoding="utf-8", errors="replace")
+        if "<<<<<<<" in text:
+            problems.append(
+                f"{rel(repo, store.path)} 带着冲突标记"
+                "（推送被拒后 rebase 没解完）：先解决冲突，再跑 validate。"
+            )
+            return {}
+        raise
+
+
 def validate(repo: Path, me: Identity) -> ValidationReport:
     problems: list[str] = []
     notices: list[str] = []
@@ -32,7 +52,7 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
 
     if pool.path.exists():
         checked += 1
-        for tid, task in pool.all().items():
+        for tid, task in _read_tasks(repo, pool, problems).items():
             total += 1
             if owner_of(task):
                 problems.append(
@@ -47,7 +67,7 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
             continue
         checked += 1
         store = TaskStore(repo, Path(path).relative_to(repo / "ledger"))
-        for tid, task in store.all().items():
+        for tid, task in _read_tasks(repo, store, problems).items():
             total += 1
             owner = owner_of(task)
             if not owner:
@@ -70,7 +90,7 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
 
     # 同一个任务号落在多个文件里（搬移中断的中间态）：读侧只显示一次，这里必须报出来
     seen: dict[str, list[str]] = {}
-    for tid in pool.all():
+    for tid in _read_tasks(repo, pool, problems):
         seen.setdefault(tid, []).append("pool.json")
     for key, path in index.shards().items():
         if not path.exists():

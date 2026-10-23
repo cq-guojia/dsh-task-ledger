@@ -102,9 +102,6 @@ def main() -> int:
             r.returncode == 1 and "必须带 --all" in (r.stdout + r.stderr),
             r.stdout + r.stderr,
         )
-        r = run(repo, "tags", "--rename", "不存在", "别的", "--dry-run")
-        check("tags 预览不写盘", r.returncode == 0 and "预览" in r.stdout, r.stdout)
-
         # 结案 → 历史
         r = run(repo, "close", "--id", tid, "--summary", "冒烟结案")
         check("close 退出码 0", r.returncode == 0, r.stderr)

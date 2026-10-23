@@ -43,6 +43,12 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
             )
         # 重跑：以对方那份为准，只补删我这边
         mine.drop(tid)
+        logs = WorklogStore(repo)
+        path = logs.find(tid, moved.get("worklog"))
+        if path is not None:
+            logs.append_exec(
+                path, exec_line(now(), me.email, "set", f"交接给 {to_key}（补齐）")
+            )
         return Result(
             already_done=True,
             where=rel(repo, to_store.path),

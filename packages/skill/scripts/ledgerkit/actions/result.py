@@ -34,7 +34,6 @@ class Result:
     changed: tuple[str, ...] = ()  # 改了哪些**字段名**（不是文件名、不是任务号）
     where: str | None = None  # 主要落在哪个文件（**相对 repo**）
     already_done: bool = False  # 重跑发现已经做过 ⇒ 退出码仍是 0
-    dry_run: bool = False  # 只预览没写盘 ⇒ 外壳跳过提交与推送
     message: str | None = None  # git 提交说明；None ⇒ 外壳用默认模板
     worklog: WorklogView | None = None
     payload: dict[str, Any] = field(default_factory=dict)

@@ -86,10 +86,26 @@ def close_task(
             title=task.get("title"),
         )
         if state == HIT:
+            # 崩在②（历史行已写）之后、③/④之前：历史里已有，但分片行可能还在、
+            # 过程文档可能还没封卷。不补齐就留下「已结案却仍在办」的僵尸 ——
+            # 它还能收 log，甚至被释放推回公共池让别人认领（2026-10-24 修）。
+            notes = [f"任务 {tid} 已经结过案，无需重复。"]
+            if doc_path is not None:
+                text = logs.read(doc_path)
+                if not has_frozen_line(text):
+                    frozen = stamp_frozen(text, finished, me.email)
+                    frozen = append_exec_log(
+                        frozen, exec_line(finished, me.email, "close", "结案封卷")
+                    )
+                    logs.write(doc_path, frozen)
+                    notes.append("补齐上次未完成的封卷。")
+            if mine.get(tid) is not None:
+                mine.drop(tid)
+                notes.append("补齐上次未完成的移出分片。")
             return Result(
                 already_done=True,
                 where=rel(repo, hist_path),
-                notices=(f"任务 {tid} 已经结过案，无需重复。",),
+                notices=tuple(notes),
             )
         if state == UNDECIDABLE:
             raise Fail(

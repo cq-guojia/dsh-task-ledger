@@ -18,7 +18,6 @@ from . import (
     log_progress,
     new_task,
     query_history,
-    rename_label,
     scan_worklogs,
     set_task,
     show_task,
@@ -54,15 +53,7 @@ ACTIONS: dict[str, ActionSpec] = {
         "result",
         params=("tid", "summary", "finished", "category", "tags"),
     ),
-    "tags --rename": ActionSpec(
-        rename_label.rename_label,
-        "result",
-        params=("old", "new", "dry_run"),
-        lock_action="tags",
-    ),
-    "tags --all": ActionSpec(
-        scan_worklogs.scan_worklogs, "census_view", readonly=True, lock_action="tags"
-    ),
+    "tags --all": ActionSpec(scan_worklogs.scan_worklogs, "census_view", readonly=True),
     "list": ActionSpec(
         list_tasks.list_tasks, "list_view", readonly=True, params=("q",)
     ),
@@ -83,7 +74,7 @@ def spec_of(command: str) -> ActionSpec:
     spec = ACTIONS.get(command)
     if spec is None:
         if command == "tags":
-            raise Fail("tags 必须带 --all（看统计）或 --rename 旧 新（归并标签）。")
+            raise Fail("tags 必须带 --all（看标签统计）。")
         raise Fail(f"未知命令：{command}")
     return spec
 

@@ -59,8 +59,6 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 
 现状是 `cmd_*` 单函数直写，六个写命令共约 710 行里混着校验、加锁、读、写、回滚、打印。逻辑形状是：
 
-
-
 ```
 外壳  cmd_* / _run_once     解析参数 → 取最新 → 自举 → 调一个业务函数 → 打印 → 提交 → 推送
   ↑
@@ -86,7 +84,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 
 ### 5.2 业务动作清单
 
-`bootstrap`（原 `ensure_ledger`：要写 3 个文件，由外壳单独一个 `atom` 包住、它自己不开事务，**必须在业务动作的 atom 之前单独跑，不得与业务动作合并进同一个 atom**）、`new_task`、`claim`、`set_task`、`release`、`handoff`、`log_progress`、`close_task`、`rename_label`。
+`bootstrap`（原 `ensure_ledger`：要写 3 个文件，由外壳单独一个 `atom` 包住、它自己不开事务，**必须在业务动作的 atom 之前单独跑，不得与业务动作合并进同一个 atom**）、`new_task`、`claim`、`set_task`、`release`、`handoff`、`log_progress`、`close_task`。
 只读不进事务：`list_tasks` / `show_task` / `query_history` / `validate` / `scan_worklogs`（`tags --all`）。
 
 签名一律 `(repo, ...)`：写动作 `-> Result`（**唯一例外 `bootstrap` → `Identity`**），只读动作 `-> 各自的视图对象`；**参数里没有 git、也没有 argparse 的 namespace**（查询条件用 `ListQuery` / `HistoryQuery`）。`Result` 里的 `changed` / `where` / `already_done` / `worklog` / `notices` **只供打印**；**提交集合只认数据层记账本记的脏集**，两者不是一回事，别拿 `changed` 去算 git 提交范围。
@@ -115,7 +113,6 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 
 - 判据全部按**目录**扫，不再按「`cmd_*` 函数体」扫（拆包后没有 `cmd_*` 了）；基线数字是现状单文件里的命中数，只用来对照。
 - 入口那一行的口径：`wc -l scripts/progress.py` ≤ 40，且**四件事**（关字节码 / 把自己塞进 `sys.path` / 调 `main` / 交出返回码）——见 `ledger-api.md` §1.2。
-
 
 ### 5.6 脚本不做的事（别再提）
 
