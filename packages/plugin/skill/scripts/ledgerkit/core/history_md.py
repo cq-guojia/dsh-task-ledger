@@ -7,16 +7,14 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Callable, Iterable
 
 from .paths import to_history_rel
 from .time import TIME_RE, time_key
 
 HISTORY_TITLE = "# 进度历史（已结案）"
-HISTORY_HEADER = (
-    "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |"
-)
+HISTORY_HEADER = "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |"
 HISTORY_SEP = "|---|---|---|---|---|---|---|---|---|"
 
 # 最旧格式把 owner 缝在工作包末尾：最右一个「空格 + @」之后整段是 owner。
@@ -107,7 +105,9 @@ def history_line_for_cols(
     link = f"[{log_rel}]({log_rel})" if log_rel else ""
     if cols <= 4:
         who = f" @{owner}" if owner else ""
-        return f"| {finished} | {esc_cell(title + who)} | {esc_cell(summary)} | {link} |\n"
+        return (
+            f"| {finished} | {esc_cell(title + who)} | {esc_cell(summary)} | {link} |\n"
+        )
     if cols == 5:
         return (
             f"| {finished} | {esc_cell(title)} | {esc_cell(owner_cell(owner))} "

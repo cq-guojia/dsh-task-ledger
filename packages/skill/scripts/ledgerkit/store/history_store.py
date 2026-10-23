@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from ..core import history_md
 from ..core.paths import HISTORY_DIR, LEGACY_HISTORY_REL, to_repo_rel
@@ -44,7 +45,7 @@ class HistoryStore:
         """升级要回链的 worklog 头部：读文件这件事留在 store，core 只消费返回的字典。"""
         logs = WorklogStore(self.repo)
 
-        def read(log_name: str) -> dict | None:
+        def read(log_name: str) -> dict[str, Any] | None:
             found = logs.by_name(log_name)
             return logs.head_meta(found) if found else None
 
@@ -83,7 +84,7 @@ class HistoryStore:
 
     # ---- 算 ----
 
-    def append_row(self, path: Path, row: dict) -> dict:
+    def append_row(self, path: Path, row: dict[str, Any]) -> dict[str, Any]:
         """算出「追加这一行后的新全文」，**不落盘**。
 
         返回四个键：`text` / `upgraded` / `duplicate` / `fallback_cols`（`None` = 正常 9 列）。

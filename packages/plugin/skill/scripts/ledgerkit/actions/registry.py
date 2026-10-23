@@ -27,33 +27,47 @@ from . import (
 
 @dataclass(frozen=True)
 class ActionSpec:
-    func: Callable                 # (repo, me, **params) -> Result | 视图对象
-    render: str                    # 渲染函数**名**；runner 用 getattr 取
+    func: Callable  # (repo, me, **params) -> Result | 视图对象
+    render: str  # 渲染函数**名**；runner 用 getattr 取
     readonly: bool = False
-    lock_action: str = ""          # 交给 lock_scope 的动作名；默认同命令名
-    params: tuple[str, ...] = field(default=())   # 从参数里挑哪些键传给 func
+    lock_action: str = ""  # 交给 lock_scope 的动作名；默认同命令名
+    params: tuple[str, ...] = field(default=())  # 从参数里挑哪些键传给 func
 
 
 ACTIONS: dict[str, ActionSpec] = {
     "new": ActionSpec(
-        new_task.new_task, "result", params=("title", "tid", "created", "category", "tags", "mine")
+        new_task.new_task,
+        "result",
+        params=("title", "tid", "created", "category", "tags", "mine"),
     ),
     "claim": ActionSpec(claim.claim, "result", params=("tid",)),
     "set": ActionSpec(
-        set_task.set_task, "result", params=("tid", "status", "owner"), lock_action="set"
+        set_task.set_task,
+        "result",
+        params=("tid", "status", "owner"),
+        lock_action="set",
     ),
     "log": ActionSpec(log_progress.log_progress, "result", params=("tid", "note")),
     "close": ActionSpec(
-        close_task.close_task, "result", params=("tid", "summary", "finished", "category", "tags")
+        close_task.close_task,
+        "result",
+        params=("tid", "summary", "finished", "category", "tags"),
     ),
     "tags --rename": ActionSpec(
-        rename_label.rename_label, "result", params=("old", "new", "dry_run"), lock_action="tags"
+        rename_label.rename_label,
+        "result",
+        params=("old", "new", "dry_run"),
+        lock_action="tags",
     ),
     "tags --all": ActionSpec(
         scan_worklogs.scan_worklogs, "census_view", readonly=True, lock_action="tags"
     ),
-    "list": ActionSpec(list_tasks.list_tasks, "list_view", readonly=True, params=("q",)),
-    "show": ActionSpec(show_task.show_task, "show_view", readonly=True, params=("tid",)),
+    "list": ActionSpec(
+        list_tasks.list_tasks, "list_view", readonly=True, params=("q",)
+    ),
+    "show": ActionSpec(
+        show_task.show_task, "show_view", readonly=True, params=("tid",)
+    ),
     "history": ActionSpec(
         query_history.query_history, "history_view", readonly=True, params=("q",)
     ),

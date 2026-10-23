@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from ..core.identity import Identity
 from ..core.labels import normalize_label
@@ -92,7 +93,7 @@ def _roll_back(repo: Path, backups: list[tuple[Path, bytes | None]]) -> None:
         )
 
 
-def _hit_tids(tasks: dict, old_label: str) -> list[str]:
+def _hit_tids(tasks: dict[str, Any], old_label: str) -> list[str]:
     out: list[str] = []
     for tid, task in tasks.items():
         category, _ = _apply(task, old_label, "")
@@ -101,7 +102,9 @@ def _hit_tids(tasks: dict, old_label: str) -> list[str]:
     return out
 
 
-def _apply(task: dict, old_label: str, new_label: str) -> tuple[str | None, tuple[str, ...]]:
+def _apply(
+    task: dict[str, Any], old_label: str, new_label: str
+) -> tuple[str | None, tuple[str, ...]]:
     """一条任务的新 (category, tags)；不在范围内返回 (None, ())。"""
     category = task.get("category")
     tags = tuple(task.get("tags") or ())

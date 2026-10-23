@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 import secrets
-from typing import Mapping
+from collections.abc import Mapping
 
 from ..errors import Fail
 from .time import now
@@ -25,9 +25,7 @@ def id_stamp(created: str) -> str:
     )
 
 
-def make_id(
-    title: str, tasks: Mapping[str, object], created: str | None = None
-) -> str:
+def make_id(title: str, tasks: Mapping[str, object], created: str | None = None) -> str:
     """按标题生成一个不撞号的任务号。
 
     随机码不能省：`make_id` 只在**在办**任务里去重，而结案的过程文档长期留在磁盘上，

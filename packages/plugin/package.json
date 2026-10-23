@@ -1,60 +1,60 @@
 {
-  "name": "dsh-task-ledger",
-  "version": "0.0.74",
-  "description": "Task ledger board for dsh (DeepSeek Harness): read-only board over task-ledger skill workspaces. The task-ledger skill is bundled — install the plugin, get the skill globally.",
-  "keywords": [
-    "deepseek",
-    "harness",
-    "dsh",
-    "dsh-plugin",
-    "task-ledger"
-  ],
-  "license": "MIT",
-  "type": "module",
-  "main": "dist/index.js",
-  "exports": {
-    ".": "./dist/index.js",
-    "./client": "./dist/client.js",
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist",
-    "skill",
-    "cordis.patch.yml",
-    "README.md"
-  ],
-  "scripts": {
-    "build": "npm run build:host && npm run build:client",
-    "build:host": "node scripts/clean-dist.mjs && tsc && node scripts/copy-skill.mjs",
-    "build:client": "tsc --noEmit -p tsconfig.client.json && tsdown --config tsdown.client.config.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
-    "smoke": "node scripts/smoke.mjs",
-    "verify": "npm run build && npm run typecheck && npm run smoke"
-  },
-  "engines": {
-    "node": ">=22.5"
-  },
-  "devDependencies": {
-    "@types/node": "^22.20.4",
-    "@types/react": "~18.3.1",
-    "tsdown": "^0.23.0",
-    "typescript": "^5.9.3"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cq-guojia/dsh-task-ledger.git"
-  },
-  "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
-    },
-    "client": {
-      "platform": "web",
-      "inject": [
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-layout"
-      ]
-    }
-  }
+	"name": "dsh-task-ledger",
+	"version": "0.0.74",
+	"description": "Task ledger board for dsh (DeepSeek Harness): read-only board over task-ledger skill workspaces. The task-ledger skill is bundled — install the plugin, get the skill globally.",
+	"keywords": [
+		"deepseek",
+		"harness",
+		"dsh",
+		"dsh-plugin",
+		"task-ledger"
+	],
+	"license": "MIT",
+	"type": "module",
+	"main": "dist/index.js",
+	"exports": {
+		".": "./dist/index.js",
+		"./client": "./dist/client.js",
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist",
+		"skill",
+		"cordis.patch.yml",
+		"README.md"
+	],
+	"scripts": {
+		"build": "npm run build:host && npm run build:client",
+		"build:host": "node scripts/clean-dist.mjs && tsc && node scripts/copy-skill.mjs",
+		"build:client": "tsc --noEmit -p tsconfig.client.json && tsdown --config tsdown.client.config.ts",
+		"typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
+		"smoke": "node scripts/smoke.mjs",
+		"verify": "npm run build && npm run typecheck && npm run smoke"
+	},
+	"engines": {
+		"node": ">=22.5"
+	},
+	"devDependencies": {
+		"@types/node": "^22.20.4",
+		"@types/react": "~18.3.1",
+		"tsdown": "^0.23.0",
+		"typescript": "^5.9.3"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/cq-guojia/dsh-task-ledger.git"
+	},
+	"dsh": {
+		"bundle": {
+			"patch": "./cordis.patch.yml"
+		},
+		"client": {
+			"platform": "web",
+			"inject": [
+				"@deepseek-ai/dsh-client-locale",
+				"@deepseek-ai/dsh-client-ui-renderer",
+				"@deepseek-ai/dsh-client-ui-layout"
+			]
+		}
+	}
 }

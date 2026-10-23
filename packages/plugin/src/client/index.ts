@@ -9,75 +9,103 @@
  * 宿主能力一律**本地结构化声明**，不 import 官方包（rc 接口会无声变）；
  * `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
  */
-import { createElement as h } from 'react'
-import { BoardHome } from './board-home'
-import { en, fallbackTranslate, interpolateTranslate, zh, type LocaleKey, type Translate } from './locales'
-import { LedgerIcon } from './ui'
+import { createElement as h } from "react";
+import { BoardHome } from "./board-home";
+import {
+	en,
+	fallbackTranslate,
+	interpolateTranslate,
+	type LocaleKey,
+	type Translate,
+	zh,
+} from "./locales";
+import { LedgerIcon } from "./ui";
 
 /** 命名空间（settings / locale / 面板 id 同名，便于对应）。 */
 /** 模块级 t 席位（侧栏 label 渲染期求值用；绑不上就回落键名，绝不上界面）。 */
-let runtimeT: Translate = (key) => key
+let runtimeT: Translate = (key) => key;
 
-const NS = 'dsh-task-ledger'
+const NS = "dsh-task-ledger";
 /** `main` 槽的 key（非 `conversation` ⇒ 不绑 Session）。 */
-const PANEL_ID = NS
+const PANEL_ID = NS;
 
 /** 浏览器插件上下文：只声明本文件实际用到的服务面。 */
 interface ClientContext {
-  inject(deps: readonly string[], callback: (ctx: ClientContext) => void): void
-  effect(setup: () => void): void
-  locale?: {
-    register(ns: string, dictionaries: Record<string, Record<string, string>>): void
-    /** 绑一份无参 t（侧栏 label 在渲染期求值，拿不到组件 props 的 t 席位）。 */
-    bind(ns: string): Translate
-  }
-  layout?: {
-    selectPanel(panelId: string | null): void
-  }
-  slots: {
-    inject(slot: string, factory: () => () => void): () => void
-    register(options: Record<string, unknown>, component: unknown): () => void
-  }
+	inject(deps: readonly string[], callback: (ctx: ClientContext) => void): void;
+	effect(setup: () => void): void;
+	locale?: {
+		register(
+			ns: string,
+			dictionaries: Record<string, Record<string, string>>,
+		): void;
+		/** 绑一份无参 t（侧栏 label 在渲染期求值，拿不到组件 props 的 t 席位）。 */
+		bind(ns: string): Translate;
+	};
+	layout?: {
+		selectPanel(panelId: string | null): void;
+	};
+	slots: {
+		inject(slot: string, factory: () => () => void): () => void;
+		register(options: Record<string, unknown>, component: unknown): () => void;
+	};
 }
 
 /** 宿主没给 t 席位时的兜底（键名绝不上界面）。 */
-const t: Translate = interpolateTranslate((key: LocaleKey, params?: Record<string, string | number>) =>
-  fallbackTranslate(key, params))
+const t: Translate = interpolateTranslate(
+	(key: LocaleKey, params?: Record<string, string | number>) =>
+		fallbackTranslate(key, params),
+);
 
 export function apply(ctx: ClientContext): void {
-  // ① 字典注册（宿主语言切换 ⇒ 渲染器换 t 引用 ⇒ 整页重渲染）
-  ctx.inject(['locale'], (localeCtx) => {
-    ctx.effect(() => localeCtx.locale?.register(NS, { zh, en }))
-    // 模块级 t 席位：`sidebar.panellist` 的 label 由侧栏在渲染期求值，拿不到组件 props 的 t
-    try { runtimeT = localeCtx.locale?.bind(NS) ?? runtimeT } catch { /* 保持键名兜底 */ }
-  })
+	// ① 字典注册（宿主语言切换 ⇒ 渲染器换 t 引用 ⇒ 整页重渲染）
+	ctx.inject(["locale"], (localeCtx) => {
+		ctx.effect(() => localeCtx.locale?.register(NS, { zh, en }));
+		// 模块级 t 席位：`sidebar.panellist` 的 label 由侧栏在渲染期求值，拿不到组件 props 的 t
+		try {
+			runtimeT = localeCtx.locale?.bind(NS) ?? runtimeT;
+		} catch {
+			/* 保持键名兜底 */
+		}
+	});
 
-  // ② 布局服务：浮标点开整页 / 整页返回会话
-  let selectPanel: (id: string | null) => void = () => {}
-  ctx.inject(['layout'], (sub) => {
-    const layout = sub.layout
-    if (layout !== undefined) selectPanel = (id) => { layout.selectPanel(id) }
-  })
+	// ② 布局服务：浮标点开整页 / 整页返回会话
+	let selectPanel: (id: string | null) => void = () => {};
+	ctx.inject(["layout"], (sub) => {
+		const layout = sub.layout;
+		if (layout !== undefined)
+			selectPanel = (id) => {
+				layout.selectPanel(id);
+			};
+	});
 
-  // ③ 槽位注册（只依赖 slots，自成一块：locale / layout 缺席也不该让入口消失）
-  ctx.inject(['slots'], (sub) => {
-    // 左侧入口：侧栏面板条目（list 槽）。**行按钮、点击、激活态全由侧栏 / 布局服务托管**，
-    // 组件只画图标；id 必须与 main 槽的 key 一致（同一 MainPanelId）。
-    // 事实见 external/client-ui-layout.md §一/§二（0.2.0-rc.2 亲验）。
-    sub.slots.inject('sidebar.panellist', () =>
-      sub.slots.register(
-        { name: 'sidebar.panellist', id: PANEL_ID, order: 30, label: () => runtimeT('panelTitle'), locale: NS },
-        (props: { size?: number }) => h(LedgerIcon, { size: props.size ?? 18 }),
-      ),
-    )
-    sub.slots.inject('main', () =>
-      sub.slots.register(
-        { name: 'main', key: PANEL_ID, locale: NS },
-        (props: { t?: Translate }) => h(BoardHome, {
-          t: props.t ?? t,
-          onBack: () => { selectPanel(null) },
-        }),
-      ),
-    )
-  })
+	// ③ 槽位注册（只依赖 slots，自成一块：locale / layout 缺席也不该让入口消失）
+	ctx.inject(["slots"], (sub) => {
+		// 左侧入口：侧栏面板条目（list 槽）。**行按钮、点击、激活态全由侧栏 / 布局服务托管**，
+		// 组件只画图标；id 必须与 main 槽的 key 一致（同一 MainPanelId）。
+		// 事实见 external/client-ui-layout.md §一/§二（0.2.0-rc.2 亲验）。
+		sub.slots.inject("sidebar.panellist", () =>
+			sub.slots.register(
+				{
+					name: "sidebar.panellist",
+					id: PANEL_ID,
+					order: 30,
+					label: () => runtimeT("panelTitle"),
+					locale: NS,
+				},
+				(props: { size?: number }) => h(LedgerIcon, { size: props.size ?? 18 }),
+			),
+		);
+		sub.slots.inject("main", () =>
+			sub.slots.register(
+				{ name: "main", key: PANEL_ID, locale: NS },
+				(props: { t?: Translate }) =>
+					h(BoardHome, {
+						t: props.t ?? t,
+						onBack: () => {
+							selectPanel(null);
+						},
+					}),
+			),
+		);
+	});
 }

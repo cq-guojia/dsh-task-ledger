@@ -29,7 +29,7 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
         if other.get(tid) is not None:
             raise Fail(f"任务 {tid} 已在 {key} 的分片里（别人正在做），不能认领。")
 
-    task = pool.get(tid)          # 锁内重读
+    task = pool.get(tid)  # 锁内重读
     if task is None:
         if mine.get(tid) is not None:
             # 重跑：分片里已有这个号（上次崩了一半）⇒ 只补删池里那行

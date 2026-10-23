@@ -16,7 +16,7 @@ from ..errors import Fail
 from .atomic import fingerprint, write_text_atomic
 
 
-def dump_ledger_json(data: dict, *, expand: str = "tasks") -> str:
+def dump_ledger_json(data: dict[str, Any], *, expand: str = "tasks") -> str:
     """「一条一行」的台账文本（`expand` 指定的那个字典一条一行，其余字段各占一行）。
 
     键排序、值也 `sort_keys`：**同一份逻辑内容永远产出同一串字节** ——
@@ -24,14 +24,14 @@ def dump_ledger_json(data: dict, *, expand: str = "tasks") -> str:
     别改成缩进美化格式，也别按插入序输出（老文件会整篇翻面）。
     """
     body: dict[str, Any] = dict(data)
-    body["version"] = FORMAT_VERSION   # 写盘一律带当前版本（缺就补、旧就更新）
+    body["version"] = FORMAT_VERSION  # 写盘一律带当前版本（缺就补、旧就更新）
     rows: list[str] = []
     for key in sorted(body):
         value = body[key]
         if key == expand and isinstance(value, dict):
             inner = [
-                f'    {json.dumps(k, ensure_ascii=False)}: '
-                f'{json.dumps(v, ensure_ascii=False, sort_keys=True)}'
+                f"    {json.dumps(k, ensure_ascii=False)}: "
+                f"{json.dumps(v, ensure_ascii=False, sort_keys=True)}"
                 for k, v in sorted(value.items())
             ]
             block = (",\n".join(inner) + "\n") if inner else ""
@@ -43,7 +43,9 @@ def dump_ledger_json(data: dict, *, expand: str = "tasks") -> str:
     return "{\n" + ",\n".join(rows) + "\n}\n"
 
 
-def write_ledger_json(path: Path, data: dict, *, expand: str = "tasks") -> None:
+def write_ledger_json(
+    path: Path, data: dict[str, Any], *, expand: str = "tasks"
+) -> None:
     """按「一条一行」写台账（格式文本由 `dump_ledger_json` 出）。"""
     write_text_atomic(path, dump_ledger_json(data, expand=expand))
 
@@ -51,15 +53,15 @@ def write_ledger_json(path: Path, data: dict, *, expand: str = "tasks") -> None:
 class JSONStore:
     """一份 JSON 台账的读改写。首次读盘后缓存在实例里。"""
 
-    def __init__(self, path: Path, *, default: dict, expand: str = "tasks"):
+    def __init__(self, path: Path, *, default: dict[str, Any], expand: str = "tasks"):
         self.path = Path(path)
         self.expand = expand
         self._default = dict(default)
-        self._data: dict | None = None
+        self._data: dict[str, Any] | None = None
 
     # ---- 读 ----
 
-    def _load(self) -> dict:
+    def _load(self) -> dict[str, Any]:
         if self._data is None:
             data = self._read_raw()
             if data is None:
@@ -79,7 +81,7 @@ class JSONStore:
             self._data = data
         return self._data
 
-    def _read_raw(self) -> dict | None:
+    def _read_raw(self) -> dict[str, Any] | None:
         try:
             text = self.path.read_text(encoding="utf-8-sig")
         except FileNotFoundError:
@@ -98,7 +100,7 @@ class JSONStore:
             raise ValueError(f"{self.path} 顶层不是对象。")
         return data
 
-    def _check_version(self, data: dict) -> None:
+    def _check_version(self, data: dict[str, Any]) -> None:
         version = data.get("version")
         if isinstance(version, str) and version == FORMAT_VERSION:
             return
@@ -113,24 +115,24 @@ class JSONStore:
         except Exception:  # noqa: BLE001
             return str(self.path)
 
-    def data(self) -> dict:
+    def data(self) -> dict[str, Any]:
         """整份只读视图（升级 / 体检用）。"""
         return dict(self._load())
 
-    def get(self, key: str) -> dict | None:
+    def get(self, key: str) -> dict[str, Any] | None:
         value = self._load().get(self.expand, {}).get(key)
         return dict(value) if isinstance(value, dict) else None
 
-    def all(self) -> dict[str, dict]:
+    def all(self) -> dict[str, dict[str, Any]]:
         rows = self._load().get(self.expand, {}) or {}
-        return {k: dict(v) for k, v in rows.items() if isinstance(v, dict)}
+        return {k: dict[str, Any](v) for k, v in rows.items() if isinstance(v, dict)}
 
     def fingerprint(self) -> str | None:
         return fingerprint(self.path)
 
     # ---- 写 ----
 
-    def put(self, key: str, value: dict) -> None:
+    def put(self, key: str, value: dict[str, Any]) -> None:
         """改一条，其余原样保留。"""
         data = self._load()
         rows = data.setdefault(self.expand, {})
@@ -149,7 +151,7 @@ class JSONStore:
         del rows[key]
         self._flush(data)
 
-    def _flush(self, data: dict) -> None:
+    def _flush(self, data: dict[str, Any]) -> None:
         write_ledger_json(self.path, data, expand=self.expand)
         self._data = data
 

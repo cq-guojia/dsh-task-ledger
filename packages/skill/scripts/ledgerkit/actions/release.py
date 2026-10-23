@@ -18,7 +18,7 @@ def release(repo: Path, me: Identity, tid: str) -> Result:
     """写序：写回池（已有同号就不覆盖）→ 删我分片那行 → 过程文档记一笔。"""
     pool = TaskStore(repo, POOL_REL)
     mine = TaskStore(repo, shard_rel(me.email), identity=me)
-    task = mine.get(tid)      # 锁内重读
+    task = mine.get(tid)  # 锁内重读
     if task is None:
         if pool.get(tid) is not None:
             return Result(

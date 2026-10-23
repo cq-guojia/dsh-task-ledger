@@ -52,7 +52,7 @@ def close_task(
     hist_path = repo / to_repo_rel(history_path_for(finished))
 
     mine = TaskStore(repo, shard_rel(me.email), identity=me)
-    task = mine.get(tid)      # 锁内重读
+    task = mine.get(tid)  # 锁内重读
     if task is None:
         # 分片里已经没有这条：上次崩在「删分片」之后。只按过程文档名判重，命中即已结案
         state = history.has_log(
@@ -108,9 +108,7 @@ def close_task(
         # ① 改标签行（给了 --category / --tags 才做，且必须在封卷之前）
         if doc_path is not None and (new_category or new_tags):
             text = logs.read(doc_path)
-            logs.write(
-                doc_path, rewrite_label_line(text, final_category, final_tags)
-            )
+            logs.write(doc_path, rewrite_label_line(text, final_category, final_tags))
 
         # ② 历史加一行（先 ensure_dir：首次结案时 history/ 可能还不存在）
         ensure_dir(hist_path.parent)

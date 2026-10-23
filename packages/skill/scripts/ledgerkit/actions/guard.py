@@ -30,7 +30,7 @@ def current_identity(repo: Path) -> Identity:
     return with_aliases(me, aliases) if aliases else me
 
 
-def require_task(tasks: Mapping[str, Any], tid: str, *, where: Path) -> dict:
+def require_task(tasks: Mapping[str, Any], tid: str, *, where: Path) -> dict[str, Any]:
     """取一条任务；缺失时给可读原因（带所在文件）。"""
     task = tasks.get(tid)
     if task is None:
@@ -44,9 +44,7 @@ def require_owner(task: Mapping[str, Any], tid: str, me: Identity) -> None:
     """只有当前 owner 能改。"""
     owner = owner_of(task)
     if not owner:
-        raise Fail(
-            f"任务 {tid} 还没有人认领（在公共池里），先 claim 再改。"
-        )
+        raise Fail(f"任务 {tid} 还没有人认领（在公共池里），先 claim 再改。")
     if not is_me(me, owner):
         raise Fail(f"任务 {tid} 的负责人是 {owner}，不是你（{me.label()}）。")
 
@@ -110,11 +108,11 @@ def _show(path: Path) -> str:
         return str(path)
 
 
-def load_task(repo: Path, tid: str) -> tuple[dict, list[Path]]:
+def load_task(repo: Path, tid: str) -> tuple[dict[str, Any], list[Path]]:
     """在池 + 索引登记的全部分片里找这条任务（只读），返回 (任务, 出现过的文件)。"""
     index = OwnersIndex(repo)
     index.assert_present()
-    found: dict | None = None
+    found: dict[str, Any] | None = None
     where: list[Path] = []
     pool = TaskStore(repo, POOL_REL)
     if pool.get(tid):

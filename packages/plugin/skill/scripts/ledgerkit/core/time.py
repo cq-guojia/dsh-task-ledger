@@ -8,11 +8,11 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ..errors import Fail
 
-_UTC = timezone.utc
+_UTC = UTC
 
 TIME_RE = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2})?\Z")
 _TIME_IN_RE = re.compile(
@@ -74,9 +74,7 @@ def to_utc(
     date_only_ref: str | None = None,
 ) -> str:
     """用户按本地墙钟给的时间 → 存盘用的 UTC 串。只由外壳调用。"""
-    wall = normalize_time(
-        value, field=field, tid=tid, date_only_ref=date_only_ref
-    )
+    wall = normalize_time(value, field=field, tid=tid, date_only_ref=date_only_ref)
     naive = datetime.strptime(wall, "%Y-%m-%d %H:%M:%S")
     return naive.astimezone(_UTC).strftime("%Y-%m-%d %H:%M:%S")
 

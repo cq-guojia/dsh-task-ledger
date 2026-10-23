@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .. import notices
 from ..core import worklog_md
@@ -108,7 +109,7 @@ class WorklogStore:
         except OSError as exc:
             raise ValueError(f"读 {path} 失败：{exc}") from exc
 
-    def head_meta(self, path: Path) -> dict:
+    def head_meta(self, path: Path) -> dict[str, Any]:
         """头部四样：`created` / `creator` / `category` / `tags`；读不出给空值。"""
         text = self.read(path)
         category, tags = worklog_md.head_meta(text)

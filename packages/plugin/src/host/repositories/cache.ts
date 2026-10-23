@@ -11,47 +11,58 @@
  */
 
 /** 缓存有效期（2026-10-18 拍板 1.5s：够挡同一屏的重复读，短到不会让人看到旧数据）。 */
-export const CACHE_TTL_MS = 1_500
+export const CACHE_TTL_MS = 1_500;
 
 /** 缓存的操作种类（= skill 脚本子命令；worklog 不进缓存故不在此列）。 */
-export type CacheOp = 'list' | 'history'
+export type CacheOp = "list" | "history";
 
-const SEP = '\u0000'
+const SEP = "\u0000";
 
 interface Cached {
-  /** **拿到结果那一刻**的时间戳（不是发起时刻：趋势要跑 3s，按发起记会让刚回来就过期）。 */
-  readonly at: number
-  readonly value: unknown
+	/** **拿到结果那一刻**的时间戳（不是发起时刻：趋势要跑 3s，按发起记会让刚回来就过期）。 */
+	readonly at: number;
+	readonly value: unknown;
 }
 
 /** 已完成的缓存：key → 值与时间戳。 */
-const settled = new Map<string, Cached>()
+const settled = new Map<string, Cached>();
 /** 在途单飞：key → 正在跑的 Promise（同 key 并发只跑一次）。 */
-const inflight = new Map<string, Promise<unknown>>()
+const inflight = new Map<string, Promise<unknown>>();
 
 /** 缓存键：`op:workspace:filter` 三条信息都要，否则不同筛选 / 不同工作区会串味。 */
-export function cacheKey(workspaceId: string, op: CacheOp, detail: string): string {
-  return `${op}${SEP}${workspaceId}${SEP}${detail}`
+export function cacheKey(
+	workspaceId: string,
+	op: CacheOp,
+	detail: string,
+): string {
+	return `${op}${SEP}${workspaceId}${SEP}${detail}`;
 }
 
 /**
  * 取数（命中即返回，未命中跑 `load` 并落缓存）。
  * `now` 仅供冒烟注入；业务代码不传，默认取当前时刻。
  */
-export function cached<T>(key: string, load: () => Promise<T>, now: number = Date.now()): Promise<T> {
-  const hit = settled.get(key)
-  if (hit !== undefined && now - hit.at < CACHE_TTL_MS) return Promise.resolve(hit.value as T)
-  const pending = inflight.get(key)
-  if (pending !== undefined) return pending as Promise<T>
-  const task = Promise.resolve()
-    .then(load)
-    .then((value) => {
-      settled.set(key, { at: Date.now(), value })
-      return value
-    })
-    .finally(() => { inflight.delete(key) })
-  inflight.set(key, task)
-  return task
+export function cached<T>(
+	key: string,
+	load: () => Promise<T>,
+	now: number = Date.now(),
+): Promise<T> {
+	const hit = settled.get(key);
+	if (hit !== undefined && now - hit.at < CACHE_TTL_MS)
+		return Promise.resolve(hit.value as T);
+	const pending = inflight.get(key);
+	if (pending !== undefined) return pending as Promise<T>;
+	const task = Promise.resolve()
+		.then(load)
+		.then((value) => {
+			settled.set(key, { at: Date.now(), value });
+			return value;
+		})
+		.finally(() => {
+			inflight.delete(key);
+		});
+	inflight.set(key, task);
+	return task;
 }
 
 /**
@@ -59,11 +70,11 @@ export function cached<T>(key: string, load: () => Promise<T>, now: number = Dat
  * 写路径（任务 4，未拍板）落地后在其成功后调本函数；现在只有手动刷新这一处用。
  */
 export function invalidate(workspaceId?: string): void {
-  if (workspaceId === undefined) {
-    settled.clear()
-    return
-  }
-  for (const key of settled.keys()) {
-    if (key.split(SEP)[1] === workspaceId) settled.delete(key)
-  }
+	if (workspaceId === undefined) {
+		settled.clear();
+		return;
+	}
+	for (const key of settled.keys()) {
+		if (key.split(SEP)[1] === workspaceId) settled.delete(key);
+	}
 }

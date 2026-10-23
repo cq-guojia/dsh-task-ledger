@@ -100,7 +100,9 @@ class Fixture:
         git(self.a, "add", "README.md")
         git(self.a, "commit", "-q", "-m", "init")
         git(self.a, "push", "-q", "-u", "origin", "HEAD")
-        subprocess.run(["git", "clone", "-q", str(self.remote), str(self.b)], check=True)
+        subprocess.run(
+            ["git", "clone", "-q", str(self.remote), str(self.b)], check=True
+        )
         ident(self.b, "smoke-b", "smoke-b@example.com")
 
     def close(self):
@@ -115,8 +117,11 @@ class Fixture:
 
     def pull(self, clone):
         branch = git(clone, "rev-parse", "--abbrev-ref", "HEAD")
-        subprocess.run(["git", "pull", "-q", "--ff-only", "origin", branch],
-                       cwd=str(clone), check=True)
+        subprocess.run(
+            ["git", "pull", "-q", "--ff-only", "origin", branch],
+            cwd=str(clone),
+            check=True,
+        )
 
 
 class ScenarioCase(unittest.TestCase):
@@ -143,7 +148,8 @@ class ConcurrentClaimTest(ScenarioCase):
         self.assertEqual(len(winners), 1, f"应只有一边认领成功：{a[2]}｜{b[2]}")
         self.assertTrue(
             "公共池里没有任务" in losers[0][2] or "不能认领" in losers[0][2],
-            f"另一边必须被明确拒绝：{losers[0][2]}")
+            f"另一边必须被明确拒绝：{losers[0][2]}",
+        )
 
     def test_truly_parallel_claim_lands_once(self):
         """两个进程同时开跑（不同 clone、锁文件不共享）：最终任务只能在一个分片里。"""
@@ -153,13 +159,26 @@ class ConcurrentClaimTest(ScenarioCase):
         fx.pull(fx.b)
         procs = []
         for clone in (fx.a, fx.b):
-            procs.append(subprocess.Popen(
-                [sys.executable, "-B", str(PROGRESS), "claim", "--id", tid,
-                 "--repo", str(clone)],
-                cwd=str(clone), env=BASE_ENV,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-            ))
-        for p in procs:   # 跑完即可，结果在各自的分片里，不在这里读
+            procs.append(
+                subprocess.Popen(
+                    [
+                        sys.executable,
+                        "-B",
+                        str(PROGRESS),
+                        "claim",
+                        "--id",
+                        tid,
+                        "--repo",
+                        str(clone),
+                    ],
+                    cwd=str(clone),
+                    env=BASE_ENV,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            )
+        for p in procs:  # 跑完即可，结果在各自的分片里，不在这里读
             p.communicate()
         # 跨机并发认领本就「不处理」（§5.7）：两边都可能各自写进自己的分片。
         # 要保证的是：状态可恢复 —— 读侧只显示一次，且 validate 把「同号多文件」报出来。
@@ -169,18 +188,32 @@ class ConcurrentClaimTest(ScenarioCase):
                 git(clone, "commit", "-q", "-m", "chore(ledger): 并行认领")
             # 两边各有一条提交 ⇒ 必然 diverged：先 rebase 再推，推不动就下一轮
             for _ in range(3):
-                subprocess.run(["git", "pull", "-q", "--rebase", "--autostash"],
-                               cwd=str(clone), env=BASE_ENV, check=False)
-                if subprocess.run(["git", "push", "-q"], cwd=str(clone),
-                                  env=BASE_ENV, check=False,
-                                  capture_output=True).returncode == 0:
+                subprocess.run(
+                    ["git", "pull", "-q", "--rebase", "--autostash"],
+                    cwd=str(clone),
+                    env=BASE_ENV,
+                    check=False,
+                )
+                if (
+                    subprocess.run(
+                        ["git", "push", "-q"],
+                        cwd=str(clone),
+                        env=BASE_ENV,
+                        check=False,
+                        capture_output=True,
+                    ).returncode
+                    == 0
+                ):
                     break
         for clone in (fx.a, fx.b):
             rows = merged(clone)
             self.assertIn(tid, rows, "两边都该看得到这条任务")
             # 读侧只显示一次，但要在 stderr 点名「这个号出现在多个文件」
-            self.assertIn("还出现在", run(clone, "show", "--id", tid)[1],
-                          "同号多文件必须由 show 点名")
+            self.assertIn(
+                "还出现在",
+                run(clone, "show", "--id", tid)[1],
+                "同号多文件必须由 show 点名",
+            )
         _, _, verr = run(fx.a, "validate")
         self.assertIn("同时出现在", verr, "同号落在多个文件必须报出来")
 
@@ -196,7 +229,9 @@ class ConcurrentNewTest(ScenarioCase):
         new_task(fx.b, "b 侧新建")
         fx.push(fx.b)
         # a 落后一个提交，直接写：写前同步自己取最新，推送若被拒则 rebase 合并
-        code, _, err = run(fx.a, "log", "--id", task_id_of(fx.a, "a 侧新建"), "--note", "x")
+        code, _, err = run(
+            fx.a, "log", "--id", task_id_of(fx.a, "a 侧新建"), "--note", "x"
+        )
         self.assertEqual(code, 0, err)
         titles = {t.get("title") for t in merged(fx.a).values()}
         self.assertLessEqual({"a 侧新建", "b 侧新建"}, titles)
@@ -237,8 +272,11 @@ class NoManualFetchTest(ScenarioCase):
         tid_pool = new_task(fx.a, "再放回池里", mine=False)
         code, _, err = run(fx.a, "set", "--id", tid_pool, "--owner", "")
         self.assertEqual(code, 0, err)
-        self.assertIn("b 侧新建的任务", {t.get("title") for t in merged(fx.a).values()},
-                      "他人分片应被刷下来（set 的刷取范围含他人分片）")
+        self.assertIn(
+            "b 侧新建的任务",
+            {t.get("title") for t in merged(fx.a).values()},
+            "他人分片应被刷下来（set 的刷取范围含他人分片）",
+        )
 
 
 class SameMachineLockTest(ScenarioCase):
@@ -250,19 +288,37 @@ class SameMachineLockTest(ScenarioCase):
         fx.push(fx.a)
         procs = []
         for i, tid in enumerate(tids):
-            procs.append(subprocess.Popen(
-                [sys.executable, "-B", str(PROGRESS), "log", "--id", tid,
-                 "--note", f"并发 {i}", "--repo", str(fx.a)],
-                cwd=str(fx.a), env=BASE_ENV,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-            ))
+            procs.append(
+                subprocess.Popen(
+                    [
+                        sys.executable,
+                        "-B",
+                        str(PROGRESS),
+                        "log",
+                        "--id",
+                        tid,
+                        "--note",
+                        f"并发 {i}",
+                        "--repo",
+                        str(fx.a),
+                    ],
+                    cwd=str(fx.a),
+                    env=BASE_ENV,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            )
         outs = [p.communicate() for p in procs]
         codes = [p.returncode for p in procs]
         self.assertTrue(all(c == 0 for c in codes), f"并发写应全部成功：{codes} {outs}")
         for i, tid in enumerate(tids):
-            self.assertIn(f"并发 {i}", worklog_text(fx.a, tid), "每条记录都要落在各自文档里")
-        self.assertEqual(git(fx.a, "status", "--porcelain", "ledger"), "",
-                         "并发写完之后工作树要干净")
+            self.assertIn(
+                f"并发 {i}", worklog_text(fx.a, tid), "每条记录都要落在各自文档里"
+            )
+        self.assertEqual(
+            git(fx.a, "status", "--porcelain", "ledger"), "", "并发写完之后工作树要干净"
+        )
 
 
 class OfflineThenOnlineTest(ScenarioCase):
@@ -288,8 +344,9 @@ class OfflineThenOnlineTest(ScenarioCase):
         code, _, err = run(fx.a, "log", "--id", tid, "--note", "联网后补一条")
         self.assertEqual(code, 0, f"推完之后该能写：{err}")
         branch = git(fx.a, "rev-parse", "--abbrev-ref", "HEAD")
-        self.assertEqual(git(fx.a, "rev-parse", f"origin/{branch}"),
-                         git(fx.a, "rev-parse", "HEAD"))
+        self.assertEqual(
+            git(fx.a, "rev-parse", f"origin/{branch}"), git(fx.a, "rev-parse", "HEAD")
+        )
 
 
 class PushRejectedTest(ScenarioCase):
@@ -304,7 +361,7 @@ class PushRejectedTest(ScenarioCase):
         hook = self.fx.a / ".git" / "hooks" / "pre-push"
         hook.write_text(
             "#!/bin/sh\n"
-            "unset GIT_DIR GIT_WORK_TREE\n"   # git 给钩子设了这个变量，不干掉它内层 git 会跑偏
+            "unset GIT_DIR GIT_WORK_TREE\n"  # git 给钩子设了这个变量，不干掉它内层 git 会跑偏
             f'if [ -f "{flag}" ]; then exit 0; fi\n'
             f'touch "{flag}"\n'
             f"sleep {delay}\n"
@@ -321,23 +378,33 @@ class PushRejectedTest(ScenarioCase):
     def test_rejection_auto_merges(self):
         fx = self.fx
         tid = new_task(fx.a, "被拒后自动合的任务")
-        time.sleep(1.1)                      # 让后面那条 log 真的改到分片（不同秒）
+        time.sleep(1.1)  # 让后面那条 log 真的改到分片（不同秒）
         fx.push(fx.a)
         fx.pull(fx.b)
         self._arm_race("new --title 别人新建的任务 --self")
         code, _, err = run(fx.a, "log", "--id", tid, "--note", "本地改这条")
         self.assertEqual(code, 0, f"推送被拒应自动 rebase 合并：{err}")
         self.assertIn("本地改这条", worklog_text(fx.a, tid), "自己那条不能丢")
-        self.assertIn("别人新建的任务", {t.get("title") for t in merged(fx.a).values()},
-                      "远端新提交要合进来")
+        self.assertIn(
+            "别人新建的任务",
+            {t.get("title") for t in merged(fx.a).values()},
+            "远端新提交要合进来",
+        )
         for shard in (fx.a / "ledger" / "owners").glob("*.json"):
-            self.assertNotIn("<<<<<<<", shard.read_text(encoding="utf-8"),
-                             "不同任务自动合上，不该留标记")
-        self.assertEqual(git(fx.a, "status", "--porcelain", "ledger"), "",
-                         "自动合上之后工作树要干净")
+            self.assertNotIn(
+                "<<<<<<<",
+                shard.read_text(encoding="utf-8"),
+                "不同任务自动合上，不该留标记",
+            )
+        self.assertEqual(
+            git(fx.a, "status", "--porcelain", "ledger"), "", "自动合上之后工作树要干净"
+        )
         branch = git(fx.a, "rev-parse", "--abbrev-ref", "HEAD")
-        self.assertEqual(git(fx.a, "rev-parse", f"origin/{branch}"),
-                         git(fx.a, "rev-parse", "HEAD"), "合并后要推得上去")
+        self.assertEqual(
+            git(fx.a, "rev-parse", f"origin/{branch}"),
+            git(fx.a, "rev-parse", "HEAD"),
+            "合并后要推得上去",
+        )
 
     def test_same_task_conflict_is_marked(self):
         """同一个人（同一个 git 邮箱）在两台机器上改同一条任务：必须留冲突标记，不许静默选。
@@ -345,12 +412,12 @@ class PushRejectedTest(ScenarioCase):
         这是 merge.py 存在的唯一理由 —— 也只有同身份时两边才会写同一份分片文件。
         """
         fx = self.fx
-        ident(fx.b, "smoke-a-other", "smoke-a@example.com")   # 同邮箱 = 同一个人
+        ident(fx.b, "smoke-a-other", "smoke-a@example.com")  # 同邮箱 = 同一个人
         tid = new_task(fx.a, "两边都改的任务")
-        time.sleep(1.1)                      # 保证 a 的 log 真的改到分片（不同秒）
+        time.sleep(1.1)  # 保证 a 的 log 真的改到分片（不同秒）
         fx.push(fx.a)
         fx.pull(fx.b)
-        wl_rel = merged(fx.a)[tid]["worklog"]   # 先记下：冲突后分片不是合法 JSON，读不了
+        wl_rel = merged(fx.a)[tid]["worklog"]  # 先记下：冲突后分片不是合法 JSON，读不了
         self._arm_race(f"log --id {tid} --note 公司改的")
         code, _, err = run(fx.a, "log", "--id", tid, "--note", "家里改的")
         # 推送失败只提示、退出码仍是 0（台账已写成功）；但冲突必须点名、标记必须留在文件里
@@ -424,7 +491,9 @@ class DryRunZeroWriteTest(ScenarioCase):
         fx = self.fx
         new_task(fx.a, "预览任务", env=NOSYNC)
         fx.push(fx.a)
-        before = {p: p.read_bytes() for p in (fx.a / "ledger").rglob("*") if p.is_file()}
+        before = {
+            p: p.read_bytes() for p in (fx.a / "ledger").rglob("*") if p.is_file()
+        }
         code, out, err = run(fx.a, "tags", "--rename", "旧标签", "新标签", "--dry-run")
         self.assertEqual(code, 0, err)
         self.assertIn("预览", out + err)
@@ -461,8 +530,9 @@ class RerunConvergesTest(ScenarioCase):
         self.assertIn("已经结过案", out + err)
         history = list((fx.a / "ledger" / "history").glob("*.md"))
         self.assertEqual(len(history), 1, "历史只该有一个月文件")
-        self.assertEqual(history[0].read_text(encoding="utf-8").count("\n| 2"), 1,
-                         "历史只该有一行")
+        self.assertEqual(
+            history[0].read_text(encoding="utf-8").count("\n| 2"), 1, "历史只该有一行"
+        )
 
     def test_claim_twice(self):
         fx = self.fx
@@ -478,8 +548,11 @@ class RerunConvergesTest(ScenarioCase):
         tid = new_task(fx.a, "崩在半途", env=NOSYNC)
         fx.push(fx.a)
         log_path = fx.a / "ledger" / merged(fx.a)[tid]["worklog"]
-        kept = [ln for ln in log_path.read_text(encoding="utf-8").splitlines()
-                if "创建任务" not in ln]
+        kept = [
+            ln
+            for ln in log_path.read_text(encoding="utf-8").splitlines()
+            if "创建任务" not in ln
+        ]
         log_path.write_text("\n".join(kept) + "\n", encoding="utf-8")
         code, _, err = run(fx.a, "log", "--id", tid, "--note", "补一条")
         self.assertEqual(code, 0, f"重跑应成功：{err}")
@@ -494,14 +567,23 @@ class CrossMonthCloseTest(ScenarioCase):
         tid = new_task(fx.a, "跨月结案任务", env=NOSYNC)
         fx.push(fx.a)
         code, _, err = run(
-            fx.a, "close", "--id", tid, "--summary", "夹具：结案到旧月份",
-            "--finished", "2020-01-15 10:00",
+            fx.a,
+            "close",
+            "--id",
+            tid,
+            "--summary",
+            "夹具：结案到旧月份",
+            "--finished",
+            "2020-01-15 10:00",
         )
         self.assertEqual(code, 0, err)
-        self.assertTrue((fx.a / "ledger" / "history" / "202001.md").exists(),
-                        "历史应落 202001.md")
-        self.assertFalse((fx.a / "ledger" / "history" / "202610.md").exists(),
-                         "不该顺带建当月历史文件")
+        self.assertTrue(
+            (fx.a / "ledger" / "history" / "202001.md").exists(), "历史应落 202001.md"
+        )
+        self.assertFalse(
+            (fx.a / "ledger" / "history" / "202610.md").exists(),
+            "不该顺带建当月历史文件",
+        )
 
 
 class MissingWorklogTest(ScenarioCase):
@@ -533,13 +615,20 @@ class ReadOnlyNoGitTest(ScenarioCase):
         fx.push(fx.b)
         branch = git(fx.a, "rev-parse", "--abbrev-ref", "HEAD")
         before = git(fx.a, "rev-parse", f"origin/{branch}")
-        for args in (("list",), ("show", "--id", tid), ("history",),
-                     ("validate",), ("tags", "--all")):
+        for args in (
+            ("list",),
+            ("show", "--id", tid),
+            ("history",),
+            ("validate",),
+            ("tags", "--all"),
+        ):
             self.assertEqual(run(fx.a, *args)[0], 0, f"{args} 应成功")
-        self.assertEqual(git(fx.a, "rev-parse", f"origin/{branch}"), before,
-                         "只读命令不该 fetch")
-        self.assertEqual(git(fx.a, "status", "--porcelain", "ledger"), "",
-                         "只读命令不该留下任何改动")
+        self.assertEqual(
+            git(fx.a, "rev-parse", f"origin/{branch}"), before, "只读命令不该 fetch"
+        )
+        self.assertEqual(
+            git(fx.a, "status", "--porcelain", "ledger"), "", "只读命令不该留下任何改动"
+        )
 
 
 class ByteContractTest(unittest.TestCase):

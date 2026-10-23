@@ -137,7 +137,9 @@ def union_merge(base: str, ours: str, theirs: str) -> str:
     base_lines = set(base.splitlines())
     have = set(theirs.splitlines())
     added = [
-        line for line in ours.splitlines() if line not in base_lines and line not in have
+        line
+        for line in ours.splitlines()
+        if line not in base_lines and line not in have
     ]
     if not added:
         return theirs
@@ -162,7 +164,12 @@ def conflict_marked(
         return dump_ledger_json(data, expand=key), []
     return (
         _marked_text(
-            _load(theirs) or {}, key, data, conflicts, _load(ours) or {}, _load(theirs) or {}
+            _load(theirs) or {},
+            key,
+            data,
+            conflicts,
+            _load(ours) or {},
+            _load(theirs) or {},
         ),
         conflicts,
     )
@@ -202,12 +209,16 @@ def _marked_text(
             left = (
                 "(远端已删除)"
                 if _rows_of(upstream, key).get(ident) is None
-                else json.dumps(_rows_of(upstream, key)[ident], ensure_ascii=False, sort_keys=True)
+                else json.dumps(
+                    _rows_of(upstream, key)[ident], ensure_ascii=False, sort_keys=True
+                )
             )
             right = (
                 "(本地已删除)"
                 if _rows_of(local, key).get(ident) is None
-                else json.dumps(_rows_of(local, key)[ident], ensure_ascii=False, sort_keys=True)
+                else json.dumps(
+                    _rows_of(local, key)[ident], ensure_ascii=False, sort_keys=True
+                )
             )
             inner.append(
                 f"<<<<<<< 远端\n    {label}: {left}\n=======\n"
@@ -249,5 +260,7 @@ def render_conflict_text(rel: str, base: str, ours: str, theirs: str) -> str:
     ]
     lines.extend(f"  - {tid}" for tid in conflicts)
     lines.append("  处理：编辑该文件保留你要的版本 → git add → git rebase --continue；")
-    lines.append("  不想合就 git rebase --abort 回到写之前。你的台账改动已提交在本地，不会丢。")
+    lines.append(
+        "  不想合就 git rebase --abort 回到写之前。你的台账改动已提交在本地，不会丢。"
+    )
     return "\n".join(lines)

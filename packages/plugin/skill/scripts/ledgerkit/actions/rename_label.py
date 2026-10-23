@@ -101,7 +101,9 @@ def _hit_tids(tasks: dict, old_label: str) -> list[str]:
     return out
 
 
-def _apply(task: dict, old_label: str, new_label: str) -> tuple[str | None, tuple[str, ...]]:
+def _apply(
+    task: dict, old_label: str, new_label: str
+) -> tuple[str | None, tuple[str, ...]]:
     """一条任务的新 (category, tags)；不在范围内返回 (None, ())。"""
     category = task.get("category")
     tags = tuple(task.get("tags") or ())

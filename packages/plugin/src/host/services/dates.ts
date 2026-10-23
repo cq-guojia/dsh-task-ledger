@@ -4,26 +4,26 @@
  */
 
 function pad(value: number): string {
-  return String(value).padStart(2, '0')
+	return String(value).padStart(2, "0");
 }
 
 /** Date → `YYYY-MM-DD`。 */
 export function ymd(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 /** 时刻串（`YYYY-MM-DD HH:mm:ss` / `YYYY-MM-DD`）→ 日期部分；解析不了回 null。 */
 export function dayOf(stamp: string | null | undefined): string | null {
-  if (stamp === null || stamp === undefined || stamp === '') return null
-  const day = String(stamp).slice(0, 10)
-  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null
+	if (stamp === null || stamp === undefined || stamp === "") return null;
+	const day = String(stamp).slice(0, 10);
+	return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
 }
 
 /** 某日期所在周的周一（00:00）。 */
 export function mondayOf(day: string): Date {
-  const date = new Date(`${day}T00:00:00`)
-  date.setDate(date.getDate() - ((date.getDay() + 6) % 7))
-  return date
+	const date = new Date(`${day}T00:00:00`);
+	date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+	return date;
 }
 
 /**
@@ -31,46 +31,62 @@ export function mondayOf(day: string): Date {
  * ⚠️ 本周只到今天（周还没结束），上周才是完整周一~周日——否则「本周」会把明天之后的
  * 日子也画进区间，tooltip 里的截止日撒谎。
  */
-export function weekWindow(offset: number, now: Date): { from: string; to: string } {
-  const monday = mondayOf(ymd(now))
-  monday.setDate(monday.getDate() + offset * 7)
-  const sunday = new Date(monday)
-  sunday.setDate(sunday.getDate() + 6)
-  const last = offset === 0 ? now : sunday
-  return { from: ymd(monday), to: ymd(last < sunday ? last : sunday) }
+export function weekWindow(
+	offset: number,
+	now: Date,
+): { from: string; to: string } {
+	const monday = mondayOf(ymd(now));
+	monday.setDate(monday.getDate() + offset * 7);
+	const sunday = new Date(monday);
+	sunday.setDate(sunday.getDate() + 6);
+	const last = offset === 0 ? now : sunday;
+	return { from: ymd(monday), to: ymd(last < sunday ? last : sunday) };
 }
 
 /** 第 offset 月的起止（offset 0 = 本月，-1 = 上月；含边界）。
  *  同 {@link weekWindow}：本月只到今天，上月才是完整自然月。 */
-export function monthWindow(offset: number, now: Date): { from: string; to: string } {
-  const first = new Date(now.getFullYear(), now.getMonth() + offset, 1)
-  const last = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0)
-  const end = offset === 0 ? now : last
-  return { from: ymd(first), to: ymd(end < last ? end : last) }
+export function monthWindow(
+	offset: number,
+	now: Date,
+): { from: string; to: string } {
+	const first = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+	const last = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+	const end = offset === 0 ? now : last;
+	return { from: ymd(first), to: ymd(end < last ? end : last) };
 }
 
 /** 日期是否落在 [from, to]（含边界，字符串比较即可——ISO 字典序即时间序）。 */
-export function inWindow(day: string | null, window: { from: string; to: string }): boolean {
-  return day !== null && day >= window.from && day <= window.to
+export function inWindow(
+	day: string | null,
+	window: { from: string; to: string },
+): boolean {
+	return day !== null && day >= window.from && day <= window.to;
 }
 
 /** 「YYYY-MM-DD HH:mm:ss」→ 距今天数（解析不了 / 未来都按 0；不编造）。 */
-export function daysSince(stamp: string | null | undefined, now: Date): number | null {
-  if (stamp === null || stamp === undefined || stamp === '') return null
-  const parsed = new Date(String(stamp).replace(' ', 'T'))
-  if (Number.isNaN(parsed.getTime())) return null
-  const days = Math.floor((now.getTime() - parsed.getTime()) / 86_400_000)
-  return days > 0 ? days : 0
+export function daysSince(
+	stamp: string | null | undefined,
+	now: Date,
+): number | null {
+	if (stamp === null || stamp === undefined || stamp === "") return null;
+	const parsed = new Date(String(stamp).replace(" ", "T"));
+	if (Number.isNaN(parsed.getTime())) return null;
+	const days = Math.floor((now.getTime() - parsed.getTime()) / 86_400_000);
+	return days > 0 ? days : 0;
 }
 
 /** 近 N 周的桶骨架（`{week, end}`，历史周 end=周日、当前周 end=今天）。 */
-export function buildWeeks(count: number, now: Date): readonly { week: string; end: string }[] {
-  const weeks: string[] = []
-  for (let offset = count - 1; offset >= 0; offset -= 1) weeks.push(weekWindow(-offset, now).from)
-  return weeks.map((week, i) => {
-    const monday = new Date(`${week}T00:00:00`)
-    const sunday = new Date(monday)
-    sunday.setDate(sunday.getDate() + 6)
-    return { week, end: i === weeks.length - 1 ? ymd(now) : ymd(sunday) }
-  })
+export function buildWeeks(
+	count: number,
+	now: Date,
+): readonly { week: string; end: string }[] {
+	const weeks: string[] = [];
+	for (let offset = count - 1; offset >= 0; offset -= 1)
+		weeks.push(weekWindow(-offset, now).from);
+	return weeks.map((week, i) => {
+		const monday = new Date(`${week}T00:00:00`);
+		const sunday = new Date(monday);
+		sunday.setDate(sunday.getDate() + 6);
+		return { week, end: i === weeks.length - 1 ? ymd(now) : ymd(sunday) };
+	});
 }

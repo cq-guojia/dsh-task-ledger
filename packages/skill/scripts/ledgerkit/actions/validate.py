@@ -35,7 +35,9 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
         for tid, task in pool.all().items():
             total += 1
             if owner_of(task):
-                problems.append(f"公共池里的 {tid} 带着 owner（池里的行必须无人认领）。")
+                problems.append(
+                    f"公共池里的 {tid} 带着 owner（池里的行必须无人认领）。"
+                )
             if task.get("status") not in STATUSES:
                 problems.append(f"公共池里的 {tid} 状态 {task.get('status')!r} 非法。")
 
@@ -62,7 +64,9 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
     registered = {p.name for p in index.shards().values()}
     for path in index.disk_shards():
         if path.name not in registered:
-            problems.append(f"owners/ 里的 {path.name} 没有在索引里登记（对它人等于不存在）。")
+            problems.append(
+                f"owners/ 里的 {path.name} 没有在索引里登记（对它人等于不存在）。"
+            )
 
     # 同一个任务号落在多个文件里（搬移中断的中间态）：读侧只显示一次，这里必须报出来
     seen: dict[str, list[str]] = {}

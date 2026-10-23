@@ -6,22 +6,33 @@
  *
  * 校验全在脚本里（认领要求 open 且无 owner；释放要求是当前 owner），本层不重复实现。
  */
-import { WRITE_TIMEOUT_MS, runLedgerCommand } from '../repositories/runner.js'
-import type { LedgerWorkspace } from '../types.js'
+import { runLedgerCommand, WRITE_TIMEOUT_MS } from "../repositories/runner.js";
+import type { LedgerWorkspace } from "../types.js";
 
 /** 返回脚本在退出码 0 时打到 stderr 的提示（同步失败等）；没有提示就是空串。 */
-async function run(workspace: LedgerWorkspace, sub: string, args: readonly string[]): Promise<string> {
-  const result = await runLedgerCommand(sub, [...args, '--repo', workspace.path], {
-    cwd: workspace.path,
-    timeoutMs: WRITE_TIMEOUT_MS,
-  })
-  if (!result.ok) throw new Error(`${workspace.title}：${result.error}`)
-  return result.notice ?? ''
+async function run(
+	workspace: LedgerWorkspace,
+	sub: string,
+	args: readonly string[],
+): Promise<string> {
+	const result = await runLedgerCommand(
+		sub,
+		[...args, "--repo", workspace.path],
+		{
+			cwd: workspace.path,
+			timeoutMs: WRITE_TIMEOUT_MS,
+		},
+	);
+	if (!result.ok) throw new Error(`${workspace.title}：${result.error}`);
+	return result.notice ?? "";
 }
 
 /** 认领：只有 open 且无人认领才能接（脚本内判定），owner = 工作区的 git 邮箱。 */
-export function claimTask(workspace: LedgerWorkspace, taskId: string): Promise<string> {
-  return run(workspace, 'claim', ['--id', taskId])
+export function claimTask(
+	workspace: LedgerWorkspace,
+	taskId: string,
+): Promise<string> {
+	return run(workspace, "claim", ["--id", taskId]);
 }
 
 /**
@@ -30,6 +41,9 @@ export function claimTask(workspace: LedgerWorkspace, taskId: string): Promise<s
  * 走 `set --owner ''`（空 owner = 释放）而不是 `set --status open`：后者只改状态，
  * 分片里那行不会回到公共池，别人永远看不到这条待认领。
  */
-export function releaseTask(workspace: LedgerWorkspace, taskId: string): Promise<string> {
-  return run(workspace, 'set', ['--id', taskId, '--owner', ''])
+export function releaseTask(
+	workspace: LedgerWorkspace,
+	taskId: string,
+): Promise<string> {
+	return run(workspace, "set", ["--id", taskId, "--owner", ""]);
 }

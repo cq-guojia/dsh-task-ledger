@@ -28,7 +28,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="progress.py", description="任务台账（本地文件 + git 同步）"
     )
-    parser.add_argument("--repo", help="台账所在仓库（默认按当前目录向上找含 ledger/ 的目录）")
+    parser.add_argument(
+        "--repo", help="台账所在仓库（默认按当前目录向上找含 ledger/ 的目录）"
+    )
     parser.add_argument(
         "--no-sync", action="store_true", help="只写本地，不取最新 / 不提交 / 不推送"
     )
@@ -101,7 +103,9 @@ def build_parser() -> argparse.ArgumentParser:
     # `--repo` 挂在**子命令后面**，所以每个子命令都要认；子命令给的值覆盖顶层那个。
     for parser_ in sub.choices.values():
         # default=SUPPRESS：子命令没给就不写回 namespace，否则会把顶层的 --repo 覆盖成 None
-        parser_.add_argument("--repo", default=argparse.SUPPRESS, help=argparse.SUPPRESS)
+        parser_.add_argument(
+            "--repo", default=argparse.SUPPRESS, help=argparse.SUPPRESS
+        )
 
     return parser
 
@@ -122,12 +126,16 @@ def to_query(args: argparse.Namespace) -> None:
             scope=scope,
             owner=getattr(args, "owner", None),
             statuses=tuple(
-                s.strip() for s in (getattr(args, "status", "") or "").split(",") if s.strip()
+                s.strip()
+                for s in (getattr(args, "status", "") or "").split(",")
+                if s.strip()
             ),
             category=getattr(args, "category", None),
             tag=getattr(args, "tag", None),
             since=_utc_of(getattr(args, "since", None), "--since"),
-            until=_utc_of(getattr(args, "until", None), "--until", date_only_ref="23:59:59"),
+            until=_utc_of(
+                getattr(args, "until", None), "--until", date_only_ref="23:59:59"
+            ),
         )
     elif command == "history":
         args.q = HistoryQuery(
@@ -136,14 +144,18 @@ def to_query(args: argparse.Namespace) -> None:
             category=getattr(args, "category", None),
             tag=getattr(args, "tag", None),
             since=_utc_of(getattr(args, "since", None), "--since"),
-            until=_utc_of(getattr(args, "until", None), "--until", date_only_ref="23:59:59"),
+            until=_utc_of(
+                getattr(args, "until", None), "--until", date_only_ref="23:59:59"
+            ),
             limit=getattr(args, "limit", None),
             months=getattr(args, "months", None),
             count_only=bool(getattr(args, "count_only", False)),
         )
 
 
-def _utc_of(value: str | None, field: str, *, date_only_ref: str | None = None) -> str | None:
+def _utc_of(
+    value: str | None, field: str, *, date_only_ref: str | None = None
+) -> str | None:
     return to_utc(value, field=field, date_only_ref=date_only_ref) if value else None
 
 
@@ -209,7 +221,7 @@ def main(argv: list[str] | None = None) -> int:
         # 定位只做一次：解析好的工作区根挂回 args，runner 与整命令锁都拿它
         args.repo = str(resolve_repo(getattr(args, "repo", None)))
         if _readonly(command):
-            return runner.run(command, args)   # 只读不碰 git ⇒ 不拿同步锁
+            return runner.run(command, args)  # 只读不碰 git ⇒ 不拿同步锁
         with repo_sync_lock(_lock_dir(Path(args.repo))):
             return runner.run(command, args)
     except Fail as exc:

@@ -103,10 +103,19 @@ class GitRepo:
     def upstream(self) -> str | None:
         """上游分支（`@{u}`）；没有就 None（此时同步整体静默跳过）。"""
         if self._upstream is None:
-            proc = _git("git", "-C", str(self.repo), "rev-parse",
-                        "--abbrev-ref", "--symbolic-full-name", "@{u}")
+            proc = _git(
+                "git",
+                "-C",
+                str(self.repo),
+                "rev-parse",
+                "--abbrev-ref",
+                "--symbolic-full-name",
+                "@{u}",
+            )
             self._upstream = (
-                proc.stdout.strip() if proc.returncode == 0 and proc.stdout.strip() else ""
+                proc.stdout.strip()
+                if proc.returncode == 0 and proc.stdout.strip()
+                else ""
             )
         return self._upstream or None
 
@@ -135,15 +144,31 @@ class GitRepo:
         upstream = self.upstream()
         if not upstream:
             return []
-        proc = _git("git", "-C", str(self.repo), "log", f"{upstream}..HEAD",
-                    "--oneline", "--", *rels)
+        proc = _git(
+            "git",
+            "-C",
+            str(self.repo),
+            "log",
+            f"{upstream}..HEAD",
+            "--oneline",
+            "--",
+            *rels,
+        )
         if proc.returncode != 0:
             return []
         return [line for line in proc.stdout.splitlines() if line.strip()]
 
     def _untracked(self, rels: list[str]) -> list[str]:
-        proc = _git("git", "-C", str(self.repo), "ls-files",
-                    "--others", "--exclude-standard", "--", *rels)
+        proc = _git(
+            "git",
+            "-C",
+            str(self.repo),
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+            "--",
+            *rels,
+        )
         if proc.returncode != 0:
             return []
         return [line for line in proc.stdout.splitlines() if line.strip()]
@@ -175,7 +200,9 @@ class GitRepo:
             return
         self.check_repo_state()
         # 手写的过程文档不算「本地脏」：它走 sync_down 的 stash → 快进 → 叠回，不硬拦
-        dirty = [line for line in self._dirty(rels) if not _is_worklog(_porcelain_path(line))]
+        dirty = [
+            line for line in self._dirty(rels) if not _is_worklog(_porcelain_path(line))
+        ]
         if dirty:
             raise Fail(
                 "本地有未提交的台账改动：\n  "
@@ -218,8 +245,9 @@ class GitRepo:
                 "推送也可能失败，留意稍后的提示。"
             )
             return []
-        ahead, behind = self._rev_count(f"{upstream}..HEAD"), self._rev_count(
-            f"HEAD..{upstream}"
+        ahead, behind = (
+            self._rev_count(f"{upstream}..HEAD"),
+            self._rev_count(f"HEAD..{upstream}"),
         )
         if ahead == 0 and behind > 0:
             # 写前 guard 已经保证本地没有未推送的台账提交 ⇒ 落后就只是"慢了一步"，快进安全
@@ -238,7 +266,9 @@ class GitRepo:
         stashed: dict[str, tuple[Path, bytes | None]] = {}
         for path in _paths(self.repo, scope):
             rel = _rel(self.repo, path)
-            exists = _git("git", "-C", str(self.repo), "cat-file", "-e", f"{upstream}:{rel}")
+            exists = _git(
+                "git", "-C", str(self.repo), "cat-file", "-e", f"{upstream}:{rel}"
+            )
             if exists.returncode != 0:
                 continue  # 上游还没有这个文件：本地留着，不覆盖也不报错
             # 「刷之前」的字节先记：手写的那版也算（叠回失败 / 命令失败时要能原样放回）
@@ -309,8 +339,15 @@ class GitRepo:
             return
         # 只提交台账那几个文件：不带 pathspec 会把用户自己暂存的别的东西一起卷进来
         commit = _git(
-            "git", "-C", str(self.repo), "commit", "--no-verify", "-m", message,
-            "--", *rels,
+            "git",
+            "-C",
+            str(self.repo),
+            "commit",
+            "--no-verify",
+            "-m",
+            message,
+            "--",
+            *rels,
         )
         if commit.returncode != 0:
             raise Fail(
@@ -430,15 +467,19 @@ class GitRepo:
                 + "\n  ".join(hard)
                 + "\n  处理：编辑该文件保留你要的版本 → git add → git rebase --continue；"
                 "不想合就 git rebase --abort 回到写之前。\n"
-                "  你的台账改动已提交在本地，不会丢。\n  "
-                + "\n  ".join(notes)
+                "  你的台账改动已提交在本地，不会丢。\n  " + "\n  ".join(notes)
             )
             return False
 
         add = _git("git", "-C", str(self.repo), "add", "--", *conflicts)
         cont = _git(
-            "git", "-C", str(self.repo),
-            "-c", "core.editor=true", "rebase", "--continue",
+            "git",
+            "-C",
+            str(self.repo),
+            "-c",
+            "core.editor=true",
+            "rebase",
+            "--continue",
         )
         if add.returncode != 0 or cont.returncode != 0:
             self._abort_rebase()
@@ -469,10 +510,18 @@ class GitRepo:
         upstream = self.upstream()
         if not upstream:
             return True
-        allproc = _git("git", "-C", str(self.repo), "log", f"{upstream}..HEAD", "--oneline")
+        allproc = _git(
+            "git", "-C", str(self.repo), "log", f"{upstream}..HEAD", "--oneline"
+        )
         ledger = _git(
-            "git", "-C", str(self.repo), "log", f"{upstream}..HEAD", "--oneline",
-            "--", "ledger",
+            "git",
+            "-C",
+            str(self.repo),
+            "log",
+            f"{upstream}..HEAD",
+            "--oneline",
+            "--",
+            "ledger",
         )
         total = len([x for x in allproc.stdout.splitlines() if x.strip()])
         ours = len([x for x in ledger.stdout.splitlines() if x.strip()])
@@ -484,8 +533,15 @@ class GitRepo:
         if not upstream:
             return []
         proc = _git(
-            "git", "-C", str(self.repo), "log", f"{upstream}..HEAD", "--format=%s",
-            "--", ".", ":!ledger",
+            "git",
+            "-C",
+            str(self.repo),
+            "log",
+            f"{upstream}..HEAD",
+            "--format=%s",
+            "--",
+            ".",
+            ":!ledger",
         )
         if proc.returncode != 0:
             return []
@@ -501,8 +557,13 @@ class GitRepo:
         # 不加 -z 时拿到的路径带引号，`git show :1:<path>` 取不到内容、owns() 也判否，
         # 冲突接管会整个放弃（2026-10-23 场景测试抓到的真 bug）。
         proc = _git(
-            "git", "-C", str(self.repo), "diff", "--name-only",
-            "--diff-filter=U", "-z",
+            "git",
+            "-C",
+            str(self.repo),
+            "diff",
+            "--name-only",
+            "--diff-filter=U",
+            "-z",
         )
         if proc.returncode != 0:
             return []

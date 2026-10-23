@@ -31,7 +31,7 @@ def handoff(
             "（写出一份对别人不存在的分片，他自己也看不到）。"
         )
     mine = TaskStore(repo, shard_rel(me.email), identity=me)
-    task = mine.get(tid)      # 锁内重读
+    task = mine.get(tid)  # 锁内重读
     if task is None:
         raise Fail(f"任务 {tid} 不在我的分片里，交接不了。")
 
@@ -67,9 +67,7 @@ def handoff(
     if path is None:
         note = f"任务 {tid} 已交给 {to_key}，但过程文档没找到，跳过执行记录。"
     else:
-        logs.append_exec(
-            path, exec_line(now(), me.email, "set", f"交接给 {to_key}")
-        )
+        logs.append_exec(path, exec_line(now(), me.email, "set", f"交接给 {to_key}"))
     return Result(
         changed=("owner", "status", "updated"),
         where=rel(repo, to_store.path),

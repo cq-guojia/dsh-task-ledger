@@ -9,17 +9,29 @@
  * 满足不了的依赖会令 entry 一直 pending、卡死整个 dsh 启动）；两条注入线
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
-import { registerRoutes, registerSessionRoutes, registerWriteRoutes, type WebServerLike, type WorkspaceRegistryLike } from './host/routes.js'
-import { buildSkillRegistration, type SkillsRegistry } from './host/skill/registration.js'
-import type { AgentsLike } from './host/services/session.service.js'
+import {
+	registerRoutes,
+	registerSessionRoutes,
+	registerWriteRoutes,
+	type WebServerLike,
+	type WorkspaceRegistryLike,
+} from "./host/routes.js";
+import type { AgentsLike } from "./host/services/session.service.js";
+import {
+	buildSkillRegistration,
+	type SkillsRegistry,
+} from "./host/skill/registration.js";
 
-export const name = 'dsh-task-ledger'
+export const name = "dsh-task-ledger";
 
 /** 插件上下文的最小面（结构声明，不 import 官方包）。 */
 interface PluginContext {
-  inject(deps: readonly string[], callback: (ctx: Record<string, unknown>) => void): void
-  /** 组合内副作用：进入时 setup、离开时执行返回的清理函数（cordis 核心面）。 */
-  effect(setup: () => (() => void) | undefined): void
+	inject(
+		deps: readonly string[],
+		callback: (ctx: Record<string, unknown>) => void,
+	): void;
+	/** 组合内副作用：进入时 setup、离开时执行返回的清理函数（cordis 核心面）。 */
+	effect(setup: () => (() => void) | undefined): void;
 }
 
 /**
@@ -28,58 +40,74 @@ interface PluginContext {
  * 探测语义是「有就用、没有就降级」，所以把 throw 归一成 undefined。
  */
 function readService(services: Record<string, unknown>, name: string): unknown {
-  try {
-    return services[name]
-  } catch {
-    return undefined
-  }
+	try {
+		return services[name];
+	} catch {
+		return undefined;
+	}
 }
 
 export function apply(ctx: PluginContext): void {
-  // ── 数据面（任务 3） ──
-  ctx.inject(['workspaceRegistry', 'webServer'], (services) => {
-    const registry = services.workspaceRegistry as WorkspaceRegistryLike | undefined
-    const webServer = services.webServer as WebServerLike | undefined
-    if (registry === undefined || webServer === undefined) {
-      console.warn('[task-ledger] workspaceRegistry / webServer 未就位，数据面路由不注册')
-      return
-    }
-    registerRoutes(webServer, { registry })
-    // 写端点（认领 / 释放）：B 混合制下由 host 直跑脚本，不依赖 agents ⇒ 与数据面同一条注入线。
-    registerWriteRoutes(webServer, { registry })
-    console.info('[task-ledger] 数据面路由已注册（读 /api/task-ledger/* + 写 /claim /release）')
-  })
+	// ── 数据面（任务 3） ──
+	ctx.inject(["workspaceRegistry", "webServer"], (services) => {
+		const registry = services.workspaceRegistry as
+			| WorkspaceRegistryLike
+			| undefined;
+		const webServer = services.webServer as WebServerLike | undefined;
+		if (registry === undefined || webServer === undefined) {
+			console.warn(
+				"[task-ledger] workspaceRegistry / webServer 未就位，数据面路由不注册",
+			);
+			return;
+		}
+		registerRoutes(webServer, { registry });
+		// 写端点（认领 / 释放）：B 混合制下由 host 直跑脚本，不依赖 agents ⇒ 与数据面同一条注入线。
+		registerWriteRoutes(webServer, { registry });
+		console.info(
+			"[task-ledger] 数据面路由已注册（读 /api/task-ledger/* + 写 /claim /release）",
+		);
+	});
 
-  // ── 会话交接（按钮侧「结束任务」，2026-10-18 拍板 B 案：只有结束走会话） ──
-  // 单独一条注入线：agents 缺席只影响这一个端点，不该拖累数据面（上一条线只等 registry + webServer）。
-  ctx.inject(['agents', 'workspaceRegistry', 'webServer'], (services) => {
-    const registry = services.workspaceRegistry as WorkspaceRegistryLike | undefined
-    const webServer = services.webServer as WebServerLike | undefined
-    if (registry === undefined || webServer === undefined) {
-      console.warn('[task-ledger] workspaceRegistry / webServer 未就位，「结束任务」端点不注册')
-      return
-    }
-    registerSessionRoutes(webServer, {
-      registry,
-      agents: services.agents as AgentsLike | undefined,
-      getService: (name) => readService(services, name),
-    })
-    console.info('[task-ledger] 「结束任务」端点已注册（POST /api/task-ledger/close）')
-  })
+	// ── 会话交接（按钮侧「结束任务」，2026-10-18 拍板 B 案：只有结束走会话） ──
+	// 单独一条注入线：agents 缺席只影响这一个端点，不该拖累数据面（上一条线只等 registry + webServer）。
+	ctx.inject(["agents", "workspaceRegistry", "webServer"], (services) => {
+		const registry = services.workspaceRegistry as
+			| WorkspaceRegistryLike
+			| undefined;
+		const webServer = services.webServer as WebServerLike | undefined;
+		if (registry === undefined || webServer === undefined) {
+			console.warn(
+				"[task-ledger] workspaceRegistry / webServer 未就位，「结束任务」端点不注册",
+			);
+			return;
+		}
+		registerSessionRoutes(webServer, {
+			registry,
+			agents: services.agents as AgentsLike | undefined,
+			getService: (name) => readService(services, name),
+		});
+		console.info(
+			"[task-ledger] 「结束任务」端点已注册（POST /api/task-ledger/close）",
+		);
+	});
 
-  // ── skill 全局注册（任务 2） ──
-  // unscoped 注册落全局层，模型可 load；disposer 随插件 dispose 自动注销。
-  ctx.inject(['skills'], (services) => {
-    const skills = services.skills as SkillsRegistry | undefined
-    if (skills === undefined || typeof skills.register !== 'function') {
-      console.warn('[task-ledger] skills 服务未就位，内嵌 skill 不注册（数据面不受影响）')
-      return
-    }
-    ctx.effect(() => {
-      const registration = buildSkillRegistration()
-      const dispose = skills.register(registration)
-      console.info(`[task-ledger] 已注册内嵌 skill：${registration.name}（正文 ${registration.content.length} 字）`)
-      return dispose
-    })
-  })
+	// ── skill 全局注册（任务 2） ──
+	// unscoped 注册落全局层，模型可 load；disposer 随插件 dispose 自动注销。
+	ctx.inject(["skills"], (services) => {
+		const skills = services.skills as SkillsRegistry | undefined;
+		if (skills === undefined || typeof skills.register !== "function") {
+			console.warn(
+				"[task-ledger] skills 服务未就位，内嵌 skill 不注册（数据面不受影响）",
+			);
+			return;
+		}
+		ctx.effect(() => {
+			const registration = buildSkillRegistration();
+			const dispose = skills.register(registration);
+			console.info(
+				`[task-ledger] 已注册内嵌 skill：${registration.name}（正文 ${registration.content.length} 字）`,
+			);
+			return dispose;
+		});
+	});
 }

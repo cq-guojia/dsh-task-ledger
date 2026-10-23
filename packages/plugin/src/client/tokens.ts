@@ -162,7 +162,7 @@ body[data-ds-dark-theme]{
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 5%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
 }
-`
+`;
 
 /**
  * 控件皮肤（L2）：**一类控件唯一实现**，抄 dispatch 表 controls-css 的规矩——
@@ -267,4 +267,4 @@ export const UI_CONTROLS_CSS = `
 @media (prefers-reduced-motion: reduce){
   .dtl-seg__item,.dtl-btn,.dtl-iconbtn,.dtl-input,.dtl-select,.dtl-card,.dtl-row{transition:none;}
 }
-`
+`;

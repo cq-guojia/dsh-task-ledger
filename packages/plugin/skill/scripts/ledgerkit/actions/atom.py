@@ -40,7 +40,7 @@ class Scope:
     files: tuple[Path, ...] = ()
     dirs: tuple[Path, ...] = ()
 
-    def __or__(self, other: "Scope") -> "Scope":
+    def __or__(self, other: Scope) -> Scope:
         return Scope(
             files=_merge(self.files, other.files),
             dirs=_merge(self.dirs, other.dirs),
@@ -116,9 +116,7 @@ def lock_scope(repo: Path, me: Identity, action: str, params: dict) -> Scope:
         tid = params.get("tid")
         # 本次要新建那篇文档：路径算得出来（锁集允许含不存在的路径），不放进去写集就超出锁集
         doc = (
-            (Path(worklog_rel(str(tid), created)),)
-            if tid and len(created) >= 7
-            else ()
+            (Path(worklog_rel(str(tid), created)),) if tid and len(created) >= 7 else ()
         )
         month_dir = worklog_dir_for(created) if len(created) >= 7 else WORKLOG_DIR
         return Scope(files=(target, *doc), dirs=(month_dir,))
@@ -139,9 +137,7 @@ def lock_scope(repo: Path, me: Identity, action: str, params: dict) -> Scope:
     if action == "close":
         wfiles, wdirs = _worklog_of(repo, params)
         finished = params.get("finished") or ""
-        history = (
-            history_path_for(finished) if len(finished) >= 7 else HISTORY_DIR
-        )
+        history = history_path_for(finished) if len(finished) >= 7 else HISTORY_DIR
         return Scope(files=(mine, history, *wfiles), dirs=wdirs)
 
     # tags：我的分片 + 全部在办文档

@@ -23,7 +23,10 @@ FAILED: list[str] = []
 def run(repo: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         [PY, "-B", str(PROGRESS), "--repo", str(repo), "--no-sync", *args],
-        capture_output=True, text=True, cwd=str(repo), check=False,
+        capture_output=True,
+        text=True,
+        cwd=str(repo),
+        check=False,
     )
 
 
@@ -36,8 +39,9 @@ def check(name: str, cond: bool, detail: str = "") -> None:
 def main() -> int:
     repo = Path(tempfile.mkdtemp(prefix="ledgerkit-smoke-"))
     subprocess.run(["git", "init", "-q", str(repo)], check=False)
-    subprocess.run(["git", "-C", str(repo), "config", "user.email", "me@example.com"],
-                   check=False)
+    subprocess.run(
+        ["git", "-C", str(repo), "config", "user.email", "me@example.com"], check=False
+    )
     subprocess.run(["git", "-C", str(repo), "config", "user.name", "Me"], check=False)
 
     try:
@@ -83,7 +87,11 @@ def main() -> int:
         r = run(repo, "close", "--id", tid, "--summary", "冒烟结案")
         check("close 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "history", "--count-only")
-        check("history 计数 1", '"count": 1' in r.stdout and '"capped": false' in r.stdout, r.stdout)
+        check(
+            "history 计数 1",
+            '"count": 1' in r.stdout and '"capped": false' in r.stdout,
+            r.stdout,
+        )
         r = run(repo, "history", "--json")
         check("history json 有 records", '"records"' in r.stdout, r.stdout)
 

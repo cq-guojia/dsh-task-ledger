@@ -38,7 +38,8 @@ function mergedTasks(ledgerFile) {
 			if (!name.endsWith(".json")) continue;
 			Object.assign(
 				out,
-				JSON.parse(fs.readFileSync(path.join(owners, name), "utf-8")).tasks ?? {},
+				JSON.parse(fs.readFileSync(path.join(owners, name), "utf-8")).tasks ??
+					{},
 			);
 		}
 	return out;
@@ -48,7 +49,10 @@ function mergedTasks(ledgerFile) {
 function taskFileOf(ledgerFile, taskId) {
 	const root = path.dirname(ledgerFile);
 	const pool = path.join(root, "pool.json");
-	if (fs.existsSync(pool) && taskId in (JSON.parse(fs.readFileSync(pool, "utf-8")).tasks ?? {}))
+	if (
+		fs.existsSync(pool) &&
+		taskId in (JSON.parse(fs.readFileSync(pool, "utf-8")).tasks ?? {})
+	)
 		return pool;
 	const owners = path.join(root, "owners");
 	if (fs.existsSync(owners))
@@ -524,19 +528,26 @@ await check("runLedgerScript：直调 count-only（合成 5 万行封顶）", as
 	const payload = JSON.parse(result.output);
 	assert.equal(payload.count, 10000, "5 万行封顶后 count 触到 COUNT_CAP");
 	assert.equal(payload.capped, true, "capped 必须为 true（count 只是下界）");
-	assert.deepEqual(Object.keys(payload).sort(), ["capped", "count"], "只准这两个键");
+	assert.deepEqual(
+		Object.keys(payload).sort(),
+		["capped", "count"],
+		"只准这两个键",
+	);
 });
 
 // 不存在的仓库：只读命令按「空结果」处理（退出 0 + 合法 JSON），不是错误
-await check("runLedgerScript 错误路径：不存在的仓库 → 空结果退出 0", async () => {
-	const result = await runLedgerScript("list", [
-		"--repo",
-		"/tmp/definitely-not-here",
-		"--json",
-	]);
-	assert.equal(result.ok, true);
-	if (result.ok) assert.equal(typeof result.data, "object");
-});
+await check(
+	"runLedgerScript 错误路径：不存在的仓库 → 空结果退出 0",
+	async () => {
+		const result = await runLedgerScript("list", [
+			"--repo",
+			"/tmp/definitely-not-here",
+			"--json",
+		]);
+		assert.equal(result.ok, true);
+		if (result.ok) assert.equal(typeof result.data, "object");
+	},
+);
 
 await check(
 	"空台账工作区不炸 /board（真机 500 回归：history 无文件时 --json 也必须出 JSON）",
@@ -566,11 +577,7 @@ await check(
 			const ws = [{ id: "ws-empty", title: "空台账", path: root }];
 			// 关键路径：这正是 /board 路由的那一次聚合调用，抛就是整条 500
 			const home = await getHomeAggregate(ws);
-			assert.equal(
-				home.snapshot.tasks.length,
-				1,
-				"有 pool.json 就应读到在办",
-			);
+			assert.equal(home.snapshot.tasks.length, 1, "有 pool.json 就应读到在办");
 			assert.equal(
 				home.trend.thisWeek.done,
 				0,
@@ -1481,8 +1488,7 @@ await check(
 					},
 				}),
 			);
-			const readTask = () =>
-				mergedTasks(progressPath)[taskId];
+			const readTask = () => mergedTasks(progressPath)[taskId];
 			const ws = { id: "ws-tmp", title: "tmp", path: root };
 
 			await claimTask(ws, taskId);
@@ -1581,15 +1587,15 @@ await check(
 				`退出码 0 的同步提示必须随响应带出：${JSON.stringify(ok.body)}`,
 			);
 			assert.equal(
-			readTask().status,
-			"open",
-			"路由层认领也要真落盘（claim 不改状态，状态由 set 改）",
-		);
-		assert.equal(
-			readTask().owner,
-			"smoke@example.com",
-			"路由层认领的 owner 同样取工作区 git 邮箱",
-		);
+				readTask().status,
+				"open",
+				"路由层认领也要真落盘（claim 不改状态，状态由 set 改）",
+			);
+			assert.equal(
+				readTask().owner,
+				"smoke@example.com",
+				"路由层认领的 owner 同样取工作区 git 邮箱",
+			);
 		} finally {
 			fs.rmSync(root, { recursive: true, force: true });
 		}
@@ -1637,8 +1643,7 @@ await check(
 			const newRun = run(a, ["new", "--title", "a 侧任务", "--self"]);
 			assert.equal(newRun.status, 0, `new 应成功：${newRun.stderr}`);
 			const progressPath = path.join(a, "ledger", "pool.json");
-			const tasks = () =>
-				mergedTasks(progressPath);
+			const tasks = () => mergedTasks(progressPath);
 			const aTaskId = Object.keys(tasks())[0];
 			const logPath = path.join(a, "ledger", tasks()[aTaskId].worklog);
 
@@ -1930,11 +1935,7 @@ await check(
 				"--note",
 				"冒烟：联网后照常写",
 			]);
-			assert.equal(
-				online.status,
-				0,
-				`推掉积压后应能写：${online.stderr}`,
-			);
+			assert.equal(online.status, 0, `推掉积压后应能写：${online.stderr}`);
 			const onlineBranch = git(a, ["rev-parse", "--abbrev-ref", "HEAD"]);
 			assert.equal(
 				git(a, ["rev-parse", `origin/${onlineBranch}`]),
@@ -2041,12 +2042,19 @@ await check("写前同步：手写 worklog 撞远端同改，两边内容都保�
 		// 两边都往同一篇正文末尾追加 ⇒ 叠不回去：中止、留冲突标记让人合，
 		// 手写那段同时在 stash 里，一个都没丢（2026-10-22 architecture.md 不变量 7）
 		assert.equal(res.status, 1, `两边同改应中止并要求人工合并：${res.stderr}`);
-		assert.ok(res.stderr.includes("冲突"), `应说清冲突与处理步骤：${res.stderr}`);
+		assert.ok(
+			res.stderr.includes("冲突"),
+			`应说清冲突与处理步骤：${res.stderr}`,
+		);
 		const text = fs.readFileSync(logPath, "utf-8");
 		assert.ok(text.includes("REMOTE-SIDE"), "远端那次改动不得被旧版覆盖写没");
 		assert.ok(text.includes("LOCAL-HANDWRITE"), "手写内容不得被覆盖吞掉");
 		assert.ok(text.includes("<<<<<<<"), "冲突要标出来，不许静默选一个");
-		assert.notEqual(git(a, ["stash", "list"]), "", "手写内容要留在 stash 里，别丢");
+		assert.notEqual(
+			git(a, ["stash", "list"]),
+			"",
+			"手写内容要留在 stash 里，别丢",
+		);
 	} finally {
 		fs.rmSync(base, { recursive: true, force: true });
 	}
@@ -2194,7 +2202,11 @@ await check("合并：不同任务自动合上 / 同一任务留冲突标记", a
 		armRace(B.base, B.a, B.b);
 		const clash = run(B.a, ["log", "--id", s2, "--note", "家里再改"]);
 		// 台账已经写成功、也提交在本地了，只是推不上去 ⇒ 退出码仍是 0，话说清就行
-		assert.equal(clash.status, 0, `同一任务两边改不该中断写入：${clash.stderr}`);
+		assert.equal(
+			clash.status,
+			0,
+			`同一任务两边改不该中断写入：${clash.stderr}`,
+		);
 		assert.ok(
 			clash.stderr.includes("两边同时改过"),
 			`应说清是同任务冲突：${clash.stderr}`,
@@ -2258,8 +2270,7 @@ await check(
 				"new 应成功",
 			);
 			const progressPath = path.join(a, "ledger", "pool.json");
-			const tasks = () =>
-				mergedTasks(progressPath);
+			const tasks = () => mergedTasks(progressPath);
 			const taskId = Object.keys(tasks())[0];
 
 			// ① 只提交台账：用户已经 git add 的业务文件不能被卷进 chore(ledger) 提交
@@ -2285,7 +2296,10 @@ await check(
 			// 一个任务一行：任务块占十几行时，删/改相邻任务的 patch 上下文会重叠，rebase 必冲突
 			// 分片布局：任务可能落在分片里，按「它实际所在的那份文件」数行
 			const tid = Object.keys(tasks())[0];
-			const rawProgress = fs.readFileSync(taskFileOf(progressPath, tid), "utf-8");
+			const rawProgress = fs.readFileSync(
+				taskFileOf(progressPath, tid),
+				"utf-8",
+			);
 			const taskLines = rawProgress
 				.split("\n")
 				.filter((line) => line.startsWith('    "'));
@@ -2395,7 +2409,8 @@ await check("写前同步只定向刷目标文件：history 不整目录枚举",
 		"历史层不该整目录枚举",
 	);
 	assert.ok(
-		/if action == "close":/.test(src) && /history_path_for\(finished\)/.test(src),
+		/if action == "close":/.test(src) &&
+			/history_path_for\(finished\)/.test(src),
 		"历史层目标应按 close 的结案月计算（finished 由外壳算好传入）",
 	);
 });

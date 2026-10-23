@@ -8,9 +8,16 @@
  *  2. **元件**：分段 / 按钮 / 图标钮 / 输入 / 下拉 / 卡 / chip / 空态 / 图表各一份，
  *     页面与浮标共用。官方 primitives 只留「官方做得更好」的（StateDot / MarkdownText / 图标）。
  */
-import { createElement as h, useState, type ChangeEvent, type CSSProperties, type ReactNode } from 'react'
-import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
-import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from './tokens'
+
+import { Tooltip } from "@deepseek-ai/dsh-client-ui-primitives";
+import {
+	type ChangeEvent,
+	type CSSProperties,
+	createElement as h,
+	type ReactNode,
+	useState,
+} from "react";
+import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
 
 /** 基础层样式（tokens + 控件皮肤；幂等注入）。 */
 const UI_BASE_CSS = `
@@ -229,107 +236,129 @@ const UI_BASE_CSS = `
 
 /* 过程正文：宽度受限、长行折行 */
 .dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
-`
+`;
 
-const STYLE_ID = 'dtl-ui-base'
+const STYLE_ID = "dtl-ui-base";
 
 /** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。
  *  已挂载时**就地比对刷新**：插件升级后宿主若复用旧面板 DOM，旧样式表会一直挂着，
  *  导致新版本样式不生效（用户 2026-10-18：0.0.31 装上了圆圈还在）—— 内容变了就原位替换，不必重启。 */
 export function ensureUiBase(): void {
-  if (typeof document === 'undefined') return
-  const css = `${UI_TOKENS_CSS}\n${UI_CONTROLS_CSS}\n${UI_BASE_CSS}`
-  const existing = document.getElementById(STYLE_ID)
-  if (existing !== null) {
-    if (existing.textContent !== css) existing.textContent = css
-    return
-  }
-  const style = document.createElement('style')
-  style.id = STYLE_ID
-  style.textContent = css
-  document.head.appendChild(style)
+	if (typeof document === "undefined") return;
+	const css = `${UI_TOKENS_CSS}\n${UI_CONTROLS_CSS}\n${UI_BASE_CSS}`;
+	const existing = document.getElementById(STYLE_ID);
+	if (existing !== null) {
+		if (existing.textContent !== css) existing.textContent = css;
+		return;
+	}
+	const style = document.createElement("style");
+	style.id = STYLE_ID;
+	style.textContent = css;
+	document.head.appendChild(style);
 }
 
 /* ── 分段控件 ─────────────────────────────────────────────────────── */
 
 /** 一段（一个可选值）。 */
 export interface SegmentedItem<Value extends string = string> {
-  readonly value: Value
-  readonly label: string
-  /** 段内角标数字；`undefined` 或 ≤0 不显示。 */
-  readonly badge?: number
+	readonly value: Value;
+	readonly label: string;
+	/** 段内角标数字；`undefined` 或 ≤0 不显示。 */
+	readonly badge?: number;
 }
 
 /** 分段控件（单选）：同一份结构 + size 轴；外观差异只由 variant 的两个颜色变量表达。 */
 export function Segmented<Value extends string>(props: {
-  items: readonly SegmentedItem<Value>[]
-  value: Value
-  onChange: (next: Value) => void
-  size?: 'sm' | 'md' | 'lg'
-  variant?: 'default' | 'inset'
-  label: string
-  id?: string
-  style?: CSSProperties
+	items: readonly SegmentedItem<Value>[];
+	value: Value;
+	onChange: (next: Value) => void;
+	size?: "sm" | "md" | "lg";
+	variant?: "default" | "inset";
+	label: string;
+	id?: string;
+	style?: CSSProperties;
 }): ReactNode {
-  ensureUiBase()
-  const size = props.size ?? 'md'
-  const variant = props.variant ?? 'default'
-  return h('div', {
-    role: 'group',
-    'aria-label': props.label,
-    id: props.id,
-    className: `dtl-seg dtl-seg--${variant} dtl-seg--${size}`,
-    style: props.style,
-  }, props.items.map(item => h('button', {
-    key: item.value,
-    type: 'button',
-    className: 'dtl-seg__item',
-    'aria-pressed': item.value === props.value,
-    onClick: () => { props.onChange(item.value) },
-  }, item.label, item.badge !== undefined && item.badge > 0
-    ? h('span', { className: 'dtl-seg__num' }, String(item.badge))
-    : null)))
+	ensureUiBase();
+	const size = props.size ?? "md";
+	const variant = props.variant ?? "default";
+	return h(
+		"div",
+		{
+			role: "group",
+			"aria-label": props.label,
+			id: props.id,
+			className: `dtl-seg dtl-seg--${variant} dtl-seg--${size}`,
+			style: props.style,
+		},
+		props.items.map((item) =>
+			h(
+				"button",
+				{
+					key: item.value,
+					type: "button",
+					className: "dtl-seg__item",
+					"aria-pressed": item.value === props.value,
+					onClick: () => {
+						props.onChange(item.value);
+					},
+				},
+				item.label,
+				item.badge !== undefined && item.badge > 0
+					? h("span", { className: "dtl-seg__num" }, String(item.badge))
+					: null,
+			),
+		),
+	);
 }
 
 /* ── 按钮 / 图标钮 ────────────────────────────────────────────────── */
 
 export function Button(props: {
-  children?: ReactNode
-  onClick: () => void
-  variant?: 'primary' | 'outline' | 'ghost'
-  size?: 'sm' | 'md' | 'lg'
-  icon?: ReactNode
-  disabled?: boolean
-  title?: string
+	children?: ReactNode;
+	onClick: () => void;
+	variant?: "primary" | "outline" | "ghost";
+	size?: "sm" | "md" | "lg";
+	icon?: ReactNode;
+	disabled?: boolean;
+	title?: string;
 }): ReactNode {
-  ensureUiBase()
-  return h('button', {
-    type: 'button',
-    className: `dtl-btn dtl-btn--${props.variant ?? 'outline'} dtl-btn--${props.size ?? 'md'}`,
-    disabled: props.disabled === true,
-    title: props.title,
-    onClick: props.onClick,
-  }, props.icon, props.children)
+	ensureUiBase();
+	return h(
+		"button",
+		{
+			type: "button",
+			className: `dtl-btn dtl-btn--${props.variant ?? "outline"} dtl-btn--${props.size ?? "md"}`,
+			disabled: props.disabled === true,
+			title: props.title,
+			onClick: props.onClick,
+		},
+		props.icon,
+		props.children,
+	);
 }
 
 export function IconButton(props: {
-  icon: ReactNode
-  label: string
-  onClick: () => void
-  variant?: 'plain' | 'outline'
-  size?: 'sm' | 'md' | 'lg'
-  disabled?: boolean
-  title?: string
+	icon: ReactNode;
+	label: string;
+	onClick: () => void;
+	variant?: "plain" | "outline";
+	size?: "sm" | "md" | "lg";
+	disabled?: boolean;
+	title?: string;
 }): ReactNode {
-  ensureUiBase()
-  return h('button', {
-    type: 'button',
-    className: `dtl-iconbtn dtl-iconbtn--${props.variant ?? 'plain'} dtl-iconbtn--${props.size ?? 'md'}`,
-    'aria-label': props.label,
-    disabled: props.disabled === true,
-    title: props.title ?? props.label,
-    onClick: props.onClick,
-  }, props.icon)
+	ensureUiBase();
+	return h(
+		"button",
+		{
+			type: "button",
+			className: `dtl-iconbtn dtl-iconbtn--${props.variant ?? "plain"} dtl-iconbtn--${props.size ?? "md"}`,
+			"aria-label": props.label,
+			disabled: props.disabled === true,
+			title: props.title ?? props.label,
+			onClick: props.onClick,
+		},
+		props.icon,
+	);
 }
 
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
@@ -337,49 +366,62 @@ export function IconButton(props: {
 /** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。
  *  `width` 定宽（px）；只给 `minWidth` = 内容自适应但有下限（工作区名长短不一时用）。 */
 export function Select<Value extends string>(props: {
-  value: Value
-  options: readonly { value: Value; label: string }[]
-  onChange: (next: Value) => void
-  ariaLabel: string
-  /** 定宽（px）；不给就按内容。 */
-  width?: number
-  /** 最小宽度（px）；内容自适应时的下限。 */
-  minWidth?: number
-  size?: 'sm' | 'md' | 'lg'
+	value: Value;
+	options: readonly { value: Value; label: string }[];
+	onChange: (next: Value) => void;
+	ariaLabel: string;
+	/** 定宽（px）；不给就按内容。 */
+	width?: number;
+	/** 最小宽度（px）；内容自适应时的下限。 */
+	minWidth?: number;
+	size?: "sm" | "md" | "lg";
 }): ReactNode {
-  ensureUiBase()
-  const size = props.size ?? 'md'
-  const style: CSSProperties | undefined = props.width === undefined
-    ? (props.minWidth === undefined ? undefined : { minWidth: `${props.minWidth}px` })
-    : { width: `${props.width}px` }
-  return h('select', {
-    className: `dtl-select dtl-select--${size}`,
-    'aria-label': props.ariaLabel,
-    style,
-    value: props.value,
-    onChange: (event: ChangeEvent<HTMLSelectElement>) => { props.onChange(event.target.value as Value) },
-  }, props.options.map(option => h('option', { key: option.value, value: option.value }, option.label)))
+	ensureUiBase();
+	const size = props.size ?? "md";
+	const style: CSSProperties | undefined =
+		props.width === undefined
+			? props.minWidth === undefined
+				? undefined
+				: { minWidth: `${props.minWidth}px` }
+			: { width: `${props.width}px` };
+	return h(
+		"select",
+		{
+			className: `dtl-select dtl-select--${size}`,
+			"aria-label": props.ariaLabel,
+			style,
+			value: props.value,
+			onChange: (event: ChangeEvent<HTMLSelectElement>) => {
+				props.onChange(event.target.value as Value);
+			},
+		},
+		props.options.map((option) =>
+			h("option", { key: option.value, value: option.value }, option.label),
+		),
+	);
 }
 
 /** 搜索框（关键字过滤；占满剩余宽度由调用方的 flex 决定）。 */
 export function SearchInput(props: {
-  value: string
-  placeholder: string
-  onChange: (next: string) => void
-  ariaLabel: string
-  size?: 'sm' | 'md' | 'lg'
+	value: string;
+	placeholder: string;
+	onChange: (next: string) => void;
+	ariaLabel: string;
+	size?: "sm" | "md" | "lg";
 }): ReactNode {
-  ensureUiBase()
-  const size = props.size ?? 'md'
-  return h('input', {
-    className: `dtl-input dtl-input--${size}`,
-    type: 'search',
-    'aria-label': props.ariaLabel,
-    placeholder: props.placeholder,
-    value: props.value,
-    spellCheck: false,
-    onChange: (event: ChangeEvent<HTMLInputElement>) => { props.onChange(event.target.value) },
-  })
+	ensureUiBase();
+	const size = props.size ?? "md";
+	return h("input", {
+		className: `dtl-input dtl-input--${size}`,
+		type: "search",
+		"aria-label": props.ariaLabel,
+		placeholder: props.placeholder,
+		value: props.value,
+		spellCheck: false,
+		onChange: (event: ChangeEvent<HTMLInputElement>) => {
+			props.onChange(event.target.value);
+		},
+	});
 }
 
 /* ── 卡 / chip / 空态 ─────────────────────────────────────────────── */
@@ -389,50 +431,65 @@ export function SearchInput(props: {
  *  `hint` 可以是富文本（如把「停滞」两字标红）；
  *  `interactive: false` = 纯展示卡（统计台：首页没有已结案可筛，不装可点）。 */
 export function StatCard(props: {
-  label: string
-  value: string | number
-  hint?: ReactNode
-  active?: boolean
-  interactive?: boolean
-  title?: string
-  onClick?: () => void
+	label: string;
+	value: string | number;
+	hint?: ReactNode;
+	active?: boolean;
+	interactive?: boolean;
+	title?: string;
+	onClick?: () => void;
 }): ReactNode {
-  ensureUiBase()
-  const interactive = props.interactive !== false && props.onClick !== undefined
-  const shown = props.value === 0 || props.value === '0' ? '—' : String(props.value)
-  return h(interactive ? 'button' : 'div', {
-    type: interactive ? 'button' : undefined,
-    className: `dtl-card dtl-stat${interactive ? ' dtl-card--clickable' : ''}`,
-    'data-active': props.active === true,
-    title: props.title,
-    onClick: interactive ? props.onClick : undefined,
-  },
-  h('span', { style: { fontSize: 'var(--dtl-font-sm)', color: 'var(--dtl-fg-2)' } }, props.label),
-  h('span', { className: 'dtl-stat__value' }, shown),
-  props.hint === undefined || props.hint === null || props.hint === ''
-    ? null
-    : h('span', { className: 'dtl-stat__hint' }, props.hint),
-  )
+	ensureUiBase();
+	const interactive =
+		props.interactive !== false && props.onClick !== undefined;
+	const shown =
+		props.value === 0 || props.value === "0" ? "—" : String(props.value);
+	return h(
+		interactive ? "button" : "div",
+		{
+			type: interactive ? "button" : undefined,
+			className: `dtl-card dtl-stat${interactive ? " dtl-card--clickable" : ""}`,
+			"data-active": props.active === true,
+			title: props.title,
+			onClick: interactive ? props.onClick : undefined,
+		},
+		h(
+			"span",
+			{ style: { fontSize: "var(--dtl-font-sm)", color: "var(--dtl-fg-2)" } },
+			props.label,
+		),
+		h("span", { className: "dtl-stat__value" }, shown),
+		props.hint === undefined || props.hint === null || props.hint === ""
+			? null
+			: h("span", { className: "dtl-stat__hint" }, props.hint),
+	);
 }
 
 /** chip（分类 / 标签 / 工作区名）。 */
 export function Chip(props: { text: string; color?: string }): ReactNode {
-  ensureUiBase()
-  return h('span', {
-    className: 'dtl-chip',
-    style: props.color === undefined ? undefined : { background: props.color, color: 'var(--dtl-on-signal)' },
-    title: props.text,
-  }, props.text)
+	ensureUiBase();
+	return h(
+		"span",
+		{
+			className: "dtl-chip",
+			style:
+				props.color === undefined
+					? undefined
+					: { background: props.color, color: "var(--dtl-on-signal)" },
+			title: props.text,
+		},
+		props.text,
+	);
 }
 
 /** 标签上限宽度（字符数）：1 个中文按 2 计 ⇒ 10 个中文 = 20 个字符（与 CSS 的 20ch 对齐）。 */
-const TAG_MAX_WIDTH = 20
+const TAG_MAX_WIDTH = 20;
 
 /** 显示宽度：全角（中 / 日 / 韩 / 全角符号）一个顶两个英文字符。 */
 function displayWidth(text: string): number {
-  let width = 0
-  for (const char of text) width += (char.codePointAt(0) ?? 0) > 0x2e80 ? 2 : 1
-  return width
+	let width = 0;
+	for (const char of text) width += (char.codePointAt(0) ?? 0) > 0x2e80 ? 2 : 1;
+	return width;
 }
 
 /**
@@ -441,63 +498,112 @@ function displayWidth(text: string): number {
  * 不跑马灯；没被截 ⇒ 悬停无反应）。
  */
 export function Tag(props: {
-  text: string
-  tone?: 'neutral' | 'open' | 'backlog' | 'doing' | 'overdue' | 'stale' | 'person'
-  /** 悬停提示（**被截时**才显示；默认 = 文本本身）。 */
-  title?: string
-  /** 悬停提示（**始终**显示，状态标记的解释走它；优先于 title）。走官方 Tooltip。 */
-  tip?: string
+	text: string;
+	tone?:
+		| "neutral"
+		| "open"
+		| "backlog"
+		| "doing"
+		| "overdue"
+		| "stale"
+		| "person";
+	/** 悬停提示（**被截时**才显示；默认 = 文本本身）。 */
+	title?: string;
+	/** 悬停提示（**始终**显示，状态标记的解释走它；优先于 title）。走官方 Tooltip。 */
+	tip?: string;
 }): ReactNode {
-  ensureUiBase()
-  const { text, tone = 'neutral', title, tip } = props
-  const long = displayWidth(text) > TAG_MAX_WIDTH
-  const label = tip ?? (long ? (title ?? text) : undefined)
-  const tag = h('span', { className: `dtl-tag dtl-tag--${tone}` }, text)
-  // 官方 Tooltip（悬停即出、支持 \n 多行、portal 逃逸祖先 overflow 裁切）
-  if (label === undefined) return tag
-  return h(Tooltip, { label, side: 'bottom', portal: true, maxWidth: 240, children: tag })
+	ensureUiBase();
+	const { text, tone = "neutral", title, tip } = props;
+	const long = displayWidth(text) > TAG_MAX_WIDTH;
+	const label = tip ?? (long ? (title ?? text) : undefined);
+	const tag = h("span", { className: `dtl-tag dtl-tag--${tone}` }, text);
+	// 官方 Tooltip（悬停即出、支持 \n 多行、portal 逃逸祖先 overflow 裁切）
+	if (label === undefined) return tag;
+	return h(Tooltip, {
+		label,
+		side: "bottom",
+		portal: true,
+		maxWidth: 240,
+		children: tag,
+	});
 }
 
 /** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
-export function EmptyState(props: { tone: 'guide' | 'filtered'; title: string; hint?: string }): ReactNode {
-  ensureUiBase()
-  if (props.tone === 'filtered') return h('div', { className: 'dtl-empty-filtered' }, props.title)
-  return h('div', { className: 'dtl-empty-guide' },
-    h('div', { style: { fontSize: 'var(--dtl-font-lg)', fontWeight: 600, marginBottom: 'var(--dtl-space-1)' } }, props.title),
-    props.hint === undefined ? null : h('div', { style: { fontSize: 'var(--dtl-font-md)', color: 'var(--dtl-fg-2)' } }, props.hint),
-  )
+export function EmptyState(props: {
+	tone: "guide" | "filtered";
+	title: string;
+	hint?: string;
+}): ReactNode {
+	ensureUiBase();
+	if (props.tone === "filtered")
+		return h("div", { className: "dtl-empty-filtered" }, props.title);
+	return h(
+		"div",
+		{ className: "dtl-empty-guide" },
+		h(
+			"div",
+			{
+				style: {
+					fontSize: "var(--dtl-font-lg)",
+					fontWeight: 600,
+					marginBottom: "var(--dtl-space-1)",
+				},
+			},
+			props.title,
+		),
+		props.hint === undefined
+			? null
+			: h(
+					"div",
+					{
+						style: { fontSize: "var(--dtl-font-md)", color: "var(--dtl-fg-2)" },
+					},
+					props.hint,
+				),
+	);
 }
 
 /** 台账图标（黑白线条，描边走 currentColor ⇒ 随主题 / 选中态反色）。
  *  侧栏条目与右上浮标共用这一份（图标只画一次，别处不许再画第二个）。 */
 export function LedgerIcon(props: { size?: number }): ReactNode {
-  const size = props.size ?? 18
-  const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 7, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
-  return h('svg', { width: size, height: size, viewBox: '0 0 128 128', 'aria-hidden': true },
-    h('path', { d: 'M96 34 A10 10 0 0 1 106 44 V102 A10 10 0 0 1 96 112 H32 A10 10 0 0 1 22 102 V44 A10 10 0 0 1 32 34 Z', ...stroke }),
-    h('path', { d: 'M50 22 V46 M78 22 V46', ...stroke }),
-    h('path', { d: 'M44 66 H84 M44 86 H70', ...stroke }),
-  )
+	const size = props.size ?? 18;
+	const stroke = {
+		fill: "none",
+		stroke: "currentColor",
+		strokeWidth: 7,
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+	} as const;
+	return h(
+		"svg",
+		{ width: size, height: size, viewBox: "0 0 128 128", "aria-hidden": true },
+		h("path", {
+			d: "M96 34 A10 10 0 0 1 106 44 V102 A10 10 0 0 1 96 112 H32 A10 10 0 0 1 22 102 V44 A10 10 0 0 1 32 34 Z",
+			...stroke,
+		}),
+		h("path", { d: "M50 22 V46 M78 22 V46", ...stroke }),
+		h("path", { d: "M44 66 H84 M44 86 H70", ...stroke }),
+	);
 }
 
 /* ── 趋势分组柱状图 ───────────────────────────────────────────────────── */
 
 /** 一周三根柱（完成 / 没完成 / 新增）。 */
 export interface GroupedBarWeek {
-  /** 轴标签（MM-DD）。 */
-  readonly label: string
-  readonly done: number
-  readonly remaining: number
-  readonly created: number
-  /** 悬停文案。 */
-  readonly title: string
+	/** 轴标签（MM-DD）。 */
+	readonly label: string;
+	readonly done: number;
+	readonly remaining: number;
+	readonly created: number;
+	/** 悬停文案。 */
+	readonly title: string;
 }
 
 /** 千位压缩（1.2k / 12k）：y 轴刻度与柱顶数值用，避免 4 位数把刻度挤宽。 */
 function compactCount(value: number): string {
-  if (value >= 10_000) return `${Math.round(value / 1000)}k`
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}k`
-  return String(value)
+	if (value >= 10_000) return `${Math.round(value / 1000)}k`;
+	if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+	return String(value);
 }
 
 /** 分组柱状图（div 柱，无新依赖）：完成（蓝）/ 没完成（琥珀）/ 新增（灰）各一细柱。
@@ -506,70 +612,172 @@ function compactCount(value: number): string {
  *  - hover 整列提亮 + 浮卡（日期 + 三个数）——原生 title 太慢；
  *  - **没有**均值线与长注释（用户 2026-10-17：均值不要、注释太长不要）。 */
 export function GroupedBarChart(props: {
-  weeks: readonly GroupedBarWeek[]
-  ariaLabel: string
-  doneLabel: string
-  remainingLabel: string
-  createdLabel: string
+	weeks: readonly GroupedBarWeek[];
+	ariaLabel: string;
+	doneLabel: string;
+	remainingLabel: string;
+	createdLabel: string;
 }): ReactNode {
-  ensureUiBase()
-  const [hover, setHover] = useState<number | null>(null)
-  const top = Math.max(1, props.weeks.reduce((peak, week) => Math.max(peak, week.done, week.remaining, week.created), 0))
-  const ticks = [0, top / 2, top]
-  const pct = (value: number): string => `${(value / top) * 100}%`
-  const columnStyle = (index: number): Record<string, string | number> => ({
-    left: `${(index / props.weeks.length) * 100}%`,
-    right: `${((props.weeks.length - index - 1) / props.weeks.length) * 100}%`,
-  })
-  // 浮卡定位：贴边两列向内收，其余居中（否则溢出图表卡）
-  const tipStyle = (index: number): Record<string, string | number> => {
-    if (index <= 1) return { left: 0 }
-    if (index >= props.weeks.length - 2) return { right: 0 }
-    return { left: `${((index + 0.5) / props.weeks.length) * 100}%`, transform: 'translateX(-50%)' }
-  }
-  return h('div', { className: 'dtl-gchart-wrap' },
-    h('div', {
-      className: 'dtl-gchart',
-      role: 'img',
-      'aria-label': props.ariaLabel,
-      onMouseLeave: () => { setHover(null) },
-    },
-      ticks.map((tick) => h('div', { key: `grid-${String(tick)}`, className: 'dtl-gchart__grid', style: { bottom: pct(tick) } })),
-      ticks.map((tick) => h('span', { key: `tick-${String(tick)}`, className: 'dtl-gchart__ytick', style: { bottom: pct(tick) } }, compactCount(Math.round(tick)))),
-      props.weeks.map((week, index) => h('div', {
-        key: week.label,
-        className: 'dtl-gchart__col',
-        style: columnStyle(index),
-        onMouseEnter: () => { setHover(index) },
-      },
-        h('div', { className: 'dtl-gchart__pair' },
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--done', style: { height: pct(week.done), minHeight: week.done > 0 ? '2px' : undefined } }),
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--remaining', style: { height: pct(week.remaining), minHeight: week.remaining > 0 ? '2px' : undefined } }),
-          h('span', { className: 'dtl-gchart__bar dtl-gchart__bar--created', style: { height: pct(week.created), minHeight: week.created > 0 ? '2px' : undefined } }),
-        ),
-        week.done === 0
-          ? null
-          : h('span', { className: 'dtl-gchart__val', style: { bottom: `calc(${pct(week.done)} + 3px)` } }, String(week.done)),
-        h('span', { className: 'dtl-gchart__label' }, week.label),
-      )),
-      hover === null
-        ? null
-        : h('div', { className: 'dtl-gchart__tip', style: tipStyle(hover) },
-          h('b', null, props.weeks[hover].title),
-          h('div', null, h('i', { style: { background: 'var(--dtl-business)' } }), `${props.doneLabel} ${props.weeks[hover].done}`),
-          h('div', null, h('i', { style: { background: 'var(--dtl-chart-remaining)' } }), `${props.remainingLabel} ${props.weeks[hover].remaining}`),
-          h('div', null, h('i', { style: { background: 'var(--dtl-chart-created)' } }), `${props.createdLabel} ${props.weeks[hover].created}`),
-        ),
-    ),
-  )
+	ensureUiBase();
+	const [hover, setHover] = useState<number | null>(null);
+	const top = Math.max(
+		1,
+		props.weeks.reduce(
+			(peak, week) => Math.max(peak, week.done, week.remaining, week.created),
+			0,
+		),
+	);
+	const ticks = [0, top / 2, top];
+	const pct = (value: number): string => `${(value / top) * 100}%`;
+	const columnStyle = (index: number): Record<string, string | number> => ({
+		left: `${(index / props.weeks.length) * 100}%`,
+		right: `${((props.weeks.length - index - 1) / props.weeks.length) * 100}%`,
+	});
+	// 浮卡定位：贴边两列向内收，其余居中（否则溢出图表卡）
+	const tipStyle = (index: number): Record<string, string | number> => {
+		if (index <= 1) return { left: 0 };
+		if (index >= props.weeks.length - 2) return { right: 0 };
+		return {
+			left: `${((index + 0.5) / props.weeks.length) * 100}%`,
+			transform: "translateX(-50%)",
+		};
+	};
+	return h(
+		"div",
+		{ className: "dtl-gchart-wrap" },
+		h(
+			"div",
+			{
+				className: "dtl-gchart",
+				role: "img",
+				"aria-label": props.ariaLabel,
+				onMouseLeave: () => {
+					setHover(null);
+				},
+			},
+			ticks.map((tick) =>
+				h("div", {
+					key: `grid-${String(tick)}`,
+					className: "dtl-gchart__grid",
+					style: { bottom: pct(tick) },
+				}),
+			),
+			ticks.map((tick) =>
+				h(
+					"span",
+					{
+						key: `tick-${String(tick)}`,
+						className: "dtl-gchart__ytick",
+						style: { bottom: pct(tick) },
+					},
+					compactCount(Math.round(tick)),
+				),
+			),
+			props.weeks.map((week, index) =>
+				h(
+					"div",
+					{
+						key: week.label,
+						className: "dtl-gchart__col",
+						style: columnStyle(index),
+						onMouseEnter: () => {
+							setHover(index);
+						},
+					},
+					h(
+						"div",
+						{ className: "dtl-gchart__pair" },
+						h("span", {
+							className: "dtl-gchart__bar dtl-gchart__bar--done",
+							style: {
+								height: pct(week.done),
+								minHeight: week.done > 0 ? "2px" : undefined,
+							},
+						}),
+						h("span", {
+							className: "dtl-gchart__bar dtl-gchart__bar--remaining",
+							style: {
+								height: pct(week.remaining),
+								minHeight: week.remaining > 0 ? "2px" : undefined,
+							},
+						}),
+						h("span", {
+							className: "dtl-gchart__bar dtl-gchart__bar--created",
+							style: {
+								height: pct(week.created),
+								minHeight: week.created > 0 ? "2px" : undefined,
+							},
+						}),
+					),
+					week.done === 0
+						? null
+						: h(
+								"span",
+								{
+									className: "dtl-gchart__val",
+									style: { bottom: `calc(${pct(week.done)} + 3px)` },
+								},
+								String(week.done),
+							),
+					h("span", { className: "dtl-gchart__label" }, week.label),
+				),
+			),
+			hover === null
+				? null
+				: h(
+						"div",
+						{ className: "dtl-gchart__tip", style: tipStyle(hover) },
+						h("b", null, props.weeks[hover].title),
+						h(
+							"div",
+							null,
+							h("i", { style: { background: "var(--dtl-business)" } }),
+							`${props.doneLabel} ${props.weeks[hover].done}`,
+						),
+						h(
+							"div",
+							null,
+							h("i", { style: { background: "var(--dtl-chart-remaining)" } }),
+							`${props.remainingLabel} ${props.weeks[hover].remaining}`,
+						),
+						h(
+							"div",
+							null,
+							h("i", { style: { background: "var(--dtl-chart-created)" } }),
+							`${props.createdLabel} ${props.weeks[hover].created}`,
+						),
+					),
+		),
+	);
 }
 
 /** 图例（完成 / 没完成 / 新增 三个色块）。 */
-export function ChartLegend(props: { doneLabel: string; remainingLabel: string; createdLabel: string }): ReactNode {
-  ensureUiBase()
-  return h('div', { className: 'dtl-gchart-legend' },
-    h('span', null, h('i', { style: { background: 'var(--dtl-business)' } }), props.doneLabel),
-    h('span', null, h('i', { style: { background: 'var(--dtl-chart-remaining)' } }), props.remainingLabel),
-    h('span', null, h('i', { style: { background: 'var(--dtl-chart-created)' } }), props.createdLabel),
-  )
+export function ChartLegend(props: {
+	doneLabel: string;
+	remainingLabel: string;
+	createdLabel: string;
+}): ReactNode {
+	ensureUiBase();
+	return h(
+		"div",
+		{ className: "dtl-gchart-legend" },
+		h(
+			"span",
+			null,
+			h("i", { style: { background: "var(--dtl-business)" } }),
+			props.doneLabel,
+		),
+		h(
+			"span",
+			null,
+			h("i", { style: { background: "var(--dtl-chart-remaining)" } }),
+			props.remainingLabel,
+		),
+		h(
+			"span",
+			null,
+			h("i", { style: { background: "var(--dtl-chart-created)" } }),
+			props.createdLabel,
+		),
+	);
 }

@@ -24,7 +24,7 @@ def log_progress(repo: Path, me: Identity, tid: str, note: str) -> Result:
     if not text:
         raise Fail("--note 不能为空。")
     mine = TaskStore(repo, shard_rel(me.email), identity=me)
-    task = mine.get(tid)      # 锁内重读
+    task = mine.get(tid)  # 锁内重读
     if task is None:
         raise Fail(f"任务 {tid} 不在我的分片里（只能给自己的任务记进展）。")
 

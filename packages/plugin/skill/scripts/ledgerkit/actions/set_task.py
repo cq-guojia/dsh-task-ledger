@@ -23,7 +23,11 @@ from .result import Result, rel
 
 
 def set_task(
-    repo: Path, me: Identity, tid: str, *, status: str | None = None,
+    repo: Path,
+    me: Identity,
+    tid: str,
+    *,
+    status: str | None = None,
     owner: str | None = None,
 ) -> Result:
     """路由：先看 `--owner` 给没给 —— 没给就只处理 status，绝不拿现存 owner 反推。"""

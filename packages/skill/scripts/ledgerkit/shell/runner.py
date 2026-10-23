@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 from .. import notices
 from ..actions import registry
@@ -84,7 +85,7 @@ def _run(command: str, args: argparse.Namespace, log: dirty.WriteLog) -> int:
         value = spec.func(repo, me, **params)
         _render(spec, value, args, as_json=as_json)
         if getattr(value, "problems", ()):
-            return BUSINESS   # validate 有 problems ⇒ 退出码 1（§六）
+            return BUSINESS  # validate 有 problems ⇒ 退出码 1（§六）
         return OK
 
     boot_scope, act_scope = presync_scope(repo, me, spec.lock_action or command, params)
@@ -100,7 +101,9 @@ def _run(command: str, args: argparse.Namespace, log: dirty.WriteLog) -> int:
         # 否则一条失败的命令会把台账留在「已写未提交」，下一条写命令被写前 guard 拦死
         # （架构文档 §三.5 正是要避免这个）。登记是幂等的，还回去下次再登记，没有损失。
         for rel in boot_scope.files:
-            log.record_presync(repo / to_repo_rel(rel), snapshot(repo / to_repo_rel(rel)))
+            log.record_presync(
+                repo / to_repo_rel(rel), snapshot(repo / to_repo_rel(rel))
+            )
         with atom(repo, *boot_scope.files):
             me = registry.bootstrap_func()(repo, me)
 
@@ -157,9 +160,9 @@ def _render(spec: registry.ActionSpec, value, args, *, as_json: bool) -> None:
 
 def _params(
     command: str, args: argparse.Namespace, repo: Path, me, spec: registry.ActionSpec
-) -> dict:
+) -> dict[str, Any]:
     """按 `spec.params` 从 args 里挑；**不许把整个 args 透传进业务层**。"""
-    out: dict = {}
+    out: dict[str, Any] = {}
     for key in spec.params:
         out[key] = getattr(args, key, None)
     if command == "new":
@@ -168,7 +171,9 @@ def _params(
             created = to_utc(args.created, field="--created")
         out["created"] = created
         if not out.get("tid"):
-            out["tid"] = make_id(out.get("title") or "", _task_snapshot(repo, me), created)
+            out["tid"] = make_id(
+                out.get("title") or "", _task_snapshot(repo, me), created
+            )
         out["tags"] = tuple(out.get("tags") or ())
     if command == "close":
         out["finished"] = (
@@ -180,12 +185,12 @@ def _params(
     return out
 
 
-def _task_snapshot(repo: Path, me) -> dict:
+def _task_snapshot(repo: Path, me) -> dict[str, Any]:
     """建任务查重要用的在办任务快照（**锁外**只读，只用于生成不撞的号）。"""
     from ..core.paths import POOL_REL, shard_rel
     from ..store.task_store import TaskStore
 
-    tasks: dict = {}
+    tasks: dict[str, Any] = {}
     tasks.update(TaskStore(repo, POOL_REL).all())
     tasks.update(TaskStore(repo, shard_rel(me.email)).all())
     return tasks
@@ -202,6 +207,3 @@ def _repo_of(args: argparse.Namespace) -> Path:
     from .cli import resolve_repo  # 延迟导入：cli 在模块层 import runner
 
     return resolve_repo(None)
-
-
-

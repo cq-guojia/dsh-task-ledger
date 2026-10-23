@@ -24,7 +24,7 @@ def log_progress(repo: Path, me: Identity, tid: str, note: str) -> Result:
     if not text:
         raise Fail("--note 不能为空。")
     mine = TaskStore(repo, shard_rel(me.email), identity=me)
-    task = mine.get(tid)      # 锁内重读
+    task = mine.get(tid)  # 锁内重读
     if task is None:
         raise Fail(f"任务 {tid} 不在我的分片里（只能给自己的任务记进展）。")
 
@@ -50,8 +50,7 @@ def log_progress(repo: Path, me: Identity, tid: str, note: str) -> Result:
             where=rel(repo, mine.path),
             message=f"{tid}：记进展",
             notices=(
-                "警告：分片的最后更新已刷，过程文档补不上（文件不可写）；"
-                "已写的分片照常提交，文档那行要手动补。",
+                "警告：分片的最后更新已刷，过程文档补不上（文件不可写）；已写的分片照常提交，文档那行要手动补。",
             ),
         )
     return Result(

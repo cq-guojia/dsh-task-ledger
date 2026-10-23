@@ -45,6 +45,8 @@ def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
             tags=tuple(task.get("tags") or ()),
             where=rel(repo, where[tid]),
         )
-        for tid, task in sorted(kept.items(), key=lambda kv: str(kv[1].get("created") or ""))
+        for tid, task in sorted(
+            kept.items(), key=lambda kv: str(kv[1].get("created") or "")
+        )
     )
     return ListResult(rows=kept, table=table)

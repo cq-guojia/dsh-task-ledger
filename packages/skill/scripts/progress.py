@@ -6,6 +6,7 @@
 3. 调 ledgerkit.shell.cli.main；
 4. 把返回码交给系统。
 """
+
 import os
 import sys
 
@@ -13,7 +14,7 @@ sys.dont_write_bytecode = True
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-from ledgerkit.shell.cli import main  # noqa: E402  —— 必须在 sys.path 之后
+from ledgerkit.shell.cli import main
 
 if __name__ == "__main__":
     sys.exit(main())

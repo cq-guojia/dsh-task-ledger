@@ -8,13 +8,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from ..actions.atom import Scope, lock_scope
 from ..core.identity import Identity
 
 
 def presync_scope(
-    repo: Path, me: Identity, action: str, params: dict
+    repo: Path, me: Identity, action: str, params: dict[str, Any]
 ) -> tuple[Scope, Scope]:
     """(自举那份, 动作那份)。只读动作由 runner 直接拿空的两份，不进这里。"""
     boot = lock_scope(repo, me, "bootstrap", params)

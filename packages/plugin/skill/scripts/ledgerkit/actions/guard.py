@@ -44,9 +44,7 @@ def require_owner(task: Mapping[str, Any], tid: str, me: Identity) -> None:
     """只有当前 owner 能改。"""
     owner = owner_of(task)
     if not owner:
-        raise Fail(
-            f"任务 {tid} 还没有人认领（在公共池里），先 claim 再改。"
-        )
+        raise Fail(f"任务 {tid} 还没有人认领（在公共池里），先 claim 再改。")
     if not is_me(me, owner):
         raise Fail(f"任务 {tid} 的负责人是 {owner}，不是你（{me.label()}）。")
 

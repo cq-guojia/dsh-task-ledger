@@ -9,7 +9,7 @@ class Fail(Exception):
 
 
 OK = 0
-BUSINESS = 1      # 业务错：任务不存在、不是你的、参数不合法
-USAGE = 2         # 用法错：argparse 自己会退出，这里留给外壳显式用
-UNEXPECTED = 3    # 未预期异常
+BUSINESS = 1  # 业务错：任务不存在、不是你的、参数不合法
+USAGE = 2  # 用法错：argparse 自己会退出，这里留给外壳显式用
+UNEXPECTED = 3  # 未预期异常
 INTERRUPTED = 130  # Ctrl-C / SIGINT

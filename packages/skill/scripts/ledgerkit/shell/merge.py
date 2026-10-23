@@ -28,7 +28,7 @@ from ..store.json_store import dump_ledger_json
 EXPAND_KEYS = ("tasks", "workers")
 
 
-def _load(text: str) -> dict | None:
+def _load(text: str) -> dict[str, Any] | None:
     if not text.strip():
         return {}
     try:
@@ -38,7 +38,7 @@ def _load(text: str) -> dict | None:
     return data if isinstance(data, dict) else None
 
 
-def _coerce(value: str | dict | None) -> dict | None:
+def _coerce(value: str | dict | None) -> dict[str, Any] | None:
     """三方内容：git 给的是文本（`git show :N:rel`），测试与调用方也可以直接给 dict。"""
     if value is None:
         return None
@@ -47,7 +47,7 @@ def _coerce(value: str | dict | None) -> dict | None:
     return _load(str(value))
 
 
-def _rows_of(data: dict | None, key: str) -> dict:
+def _rows_of(data: dict[str, Any] | None, key: str) -> dict[str, Any]:
     rows = (data or {}).get(key)
     return rows if isinstance(rows, dict) else {}
 
@@ -82,7 +82,7 @@ def merge_task_dicts(
     base: str | dict | None,
     ours: str | dict | None,
     theirs: str | dict | None,
-) -> tuple[dict, list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     """按任务号做三方合并；返回 (合并结果, 两边都改过的任务号)。
 
     合并单位是「任务」不是文本行 —— 行级合并只认相邻上下文：不同任务各自新增 /
@@ -137,7 +137,9 @@ def union_merge(base: str, ours: str, theirs: str) -> str:
     base_lines = set(base.splitlines())
     have = set(theirs.splitlines())
     added = [
-        line for line in ours.splitlines() if line not in base_lines and line not in have
+        line
+        for line in ours.splitlines()
+        if line not in base_lines and line not in have
     ]
     if not added:
         return theirs
@@ -162,19 +164,24 @@ def conflict_marked(
         return dump_ledger_json(data, expand=key), []
     return (
         _marked_text(
-            _load(theirs) or {}, key, data, conflicts, _load(ours) or {}, _load(theirs) or {}
+            _load(theirs) or {},
+            key,
+            data,
+            conflicts,
+            _load(ours) or {},
+            _load(theirs) or {},
         ),
         conflicts,
     )
 
 
 def _marked_text(
-    full: dict,
+    full: dict[str, Any],
     key: str,
-    merged: dict,
+    merged: dict[str, Any],
     conflicts: list[str],
-    upstream: dict,
-    local: dict,
+    upstream: dict[str, Any],
+    local: dict[str, Any],
 ) -> str:
     """按「一条一行」渲染整份台账；两边都改过的条目用冲突标记包起来。
 
@@ -202,12 +209,16 @@ def _marked_text(
             left = (
                 "(远端已删除)"
                 if _rows_of(upstream, key).get(ident) is None
-                else json.dumps(_rows_of(upstream, key)[ident], ensure_ascii=False, sort_keys=True)
+                else json.dumps(
+                    _rows_of(upstream, key)[ident], ensure_ascii=False, sort_keys=True
+                )
             )
             right = (
                 "(本地已删除)"
                 if _rows_of(local, key).get(ident) is None
-                else json.dumps(_rows_of(local, key)[ident], ensure_ascii=False, sort_keys=True)
+                else json.dumps(
+                    _rows_of(local, key)[ident], ensure_ascii=False, sort_keys=True
+                )
             )
             inner.append(
                 f"<<<<<<< 远端\n    {label}: {left}\n=======\n"
@@ -249,5 +260,7 @@ def render_conflict_text(rel: str, base: str, ours: str, theirs: str) -> str:
     ]
     lines.extend(f"  - {tid}" for tid in conflicts)
     lines.append("  处理：编辑该文件保留你要的版本 → git add → git rebase --continue；")
-    lines.append("  不想合就 git rebase --abort 回到写之前。你的台账改动已提交在本地，不会丢。")
+    lines.append(
+        "  不想合就 git rebase --abort 回到写之前。你的台账改动已提交在本地，不会丢。"
+    )
     return "\n".join(lines)

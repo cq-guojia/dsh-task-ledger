@@ -97,7 +97,9 @@ def show_view(res: ShowResult, *, as_json: bool) -> None:
         return
     task = res.task
     _out(f"{task.get('tid', '')}：{task.get('title', '')}")
-    _out(f"  状态：{task.get('status', '')}　负责人：{task.get('owner') or '（未认领）'}")
+    _out(
+        f"  状态：{task.get('status', '')}　负责人：{task.get('owner') or '（未认领）'}"
+    )
     _out(
         f"  创建：{fmt_local(task.get('created'))}　"
         f"最后更新：{fmt_local(task.get('updated'))}"
@@ -191,4 +193,6 @@ def census_view(res: Census, *, as_json: bool) -> None:
 
 
 def _kv(mapping: dict[str, int]) -> str:
-    return "、".join(f"{k}({v})" for k, v in sorted(mapping.items(), key=lambda kv: -kv[1]))
+    return "、".join(
+        f"{k}({v})" for k, v in sorted(mapping.items(), key=lambda kv: -kv[1])
+    )

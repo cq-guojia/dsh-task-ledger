@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 from ..core.identity import Identity, normalize
 from ..core.paths import OWNERS_DIR, OWNERS_REL, shard_rel, to_repo_rel
@@ -25,13 +25,13 @@ class OwnersIndex:
             self.repo / to_repo_rel(OWNERS_REL), default=DEFAULT_DATA, expand="workers"
         )
 
-    def get(self, who: str) -> dict | None:
+    def get(self, who: str) -> dict[str, Any] | None:
         return self._store.get(normalize(who))
 
-    def all(self) -> dict[str, dict]:
+    def all(self) -> dict[str, dict[str, Any]]:
         return self._store.all()
 
-    def ensure(self, me: Identity) -> tuple[bool, dict]:
+    def ensure(self, me: Identity) -> tuple[bool, dict[str, Any]]:
         """登记 / 补 `joined` / 名字或 aliases 变了才写。返回 (这次写了没有, 记录)。"""
         key = normalize(me.email)
         with self._open() as session:
@@ -110,7 +110,7 @@ class _IndexSession:
 
     def __init__(self, store: JSONStore):
         self.store = store
-        self.data: dict = {}
+        self.data: dict[str, Any] = {}
         self.changed = False
 
     def mark(self) -> None:

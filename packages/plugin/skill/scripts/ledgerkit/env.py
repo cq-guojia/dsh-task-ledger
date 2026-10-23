@@ -21,17 +21,13 @@ _IDENT_RE = re.compile(r"<([^>]*)>")
 
 
 def _git(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["git", *args], capture_output=True, text=True, check=False
-    )
+    return subprocess.run(["git", *args], capture_output=True, text=True, check=False)
 
 
 def git_value(repo: Path | None, *args: str) -> str | None:
     """读一个 git 配置值；cwd 给定时按那个仓库判（--repo 未必是当前目录）。"""
     base = ("git", "-C", str(repo)) if repo is not None else ("git",)
-    proc = subprocess.run(
-        [*base, *args], capture_output=True, text=True, check=False
-    )
+    proc = subprocess.run([*base, *args], capture_output=True, text=True, check=False)
     if proc.returncode == 0 and proc.stdout.strip():
         return proc.stdout.strip()
     return None

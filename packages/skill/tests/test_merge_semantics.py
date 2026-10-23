@@ -18,6 +18,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 SKILL = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL / "scripts"))
@@ -31,7 +32,7 @@ POOL_REL = "ledger/pool.json"
 WORKLOG_REL = "ledger/worklog/202610/22-0230-abcd.md"
 
 
-def task(title: str, owner: str | None = None) -> dict:
+def task(title: str, owner: str | None = None) -> dict[str, Any]:
     return {
         "title": title,
         "status": "doing" if owner else "open",
@@ -40,12 +41,12 @@ def task(title: str, owner: str | None = None) -> dict:
     }
 
 
-def doc(tasks: dict) -> dict:
+def doc(tasks: dict[str, Any]) -> dict[str, Any]:
     """一份台账文件的形状（`merge_task_dicts` 吃的是整份文档，不是 tasks 字典）。"""
     return {"version": "20261022000000", "tasks": tasks}
 
 
-def text(tasks: dict) -> str:
+def text(tasks: dict[str, Any]) -> str:
     return json.dumps(doc(tasks))
 
 
@@ -114,7 +115,9 @@ class MergeTaskDictsTest(unittest.TestCase):
 
     def test_one_side_new_task(self) -> None:
         merged, conflicts = merge.merge_task_dicts(
-            doc({"t1": task("一")}), doc({"t1": task("一")}), doc({"t1": task("一"), "tb": task("B")})
+            doc({"t1": task("一")}),
+            doc({"t1": task("一")}),
+            doc({"t1": task("一"), "tb": task("B")}),
         )
         self.assertEqual(conflicts, [])
         self.assertEqual(sorted(merged["tasks"]), ["t1", "tb"])
@@ -159,7 +162,9 @@ class MergeTaskDictsTest(unittest.TestCase):
         self.assertEqual(merged["tasks"]["t1"]["title"], "本地改")
 
     def test_both_delete_no_conflict(self) -> None:
-        merged, conflicts = merge.merge_task_dicts(doc({"t1": task("一")}), doc({}), doc({}))
+        merged, conflicts = merge.merge_task_dicts(
+            doc({"t1": task("一")}), doc({}), doc({})
+        )
         self.assertEqual(conflicts, [])
         self.assertEqual(merged["tasks"], {})
 
@@ -172,28 +177,32 @@ class MergeTaskDictsTest(unittest.TestCase):
         self.assertEqual(merged["tasks"]["t1"]["title"], "都改成这个")
 
     def test_empty_base_both_add(self) -> None:
-        merged, conflicts = merge.merge_task_dicts(doc({}), doc({"ta": task("A")}), doc({"tb": task("B")}))
+        merged, conflicts = merge.merge_task_dicts(
+            doc({}), doc({"ta": task("A")}), doc({"tb": task("B")})
+        )
         self.assertEqual(conflicts, [])
         self.assertEqual(sorted(merged["tasks"]), ["ta", "tb"])
 
     def test_never_emits_none_value(self) -> None:
         merged, _ = merge.merge_task_dicts(
-            doc({"t1": task("一"), "t2": task("二")}), doc({"t1": task("一")}), doc({"t1": task("一")})
+            doc({"t1": task("一"), "t2": task("二")}),
+            doc({"t1": task("一")}),
+            doc({"t1": task("一")}),
         )
         self.assertTrue(all(v is not None for v in merged["tasks"].values()))
 
     def test_text_sides_are_parsed(self) -> None:
         """git 给过来的是文本（`git show :N:rel`），不是 dict。"""
         merged, conflicts = merge.merge_task_dicts(
-            text({"t1": task("原")}), text({"t1": task("远端改")}), text({"t1": task("本地改")})
+            text({"t1": task("原")}),
+            text({"t1": task("远端改")}),
+            text({"t1": task("本地改")}),
         )
         self.assertEqual(conflicts, ["t1"])
         self.assertEqual(merged["tasks"]["t1"]["title"], "远端改")
 
     def test_broken_json_is_reported_not_guessed(self) -> None:
-        merged, conflicts = merge.merge_task_dicts(
-            "{ 不是 JSON", text({}), text({})
-        )
+        merged, conflicts = merge.merge_task_dicts("{ 不是 JSON", text({}), text({}))
         self.assertEqual(merged, {})
         self.assertTrue(any("合法 JSON" in line for line in conflicts))
 
@@ -319,7 +328,9 @@ class ResolveConflictsTest(unittest.TestCase):
         os.environ.update(self._env)
         shutil.rmtree(self.tmp, ignore_errors=True)
 
-    def git(self, *args: str, cwd: Path, check: bool = True) -> subprocess.CompletedProcess:
+    def git(
+        self, *args: str, cwd: Path, check: bool = True
+    ) -> subprocess.CompletedProcess:
         proc = subprocess.run(
             ["git", *args], cwd=cwd, capture_output=True, text=True, check=False
         )
@@ -327,21 +338,21 @@ class ResolveConflictsTest(unittest.TestCase):
             self.fail(f"git {' '.join(args)} 失败：\n{proc.stdout}\n{proc.stderr}")
         return proc
 
-    def write(self, repo: Path, tasks: dict) -> None:
+    def write(self, repo: Path, tasks: dict[str, Any]) -> None:
         path = Path(repo) / POOL_REL
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             dump_ledger_json({"version": "", "tasks": tasks}), encoding="utf-8"
         )
 
-    def read(self, repo: Path) -> dict:
+    def read(self, repo: Path) -> dict[str, Any]:
         return json.loads((repo / POOL_REL).read_text(encoding="utf-8"))["tasks"]
 
     def commit(self, repo: Path, msg: str) -> None:
         self.git("add", "-A", cwd=repo)
         self.git("commit", "-m", msg, cwd=repo)
 
-    def seed(self, tasks: dict) -> None:
+    def seed(self, tasks: dict[str, Any]) -> None:
         self.write(self.a, tasks)
         self.commit(self.a, "seed")
         self.git("push", "origin", "main", cwd=self.a)
@@ -497,7 +508,9 @@ class ResolveConflictsTest(unittest.TestCase):
         self.assertIs(self.resolve(), False)
         # 不接管 ⇒ 干净退回 rebase 之前，业务文件的冲突态交还给人
         self.assertFalse((self.b / ".git" / "rebase-merge").exists())
-        self.assertEqual(self.git("status", "--porcelain", cwd=self.b).stdout.strip(), "")
+        self.assertEqual(
+            self.git("status", "--porcelain", cwd=self.b).stdout.strip(), ""
+        )
 
 
 if __name__ == "__main__":

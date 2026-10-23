@@ -2,46 +2,52 @@
  * 内嵌 skill 的注册体组装（任务 2「skill 注册最小闭环」）。
  * 宿主事实（0.2.0-rc.2 npm pack 亲验）：external/dsh-skill-registration.md。
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 /** 内嵌 skill 目录：dist/host/skill/registration.js → 包根 skill/（copy-skill 产物；
  *  比原 host/skill-registration.js 深一层 ⇒ 相对路径多一级 `../`）。 */
-const SKILL_DIR = fileURLToPath(new URL('../../../skill', import.meta.url))
+const SKILL_DIR = fileURLToPath(new URL("../../../skill", import.meta.url));
 
 /** SKILL.md 里指示脚本位置的占位符（注册时替换为绝对路径，模型据此找到脚本）。 */
-const SKILL_DIR_TOKEN = '<本 SKILL.md 所在目录>'
+const SKILL_DIR_TOKEN = "<本 SKILL.md 所在目录>";
 
 /** skill 脚本绝对路径（提示词里直接给「原样执行这一条」的命令用；与注册共用同一份目录知识）。 */
-export const SKILL_SCRIPT = `${SKILL_DIR}/scripts/progress.py`
+export const SKILL_SCRIPT = `${SKILL_DIR}/scripts/progress.py`;
 
 /** 宿主 ctx.skills.register 的最小面（外部事实文档的结构面）。 */
 export interface SkillRegistration {
-  name: string
-  description: string
-  content: string
-  whenToUse?: string
-  path?: string
-  source?: string
-  resourceBase?: { kind: 'directory'; path: string }
-  metadata?: Record<string, unknown>
+	name: string;
+	description: string;
+	content: string;
+	whenToUse?: string;
+	path?: string;
+	source?: string;
+	resourceBase?: { kind: "directory"; path: string };
+	metadata?: Record<string, unknown>;
 }
 
 /** 宿主 skills 服务的最小面。 */
 export interface SkillsRegistry {
-  register(skill: SkillRegistration): () => void
+	register(skill: SkillRegistration): () => void;
 }
 
 /** frontmatter 最小解析：只取 name / description（不引 YAML 库；值去首尾引号）。 */
 function parseFrontmatter(text: string): { name: string; description: string } {
-  const match = /^---\n([\s\S]*?)\n---/.exec(text)
-  if (match === null) throw new Error('SKILL.md 缺 frontmatter（--- 包裹的头）')
-  const field = (key: string): string => {
-    const line = (match[1] ?? '').split('\n').find((item) => item.startsWith(`${key}:`))
-    if (line === undefined) throw new Error(`SKILL.md frontmatter 缺 ${key}`)
-    return line.slice(key.length + 1).trim().replace(/^["']|["']$/g, '')
-  }
-  return { name: field('name'), description: field('description') }
+	const match = /^---\n([\s\S]*?)\n---/.exec(text);
+	if (match === null)
+		throw new Error("SKILL.md 缺 frontmatter（--- 包裹的头）");
+	const field = (key: string): string => {
+		const line = (match[1] ?? "")
+			.split("\n")
+			.find((item) => item.startsWith(`${key}:`));
+		if (line === undefined) throw new Error(`SKILL.md frontmatter 缺 ${key}`);
+		return line
+			.slice(key.length + 1)
+			.trim()
+			.replace(/^["']|["']$/g, "");
+	};
+	return { name: field("name"), description: field("description") };
 }
 
 /**
@@ -52,15 +58,17 @@ function parseFrontmatter(text: string): { name: string; description: string } {
  * 最小闭环选「插值绝对路径」——resourceBase 的消费者呈现未验证，不押注。
  * 拍板后如改走 resourceBase，只动本函数，调用方无感。
  */
-export function buildSkillRegistration(skillDir: string = SKILL_DIR): SkillRegistration {
-  const text = readFileSync(`${skillDir}/SKILL.md`, 'utf-8')
-  const { name, description } = parseFrontmatter(text)
-  const content = text.split(SKILL_DIR_TOKEN).join(skillDir)
-  if (content.includes(SKILL_DIR_TOKEN)) {
-    throw new Error('占位符替换失败：SKILL.md 里仍残留脚本路径占位符')
-  }
-  if (!content.includes(`${skillDir}/scripts/progress.py`)) {
-    throw new Error('占位符替换异常：替换后找不到脚本路径')
-  }
-  return { name, description, content, path: `${skillDir}/SKILL.md` }
+export function buildSkillRegistration(
+	skillDir: string = SKILL_DIR,
+): SkillRegistration {
+	const text = readFileSync(`${skillDir}/SKILL.md`, "utf-8");
+	const { name, description } = parseFrontmatter(text);
+	const content = text.split(SKILL_DIR_TOKEN).join(skillDir);
+	if (content.includes(SKILL_DIR_TOKEN)) {
+		throw new Error("占位符替换失败：SKILL.md 里仍残留脚本路径占位符");
+	}
+	if (!content.includes(`${skillDir}/scripts/progress.py`)) {
+		throw new Error("占位符替换异常：替换后找不到脚本路径");
+	}
+	return { name, description, content, path: `${skillDir}/SKILL.md` };
 }

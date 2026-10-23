@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 from ..errors import Fail
 from .labels import label_line, parse_label_line
@@ -18,7 +18,7 @@ EXEC_HINT = (
     '     补记用 progress.py log --id <任务号> --note "一句话"。 -->'
 )
 FROZEN_MARK = "✅ 完成封卷"
-FROZEN_RE = re.compile(r"^>\s*" + FROZEN_MARK, re.M)
+FROZEN_RE = re.compile(r"^>\s*" + FROZEN_MARK, re.MULTILINE)
 CREATED_RE = re.compile(r"^\s*>\s*\*\*创建\*\*")
 # 头部「创建」行：`> **创建**：2026-10-06 00:00（@某人）` —— 创建时间与发起人两个来源。
 CREATED_AT_RE = re.compile(
@@ -27,7 +27,7 @@ CREATED_AT_RE = re.compile(
 )
 CREATOR_RE = re.compile(r"^\s*>\s*\*\*创建\*\*\s*[：:].*?（@(.+?)）")
 
-_HEAD_RE = re.compile(r"\A(.*?)(?=^## |\Z)", re.S | re.M)
+_HEAD_RE = re.compile(r"\A(.*?)(?=^## |\Z)", re.DOTALL | re.MULTILINE)
 
 
 def is_skeleton(text: str) -> bool:

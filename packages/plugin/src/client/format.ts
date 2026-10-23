@@ -7,14 +7,17 @@
  * 按当时口径在此重建，别处不许再写一份。
  */
 export function pad2(value: number | string): string {
-  return String(value).padStart(2, '0')
+	return String(value).padStart(2, "0");
 }
 
 /** ISO → `YYYY-MM-DD HH:mm`（`seconds: true` 时补 `:ss`）；解析失败返回 `fallback`（缺省原串）。 */
-export function formatDateTime(iso: string, opts?: { seconds?: boolean; fallback?: string }): string {
-  const ms = Date.parse(iso)
-  if (Number.isNaN(ms)) return opts?.fallback ?? iso
-  const d = new Date(ms)
-  const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
-  return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base
+export function formatDateTime(
+	iso: string,
+	opts?: { seconds?: boolean; fallback?: string },
+): string {
+	const ms = Date.parse(iso);
+	if (Number.isNaN(ms)) return opts?.fallback ?? iso;
+	const d = new Date(ms);
+	const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+	return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
 }

@@ -7,16 +7,15 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Any
 
 from .paths import to_history_rel
 from .time import TIME_RE, time_key
 
 HISTORY_TITLE = "# 进度历史（已结案）"
-HISTORY_HEADER = (
-    "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |"
-)
+HISTORY_HEADER = "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |"
 HISTORY_SEP = "|---|---|---|---|---|---|---|---|---|"
 
 # 最旧格式把 owner 缝在工作包末尾：最右一个「空格 + @」之后整段是 owner。
@@ -24,7 +23,7 @@ OLD_OWNER_RE = re.compile(r"^(?P<title>.*\S)\s+@(?P<owner>\S.*)$")
 _LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]*)\)")
 _TAG_SPLIT_RE = re.compile(r"[,，、]")
 
-Row = dict  # 一条历史行：见 parse_history 的返回
+Row = dict[str, Any]  # 一条历史行：见 parse_history 的返回
 
 
 def esc_cell(text: str) -> str:
@@ -107,7 +106,9 @@ def history_line_for_cols(
     link = f"[{log_rel}]({log_rel})" if log_rel else ""
     if cols <= 4:
         who = f" @{owner}" if owner else ""
-        return f"| {finished} | {esc_cell(title + who)} | {esc_cell(summary)} | {link} |\n"
+        return (
+            f"| {finished} | {esc_cell(title + who)} | {esc_cell(summary)} | {link} |\n"
+        )
     if cols == 5:
         return (
             f"| {finished} | {esc_cell(title)} | {esc_cell(owner_cell(owner))} "
@@ -232,7 +233,7 @@ def _drop_trailing_blank(out: list[str]) -> None:
 def upgrade_history(
     text: str,
     *,
-    read_worklog: Callable[[str], dict | None],
+    read_worklog: Callable[[str], dict[str, Any] | None],
     fallback_created: str,
 ) -> tuple[str, int] | None:
     """旧格式（4 / 5 / 6 / 8 列）→ v9。**全部数据行可解析才返回 (新文本, 转换行数)**，否则 None。
@@ -339,7 +340,9 @@ def _link_target(cell: str) -> str:
     return (m.group(1) if m else (cell or "")).strip()
 
 
-def _meta_of(doc: str, read_worklog: Callable[[str], dict | None]) -> dict | None:
+def _meta_of(
+    doc: str, read_worklog: Callable[[str], dict[str, Any] | None]
+) -> dict[str, Any] | None:
     """顺着历史行的文档链接取回 worklog 头部四样（`read_worklog` 收文件名）。"""
     target = _link_target(doc)
     if not target:

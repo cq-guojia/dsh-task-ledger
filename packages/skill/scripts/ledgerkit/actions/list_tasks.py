@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from ..core.identity import Identity
 from ..core.paths import POOL_REL
@@ -15,7 +16,7 @@ from .result import ListResult, TaskRow, rel
 
 def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
     """合并顺序定死：先池、再按索引键排序的各分片，同一任务号由分片那份胜出。"""
-    rows: dict[str, dict] = {}
+    rows: dict[str, dict[str, Any]] = {}
     where: dict[str, Path] = {}
 
     pool = TaskStore(repo, POOL_REL)
@@ -45,6 +46,8 @@ def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
             tags=tuple(task.get("tags") or ()),
             where=rel(repo, where[tid]),
         )
-        for tid, task in sorted(kept.items(), key=lambda kv: str(kv[1].get("created") or ""))
+        for tid, task in sorted(
+            kept.items(), key=lambda kv: str(kv[1].get("created") or "")
+        )
     )
     return ListResult(rows=kept, table=table)

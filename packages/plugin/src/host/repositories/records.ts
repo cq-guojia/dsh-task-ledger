@@ -8,44 +8,70 @@
  *   旧 8 列 history 不因此被误杀）。
  * 失败抛 {@link LedgerDataError}——由 service 层捕获进 degraded，不静默。
  */
-import { LedgerDataError } from '../errors.js'
-import type { HistoryRecord, LedgerWorkspace, TaskRecord, TaskRow } from '../types.js'
+import { LedgerDataError } from "../errors.js";
+import type {
+	HistoryRecord,
+	LedgerWorkspace,
+	TaskRecord,
+	TaskRow,
+} from "../types.js";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
+	return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 /** `list --json`（任务号为键的对象）→ TaskRow[]（打上 id 与 workspace）。 */
-export function parseTaskList(raw: unknown, workspace: LedgerWorkspace): TaskRow[] {
-  if (!isPlainObject(raw)) {
-    throw new LedgerDataError(workspace.id, `${workspace.title}: 台账 list 输出不是「任务号为键的对象」，拒绝当成空列表`)
-  }
-  const rows: TaskRow[] = []
-  for (const [id, value] of Object.entries(raw)) {
-    if (!isPlainObject(value)) {
-      throw new LedgerDataError(workspace.id, `${workspace.title}: 任务 ${id} 不是对象，台账格式可能已变`)
-    }
-    if (id === '') {
-      throw new LedgerDataError(workspace.id, `${workspace.title}: 台账存在空任务号，格式可能已变`)
-    }
-    rows.push({ ...(value as TaskRecord), id, workspace })
-  }
-  return rows
+export function parseTaskList(
+	raw: unknown,
+	workspace: LedgerWorkspace,
+): TaskRow[] {
+	if (!isPlainObject(raw)) {
+		throw new LedgerDataError(
+			workspace.id,
+			`${workspace.title}: 台账 list 输出不是「任务号为键的对象」，拒绝当成空列表`,
+		);
+	}
+	const rows: TaskRow[] = [];
+	for (const [id, value] of Object.entries(raw)) {
+		if (!isPlainObject(value)) {
+			throw new LedgerDataError(
+				workspace.id,
+				`${workspace.title}: 任务 ${id} 不是对象，台账格式可能已变`,
+			);
+		}
+		if (id === "") {
+			throw new LedgerDataError(
+				workspace.id,
+				`${workspace.title}: 台账存在空任务号，格式可能已变`,
+			);
+		}
+		rows.push({ ...(value as TaskRecord), id, workspace });
+	}
+	return rows;
 }
 
 /** `history --json`（`{count, filters, records}`）→ HistoryRecord[]（打上 workspace）。 */
-export function parseHistoryRecords(raw: unknown, workspace: LedgerWorkspace): HistoryRecord[] {
-  if (!isPlainObject(raw)) {
-    throw new LedgerDataError(workspace.id, `${workspace.title}: 台账 history 输出不是对象，拒绝当成空历史`)
-  }
-  const records = raw.records
-  if (!Array.isArray(records)) {
-    throw new LedgerDataError(workspace.id, `${workspace.title}: 台账 history 输出缺 records 数组，格式可能已变`)
-  }
-  const rows: HistoryRecord[] = []
-  for (const record of records) {
-    if (!isPlainObject(record)) continue // 元素级宽松：坏行跳过，不整板炸
-    rows.push({ ...(record as HistoryRecord), workspace })
-  }
-  return rows
+export function parseHistoryRecords(
+	raw: unknown,
+	workspace: LedgerWorkspace,
+): HistoryRecord[] {
+	if (!isPlainObject(raw)) {
+		throw new LedgerDataError(
+			workspace.id,
+			`${workspace.title}: 台账 history 输出不是对象，拒绝当成空历史`,
+		);
+	}
+	const records = raw.records;
+	if (!Array.isArray(records)) {
+		throw new LedgerDataError(
+			workspace.id,
+			`${workspace.title}: 台账 history 输出缺 records 数组，格式可能已变`,
+		);
+	}
+	const rows: HistoryRecord[] = [];
+	for (const record of records) {
+		if (!isPlainObject(record)) continue; // 元素级宽松：坏行跳过，不整板炸
+		rows.push({ ...(record as HistoryRecord), workspace });
+	}
+	return rows;
 }

@@ -56,7 +56,7 @@ def new_task(
     if other.get(tid) is not None:
         raise Fail(f"任务号 {tid} 已经存在了（这不是重跑，是重号）。")
 
-    doc_rel = worklog_rel(tid, created)   # 别叫 rel：那是 result.rel 的函数名
+    doc_rel = worklog_rel(tid, created)  # 别叫 rel：那是 result.rel 的函数名
     path = repo / to_repo_rel(doc_rel)
     logs = WorklogStore(repo)
     before_doc = snapshot(path)

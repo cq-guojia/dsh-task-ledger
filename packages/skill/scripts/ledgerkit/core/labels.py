@@ -8,11 +8,11 @@ from collections.abc import Iterable
 from ..errors import Fail
 
 STATUSES = ("open", "doing")
-LEGACY_STATUSES = ("blocked",)          # 旧数据：读侧当进行中，不写回
+LEGACY_STATUSES = ("blocked",)  # 旧数据：读侧当进行中，不写回
 FORMAT_VERSION = "20261022000000"
 
-LABEL_MAX_CHARS = 4      # 含 CJK 时按「字」算
-LABEL_MAX_WORDS_EN = 3   # 纯 ASCII 时按「词」算
+LABEL_MAX_CHARS = 4  # 含 CJK 时按「字」算
+LABEL_MAX_WORDS_EN = 3  # 纯 ASCII 时按「词」算
 TAGS_MAX_COUNT = 5
 
 CJK_RE = re.compile(r"[\u4e00-\u9fff]")
@@ -28,13 +28,9 @@ def normalize_label(value: str, *, field: str) -> str:
         raise Fail(f"{field} 不能为空。")
     if CJK_RE.search(text):
         if len(text) > LABEL_MAX_CHARS:
-            raise Fail(
-                f"{field} {text!r} 太长：含中文时最多 {LABEL_MAX_CHARS} 个字。"
-            )
+            raise Fail(f"{field} {text!r} 太长：含中文时最多 {LABEL_MAX_CHARS} 个字。")
     elif len(text.split()) > LABEL_MAX_WORDS_EN:
-        raise Fail(
-            f"{field} {text!r} 太长：英文最多 {LABEL_MAX_WORDS_EN} 个词。"
-        )
+        raise Fail(f"{field} {text!r} 太长：英文最多 {LABEL_MAX_WORDS_EN} 个词。")
     return text
 
 

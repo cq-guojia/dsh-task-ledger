@@ -22,20 +22,20 @@ def rel(repo: Path, path: Path) -> str:
 class WorklogView:
     """「这条任务的过程文档要怎么显示」。"""
 
-    path: str | None = None      # 相对 repo
-    text: str | None = None      # 全文；读不到时为 None
-    error: str | None = None     # 读不到的原因（缺失 / 读不了），给人看
+    path: str | None = None  # 相对 repo
+    text: str | None = None  # 全文；读不到时为 None
+    error: str | None = None  # 读不到的原因（缺失 / 读不了），给人看
 
 
 @dataclass(frozen=True)
 class Result:
     """写动作的返回。"""
 
-    changed: tuple[str, ...] = ()     # 改了哪些**字段名**（不是文件名、不是任务号）
-    where: str | None = None          # 主要落在哪个文件（**相对 repo**）
-    already_done: bool = False        # 重跑发现已经做过 ⇒ 退出码仍是 0
-    dry_run: bool = False             # 只预览没写盘 ⇒ 外壳跳过提交与推送
-    message: str | None = None        # git 提交说明；None ⇒ 外壳用默认模板
+    changed: tuple[str, ...] = ()  # 改了哪些**字段名**（不是文件名、不是任务号）
+    where: str | None = None  # 主要落在哪个文件（**相对 repo**）
+    already_done: bool = False  # 重跑发现已经做过 ⇒ 退出码仍是 0
+    dry_run: bool = False  # 只预览没写盘 ⇒ 外壳跳过提交与推送
+    message: str | None = None  # git 提交说明；None ⇒ 外壳用默认模板
     worklog: WorklogView | None = None
     payload: dict[str, Any] = field(default_factory=dict)
     notices: tuple[str, ...] = ()
@@ -48,17 +48,17 @@ class TaskRow:
     tid: str
     title: str
     status: str
-    owner: str | None = None      # 显示名
+    owner: str | None = None  # 显示名
     created: str | None = None
     started: str | None = None
     category: str | None = None
     tags: tuple[str, ...] = ()
-    where: str | None = None      # 所在文件（相对 repo）
+    where: str | None = None  # 所在文件（相对 repo）
 
 
 @dataclass(frozen=True)
 class ListResult:
-    rows: dict[str, dict] = field(default_factory=dict)   # tid → 原样任务对象
+    rows: dict[str, dict] = field(default_factory=dict)  # tid → 原样任务对象
     table: tuple[TaskRow, ...] = ()
     notices: tuple[str, ...] = ()
 
@@ -67,14 +67,14 @@ class ListResult:
 class ShowResult:
     task: dict[str, Any] = field(default_factory=dict)
     worklog: WorklogView | None = None
-    others: tuple[str, ...] = ()      # 同一个任务号还出现在哪些文件里
+    others: tuple[str, ...] = ()  # 同一个任务号还出现在哪些文件里
     notices: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
 class HistoryResult:
     count: int = 0
-    filters: dict[str, Any] = field(default_factory=dict)   # 回显生效的筛选
+    filters: dict[str, Any] = field(default_factory=dict)  # 回显生效的筛选
     records: tuple[dict[str, Any], ...] = ()
     warnings: tuple[str, ...] = ()
     capped: bool = False
@@ -82,8 +82,8 @@ class HistoryResult:
 
 @dataclass(frozen=True)
 class ValidationReport:
-    problems: tuple[str, ...] = ()    # 只有它影响退出码
-    notices: tuple[str, ...] = ()     # 只提示，不改退出码
+    problems: tuple[str, ...] = ()  # 只有它影响退出码
+    notices: tuple[str, ...] = ()  # 只提示，不改退出码
     checked_files: int = 0
     total_tasks: int = 0
 

@@ -24,14 +24,14 @@ def dump_ledger_json(data: dict, *, expand: str = "tasks") -> str:
     别改成缩进美化格式，也别按插入序输出（老文件会整篇翻面）。
     """
     body: dict[str, Any] = dict(data)
-    body["version"] = FORMAT_VERSION   # 写盘一律带当前版本（缺就补、旧就更新）
+    body["version"] = FORMAT_VERSION  # 写盘一律带当前版本（缺就补、旧就更新）
     rows: list[str] = []
     for key in sorted(body):
         value = body[key]
         if key == expand and isinstance(value, dict):
             inner = [
-                f'    {json.dumps(k, ensure_ascii=False)}: '
-                f'{json.dumps(v, ensure_ascii=False, sort_keys=True)}'
+                f"    {json.dumps(k, ensure_ascii=False)}: "
+                f"{json.dumps(v, ensure_ascii=False, sort_keys=True)}"
                 for k, v in sorted(value.items())
             ]
             block = (",\n".join(inner) + "\n") if inner else ""
