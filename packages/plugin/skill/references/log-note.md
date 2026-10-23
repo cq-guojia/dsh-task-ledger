@@ -35,7 +35,7 @@
 正例：
 
 ```
---note "把 home.service 的停滞口径改成 updated 满 3 天（home.service.ts:41-52）"
+--note "改了认领即 doing（claim.py:56）"
 --note "验证通过：verify 25 项；下一步补 UI 的 overdue 标记"
 --note "卡在远端鉴权，缺 deploy key，等用户给"
 ```

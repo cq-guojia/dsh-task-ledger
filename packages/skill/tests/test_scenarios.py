@@ -508,6 +508,29 @@ class DryRunZeroWriteTest(ScenarioCase):
         self.assertFalse((fx.a / "ledger").exists(), "不许顺手把台账建出来")
 
 
+class RenameTagOnlyTest(ScenarioCase):
+    """只打了标签、没设分类的任务也要能归并（2026-10-24 修的漏判）。"""
+
+    def test_rename_hits_tag_only_task(self):
+        fx = self.fx
+        code, _, err = run(
+            fx.a, "new", "--title", "只有标签", "--self", "--tags", "旧标签", env=NOSYNC
+        )
+        self.assertEqual(code, 0, err)
+        tid = task_id_of(fx.a, "只有标签")
+        code, out, err = run(
+            fx.a, "tags", "--rename", "旧标签", "新标签", "--dry-run", env=NOSYNC
+        )
+        self.assertEqual(code, 0, err)
+        self.assertIn("有 1 条任务会改", out + err)
+        self.assertIn(tid, out + err, "dry-run 要报出任务号")
+        code, _, err = run(fx.a, "tags", "--rename", "旧标签", "新标签", env=NOSYNC)
+        self.assertEqual(code, 0, err)
+        task = merged(fx.a)[tid]
+        self.assertEqual(task["tags"], ["新标签"])
+        self.assertIsNone(task["category"], "没设分类的不该被顺手补上")
+
+
 class RerunConvergesTest(ScenarioCase):
     """崩在半途 ⇒ 重跑一次收敛（写序表的「重跑怎么收敛」逐条验）。"""
 

@@ -38,11 +38,13 @@ def rename_label(
     logs = WorklogStore(repo)
     tasks = mine.all()
     if dry_run:
+        hits = _hit_tids(tasks, old_label)
         return Result(
             dry_run=True,
-            payload={"tids": tuple(_hit_tids(tasks, old_label))},
+            payload={"tids": tuple(hits)},
             notices=(
-                f"预览：有 {len(_hit_tids(tasks, old_label))} 条任务会改，没有写任何文件。",
+                f"预览：有 {len(hits)} 条任务会改，没有写任何文件。",
+                *(f"  · {tid}" for tid in hits),
             ),
         )
 
@@ -50,9 +52,10 @@ def rename_label(
     backups: list[tuple[Path, bytes | None]] = [(mine.path, snapshot(mine.path))]
     try:
         for tid, task in tasks.items():
-            category, tags = _apply(task, old_label, new_label)
-            if category is None:
+            hit = _apply(task, old_label, new_label)
+            if hit is None:
                 continue
+            category, tags = hit
             doc_path = logs.find(tid, task.get("worklog"))
             if doc_path is not None:
                 text = logs.read(doc_path)
@@ -96,16 +99,19 @@ def _roll_back(repo: Path, backups: list[tuple[Path, bytes | None]]) -> None:
 def _hit_tids(tasks: dict[str, Any], old_label: str) -> list[str]:
     out: list[str] = []
     for tid, task in tasks.items():
-        category, _ = _apply(task, old_label, "")
-        if category is not None:
+        if _apply(task, old_label, "") is not None:
             out.append(tid)
     return out
 
 
 def _apply(
     task: dict[str, Any], old_label: str, new_label: str
-) -> tuple[str | None, tuple[str, ...]]:
-    """一条任务的新 (category, tags)；不在范围内返回 (None, ())。"""
+) -> tuple[str | None, tuple[str, ...]] | None:
+    """一条任务的新 (category, tags)；不在范围内返回 None。
+
+    不能用「category 是 None」当没命中 —— 没设分类 + 标签命中时，category
+    也 legitimately 是 None（2026-10-24 修：曾因此漏掉所有「有标签没分类」的任务）。
+    """
     category = task.get("category")
     tags = tuple(task.get("tags") or ())
     if category == old_label:
@@ -117,4 +123,4 @@ def _apply(
             if value not in merged:
                 merged.append(value)
         return (category, tuple(merged))
-    return (None, ())
+    return None
