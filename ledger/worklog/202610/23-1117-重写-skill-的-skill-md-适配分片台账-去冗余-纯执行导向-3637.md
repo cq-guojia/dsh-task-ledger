@@ -11,7 +11,8 @@
 
 ## 待办
 
-- 讨论轮（用户要求多轮再定）：① claim 回归——修代码恢复 doing，还是文档按「claim 只认领、doing 靠 set」新语义；② 命令参考内联种子还是拆 references（我倾内联）；③ 纪律三合一（铁律/授权/出错并一节）认不认；④ 生命周期与方法参考的分工线；⑤ 书写体改命令式祈使句
+- 讨论轮结论（用户不懂 skill 编写，要求自行参考专业规范裁定，不再问用户）：① 命令参考内联种子（pdf 按频率拆分 + <500 行预算 + 用户偏好）；② 纪律三合一（数据完整性/人类授权/故障处置，mgechev 反模式依据）；③ 举例只在命令参考、生命周期只写何时调什么；④ 书写体改命令式祈使句（skill-creator + mgechev 明确要求）；⑤ claim/doing 文档按代码现状写，bug 单独报
+- **claim 不置 doing 定性为真 bug**（非设计）：看板 home.service.ts:48/70-79 把 doing 当「我的在办」算、open 当待认领并算「已等待 N 天」；看板认领按钮（ledger-write.service.ts:31-36）调的也是同一个 claim —— 用户点认领后任务仍显示未认领、不进我的在办。建议修 claim.py 补回置 doing（对齐旧版 progress.py:2155），待用户一句话；未修前文档按现状（认领=归属、doing 显式 set）
 - 用户 review 第一版 4 文件后的结构意见已进骨架草案 v2，定稿后重写
 - README.md 待同步：references 索引（6→3）、design.md 死链（用户明确「其他文件不用管」，暂未动）
 - design.md 的 WHY 论证（在 references.bak/design.md）要不要进仓库 docs/design/，待用户定
@@ -46,7 +47,7 @@
 
 - 用户目标结构：文件结构（表 + 禁手改/可手写各一句）→ 命令参考（每方法：参数含义 / 一句话 / 举例）→ 怎么调用（纯机制）→ 纪律（只留脚本管不了的）→ 过程文档（唯一可手写 + 六节）→ 生命周期；分类标签并入命令参考当参数文档；「铁律 / 写操作红线 / 出错即停」三锅分清
 - 外部调研（GitHub 写得好的）：① nickolasclarke/writing-cli-skills —— SKILL.md 管工作流与判断、references 管命令语法；Explore→Query / Find→Inspect→Operate 两范式；<500 行；引 `--help` 不罗列 flag；② mgechev/skills-best-practices —— <500 行、祈使句、JIT 指针、反模式清单（散文式指令 / 冗余逻辑）；③ anthropics/skills 的 pdf —— 按频率拆分：高频操作内联 + Quick Reference 表、长尾外移；④ webapp-testing —— 决策树 + 脚本黑盒 + Common Pitfall
-- **代码核实（建 / 认领）**：`new` 无 `--self` → pool.json（open、owner 空、started 空）；`new --self` → 自己分片（owner=我、**status 仍是 open**）；`claim` → 搬进自己分片、补 started/updated，**status 不动**。旧版 progress.py:2148-2155 的 claim 会校验 open 并置 `doing` —— 新 claim.py 两样都丢了，是分片重构的静默回归（state-model.md:9 状态机图还写着 claim→doing；活证据：本任务 `status=open`、`started=None`）。待用户定：修代码还是文档按新语义
+- **代码核实（建 / 认领）**：`new` 无 `--self` → pool.json（open、owner 空、started 空）；`new --self` → 自己分片（owner=我、**status 仍是 open**）；`claim` → 搬进自己分片、补 started/updated，**status 不动**。旧版 progress.py:2148-2155 的 claim 会校验 open 并置 `doing` —— 新 claim.py 两样都丢了（state-model.md:9 状态机图还写着 claim→doing；活证据：本任务 `status=open`、`started=None`）。看板侧证据见下条，定性为 bug 待修
 
 ## 结论
 
@@ -85,3 +86,4 @@
 - 2026-10-23 19:48:28 · log · @cqguojia@hotmail.com · 备份+清空+通读 7 文件：结构定为 1 种子+3 分支共 4 个；新定性 3 处矛盾（身份兜底不报错/new --self=open/tags 计数）；design.md 6 处口径列了搬迁清单
 - 2026-10-23 20:00:58 · log · @cqguojia@hotmail.com · 落盘 4 文件：种子 132 行纯执行（20 处硬伤全修）+ references 6→3；smoke 等价断言 8/8 过；design.md 未重建等用户定去向；README/版本/插件副本按「其他文件不用管」未动
 - 2026-10-23 20:30:18 · log · @cqguojia@hotmail.com · 外部调研 4 源定骨架 v2（命令参考/生命周期/纪律三锅分清/分类标签并入参数）；代码核实：claim 不置 doing 是分片重构回归（旧 progress.py:2155 置 doing），待用户定修代码还是改语义
+- 2026-10-23 20:39:30 · log · @cqguojia@hotmail.com · 五项结构争议自行裁定完（命令参考内联/纪律三合一/分工线/祈使句/claim 按现状）；claim 不置 doing 定性为看板可见的真 bug（home.service.ts:48-79），建议修 claim.py 待用户发话
