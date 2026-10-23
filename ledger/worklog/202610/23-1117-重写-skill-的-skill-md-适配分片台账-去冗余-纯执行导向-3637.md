@@ -23,7 +23,14 @@
 
 ## 下一步
 
-按第五轮裁定的结构重写 4 文件（命令参考内联 / 纪律三合一 / 祈使句），语义按第六轮修复后的代码：建（new→池 open）、建并认领（new --self→doing）、认领（claim→doing，无手敲 set --status doing 的常规步骤）；生命周期加「我们来做 X」决策树（先 list --mine 找→池里有就问「未认领，认领吗」→都没有就 new --self）
+- 插件内嵌副本重建（packages/plugin 跑 build:host）：先删 SKILL.md.bak 与 references.bak/，否则会被 copy-skill 拷进插件、check-skill-copy 报 extra；重建后跑 check-skill-copy + npm run verify
+- README.md 同步：references 索引（6→3）、design.md 死链
+- 插件注释 ledger-write.service.ts:39-42「owner / started 清空」按外卖计时器模型改口（动了插件要重建）
+- 发版前：版本 bump（frontmatter 与 package.json 现均为 1.3.0）+ skill-v / plugin-v 双 tag（等用户明说发版）
+
+## 结论（补充）
+
+第七轮文档重写落地（4 文件定稿）：SKILL.md 253 行 / 17.2 KB，7 节结构 —— 什么时候用 / 台账文件（表 + 禁手改与唯一可手写两条边界）/ 命令参考（10 方法各：参数表 + 干什么 + 举例；分类标签口径并入 new）/ 怎么调用（纯机制）/ 任务生命周期（9 步，含「我们来做 X」决策树：先 list --mine → 池里有先问「未认领，认领吗」→ 都没有才 new --self）/ 过程文档（唯一可手写 + 六节表 + 收工三步）/ 纪律（数据完整性 / 人类授权 / 故障处置三子块，每规一条只出现一次）/ references（3 行）。state-model.md 校正（认领即 doing、new --self 即 doing、started 外卖计时器不清）；troubleshooting.md、log-note.md 沿用已校正版。验证：smoke 等价断言 8/8 + 祈使句无「你」+ 陈旧口径零残留 + 「禁手改」规则全文仅 1 处
 
 ## 过程
 
@@ -92,3 +99,4 @@
 - 2026-10-23 21:02:16 · set · @cqguojia@hotmail.com · 状态改为 doing
 - 2026-10-23 21:02:26 · log · @cqguojia@hotmail.com · 代码修复落地：claim 认领即 doing+open 守卫、new --self 建即 doing+started、smoke 补 4 断言；4 测试全过、codelint 仅剩 .bak；另发现 release 不清 started（插件注释与旧文档都说清），一行待修
 - 2026-10-23 21:23:06 · log · @cqguojia@hotmail.com · 拍板 release 不清 started 是特性非 bug：外卖计时器模型——逾期从首次认领跑到结案、转手不重置，防「释放再认领洗时钟」作弊；责任归属看执行记录流水。四处陈旧表述列了修正清单
+- 2026-10-23 21:33:23 · log · @cqguojia@hotmail.com · 4 文档定稿落地：SKILL.md 7 节 253 行（命令参考内联/生命周期含决策树/纪律三合一/祈使句）；smoke 等价断言 8/8、无「你」、陈旧口径零残留；待重建插件副本+同步 README
