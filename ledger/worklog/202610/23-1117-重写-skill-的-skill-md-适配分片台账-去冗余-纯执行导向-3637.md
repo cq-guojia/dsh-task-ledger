@@ -100,3 +100,4 @@
 - 2026-10-23 21:02:26 · log · @cqguojia@hotmail.com · 代码修复落地：claim 认领即 doing+open 守卫、new --self 建即 doing+started、smoke 补 4 断言；4 测试全过、codelint 仅剩 .bak；另发现 release 不清 started（插件注释与旧文档都说清），一行待修
 - 2026-10-23 21:23:06 · log · @cqguojia@hotmail.com · 拍板 release 不清 started 是特性非 bug：外卖计时器模型——逾期从首次认领跑到结案、转手不重置，防「释放再认领洗时钟」作弊；责任归属看执行记录流水。四处陈旧表述列了修正清单
 - 2026-10-23 21:33:23 · log · @cqguojia@hotmail.com · 4 文档定稿落地：SKILL.md 7 节 253 行（命令参考内联/生命周期含决策树/纪律三合一/祈使句）；smoke 等价断言 8/8、无「你」、陈旧口径零残留；待重建插件副本+同步 README
+- 2026-10-23 21:53:46 · log · @cqguojia@hotmail.com · 已提交并推送 ac950aa（66 文件）：文档重写+认领即 doing+副本/dist 追平；门禁全绿（skill 4 测试/插件 smoke 32/typecheck/codelint/check-skill-copy）
