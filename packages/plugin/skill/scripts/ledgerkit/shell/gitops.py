@@ -401,7 +401,8 @@ class GitRepo:
             reason = (again.stderr or again.stdout or "").strip()
         notices.note(
             f"提示：推送被拒，本次台账改动已提交在本地、未推送：{reason}\n"
-            "  处理：手动 git pull --rebase && git push（冲突按任务号合并，见 merge）。"
+            "  处理：手动 git pull --rebase && git push（冲突自己解；"
+            "脚本的「按任务号合并」只在它自动重试时发生）。"
         )
 
     def _rebase_retry(self) -> bool:
