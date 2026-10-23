@@ -96,6 +96,12 @@ def main() -> int:
         check("validate 无问题", '"problems": []' in r.stdout, r.stdout)
         r = run(repo, "tags", "--all", "--json")
         check("tags --all 有 tasks 键", '"tasks"' in r.stdout, r.stdout)
+        r = run(repo, "tags")
+        check(
+            "裸 tags 报业务错（退 1 + 人话）",
+            r.returncode == 1 and "必须带 --all" in (r.stdout + r.stderr),
+            r.stdout + r.stderr,
+        )
         r = run(repo, "tags", "--rename", "不存在", "别的", "--dry-run")
         check("tags 预览不写盘", r.returncode == 0 and "预览" in r.stdout, r.stdout)
 

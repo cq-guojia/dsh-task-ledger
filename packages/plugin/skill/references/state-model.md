@@ -22,9 +22,10 @@ close             → 历史层 + 封卷 + 移出自己名下
 - **精度**：任务号、worklog 目录与文件名到分（`年月日-时分` / `YYYYMM`）；其余记录到秒（`YYYY-MM-DD HH:MM:SS`）。
 - **默认不传**：`new` / `claim` / `set` / `log` / `close` 都取当前时刻。
 - **只在补录过去时间时传**：`new --created`、`close --finished`。格式 `YYYY-MM-DD[ HH:MM[:SS]]`，按本地墙钟给、脚本内部转 UTC。`new --created` 补录时 `updated` 一并等于该时间 —— 之后补一条 `log` 把 `updated` 刷回当前。
+  - 注意：任务号前缀与 worklog 月份目录按 **UTC** 推 —— UTC+8 下裸日期 `--created 2026-01-05` 存成 `2026-01-04 16:00:00`，任务号前缀变成 `20260104-1600`；临午夜补录要连时间一起传。
 - **筛选语义**：`list` / `history` 的 `--since` / `--until` 按**创建时间**；只给日期时起 = 当天 `00:00:00`、止 = 当天 `23:59:59`（含当天）。
 - **时区**：存盘为 UTC 的只有 —— 任务号、worklog 目录 / 文件名、台账 JSON 的 `created`/`started`/`updated`/`finished`、history 行、worklog 头部「创建」行。**执行记录行、封卷行、`list` / `history` 的人话输出都是本机本地时间**（给人看的日志行）；`--json` 原样给 UTC，由消费方自己转。存量老数据（2026-10-22 前）写的是写入者本地时间、无标记，无法与 UTC 区分。
-- **history 列序**：第一列结案时间、第二列创建时间；排序与 `--since` / `--until` 都按创建时间。
+- **history 文件 9 列**：结案时间 / 创建时间 / 工作包 / 分类 / 标签 / owner / creator / 摘要 / 过程文档；排序与 `--since` / `--until` 按创建时间。（`history` 命令的人话输出只展示其中几列：结案时间、负责人、摘要。）
 
 ## 任务号
 

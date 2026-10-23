@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from ..errors import Fail
 from . import (
     bootstrap,
     claim,
@@ -78,11 +79,13 @@ READONLY = tuple(name for name, spec in ACTIONS.items() if spec.readonly)
 
 
 def spec_of(command: str) -> ActionSpec:
-    """按命令写法取名册项；不在名册里就是用法错。"""
-    try:
-        return ACTIONS[command]
-    except KeyError:
-        raise KeyError(f"未知命令：{command}") from None
+    """按命令写法取名册项；不在名册里就是用法错（业务错，退 1 人话）。"""
+    spec = ACTIONS.get(command)
+    if spec is None:
+        if command == "tags":
+            raise Fail("tags 必须带 --all（看统计）或 --rename 旧 新（归并标签）。")
+        raise Fail(f"未知命令：{command}")
+    return spec
 
 
 def bootstrap_func():

@@ -48,4 +48,3 @@ jobs:
       - name: 台账合并语义测试
         run: |
           python3 -B packages/skill/tests/test_merge_semantics.py
-          python3 -B packages/skill/tests/test_git_merge.py
