@@ -12,7 +12,8 @@
 ## 待办
 
 - 讨论轮结论（用户不懂 skill 编写，要求自行参考专业规范裁定，不再问用户）：① 命令参考内联种子（pdf 按频率拆分 + <500 行预算 + 用户偏好）；② 纪律三合一（数据完整性/人类授权/故障处置，mgechev 反模式依据）；③ 举例只在命令参考、生命周期只写何时调什么；④ 书写体改命令式祈使句（skill-creator + mgechev 明确要求）；⑤ claim/doing 文档按代码现状写，bug 单独报
-- **claim 不置 doing 定性为真 bug**（非设计）：看板 home.service.ts:48/70-79 把 doing 当「我的在办」算、open 当待认领并算「已等待 N 天」；看板认领按钮（ledger-write.service.ts:31-36）调的也是同一个 claim —— 用户点认领后任务仍显示未认领、不进我的在办。建议修 claim.py 补回置 doing（对齐旧版 progress.py:2155），待用户一句话；未修前文档按现状（认领=归属、doing 显式 set）
+- **claim 不置 doing 已修复**（第六轮，用户拍板「改」）：claim.py:56 认领即置 doing（旧 blocked 池里任务也可认领、非 open/blocked 拒绝并指向 validate），执行记录写「认领 → doing」；new_task.py:67/73 `--self` 建出来即 doing + started（「建并认领」一个命令组合完成，不留半成品）；smoke.py 补 4 条断言（new --self 三状 + claim 后 doing）。4 个测试文件全过、koc-codelint 仅剩 .bak 一条（用户指令保留，提交/重建前删）
+- **待修（同类静默丢失，已取证未动手）**：release 不清 started —— 插件注释 ledger-write.service.ts:39-42 与旧 state-model.md:18 都说释放清 started，现 release.py:31-37 只清 owner。后果：释放后别人认领，逾期 14 天从首次接单算起而非重新认领日。一行修复，待用户发话
 - 用户 review 第一版 4 文件后的结构意见已进骨架草案 v2，定稿后重写
 - README.md 待同步：references 索引（6→3）、design.md 死链（用户明确「其他文件不用管」，暂未动）
 - design.md 的 WHY 论证（在 references.bak/design.md）要不要进仓库 docs/design/，待用户定
@@ -21,7 +22,7 @@
 
 ## 下一步
 
-等用户对骨架草案 v2 的 5 个讨论点拍板 → 定稿 → 重写 4 文件 → build:host → verify
+按第五轮裁定的结构重写 4 文件（命令参考内联 / 纪律三合一 / 祈使句），语义按第六轮修复后的代码：建（new→池 open）、建并认领（new --self→doing）、认领（claim→doing，无手敲 set --status doing 的常规步骤）；生命周期加「我们来做 X」决策树（先 list --mine 找→池里有就问「未认领，认领吗」→都没有就 new --self）
 
 ## 过程
 
@@ -87,3 +88,4 @@
 - 2026-10-23 20:00:58 · log · @cqguojia@hotmail.com · 落盘 4 文件：种子 132 行纯执行（20 处硬伤全修）+ references 6→3；smoke 等价断言 8/8 过；design.md 未重建等用户定去向；README/版本/插件副本按「其他文件不用管」未动
 - 2026-10-23 20:30:18 · log · @cqguojia@hotmail.com · 外部调研 4 源定骨架 v2（命令参考/生命周期/纪律三锅分清/分类标签并入参数）；代码核实：claim 不置 doing 是分片重构回归（旧 progress.py:2155 置 doing），待用户定修代码还是改语义
 - 2026-10-23 20:39:30 · log · @cqguojia@hotmail.com · 五项结构争议自行裁定完（命令参考内联/纪律三合一/分工线/祈使句/claim 按现状）；claim 不置 doing 定性为看板可见的真 bug（home.service.ts:48-79），建议修 claim.py 待用户发话
+- 2026-10-23 21:02:16 · set · @cqguojia@hotmail.com · 状态改为 doing
