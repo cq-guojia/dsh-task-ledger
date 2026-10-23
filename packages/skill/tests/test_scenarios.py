@@ -452,7 +452,7 @@ class NoUpstreamTest(ScenarioCase):
 
 
 class OthersTaskTest(ScenarioCase):
-    """动别人的任务一律拒绝（记进展 / 改状态 / 结案 / 交给没登记的人）。"""
+    """动别人的任务一律拒绝（记进展 / 释放 / 结案 / 交给没登记的人）。"""
 
     def test_cannot_touch_others(self):
         fx = self.fx
@@ -462,7 +462,7 @@ class OthersTaskTest(ScenarioCase):
         code, _, err = run(fx.b, "log", "--id", tid, "--note", "别人的")
         self.assertEqual(code, 1)
         self.assertIn("不在我的分片里", err)
-        code, _, err = run(fx.b, "set", "--id", tid, "--status", "doing")
+        code, _, err = run(fx.b, "set", "--id", tid, "--owner", "")
         self.assertEqual(code, 1)
         self.assertIn("不在我的分片里", err)
         code, _, err = run(fx.b, "close", "--id", tid, "--summary", "x")

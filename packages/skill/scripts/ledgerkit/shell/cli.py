@@ -13,7 +13,6 @@ import sys
 from pathlib import Path
 
 from ..actions.query import HistoryQuery, ListQuery
-from ..core.labels import STATUSES
 from ..core.paths import LEDGER_DIR
 from ..core.time import to_utc
 from ..errors import BUSINESS, USAGE, Fail
@@ -47,9 +46,8 @@ def build_parser() -> argparse.ArgumentParser:
     claim = sub.add_parser("claim", help="认领公共池里的任务")
     claim.add_argument("--id", required=True, dest="tid")
 
-    setp = sub.add_parser("set", help="改状态 / 换负责人")
+    setp = sub.add_parser("set", help="释放 / 交接任务")
     setp.add_argument("--id", required=True, dest="tid")
-    setp.add_argument("--status", choices=STATUSES)
     setp.add_argument("--owner")
 
     logp = sub.add_parser("log", help="记一条进展")

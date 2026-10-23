@@ -130,7 +130,7 @@ def lock_scope(repo: Path, me: Identity, action: str, params: dict[str, Any]) ->
 
     if action == "set":
         wfiles, wdirs = _worklog_of(repo, params)
-        # 四个分支取并集：release 写池、handoff 写对方、claim 查他人、set_field 只写我的分片
+        # 分支取并集：release 写池、handoff 写对方分片、指向自己且未认领先认领（写我的分片）；已在名下则空转不写盘
         return Scope(files=(mine, pool, *others, *wfiles), dirs=wdirs)
 
     if action == "log":

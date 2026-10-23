@@ -69,7 +69,7 @@ def main() -> int:
         check("new --self owner 是我", mine_task["owner"] == "me@example.com", r.stdout)
         check("new --self 记了 started", bool(mine_task["started"]), r.stdout)
 
-        # 释放 → 认领（自动 doing）→ 记进展 → 重复置 doing 走 already_done
+        # 释放 → 认领（自动 doing）→ 记进展 → set 指向自己走空转
         r = run(repo, "set", "--id", tid, "--owner", "")
         check("release 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "claim", "--id", tid)
@@ -82,10 +82,12 @@ def main() -> int:
         )
         r = run(repo, "log", "--id", tid, "--note", "冒烟记一条")
         check("log 退出码 0", r.returncode == 0, r.stderr)
-        r = run(repo, "set", "--id", tid, "--status", "doing")
-        check("set doing 退出码 0", r.returncode == 0, r.stderr)
-        r = run(repo, "set", "--id", tid, "--status", "doing")
-        check("set 重跑 already_done", "无需重复" in r.stdout, r.stdout)
+        r = run(repo, "set", "--id", tid, "--owner", "me@example.com")
+        check(
+            "set 指向自己 = 空转",
+            r.returncode == 0 and "无需重复" in r.stdout,
+            r.stdout,
+        )
 
         # show / history / validate / tags
         r = run(repo, "show", "--id", tid)

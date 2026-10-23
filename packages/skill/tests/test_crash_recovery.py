@@ -175,17 +175,13 @@ class ProgramCrashRerunTest(CrashRecoveryCase):
         self.assertIn(tid, tasks_of(self.r.root, "pool.json"))
 
     def test_set_rerun_idempotent(self):
-        tid = self.new_mine("待改")
+        tid = self.new_mine("待释放")
         shard = self.shard_with(tid)
         assert shard is not None, "任务应在我的分片里"
-        self.assertEqual(
-            run(self.r.root, "set", "--id", tid, "--status", "doing")[0], 0
-        )
-        before = tasks_of(self.r.root, shard.name)[tid]["status"]
-        code, _, err = run(self.r.root, "set", "--id", tid, "--status", "doing")
-        self.assertEqual(code, 0, f"set 重跑应收敛：{err}")
-        after = tasks_of(self.r.root, shard.name)[tid]["status"]
-        self.assertEqual(before, after, "重跑不应改变已是一致的状态")
+        self.assertEqual(run(self.r.root, "set", "--id", tid, "--owner", "")[0], 0)
+        code, _, err = run(self.r.root, "set", "--id", tid, "--owner", "")
+        self.assertEqual(code, 0, f"释放重跑应收敛：{err}")
+        self.assertIn(tid, tasks_of(self.r.root, "pool.json"), "释放后任务应回公共池")
 
     def test_log_rerun_idempotent(self):
         tid = self.new_mine("待记")

@@ -16,13 +16,8 @@ from .guard import same_task_ignoring_stamp
 from .result import Result, rel
 
 
-def handoff(
-    repo: Path, me: Identity, tid: str, *, to: str, status: str | None = None
-) -> Result:
-    """写序：对方分片 → 删我分片那行 → 过程文档记一笔。
-
-    `status` 传了就写目标值（`set --owner X --status doing` 走的就是这条路），`None` 才带原值。
-    """
+def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
+    """写序：对方分片 → 删我分片那行 → 过程文档记一笔。"""
     index = OwnersIndex(repo)
     record = index.get(to)
     if record is None:
@@ -38,8 +33,6 @@ def handoff(
     to_store = TaskStore(repo, shard_rel(to_key))
     moved = dict(task)
     moved["owner"] = to_key
-    if status is not None:
-        moved["status"] = status
     moved["updated"] = now()
 
     existing = to_store.get(tid)
@@ -68,7 +61,7 @@ def handoff(
     else:
         logs.append_exec(path, exec_line(now(), me.email, "set", f"交接给 {to_key}"))
     return Result(
-        changed=("owner", "status", "updated"),
+        changed=("owner", "updated"),
         where=rel(repo, to_store.path),
         message=f"交接 {tid} → {to_key}",
         notices=(note,) if note else (),
