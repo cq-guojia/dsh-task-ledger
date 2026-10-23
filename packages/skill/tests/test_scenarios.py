@@ -9,6 +9,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -529,6 +530,87 @@ class RenameTagOnlyTest(ScenarioCase):
         task = merged(fx.a)[tid]
         self.assertEqual(task["tags"], ["新标签"])
         self.assertIsNone(task["category"], "没设分类的不该被顺手补上")
+
+
+class NoGitRepoTest(unittest.TestCase):
+    """没有 git 也必须能用（2026-10-24 用户拍板）：台账照写、同步跳过、给提示。"""
+
+    def setUp(self):
+        self.root = Path(tempfile.mkdtemp(prefix="dtl-nogit-"))
+        self.addCleanup(shutil.rmtree, self.root, True)
+
+    def test_write_works_without_git(self):
+        code, out, err = run(self.root, "new", "--title", "无 git 也记", "--self")
+        self.assertEqual(code, 0, err)
+        self.assertIn("不是 git 仓库", out + err, "要给「只写了本地」的提示")
+        task = merged(self.root)
+        self.assertEqual(len(task), 1)
+        self.assertEqual(task[next(iter(task))]["status"], "doing")
+        # 只读也能用
+        code, out, _err = run(self.root, "list")
+        self.assertEqual(code, 0)
+        self.assertIn("无 git 也记", out)
+
+    def test_second_write_not_blocked(self):
+        run(self.root, "new", "--title", "第一条", "--self")
+        tid = task_id_of(self.root, "第一条")
+        code, _, err = run(self.root, "log", "--id", tid, "--note", "无 git 也记进展")
+        self.assertEqual(code, 0, err)
+        code, _, err = run(self.root, "set", "--id", tid, "--owner", "")
+        self.assertEqual(code, 0, err)
+        self.assertIn(tid, merged(self.root), "释放后回公共池（merged 含池）")
+
+
+class MonthsWindowTest(ScenarioCase):
+    """--months 是自然月窗口：自己算最近 N 个月，读其中存在的文件（2026-10-24）。"""
+
+    def test_months_is_calendar_window_not_file_count(self):
+        fx = self.fx
+        # 一条现在的、一条三个月前的（用 --finished 把历史行落到指定月）
+        now_tid = new_task(fx.a, "本月结案", env=NOSYNC)
+        run(fx.a, "close", "--id", now_tid, "--summary", "本月", env=NOSYNC)
+        old_tid = new_task(fx.a, "古早结案", env=NOSYNC)
+        old_finished = _shift_months(-3)
+        code, _, err = run(
+            fx.a,
+            "close",
+            "--id",
+            old_tid,
+            "--summary",
+            "古早",
+            "--finished",
+            old_finished,
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, err)
+        # 默认（不限月）两条都在
+        code, out, _ = run(fx.a, "history", env=NOSYNC)
+        self.assertEqual(code, 0)
+        self.assertIn("本月结案", out)
+        self.assertIn("古早结案", out)
+        # 最近 1 个月：只有本月那条（古早的在 3 个月前，窗口外）
+        code, out, _ = run(fx.a, "history", "--months", "1", env=NOSYNC)
+        self.assertEqual(code, 0)
+        self.assertIn("本月结案", out)
+        self.assertNotIn("古早结案", out)
+        # 最近 6 个月：两条都该在（窗口覆盖到 3 个月前）
+        code, out, _ = run(fx.a, "history", "--months", "6", env=NOSYNC)
+        self.assertEqual(code, 0)
+        self.assertIn("本月结案", out)
+        self.assertIn("古早结案", out)
+
+
+def _shift_months(delta: int) -> str:
+    """当前 UTC 月份偏移 delta 个月，返回 YYYY-MM-DD（当月 15 号，避免跨月边界）。"""
+    from ledgerkit.core.time import now as _now
+
+    stamp = _now()
+    year, month = int(stamp[0:4]), int(stamp[5:7]) + delta
+    while month > 12:
+        year, month = year + 1, month - 12
+    while month < 1:
+        year, month = year - 1, month + 12
+    return f"{year:04d}-{month:02d}-15"
 
 
 class RerunConvergesTest(ScenarioCase):

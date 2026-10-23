@@ -97,8 +97,21 @@ class GitRepo:
     def __init__(self, repo: Path):
         self.repo = Path(repo)
         self._upstream: str | None = None
+        self._is_repo: bool | None = None
 
     # ---- 查 ----
+
+    def is_git_repo(self) -> bool:
+        """所在目录是不是一个 git 仓库（工作树内）。
+
+        不是 ⇒ 同步整体跳过、台账照写（2026-10-24 用户拍板：没有 git 也必须能用）。
+        """
+        if self._is_repo is None:
+            proc = _git(
+                "git", "-C", str(self.repo), "rev-parse", "--is-inside-work-tree"
+            )
+            self._is_repo = proc.returncode == 0 and proc.stdout.strip() == "true"
+        return bool(self._is_repo)
 
     def upstream(self) -> str | None:
         """上游分支（`@{u}`）；没有就 None（此时同步整体静默跳过）。"""

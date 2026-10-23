@@ -25,9 +25,18 @@ def _git(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def git_value(repo: Path | None, *args: str) -> str | None:
-    """读一个 git 配置值；cwd 给定时按那个仓库判（--repo 未必是当前目录）。"""
+    """读一个 git 配置值；cwd 给定时按那个仓库判（--repo 未必是当前目录）。
+
+    没装 git 二进制不算故障：当「读不到」处理，走兜底身份（2026-10-24：
+    以前直接 FileNotFoundError 崩，没 git 的机器连台账都建不起来）。
+    """
     base = ("git", "-C", str(repo)) if repo is not None else ("git",)
-    proc = subprocess.run([*base, *args], capture_output=True, text=True, check=False)
+    try:
+        proc = subprocess.run(
+            [*base, *args], capture_output=True, text=True, check=False
+        )
+    except FileNotFoundError:
+        return None
     if proc.returncode == 0 and proc.stdout.strip():
         return proc.stdout.strip()
     return None

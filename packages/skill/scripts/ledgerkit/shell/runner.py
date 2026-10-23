@@ -144,6 +144,16 @@ def _finalize(
         return
     repo = _repo_of(args)
     git = GitRepo(repo)
+    if not git.is_git_repo():
+        # 没有 git 也能用：台账照写，只不做同步（2026-10-24 用户拍板）。
+        # 以前这里直接 git add，非 git 目录下必失败 ⇒ 整条命令退 1，台账像没写。
+        notices.note(
+            "提示：当前目录不是 git 仓库，台账只写了本地文件（未提交、未推送）。\n"
+            "  处理：想纳入版本管理就 git init；否则继续本地写也行 —— "
+            "多人各写各的，后写覆盖先写。"
+        )
+        log.clear()
+        return
     message = message or f"chore(ledger): {command}"
     git.commit(log.commit_set(), message)
     git.push()
