@@ -21,7 +21,7 @@
 
 以上五类文件**只由脚本写**（📝 计划：L1 落盘、业务层定写序）。
 
-⚠️ **本仓（`dsh-task-ledger` 自己）尚未迁到分片布局**：`history/`（按月文件、9 列）与 `worklog/`（按月目录）已是新布局，`owners/` 目录已建但为空；**缺 `pool.json`、`owners.json` 与各人分片**，在办任务仍记在 `ledger/progress.json`。按既定口径**不写迁移程序**，老工作区由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。存量扁平 `ledger/PROGRESS-HISTORY.md` 只读兼容、永不重写。
+⚠️ **本仓（`dsh-task-ledger` 自己）已迁到分片布局**：`pool.json` / `owners.json` / `owners/<hash>.json` 已是新分片格式，在办任务在各人分片（未认领的在 `pool.json`）；`history/`（9 列）与 `worklog/`（六节）同步为新布局。老工作区（仍用扁平 `ledger/progress.json`）由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。存量扁平 `ledger/PROGRESS-HISTORY.md` 只读兼容、永不重写。
 
 ## 二、任务表：`pool.json` 与 `owners/*.json`
 
@@ -116,4 +116,4 @@
 - 写入前的防撞：`claim` / `set --owner` 会在落盘前挡一道（别人分片里已有同号 / 目标分片已有不同内容 ⇒ 拒绝），但跨机同时抢仍有窗口。
 - 历史 = `history/<年月>.md` 9 列（owner = 负责人筛选面；creator = 发起人，`owner` 可被 claim 改走、「谁建的」不变）。
 - 报表只有两个来源：**必须读过程文档正文才知道的**（分类 / 标签 / 按人 / 按月计数）来自脚本的 `scan_worklogs`；**台账与历史里已有的**（时间线、按人工作日志、状态分布）由宿主从 `query_history` / `list_tasks` 的返回聚合。脚本不再开第三个入口。
-- 当前差异：宿主**历史侧已解析** `history/`，**待办侧仍按 `ledger/progress.json`** 判活跃、只解析旧进度表 —— 分片布局尚未适配完。
+- 当前差异（宿主侧，见 `external/dsh-workspace-registry.md`）：宿主**历史侧已解析** `history/`，**待办侧仍按旧的 `ledger/progress.json`** 判活跃、只解析旧进度表 —— 分片布局的**宿主侧消费**尚未适配，属独立于 ledgerkit 包的待办项（不在本包实现范围内）。
