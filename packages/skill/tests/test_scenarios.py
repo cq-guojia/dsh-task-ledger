@@ -548,7 +548,7 @@ class ByteContractTest(unittest.TestCase):
     def test_dump_matches_sorted_layout(self):
         data = {
             "identity": {"email": "a@b.c", "name": "A"},
-            "version": "2026-10-22 00:00:00",
+            "version": "20261022000000",
             "tasks": {"t2": {"title": "后"}, "t1": {"title": "前"}},
         }
         text = dump_ledger_json(data)
@@ -561,7 +561,7 @@ class ByteContractTest(unittest.TestCase):
                 '    "t1": {"title": "前"},',
                 '    "t2": {"title": "后"}',
                 "  },",
-                '  "version": "2026-10-22 00:00:00"',
+                '  "version": "20261022000000"',
                 "}",
             ],
         )

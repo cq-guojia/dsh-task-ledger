@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 from ..errors import Fail
 
 STATUSES = ("open", "doing")
 LEGACY_STATUSES = ("blocked",)          # 旧数据：读侧当进行中，不写回
-FORMAT_VERSION = "2026-10-22 00:00:00"
+FORMAT_VERSION = "20261022000000"
 
 LABEL_MAX_CHARS = 4      # 含 CJK 时按「字」算
 LABEL_MAX_WORDS_EN = 3   # 纯 ASCII 时按「词」算

@@ -42,7 +42,7 @@ def task(title: str, owner: str | None = None) -> dict:
 
 def doc(tasks: dict) -> dict:
     """一份台账文件的形状（`merge_task_dicts` 吃的是整份文档，不是 tasks 字典）。"""
-    return {"version": "2026-10-22 00:00:00", "tasks": tasks}
+    return {"version": "20261022000000", "tasks": tasks}
 
 
 def text(tasks: dict) -> str:

@@ -67,5 +67,5 @@ doing ──set --status open──> 搬回 pool.json（open，owner 与 started
 
 - `pool.json` = `{version, tasks}`；`owners.json` = `{version, workers{身份: {file, name, joined}}}`；
   分片 = `{version, identity{email, name, joined}, tasks}` —— 分片自带 `identity` 是为了索引丢了能自证。
-- `version` = **文件格式版本号**（`FORMAT_VERSION`，形如 `2026-10-22 00:00:00`，语义是「第几版格式」，不是时间戳）：
+- `version` = **文件格式版本号**（`FORMAT_VERSION`，形如 `20261022000000`，用时间戳拼成、但压成紧凑数字串，**不**像可阅读的日期）：
   建文件时原样抄常量，运行时永不自己算；读到不一致只提示不改，缺了也照读、写回时补当前值。
