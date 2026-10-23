@@ -102,3 +102,4 @@
 - 2026-10-23 21:33:23 · log · @cqguojia@hotmail.com · 4 文档定稿落地：SKILL.md 7 节 253 行（命令参考内联/生命周期含决策树/纪律三合一/祈使句）；smoke 等价断言 8/8、无「你」、陈旧口径零残留；待重建插件副本+同步 README
 - 2026-10-23 21:53:46 · log · @cqguojia@hotmail.com · 已提交并推送 ac950aa（66 文件）：文档重写+认领即 doing+副本/dist 追平；门禁全绿（skill 4 测试/插件 smoke 32/typecheck/codelint/check-skill-copy）
 - 2026-10-23 22:04:52 · log · @cqguojia@hotmail.com · 按用户反馈重写种子+state-model：禁自建台账/任务、删分片与文件表现内部细节、建vs建并认领判定规则（仅明确「并开始做/并执行」才 --self）、owner 全程不传、删看板阈值、台账失败不挡主任务；门禁全绿，未提交等用户发话
+- 2026-10-23 22:30:44 · log · @cqguojia@hotmail.com · 二轮反馈落地：开头加数据落点+状态词典（待认领/进行中/已结案）、标题 4~20 字备注、--created 白话化、set 改纯释放（放一放≠释放）、close 两层确认（含糊必须反问）+close 后禁写、确认 log 自动刷 updated；门禁全绿未提交
