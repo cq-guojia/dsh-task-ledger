@@ -134,6 +134,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 
 | 何时读 | 文件 |
 |---|---|
+| 要理解某项设计为什么这样（如为什么分片 / 为什么状态用 JSON / 时区怎么处理） | `references/design.md` |
 | 要传 `--created` / `--finished` 补录时间、看到旧 `blocked`、答「停太久」要解释口径 | `references/state-model.md` |
 | 填正文前、补老任务文档、`log` 报错找不到文档 | `references/worklog.md` |
 | 拿不准一条记录够不够格、`--note` 怎么写 | `references/log-note.md` |
