@@ -13,7 +13,8 @@
 
 - 讨论轮结论（用户不懂 skill 编写，要求自行参考专业规范裁定，不再问用户）：① 命令参考内联种子（pdf 按频率拆分 + <500 行预算 + 用户偏好）；② 纪律三合一（数据完整性/人类授权/故障处置，mgechev 反模式依据）；③ 举例只在命令参考、生命周期只写何时调什么；④ 书写体改命令式祈使句（skill-creator + mgechev 明确要求）；⑤ claim/doing 文档按代码现状写，bug 单独报
 - **claim 不置 doing 已修复**（第六轮，用户拍板「改」）：claim.py:56 认领即置 doing（旧 blocked 池里任务也可认领、非 open/blocked 拒绝并指向 validate），执行记录写「认领 → doing」；new_task.py:67/73 `--self` 建出来即 doing + started（「建并认领」一个命令组合完成，不留半成品）；smoke.py 补 4 条断言（new --self 三状 + claim 后 doing）。4 个测试文件全过、koc-codelint 仅剩 .bak 一条（用户指令保留，提交/重建前删）
-- **待修（同类静默丢失，已取证未动手）**：release 不清 started —— 插件注释 ledger-write.service.ts:39-42 与旧 state-model.md:18 都说释放清 started，现 release.py:31-37 只清 owner。后果：释放后别人认领，逾期 14 天从首次接单算起而非重新认领日。一行修复，待用户发话
+- **release 不清 started —— 拍板：不改，这是特性**（用户外卖模型）：逾期时钟从**首次认领**跑到结案，转手不重置——「释放→再认领刷新时钟」是作弊向量（眼看要超时，释放掉再领回来就不逾期了），现代码全程没有重置 started 的路径（release 不清、claim 的 `or now()` 只在空时盖、set 只在空时补），正好防住。用户原话：「中间骑手随便转单，我只看出餐到我手有没有超时」「他没做好你接了，就是超时了，你俩都算超时，责任怎么看是看板的事」。责任归属数据在执行记录流水（谁认领 / 谁释放逐笔有记录），计时器只回答「这单迟没迟」
+- **因此变陈旧的四处**（文档修正时处理，不动代码）：插件注释 ledger-write.service.ts:39-42「owner / started 清空」、旧 state-model.md:18「释放清 started」、旧 SKILL.md 同类表述。新 references/state-model.md 写正确语义：started = 首次认领时间、释放不清、重新认领不刷新
 - 用户 review 第一版 4 文件后的结构意见已进骨架草案 v2，定稿后重写
 - README.md 待同步：references 索引（6→3）、design.md 死链（用户明确「其他文件不用管」，暂未动）
 - design.md 的 WHY 论证（在 references.bak/design.md）要不要进仓库 docs/design/，待用户定
@@ -90,3 +91,4 @@
 - 2026-10-23 20:39:30 · log · @cqguojia@hotmail.com · 五项结构争议自行裁定完（命令参考内联/纪律三合一/分工线/祈使句/claim 按现状）；claim 不置 doing 定性为看板可见的真 bug（home.service.ts:48-79），建议修 claim.py 待用户发话
 - 2026-10-23 21:02:16 · set · @cqguojia@hotmail.com · 状态改为 doing
 - 2026-10-23 21:02:26 · log · @cqguojia@hotmail.com · 代码修复落地：claim 认领即 doing+open 守卫、new --self 建即 doing+started、smoke 补 4 断言；4 测试全过、codelint 仅剩 .bak；另发现 release 不清 started（插件注释与旧文档都说清），一行待修
+- 2026-10-23 21:23:06 · log · @cqguojia@hotmail.com · 拍板 release 不清 started 是特性非 bug：外卖计时器模型——逾期从首次认领跑到结案、转手不重置，防「释放再认领洗时钟」作弊；责任归属看执行记录流水。四处陈旧表述列了修正清单
