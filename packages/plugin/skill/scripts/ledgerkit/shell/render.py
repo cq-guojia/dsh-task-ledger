@@ -12,7 +12,6 @@ from typing import Any
 from .. import notices
 from ..actions.query import HistoryQuery, ListQuery
 from ..actions.result import (
-    Census,
     HistoryResult,
     ListResult,
     Result,
@@ -162,35 +161,3 @@ def validate_view(rep: ValidationReport, *, as_json: bool) -> None:
         _out("没有发现问题。")
     for line in rep.notices:
         _err(f"提示：{line}")
-
-
-def census_view(res: Census, *, as_json: bool) -> None:
-    if as_json:
-        _json(
-            {
-                "tasks": res.tasks,
-                "categories": res.categories,
-                "tags": res.tags,
-                "owners": res.owners,
-                "months": res.months,
-                "notices": list(res.notices),
-            }
-        )
-        return
-    _out(f"在办文档 {res.tasks} 篇。")
-    if res.categories:
-        _out(f"  分类：{_kv(res.categories)}")
-    if res.tags:
-        _out(f"  标签：{_kv(res.tags)}")
-    if res.owners:
-        _out(f"  按人：{_kv(res.owners)}")
-    if res.months:
-        _out(f"  按月：{_kv(res.months)}")
-    for line in res.notices:
-        _err(f"提示：{line}")
-
-
-def _kv(mapping: dict[str, int]) -> str:
-    return "、".join(
-        f"{k}({v})" for k, v in sorted(mapping.items(), key=lambda kv: -kv[1])
-    )

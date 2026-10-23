@@ -85,13 +85,3 @@ class ValidationReport:
     notices: tuple[str, ...] = ()  # 只提示，不改退出码
     checked_files: int = 0
     total_tasks: int = 0
-
-
-@dataclass(frozen=True)
-class Census:
-    tasks: int = 0
-    categories: dict[str, int] = field(default_factory=dict)
-    tags: dict[str, int] = field(default_factory=dict)
-    owners: dict[str, int] = field(default_factory=dict)
-    months: dict[str, int] = field(default_factory=dict)
-    notices: tuple[str, ...] = ()

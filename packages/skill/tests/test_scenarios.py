@@ -710,7 +710,6 @@ class ReadOnlyNoGitTest(ScenarioCase):
             ("show", "--id", tid),
             ("history",),
             ("validate",),
-            ("tags", "--all"),
         ):
             self.assertEqual(run(fx.a, *args)[0], 0, f"{args} 应成功")
         self.assertEqual(

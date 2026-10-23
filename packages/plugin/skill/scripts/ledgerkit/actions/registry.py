@@ -18,7 +18,6 @@ from . import (
     log_progress,
     new_task,
     query_history,
-    scan_worklogs,
     set_task,
     show_task,
     validate,
@@ -53,7 +52,6 @@ ACTIONS: dict[str, ActionSpec] = {
         "result",
         params=("tid", "summary", "finished", "category", "tags"),
     ),
-    "tags --all": ActionSpec(scan_worklogs.scan_worklogs, "census_view", readonly=True),
     "list": ActionSpec(
         list_tasks.list_tasks, "list_view", readonly=True, params=("q",)
     ),
@@ -73,8 +71,6 @@ def spec_of(command: str) -> ActionSpec:
     """按命令写法取名册项；不在名册里就是用法错（业务错，退 1 人话）。"""
     spec = ACTIONS.get(command)
     if spec is None:
-        if command == "tags":
-            raise Fail("tags 必须带 --all（看标签统计）。")
         raise Fail(f"未知命令：{command}")
     return spec
 

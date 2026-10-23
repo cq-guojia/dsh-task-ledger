@@ -60,10 +60,6 @@ def build_parser() -> argparse.ArgumentParser:
     close.add_argument("--category")
     close.add_argument("--tags")
 
-    tags = sub.add_parser("tags", help="标签统计")
-    tags.add_argument("--all", action="store_true")
-    tags.add_argument("--json", action="store_true")
-
     listp = sub.add_parser("list", help="查在办任务")
     listp.add_argument("--pool", action="store_true")
     listp.add_argument("--mine", action="store_true")
@@ -156,10 +152,7 @@ def _utc_of(
 
 def command_of(args: argparse.Namespace) -> str:
     """命令行 → 名册的键（命令写法）。"""
-    command = str(getattr(args, "command", ""))
-    if command == "tags" and getattr(args, "all", False):
-        return "tags --all"
-    return command
+    return str(getattr(args, "command", ""))
 
 
 def _split_tags(value: str | None) -> tuple[str, ...]:

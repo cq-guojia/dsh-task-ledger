@@ -89,19 +89,12 @@ def main() -> int:
             r.stdout,
         )
 
-        # show / history / validate / tags
+        # show / history / validate
         r = run(repo, "show", "--id", tid)
         check("show 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "validate", "--json")
         check("validate 无问题", '"problems": []' in r.stdout, r.stdout)
-        r = run(repo, "tags", "--all", "--json")
-        check("tags --all 有 tasks 键", '"tasks"' in r.stdout, r.stdout)
-        r = run(repo, "tags")
-        check(
-            "裸 tags 报业务错（退 1 + 人话）",
-            r.returncode == 1 and "必须带 --all" in (r.stdout + r.stderr),
-            r.stdout + r.stderr,
-        )
+
         # 结案 → 历史
         r = run(repo, "close", "--id", tid, "--summary", "冒烟结案")
         check("close 退出码 0", r.returncode == 0, r.stderr)
