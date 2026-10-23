@@ -6,8 +6,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from ..core.identity import Identity, is_me, normalize
 from ..core.labels import LEGACY_STATUSES
@@ -99,9 +100,7 @@ def in_scope(task: Mapping[str, Any], q: ListQuery, *, me: Identity) -> bool:
     created = task.get("created")
     if q.since and isinstance(created, str) and created[:19] < q.since[:19]:
         return False
-    if q.until and isinstance(created, str) and created[:19] > q.until[:19]:
-        return False
-    return True
+    return not (q.until and isinstance(created, str) and created[:19] > q.until[:19])
 
 
 def _show(path: Path) -> str:
@@ -114,6 +113,7 @@ def _show(path: Path) -> str:
 def load_task(repo: Path, tid: str) -> tuple[dict, list[Path]]:
     """在池 + 索引登记的全部分片里找这条任务（只读），返回 (任务, 出现过的文件)。"""
     index = OwnersIndex(repo)
+    index.assert_present()
     found: dict | None = None
     where: list[Path] = []
     pool = TaskStore(repo, POOL_REL)

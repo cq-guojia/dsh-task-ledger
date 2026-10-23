@@ -7,10 +7,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Self
 
 from ..core.identity import Identity, normalize
 from ..core.paths import OWNERS_DIR, OWNERS_REL, shard_rel, to_repo_rel
 from ..core.time import now
+from ..errors import Fail
 from .json_store import JSONStore
 
 DEFAULT_DATA = {"version": "", "workers": {}}
@@ -76,6 +78,28 @@ class OwnersIndex:
             return []
         return sorted(p for p in base.glob("*.json") if p.is_file())
 
+    def assert_present(self) -> None:
+        """登记过的分片（含池）文件必须都在；被人删了/改名了就报清楚，绝不悄悄当空、绝不修复。
+
+        只校验「该在的文件在不在」，不碰内容、不重建。本方法只在校读路径
+        （list / show / validate）调用；会新建分片的写动作（claim/set/…）里不调，
+        否则全新仓库第一次写会被误报「分片文件缺失」。
+        """
+        missing = [str(p) for p in self.shards().values() if not p.exists()]
+        if missing:
+            raise Fail(
+                "台账里登记的任务文件找不到了（可能被人手动删除或改名）：\n  "
+                + "\n  ".join(missing)
+                + "\n程序不自动修复——请用 git 恢复原文件（git checkout -- <文件>），"
+                "或把原文件放回原处，再重试。"
+            )
+        # 索引本身没了、但盘上还有分片 ⇒ 分片变成无主孤儿，等同于被删
+        if not (self.repo / to_repo_rel(OWNERS_REL)).exists() and self.disk_shards():
+            raise Fail(
+                "台账索引 owners.json 找不到了，但 owners/ 下还有任务文件"
+                "（可能被人手动删除或改名）。\n程序不自动修复——请用 git 恢复 owners.json，再重试。"
+            )
+
     def _open(self):
         """把 `ensure` 的读写收在一处：任何改动最终都按一条一行写回。"""
         return _IndexSession(self._store)
@@ -92,13 +116,13 @@ class _IndexSession:
     def mark(self) -> None:
         self.changed = True
 
-    def __enter__(self) -> "_IndexSession":
+    def __enter__(self) -> Self:
         self.data = self.store.data()
         return self
 
     def __exit__(self, *exc) -> None:
         if self.changed:
-            self.store._flush(self.data)  # noqa: SLF001 —— 同一个包内的受控写回口
+            self.store._flush(self.data)  # 同一个包内的受控写回口
 
 
 def _merge_aliases(known: list, extra: tuple[str, ...] | list[str]) -> list[str]:

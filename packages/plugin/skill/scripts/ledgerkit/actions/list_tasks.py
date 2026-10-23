@@ -24,6 +24,7 @@ def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
         where[tid] = pool.path
 
     index = OwnersIndex(repo)
+    index.assert_present()
     for key in sorted(index.shards()):
         path = index.shards()[key]
         store = TaskStore(repo, Path(path).relative_to(repo / "ledger"))

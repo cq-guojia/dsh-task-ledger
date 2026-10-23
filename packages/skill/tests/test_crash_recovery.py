@@ -226,11 +226,12 @@ class UserCorruptionTest(CrashRecoveryCase):
         self.assertEqual(shard.read_text(encoding="utf-8"), "{ 这不是合法 json ",
                          "绝不允许尝试修复损坏的文件")
 
-    def test_missing_shard_is_not_recreated(self):
+    def test_missing_shard_errors_and_is_not_recreated(self):
         self.new_mine("会被删的任务")
         shard = self.shards[0]
         shard.unlink()  # 用户删了分片
-        run(self.r.root, "list")  # 不论报错与否
+        code, _, err = run(self.r.root, "list")
+        self.assertNotEqual(code, 0, f"被删的分片必须报错：{err}")
         self.assertFalse(shard.exists(),
                          "被删的分片绝不能被自动重建（不修复）")
 
