@@ -108,3 +108,4 @@
 - 2026-10-23 23:03:57 · log · @cqguojia@hotmail.com · 修用户指出的口径矛盾：开口径「不碰数据文件」改精确表述「状态与归属只经命令改、唯一手写是过程文档前五节」，三处口径（开头/手写边界/过程文档）达成一致；门禁全绿未提交
 - 2026-10-23 23:48:33 · log · @cqguojia@hotmail.com · 专家组审查（提示词8/结构8/逻辑9项相符）后修复：裸 tags 退3改退1人话（真bug）、history 第二列改负责人、allowed-tools 补Edit、五处重复规则收敛、清60秒/release字样/退出码泄漏、README 清死链、删 CI 幽灵测试行；门禁全绿
 - 2026-10-24 00:35:49 · log · @cqguojia@hotmail.com · 二轮专家组（提示词7.5/结构8/逻辑85）修复：Git 前提、history 第三列、log 归属、rename 仅自己名下、失败三分支、建台账闭环、troubleshooting 引文全换真串；实跑抓出并修掉真 bug：_apply 用 category=None 当没命中，导致有标签没分类的任务 rename 永远改不到（dry-run 报 0/真跑静默跳过），改显式哨兵+回归测试；门禁全绿，按用户要求未提交等审
+- 2026-10-24 01:01:32 · log · @cqguojia@hotmail.com · 用户三条例 + 代码修复：①无 git 必须能用——_finalize 遇非 git 目录跳过提交推送只提示、env 按 FileNotFound 处理（无二进制也不崩），实跑双路径通过；②--months 改自然月窗口（自己算最近 N 个月读存在文件）；③--no-sync 改显式开关，有无远端/离线由脚本判断；各补回归测试；门禁全绿未提交等审
