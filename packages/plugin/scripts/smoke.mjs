@@ -1492,8 +1492,9 @@ await check(
 			const ws = { id: "ws-tmp", title: "tmp", path: root };
 
 			await claimTask(ws, taskId);
-			// 分片布局契约：claim 只改 owner / started / updated，**不动 status**
-			assert.equal(readTask().status, "open", "认领不改状态（状态由 set 改）");
+			// 认领即在做（2026-10-23 修复：分片重构丢了旧版行为；看板按 doing 算「我的在办」）
+			assert.equal(readTask().status, "doing", "认领即 doing");
+			assert.ok(readTask().started, "认领后应记 started");
 			assert.ok(readTask().owner, "认领后应有 owner");
 			assert.equal(
 				readTask().owner,
@@ -1588,8 +1589,8 @@ await check(
 			);
 			assert.equal(
 				readTask().status,
-				"open",
-				"路由层认领也要真落盘（claim 不改状态，状态由 set 改）",
+				"doing",
+				"路由层认领也要真落盘（认领即 doing）",
 			);
 			assert.equal(
 				readTask().owner,

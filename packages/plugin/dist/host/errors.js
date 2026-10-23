@@ -9,22 +9,22 @@
  */
 /** 台账数据形状不符（容器级校验失败）。message 带工作区名 + 人话，可直接上界面。 */
 export class LedgerDataError extends Error {
-    code = 'LEDGER_DATA_INVALID';
+    code = "LEDGER_DATA_INVALID";
     workspaceId;
     constructor(workspaceId, message) {
         super(message);
-        this.name = 'LedgerDataError';
+        this.name = "LedgerDataError";
         this.workspaceId = workspaceId;
     }
 }
 /** 从任意抛出物取错误码（无 code 的按 LEDGER_SCRIPT_FAILED 兜底——那正是脚本非零的主路径）。 */
 export function codeOf(error) {
-    if (error !== null && typeof error === 'object' && 'code' in error) {
+    if (error !== null && typeof error === "object" && "code" in error) {
         const code = error.code;
-        if (typeof code === 'string' && code.startsWith('LEDGER_'))
+        if (typeof code === "string" && code.startsWith("LEDGER_"))
             return code;
     }
-    return 'LEDGER_SCRIPT_FAILED';
+    return "LEDGER_SCRIPT_FAILED";
 }
 /** 人话（优先 Error.message；其余 String()，不吞）。 */
 export function messageOf(error) {
@@ -41,13 +41,19 @@ export async function settleWorkspaces(workspaces, op, read, merge) {
     let firstError = null;
     settled.forEach((result, i) => {
         const workspace = workspaces[i];
-        if (result.status === 'fulfilled') {
+        if (result.status === "fulfilled") {
             rows.push(result.value);
             return;
         }
         if (firstError === null)
             firstError = result.reason;
-        degraded.push({ workspaceId: workspace.id, workspaceTitle: workspace.title, op, code: codeOf(result.reason), message: messageOf(result.reason) });
+        degraded.push({
+            workspaceId: workspace.id,
+            workspaceTitle: workspace.title,
+            op,
+            code: codeOf(result.reason),
+            message: messageOf(result.reason),
+        });
     });
     if (rows.length === 0 && workspaces.length > 0)
         throw firstError;

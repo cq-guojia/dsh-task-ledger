@@ -6,20 +6,20 @@
  *
  * 校验全在脚本里（认领要求 open 且无 owner；释放要求是当前 owner），本层不重复实现。
  */
-import { WRITE_TIMEOUT_MS, runLedgerCommand } from '../repositories/runner.js';
+import { runLedgerCommand, WRITE_TIMEOUT_MS } from "../repositories/runner.js";
 /** 返回脚本在退出码 0 时打到 stderr 的提示（同步失败等）；没有提示就是空串。 */
 async function run(workspace, sub, args) {
-    const result = await runLedgerCommand(sub, [...args, '--repo', workspace.path], {
+    const result = await runLedgerCommand(sub, [...args, "--repo", workspace.path], {
         cwd: workspace.path,
         timeoutMs: WRITE_TIMEOUT_MS,
     });
     if (!result.ok)
         throw new Error(`${workspace.title}：${result.error}`);
-    return result.notice ?? '';
+    return result.notice ?? "";
 }
 /** 认领：只有 open 且无人认领才能接（脚本内判定），owner = 工作区的 git 邮箱。 */
 export function claimTask(workspace, taskId) {
-    return run(workspace, 'claim', ['--id', taskId]);
+    return run(workspace, "claim", ["--id", taskId]);
 }
 /**
  * 释放：写回公共池（owner / started 清空、status 回 open），只许当前 owner 本人（脚本内判定）。
@@ -28,5 +28,5 @@ export function claimTask(workspace, taskId) {
  * 分片里那行不会回到公共池，别人永远看不到这条待认领。
  */
 export function releaseTask(workspace, taskId) {
-    return run(workspace, 'set', ['--id', taskId, '--owner', '']);
+    return run(workspace, "set", ["--id", taskId, "--owner", ""]);
 }

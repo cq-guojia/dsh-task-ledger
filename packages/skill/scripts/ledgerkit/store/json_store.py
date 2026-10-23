@@ -97,7 +97,7 @@ class JSONStore:
                 f"{self.path} 不是合法 JSON（第 {exc.lineno} 行）：{exc.msg}"
             ) from exc
         if not isinstance(data, dict):
-            raise ValueError(f"{self.path} 顶层不是对象。")
+            raise TypeError(f"{self.path} 顶层不是对象。")
         return data
 
     def _check_version(self, data: dict[str, Any]) -> None:

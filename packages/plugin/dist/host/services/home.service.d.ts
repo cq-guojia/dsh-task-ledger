@@ -1,5 +1,11 @@
-import { type DegradedInfo } from '../errors.js';
-import type { BoardSnapshot, LedgerWorkspace, TaskScope } from '../types.js';
+/**
+ * 首页**快路径**用例：在办快照 + 统计卡。
+ * 只读 progress.json（list）+ git 身份，**不碰 history**——首屏耗时与历史总量解耦
+ * （20 万条量级实测：527ms vs 合并端点 4.4s，见 docs/design/host-data-plane.md §四）。
+ * 慢路径（趋势）在 ./trend.service.ts；组合入口（/board 兼容全量）在 ../board.ts。
+ */
+import { type DegradedInfo } from "../errors.js";
+import type { BoardSnapshot, LedgerWorkspace, TaskScope } from "../types.js";
 /** 停滞阈值：进行中且 updated 至今满这么多天没更新（2026-10-19 拍板，显示级）。 */
 export declare const STALE_DAYS = 3;
 /** 逾期阈值：进行中且 started 至今满这么多天还没做完——中途更新不影响（2026-10-19 拍板 7 → 14 天）。 */

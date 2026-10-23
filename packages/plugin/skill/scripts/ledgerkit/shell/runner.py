@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 from .. import notices
 from ..actions import registry
@@ -159,9 +160,9 @@ def _render(spec: registry.ActionSpec, value, args, *, as_json: bool) -> None:
 
 def _params(
     command: str, args: argparse.Namespace, repo: Path, me, spec: registry.ActionSpec
-) -> dict:
+) -> dict[str, Any]:
     """按 `spec.params` 从 args 里挑；**不许把整个 args 透传进业务层**。"""
-    out: dict = {}
+    out: dict[str, Any] = {}
     for key in spec.params:
         out[key] = getattr(args, key, None)
     if command == "new":
@@ -184,12 +185,12 @@ def _params(
     return out
 
 
-def _task_snapshot(repo: Path, me) -> dict:
+def _task_snapshot(repo: Path, me) -> dict[str, Any]:
     """建任务查重要用的在办任务快照（**锁外**只读，只用于生成不撞的号）。"""
     from ..core.paths import POOL_REL, shard_rel
     from ..store.task_store import TaskStore
 
-    tasks: dict = {}
+    tasks: dict[str, Any] = {}
     tasks.update(TaskStore(repo, POOL_REL).all())
     tasks.update(TaskStore(repo, shard_rel(me.email)).all())
     return tasks

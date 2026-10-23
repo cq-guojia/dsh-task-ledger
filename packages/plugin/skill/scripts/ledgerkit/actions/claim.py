@@ -42,8 +42,18 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
             )
         raise Fail(f"公共池里没有任务 {tid}（已经被人认领或不存在）。")
 
+    current = task.get("status")
+    if current not in ("open", "blocked"):
+        raise Fail(
+            f"任务 {tid} 在公共池里但状态是 {current}（应为 open）—— "
+            "先跑 validate 看台账是不是乱了。"
+        )
+
     moved = dict(task)
     moved["owner"] = me.email
+    # 认领即在做：看板把 doing 当「我的在办」算（home.service.ts），置 open 会让
+    # 认领后的任务看起来仍没人领。旧版 progress.py 置 doing，分片重构时丢了。
+    moved["status"] = "doing"
     moved["started"] = moved.get("started") or now()
     moved["updated"] = now()
     mine.put(tid, moved)
@@ -53,7 +63,7 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
     logs = WorklogStore(repo)
     path = logs.find(tid, moved.get("worklog"))
     if path is not None:
-        logs.append_exec(path, exec_line(now(), me.email, "claim", "认领"))
+        logs.append_exec(path, exec_line(now(), me.email, "claim", "认领 → doing"))
         note = None
     return Result(
         changed=("owner", "started", "updated"),

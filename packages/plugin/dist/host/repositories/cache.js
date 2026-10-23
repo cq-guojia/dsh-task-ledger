@@ -11,7 +11,7 @@
  */
 /** 缓存有效期（2026-10-18 拍板 1.5s：够挡同一屏的重复读，短到不会让人看到旧数据）。 */
 export const CACHE_TTL_MS = 1_500;
-const SEP = '\u0000';
+const SEP = "\u0000";
 /** 已完成的缓存：key → 值与时间戳。 */
 const settled = new Map();
 /** 在途单飞：key → 正在跑的 Promise（同 key 并发只跑一次）。 */
@@ -37,7 +37,9 @@ export function cached(key, load, now = Date.now()) {
         settled.set(key, { at: Date.now(), value });
         return value;
     })
-        .finally(() => { inflight.delete(key); });
+        .finally(() => {
+        inflight.delete(key);
+    });
     inflight.set(key, task);
     return task;
 }

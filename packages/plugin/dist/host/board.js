@@ -5,9 +5,9 @@
  * 拆端点后（host-data-plane §五 A）首屏走 `services/home.service.ts::getSnapshot()`（不碰 history），
  * 本组合归「兼容期全量 `/board`」；新端点在 routes 层直接调 service，不过本文件。
  */
-import { settleWorkspaces } from './errors.js';
-import { computeSnapshot } from './services/home.service.js';
-import { computeClosedSummary, computeTrendPeriods, readTrendScope } from './services/trend.service.js';
+import { settleWorkspaces } from "./errors.js";
+import { computeSnapshot } from "./services/home.service.js";
+import { computeClosedSummary, computeTrendPeriods, readTrendScope, } from "./services/trend.service.js";
 /**
  * 首页一次拿全：在办快照（含停滞 / 天数 / 身份）+ 近 8 周趋势（完成 / 新增 × 所有 / 我的）
  * + 四个自然周期计数。**每个工作区只读一次**（list + history + git 身份），
@@ -16,7 +16,7 @@ import { computeClosedSummary, computeTrendPeriods, readTrendScope } from './ser
  */
 export async function getHomeAggregate(workspaces) {
     const now = new Date();
-    const { data: scopes, degraded } = await settleWorkspaces(workspaces, 'history', readTrendScope, (rows) => rows);
+    const { data: scopes, degraded } = await settleWorkspaces(workspaces, "history", readTrendScope, (rows) => rows);
     return {
         snapshot: computeSnapshot(scopes, now),
         closed: computeClosedSummary(scopes, now),
@@ -24,6 +24,6 @@ export async function getHomeAggregate(workspaces) {
         degraded,
     };
 }
+export { getFilterOptions, queryClosed } from "./services/history.service.js";
 // 单路径用例直接透传 service（调用方按快 / 慢自己选，不必经过组合）：
-export { getSnapshot as getBoardSnapshot } from './services/home.service.js';
-export { getFilterOptions, queryClosed } from './services/history.service.js';
+export { getSnapshot as getBoardSnapshot } from "./services/home.service.js";

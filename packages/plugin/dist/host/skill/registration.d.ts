@@ -9,7 +9,7 @@ export interface SkillRegistration {
     path?: string;
     source?: string;
     resourceBase?: {
-        kind: 'directory';
+        kind: "directory";
         path: string;
     };
     metadata?: Record<string, unknown>;

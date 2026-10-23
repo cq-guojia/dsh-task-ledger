@@ -5,10 +5,10 @@
  * ⚠️ 窗口必须是 13 个月而不是 2：8 周桶在月初会横跨 3 个自然月（如 10 月第 1 周回溯到 8 月），
  * `--months` 是**文件级**过滤，缩到 2 会静默漏掉 8 月结案记录、趋势少算（2026-10-18 架构评审结论）。
  */
-import { readHistory, readTasks } from '../repositories/ledger.repository.js';
-import { getCurrentIdentity } from '../repositories/identity.repository.js';
-import { settleWorkspaces } from '../errors.js';
-import { buildWeeks, dayOf, inWindow, monthWindow, mondayOf, weekWindow, ymd } from './dates.js';
+import { settleWorkspaces } from "../errors.js";
+import { getCurrentIdentity } from "../repositories/identity.repository.js";
+import { readHistory, readTasks } from "../repositories/ledger.repository.js";
+import { buildWeeks, dayOf, inWindow, mondayOf, monthWindow, weekWindow, ymd, } from "./dates.js";
 /** 历史窗口：只读最近 13 个月的文件（2026-10-17 拍板；脚本默认读全部，窗口由插件显式传）。 */
 export const RECENT_MONTHS = 13;
 /** 趋势图桶数：近 8 周（2026-10-17 定稿）。 */
@@ -44,7 +44,8 @@ export function computeClosedSummary(scopes, now) {
         if (createdDay === null)
             return;
         for (let i = 0; i < weeks.length; i += 1) {
-            if (createdDay <= weekEnds[i] && (closeDay === null || closeDay > weekEnds[i])) {
+            if (createdDay <= weekEnds[i] &&
+                (closeDay === null || closeDay > weekEnds[i])) {
                 const bucket = map.get(weeks[i].week);
                 if (bucket !== undefined)
                     bucket.remaining += 1;
@@ -59,9 +60,9 @@ export function computeClosedSummary(scopes, now) {
                 continue;
             const week = ymd(mondayOf(created));
             const createdMine = identity !== null && (task.creator ?? null) === identity;
-            bump(bucketsAll, week, 'created');
+            bump(bucketsAll, week, "created");
             if (createdMine)
-                bump(bucketsMine, week, 'created');
+                bump(bucketsMine, week, "created");
             const ownedMine = identity !== null && (task.owner ?? null) === identity;
             bumpRemaining(bucketsAll, created, null);
             if (ownedMine)
@@ -71,19 +72,21 @@ export function computeClosedSummary(scopes, now) {
             const closed = dayOf(record.time);
             if (closed !== null) {
                 const week = ymd(mondayOf(closed));
-                bump(bucketsAll, week, 'done');
+                bump(bucketsAll, week, "done");
                 if (identity !== null && (record.owner ?? null) === identity)
-                    bump(bucketsMine, week, 'done');
+                    bump(bucketsMine, week, "done");
             }
             const created = dayOf(record.created);
             if (created !== null) {
                 const week = ymd(mondayOf(created));
-                bump(bucketsAll, week, 'created');
+                bump(bucketsAll, week, "created");
                 // 新增（我的）= 我创建的（creator）；旧 8 列历史无 creator 列 ⇒ 兜底 owner
-                const createdMine = identity !== null && ((record.creator ?? null) === identity
-                    || ((record.creator ?? null) === null && (record.owner ?? null) === identity));
+                const createdMine = identity !== null &&
+                    ((record.creator ?? null) === identity ||
+                        ((record.creator ?? null) === null &&
+                            (record.owner ?? null) === identity));
                 if (createdMine)
-                    bump(bucketsMine, week, 'created');
+                    bump(bucketsMine, week, "created");
             }
             const ownedMine = identity !== null && (record.owner ?? null) === identity;
             bumpRemaining(bucketsAll, created, closed);
@@ -92,9 +95,13 @@ export function computeClosedSummary(scopes, now) {
         }
     }
     const toBuckets = (map) => weeks.map((slot, i) => ({
-        week: slot.week, end: weekEnds[i], ...(map.get(slot.week) ?? { done: 0, created: 0, remaining: 0 }),
+        week: slot.week,
+        end: weekEnds[i],
+        ...(map.get(slot.week) ?? { done: 0, created: 0, remaining: 0 }),
     }));
-    return { weekly: { all: toBuckets(bucketsAll), mine: toBuckets(bucketsMine) } };
+    return {
+        weekly: { all: toBuckets(bucketsAll), mine: toBuckets(bucketsMine) },
+    };
 }
 /** 四个自然周期（只算「全部工作区」范围；图表切换不带动卡片）——纯函数。 */
 export function computeTrendPeriods(scopes, now) {
@@ -104,14 +111,24 @@ export function computeTrendPeriods(scopes, now) {
         thisMonth: monthWindow(0, now),
         lastMonth: monthWindow(-1, now),
     };
-    const doneEntries = scopes.flatMap((scope) => scope.history.map((record) => ({ day: dayOf(record.time), owner: record.owner ?? null })));
+    const doneEntries = scopes.flatMap((scope) => scope.history.map((record) => ({
+        day: dayOf(record.time),
+        owner: record.owner ?? null,
+    })));
     const createdEntries = scopes.flatMap((scope) => [
-        ...scope.tasks.map((task) => ({ day: dayOf(task.created), owner: task.owner ?? null })),
-        ...scope.history.map((record) => ({ day: dayOf(record.created), owner: record.owner ?? null })),
+        ...scope.tasks.map((task) => ({
+            day: dayOf(task.created),
+            owner: task.owner ?? null,
+        })),
+        ...scope.history.map((record) => ({
+            day: dayOf(record.created),
+            owner: record.owner ?? null,
+        })),
     ]);
     const period = (window) => ({
         done: doneEntries.filter((entry) => inWindow(entry.day, window)).length,
-        created: createdEntries.filter((entry) => inWindow(entry.day, window)).length,
+        created: createdEntries.filter((entry) => inWindow(entry.day, window))
+            .length,
         from: window.from,
         to: window.to,
     });
@@ -125,8 +142,12 @@ export function computeTrendPeriods(scopes, now) {
 /** 慢路径端点：趋势 + 周期（读 history）。异步加载，首屏不等。单工作区坏 ⇒ 进 degraded。 */
 export async function getTrend(workspaces) {
     const now = new Date();
-    const { data: scopes, degraded } = await settleWorkspaces(workspaces, 'history', readTrendScope, (rows) => rows);
-    return { closed: computeClosedSummary(scopes, now), trend: computeTrendPeriods(scopes, now), degraded };
+    const { data: scopes, degraded } = await settleWorkspaces(workspaces, "history", readTrendScope, (rows) => rows);
+    return {
+        closed: computeClosedSummary(scopes, now),
+        trend: computeTrendPeriods(scopes, now),
+        degraded,
+    };
 }
 /** 趋势端点用的历史 filter（窗口由本模块策略决定，repository 零默认值注入）。 */
 export function trendHistoryFilter(extra = {}) {

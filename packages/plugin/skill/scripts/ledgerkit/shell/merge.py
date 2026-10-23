@@ -28,7 +28,7 @@ from ..store.json_store import dump_ledger_json
 EXPAND_KEYS = ("tasks", "workers")
 
 
-def _load(text: str) -> dict | None:
+def _load(text: str) -> dict[str, Any] | None:
     if not text.strip():
         return {}
     try:
@@ -38,7 +38,7 @@ def _load(text: str) -> dict | None:
     return data if isinstance(data, dict) else None
 
 
-def _coerce(value: str | dict | None) -> dict | None:
+def _coerce(value: str | dict | None) -> dict[str, Any] | None:
     """三方内容：git 给的是文本（`git show :N:rel`），测试与调用方也可以直接给 dict。"""
     if value is None:
         return None
@@ -47,7 +47,7 @@ def _coerce(value: str | dict | None) -> dict | None:
     return _load(str(value))
 
 
-def _rows_of(data: dict | None, key: str) -> dict:
+def _rows_of(data: dict[str, Any] | None, key: str) -> dict[str, Any]:
     rows = (data or {}).get(key)
     return rows if isinstance(rows, dict) else {}
 
@@ -82,7 +82,7 @@ def merge_task_dicts(
     base: str | dict | None,
     ours: str | dict | None,
     theirs: str | dict | None,
-) -> tuple[dict, list[str]]:
+) -> tuple[dict[str, Any], list[str]]:
     """按任务号做三方合并；返回 (合并结果, 两边都改过的任务号)。
 
     合并单位是「任务」不是文本行 —— 行级合并只认相邻上下文：不同任务各自新增 /
@@ -176,12 +176,12 @@ def conflict_marked(
 
 
 def _marked_text(
-    full: dict,
+    full: dict[str, Any],
     key: str,
-    merged: dict,
+    merged: dict[str, Any],
     conflicts: list[str],
-    upstream: dict,
-    local: dict,
+    upstream: dict[str, Any],
+    local: dict[str, Any],
 ) -> str:
     """按「一条一行」渲染整份台账；两边都改过的条目用冲突标记包起来。
 

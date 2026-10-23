@@ -8,7 +8,7 @@
  *   防止「python3 根本没装」被集体降级成一片绿色空板——那等于界面撒谎。
  */
 /** 机器可读错误码（只增不改；`LEDGER_` 前缀避开宿主错误码空间）。 */
-export type LedgerErrorCode = 'LEDGER_SCRIPT_UNAVAILABLE' | 'LEDGER_SCRIPT_TIMEOUT' | 'LEDGER_SCRIPT_FAILED' | 'LEDGER_SCRIPT_BAD_JSON' | 'LEDGER_DATA_INVALID';
+export type LedgerErrorCode = "LEDGER_SCRIPT_UNAVAILABLE" | "LEDGER_SCRIPT_TIMEOUT" | "LEDGER_SCRIPT_FAILED" | "LEDGER_SCRIPT_BAD_JSON" | "LEDGER_DATA_INVALID";
 /** 台账数据形状不符（容器级校验失败）。message 带工作区名 + 人话，可直接上界面。 */
 export declare class LedgerDataError extends Error {
     readonly code: LedgerErrorCode;
@@ -20,7 +20,7 @@ export interface DegradedInfo {
     readonly workspaceId: string;
     readonly workspaceTitle: string;
     /** 哪个读挂了——trend 同时读 list + history，必须能区分。 */
-    readonly op: 'list' | 'history';
+    readonly op: "list" | "history";
     readonly code: LedgerErrorCode;
     /** 人话，可直接上界面（真源：脚本 stderr / records 校验文案）。 */
     readonly message: string;
@@ -36,7 +36,7 @@ export declare function messageOf(error: unknown): string;
 export declare function settleWorkspaces<W extends {
     id: string;
     title: string;
-}, T, R>(workspaces: readonly W[], op: 'list' | 'history', read: (workspace: W) => Promise<T>, merge: (rows: readonly T[]) => R): Promise<{
+}, T, R>(workspaces: readonly W[], op: "list" | "history", read: (workspace: W) => Promise<T>, merge: (rows: readonly T[]) => R): Promise<{
     data: R;
     degraded: readonly DegradedInfo[];
 }>;

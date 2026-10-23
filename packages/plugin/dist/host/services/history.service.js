@@ -1,9 +1,9 @@
 /**
  * 已结案列表 / 筛选项候选用例（history tab 与筛选控件用；非首屏，按需调用）。
  */
-import { readHistory } from '../repositories/ledger.repository.js';
-import { settleWorkspaces } from '../errors.js';
-import { RECENT_MONTHS, readTrendScope } from './trend.service.js';
+import { settleWorkspaces } from "../errors.js";
+import { readHistory } from "../repositories/ledger.repository.js";
+import { RECENT_MONTHS, readTrendScope } from "./trend.service.js";
 /** 已结案列表默认分页大小（「加载更多」= 调用方加大 limit 重取）。 */
 export const DEFAULT_HISTORY_LIMIT = 500;
 /**
@@ -14,8 +14,9 @@ export const DEFAULT_HISTORY_LIMIT = 500;
  */
 export async function queryClosed(workspaces, filter = {}) {
     const windowed = { months: RECENT_MONTHS, ...filter };
-    const { data, degraded } = await settleWorkspaces(workspaces, 'history', (workspace) => readHistory(workspace, windowed), (rows) => rows.flat()
-        .sort((a, b) => String(b.created ?? b.time ?? '').localeCompare(String(a.created ?? a.time ?? '')))
+    const { data, degraded } = await settleWorkspaces(workspaces, "history", (workspace) => readHistory(workspace, windowed), (rows) => rows
+        .flat()
+        .sort((a, b) => String(b.created ?? b.time ?? "").localeCompare(String(a.created ?? a.time ?? "")))
         .slice(0, filter.limit ?? DEFAULT_HISTORY_LIMIT));
     return { records: data, degraded };
 }
@@ -25,19 +26,25 @@ export function collectFilterOptions(scopes) {
     const categories = new Set();
     const tags = new Set();
     const addTask = (task) => {
-        if (task.owner !== undefined && task.owner !== null && task.owner !== '')
+        if (task.owner !== undefined && task.owner !== null && task.owner !== "")
             owners.add(task.owner);
-        if (task.creator !== undefined && task.creator !== null && task.creator !== '')
+        if (task.creator !== undefined &&
+            task.creator !== null &&
+            task.creator !== "")
             owners.add(task.creator);
-        if (task.category !== undefined && task.category !== null && task.category !== '')
+        if (task.category !== undefined &&
+            task.category !== null &&
+            task.category !== "")
             categories.add(task.category);
         for (const tag of task.tags ?? [])
             tags.add(tag);
     };
     const addRecord = (record) => {
-        if (record.owner !== undefined && record.owner !== '')
+        if (record.owner !== undefined && record.owner !== "")
             owners.add(record.owner);
-        if (record.category !== undefined && record.category !== null && record.category !== '')
+        if (record.category !== undefined &&
+            record.category !== null &&
+            record.category !== "")
             categories.add(record.category);
         for (const tag of record.tags ?? [])
             tags.add(tag);
@@ -48,14 +55,18 @@ export function collectFilterOptions(scopes) {
         for (const record of scope.history)
             addRecord(record);
     }
-    const sorted = (values) => [...values].sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
-    return { owners: sorted(owners), categories: sorted(categories), tags: sorted(tags) };
+    const sorted = (values) => [...values].sort((a, b) => a.localeCompare(b, "zh-Hans-CN"));
+    return {
+        owners: sorted(owners),
+        categories: sorted(categories),
+        tags: sorted(tags),
+    };
 }
 /**
  * 筛选项候选：在办（全量）+ 近 13 个月历史的去重值（owner / category / tag）。
  * 按需调用（/filters 路由），非首屏——历史侧在极端量级下是百毫秒级。单工作区坏 ⇒ 进 degraded。
  */
 export async function getFilterOptions(workspaces) {
-    const { data, degraded } = await settleWorkspaces(workspaces, 'history', readTrendScope, collectFilterOptions);
+    const { data, degraded } = await settleWorkspaces(workspaces, "history", readTrendScope, collectFilterOptions);
     return { options: data, degraded };
 }

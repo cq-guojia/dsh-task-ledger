@@ -14,6 +14,7 @@ import contextlib
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from ..core.identity import Identity, normalize
 from ..core.paths import (
@@ -77,7 +78,9 @@ def _other_shards(repo: Path, me: Identity) -> tuple[Path, ...]:
     return tuple(out)
 
 
-def _worklog_of(repo: Path, params: dict) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
+def _worklog_of(
+    repo: Path, params: dict[str, Any]
+) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
     """这条任务的过程文档：查得到给文件，查不到退回整个 `worklog/` 目录（宁宽）。"""
     tid = params.get("tid")
     if not tid:
@@ -97,7 +100,7 @@ def _worklog_of(repo: Path, params: dict) -> tuple[tuple[Path, ...], tuple[Path,
     return (), (WORKLOG_DIR,)
 
 
-def lock_scope(repo: Path, me: Identity, action: str, params: dict) -> Scope:
+def lock_scope(repo: Path, me: Identity, action: str, params: dict[str, Any]) -> Scope:
     """算出这次可能碰哪些文件（**在锁外跑**，宁可算宽）。七个分支与 §四 的表逐行对应。"""
     if action not in ACTIONS:
         raise ValueError(f"未知的 lock_scope action：{action!r}")

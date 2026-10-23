@@ -4,13 +4,13 @@
  * 宿主事实（handler = 原始 Node req/res、发头后不抛错、重复 path 注册直接 throw）
  * 见 external/host-webserver.md。
  */
-import type { IncomingMessage, ServerResponse } from 'node:http';
-import { type AgentsLike } from './services/session.service.js';
-import { type RegistryWorkspace } from './workspace.js';
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { type AgentsLike } from "./services/session.service.js";
+import { type RegistryWorkspace } from "./workspace.js";
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 external/host-webserver.md）。 */
 export interface WebServerLike {
     register(route: {
-        kind: 'exact' | 'prefix';
+        kind: "exact" | "prefix";
         path: string;
         handler: (req: IncomingMessage, res: ServerResponse) => void | Promise<void>;
     }): unknown;

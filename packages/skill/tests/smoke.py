@@ -60,12 +60,26 @@ def main() -> int:
         import json
 
         tid = next(iter(json.loads(r.stdout)), "")
+        mine_task = json.loads(r.stdout)[tid]
+        check(
+            "new --self 建出来就是 doing",
+            mine_task["status"] == "doing",
+            r.stdout,
+        )
+        check("new --self owner 是我", mine_task["owner"] == "me@example.com", r.stdout)
+        check("new --self 记了 started", bool(mine_task["started"]), r.stdout)
 
-        # 释放 → 认领 → 记进展 → 改状态
+        # 释放 → 认领（自动 doing）→ 记进展 → 重复置 doing 走 already_done
         r = run(repo, "set", "--id", tid, "--owner", "")
         check("release 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "claim", "--id", tid)
         check("claim 退出码 0", r.returncode == 0, r.stderr)
+        r = run(repo, "list", "--json")
+        check(
+            "claim 后 status 是 doing",
+            json.loads(r.stdout)[tid]["status"] == "doing",
+            r.stdout,
+        )
         r = run(repo, "log", "--id", tid, "--note", "冒烟记一条")
         check("log 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "set", "--id", tid, "--status", "doing")

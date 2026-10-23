@@ -1,4 +1,4 @@
-import type { LedgerWorkspace } from '../types.js';
+import type { LedgerWorkspace } from "../types.js";
 /**
  * 当前 git 身份（cwd = 该工作区）——「我的待办」判定源。
  * 与 agent 在会话里跑 skill 时的取值环境一致；取不到回 null（非 git 目录 / 没配身份），

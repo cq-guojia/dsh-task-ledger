@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from ..core.identity import Identity
 from ..core.paths import to_repo_rel
@@ -20,7 +21,7 @@ class TaskStore(JSONStore):
         super().__init__(Path(repo) / to_repo_rel(rel), default=DEFAULT_DATA)
         self.identity = identity
 
-    def _flush(self, data: dict) -> None:
+    def _flush(self, data: dict[str, Any]) -> None:
         """写盘时带上分片顶部的 `identity`（只改格式，不动任务内容）。"""
         if self.identity is not None:
             data["identity"] = {

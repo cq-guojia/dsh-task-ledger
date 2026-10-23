@@ -1,4 +1,4 @@
-import type { LedgerWorkspace } from '../types.js';
+import type { LedgerWorkspace } from "../types.js";
 /** 认领：只有 open 且无人认领才能接（脚本内判定），owner = 工作区的 git 邮箱。 */
 export declare function claimTask(workspace: LedgerWorkspace, taskId: string): Promise<string>;
 /**

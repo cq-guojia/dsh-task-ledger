@@ -58,7 +58,7 @@ class TaskRow:
 
 @dataclass(frozen=True)
 class ListResult:
-    rows: dict[str, dict] = field(default_factory=dict)  # tid → 原样任务对象
+    rows: dict[str, dict[str, Any]] = field(default_factory=dict)  # tid → 原样任务对象
     table: tuple[TaskRow, ...] = ()
     notices: tuple[str, ...] = ()
 

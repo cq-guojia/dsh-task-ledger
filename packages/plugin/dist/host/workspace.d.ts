@@ -1,4 +1,4 @@
-import type { LedgerWorkspace } from './types.js';
+import type { LedgerWorkspace } from "./types.js";
 /** 宿主 workspaceRegistry.list() 条目的最小面（结构声明；事实与坐标见 external/dsh-workspace-registry.md）。 */
 export interface RegistryWorkspace {
     readonly id: string;

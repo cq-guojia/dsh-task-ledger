@@ -14,15 +14,15 @@
  * 本文件只管「结束任务」这一条（2026-10-18 用户拍板：认领 / 释放由 host 直写、不开会话；
  * 结束要走会话，因为要带用户留言、要模型读过程文档后写摘要）。
  */
-import { randomUUID } from 'node:crypto';
-import { getTask } from '../repositories/ledger.repository.js';
-import { SKILL_SCRIPT } from '../skill/registration.js';
+import { randomUUID } from "node:crypto";
+import { getTask } from "../repositories/ledger.repository.js";
+import { SKILL_SCRIPT } from "../skill/registration.js";
 export class HandoffError extends Error {
     code;
     constructor(code, message) {
         super(message);
         this.code = code;
-        this.name = 'HandoffError';
+        this.name = "HandoffError";
     }
 }
 /**
@@ -35,31 +35,33 @@ export class HandoffError extends Error {
  * ③ 写台账只经 skill 脚本（插件不手改文件，close 由模型执行）。
  */
 export function buildClosePrompt(input) {
-    const worklog = input.worklogPath === null || input.worklogPath === ''
-        ? '（这条任务没有登记过程文档）'
+    const worklog = input.worklogPath === null || input.worklogPath === ""
+        ? "（这条任务没有登记过程文档）"
         : `${input.workspacePath}/ledger/${input.worklogPath}`;
-    const message = input.message.trim() === '' ? '（用户没有留具体内容）' : input.message.trim();
+    const message = input.message.trim() === ""
+        ? "（用户没有留具体内容）"
+        : input.message.trim();
     return [
         `用户从任务台账看板点了「结束」，要把任务「${input.title}」（任务号 ${input.taskId}）结案。`,
-        '',
+        "",
         `工作区：${input.workspacePath}`,
         `过程文档：${worklog}`,
-        '',
-        '请按顺序做完这三件，然后停下：',
-        '1. 读过程文档的「背景 / 待办 / 下一步」，核对这次到底做了什么、还留了什么坑。',
+        "",
+        "请按顺序做完这三件，然后停下：",
+        "1. 读过程文档的「背景 / 待办 / 下一步」，核对这次到底做了什么、还留了什么坑。",
         `2. 用 task-ledger skill 的脚本结案（在工作区目录下、原样执行这一条命令）：`,
         `   python3 ${SKILL_SCRIPT} close --id ${input.taskId} --repo ${input.workspacePath} --summary "<一句话说清做成了什么、留了什么坑>"`,
-        '   `--summary` 是必填参数，不许编套话；命令报错就原样报告错误，不要自己绕过、不要手改台账文件。',
-        '3. 收尾即结束——这就是本条消息的全部要求。',
-        '',
-        '【硬约束】',
-        '- 不要在会话里继续派活，**不要新建会话或子 agent**：这是收尾动作，不是新任务的开始。',
-        '- 用户已经明确要结束，不会再回答提问：信息不足就按留言与过程文档如实写进摘要/结论，**不要停下来反问**。',
-        '- 只动这一个任务，不顺带改别的记录；写台账只经上面那个 skill 脚本。',
-        '',
-        '用户现在处理结束，以下是用户的留言：',
+        "   `--summary` 是必填参数，不许编套话；命令报错就原样报告错误，不要自己绕过、不要手改台账文件。",
+        "3. 收尾即结束——这就是本条消息的全部要求。",
+        "",
+        "【硬约束】",
+        "- 不要在会话里继续派活，**不要新建会话或子 agent**：这是收尾动作，不是新任务的开始。",
+        "- 用户已经明确要结束，不会再回答提问：信息不足就按留言与过程文档如实写进摘要/结论，**不要停下来反问**。",
+        "- 只动这一个任务，不顺带改别的记录；写台账只经上面那个 skill 脚本。",
+        "",
+        "用户现在处理结束，以下是用户的留言：",
         message,
-    ].join('\n');
+    ].join("\n");
 }
 /**
  * 起一个「结束任务」会话并发出首条提示词。
@@ -68,24 +70,24 @@ export function buildClosePrompt(input) {
 export async function startCloseSession(deps, request) {
     const agents = deps.agents;
     if (agents === undefined) {
-        throw new HandoffError('no-agents', '宿主未暴露 agents 服务，起不了会话（按钮交接暂不可用）');
+        throw new HandoffError("no-agents", "宿主未暴露 agents 服务，起不了会话（按钮交接暂不可用）");
     }
     const presets = deps.presets;
     if (presets === undefined) {
-        throw new HandoffError('no-preset', '宿主未暴露 agentPresets 服务：起出来的会话没有 fs / bash 工具，模型跑不了 close');
+        throw new HandoffError("no-preset", "宿主未暴露 agentPresets 服务：起出来的会话没有 fs / bash 工具，模型跑不了 close");
     }
     const route = resolveModelRoute(deps.defaultModel, request.model);
     // 任务此刻必须还在在办里（刚被别处结案 ⇒ 明确告知，不拿空标题去建会话）。
     const task = await getTask(request.workspace, request.taskId);
     if (task === null) {
-        throw new HandoffError('task-missing', `任务 ${request.taskId} 不在「${request.workspace.title}」的在办列表里（可能已被结案）`);
+        throw new HandoffError("task-missing", `任务 ${request.taskId} 不在「${request.workspace.title}」的在办列表里（可能已被结案）`);
     }
     let presetId;
     try {
         presetId = (await presets.resolve()).id;
     }
     catch (error) {
-        throw new HandoffError('no-preset', `解析默认 preset 失败：${error instanceof Error ? error.message : String(error)}`);
+        throw new HandoffError("no-preset", `解析默认 preset 失败：${error instanceof Error ? error.message : String(error)}`);
     }
     const sessionId = randomUUID();
     let handle;
@@ -96,11 +98,13 @@ export async function startCloseSession(deps, request) {
             meta: { cwd: request.workspace.path, agentPreset: presetId },
             agentOptions: { provider: route.provider, model: route.model },
             // setup 是发布前唯一能挂工具 / prompt sections / skill 的时机；抛错则整个作用域回滚。
-            setup: async (agentCtx) => { await presets.mount(agentCtx, presetId); },
+            setup: async (agentCtx) => {
+                await presets.mount(agentCtx, presetId);
+            },
         });
     }
     catch (error) {
-        throw new HandoffError('create-failed', `会话没建起来（preset=${presetId}）：${error instanceof Error ? error.message : String(error)}`);
+        throw new HandoffError("create-failed", `会话没建起来（preset=${presetId}）：${error instanceof Error ? error.message : String(error)}`);
     }
     const prompt = buildClosePrompt({
         title: task.title ?? request.taskId,
@@ -112,13 +116,17 @@ export async function startCloseSession(deps, request) {
     try {
         handle.agent.send({
             id: randomUUID(),
-            role: 'user',
-            content: [{ type: 'text', text: prompt }],
-            source: { kind: 'task-ledger', form: 'notice', summary: `结束任务 · ${task.title ?? request.taskId}` },
-        }, 'next-turn', true);
+            role: "user",
+            content: [{ type: "text", text: prompt }],
+            source: {
+                kind: "task-ledger",
+                form: "notice",
+                summary: `结束任务 · ${task.title ?? request.taskId}`,
+            },
+        }, "next-turn", true);
     }
     catch (error) {
-        throw new HandoffError('send-failed', `会话已建（${sessionId}）但首条消息没发出去：${error instanceof Error ? error.message : String(error)}`);
+        throw new HandoffError("send-failed", `会话已建（${sessionId}）但首条消息没发出去：${error instanceof Error ? error.message : String(error)}`);
     }
     return { sessionId };
 }
@@ -128,18 +136,20 @@ export async function startCloseSession(deps, request) {
  */
 export function resolveModelRoute(defaultModel, explicit) {
     if (explicit !== undefined) {
-        if (explicit.provider === '' || explicit.model === '') {
-            throw new HandoffError('no-model', 'provider 与 model 必须成对给出（只给一半会被拒，不做猜测）');
+        if (explicit.provider === "" || explicit.model === "") {
+            throw new HandoffError("no-model", "provider 与 model 必须成对给出（只给一半会被拒，不做猜测）");
         }
         return explicit;
     }
     if (defaultModel !== undefined) {
         try {
             const route = defaultModel.currentSelection();
-            if (route.provider !== '' && route.model !== '')
+            if (route.provider !== "" && route.model !== "")
                 return { provider: route.provider, model: route.model };
         }
-        catch { /* 读不到就往下走，报同一句人话 */ }
+        catch {
+            /* 读不到就往下走，报同一句人话 */
+        }
     }
-    throw new HandoffError('no-model', '宿主没有可用的默认模型：请在请求里给出 provider + model');
+    throw new HandoffError("no-model", "宿主没有可用的默认模型：请在请求里给出 provider + model");
 }

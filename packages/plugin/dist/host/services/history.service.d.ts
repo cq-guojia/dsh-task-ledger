@@ -1,5 +1,8 @@
-import { type DegradedInfo } from '../errors.js';
-import type { FilterOptions, HistoryRecord, LedgerFilter, LedgerWorkspace, TrendScope } from '../types.js';
+/**
+ * 已结案列表 / 筛选项候选用例（history tab 与筛选控件用；非首屏，按需调用）。
+ */
+import { type DegradedInfo } from "../errors.js";
+import type { FilterOptions, HistoryRecord, LedgerFilter, LedgerWorkspace, TrendScope } from "../types.js";
 /** 已结案列表默认分页大小（「加载更多」= 调用方加大 limit 重取）。 */
 export declare const DEFAULT_HISTORY_LIMIT = 500;
 /**

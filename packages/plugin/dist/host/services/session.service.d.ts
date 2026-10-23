@@ -1,4 +1,4 @@
-import type { LedgerWorkspace } from '../types.js';
+import type { LedgerWorkspace } from "../types.js";
 /** 模型路由：provider 与 model 必须成对。 */
 export interface ModelRoute {
     readonly provider: string;
@@ -7,9 +7,9 @@ export interface ModelRoute {
 /** 会话首条 user 消息（`@deepseek-ai/dsh-llm` UserMessage 的最小同形面）。 */
 export interface UserMessageLike {
     readonly id: string;
-    readonly role: 'user';
+    readonly role: "user";
     readonly content: readonly {
-        readonly type: 'text';
+        readonly type: "text";
         readonly text: string;
     }[];
     /**
@@ -18,7 +18,7 @@ export interface UserMessageLike {
      */
     readonly source: {
         readonly kind: string;
-        readonly form: 'notice';
+        readonly form: "notice";
         readonly summary: string;
     };
 }
@@ -37,7 +37,7 @@ export interface AgentsLike {
         readonly setup?: (agentCtx: unknown) => void | Promise<void>;
     }): Promise<{
         readonly agent: {
-            send(message: UserMessageLike, target: 'next-turn' | 'next-step', wakeup: boolean): void;
+            send(message: UserMessageLike, target: "next-turn" | "next-step", wakeup: boolean): void;
         };
     }>;
 }
@@ -53,7 +53,7 @@ export interface DefaultModelLike {
     currentSelection(): ModelRoute;
 }
 /** 交接失败的原因码（路由层据此给状态码，文案在这里写成能直接上界面的）。 */
-export type HandoffErrorCode = 'no-agents' | 'no-preset' | 'no-model' | 'task-missing' | 'create-failed' | 'send-failed';
+export type HandoffErrorCode = "no-agents" | "no-preset" | "no-model" | "task-missing" | "create-failed" | "send-failed";
 export declare class HandoffError extends Error {
     readonly code: HandoffErrorCode;
     constructor(code: HandoffErrorCode, message: string);

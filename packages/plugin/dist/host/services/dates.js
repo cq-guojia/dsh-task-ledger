@@ -3,7 +3,7 @@
  * 所有函数显式收 `now`——不自己读时钟，便于单测与跨时区复现。
  */
 function pad(value) {
-    return String(value).padStart(2, '0');
+    return String(value).padStart(2, "0");
 }
 /** Date → `YYYY-MM-DD`。 */
 export function ymd(date) {
@@ -11,7 +11,7 @@ export function ymd(date) {
 }
 /** 时刻串（`YYYY-MM-DD HH:mm:ss` / `YYYY-MM-DD`）→ 日期部分；解析不了回 null。 */
 export function dayOf(stamp) {
-    if (stamp === null || stamp === undefined || stamp === '')
+    if (stamp === null || stamp === undefined || stamp === "")
         return null;
     const day = String(stamp).slice(0, 10);
     return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
@@ -49,9 +49,9 @@ export function inWindow(day, window) {
 }
 /** 「YYYY-MM-DD HH:mm:ss」→ 距今天数（解析不了 / 未来都按 0；不编造）。 */
 export function daysSince(stamp, now) {
-    if (stamp === null || stamp === undefined || stamp === '')
+    if (stamp === null || stamp === undefined || stamp === "")
         return null;
-    const parsed = new Date(String(stamp).replace(' ', 'T'));
+    const parsed = new Date(String(stamp).replace(" ", "T"));
     if (Number.isNaN(parsed.getTime()))
         return null;
     const days = Math.floor((now.getTime() - parsed.getTime()) / 86_400_000);

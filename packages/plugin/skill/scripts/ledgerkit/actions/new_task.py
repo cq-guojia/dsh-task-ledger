@@ -64,26 +64,29 @@ def new_task(
     task = {
         "title": clean_title,
         "created": created,
-        "status": "open",
+        # --self = 建并认领：直接归自己名下就必须是在做，不留 open 半成品
+        "status": "doing" if mine else "open",
         "owner": me.email if mine else None,
         "creator": me.email,
         "category": category,
         "tags": list(tag_list),
         "worklog": doc_rel,
-        "started": None,
+        "started": created if mine else None,
         "updated": created,
         "finished": None,
     }
     try:
         ensure_dir(path.parent)
-        logs.create(
+        _ = logs.create(
             tid=tid,
             title=clean_title,
             created=created,
             creator=me.email,
             category=category,
             tags=tag_list,
-            first_exec=exec_line(created, me.email, "new", "创建任务"),
+            first_exec=exec_line(
+                created, me.email, "new", "创建任务并认领" if mine else "创建任务"
+            ),
         )
         target.put(tid, task)
     except Exception:

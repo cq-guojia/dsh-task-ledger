@@ -12,7 +12,7 @@
 /** 缓存有效期（2026-10-18 拍板 1.5s：够挡同一屏的重复读，短到不会让人看到旧数据）。 */
 export declare const CACHE_TTL_MS = 1500;
 /** 缓存的操作种类（= skill 脚本子命令；worklog 不进缓存故不在此列）。 */
-export type CacheOp = 'list' | 'history';
+export type CacheOp = "list" | "history";
 /** 缓存键：`op:workspace:filter` 三条信息都要，否则不同筛选 / 不同工作区会串味。 */
 export declare function cacheKey(workspaceId: string, op: CacheOp, detail: string): string;
 /**

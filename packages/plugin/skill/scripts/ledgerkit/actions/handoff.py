@@ -27,8 +27,7 @@ def handoff(
     record = index.get(to)
     if record is None:
         raise Fail(
-            f"{to} 还没在索引里登记过 ⇒ 不能交接给他"
-            "（写出一份对别人不存在的分片，他自己也看不到）。"
+            f"{to} 还没在索引里登记过 ⇒ 不能交接给他（写出一份对别人不存在的分片，他自己也看不到）。"
         )
     mine = TaskStore(repo, shard_rel(me.email), identity=me)
     task = mine.get(tid)  # 锁内重读

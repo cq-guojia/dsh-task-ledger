@@ -1,4 +1,4 @@
-import { hasLedger } from './repositories/ledger.repository.js';
+import { hasLedger } from "./repositories/ledger.repository.js";
 /**
  * 工作区发现：宿主 registry 全量 → 逐个查 <path>/ledger/progress.json，只返回有的。
  * 未初始化（有 ledger/ 无 progress.json）= 隐藏，后端无此概念（2026-10-17 拍板）。
@@ -9,5 +9,9 @@ import { hasLedger } from './repositories/ledger.repository.js';
 export function resolveWorkspaces(registryList) {
     return registryList
         .filter((workspace) => hasLedger(workspace.path))
-        .map((workspace) => ({ id: workspace.id, title: workspace.title, path: workspace.path }));
+        .map((workspace) => ({
+        id: workspace.id,
+        title: workspace.title,
+        path: workspace.path,
+    }));
 }

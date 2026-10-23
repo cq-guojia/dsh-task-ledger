@@ -5,8 +5,8 @@
  * 拆端点后（host-data-plane §五 A）首屏走 `services/home.service.ts::getSnapshot()`（不碰 history），
  * 本组合归「兼容期全量 `/board`」；新端点在 routes 层直接调 service，不过本文件。
  */
-import { type DegradedInfo } from './errors.js';
-import type { HomeAggregate, LedgerWorkspace } from './types.js';
+import { type DegradedInfo } from "./errors.js";
+import type { HomeAggregate, LedgerWorkspace } from "./types.js";
 /**
  * 首页一次拿全：在办快照（含停滞 / 天数 / 身份）+ 近 8 周趋势（完成 / 新增 × 所有 / 我的）
  * + 四个自然周期计数。**每个工作区只读一次**（list + history + git 身份），
@@ -16,5 +16,5 @@ import type { HomeAggregate, LedgerWorkspace } from './types.js';
 export declare function getHomeAggregate(workspaces: readonly LedgerWorkspace[]): Promise<HomeAggregate & {
     degraded: readonly DegradedInfo[];
 }>;
-export { getSnapshot as getBoardSnapshot } from './services/home.service.js';
-export { getFilterOptions, queryClosed } from './services/history.service.js';
+export { getFilterOptions, queryClosed } from "./services/history.service.js";
+export { getSnapshot as getBoardSnapshot } from "./services/home.service.js";

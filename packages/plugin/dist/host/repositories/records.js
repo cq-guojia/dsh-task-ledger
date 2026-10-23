@@ -8,9 +8,9 @@
  *   旧 8 列 history 不因此被误杀）。
  * 失败抛 {@link LedgerDataError}——由 service 层捕获进 degraded，不静默。
  */
-import { LedgerDataError } from '../errors.js';
+import { LedgerDataError } from "../errors.js";
 function isPlainObject(value) {
-    return value !== null && typeof value === 'object' && !Array.isArray(value);
+    return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 /** `list --json`（任务号为键的对象）→ TaskRow[]（打上 id 与 workspace）。 */
 export function parseTaskList(raw, workspace) {
@@ -22,7 +22,7 @@ export function parseTaskList(raw, workspace) {
         if (!isPlainObject(value)) {
             throw new LedgerDataError(workspace.id, `${workspace.title}: 任务 ${id} 不是对象，台账格式可能已变`);
         }
-        if (id === '') {
+        if (id === "") {
             throw new LedgerDataError(workspace.id, `${workspace.title}: 台账存在空任务号，格式可能已变`);
         }
         rows.push({ ...value, id, workspace });

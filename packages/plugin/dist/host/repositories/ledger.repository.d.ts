@@ -1,4 +1,4 @@
-import type { HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRow } from '../types.js';
+import type { HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRow } from "../types.js";
 /**
  * LedgerFilter → skill 脚本参数（只拼调用方给了的；undefined 一律不拼，
  * 让脚本走自己的默认——插件不替脚本决定默认值）。
