@@ -1,6 +1,0 @@
-{
-  "version": "2026-10-22 00:00:00",
-  "workers": {
-    "guojia-agent": {"aliases": [], "file": "e30e467c11a0.json", "joined": "2026-10-21 22:01:37", "name": "GuoJia-Agent"}
-  }
-}
