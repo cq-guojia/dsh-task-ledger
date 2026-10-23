@@ -89,3 +89,4 @@
 - 2026-10-23 20:30:18 · log · @cqguojia@hotmail.com · 外部调研 4 源定骨架 v2（命令参考/生命周期/纪律三锅分清/分类标签并入参数）；代码核实：claim 不置 doing 是分片重构回归（旧 progress.py:2155 置 doing），待用户定修代码还是改语义
 - 2026-10-23 20:39:30 · log · @cqguojia@hotmail.com · 五项结构争议自行裁定完（命令参考内联/纪律三合一/分工线/祈使句/claim 按现状）；claim 不置 doing 定性为看板可见的真 bug（home.service.ts:48-79），建议修 claim.py 待用户发话
 - 2026-10-23 21:02:16 · set · @cqguojia@hotmail.com · 状态改为 doing
+- 2026-10-23 21:02:26 · log · @cqguojia@hotmail.com · 代码修复落地：claim 认领即 doing+open 守卫、new --self 建即 doing+started、smoke 补 4 断言；4 测试全过、codelint 仅剩 .bak；另发现 release 不清 started（插件注释与旧文档都说清），一行待修
