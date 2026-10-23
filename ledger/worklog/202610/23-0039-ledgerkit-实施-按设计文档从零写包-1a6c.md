@@ -1,6 +1,7 @@
 # 20261023-0039-ledgerkit-实施-按设计文档从零写包-1a6c：ledgerkit 实施：按设计文档从零写包
 
 > **创建**：2026-10-23 00:39:39（@GuoJia-Agent）
+> ✅ 完成封卷：2026-10-23 12:36:23（@guojia-agent）
 > **分类**：实施 ｜ **标签**：ledgerkit、分包、分层、单测
 
 <!-- 「> **分类**：… ｜ **标签**：…」行由脚本按 new --category / --tags 插入；两者皆空则不写。 -->
@@ -39,3 +40,4 @@
      补记用 progress.py log --id <任务号> --note "一句话"。 -->
 - 2026-10-23 00:39:39 · new · @GuoJia-Agent · 创建任务（doing）
 - 2026-10-23 00:40:28 · log · @GuoJia-Agent · 建档：背景/待办/下一步写清三阶段与真源文档；下一步先建 ledgerkit 骨架与 core/paths.py
+- 2026-10-23 12:36:23 · close · @guojia-agent · 结案封卷
