@@ -106,3 +106,4 @@
 - 2026-10-23 22:49:41 · log · @cqguojia@hotmail.com · 三轮反馈落地：多人并行 Git 分界（同 clone 靠锁/跨机必须 Git+无 Git 提醒）、--created/--finished 白话化、删 init 废话句、执行记录禁手写加重、tags --rename 补场景说明、拿不定问用户；另发现 --status 无任何产品调用方建议删
 - 2026-10-23 23:02:11 · log · @cqguojia@hotmail.com · 删除 --status 落地（用户拍板）：cli/registry/set_task 重写/handoff 去参、3 测试改路、SKILL.md 与 state-model 同步；四路由手工验证（无 owner 退1/指向自己=认领/claim→doing/释放回池 started 保留）；门禁全绿未提交
 - 2026-10-23 23:03:57 · log · @cqguojia@hotmail.com · 修用户指出的口径矛盾：开口径「不碰数据文件」改精确表述「状态与归属只经命令改、唯一手写是过程文档前五节」，三处口径（开头/手写边界/过程文档）达成一致；门禁全绿未提交
+- 2026-10-23 23:48:33 · log · @cqguojia@hotmail.com · 专家组审查（提示词8/结构8/逻辑9项相符）后修复：裸 tags 退3改退1人话（真bug）、history 第二列改负责人、allowed-tools 补Edit、五处重复规则收敛、清60秒/release字样/退出码泄漏、README 清死链、删 CI 幽灵测试行；门禁全绿
