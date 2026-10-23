@@ -11,11 +11,11 @@
 
 ## 待办
 
-- 用户拍板：release 语义按代码事实改（唯一释放路径是 `set --owner ""`）；`set --owner <别人>` 仍定为看板/维护者通道、agent 不用
-- 用户拍板：`references/design.md` 的去向（删出 skill 包；WHY 论证并入仓库 `docs/design/` 还是直接删）
-- 用户拍板：references 定为 3 个（log-note / troubleshooting / state-model），worklog.md / taxonomy.md 并回 SKILL.md
-- 授权后：重写 SKILL.md（守住 smoke.mjs:934-968 七条断言）→ 校正 state-model.md / troubleshooting.md → 删 design.md / worklog.md / taxonomy.md → `packages/plugin` 跑 build:host 重建内嵌副本 → check-skill-copy + verify
-- 发版前：SKILL.md frontmatter version 与 package.json 同步；AGENTS.md 要求改 skill 须同时升 skill-v 与 plugin-v 两个 tag（等用户明说发版）
+- 用户 review 新落的 4 个文件（种子 132 行 / 12.3 KB；references 3 个共 15.5 KB），按反馈改
+- README.md 待同步：references 索引（6→3）、design.md 死链（用户明确「其他文件不用管」，暂未动）
+- design.md 的 WHY 论证（在 references.bak/design.md）要不要进仓库 docs/design/，待用户定
+- 重建插件内嵌副本前先删 SKILL.md.bak 与 references.bak/，否则会被 copy-skill 拷进插件、check-skill-copy 报 extra
+- 发版前：版本 bump（SKILL.md frontmatter 与 package.json 现均为 1.3.0，保持同值再升）+ AGENTS.md 要求的 skill-v / plugin-v 双 tag（等用户明说发版）
 
 ## 下一步
 
@@ -34,6 +34,12 @@
 
 - 备份 `SKILL.md → SKILL.md.bak`、`references/ → references.bak/`（md5 逐字节核验一致），随后清空原目录（原件已删，可随时从 .bak 或 git 恢复）
 - 通读全部 7 个备份文件，新增定性 3 处文档 vs 代码矛盾：① 身份读不到 git 邮箱**不报错**，走兜底链 + 一条提示、命令照常成功（env.py:74-84；SKILL.md:73 / state-model.md:59 / design.md:91 / troubleshooting.md:17 四处全错）；② `new --self` 建出来 `status=open` 不是 doing（new_task.py:67；state-model.md:17 错）；③ `tags --all` 输出是 `键(值)` 计数不是两列表、统计对象含已封卷文档（render.py:182-190；SKILL.md:56/:119 错）
+
+第三轮（用户授权「按照你说的先落」，只管 skill、不碰其他文件）：
+
+- 落盘 4 个文件：`SKILL.md`（种子，纯执行导向，20 处硬伤全修）+ `references/state-model.md` + `references/troubleshooting.md` + `references/log-note.md`（原样保留）；worklog.md / taxonomy.md 的必备内容并入种子；design.md 未重建（全部旧文件在 *.bak 里）
+- 验证：复刻 smoke.mjs:934-968 文档断言 8/8 过（name / description>20 / `# task-ledger` / progress.py / claim / 占位符全替换 / python3 行正则 + 脚本真实存在 / version 与 package.json 一致）；残留错误口径扫描 3 处命中均为校正后的否定句（`tags --all` 误报 / `--status blocked` 匹配不到 / 没有自动补推）
+- 体积：种子 143 行 13.4 KB → 132 行 12.3 KB；references 6 个 37.5 KB → 3 个 15.5 KB；design.md 17.8 KB 移出包。种子降幅有限是因为并入了 worklog / taxonomy 的每次必备内容 —— 赢在零重复规则 + 按需分支真的按需
 
 ## 结论
 
@@ -70,3 +76,4 @@
 - 2026-10-23 19:17:54 · new · @cqguojia@hotmail.com · 创建任务
 - 2026-10-23 19:30:51 · log · @cqguojia@hotmail.com · 专家组会诊+代码复核：SKILL.md 与分片台账 17 处硬伤（release 语义/时区/list 参数/自动补推/traceback 边…），定目标结构：正文 ~105 行纯执行、references 6→3、design.md 移出；等用户拍板后重写
 - 2026-10-23 19:48:28 · log · @cqguojia@hotmail.com · 备份+清空+通读 7 文件：结构定为 1 种子+3 分支共 4 个；新定性 3 处矛盾（身份兜底不报错/new --self=open/tags 计数）；design.md 6 处口径列了搬迁清单
+- 2026-10-23 20:00:58 · log · @cqguojia@hotmail.com · 落盘 4 文件：种子 132 行纯执行（20 处硬伤全修）+ references 6→3；smoke 等价断言 8/8 过；design.md 未重建等用户定去向；README/版本/插件副本按「其他文件不用管」未动
