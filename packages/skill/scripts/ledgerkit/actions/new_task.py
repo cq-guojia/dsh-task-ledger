@@ -76,7 +76,7 @@ def new_task(
     }
     try:
         ensure_dir(path.parent)
-        logs.create(
+        _ = logs.create(
             tid=tid,
             title=clean_title,
             created=created,
