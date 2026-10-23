@@ -105,3 +105,4 @@
 - 2026-10-23 22:30:44 · log · @cqguojia@hotmail.com · 二轮反馈落地：开头加数据落点+状态词典（待认领/进行中/已结案）、标题 4~20 字备注、--created 白话化、set 改纯释放（放一放≠释放）、close 两层确认（含糊必须反问）+close 后禁写、确认 log 自动刷 updated；门禁全绿未提交
 - 2026-10-23 22:49:41 · log · @cqguojia@hotmail.com · 三轮反馈落地：多人并行 Git 分界（同 clone 靠锁/跨机必须 Git+无 Git 提醒）、--created/--finished 白话化、删 init 废话句、执行记录禁手写加重、tags --rename 补场景说明、拿不定问用户；另发现 --status 无任何产品调用方建议删
 - 2026-10-23 23:02:11 · log · @cqguojia@hotmail.com · 删除 --status 落地（用户拍板）：cli/registry/set_task 重写/handoff 去参、3 测试改路、SKILL.md 与 state-model 同步；四路由手工验证（无 owner 退1/指向自己=认领/claim→doing/释放回池 started 保留）；门禁全绿未提交
+- 2026-10-23 23:03:57 · log · @cqguojia@hotmail.com · 修用户指出的口径矛盾：开口径「不碰数据文件」改精确表述「状态与归属只经命令改、唯一手写是过程文档前五节」，三处口径（开头/手写边界/过程文档）达成一致；门禁全绿未提交
