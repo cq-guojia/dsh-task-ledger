@@ -35,7 +35,8 @@ export function filterArgs(filter) {
  * 2026-10-17 拍板）。全 host 对台账目录的 IO 只在本文件——别处再写 existsSync 即为分层倒退。
  */
 export function hasLedger(workspacePath) {
-    return existsSync(path.join(workspacePath, LEDGER_DIR, 'progress.json'));
+    // 分片布局（2026-10-23）：公共池 pool.json 在才算初始化；各人分片 owners/*.json 由脚本维护。
+    return existsSync(path.join(workspacePath, LEDGER_DIR, 'pool.json'));
 }
 /**
  * 在办任务（包 `list --json`；结果过 records 入口校验后打上 workspace）。

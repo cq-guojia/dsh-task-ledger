@@ -18,7 +18,48 @@ const { getHomeAggregate, getBoardSnapshot, queryClosed, getFilterOptions } =
 const { getCurrentIdentity } = await import(
 	"../dist/host/repositories/identity.repository.js"
 );
-const { runLedgerScript } = await import("../dist/host/repositories/runner.js");
+const { runLedgerScript, runLedgerCommand } = await import(
+	"../dist/host/repositories/runner.js"
+);
+
+/**
+ * 分片布局下的「在办任务合并视图」：先公共池 pool.json，再各人分片 owners/*.json（后读胜出）。
+ * 与 `list --json` 同口径 —— 冒烟不要再假设所有任务都在单个文件里。
+ */
+function mergedTasks(ledgerFile) {
+	const root = path.dirname(ledgerFile); // <ws>/ledger
+	const out = {};
+	const pool = path.join(root, "pool.json");
+	if (fs.existsSync(pool))
+		Object.assign(out, JSON.parse(fs.readFileSync(pool, "utf-8")).tasks ?? {});
+	const owners = path.join(root, "owners");
+	if (fs.existsSync(owners))
+		for (const name of fs.readdirSync(owners).sort()) {
+			if (!name.endsWith(".json")) continue;
+			Object.assign(
+				out,
+				JSON.parse(fs.readFileSync(path.join(owners, name), "utf-8")).tasks ?? {},
+			);
+		}
+	return out;
+}
+
+/** 某条任务当前落在哪份台账文件里（池 or 分片）。 */
+function taskFileOf(ledgerFile, taskId) {
+	const root = path.dirname(ledgerFile);
+	const pool = path.join(root, "pool.json");
+	if (fs.existsSync(pool) && taskId in (JSON.parse(fs.readFileSync(pool, "utf-8")).tasks ?? {}))
+		return pool;
+	const owners = path.join(root, "owners");
+	if (fs.existsSync(owners))
+		for (const name of fs.readdirSync(owners).sort()) {
+			if (!name.endsWith(".json")) continue;
+			const target = path.join(owners, name);
+			if (taskId in (JSON.parse(fs.readFileSync(target, "utf-8")).tasks ?? {}))
+				return target;
+		}
+	return null;
+}
 const { ensurePerfFixture } = await import("./fixtures/generate-perf.mjs");
 
 let passed = 0;
@@ -42,7 +83,7 @@ const PERF_PATH = ensurePerfFixture();
 // 姊妹工作区（真机用例用）：缺它只降级真机断言，合成用例不受影响
 const DISPATCH_PATH = path.resolve(repoRoot, "../dsh-task-dispatch-table");
 const hasDispatch = fs.existsSync(
-	path.join(DISPATCH_PATH, "ledger", "progress.json"),
+	path.join(DISPATCH_PATH, "ledger", "pool.json"),
 );
 
 const registry = [
@@ -63,7 +104,7 @@ const registry = [
 console.log("smoke: 后端方法抽象");
 
 await check(
-	"resolveWorkspaces：只返回有 progress.json 的（未初始化/无台账被过滤）",
+	"resolveWorkspaces：只返回有 pool.json 的（未初始化/无台账被过滤）",
 	async () => {
 		const found = resolveWorkspaces(registry);
 		const ids = found.map((w) => w.id);
@@ -89,13 +130,12 @@ await check("readTasks：在办任务带 id 与 workspace", async () => {
 	}
 });
 
+// 分片布局 + 无 init：工作区没有台账文件**不是错误**，`list --json` 出 `{}`、退出 0。
 await check(
-	"readTasks 错误路径：无 progress.json 的工作区抛人话错误",
+	"readTasks 错误路径：无 pool.json 的工作区返回空数组（不是错误）",
 	async () => {
-		await assert.rejects(
-			() => readTasks({ id: "x", title: "x", path: "/tmp" }),
-			/progress\.json/,
-		);
+		const rows = await readTasks({ id: "x", title: "x", path: "/tmp" });
+		assert.equal(rows.length, 0);
 	},
 );
 
@@ -283,7 +323,7 @@ await check(
 				});
 				// 在办：creator=me、owner=other、本周创建且未结
 				await fs.promises.writeFile(
-					path.join(dir, "ledger", "progress.json"),
+					path.join(dir, "ledger", "pool.json"),
 					JSON.stringify({
 						tasks: {
 							x1: {
@@ -369,7 +409,7 @@ await check(
 			trend.lastMonth.to < trend.thisMonth.from,
 			"上月应结束在本月开始之前",
 		);
-		// 新增必须合并两个来源：本仓有在办（progress.json）+ 已结案（history），两者都该被数到
+		// 新增必须合并两个来源：本仓有在办（pool.json）+ 已结案（history），两者都该被数到
 		assert.ok(
 			trend.thisMonth.created >= trend.thisWeek.created,
 			"本月新增 ≥ 本周新增",
@@ -397,12 +437,12 @@ await check("queryClosed：近 13 个月窗口 + 创建时间倒序 + limit", as
 
 await check("getFilterOptions：owner/category/tag 去重候选", async () => {
 	// 自造一个小台账：不读本仓真实数据（会随日常结案变化），也不吃 perf fixture
-	//（那个 fixture 故意只造 history、不写 progress.json，专门喂「无台账被过滤」用例）
+	//（那个 fixture 故意只造 history、不写 pool.json，专门喂「无台账被过滤」用例）
 	const board = fs.mkdtempSync(path.join(os.tmpdir(), "dtl-filter-"));
 	try {
 		fs.mkdirSync(path.join(board, "ledger", "history"), { recursive: true });
 		fs.writeFileSync(
-			path.join(board, "ledger", "progress.json"),
+			path.join(board, "ledger", "pool.json"),
 			JSON.stringify({
 				tasks: {
 					"20260101-0000-夹具任务-a1b2": {
@@ -471,28 +511,28 @@ await check("getTask + readWorklog：详情与过程正文", async () => {
 });
 
 await check("runLedgerScript：直调 count-only（合成 5 万行封顶）", async () => {
-	const result = await runLedgerScript("history", [
+	// --json 与 --count-only 互斥（同时给 = 用法错退出码 2）；count-only 打的是人话，走 Command
+	const result = await runLedgerCommand("history", [
 		"--repo",
 		PERF_PATH,
-		"--json",
 		"--count-only",
 		"--months",
 		"13",
 	]);
-	assert.equal(result.ok, true);
-	if (result.ok) {
-		assert.equal(result.data.count, 10000);
-		assert.equal(result.data.capped, true);
-	}
+	assert.equal(result.ok, true, `count-only 应成功：${result.error ?? ""}`);
+	assert.match(result.output, /已结案：10000 条/);
+	assert.match(result.output, /计数已封顶/);
 });
 
-await check("runLedgerScript 错误路径：不存在的仓库 → 人话错误", async () => {
+// 不存在的仓库：只读命令按「空结果」处理（退出 0 + 合法 JSON），不是错误
+await check("runLedgerScript 错误路径：不存在的仓库 → 空结果退出 0", async () => {
 	const result = await runLedgerScript("list", [
 		"--repo",
 		"/tmp/definitely-not-here",
+		"--json",
 	]);
-	assert.equal(result.ok, false);
-	if (!result.ok) assert.match(result.error, /repo|目录|不存在/);
+	assert.equal(result.ok, true);
+	if (result.ok) assert.equal(typeof result.data, "object");
 });
 
 await check(
@@ -506,7 +546,7 @@ await check(
 		try {
 			mkdirSync(path.join(root, "ledger"), { recursive: true });
 			writeFileSync(
-				path.join(root, "ledger", "progress.json"),
+				path.join(root, "ledger", "pool.json"),
 				JSON.stringify({
 					version: 6,
 					tasks: {
@@ -526,7 +566,7 @@ await check(
 			assert.equal(
 				home.snapshot.tasks.length,
 				1,
-				"有 progress.json 就应读到在办",
+				"有 pool.json 就应读到在办",
 			);
 			assert.equal(
 				home.trend.thisWeek.done,
@@ -965,7 +1005,7 @@ await check(
 				);
 			}
 			writeFileSync(
-				path.join(root, "good", "ledger", "progress.json"),
+				path.join(root, "good", "ledger", "pool.json"),
 				JSON.stringify({
 					tasks: {
 						t1: {
@@ -978,7 +1018,7 @@ await check(
 				}),
 			);
 			writeFileSync(
-				path.join(root, "bad", "ledger", "progress.json"),
+				path.join(root, "bad", "ledger", "pool.json"),
 				"{ 这不是合法 JSON",
 			);
 			const ws = [
@@ -1415,7 +1455,7 @@ await check(
 		const { execFileSync } = await import("node:child_process");
 		const root = fs.mkdtempSync(path.join(os.tmpdir(), "dtl-write-"));
 		try {
-			// 真 git 仓：脚本的 owner 只认 cwd 的 git config user.name（--repo 只解决路径）
+			// 真 git 仓：脚本的 owner 取 cwd 的 git config user.email（--repo 只解决路径）
 			execFileSync("git", ["init", "-q"], { cwd: root });
 			execFileSync("git", ["config", "user.name", "smoke-user"], { cwd: root });
 			execFileSync("git", ["config", "user.email", "smoke@example.com"], {
@@ -1423,7 +1463,7 @@ await check(
 			});
 			fs.mkdirSync(path.join(root, "ledger"), { recursive: true });
 			const taskId = "20260101-0000-示例-abcd";
-			const progressPath = path.join(root, "ledger", "progress.json");
+			const progressPath = path.join(root, "ledger", "pool.json");
 			fs.writeFileSync(
 				progressPath,
 				JSON.stringify({
@@ -1431,7 +1471,7 @@ await check(
 						[taskId]: {
 							title: "示例",
 							status: "open",
-							creator: "smoke-user",
+							creator: "smoke@example.com",
 							created: "2026-01-01 00:00:00",
 							worklog: null,
 						},
@@ -1439,15 +1479,17 @@ await check(
 				}),
 			);
 			const readTask = () =>
-				JSON.parse(fs.readFileSync(progressPath, "utf-8")).tasks[taskId];
+				mergedTasks(progressPath)[taskId];
 			const ws = { id: "ws-tmp", title: "tmp", path: root };
 
 			await claimTask(ws, taskId);
-			assert.equal(readTask().status, "doing", "认领后应为 doing");
+			// 分片布局契约：claim 只改 owner / started / updated，**不动 status**
+			assert.equal(readTask().status, "open", "认领不改状态（状态由 set 改）");
+			assert.ok(readTask().owner, "认领后应有 owner");
 			assert.equal(
 				readTask().owner,
-				"smoke-user",
-				"owner 应取工作区 git 身份（不是宿主进程 cwd）",
+				"smoke@example.com",
+				"owner 应取工作区 git 邮箱（不是宿主进程 cwd）",
 			);
 			await releaseTask(ws, taskId);
 			assert.equal(readTask().status, "open", "释放后应回 open");
@@ -1535,14 +1577,23 @@ await check(
 					ok.body.notice.includes("没有上游"),
 				`退出码 0 的同步提示必须随响应带出：${JSON.stringify(ok.body)}`,
 			);
-			assert.equal(readTask().status, "doing", "路由层认领也要真落盘");
+			assert.equal(
+			readTask().status,
+			"open",
+			"路由层认领也要真落盘（claim 不改状态，状态由 set 改）",
+		);
+		assert.equal(
+			readTask().owner,
+			"smoke@example.com",
+			"路由层认领的 owner 同样取工作区 git 邮箱",
+		);
 		} finally {
 			fs.rmSync(root, { recursive: true, force: true });
 		}
 	},
 );
 
-// 写前同步（2026-10-21 修）：只定向取 progress.json 与 history/，worklog 正文一个字都不碰。
+// 写前同步（2026-10-21 修）：只定向取 pool.json 与 history/，worklog 正文一个字都不碰。
 // 覆盖三类事故：正文被覆盖丢失、本地改动被静默回退、远端新任务 / worklog 取不下来。
 await check(
 	"写前同步：定向取最新 / 正文保留 / 脏与未推送中止 / --no-sync / 只读不触发 / 离线可写",
@@ -1580,12 +1631,11 @@ await check(
 			git(a, ["commit", "-q", "-m", "init"]);
 			git(a, ["push", "-q", "-u", "origin", "HEAD"]);
 
-			assert.equal(run(a, ["init"]).status, 0, "init 应成功（含写后提交推送）");
 			const newRun = run(a, ["new", "--title", "a 侧任务", "--self"]);
 			assert.equal(newRun.status, 0, `new 应成功：${newRun.stderr}`);
-			const progressPath = path.join(a, "ledger", "progress.json");
+			const progressPath = path.join(a, "ledger", "pool.json");
 			const tasks = () =>
-				JSON.parse(fs.readFileSync(progressPath, "utf-8")).tasks;
+				mergedTasks(progressPath);
 			const aTaskId = Object.keys(tasks())[0];
 			const logPath = path.join(a, "ledger", tasks()[aTaskId].worklog);
 
@@ -1603,7 +1653,7 @@ await check(
 				"log 不得覆盖 worklog 正文",
 			);
 
-			// 脏 progress.json：写前取最新会覆盖它 → 中止，且字节不变
+			// 脏 pool.json：写前取最新会覆盖它 → 中止，且字节不变
 			const dirtyBefore = fs.readFileSync(progressPath);
 			const dirtyData = Buffer.concat([dirtyBefore, Buffer.from("\n")]);
 			fs.writeFileSync(progressPath, dirtyData);
@@ -1614,9 +1664,9 @@ await check(
 				"--note",
 				"冒烟：脏时应中止",
 			]);
-			assert.equal(dirtyRun.status, 1, "脏 progress.json 应中止");
+			assert.equal(dirtyRun.status, 1, "脏 pool.json 应中止");
 			assert.ok(
-				dirtyRun.stderr.includes("还没签入 git"),
+				/未提交|还没签入/.test(dirtyRun.stderr),
 				`应提示未提交改动：${dirtyRun.stderr}`,
 			);
 			assert.deepEqual(
@@ -1626,9 +1676,10 @@ await check(
 			);
 			fs.writeFileSync(progressPath, dirtyBefore);
 
-			// 有未推送的台账提交：联网后第一笔写先把它们推上去再照常写（2026-10-21 改，不再中止等用户手动 push）
-			// 用 new 而不是 log 造这次提交：new 必然改 progress.json（多一个任务键），
-			// log 只刷 updated，同一秒内可能内容不变、提交里就没有 progress.json。
+			// 有未推送的台账提交：写前 guard 硬拦（2026-10-22 设计定稿：不替用户 push，
+			// 免得把用户特意留在本地的提交推走），提示里要给出处理办法
+			// 用 new 而不是 log 造这次提交：new 必然改 pool.json（多一个任务键），
+			// log 只刷 updated，同一秒内可能内容不变、提交里就没有 pool.json。
 			assert.equal(
 				run(a, ["new", "--title", "本地未推送的任务", "--self"], {
 					TASK_LEDGER_NO_SYNC: "1",
@@ -1643,23 +1694,22 @@ await check(
 				"--id",
 				aTaskId,
 				"--note",
-				"冒烟：未推送先补推",
+				"冒烟：未推送应中止",
 			]);
 			assert.equal(
 				unpushed.status,
-				0,
-				`有未推送台账提交时应先补推再写：${unpushed.stderr}`,
+				1,
+				`有未推送台账提交应中止：${unpushed.stderr}`,
 			);
 			assert.ok(
-				unpushed.stderr.includes("推上去了"),
-				`应先补推积压提交：${unpushed.stderr}`,
+				/未推送/.test(unpushed.stderr),
+				`应说明是未推送的台账提交：${unpushed.stderr}`,
 			);
-			const unpushedBranch = git(a, ["rev-parse", "--abbrev-ref", "HEAD"]);
-			assert.equal(
-				git(a, ["rev-parse", `origin/${unpushedBranch}`]),
-				git(a, ["rev-parse", "HEAD"]),
-				"补推后远端应与本地一致",
+			assert.ok(
+				/git push/.test(unpushed.stderr),
+				`应给出处理办法（git push / --no-sync）：${unpushed.stderr}`,
 			);
+			git(a, ["push", "-q"]); // 人工推掉积压，后面的用例才有干净起点
 
 			// 他人新建任务 → 本地写命令前取到最新；worklog 新文件被补下来，已有正文不动
 			execFileSync("git", ["clone", "-q", remote, b], {
@@ -1673,9 +1723,7 @@ await check(
 				"他人 new 应成功",
 			);
 			const bTaskId = Object.keys(
-				JSON.parse(
-					fs.readFileSync(path.join(b, "ledger", "progress.json"), "utf-8"),
-				).tasks,
+				mergedTasks(path.join(b, "ledger", "pool.json")),
 			).find((id) => id !== aTaskId);
 			const fetched = run(a, [
 				"log",
@@ -1704,7 +1752,7 @@ await check(
 			);
 
 			// 先让 b 快进到远端最新：这条用例验的是「历史层只刷目标月」，
-			// 不该被「两边同时改 progress.json 导致的 rebase 冲突」（B 类待定项）拖累。
+			// 不该被「两边同时改 pool.json 导致的 rebase 冲突」（B 类待定项）拖累。
 			const bBranch = git(b, ["rev-parse", "--abbrev-ref", "HEAD"]);
 			git(b, ["pull", "-q", "--ff-only", "origin", bBranch]);
 
@@ -1810,9 +1858,7 @@ await check(
 				"他人再建一个",
 			);
 			const bNew = Object.keys(
-				JSON.parse(
-					fs.readFileSync(path.join(b, "ledger", "progress.json"), "utf-8"),
-				).tasks,
+				mergedTasks(path.join(b, "ledger", "pool.json")),
 			).filter((id) => !aKnown.has(id));
 			assert.ok(bNew.length >= 1, "他人侧应有一个 a 没见过的任务");
 			const off = run(
@@ -1854,23 +1900,37 @@ await check(
 				"离线也要把记录写进正文",
 			);
 
-			// 联网恢复：写前先把离线攒下的台账提交推上去，不再拿「有 N 个没推」挡住写入
+			// 联网恢复：离线攒下的台账提交先被写前 guard 拦下（不自动替用户 push），
+			// 人工推掉之后才照常写
 			git(a, ["remote", "set-url", "origin", remote]);
+			const blocked = run(a, [
+				"log",
+				"--id",
+				aTaskId,
+				"--note",
+				"冒烟：联网后先被拦",
+			]);
+			assert.equal(
+				blocked.status,
+				1,
+				`联网后有未推送台账提交应中止：${blocked.stderr}`,
+			);
+			assert.ok(
+				/未推送/.test(blocked.stderr),
+				`应说明是未推送的台账提交：${blocked.stderr}`,
+			);
+			git(a, ["push", "-q"]);
 			const online = run(a, [
 				"log",
 				"--id",
 				aTaskId,
 				"--note",
-				"冒烟：联网后自动补推",
+				"冒烟：联网后照常写",
 			]);
 			assert.equal(
 				online.status,
 				0,
-				`联网后应能直接写（不该被「没推」挡住）：${online.stderr}`,
-			);
-			assert.ok(
-				online.stderr.includes("推上去了"),
-				`应先自动补推积压提交：${online.stderr}`,
+				`推掉积压后应能写：${online.stderr}`,
 			);
 			const onlineBranch = git(a, ["rev-parse", "--abbrev-ref", "HEAD"]);
 			assert.equal(
@@ -1955,15 +2015,13 @@ await check("写前同步：手写 worklog 撞远端同改，两边内容都保�
 		git(a, ["add", "README.md"]);
 		git(a, ["commit", "-q", "-m", "init"]);
 		git(a, ["push", "-q", "-u", "origin", "HEAD"]);
-		assert.equal(run(a, ["init"]).status, 0, "init 应成功");
 		assert.equal(
 			run(a, ["new", "--title", "共享任务", "--self"]).status,
 			0,
 			"new 应成功",
 		);
-		const tasks = JSON.parse(
-			fs.readFileSync(path.join(a, "ledger", "progress.json"), "utf-8"),
-		).tasks;
+		const ledgerFile = path.join(a, "ledger", "pool.json");
+		const tasks = mergedTasks(ledgerFile);
 		const tid = Object.keys(tasks)[0];
 		const rel = tasks[tid].worklog;
 		const logPath = path.join(a, "ledger", rel);
@@ -1977,27 +2035,27 @@ await check("写前同步：手写 worklog 撞远端同改，两边内容都保�
 
 		fs.appendFileSync(logPath, "\nLOCAL-HANDWRITE\n");
 		const res = run(a, ["log", "--id", tid, "--note", "本地一条记录"]);
+		// 两边都往同一篇正文末尾追加 ⇒ 叠不回去：中止、留冲突标记让人合，
+		// 手写那段同时在 stash 里，一个都没丢（2026-10-22 architecture.md 不变量 7）
+		assert.equal(res.status, 1, `两边同改应中止并要求人工合并：${res.stderr}`);
+		assert.ok(res.stderr.includes("冲突"), `应说清冲突与处理步骤：${res.stderr}`);
 		const text = fs.readFileSync(logPath, "utf-8");
 		assert.ok(text.includes("REMOTE-SIDE"), "远端那次改动不得被旧版覆盖写没");
 		assert.ok(text.includes("LOCAL-HANDWRITE"), "手写内容不得被覆盖吞掉");
-		assert.equal(res.status, 1, `两边同改应中止并要求人工合并：${res.stderr}`);
-		assert.ok(
-			res.stderr.includes("冲突"),
-			`应说清冲突与处理步骤：${res.stderr}`,
-		);
-		assert.notEqual(
-			git(a, ["stash", "list"]),
-			"",
-			"手写内容要留在 stash 里，别丢",
-		);
+		assert.ok(text.includes("<<<<<<<"), "冲突要标出来，不许静默选一个");
+		assert.notEqual(git(a, ["stash", "list"]), "", "手写内容要留在 stash 里，别丢");
 	} finally {
 		fs.rmSync(base, { recursive: true, force: true });
 	}
 });
 
 // 合并按「任务」对账，不是按文本行：行级合并只认相邻上下文，删一行 + 末尾加一行就撞；
-// 按任务号对账后，不同任务各自改动自动合上，只有同一任务被两边改才报冲突（不静默选）。
-await check("合并：不同任务自动合上 / 同一任务报冲突", async () => {
+// 按任务号对账后，不同任务各自改动自动合上，只有同一任务被两边改才留标记（不静默选）。
+//
+// 2026-10-23 重写：写前 guard 已经保证「本地没有未推送的台账提交」，所以 rebase 自动合并
+// 只剩一条路能走到 —— 取完最新之后、推送之前，远端又来了新提交。用远端 pre-receive 钩子
+// 精确制造这个竞态：第一次收到推送时，先把 b 攒着没推的提交收下来，再拒掉本次推送。
+await check("合并：不同任务自动合上 / 同一任务留冲突标记", async () => {
 	const { execFileSync, spawnSync } = await import("node:child_process");
 	const script = path.join(here, "../skill/scripts/progress.py");
 	const env = { ...process.env, PYTHONDONTWRITEBYTECODE: "1" };
@@ -2014,6 +2072,26 @@ await check("合并：不同任务自动合上 / 同一任务报冲突", async (
 		git(dir, ["config", "user.email", "smoke@example.com"]);
 	};
 	const bases = [];
+	// 竞态制造器：a 的 pre-push 钩子 —— 第一次推送被拒，且被拒之前先把 b 攒着没推的
+	// 提交推上远端（放行第二次）。core.hooksPath 钉到本仓 hooks 目录，免得全局配置覆盖。
+	const armRace = (base, a, b) => {
+		const flag = path.join(base, "raced");
+		const hook = path.join(a, ".git", "hooks", "pre-push");
+		fs.writeFileSync(
+			hook,
+			[
+				"#!/bin/sh",
+				`if [ -f "${flag}" ]; then exit 0; fi`,
+				`touch "${flag}"`,
+				`( cd "${b}" && unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE ` +
+					`&& git push -q origin HEAD < /dev/null )`,
+				"exit 1",
+				"",
+			].join("\n"),
+		);
+		fs.chmodSync(hook, 0o755);
+		git(a, ["config", "core.hooksPath", path.join(a, ".git", "hooks")]);
+	};
 	const setup = (tag, wanted) => {
 		const base = fs.mkdtempSync(path.join(os.tmpdir(), `dtl-merge-${tag}-`));
 		bases.push(base);
@@ -2032,7 +2110,6 @@ await check("合并：不同任务自动合上 / 同一任务报冲突", async (
 		git(a, ["add", "README.md"]);
 		git(a, ["commit", "-q", "-m", "init"]);
 		git(a, ["push", "-q", "-u", "origin", "HEAD"]);
-		assert.equal(run(a, ["init"]).status, 0, "init 应成功");
 		const ns = { TASK_LEDGER_NO_SYNC: "1" };
 		for (const t of wanted)
 			assert.equal(
@@ -2045,25 +2122,17 @@ await check("合并：不同任务自动合上 / 同一任务报冲突", async (
 		git(a, ["push", "-q"]);
 		execFileSync("git", ["clone", "-q", remote, b], { env, encoding: "utf-8" });
 		ident(b, "smoke-user");
-		const tasks = () =>
-			JSON.parse(
-				fs.readFileSync(path.join(a, "ledger", "progress.json"), "utf-8"),
-			).tasks;
+		// 分片布局：--self 的任务落在 owners/<hash>.json，读它得走合并视图
+		const ledgerFile = path.join(a, "ledger", "pool.json");
+		const tasks = () => mergedTasks(ledgerFile);
 		const idOf = (title) =>
 			Object.keys(tasks()).find((id) => tasks()[id].title === title);
-		return { base, a, b, tasks, idOf, remote, ns };
+		const fileOf = (id) => taskFileOf(ledgerFile, id);
+		return { base, a, b, tasks, idOf, fileOf, remote, ns };
 	};
 	try {
-		// A：a 关掉一个任务（删末尾一行）+ b 新建一个任务（末尾加一行）—— 行级合并必撞
+		// A：a 结案一个任务（删末尾一行）+ b 新建一个任务（末尾加一行）—— 行级合并必撞
 		const A = setup("diff", ["T1", "T2", "T3"]);
-		assert.equal(
-			run(A.a, ["close", "--id", A.idOf("T3"), "--summary", "夹具"], A.ns)
-				.status,
-			0,
-			"close 应成功",
-		);
-		git(A.a, ["add", "ledger"]);
-		git(A.a, ["commit", "-q", "-m", "chore(ledger): a 结案"]);
 		assert.equal(
 			run(A.b, ["new", "--title", "T4", "--self"], A.ns).status,
 			0,
@@ -2071,13 +2140,13 @@ await check("合并：不同任务自动合上 / 同一任务报冲突", async (
 		);
 		git(A.b, ["add", "ledger"]);
 		git(A.b, ["commit", "-q", "-m", "chore(ledger): b 新建"]);
-		git(A.b, ["push", "-q"]);
+		armRace(A.base, A.a, A.b);
 		const merged = run(A.a, [
-			"log",
+			"close",
 			"--id",
-			A.idOf("T1"),
-			"--note",
-			"触发合并",
+			A.idOf("T3"),
+			"--summary",
+			"夹具：结案撞上远端新建",
 		]);
 		assert.equal(merged.status, 0, `不同任务应自动合上：${merged.stderr}`);
 		assert.ok(
@@ -2092,50 +2161,50 @@ await check("合并：不同任务自动合上 / 同一任务报冲突", async (
 			"T3 该没、T4 该在",
 		);
 		assert.ok(
-			!fs
-				.readFileSync(path.join(A.a, "ledger", "progress.json"), "utf-8")
-				.includes("<<<<<<<"),
+			!fs.readFileSync(A.fileOf(A.idOf("T1")), "utf-8").includes("<<<<<<<"),
 			"合上了就不该留冲突标记",
 		);
 		assert.equal(git(A.a, ["status", "--porcelain"]), "", "合并后工作区应干净");
+		const aBranch = git(A.a, ["rev-parse", "--abbrev-ref", "HEAD"]);
+		assert.equal(
+			git(A.a, ["rev-parse", `origin/${aBranch}`]),
+			git(A.a, ["rev-parse", "HEAD"]),
+			"合并后推送应成功",
+		);
 
-		// B：两台机器各改同一个任务 —— 必须报冲突，不许静默选一个
+		// B：两台机器各改同一个任务 —— 留标记等人，不许静默选一个
 		const B = setup("same", ["S1", "S2"]);
 		const s2 = B.idOf("S2");
-		const s2Log = B.tasks()[s2].worklog; // 冲突后 progress.json 不再是合法 JSON，路径得先记下
+		const s2File = B.fileOf(s2); // 冲突后分片不再是合法 JSON，路径得先记下
+		const s2Log = B.tasks()[s2].worklog;
 		// 两次 log 要隔着 1 秒：时间戳同秒时两个版本字节完全相同，那本来就该判成没冲突。
 		execFileSync("sleep", ["1.1"], { env });
 		assert.equal(
-			run(B.a, ["log", "--id", s2, "--note", "家里改的"], B.ns).status,
-			0,
-			"a log 应成功",
-		);
-		git(B.a, ["add", "ledger"]);
-		git(B.a, ["commit", "-q", "-m", "chore(ledger): 家里改"]);
-		execFileSync("sleep", ["1.1"], { env });
-		assert.equal(
-			run(B.b, ["log", "--id", s2, "--note", "公司改的"]).status,
+			run(B.b, ["log", "--id", s2, "--note", "公司改的"], B.ns).status,
 			0,
 			"b log 应成功",
 		);
+		git(B.b, ["add", "ledger"]);
+		git(B.b, ["commit", "-q", "-m", "chore(ledger): 公司改"]);
+		// 两次 log 都要隔着 1 秒：时间戳同秒时两个版本字节完全相同，那本来就该判成没冲突。
+		execFileSync("sleep", ["1.1"], { env });
+		armRace(B.base, B.a, B.b);
 		const clash = run(B.a, ["log", "--id", s2, "--note", "家里再改"]);
-		assert.equal(clash.status, 1, `同一任务两边改应中止：${clash.stderr}`);
+		// 台账已经写成功、也提交在本地了，只是推不上去 ⇒ 退出码仍是 0，话说清就行
+		assert.equal(clash.status, 0, `同一任务两边改不该中断写入：${clash.stderr}`);
 		assert.ok(
 			clash.stderr.includes("两边同时改过"),
 			`应说清是同任务冲突：${clash.stderr}`,
 		);
-		const progressText = fs.readFileSync(
-			path.join(B.a, "ledger", "progress.json"),
-			"utf-8",
-		);
+		const shardText = fs.readFileSync(s2File, "utf-8");
 		assert.ok(
-			progressText.includes("<<<<<<< 远端"),
+			shardText.includes("<<<<<<< 远端"),
 			"冲突任务要标出来，不能静默选（rebase 下左边是上游/别人的版本）",
 		);
-		assert.ok(progressText.includes(">>>>>>> 本地"), "冲突任务要标出本机版本");
+		assert.ok(shardText.includes(">>>>>>> 本地"), "冲突任务要标出本机版本");
 		const wl = fs.readFileSync(path.join(B.a, "ledger", s2Log), "utf-8");
 		assert.ok(
-			wl.includes("家里改的") && wl.includes("公司改的"),
+			wl.includes("公司改的") && wl.includes("家里再改"),
 			"worklog 两边记录都得保住",
 		);
 		assert.ok(!wl.includes("<<<<<<<"), "worklog 是追加式正文，不该留冲突标记");
@@ -2180,15 +2249,14 @@ await check(
 			git(a, ["add", "README.md"]);
 			git(a, ["commit", "-q", "-m", "init"]);
 			git(a, ["push", "-q", "-u", "origin", "HEAD"]);
-			assert.equal(run(a, ["init"]).status, 0, "init 应成功");
 			assert.equal(
 				run(a, ["new", "--title", "同步边界任务", "--self"]).status,
 				0,
 				"new 应成功",
 			);
-			const progressPath = path.join(a, "ledger", "progress.json");
+			const progressPath = path.join(a, "ledger", "pool.json");
 			const tasks = () =>
-				JSON.parse(fs.readFileSync(progressPath, "utf-8")).tasks;
+				mergedTasks(progressPath);
 			const taskId = Object.keys(tasks())[0];
 
 			// ① 只提交台账：用户已经 git add 的业务文件不能被卷进 chore(ledger) 提交
@@ -2212,14 +2280,16 @@ await check(
 			fs.rmSync(path.join(a, "biz.txt"), { force: true });
 
 			// 一个任务一行：任务块占十几行时，删/改相邻任务的 patch 上下文会重叠，rebase 必冲突
-			const rawProgress = fs.readFileSync(progressPath, "utf-8");
+			// 分片布局：任务可能落在分片里，按「它实际所在的那份文件」数行
+			const tid = Object.keys(tasks())[0];
+			const rawProgress = fs.readFileSync(taskFileOf(progressPath, tid), "utf-8");
 			const taskLines = rawProgress
 				.split("\n")
 				.filter((line) => line.startsWith('    "'));
 			assert.equal(
 				taskLines.length,
 				Object.keys(tasks()).length,
-				"progress.json 应一个任务一行",
+				"pool.json 应一个任务一行",
 			);
 
 			// ② 命令失败要回滚写前刷新，不能把远端版本留在工作树里冒充用户的未提交改动
@@ -2312,18 +2382,18 @@ await check(
 // 写前同步的目标范围（结构断言）：历史层不再整目录枚举，只在 close 时按结案月取一个文件。
 // 运行时区分不开「rebase 带进来的历史文件」与「presync 主动刷的」，所以从源码层面守。
 await check("写前同步只定向刷目标文件：history 不整目录枚举", async () => {
+	// 锁集只由 actions/atom.py 一处算（progress.py 现在只是 19 行入口壳）
 	const src = fs.readFileSync(
-		path.join(here, "../skill/scripts/progress.py"),
+		path.join(here, "../skill/scripts/ledgerkit/actions/atom.py"),
 		"utf-8",
 	);
 	assert.ok(
-		!/_remote_dir_files\([^)]*history/.test(src),
-		"历史层不该用 _remote_dir_files 整目录枚举",
+		!/rglob\([^)]*history|glob\([^)]*history/.test(src),
+		"历史层不该整目录枚举",
 	);
 	assert.ok(
-		/if action == "close":/.test(src) &&
-			/history_path_for\(repo, now\(\)\)/.test(src),
-		"历史层目标应按 close 的结案月计算（含 --finished 兜底）",
+		/if action == "close":/.test(src) && /history_path_for\(finished\)/.test(src),
+		"历史层目标应按 close 的结案月计算（finished 由外壳算好传入）",
 	);
 });
 

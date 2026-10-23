@@ -175,7 +175,7 @@ export const zh: Record<LocaleKey, string> = {
   mdFootnotes: '脚注',
 
   emptyNoWorkspace: '还没有台账工作区',
-  emptyNoWorkspaceHint: '在某个项目里跑 task-ledger skill 的 init 建档（生成 ledger/progress.json），这里就会出现它。',
+  emptyNoWorkspaceHint: '在某个项目里跑一条 task-ledger skill 的写命令（第一条会自动建档 ledger/pool.json），这里就会出现它。',
   emptyNoTask: '一条任务都没有',
   emptyNoTaskHint: '用 task-ledger skill 的 new 开一个任务，或让别人开在这里等你认领。',
   emptyFiltered: '没有符合当前筛选的任务',
@@ -308,7 +308,7 @@ export const en: Record<LocaleKey, string> = {
   mdFootnotes: 'Footnotes',
 
   emptyNoWorkspace: 'No ledger workspace yet',
-  emptyNoWorkspaceHint: 'Run the task-ledger skill init in a project (creates ledger/progress.json) and it shows up here.',
+  emptyNoWorkspaceHint: 'Run any task-ledger skill write command in a project (the first one creates ledger/pool.json) and it shows up here.',
   emptyNoTask: 'No tasks yet',
   emptyNoTaskHint: 'Create one with the task-ledger skill new, or leave one here for others to claim.',
   emptyFiltered: 'No tasks match the current filters',

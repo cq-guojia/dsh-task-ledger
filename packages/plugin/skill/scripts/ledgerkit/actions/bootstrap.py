@@ -1,0 +1,27 @@
+"""开工前的自举：台账文件不存在就建，没登记过就把自己登记进去、建自己的分片。
+
+这三份由**外壳**单独一个 `atom` 包住，它自己不开事务、不拿锁。
+返回 `Identity`（把索引里的 `aliases` 并进来），不参与「提交说明 / where / 打印」。
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from ..core.identity import Identity, with_aliases
+from ..core.paths import LEDGER_DIR, OWNERS_DIR, POOL_REL, shard_rel, to_repo_rel
+from ..store.atomic import ensure_dir
+from ..store.owners_index import OwnersIndex
+from ..store.task_store import TaskStore
+
+
+def bootstrap(repo: Path, me: Identity) -> Identity:
+    """写序：`owners/` 目录 → 池 → 索引（登记自己）→ 我的分片。已登记且没变 ⇒ 零写。"""
+    ensure_dir(repo / to_repo_rel(LEDGER_DIR))
+    ensure_dir(repo / to_repo_rel(OWNERS_DIR))
+    TaskStore(repo, POOL_REL).ensure_file()
+    index = OwnersIndex(repo)
+    _, record = index.ensure(me)
+    TaskStore(repo, shard_rel(me.email), identity=me).ensure_file()
+    aliases = tuple(record.get("aliases") or ())
+    return with_aliases(me, aliases) if aliases else me
