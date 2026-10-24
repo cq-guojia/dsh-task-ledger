@@ -323,6 +323,101 @@ class SameMachineLockTest(ScenarioCase):
         )
 
 
+class ConcurrentMixedWorkloadTest(ScenarioCase):
+    """多人同时写/读/领/放弃：所有操作都要成功，台账最终一致且不破。
+
+    8 条公共任务预建好；14 个 worker 进程并发（a/b 两 clone 各分一半），
+    各认领/放弃**互不相同**的任务、写命令各自建新号、读命令只读 ——
+    因此没有「业务层理应失败」的冲突，任何非 0 退出都算 bug。
+    """
+
+    def _spawn(self, clone, *args):
+        return subprocess.Popen(
+            [sys.executable, "-B", str(PROGRESS), *args, "--repo", str(clone)],
+            cwd=str(clone),
+            env=BASE_ENV,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+    def _converge(self, clone):
+        git(clone, "add", "ledger")
+        if git(clone, "status", "--porcelain", "ledger"):
+            git(clone, "commit", "-q", "-m", "chore(ledger): 并发混合负载")
+        for _ in range(5):
+            subprocess.run(
+                ["git", "pull", "-q", "--rebase", "--autostash"],
+                cwd=str(clone),
+                env=BASE_ENV,
+                check=False,
+            )
+            if (
+                subprocess.run(
+                    ["git", "push", "-q"],
+                    cwd=str(clone),
+                    env=BASE_ENV,
+                    check=False,
+                    capture_output=True,
+                ).returncode
+                == 0
+            ):
+                break
+
+    def test_mixed_read_write_claim_abandon_all_succeed(self):
+        fx = self.fx
+        # 预建 8 条公共任务，两 clone 都看得到
+        pub = [new_task(fx.a, f"公共任务 {i}", mine=False) for i in range(8)]
+        fx.push(fx.a)
+        fx.pull(fx.b)
+
+        workers = []  # (proc, label, target_note)
+        # 写：各 clone 2 个 writer，各自建新任务（并发 new）
+        for clone in (fx.a, fx.b):
+            for w in range(2):
+                workers.append(
+                    (self._spawn(clone, "new", "--title", f"{clone.name}-并发写-{w}", "--self"), "write")
+                )
+        # 领：4 个 claimer 各认领一条互不相同的公共任务（a/b 各 2）
+        for clone, tid in ((fx.a, pub[0]), (fx.a, pub[1]), (fx.b, pub[2]), (fx.b, pub[3])):
+            workers.append((self._spawn(clone, "claim", "--id", tid), "claim"))
+        # 放弃：2 个 abandoner 各把一条公共任务释放回公共池（a/b 各 1）
+        for clone, tid in ((fx.a, pub[4]), (fx.b, pub[5])):
+            workers.append((self._spawn(clone, "set", "--id", tid, "--owner", ""), "abandon"))
+        # 读：各 clone 2 个 reader，反复 list / history
+        for clone in (fx.a, fx.b):
+            for r in range(2):
+                workers.append((self._spawn(clone, "list"), f"read-list-{r}"))
+                workers.append((self._spawn(clone, "history", "--count-only"), f"read-hist-{r}"))
+
+        # 全并发开跑
+        results = []
+        for proc, label in workers:
+            out, err = proc.communicate()
+            results.append((label, proc.returncode, out, err))
+
+        # 任何非 0 退出都算 bug（目标互不冲突，不该有业务拒绝）
+        failed = [(l, c, e) for (l, c, _o, e) in results if c != 0]
+        self.assertEqual(failed, [], f"并发混合负载里出现非 0 退出（应全成功）：{failed}")
+
+        # 收敛：两 clone 都推上去再互拉
+        self._converge(fx.a)
+        self._converge(fx.b)
+        fx.pull(fx.a)
+        fx.pull(fx.b)
+
+        # 最终一致且不破：可校验、任务不丢、工作树干净
+        self.assertEqual(run(fx.a, "validate")[0], 0, "并发后台账必须仍可通过校验")
+        rows = merged(fx.a)
+        for tid in pub:
+            self.assertIn(tid, rows, f"并发后公共任务不能丢：{tid}")
+        self.assertEqual(
+            git(fx.a, "status", "--porcelain", "ledger"),
+            "",
+            "并发收敛后工作树要干净",
+        )
+
+
 class OfflineThenOnlineTest(ScenarioCase):
     """离线写完再联网：下一条写命令先把积压推上去，不让「没推」挡住写入。"""
 

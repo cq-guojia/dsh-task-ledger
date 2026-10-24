@@ -368,39 +368,50 @@ class GitRepo:
                 "  处理：文件已暂存、本次改动没丢；按提示处理（常见：commit 检查钩子拒了消息）后重跑。"
             )
 
-    def push(self) -> None:
-        """推送；被拒（远端有新提交）就 rebase 重试一次，冲突由 `merge` 解。
+    def push(self, max_attempts: int = 8, deadline: float | None = None) -> None:
+        """推送；被拒（远端有新提交）就 rebase 后重试，循环到成功或遇到真冲突。
+
+        跨 clone 并发推同一 origin 时，单次「rebase + 再 push」会被别的 clone 在空档里
+        又推一次击穿——留下未推送提交、后续写命令被 guard 拦掉、雪崩式拖垮同 clone 写入。
+        所以改成有上限的 rebase+push 循环：每轮都 fetch 最新 origin 再 rebase，把别人的新
+        推送吸收掉，直到真正推上去；只有遇到「无上游 / 本地混了非台账提交 / 真冲突（已留标记）
+        / 次数耗尽或超时」才停，绝不静默丢数据。
 
         **任何失败都只提示、不抛**：提交已经落下去了，抛 Fail 会让 runner 走失败收尾，
         把已提交的内容从工作树里抹掉，那才是真丢数据。git 的原话必须带出去。
         """
-        first = _git("git", "-C", str(self.repo), "push")
-        if first.returncode == 0:
-            return
-        reason = (first.stderr or first.stdout or "").strip()
-        if not self.upstream():
-            notices.note(
-                f"提示：没有上游分支，本地提交已保留、未推送：{reason}\n"
-                "  处理：给分支设上游（git push -u origin <分支>）后重跑即可推走。"
-            )
-            return
-        if self._has_foreign_commits():
-            titles = self._foreign_titles()
-            detail = f"：{'；'.join(titles[:5])}" if titles else ""
-            notices.note(
-                f"提示：推送被拒（远端有新提交）：{reason}\n"
-                f"且本地还有你自己的提交{detail} ⇒ 不自动 rebase（那会改写提交号）。"
-                "手动跑 git pull --rebase && git push 即可；重推时它们会被一并推上去，请自行确认。\n"
-                "  本次台账改动已提交在本地，不会丢。"
-            )
-            return
-        if self._rebase_retry():
-            again = _git("git", "-C", str(self.repo), "push")
-            if again.returncode == 0:
+        if deadline is None:
+            deadline = time.monotonic() + 45.0
+        last_reason = ""
+        for _ in range(max_attempts):
+            if time.monotonic() >= deadline:
+                break
+            attempt = _git("git", "-C", str(self.repo), "push")
+            last_reason = (attempt.stderr or attempt.stdout or "").strip()
+            if attempt.returncode == 0:
                 return
-            reason = (again.stderr or again.stdout or "").strip()
+            if not self.upstream():
+                notices.note(
+                    f"提示：没有上游分支，本地提交已保留、未推送：{last_reason}\n"
+                    "  处理：给分支设上游（git push -u origin <分支>）后重跑即可推走。"
+                )
+                return
+            if self._has_foreign_commits():
+                titles = self._foreign_titles()
+                detail = f"：{'；'.join(titles[:5])}" if titles else ""
+                notices.note(
+                    f"提示：推送被拒（远端有新提交）：{last_reason}\n"
+                    f"且本地还有你自己的提交{detail} ⇒ 不自动 rebase（那会改写提交号）。"
+                    "手动跑 git pull --rebase && git push 即可；重推时它们会被一并推上去，请自行确认。\n"
+                    "  本次台账改动已提交在本地，不会丢。"
+                )
+                return
+            if not self._rebase_retry():
+                # 真冲突已留标记（或 fetch 失败）：交给人工，不再重试
+                return
+            # rebase 成功 ⇒ 循环再 push（已基于最新 origin）
         notices.note(
-            f"提示：推送被拒，本次台账改动已提交在本地、未推送：{reason}\n"
+            f"提示：推送多次被拒，本次台账改动已提交在本地、未推送：{last_reason}\n"
             "  处理：手动 git pull --rebase && git push（冲突自己解；"
             "脚本的「按任务号合并」只在它自动重试时发生）。"
         )
