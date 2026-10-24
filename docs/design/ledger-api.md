@@ -470,13 +470,13 @@ def atom(repo: Path, *rels: Path) -> ContextManager      # 20 行：按序锁住
 
 ```python
 # guard.py
-def current_identity(repo) -> Identity                       # env 的本机身份 + owners.json 里该身份的 aliases
+def current_identity(repo) -> Identity                       # env 的本机身份
 def require_task(tasks: dict, tid, *, where: Path) -> dict   # 取一条，缺失时给可读原因
 def require_owner(task, tid, me: Identity)                   # 只有当前 owner 能改
 def same_task_ignoring_stamp(a, b) -> bool                   # 两份内容是否只差时间戳
 def owner_of(task) -> str | None                             # 读 owner 的唯一入口
 def status_of(task) -> str                                   # 读 status 的唯一入口
-def is_mine(task, me: Identity) -> bool                      # 归一化后比较（含 aliases）
+def is_mine(task, me: Identity) -> bool                      # 归一化后按邮箱比较
 def in_scope(task, q: ListQuery, *, me: Identity) -> bool    # list 的过滤谓词
 ```
 
@@ -513,8 +513,8 @@ def bootstrap(repo, me) -> Identity
 ```
 
 - 写集（最小）：索引 + 池 + 我的分片。
-- 写序：`atomic.ensure_dir(owners/)` → 池 `TaskStore(POOL_REL).ensure_file()`（缺则建空池、有则不动）→ `OwnersIndex.ensure(me)`（索引缺则建、登记自己并写回 aliases）→ 我的分片 `TaskStore(shard_rel(me)).ensure_file()`。**建目录只走 `atomic.ensure_dir`、建文件只走 `ensure_file`**，业务层不碰 `write_ledger_json`。三样由外壳用 `presync_scope` 返回的**自举那份** `Scope.files` 一次 `atom` 包住（机制同 §3.2 总则 2）；`bootstrap` 自己不开事务、不拿锁。
-- 重跑：已登记且 `name` 与 `aliases` 都没变 ⇒ 零写，直接返回。
+- 写序：`atomic.ensure_dir(owners/)` → 池 `TaskStore(POOL_REL).ensure_file()`（缺则建空池、有则不动）→ `OwnersIndex.ensure(me)`（索引缺则建、登记自己）→ 我的分片 `TaskStore(shard_rel(me)).ensure_file()`。**建目录只走 `atomic.ensure_dir`、建文件只走 `ensure_file`**，业务层不碰 `write_ledger_json`。三样由外壳用 `presync_scope` 返回的**自举那份** `Scope.files` 一次 `atom` 包住（机制同 §3.2 总则 2）；`bootstrap` 自己不开事务、不拿锁。
+- 重跑：已登记 ⇒ 零写，直接返回。
 - 必须在别的动作之前单独跑（文件锁不可重入，嵌进去会自己卡死）。
 - **返回 `Identity` 而不是 `Result`**：它是 runner 在动作之前调的自举步骤，不参与"提交说明 / where / 打印"；它写的文件照样记进记账本，提交集合照常由记账本决定。
 
@@ -617,7 +617,7 @@ def query_history(repo, me, q: HistoryQuery) -> HistoryResult
 def validate(repo, me, deep: bool = False) -> ValidationReport
 ```
 
-**签名统一收 `(repo, me, …)`**：`--mine` / 归属判断都要认人。只读动作不跑自举，`me` 由外壳用 `guard.current_identity(repo)` 装好传进来（读索引补 aliases，不写盘、不登记）。`me` 用不上也照样收，免得留一张"哪些动作要 me"的例外表。
+**签名统一收 `(repo, me, …)`**：`--mine` / 归属判断都要认人。只读动作不跑自举，`me` 由外壳用 `guard.current_identity(repo)` 装好传进来（env 本机身份，不写盘、不登记）。`me` 用不上也照样收，免得留一张"哪些动作要 me"的例外表。
 
 **五个返回对象（字段名是公开契约，插件看板直接读；外壳不许重新算）**：
 
@@ -716,7 +716,7 @@ class ActionSpec:
 ```
 
 1. `GitRepo(repo)` 在写动作里构造一次；**只读动作不构造**。`--no-sync` 照样构造，只是 runner 不调 `sync_down` / `guard_before_write` / `commit` / `push`（`TASK_LEDGER_NO_SYNC` 只在 `cli.main` 读一次，折成 `args.no_sync` 往下传，别在别处再读环境变量）。
-2. `me` 统一由 `guard.current_identity(repo)` 装配：先 `env.current()` 拿本机 git 身份，再把 `owners.json` 里该身份的 `aliases` 并进来（索引不存在就只用 env 那一个）。写动作随后用 `bootstrap(repo, me)` 的返回值覆盖（自举会把 aliases 写回索引）。
+2. `me` 统一由 `guard.current_identity(repo)` 装配：先 `env.current()` 拿本机 git 身份（邮箱即唯一身份键）。写动作随后用 `bootstrap(repo, me)` 的返回值覆盖。
 3. `spec.func(repo, me, **params)`，`params` 只按 §九 的映射表挑，**不许把整个 `args` 透传进业务层**。
 4. `spec.render(value, **视图参数)` **只负责打印，不 flush**；`render.flush_notices()` 只在 `cli.main` 的 `finally` 里调一次 —— 提交/推送阶段冒出来的提示也才打得到。
 
@@ -743,7 +743,7 @@ class ActionSpec:
 | `time.py` | `now()`；`to_utc(value, *, field, tid=None)`；`fmt_local(utc)`；`normalize_time(value, *, field)`；`time_key(utc)` |
 | `paths.py` | `SKILL_DIR`（**模板与资产的唯一定位基准**，按自身位置算绝对路径）；`WORKLOG_TEMPLATE`；`POOL_REL` / `OWNERS_REL` / `OWNERS_DIR` / `HISTORY_DIR` / `WORKLOG_DIR` / `LEGACY_HISTORY_REL`；`shard_rel(identity)`；`worklog_dir_for(created)`；`worklog_name(tid)`；`worklog_rel(tid, created)`；`history_path_for(finished)`；`to_repo_rel(ledger_rel)` / `to_ledger_rel(repo_rel)` / `to_history_rel(ledger_rel)` |
 | `ids.py` | `id_stamp(created)`；`slugify(title)`；`make_id(title, tasks, created=None)`；`require_task_id(tid)` |
-| `identity.py` | `Identity`（`email` / `name` / `aliases` 的不可变值对象）；`normalize(who)`；`is_me(identity, who)`；`keys(identity)` |
+| `identity.py` | `Identity`（`email` / `name` 的不可变值对象）；`normalize(who)`；`is_me(identity, who)` |
 | `labels.py` | `STATUSES = ("open", "doing")`（`--status` 的白名单就是它）；`LEGACY_STATUSES = ("blocked",)`（读侧当进行中，不写回）；`done` 只能由 `close` 产生、不在此二者里；`FORMAT_VERSION`；`normalize_label(value, *, field)`；`parse_tags(raw)`；`label_line(category, tags)`；`parse_label_line(text)` |
 | `worklog_md.py` | `render_worklog(*, tid, title, created, creator, category, tags, template) -> str`；`is_skeleton(text)`；`exec_line(when, who, kind, note)`；`append_exec_log(text, line)`；`stamp_frozen(text, finished, who)`；`has_frozen_line(text)`；`rewrite_label_line(text, category, tags)` |
 | `history_md.py` | `esc_cell(s)`；`history_line(...)`；`history_cols(header)`；`history_line_for_cols(cols, row)`；`split_row(line)`；`is_sep_row(line)`；`parse_history(text)`；`upgrade_history(text, *, read_worklog)` |
@@ -752,7 +752,7 @@ class ActionSpec:
 
 - **路径基准只有一个约定**：磁盘与 JSON 里存的路径**相对 `ledger/`**（格式契约，如 `task["worklog"]`）；凡是输出给人或给界面的（`Result.where`、`WorklogView.path`、`payload` 里所有 `*_path`）**一律相对 repo**。换算只在 `core/paths.py` 的 `to_repo_rel` / `to_ledger_rel` / `to_history_rel` 三处做，任何层都不许自己拼 `..`。
 - **时间只有一个例外**：所有存盘时间都是 UTC；唯一例外是过程文档「执行记录」那行的时刻 —— 它是**本地时间**，给人读的日志行，不参与任何筛选或排序。转换固定发生在 `worklog_md.exec_line(when_utc, …)` 内部（它自己调 `fmt_local`）：**调用方一律传 UTC**，别在外面先转一遍。
-- **`Identity.aliases` 只存在 `owners.json` 里**（`workers[<key>].aliases`，可选数组）。`env.py` 只给「当前这台机器的 git 邮箱 + 名字」，其余身份从索引读；没登记过的就只有它自己那一个身份。别把 aliases 塞进分片、也别指望从 git 配置里猜出来。
+- **身份只有 `email` 一个键**。`env.py` 给「当前这台机器的 git 邮箱 + 名字」，名字只用于显示与给你做对照，不参与任何归属判定；别把显示名塞进分片、也别指望从 git 配置里猜出别的身份。
 - **`render_worklog` 只做字符串替换**：模板由 `WorklogStore.template()` 取来传进去，它自己不读文件、也不接收整条 task dict。
 - **`upgrade_history` 的回调契约写死**：`read_worklog(log_name: str) -> dict | None` —— 收的是**文件名**（历史末列的 basename，如 `16-1742-…-5563.md`，不是路径），返回 `{"created","creator","category","tags"}`，找不到给 `None`。实现方在 store 侧：`WorklogStore.by_name(log_name)` 拿路径、`head_meta(path)` 抽字段。`core` 只消费返回值、自己不开文件 —— 否则它就是个偷偷读文件的"纯函数"，迟早被放进数据层顺手写盘。
 
@@ -763,7 +763,7 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
                                # 读不到就给兜底身份，并 notices.note("提示：…")，绝不抛
 ```
 
-- 只有一个方法。它**只给本机的这一个身份**，不带 aliases —— 补 aliases 是 `guard.current_identity(repo)` 的活（要读索引）。
+- 只有一个方法。它**只给本机的这一个身份**（邮箱即唯一身份键）。
 - 它跑 `git config`（子进程），这是全仓唯一允许跑 git 的非 shell 文件；只读配置，不 pull / commit / push。
 
 ## 六、错误、退出码、输出

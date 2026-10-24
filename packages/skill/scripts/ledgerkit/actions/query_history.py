@@ -127,8 +127,7 @@ def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
             records.append(row)
 
     if q.mine:
-        wanted = {k for k in (me.email, *me.aliases) if k}
-        wanted = {normalize(k) for k in wanted}
+        wanted = {normalize(me.email)}
         records = [r for r in records if normalize(r.get("owner") or "") in wanted]
     elif q.owner:
         key = normalize(q.owner)

@@ -90,4 +90,4 @@ def current(repo: Path | None = None) -> Identity:
             "配好 git config user.email 再跑，任务才会记到正确的名下。"
         )
     name = git_name(repo) or email
-    return Identity(email=normalize(email), name=name.strip(), aliases=())
+    return Identity(email=normalize(email), name=name.strip())

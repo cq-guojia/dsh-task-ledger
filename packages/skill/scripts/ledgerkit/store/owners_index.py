@@ -1,7 +1,6 @@
 """索引 `owners.json`：谁是登记过的人、各自的分片文件是哪个、新人的登记与改名。
 
 **分片只认索引，不扫目录** —— 唯一例外是全仓仅此一处的 `disk_shards()`，它只给 `validate` 用。
-`ensure` 是 `aliases` 的唯一写入点。
 """
 
 from __future__ import annotations
@@ -32,7 +31,7 @@ class OwnersIndex:
         return self._store.all()
 
     def ensure(self, me: Identity) -> tuple[bool, dict[str, Any]]:
-        """登记 / 补 `joined` / 名字或 aliases 变了才写。返回 (这次写了没有, 记录)。"""
+        """登记 / 补 `joined`。`name` 只在首次登记时写入，之后不回写（名字是给你做对照的被动字段，不该被任何逻辑读）。返回 (这次写了没有, 记录)。"""
         key = normalize(me.email)
         with self._open() as session:
             data = session.data
@@ -43,23 +42,11 @@ class OwnersIndex:
                     "file": shard_rel(key).name,
                     "name": me.name,
                     "joined": now(),
-                    "aliases": _merge_aliases([], me.aliases),
                 }
                 workers[key] = record
                 session.mark()
                 return True, dict(record)
-            changed = False
-            if me.name and record.get("name") != me.name:
-                record["name"] = me.name
-                changed = True
-            known = list(record.get("aliases") or [])
-            aliases = _merge_aliases(known, me.aliases)  # 只增不删
-            if aliases != known:
-                record["aliases"] = aliases
-                changed = True
-            if changed:
-                session.mark()
-            return changed, dict(record)
+            return False, dict(record)
 
     def shards(self) -> dict[str, Path]:
         """身份 → 分片绝对路径（只信索引）。"""
@@ -125,11 +112,3 @@ class _IndexSession:
             self.store._flush(self.data)  # 同一个包内的受控写回口
 
 
-def _merge_aliases(known: list, extra: tuple[str, ...] | list[str]) -> list[str]:
-    """把新别名并进去，只增不删、去重保序。"""
-    out = list(known)
-    for alias in extra or ():
-        key = normalize(alias)
-        if key and key not in out:
-            out.append(key)
-    return out
