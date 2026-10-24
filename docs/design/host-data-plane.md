@@ -6,19 +6,21 @@
 
 ## 一、现状与问题（2026-10-18 勘查 + 实测）
 
-### 1.1 现有分层（已 80% 到位）
+### 1.1 现有分层（2026-10-24 复核；代码已落地 `repositories/` + `services/` + `skill/` 重分）
 
 | 层 | 文件 | 职责 | 状态 |
 |---|---|---|---|
-| 进程出口 | `script.ts` | 全插件唯一 `spawn('python3')`，不解析台账格式 | ✅ |
-| 中间层 | `ledger-read.ts` | `readTasks/readHistory/getTask/readWorklog/filterArgs` | ✅ |
-| 聚合层 | `board.ts` | 统计/趋势/周期，纯计算 | ⚠️ 含第 5 处 IO（spawn git） |
+| 进程出口 | `repositories/runner.ts` | 全插件唯一 `spawn('python3')`，不解析台账格式 | ✅ |
+| 台账读取 | `repositories/ledger.repository.ts` | 判台账存在（`hasLedger`）、读在办（pool.json + 分片）、读 history/worklog | ✅ |
+| 聚合层 | `services/*`（如 `home.service.ts`） | 统计/趋势/周期，纯计算 | ✅ |
+| 兼容壳 | `board.ts` | 拆端点后过渡组合壳，首屏转调 `services/home.service.ts::getSnapshot()` | ⚠️ 临时期 |
 | 路由薄壳 | `routes.ts` | 只做协议 | ✅ |
-| 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（收敛为 `existsSync('ledger/pool.json')`，分片布局） | ✅ |
+| 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（`existsSync('ledger/pool.json')`，分片布局） | ✅ |
+| skill 注册 | `skill/registration.ts` | 注册内嵌 `task-ledger` SKILL.md | ✅ |
 
-### 1.2 IO 散点（勘查实锤）
+### 1.2 IO 散点（2026-10-24 复核；行号随重构已变，以下只列文件）
 
-`script.ts:35`(python3)、`board.ts:171`(git)、`workspace.ts:20`(existsSync)、`ledger-read.ts:54`(readFile worklog)、`skill-registration.ts:52`(读 SKILL.md，不碰台账、不动)。
+台账相关的 `spawn('python3')` 唯一落在 `repositories/runner.ts`；台账/分片/worklog 读取集中在 `repositories/ledger.repository.ts`；工作区判活在 `workspace.ts`（`existsSync('ledger/pool.json')`）；SKILL.md 读取在 `skill/registration.ts`。原 §1.2 的 `script.ts`/`ledger-read.ts`/`skill-registration.ts` 等旧文件名与行号对应重构前结构，已失效（现状以 `packages/plugin/src/host/` 为准）。
 
 ### 1.3 三个健壮性缺口
 
@@ -120,20 +122,20 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 
 `/board` 全量端点标记为「兼容期专用」，下个大版本（1.x）删除，删除时在 CHANGELOG/README 明示。
 
-**实施状态**：4a（host 三端点 + 冒烟路由层断言）、4b（client 两段刷新：快照先渲染、趋势后台拉，未到/读挂各自兜底）已落地；冒烟另加客户端数据面断言防回退（页面不许再从快照读 `closed` / `trend`）。
+**实施状态**：4a（host 三端点 + 路由层断言）、4b（client 两段刷新：快照先渲染、趋势后台拉，未到/读挂各自兜底）已落地；客户端数据面需保证页面不从快照读 `closed` / `trend`（防回退）。
 
 ## 六、分期
 
 | 期 | 内容 | 对外行为 |
 |---|---|---|
-| 1 | 目录重组 + IO 收敛 + 错误模型/降级 + 入口校验 | 完全等价，冒烟全绿才算完 |
+| 1 | 目录重组 + IO 收敛 + 错误模型/降级 + 入口校验 | 完全等价，验收通过才算完 |
 | 2 | 拆端点（A）+ 缓存（B）+ 前端降级标红 —— ✅ 已完成（4a / 4b / 步骤 5） | 新增行为 |
 | 3 | 写路径 + invalidate（等任务 4 拍板） | 新增行为 |
 
 ## 七、影响面（重构必读）
 
-- smoke 的 5 处 `import('../dist/host/*.js')` 硬编码路径要随文件重组同步改；
-- 对外契约不许变：`list --json` = 任务号为键的对象；`history --json` = `{count,filters,records}`；`--count-only` = `{count,capped}`；错误人话文案由 smoke 守返回结构与文案（见 §七 影响面）；
+- host 文件重组时，`dist/` 产物路径的下游引用要同步（原 smoke 的 5 处硬编码 `import('../dist/host/*.js')` 已随 smoke 删除移除）；
+- 对外契约不许变：`list --json` = 任务号为键的对象；`history --json` = `{count,filters,records}`；`--count-only` = `{count,capped}`；错误人话文案守返回结构与文案；
 - host 新文件 tsc 自动纳入（`tsconfig.json` include `src`）；client 禁止 import host；
 - API 前缀两份副本：`routes.ts:32` 与 `client/api.ts:14`，改要同步；
 - 文档同步：`ledger-data.md`（点名 runLedgerScript 处）、`architecture.md`、`code-conventions.md`、`board-home.md`、`external/dsh-workspace-registry.md`。

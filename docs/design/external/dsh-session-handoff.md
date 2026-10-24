@@ -70,7 +70,7 @@
 > 用户现在处理结束，以下是用户的留言：
 > <用户留言，可空>
 
-实现落点：`packages/plugin/src/host/services/session.service.ts::buildClosePrompt`（冒烟逐条断言上述约束都在）。
+实现落点：`packages/plugin/src/host/services/session.service.ts::buildClosePrompt`。
 
 ## 四、复核方式（宿主升级后）
 

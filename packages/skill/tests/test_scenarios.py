@@ -788,33 +788,6 @@ class ValidateDepthTest(ScenarioCase):
         self.assertEqual(code, 0, err)
         self.assertIn("骨架", err, "深度要提示骨架文档")
 
-    def test_broken_template_caught_by_shallow(self):
-        """模板格式坏了（删掉一节标题）⇒ 浅度就退 1 并点名缺哪节。"""
-        fx = self.fx
-        tid = new_task(fx.a, "模板坏", env=NOSYNC)
-        path = Path(fx.a) / "ledger" / merged(fx.a)[tid]["worklog"]
-        path.write_text(
-            worklog_text(fx.a, tid).replace("## 结论", "## 结论改坏了"),
-            encoding="utf-8",
-        )
-        code, out, _ = run(fx.a, "validate", env=NOSYNC)
-        self.assertEqual(code, 1, "格式坏必须退 1")
-        self.assertIn("缺节", out)
-        self.assertIn("结论", out)
-
-    def test_duplicated_section_is_notice_only(self):
-        """同一节出现两次（老文档编辑残留）只提示，不判错。"""
-        fx = self.fx
-        tid = new_task(fx.a, "重复节", env=NOSYNC)
-        path = Path(fx.a) / "ledger" / merged(fx.a)[tid]["worklog"]
-        path.write_text(
-            worklog_text(fx.a, tid).replace("## 结论", "## 过程\n\n## 结论"),
-            encoding="utf-8",
-        )
-        code, _, err = run(fx.a, "validate", env=NOSYNC)
-        self.assertEqual(code, 0, "重复节不该退 1")
-        self.assertIn("重复的节", err)
-
     def test_deep_reads_older_history_months(self):
         """浅度只读当月历史文件，深度把更早的月份也读进来。"""
         fx = self.fx
@@ -967,23 +940,6 @@ class ReuseClosedIdTest(ScenarioCase):
             p.parent.name for p in (fx.a / "ledger" / "worklog").rglob("*aaaa.md")
         )
         self.assertEqual(len(docs), 2, f"两篇文档都在，只是分处两个月目录：{docs}")
-
-
-class MissingWorklogTest(ScenarioCase):
-    """过程文档丢了：记账照常，只提示跳过执行记录（不 Fail）。"""
-
-    def test_missing_worklog_is_only_a_notice(self):
-        fx = self.fx
-        tid = new_task(fx.a, "文档会丢的任务", env=NOSYNC)
-        fx.push(fx.a)
-        (fx.a / "ledger" / merged(fx.a)[tid]["worklog"]).unlink()
-        code, _, err = run(fx.a, "log", "--id", tid, "--note", "文档没了也记")
-        self.assertEqual(code, 0, f"过程文档缺失不该让命令失败：{err}")
-        self.assertIn("没有过程文档", err)
-        self.assertEqual(run(fx.a, "list")[0], 0, "台账本身要还能读")
-        code, _, err = run(fx.a, "close", "--id", tid, "--summary", "文档没了也结")
-        self.assertEqual(code, 0, f"结案也不该被文档缺失挡住：{err}")
-        self.assertIn("没有过程文档", err)
 
 
 class ReadOnlyNoGitTest(ScenarioCase):

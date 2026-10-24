@@ -43,10 +43,10 @@
 
 **为什么这几个自绘**（2026-10-17 改版定稿）：官方 `Button` / `SegmentedControl` / `Input` 各自的高度、内距、圆角口径不一（姊妹仓踩过「搜索框比下拉高 2px」「官方 Input 默认 32px」），而用户要求「一行控件全同高、样式全统一」⇒ 收成一套 `.dtl-*` 皮肤：高度只取 24/28/32 三档、有边变体用 1px 真边框 + 内部 padding 补回（有边 / 无边同高）、变体只换颜色变量。官方件继续用在它确实更好的地方（StateDot / MarkdownText / 图标）。
 
-宿主**没有**图表件 ⇒ 趋势图自绘（`ui.ts::BarChart`，div 柱 + token 色，无新依赖）；宿主**没有**廉价下拉件 ⇒ 原生 `select` + `appearance:none` 自绘箭头，与输入框同宗同高。
+宿主**没有**图表件 ⇒ 趋势图自绘（`ui.ts::GroupedBarChart`，div 柱 + token 色，无新依赖）；宿主**没有**廉价下拉件 ⇒ 原生 `select` + `appearance:none` 自绘箭头，与输入框同宗同高。
 
 ## 五、文案唯一真源：`src/client/locales.ts`
 
-- 命名空间 `dsh-task-ledger`，`zh` / `en` **两档键必须完全对齐**（冒烟有断言）；界面上**不许出现未登记的硬编码中文**。
+- 命名空间 `dsh-task-ledger`，`zh` / `en` **两档键必须完全对齐**；界面上**不许出现未登记的硬编码中文**。
 - 语言切换**跟随宿主**（`ctx.locale.register(ns,{zh,en})` + 注册项声明 `locale:` ⇒ 宿主渲染器把 `t` 席位合成进 props）。插件**不自带语言开关**。
 - 占位符一律 `{name}`，由 `interpolateTranslate` 自己替换（不依赖宿主是否支持 params）。

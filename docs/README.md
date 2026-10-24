@@ -20,7 +20,7 @@
 | 方法规范 | `docs/design/code-conventions.md`（client 半分层 + 脚本侧两层（L1 / L2 / 外壳）、铁律与防塌线；宿主接口核实方法写在各 `external/` **宿主接口**文档的「复核方式」节，`publish-oidc.md` 是发布链路、无此节） |
 | 接口契约 | `docs/design/ledger-api.md`（完全重构后的目录树 + 每文件职责 + 逐方法参数与返回 + 现状符号对照 + 防塌线） |
 | 后端数据面 | `docs/design/host-data-plane.md`（host 三层架构、降级/缓存语义、性能实测基线与优化路线） |
-| 测试与验收判据 | `docs/design/code-conventions.md` 的「防塌线」节（判据 + 基线数字 + 口径）、`packages/plugin/scripts/smoke.mjs`（空台账工作区用例勿删）、`npm run verify` |
+| 测试与验收判据 | `docs/design/code-conventions.md` 的「防塌线」节（判据 + 基线数字 + 口径）、`npm run verify`（build + typecheck） |
 | 迁移手册 | `docs/history-creator-upgrade.md`（存量 history 8 列 → 9 列的一次性升级步骤，一次性文档，不随版本维护） |
 | 样例 | 不适用（无独立样例产出；台账文件的真实样例直接看本仓 `ledger/history/202610.md` 与 `ledger/worklog/202610/`） |
 

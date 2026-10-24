@@ -3,7 +3,7 @@
 
 台账真正的合并发生在脚本自己 rebase 撞车时：`GitRepo._rebase_retry` →
 `GitRepo.resolve_conflicts` → `merge.merge_task_dicts` / `merge.union_merge`。
-所以这里测的是那套语义，不是 git 的行级行为（行级的坑由插件冒烟的真仓用例守）。
+所以这里测的是那套语义，不是 git 的行级行为（行级的坑由 `test_scenarios.py` 的并发用例覆盖）。
 
 跑法：python3 -B packages/skill/tests/test_merge_semantics.py -v
 """

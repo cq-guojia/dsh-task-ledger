@@ -91,7 +91,7 @@ git 现在已经在命令的**前后两端**，业务中间不碰 git —— 这
 8. **开关只有两组**：动作是否只读由 `actions/registry.py` 的 `ActionSpec.readonly` 决定（只读 ⇒ 不取最新、不自举、不提交）；`--no-sync` / `TASK_LEDGER_NO_SYNC`（不碰 git、不拿整命令级锁）。
 9. **skill 内容单一真源**：`packages/skill/` 是唯一真源，插件内嵌副本由构建纳入，两处逐字节一致（`check-skill-copy.mjs` 守）。
 10. **开发基线 = 宿主 0.2.0-rc.2**：宿主能力一律以 [`external/`](external/) 为准，不得凭方法名猜签名。
-11. **dist 入仓**：git 直装不跑构建脚本；推送前必须 build + 冒烟。
+11. **dist 入仓**：git 直装不跑构建脚本；推送前必须 build（含 typecheck 验证）。
 12. **明暗主题只认宿主**：`body[data-ds-dark-theme]`，禁用 `prefers-color-scheme`。
 13. **路由自持鉴权**：宿主 webServer 无 server-wide auth（默认回环绑定）；若部署暴露非回环地址，闸门必须由插件路由方自持 —— 目前未做，属待拍板风险。
 

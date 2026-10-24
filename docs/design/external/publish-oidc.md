@@ -25,4 +25,4 @@
 
 ## 三、双包发布节奏（规划）
 
-两包独立 semver，按 tag 前缀分别触发：`plugin-v*` / `skill-v*`（待 monorepo 落地时改建，替换现行 `v*` 单包触发）。
+两包独立 semver，按 tag 前缀分别触发：`plugin-v*` / `skill-v*`（已按 `.github/workflows/publish.yml` 拆分触发，非旧 `v*` 单包）。

@@ -4,8 +4,8 @@
 A. 程序崩在中间 → 同一条命令**重跑收敛**（不重复、不报错、数据一致）。
    实现保证：动作层在锁内重读，命中「已完成」状态就返回 already_done，没命中就幂等补齐；
    配合 store/atomic 的 snapshot/restore，崩在任一步都能靠重跑收敛。
-B. 用户搞坏文件（删除 / 格式损坏）→ **可以报错，但绝不尝试修复**。
-   非法 JSON 直接抛错；缺失的分片读取侧当空处理（不报错也不修复）。任一种都不准回写修复。
+
+（用户自己删文件 / 改坏文件属「手动瞎操作」，不处理也不模拟 —— 见整理用例时的口径。）
 
 与 test_scenarios.py 的区别：本文件不涉跨 clone 并发，只验证单仓内的崩溃恢复契约。
 跑法：python3 -B tests/test_crash_recovery.py
@@ -234,30 +234,6 @@ class ProgramCrashRerunTest(CrashRecoveryCase):
         shard = self.shard_with(tid)
         if shard is not None:
             self.assertNotIn(tid, tasks_of(self.r.root, shard.name), "分片不应还有")
-
-
-class UserCorruptionTest(CrashRecoveryCase):
-    """B. 用户搞坏文件 → 报错，但绝不修复。"""
-
-    def test_corrupt_shard_errors_and_is_not_repaired(self):
-        self.new_mine("会坏的任务")
-        shard = self.shards[0]
-        shard.write_text("{ 这不是合法 json ", encoding="utf-8")
-        code, _, _ = run(self.r.root, "list")
-        self.assertNotEqual(code, 0, "损坏的分片必须报错")
-        self.assertEqual(
-            shard.read_text(encoding="utf-8"),
-            "{ 这不是合法 json ",
-            "绝不允许尝试修复损坏的文件",
-        )
-
-    def test_missing_shard_errors_and_is_not_recreated(self):
-        self.new_mine("会被删的任务")
-        shard = self.shards[0]
-        shard.unlink()  # 用户删了分片
-        code, _, err = run(self.r.root, "list")
-        self.assertNotEqual(code, 0, f"被删的分片必须报错：{err}")
-        self.assertFalse(shard.exists(), "被删的分片绝不能被自动重建（不修复）")
 
 
 if __name__ == "__main__":

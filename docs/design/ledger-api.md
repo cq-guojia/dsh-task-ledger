@@ -63,7 +63,7 @@ packages/skill/scripts/
 │
 ├── progress.py                ← 程序入口，就 4 件事：关掉字节码、把自己塞进 sys.path、调 main、
 │                                 把返回码交给系统。只用绝对导入（`from ledgerkit…`）。
-│                                 硬限制 ≤ 40 行。宿主、SKILL.md、冒烟测试都按这个路径调，不许改名挪位。
+│                                 硬限制 ≤ 40 行。宿主、SKILL.md 都按这个路径调，不许改名挪位。
 │
 └── ledgerkit/                 ← 除入口外的全部代码
     │
@@ -216,7 +216,6 @@ packages/skill/scripts/
 |---|---|---|
 | 字节码 | `progress.py` 第一行（**在任何 import 之前**）设 `sys.dont_write_bytecode = True`；`.gitignore` 加 `__pycache__/`、`*.pyc`；`copy-skill.mjs` 的 filter 加 `__pycache__`（**保留原有对 `tests/` 的排除**） | 一旦有了 `import`，`.pyc` 会被 `cp -r` 拷进 `packages/plugin/skill/` 并入库；而 `check-skill-copy` 恰好忽略它 ⇒ **校验通过、脏文件已经进去了**。另：这条只能挡住 `ledgerkit/**`，挡不住 `progress.py` 自己 |
 | 入口能自己找到包 | 入口里加 `sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))`，并且**只用绝对导入** `from ledgerkit.shell.cli import main` | 默认行为下 `sys.path[0]` 就是脚本目录，能跑；但 `-P` / `PYTHONSAFEPATH=1`（3.11+）/ `-I` 会取消这个默认 ⇒ `ModuleNotFoundError`。相对导入在脚本模式下必炸 |
-| 冒烟 | 读源码做字面断言的那几条，改成**行为断言**（跑一条命令，看落到哪个文件）；注意它读的是 `packages/plugin/skill/` 的**内嵌副本**，不是源 | 拆包后代码搬了家，字面量全都对不上 ⇒ 冒烟假红；只读副本又不先构建 ⇒ 读到上一版目录树 |
 | 测试与文档 | 测试只从**公开位置** import（`from ledgerkit.shell.merge import merge_task_dicts`），不摸私有名；本文档就是唯一的目录树，`code-conventions` 只留链接 | 改了名测试全红；两份目录树打架 |
 
 ## 二、数据层 `store/`：方法定义

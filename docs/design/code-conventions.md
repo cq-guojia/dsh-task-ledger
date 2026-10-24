@@ -36,7 +36,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 ## 二、模块导入的两条铁律
 
 1. `client/` **不 import `host/`**，也不 import 官方包（rc 接口会无声变 ⇒ 只本地结构化声明，见 `primitives.d.ts`）。
-2. `client/` 内部相对导入**一律带 `.ts` 扩展名**：`tsconfig.client.json` 开了 `allowImportingTsExtensions`，tsdown 单文件打包与 Node 剥类型都认；不带扩展名时 Node 的 ESM 解析器找不到，冒烟就测不了纯逻辑模块。
+2. `client/` 内部相对导入**一律带 `.ts` 扩展名**：`tsconfig.client.json` 开了 `allowImportingTsExtensions`，tsdown 单文件打包与 Node 剥类型都认；不带扩展名时 Node 的 ESM 解析器找不到，纯逻辑模块也无法直测。
 
 ## 三、取数与刷新
 
@@ -47,8 +47,8 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 ## 四、工程与产物
 
 - `dist/` 入仓；`npm run build` = host(`clean-dist` → `tsc` → `copy-skill`) + client(`tsc --noEmit` → `tsdown`)。
-- 浏览器产物是 CJS 闭包工厂（`window.__ModuleLoader__.load`），平台模块必须保留成 `require()`，其余内联；冒烟守这条。
-- `npm run smoke` 打 `dist/`；无 DOM 依赖的纯逻辑模块允许剥类型直读源码直测。
+- 浏览器产物是 CJS 闭包工厂（`window.__ModuleLoader__.load`），平台模块必须保留成 `require()`，其余内联；dist 入仓产物守这条。
+- `npm run build` 打 `dist/`；无 DOM 依赖的纯逻辑模块允许剥类型直读源码直测。
 - **pnpm 只认 `pnpm-workspace.yaml`**，不读 `package.json` 的 `workspaces` 字段（后者留给 npm 生态）。改 workspace 结构别只改一处。
 
 ## 五、脚本侧：两层 + 一个外壳（🔵 落码）

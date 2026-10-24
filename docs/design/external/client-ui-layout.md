@@ -57,7 +57,7 @@
 1. **当前入口 = `main` 整页（任务 / 统计两 tab 自绘）+ 侧栏 `sidebar.panellist` 条目**（代码仅注册这两者，无 overlay）。`shell.overlay` 浮标为候选、截至本版未落码，无角标通知；若实现，定位 `top:var(--dsh-frame-overlay-top); right:12px`，浮层默认点击穿透、子元素自动恢复指针事件 ⇒ 不挡应用。
 2. 两 tab 看板（任务 / 统计）= `main` 面板内自绘；非 `conversation` 键**不绑 Session**，无需处理会话上下文。
 3. 列表行自绘（无表格件），行件参照 `DisclosureRow` 几何，状态用 `StateDot`，文件类型用 `FileTypeIcon`。
-4. 角标计数由 host SSE 推送驱动（宿主无通知 API，见 [`dsh-session-handoff.md`](dsh-session-handoff.md) 同源的 webServer 事实）。
+4. 角标计数（若未来落地 overlay）拟由 host SSE 推送驱动；但当前后端**不做 SSE**（见 `features/board-home.md` §五.3），且 overlay 未落码，故现无角标通知。
 5. 样式硬约束（明暗判据、token 使用）见 [`../ui-style.md`](../ui-style.md)。
 
 ## 四、复核方式（宿主升级后）

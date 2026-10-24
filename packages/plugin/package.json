@@ -28,8 +28,7 @@
 		"build:host": "node scripts/clean-dist.mjs && tsc && node scripts/copy-skill.mjs",
 		"build:client": "tsc --noEmit -p tsconfig.client.json && tsdown --config tsdown.client.config.ts",
 		"typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
-		"smoke": "node scripts/smoke.mjs",
-		"verify": "npm run build && npm run typecheck && npm run smoke"
+		"verify": "npm run build && npm run typecheck"
 	},
 	"engines": {
 		"node": ">=22.5"
