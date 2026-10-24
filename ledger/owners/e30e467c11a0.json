@@ -1,7 +1,0 @@
-{
-  "identity": {"email": "guojia-agent", "name": "GuoJia-Agent"},
-  "tasks": {
-    "20261021-2251-台账数据面改分片-一人一文件-索引-主干-worktree-14c0": {"category": "基建", "created": "2026-10-21 22:51:01", "creator": "GuoJia-Agent", "finished": null, "owner": "GuoJia-Agent", "started": "2026-10-21 22:51:01", "status": "doing", "tags": ["台账", "分片", "git", "并发"], "title": "台账数据面改分片：一人一文件 + 索引 + 主干 worktree", "updated": "2026-10-22 17:08:10", "worklog": "worklog/202610/21-2251-台账数据面改分片-一人一文件-索引-主干-worktree-14c0.md"}
-  },
-  "version": "20261022000000"
-}

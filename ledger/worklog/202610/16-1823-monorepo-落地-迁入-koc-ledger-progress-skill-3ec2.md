@@ -1,7 +1,7 @@
 # 20261016-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2：monorepo 落地：迁入 koc-ledger-progress skill 并发布可安装包
 
-> **✅ 完成封卷**：2026-10-16 20:41:15（@GuoJia-Agent）
-> **创建**：2026-10-16 18:23:28（@GuoJia-Agent）
+> **✅ 完成封卷**：2026-10-16 20:41:15（@cqguojia@hotmail.com）
+> **创建**：2026-10-16 18:23:28（@cqguojia@hotmail.com）
 > **分类**：建设 ｜ **标签**：monorepo、skill、发布
 
 <!-- 「> **分类**：… ｜ **标签**：…」行由脚本按 new --category / --tags 自动插在创建行后；
