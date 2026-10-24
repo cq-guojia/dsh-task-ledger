@@ -691,7 +691,7 @@ class ReuseClosedIdTest(ScenarioCase):
         self._close(fx, tid)
         code, _, err = run(fx.a, "new", "--title", "同月再来", "--id", tid, env=NOSYNC)
         self.assertEqual(code, 1, "同月复用已结案的号必须挡住：会撞同一篇文档")
-        self.assertIn("已经结过案", err)
+        self.assertIn("过程文档已经存在", err)
 
     def test_cross_month_reuse_is_allowed(self):
         fx = self.fx

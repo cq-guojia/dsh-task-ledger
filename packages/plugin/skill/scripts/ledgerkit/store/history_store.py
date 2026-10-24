@@ -38,19 +38,6 @@ class HistoryStore:
         stem = Path(path).stem
         return stem if len(stem) == 6 and stem.isdigit() else ""
 
-    def sources_between(self, start_ym: str, end_ym: str) -> list[Path]:
-        """`[start_ym, end_ym]` 区间内的按月文件（含两端）+ 存量平铺文件。
-
-        跨月同号的过程文档落在**不同月份目录**、历史行落在**不同月份文件**，互不干扰 ⇒
-        查重只看「创建月 → 当月」这个区间就够，不必遍历全部历史（2026-10-24）。
-        """
-        out: list[Path] = []
-        for p in self.sources():
-            key = self.month_key(p)
-            if not key or start_ym <= key <= end_ym:
-                out.append(p)
-        return out
-
     def read(self, path: Path) -> str:
         try:
             return path.read_text(encoding="utf-8-sig")
@@ -78,26 +65,20 @@ class HistoryStore:
         log_name: str | None,
         created: str | None,
         title: str | None,
-        log_month: str | None = None,
     ) -> str:
         """这个月的历史里已经有这条了吗？三态：`hit` / `miss` / `undecidable`。
 
-        有末列就比**文件名**（不比整条路径）；`log_month` 给了还要求链接里的月份对上 ——
-        跨月同号的过程文档落在不同月份目录、历史行又按结案月分文件，不给这个参数会把
-        「上月建、本月结案」的行误判成「本月建的同号任务」。末列为空的行改按
-        「创建时间 + 工作包」两列比 —— 那种行在调用方给不出 `created` / `title` 时判不了，
-        明说 `undecidable`，不拿 miss 冒充。
+        有末列就比**文件名**（不比整条路径）。末列为空的行改按「创建时间 + 工作包」两列比
+        —— 那种行在调用方给不出 `created` / `title` 时判不了，明说 `undecidable`，不拿 miss 冒充。
         """
         records, _ = history_md.parse_history(self.read(path))
         undecidable = False
         for row in records:
             worklog = (row.get("worklog") or "").strip()
             if log_name and worklog:
-                if Path(worklog).name != Path(log_name).name:
-                    continue
-                if log_month and Path(worklog).parent.name != log_month:
-                    continue
-                return HIT
+                if Path(worklog).name == Path(log_name).name:
+                    return HIT
+                continue
             if not worklog:
                 if created and title:
                     if row.get("created") == created and row.get("title") == title:

@@ -13,17 +13,13 @@ from ..core.ids import require_task_id
 from ..core.labels import normalize_label, parse_tags
 from ..core.paths import (
     POOL_REL,
-    month_of,
     shard_rel,
     to_repo_rel,
-    worklog_name,
     worklog_rel,
 )
-from ..core.time import now
 from ..core.worklog_md import exec_line
 from ..errors import Fail
 from ..store.atomic import ensure_dir, restore, snapshot
-from ..store.history_store import HIT, HistoryStore
 from ..store.task_store import TaskStore
 from ..store.worklog_store import WorklogStore
 from .result import Result, WorklogView, rel
@@ -64,25 +60,15 @@ def new_task(
     other = pool if mine else mine_store
     if other.get(tid) is not None:
         raise Fail(f"任务号 {tid} 已经存在了（这不是重跑，是重号）。")
-    # 已结案的号也不能复用：close 的判重只比过程文档名，同月同号会撞同一篇文档，
-    # 命中「已经结过案」却永远移不出分片（2026-10-24 修）。
-    # 但只查「创建月 → 当月」这个区间：任务号前缀带创建时间的年月、过程文档也按创建月
-    # 分目录，跨月同号落在不同目录、历史行落在不同月份文件，互不干扰。常规 new 的
-    # created 就是现在 ⇒ 只查当月一个文件，不遍历全部历史（2026-10-24 改）。
-    log_name = worklog_name(tid)
-    history = HistoryStore(repo)
-    start_ym = month_of(created, fallback_now=now())
-    for path in history.sources_between(start_ym, month_of(now())):
-        if (
-            history.has_log(
-                path, log_name=log_name, created=None, title=None, log_month=start_ym
-            )
-            == HIT
-        ):
-            raise Fail(
-                f"任务号 {tid} 已经结过案了（过程文档名撞上历史行）⇒ 换一个 --id，"
-                "别复用历史号。"
-            )
+    # 已结案的号也不能复用，且跨月同号互不干扰：直接看过程文档路径在不在。
+    # 在办任务的文档在磁盘上、已结案任务的文档也留在磁盘上 ⇒ 文档存在即这个号被占过
+    # （撞的是同一篇 worklog 文件，会覆盖 / 日后让 close 误判 already_done 变僵尸）。
+    # O(1)，不必扫历史文件。上面分片 / 池是并发安全闸门，这里补文件级的精确判重。
+    if (repo / to_repo_rel(worklog_rel(tid, created))).exists():
+        raise Fail(
+            f"任务号 {tid} 的过程文档已经存在（同名号的在办 / 已结案任务占着同一篇文档）"
+            "⇒ 换一个 --id，别复用历史号。"
+        )
 
     doc_rel = worklog_rel(tid, created)  # 别叫 rel：那是 result.rel 的函数名
     path = repo / to_repo_rel(doc_rel)
