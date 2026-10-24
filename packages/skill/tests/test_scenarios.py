@@ -650,17 +650,65 @@ class HistoryRangeTest(ScenarioCase):
         self.assertNotIn(
             "跨月任务", out, "按结案时间过滤，不能因 created 在上月就误命中"
         )
-        # 同月文件内再按 finished 精筛：本月 16 号之后的区间应排除（结案在本月较早）
+
+    def test_in_file_finished_filter_within_same_month(self):
+        fx = self.fx
+        # 整月都在过去，避免 --finished 落到未来；验证同一月文件内也按 finished 精确到日筛
+        ym = _shift_months(-3)[:8]  # "YYYY-MM-"
+        code, _, err = run(
+            fx.a,
+            "new",
+            "--title",
+            "精筛任务",
+            "--self",
+            "--created",
+            f"{ym}01",
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, err)
+        tid = task_id_of(fx.a, "精筛任务")
+        code, _, err = run(
+            fx.a,
+            "close",
+            "--id",
+            tid,
+            "--summary",
+            "精筛",
+            "--finished",
+            f"{ym}05",
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, err)
+        # 结案在 5 号：查 10-20 应排除（同一月文件，但 finished 不在区间）
         code, out, _ = run(
             fx.a,
             "history",
             "--since",
-            self._ymd(0, 20),
+            f"{ym}10",
             "--until",
-            self._ymd(0, 28),
+            f"{ym}20",
             env=NOSYNC,
         )
         self.assertEqual(code, 0)
+        self.assertNotIn("精筛任务", out, "结案在 5 号，10 号之后的区间不该命中")
+        # 同月 01-20：结案 5 号在区间内，应命中
+        code, out, _ = run(
+            fx.a,
+            "history",
+            "--since",
+            f"{ym}01",
+            "--until",
+            f"{ym}20",
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("精筛任务", out)
+
+    def test_thirteen_files_allowed(self):
+        fx = self.fx
+        # 上限卡的是「文件数」：恰好 13 个文件要放行，14 个才拒
+        code, _, err = run(fx.a, "history", "--months", "13", env=NOSYNC)
+        self.assertEqual(code, 0, f"13 个文件应放行：{err}")
 
     def test_default_is_last_three_months(self):
         fx = self.fx

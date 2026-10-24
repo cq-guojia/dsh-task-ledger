@@ -19,8 +19,8 @@ from ..store.history_store import HistoryStore
 from .query import COUNT_CAP, HistoryQuery
 from .result import HistoryResult, rel
 
-#: 一次最多查多少个月（含当月）；超出直接 Fail，不去 stat 任何文件。
-MAX_HISTORY_MONTHS = 13
+#: 一次最多读多少个历史文件（按月分文件；不区分连续 / 分散，只数总数）。
+MAX_HISTORY_FILES = 13
 #: 没给任何时间参数时，默认只看最近几个自然月。
 DEFAULT_HISTORY_MONTHS = 3
 
@@ -90,12 +90,15 @@ def _target_month_keys(q: HistoryQuery) -> list[str]:
         keys = _month_keys_between(lo, hi)
     else:
         keys = _recent_month_keys(DEFAULT_HISTORY_MONTHS)
-    if len(keys) > MAX_HISTORY_MONTHS:
+    # 上限卡的是「要读的文件总数」，不是月跨度：按月分文件，一个键一个文件；
+    # 连不连续、将来把多段时间拼在一起也都只数总数。
+    files = sorted(set(keys))
+    if len(files) > MAX_HISTORY_FILES:
         raise Fail(
-            f"历史查询一次最多跨 {MAX_HISTORY_MONTHS} 个月（含当月），"
-            f"本次要查 {len(keys)} 个月 ⇒ 缩小 --since/--until 或 --months。"
+            f"历史查询一次最多读 {MAX_HISTORY_FILES} 个历史文件（按月分文件，不区分连续/分散），"
+            f"本次要读 {len(files)} 个 ⇒ 缩小 --since/--until 或 --months。"
         )
-    return keys
+    return files
 
 
 def _candidate_paths(repo: Path, keys: list[str]) -> list[Path]:
