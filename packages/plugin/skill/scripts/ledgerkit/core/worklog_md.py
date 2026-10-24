@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from itertools import takewhile
 
 from ..errors import Fail
 from .labels import label_line, parse_label_line
@@ -28,6 +29,72 @@ CREATED_AT_RE = re.compile(
 CREATOR_RE = re.compile(r"^\s*>\s*\*\*创建\*\*\s*[：:].*?（@(.+?)）")
 
 _HEAD_RE = re.compile(r"\A(.*?)(?=^## |\Z)", re.DOTALL | re.MULTILINE)
+
+
+#: 过程文档应有的六节，顺序即模板顺序（真源是 `assets/worklog.md`）。
+WORKLOG_SECTIONS = ("背景", "待办", "下一步", "过程", "结论", "执行记录")
+#: 判「格式坏」只要求前五节；「执行记录」由脚本维护，老文档没有、写入时会补，缺了只提示。
+REQUIRED_SECTIONS = WORKLOG_SECTIONS[:5]
+
+
+def section_heads(text: str) -> list[str]:
+    """文档里的二级标题（`## 背景` → `背景`），按出现顺序。"""
+    return [
+        line[3:].strip() for line in (text or "").splitlines() if line.startswith("## ")
+    ]
+
+
+def _head_lines(lines: list[str]) -> list[str]:
+    """第一个二级标题之前的行（头部引用块）。"""
+    return list(takewhile(lambda line: not line.startswith("## "), lines))
+
+
+def format_problems(text: str) -> list[str]:
+    """过程文档的**格式**问题：只看骨架结构，不看内容、不判业务。空列表 = 没问题。
+
+    五项：第一行是标题 / 头部「创建」行有时间 / 创建行有发起人 / 前五节齐全 / 前五节顺序对。
+    结案封卷、分类标签、正文写得怎么样都不在这里判（那是内容与业务）。
+    """
+    problems: list[str] = []
+    body = (text or "").lstrip("\ufeff")
+    lines = body.splitlines()
+    if not lines or not lines[0].startswith("# "):
+        problems.append("第一行不是标题（应为 `# <任务号>：<标题>`）")
+    head = _head_lines(lines)
+    if not any(CREATED_AT_RE.match(line) for line in head):
+        problems.append(
+            "头部缺「创建」时间行（应为 `> **创建**：YYYY-MM-DD HH:MM（@某人）`）"
+        )
+    elif not any(CREATOR_RE.match(line) for line in head):
+        problems.append("头部「创建」行缺发起人（应为 `…（@某人）`）")
+    heads = section_heads(body)
+    missing = [s for s in REQUIRED_SECTIONS if s not in heads]
+    if missing:
+        problems.append("缺节：" + "、".join(f"`## {s}`" for s in missing))
+    else:
+        # 按「首次出现」去重再比顺序：老文档里同一节重复出现很常见（编辑残留），
+        # 那不影响读写（脚本按锚点定位），只作提示，不判错。
+        order: list[str] = []
+        for head in heads:
+            if head in REQUIRED_SECTIONS and head not in order:
+                order.append(head)
+        if order != list(REQUIRED_SECTIONS):
+            problems.append(
+                "节的顺序不对：应为 "
+                + " → ".join(f"`## {s}`" for s in REQUIRED_SECTIONS)
+            )
+    return problems
+
+
+def duplicated_sections(text: str) -> list[str]:
+    """重复出现的节标题（老文档编辑残留；不影响读写，只作提示）。"""
+    heads = section_heads(text)
+    return [s for s in REQUIRED_SECTIONS if heads.count(s) > 1]
+
+
+def lacks_exec_section(text: str) -> bool:
+    """缺「执行记录」节（老文档没有；只提示，脚本写入时会自动补上这一节）。"""
+    return WORKLOG_SECTIONS[-1] not in section_heads(text)
 
 
 def is_skeleton(text: str) -> bool:

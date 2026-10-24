@@ -615,7 +615,7 @@ def close_task(repo, me, tid, *, summary, finished: str, category=None, tags=Non
 def list_tasks(repo, me, q: ListQuery) -> ListResult
 def show_task(repo, me, tid) -> ShowResult
 def query_history(repo, me, q: HistoryQuery) -> HistoryResult
-def validate(repo, me) -> ValidationReport
+def validate(repo, me, deep: bool = False) -> ValidationReport
 ```
 
 **签名统一收 `(repo, me, …)`**：`--mine` / 归属判断都要认人。只读动作不跑自举，`me` 由外壳用 `guard.current_identity(repo)` 装好传进来（读索引补 aliases，不写盘、不登记）。`me` 用不上也照样收，免得留一张"哪些动作要 me"的例外表。
@@ -628,18 +628,21 @@ def validate(repo, me) -> ValidationReport
 | `TaskRow` | `tid` / `title` / `status` / `owner`（显示名）/ `created` / `started` / `category` / `tags` / `where`（所在文件） |
 | `ShowResult` | `task: dict`；`worklog: WorklogView`；`others: tuple[str, …]`（同一个任务号还出现在哪些文件里）；`notices: tuple[str, …]` |
 | `HistoryResult` | `count`；`filters: dict`（回显生效的筛选）；`records: tuple[dict, …]`（每条 = 九列解析后的字段，`tags` 已拆成 `tuple[str, …]`；再加 `src` 来源文件 / `fmt` 原列数 / `line` 行号三个定位用字段）；`warnings: tuple[str, …]`；`capped: bool` |
-| `ValidationReport` | `problems: tuple[str, …]`（**只有它影响退出码**）；`notices: tuple[str, …]`（只提示，不改退出码）；`checked_files: int`；`total_tasks: int` |
+| `ValidationReport` | `problems: tuple[str, …]`（**只有它影响退出码**）；`notices: tuple[str, …]`（只提示，不改退出码）；`checked_files: int`；`total_tasks: int`；`deep: bool`（本次是深度还是浅度） |
 
 - **`list --json` 吐的是 `rows`（原始任务对象），不是 `TaskRow`**：看板要 `worklog` / `creator` / `updated` / `finished` 这些字段，`TaskRow` 只给人看的表格。
 - **`rows` 的来源就是各份台账的 `TaskStore.data()["tasks"]` 按合并顺序拼起来**：不增字段、不改名、不做任何转换——里面的 `worklog` 仍是磁盘原值（相对 `ledger/`，见 §五 的基准约定），别在动作层偷偷改成相对 repo。
 - **`list_tasks` 的合并顺序定死**：先池、再按索引键排序的各分片，同一任务号由分片那份胜出（见 `ledger-data.md` §八）。顺序不确定会让同一份数据两次查给出不同结果。
-- **`validate` 的三类信号**：
-  - `problems` —— 索引与文件对不上、池里有越权、字段非法、分片主人与分区键不一致 ⇒ 退出码 1；
-  - `notices` —— 骨架文档（正文还没填）、旧格式行、解析历史时的警告、「历史里已结案但分片里还挂着」⇒ **只提示**，退出码 0；
+- **`validate` 分两档，只查格式不查业务**（2026-10-24 用户拍板）：
+  - 浅度（默认）读：池 + 索引登记的各分片 + `owners/` 目录、**当月**历史文件、每篇过程文档的模板格式（标题行 / 「创建」行 / 前五节齐且有序）；
+  - `--deep` 追加：全部月份的历史文件（含存量平铺）、读正文判「还是空骨架」；
+  - `problems` —— 索引与文件对不上、池里有越权、字段非法、分片主人与分区键不一致、过程文档格式坏 ⇒ 退出码 1；
+  - `notices` —— 缺「执行记录」节、有重复的节、解析历史时的警告、「历史里已结案但分片里还挂着」、空骨架（仅 `--deep`）⇒ **只提示**，退出码 0；
   - 没有台账 ⇒ 什么都不算，两个都是空，退出码 0。
+  - **不查「同一任务号落在多个文件」**：读侧 `show` 会点名，写侧已有防护，体检不管（同号多文件不再影响退出码）。
 - **报表只有**宿主侧一个来源：从 `query_history` 的 `records` 与 `list_tasks` 的 `rows` 聚合（时间线、按人工作日志、状态分布、分类 / 标签计数都从这里出）。脚本不开统计入口 —— 分类 / 标签计数要么从在办任务的 `rows` 里取，要么从历史行的分类 / 标签列取，都不需要逐篇扫过程文档。
 - **只读动作的共同约束**：不拿整命令级锁、不加文件锁、不开事务、不跑自举、不做取最新（`list` 在没有台账时要能打出空表，`validate` 一个字节都不写）。
-- **不拿锁为什么安全**：不做取最新 ⇒ 只读本地已提交的状态，不会撞上"正在刷盘"；另一个写进程留下的搬移中间态（同号在池与分片各一份）读侧本来就要容忍（`list` 只显示一次、`show` 在 stderr 说明、`validate` 负责报出来）。
+- **不拿锁为什么安全**：不做取最新 ⇒ 只读本地已提交的状态，不会撞上"正在刷盘"；另一个写进程留下的搬移中间态（同号在池与分片各一份）读侧本来就要容忍（`list` 只显示一次、`show` 在 stderr 说明）。
 
 ## 四、外壳 `shell/`：方法定义
 
@@ -774,7 +777,7 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
 | stderr | `提示：`/`警告：`/`错误：` 一律走这里；`notices` 由 `flush_notices()` 在退出前一次性打完 |
 | 打印位置 | **只在 `shell/render.py`** |
 | `--json` 挂在哪 | 只有 `list` / `show` / `history` / `validate` 挂；写动作一律人话 |
-| 空结果也是 JSON（契约） | `list` → `{}`；`history` → `{"count":0,"filters":{…},"records":[],"warnings":[],"capped":false}`；`validate` → `{"problems":[],"notices":[],"checked_files":0,"total_tasks":0}` |
+| 空结果也是 JSON（契约） | `list` → `{}`；`history` → `{"count":0,"filters":{…},"records":[],"warnings":[],"capped":false}`；`validate` → `{"problems":[],"notices":[],"checked_files":0,"total_tasks":0,"deep":false}` |
 | 非空形状 | 就是 §3.3 那几个返回对象的字段直译，不许在 render 里换名字、加壳、去掉字段。**唯一例外是 `list`**：它的 `--json` 顶层直接是 `rows`（`{tid: task}`），不套 `ListResult` 那层壳 |
 | `--count-only` 的形状 | **固定两个键** `{"count": int, "capped": bool}`；`capped=true` 表示计数触到 `COUNT_CAP`（10000）被封顶，此时 `count` 只是一个下界，调用方不许当精确值用 |
 | 互斥 | `--json` 与 `--count-only` 同时给 ⇒ 用法错（退出码 2） |
@@ -847,7 +850,7 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
 | `list` | `--mine --owner --all --status --category --tag --since --until --json` | `list_tasks(q)` |
 | `show` | `--id --json` | `show_task(tid)` |
 | `history` | `--owner --mine --category --tag --since --until --limit --months --json --count-only` | `query_history(q)` |
-| `validate` | `--json` | `validate()` |
+| `validate` | `--deep --json` | `validate(deep)` |
 | 全局 | `--repo`、`--no-sync` | 外壳处理，不进业务层（`--repo` 由 `resolve_repo` 消费） |
 
 表里只列**命令带来的参数**：`repo` 与 `me` 由外壳自动注入（见 §四 的 `ActionSpec`）；**第三列括号里的参数名就是 `params` 的键**，外壳照它挑，多一个少一个都算契约破坏。

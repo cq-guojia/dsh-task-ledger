@@ -87,7 +87,10 @@ def build_parser() -> argparse.ArgumentParser:
     hist.add_argument("--count-only", action="store_true")
     hist.add_argument("--json", action="store_true")
 
-    valp = sub.add_parser("validate", help="台账体检")
+    valp = sub.add_parser(
+        "validate", help="台账体检（默认浅度；--deep 读全部历史与过程文档）"
+    )
+    valp.add_argument("--deep", action="store_true")
     valp.add_argument("--json", action="store_true")
 
     # 宿主（插件 / SKILL.md）的调用写法是 `progress.py list --repo <仓库>`：

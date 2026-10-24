@@ -1,7 +1,10 @@
-"""只读：台账体检。`problems` 才影响退出码，`notices` 只提示。
+"""只读：台账体检。两档：默认浅度只查格式，`--deep` 才读全部历史与过程文档正文。
 
-四类问题（problems）：索引与文件对不上、池里有越权、字段非法、分片主人与分区键不一致。
-提示（notices）：骨架文档、旧格式行、历史解析警告、历史已结案但分片还挂着。
+浅度（默认）：池 + 各分片的字段格式、索引与文件对不对得上、**当月**历史、每篇过程文档的模板格式。
+深度（`--deep`）：历史不止当月（全部月份），过程文档再判骨架（正文填了没）。
+
+只查格式，不查业务（该谁结案、逾期与否都不管）；也不查「同一任务号落在多个文件」——
+读侧只显示一次（`show` 会点名）、写侧已有防护，撞上了不关体检的事（2026-10-24 用户拍板）。
 """
 
 from __future__ import annotations
@@ -12,7 +15,13 @@ from ..core import history_md
 from ..core.identity import Identity
 from ..core.labels import STATUSES
 from ..core.paths import LEGACY_HISTORY_REL, OWNERS_REL, POOL_REL, to_repo_rel
-from ..core.worklog_md import is_skeleton
+from ..core.time import now
+from ..core.worklog_md import (
+    duplicated_sections,
+    format_problems,
+    is_skeleton,
+    lacks_exec_section,
+)
 from ..store.history_store import HistoryStore
 from ..store.owners_index import OwnersIndex
 from ..store.task_store import TaskStore
@@ -41,15 +50,14 @@ def _read_tasks(repo: Path, store: TaskStore, problems: list[str]) -> dict:
         raise
 
 
-def validate(repo: Path, me: Identity) -> ValidationReport:
-    problems: list[str] = []
-    notices: list[str] = []
+def _check_task_files(
+    repo: Path, index: OwnersIndex, problems: list[str]
+) -> tuple[int, int]:
+    """池 + 各分片的字段格式（owner / status / 分片归属）；返回 (查了几个文件, 几条任务)。"""
     checked = 0
     total = 0
 
     pool = TaskStore(repo, POOL_REL)
-    index = OwnersIndex(repo)
-
     if pool.path.exists():
         checked += 1
         for tid, task in _read_tasks(repo, pool, problems).items():
@@ -80,7 +88,11 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
             if status not in STATUSES:
                 problems.append(f"分片 {key} 里的 {tid} 状态 {status!r} 非法。")
 
-    # 目录里有、索引没登记的分片（全仓唯一扫目录的地方）
+    return checked, total
+
+
+def _check_orphan_shards(index: OwnersIndex, problems: list[str]) -> None:
+    """目录里有、索引没登记的分片（全仓唯一扫目录的地方）。"""
     registered = {p.name for p in index.shards().values()}
     for path in index.disk_shards():
         if path.name not in registered:
@@ -88,29 +100,28 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
                 f"owners/ 里的 {path.name} 没有在索引里登记（对它人等于不存在）。"
             )
 
-    # 同一个任务号落在多个文件里（搬移中断的中间态）：读侧只显示一次，这里必须报出来
-    seen: dict[str, list[str]] = {}
-    for tid in _read_tasks(repo, pool, problems):
-        seen.setdefault(tid, []).append("pool.json")
-    for key, path in index.shards().items():
-        if not path.exists():
-            continue
-        for tid in TaskStore(repo, Path(path).relative_to(repo / "ledger")).all():
-            seen.setdefault(tid, []).append(path.name)
-    for tid, where in sorted(seen.items()):
-        if len(where) > 1:
-            notices.append(
-                f"任务 {tid} 同时出现在 {'、'.join(where)}（搬移中断的中间态），"
-                "读的时候只显示一次；确认哪一份是对的，把另一份删掉。"
-            )
 
-    # 历史：解析警告 + 「已结案但分片里还挂着」（按过程文档文件名对账，
-    # 不从文件名反推任务号 —— 任务号的年月日在父目录里，反推必错）
-    open_docs = _open_worklog_names(repo, index)
-    history = HistoryStore(repo)
-    for path in history.sources():
+def _history_paths(store: HistoryStore, *, deep: bool) -> list[Path]:
+    """要读的历史文件：浅度只读当月那个月文件（存量平铺文件不读），深度读全部。"""
+    sources = store.sources()
+    if deep:
+        return sources
+    month = now()[0:4] + now()[5:7]
+    return [p for p in sources if store.month_key(p) == month]
+
+
+def _check_history(
+    repo: Path,
+    paths: list[Path],
+    open_docs: set[str],
+    store: HistoryStore,
+    notices: list[str],
+) -> int:
+    """历史文件的格式与对账：解析警告、行尾文档链接对得上在办任务没。"""
+    checked = 0
+    for path in paths:
         checked += 1
-        rows, warns = history_md.parse_history(history.read(path))
+        rows, warns = history_md.parse_history(store.read(path))
         notices.extend(f"{rel(repo, path)}：{w}" for w in warns)
         for row in rows:
             name = Path(row.get("worklog") or "").name
@@ -119,17 +130,69 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
                     f"历史里有「{row.get('title') or name}」的结案行，"
                     "但它还挂在在办台账里。"
                 )
+    return checked
 
-    # 骨架文档只提示
-    logs = WorklogStore(repo)
+
+def _check_worklog(
+    repo: Path,
+    logs: WorklogStore,
+    problems: list[str],
+    notices: list[str],
+    *,
+    deep: bool,
+) -> int:
+    """每篇过程文档：模板格式（浅度就查）+ 空骨架判定（只有 `--deep` 才判）。
+
+    一趟读完两件事都做 —— 格式要看全文找节标题，骨架吃同一份文本，别为此读第二遍。
+    """
+    checked = 0
     for path in logs.all():
         checked += 1
         try:
             text = logs.read(path)
         except ValueError:
             continue
-        if is_skeleton(text):
-            notices.append(f"{rel(repo, path)} 还是骨架（正文没填）。")
+        if not text:
+            continue
+        where = rel(repo, path)
+        problems.extend(f"{where} 格式：{line}" for line in format_problems(text))
+        if lacks_exec_section(text):
+            notices.append(
+                f"{where} 没有「执行记录」节（老文档；写一条记录会自动补上）。"
+            )
+        dup = duplicated_sections(text)
+        if dup:
+            notices.append(
+                f"{where} 有重复的节：{'、'.join(f'`## {s}`' for s in dup)}。"
+            )
+        if deep and is_skeleton(text):
+            notices.append(f"{where} 还是骨架（正文没填）。")
+    return checked
+
+
+def validate(repo: Path, me: Identity, deep: bool = False) -> ValidationReport:
+    problems: list[str] = []
+    notices: list[str] = []
+    checked = 0
+    total = 0
+
+    index = OwnersIndex(repo)
+    history = HistoryStore(repo)
+    logs = WorklogStore(repo)
+
+    files, tasks = _check_task_files(repo, index, problems)
+    checked += files
+    total += tasks
+    _check_orphan_shards(index, problems)
+
+    checked += _check_history(
+        repo,
+        _history_paths(history, deep=deep),
+        _open_worklog_names(repo, index),
+        history,
+        notices,
+    )
+    checked += _check_worklog(repo, logs, problems, notices, deep=deep)
 
     legacy = repo / to_repo_rel(LEGACY_HISTORY_REL)
     if legacy.exists():
@@ -142,6 +205,7 @@ def validate(repo: Path, me: Identity) -> ValidationReport:
         notices=tuple(notices),
         checked_files=checked,
         total_tasks=total,
+        deep=deep,
     )
 
 

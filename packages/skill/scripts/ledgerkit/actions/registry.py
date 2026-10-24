@@ -61,7 +61,9 @@ ACTIONS: dict[str, ActionSpec] = {
     "history": ActionSpec(
         query_history.query_history, "history_view", readonly=True, params=("q",)
     ),
-    "validate": ActionSpec(validate.validate, "validate_view", readonly=True),
+    "validate": ActionSpec(
+        validate.validate, "validate_view", readonly=True, params=("deep",)
+    ),
 }
 
 READONLY = tuple(name for name, spec in ACTIONS.items() if spec.readonly)

@@ -182,7 +182,7 @@ class ConcurrentClaimTest(ScenarioCase):
         for p in procs:  # 跑完即可，结果在各自的分片里，不在这里读
             p.communicate()
         # 跨机并发认领本就「不处理」（§5.7）：两边都可能各自写进自己的分片。
-        # 要保证的是：状态可恢复 —— 读侧只显示一次，且 validate 把「同号多文件」报出来。
+        # 要保证的是：状态可恢复 —— 读侧只显示一次（show 点名同号多文件）。
         for clone in (fx.a, fx.b):
             git(clone, "add", "ledger")
             if git(clone, "status", "--porcelain", "ledger"):
@@ -215,8 +215,9 @@ class ConcurrentClaimTest(ScenarioCase):
                 run(clone, "show", "--id", tid)[1],
                 "同号多文件必须由 show 点名",
             )
-        _, _, verr = run(fx.a, "validate")
-        self.assertIn("同时出现在", verr, "同号落在多个文件必须报出来")
+        # 同号多文件不再由 validate 报（2026-10-24 用户拍板：读侧 show 已点名、
+        # 写侧已有防护，体检不管这件事），断言它不因这个退 1。
+        self.assertEqual(run(fx.a, "validate")[0], 0, "同号多文件不该让体检退 1")
 
 
 class ConcurrentNewTest(ScenarioCase):
@@ -771,6 +772,70 @@ class HistoryRangeTest(ScenarioCase):
         )
         self.assertNotEqual(code, 0, "--months 与 --since 同时用应报错")
         self.assertIn("不能同时用", err)
+
+
+class ValidateDepthTest(ScenarioCase):
+    """validate 两档：默认浅度只查格式，`--deep` 才读全部历史与过程文档正文（2026-10-24）。"""
+
+    def test_shallow_does_not_read_bodies(self):
+        """浅度不碰正文：骨架文档不提示；深度才提示。"""
+        fx = self.fx
+        new_task(fx.a, "只有骨架", env=NOSYNC)
+        code, out, err = run(fx.a, "validate", env=NOSYNC)
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("骨架", out + err, "浅度不该判骨架（那要读正文）")
+        code, out, err = run(fx.a, "validate", "--deep", env=NOSYNC)
+        self.assertEqual(code, 0, err)
+        self.assertIn("骨架", err, "深度要提示骨架文档")
+
+    def test_broken_template_caught_by_shallow(self):
+        """模板格式坏了（删掉一节标题）⇒ 浅度就退 1 并点名缺哪节。"""
+        fx = self.fx
+        tid = new_task(fx.a, "模板坏", env=NOSYNC)
+        path = Path(fx.a) / "ledger" / merged(fx.a)[tid]["worklog"]
+        path.write_text(
+            worklog_text(fx.a, tid).replace("## 结论", "## 结论改坏了"),
+            encoding="utf-8",
+        )
+        code, out, _ = run(fx.a, "validate", env=NOSYNC)
+        self.assertEqual(code, 1, "格式坏必须退 1")
+        self.assertIn("缺节", out)
+        self.assertIn("结论", out)
+
+    def test_duplicated_section_is_notice_only(self):
+        """同一节出现两次（老文档编辑残留）只提示，不判错。"""
+        fx = self.fx
+        tid = new_task(fx.a, "重复节", env=NOSYNC)
+        path = Path(fx.a) / "ledger" / merged(fx.a)[tid]["worklog"]
+        path.write_text(
+            worklog_text(fx.a, tid).replace("## 结论", "## 过程\n\n## 结论"),
+            encoding="utf-8",
+        )
+        code, _, err = run(fx.a, "validate", env=NOSYNC)
+        self.assertEqual(code, 0, "重复节不该退 1")
+        self.assertIn("重复的节", err)
+
+    def test_deep_reads_older_history_months(self):
+        """浅度只读当月历史文件，深度把更早的月份也读进来。"""
+        fx = self.fx
+        tid = new_task(fx.a, "四月前结案", env=NOSYNC)
+        code, _, err = run(
+            fx.a,
+            "close",
+            "--id",
+            tid,
+            "--summary",
+            "老任务",
+            "--finished",
+            _shift_months(-4),
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, err)
+        _, out, _ = run(fx.a, "validate", "--json", env=NOSYNC)
+        shallow = json.loads(out)["checked_files"]
+        _, out, _ = run(fx.a, "validate", "--json", "--deep", env=NOSYNC)
+        deep = json.loads(out)["checked_files"]
+        self.assertGreater(deep, shallow, "深度要多读历史月份文件")
 
 
 class RerunConvergesTest(ScenarioCase):

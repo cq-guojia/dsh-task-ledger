@@ -85,3 +85,4 @@ class ValidationReport:
     notices: tuple[str, ...] = ()  # 只提示，不改退出码
     checked_files: int = 0
     total_tasks: int = 0
+    deep: bool = False  # 本次是深度检查（--deep）还是默认浅度

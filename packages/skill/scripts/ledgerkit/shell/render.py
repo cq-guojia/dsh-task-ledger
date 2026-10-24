@@ -149,15 +149,17 @@ def validate_view(rep: ValidationReport, *, as_json: bool) -> None:
                 "notices": list(rep.notices),
                 "checked_files": rep.checked_files,
                 "total_tasks": rep.total_tasks,
+                "deep": rep.deep,
             }
         )
         return
-    _out(f"体检：查了 {rep.checked_files} 个文件、{rep.total_tasks} 条任务。")
+    mode = "深度" if rep.deep else "浅度"
+    _out(f"体检（{mode}）：查了 {rep.checked_files} 个文件、{rep.total_tasks} 条任务。")
     if rep.problems:
         _out(f"问题 {len(rep.problems)} 条：")
         for line in rep.problems:
             _out(f"  - {line}")
     else:
-        _out("没有发现问题。")
+        _out("没有问题。")
     for line in rep.notices:
         _err(f"提示：{line}")
