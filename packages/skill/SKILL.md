@@ -117,14 +117,15 @@ allowed-tools: Read,Edit,Bash,Grep
 |---|---|
 | `--owner <邮箱>` / `--mine` | 按 owner 筛 |
 | `--category` / `--tag` | 按分类 / 标签筛 |
-| `--since` / `--until` | 按创建时间筛 |
-| `--months N` / `--limit N` | 最近 N 个自然月 / 最近 N 条 |
+| `--since` / `--until` | 按**结案时间**筛（只给日期含当天） |
+| `--months N` | 最近 N 个自然月（与 `--since` / `--until` **互斥**，同传直接报错） |
+| `--limit N` | 最近 N 条 |
 | `--count-only` | 只输出 `{"count","capped"}`（与 `--json` 互斥） |
 | `--json` | JSON 输出 |
 
-干什么：人话一行一条：结案时间、负责人、标题；要摘要 / 分类 / 标签 / 完整时间用 `--json`。
+干什么：按结案时间倒序，人话一行一条：结案时间、负责人、标题；要摘要 / 分类 / 标签 / 完整时间用 `--json`。不给任何时间参数 = 最近 3 个自然月；一次最多读 13 个历史文件（按月分文件，不区分连续 / 分散，只数总数），超出直接报错、一个文件都不读；缺月跳过、不扫磁盘。
 
-举例：「上周做过什么」→ `history --since <上周一日期>`。
+举例：「上周做过什么」→ `history --since <上周一日期>`；「今年都结掉哪些」→ `history --months 12`（超过 13 个月要分段查）。
 
 ### validate — 台账体检
 
@@ -159,7 +160,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 6. **交付待验收**：任务留「进行中」，「待办」写「待用户验收」，「下一步」写清验收看什么；照收工三步记一条 `log --note "已交付待验收：…"`。
 7. **释放**：仅当用户明确说「退回去 / 释放掉」→ `set --id <任务号> --owner ""`。任务回公共池，别人可认领。
 8. **结案**：仅当用户明确说「把这个任务结束掉 / close 掉」→ `close --id <任务号> --summary "…"`；说得含糊（「做完了」「验收通过」）先反问「是要结束这个任务吗？」。收尾顺序：**先补完正文 + 记 log，最后才 close** —— 关了就不能再写。
-9. **查询**：在办 `list` / 单条 `show` / 已结案 `history` / 体检 `validate`。
+9. **查询**：在办 `list` / 单条 `show` / 已结案 `history`（默认只近 3 个自然月，更早的要 `--months` / `--since`）/ 体检 `validate`。
 
 ## 过程文档
 
@@ -180,7 +181,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 - 过程文档找不到时 `log` 只提示不失败；用 `show` 查路径，不要手写。
 - 头部只有创建时间 / 创建人、封卷标记、分类 / 标签行 —— **状态与归属以台账数据为准，别从头部读**。
 - 执行记录行格式 `- 本地时间 · 类型 · @谁 · 说明`，`@谁` 是这次动手的人、不是任务现归属；只追加、不改旧行。行首「类型」是脚本内部动作名（会见到 `release`，它就是 `set --owner ""`）；认不出就别当成新命令，按 `--help` 查。
-- 只改某条任务的正文：`show --id <任务号>` 拿路径直接改，不另建 md；已结案的用 `history` 找回链接，只读不改。
+- 只改某条任务的正文：`show --id <任务号>` 拿路径直接改，不另建 md；已结案的用 `history --months 12`（或 `--since`）找回链接——默认只查近 3 个月，结案久了的要显式放大窗口；只读不改。
 
 ### 收工三步（「收工」= 这一轮对用户有可见产出）
 
@@ -223,5 +224,5 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当�
 | 何时读 | 文件 |
 |---|---|
 | 任何非 0 退出、退出码 0 但有 `提示：` / `错误：` / `警告：`、并发冲突、`validate` 报错 | `references/troubleshooting.md` |
-| 传 `--created` / `--finished` 补录时间、看到旧 `blocked`、看 `--json` 里的时间字段、查别人时 owner 匹配异常、看 history 列义或旧格式行 | `references/state-model.md` |
+| 传 `--created` / `--finished` 补录时间、看到旧 `blocked`、看 `--json` 里的时间字段、查别人时 owner 匹配异常、看 history 列义 / 时间窗口口径 / 旧格式行 | `references/state-model.md` |
 | 拿不准一条记录够不够格、`--note` 不会写 | `references/log-note.md` |
