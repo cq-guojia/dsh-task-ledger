@@ -20,14 +20,10 @@ from .query import ListQuery
 
 
 def current_identity(repo: Path) -> Identity:
-    """env 的本机身份 + `owners.json` 里这个身份的 `aliases`（不写盘、不登记）。"""
+    """env 的本机身份（不写盘、不登记）。全站只认邮箱这一个身份键。"""
     from .. import env
-    from ..core.identity import with_aliases
 
-    me = env.current(repo)
-    record = OwnersIndex(repo).get(me.email) or {}
-    aliases = tuple(record.get("aliases") or ())
-    return with_aliases(me, aliases) if aliases else me
+    return env.current(repo)
 
 
 def require_task(tasks: Mapping[str, Any], tid: str, *, where: Path) -> dict[str, Any]:
@@ -72,7 +68,7 @@ def status_of(task: Mapping[str, Any]) -> str:
 
 
 def is_mine(task: Mapping[str, Any], me: Identity) -> bool:
-    """这条任务是不是我的（含 aliases）。"""
+    """这条任务是不是我的（按邮箱判定）。"""
     return is_me(me, owner_of(task) or "")
 
 

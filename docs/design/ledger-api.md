@@ -6,7 +6,7 @@
 >
 > **2026-10-22 评审补全（两轮）**：
 > 第一轮——补齐 6 个原本没有落点的角色（`core/identity.py` 的 `Identity`、`actions/query.py` 的查询对象、`shell/cli.py` 的 `resolve_repo`、`store/atomic.py` 的 `snapshot`/`restore`、顶层 `notices.py` 的提示通道、`WorklogStore.template()` 的模板读取）；消解 4 处规则互斥（`set_task` 的跨动作 import 白名单、`close_task` 锁集含过程文档、`render_worklog` 不再吃整条 task、防塌线的 owner/status 判定口径）；补齐只读动作的返回契约与 `--json` 形状。
-> 第二轮——补 `HistoryStore.write`（结案落盘口）、`Result.dry_run`、`ActionSpec`（外壳怎么调动作）、`COUNT_CAP`、`aliases` 的持久化位置、路径基准约定（磁盘相对 `ledger/`、输出相对 repo）、`scan_worklogs` 与报表的归属；统一 `release` 的重跑收敛、`rename_label` 的 `old/new` 落法、全部动作签名收 `me`。
+> 第二轮——补 `HistoryStore.write`（结案落盘口）、`Result.dry_run`、`ActionSpec`（外壳怎么调动作）、`COUNT_CAP`、`aliases` 的持久化位置（该字段已于 2026-10-25 移除，身份只认邮箱）、路径基准约定（磁盘相对 `ledger/`、输出相对 repo）、`scan_worklogs` 与报表的归属；统一 `release` 的重跑收敛、`rename_label` 的 `old/new` 落法、全部动作签名收 `me`。
 > 第三～八轮——修正**流程顺序**（记账本 → 取最新 → 自举 → 动作 → 打印 → 提交 → 推送；取最新必须早于自举，否则旧索引盖掉远端新登记）、补 `atomic.ensure_dir` / `WorklogStore.by_name` / `GitRepo.guard_before_write` / `OwnersIndex.__init__` 等缺签名的方法、把「锁」拆成「最小写集 + `lock_scope` 实际加锁」并补齐四条锁集总则、`dry_run` 定为整条命令零写（含跳过自举）、`snapshot`/`restore` 的豁免名单、`history --json` 与 `list --json` 的形状统一、历史末列与执行记录时间的转换落点写死。
 > **契约以 §二~§五 为准**；§七 搬迁地图只作施工参考。
 

@@ -35,7 +35,7 @@ close             → 历史层 + 封卷 + 移出自己名下
 
 - 主键 = **git 邮箱**（`git var GIT_COMMITTER_IDENT` 里的 email，退回 `git config user.email`），归一化（去空白 + 小写）后比对。
 - 读不到邮箱**不报错**：走兜底链（`USER`/`LOGNAME` → `getpass` → 主机名 → 字面 `default`）并出一条提示，命令照常跑完。看到提示要告诉用户配好 git，否则任务记到兜底身份名下。
-- `owners.json` 里的 `aliases` 会并进身份比对；`list --owner` / `history --owner` 是归一化后的**精确匹配**，没有 `me` 缩写，「自己」用 `--mine`。
+- 全站只认 git 邮箱这一个身份键；`list --owner` / `history --owner` 是归一化后的**精确匹配**，没有 `me` 缩写，「自己」用 `--mine`。
 - `close` / `log` 只对自己名下的任务生效，不在名下直接拒绝；`set --owner ""` 对已在公共池里的任务是幂等空转（退 0）；`set --owner <自己>` 会把公共池里的任务认领到自己名下。
 
 ## 历史层

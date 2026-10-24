@@ -31,7 +31,7 @@ class OwnersIndex:
         return self._store.all()
 
     def ensure(self, me: Identity) -> tuple[bool, dict[str, Any]]:
-        """登记 / 补 `joined` / 名字变了才写。返回 (这次写了没有, 记录)。"""
+        """登记 / 补 `joined`。`name` 只在首次登记时写入，之后不回写（名字是给你做对照的被动字段，不该被任何逻辑读）。返回 (这次写了没有, 记录)。"""
         key = normalize(me.email)
         with self._open() as session:
             data = session.data
@@ -46,13 +46,7 @@ class OwnersIndex:
                 workers[key] = record
                 session.mark()
                 return True, dict(record)
-            changed = False
-            if me.name and record.get("name") != me.name:
-                record["name"] = me.name
-                changed = True
-            if changed:
-                session.mark()
-            return changed, dict(record)
+            return False, dict(record)
 
     def shards(self) -> dict[str, Path]:
         """身份 → 分片绝对路径（只信索引）。"""
