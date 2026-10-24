@@ -14,7 +14,7 @@
 | 中间层 | `ledger-read.ts` | `readTasks/readHistory/getTask/readWorklog/filterArgs` | ✅ |
 | 聚合层 | `board.ts` | 统计/趋势/周期，纯计算 | ⚠️ 含第 5 处 IO（spawn git） |
 | 路由薄壳 | `routes.ts` | 只做协议 | ✅ |
-| 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（原自己 `existsSync('ledger/progress.json')`，已收敛） | ✅ |
+| 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（收敛为 `existsSync('ledger/pool.json')`，分片布局） | ✅ |
 
 ### 1.2 IO 散点（勘查实锤）
 
@@ -65,7 +65,7 @@ workspace.ts         调 ledger.repository.hasLedger()，不再自己 existsSync
 errors.ts            统一错误模型 + 降级结果类型（横切）
 ```
 
-**降级语义**（用户 2026-10-18 确认）：读失败 = ①`progress.json` 坏 JSON / 缺字段 ②脚本非零退出 ③python3 起不来 ④超时。四种都记 `degraded:true + 原因`，接口仍 200，前端把该工作区**标红 + 警告**，其他工作区不受影响。
+**降级语义**（用户 2026-10-18 确认）：读失败 = ①台账（pool.json + 分片）坏 JSON / 缺字段 ②脚本非零退出 ③python3 起不来 ④超时。四种都记 `degraded:true + 原因`，接口仍 200，前端把该工作区**标红 + 警告**，其他工作区不受影响。
 
 **缓存语义**（用户已接受）：TTL 1.5s + `fresh=1` 绕过 + 写路径成功后 `invalidate()`（写路径归任务 4，未拍板前缓存无正确性风险）。
 
@@ -81,7 +81,7 @@ errors.ts            统一错误模型 + 降级结果类型（横切）
 
 ## 四、量级实测（2026-10-18，用户规模假设：10 工作区 × 每月 1000~5000 条）
 
-fixture：10 个工作区，每个 `progress.json` + 按月 history 文件（真实造库，非估算）。
+fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文件（真实造库，非估算）。
 
 | 场景 | 现状 `/board`（首屏全卡） | 拆端点后首屏 | 趋势异步加载 |
 |---|---|---|---|
@@ -92,7 +92,7 @@ fixture：10 个工作区，每个 `progress.json` + 按月 history 文件（真
 **结论**：
 
 1. 现状 `/board` 在 20 万量级 **4.4s 全屏卡死**，不可接受；
-2. **拆端点**（首屏只读 `progress.json` + git 身份，不碰 history）后首屏 **~500ms 且与 history 总量无关**——这不是优化，是把首屏与历史数据量**解耦**；
+2. **拆端点**（首屏只读在办数据：pool.json + 分片 + git 身份，不碰 history）后首屏 **~500ms 且与 history 总量无关**——这不是优化，是把首屏与历史数据量**解耦**；
 3. 趋势（`months=2`，8 周 + 余量，2 个文件/工作区）在 20 万量级 **3.0s**，异步加载 + 加载态，符合用户 10 秒标准；
 4. `months 13→2` 在「按月文件」场景收益有限（文件本来就不多），真正受益是挂了多年的老库（13 文件 vs 2 文件）——仍应改，但它是次要项；
 5. 趋势必须读 history 明细是设计使然：「周截止未结数」要判「创建 ≤ 周末且未结」，已结案的 close 时间只在 history 里（与在办的 created 合并），不是浪费。
@@ -133,7 +133,7 @@ fixture：10 个工作区，每个 `progress.json` + 按月 history 文件（真
 ## 七、影响面（重构必读）
 
 - smoke 的 5 处 `import('../dist/host/*.js')` 硬编码路径要随文件重组同步改；
-- 对外契约不许变：`list --json` = 任务号为键的对象；`history --json` = `{count,filters,records}`；`--count-only` = `{count,capped}`；错误人话文案（smoke 断言 `/progress\.json/`）；
+- 对外契约不许变：`list --json` = 任务号为键的对象；`history --json` = `{count,filters,records}`；`--count-only` = `{count,capped}`；错误人话文案由 smoke 守返回结构与文案（见 §七 影响面）；
 - host 新文件 tsc 自动纳入（`tsconfig.json` include `src`）；client 禁止 import host；
 - API 前缀两份副本：`routes.ts:32` 与 `client/api.ts:14`，改要同步；
 - 文档同步：`ledger-data.md`（点名 runLedgerScript 处）、`architecture.md`、`code-conventions.md`、`board-home.md`、`external/dsh-workspace-registry.md`。

@@ -18,8 +18,7 @@
 | `shell.leading` | single / root | ❌ 被 ui-sidebar 占用 | 左上窗口 chrome（重开 / 新会话控件） |
 | `sidebar.toggle.badge` | single / root | 可注册但**仅折叠侧栏展开钮内、不可交互** | — |
 
-**本插件入口定论 = 双入口**（2026-10-17 深夜改）：左侧 `sidebar.panellist` 条目 + 右侧 `shell.overlay` 浮标并存，
-右侧浮标带「我的待办」角标暂不删，最终取舍待用户真机用一段再定。详见 [`../../features/board-home.md`](../../features/board-home.md) §一。
+**本插件当前入口 = 左侧 `sidebar.panellist` 条目 + `main` 整页**（代码只注册这两者，见 `features/board-home.md` §一）。右侧 `shell.overlay` 浮标是宿主提供的候选槽位（带「我的待办」角标），截至本版未落码，是否实现待用户真机体验后再定。
 
 入口三件套结论（仍有效）：
 
@@ -55,7 +54,7 @@
 
 ## 三、对本插件的落地含义
 
-1. **入口 = `shell.overlay` 浮标**（深夜拍板）：list 条目自绘小图标按钮，定位 `top:var(--dsh-frame-overlay-top); right:12px`；点击 `selectPanel(看板 id)`。浮层默认点击穿透，子元素自动恢复指针事件 ⇒ 不挡应用。备选 `panellist`（`order` 放大沉底部）未采用。
+1. **当前入口 = `main` 整页（任务 / 统计两 tab 自绘）+ 侧栏 `sidebar.panellist` 条目**（代码仅注册这两者，无 overlay）。`shell.overlay` 浮标为候选、截至本版未落码，无角标通知；若实现，定位 `top:var(--dsh-frame-overlay-top); right:12px`，浮层默认点击穿透、子元素自动恢复指针事件 ⇒ 不挡应用。
 2. 两 tab 看板（任务 / 统计）= `main` 面板内自绘；非 `conversation` 键**不绑 Session**，无需处理会话上下文。
 3. 列表行自绘（无表格件），行件参照 `DisclosureRow` 几何，状态用 `StateDot`，文件类型用 `FileTypeIcon`。
 4. 角标计数由 host SSE 推送驱动（宿主无通知 API，见 [`dsh-session-handoff.md`](dsh-session-handoff.md) 同源的 webServer 事实）。

@@ -1,8 +1,8 @@
 # 方法规范：client 分层 + 脚本两层
 
-> **状态**：🔵 落码（§五「脚本侧两层」是 📝 计划，尚未落码，见该节标题）
+> **状态**：🔵 落码（脚本「两层 + 外壳」重构已于 2026-10-23 落地，见 §五）
 > **来源**：用户 2026-10-17「该抽象出来的东西一定要抽象出来」；2026-10-22「两层，清清楚明了，不要搞复杂」
-> **配套**：系统不变量见 [`architecture.md`](architecture.md)；数据契约见 [`ledger-data.md`](ledger-data.md)；样式规矩见 [`ui-style.md`](ui-style.md)；改造前旧稿见 [`../design.bak/`](../design.bak/)（只读归档，不作依据）
+> **配套**：系统不变量见 [`architecture.md`](architecture.md)；数据契约见 [`ledger-data.md`](ledger-data.md)；样式规矩见 [`ui-style.md`](ui-style.md)
 
 本文件只记**不写就会做错**的约定，不写通用编码常识。
 
@@ -51,13 +51,13 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 - `npm run smoke` 打 `dist/`；无 DOM 依赖的纯逻辑模块允许剥类型直读源码直测。
 - **pnpm 只认 `pnpm-workspace.yaml`**，不读 `package.json` 的 `workspaces` 字段（后者留给 npm 生态）。改 workspace 结构别只改一处。
 
-## 五、脚本侧：两层 + 一个外壳（📝 计划，未落码）
+## 五、脚本侧：两层 + 一个外壳（🔵 落码）
 
 **目录结构、每个文件的职责、逐方法签名与现状对照全在 [`ledger-api.md`](ledger-api.md)；本节只记纪律。**
 
 物理落点（完全重构后）：入口 `scripts/progress.py` 压到 ≤ 40 行，其余进 `scripts/ledgerkit/`，四个子包 `core/`（纯函数）、`store/`（数据层）、`actions/`（业务层）、`shell/`（驱动），加三个顶层文件 `errors.py`（错误与退出码）、`notices.py`（进程级提示收集）、`env.py`（问 git 我是谁）。入口路径不许动（宿主与 SKILL.md 按它调）。
 
-现状是 `cmd_*` 单函数直写，六个写命令共约 710 行里混着校验、加锁、读、写、回滚、打印。逻辑形状是：
+重构前是 `cmd_*` 单函数直写，六个写命令共约 710 行里混着校验、加锁、读、写、回滚、打印。逻辑形状是：
 
 ```
 外壳  cmd_* / _run_once     解析参数 → 取最新 → 自举 → 调一个业务函数 → 打印 → 提交 → 推送

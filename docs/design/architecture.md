@@ -1,9 +1,8 @@
 # 架构总览
 
-> **状态**：📝 待落码（host 半与 client 半已落码；脚本「两层 + 外壳」尚未落码，`progress.py` 仍是 4657 行的 `cmd_*` 单函数）
+> **状态**：🔵 落码（host 半、client 半、脚本「两层 + 外壳」均已落码；少数细节见 §四「已知差异与未落码部分」，如浮标入口、`fsync(父目录)`）
 > **来源**：NAS-Docker 台账调研任务（2026-10-16 结案）+ 用户 2026-10-22「只要两层，别搞框架、别加层」
 > **配套**：数据格式见 [`ledger-data.md`](ledger-data.md)；脚本分层、铁律与防塌线见 [`code-conventions.md`](code-conventions.md)；功能清单见 [`features.md`](features.md)；宿主接口事实见 [`external/`](external/)
-> **重构前快照**：[`../design.bak/`](../design.bak/)（2026-10-22 备份，只读归档，不作任何结论依据）
 
 ## 一、项目是什么
 
@@ -18,7 +17,7 @@
 | 包 | 内容 | 发布触发 |
 |---|---|---|
 | `dsh-task-ledger`（`packages/plugin/`） | host 半（skill 注册 + webServer 路由 + 跨工作区读台账）+ client 半（侧栏条目 + 主面板）+ `cordis.patch.yml`；`dist/` 入仓 | tag `plugin-v*` |
-| `task-ledger`（`packages/skill/`） | SKILL.md + `scripts/progress.py` + assets + references（零依赖，`python3` 直跑） | tag `skill-v*` |
+| `task-ledger`（`packages/skill/`） | SKILL.md + `scripts/progress.py`（入口 shim）+ `scripts/ledgerkit/`（业务 / 数据 / 驱动分层）+ assets + references（零依赖，`python3` 直跑） | tag `skill-v*` |
 
 两包独立 semver。skill 内容唯一真源在 `packages/skill/`，插件构建时整目录拷入（内嵌副本与独立包必须同源）。
 
@@ -100,7 +99,6 @@ git 现在已经在命令的**前后两端**，业务中间不碰 git —— 这
 
 | 项 | 现状 |
 |---|---|
-| 脚本「两层 + 外壳」 | 未落码；设计见 [`code-conventions.md`](code-conventions.md) 的脚本侧一节 |
 | `fsync(父目录)` | 未做（见不变量「原子性」） |
 | 浮标入口（`shell.overlay`） | 未落码；当前入口只有 `sidebar.panellist` 侧栏条目 + `main` 整页 |
 | `close` 跨月取最新上界 | 口径已定死：`finished` **只算一次**，月份判断 / 落盘路径 / 刷新范围全用同一个值（见 `ledger-api.md` §3.2）。现状是各处各算一次，跨月那一瞬会刷错月份 ⇒ 落码时按新口径实现 |

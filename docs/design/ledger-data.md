@@ -1,7 +1,7 @@
 # 数据说明：台账文件格式
 
-> **状态**：🔵 落码（数据格式与写序均为现状；写序表里的**函数名**是 📝 计划）
-> **来源**：`task-ledger` skill（`packages/skill/scripts/progress.py` + `assets/worklog.md`）是格式真源
+> **状态**：🔵 落码（数据格式与写序均为现状，写序表里的函数名即 `ledgerkit/actions/` 实际实现）
+> **来源**：`task-ledger` skill（`packages/skill/scripts/ledgerkit/` + `assets/worklog.md`）是格式真源
 > **配套**：运行逻辑见 [`architecture.md`](architecture.md)；脚本分层见 [`code-conventions.md`](code-conventions.md)
 
 本项目**不自建数据库**：插件只读各工作区的台账文件。格式真源在 skill 代码，本文档只做索引级说明；字面值以代码为准。
@@ -19,7 +19,7 @@
 │       └── <日>-<时分>-<说明>-<随机码>.md
 ```
 
-以上五类文件**只由脚本写**（📝 计划：L1 落盘、业务层定写序）。
+以上五类文件**只由脚本写**（L1 落盘、业务层定写序）。
 
 ⚠️ **本仓（`dsh-task-ledger` 自己）已迁到分片布局**：`pool.json` / `owners.json` / `owners/<hash>.json` 已是新分片格式，在办任务在各人分片（未认领的在 `pool.json`）；`history/`（9 列）与 `worklog/`（六节）同步为新布局。老工作区（仍用扁平 `ledger/progress.json`）由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。存量扁平 `ledger/PROGRESS-HISTORY.md` 只读兼容、永不重写。
 
@@ -77,9 +77,9 @@
 - 末节「执行记录」**只由脚本追加**：一行固定 `- 时间 · 类型 · @谁 · 说明`，类型取 `new` / `claim` / `set` / `release` / `handoff` / `log` / `close`（`set` 只用于原地改字段；`release` / `handoff` 各有自己的取值）；只增不改。
 - 结案时封卷，此后不再修改。执行记录行用**本地时间**（与 JSON 里的 UTC 不同，别混）。
 
-## 六、写序 = 崩溃恢复协议（函数名为 📝 计划）
+## 六、写序 = 崩溃恢复协议
 
-每个动作的写序不是实现细节，是数据契约。崩在中间留下的状态，必须能靠「重跑一次」收敛。「函数」列是重构后的业务函数名（计划）。
+每个动作的写序不是实现细节，是数据契约。崩在中间留下的状态，必须能靠「重跑一次」收敛。「函数」列即 `ledgerkit/actions/` 实际业务函数名。
 
 | 动作 | 函数 | 写序 | 崩在中间 | 重跑怎么收敛 |
 |---|---|---|---|---|
@@ -115,4 +115,4 @@
 - 写入前的防撞：`claim` / `set --owner` 会在落盘前挡一道（别人分片里已有同号 / 目标分片已有不同内容 ⇒ 拒绝），但跨机同时抢仍有窗口。
 - 历史 = `history/<年月>.md` 9 列（owner = 负责人筛选面；creator = 发起人，`owner` 可被 claim 改走、「谁建的」不变）。
 - 报表只有一个来源：全部由宿主从 `query_history` / `list_tasks` 的返回聚合（时间线、按人工作日志、状态分布、分类 / 标签计数）。脚本不开统计入口 —— 分类 / 标签要么在在办任务对象里、要么在历史行的分类 / 标签列里，都不需要逐篇扫过程文档。
-- 当前差异（宿主侧，见 `external/dsh-workspace-registry.md`）：宿主**历史侧已解析** `history/`，**待办侧仍按旧的 `ledger/progress.json`** 判活跃、只解析旧进度表 —— 分片布局的**宿主侧消费**尚未适配，属独立于 ledgerkit 包的待办项（不在本包实现范围内）。
+- 宿主侧消费（见 `external/dsh-workspace-registry.md`）：以 `pool.json` 存在判定台账、待办 / 历史一律经内嵌脚本（已分片感知）读取，不再直接读扁平 `progress.json`；老工作区未迁完前，脚本读到旧布局会在 stderr 提示，旧任务在迁完前对它等于不存在。
