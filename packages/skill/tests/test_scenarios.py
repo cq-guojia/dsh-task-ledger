@@ -540,6 +540,22 @@ class NoGitRepoTest(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertIn(tid, merged(self.root), "释放后回公共池（merged 含池）")
 
+    def test_close_and_history_without_git(self):
+        """无 git 下 close / history / --count-only 也必须能用（2026-10-24 拍板）。"""
+        tid = new_task(self.root, "无 git 也结案")
+        code, _, err = run(self.root, "close", "--id", tid, "--summary", "无 git 收尾")
+        self.assertEqual(code, 0, err)
+        # history 读的是台账自带 history（不靠 git），无 git 也要能列出结案
+        code, out, err = run(self.root, "history")
+        self.assertEqual(code, 0, err)
+        self.assertIn("无 git 也结案", out, "无 git 下 history 也要能列出结案")
+        # --count-only 固定 {count, capped} 两键，封顶边界另见 COUNT_CAP
+        code, out, _ = run(self.root, "history", "--count-only")
+        self.assertEqual(code, 0)
+        data = json.loads(out)
+        self.assertEqual(set(data), {"count", "capped"})
+        self.assertGreaterEqual(data["count"], 1)
+
 
 class MonthsWindowTest(ScenarioCase):
     """--months 是自然月窗口：自己算最近 N 个月，读其中存在的文件（2026-10-24）。"""
