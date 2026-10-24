@@ -1,6 +1,7 @@
 {
   "identity": {"email": "cqguojia@hotmail.com", "name": "GuoJia-Agent"},
   "tasks": {
+    "20261016-2338-发布到插件市场-6dbd": {"category": "建设", "created": "2026-10-16 23:38:14", "creator": "GuoJia-Agent", "finished": null, "owner": "cqguojia@hotmail.com", "started": "2026-10-24 13:11:48", "status": "doing", "tags": ["DSH", "发布", "市场"], "title": "发布到插件市场", "updated": "2026-10-24 13:11:48", "worklog": "worklog/202610/16-2338-发布到插件市场-6dbd.md"},
     "20261023-1117-重写-skill-的-skill-md-适配分片台账-去冗余-纯执行导向-3637": {"category": "文档", "created": "2026-10-23 11:17:54", "creator": "cqguojia@hotmail.com", "finished": null, "owner": "cqguojia@hotmail.com", "started": "2026-10-23 13:02:16", "status": "doing", "tags": ["skill", "提示词"], "title": "重写 skill 的 SKILL.md：适配分片台账、去冗余、纯执行导向", "updated": "2026-10-24 09:10:15", "worklog": "worklog/202610/23-1117-重写-skill-的-skill-md-适配分片台账-去冗余-纯执行导向-3637.md"}
   },
   "version": "20261022000000"
