@@ -23,10 +23,10 @@ class HistoryQuery:
     mine: bool = False
     category: str | None = None
     tag: str | None = None
-    since: str | None = None
-    until: str | None = None
+    since: str | None = None  # UTC 串，闭区间；比 finished（结案时间），不比 created
+    until: str | None = None  # 同上
     limit: int | None = None
-    months: int | None = None  # 只看最近 N 个月的文件
+    months: int | None = None  # 最近 N 个自然月；与 since/until 互斥
     count_only: bool = False  # 只要计数，不要 records
 
 

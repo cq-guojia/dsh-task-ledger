@@ -562,11 +562,11 @@ class MonthsWindowTest(ScenarioCase):
             env=NOSYNC,
         )
         self.assertEqual(code, 0, err)
-        # 默认（不限月）两条都在
+        # 默认 = 最近 3 个自然月：本月的在，3 个月前的不在（窗口外）
         code, out, _ = run(fx.a, "history", env=NOSYNC)
         self.assertEqual(code, 0)
         self.assertIn("本月结案", out)
-        self.assertIn("古早结案", out)
+        self.assertNotIn("古早结案", out, "默认只查近 3 个月，3 个月前的不在窗口内")
         # 最近 1 个月：只有本月那条（古早的在 3 个月前，窗口外）
         code, out, _ = run(fx.a, "history", "--months", "1", env=NOSYNC)
         self.assertEqual(code, 0)
@@ -596,6 +596,133 @@ def _shift_months(delta: int) -> str:
     while month < 1:
         year, month = year - 1, month + 12
     return f"{year:04d}-{month:02d}-15"
+
+
+class HistoryRangeTest(ScenarioCase):
+    """history 的时间区间：按结案时间过滤、默认近 3 月、上限 13 月、缺月跳过。"""
+
+    def _ymd(self, offset: int, day: int) -> str:
+        """相对当前的月份偏移 offset，返回该月 day 号的 `YYYY-MM-DD`。"""
+        return f"{_shift_months(offset)[:8]}{day:02d}"
+
+    def test_since_until_filters_by_finished_not_created(self):
+        fx = self.fx
+        # 上月创建、本月结案：记录落在本月历史文件、finished 在本月
+        code, _, err = run(
+            fx.a,
+            "new",
+            "--title",
+            "跨月任务",
+            "--self",
+            "--created",
+            self._ymd(-1, 15),
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, err)
+        tid = task_id_of(fx.a, "跨月任务")
+        code, _, err = run(
+            fx.a, "close", "--id", tid, "--summary", "跨月结案", env=NOSYNC
+        )
+        self.assertEqual(code, 0, err)
+        # 查本月：按 finished 命中（比 created 会漏，因为 created 在上月）
+        code, out, _ = run(
+            fx.a,
+            "history",
+            "--since",
+            self._ymd(0, 1),
+            "--until",
+            self._ymd(0, 28),
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("跨月任务", out, "结案月的区间应命中（历史按结案月归档）")
+        # 查上月：created 在上月，但 finished 在本月 ⇒ 不该命中
+        code, out, _ = run(
+            fx.a,
+            "history",
+            "--since",
+            self._ymd(-1, 1),
+            "--until",
+            self._ymd(-1, 28),
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0)
+        self.assertNotIn(
+            "跨月任务", out, "按结案时间过滤，不能因 created 在上月就误命中"
+        )
+        # 同月文件内再按 finished 精筛：本月 16 号之后的区间应排除（结案在本月较早）
+        code, out, _ = run(
+            fx.a,
+            "history",
+            "--since",
+            self._ymd(0, 20),
+            "--until",
+            self._ymd(0, 28),
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0)
+
+    def test_default_is_last_three_months(self):
+        fx = self.fx
+        tid = new_task(fx.a, "四月前结案", env=NOSYNC)
+        code, _, err = run(
+            fx.a,
+            "close",
+            "--id",
+            tid,
+            "--summary",
+            "老任务",
+            "--finished",
+            _shift_months(-4),
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, err)
+        code, out, _ = run(fx.a, "history", env=NOSYNC)
+        self.assertEqual(code, 0)
+        self.assertNotIn("四月前结案", out, "默认只查近 3 个月")
+        code, out, _ = run(fx.a, "history", "--months", "6", env=NOSYNC)
+        self.assertEqual(code, 0)
+        self.assertIn("四月前结案", out, "--months 6 覆盖到 4 个月前")
+
+    def test_over_13_months_rejected(self):
+        fx = self.fx
+        code, _, err = run(fx.a, "history", "--months", "14", env=NOSYNC)
+        self.assertNotEqual(code, 0, "超过 13 个月必须报错")
+        self.assertIn("13", err)
+        code, _, err = run(
+            fx.a,
+            "history",
+            "--since",
+            _shift_months(-14),
+            "--until",
+            _shift_months(0),
+            env=NOSYNC,
+        )
+        self.assertNotEqual(code, 0, "跨 15 个月的区间必须报错")
+        self.assertIn("13", err)
+
+    def test_missing_month_is_skipped(self):
+        fx = self.fx
+        month = _shift_months(-6)[:8]
+        code, out, err = run(
+            fx.a,
+            "history",
+            "--since",
+            month + "01",
+            "--until",
+            month + "28",
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, f"缺月应跳过、不报错：{err}")
+        self.assertIn("没有符合条件", out, "缺月应视为没记录，不报错")
+
+    def test_months_conflicts_with_since(self):
+        fx = self.fx
+        code, _, err = run(
+            fx.a, "history", "--months", "3", "--since", "2026-01-01", env=NOSYNC
+        )
+        self.assertNotEqual(code, 0, "--months 与 --since 同时用应报错")
+        self.assertIn("不能同时用", err)
 
 
 class RerunConvergesTest(ScenarioCase):
