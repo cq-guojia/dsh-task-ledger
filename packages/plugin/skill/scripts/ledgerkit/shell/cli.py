@@ -36,7 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     new = sub.add_parser("new", help="建任务")
     new.add_argument("--title", required=True)
-    new.add_argument("--id")
+    new.add_argument("--id", dest="tid")
     new.add_argument("--created")
     new.add_argument("--category")
     new.add_argument("--tags")

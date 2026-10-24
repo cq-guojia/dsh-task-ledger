@@ -676,6 +676,59 @@ class CrossMonthCloseTest(ScenarioCase):
         )
 
 
+class ReuseClosedIdTest(ScenarioCase):
+    """复用已结案的任务号：同月要挡（撞同一篇文档），跨月不挡（落在不同月份目录）。"""
+
+    def _close(self, fx, tid):
+        code, _, err = run(
+            fx.a, "close", "--id", tid, "--summary", "夹具结案", env=NOSYNC
+        )
+        self.assertEqual(code, 0, err)
+
+    def test_same_month_reuse_is_rejected(self):
+        fx = self.fx
+        tid = new_task(fx.a, "同月复用", env=NOSYNC)
+        self._close(fx, tid)
+        code, _, err = run(fx.a, "new", "--title", "同月再来", "--id", tid, env=NOSYNC)
+        self.assertEqual(code, 1, "同月复用已结案的号必须挡住：会撞同一篇文档")
+        self.assertIn("已经结过案", err)
+
+    def test_cross_month_reuse_is_allowed(self):
+        fx = self.fx
+        tid = "20260915-1200-跨月复用-aaaa"
+        code, _, err = run(
+            fx.a,
+            "new",
+            "--title",
+            "跨月复用",
+            "--id",
+            tid,
+            "--created",
+            _shift_months(-1),
+            "--self",
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, err)
+        self._close(fx, tid)  # 结案时间 = 现在 ⇒ 历史行落在**当月**文件里
+        code, _, err = run(
+            fx.a,
+            "new",
+            "--title",
+            "跨月再来",
+            "--id",
+            tid,
+            "--created",
+            _shift_months(0),
+            "--self",
+            env=NOSYNC,
+        )
+        self.assertEqual(code, 0, err + "｜跨月同号落在不同月份目录，不该挡")
+        docs = sorted(
+            p.parent.name for p in (fx.a / "ledger" / "worklog").rglob("*aaaa.md")
+        )
+        self.assertEqual(len(docs), 2, f"两篇文档都在，只是分处两个月目录：{docs}")
+
+
 class MissingWorklogTest(ScenarioCase):
     """过程文档丢了：记账照常，只提示跳过执行记录（不 Fail）。"""
 

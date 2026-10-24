@@ -30,19 +30,13 @@ def _recent_month_keys(count: int) -> set[str]:
     return keys
 
 
-def _month_key_of(path: Path) -> str:
-    """按月文件的月份键；存量平铺文件没有月份键，返回空串。"""
-    stem = path.stem
-    return stem if len(stem) == 6 and stem.isdigit() else ""
-
-
 def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
     """`--owner` / `--mine` 一律**精确相等**（不做前缀 / 子串）；`--since` / `--until` 比 `created`。"""
     store = HistoryStore(repo)
     sources = store.sources()
     if q.months:
         wanted = _recent_month_keys(int(q.months))
-        sources = [p for p in sources if _month_key_of(p) in wanted]
+        sources = [p for p in sources if store.month_key(p) in wanted]
 
     records: list[dict[str, Any]] = []
     warnings: list[str] = []
