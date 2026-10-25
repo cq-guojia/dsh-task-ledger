@@ -353,7 +353,7 @@ class HistoryStore:
 - **当月第一次结案（文件还不存在）由 `append_row` 起表**：文件不存在（或 `read` 回空串）⇒ 它自己按 `ledger-data.md` §四 的九列表头 + 分隔行开头，再接这一行。表头的真源只有 `history_md` 一处，别在业务层拼。
 - `has_log` **只看传进来的那一个月文件**，不扫全年（跨月重跑会在两个月各记一行，这是已知且接受的例外）。
 - **末列那格路径的基准换算只调 `core/paths.py::to_history_rel`**：`history_line` 接到的 `worklog` 是 `task["worklog"]` 原值（相对 `ledger/`），由它调 `to_history_rel` 换成相对 `ledger/history/` 的 `../worklog/…` 形式（深度固定，但拼 `..` 只许在这一处）。`has_log` 只比**文件名**（末列的 basename），不比整条路径——这样两边谁也不用猜对方的基准。**末列为空的行**（这条任务本来就没过程文档）没有文件名可比，改按「创建时间 + 工作包」两列判重，否则结案重跑会把同一行追加两次。
-- **`has_log` 三态返回**：`"hit"` 已有这一行、`"miss"` 确实没有、`"undecidable"` 表里有末列为空的行而调用方没给 `created` / `title`（分片已删时就是这样）—— 看不清就明说，别拿 `False` 冒充"没有"。
+- **`has_log` 三态返回**：`"hit"` 已有这一行、`"miss"` 确实没有、`"undecidable"` 判不了。判不了有两种：表里有**末列为空**的行而调用方没给 `created` / `title`（分片已删时就是这样）；或调用方给不出 `log_name`（任务的过程文档丢了 / 被移走）而表里那行**带着链接**。看不清就明说，别拿 `False` 冒充"没有"。
 
 ```python
 class WorklogStore:
@@ -510,7 +510,7 @@ def bootstrap(repo, me) -> Identity
 ```
 
 - 写集（最小）：索引 + 池 + 我的分片。
-- 写序：`atomic.ensure_dir(owners/)` → 池 `TaskStore(POOL_REL).ensure_file()`（缺则建空池、有则不动）→ `OwnersIndex.ensure(me)`（索引缺则建、登记自己）→ 我的分片 `TaskStore(shard_rel(me)).ensure_file()`。**建目录只走 `atomic.ensure_dir`、建文件只走 `ensure_file`**，业务层不碰 `write_ledger_json`。三样由外壳用 `presync_scope` 返回的**自举那份** `Scope.files` 一次 `atom` 包住（机制同 §3.2 总则 2）；`bootstrap` 自己不开事务、不拿锁。
+- 写序：`atomic.ensure_dir(owners/)` → 池 `TaskStore(POOL_REL).ensure_file()`（缺则建空池、有则不动）→ 我的分片 `TaskStore(shard_rel(me)).ensure_file()` → `OwnersIndex.ensure(me)`（索引缺则建、登记自己）。**分片必须早于登记**：反过来崩在中间会留下「索引里有我、磁盘上没分片」，全员读路径都 Fail 且永不自愈（见 `bootstrap.py` 注释）。**建目录只走 `atomic.ensure_dir`、建文件只走 `ensure_file`**，业务层不碰 `write_ledger_json`。这几样由外壳用 `presync_scope` 返回的**自举那份** `Scope.files` 一次 `atom` 包住（机制同 §3.2 总则 2）；`bootstrap` 自己不开事务、不拿锁。
 - 重跑：已登记 ⇒ 零写，直接返回。
 - 必须在别的动作之前单独跑（文件锁不可重入，嵌进去会自己卡死）。
 - **返回 `Identity` 而不是 `Result`**：它是 runner 在动作之前调的自举步骤，不参与"提交说明 / where / 打印"；它写的文件照样记进记账本，提交集合照常由记账本决定。

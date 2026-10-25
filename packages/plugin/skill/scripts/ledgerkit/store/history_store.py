@@ -64,6 +64,11 @@ class HistoryStore:
                 if Path(worklog).name == Path(log_name).name:
                     return HIT
                 continue
+            if log_name is None and worklog:
+                # 历史行里有链接，但这次判不出对应的是哪篇文档（任务的过程文档丢了 / 被移走）：
+                # 判不了就明说。拿 miss 冒充会再追加一行 ⇒ 同一条任务两条结案记录。
+                undecidable = True
+                continue
             if not worklog:
                 if created and title:
                     if row.get("created") == created and row.get("title") == title:
