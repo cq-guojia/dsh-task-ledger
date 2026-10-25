@@ -1,6 +1,6 @@
 # 架构总览
 
-> **状态**：🔵 落码（host 半、client 半、脚本「两层 + 外壳」均已落码；少数细节见 §四「已知差异与未落码部分」，如浮标入口、`fsync(父目录)`）
+> **状态**：🔵 落码（host 半、client 半、脚本「两层 + 外壳」均已落码；少数细节见 §四「已知差异与未落码部分」，如浮标入口）
 > **来源**：NAS-Docker 台账调研任务（2026-10-16 结案）+ 用户 2026-10-22「只要两层，别搞框架、别加层」
 > **配套**：数据格式见 [`ledger-data.md`](ledger-data.md)；脚本分层、铁律与防塌线见 [`code-conventions.md`](code-conventions.md)；功能清单见 [`features.md`](features.md)；宿主接口事实见 [`external/`](external/)
 
@@ -40,13 +40,15 @@ client 半：侧栏条目（带计数）+ 主面板（任务 / 统计两 tab）
 
 ### 2.2 一次写（现状）
 
+外壳 `cli.main`（定位工作区 + 整命令锁）调 `runner.run`，一路七步：
+
 ```
-_run_once:  git_presync  →  args.func（命令本体：自己读、自己改、自己写）  →  git_sync（提交 + 推送）
+绑记账本 → 取最新 → 自举 → 调业务函数 → 打印 → 提交 → 推送
 ```
 
-git 现在已经在命令的**前后两端**，业务中间不碰 git —— 这一点重构必须保住，理由见下节与不变量「提交只在脚本外壳」。
+git 只在命令的**前后两端**，业务中间不碰 git —— 这一点重构必须保住，理由见下节与不变量「提交只在脚本外壳」。
 
-### 2.3 一次写（目标形态，未落码）
+### 2.3 七步的细节与跳过条件
 
 ```
 外壳 cli.main → runner.run
@@ -80,11 +82,11 @@ git 现在已经在命令的**前后两端**，业务中间不碰 git —— 这
 3. **两级锁，别混为一谈**：
    - 整条命令级 `repo_sync_lock`：锁文件在 `<git-common-dir>`（worktree 共享），`LOCK_NB` 轮询、最多等 60 秒，等不到就 `Fail`；
    - 单文件级 `progress_lock`：`flock(LOCK_EX)` **无超时、不重入**；平台没有 `fcntl` / `msvcrt` 时**直接不加锁**（只读、单人场景的取舍）；
-   - 只读命令与 `--no-sync` 不拿整命令级锁。
+   - 只有只读命令不拿整命令级锁；`--no-sync` 的写命令**照拿**（它只跳取最新 / 提交 / 推送）。
 4. **失败收尾只有两套，别再长第三套**：`WriteLog.rollback_presync()` 负责把「写前取最新」覆盖掉的内容恢复回去；`WriteLog.discard_created()` 负责删掉本次新建的文件；成功路径统一 `clear()`。（业务动作自己写坏了是另一对：`atomic.snapshot` / `restore`，只还原本次动作碰过的文件。）
 5. **唯一一个不回滚的失败分支**：BrokenPipe（下游读走人）—— 不回滚，但若本次已写过文件，仍必须完成提交，否则台账停在「已写未提交」，下一条写命令会被写前 guard 拦死。
 6. **原子性靠单文件原子写 + 固定写序 + 重跑幂等**，不引入 journal / recover：
-   - 单文件现状：`mkstemp → write → fsync(file) → chmod → os.replace`；**目标补一步 `fsync(父目录)`**（掉电时 rename 的目录项可能丢）。全仓只有一个写盘出口 `write_text_atomic`，别开第二个；
+   - 单文件写：`mkstemp → write → fsync(file) → chmod → os.replace → fsync(父目录)`（掉电时 rename 的目录项可能丢，所以父目录也要刷）。全仓只有一个写盘出口 `write_text_atomic`，别开第二个；
    - 多文件：先写目标、后删源、删永远是最后一步；每个动作的重跑判据写在业务层。写序表见 [`ledger-data.md`](ledger-data.md)。
    - 跨文件写失败：用 `atomic.snapshot` / `restore` 把**本次动作刚碰过的**文件按字节还回去。这是"读进内存、失败写回"，**不是** journal —— 不落日志、不扫残留、没有启动恢复。
 7. **写前 guard 会硬拦**：本地台账有未提交改动 / 有未推送的台账提交 / 有未入库的同名文件 / 处于 rebase 中间态 ⇒ 中止并说明怎么处理。detached HEAD 或无上游时只做本地提交并在 stderr 提示。`worklog` 里人写的改动先 stash、刷完再叠回。
@@ -99,9 +101,7 @@ git 现在已经在命令的**前后两端**，业务中间不碰 git —— 这
 
 | 项 | 现状 |
 |---|---|
-| `fsync(父目录)` | 未做（见不变量「原子性」） |
 | 浮标入口（`shell.overlay`） | 未落码；当前入口只有 `sidebar.panellist` 侧栏条目 + `main` 整页 |
-| `close` 跨月取最新上界 | 口径已定死：`finished` **只算一次**，月份判断 / 落盘路径 / 刷新范围全用同一个值（见 `ledger-api.md` §3.2）。现状是各处各算一次，跨月那一瞬会刷错月份 ⇒ 落码时按新口径实现 |
 
 ## 五、待拍板
 

@@ -56,7 +56,7 @@ fixture：`/tmp/perf3` = 空在办 + `history/202610.md` 50002 行 / 6.6MB（5 �
 
 ```
 routes.ts            传输层：参数解析 / 发 JSON / 错误→状态码
-services/            用例层：纯计算零 IO（home / history / filters 三个 service）
+services/            用例层：聚合与计算（多数是纯函数；`trend.service` 自己调 repositories 读在办 + 历史）
 repositories/        数据访问层：**唯一知道「台账怎么读」的地方**
   ledger.repository    readTasks / readHistory / getTask / readWorklog / hasLedger
   identity.repository  读本机 identity.json 的 uuid（机器级；与工作区 / git 无关）
@@ -130,12 +130,12 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 |---|---|---|
 | 1 | 目录重组 + IO 收敛 + 错误模型/降级 + 入口校验 | 完全等价，验收通过才算完 |
 | 2 | 拆端点（A）+ 缓存（B）+ 前端降级标红 —— ✅ 已完成（4a / 4b / 步骤 5） | 新增行为 |
-| 3 | 写路径 + invalidate（等任务 4 拍板） | 新增行为 |
+| 3 | 写路径 + invalidate | ✅ 已完成：`/claim`、`/release` 走 `ledger-write.service.ts`（host 代跑同一个脚本），`/close` 走会话交接由模型执行 |
 
 ## 七、影响面（重构必读）
 
 - host 文件重组时，`dist/` 产物路径的下游引用要同步（原 smoke 的 5 处硬编码 `import('../dist/host/*.js')` 已随 smoke 删除移除）；
 - 对外契约不许变：`list --json` = 任务号为键的对象；`history --json` = `{count,filters,records}`；`--count-only` = `{count,capped}`；错误人话文案守返回结构与文案；
 - host 新文件 tsc 自动纳入（`tsconfig.json` include `src`）；client 禁止 import host；
-- API 前缀两份副本：`routes.ts:32` 与 `client/api.ts:14`，改要同步；
+- API 前缀两份副本：`host/routes.ts` 与 `client/api.ts` 各一份 `API_PREFIX`，改要同步；
 - 文档同步：`ledger-data.md`（点名 runLedgerScript 处）、`architecture.md`、`code-conventions.md`、`board-home.md`、`external/dsh-workspace-registry.md`。

@@ -159,6 +159,13 @@ def main() -> int:
             r.returncode == 1 and "只收身份 uuid" in r.stderr,
             r.stdout + r.stderr,
         )
+        # 空串不是「释放」的隐式语义：host 曾拿 `set --owner ""` 当释放，必然失败（2026-10-25 修）
+        r = run(repo, "set", "--id", tid, "--owner", "")
+        check(
+            "set --owner 空串被拒（释放只认 --release）",
+            r.returncode == 1 and "只收身份 uuid" in r.stderr,
+            r.stdout + r.stderr,
+        )
 
         # show / history / validate
         r = run(repo, "show", "--id", tid)
@@ -221,6 +228,35 @@ def main() -> int:
             r.returncode == 0 and before["uuid"] == after["uuid"],
             r.stdout + r.stderr,
         )
+
+        # 空台账契约（ledger-data.md §七）：没有任何历史文件时，--json 仍必须是 JSON。
+        # 这条一破，插件把「输出不是 JSON」当失败 ⇒ 一个空工作区就能让整块看板 500（2026-10-17 真机）。
+        empty = Path(tempfile.mkdtemp(prefix="ledgerkit-empty-"))
+        try:
+            r = run(empty, "list", "--json")
+            check(
+                "空台账 list --json 是 {}",
+                r.returncode == 0 and r.stdout.strip() == "{}",
+                r.stdout + r.stderr,
+            )
+            r = run(empty, "history", "--json")
+            shape = json.loads(r.stdout) if r.returncode == 0 else {}
+            check(
+                "空台账 history --json 五键齐全",
+                r.returncode == 0
+                and set(shape) == {"count", "filters", "records", "warnings", "capped"}
+                and shape["count"] == 0
+                and shape["records"] == [],
+                r.stdout + r.stderr,
+            )
+            r = run(empty, "history", "--count-only")
+            check(
+                "空台账 --count-only 只有两键",
+                json.loads(r.stdout) == {"count": 0, "capped": False},
+                r.stdout + r.stderr,
+            )
+        finally:
+            shutil.rmtree(empty, ignore_errors=True)
 
         # 关掉字节码：产物里不许有 __pycache__
         pycache = list(SCRIPTS.rglob("__pycache__"))

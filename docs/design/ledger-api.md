@@ -15,7 +15,7 @@
 | 文档里的说法 | 人话 |
 |---|---|
 | **数据层**（`store/`，旧称 L1） | 只跟文件打交道的代码。每一种文件一个对象，负责把它读出来、改好、写回去。**它不知道业务规矩**——不懂「这个任务该不该由你改」，也不懂「结案要同时写三个文件」。 |
-| **业务层**（`actions/`，旧称 L2） | 一个动作一个函数：建任务、认领、改状态、释放、交接、记进展、结案、归并标签。**它决定顺序**——先写哪个文件、后写哪个、崩在中间怎么补。 |
+| **业务层**（`actions/`，旧称 L2） | 一个动作一个函数：建任务、认领、释放、交接、记进展、结案。**它决定顺序**——先写哪个文件、后写哪个、崩在中间怎么补。 |
 | **外壳**（`shell/`） | 跑一条命令时的外围杂事：读命令行参数、跑之前取最新、跑完提交推送、把结果打印出来、决定退出码。**它不懂业务**，也不知道台账里有什么字段的含义。 |
 | **工具层**（`core/`） | 纯换算：时间格式、路径拼接、任务号生成、标签校验、markdown 文本的增删行。**不读文件、不写文件、不联网、不打印。** |
 | **`env.py`** | 唯一被允许确认「我现在是谁」的地方（读机器级身份文件 `~/.taskledger/identity.json` 的 `uuid`）。 |
@@ -148,7 +148,7 @@ packages/skill/scripts/
     │   │                         外壳把命令行参数装成它，界面直接构造它——动作层不认识 argparse。
     │   ├── result.py          ← 动作的返回值长什么样：写了哪些字段、落在哪个文件、
     │   │                         是不是"重跑发现已经做过"、提交用什么消息、要额外显示什么；
-    │   │                         以及只读动作那几种结果（列表 / 单条 / 历史 / 体检 / 统计）。
+    │   │                         以及只读动作那四种结果（列表 / 单条 / 历史 / 体检）。
     │   ├── atom.py            ← 事务的唯一入口，20 行：把这次要碰的文件按固定顺序一次锁住。
     │   │                         只加锁，不管写盘、不碰 git、不打印。
     │   ├── guard.py           ← 业务校验的共用件：任务号形态、任务存不存在、
@@ -332,7 +332,7 @@ class OwnersIndex:
 ```python
 class HistoryStore:
     def __init__(self, repo: Path)
-    def sources(self) -> list[Path]                       # 按月的 history/*.md + 存量平铺的 legacy 文件（只读）
+    def sources(self) -> list[Path]                       # 按月的 history/*.md（**只认这一种**，平铺的旧文件不读）
     def read(self, path: Path) -> str
     def append_row(self, path: Path, row: dict) -> dict   # 只算新全文，不落盘
     def has_log(self, path: Path, *, log_name: str | None,
@@ -417,8 +417,8 @@ class ListQuery:
     tag: str | None = None
     since: str | None = None              # UTC 串，闭区间
     until: str | None = None                # 同上
-    # `since` / `until` **一律比 `created`**（含边界，只给其一也行），不比 `started` / `updated`；
-    # `HistoryQuery` 同名两字段同口径（与 §3.3「history 按创建时间过滤」一致）
+    # `since` / `until` **一律比 `created`**（含边界，只给其一也行），不比 `started` / `updated`
+    # ⚠️ `HistoryQuery` 的同名两字段**口径不同**：比的是 `finished`（结案时间），不是 created
 
 @dataclass(frozen=True)
 class HistoryQuery:
@@ -481,7 +481,7 @@ def in_scope(task, q: ListQuery, *, me: Identity) -> bool    # list 的过滤谓
 - **`owner` / `status` 的读取只走这四个谓词**：`store/` 里一律不许出现 `get("owner")` / `get("status")`，`actions/` 里除 `guard.py` 之外也不许裸写字段名比较。业务动作要判归属就调 `is_mine` / `require_owner` / `owner_of`。
 - **任务号形态校验只在 `core/ids.py::require_task_id` 一处**，`guard` 不再提供同名函数（要校验就调 ids 那个）。
 
-### 3.2 写动作（9 个）
+### 3.2 写动作（8 个）
 
 每个动作文件顶部固定三行注释：**写集（最小） / 写序 / 重跑怎么收敛**。（加锁不在这里 —— 外壳用 `atom` 包住调用。）
 
@@ -498,8 +498,8 @@ def in_scope(task, q: ListQuery, *, me: Identity) -> bool    # list 的过滤谓
 
 | 动作 | 它写哪些字段 |
 |---|---|
-| `new_task` | `status="open"`、`started=null`、`updated=created`、`finished=null`、`creator=me.uuid`、`creator_name=me.name`；`owner` = `mine ? me.uuid : null`、`owner_name` 同理（进池的那份恒 `null`） |
-| `claim` | `owner=me.uuid`、`owner_name=me.name`、`updated=now()`；`started` 还空就填 `now()`（"开始做"的时刻），已有值不动；`status` 不动 |
+| `new_task` | `updated=created`、`finished=null`、`creator=me.uuid`、`creator_name=me.name`；`owner` = `mine ? me.uuid : null`、`owner_name` 同理；**`--self` 分支直接是在做**：`status="doing"`、`started=created`，不加 `--self` 才是 `status="open"`、`started=null` |
+| `claim` | `owner=me.uuid`、`owner_name=me.name`、`status="doing"`（认领即在做，看板按 `doing` 算「我的在办」）、`updated=now()`；`started` 还空就填 `now()`（"开始做"的时刻），已有值不动 |
 | `release` | 写回池的那份 `owner=null`、`owner_name=null`、`status="open"`、`updated=now()`；`started` 保留（重领时不重置） |
 | `handoff` | 对方分片那份 `owner=to`、`owner_name=`名册里对方的 name、`updated=now()`；`started` 原值带走 |
 | `log_progress` | 只改 `updated=now()` |
@@ -559,7 +559,7 @@ def release(repo, me, tid) -> Result
 - 重跑：**收敛**，不是报错——池里已有同号（上次崩了一半）⇒ 只补删我分片那行，`already_done=True`、退出码 0。
 
 ```python
-def handoff(repo, me, tid, *, to, status=None) -> Result
+def handoff(repo, me, tid, *, to) -> Result
 ```
 
 - 写集（最小）：我的分片 + 对方分片 + 过程文档。
@@ -594,7 +594,7 @@ def close_task(repo, me, tid, *, summary, finished: str, category=None, tags=Non
 - 失败：用 `atomic.restore` 把第 1~3 步碰过的文件按字节还原（`snapshot` 拿到的 `None` 表示原本不存在 ⇒ 删掉）。
 - `payload`：`{"history_path": …, "worklog_path": …}`。
 
-### 3.3 只读动作（5 个）
+### 3.3 只读动作（4 个）
 
 ```python
 def list_tasks(repo, me, q: ListQuery) -> ListResult
@@ -620,7 +620,7 @@ def validate(repo, me, deep: bool = False) -> ValidationReport
 - **`list_tasks` 的合并顺序定死**：先池、再按索引键排序的各分片，同一任务号由分片那份胜出（见 `ledger-data.md` §八）。顺序不确定会让同一份数据两次查给出不同结果。
 - **`validate` 分两档，只查格式不查业务**（2026-10-24 用户拍板）：
   - 浅度（默认）读：池 + 索引登记的各分片 + `owners/` 目录、**当月**历史文件、每篇过程文档的模板格式（标题行 / 「创建」行 / 前五节齐且有序）；
-  - `--deep` 追加：全部月份的历史文件（含存量平铺）、读正文判「还是空骨架」；
+  - `--deep` 追加：全部月份的历史文件（**只认按月文件**，平铺旧文件不读）、读正文判「还是空骨架」；
   - `problems` —— 索引与文件对不上、池里有越权、字段非法、分片主人与分区键不一致、过程文档格式坏 ⇒ 退出码 1；
   - `notices` —— 缺「执行记录」节、有重复的节、解析历史时的警告、「历史里已结案但分片里还挂着」、空骨架（仅 `--deep`）⇒ **只提示**，退出码 0；
   - 没有台账 ⇒ 什么都不算，两个都是空，退出码 0。
@@ -639,7 +639,9 @@ def main(argv=None) -> int                    # 唯一入口：解析 → 定位
 def build_parser() -> ArgumentParser          # 动作名与只读名单从 actions.registry 取
 def resolve_repo(arg: str | None) -> Path     # --repo 给了就校验（是目录、且不是 ledger/ 本身）；没给则从 cwd 往上找
                                               # 找不到 ⇒ Fail（退出码 1），不自作主张在当前目录建台账
-def to_query(args) -> ListQuery | HistoryQuery  # 命令行参数 → 查询对象。**只有这里认识 argparse**
+def to_query(args) -> None                    # 命令行参数 → 查询对象，**挂在 args.q 上**。只有这里认识 argparse
+def _run_init(args) -> int                    # `init` 专用：不进 runner、不读台账、不碰 git，只写机器身份文件
+                                              # （`main` 里在读台账之前分流；输出直接由它打印，见 §八 例外）
 
 # runner.py
 def run(action: str, args) -> int
@@ -702,11 +704,11 @@ class ActionSpec:
 ```
 
 1. `GitRepo(repo)` 在写动作里构造一次；**只读动作不构造**。`--no-sync` 照样构造，只是 runner 不调 `sync_down` / `guard_before_write` / `commit` / `push`（`TASK_LEDGER_NO_SYNC` 只在 `cli.main` 读一次，折成 `args.no_sync` 往下传，别在别处再读环境变量）。
-2. `me` 统一由 `guard.current_identity(repo)` 装配：先 `env.current()` 拿本机 git 身份（邮箱即唯一身份键）。写动作随后用 `bootstrap(repo, me)` 的返回值覆盖。
+2. `me` 统一由 `guard.current_identity(repo)` 装配：`env.current(repo)` 读机器身份文件拿 **uuid**（身份键是 uuid，不是邮箱 / 名字），`name` 优先取当前工作区 `owners.json` 里同 uuid 的那份。写动作随后用 `bootstrap(repo, me)` 的返回值覆盖。
 3. `spec.func(repo, me, **params)`，`params` 只按 §九 的映射表挑，**不许把整个 `args` 透传进业务层**。
 4. `spec.render(value, **视图参数)` **只负责打印，不 flush**；`render.flush_notices()` 只在 `cli.main` 的 `finally` 里调一次 —— 提交/推送阶段冒出来的提示也才打得到。
 
-**每个 `lock_scope(action)` 算哪些文件（七个分支）——只由 `actions.atom.lock_scope` 一处算，不许各写一份**：
+**每个 `lock_scope(action)` 算哪些文件（六个分支）——只由 `actions.atom.lock_scope` 一处算，不许各写一份**：
 
 | 动作（`lock_scope` 的 `action`） | 刷取范围（该动作会碰的文件 / 目录） |
 |---|---|
@@ -716,7 +718,6 @@ class ActionSpec:
 | 改状态 `"set"` | 我的分片 + 池 + **他人分片**（`claim` 前置要查、`handoff` 要写对方）+ 目标分片 + 该任务过程文档（四分支取并集，宁宽勿窄） |
 | 记进展 `"log"` | 我的分片 + 该任务过程文档 |
 | 结案 `"close"` | 我的分片 + **结案时间所在那个月**的历史 + 该任务过程文档 |
-| 归并标签 `"tags"` | 我的分片 + 全部在办文档 |
 
 - **表里的"目录"进 `Scope.dirs`**（只刷盘、不加锁，展开成目录下已存在的文件）；其余进 `Scope.files`，其中**本次要新建的文档路径也算进去**（`new` 那篇、`close` 要封卷那篇 —— 路径算得出来、文件还没有）。所以锁集允许含尚不存在的路径（见 §3.2 总则 4）。
 - **② 取最新实际刷的是「`"bootstrap"` 行 ∪ 动作行」**（`presync_scope` 算这个并集）：写命令的自举会写索引与我的分片，只刷动作那一行不足以防旧索引盖人。
@@ -727,7 +728,7 @@ class ActionSpec:
 | 文件 | 函数 |
 |---|---|
 | `time.py` | `now()`；`to_utc(value, *, field, tid=None)`；`fmt_local(utc)`；`normalize_time(value, *, field)`；`time_key(utc)` |
-| `paths.py` | `SKILL_DIR`（**模板与资产的唯一定位基准**，按自身位置算绝对路径）；`WORKLOG_TEMPLATE`；`POOL_REL` / `OWNERS_REL` / `OWNERS_DIR` / `HISTORY_DIR` / `WORKLOG_DIR` / `LEGACY_HISTORY_REL`；`shard_rel(identity)`；`worklog_dir_for(created)`；`worklog_name(tid)`；`worklog_rel(tid, created)`；`history_path_for(finished)`；`to_repo_rel(ledger_rel)` / `to_ledger_rel(repo_rel)` / `to_history_rel(ledger_rel)` |
+| `paths.py` | `SKILL_DIR`（**模板与资产的唯一定位基准**，按自身位置算绝对路径）；`WORKLOG_TEMPLATE`；`POOL_REL` / `OWNERS_REL` / `OWNERS_DIR` / `HISTORY_DIR` / `WORKLOG_DIR`；`shard_rel(identity)`；`worklog_dir_for(created)`；`worklog_name(tid)`；`worklog_rel(tid, created)`；`history_path_for(finished)`；`to_repo_rel(ledger_rel)` / `to_ledger_rel(repo_rel)` / `to_history_rel(ledger_rel)` |
 | `ids.py` | `id_stamp(created)`；`slugify(title)`；`make_id(title, tasks, created=None)`；`require_task_id(tid)` |
 | `identity.py` | `Identity`（`uuid` / `name` 的不可变值对象）；`normalize(who)`；`looks_like_uuid(who)`；`is_me(identity, who)` |
 | `labels.py` | `STATUSES = ("open", "doing")`（`--status` 的白名单就是它）；`done` 只能由 `close` 产生、不在此二者里；`FORMAT_VERSION`；`normalize_label(value, *, field)`；`parse_tags(raw)`；`label_line(category, tags)`；`parse_label_line(text)` |
@@ -746,11 +747,11 @@ class ActionSpec:
 
 ```python
 def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有就 Fail 提示跑 init
-                               # 读不到就给兜底身份，并 notices.note("提示：…")，绝不抛
+                               # 不兜底：没身份直接抛 Fail，绝不编一个假身份往下走
 ```
 
-- 只有一个方法。它**只给本机的这一个身份**（邮箱即唯一身份键）。
-- 它跑 `git config`（子进程），这是全仓唯一允许跑 git 的非 shell 文件；只读配置，不 pull / commit / push。
+- 只有一个方法。它**只给本机的这一个身份**（身份键是 **uuid**，`name` 只用于显示）。
+- **它不跑 git、不开子进程**：只读文件。全仓跑 git 的只有 `shell/`。
 
 ## 六、错误、退出码、输出
 
@@ -808,7 +809,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 
 | 判据 | 现状 | 目标 |
 |---|---|---|
-| `actions/` 里出现 `write_text_atomic\|read_ledger\|load_pool\|load_shard\|open(\|read_text(\|read_bytes` | 26 行（在 `cmd_*` 里） | **0** |
+| `actions/` 里出现 `write_text_atomic\|read_ledger\|load_pool\|load_shard\|open(\|read_text(\|read_bytes` | 26 行（在 `cmd_*` 里） | **0**（唯一例外：`validate.py` 在 JSON 解析失败后读原文，判断是不是程序自己留的 `<<<<<<<` 冲突标记 —— 那时 store 已经抛了，只能读原文） |
 | `snapshot(` / `restore(` 出现在 `actions/` 的 `close_task.py` / `new_task.py` 之外 | — | **0**（只有"一次改多个文件、且半路失败要按字节退回"的动作才用；`new_task.py` 只用它删本次新建的那篇文档） |
 | `actions/` 里出现 `print(` | 73 处 | **0**（打印全在 `shell/render.py`） |
 | `actions/`+`store/` 里出现 `git_\|subprocess\|_push\|_rebase_retry` | 0 | **0**（唯一例外：顶层 `env.py` 读 `git config`，它不在这两个目录里） |
@@ -817,7 +818,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 | **`store/` 里出现 `get("owner")` / `get("status")` 判定** | 16 处 | **0**（读 `owner`/`status` 只走 `guard.py` 的四个谓词） |
 | **`actions/` 里在 `guard.py` 之外**读**裸写 `["owner"]` / `["status"]` / `.get("owner")` / `.get("status")`**（用于判定） | — | **0**（要判就调 `is_mine` / `owner_of` / `status_of` / `in_scope`）；**写**这两个字段不算违规（`claim` / `release` / `handoff` / `set_task` 本来就要写），用赋值形态 `\["owner"\]\s*=` / `\["status"\]\s*=` 把它们从判据里排除 |
 | 四个记账本名字出现在 `store/dirty.py` 之外 | 4 个文件都有 | **0** |
-| `print(` 出现在 `notices.py` 与 `render.py` 之外 | — | **0** |
+| `\bprint\(` 出现在 `notices.py` 与 `render.py` 之外 | — | **0**（唯一例外：`cli._run_init` 打 init 结果 —— 它不进 runner，也没有别的渲染入口。判据必须带词边界，否则 `fingerprint(` 会被误算） |
 | 跨动作 import（`set_task.py → release.py/handoff.py/claim.py` 除外） | — | **0** |
 | `scripts/progress.py` 行数 | 4657 | **≤ 40** |
 | `actions/` 单文件最大行数 | — | **≤ 300** |
@@ -828,6 +829,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 
 | 命令 | 参数 | 动作 |
 |---|---|---|
+| `init` | `--claim --new --name` | `init_identity(repo, claim, new, name)`（**不进 runner**：只写机器身份 `~/.taskledger/identity.json`，不碰台账、不碰 git；`repo` 只用来读名册给人挑 uuid，可以为 None） |
 | `new` | `--title --id --created --category --tags --self` | `new_task(title, tid, created, category, tags, mine)` |
 | `claim` | `--id` | `claim(tid)` |
 | `set` | `--id --release --owner` | `set_task(tid, owner, release)` → `release` / `handoff` / `claim` |
@@ -841,7 +843,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 
 表里只列**命令带来的参数**：`repo` 与 `me` 由外壳自动注入（见 §四 的 `ActionSpec`）；**第三列括号里的参数名就是 `params` 的键**，外壳照它挑，多一个少一个都算契约破坏。
 
-**名册的键就是命令写法**：九个命令九个键，没有子模式分键。没有 `--dry-run` —— 写命令没有预览模式。
+**名册的键就是命令写法**：`init` 之外的九个命令九个键，没有子模式分键（`init` 在 `cli.main` 里先分流、不进 registry，理由见上表）。没有 `--dry-run` —— 写命令没有预览模式。
 
 **参数 → 查询对象的装配只在 `cli.to_query` 一处**：动作层拿到的永远是 `ListQuery` / `HistoryQuery`，不是 argparse 的 namespace。界面（看板）要复用同一个动作，自己构造这两个 dataclass 即可 —— 这是 §〇 第 39 行「业务函数要能被界面单独调」能成立的唯一方式。
 

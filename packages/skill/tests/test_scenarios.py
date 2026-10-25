@@ -1321,5 +1321,27 @@ class ByteContractTest(unittest.TestCase):
         self.assertIn('"a": 3', text)
 
 
+class GitTimeoutTest(unittest.TestCase):
+    """`_git` 超时必须折成返回码 124，不许抛出去。
+
+    抛出去会被 runner 兜底成「未预期错误」（退出码 3），把 `sync_down` 里
+    「写前拉取失败、按本地最新写」那条降级路径整条跳过 —— 触发场景是弱网 / 网络黑洞，
+    fetch 一直挂到超时。这里用极短超时直接压出这条路，不真等 30 秒。
+    """
+
+    def test_timeout_becomes_returncode_124(self):
+        from ledgerkit.shell.gitops import _git
+
+        proc = _git("git", "--version", timeout=0.001)
+        self.assertEqual(proc.returncode, 124)
+        self.assertIn("timed out", proc.stderr)
+
+    def test_missing_git_is_not_crash(self):
+        from ledgerkit.shell.gitops import _git
+
+        proc = _git("definitely-not-a-git-binary", "status")
+        self.assertEqual(proc.returncode, 127)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

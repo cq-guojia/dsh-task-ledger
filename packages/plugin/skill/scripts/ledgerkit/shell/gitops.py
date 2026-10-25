@@ -30,7 +30,13 @@ GIT_TIMEOUT = 30
 
 
 def _git(*args: str, timeout: int | None = GIT_TIMEOUT) -> subprocess.CompletedProcess:
-    """跑一条 git。没装 git 不当崩溃：返回 127 的空结果，由调用方按返回码处理。"""
+    """跑一条 git。没装 git 不当崩溃：返回 127 的空结果，由调用方按返回码处理。
+
+    **超时也折成返回码 124**，不许抛出去：`sync_down` 的 fetch 分支、`push` 的重试、
+    `_rebase_retry` 全按返回码判「远端不通」，抛异常会被 runner 兜底成「未预期错误」
+    （退出码 3），把「拉取失败、按本地最新写」这条既定降级路径整条跳过。触发场景是
+    弱网 / 网络黑洞 / 代理挂住 —— 远端不立刻拒绝，fetch 一直挂到超时（2026-10-25 修）。
+    """
     try:
         return subprocess.run(
             list(args), capture_output=True, text=True, timeout=timeout, check=False
@@ -38,6 +44,13 @@ def _git(*args: str, timeout: int | None = GIT_TIMEOUT) -> subprocess.CompletedP
     except FileNotFoundError:
         return subprocess.CompletedProcess(
             list(args), 127, stdout="", stderr="git: command not found"
+        )
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(
+            list(args),
+            124,
+            stdout="",
+            stderr=f"git: timed out after {timeout}s",
         )
 
 

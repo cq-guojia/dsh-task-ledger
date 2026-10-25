@@ -42,9 +42,10 @@ jobs:
       - name: build + typecheck + smoke
         run: pnpm --filter dsh-task-ledger run verify
 
-      # 台账合并语义：真起 git 仓库（bare + 两个 clone）跑 rebase 冲突接管，纯标准库、秒级、不出网。
-      # 两个文件分工：test_merge_semantics = 产品实际走的「按任务号三方合并」；
-      # test_merge_semantics = 分片台账的合并语义（不同任务自动合、同任务留标记）。
-      - name: 台账合并语义测试
-        run: |
-          python3 -B packages/skill/tests/test_merge_semantics.py
+      # 台账脚本全量测试（纯标准库、不出网、约 80 秒），四份各管一段：
+      #   smoke              单机单进程：每条命令的正反路 + 空台账 JSON 契约
+      #   test_crash_recovery 崩在写序中间，重跑必须收敛
+      #   test_scenarios      跨 clone / 跨进程：并发认领、离线恢复、推送被拒、跨月结案、根定位
+      #   test_merge_semantics 合并语义：不同任务自动合、同任务留冲突标记
+      - name: 台账脚本测试
+        run: pnpm run test:skill
