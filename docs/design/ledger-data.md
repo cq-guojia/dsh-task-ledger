@@ -14,7 +14,7 @@
 <工作区>/
 ├── ledger/
 │   ├── pool.json                  # 公共池：未认领任务（owner=null、status=open）
-│   ├── owners.json                # 索引：身份（git 邮箱）→ 分片文件
+│   ├── owners.json                # 索引：身份 uuid → 分片文件（name 只做显示）
 │   ├── owners/<hash12>.json       # 每人一份分片：自己名下的任务
 │   ├── history/<年月>.md          # 已结案索引，按结案时间分月（9 列）
 │   └── worklog/<年月>/            # 过程正文，一任务一篇
@@ -23,7 +23,7 @@
 
 以上五类文件**只由脚本写**（L1 落盘、业务层定写序）。
 
-⚠️ **本仓（`dsh-task-ledger` 自己）已迁到分片布局**：`pool.json` / `owners.json` / `owners/<hash>.json` 已是新分片格式，在办任务在各人分片（未认领的在 `pool.json`）；`history/`（9 列）与 `worklog/`（六节）同步为新布局。老工作区（仍用扁平 `ledger/progress.json`）由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。存量扁平 `ledger/PROGRESS-HISTORY.md` 只读兼容、永不重写。
+⚠️ **本仓（`dsh-task-ledger` 自己）已迁到分片布局**：`pool.json` / `owners.json` / `owners/<hash>.json` 已是新分片格式，在办任务在各人分片（未认领的在 `pool.json`）；`history/`（9 列）与 `worklog/`（六节）同步为新布局。老工作区（仍用扁平 `ledger/progress.json`）由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。**脚本不做任何旧格式兼容**：历史只认九列，平铺历史文件不再读。
 
 ## 二、任务表：`pool.json` 与 `owners/*.json`
 
@@ -36,8 +36,8 @@
 | 字段 | 值样例 | 说明 |
 |---|---|---|
 | `title` | 熟悉项目初衷并搭建初始文档架构 | 任务标题 |
-| `status` | `open` / `doing` | `done` 只能由 close 产生；`blocked` 是旧数据，读侧当进行中 |
-| `creator` / `owner` | `ming@example.com` | **git 邮箱**（归一化小写），不是 `user.name`；池里的行 `owner` 为 null |
+| `status` | `open` / `doing` | `done` 只能由 close 产生 |
+| `creator` / `owner` | `0c1e…-…`（uuid） | **身份 uuid**（小写，与 `~/.taskledger/identity.json` 同一个值）；池里的行 `owner` 为 null |
 | `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | **2026-10-22 起才写 UTC、不带偏移量**；此前写的是写入者本地时间且无标记，两类无法区分。`finished` 结案前为 null；`updated` = 最后一次推进，老数据可能缺失（看板回退到 `started` / `created`） |
 | `category` | 建设 | 单值分类 |
 | `tags` | `["文档架构","初始化"]` | 0~5 个 |
@@ -53,7 +53,7 @@
 另一形状：`workers` 对象，键 = 归一化身份，值 = `{"file": "<sha256前12位>.json", "name": …, "joined": …}`。
 
 - 分片文件名 = `sha256(归一化身份)[:12] + ".json"`；**索引是唯一入口** —— 目录里有、索引没登记的分片对它人等于不存在（`validate` 报出来；自己读自己那份会提示「没登记」）。
-- `identity.name` 是给你做对照的被动显示字段：只在首次登记时按当前 git `user.name` 写入，**之后任何逻辑都不读它、也不回写**；`joined` 保留首次登记时间。
+- `name` 是给人看的被动显示字段：首次登记时写进 `owners.json`，**任何归属判定都不读它**；任务行与历史行另有冗余的 `owner_name` / `creator_name`（同样只用于显示与 `--owner-name` 模糊筛）。`joined` 保留首次登记时间。
 
 ## 四、已结案：`history/<年月>.md`
 

@@ -218,5 +218,5 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <工�
 | 何时读 | 文件 |
 |---|---|
 | 任何非 0 退出、退出码 0 但有 `提示：` / `错误：` / `警告：`、并发冲突、`validate` 报错 | `references/troubleshooting.md` |
-| 传 `--created` / `--finished` 补录时间、看到旧 `blocked`、看 `--json` 里的时间字段、查别人时 owner 匹配异常、看 history 列义 / 时间窗口口径 / 旧格式行 | `references/state-model.md` |
+| 传 `--created` / `--finished` 补录时间、看 `--json` 里的时间字段、查别人时 owner 匹配异常、看 history 列义 / 时间窗口口径 | `references/state-model.md` |
 | 拿不准一条记录够不够格、`--note` 不会写 | `references/log-note.md` |

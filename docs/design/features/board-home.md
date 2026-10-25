@@ -89,9 +89,9 @@
 | 控件 | 取值 | 说明 |
 |---|---|---|
 | 范围 Segmented | 我的 / 全部工作区（默认全部） | 「我的」时隐藏第二区 |
-| 状态 Segmented | 全部 / 进行中 / 待认领 / 积压 / 逾期 / 停滞 | 「进行中」= doing（旧数据 blocked 也算）；「积压 / 逾期 / 停滞」= host 按时间算的 backlog / overdue / stale |
+| 状态 Segmented | 全部 / 进行中 / 待认领 / 积压 / 逾期 / 停滞 | 「进行中」= doing；「积压 / 逾期 / 停滞」= host 按时间算的 backlog / overdue / stale |
 | 工作区下拉 | 全部工作区 + 各工作区（定宽 180） | **本次新增**：五六个项目混排时最核心的那个筛选项 |
-| 搜索框 | 关键字（占满剩余宽度） | 标题 / 任务号 / 人 / 分类 / 标签 |
+| 搜索框 | 关键字（占满剩余宽度） | 标题 / 任务号 / 人名（`owner_name`） / 分类 / 标签 |
 | 刷新按钮 | — | 手动刷新，不轮询 |
 
 **撤掉的两个**：时间范围下拉（时间只作用于统计卡与趋势图，列表不受理）、标签下拉（用户 2026-10-17 明确：要按标签找就打字搜索，不值得占一个控件位）。
@@ -150,7 +150,7 @@ host 是否还代跑 skill 脚本写台账 —— **已定：认领 / 释放 / �
 
 现成落点：`POST /api/task-ledger/close`（`host/routes.ts::registerSessionRoutes` + `host/services/session.service.ts`），请求体 `{ ws, id, message?, provider?, model? }`，响应 `{ sessionId, warning? }`；同源守卫 + 请求体 64KB 上限。
 
-认领 / 释放（不开会话）：`POST /api/task-ledger/claim` / `/release`（`host/routes.ts::registerWriteRoutes` + `host/services/ledger-write.service.ts`），请求体 `{ ws, id }`，响应 `{ ok: true }`；同样过同源守卫。host 以**该工作区为 cwd** 起 `progress.py`（owner 取 `git config user.name`），成功后清该工作区读缓存。客户端入口 `api.ts::requestClaim / requestRelease`。
+认领 / 释放（不开会话）：`POST /api/task-ledger/claim` / `/release`（`host/routes.ts::registerWriteRoutes` + `host/services/ledger-write.service.ts`），请求体 `{ ws, id }`，响应 `{ ok: true }`；同样过同源守卫。host 以**该工作区为 cwd** 起 `progress.py`（身份由脚本自己从 `~/.taskledger/identity.json` 取 uuid），成功后清该工作区读缓存。客户端入口 `api.ts::requestClaim / requestRelease`。
 
 ## 五、数据与硬约束
 

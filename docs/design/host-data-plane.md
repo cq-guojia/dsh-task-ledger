@@ -59,8 +59,8 @@ routes.ts            传输层：参数解析 / 发 JSON / 错误→状态码
 services/            用例层：纯计算零 IO（home / history / filters 三个 service）
 repositories/        数据访问层：**唯一知道「台账怎么读」的地方**
   ledger.repository    readTasks / readHistory / getTask / readWorklog / hasLedger
-  identity.repository  git config user.name（收敛 board.ts:171）
-  records.ts           入口校验：脚本 JSON → 领域对象，坏数据抛 LedgerDataError
+  identity.repository  读本机 identity.json 的 uuid（机器级；与工作区 / git 无关）
+  records.ts           入口校验：脚本 JSON → 领域对象（含 finished/title/worklog → time/workpackage/log），坏数据抛 LedgerDataError
   cache.ts             TTL 读缓存 + 单飞去重 + invalidate() 钩子
   runner.ts            = 现 script.ts，全插件唯一 spawn python3
 workspace.ts         调 ledger.repository.hasLedger()，不再自己 existsSync

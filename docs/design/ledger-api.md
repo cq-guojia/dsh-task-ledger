@@ -6,7 +6,7 @@
 >
 > **2026-10-22 评审补全（两轮）**：
 > 第一轮——补齐 6 个原本没有落点的角色（`core/identity.py` 的 `Identity`、`actions/query.py` 的查询对象、`shell/cli.py` 的 `resolve_repo`、`store/atomic.py` 的 `snapshot`/`restore`、顶层 `notices.py` 的提示通道、`WorklogStore.template()` 的模板读取）；消解 4 处规则互斥（`set_task` 的跨动作 import 白名单、`close_task` 锁集含过程文档、`render_worklog` 不再吃整条 task、防塌线的 owner/status 判定口径）；补齐只读动作的返回契约与 `--json` 形状。
-> 第二轮——补 `HistoryStore.write`（结案落盘口）、`Result.dry_run`、`ActionSpec`（外壳怎么调动作）、`COUNT_CAP`、`aliases` 的持久化位置（该字段已于 2026-10-25 移除，身份只认邮箱）、路径基准约定（磁盘相对 `ledger/`、输出相对 repo）、`scan_worklogs` 与报表的归属；统一 `release` 的重跑收敛、`rename_label` 的 `old/new` 落法、全部动作签名收 `me`。
+> 第二轮——补 `HistoryStore.write`（结案落盘口）、`Result.dry_run`、`ActionSpec`（外壳怎么调动作）、`COUNT_CAP`、`aliases` 的持久化位置（该字段已移除，身份只认 uuid）、路径基准约定（磁盘相对 `ledger/`、输出相对 repo）、`scan_worklogs` 与报表的归属；统一 `release` 的重跑收敛、`rename_label` 的 `old/new` 落法、全部动作签名收 `me`。
 > 第三～八轮——修正**流程顺序**（记账本 → 取最新 → 自举 → 动作 → 打印 → 提交 → 推送；取最新必须早于自举，否则旧索引盖掉远端新登记）、补 `atomic.ensure_dir` / `WorklogStore.by_name` / `GitRepo.guard_before_write` / `OwnersIndex.__init__` 等缺签名的方法、把「锁」拆成「最小写集 + `lock_scope` 实际加锁」并补齐四条锁集总则、`dry_run` 定为整条命令零写（含跳过自举）、`snapshot`/`restore` 的豁免名单、`history --json` 与 `list --json` 的形状统一、历史末列与执行记录时间的转换落点写死。
 > **契约以 §二~§五 为准**；§七 搬迁地图只作施工参考。
 
@@ -18,7 +18,7 @@
 | **业务层**（`actions/`，旧称 L2） | 一个动作一个函数：建任务、认领、改状态、释放、交接、记进展、结案、归并标签。**它决定顺序**——先写哪个文件、后写哪个、崩在中间怎么补。 |
 | **外壳**（`shell/`） | 跑一条命令时的外围杂事：读命令行参数、跑之前取最新、跑完提交推送、把结果打印出来、决定退出码。**它不懂业务**，也不知道台账里有什么字段的含义。 |
 | **工具层**（`core/`） | 纯换算：时间格式、路径拼接、任务号生成、标签校验、markdown 文本的增删行。**不读文件、不写文件、不联网、不打印。** |
-| **`env.py`** | 唯一被允许去问 git「我现在是谁」的地方（读 `user.email`）。 |
+| **`env.py`** | 唯一被允许确认「我现在是谁」的地方（读机器级身份文件 `~/.taskledger/identity.json` 的 `uuid`）。 |
 | **`errors.py`** | 只放「出错就抛出这个」，以及退出码的数字。 |
 
 为什么非要分这四块：改「文件存成什么样」和改「业务先后顺序」是两件不相干的事。重构前这些逻辑混在同一个大文件里，改任何一处都得通读全局；拆分之后，前者只看 `store/`，后者只看 `actions/`。
@@ -80,10 +80,10 @@ packages/skill/scripts/
     │                             各层都能往里放（数据层读盘时的版本告警、env 的兜底身份、
     │                             业务层的兜底提示），最后由 `shell/render.py` 一次性打到 stderr。
     │
-    ├── env.py                 ← 唯一允许去问 git"我是谁"（读 GIT_COMMITTER_IDENT、config user.email），
-    │                             组装成 `core/identity.py` 的 `Identity` 返回；读不到时给兜底身份，
-    │                             兜底这件事本身只 `notices.note("提示：…")`，不打印。
-    │                             它不算 git 操作：只读配置，不 pull、不 commit、不 push。
+    ├── env.py                 ← 唯一允许确认"我是谁"（读 `$TASK_LEDGER_HOME/.taskledger/identity.json`
+    │                             的 `uuid` / `name`；默认 `~/.taskledger/identity.json`），
+    │                             组装成 `core/identity.py` 的 `Identity` 返回。**不读 git、不读环境变量**；
+    │                             没有身份文件直接 Fail 并提示去跑 `init`（没有兜底身份）。
     │
     ├── core/                  ← 工具层：纯换算，零文件读写
     │   │                         进门规则：只许 import errors / notices / 同目录兄弟和标准库；不许 open/写文件/跑子进程/打印；
@@ -94,8 +94,8 @@ packages/skill/scripts/
     │   ├── paths.py           ← 路径怎么拼：某人的分片文件叫什么名、某月的历史放哪、
     │   │                         某月的 worklog 放哪、任务号怎么变成文件名。
     │   ├── ids.py             ← 任务号：从标题生成「日期-时分-标题-四位随机」、查重、形态校验。
-    │   ├── identity.py        ← 身份这个值对象本身：归一化（小写去空白）、"这条算不算我的"、
-    │   │                         一个人有多个邮箱（aliases）时的比较规则。**只做字符串换算，不读 git**。
+    │   ├── identity.py        ← 身份这个值对象本身：`uuid` + `name`、归一化（小写去空白）、
+    │   │                         uuid 形态校验、"这条算不算我的"。**只做字符串换算，不读文件**。
     │   ├── labels.py          ← 分类和标签：长度/数量上限的校验、头部那行"分类/标签"的拼和拆。
     │   ├── worklog_md.py      ← 过程文档的文本操作：套六节模板、往执行记录节追加一行、
     │   │                         盖章（封卷）、改头部标签行。全部是"给一段文字，返回新文字"。
@@ -171,7 +171,7 @@ packages/skill/scripts/
     │   ├── show_task.py       ← 只读：单任务详情 + 过程文档全文
     │   ├── query_history.py   ← 只读：查已结案（按月文件逐个读、过滤、合并、倒序）
     │   ├── validate.py        ← 只读：体检（索引与文件对不对得上、池里有没有越权、字段是否合法），
-    │   │                         外加三类"只提示、不判错"的信号：骨架文档 / 旧格式行 / 历史已结案仍在办
+    │   │                         外加三类"只提示、不判错"的信号：骨架文档 / 历史行格式坏 / 历史已结案仍在办
     │   └── validate.py 的骨架判定与 `query_history` 的回链共用 `worklog_md.head_meta`
     │
     └── shell/                 ← 外壳：唯一跑 git、唯一打印、唯一决定退出码
@@ -321,12 +321,12 @@ class OwnersIndex:
     def __init__(self, repo: Path)
     def get(self, who: str) -> dict | None
     def all(self) -> dict[str, dict]
-    def ensure(self, me: Identity) -> tuple[bool, dict]   # 登记/补 joined/名或 aliases 变了才改；返回(是否写了, 记录)
+    def ensure(self, me: Identity) -> tuple[bool, dict]   # 首次登记（写 file/name/joined）；已登记零写；返回(是否写了, 记录)
     def shards(self) -> dict[str, Path]                   # 身份 → 分片绝对路径（只信索引，不扫目录）
     def disk_shards(self) -> list[Path]                   # 扫 owners/ 下全部 *.json；只有 validate 用它比对索引
 ```
 
-- **`ensure` 是 `aliases` 的唯一写入点**：把 `me.aliases` 并进 `workers[<归一化邮箱>].aliases`（只增不删）。名字只在变了时才写，`joined` 保留首次值。
+- **`ensure` 只登记一次**：`workers[<uuid>] = {file, name, joined}`；已登记身份零写，`name` 之后不再回写（改名不影响归属，`name` 只是显示）。
 - **`disk_shards()` 是全仓唯一扫目录的地方**：平时「分片只认索引」，只有 `validate` 拿它找「目录里有、索引没登记」的分片，别把它当发现机制用。
 
 ```python
@@ -448,7 +448,7 @@ def atom(repo: Path, *rels: Path) -> ContextManager      # 20 行：按序锁住
 ```
 
 - **`Scope` 两个字段各管一头**：`files` 既给 `atom` 加锁、也给 `sync_down` 刷；`dirs` 只给 `sync_down`（目录本身不 flock，由它展开成目录里已存在的文件）。
-- **`action` 的取值域就六个**：`"bootstrap"` / `"new"` / `"claim"` / `"set"` / `"log"` / `"close"`，与 §四 的刷取范围表逐行对应。传进来的不是命令行原文，而是 `ActionSpec.lock_action`（默认同命令名）。`set` 的四个分支（`release`/`handoff`/`claim`+`set_field`/`set_field`）共用 `"set"` 这一行，按"宁可算宽"取并集。
+- **`action` 的取值域就六个**：`"bootstrap"` / `"new"` / `"claim"` / `"set"` / `"log"` / `"close"`，与 §四 的刷取范围表逐行对应。传进来的不是命令行原文，而是 `ActionSpec.lock_action`（默认同命令名）。`set` 的三个分支（`release` / `handoff` / `claim`）共用 `"set"` 这一行，按"宁可算宽"取并集。
 - **谁调它、什么时候调**：`runner` 在**第 ② 步「取最新」开头**调一次 `presync_scope`（见 §四），拿回**两份** `Scope`——自举那份与动作那份（`presync_scope` 内部各调一次 `lock_scope`，别处不许再调）：
   - 两份**合并**（`boot | act`）交给 `GitRepo.sync_down`；
   - 自举那份 `with atom(repo, *boot.files)` 包住第 ③ 步的自举；
@@ -492,17 +492,16 @@ def in_scope(task, q: ListQuery, *, me: Identity) -> bool    # list 的过滤谓
 3. 锁集只许宽不许窄；锁集以外的文件一个字节都不许写。
 4. **锁集 = `Scope.files`，是文件清单，允许包含"还不存在"的路径**（新建的过程文档就是这种：路径算得出来、文件还没有）。`Scope.dirs` 只决定"刷盘刷到哪"（展开成目录下已存在的文件），所以同一动作的锁集与刷取范围粒度不同、不必相等 —— presync 管"把旧的刷成新的"，锁管"我准备写哪些文件"。
 
-**过程文档缺失怎么办（六个动作共用一条）**：`WorklogStore.find` 返回 `None`（台账里 `worklog` 为空、或文件已经不在）时，`claim` / `set_field` / `release` / `handoff` / `log_progress` / `close_task` **跳过「往过程文档记一笔」这一步**，不 Fail，只 `notices.note("提示：这条任务没有过程文档，已跳过执行记录")`；`close_task` 连带跳过封卷，历史末列留空、`payload["worklog_path"] = None`。其余步骤照常走。
+**过程文档缺失怎么办（六个动作共用一条）**：`WorklogStore.find` 返回 `None`（台账里 `worklog` 为空、或文件已经不在）时，`claim` / `release` / `handoff` / `log_progress` / `close_task` **跳过「往过程文档记一笔」这一步**，不 Fail，只 `notices.note("提示：这条任务没有过程文档，已跳过执行记录")`；`close_task` 连带跳过封卷，历史末列留空、`payload["worklog_path"] = None`。其余步骤照常走。
 
 **任务字段的初值与赋值时机（写死，别各动作自己猜）**：
 
 | 动作 | 它写哪些字段 |
 |---|---|
-| `new_task` | `status="open"`、`started=null`、`updated=created`、`finished=null`、`creator=me.email`；`owner` = `mine ? me.email : null`（进池的那份恒 `null`） |
-| `claim` | `owner=me.email`、`updated=now()`；`started` 还空就填 `now()`（"开始做"的时刻），已有值不动；`status` 不动 |
-| `set_field` | `status` 改成目标值、`updated=now()`；`started` 只在「还空且新状态是 `doing`」时填 `now()`（旧数据 `blocked` 同样算进行中），之后永不再改 |
-| `release` | 写回池的那份 `owner=null`、`status="open"`、`updated=now()`；`started` 保留（重领时不重置） |
-| `handoff` | 对方分片那份 `owner=to`、`updated=now()`；**`status`：传了就写目标值（`set --owner X --status doing` 走的就是这条路），`None` 才带原值**；`started` 原值带走 |
+| `new_task` | `status="open"`、`started=null`、`updated=created`、`finished=null`、`creator=me.uuid`、`creator_name=me.name`；`owner` = `mine ? me.uuid : null`、`owner_name` 同理（进池的那份恒 `null`） |
+| `claim` | `owner=me.uuid`、`owner_name=me.name`、`updated=now()`；`started` 还空就填 `now()`（"开始做"的时刻），已有值不动；`status` 不动 |
+| `release` | 写回池的那份 `owner=null`、`owner_name=null`、`status="open"`、`updated=now()`；`started` 保留（重领时不重置） |
+| `handoff` | 对方分片那份 `owner=to`、`owner_name=`名册里对方的 name、`updated=now()`；`started` 原值带走 |
 | `log_progress` | 只改 `updated=now()` |
 | `close_task` | **不写任务字段**：终值直接进历史行，分片那行最后删掉；`finished` 只出现在历史行与封卷标记里 |
 
@@ -539,28 +538,17 @@ def claim(repo, me, tid) -> Result
 - `worklog`：填；`payload`：`{}`。
 
 ```python
-def set_task(repo, me, tid, *, status=None, owner=None) -> Result
+def set_task(repo, me, tid, *, owner=None, release=False) -> Result
 ```
 
 - **只做参数校验和路由，自己不加锁、不改任何文件**（它 import `release` / `handoff` / `claim`，这是全树唯一的跨动作引用）：
-  - **先看 `--owner` 给没给**，两个入口互斥，不存在"最终 owner"这种含糊说法：
-    - **没给 `--owner`**（只给了 `--status`）⇒ 一律 `set_field(repo, me, tid, status=…)`；任务不在我名下由 `require_owner` 报错。**不拿现存 owner 反推分支**，否则池里的任务会被误判成"释放"。
-    - **给了 `--owner`**，按它的值分四支：
-      - 空 ⇒ `release(repo, me, tid)`（此时不许再带 `--status`，带了就报错）
-      - 别人 ⇒ `handoff(repo, me, tid, to=…, status=status)`（`handoff` 收 `status`，见其签名）
-      - 自己、这条现在不在我名下 ⇒ **先 `claim`**，`status` 有值再接着 `set_field(status=…)`（两步同一次 `atom`，合计即 `"set"` 锁集）
-      - 自己、已经在我名下 ⇒ `set_field(repo, me, tid, status=…)`
-  - `claim` 不接受 `status`，别指望它顺手改状态
-- 前置校验（都在转发之前做完）：`--status open` 不许同时带 `--owner`；`blocked` / `done` 有各自的专门报错（`done` 只能走 `close`）；`--status` 必须在白名单里。
-
-```python
-def set_field(repo, me, tid, *, status=None) -> Result     # set_task.py 内部函数，不单独成文件
-```
-
-- 写集（最小）：我的分片 + 过程文档。
-- 写序：分片原地改 `status` + `updated` → 过程文档记一笔。
-- 重跑：幂等——目标 status 与现值相同 ⇒ 直接返回（`already_done=True`、退出码 0），**不刷 `updated`、不写过程文档**；否则必然要刷 `updated=now()`，那就不是"内容不变"而是"改了"。
-- 这就是原来 set 的第三分支——**它必须有名字、有锁集、有 where**，否则就是一段没有契约的代码。
+  - `--release` 与 `--owner` **必须二选一**：都缺 ⇒ `Fail`；都给 ⇒ `Fail`（释放不带人、交接不带释放）。**没有"空串 = 释放"这种隐式语义**。
+  - `--release` ⇒ `release(repo, me, tid)`。
+  - `--owner <uuid>` ⇒ 先过 `require_uuid`（非 uuid 当场 `Fail`，不做模糊匹配），再分三支：
+    - 别人、已在索引里登记 ⇒ `handoff(repo, me, tid, to=…)`（没登记过 ⇒ `Fail`，不写出对别人不存在的分片）
+    - 自己、这条现在不在我名下 ⇒ `claim(repo, me, tid)`
+    - 自己、已经在我名下 ⇒ 幂等返回（`already_done=True`、退出码 0）
+- 「我的」只比 uuid：分片里的行、历史两列、`--owner` / `--mine` 全是 uuid；显示名（`owner_name` / `creator_name`）只用于显示与 `--owner-name` 模糊筛。
 
 ```python
 def release(repo, me, tid) -> Result
@@ -741,8 +729,8 @@ class ActionSpec:
 | `time.py` | `now()`；`to_utc(value, *, field, tid=None)`；`fmt_local(utc)`；`normalize_time(value, *, field)`；`time_key(utc)` |
 | `paths.py` | `SKILL_DIR`（**模板与资产的唯一定位基准**，按自身位置算绝对路径）；`WORKLOG_TEMPLATE`；`POOL_REL` / `OWNERS_REL` / `OWNERS_DIR` / `HISTORY_DIR` / `WORKLOG_DIR` / `LEGACY_HISTORY_REL`；`shard_rel(identity)`；`worklog_dir_for(created)`；`worklog_name(tid)`；`worklog_rel(tid, created)`；`history_path_for(finished)`；`to_repo_rel(ledger_rel)` / `to_ledger_rel(repo_rel)` / `to_history_rel(ledger_rel)` |
 | `ids.py` | `id_stamp(created)`；`slugify(title)`；`make_id(title, tasks, created=None)`；`require_task_id(tid)` |
-| `identity.py` | `Identity`（`email` / `name` 的不可变值对象）；`normalize(who)`；`is_me(identity, who)` |
-| `labels.py` | `STATUSES = ("open", "doing")`（`--status` 的白名单就是它）；`LEGACY_STATUSES = ("blocked",)`（读侧当进行中，不写回）；`done` 只能由 `close` 产生、不在此二者里；`FORMAT_VERSION`；`normalize_label(value, *, field)`；`parse_tags(raw)`；`label_line(category, tags)`；`parse_label_line(text)` |
+| `identity.py` | `Identity`（`uuid` / `name` 的不可变值对象）；`normalize(who)`；`looks_like_uuid(who)`；`is_me(identity, who)` |
+| `labels.py` | `STATUSES = ("open", "doing")`（`--status` 的白名单就是它）；`done` 只能由 `close` 产生、不在此二者里；`FORMAT_VERSION`；`normalize_label(value, *, field)`；`parse_tags(raw)`；`label_line(category, tags)`；`parse_label_line(text)` |
 | `worklog_md.py` | `render_worklog(*, tid, title, created, creator, category, tags, template) -> str`；`is_skeleton(text)`；`exec_line(when, who, kind, note)`；`append_exec_log(text, line)`；`stamp_frozen(text, finished, who)`；`has_frozen_line(text)`；`rewrite_label_line(text, category, tags)` |
 | `history_md.py` | `esc_cell(s)`；`owner_cell(owner)`；`creator_cell(creator)`；`history_line(...)`；`split_row(line)`；`is_sep_row(line)`；`parse_history(text)`（只认九列） |
 
@@ -750,14 +738,14 @@ class ActionSpec:
 
 - **路径基准只有一个约定**：磁盘与 JSON 里存的路径**相对 `ledger/`**（格式契约，如 `task["worklog"]`）；凡是输出给人或给界面的（`Result.where`、`WorklogView.path`、`payload` 里所有 `*_path`）**一律相对 repo**。换算只在 `core/paths.py` 的 `to_repo_rel` / `to_ledger_rel` / `to_history_rel` 三处做，任何层都不许自己拼 `..`。
 - **时间只有一个例外**：所有存盘时间都是 UTC；唯一例外是过程文档「执行记录」那行的时刻 —— 它是**本地时间**，给人读的日志行，不参与任何筛选或排序。转换固定发生在 `worklog_md.exec_line(when_utc, …)` 内部（它自己调 `fmt_local`）：**调用方一律传 UTC**，别在外面先转一遍。
-- **身份只有 `email` 一个键**。`env.py` 给「当前这台机器的 git 邮箱 + 名字」，名字只用于显示与给你做对照，不参与任何归属判定；别把显示名塞进分片、也别指望从 git 配置里猜出别的身份。
+- **身份只有 `uuid` 一个键**。`env.py` 只读本机身份文件（`$TASK_LEDGER_HOME/.taskledger/identity.json`，默认 `~/.taskledger/identity.json`），不读 git、不读环境变量、没有兜底。名字（`name`）只用于显示与 `--owner-name` 模糊筛，**不参与任何归属判定**；分片、历史行、`--owner` / `--mine` 一律比 uuid。
 - **`render_worklog` 只做字符串替换**：模板由 `WorklogStore.template()` 取来传进去，它自己不读文件、也不接收整条 task dict。
 - **`history_md` 自己不开文件**：它只做文本换算；凡是要读 worklog 的事都留在 store / 业务层。
 
 ### 5.1 顶层 `env.py`（不在四层里）
 
 ```python
-def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.email → user.name
+def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有就 Fail 提示跑 init
                                # 读不到就给兜底身份，并 notices.note("提示：…")，绝不抛
 ```
 
@@ -800,7 +788,7 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
 | `normalize_label` / `parse_tags` / `label_line` / `parse_label_line` | `core/labels.py` |
 | `now` 132 / `to_utc` 140 / `fmt_local` 156 / `normalize_time` 196 | `core/time.py` |
 | 路径常量 / `shard_rel` 290 / `worklog_rel` 2918 / `worklog_dir_for` 2895 / `worklog_name` 2904 / `history_path_for` 2593 | `core/paths.py` |
-| `current_identity` 341 / `_git_email` 296 / `my_identity_keys` 371 | `env.py`（问 git 拿原始串）+ `core/identity.py`（`Identity` 值对象、归一化、`is_me`） |
+| `current_identity` / `read_identity` / `current` | `env.py`（读本机身份文件）+ `core/identity.py`（`Identity` 值对象、归一化、`looks_like_uuid`、`is_me`） |
 | `require_owner` 2795 / `load_task` 2764 / `same_task_ignoring_stamp` 3318 | `actions/guard.py` + `actions/show_task.py`；`owner_of` / `status_of` / `is_mine` / `in_scope` 为**新增谓词**，把散落的 `get("owner")` 判定收进来 |
 | `ensure_ledger` 692 | `actions/bootstrap.py` |
 | `cmd_new` 3139 / `undo_new_task` 3028 | `actions/new_task.py`（撤销降为私有） |
@@ -842,12 +830,12 @@ def current() -> Identity      # 问 git：GIT_COMMITTER_IDENT → config user.e
 |---|---|---|
 | `new` | `--title --id --created --category --tags --self` | `new_task(title, tid, created, category, tags, mine)` |
 | `claim` | `--id` | `claim(tid)` |
-| `set` | `--id --status --owner` | `set_task(tid, status, owner)` → `release` / `handoff` / `claim`+`set_field` / `set_field` |
+| `set` | `--id --release --owner` | `set_task(tid, owner, release)` → `release` / `handoff` / `claim` |
 | `log` | `--id --note` | `log_progress(tid, note)`（折叠空白，不限长度） |
 | `close` | `--id --summary --finished --category --tags` | `close_task(tid, summary, finished, category, tags)` |
-| `list` | `--mine --owner --all --status --category --tag --since --until --json` | `list_tasks(q)` |
+| `list` | `--mine --owner --owner-name --pool --status --category --tag --since --until --json` | `list_tasks(q)` |
 | `show` | `--id --json` | `show_task(tid)` |
-| `history` | `--owner --mine --category --tag --since --until --limit --months --json --count-only` | `query_history(q)` |
+| `history` | `--owner --owner-name --mine --category --tag --since --until --limit --months --json --count-only` | `query_history(q)` |
 | `validate` | `--deep --json` | `validate(deep)` |
 | 全局 | `--repo`、`--no-sync` | 外壳处理，不进业务层（`--repo` 由 `resolve_repo` 消费） |
 
