@@ -39,7 +39,9 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
             "  处理：跑 validate 看台账是不是脏了。"
         )
     to_name = str(record.get("name") or "") or None  # 只用于显示
-    who = to_name or to_key
+    who = to_name or to_key  # 给人看：命令输出、提示语
+    # 落盘用「名字 · uuid」：接收人拿什么键去分片里找，比执行者更需要 uuid
+    who_stamp = Identity(uuid=to_key, name=to_name or "").stamp()
     to_store = TaskStore(repo, shard_rel(to_key))
     moved = dict(task)
     moved["owner"] = to_key
@@ -58,7 +60,8 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
         path = logs.find(tid, moved.get("worklog"))
         if path is not None:
             logs.append_exec(
-                path, exec_line(now(), me.stamp(), "set", f"交接给 {who}（补齐）")
+                path,
+                exec_line(now(), me.stamp(), "set", f"交接给 @{who_stamp}（补齐）"),
             )
         return Result(
             already_done=True,
@@ -76,7 +79,9 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
     if path is None:
         note = f"任务 {tid} 已交给 {who}，但过程文档没找到，跳过执行记录。"
     else:
-        logs.append_exec(path, exec_line(now(), me.stamp(), "set", f"交接给 {who}"))
+        logs.append_exec(
+            path, exec_line(now(), me.stamp(), "set", f"交接给 @{who_stamp}")
+        )
     return Result(
         changed=("owner", "owner_name", "updated"),
         where=rel(repo, to_store.path),
