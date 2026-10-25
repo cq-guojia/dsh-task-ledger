@@ -14,7 +14,13 @@ from pathlib import Path
 from ..core import history_md
 from ..core.identity import Identity
 from ..core.labels import STATUSES
-from ..core.paths import LEGACY_HISTORY_REL, OWNERS_REL, POOL_REL, to_repo_rel
+from ..core.paths import (
+    LEDGER_DIR,
+    LEGACY_HISTORY_REL,
+    OWNERS_REL,
+    POOL_REL,
+    to_repo_rel,
+)
 from ..core.time import now
 from ..core.worklog_md import (
     duplicated_sections,
@@ -199,6 +205,12 @@ def validate(repo: Path, me: Identity, deep: bool = False) -> ValidationReport:
         notices.append(f"存量平铺文件 {rel(repo, legacy)} 只读兼容，不会重写。")
     if not (repo / to_repo_rel(OWNERS_REL)).exists():
         notices.append("还没有 owners.json（索引）：跑一条写命令会自动建。")
+    stray = repo / LEDGER_DIR / LEDGER_DIR
+    if stray.is_dir():
+        problems.append(
+            f"{rel(repo, stray)} 是错位的台账目录（根被当成 ledger/ 时写出来的幻影）；"
+            "确认哪份是真台账后删掉多余的，命令一律带 --repo <工作区根>。"
+        )
 
     return ValidationReport(
         problems=tuple(problems),

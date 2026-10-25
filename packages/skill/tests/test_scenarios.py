@@ -376,19 +376,37 @@ class ConcurrentMixedWorkloadTest(ScenarioCase):
         for clone in (fx.a, fx.b):
             for w in range(2):
                 workers.append(
-                    (self._spawn(clone, "new", "--title", f"{clone.name}-并发写-{w}", "--self"), "write")
+                    (
+                        self._spawn(
+                            clone,
+                            "new",
+                            "--title",
+                            f"{clone.name}-并发写-{w}",
+                            "--self",
+                        ),
+                        "write",
+                    )
                 )
         # 领：4 个 claimer 各认领一条互不相同的公共任务（a/b 各 2）
-        for clone, tid in ((fx.a, pub[0]), (fx.a, pub[1]), (fx.b, pub[2]), (fx.b, pub[3])):
+        for clone, tid in (
+            (fx.a, pub[0]),
+            (fx.a, pub[1]),
+            (fx.b, pub[2]),
+            (fx.b, pub[3]),
+        ):
             workers.append((self._spawn(clone, "claim", "--id", tid), "claim"))
         # 放弃：2 个 abandoner 各把一条公共任务释放回公共池（a/b 各 1）
         for clone, tid in ((fx.a, pub[4]), (fx.b, pub[5])):
-            workers.append((self._spawn(clone, "set", "--id", tid, "--owner", ""), "abandon"))
+            workers.append(
+                (self._spawn(clone, "set", "--id", tid, "--owner", ""), "abandon")
+            )
         # 读：各 clone 2 个 reader，反复 list / history
         for clone in (fx.a, fx.b):
             for r in range(2):
                 workers.append((self._spawn(clone, "list"), f"read-list-{r}"))
-                workers.append((self._spawn(clone, "history", "--count-only"), f"read-hist-{r}"))
+                workers.append(
+                    (self._spawn(clone, "history", "--count-only"), f"read-hist-{r}")
+                )
 
         # 全并发开跑
         results = []
@@ -398,7 +416,9 @@ class ConcurrentMixedWorkloadTest(ScenarioCase):
 
         # 任何非 0 退出都算 bug（目标互不冲突，不该有业务拒绝）
         failed = [(l, c, e) for (l, c, _o, e) in results if c != 0]
-        self.assertEqual(failed, [], f"并发混合负载里出现非 0 退出（应全成功）：{failed}")
+        self.assertEqual(
+            failed, [], f"并发混合负载里出现非 0 退出（应全成功）：{failed}"
+        )
 
         # 收敛：两 clone 都推上去再互拉
         self._converge(fx.a)
@@ -650,6 +670,78 @@ class NoGitRepoTest(unittest.TestCase):
         data = json.loads(out)
         self.assertEqual(set(data), {"count", "capped"})
         self.assertGreaterEqual(data["count"], 1)
+
+
+class RootResolutionTest(unittest.TestCase):
+    """工作区根定位回归：--repo 指到 ledger/ 本身、stray ledger/ledger、合法场景（2026-10-25）。"""
+
+    def setUp(self):
+        self.root = Path(tempfile.mkdtemp(prefix="dtl-root-"))
+        self.addCleanup(shutil.rmtree, self.root, True)
+        self.repo = self.root / "proj"
+        (self.repo / "ledger" / "owners").mkdir(parents=True)
+        (self.repo / "ledger" / "pool.json").write_text(
+            '{"version": "1", "tasks": {}}', encoding="utf-8"
+        )
+        (self.repo / "ledger" / "owners.json").write_text(
+            '{"workers": {}}', encoding="utf-8"
+        )
+
+    def test_repo_pointing_at_ledger_dir_is_rejected(self):
+        """把 ledger/ 当 --repo 传 ⇒ 退 1，且说明它是台账目录、不新造 ledger/ledger。"""
+        code, out, err = run(self.repo / "ledger", "list")
+        self.assertEqual(code, 1)
+        text = out + err
+        self.assertIn("台账目录本身", text)
+        self.assertIn("才是工作区根", text)
+        self.assertFalse(
+            (self.repo / "ledger" / "ledger").exists(), "更不该再建出 ledger/ledger"
+        )
+
+    def test_readonly_also_rejected(self):
+        """只读命令也不许静默读错目录：validate 同样被拦。"""
+        code, _out, _err = run(self.repo / "ledger", "validate")
+        self.assertEqual(code, 1)
+
+    def test_bootstrap_does_not_create_nested_ledger(self):
+        """自举只建 <root>/ledger，绝不再套一层 ledger/ledger（元凶回归）。"""
+        code, _out, err = run(
+            self.repo, "new", "--title", "根校验", "--self", env=NOSYNC
+        )
+        self.assertEqual(code, 0, err)
+        self.assertTrue((self.repo / "ledger" / "pool.json").exists())
+        self.assertFalse(
+            (self.repo / "ledger" / "ledger").exists(), "自举不许再建 ledger/ledger"
+        )
+
+    def test_stray_ledger_does_not_hijack_upward_lookup(self):
+        """造一个 stray 空 ledger/ledger 后，从 ledger/owners 里跑，根不能被带偏成 ledger/。"""
+        (self.repo / "ledger" / "ledger").mkdir()
+        proc = subprocess.run(
+            [sys.executable, "-B", str(PROGRESS), "list"],
+            capture_output=True,
+            text=True,
+            cwd=str(self.repo / "ledger" / "owners"),
+            env={**BASE_ENV, **NOSYNC},
+            check=False,
+        )
+        text = proc.stdout + proc.stderr
+        self.assertNotIn(
+            str(self.repo / "ledger" / "ledger"), text, "根不能被 stray 带偏"
+        )
+
+    def test_project_root_named_ledger_is_allowed(self):
+        """项目根真的叫 ledger 时不能被误拒。"""
+        weird = self.root / "ledger"
+        (weird / "ledger" / "owners").mkdir(parents=True)
+        (weird / "ledger" / "pool.json").write_text(
+            '{"version": "1", "tasks": {}}', encoding="utf-8"
+        )
+        (weird / "ledger" / "owners.json").write_text(
+            '{"workers": {}}', encoding="utf-8"
+        )
+        code, _out, err = run(weird, "list", env=NOSYNC)
+        self.assertEqual(code, 0, f"根叫 ledger 不该被误拒：{err}")
 
 
 class MonthsWindowTest(ScenarioCase):

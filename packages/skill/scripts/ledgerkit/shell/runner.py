@@ -219,7 +219,9 @@ def _repo_of(args: argparse.Namespace) -> Path:
     """
     repo = getattr(args, "repo", None)
     if repo:
-        return Path(repo)
+        from ..core.roots import as_root  # 门 2 兜底：绕过 cli 直调 runner 也不收错位根
+
+        return as_root(repo, source="--repo")
     from .cli import resolve_repo  # 延迟导入：cli 在模块层 import runner
 
     return resolve_repo(None)

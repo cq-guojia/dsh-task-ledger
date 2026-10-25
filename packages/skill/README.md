@@ -31,7 +31,7 @@
 直接跑：
 
 ```bash
-python3 <SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <当前工作区>
+python3 <SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <工作区根>
 ```
 
 子命令：`new` `claim` `set` `log` `close` `list` `history` `show` `tags` `validate`。命令参考（参数 / 一句话 / 举例）、任务生命周期、纪律（数据完整性 / 人类授权 / 故障处置）全在 `SKILL.md`；参数细节看 `<子命令> --help`（不要凭记忆编）。

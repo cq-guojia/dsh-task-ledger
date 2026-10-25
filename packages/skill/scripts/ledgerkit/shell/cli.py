@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from ..actions.query import HistoryQuery, ListQuery
-from ..core.paths import LEDGER_DIR
+from ..core.roots import as_root, root_of
 from ..core.time import to_utc
 from ..errors import BUSINESS, USAGE, Fail
 from . import render, runner
@@ -27,7 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="progress.py", description="任务台账（本地文件 + git 同步）"
     )
     parser.add_argument(
-        "--repo", help="台账所在仓库（默认按当前目录向上找含 ledger/ 的目录）"
+        "--repo", help="工作区根（直接含有 ledger/ 的那个目录；默认按当前目录向上找）"
     )
     parser.add_argument(
         "--no-sync", action="store_true", help="只写本地，不取最新 / 不提交 / 不推送"
@@ -169,22 +169,22 @@ def _split_tags(value: str | None) -> tuple[str, ...]:
 
 
 def resolve_repo(arg: str | None, start: Path | None = None) -> Path:
-    """`--repo` 给了就用；没给就从 `start`（默认 cwd）往上找含 `ledger/` 的目录。
+    """`--repo` 给了就校验后用；没给就从 `start`（默认 cwd）往上找。
 
     找不到 ⇒ Fail：绝不在当前目录自作主张建台账（2026-10-22 设计定稿）。
     建台账是第一条写命令的事，不需要、也没有 `init` 子命令。
     """
     if arg:
-        return Path(arg)
+        return as_root(arg, source="--repo")
     here = (start or Path.cwd()).resolve()
-    for candidate in (*here.parents, here):
-        if (candidate / LEDGER_DIR).is_dir():
-            return candidate
-    raise Fail(
-        "找不到台账：从当前目录往上都没有 ledger/ 目录。\n"
-        "  处理：回到项目根再跑；或用 --repo <项目根> 指定。\n"
-        "  第一条写命令会自动把 ledger/ 建出来，不用先初始化。"
-    )
+    root = root_of(here)
+    if root is None:
+        raise Fail(
+            "找不到台账：从当前目录往上都没有 ledger/ 目录。\n"
+            "  处理：用 --repo <工作区根> 指定（根是直接含 ledger/ 的那个目录，不是 ledger/ 本身）；\n"
+            "  或先 cd 到项目根再跑。第一条写命令会自动把 ledger/ 建出来，不用先初始化。"
+        )
+    return root
 
 
 def _repo_of(args: argparse.Namespace) -> Path:

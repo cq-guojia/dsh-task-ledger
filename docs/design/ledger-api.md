@@ -651,7 +651,7 @@ def main(argv=None) -> int                    # 唯一入口：解析 → 定位
                                               # 「整命令锁」只在这里拿一次；runner 内部不再拿
                                               # finally 里 **只调一次** render.flush_notices()：任何阶段的提示都不丢
 def build_parser() -> ArgumentParser          # 动作名与只读名单从 actions.registry 取
-def resolve_repo(arg: str | None) -> Path     # --repo 给了就用；没给就从 cwd 往上找含 ledger/ 的目录；
+def resolve_repo(arg: str | None) -> Path     # --repo 给了就校验（是目录、且不是 ledger/ 本身）；没给则从 cwd 往上找
                                               # 找不到 ⇒ Fail（退出码 1），不自作主张在当前目录建台账
 def to_query(args) -> ListQuery | HistoryQuery  # 命令行参数 → 查询对象。**只有这里认识 argparse**
 
