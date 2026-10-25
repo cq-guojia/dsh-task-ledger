@@ -13,7 +13,7 @@ window.__ModuleLoader__.load({
 			if (needle === "") return true;
 			return parts.some((part) => part?.toLowerCase().includes(needle) === true);
 		}
-		/** 「我的」判定：owner = 该工作区的当前 git 身份，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
+		/** 「我的」判定：owner = 本机身份 uuid，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
 		function isMine(task, board) {
 			if (board === null) return false;
 			const identity = board.identities[task.workspace.id] ?? null;

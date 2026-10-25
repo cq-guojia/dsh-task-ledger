@@ -13,10 +13,10 @@ import uuid as uuidlib
 from pathlib import Path
 from typing import Any
 
-from ..core.identity import Identity
+from .. import env
+from ..core.identity import Identity, normalize
 from ..core.paths import OWNERS_REL, to_repo_rel
 from ..errors import Fail
-from .. import env
 
 
 def _read_workers(repo: Path | None) -> dict[str, Any]:
@@ -43,13 +43,14 @@ def init_identity(
 
     workers = _read_workers(repo)
     if claim:
-        record = workers.get(claim)
+        key = normalize(claim)  # 名册键一律小写；--claim 抄来的大小写不影响
+        record = workers.get(key)
         if record is None:
             raise Fail(
                 f"名册里没有 uuid={claim}。\n"
                 "  处理：不带参数跑一次 init 看可选用户，再 --claim 选一个。"
             )
-        identity = Identity(uuid=claim, name=str(record.get("name") or ""))
+        identity = Identity(uuid=key, name=str(record.get("name") or ""))
     elif workers and not new:
         return {
             "need_choose": True,

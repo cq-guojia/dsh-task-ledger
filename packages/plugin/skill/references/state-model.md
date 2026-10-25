@@ -26,6 +26,7 @@ close             → 历史层 + 封卷 + 移出自己名下
 - **筛选语义**：`list` 的 `--since` / `--until` 按**创建时间**；`history` 的按**结案时间**（历史文件按结案月归档，按创建时间比较会漏「上月建、本月结」的记录）。只给日期时起 = 当天 `00:00:00`、止 = 当天 `23:59:59`（含当天）。
 - **时区**：存盘为 UTC 的只有 —— 任务号、worklog 目录 / 文件名、台账 JSON 的 `created`/`started`/`updated`/`finished`、history 行、worklog 头部「创建」行。**执行记录行、封卷行、`list` / `history` 的人话输出都是本机本地时间**（给人看的日志行）；`--json` 原样给 UTC，由消费方自己转。存量老数据（2026-10-22 前）写的是写入者本地时间、无标记，无法与 UTC 区分。
 - **history 文件 9 列**：结案时间 / 创建时间 / 工作包（= `new --title` 的任务标题）/ 分类 / 标签 / owner / creator / 摘要 / 过程文档；排序与 `--since` / `--until` 按**结案时间**。（`history` 命令的人话输出只展示其中几列：结案时间、负责人、标题。）
+- **owner / creator 两列存的是 uuid**（与任务里一致，身份只认 uuid）；人话输出与 `--json` 里的 `owner_name` / `creator_name` 是读的时候按 `owners.json` 名册现查补上的显示名，不落盘。老历史文件里可能是显示名（旧格式），查不到名册就不补。
 
 ## 任务号
 
@@ -33,9 +34,10 @@ close             → 历史层 + 封卷 + 移出自己名下
 
 ## 身份
 
-- 主键 = **本机 UUID**（`~/.taskledger/identity.json` 里的 `uuid`），归一化后比对；`name` 只用于显示。
+- 主键 = **本机 UUID**（`~/.taskledger/identity.json` 里的 `uuid`），归一化后比对；`name` 只用于显示与 `--owner-name` 模糊筛。
 - 没有 `identity.json`（未初始化）**直接报错**，提示先跑 `init`（一台机器一次）；不再有兜底身份，也不读 git / 环境变量。
-- 全站只认 UUID 这一个身份键；`list --owner` / `history --owner` 按 uuid 或显示名**精确匹配**，没有 `me` 缩写，「自己」用 `--mine`。
+- 全站只认 UUID 这一个身份键；`list --owner` / `history --owner` **只收 uuid**（形态不是 UUID 直接报错，不静默返回空），没有 `me` 缩写，「自己」用 `--mine`。
+- **名字不进任何判定**：按人模糊找只能走 `--owner-name <片段>`（对名册里的 `name` 做子串、不分大小写匹配，换成 uuid 集合再筛），它只是查询便利，认领 / 释放 / 交接 / 「我的」一律只比 uuid。任务上的 `owner_name` 是冗余显示字段，改名不影响归属。
 - `close` / `log` 只对自己名下的任务生效，不在名下直接拒绝；`set --owner ""` 对已在公共池里的任务是幂等空转（退 0）；`set --owner <自己>` 会把公共池里的任务认领到自己名下。
 
 ## 历史层

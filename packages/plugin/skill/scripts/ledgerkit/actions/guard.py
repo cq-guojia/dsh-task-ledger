@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from ..core.identity import Identity, is_me, normalize
+from ..core.identity import Identity, is_me, looks_like_uuid, normalize
 from ..core.labels import LEGACY_STATUSES
 from ..core.paths import POOL_REL
 from ..errors import Fail
@@ -20,10 +20,27 @@ from .query import ListQuery
 
 
 def current_identity(repo: Path) -> Identity:
-    """env 的本机身份（不写盘、不登记）。全站只认邮箱这一个身份键。"""
+    """env 的本机身份（不写盘、不登记）。全站只认 uuid 这一个身份键。"""
     from .. import env
 
     return env.current(repo)
+
+
+def require_uuid(value: str, *, field: str) -> str:
+    """身份参数只收 UUID：名字 / 邮箱一律当场报错，绝不悄悄比不到东西。
+
+    名字只能用于查询筛选（`--owner-name`），这一点要在报错里说清楚，
+    否则用户会以为「名字也行，只是没查到」。
+    """
+    text = normalize(value)
+    if not looks_like_uuid(text):
+        raise Fail(
+            f"{field} 只收身份 uuid（形如 00000000-0000-4000-8000-000000000000），"
+            f"不接受名字 / 邮箱：{value.strip()}\n"
+            "  按显示名模糊筛请用 --owner-name <片段>；"
+            "不知道对方 uuid 就先跑 list --json 看，或让本人跑 list --mine。"
+        )
+    return text
 
 
 def require_task(tasks: Mapping[str, Any], tid: str, *, where: Path) -> dict[str, Any]:
@@ -68,17 +85,29 @@ def status_of(task: Mapping[str, Any]) -> str:
 
 
 def is_mine(task: Mapping[str, Any], me: Identity) -> bool:
-    """这条任务是不是我的（按邮箱判定）。"""
+    """这条任务是不是我的（只比 uuid）。"""
     return is_me(me, owner_of(task) or "")
 
 
-def in_scope(task: Mapping[str, Any], q: ListQuery, *, me: Identity) -> bool:
-    """`list` 的过滤谓词：范围、状态、分类、标签、创建时间闭区间。"""
+def in_scope(
+    task: Mapping[str, Any],
+    q: ListQuery,
+    *,
+    me: Identity,
+    name_keys: set[str] | frozenset[str] = frozenset(),
+) -> bool:
+    """`list` 的过滤谓词：范围、状态、分类、标签、创建时间闭区间。
+
+    `name_keys` 是 `--owner-name` 先在名册里模糊匹配出来的 uuid 集合（由调用方查好传进来）：
+    **名字只用来缩小 uuid 集合，判定本身仍按 uuid 比。**
+    """
     if q.scope == "mine" and not is_mine(task, me):
         return False
     if q.scope == "pool" and owner_of(task):
         return False
     if q.scope == "owner" and q.owner and normalize(q.owner) != owner_of(task):
+        return False
+    if q.owner_name and owner_of(task) not in name_keys:
         return False
     if q.statuses:
         status = status_of(task)

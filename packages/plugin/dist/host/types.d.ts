@@ -149,13 +149,13 @@ export interface BoardSnapshot {
     readonly tasks: readonly BoardTask[];
     readonly stats: BoardStats;
     /**
-     * 工作区 id → 该工作区的当前 git 身份（取不到为 null）。
-     * 「我的待办」在前端按 `owner === identities[workspace.id]` 筛——身份只在 host 侧取得到
-     * （cwd = 该工作区跑 `git config user.name`），UI 不摸 git。
+     * 工作区 id → 本机身份 uuid（取不到为 null）。
+     * 「我的待办」在前端按 `owner === identities[workspace.id]` 筛——身份只在 host 侧读
+     * （`~/.taskledger/identity.json` 的 `uuid`，机器级，与工作区 / git 配置无关），UI 不碰文件。
      */
     readonly identities: Readonly<Record<string, string | null>>;
 }
-/** 首页一次 `/board` 的全部聚合（**每个工作区只读一次** list + history + git 身份）。 */
+/** 首页一次 `/board` 的全部聚合（**每个工作区只读一次** list + history + 本机身份）。 */
 export interface HomeAggregate {
     readonly snapshot: BoardSnapshot;
     readonly closed: ClosedSummary;

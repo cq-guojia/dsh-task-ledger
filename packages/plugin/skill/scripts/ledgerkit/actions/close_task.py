@@ -136,10 +136,10 @@ def close_task(
                 "title": task.get("title") or "",
                 "category": final_category,
                 "tags": final_tags,
-                "owner": me.label(),
-                "owner_name": me.name,
-                "creator": task.get("creator_name") or me.label(),
-                "creator_name": task.get("creator_name") or me.name,
+                # 历史两列只存 **uuid**（身份唯一键）；显示名在读的时候按名册换，
+                # 不落盘 —— 否则 `history --owner <uuid>` / `--mine` 永远比不到东西。
+                "owner": me.uuid,
+                "creator": task.get("creator") or me.uuid,
                 "summary": text_summary,
                 "worklog": task.get("worklog") if doc_path else None,
             },

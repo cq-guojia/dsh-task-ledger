@@ -1,6 +1,6 @@
 /**
  * 首页**慢路径**用例：近 8 周趋势 + 四个自然周期。
- * 读 history（months=RECENT_MONTHS）+ 在办 + git 身份——首屏不等它（异步/按需拉）。
+ * 读 history（months=RECENT_MONTHS）+ 在办 + 本机身份——首屏不等它（异步/按需拉）。
  *
  * ⚠️ 窗口必须是 13 个月而不是 2：8 周桶在月初会横跨 3 个自然月（如 10 月第 1 周回溯到 8 月），
  * `--months` 是**文件级**过滤，缩到 2 会静默漏掉 8 月结案记录、趋势少算（2026-10-18 架构评审结论）。
@@ -11,7 +11,7 @@ import type { ClosedSummary, LedgerFilter, LedgerWorkspace, TrendPeriods, TrendS
 export declare const RECENT_MONTHS = 13;
 /** 趋势图桶数：近 8 周（2026-10-17 定稿）。 */
 export declare const WEEKLY_WEEKS = 8;
-/** 慢路径读法：单工作区 readTasks + readHistory(months) + git 身份（并行；供 settle 逐工作区调）。 */
+/** 慢路径读法：单工作区 readTasks + readHistory(months) + 本机身份（并行；供 settle 逐工作区调）。 */
 export declare function readTrendScope(workspace: LedgerWorkspace): Promise<TrendScope>;
 /**
  * 近 N 周分组桶（完成按结案时间、新增按创建时间）× 所有 / 我的（纯函数）。

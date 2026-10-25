@@ -47,7 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     setp = sub.add_parser("set", help="释放 / 交接任务")
     setp.add_argument("--id", required=True, dest="tid")
-    setp.add_argument("--owner")
+    setp.add_argument("--owner", help="空串 = 释放回公共池；别人的 uuid = 交接")
 
     logp = sub.add_parser("log", help="记一条进展")
     logp.add_argument("--id", required=True, dest="tid")
@@ -63,7 +63,12 @@ def build_parser() -> argparse.ArgumentParser:
     listp = sub.add_parser("list", help="查在办任务")
     listp.add_argument("--pool", action="store_true")
     listp.add_argument("--mine", action="store_true")
-    listp.add_argument("--owner")
+    listp.add_argument(
+        "--owner", help="某个人的 uuid（精确匹配；名字请用 --owner-name）"
+    )
+    listp.add_argument(
+        "--owner-name", dest="owner_name", help="按显示名模糊筛（子串、不分大小写）"
+    )
     listp.add_argument("--status")
     listp.add_argument("--category")
     listp.add_argument("--tag")
@@ -76,7 +81,12 @@ def build_parser() -> argparse.ArgumentParser:
     showp.add_argument("--json", action="store_true")
 
     hist = sub.add_parser("history", help="查已结案")
-    hist.add_argument("--owner")
+    hist.add_argument(
+        "--owner", help="某个人的 uuid（精确匹配；名字请用 --owner-name）"
+    )
+    hist.add_argument(
+        "--owner-name", dest="owner_name", help="按显示名模糊筛（子串、不分大小写）"
+    )
     hist.add_argument("--mine", action="store_true")
     hist.add_argument("--category")
     hist.add_argument("--tag")
@@ -124,6 +134,7 @@ def to_query(args: argparse.Namespace) -> None:
         args.q = ListQuery(
             scope=scope,
             owner=getattr(args, "owner", None),
+            owner_name=getattr(args, "owner_name", None),
             statuses=tuple(
                 s.strip()
                 for s in (getattr(args, "status", "") or "").split(",")
@@ -139,6 +150,7 @@ def to_query(args: argparse.Namespace) -> None:
     elif command == "history":
         args.q = HistoryQuery(
             owner=getattr(args, "owner", None),
+            owner_name=getattr(args, "owner_name", None),
             mine=bool(getattr(args, "mine", False)),
             category=getattr(args, "category", None),
             tag=getattr(args, "tag", None),

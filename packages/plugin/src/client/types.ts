@@ -135,7 +135,7 @@ export interface BoardPayload {
 	readonly workspaces: readonly Workspace[];
 	readonly tasks: readonly BoardTask[];
 	readonly stats: BoardStats;
-	/** 工作区 id → 该工作区的当前 git 身份（`git config user.name`，取不到为 null）——「我的待办」判定源。 */
+	/** 工作区 id → 本机身份 uuid（`~/.taskledger/identity.json`，取不到为 null）——「我的待办」判定源。 */
 	readonly identities: Readonly<Record<string, string | null>>;
 	/** 降级信息：哪些工作区读挂了、为什么（单工作区坏不拖垮其余；空 = 全部正常）。 */
 	readonly degraded?: readonly DegradedInfo[];

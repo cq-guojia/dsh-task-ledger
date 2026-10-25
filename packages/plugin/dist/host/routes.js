@@ -93,7 +93,7 @@ export function registerRoutes(webServer, deps) {
         }
     });
     // ── 拆端点（2026-10-18 步骤 4a：纯加法，旧 /board 全量原样保留）──
-    // 快路径：首屏。只读 progress.json + git 身份，**不碰 history** ⇒ 耗时与历史总量解耦
+    // 快路径：首屏。只读 progress.json + 本机身份，**不碰 history** ⇒ 耗时与历史总量解耦
     // （20 万条量级实测 527ms vs 合并端点 4.4s）。
     registerRead("/board/snapshot", async (_req, res) => {
         try {

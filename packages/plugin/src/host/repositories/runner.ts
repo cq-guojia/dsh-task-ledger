@@ -40,7 +40,7 @@ export interface RunOptions {
 	timeoutMs?: number;
 	/**
 	 * 子进程 cwd。写命令（claim / set）必须落在工作区：
-	 * 脚本内的 owner 取 `git config user.name`，走进程 cwd 而不是 `--repo`。
+	 * 脚本按 cwd 逐级往上找 `ledger/`（或靠 `--repo` 指定），与身份无关。
 	 */
 	cwd?: string;
 }
@@ -114,7 +114,7 @@ function exec(
  * @param args - 参数数组，由调用方自拼（含 --repo / --json / --months 等）
  * @param opts.scriptPath - 测试用：覆盖脚本路径
  * @param opts.timeoutMs - 覆盖超时
- * @param opts.cwd - 子进程工作目录（写命令取 git 身份用）
+ * @param opts.cwd - 子进程工作目录（写命令按 cwd 定位台账用）
  */
 export async function runLedgerScript<T = unknown>(
 	sub: string,

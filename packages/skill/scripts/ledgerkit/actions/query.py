@@ -8,7 +8,8 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ListQuery:
     scope: str = "all"  # "all" / "pool" / "mine" / "owner"
-    owner: str | None = None  # scope="owner" 时生效
+    owner: str | None = None  # scope="owner" 时生效；**只收 uuid**
+    owner_name: str | None = None  # 显示名模糊筛（子串、不分大小写）；只筛不判定
     statuses: tuple[str, ...] = ()
     category: str | None = None
     tag: str | None = None
@@ -19,7 +20,8 @@ class ListQuery:
 
 @dataclass(frozen=True)
 class HistoryQuery:
-    owner: str | None = None
+    owner: str | None = None  # **只收 uuid**
+    owner_name: str | None = None  # 显示名模糊筛（子串、不分大小写）
     mine: bool = False
     category: str | None = None
     tag: str | None = None

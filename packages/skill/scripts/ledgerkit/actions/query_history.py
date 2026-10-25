@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,8 @@ from ..core.paths import HISTORY_DIR, LEGACY_HISTORY_REL, month_of, to_repo_rel
 from ..core.time import now, time_key
 from ..errors import Fail
 from ..store.history_store import HistoryStore
+from ..store.owners_index import OwnersIndex
+from .guard import require_uuid
 from .query import COUNT_CAP, HistoryQuery
 from .result import HistoryResult, rel
 
@@ -109,7 +112,12 @@ def _candidate_paths(repo: Path, keys: list[str]) -> list[Path]:
 
 
 def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
-    """`--owner` / `--mine` 一律**精确相等**（不做前缀 / 子串）；`--since` / `--until` 比 `finished`（结案时间）。"""
+    """`--owner` / `--mine` 一律按 **uuid 精确相等**；名字只能走 `--owner-name` 模糊筛。
+
+    `--since` / `--until` 比 `finished`（结案时间）。
+    """
+    if q.owner:
+        q = replace(q, owner=require_uuid(q.owner, field="--owner"))
     keys = _target_month_keys(q)
     store = HistoryStore(repo)
     records: list[dict[str, Any]] = []
@@ -126,12 +134,29 @@ def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
             row["finished"] = time_key(row.get("finished") or "") or row.get("finished")
             records.append(row)
 
+    index = OwnersIndex(repo)
+    roster = index.all()
     if q.mine:
         wanted = {normalize(me.uuid)}
         records = [r for r in records if normalize(r.get("owner") or "") in wanted]
     elif q.owner:
         key = normalize(q.owner)
         records = [r for r in records if normalize(r.get("owner") or "") == key]
+    if q.owner_name:
+        # 名字只在名册里模糊匹配出 uuid 集合，命中判定仍比 uuid
+        keys_of_name = index.keys_of_name(q.owner_name)
+        records = [
+            r for r in records if normalize(r.get("owner") or "") in keys_of_name
+        ]
+
+    # 展示名（`owner_name` / `creator_name`）只在这层补上，不落盘：
+    # 历史文件里 owner / creator 两列存的一律是 uuid，读出来给人看时才换成名字。
+    for row in records:
+        for field, target in (("owner", "owner_name"), ("creator", "creator_name")):
+            key = normalize(row.get(field) or "")
+            name = str((roster.get(key) or {}).get("name") or "")
+            if name:
+                row[target] = name
     if q.category:
         records = [r for r in records if (r.get("category") or "") == q.category]
     if q.tag:
@@ -155,6 +180,7 @@ def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
 
     filters = {
         "owner": q.owner,
+        "owner_name": q.owner_name,
         "mine": q.mine,
         "category": q.category,
         "tag": q.tag,

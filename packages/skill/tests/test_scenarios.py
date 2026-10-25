@@ -15,6 +15,7 @@ import sys
 import tempfile
 import time
 import unittest
+import uuid as uuidlib
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -28,6 +29,11 @@ NOSYNC = {"TASK_LEDGER_NO_SYNC": "1"}
 BASE_ENV = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
 
 
+def uid(seed: str) -> str:
+    """测试用稳定 uuid：同一个种子永远同一个身份（身份键的形态必须是真 UUID）。"""
+    return str(uuidlib.uuid5(uuidlib.NAMESPACE_URL, seed.strip().lower()))
+
+
 def home_of(repo) -> Path:
     """测试用 TASK_LEDGER_HOME：缺身份时补默认 tester。"""
     home = Path(repo) / ".tlhome"
@@ -35,7 +41,7 @@ def home_of(repo) -> Path:
     if not idf.exists():
         idf.parent.mkdir(parents=True, exist_ok=True)
         idf.write_text(
-            json.dumps({"uuid": "tester@example.com", "name": "tester"}), encoding="utf-8"
+            json.dumps({"uuid": uid("tester"), "name": "tester"}), encoding="utf-8"
         )
     return home
 
@@ -60,12 +66,12 @@ def git(cwd, *args):
     ).stdout.strip()
 
 
-def ident(dirpath, name, email):
-    """设本机身份：写 TASK_LEDGER_HOME 下的 identity.json（uuid 用 email 便于断言）。"""
+def ident(dirpath, name, seed):
+    """设本机身份：写 TASK_LEDGER_HOME 下的 identity.json（uuid 由 seed 推出，便于断言）。"""
     home = Path(dirpath) / ".tlhome" / ".taskledger"
     home.mkdir(parents=True, exist_ok=True)
     (home / "identity.json").write_text(
-        json.dumps({"uuid": email.strip().lower(), "name": name}), encoding="utf-8"
+        json.dumps({"uuid": uid(seed), "name": name}), encoding="utf-8"
     )
 
 
@@ -541,12 +547,12 @@ class PushRejectedTest(ScenarioCase):
         )
 
     def test_same_task_conflict_is_marked(self):
-        """同一个人（同一个 git 邮箱）在两台机器上改同一条任务：必须留冲突标记，不许静默选。
+        """同一个人（同一个 uuid）在两台机器上改同一条任务：必须留冲突标记，不许静默选。
 
         这是 merge.py 存在的唯一理由 —— 也只有同身份时两边才会写同一份分片文件。
         """
         fx = self.fx
-        ident(fx.b, "smoke-a-other", "smoke-a@example.com")  # 同邮箱 = 同一个人
+        ident(fx.b, "smoke-a-other", "smoke-a@example.com")  # 同 uuid = 同一个人
         tid = new_task(fx.a, "两边都改的任务")
         time.sleep(1.1)  # 保证 a 的 log 真的改到分片（不同秒）
         fx.push(fx.a)
@@ -601,21 +607,25 @@ class OthersTaskTest(ScenarioCase):
         self.assertIn("不在我的分片里", err)
         code, _, err = run(fx.b, "close", "--id", tid, "--summary", "x")
         self.assertEqual(code, 1)
-        code, _, err = run(fx.a, "set", "--id", tid, "--owner", "ghost@example.com")
+        code, _, err = run(fx.a, "set", "--id", tid, "--owner", uid("ghost"))
         self.assertEqual(code, 1)
         self.assertIn("还没在索引里登记过", err, "不能写出对别人不存在的分片")
         # 交给一个没登记过的身份要拒（写出一份对别人不存在的分片）
-        code, _, err = run(fx.a, "set", "--id", tid, "--owner", "smoke-b@example.com")
+        code, _, err = run(
+            fx.a, "set", "--id", tid, "--owner", uid("smoke-b@example.com")
+        )
         self.assertEqual(code, 1, "b 从未成功写过 ⇒ 没登记过，不能交接给他")
         # b 自己成功建一条（这一步才会把他登记进索引），之后交接就合法
         self.assertEqual(run(fx.b, "new", "--title", "b 自己的任务", "--self")[0], 0)
         fx.push(fx.b)
         fx.pull(fx.a)
-        code, _, err = run(fx.a, "set", "--id", tid, "--owner", "smoke-b@example.com")
+        code, _, err = run(
+            fx.a, "set", "--id", tid, "--owner", uid("smoke-b@example.com")
+        )
         self.assertEqual(code, 0, f"交给已登记的人应成功：{err}")
         fx.push(fx.a)
         fx.pull(fx.b)
-        self.assertEqual(merged(fx.b)[tid]["owner"], "smoke-b@example.com")
+        self.assertEqual(merged(fx.b)[tid]["owner"], uid("smoke-b@example.com"))
 
 
 class NoLedgerTest(ScenarioCase):

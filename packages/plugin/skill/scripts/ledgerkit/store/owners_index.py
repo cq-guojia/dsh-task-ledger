@@ -48,6 +48,21 @@ class OwnersIndex:
                 return True, dict(record)
             return False, dict(record)
 
+    def keys_of_name(self, fragment: str) -> set[str]:
+        """显示名模糊匹配（不分大小写的子串）⇒ uuid 集合。**只给查询筛选**，不参与归属判定。
+
+        比对的是名册里的名字（`workers[<uuid>].name`），不是每条任务上那份冗余的
+        `owner_name`：改名后名册先变，筛选结果跟着变，任务里的旧名字不会干扰。
+        """
+        needle = normalize(fragment)
+        if not needle:
+            return set()
+        return {
+            key
+            for key, record in self.all().items()
+            if needle in normalize(str((record or {}).get("name") or ""))
+        }
+
     def shards(self) -> dict[str, Path]:
         """身份 → 分片绝对路径（只信索引）。"""
         out: dict[str, Path] = {}
@@ -110,5 +125,3 @@ class _IndexSession:
     def __exit__(self, *exc) -> None:
         if self.changed:
             self.store._flush(self.data)  # 同一个包内的受控写回口
-
-

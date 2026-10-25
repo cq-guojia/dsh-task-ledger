@@ -19,18 +19,20 @@ from ..store.task_store import TaskStore
 from . import claim as claim_mod
 from . import handoff as handoff_mod
 from . import release as release_mod
+from .guard import require_uuid
 from .result import Result, rel
 
 
 def set_task(repo: Path, me: Identity, tid: str, *, owner: str | None) -> Result:
-    """路由：空串 = 释放；别人 = 交接；自己 = 已认领则空转、没认领先认领。"""
+    """路由：空串 = 释放；别人的 uuid = 交接；自己的 uuid = 已认领则空转、没认领先认领。"""
     if owner is None:
         raise Fail(
-            "set 必须带 --owner：空串 = 释放回公共池；对方身份 = 交接（预留通道，agent 不用）。"
+            "set 必须带 --owner：空串 = 释放回公共池；对方 uuid = 交接（预留通道，agent 不用）。"
         )
-    target = owner.strip()
-    if not target:
+    if not owner.strip():
         return release_mod.release(repo, me, tid)
+    # 交接目标只收 uuid：名字查不到就当场报错，绝不去猜「他大概是这个人」
+    target = require_uuid(owner, field="--owner")
     if not is_me(me, target):
         return handoff_mod.handoff(repo, me, tid, to=target)
     mine = TaskStore(repo, shard_rel(me.uuid), identity=me)

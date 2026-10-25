@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -9,13 +10,16 @@ from ..core.identity import Identity
 from ..core.paths import POOL_REL
 from ..store.owners_index import OwnersIndex
 from ..store.task_store import TaskStore
-from .guard import in_scope, owner_of, status_of
+from .guard import in_scope, owner_of, require_uuid, status_of
 from .query import ListQuery
 from .result import ListResult, TaskRow, rel
 
 
 def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
     """合并顺序定死：先池、再按索引键排序的各分片，同一任务号由分片那份胜出。"""
+    # `--owner` 只认 uuid：传名字当场报错，不静默返回空表（名字筛走 --owner-name）
+    if q.scope == "owner" and q.owner:
+        q = replace(q, owner=require_uuid(q.owner, field="--owner"))
     rows: dict[str, dict[str, Any]] = {}
     where: dict[str, Path] = {}
 
@@ -33,7 +37,10 @@ def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
             rows[tid] = task
             where[tid] = store.path
 
-    kept = {tid: t for tid, t in rows.items() if in_scope(t, q, me=me)}
+    name_keys = index.keys_of_name(q.owner_name) if q.owner_name else set()
+    kept = {
+        tid: t for tid, t in rows.items() if in_scope(t, q, me=me, name_keys=name_keys)
+    }
     table = tuple(
         TaskRow(
             tid=tid,

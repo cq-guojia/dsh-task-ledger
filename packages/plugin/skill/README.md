@@ -17,7 +17,7 @@
 | 文件 | 装什么 |
 |---|---|
 | `ledger/pool.json` | 公共池：未认领任务（owner 空） |
-| `ledger/owners.json` | 索引：git 邮箱身份 → 分片文件 |
+| `ledger/owners.json` | 索引：身份 uuid → 分片文件（`name` 只做显示 / 模糊筛） |
 | `ledger/owners/<hash>.json` | 每人一份分片：自己认领的任务 |
 | `ledger/worklog/<年月>/*.md` | 任务正文（六节） |
 | `ledger/history/<年月>.md` | 已结案（一行一条，9 列） |

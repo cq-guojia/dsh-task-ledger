@@ -30,9 +30,12 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
         raise Fail(f"任务 {tid} 不在我的分片里，交接不了。")
 
     to_key = normalize(to)
+    to_name = str(record.get("name") or "") or None  # 只用于显示
+    who = to_name or to_key
     to_store = TaskStore(repo, shard_rel(to_key))
     moved = dict(task)
     moved["owner"] = to_key
+    moved["owner_name"] = to_name
     moved["updated"] = now()
 
     existing = to_store.get(tid)
@@ -47,12 +50,12 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
         path = logs.find(tid, moved.get("worklog"))
         if path is not None:
             logs.append_exec(
-                path, exec_line(now(), me.label(), "set", f"交接给 {to_key}（补齐）")
+                path, exec_line(now(), me.label(), "set", f"交接给 {who}（补齐）")
             )
         return Result(
             already_done=True,
             where=rel(repo, to_store.path),
-            message=f"交接 {tid} → {to_key}：补齐上次未完成的清理",
+            message=f"交接 {tid} → {who}：补齐上次未完成的清理",
             notices=(f"任务 {tid} 已在对方分片里（内容一致），本次只补删我分片那行。",),
         )
 
@@ -63,12 +66,12 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
     path = logs.find(tid, moved.get("worklog"))
     note = None
     if path is None:
-        note = f"任务 {tid} 已交给 {to_key}，但过程文档没找到，跳过执行记录。"
+        note = f"任务 {tid} 已交给 {who}，但过程文档没找到，跳过执行记录。"
     else:
-        logs.append_exec(path, exec_line(now(), me.label(), "set", f"交接给 {to_key}"))
+        logs.append_exec(path, exec_line(now(), me.label(), "set", f"交接给 {who}"))
     return Result(
-        changed=("owner", "updated"),
+        changed=("owner", "owner_name", "updated"),
         where=rel(repo, to_store.path),
-        message=f"交接 {tid} → {to_key}",
+        message=f"交接 {tid} → {who}",
         notices=(note,) if note else (),
     )

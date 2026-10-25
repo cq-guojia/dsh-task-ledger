@@ -19,6 +19,7 @@ import sys
 import tempfile
 import unicodedata
 import unittest
+import uuid as uuidlib
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -40,6 +41,11 @@ def run(repo, *args, env=None):
         check=False,
     )
     return proc.returncode, proc.stdout, proc.stderr
+
+
+def uid(seed: str) -> str:
+    """测试用稳定 uuid：同一个种子永远同一个身份（身份键的形态必须是真 UUID）。"""
+    return str(uuidlib.uuid5(uuidlib.NAMESPACE_URL, seed.strip().lower()))
 
 
 def _nfc(s: str) -> str:
@@ -74,14 +80,14 @@ class Repo:
     def close(self):
         shutil.rmtree(self.root, ignore_errors=True)
 
-    def switch(self, email):
-        self.ident(email, email)
+    def switch(self, seed):
+        self.ident(seed, seed)
 
-    def ident(self, name, email):
+    def ident(self, name, seed):
         home = self.root / ".tlhome" / ".taskledger"
         home.mkdir(parents=True, exist_ok=True)
         (home / "identity.json").write_text(
-            json.dumps({"uuid": email.strip().lower(), "name": name}), encoding="utf-8"
+            json.dumps({"uuid": uid(seed), "name": name}), encoding="utf-8"
         )
 
 
@@ -214,7 +220,7 @@ class ProgramCrashRerunTest(CrashRecoveryCase):
         self.r.switch("cr@example.com")
         tid = self.new_mine("待交接")
         self.assertEqual(
-            run(self.r.root, "set", "--id", tid, "--owner", "b@example.com")[0], 0
+            run(self.r.root, "set", "--id", tid, "--owner", uid("b@example.com"))[0], 0
         )
         # 模拟崩溃：交接写到 b、删我之前崩了 → 任务还在我分片
         b_shard = self.shard_with(tid)
@@ -225,7 +231,9 @@ class ProgramCrashRerunTest(CrashRecoveryCase):
         my_data.setdefault("tasks", {})[tid] = b_task
         my_shard.write_text(json.dumps(my_data, ensure_ascii=False))
         # 重跑交接（set --owner）：内容一致 ⇒ 只补删我 → 收敛
-        code, _, err = run(self.r.root, "set", "--id", tid, "--owner", "b@example.com")
+        code, _, err = run(
+            self.r.root, "set", "--id", tid, "--owner", uid("b@example.com")
+        )
         self.assertEqual(code, 0, f"交接重跑(在两边)应收敛：{err}")
         self.assertNotIn(tid, tasks_of(self.r.root, my_shard.name), "我分片不应还有")
         self.assertIn(tid, tasks_of(self.r.root, b_shard.name), "b 分片应有")

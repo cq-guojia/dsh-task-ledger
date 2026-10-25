@@ -76,7 +76,7 @@ function exec(sub, args, opts) {
  * @param args - 参数数组，由调用方自拼（含 --repo / --json / --months 等）
  * @param opts.scriptPath - 测试用：覆盖脚本路径
  * @param opts.timeoutMs - 覆盖超时
- * @param opts.cwd - 子进程工作目录（写命令取 git 身份用）
+ * @param opts.cwd - 子进程工作目录（写命令按 cwd 定位台账用）
  */
 export async function runLedgerScript(sub, args, opts) {
     const result = await exec(sub, args, opts);

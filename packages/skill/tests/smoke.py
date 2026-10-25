@@ -17,6 +17,9 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 PROGRESS = SCRIPTS / "progress.py"
 PY = sys.executable
 
+#: 本机身份 uuid（身份键只认 UUID，测试也用真形态；名字只用于显示与模糊筛）
+ME = "11111111-1111-4111-8111-111111111111"
+
 FAILED: list[str] = []
 
 
@@ -28,9 +31,7 @@ def run(repo: Path, *args: str) -> subprocess.CompletedProcess:
     idf = home / ".taskledger" / "identity.json"
     if not idf.exists():
         idf.parent.mkdir(parents=True, exist_ok=True)
-        idf.write_text(
-            json.dumps({"uuid": "me@example.com", "name": "Me"}), encoding="utf-8"
-        )
+        idf.write_text(json.dumps({"uuid": ME, "name": "Me"}), encoding="utf-8")
     return subprocess.run(
         [PY, "-B", str(PROGRESS), "--repo", str(repo), "--no-sync", *args],
         capture_output=True,
@@ -77,7 +78,7 @@ def main() -> int:
             mine_task["status"] == "doing",
             r.stdout,
         )
-        check("new --self owner 是我", mine_task["owner"] == "me@example.com", r.stdout)
+        check("new --self owner 是我", mine_task["owner"] == ME, r.stdout)
         check("new --self 记了 started", bool(mine_task["started"]), r.stdout)
 
         # 释放 → 认领（自动 doing）→ 记进展 → set 指向自己走空转
@@ -93,12 +94,33 @@ def main() -> int:
         )
         r = run(repo, "log", "--id", tid, "--note", "冒烟记一条")
         check("log 退出码 0", r.returncode == 0, r.stderr)
-        r = run(repo, "set", "--id", tid, "--owner", "me@example.com")
+        r = run(repo, "set", "--id", tid, "--owner", ME)
         check(
             "set 指向自己 = 空转",
             r.returncode == 0 and "无需重复" in r.stdout,
             r.stdout,
         )
+        # 身份参数只收 uuid：传名字当场报错，不静默查不到
+        r = run(repo, "set", "--id", tid, "--owner", "Me")
+        check(
+            "set --owner 传名字被拒",
+            r.returncode == 1 and "--owner-name" in r.stderr,
+            r.stdout + r.stderr,
+        )
+
+        # 查询：--owner 只收 uuid；名字只能走 --owner-name 模糊筛
+        r = run(repo, "list", "--owner", ME)
+        check("list --owner <uuid> 命中", "在办 1 条" in r.stdout, r.stdout)
+        r = run(repo, "list", "--owner", "Me")
+        check(
+            "list --owner 传名字被拒",
+            r.returncode == 1 and "--owner-name" in r.stderr,
+            r.stdout + r.stderr,
+        )
+        r = run(repo, "list", "--owner-name", "m")
+        check("list --owner-name 模糊命中", "在办 1 条" in r.stdout, r.stdout)
+        r = run(repo, "list", "--owner-name", "zzz")
+        check("list --owner-name 不匹配 = 空", "没有符合条件" in r.stdout, r.stdout)
 
         # show / history / validate
         r = run(repo, "show", "--id", tid)
@@ -117,6 +139,19 @@ def main() -> int:
         )
         r = run(repo, "history", "--json")
         check("history json 有 records", '"records"' in r.stdout, r.stdout)
+        # 历史行的 owner 存 uuid ⇒ --owner / --mine 才真能比到（此前存显示名，恒查不到）
+        r = run(repo, "history", "--owner", ME, "--count-only")
+        check("history --owner <uuid> 命中", '"count": 1' in r.stdout, r.stdout)
+        r = run(repo, "history", "--mine", "--count-only")
+        check("history --mine 命中", '"count": 1' in r.stdout, r.stdout)
+        r = run(repo, "history", "--owner-name", "m", "--count-only")
+        check("history --owner-name 模糊命中", '"count": 1' in r.stdout, r.stdout)
+        r = run(repo, "history", "--owner", "Me")
+        check(
+            "history --owner 传名字被拒",
+            r.returncode == 1 and "--owner-name" in r.stderr,
+            r.stdout + r.stderr,
+        )
 
         # 关掉字节码：产物里不许有 __pycache__
         pycache = list(SCRIPTS.rglob("__pycache__"))
