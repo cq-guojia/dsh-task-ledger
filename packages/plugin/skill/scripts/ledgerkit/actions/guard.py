@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 from ..core.identity import Identity, is_me, looks_like_uuid, normalize
-from ..core.labels import LEGACY_STATUSES
 from ..core.paths import POOL_REL
 from ..errors import Fail
 from ..store.owners_index import OwnersIndex
@@ -76,12 +75,11 @@ def owner_of(task: Mapping[str, Any]) -> str | None:
 
 
 def status_of(task: Mapping[str, Any]) -> str:
-    """读 `status` 的唯一入口；老数据 `blocked` 当进行中。"""
+    """读 `status` 的唯一入口。"""
     value = task.get("status")
     if not isinstance(value, str) or not value.strip():
         return "open"
-    value = value.strip().lower()
-    return "doing" if value in LEGACY_STATUSES else value
+    return value.strip().lower()
 
 
 def is_mine(task: Mapping[str, Any], me: Identity) -> bool:
@@ -109,13 +107,8 @@ def in_scope(
         return False
     if q.owner_name and owner_of(task) not in name_keys:
         return False
-    if q.statuses:
-        status = status_of(task)
-        wanted = {s for s in q.statuses}
-        if status not in wanted and not (
-            "doing" in wanted and status in LEGACY_STATUSES
-        ):
-            return False
+    if q.statuses and status_of(task) not in set(q.statuses):
+        return False
     if q.category and (task.get("category") or "") != q.category:
         return False
     if q.tag and q.tag not in (task.get("tags") or ()):

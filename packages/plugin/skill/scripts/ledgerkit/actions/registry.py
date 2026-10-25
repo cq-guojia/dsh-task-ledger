@@ -43,7 +43,7 @@ ACTIONS: dict[str, ActionSpec] = {
     "set": ActionSpec(
         set_task.set_task,
         "result",
-        params=("tid", "owner"),
+        params=("tid", "owner", "release"),
         lock_action="set",
     ),
     "log": ActionSpec(log_progress.log_progress, "result", params=("tid", "note")),

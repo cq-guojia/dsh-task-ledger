@@ -181,9 +181,9 @@ class ProgramCrashRerunTest(CrashRecoveryCase):
     def test_release_rerun_idempotent(self):
         tid = self.new_pool("待释放")
         self.assertEqual(run(self.r.root, "claim", "--id", tid)[0], 0)
-        self.assertEqual(run(self.r.root, "set", "--id", tid, "--owner", "")[0], 0)
+        self.assertEqual(run(self.r.root, "set", "--id", tid, "--release")[0], 0)
         self.assertIn(tid, tasks_of(self.r.root, "pool.json"))
-        code, _, err = run(self.r.root, "set", "--id", tid, "--owner", "")
+        code, _, err = run(self.r.root, "set", "--id", tid, "--release")
         self.assertEqual(code, 0, f"释放重跑应收敛：{err}")
         self.assertIn(tid, tasks_of(self.r.root, "pool.json"))
 
@@ -191,8 +191,8 @@ class ProgramCrashRerunTest(CrashRecoveryCase):
         tid = self.new_mine("待释放")
         shard = self.shard_with(tid)
         assert shard is not None, "任务应在我的分片里"
-        self.assertEqual(run(self.r.root, "set", "--id", tid, "--owner", "")[0], 0)
-        code, _, err = run(self.r.root, "set", "--id", tid, "--owner", "")
+        self.assertEqual(run(self.r.root, "set", "--id", tid, "--release")[0], 0)
+        code, _, err = run(self.r.root, "set", "--id", tid, "--release")
         self.assertEqual(code, 0, f"释放重跑应收敛：{err}")
         self.assertIn(tid, tasks_of(self.r.root, "pool.json"), "释放后任务应回公共池")
 

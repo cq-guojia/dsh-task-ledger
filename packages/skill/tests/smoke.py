@@ -82,7 +82,7 @@ def main() -> int:
         check("new --self 记了 started", bool(mine_task["started"]), r.stdout)
 
         # 释放 → 认领（自动 doing）→ 记进展 → set 指向自己走空转
-        r = run(repo, "set", "--id", tid, "--owner", "")
+        r = run(repo, "set", "--id", tid, "--release")
         check("release 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "list", "--json")
         released = json.loads(r.stdout)[tid]
@@ -141,9 +141,21 @@ def main() -> int:
             r.returncode == 1 and "只收身份 uuid" in r.stderr,
             r.stdout + r.stderr,
         )
+        r = run(repo, "set", "--id", tid)
+        check(
+            "set 既没 --release 也没 --owner 被拒",
+            r.returncode == 1 and "--release" in r.stderr,
+            r.stdout + r.stderr,
+        )
+        r = run(repo, "set", "--id", tid, "--release", "--owner", ME)
+        check(
+            "set --release 与 --owner 同给被拒",
+            r.returncode == 1 and "不能同时给" in r.stderr,
+            r.stdout + r.stderr,
+        )
         r = run(repo, "set", "--id", tid, "--owner", "   ")
         check(
-            "set --owner 全空白不算释放",
+            "set --owner 全空白被拒",
             r.returncode == 1 and "只收身份 uuid" in r.stderr,
             r.stdout + r.stderr,
         )

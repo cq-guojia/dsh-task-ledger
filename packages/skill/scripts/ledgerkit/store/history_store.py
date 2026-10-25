@@ -9,9 +9,8 @@ from pathlib import Path
 from typing import Any
 
 from ..core import history_md
-from ..core.paths import HISTORY_DIR, LEGACY_HISTORY_REL, to_repo_rel
+from ..core.paths import HISTORY_DIR, to_repo_rel
 from .atomic import write_text_atomic
-from .worklog_store import WorklogStore
 
 HIT = "hit"
 MISS = "miss"
@@ -25,16 +24,12 @@ class HistoryStore:
     # ---- 读 ----
 
     def sources(self) -> list[Path]:
-        """按月的 `history/*.md`（按文件名排序）+ 存量平铺文件（只读，永不重写）。"""
+        """按月的 `history/*.md`（按文件名排序）。"""
         base = self.repo / to_repo_rel(HISTORY_DIR)
-        files = sorted(base.glob("*.md")) if base.is_dir() else []
-        legacy = self.repo / to_repo_rel(LEGACY_HISTORY_REL)
-        if legacy.is_file():
-            files.append(legacy)
-        return files
+        return sorted(base.glob("*.md")) if base.is_dir() else []
 
     def month_key(self, path: Path) -> str:
-        """按月文件的 `YYYYMM`；存量平铺文件没有月份键，返回空串。"""
+        """按月文件的 `YYYYMM`。"""
         stem = Path(path).stem
         return stem if len(stem) == 6 and stem.isdigit() else ""
 
@@ -45,16 +40,6 @@ class HistoryStore:
             return ""
         except OSError as exc:
             raise ValueError(f"读 {path} 失败：{exc}") from exc
-
-    def _read_worklog(self, path: Path):
-        """升级要回链的 worklog 头部：读文件这件事留在 store，core 只消费返回的字典。"""
-        logs = WorklogStore(self.repo)
-
-        def read(log_name: str) -> dict[str, Any] | None:
-            found = logs.by_name(log_name)
-            return logs.head_meta(found) if found else None
-
-        return read
 
     # ---- 判重 ----
 
@@ -90,11 +75,7 @@ class HistoryStore:
     # ---- 算 ----
 
     def append_row(self, path: Path, row: dict[str, Any]) -> dict[str, Any]:
-        """算出「追加这一行后的新全文」，**不落盘**。
-
-        返回四个键：`text` / `upgraded` / `duplicate` / `fallback_cols`（`None` = 正常 9 列）。
-        老表列少又不敢整体升级时，按现有列数追加并让业务层提示，绝不硬写 9 列把表格挤歪。
-        """
+        """算出「追加这一行后的新全文」，**不落盘**。返回 `text` / `duplicate`。"""
         original = self.read(path)
         duplicate = (
             self.has_log(
@@ -105,65 +86,24 @@ class HistoryStore:
             )
             == HIT
         )
-        if not original.strip():
-            text = _fresh_table()
-            upgraded = False
-            fallback_cols = None
-        else:
-            cols = history_md.history_cols(original)
-            if cols == 9:
-                text = original
-                upgraded = False
-                fallback_cols = None
-            else:
-                upgraded_text = history_md.upgrade_history(
-                    original, read_worklog=self._read_worklog(path)
-                )
-                if upgraded_text is None:
-                    text = original
-                    upgraded = False
-                    fallback_cols = cols
-                else:
-                    text, _ = upgraded_text
-                    upgraded = True
-                    fallback_cols = None
-        line = (
-            history_md.history_line(
-                row.get("finished") or "",
-                row.get("created"),
-                row.get("title") or "",
-                row.get("owner"),
-                row.get("summary") or "",
-                row.get("worklog"),
-                row.get("category"),
-                row.get("tags"),
-                row.get("creator"),
-            )
-            if fallback_cols is None
-            else history_md.history_line_for_cols(
-                fallback_cols,
-                row.get("finished") or "",
-                row.get("created"),
-                row.get("title") or "",
-                row.get("owner"),
-                row.get("summary") or "",
-                row.get("worklog"),
-                row.get("category"),
-                row.get("tags"),
-                row.get("creator"),
-            )
+        text = original if original.strip() else _fresh_table()
+        line = history_md.history_line(
+            row.get("finished") or "",
+            row.get("created"),
+            row.get("title") or "",
+            row.get("owner"),
+            row.get("summary") or "",
+            row.get("worklog"),
+            row.get("category"),
+            row.get("tags"),
+            row.get("creator"),
         )
-        return {
-            "text": _append_line(text, line),
-            "upgraded": upgraded,
-            "duplicate": duplicate,
-            "fallback_cols": fallback_cols,
-        }
+        return {"text": _append_line(text, line), "duplicate": duplicate}
 
     # ---- 写 ----
 
     def write(self, path: Path, text: str) -> None:
-        """历史表唯一的写回口：只用于「结案追加」与「8→9 列升级」的结果落盘。"""
+        """历史表唯一的写回口：只用于「结案追加」的结果落盘。"""
         write_text_atomic(path, text)
 
 

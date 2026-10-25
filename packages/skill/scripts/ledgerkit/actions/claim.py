@@ -51,7 +51,7 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
         raise Fail(f"公共池里没有任务 {tid}（已经被人认领或不存在）。")
 
     current = task.get("status")
-    if current not in ("open", "blocked"):
+    if current != "open":
         raise Fail(
             f"任务 {tid} 在公共池里但状态是 {current}（应为 open）—— "
             "先跑 validate 看台账是不是乱了。"

@@ -8,7 +8,6 @@ from collections.abc import Iterable
 from ..errors import Fail
 
 STATUSES = ("open", "doing")
-LEGACY_STATUSES = ("blocked",)  # 旧数据：读侧当进行中，不写回
 FORMAT_VERSION = "20261022000000"
 
 LABEL_MAX_CHARS = 4  # 含 CJK 时按「字」算

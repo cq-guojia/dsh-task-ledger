@@ -47,7 +47,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     setp = sub.add_parser("set", help="释放 / 交接任务")
     setp.add_argument("--id", required=True, dest="tid")
-    setp.add_argument("--owner", help="空串 = 释放回公共池；别人的 uuid = 交接")
+    setp.add_argument("--owner", help="交给别人的 uuid（交接）")
+    setp.add_argument("--release", action="store_true", help="释放回公共池")
 
     logp = sub.add_parser("log", help="记一条进展")
     logp.add_argument("--id", required=True, dest="tid")

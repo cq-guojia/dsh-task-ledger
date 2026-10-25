@@ -295,7 +295,7 @@ class NoManualFetchTest(ScenarioCase):
         fx.push(fx.b)
         # set 的刷取范围含「他人分片」：跑一次改状态类命令就把别人的分片带下来
         tid_pool = new_task(fx.a, "再放回池里", mine=False)
-        code, _, err = run(fx.a, "set", "--id", tid_pool, "--owner", "")
+        code, _, err = run(fx.a, "set", "--id", tid_pool, "--release")
         self.assertEqual(code, 0, err)
         self.assertIn(
             "b 侧新建的任务",
@@ -421,7 +421,7 @@ class ConcurrentMixedWorkloadTest(ScenarioCase):
         # 放弃：2 个 abandoner 各把一条公共任务释放回公共池（a/b 各 1）
         for clone, tid in ((fx.a, pub[4]), (fx.b, pub[5])):
             workers.append(
-                (self._spawn(clone, "set", "--id", tid, "--owner", ""), "abandon")
+                (self._spawn(clone, "set", "--id", tid, "--release"), "abandon")
             )
         # 读：各 clone 2 个 reader，反复 list / history
         for clone in (fx.a, fx.b):
@@ -602,7 +602,7 @@ class OthersTaskTest(ScenarioCase):
         code, _, err = run(fx.b, "log", "--id", tid, "--note", "别人的")
         self.assertEqual(code, 1)
         self.assertIn("不在我的分片里", err)
-        code, _, err = run(fx.b, "set", "--id", tid, "--owner", "")
+        code, _, err = run(fx.b, "set", "--id", tid, "--release")
         self.assertEqual(code, 1)
         self.assertIn("不在我的分片里", err)
         code, _, err = run(fx.b, "close", "--id", tid, "--summary", "x")
@@ -678,7 +678,7 @@ class NoGitRepoTest(unittest.TestCase):
         tid = task_id_of(self.root, "第一条")
         code, _, err = run(self.root, "log", "--id", tid, "--note", "无 git 也记进展")
         self.assertEqual(code, 0, err)
-        code, _, err = run(self.root, "set", "--id", tid, "--owner", "")
+        code, _, err = run(self.root, "set", "--id", tid, "--release")
         self.assertEqual(code, 0, err)
         self.assertIn(tid, merged(self.root), "释放后回公共池（merged 含池）")
 
@@ -1130,8 +1130,8 @@ class RerunConvergesTest(ScenarioCase):
     def test_release_twice(self):
         fx = self.fx
         tid = new_task(fx.a, "释放两次")
-        self.assertEqual(run(fx.a, "set", "--id", tid, "--owner", "")[0], 0)
-        code, out, err = run(fx.a, "set", "--id", tid, "--owner", "")
+        self.assertEqual(run(fx.a, "set", "--id", tid, "--release")[0], 0)
+        code, out, err = run(fx.a, "set", "--id", tid, "--release")
         self.assertEqual(code, 0, "重复释放不算失败")
         self.assertIn("已经在公共池里", out + err)
         self.assertIsNone(merged(fx.a)[tid]["owner"])

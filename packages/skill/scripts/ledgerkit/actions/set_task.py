@@ -23,15 +23,23 @@ from .guard import require_uuid
 from .result import Result, rel
 
 
-def set_task(repo: Path, me: Identity, tid: str, *, owner: str | None) -> Result:
-    """路由：空串 = 释放；别人的 uuid = 交接；自己的 uuid = 已认领则空转、没认领先认领。"""
+def set_task(
+    repo: Path,
+    me: Identity,
+    tid: str,
+    *,
+    owner: str | None = None,
+    release: bool = False,
+) -> Result:
+    """路由：`--release` = 释放；别人的 uuid = 交接；自己的 uuid = 已认领则空转、没认领先认领。"""
+    if release:
+        if owner is not None:
+            raise Fail("--release 与 --owner 不能同时给：释放不带人，交接不带释放。")
+        return release_mod.release(repo, me, tid)
     if owner is None:
         raise Fail(
-            "set 必须带 --owner：空串 = 释放回公共池；对方 uuid = 交接（预留通道，agent 不用）。"
+            "set 必须二选一：`--release`（释放回公共池）或 `--owner <对方 uuid>`（交接）。"
         )
-    # 只认**空串**为释放：`--owner "  "`（变量没展开）不许被当成释放，交给 require_uuid 拒掉
-    if owner == "":
-        return release_mod.release(repo, me, tid)
     # 交接目标只收 uuid：名字查不到就当场报错，绝不去猜「他大概是这个人」
     target = require_uuid(owner, field="--owner")
     if not is_me(me, target):

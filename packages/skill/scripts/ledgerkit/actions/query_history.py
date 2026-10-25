@@ -13,7 +13,7 @@ from typing import Any
 
 from ..core import history_md
 from ..core.identity import Identity, normalize
-from ..core.paths import HISTORY_DIR, LEGACY_HISTORY_REL, month_of, to_repo_rel
+from ..core.paths import HISTORY_DIR, month_of, to_repo_rel
 from ..core.time import now, time_key
 from ..errors import Fail
 from ..store.history_store import HistoryStore
@@ -105,10 +105,8 @@ def _target_month_keys(q: HistoryQuery) -> list[str]:
 
 
 def _candidate_paths(repo: Path, keys: list[str]) -> list[Path]:
-    """按月键【直接拼】`history/<年月>.md`（不扫磁盘）；存量平铺文件按固定路径顺带一看。"""
-    paths = [repo / to_repo_rel(HISTORY_DIR / f"{ym}.md") for ym in keys]
-    paths.append(repo / to_repo_rel(LEGACY_HISTORY_REL))
-    return paths
+    """按月键【直接拼】`history/<年月>.md`（不扫磁盘）。"""
+    return [repo / to_repo_rel(HISTORY_DIR / f"{ym}.md") for ym in keys]
 
 
 def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:

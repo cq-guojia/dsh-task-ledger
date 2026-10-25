@@ -1,17 +1,14 @@
-"""历史表格的文本操作：拼行、解析、旧列数升级。
+"""历史表格的文本操作：拼九列一行、解析九列一行。
 
-**自己不开文件**：升级要回链 worklog 读头部，那件事由调用方传 `read_worklog`
-回调进来（`str -> str | None`），core 只做文本换算。
+**只认九列这一种格式**（开发期没发布，不做任何旧列数 / 旧列语义的迁移）。
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable
-from pathlib import Path
+from collections.abc import Iterable
 from typing import Any
 
-from .identity import uuid_or_none
 from .paths import to_history_rel
 from .time import TIME_RE, time_key
 
@@ -19,8 +16,6 @@ HISTORY_TITLE = "# 进度历史（已结案）"
 HISTORY_HEADER = "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |"
 HISTORY_SEP = "|---|---|---|---|---|---|---|---|---|"
 
-# 最旧格式把 owner 缝在工作包末尾：最右一个「空格 + @」之后整段是 owner。
-OLD_OWNER_RE = re.compile(r"^(?P<title>.*\S)\s+@(?P<owner>\S.*)$")
 _LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]*)\)")
 _TAG_SPLIT_RE = re.compile(r"[,，、]")
 
@@ -33,7 +28,7 @@ def esc_cell(text: str) -> str:
 
 
 def owner_cell(owner: str | None) -> str:
-    """owner 列的展示值：人名前加 @（`@` 只是展示约定，匹配一律用裸标识）。"""
+    """owner 列的展示值：人名前加 @（`@` 只是展示约定，匹配一律用裸 uuid）。"""
     return f"@{owner}" if owner else ""
 
 
@@ -57,7 +52,6 @@ def is_sep_row(cells: list[str]) -> bool:
 
 
 def _looks_like_header(cells: list[str]) -> bool:
-    # 按内容判、不按位置判：无表头的老文件首行就是数据，按位置判会把第一条记录当表头删掉。
     return bool(cells) and cells[0] in ("时间", "结案时间")
 
 
@@ -74,7 +68,7 @@ def history_line(
 ) -> str:
     """九列的一行。`worklog` 收**相对 `ledger/`** 的路径，这里负责换成相对 `history/` 的链接。
 
-    owner / creator 传**裸标识**（`@` 由 owner_cell / creator_cell 加），外面别先加。
+    owner / creator 传**裸 uuid**（`@` 由 owner_cell / creator_cell 加），外面别先加。
     """
     log_rel = to_history_rel(worklog) if worklog else ""
     tag_cell = esc_cell("、".join(tags) if tags else "")
@@ -87,86 +81,11 @@ def history_line(
     )
 
 
-def history_line_for_cols(
-    cols: int,
-    finished: str,
-    created: str | None,
-    title: str,
-    owner: str | None,
-    summary: str,
-    worklog: str | None,
-    category: str | None = None,
-    tags: Iterable[str] | None = None,
-    creator: str | None = None,
-) -> str:
-    """「历史层有无法解析的行、不敢整体升级」时按现有列数追加一行，避免列错位。
-
-    GFM 按首行列数渲染，列数写错会被静默丢弃 / 错位。少列的文件硬塞 9 列会把整行挤歪。
-    """
-    log_rel = to_history_rel(worklog) if worklog else ""
-    link = f"[{log_rel}]({log_rel})" if log_rel else ""
-    tag_cell = esc_cell("、".join(tags) if tags else "")
-    if cols <= 4:
-        who = f" @{owner}" if owner else ""
-        return (
-            f"| {finished} | {esc_cell(title + who)} | {esc_cell(summary)} | {link} |\n"
-        )
-    if cols == 5:
-        return (
-            f"| {finished} | {esc_cell(title)} | {esc_cell(owner_cell(owner))} "
-            f"| {esc_cell(summary)} | {link} |\n"
-        )
-    if cols == 6:
-        return (
-            f"| {finished} | {created or ''} | {esc_cell(title)} "
-            f"| {esc_cell(owner_cell(owner))} | {esc_cell(summary)} | {link} |\n"
-        )
-    if cols == 8:
-        # 8 列 = 9 列去掉 creator（历史 2026-10 之前的样子）
-        return (
-            f"| {finished} | {created or ''} | {esc_cell(title)} "
-            f"| {esc_cell(category or '')} | {tag_cell} "
-            f"| {esc_cell(owner_cell(owner))} | {esc_cell(summary)} | {link} |\n"
-        )
-    # 其它列数（7 / ≥10）没有已知语义：按九列拼，再按现有列数**补齐或从尾部截断**，
-    # 保证行与表对齐（信息可能丢，业务层有 fallback 警告）；绝不硬塞 9 列把表格挤歪。
-    cells = [
-        finished,
-        created or "",
-        esc_cell(title),
-        esc_cell(category or ""),
-        tag_cell,
-        esc_cell(owner_cell(owner)),
-        esc_cell(creator_cell(creator)),
-        esc_cell(summary),
-        link,
-    ]
-    cells = cells[:cols] if cols < len(cells) else cells + [""] * (cols - len(cells))
-    return "| " + " | ".join(cells) + " |\n"
-
-
-def history_cols(text: str) -> int:
-    """现有历史表格数据行的列数（取众数、平局取较大）；无数据行时按 6。"""
-    counts: dict[int, int] = {}
-    for raw in text.splitlines():
-        if not raw.strip().startswith("|"):
-            continue
-        cells = split_row(raw)
-        if not cells or is_sep_row(cells) or _looks_like_header(cells):
-            continue
-        if len(cells) >= 4:
-            counts[len(cells)] = counts.get(len(cells), 0) + 1
-    if not counts:
-        return 6
-    return max(counts, key=lambda k: (counts[k], k))
-
-
 def parse_history(text: str) -> tuple[list[Row], list[str]]:
-    """解析历史表 → (records, warnings)。**逐行按自己的列数判别**，表头只用来跳过。
+    """解析九列历史表 → (records, warnings)。坏行（列数不对 / 时间列不合法）跳过并警告。
 
-    兼容 9 / 8 / 6 / 5（两种）/ 4 列；坏行（列数不在列、时间列不合法）跳过并警告，不中断。
     返回的键：finished / created / title / category / tags / owner / creator / summary /
-    worklog / fmt / line。owner 与 creator 一律**剥掉 `@`**（匹配用裸标识）。
+    worklog / fmt / line。owner 与 creator 一律**剥掉 `@`**（存储值是裸 uuid）。
     """
     records: list[Row] = []
     warnings: list[str] = []
@@ -176,197 +95,31 @@ def parse_history(text: str) -> tuple[list[Row], list[str]]:
         cells = split_row(raw)
         if not cells or is_sep_row(cells) or _looks_like_header(cells):
             continue
-        created = ""
-        category: str | None = None
-        tags: list[str] = []
-        creator: str | None = None
-        if len(cells) == 9:
-            (
-                finished,
-                created,
-                title,
-                category,
-                tag_cell,
-                owner,
-                creator,
-                summary,
-                doc,
-            ) = cells
-            fmt = "v9"
-            category = category.strip() or None
-            tags = [t.strip() for t in _TAG_SPLIT_RE.split(tag_cell) if t.strip()]
-            creator = creator.strip().removeprefix("@") or None
-        elif len(cells) == 8:
-            finished, created, title, category, tag_cell, owner, summary, doc = cells
-            fmt = "v8"
-            category = category.strip() or None
-            tags = [t.strip() for t in _TAG_SPLIT_RE.split(tag_cell) if t.strip()]
-        elif len(cells) == 6:
-            finished, created, title, owner, summary, doc = cells
-            fmt = "v6"
-        elif len(cells) == 5 and TIME_RE.fullmatch(cells[1]):
-            # 旧 ledger 格式（结案 / 创建 / 工作包 / 摘要 / 文档）：行内自带创建时间。
-            finished, created, title, summary, doc = cells
-            owner = ""
-            fmt = "v5ledger"
-        elif len(cells) == 5:
-            finished, title, owner, summary, doc = cells
-            fmt = "v5"
-        elif len(cells) == 4:
-            finished, title, summary, doc = cells
-            m = OLD_OWNER_RE.match(title)
-            owner = m.group("owner") if m else ""
-            if m:
-                title = m.group("title")
-            fmt = "v4"
-        else:
-            warnings.append(f"第 {lineno} 行列数不是 4 / 5 / 6 / 8 / 9，已跳过")
+        if len(cells) != 9:
+            warnings.append(f"第 {lineno} 行不是九列（历史表只认九列），已跳过")
             continue
+        finished, created, title, category, tag_cell, owner, creator, summary, doc = (
+            cells
+        )
         if not TIME_RE.fullmatch(finished):
             warnings.append(f"第 {lineno} 行时间列 {finished!r} 不合法，已跳过")
             continue
         m = _LINK_RE.fullmatch(doc.strip())
-        log = m.group(1) if m else doc.strip()
         records.append(
             {
                 "finished": finished,
                 "created": time_key(created) if created else None,
                 "title": title,
-                "category": category,
-                "tags": tuple(tags),
-                "owner": (owner or "").strip().removeprefix("@") or None,
-                "creator": creator,
+                "category": category.strip() or None,
+                "tags": tuple(
+                    t.strip() for t in _TAG_SPLIT_RE.split(tag_cell) if t.strip()
+                ),
+                "owner": owner.strip().removeprefix("@") or None,
+                "creator": creator.strip().removeprefix("@") or None,
                 "summary": summary,
-                "worklog": log or None,
-                "fmt": fmt,
+                "worklog": (m.group(1) if m else doc.strip()) or None,
+                "fmt": "v9",
                 "line": lineno,
             }
         )
     return records, warnings
-
-
-def _drop_trailing_blank(out: list[str]) -> None:
-    """去掉已在结果里的尾部空行（丢弃重复表头时用）：中间的空行会把 GFM 表格截断。"""
-    while out and not out[-1].strip():
-        out.pop()
-
-
-def upgrade_history(
-    text: str,
-    *,
-    read_worklog: Callable[[str], dict[str, Any] | None],
-) -> tuple[str, int] | None:
-    """旧格式（4 / 5 / 6 / 8 列）→ v9。**全部数据行可解析才返回 (新文本, 转换行数)**，否则 None。
-
-    `None` 的语义是「不敢动」：调用方必须退回 `history_line_for_cols` 按原列数追加并明示，
-    绝不半升级、绝不猜。分类 / 标签 / creator / 缺的创建时间都靠 `read_worklog` 回链补，
-    读不到就**留空**——尤其不许拿「本次正在结案的那条任务」的创建时间冒充别的行。
-
-    `read_worklog` 的契约：`(log_name: str) -> dict | None` —— 收**文件名**（历史末列的
-    basename，不是路径），返回 `{"created", "creator", "category", "tags"}`。core 只消费
-    返回值，自己不开文件。
-    """
-    out: list[str] = []
-    converted = 0
-    seen_header = False
-    seen_sep = False
-    for raw in text.splitlines():
-        if not raw.strip().startswith("|"):
-            out.append(raw)
-            continue
-        cells = split_row(raw)
-        if not cells:
-            out.append(raw)
-            continue
-        if is_sep_row(cells):
-            if seen_sep:
-                _drop_trailing_blank(out)
-                continue
-            seen_sep = True
-            out.append(HISTORY_SEP)
-            continue
-        if _looks_like_header(cells):
-            if seen_header:
-                _drop_trailing_blank(out)
-                continue
-            seen_header = True
-            out.append(HISTORY_HEADER)
-            continue
-        if len(cells) == 9:
-            if time_key(cells[0]) is None:
-                return None
-            # 逐格重新转义：split_row 已把 `\|` 还原成 `|`，直接拼回去会把含竖线的单元格拆坏
-            out.append("| " + " | ".join(esc_cell(c) for c in cells) + " |")
-            continue
-        explicit_created: str | None = None
-        creator: str | None = None
-        if len(cells) == 8:
-            finished, created, title, category, tag_cell, owner, summary, doc = cells
-            if time_key(finished) is None:
-                return None
-            created_key = time_key(created.strip())
-            tags = [t.strip() for t in _TAG_SPLIT_RE.split(tag_cell) if t.strip()]
-            # 头部那格写的是显示名（`@人名`）：只有形态是 uuid 才当 creator，否则留空
-            creator = uuid_or_none((_meta_of(doc, read_worklog) or {}).get("creator"))
-            out.append(
-                f"| {finished} | {created_key or ''} | {esc_cell(title)} "
-                f"| {esc_cell(category.strip())} "
-                f"| {esc_cell('、'.join(tags) if tags else '')} "
-                f"| {esc_cell(owner_cell(owner.lstrip('@')))} "
-                f"| {esc_cell(creator_cell(creator))} "
-                f"| {esc_cell(summary)} | {doc} |"
-            )
-            converted += 1
-            continue
-        if len(cells) == 6:
-            finished, created, title, owner, summary, doc = cells
-            owner = owner.lstrip("@")
-            explicit_created = time_key(created.strip())
-        elif len(cells) == 5 and TIME_RE.fullmatch(cells[1]):
-            finished, created_cell, title, summary, doc = cells
-            owner = ""
-            explicit_created = time_key(created_cell.strip())
-        elif len(cells) == 5:
-            finished, title, owner, summary, doc = cells
-            owner = owner.lstrip("@")
-        elif len(cells) == 4:
-            finished, title, summary, doc = cells
-            m = OLD_OWNER_RE.match(title)
-            owner = m.group("owner") if m else ""
-            if m:
-                title = m.group("title")
-        else:
-            return None
-        finished_key = time_key(finished)
-        if finished_key is None:
-            return None
-        meta = _meta_of(doc, read_worklog)
-        created = explicit_created or (meta or {}).get("created") or ""
-        category = (meta or {}).get("category")
-        tags = tuple((meta or {}).get("tags") or ())
-        creator = uuid_or_none((meta or {}).get("creator"))
-        out.append(
-            f"| {finished_key} | {created} | {esc_cell(title)} "
-            f"| {esc_cell(category or '')} "
-            f"| {esc_cell('、'.join(tags) if tags else '')} "
-            f"| {esc_cell(owner_cell(owner))} "
-            f"| {esc_cell(creator_cell(creator))} "
-            f"| {esc_cell(summary)} | {doc} |"
-        )
-        converted += 1
-    return "\n".join(out) + "\n", converted
-
-
-def _link_target(cell: str) -> str:
-    m = _LINK_RE.fullmatch((cell or "").strip())
-    return (m.group(1) if m else (cell or "")).strip()
-
-
-def _meta_of(
-    doc: str, read_worklog: Callable[[str], dict[str, Any] | None]
-) -> dict[str, Any] | None:
-    """顺着历史行的文档链接取回 worklog 头部四样（`read_worklog` 收文件名）。"""
-    target = _link_target(doc)
-    if not target:
-        return None
-    return read_worklog(Path(target).name)

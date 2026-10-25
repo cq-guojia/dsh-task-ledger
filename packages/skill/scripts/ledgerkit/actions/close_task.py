@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..core.identity import Identity, uuid_or_none
+from ..core.identity import Identity
 from ..core.labels import normalize_label, parse_tags
 from ..core.paths import history_path_for, shard_rel, to_repo_rel, worklog_name
 from ..core.worklog_md import (
@@ -25,8 +25,6 @@ from ..store.task_store import TaskStore
 from ..store.worklog_store import WorklogStore
 from .guard import require_owner
 from .result import Result, rel
-
-_COLS_FALLBACK_HINT = "警告：历史表列数不是 9 且无法整体升级，本次按现有列数追加。"
 
 
 def close_task(
@@ -142,9 +140,8 @@ def close_task(
                 "tags": final_tags,
                 # 历史两列只存 **uuid**（身份唯一键）；显示名在读的时候按名册换，
                 # 不落盘 —— 否则 `history --owner <uuid>` / `--mine` 永远比不到东西。
-                # 老任务里的 creator 可能是显示名（旧版本写的）⇒ 形态不对就退回我，不把名字写进历史。
                 "owner": me.uuid,
-                "creator": uuid_or_none(task.get("creator")) or me.uuid,
+                "creator": task.get("creator") or me.uuid,
                 "summary": text_summary,
                 "worklog": task.get("worklog") if doc_path else None,
             },
@@ -170,8 +167,6 @@ def close_task(
         raise
 
     notices: list[str] = []
-    if out.get("fallback_cols"):
-        notices.append(_COLS_FALLBACK_HINT)
     if doc_path is None:
         notices.append(f"提示：任务 {tid} 没有过程文档，已跳过封卷，历史末列留空。")
     return Result(
@@ -181,7 +176,6 @@ def close_task(
         payload={
             "history_path": rel(repo, hist_path),
             "worklog_path": rel(repo, doc_path) if doc_path else None,
-            "fallback_cols": out.get("fallback_cols"),
         },
         notices=tuple(notices),
     )

@@ -35,16 +35,6 @@ def looks_like_uuid(who: str | None) -> bool:
     return bool(UUID_RE.match(normalize(who or "")))
 
 
-def uuid_or_none(who: str | None) -> str | None:
-    """能当身份键就返回归一化 uuid，否则 None。
-
-    用途：清理旧数据（老任务的 `creator`、老历史行的 owner/creator 可能是显示名），
-    写盘前一律过一遍，宁可留空也不把名字混进身份列。
-    """
-    key = normalize(who or "")
-    return key if key and looks_like_uuid(key) else None
-
-
 def is_me(identity: Identity, who: str | None) -> bool:
     """`who`（uuid）是不是这个人。全站只认 uuid 这一个身份键。"""
     return normalize(who or "") == normalize(identity.uuid)

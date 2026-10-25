@@ -20,7 +20,6 @@ OWNERS_REL = Path("owners.json")
 OWNERS_DIR = Path("owners")
 HISTORY_DIR = Path("history")
 WORKLOG_DIR = Path("worklog")
-LEGACY_HISTORY_REL = Path("PROGRESS-HISTORY.md")  # 存量平铺文件：只读不写
 
 SHA_LEN = 12
 

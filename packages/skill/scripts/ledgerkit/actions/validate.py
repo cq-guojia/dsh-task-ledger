@@ -16,7 +16,6 @@ from ..core.identity import Identity
 from ..core.labels import STATUSES
 from ..core.paths import (
     LEDGER_DIR,
-    LEGACY_HISTORY_REL,
     OWNERS_REL,
     POOL_REL,
     to_repo_rel,
@@ -200,9 +199,6 @@ def validate(repo: Path, me: Identity, deep: bool = False) -> ValidationReport:
     )
     checked += _check_worklog(repo, logs, problems, notices, deep=deep)
 
-    legacy = repo / to_repo_rel(LEGACY_HISTORY_REL)
-    if legacy.exists():
-        notices.append(f"存量平铺文件 {rel(repo, legacy)} 只读兼容，不会重写。")
     if not (repo / to_repo_rel(OWNERS_REL)).exists():
         notices.append("还没有 owners.json（索引）：跑一条写命令会自动建。")
     stray = repo / LEDGER_DIR / LEDGER_DIR

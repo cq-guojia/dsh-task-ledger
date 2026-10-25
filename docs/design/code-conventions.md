@@ -76,7 +76,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 这里只留四条**不写就会做错**的纪律：
 
 - 工具层（`core/`）里的函数不算层：`append_exec_log`、`stamp_frozen`、`rewrite_label_line`、`has_frozen_line`。
-- `HistoryStore.write` 的唯一调用点是结案的第 2 步（8 列 → 9 列升级后的全文也经它落盘）。业务不得用它整篇改写历史。
+- `HistoryStore.write` 的唯一调用点是结案的第 2 步。业务不得用它整篇改写历史。
 - `WorklogStore` 只有锚点能力（建篇 / 追加执行记录 / 改头部标签行 / 封卷标记）：写回的永远是「锚点编辑后的新全文」，**没有「用一段正文覆盖前五节」这种能力**。
 - `fingerprint()` 必须是**内容 sha256**（现在的 `stat_key`），不是 `(mtime, size)` —— 后者在同一时间精度内连写两次会漏判。
 
