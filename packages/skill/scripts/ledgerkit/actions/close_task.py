@@ -138,10 +138,14 @@ def close_task(
                 "title": task.get("title") or "",
                 "category": final_category,
                 "tags": final_tags,
-                # 历史两列只存 **uuid**（身份唯一键）；显示名在读的时候按名册换，
-                # 不落盘 —— 否则 `history --owner <uuid>` / `--mine` 永远比不到东西。
+                # 历史里 uuid 与名字**都落盘**：uuid 是判定键（`@` + 裸 uuid，
+                # `--owner` / `--mine` 比它），名字是**结案那一刻的快照** —— 之后改名
+                # 不回写旧行，看历史看到的就是当时那个名字。
+                # 取值优先用任务行里认领 / 建任务时写下的那份；老任务没有就留空，不编造。
                 "owner": me.uuid,
+                "owner_name": task.get("owner_name") or me.name,
                 "creator": task.get("creator") or me.uuid,
+                "creator_name": task.get("creator_name"),
                 "summary": text_summary,
                 "worklog": task.get("worklog") if doc_path else None,
             },

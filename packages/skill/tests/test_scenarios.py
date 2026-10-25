@@ -1330,9 +1330,22 @@ class GitTimeoutTest(unittest.TestCase):
     """
 
     def test_timeout_becomes_returncode_124(self):
-        from ledgerkit.shell.gitops import _git
+        # 不靠真实耗时（机器快时 `git --version` 能在超时判定前跑完），直接把
+        # subprocess.run 换成必抛 TimeoutExpired 的桩，确定性地压到那个 except 分支上。
+        import subprocess
 
-        proc = _git("git", "--version", timeout=0.001)
+        from ledgerkit.shell import gitops
+
+        original = subprocess.run
+
+        def boom(cmd: list[str], timeout: float | None = None, **_rest: object) -> None:
+            raise subprocess.TimeoutExpired(cmd, timeout or 0.0)
+
+        subprocess.run = boom
+        try:
+            proc = gitops._git("git", "status")
+        finally:
+            subprocess.run = original
         self.assertEqual(proc.returncode, 124)
         self.assertIn("timed out", proc.stderr)
 

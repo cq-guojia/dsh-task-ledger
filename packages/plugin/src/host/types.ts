@@ -53,9 +53,9 @@ export interface HistoryRecord {
 	tags?: string[] | null;
 	/** 负责人 uuid（身份唯一键；`history --owner` 就比这个）。 */
 	owner?: string;
-	/** 发起人（creator）：任务的「创建者」，与 owner 区分（owner 可被 claim 改走）。历史 9 列新增；旧 8 列由 skill 回链 worklog 头部补。 */
+	/** 发起人（creator）：任务的「创建者」，与 owner 区分（owner 可被 claim 改走）。历史 11 列新增。 */
 	creator?: string | null;
-	/** 负责人 / 发起人的显示名：脚本读历史时按名册现查补上，**只用于显示 / 搜索**。 */
+	/** 负责人 / 发起人的显示名：**落盘在历史行里**（结案那一刻的快照，改名不回写旧行），只用于显示 / 搜索；老行没有时才按名册兜底补。 */
 	owner_name?: string | null;
 	creator_name?: string | null;
 	/** 「完成了什么」列。 */

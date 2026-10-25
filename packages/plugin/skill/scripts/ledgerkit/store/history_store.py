@@ -99,9 +99,11 @@ class HistoryStore:
             row.get("owner"),
             row.get("summary") or "",
             row.get("worklog"),
-            row.get("category"),
-            row.get("tags"),
-            row.get("creator"),
+            category=row.get("category"),
+            tags=row.get("tags"),
+            creator=row.get("creator"),
+            owner_name=row.get("owner_name"),
+            creator_name=row.get("creator_name"),
         )
         return {"text": _append_line(text, line), "duplicate": duplicate}
 
@@ -117,7 +119,7 @@ def _name_of(worklog: str | None) -> str | None:
 
 
 def _fresh_table() -> str:
-    """当月第一次结案：按九列表头起表（表头的真源只有 `history_md` 一处）。"""
+    """当月第一次结案：按十一列表头起表（表头的真源只有 `history_md` 一处）。"""
     return (
         f"{history_md.HISTORY_TITLE}\n\n"
         f"{history_md.HISTORY_HEADER}\n{history_md.HISTORY_SEP}\n"

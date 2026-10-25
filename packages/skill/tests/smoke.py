@@ -184,6 +184,27 @@ def main() -> int:
         )
         r = run(repo, "history", "--json")
         check("history json 有 records", '"records"' in r.stdout, r.stdout)
+        # 历史行十一列：uuid 与显示名**都落盘**（落的是结案那一刻的名字，改名不改旧行）
+        hist = next(iter((repo / "ledger" / "history").glob("*.md")))
+        data_rows = [
+            line
+            for line in hist.read_text(encoding="utf-8").splitlines()
+            if line.startswith("| 2026")
+        ]
+        check(
+            "历史数据行是十一列",
+            bool(data_rows) and len(data_rows[0].split("|")) == 13,  # 11 列 + 首尾空
+            data_rows[0] if data_rows else "(没有数据行)",
+        )
+        body = json.loads(r.stdout)["records"]
+        check(
+            "历史行落盘显示名（不是 uuid）",
+            bool(body)
+            and body[0].get("owner_name") == "Me"
+            and body[0].get("creator_name") == "Me"
+            and body[0].get("owner") == ME,
+            json.dumps(body[:1], ensure_ascii=False),
+        )
         # 历史行的 owner 存 uuid ⇒ --owner / --mine 才真能比到（此前存显示名，恒查不到）
         r = run(repo, "history", "--owner", ME, "--count-only")
         check("history --owner <uuid> 命中", '"count": 1' in r.stdout, r.stdout)

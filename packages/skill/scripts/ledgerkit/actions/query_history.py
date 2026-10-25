@@ -143,16 +143,23 @@ def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
         key = normalize(q.owner)
         records = [r for r in records if normalize(r.get("owner") or "") == key]
     if q.owner_name:
-        # 名字只在名册里模糊匹配出 uuid 集合，命中判定仍比 uuid
-        keys_of_name = index.keys_of_name(q.owner_name)
+        # 名字已经落在历史行里 ⇒ 直接比它（子串、不分大小写）。落的是**当时**那个名字，
+        # 改名后的旧行仍留旧名 ⇒ 按新名筛不到旧行，这是快照语义，不是漏。
+        # 老行（升级前落的）没有名字列，退回按 uuid 片段比，不至于一条都筛不出来。
+        needle = q.owner_name.strip().lower()
         records = [
-            r for r in records if normalize(r.get("owner") or "") in keys_of_name
+            r
+            for r in records
+            if needle in str(r.get("owner_name") or "").lower()
+            or needle in normalize(r.get("owner") or "")
         ]
 
-    # 展示名（`owner_name` / `creator_name`）只在这层补上，不落盘：
-    # 历史文件里 owner / creator 两列存的一律是 uuid，读出来给人看时才换成名字。
+    # 名字**已经落盘**（`owner_name` / `creator_name` 两列）。这里只给没名字的**老行**
+    # 按名册兜底补一次 —— 补的是读时展示值，不回写文件。
     for row in records:
         for field, target in (("owner", "owner_name"), ("creator", "creator_name")):
+            if row.get(target):
+                continue
             key = normalize(row.get(field) or "")
             name = str((roster.get(key) or {}).get("name") or "")
             if name:

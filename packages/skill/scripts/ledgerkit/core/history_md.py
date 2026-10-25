@@ -1,6 +1,7 @@
-"""历史表格的文本操作：拼九列一行、解析九列一行。
+"""历史表格的文本操作：拼十一列一行、解析十一列一行。
 
-**只认九列这一种格式**（开发期没发布，不做任何旧列数 / 旧列语义的迁移）。
+**只认十一列这一种格式**：存量九列的文件按 `docs/history-creator-upgrade.md`
+那份手册一次性升级，脚本不做运行时迁移。
 """
 
 from __future__ import annotations
@@ -13,8 +14,11 @@ from .paths import to_history_rel
 from .time import TIME_RE, time_key
 
 HISTORY_TITLE = "# 进度历史（已结案）"
-HISTORY_HEADER = "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 | owner | creator | 完成了什么 | 过程文档 |"
-HISTORY_SEP = "|---|---|---|---|---|---|---|---|---|"
+HISTORY_HEADER = (
+    "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 "
+    "| owner | owner_name | creator | creator_name | 完成了什么 | 过程文档 |"
+)
+HISTORY_SEP = "|---|---|---|---|---|---|---|---|---|---|---|"
 
 _LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]*)\)")
 _TAG_SPLIT_RE = re.compile(r"[,，、]")
@@ -65,10 +69,14 @@ def history_line(
     category: str | None = None,
     tags: Iterable[str] | None = None,
     creator: str | None = None,
+    owner_name: str | None = None,
+    creator_name: str | None = None,
 ) -> str:
-    """九列的一行。`worklog` 收**相对 `ledger/`** 的路径，这里负责换成相对 `history/` 的链接。
+    """十一列的一行。`worklog` 收**相对 `ledger/`** 的路径，这里负责换成相对 `history/` 的链接。
 
     owner / creator 传**裸 uuid**（`@` 由 owner_cell / creator_cell 加），外面别先加。
+    `owner_name` / `creator_name` 是**落盘的显示名快照**（结案那一刻的名字，之后改名不改旧行），
+    原值写入、**不加 `@`** —— `@` 只属于 uuid 那两列。
     """
     log_rel = to_history_rel(worklog) if worklog else ""
     tag_cell = esc_cell("、".join(tags) if tags else "")
@@ -76,16 +84,18 @@ def history_line(
     return (
         f"| {finished} | {created or ''} | {esc_cell(title)} "
         f"| {esc_cell(category or '')} | {tag_cell} "
-        f"| {esc_cell(owner_cell(owner))} | {esc_cell(creator_cell(creator))} "
+        f"| {esc_cell(owner_cell(owner))} | {esc_cell(owner_name or '')} "
+        f"| {esc_cell(creator_cell(creator))} | {esc_cell(creator_name or '')} "
         f"| {esc_cell(summary)} | {link} |\n"
     )
 
 
 def parse_history(text: str) -> tuple[list[Row], list[str]]:
-    """解析九列历史表 → (records, warnings)。坏行（列数不对 / 时间列不合法）跳过并警告。
+    """解析十一列历史表 → (records, warnings)。坏行（列数不对 / 时间列不合法）跳过并警告。
 
-    返回的键：finished / created / title / category / tags / owner / creator / summary /
-    worklog / fmt / line。owner 与 creator 一律**剥掉 `@`**（存储值是裸 uuid）。
+    返回的键：finished / created / title / category / tags / owner / owner_name /
+    creator / creator_name / summary / worklog / fmt / line。owner 与 creator 一律
+    **剥掉 `@`**（存储值是裸 uuid）；两个名字列是**原值**（落盘快照，可能为空）。
     """
     records: list[Row] = []
     warnings: list[str] = []
@@ -95,12 +105,22 @@ def parse_history(text: str) -> tuple[list[Row], list[str]]:
         cells = split_row(raw)
         if not cells or is_sep_row(cells) or _looks_like_header(cells):
             continue
-        if len(cells) != 9:
-            warnings.append(f"第 {lineno} 行不是九列（历史表只认九列），已跳过")
+        if len(cells) != 11:
+            warnings.append(f"第 {lineno} 行不是十一列（历史表只认十一列），已跳过")
             continue
-        finished, created, title, category, tag_cell, owner, creator, summary, doc = (
-            cells
-        )
+        (
+            finished,
+            created,
+            title,
+            category,
+            tag_cell,
+            owner,
+            owner_name,
+            creator,
+            creator_name,
+            summary,
+            doc,
+        ) = cells
         if not TIME_RE.fullmatch(finished):
             warnings.append(f"第 {lineno} 行时间列 {finished!r} 不合法，已跳过")
             continue
@@ -115,10 +135,12 @@ def parse_history(text: str) -> tuple[list[Row], list[str]]:
                     t.strip() for t in _TAG_SPLIT_RE.split(tag_cell) if t.strip()
                 ),
                 "owner": owner.strip().removeprefix("@") or None,
+                "owner_name": owner_name.strip() or None,
                 "creator": creator.strip().removeprefix("@") or None,
+                "creator_name": creator_name.strip() or None,
                 "summary": summary,
                 "worklog": (m.group(1) if m else doc.strip()) or None,
-                "fmt": "v9",
+                "fmt": "v11",
                 "line": lineno,
             }
         )

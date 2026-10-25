@@ -99,7 +99,7 @@ packages/skill/scripts/
     │   ├── labels.py          ← 分类和标签：长度/数量上限的校验、头部那行"分类/标签"的拼和拆。
     │   ├── worklog_md.py      ← 过程文档的文本操作：套六节模板、往执行记录节追加一行、
     │   │                         盖章（封卷）、改头部标签行。全部是"给一段文字，返回新文字"。
-    │   └── history_md.py      ← 历史表格的文本操作：九列一行怎么拼、表格怎么解析。
+    │   └── history_md.py      ← 历史表格的文本操作：十一列一行怎么拼、表格怎么解析。
     │                             它自己不开文件（读 worklog 的事留在 store / 业务层）。
     │
     ├── store/                 ← 数据层：唯一写文件的地方，一种文件一个对象
@@ -341,16 +341,17 @@ class HistoryStore:
     def write(self, path: Path, text: str) -> None        # 受控写回：唯一调用点是结案第 2 步
 ```
 
-- **`row` 的九个键**（与 `ledger-data.md` §四 的九列一一对应，顺序也一致）：
-  `{"finished", "created", "title", "category", "tags", "owner", "creator", "summary", "worklog"}`
+- **`row` 的十一个键**（与 `ledger-data.md` §四 的十一列一一对应，顺序也一致）：
+  `{"finished", "created", "title", "category", "tags", "owner", "owner_name", "creator", "creator_name", "summary", "worklog"}`
   ——`tags` 是 `tuple[str, …]`（拼成「、」分隔的一格），`worklog` 是**相对 `ledger/`** 的路径。
   ——`owner` / `creator` 传**裸标识**（`task["owner"]` 那个值）：`history_line` 自己加 `@`、`parse_history` 自己剥，外面别先加，否则落盘成 `@@`（`ledger-data.md` §四）。
+  ——`owner_name` / `creator_name` 传**显示名原值**（不加 `@`），是结案那一刻的快照，改名不回写旧行。
 - **`append_row` 返回两个键**：
   - `text` = 追加后的新全文（调用方决定什么时候落盘）；
   - `duplicate` = 这一行已经存在，**判重规则与 `has_log` 完全一致**（共用一份实现：有末列比文件名，末列空比「创建时间 + 工作包」两列）。
-- **历史表只有九列这一种格式**（开发期没发布，不做旧列数迁移）：列数不对的行由 `parse_history` 跳过并警告，`append_row` 永远按九列追加。
+- **历史表只有十一列这一种格式**（不做旧列数迁移，存量十一列按 `docs/history-creator-upgrade.md` 一次性升级）：列数不对的行由 `parse_history` 跳过并警告，`append_row` 永远按十一列追加。
 - **`append_row` 算、`write` 落**：结案的顺序是「历史 → 封卷 → 删分片」，写盘时机必须由业务层控，所以拆成两个方法。`write` 是历史表唯一的写回口，除"结案追加"之外不许调。
-- **当月第一次结案（文件还不存在）由 `append_row` 起表**：文件不存在（或 `read` 回空串）⇒ 它自己按 `ledger-data.md` §四 的九列表头 + 分隔行开头，再接这一行。表头的真源只有 `history_md` 一处，别在业务层拼。
+- **当月第一次结案（文件还不存在）由 `append_row` 起表**：文件不存在（或 `read` 回空串）⇒ 它自己按 `ledger-data.md` §四 的十一列表头 + 分隔行开头，再接这一行。表头的真源只有 `history_md` 一处，别在业务层拼。
 - `has_log` **只看传进来的那一个月文件**，不扫全年（跨月重跑会在两个月各记一行，这是已知且接受的例外）。
 - **末列那格路径的基准换算只调 `core/paths.py::to_history_rel`**：`history_line` 接到的 `worklog` 是 `task["worklog"]` 原值（相对 `ledger/`），由它调 `to_history_rel` 换成相对 `ledger/history/` 的 `../worklog/…` 形式（深度固定，但拼 `..` 只许在这一处）。`has_log` 只比**文件名**（末列的 basename），不比整条路径——这样两边谁也不用猜对方的基准。**末列为空的行**（这条任务本来就没过程文档）没有文件名可比，改按「创建时间 + 工作包」两列判重，否则结案重跑会把同一行追加两次。
 - **`has_log` 三态返回**：`"hit"` 已有这一行、`"miss"` 确实没有、`"undecidable"` 判不了。判不了有两种：表里有**末列为空**的行而调用方没给 `created` / `title`（分片已删时就是这样）；或调用方给不出 `log_name`（任务的过程文档丢了 / 被移走）而表里那行**带着链接**。看不清就明说，别拿 `False` 冒充"没有"。
@@ -584,7 +585,7 @@ def close_task(repo, me, tid, *, summary, finished: str, category=None, tags=Non
 - 写前核对：分片 / 历史 / 过程文档三个文件的 `fingerprint`，任一变了就中止；同时 `snapshot` 三份字节备用。
 - **写序四步**：
   1. **改标签行**——给了 `--category` / `--tags` 就先改写过程文档头部那行（必须在封卷之前，否则封卷后就不许再动）；
-     **历史行那九列里的 `category` / `tags` 取最终值**：给了参数就写新值，没给就写任务原值（分片里的），两处必须一致 —— 否则历史里会留下改前的旧标签；
+     **历史行那十一列里的 `category` / `tags` 取最终值**：给了参数就写新值，没给就写任务原值（分片里的），两处必须一致 —— 否则历史里会留下改前的旧标签；
   2. **历史加一行**——先 `atomic.ensure_dir(HISTORY_DIR)`（首次结案时 `ledger/history/` 可能还不存在，而 `write_text_atomic` 不建父目录），再落 `append_row` 返回的新全文；
   3. **封卷过程文档**——打封卷标记 + 在执行记录里补一行，一次写完；
   4. **删我分片那行**（永远是最后一步）。
@@ -612,7 +613,7 @@ def validate(repo, me, deep: bool = False) -> ValidationReport
 | `ListResult` | `rows: dict[tid, task]`（**原样任务对象**，`--json` 直接吐它）；`table: tuple[TaskRow, …]`（同一批数据的 9 字段投影，只给人话表格用）；`notices: tuple[str, …]` |
 | `TaskRow` | `tid` / `title` / `status` / `owner`（显示名）/ `created` / `started` / `category` / `tags` / `where`（所在文件） |
 | `ShowResult` | `task: dict`；`worklog: WorklogView`；`others: tuple[str, …]`（同一个任务号还出现在哪些文件里）；`notices: tuple[str, …]` |
-| `HistoryResult` | `count`；`filters: dict`（回显生效的筛选）；`records: tuple[dict, …]`（每条 = 九列解析后的字段，`tags` 已拆成 `tuple[str, …]`；再加 `src` 来源文件 / `fmt` 原列数 / `line` 行号三个定位用字段）；`warnings: tuple[str, …]`；`capped: bool` |
+| `HistoryResult` | `count`；`filters: dict`（回显生效的筛选）；`records: tuple[dict, …]`（每条 = 十一列解析后的字段，`tags` 已拆成 `tuple[str, …]`；再加 `src` 来源文件 / `fmt` 原列数 / `line` 行号三个定位用字段）；`warnings: tuple[str, …]`；`capped: bool` |
 | `ValidationReport` | `problems: tuple[str, …]`（**只有它影响退出码**）；`notices: tuple[str, …]`（只提示，不改退出码）；`checked_files: int`；`total_tasks: int`；`deep: bool`（本次是深度还是浅度） |
 
 - **`list --json` 吐的是 `rows`（原始任务对象），不是 `TaskRow`**：看板要 `worklog` / `creator` / `updated` / `finished` 这些字段，`TaskRow` 只给人看的表格。
@@ -733,7 +734,7 @@ class ActionSpec:
 | `identity.py` | `Identity`（`uuid` / `name` 的不可变值对象）；`normalize(who)`；`looks_like_uuid(who)`；`is_me(identity, who)` |
 | `labels.py` | `STATUSES = ("open", "doing")`（`--status` 的白名单就是它）；`done` 只能由 `close` 产生、不在此二者里；`FORMAT_VERSION`；`normalize_label(value, *, field)`；`parse_tags(raw)`；`label_line(category, tags)`；`parse_label_line(text)` |
 | `worklog_md.py` | `render_worklog(*, tid, title, created, creator, category, tags, template) -> str`；`is_skeleton(text)`；`exec_line(when, who, kind, note)`；`append_exec_log(text, line)`；`stamp_frozen(text, finished, who)`；`has_frozen_line(text)`；`rewrite_label_line(text, category, tags)` |
-| `history_md.py` | `esc_cell(s)`；`owner_cell(owner)`；`creator_cell(creator)`；`history_line(...)`；`split_row(line)`；`is_sep_row(line)`；`parse_history(text)`（只认九列） |
+| `history_md.py` | `esc_cell(s)`；`owner_cell(owner)`；`creator_cell(creator)`；`history_line(...)`；`split_row(line)`；`is_sep_row(line)`；`parse_history(text)`（只认十一列） |
 
 五条必须守住的：
 
@@ -783,7 +784,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 | `load_owners` 624 / `registered_shards` 642 | `store/owners_index.py` |
 | `history_sources` 2620 / `append_history_line` 2649 | `store/history_store.py`；`has_log` 为**新增**（结案重跑判据）；原来的 `rewrite` 并入 `write`（唯一的受控写回口） |
 | `write_worklog` 3022 / `record_exec` 2989 / `find_worklog` 2927 | `store/worklog_store.py`（`record_exec` 里"找+读+拼+写+打印"拆开：前三步留数据层，打印归外壳）；`template` / `head_meta` 为**新增** |
-| `parse_history` | `core/history_md.py`（只认九列；旧 `upgrade_history` 已删） |
+| `parse_history` | `core/history_md.py`（只认十一列；旧 `upgrade_history` 已删） |
 | `append_exec_log` 2965 / `stamp_frozen` 3117 / `has_frozen_line` 3105 / `rewrite_label_line` 2857 / `render_worklog` 2875 | `core/worklog_md.py` |
 | `id_stamp` 2739 / `make_id` 2746 / `slugify` / `require_task_id` | `core/ids.py` |
 | `normalize_label` / `parse_tags` / `label_line` / `parse_label_line` | `core/labels.py` |
