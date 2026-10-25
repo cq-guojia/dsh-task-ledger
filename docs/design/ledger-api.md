@@ -548,7 +548,7 @@ def set_task(repo, me, tid, *, owner=None, release=False) -> Result
     - 别人、已在索引里登记 ⇒ `handoff(repo, me, tid, to=…)`（没登记过 ⇒ `Fail`，不写出对别人不存在的分片）
     - 自己、这条现在不在我名下 ⇒ `claim(repo, me, tid)`
     - 自己、已经在我名下 ⇒ 幂等返回（`already_done=True`、退出码 0）
-- 「我的」只比 uuid：分片里的行、历史两列、`--owner` / `--mine` 全是 uuid；显示名（`owner_name` / `creator_name`）只用于显示与 `--owner-name` 模糊筛。
+- 「我的」只比 uuid：分片里的行、历史两列、`--owner` / `--mine` 全是 uuid；显示名（`owner_name` / `creator_name`）只用于显示与 `--owner-name` 模糊筛。**落点分两种：任务行落盘，历史行不落盘、读时按名册补**（见 `ledger-data.md` §四）。
 
 ```python
 def release(repo, me, tid) -> Result
