@@ -37,9 +37,10 @@ type Tone = "doing" | "overdue" | "stale" | "backlog" | "open" | "closed";
 
 /** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
 function titleOf(row: Row): string {
-	if (row.kind === "task") return row.task.title ?? row.task.id;
-	const title = row.record.workpackage ?? row.record.summary;
-	return title !== undefined && title !== "" ? title : (row.record.src ?? "—");
+	if (row.kind === "task") return row.task.title || row.task.id;
+	// 空串也算「没有」：用 || 而不是 ??，否则空标题会顶掉摘要
+	const title = row.record.workpackage || row.record.summary || "";
+	return title !== "" ? title : (row.record.src ?? "—");
 }
 
 /** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 host 按时间算出来的，不是状态）。
@@ -234,13 +235,11 @@ export function TaskRowView(props: {
 
 	// ── 形态 B：全部待办 = 真表格行（无卡片、无外框，一行一格）──
 	if (variant === "others") {
-		// 已结案行没有「执行人」列 ⇒ 那格摆负责人（显示名优先，没有才退回 uuid）
-		const creator = isTask
-			? row.task.creator
-			: displayName(row.record.owner_name, row.record.owner);
+		// 已结案行没有「执行人」列 ⇒ 那格摆**创建人**（owner 会被交接改走，不是“创建于”的人）
+		const creator = isTask ? row.task.creator : row.record.creator;
 		const owner = isTask ? row.task.owner : null;
 		const creatorLabel = displayName(
-			isTask ? row.task.creator_name : row.record.owner_name,
+			isTask ? row.task.creator_name : row.record.creator_name,
 			creator,
 		);
 		const hasOwner = !(owner === null || owner === undefined || owner === "");
@@ -289,7 +288,8 @@ export function TaskRowView(props: {
 					// 名字上限 20 字（Tag 的 20ch）；超了 ⇒ 省略号 + 悬停补全名（ownerTip）
 					hasOwner
 						? h(Tag, {
-								text: `@${String(owner)}`,
+								// owner 是 uuid：显示名优先，旧数据没有才退回 uuid
+								text: `@${displayName(isTask ? row.task.owner_name : null, owner)}`,
 								tone: "person",
 								title: ownerTip,
 							})
@@ -349,7 +349,7 @@ export function TaskRowView(props: {
 		}
 	} else {
 		parts.push(
-			`${t("fieldFinished")} ${formatDateTime(row.record.time ?? row.record.created ?? "", { fallback: t("timeUnknown") })}`,
+			`${t("fieldFinished")} ${formatDateTime(row.record.time || row.record.created || "", { fallback: t("timeUnknown") })}`,
 		);
 	}
 	return h(

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..core.identity import Identity
+from ..core.identity import Identity, uuid_or_none
 from ..core.labels import normalize_label, parse_tags
 from ..core.paths import history_path_for, shard_rel, to_repo_rel, worklog_name
 from ..core.worklog_md import (
@@ -23,6 +23,7 @@ from ..store.atomic import ensure_dir, fingerprint, restore, snapshot
 from ..store.history_store import HIT, UNDECIDABLE, HistoryStore
 from ..store.task_store import TaskStore
 from ..store.worklog_store import WorklogStore
+from .guard import require_owner
 from .result import Result, rel
 
 _COLS_FALLBACK_HINT = "警告：历史表列数不是 9 且无法整体升级，本次按现有列数追加。"
@@ -65,6 +66,9 @@ def close_task(
                 notices=(f"任务 {tid} 已经结过案，无需重复。",),
             )
         raise Fail(f"任务 {tid} 不在我的分片里（只能结案自己的任务）。")
+
+    # 分片里在、但行内 owner 不是我 ⇒ 台账脏了（validate 会报⑤）：先拦下来，别用我的 uuid 记历史
+    require_owner(task, tid, me)
 
     # 历史行那两列取**最终值**：给了参数用新值，没给用任务原值，两处必须一致
     final_category = new_category if new_category else task.get("category")
@@ -138,8 +142,9 @@ def close_task(
                 "tags": final_tags,
                 # 历史两列只存 **uuid**（身份唯一键）；显示名在读的时候按名册换，
                 # 不落盘 —— 否则 `history --owner <uuid>` / `--mine` 永远比不到东西。
+                # 老任务里的 creator 可能是显示名（旧版本写的）⇒ 形态不对就退回我，不把名字写进历史。
                 "owner": me.uuid,
-                "creator": task.get("creator") or me.uuid,
+                "creator": uuid_or_none(task.get("creator")) or me.uuid,
                 "summary": text_summary,
                 "worklog": task.get("worklog") if doc_path else None,
             },

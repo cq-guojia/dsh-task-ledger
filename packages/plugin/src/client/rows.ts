@@ -66,13 +66,23 @@ function hitKeyword(
 	return parts.some((part) => part?.toLowerCase().includes(needle) === true);
 }
 
+/** uuid 比较：两边都 trim + 小写（身份键不分大小写，与脚本 `normalize` 同口径）。 */
+export function sameUuid(
+	a: string | null | undefined,
+	b: string | null | undefined,
+): boolean {
+	const left = (a ?? "").trim().toLowerCase();
+	const right = (b ?? "").trim().toLowerCase();
+	return left !== "" && left === right;
+}
+
 /** 「我的」判定：owner = 本机身份 uuid，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
 export function isMine(task: BoardTask, board: BoardPayload | null): boolean {
 	if (board === null) return false;
 	const identity = board.identities[task.workspace.id] ?? null;
 	if (identity === null || identity === "") return false;
 	return (
-		task.owner === identity &&
+		sameUuid(task.owner, identity) &&
 		(task.status === "doing" || task.status === "blocked")
 	);
 }

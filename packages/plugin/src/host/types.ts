@@ -64,6 +64,9 @@ export interface HistoryRecord {
 	log?: string | null;
 	/** 行所在历史文件（相对工作区，脚本打上）。 */
 	src?: string;
+	/** 行格式（脚本 `fmt`）与行号（脚本 `line`）：排查坏历史行时用来定位。 */
+	fmt?: string;
+	line?: number;
 	/** 归属工作区（读取时打上）。 */
 	readonly workspace?: LedgerWorkspace;
 }
@@ -72,7 +75,10 @@ export interface HistoryRecord {
 export interface LedgerFilter {
 	/** 状态（open/doing；旧数据可能残留 blocked，读侧当进行中处理）。 */
 	status?: string;
+	/** 负责人 **uuid**（脚本 `--owner` 只收 uuid，传名字脚本会退 1）。 */
 	owner?: string;
+	/** 负责人显示名模糊筛（脚本 `--owner-name`，子串、不分大小写）；只筛不判定。 */
+	ownerName?: string;
 	category?: string;
 	tag?: string;
 	/** 创建时间起 / 止（YYYY-MM-DD [HH:mm[:ss]]，脚本会补全）。 */

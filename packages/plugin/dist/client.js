@@ -21,12 +21,18 @@ window.__ModuleLoader__.load({
 			if (needle === "") return true;
 			return parts.some((part) => part?.toLowerCase().includes(needle) === true);
 		}
+		/** uuid 比较：两边都 trim + 小写（身份键不分大小写，与脚本 `normalize` 同口径）。 */
+		function sameUuid(a, b) {
+			const left = (a ?? "").trim().toLowerCase();
+			const right = (b ?? "").trim().toLowerCase();
+			return left !== "" && left === right;
+		}
 		/** 「我的」判定：owner = 本机身份 uuid，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
 		function isMine(task, board) {
 			if (board === null) return false;
 			const identity = board.identities[task.workspace.id] ?? null;
 			if (identity === null || identity === "") return false;
-			return task.owner === identity && (task.status === "doing" || task.status === "blocked");
+			return sameUuid(task.owner, identity) && (task.status === "doing" || task.status === "blocked");
 		}
 		function resolveActions(task, board) {
 			const mine = isMine(task, board);
@@ -1105,9 +1111,9 @@ body[data-ds-dark-theme]{
 		*/
 		/** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
 		function titleOf(row) {
-			if (row.kind === "task") return row.task.title ?? row.task.id;
-			const title = row.record.workpackage ?? row.record.summary;
-			return title !== void 0 && title !== "" ? title : row.record.src ?? "—";
+			if (row.kind === "task") return row.task.title || row.task.id;
+			const title = row.record.workpackage || row.record.summary || "";
+			return title !== "" ? title : row.record.src ?? "—";
 		}
 		/** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 host 按时间算出来的，不是状态）。
 		*  只决定圆点 / 左缘色条这类**单色位**——标签可以多枚，见 MARKS。 */
@@ -1223,9 +1229,9 @@ body[data-ds-dark-theme]{
 				title: titleOf(row)
 			}, titleOf(row)));
 			if (variant === "others") {
-				const creator = isTask ? row.task.creator : displayName(row.record.owner_name, row.record.owner);
+				const creator = isTask ? row.task.creator : row.record.creator;
 				const owner = isTask ? row.task.owner : null;
-				const creatorLabel = displayName(isTask ? row.task.creator_name : row.record.owner_name, creator);
+				const creatorLabel = displayName(isTask ? row.task.creator_name : row.record.creator_name, creator);
 				const hasOwner = !(owner === null || owner === void 0 || owner === "");
 				const who = creatorLabel === "" ? "—" : `@${creatorLabel}`;
 				const createdOk = created !== null && created !== void 0 && Date.parse(created) >= 0;
@@ -1239,7 +1245,7 @@ body[data-ds-dark-theme]{
 					text: `#${tag}`
 				})));
 				return (0, react.createElement)("div", { className: "dtl-orow" }, (0, react.createElement)("div", { className: "dtl-orow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, orowTitleLine, tagLine), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, hasOwner ? (0, react.createElement)(Tag, {
-					text: `@${String(owner)}`,
+					text: `@${displayName(isTask ? row.task.owner_name : null, owner)}`,
 					tone: "person",
 					title: ownerTip
 				}) : null), (0, react.createElement)("span", { className: "dtl-orow__slot" }, (0, react.createElement)("span", { className: "dtl-orow__created" }, t("createdAt", {
@@ -1252,7 +1258,7 @@ body[data-ds-dark-theme]{
 				const startRaw = row.task.started ?? row.task.created;
 				if (startRaw !== void 0 && startRaw !== null && startRaw !== "" && Date.parse(startRaw) >= 0) parts.push(`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`);
 				if (row.task.ageDays !== null && row.task.ageDays !== void 0) parts.push(row.task.ageDays === 0 ? t("ageToday") : t("ageDaysText", { n: row.task.ageDays }));
-			} else parts.push(`${t("fieldFinished")} ${formatDateTime(row.record.time ?? row.record.created ?? "", { fallback: t("timeUnknown") })}`);
+			} else parts.push(`${t("fieldFinished")} ${formatDateTime(row.record.time || row.record.created || "", { fallback: t("timeUnknown") })}`);
 			return (0, react.createElement)("div", { className: "dtl-taskrow" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0

@@ -116,7 +116,9 @@ def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
 
     `--since` / `--until` 比 `finished`（结案时间）。
     """
-    if q.owner:
+    if q.owner is not None:
+        if q.mine:
+            raise Fail("--owner 不能和 --mine 一起用：一次只按一种范围筛。")
         q = replace(q, owner=require_uuid(q.owner, field="--owner"))
     keys = _target_month_keys(q)
     store = HistoryStore(repo)
@@ -167,16 +169,29 @@ def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
     lo_key, hi_key = min(keys), max(keys)
     eff_since = q.since or f"{lo_key[0:4]}-{lo_key[4:6]}-01 00:00:00"
     eff_until = q.until or _month_end(hi_key)
+    if eff_since > eff_until:
+        raise Fail(
+            f"时间区间反了：--since（{eff_since}）晚于 --until（{eff_until}）。\n"
+            "  处理：把两端换过来；只给一端就只给一端。"
+        )
     records = [r for r in records if (r.get("finished") or "") >= eff_since]
     records = [r for r in records if (r.get("finished") or "") <= eff_until]
 
     records.sort(key=lambda r: str(r.get("finished") or ""), reverse=True)
+    if q.count_only and q.limit is not None:
+        raise Fail("--count-only 与 --limit 不能同时用：计数不截断，列表才截断。")
+    limit: int | None = None
+    if q.limit is not None:
+        limit = int(q.limit)
+        if limit < 1:
+            raise Fail(f"--limit 必须 ≥ 1（收到 {limit}）。")
     capped = False
     if q.count_only and len(records) > COUNT_CAP:
         capped = True
         records = records[:COUNT_CAP]
-    elif q.limit:
-        records = records[: int(q.limit)]
+    elif limit is not None:
+        capped = len(records) > limit  # 截断了要让调用方知道「还有更多」
+        records = records[:limit]
 
     filters = {
         "owner": q.owner,

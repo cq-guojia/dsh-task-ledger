@@ -12,7 +12,7 @@ from ..errors import Fail
 from ..store.owners_index import OwnersIndex
 from ..store.task_store import TaskStore
 from ..store.worklog_store import WorklogStore
-from .guard import same_task_ignoring_stamp
+from .guard import owner_of, same_task_ignoring_stamp
 from .result import Result, rel
 
 
@@ -30,6 +30,14 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
         raise Fail(f"任务 {tid} 不在我的分片里，交接不了。")
 
     to_key = normalize(to)
+    # 行内 owner 只能是我（正常）或已经是对方（上次交接崩在半途，这次要补齐）：
+    # 别的一律拒绝——分片里有、owner 却写着第三个人 ⇒ 台账脏了
+    owner = owner_of(task)
+    if owner not in (normalize(me.uuid), to_key):
+        raise Fail(
+            f"任务 {tid} 的负责人是 {owner}，不是你（{me.label()}），交接不了。\n"
+            "  处理：跑 validate 看台账是不是脏了。"
+        )
     to_name = str(record.get("name") or "") or None  # 只用于显示
     who = to_name or to_key
     to_store = TaskStore(repo, shard_rel(to_key))

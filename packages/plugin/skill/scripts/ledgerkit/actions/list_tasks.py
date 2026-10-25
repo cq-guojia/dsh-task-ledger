@@ -8,6 +8,7 @@ from typing import Any
 
 from ..core.identity import Identity
 from ..core.paths import POOL_REL
+from ..errors import Fail
 from ..store.owners_index import OwnersIndex
 from ..store.task_store import TaskStore
 from .guard import in_scope, owner_of, require_uuid, status_of
@@ -17,8 +18,11 @@ from .result import ListResult, TaskRow, rel
 
 def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
     """合并顺序定死：先池、再按索引键排序的各分片，同一任务号由分片那份胜出。"""
-    # `--owner` 只认 uuid：传名字当场报错，不静默返回空表（名字筛走 --owner-name）
-    if q.scope == "owner" and q.owner:
+    # `--owner` 只认 uuid，且**给了就必须生效**：和 --mine / --pool 同传直接报错，
+    # 不许出现「传了 uuid 却被范围参数静默吃掉」（--owner "" 也算给了，同样报错）。
+    if q.owner is not None:
+        if q.scope in ("mine", "pool"):
+            raise Fail("--owner 不能和 --mine / --pool 一起用：一次只按一种范围筛。")
         q = replace(q, owner=require_uuid(q.owner, field="--owner"))
     rows: dict[str, dict[str, Any]] = {}
     where: dict[str, Path] = {}

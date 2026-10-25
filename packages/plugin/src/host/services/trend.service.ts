@@ -7,6 +7,7 @@
  */
 
 import { type DegradedInfo, settleWorkspaces } from "../errors.js";
+import { sameUuid } from "./uuid.js";
 import { getCurrentIdentity } from "../repositories/identity.repository.js";
 import { readHistory, readTasks } from "../repositories/ledger.repository.js";
 import type {
@@ -102,11 +103,10 @@ export function computeClosedSummary(
 			const created = dayOf(task.created);
 			if (created === null) continue;
 			const week = ymd(mondayOf(created));
-			const createdMine =
-				identity !== null && (task.creator ?? null) === identity;
+			const createdMine = sameUuid(task.creator, identity);
 			bump(bucketsAll, week, "created");
 			if (createdMine) bump(bucketsMine, week, "created");
-			const ownedMine = identity !== null && (task.owner ?? null) === identity;
+			const ownedMine = sameUuid(task.owner, identity);
 			bumpRemaining(bucketsAll, created, null);
 			if (ownedMine) bumpRemaining(bucketsMine, created, null);
 		}
@@ -115,8 +115,7 @@ export function computeClosedSummary(
 			if (closed !== null) {
 				const week = ymd(mondayOf(closed));
 				bump(bucketsAll, week, "done");
-				if (identity !== null && (record.owner ?? null) === identity)
-					bump(bucketsMine, week, "done");
+				if (sameUuid(record.owner, identity)) bump(bucketsMine, week, "done");
 			}
 			const created = dayOf(record.created);
 			if (created !== null) {
@@ -124,14 +123,11 @@ export function computeClosedSummary(
 				bump(bucketsAll, week, "created");
 				// 新增（我的）= 我创建的（creator）；旧 8 列历史无 creator 列 ⇒ 兜底 owner
 				const createdMine =
-					identity !== null &&
-					((record.creator ?? null) === identity ||
-						((record.creator ?? null) === null &&
-							(record.owner ?? null) === identity));
+					sameUuid(record.creator, identity) ||
+					((record.creator ?? null) === null && sameUuid(record.owner, identity));
 				if (createdMine) bump(bucketsMine, week, "created");
 			}
-			const ownedMine =
-				identity !== null && (record.owner ?? null) === identity;
+			const ownedMine = sameUuid(record.owner, identity);
 			bumpRemaining(bucketsAll, created, closed);
 			if (ownedMine) bumpRemaining(bucketsMine, created, closed);
 		}

@@ -9,13 +9,19 @@ const LEDGER_DIR = "ledger";
 /**
  * LedgerFilter → skill 脚本参数（只拼调用方给了的；undefined 一律不拼，
  * 让脚本走自己的默认——插件不替脚本决定默认值）。
+ *
+ * **按子命令裁参数**：`list` 不认 `--limit` / `--months`，`history` 不认 `--status`，
+ * 拼错一个就让 argparse 退 2、整块列表 500。口径以 `skill/shell/cli.py` 为准。
  */
-export function filterArgs(filter) {
+export function filterArgs(filter, sub) {
     const args = [];
-    if (filter.status !== undefined)
+    if (sub === "list" && filter.status !== undefined)
         args.push("--status", filter.status);
+    // 身份只收 uuid（脚本同样口径）；按名字模糊筛走 --owner-name
     if (filter.owner !== undefined)
         args.push("--owner", filter.owner);
+    if (filter.ownerName !== undefined)
+        args.push("--owner-name", filter.ownerName);
     if (filter.category !== undefined)
         args.push("--category", filter.category);
     if (filter.tag !== undefined)
@@ -24,15 +30,18 @@ export function filterArgs(filter) {
         args.push("--since", filter.since);
     if (filter.until !== undefined)
         args.push("--until", filter.until);
-    if (filter.limit !== undefined)
-        args.push("--limit", String(filter.limit));
-    if (filter.months !== undefined)
-        args.push("--months", String(filter.months));
+    if (sub === "history") {
+        if (filter.limit !== undefined)
+            args.push("--limit", String(filter.limit));
+        if (filter.months !== undefined)
+            args.push("--months", String(filter.months));
+    }
     return args;
 }
 /**
- * 台账工作区探测：`<path>/ledger/progress.json` 在才算（未初始化 = 后端不可见，
- * 2026-10-17 拍板）。全 host 对台账目录的 IO 只在本文件——别处再写 existsSync 即为分层倒退。
+ * 台账工作区探测：`<path>/ledger/pool.json` 在才算（分片布局的初始化标志；
+ * 未初始化 = 后端不可见，2026-10-17 拍板）。全 host 对台账目录的 IO 只在本文件
+ * ——别处再写 existsSync 即为分层倒退。
  */
 export function hasLedger(workspacePath) {
     // 分片布局（2026-10-23）：公共池 pool.json 在才算初始化；各人分片 owners/*.json 由脚本维护。
@@ -44,12 +53,12 @@ export function hasLedger(workspacePath) {
  * 不静默返空（空 = 撒谎）。**过 1.5s 读缓存**（同屏多端点会反复读同一份在办）。
  */
 export async function readTasks(workspace, filter = {}) {
-    return await cached(cacheKey(workspace.id, "list", argsKey(filter)), async () => {
+    return await cached(cacheKey(workspace.id, "list", argsKey(filter, "list")), async () => {
         const result = await runLedgerScript("list", [
             "--repo",
             workspace.path,
             "--json",
-            ...filterArgs(filter),
+            ...filterArgs(filter, "list"),
         ]);
         if (!result.ok)
             throw new Error(`${workspace.title}: ${result.error}`);
@@ -58,12 +67,12 @@ export async function readTasks(workspace, filter = {}) {
 }
 /** 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。同样过读缓存。 */
 export async function readHistory(workspace, filter = {}) {
-    return await cached(cacheKey(workspace.id, "history", argsKey(filter)), async () => {
+    return await cached(cacheKey(workspace.id, "history", argsKey(filter, "history")), async () => {
         const result = await runLedgerScript("history", [
             "--repo",
             workspace.path,
             "--json",
-            ...filterArgs(filter),
+            ...filterArgs(filter, "history"),
         ]);
         if (!result.ok)
             throw new Error(`${workspace.title}: ${result.error}`);
@@ -71,8 +80,8 @@ export async function readHistory(workspace, filter = {}) {
     });
 }
 /** 缓存键的 filter 段：脚本参数原样序列化（分隔符取不可见字符，值里带空格也不会串）。 */
-function argsKey(filter) {
-    return filterArgs(filter).join("\u0001");
+function argsKey(filter, sub) {
+    return filterArgs(filter, sub).join("\u0001");
 }
 /** 单条在办（展开行 / 详情用）。取不到回 null，不抛。 */
 export async function getTask(workspace, taskId) {

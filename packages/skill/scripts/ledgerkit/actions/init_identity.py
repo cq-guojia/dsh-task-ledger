@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from .. import env
-from ..core.identity import Identity, normalize
+from ..core.identity import Identity, looks_like_uuid, normalize
 from ..core.paths import OWNERS_REL, to_repo_rel
 from ..errors import Fail
 
@@ -44,6 +44,14 @@ def init_identity(
     workers = _read_workers(repo)
     if claim:
         key = normalize(claim)  # 名册键一律小写；--claim 抄来的大小写不影响
+        # 认领目标必须是 uuid：老台账的键还可能是个邮箱 / 名字，认来会让整台机器
+        # 拿非 uuid 当身份写进每一处（--owner 反倒拒收自己）
+        if not looks_like_uuid(key):
+            raise Fail(
+                f"认领目标不是 uuid：{claim.strip()}\n"
+                "  处理：老台账（身份键是邮箱 / 名字）请改走 `init --new --name=<名字>`；"
+                "先把那本台账迁到 uuid 身份，再谈认领。"
+            )
         record = workers.get(key)
         if record is None:
             raise Fail(

@@ -16,6 +16,12 @@ const SEP = "\u0000";
 const settled = new Map();
 /** 在途单飞：key → 正在跑的 Promise（同 key 并发只跑一次）。 */
 const inflight = new Map();
+/**
+ * 失效代次：`invalidate()` 递增一次。
+ * 在飞的 Promise 落地时若代次变了就不写回 `settled`——否则「清缓存 → 旧读回来又填上」，
+ * 手动刷新 / 写完立刻刷新都会看到旧数据。
+ */
+let epoch = 0;
 /** 缓存键：`op:workspace:filter` 三条信息都要，否则不同筛选 / 不同工作区会串味。 */
 export function cacheKey(workspaceId, op, detail) {
     return `${op}${SEP}${workspaceId}${SEP}${detail}`;
@@ -31,14 +37,17 @@ export function cached(key, load, now = Date.now()) {
     const pending = inflight.get(key);
     if (pending !== undefined)
         return pending;
+    const issued = epoch;
     const task = Promise.resolve()
         .then(load)
         .then((value) => {
-        settled.set(key, { at: Date.now(), value });
+        if (issued === epoch)
+            settled.set(key, { at: Date.now(), value });
         return value;
     })
         .finally(() => {
-        inflight.delete(key);
+        if (inflight.get(key) === task)
+            inflight.delete(key);
     });
     inflight.set(key, task);
     return task;
@@ -48,12 +57,19 @@ export function cached(key, load, now = Date.now()) {
  * 写路径（任务 4，未拍板）落地后在其成功后调本函数；现在只有手动刷新这一处用。
  */
 export function invalidate(workspaceId) {
+    // 代次一律递增：在飞的结果落地时不再写回（按工作区区分度太细，多跑一次脚本不心疼）
+    epoch += 1;
     if (workspaceId === undefined) {
         settled.clear();
+        inflight.clear();
         return;
     }
     for (const key of settled.keys()) {
         if (key.split(SEP)[1] === workspaceId)
             settled.delete(key);
+    }
+    for (const key of inflight.keys()) {
+        if (key.split(SEP)[1] === workspaceId)
+            inflight.delete(key);
     }
 }

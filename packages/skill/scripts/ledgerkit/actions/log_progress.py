@@ -11,6 +11,7 @@ from ..core.worklog_md import exec_line
 from ..errors import Fail
 from ..store.task_store import TaskStore
 from ..store.worklog_store import WorklogStore
+from .guard import require_owner
 from .result import Result, rel
 
 
@@ -27,6 +28,8 @@ def log_progress(repo: Path, me: Identity, tid: str, note: str) -> Result:
     task = mine.get(tid)  # 锁内重读
     if task is None:
         raise Fail(f"任务 {tid} 不在我的分片里（只能给自己的任务记进展）。")
+    # 分片里有、行内 owner 却不是我 ⇒ 台账脏了（validate ⑤），先拦下来
+    require_owner(task, tid, me)
 
     updated = dict(task)
     updated["updated"] = now()

@@ -11,6 +11,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
+from .identity import uuid_or_none
 from .paths import to_history_rel
 from .time import TIME_RE, time_key
 
@@ -104,6 +105,7 @@ def history_line_for_cols(
     """
     log_rel = to_history_rel(worklog) if worklog else ""
     link = f"[{log_rel}]({log_rel})" if log_rel else ""
+    tag_cell = esc_cell("、".join(tags) if tags else "")
     if cols <= 4:
         who = f" @{owner}" if owner else ""
         return (
@@ -119,9 +121,28 @@ def history_line_for_cols(
             f"| {finished} | {created or ''} | {esc_cell(title)} "
             f"| {esc_cell(owner_cell(owner))} | {esc_cell(summary)} | {link} |\n"
         )
-    return history_line(
-        finished, created, title, owner, summary, worklog, category, tags, creator
-    )
+    if cols == 8:
+        # 8 列 = 9 列去掉 creator（历史 2026-10 之前的样子）
+        return (
+            f"| {finished} | {created or ''} | {esc_cell(title)} "
+            f"| {esc_cell(category or '')} | {tag_cell} "
+            f"| {esc_cell(owner_cell(owner))} | {esc_cell(summary)} | {link} |\n"
+        )
+    # 其它列数（7 / ≥10）没有已知语义：按九列拼，再按现有列数**补齐或从尾部截断**，
+    # 保证行与表对齐（信息可能丢，业务层有 fallback 警告）；绝不硬塞 9 列把表格挤歪。
+    cells = [
+        finished,
+        created or "",
+        esc_cell(title),
+        esc_cell(category or ""),
+        tag_cell,
+        esc_cell(owner_cell(owner)),
+        esc_cell(creator_cell(creator)),
+        esc_cell(summary),
+        link,
+    ]
+    cells = cells[:cols] if cols < len(cells) else cells + [""] * (cols - len(cells))
+    return "| " + " | ".join(cells) + " |\n"
 
 
 def history_cols(text: str) -> int:
@@ -234,13 +255,12 @@ def upgrade_history(
     text: str,
     *,
     read_worklog: Callable[[str], dict[str, Any] | None],
-    fallback_created: str,
 ) -> tuple[str, int] | None:
     """旧格式（4 / 5 / 6 / 8 列）→ v9。**全部数据行可解析才返回 (新文本, 转换行数)**，否则 None。
 
     `None` 的语义是「不敢动」：调用方必须退回 `history_line_for_cols` 按原列数追加并明示，
     绝不半升级、绝不猜。分类 / 标签 / creator / 缺的创建时间都靠 `read_worklog` 回链补，
-    读不到就留空（创建时间除外：留空会让排序失效，所以退化到 `fallback_created`）。
+    读不到就**留空**——尤其不许拿「本次正在结案的那条任务」的创建时间冒充别的行。
 
     `read_worklog` 的契约：`(log_name: str) -> dict | None` —— 收**文件名**（历史末列的
     basename，不是路径），返回 `{"created", "creator", "category", "tags"}`。core 只消费
@@ -275,7 +295,8 @@ def upgrade_history(
         if len(cells) == 9:
             if time_key(cells[0]) is None:
                 return None
-            out.append("| " + " | ".join(cells) + " |")
+            # 逐格重新转义：split_row 已把 `\|` 还原成 `|`，直接拼回去会把含竖线的单元格拆坏
+            out.append("| " + " | ".join(esc_cell(c) for c in cells) + " |")
             continue
         explicit_created: str | None = None
         creator: str | None = None
@@ -285,7 +306,8 @@ def upgrade_history(
                 return None
             created_key = time_key(created.strip())
             tags = [t.strip() for t in _TAG_SPLIT_RE.split(tag_cell) if t.strip()]
-            creator = (_meta_of(doc, read_worklog) or {}).get("creator")
+            # 头部那格写的是显示名（`@人名`）：只有形态是 uuid 才当 creator，否则留空
+            creator = uuid_or_none((_meta_of(doc, read_worklog) or {}).get("creator"))
             out.append(
                 f"| {finished} | {created_key or ''} | {esc_cell(title)} "
                 f"| {esc_cell(category.strip())} "
@@ -319,10 +341,10 @@ def upgrade_history(
         if finished_key is None:
             return None
         meta = _meta_of(doc, read_worklog)
-        created = explicit_created or (meta or {}).get("created") or fallback_created
+        created = explicit_created or (meta or {}).get("created") or ""
         category = (meta or {}).get("category")
         tags = tuple((meta or {}).get("tags") or ())
-        creator = (meta or {}).get("creator")
+        creator = uuid_or_none((meta or {}).get("creator"))
         out.append(
             f"| {finished_key} | {created} | {esc_cell(title)} "
             f"| {esc_cell(category or '')} "

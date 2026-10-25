@@ -71,6 +71,9 @@ export interface HistoryRecord {
 	readonly log?: string | null;
 	/** 行所在历史文件（相对工作区）。 */
 	readonly src?: string;
+	/** 行格式（脚本 `fmt`）与行号（脚本 `line`）：排查坏历史行时用来定位。 */
+	readonly fmt?: string;
+	readonly line?: number;
 	readonly workspace?: Workspace;
 }
 

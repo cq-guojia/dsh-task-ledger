@@ -71,7 +71,31 @@ export function parseHistoryRecords(
 	const rows: HistoryRecord[] = [];
 	for (const record of records) {
 		if (!isPlainObject(record)) continue; // 元素级宽松：坏行跳过，不整板炸
-		rows.push({ ...(record as HistoryRecord), workspace });
+		rows.push(toHistoryRecord(record, workspace));
 	}
 	return rows;
+}
+
+/**
+ * 脚本 9 列的键 → 领域字段名。
+ *
+ * 脚本（`history --json`）吐的是**列名**：`finished` / `title` / `worklog`；
+ * 领域层用的是 `time` / `workpackage` / `log`。两个名字都得能用：
+ * 不映射的话结案时间会落到 `created`、标题落到摘要、趋势图的「完成数」恒 0（`dayOf(undefined)`）。
+ * 两边都给：脚本将来改回列名以外的实现也不会炸。
+ */
+function toHistoryRecord(
+	source: Record<string, unknown>,
+	workspace: LedgerWorkspace,
+): HistoryRecord {
+	const text = (value: unknown): string | undefined =>
+		typeof value === "string" && value !== "" ? value : undefined;
+	return {
+		...(source as HistoryRecord),
+		// 脚本里的列名是真源；领域字段名作为兼容保留
+		time: text(source.finished) ?? text(source.time),
+		workpackage: text(source.title) ?? text(source.workpackage),
+		log: text(source.worklog) ?? text(source.log),
+		workspace,
+	};
 }

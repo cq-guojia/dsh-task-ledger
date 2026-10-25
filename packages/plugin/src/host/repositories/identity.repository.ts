@@ -19,7 +19,9 @@ const IDENTITY_HOME_ENV = "TASK_LEDGER_HOME";
 /** 机器级身份文件路径（与 skill 侧 `env.identity_file()` 同一口径）。 */
 export function identityPath(): string {
 	const base = process.env[IDENTITY_HOME_ENV];
-	const dir = base ?? os.homedir();
+	// 空串按「没设」处理：否则 path.join("", …) 会变成跟着 host 进程 cwd 走的相对路径，
+	// 与脚本侧 `if base: … else Path.home()` 的口径就对不上了
+	const dir = base !== undefined && base.trim() !== "" ? base : os.homedir();
 	return path.join(dir, ".taskledger", "identity.json");
 }
 

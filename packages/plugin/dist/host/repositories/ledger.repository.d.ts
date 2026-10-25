@@ -2,11 +2,15 @@ import type { HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRow } from "../t
 /**
  * LedgerFilter → skill 脚本参数（只拼调用方给了的；undefined 一律不拼，
  * 让脚本走自己的默认——插件不替脚本决定默认值）。
+ *
+ * **按子命令裁参数**：`list` 不认 `--limit` / `--months`，`history` 不认 `--status`，
+ * 拼错一个就让 argparse 退 2、整块列表 500。口径以 `skill/shell/cli.py` 为准。
  */
-export declare function filterArgs(filter: LedgerFilter): string[];
+export declare function filterArgs(filter: LedgerFilter, sub: "list" | "history"): string[];
 /**
- * 台账工作区探测：`<path>/ledger/progress.json` 在才算（未初始化 = 后端不可见，
- * 2026-10-17 拍板）。全 host 对台账目录的 IO 只在本文件——别处再写 existsSync 即为分层倒退。
+ * 台账工作区探测：`<path>/ledger/pool.json` 在才算（分片布局的初始化标志；
+ * 未初始化 = 后端不可见，2026-10-17 拍板）。全 host 对台账目录的 IO 只在本文件
+ * ——别处再写 existsSync 即为分层倒退。
  */
 export declare function hasLedger(workspacePath: string): boolean;
 /**

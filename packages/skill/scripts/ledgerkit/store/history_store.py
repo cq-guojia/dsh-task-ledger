@@ -117,9 +117,7 @@ class HistoryStore:
                 fallback_cols = None
             else:
                 upgraded_text = history_md.upgrade_history(
-                    original,
-                    read_worklog=self._read_worklog(path),
-                    fallback_created=row.get("created") or "",
+                    original, read_worklog=self._read_worklog(path)
                 )
                 if upgraded_text is None:
                     text = original

@@ -128,6 +128,25 @@ def main() -> int:
         check("list --owner-name 模糊命中", "在办 1 条" in r.stdout, r.stdout)
         r = run(repo, "list", "--owner-name", "zzz")
         check("list --owner-name 不匹配 = 空", "没有符合条件" in r.stdout, r.stdout)
+        # 给了 --owner 就必须生效：不许被 --mine / 空串静默吃掉
+        r = run(repo, "list", "--mine", "--owner", ME)
+        check(
+            "list --mine 与 --owner 同给被拒",
+            r.returncode == 1 and "不能和" in r.stderr,
+            r.stdout + r.stderr,
+        )
+        r = run(repo, "list", "--owner", "")
+        check(
+            "list --owner 传空串被拒",
+            r.returncode == 1 and "只收身份 uuid" in r.stderr,
+            r.stdout + r.stderr,
+        )
+        r = run(repo, "set", "--id", tid, "--owner", "   ")
+        check(
+            "set --owner 全空白不算释放",
+            r.returncode == 1 and "只收身份 uuid" in r.stderr,
+            r.stdout + r.stderr,
+        )
 
         # show / history / validate
         r = run(repo, "show", "--id", tid)
@@ -157,6 +176,18 @@ def main() -> int:
         check(
             "history --owner 传名字被拒",
             r.returncode == 1 and "--owner-name" in r.stderr,
+            r.stdout + r.stderr,
+        )
+        r = run(repo, "history", "--mine", "--owner", ME)
+        check(
+            "history --mine 与 --owner 同给被拒",
+            r.returncode == 1 and "不能和" in r.stderr,
+            r.stdout + r.stderr,
+        )
+        r = run(repo, "history", "--limit", "0")
+        check(
+            "history --limit 0 被拒",
+            r.returncode == 1 and "≥ 1" in r.stderr,
             r.stdout + r.stderr,
         )
 

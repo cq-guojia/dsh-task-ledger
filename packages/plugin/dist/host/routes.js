@@ -12,7 +12,18 @@ function sendJson(res, status, body) {
     res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(body));
 }
-/** URL query → LedgerFilter（只认白名单键；limit/months 非正数忽略）。 */
+/** 参数用错（不是台账坏）：回 400，不落到 500，也不下发给脚本去撞。 */
+class UsageError extends Error {
+}
+/** 身份形态（与脚本 `core/identity.UUID_RE` 同一口径）。 */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * URL query → LedgerFilter（只认白名单键；limit/months 非正数忽略）。
+ *
+ * 两条硬口径：
+ * - `owner` **只收 uuid**，传名字直接 400 —— 名字筛走 `owner_name=<片段>`（脚本同一条规则）；
+ * - `months` 与 `since/until` 互斥：给了 `months` 就忽略后两者（脚本会 Fail，别让 UI 一次踩两个）。
+ */
 function filterFromQuery(url) {
     const filter = {};
     const str = (key) => {
@@ -30,26 +41,36 @@ function filterFromQuery(url) {
     if (status !== null)
         filter.status = status;
     const owner = str("owner");
-    if (owner !== null)
-        filter.owner = owner;
+    if (owner !== null) {
+        const key = owner.trim();
+        if (!UUID_RE.test(key))
+            throw new UsageError("owner 只收身份 uuid；按显示名模糊筛请用 owner_name=<片段>");
+        filter.owner = key;
+    }
+    const ownerName = str("owner_name");
+    if (ownerName !== null)
+        filter.ownerName = ownerName;
     const category = str("category");
     if (category !== null)
         filter.category = category;
     const tag = str("tag");
     if (tag !== null)
         filter.tag = tag;
-    const since = str("since");
-    if (since !== null)
-        filter.since = since;
-    const until = str("until");
-    if (until !== null)
-        filter.until = until;
     const limit = int("limit");
     if (limit !== undefined)
         filter.limit = limit;
     const months = int("months");
-    if (months !== undefined)
+    if (months !== undefined) {
         filter.months = months;
+    }
+    else {
+        const since = str("since");
+        if (since !== null)
+            filter.since = since;
+        const until = str("until");
+        if (until !== null)
+            filter.until = until;
+    }
     return filter;
 }
 /** 每请求重新解析工作区（registry 可能刚变；探测走 hasLedger()，微秒级，不缓存）。 */
@@ -129,6 +150,10 @@ export function registerRoutes(webServer, deps) {
             sendJson(res, 200, { tasks: perWorkspace.flat() });
         }
         catch (error) {
+            if (error instanceof UsageError) {
+                sendJson(res, 400, { error: error.message });
+                return;
+            }
             sendJson(res, 500, {
                 error: error instanceof Error ? error.message : String(error),
             });
@@ -167,6 +192,10 @@ export function registerRoutes(webServer, deps) {
             });
         }
         catch (error) {
+            if (error instanceof UsageError) {
+                sendJson(res, 400, { error: error.message });
+                return;
+            }
             sendJson(res, 500, {
                 error: error instanceof Error ? error.message : String(error),
             });

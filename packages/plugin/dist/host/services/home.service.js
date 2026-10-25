@@ -5,6 +5,7 @@
  * 慢路径（趋势）在 ./trend.service.ts；组合入口（/board 兼容全量）在 ../board.ts。
  */
 import { settleWorkspaces } from "../errors.js";
+import { sameUuid } from "./uuid.js";
 import { getCurrentIdentity } from "../repositories/identity.repository.js";
 import { readTasks } from "../repositories/ledger.repository.js";
 import { daysSince } from "./dates.js";
@@ -48,12 +49,14 @@ export function computeSnapshot(scopes, now) {
     }));
     const openTasks = withMeta.filter((task) => task.status === "open");
     const myActive = scopes.reduce((sum, scope) => sum +
-        scope.tasks.filter((task) => task.owner === scope.identity &&
+        scope.tasks.filter((task) => 
+        // identity 为 null（本机没 init）时不许把 owner 为空的 doing 任务算成「我的」
+        sameUuid(task.owner, scope.identity) &&
             (task.status === "doing" || task.status === "blocked")).length, 0);
     const identities = {};
     for (const scope of scopes)
         identities[scope.workspace.id] = scope.identity;
-    const mine = (task) => task.owner != null && task.owner === identities[task.workspace.id];
+    const mine = (task) => sameUuid(task.owner, identities[task.workspace.id]);
     const backlogTasks = withMeta.filter((task) => task.backlog);
     const overdueTasks = withMeta.filter((task) => task.overdue);
     const staleTasks = withMeta.filter((task) => task.stale);
