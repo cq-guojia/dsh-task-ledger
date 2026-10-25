@@ -99,11 +99,11 @@ def new_task(
             tid=tid,
             title=clean_title,
             created=created,
-            creator=me.label(),
+            creator=me.stamp(),
             category=category,
             tags=tag_list,
             first_exec=exec_line(
-                created, me.label(), "new", "创建任务并认领" if mine else "创建任务"
+                created, me.stamp(), "new", "创建任务并认领" if mine else "创建任务"
             ),
         )
         target.put(tid, task)

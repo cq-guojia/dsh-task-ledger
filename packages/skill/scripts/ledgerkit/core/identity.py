@@ -21,8 +21,22 @@ class Identity:
     name: str = ""
 
     def label(self) -> str:
-        """显示名：没名字就用 uuid 前 8 位。"""
+        """显示名：没名字就用 uuid 前 8 位。只给人看（报错文案、界面）。"""
         return self.name or self.uuid[:8]
+
+    def stamp(self) -> str:
+        """**落盘**用的身份串：`名字 · uuid` —— 名字在前给人读，uuid 在后给机器对。
+
+        与 `label()` 一样**不带 `@`**（`@` 由各落点自己加：模板创建行是 `（@<creator>）`、
+        `exec_line` 拼 ` · @{who} · `、`stamp_frozen` 拼 `（@{who}）`）。
+
+        过程文档（创建行 / 封卷行 / 执行记录）是这个串唯一的落点：文件是最终产物，
+        创建人和封卷人可能不是同一个人、也可能中途改过名，所以**两个都要留**，不靠
+        历史表回链。没名字就只写 uuid。
+        """
+        if not self.name:
+            return self.uuid
+        return f"{self.name} · {self.uuid}"
 
 
 def normalize(who: str) -> str:

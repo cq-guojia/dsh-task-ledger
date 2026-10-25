@@ -72,7 +72,7 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
     logs = WorklogStore(repo)
     path = logs.find(tid, moved.get("worklog"))
     if path is not None:
-        logs.append_exec(path, exec_line(now(), me.label(), "claim", "认领 → doing"))
+        logs.append_exec(path, exec_line(now(), me.stamp(), "claim", "认领 → doing"))
         note = None
     return Result(
         changed=("owner", "started", "updated"),

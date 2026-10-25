@@ -733,7 +733,7 @@ class ActionSpec:
 | `ids.py` | `id_stamp(created)`；`slugify(title)`；`make_id(title, tasks, created=None)`；`require_task_id(tid)` |
 | `identity.py` | `Identity`（`uuid` / `name` 的不可变值对象）；`normalize(who)`；`looks_like_uuid(who)`；`is_me(identity, who)` |
 | `labels.py` | `STATUSES = ("open", "doing")`（`--status` 的白名单就是它）；`done` 只能由 `close` 产生、不在此二者里；`FORMAT_VERSION`；`normalize_label(value, *, field)`；`parse_tags(raw)`；`label_line(category, tags)`；`parse_label_line(text)` |
-| `worklog_md.py` | `render_worklog(*, tid, title, created, creator, category, tags, template) -> str`；`is_skeleton(text)`；`exec_line(when, who, kind, note)`；`append_exec_log(text, line)`；`stamp_frozen(text, finished, who)`；`has_frozen_line(text)`；`rewrite_label_line(text, category, tags)` |
+| `worklog_md.py` | `render_worklog(*, tid, title, created, creator, category, tags, template) -> str`；`is_skeleton(text)`；`exec_line(when, who, kind, note)`（`who` 收 `Identity.stamp()`，拼成 ` · @{名字 · uuid} · `）；`append_exec_log(text, line)`；`stamp_frozen(text, finished, who)`；`has_frozen_line(text)`；`rewrite_label_line(text, category, tags)`；`head_creator(text)`（名字）；`head_creator_uuid(text)`（uuid，老文档没落就空） |
 | `history_md.py` | `esc_cell(s)`；`owner_cell(owner)`；`creator_cell(creator)`；`history_line(...)`；`split_row(line)`；`is_sep_row(line)`；`parse_history(text)`（只认十一列） |
 
 五条必须守住的：
@@ -741,6 +741,7 @@ class ActionSpec:
 - **路径基准只有一个约定**：磁盘与 JSON 里存的路径**相对 `ledger/`**（格式契约，如 `task["worklog"]`）；凡是输出给人或给界面的（`Result.where`、`WorklogView.path`、`payload` 里所有 `*_path`）**一律相对 repo**。换算只在 `core/paths.py` 的 `to_repo_rel` / `to_ledger_rel` / `to_history_rel` 三处做，任何层都不许自己拼 `..`。
 - **时间只有一个例外**：所有存盘时间都是 UTC；唯一例外是过程文档「执行记录」那行的时刻 —— 它是**本地时间**，给人读的日志行，不参与任何筛选或排序。转换固定发生在 `worklog_md.exec_line(when_utc, …)` 内部（它自己调 `fmt_local`）：**调用方一律传 UTC**，别在外面先转一遍。
 - **身份只有 `uuid` 一个键**。`env.py` 只读本机身份文件（`$TASK_LEDGER_HOME/.taskledger/identity.json`，默认 `~/.taskledger/identity.json`），不读 git、不读环境变量、没有兜底。名字（`name`）只用于显示与 `--owner-name` 模糊筛，**不参与任何归属判定**；分片、历史行、`--owner` / `--mine` 一律比 uuid。
+- **名字落盘用哪个串，看落点**：`Identity.label()` = 名字（只给人看：报错文案、界面）；`Identity.stamp()` = `名字 · uuid`（**过程文档三处落点**——头部创建行、封卷行、每条执行记录）。两者都**不带 `@`**，`@` 由落点自己加（模板创建行是 `（@<creator>）`、`exec_line` 拼 ` · @{who} · `）。过程文档是最终产物，创建人和封卷人可能不是同一个人、也可能中途改名，所以**名字和 uuid 都要留**，不靠历史表回链。
 - **`render_worklog` 只做字符串替换**：模板由 `WorklogStore.template()` 取来传进去，它自己不读文件、也不接收整条 task dict。
 - **`history_md` 自己不开文件**：它只做文本换算；凡是要读 worklog 的事都留在 store / 业务层。
 

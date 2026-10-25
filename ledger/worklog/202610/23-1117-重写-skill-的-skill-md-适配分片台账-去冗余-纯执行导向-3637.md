@@ -1,7 +1,7 @@
 # 20261023-1117-重写-skill-的-skill-md-适配分片台账-去冗余-纯执行导向-3637：重写 skill 的 SKILL.md：适配分片台账、去冗余、纯执行导向
 
-> **创建**：2026-10-23 11:17:54（@GuoJia-Agent）
-> ✅ 完成封卷：2026-10-24 23:10:26（@GuoJia-Agent）
+> **创建**：2026-10-23 11:17:54（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
+> ✅ 完成封卷：2026-10-24 23:10:26（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
 > **分类**：文档 ｜ **标签**：skill、提示词
 
 <!-- 「> **分类**：… ｜ **标签**：…」行由脚本按 new --category / --tags 插入；两者皆空则不写。 -->
@@ -91,26 +91,26 @@
 
 <!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
      补记用 progress.py log --id <任务号> --note "一句话"。 -->
-- 2026-10-23 19:17:54 · new · @GuoJia-Agent · 创建任务
-- 2026-10-23 19:30:51 · log · @GuoJia-Agent · 专家组会诊+代码复核：SKILL.md 与分片台账 17 处硬伤（release 语义/时区/list 参数/自动补推/traceback 边…），定目标结构：正文 ~105 行纯执行、references 6→3、design.md 移出；等用户拍板后重写
-- 2026-10-23 19:48:28 · log · @GuoJia-Agent · 备份+清空+通读 7 文件：结构定为 1 种子+3 分支共 4 个；新定性 3 处矛盾（身份兜底不报错/new --self=open/tags 计数）；design.md 6 处口径列了搬迁清单
-- 2026-10-23 20:00:58 · log · @GuoJia-Agent · 落盘 4 文件：种子 132 行纯执行（20 处硬伤全修）+ references 6→3；smoke 等价断言 8/8 过；design.md 未重建等用户定去向；README/版本/插件副本按「其他文件不用管」未动
-- 2026-10-23 20:30:18 · log · @GuoJia-Agent · 外部调研 4 源定骨架 v2（命令参考/生命周期/纪律三锅分清/分类标签并入参数）；代码核实：claim 不置 doing 是分片重构回归（旧 progress.py:2155 置 doing），待用户定修代码还是改语义
-- 2026-10-23 20:39:30 · log · @GuoJia-Agent · 五项结构争议自行裁定完（命令参考内联/纪律三合一/分工线/祈使句/claim 按现状）；claim 不置 doing 定性为看板可见的真 bug（home.service.ts:48-79），建议修 claim.py 待用户发话
-- 2026-10-23 21:02:16 · set · @GuoJia-Agent · 状态改为 doing
-- 2026-10-23 21:02:26 · log · @GuoJia-Agent · 代码修复落地：claim 认领即 doing+open 守卫、new --self 建即 doing+started、smoke 补 4 断言；4 测试全过、codelint 仅剩 .bak；另发现 release 不清 started（插件注释与旧文档都说清），一行待修
-- 2026-10-23 21:23:06 · log · @GuoJia-Agent · 拍板 release 不清 started 是特性非 bug：外卖计时器模型——逾期从首次认领跑到结案、转手不重置，防「释放再认领洗时钟」作弊；责任归属看执行记录流水。四处陈旧表述列了修正清单
-- 2026-10-23 21:33:23 · log · @GuoJia-Agent · 4 文档定稿落地：SKILL.md 7 节 253 行（命令参考内联/生命周期含决策树/纪律三合一/祈使句）；smoke 等价断言 8/8、无「你」、陈旧口径零残留；待重建插件副本+同步 README
-- 2026-10-23 21:53:46 · log · @GuoJia-Agent · 已提交并推送 ac950aa（66 文件）：文档重写+认领即 doing+副本/dist 追平；门禁全绿（skill 4 测试/插件 smoke 32/typecheck/codelint/check-skill-copy）
-- 2026-10-23 22:04:52 · log · @GuoJia-Agent · 按用户反馈重写种子+state-model：禁自建台账/任务、删分片与文件表现内部细节、建vs建并认领判定规则（仅明确「并开始做/并执行」才 --self）、owner 全程不传、删看板阈值、台账失败不挡主任务；门禁全绿，未提交等用户发话
-- 2026-10-23 22:30:44 · log · @GuoJia-Agent · 二轮反馈落地：开头加数据落点+状态词典（待认领/进行中/已结案）、标题 4~20 字备注、--created 白话化、set 改纯释放（放一放≠释放）、close 两层确认（含糊必须反问）+close 后禁写、确认 log 自动刷 updated；门禁全绿未提交
-- 2026-10-23 22:49:41 · log · @GuoJia-Agent · 三轮反馈落地：多人并行 Git 分界（同 clone 靠锁/跨机必须 Git+无 Git 提醒）、--created/--finished 白话化、删 init 废话句、执行记录禁手写加重、tags --rename 补场景说明、拿不定问用户；另发现 --status 无任何产品调用方建议删
-- 2026-10-23 23:02:11 · log · @GuoJia-Agent · 删除 --status 落地（用户拍板）：cli/registry/set_task 重写/handoff 去参、3 测试改路、SKILL.md 与 state-model 同步；四路由手工验证（无 owner 退1/指向自己=认领/claim→doing/释放回池 started 保留）；门禁全绿未提交
-- 2026-10-23 23:03:57 · log · @GuoJia-Agent · 修用户指出的口径矛盾：开口径「不碰数据文件」改精确表述「状态与归属只经命令改、唯一手写是过程文档前五节」，三处口径（开头/手写边界/过程文档）达成一致；门禁全绿未提交
-- 2026-10-23 23:48:33 · log · @GuoJia-Agent · 专家组审查（提示词8/结构8/逻辑9项相符）后修复：裸 tags 退3改退1人话（真bug）、history 第二列改负责人、allowed-tools 补Edit、五处重复规则收敛、清60秒/release字样/退出码泄漏、README 清死链、删 CI 幽灵测试行；门禁全绿
-- 2026-10-24 00:35:49 · log · @GuoJia-Agent · 二轮专家组（提示词7.5/结构8/逻辑85）修复：Git 前提、history 第三列、log 归属、rename 仅自己名下、失败三分支、建台账闭环、troubleshooting 引文全换真串；实跑抓出并修掉真 bug：_apply 用 category=None 当没命中，导致有标签没分类的任务 rename 永远改不到（dry-run 报 0/真跑静默跳过），改显式哨兵+回归测试；门禁全绿，按用户要求未提交等审
-- 2026-10-24 01:01:32 · log · @GuoJia-Agent · 用户三条例 + 代码修复：①无 git 必须能用——_finalize 遇非 git 目录跳过提交推送只提示、env 按 FileNotFound 处理（无二进制也不崩），实跑双路径通过；②--months 改自然月窗口（自己算最近 N 个月读存在文件）；③--no-sync 改显式开关，有无远端/离线由脚本判断；各补回归测试；门禁全绿未提交等审
-- 2026-10-24 01:16:52 · log · @GuoJia-Agent · 三轮专家组（提示词8.5/技能终审/项目7）：按用户三把尺子砍种子 14 处废话（机制解释/不言自明/元说明），17.9→17.0 KB，用户要求的 4~20 字保留；术语统一（工作包=标题）、成果→过程文档、手动 pull 路径去掉按任务号合并的过度承诺（文档+脚本提示同步）、CI 注释幽灵修正；门禁全绿未提交等审
-- 2026-10-24 16:42:50 · log · @GuoJia-Agent · SKILL.md 对齐 history 实际口径：--since/--until 按结案时间（含当天）、--months 与二者互斥、默认近 3 个自然月、一次最多读 13 个历史文件（超限报错且不读任何文件）、缺月跳过；同步命令表/示例/查询速查/正文回链/参考索引 6 处，references/state-model.md 原有内容已覆盖无需改；copy-skill 同步内嵌副本，check-skill-copy 通过
-- 2026-10-24 17:10:15 · log · @GuoJia-Agent · 用户口径：SKILL.md 是给调用方的提示词，只写「返回什么、要什么加 --json、多久、超了报错」，不写实现细节（不写读几个文件/怎么跳缺月/扫不扫磁盘）；history 段已按此精简并提交 d8396a8
-- 2026-10-24 23:10:26 · close · @GuoJia-Agent · 结案封卷
+- 2026-10-23 19:17:54 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务
+- 2026-10-23 19:30:51 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 专家组会诊+代码复核：SKILL.md 与分片台账 17 处硬伤（release 语义/时区/list 参数/自动补推/traceback 边…），定目标结构：正文 ~105 行纯执行、references 6→3、design.md 移出；等用户拍板后重写
+- 2026-10-23 19:48:28 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 备份+清空+通读 7 文件：结构定为 1 种子+3 分支共 4 个；新定性 3 处矛盾（身份兜底不报错/new --self=open/tags 计数）；design.md 6 处口径列了搬迁清单
+- 2026-10-23 20:00:58 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 落盘 4 文件：种子 132 行纯执行（20 处硬伤全修）+ references 6→3；smoke 等价断言 8/8 过；design.md 未重建等用户定去向；README/版本/插件副本按「其他文件不用管」未动
+- 2026-10-23 20:30:18 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 外部调研 4 源定骨架 v2（命令参考/生命周期/纪律三锅分清/分类标签并入参数）；代码核实：claim 不置 doing 是分片重构回归（旧 progress.py:2155 置 doing），待用户定修代码还是改语义
+- 2026-10-23 20:39:30 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 五项结构争议自行裁定完（命令参考内联/纪律三合一/分工线/祈使句/claim 按现状）；claim 不置 doing 定性为看板可见的真 bug（home.service.ts:48-79），建议修 claim.py 待用户发话
+- 2026-10-23 21:02:16 · set · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 状态改为 doing
+- 2026-10-23 21:02:26 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 代码修复落地：claim 认领即 doing+open 守卫、new --self 建即 doing+started、smoke 补 4 断言；4 测试全过、codelint 仅剩 .bak；另发现 release 不清 started（插件注释与旧文档都说清），一行待修
+- 2026-10-23 21:23:06 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 拍板 release 不清 started 是特性非 bug：外卖计时器模型——逾期从首次认领跑到结案、转手不重置，防「释放再认领洗时钟」作弊；责任归属看执行记录流水。四处陈旧表述列了修正清单
+- 2026-10-23 21:33:23 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 4 文档定稿落地：SKILL.md 7 节 253 行（命令参考内联/生命周期含决策树/纪律三合一/祈使句）；smoke 等价断言 8/8、无「你」、陈旧口径零残留；待重建插件副本+同步 README
+- 2026-10-23 21:53:46 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 已提交并推送 ac950aa（66 文件）：文档重写+认领即 doing+副本/dist 追平；门禁全绿（skill 4 测试/插件 smoke 32/typecheck/codelint/check-skill-copy）
+- 2026-10-23 22:04:52 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户反馈重写种子+state-model：禁自建台账/任务、删分片与文件表现内部细节、建vs建并认领判定规则（仅明确「并开始做/并执行」才 --self）、owner 全程不传、删看板阈值、台账失败不挡主任务；门禁全绿，未提交等用户发话
+- 2026-10-23 22:30:44 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 二轮反馈落地：开头加数据落点+状态词典（待认领/进行中/已结案）、标题 4~20 字备注、--created 白话化、set 改纯释放（放一放≠释放）、close 两层确认（含糊必须反问）+close 后禁写、确认 log 自动刷 updated；门禁全绿未提交
+- 2026-10-23 22:49:41 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 三轮反馈落地：多人并行 Git 分界（同 clone 靠锁/跨机必须 Git+无 Git 提醒）、--created/--finished 白话化、删 init 废话句、执行记录禁手写加重、tags --rename 补场景说明、拿不定问用户；另发现 --status 无任何产品调用方建议删
+- 2026-10-23 23:02:11 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 删除 --status 落地（用户拍板）：cli/registry/set_task 重写/handoff 去参、3 测试改路、SKILL.md 与 state-model 同步；四路由手工验证（无 owner 退1/指向自己=认领/claim→doing/释放回池 started 保留）；门禁全绿未提交
+- 2026-10-23 23:03:57 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 修用户指出的口径矛盾：开口径「不碰数据文件」改精确表述「状态与归属只经命令改、唯一手写是过程文档前五节」，三处口径（开头/手写边界/过程文档）达成一致；门禁全绿未提交
+- 2026-10-23 23:48:33 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 专家组审查（提示词8/结构8/逻辑9项相符）后修复：裸 tags 退3改退1人话（真bug）、history 第二列改负责人、allowed-tools 补Edit、五处重复规则收敛、清60秒/release字样/退出码泄漏、README 清死链、删 CI 幽灵测试行；门禁全绿
+- 2026-10-24 00:35:49 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 二轮专家组（提示词7.5/结构8/逻辑85）修复：Git 前提、history 第三列、log 归属、rename 仅自己名下、失败三分支、建台账闭环、troubleshooting 引文全换真串；实跑抓出并修掉真 bug：_apply 用 category=None 当没命中，导致有标签没分类的任务 rename 永远改不到（dry-run 报 0/真跑静默跳过），改显式哨兵+回归测试；门禁全绿，按用户要求未提交等审
+- 2026-10-24 01:01:32 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 用户三条例 + 代码修复：①无 git 必须能用——_finalize 遇非 git 目录跳过提交推送只提示、env 按 FileNotFound 处理（无二进制也不崩），实跑双路径通过；②--months 改自然月窗口（自己算最近 N 个月读存在文件）；③--no-sync 改显式开关，有无远端/离线由脚本判断；各补回归测试；门禁全绿未提交等审
+- 2026-10-24 01:16:52 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 三轮专家组（提示词8.5/技能终审/项目7）：按用户三把尺子砍种子 14 处废话（机制解释/不言自明/元说明），17.9→17.0 KB，用户要求的 4~20 字保留；术语统一（工作包=标题）、成果→过程文档、手动 pull 路径去掉按任务号合并的过度承诺（文档+脚本提示同步）、CI 注释幽灵修正；门禁全绿未提交等审
+- 2026-10-24 16:42:50 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · SKILL.md 对齐 history 实际口径：--since/--until 按结案时间（含当天）、--months 与二者互斥、默认近 3 个自然月、一次最多读 13 个历史文件（超限报错且不读任何文件）、缺月跳过；同步命令表/示例/查询速查/正文回链/参考索引 6 处，references/state-model.md 原有内容已覆盖无需改；copy-skill 同步内嵌副本，check-skill-copy 通过
+- 2026-10-24 17:10:15 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 用户口径：SKILL.md 是给调用方的提示词，只写「返回什么、要什么加 --json、多久、超了报错」，不写实现细节（不写读几个文件/怎么跳缺月/扫不扫磁盘）；history 段已按此精简并提交 d8396a8
+- 2026-10-24 23:10:26 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷

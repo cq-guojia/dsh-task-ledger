@@ -46,7 +46,7 @@ def log_progress(repo: Path, me: Identity, tid: str, note: str) -> Result:
                 "提示：这条任务没有过程文档，已跳过执行记录（分片的最后更新已刷）。",
             ),
         )
-    ok = logs.append_exec(path, exec_line(now(), me.label(), "log", text))
+    ok = logs.append_exec(path, exec_line(now(), me.stamp(), "log", text))
     if not ok:
         return Result(
             changed=("updated",),

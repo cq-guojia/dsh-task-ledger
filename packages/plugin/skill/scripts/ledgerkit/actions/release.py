@@ -63,7 +63,7 @@ def release(repo: Path, me: Identity, tid: str) -> Result:
     if path is None:
         note = f"任务 {tid} 已退回公共池，但过程文档没找到，跳过执行记录。"
     else:
-        logs.append_exec(path, exec_line(now(), me.label(), "release", "释放回公共池"))
+        logs.append_exec(path, exec_line(now(), me.stamp(), "release", "释放回公共池"))
     return Result(
         changed=("owner", "owner_name", "status", "updated"),
         where=rel(repo, pool.path),

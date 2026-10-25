@@ -205,6 +205,19 @@ def main() -> int:
             and body[0].get("owner") == ME,
             json.dumps(body[:1], ensure_ascii=False),
         )
+        # 过程文档三处落点（创建行 / 封卷行 / 执行记录）都记「名字 + uuid」，不靠历史表回链
+        doc = next(iter((repo / "ledger" / "worklog").rglob("*.md")))
+        text = doc.read_text(encoding="utf-8")
+        check(
+            "过程文档头部记名字 + uuid",
+            f"（@Me · {ME}）" in text,
+            text[:200],
+        )
+        check(
+            "执行记录记名字 + uuid",
+            f"· @Me · {ME} · " in text,
+            text[-200:],
+        )
         # 历史行的 owner 存 uuid ⇒ --owner / --mine 才真能比到（此前存显示名，恒查不到）
         r = run(repo, "history", "--owner", ME, "--count-only")
         check("history --owner <uuid> 命中", '"count": 1' in r.stdout, r.stdout)

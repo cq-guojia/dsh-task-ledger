@@ -95,9 +95,9 @@ def close_task(
             if doc_path is not None:
                 text = logs.read(doc_path)
                 if not has_frozen_line(text):
-                    frozen = stamp_frozen(text, finished, me.label())
+                    frozen = stamp_frozen(text, finished, me.stamp())
                     frozen = append_exec_log(
-                        frozen, exec_line(finished, me.label(), "close", "结案封卷")
+                        frozen, exec_line(finished, me.stamp(), "close", "结案封卷")
                     )
                     logs.write(doc_path, frozen)
                     notes.append("补齐上次未完成的封卷。")
@@ -156,9 +156,9 @@ def close_task(
         if doc_path is not None:
             text = logs.read(doc_path)
             if not has_frozen_line(text):
-                frozen = stamp_frozen(text, finished, me.label())
+                frozen = stamp_frozen(text, finished, me.stamp())
                 frozen = append_exec_log(
-                    frozen, exec_line(finished, me.label(), "close", "结案封卷")
+                    frozen, exec_line(finished, me.stamp(), "close", "结案封卷")
                 )
                 logs.write(doc_path, frozen)
 

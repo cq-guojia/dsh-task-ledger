@@ -10,6 +10,7 @@ from collections.abc import Iterable
 from itertools import takewhile
 
 from ..errors import Fail
+from .identity import UUID_RE
 from .labels import label_line, parse_label_line
 from .time import fmt_local, normalize_time
 
@@ -21,7 +22,9 @@ EXEC_HINT = (
 FROZEN_MARK = "✅ 完成封卷"
 FROZEN_RE = re.compile(r"^>\s*" + FROZEN_MARK, re.MULTILINE)
 CREATED_RE = re.compile(r"^\s*>\s*\*\*创建\*\*")
-# 头部「创建」行：`> **创建**：2026-10-06 00:00（@某人）` —— 创建时间与发起人两个来源。
+# 头部「创建」行：`> **创建**：2026-10-06 00:00（@某人 · uuid）` —— 创建时间与发起人两个来源。
+# 括号里落 `Identity.stamp()`（`@名字 · uuid`）：名字在前给人读，uuid 在后给机器对。
+# 老文档只有名字（没有 uuid）时，下面两个函数各自返回它能读到的那一段，不报错。
 CREATED_AT_RE = re.compile(
     r"^\s*>\s*\*\*创建\*\*\s*[：:]\s*"
     r"(\d{4}-\d{2}-\d{2}(?: +\d{1,2}:\d{1,2}(?::\d{1,2})?)?)"
@@ -224,9 +227,26 @@ def head_created(text: str) -> str | None:
 
 
 def head_creator(text: str) -> str | None:
-    """头部「创建」行括号里的发起人（裸标识，不带 @）；读不到返回 None。"""
+    """头部「创建」行括号里的发起人**名字**（不带 @、不带 uuid）；读不到返回 None。"""
     for line in text.splitlines():
         m = CREATOR_RE.match(line)
         if m and m.group(1).strip():
-            return m.group(1).strip()
+            return m.group(1).split(" · ")[0].strip()
+    return None
+
+
+def head_creator_uuid(text: str) -> str | None:
+    """头部「创建」行括号里的发起人 **uuid**；老文档没落 uuid 时返回 None。
+
+    `UUID_RE` 带 `^$` 锚点，只能整串匹配 —— 所以先按 ` · ` 切出尾段再判，不能 search。
+    """
+    for line in text.splitlines():
+        m = CREATOR_RE.match(line)
+        if not m:
+            continue
+        parts = m.group(1).split(" · ")
+        if len(parts) > 1:
+            uuid = parts[-1].strip()
+            if UUID_RE.fullmatch(uuid):
+                return uuid
     return None
