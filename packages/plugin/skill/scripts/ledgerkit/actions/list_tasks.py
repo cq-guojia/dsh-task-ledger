@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from ..core.identity import Identity
+from ..core.labels import STATUSES
 from ..core.paths import POOL_REL
 from ..errors import Fail
 from ..store.owners_index import OwnersIndex
@@ -24,6 +25,12 @@ def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
         if q.scope in ("mine", "pool"):
             raise Fail("--owner 不能和 --mine / --pool 一起用：一次只按一种范围筛。")
         q = replace(q, owner=require_uuid(q.owner, field="--owner"))
+    # `--status` 只认白名单：`--status blocked` 这种早该消失的值不许静默返回空表
+    unknown = [s for s in q.statuses if s not in STATUSES]
+    if unknown:
+        raise Fail(
+            f"--status 只认 {' / '.join(STATUSES)}（收到 {', '.join(unknown)}）。"
+        )
     rows: dict[str, dict[str, Any]] = {}
     where: dict[str, Path] = {}
 

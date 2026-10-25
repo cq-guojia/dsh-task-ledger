@@ -36,9 +36,18 @@ def init_identity(
     path = env.identity_file()
     existing = env.read_identity()
     if existing is not None:
+        # 已初始化 = 幂等空转（与 release/claim/close 的重跑口径一致）：退 0、零写。
+        # 只有「认领另一个 uuid」才是真冲突——换身份不归 init 管。
+        if claim is None or normalize(claim) == existing.uuid:
+            return {
+                "already": True,
+                "uuid": existing.uuid,
+                "name": existing.name,
+                "path": str(path),
+            }
         raise Fail(
-            f"这台机器已经初始化过了（{path}，uuid={existing.uuid}）。\n"
-            "  处理：要换身份请手动改该文件的 uuid；一台机器只初始化一次。"
+            f"这台机器已经是 {existing.uuid}（{path}），不能再认领 {claim.strip()}。\n"
+            "  处理：要换身份请手动改该文件的 uuid；一台机器一个身份。"
         )
 
     workers = _read_workers(repo)

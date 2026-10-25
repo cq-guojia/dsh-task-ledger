@@ -203,6 +203,25 @@ def main() -> int:
             r.stdout + r.stderr,
         )
 
+        # 参数白名单与状态白名单：不许静默给空表
+        r = run(repo, "list", "--status", "blocked")
+        check(
+            "list --status 非法值被拒",
+            r.returncode == 1 and "--status 只认" in r.stderr,
+            r.stdout + r.stderr,
+        )
+
+        # init 幂等：已初始化再跑一次退 0、身份不变
+        idfile = Path(repo) / ".tlhome" / ".taskledger" / "identity.json"
+        before = json.loads(idfile.read_text())
+        r = run(repo, "init", "--new", "--name", "Me")
+        after = json.loads(idfile.read_text())
+        check(
+            "重复 init 幂等（退 0、身份不变）",
+            r.returncode == 0 and before["uuid"] == after["uuid"],
+            r.stdout + r.stderr,
+        )
+
         # 关掉字节码：产物里不许有 __pycache__
         pycache = list(SCRIPTS.rglob("__pycache__"))
         check("没有 __pycache__", not pycache, str(pycache))

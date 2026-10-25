@@ -295,6 +295,12 @@ def _run_init(args: argparse.Namespace) -> int:
             print(f"  {opt['uuid']}  {opt['name']}")
         print("请重跑：init --claim=<uuid>  认领，或  init --new --name=<名字>  新建")
         return 0
+    if res.get("already"):
+        print(
+            f"已经初始化过，未做改动：{res['name'] or res['uuid'][:8]}（{res['uuid']}）"
+        )
+        print(f"文件：{res['path']}")
+        return 0
     print(f"已初始化：{res['name'] or res['uuid'][:8]}（{res['uuid']}）")
     print(f"文件：{res['path']}")
     return 0
