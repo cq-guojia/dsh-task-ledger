@@ -18,8 +18,8 @@ from .result import Result, rel
 def claim(repo: Path, me: Identity, tid: str) -> Result:
     """写序：我的分片 → 删池里那行 → 过程文档记一笔。"""
     pool = TaskStore(repo, POOL_REL)
-    mine = TaskStore(repo, shard_rel(me.email), identity=me)
-    me_key = normalize(me.email)
+    mine = TaskStore(repo, shard_rel(me.uuid), identity=me)
+    me_key = normalize(me.uuid)
 
     # 前置：别人正在改它（他的分片里已有这个号）⇒ 拒绝
     for key, path in OwnersIndex(repo).shards().items():
@@ -40,7 +40,7 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
             if path is not None:
                 logs.append_exec(
                     path,
-                    exec_line(now(), me.email, "claim", "认领（补齐上次未完成的清理）"),
+                    exec_line(now(), me.uuid, "claim", "认领（补齐上次未完成的清理）"),
                 )
             return Result(
                 already_done=True,
@@ -58,7 +58,8 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
         )
 
     moved = dict(task)
-    moved["owner"] = me.email
+    moved["owner"] = me.uuid
+    moved["owner_name"] = me.name
     # 认领即在做：看板把 doing 当「我的在办」算（home.service.ts），置 open 会让
     # 认领后的任务看起来仍没人领。旧版 progress.py 置 doing，分片重构时丢了。
     moved["status"] = "doing"
@@ -71,7 +72,7 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
     logs = WorklogStore(repo)
     path = logs.find(tid, moved.get("worklog"))
     if path is not None:
-        logs.append_exec(path, exec_line(now(), me.email, "claim", "认领 → doing"))
+        logs.append_exec(path, exec_line(now(), me.label(), "claim", "认领 → doing"))
         note = None
     return Result(
         changed=("owner", "started", "updated"),

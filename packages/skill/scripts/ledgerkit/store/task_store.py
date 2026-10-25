@@ -24,5 +24,5 @@ class TaskStore(JSONStore):
     def _flush(self, data: dict[str, Any]) -> None:
         """写盘时带上分片顶部的 `identity`（只存邮箱；显示名在索引里）。"""
         if self.identity is not None:
-            data["identity"] = {"email": self.identity.email}
+            data["identity"] = {"uuid": self.identity.uuid}
         super()._flush(data)

@@ -21,11 +21,22 @@ FAILED: list[str] = []
 
 
 def run(repo: Path, *args: str) -> subprocess.CompletedProcess:
+    import json
+    import os
+
+    home = Path(repo) / ".tlhome"
+    idf = home / ".taskledger" / "identity.json"
+    if not idf.exists():
+        idf.parent.mkdir(parents=True, exist_ok=True)
+        idf.write_text(
+            json.dumps({"uuid": "me@example.com", "name": "Me"}), encoding="utf-8"
+        )
     return subprocess.run(
         [PY, "-B", str(PROGRESS), "--repo", str(repo), "--no-sync", *args],
         capture_output=True,
         text=True,
         cwd=str(repo),
+        env={**os.environ, "TASK_LEDGER_HOME": str(home)},
         check=False,
     )
 

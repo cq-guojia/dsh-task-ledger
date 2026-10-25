@@ -1,93 +1,81 @@
-"""唯一允许去问 git「我现在是谁」的地方。
+"""确定「我是谁」的唯一地方：只读机器级身份文件，不读 git、不读环境变量。
 
-只**读**配置（`GIT_COMMITTER_IDENT` / `config user.email` / `config user.name`），
-不 pull、不 commit、不 push —— 那不算 git 操作，算环境。
-兜底身份这件事本身只 `notices.note("提示：…")`，不打印。
+身份文件：`$TASK_LEDGER_HOME/.taskledger/identity.json`（默认 `~/.taskledger/identity.json`），
+内容是 `{"uuid": "...", "name": "..."}`。没有就报错，由 `init` 命令创建。
 """
 
 from __future__ import annotations
 
-import getpass
+import json
 import os
-import re
-import socket
-import subprocess
 from pathlib import Path
 
-from . import notices
-from .core.identity import Identity, normalize
+from .core.identity import Identity
+from .errors import Fail
 
-_IDENT_RE = re.compile(r"<([^>]*)>")
-
-
-def _git(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["git", *args], capture_output=True, text=True, check=False)
+IDENTITY_HOME_ENV = "TASK_LEDGER_HOME"
 
 
-def git_value(repo: Path | None, *args: str) -> str | None:
-    """读一个 git 配置值；cwd 给定时按那个仓库判（--repo 未必是当前目录）。
-
-    没装 git 二进制不算故障：当「读不到」处理，走兜底身份（2026-10-24：
-    以前直接 FileNotFoundError 崩，没 git 的机器连台账都建不起来）。
-    """
-    base = ("git", "-C", str(repo)) if repo is not None else ("git",)
+def identity_file() -> Path:
+    """机器级身份文件路径；`TASK_LEDGER_HOME` 可覆写主目录（容器/测试用）。"""
+    base = os.environ.get(IDENTITY_HOME_ENV)
+    if base:
+        return Path(base) / ".taskledger" / "identity.json"
     try:
-        proc = subprocess.run(
-            [*base, *args], capture_output=True, text=True, check=False
-        )
-    except FileNotFoundError:
+        home = Path.home()
+    except RuntimeError as exc:
+        raise Fail(
+            "找不到用户主目录（HOME）。\n"
+            "  处理：设置环境变量 TASK_LEDGER_HOME 指向一个可写目录，再重试。"
+        ) from exc
+    return home / ".taskledger" / "identity.json"
+
+
+def read_identity() -> Identity | None:
+    """读机器身份；文件不存在、空文件、坏 JSON、没 uuid 一律返回 None。"""
+    path = identity_file()
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except (OSError, ValueError):
         return None
-    if proc.returncode == 0 and proc.stdout.strip():
-        return proc.stdout.strip()
-    return None
-
-
-def git_email(repo: Path | None) -> str | None:
-    """GIT_COMMITTER_IDENT 优先，退回 user.email。"""
-    ident = git_value(repo, "var", "GIT_COMMITTER_IDENT")
-    if ident:
-        m = _IDENT_RE.search(ident)
-        if m and m.group(1).strip():
-            return m.group(1).strip()
-    return git_value(repo, "config", "user.email")
-
-
-def git_name(repo: Path | None) -> str | None:
-    ident = git_value(repo, "var", "GIT_COMMITTER_IDENT")
-    if ident:
-        head = ident.split("<", 1)[0].strip()
-        if head:
-            return head
-    return git_value(repo, "config", "user.name")
-
-
-def fallback_identity() -> str:
-    """不在 git 仓库里时的兜底链：系统用户名 → getpass → 主机名 → 字面 default。"""
-    for key in ("USER", "LOGNAME"):
-        value = os.environ.get(key, "").strip()
-        if value:
-            return value
     try:
-        name = getpass.getuser().strip()
-    except Exception:  # noqa: BLE001 —— 拿不到用户名是正常分支，不该炸
-        name = ""
-    if name:
-        return name
-    try:
-        host = socket.gethostname().strip()
-    except OSError:
-        host = ""
-    return host or "default"
+        data = json.loads(raw)
+    except ValueError:
+        return None
+    uuid = str((data or {}).get("uuid") or "").strip()
+    if not uuid:
+        return None
+    name = str((data or {}).get("name") or "").strip()
+    return Identity(uuid=uuid, name=name)
 
 
 def current(repo: Path | None = None) -> Identity:
-    """当前操作者。邮箱与名字取不到都给兜底，并留一条提示（不打印）。"""
-    email = git_email(repo)
-    if not email:
-        email = fallback_identity()
-        notices.note(
-            f"提示：读不到 git 身份（user.email），本次按兜底身份 {email!r} 记账；"
-            "配好 git config user.email 再跑，任务才会记到正确的名下。"
+    """当前操作者；没初始化就报错，提示去 init。
+
+    name 的取值规则：工作区 owners.json 里同 uuid 的 name 优先，没有就用总体的 name。
+    """
+    identity = read_identity()
+    if identity is None:
+        raise Fail(
+            "这台机器还没有初始化身份。\n"
+            "  处理：先运行 `progress.py init --repo <工作区根>`，输入一个名字，再执行本命令。"
         )
-    name = git_name(repo) or email
-    return Identity(email=normalize(email), name=name.strip())
+    name = identity.name
+    if repo is not None:
+        name = _workspace_name(repo, identity.uuid) or name
+    return Identity(uuid=identity.uuid, name=name)
+
+
+def _workspace_name(repo: Path, uuid: str) -> str:
+    """当前工作区 owners.json 里这个 uuid 的 name；没有/读不到返回空串。"""
+    from .core.paths import OWNERS_REL, to_repo_rel
+
+    try:
+        raw = (repo / to_repo_rel(OWNERS_REL)).read_text(encoding="utf-8")
+        workers = (json.loads(raw) or {}).get("workers", {}) or {}
+    except (OSError, ValueError):
+        return ""
+    record = workers.get(uuid) or workers.get(uuid.lower())
+    if not isinstance(record, dict):
+        return ""
+    return str(record.get("name") or "").strip()

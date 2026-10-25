@@ -213,7 +213,7 @@ def _task_snapshot(repo: Path, me) -> dict[str, Any]:
 
     tasks: dict[str, Any] = {}
     tasks.update(TaskStore(repo, POOL_REL).all())
-    tasks.update(TaskStore(repo, shard_rel(me.email)).all())
+    tasks.update(TaskStore(repo, shard_rel(me.uuid)).all())
     return tasks
 
 

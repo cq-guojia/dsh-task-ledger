@@ -28,14 +28,27 @@ NOSYNC = {"TASK_LEDGER_NO_SYNC": "1"}
 BASE_ENV = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
 
 
+def home_of(repo) -> Path:
+    """测试用 TASK_LEDGER_HOME：缺身份时补默认 tester。"""
+    home = Path(repo) / ".tlhome"
+    idf = home / ".taskledger" / "identity.json"
+    if not idf.exists():
+        idf.parent.mkdir(parents=True, exist_ok=True)
+        idf.write_text(
+            json.dumps({"uuid": "tester@example.com", "name": "tester"}), encoding="utf-8"
+        )
+    return home
+
+
 def run(repo, *args, env=None):
     """跑一次脚本，返回 (退出码, stdout, stderr)。默认**开着同步**（真走 git）。"""
+    base_env = {**BASE_ENV, "TASK_LEDGER_HOME": str(home_of(repo))}
     proc = subprocess.run(
         [sys.executable, "-B", str(PROGRESS), *args, "--repo", str(repo)],
         capture_output=True,
         text=True,
         cwd=str(repo),
-        env={**BASE_ENV, **(env or {})},
+        env={**base_env, **(env or {})},
         check=False,
     )
     return proc.returncode, proc.stdout, proc.stderr
@@ -48,8 +61,12 @@ def git(cwd, *args):
 
 
 def ident(dirpath, name, email):
-    git(dirpath, "config", "user.name", name)
-    git(dirpath, "config", "user.email", email)
+    """设本机身份：写 TASK_LEDGER_HOME 下的 identity.json（uuid 用 email 便于断言）。"""
+    home = Path(dirpath) / ".tlhome" / ".taskledger"
+    home.mkdir(parents=True, exist_ok=True)
+    (home / "identity.json").write_text(
+        json.dumps({"uuid": email.strip().lower(), "name": name}), encoding="utf-8"
+    )
 
 
 def new_task(repo, title, *, mine=True, env=None):
@@ -305,7 +322,7 @@ class SameMachineLockTest(ScenarioCase):
                         str(fx.a),
                     ],
                     cwd=str(fx.a),
-                    env=BASE_ENV,
+                    env={**BASE_ENV, "TASK_LEDGER_HOME": str(home_of(fx.a))},
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
@@ -335,7 +352,7 @@ class ConcurrentMixedWorkloadTest(ScenarioCase):
         return subprocess.Popen(
             [sys.executable, "-B", str(PROGRESS), *args, "--repo", str(clone)],
             cwd=str(clone),
-            env=BASE_ENV,
+            env={**BASE_ENV, "TASK_LEDGER_HOME": str(home_of(clone))},
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -792,7 +809,7 @@ class RootResolutionTest(unittest.TestCase):
             capture_output=True,
             text=True,
             cwd=str(cwd),
-            env={**BASE_ENV, **NOSYNC},
+            env={**BASE_ENV, **NOSYNC, "TASK_LEDGER_HOME": str(home_of(cwd))},
             check=False,
         )
         return proc.returncode, proc.stdout, proc.stderr

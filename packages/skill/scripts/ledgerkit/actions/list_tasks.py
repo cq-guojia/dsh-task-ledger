@@ -39,7 +39,7 @@ def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
             tid=tid,
             title=str(task.get("title") or ""),
             status=status_of(task),
-            owner=owner_of(task),
+            owner=task.get("owner_name") or owner_of(task),
             created=task.get("created"),
             started=task.get("started"),
             category=task.get("category"),

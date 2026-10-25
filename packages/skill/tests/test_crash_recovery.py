@@ -30,12 +30,13 @@ CREATED = "2026-10-23 00:00:00"
 
 
 def run(repo, *args, env=None):
+    base_env = {**BASE_ENV, **NOSYNC, "TASK_LEDGER_HOME": str(Path(repo) / ".tlhome")}
     proc = subprocess.run(
         [sys.executable, "-B", str(PROGRESS), *args, "--repo", str(repo)],
         capture_output=True,
         text=True,
         cwd=str(repo),
-        env={**BASE_ENV, **NOSYNC, **(env or {})},
+        env={**base_env, **(env or {})},
         check=False,
     )
     return proc.returncode, proc.stdout, proc.stderr
@@ -65,8 +66,7 @@ class Repo:
     def __init__(self):
         self.root = Path(tempfile.mkdtemp(prefix="dtl-cr-"))
         git(self.root, "init", "-q")
-        git(self.root, "config", "user.name", "cr")
-        git(self.root, "config", "user.email", "cr@example.com")
+        self.ident("cr", "cr@example.com")
         (self.root / "README.md").write_text("# x\n", encoding="utf-8")
         git(self.root, "add", "README.md")
         git(self.root, "commit", "-q", "-m", "init")
@@ -75,7 +75,14 @@ class Repo:
         shutil.rmtree(self.root, ignore_errors=True)
 
     def switch(self, email):
-        git(self.root, "config", "user.email", email)
+        self.ident(email, email)
+
+    def ident(self, name, email):
+        home = self.root / ".tlhome" / ".taskledger"
+        home.mkdir(parents=True, exist_ok=True)
+        (home / "identity.json").write_text(
+            json.dumps({"uuid": email.strip().lower(), "name": name}), encoding="utf-8"
+        )
 
 
 class CrashRecoveryCase(unittest.TestCase):
