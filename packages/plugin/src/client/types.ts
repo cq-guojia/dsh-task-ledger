@@ -18,6 +18,9 @@ export interface TaskRow {
 	readonly status?: string;
 	readonly creator?: string | null;
 	readonly owner?: string | null;
+	/** 显示名（uuid 的冗余字段，只用于显示 / 搜索；字段名沿用脚本 JSON 的 snake_case 原样）。 */
+	readonly owner_name?: string | null;
+	readonly creator_name?: string | null;
 	readonly created?: string | null;
 	readonly started?: string | null;
 	/** 最后一次推进的时间（老数据可能没有）。 */
@@ -59,6 +62,9 @@ export interface HistoryRecord {
 	readonly owner?: string;
 	/** 发起人（creator）：任务创建者，与 owner 区分（owner 可被 claim 改走）。 */
 	readonly creator?: string | null;
+	/** 显示名（uuid 的冗余字段，只用于显示 / 搜索）。 */
+	readonly owner_name?: string | null;
+	readonly creator_name?: string | null;
 	/** 「完成了什么」列。 */
 	readonly summary?: string;
 	/** 过程文档路径列。 */

@@ -30,6 +30,7 @@ def release(repo: Path, me: Identity, tid: str) -> Result:
 
     back = dict(task)
     back["owner"] = None
+    back["owner_name"] = None  # 冗余显示名跟着 owner 一起清，否则池里那条仍显示原负责人
     back["status"] = "open"
     back["updated"] = now()
     if pool.get(tid) is None:
@@ -44,7 +45,7 @@ def release(repo: Path, me: Identity, tid: str) -> Result:
     else:
         logs.append_exec(path, exec_line(now(), me.label(), "release", "释放回公共池"))
     return Result(
-        changed=("owner", "status", "updated"),
+        changed=("owner", "owner_name", "status", "updated"),
         where=rel(repo, pool.path),
         message=f"释放 {tid}：{back.get('title') or ''}".strip(),
         notices=(note,) if note else (),

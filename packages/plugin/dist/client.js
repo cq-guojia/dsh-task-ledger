@@ -7,6 +7,14 @@ window.__ModuleLoader__.load({
 		let react = require("react");
 		let _deepseek_ai_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 		//#region src/client/rows.ts
+		/**
+		* 界面上显示人名的**唯一**口径：显示名（`owner_name` / `creator_name`）优先，
+		* 旧数据 / 名册里没名字才退回 uuid。**只用于显示与搜索** —— 归属判定一律比 uuid（见 `isMine`）。
+		*/
+		function displayName(name, uuid) {
+			const label = (name ?? "").trim();
+			return label !== "" ? label : (uuid ?? "").trim();
+		}
 		/** 关键字命中（标题 / 任务号 / 人 / 分类 / 标签；已结案另含「完成了什么」）。 */
 		function hitKeyword(keyword, parts) {
 			const needle = keyword.trim().toLowerCase();
@@ -88,8 +96,8 @@ window.__ModuleLoader__.load({
 			const mineRows = board.tasks.filter((task) => isMine(task, board)).filter((task) => query.workspace === "" || task.workspace.id === query.workspace).filter((task) => hitKeyword(query.keyword, [
 				task.title,
 				task.id,
-				task.owner,
-				task.creator,
+				displayName(task.owner_name, task.owner),
+				displayName(task.creator_name, task.creator),
 				task.category,
 				...task.tags ?? []
 			])).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
@@ -98,7 +106,7 @@ window.__ModuleLoader__.load({
 				task,
 				mine: true
 			}));
-			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => statusHit(task, query.status)).filter((task) => hitKeyword(query.othersKeyword, [task.title, task.owner]));
+			const rest = query.scope === "mine" ? [] : board.tasks.filter((task) => statusHit(task, query.status)).filter((task) => hitKeyword(query.othersKeyword, [task.title, displayName(task.owner_name, task.owner)]));
 			const byWorkspace = /* @__PURE__ */ new Map();
 			for (const task of rest) {
 				const entry = byWorkspace.get(task.workspace.id) ?? {
@@ -1142,7 +1150,7 @@ body[data-ds-dark-theme]{
 			const detailTip = (which) => {
 				if (row.kind !== "task") return void 0;
 				const { task } = row;
-				const owner = task.owner ?? "";
+				const owner = displayName(task.owner_name, task.owner);
 				const who = owner === "" ? t("ownerUnclaimed") : `@${owner}`;
 				const started = stamp(task.started ?? task.created);
 				const updated = stamp(task.updated ?? task.started ?? task.created);
@@ -1215,14 +1223,15 @@ body[data-ds-dark-theme]{
 				title: titleOf(row)
 			}, titleOf(row)));
 			if (variant === "others") {
-				const creator = isTask ? row.task.creator : row.record.owner;
+				const creator = isTask ? row.task.creator : displayName(row.record.owner_name, row.record.owner);
 				const owner = isTask ? row.task.owner : null;
+				const creatorLabel = displayName(isTask ? row.task.creator_name : row.record.owner_name, creator);
 				const hasOwner = !(owner === null || owner === void 0 || owner === "");
-				const who = creator === null || creator === void 0 || creator === "" ? "—" : `@${creator}`;
+				const who = creatorLabel === "" ? "—" : `@${creatorLabel}`;
 				const createdOk = created !== null && created !== void 0 && Date.parse(created) >= 0;
 				const startedOk = isTask && row.task.started !== null && row.task.started !== void 0 && Date.parse(row.task.started) >= 0;
 				const ownerTip = t("startedAt", {
-					who: String(owner),
+					who: displayName(isTask ? row.task.owner_name : null, owner),
 					when: startedOk ? formatDateTime(String(row.task.started)) : t("timeUnknown")
 				});
 				const tagLine = (0, react.createElement)("div", { className: "dtl-orow__tags" }, ...statusTags, tags.map((tag) => (0, react.createElement)(Tag, {

@@ -29,7 +29,7 @@ import {
 import { createElement as h, type ReactNode } from "react";
 import { formatDateTime } from "./format";
 import type { Translate } from "./locales";
-import { CLOSED_ACTIONS, type Row, resolveActions } from "./rows";
+import { CLOSED_ACTIONS, displayName, type Row, resolveActions } from "./rows";
 import type { BoardPayload } from "./types";
 import { Tag } from "./ui";
 
@@ -101,7 +101,7 @@ export function TaskRowView(props: {
 	const detailTip = (which: Exclude<Tone, "closed">): string | undefined => {
 		if (row.kind !== "task") return undefined;
 		const { task } = row;
-		const owner = task.owner ?? "";
+		const owner = displayName(task.owner_name, task.owner);
 		const who = owner === "" ? t("ownerUnclaimed") : `@${owner}`;
 		const started = stamp(task.started ?? task.created);
 		const updated = stamp(task.updated ?? task.started ?? task.created);
@@ -234,13 +234,17 @@ export function TaskRowView(props: {
 
 	// ── 形态 B：全部待办 = 真表格行（无卡片、无外框，一行一格）──
 	if (variant === "others") {
-		const creator = isTask ? row.task.creator : row.record.owner;
+		// 已结案行没有「执行人」列 ⇒ 那格摆负责人（显示名优先，没有才退回 uuid）
+		const creator = isTask
+			? row.task.creator
+			: displayName(row.record.owner_name, row.record.owner);
 		const owner = isTask ? row.task.owner : null;
+		const creatorLabel = displayName(
+			isTask ? row.task.creator_name : row.record.owner_name,
+			creator,
+		);
 		const hasOwner = !(owner === null || owner === undefined || owner === "");
-		const who =
-			creator === null || creator === undefined || creator === ""
-				? "—"
-				: `@${creator}`;
+		const who = creatorLabel === "" ? "—" : `@${creatorLabel}`;
 		const createdOk =
 			created !== null && created !== undefined && Date.parse(created) >= 0;
 		// 执行人的悬停提示（**只在名字被截断时才显示**，见 Tag）：全名 + **什么时候开始执行**
@@ -251,7 +255,7 @@ export function TaskRowView(props: {
 			row.task.started !== undefined &&
 			Date.parse(row.task.started) >= 0;
 		const ownerTip = t("startedAt", {
-			who: String(owner),
+			who: displayName(isTask ? row.task.owner_name : null, owner),
 			when: startedOk
 				? formatDateTime(String(row.task.started))
 				: t("timeUnknown"),

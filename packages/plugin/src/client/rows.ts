@@ -14,6 +14,18 @@ export type Row =
 	| { kind: "task"; key: string; task: BoardTask; mine: boolean }
 	| { kind: "closed"; key: string; record: HistoryRecord };
 
+/**
+ * 界面上显示人名的**唯一**口径：显示名（`owner_name` / `creator_name`）优先，
+ * 旧数据 / 名册里没名字才退回 uuid。**只用于显示与搜索** —— 归属判定一律比 uuid（见 `isMine`）。
+ */
+export function displayName(
+	name: string | null | undefined,
+	uuid: string | null | undefined,
+): string {
+	const label = (name ?? "").trim();
+	return label !== "" ? label : (uuid ?? "").trim();
+}
+
 /** 一个工作区分组（计数口径：待认领 / 进行中 / 积压 / 逾期 / 停滞 / 总，供「全部待办」段头统计）。 */
 export interface WorkspaceGroup {
 	readonly workspaceId: string;
@@ -169,8 +181,9 @@ export function selectView(current: {
 			hitKeyword(query.keyword, [
 				task.title,
 				task.id,
-				task.owner,
-				task.creator,
+				// 搜的是**人名**：uuid 是机器键，人不会拿它搜
+				displayName(task.owner_name, task.owner),
+				displayName(task.creator_name, task.creator),
 				task.category,
 				...(task.tags ?? []),
 			]),
@@ -194,7 +207,10 @@ export function selectView(current: {
 			: board.tasks
 					.filter((task) => statusHit(task, query.status))
 					.filter((task) =>
-						hitKeyword(query.othersKeyword, [task.title, task.owner]),
+						hitKeyword(query.othersKeyword, [
+							task.title,
+							displayName(task.owner_name, task.owner),
+						]),
 					);
 	const byWorkspace = new Map<string, { title: string; rows: Row[] }>();
 	for (const task of rest) {
@@ -255,7 +271,7 @@ export function selectClosed(current: {
 			hitKeyword(current.query.keyword, [
 				record.summary,
 				record.workpackage,
-				record.owner,
+				displayName(record.owner_name, record.owner),
 				record.category,
 				...(record.tags ?? []),
 			]),

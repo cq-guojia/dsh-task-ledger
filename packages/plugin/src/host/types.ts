@@ -19,8 +19,14 @@ export interface LedgerWorkspace {
 export interface TaskRecord {
 	title?: string;
 	status?: string;
+	/** 发起人 uuid（身份唯一键）。 */
 	creator?: string | null;
+	/** 负责人 uuid；池里那条为空。 */
 	owner?: string | null;
+	/** 发起人显示名（脚本算好的冗余字段，**只用于显示 / 搜索**，判定一律比 uuid）。 */
+	creator_name?: string | null;
+	/** 负责人显示名（同上：只用于显示 / 搜索）。 */
+	owner_name?: string | null;
 	created?: string | null;
 	started?: string | null;
 	/** 最后一次推进（建 / 认领 / 改状态 / 交接 / 补执行记录）的时间；老数据可能没有。 */
@@ -45,9 +51,13 @@ export interface HistoryRecord {
 	workpackage?: string;
 	category?: string | null;
 	tags?: string[] | null;
+	/** 负责人 uuid（身份唯一键；`history --owner` 就比这个）。 */
 	owner?: string;
 	/** 发起人（creator）：任务的「创建者」，与 owner 区分（owner 可被 claim 改走）。历史 9 列新增；旧 8 列由 skill 回链 worklog 头部补。 */
 	creator?: string | null;
+	/** 负责人 / 发起人的显示名：脚本读历史时按名册现查补上，**只用于显示 / 搜索**。 */
+	owner_name?: string | null;
+	creator_name?: string | null;
 	/** 「完成了什么」列。 */
 	summary?: string;
 	/** 过程文档链接列。 */

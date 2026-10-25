@@ -84,6 +84,13 @@ def main() -> int:
         # 释放 → 认领（自动 doing）→ 记进展 → set 指向自己走空转
         r = run(repo, "set", "--id", tid, "--owner", "")
         check("release 退出码 0", r.returncode == 0, r.stderr)
+        r = run(repo, "list", "--json")
+        released = json.loads(r.stdout)[tid]
+        check(
+            "release 清掉冗余显示名（池里那条不许再挂着原负责人）",
+            released["owner"] is None and released["owner_name"] is None,
+            r.stdout,
+        )
         r = run(repo, "claim", "--id", tid)
         check("claim 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "list", "--json")
