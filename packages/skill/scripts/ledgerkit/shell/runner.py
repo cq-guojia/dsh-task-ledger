@@ -91,6 +91,11 @@ def _run(command: str, args: argparse.Namespace, log: dirty.WriteLog) -> int:
     # 只读：不建 GitRepo、不进事务、不提交
     if spec.readonly:
         value = spec.func(repo, me, **params)
+        # 先自报读的是哪个台账：`--repo` 指错目录时输出会变成一片「没有任务」，不带这一行
+        # 就完全看不出读错了地方。`--count-only` 也出 JSON，同样不打（2026-10-25 改）
+        render.repo_banner(
+            repo, machine=as_json or bool(getattr(args, "count_only", False))
+        )
         _render(spec, value, args, as_json=as_json)
         if getattr(value, "problems", ()):
             return BUSINESS  # validate 有 problems ⇒ 退出码 1（§六）

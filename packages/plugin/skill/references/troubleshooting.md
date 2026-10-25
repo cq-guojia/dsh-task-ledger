@@ -56,6 +56,7 @@
 - **「仓库处于中间态（rebase-merge / rebase-apply / MERGE_HEAD）：先跑 git status 看提示，完成或中止它（git rebase --abort / git merge --abort）再跑本命令」**：上次 rebase / merge 没收尾。
 - **「找不到台账：从当前目录往上都没有 ledger/ 目录」**：`--repo` 指对**工作区根**（直接含有 `ledger/` 的那个目录）；第一条写命令会自动把 `ledger/` 建出来，不用先初始化。
 - **「--repo 指到了台账目录本身」**：你把 `ledger/` 当成了根；它的上一级才是工作区根，按报错里给的路径改。
+- **「--repo 指到了台账目录里面」**：你指到了 `ledger/` 下面的某个子目录（如 `ledger/worklog`）；工作区根是那个 `ledger/` 的上一级，按报错里给的路径改。
 - **「--repo 指向的不是一个目录」**：路径写错或不存在，要指到工作区根。
 
 ### 并发 / 锁（退 1 或提示）

@@ -743,6 +743,89 @@ class RootResolutionTest(unittest.TestCase):
         code, _out, err = run(weird, "list", env=NOSYNC)
         self.assertEqual(code, 0, f"根叫 ledger 不该被误拒：{err}")
 
+    def test_common_filenames_in_root_are_not_rejected(self):
+        """项目根自带 pool.json / history+worklog / owners.json+owners 都不是台账目录。
+
+        判据只看结构（含不含 ledger/、在不在 ledger/ 里），不看目录里有哪些文件
+        （2026-10-25 改）。
+        """
+        cases = {
+            "pool": lambda r: (r / "pool.json").write_text("{}", encoding="utf-8"),
+            "history_worklog": lambda r: [
+                (r / d).mkdir(exist_ok=True) for d in ("history", "worklog")
+            ],
+            "owners": lambda r: [
+                (r / "owners").mkdir(exist_ok=True),
+                (r / "owners.json").write_text("{}", encoding="utf-8"),
+            ],
+        }
+        for name, prepare in cases.items():
+            with self.subTest(name=name):
+                r = self.root / f"proj-{name}"
+                (r / "ledger" / "owners").mkdir(parents=True)
+                (r / "ledger" / "pool.json").write_text(
+                    '{"version": "1", "tasks": {}}', encoding="utf-8"
+                )
+                prepare(r)
+                code, _out, err = run(r, "list", env=NOSYNC)
+                self.assertEqual(code, 0, f"{name}：根不该被误当成台账目录：{err}")
+
+    def test_repo_pointing_inside_ledger_is_rejected(self):
+        """`--repo <根>/ledger/worklog` 是台账目录里面，不能当根（否则建出嵌套台账）。"""
+        (self.repo / "ledger" / "worklog").mkdir()
+        code, _out, err = run(self.repo / "ledger" / "worklog", "list")
+        self.assertEqual(code, 1)
+        self.assertIn("台账目录里面", err)
+
+    def test_half_bootstrapped_ledger_dir_is_rejected(self):
+        """半自举遗留（只有 owners/、没有 pool.json）也是台账目录，靠位置判、不靠指纹。"""
+        half = self.root / "proj2" / "ledger"
+        (half / "owners").mkdir(parents=True)
+        code, _out, err = run(half, "list")
+        self.assertEqual(code, 1)
+        self.assertIn("台账目录本身", err)
+
+    def _run_cwd(self, cwd, *args):
+        """不带 `--repo` 跑一条命令，走 cwd 向上定位那条路（`run()` 永远硬塞 --repo）。"""
+        proc = subprocess.run(
+            [sys.executable, "-B", str(PROGRESS), *args],
+            capture_output=True,
+            text=True,
+            cwd=str(cwd),
+            env={**BASE_ENV, **NOSYNC},
+            check=False,
+        )
+        return proc.returncode, proc.stdout, proc.stderr
+
+    def test_cwd_root_named_ledger_finds_real_ledger(self):
+        """工作区根自己就叫 ledger 时，cwd 定位要走根上的 ledger/，不能被父目录抢走。"""
+        weird = self.root / "proj3" / "ledger"
+        real = weird / "ledger"
+        (real / "owners").mkdir(parents=True)
+        (real / "pool.json").write_text(
+            '{"version": "1", "tasks": {"T1": {"id": "T1", "title": "真任务",'
+            ' "status": "open", "owner": null}}}',
+            encoding="utf-8",
+        )
+        (real / "owners.json").write_text('{"workers": {}}', encoding="utf-8")
+        code, out, err = self._run_cwd(weird, "list")
+        self.assertEqual(code, 0, err)
+        self.assertIn("真任务", out, "必须读到根上的 ledger/，不是父目录")
+        self.assertIn(f"台账：{weird.resolve()}", out)
+
+    def test_cwd_root_with_history_and_worklog_dirs(self):
+        """根自带 history/ + worklog/ 两个目录时，cwd 定位仍要落到根上（不许说找不到）。"""
+        r = self.root / "proj-sibling-dirs"
+        (r / "ledger" / "owners").mkdir(parents=True)
+        (r / "ledger" / "pool.json").write_text(
+            '{"version": "1", "tasks": {}}', encoding="utf-8"
+        )
+        for d in ("history", "worklog"):
+            (r / d).mkdir()
+        code, out, err = self._run_cwd(r, "list")
+        self.assertEqual(code, 0, err)
+        self.assertIn(f"台账：{r.resolve()}", out)
+
 
 class MonthsWindowTest(ScenarioCase):
     """--months 是自然月窗口：自己算最近 N 个月，读其中存在的文件（2026-10-24）。"""

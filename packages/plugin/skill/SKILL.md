@@ -134,7 +134,7 @@ allowed-tools: Read,Edit,Bash,Grep
 python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <工作区根>
 ```
 
-- 定位项目：`--repo <工作区根>`（**直接含有 `ledger/` 的那个目录**）给了就校验后用；不给就从当前目录逐级向上找。`ledger/` 本身不是根，指到它会被直接拒绝。
+- 定位项目：`--repo <工作区根>`（**直接含有 `ledger/` 的那个目录**）给了就校验后用；不给就从当前目录逐级向上找。`ledger/` 本身、以及它下面的任何子目录都不是根，指过去会被直接拒绝（判据只看位置，不看目录里有哪些文件 —— 项目根自带 `pool.json`、`history/`、`worklog/` 都不影响）。
 - `--no-sync`（放在子命令**前**）：用户明确要求「先别同步」时才用；之后自己 `git add ledger && commit && push`。
 - `--json` 只对只读命令（`list` / `show` / `history` / `validate`）有意义；写命令不接收 `--json`，传了是用法错。`--json` 里的时间字段是 UTC，人话输出是本地时间。
 - 命令回执只用来确认生效；任务状态以 `show` / `list` 为准。

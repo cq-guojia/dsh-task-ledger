@@ -41,6 +41,12 @@ def fail_message(exc: BaseException, *, title: str = "错误") -> None:
     _err(f"{title}：{exc}")
 
 
+def repo_banner(repo: Any, *, machine: bool) -> None:
+    """只读命令开头自报「读的是哪个台账」（输出是 JSON 时不打，否则污染机器可读结果）。"""
+    if not machine:
+        _out(f"台账：{repo}")
+
+
 def _json(data: Any) -> None:
     sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
