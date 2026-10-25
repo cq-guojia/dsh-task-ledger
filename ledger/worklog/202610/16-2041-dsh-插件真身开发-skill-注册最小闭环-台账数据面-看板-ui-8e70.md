@@ -104,18 +104,12 @@
 （未就绪/真空引导卡/筛选空）；确认框自绘；数据 = HTTP 增量（rev）+ SSE 单例
 （无轮询）；`--tdt-*` token 一律映射 `--dsw-*`。
 
-## 下一步
-
-先落 host 最小闭环：建 `packages/plugin` 构建工程（package.json 依赖/脚本 +
-tsconfig，产物 `dist/` 入仓），实现 apply 注册内嵌 skill；宿主接口一律先读
-`docs/design/external/` 已核实事实，查不到再 `npm pack` 亲验，不猜签名。
-
-## 过程
-
-<!-- 踩坑、定位、证据。带 revision 和 文件:行号 或符号名（行号会漂移）。
-     例：rc4f2a1 的 src/host.ts:112 返回 null，是因为没等 ready 事件就发了请求 -->
-
 ## 结论
 
 <!-- 收尾时填：做成了什么、留了什么坑。
      例：已修复，但只覆盖 UTF-8；GBK 另开任务 -->
+
+## 执行记录
+
+<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
+     补记用 progress.py log --id <任务号> --note "一句话"。 -->

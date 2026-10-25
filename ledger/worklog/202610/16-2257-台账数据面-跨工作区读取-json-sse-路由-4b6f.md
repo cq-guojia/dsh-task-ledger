@@ -34,3 +34,8 @@ skill 注册最小闭环」先就位（路由挂在同一个 host 半里）。
 
 <!-- 收尾时填：做成了什么、留了什么坑。
      例：已修复，但只覆盖 UTF-8；GBK 另开任务 -->
+
+## 执行记录
+
+<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
+     补记用 progress.py log --id <任务号> --note "一句话"。 -->
