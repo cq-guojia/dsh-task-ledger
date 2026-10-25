@@ -33,7 +33,7 @@ def set_task(repo: Path, me: Identity, tid: str, *, owner: str | None) -> Result
         return release_mod.release(repo, me, tid)
     if not is_me(me, target):
         return handoff_mod.handoff(repo, me, tid, to=target)
-    mine = TaskStore(repo, shard_rel(me.email), identity=me)
+    mine = TaskStore(repo, shard_rel(me.uuid), identity=me)
     if mine.get(tid) is not None:
         return Result(
             already_done=True,

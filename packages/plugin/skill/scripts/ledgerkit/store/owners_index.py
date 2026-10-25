@@ -32,7 +32,7 @@ class OwnersIndex:
 
     def ensure(self, me: Identity) -> tuple[bool, dict[str, Any]]:
         """登记 / 补 `joined`。`name` 只在首次登记时写入，之后不回写（名字是给你做对照的被动字段，不该被任何逻辑读）。返回 (这次写了没有, 记录)。"""
-        key = normalize(me.email)
+        key = normalize(me.uuid)
         with self._open() as session:
             data = session.data
             workers = data.setdefault("workers", {})

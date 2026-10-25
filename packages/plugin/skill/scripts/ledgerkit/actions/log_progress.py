@@ -23,7 +23,7 @@ def log_progress(repo: Path, me: Identity, tid: str, note: str) -> Result:
     text = " ".join((note or "").split())
     if not text:
         raise Fail("--note 不能为空。")
-    mine = TaskStore(repo, shard_rel(me.email), identity=me)
+    mine = TaskStore(repo, shard_rel(me.uuid), identity=me)
     task = mine.get(tid)  # 锁内重读
     if task is None:
         raise Fail(f"任务 {tid} 不在我的分片里（只能给自己的任务记进展）。")
@@ -43,7 +43,7 @@ def log_progress(repo: Path, me: Identity, tid: str, note: str) -> Result:
                 "提示：这条任务没有过程文档，已跳过执行记录（分片的最后更新已刷）。",
             ),
         )
-    ok = logs.append_exec(path, exec_line(now(), me.email, "log", text))
+    ok = logs.append_exec(path, exec_line(now(), me.label(), "log", text))
     if not ok:
         return Result(
             changed=("updated",),

@@ -101,7 +101,8 @@ def show_view(res: ShowResult, *, as_json: bool) -> None:
     task = res.task
     _out(f"{task.get('tid', '')}：{task.get('title', '')}")
     _out(
-        f"  状态：{task.get('status', '')}　负责人：{task.get('owner') or '（未认领）'}"
+        f"  状态：{task.get('status', '')}　"
+        f"负责人：{task.get('owner_name') or task.get('owner') or '（未认领）'}"
     )
     _out(
         f"  创建：{fmt_local(task.get('created'))}　"
@@ -143,7 +144,7 @@ def history_view(res: HistoryResult, q: HistoryQuery | None, *, as_json: bool) -
     for row in res.records:
         _out(
             f"  {fmt_local(row.get('finished'))}  "
-            f"{row.get('owner') or '（无人）':<12} {row.get('title', '')}"
+            f"{row.get('owner_name') or row.get('owner') or '（无人）':<12} {row.get('title', '')}"
         )
 
 

@@ -24,7 +24,7 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
         raise Fail(
             f"{to} 还没在索引里登记过 ⇒ 不能交接给他（写出一份对别人不存在的分片，他自己也看不到）。"
         )
-    mine = TaskStore(repo, shard_rel(me.email), identity=me)
+    mine = TaskStore(repo, shard_rel(me.uuid), identity=me)
     task = mine.get(tid)  # 锁内重读
     if task is None:
         raise Fail(f"任务 {tid} 不在我的分片里，交接不了。")
@@ -47,7 +47,7 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
         path = logs.find(tid, moved.get("worklog"))
         if path is not None:
             logs.append_exec(
-                path, exec_line(now(), me.email, "set", f"交接给 {to_key}（补齐）")
+                path, exec_line(now(), me.label(), "set", f"交接给 {to_key}（补齐）")
             )
         return Result(
             already_done=True,
@@ -65,7 +65,7 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
     if path is None:
         note = f"任务 {tid} 已交给 {to_key}，但过程文档没找到，跳过执行记录。"
     else:
-        logs.append_exec(path, exec_line(now(), me.email, "set", f"交接给 {to_key}"))
+        logs.append_exec(path, exec_line(now(), me.label(), "set", f"交接给 {to_key}"))
     return Result(
         changed=("owner", "updated"),
         where=rel(repo, to_store.path),

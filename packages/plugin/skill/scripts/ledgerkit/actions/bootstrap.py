@@ -26,5 +26,5 @@ def bootstrap(repo: Path, me: Identity) -> Identity:
     TaskStore(repo, POOL_REL).ensure_file()
     index = OwnersIndex(repo)
     _, _ = index.ensure(me)  # 登记自己（已登记则零写）
-    TaskStore(repo, shard_rel(me.email), identity=me).ensure_file()
+    TaskStore(repo, shard_rel(me.uuid), identity=me).ensure_file()
     return me

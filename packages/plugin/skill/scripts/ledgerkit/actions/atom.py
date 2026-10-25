@@ -61,13 +61,13 @@ def _pool(repo: Path) -> Path:
 
 
 def _shard(repo: Path, me: Identity) -> Path:
-    return shard_rel(me.email)
+    return shard_rel(me.uuid)
 
 
 def _other_shards(repo: Path, me: Identity) -> tuple[Path, ...]:
     """索引里除我之外的分片（宁宽：认领的前置要查、交接要写对方那份）。"""
     index = OwnersIndex(repo)
-    me_key = normalize(me.email)
+    me_key = normalize(me.uuid)
     out: list[Path] = []
     for key, record in index.all().items():
         if key == me_key:

@@ -50,7 +50,7 @@ def new_task(
     category = normalize_label(category, field="分类") if category else None
     tag_list = parse_tags(tags)
 
-    mine_store = TaskStore(repo, shard_rel(me.email), identity=me)
+    mine_store = TaskStore(repo, shard_rel(me.uuid), identity=me)
     pool = TaskStore(repo, POOL_REL)
     target = mine_store if mine else pool
 
@@ -80,8 +80,10 @@ def new_task(
         "created": created,
         # --self = 建并认领：直接归自己名下就必须是在做，不留 open 半成品
         "status": "doing" if mine else "open",
-        "owner": me.email if mine else None,
-        "creator": me.email,
+        "owner": me.uuid if mine else None,
+        "owner_name": me.name if mine else None,
+        "creator": me.uuid,
+        "creator_name": me.name,
         "category": category,
         "tags": list(tag_list),
         "worklog": doc_rel,
@@ -95,11 +97,11 @@ def new_task(
             tid=tid,
             title=clean_title,
             created=created,
-            creator=me.email,
+            creator=me.label(),
             category=category,
             tags=tag_list,
             first_exec=exec_line(
-                created, me.email, "new", "创建任务并认领" if mine else "创建任务"
+                created, me.label(), "new", "创建任务并认领" if mine else "创建任务"
             ),
         )
         target.put(tid, task)

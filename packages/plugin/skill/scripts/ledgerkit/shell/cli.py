@@ -93,6 +93,11 @@ def build_parser() -> argparse.ArgumentParser:
     valp.add_argument("--deep", action="store_true")
     valp.add_argument("--json", action="store_true")
 
+    initp = sub.add_parser("init", help="初始化本机身份（一台机器只一次）")
+    initp.add_argument("--claim", help="认领名册里已有的 uuid")
+    initp.add_argument("--new", action="store_true", dest="new_id", help="新建身份")
+    initp.add_argument("--name", help="新建身份时的显示名字（必填）")
+
     # 宿主（插件 / SKILL.md）的调用写法是 `progress.py list --repo <仓库>`：
     # `--repo` 挂在**子命令后面**，所以每个子命令都要认；子命令给的值覆盖顶层那个。
     for parser_ in sub.choices.values():
@@ -206,6 +211,8 @@ def main(argv: list[str] | None = None) -> int:
     to_query(args)
 
     command = command_of(args)
+    if command == "init":
+        return _run_init(args)
     try:
         # 定位只做一次：解析好的工作区根挂回 args，runner 与整命令锁都拿它
         args.repo = str(resolve_repo(getattr(args, "repo", None)))
@@ -247,6 +254,37 @@ def _lock_dir(repo: Path) -> Path:
     lock_dir = Path(tempfile.gettempdir()) / f"dsh-task-ledger-{key}"
     lock_dir.mkdir(parents=True, exist_ok=True)
     return lock_dir
+
+
+def _run_init(args: argparse.Namespace) -> int:
+    """init 不进 runner、不解析台账、不碰 git：只写机器身份文件。"""
+    from ..actions.init_identity import init_identity
+
+    repo: Path | None = None
+    raw = getattr(args, "repo", None)
+    try:
+        repo = as_root(raw, source="--repo") if raw else root_of(Path.cwd().resolve())
+    except Fail:
+        repo = None
+    try:
+        res = init_identity(
+            repo,
+            claim=getattr(args, "claim", None),
+            new=bool(getattr(args, "new_id", False)),
+            name=getattr(args, "name", "") or "",
+        )
+    except Fail as exc:
+        render.fail_message(exc)
+        return BUSINESS
+    if res.get("need_choose"):
+        print("这台机器还没初始化。当前仓库里已有的用户：")
+        for opt in res.get("options", []):
+            print(f"  {opt['uuid']}  {opt['name']}")
+        print("请重跑：init --claim=<uuid>  认领，或  init --new --name=<名字>  新建")
+        return 0
+    print(f"已初始化：{res['name'] or res['uuid'][:8]}（{res['uuid']}）")
+    print(f"文件：{res['path']}")
+    return 0
 
 
 def _readonly(command: str) -> bool:

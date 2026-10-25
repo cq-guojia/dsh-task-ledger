@@ -17,7 +17,7 @@ from .result import Result, rel
 def release(repo: Path, me: Identity, tid: str) -> Result:
     """写序：写回池（已有同号就不覆盖）→ 删我分片那行 → 过程文档记一笔。"""
     pool = TaskStore(repo, POOL_REL)
-    mine = TaskStore(repo, shard_rel(me.email), identity=me)
+    mine = TaskStore(repo, shard_rel(me.uuid), identity=me)
     task = mine.get(tid)  # 锁内重读
     if task is None:
         if pool.get(tid) is not None:
@@ -42,7 +42,7 @@ def release(repo: Path, me: Identity, tid: str) -> Result:
     if path is None:
         note = f"任务 {tid} 已退回公共池，但过程文档没找到，跳过执行记录。"
     else:
-        logs.append_exec(path, exec_line(now(), me.email, "release", "释放回公共池"))
+        logs.append_exec(path, exec_line(now(), me.label(), "release", "释放回公共池"))
     return Result(
         changed=("owner", "status", "updated"),
         where=rel(repo, pool.path),

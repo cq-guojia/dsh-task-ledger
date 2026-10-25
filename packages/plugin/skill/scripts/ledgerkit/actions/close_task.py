@@ -51,7 +51,7 @@ def close_task(
     history = HistoryStore(repo)
     hist_path = repo / to_repo_rel(history_path_for(finished))
 
-    mine = TaskStore(repo, shard_rel(me.email), identity=me)
+    mine = TaskStore(repo, shard_rel(me.uuid), identity=me)
     task = mine.get(tid)  # 锁内重读
     if task is None:
         # 分片里已经没有这条：上次崩在「删分片」之后。只按过程文档名判重，命中即已结案
@@ -93,9 +93,9 @@ def close_task(
             if doc_path is not None:
                 text = logs.read(doc_path)
                 if not has_frozen_line(text):
-                    frozen = stamp_frozen(text, finished, me.email)
+                    frozen = stamp_frozen(text, finished, me.label())
                     frozen = append_exec_log(
-                        frozen, exec_line(finished, me.email, "close", "结案封卷")
+                        frozen, exec_line(finished, me.label(), "close", "结案封卷")
                     )
                     logs.write(doc_path, frozen)
                     notes.append("补齐上次未完成的封卷。")
@@ -136,8 +136,10 @@ def close_task(
                 "title": task.get("title") or "",
                 "category": final_category,
                 "tags": final_tags,
-                "owner": me.email,
-                "creator": task.get("creator") or me.email,
+                "owner": me.label(),
+                "owner_name": me.name,
+                "creator": task.get("creator_name") or me.label(),
+                "creator_name": task.get("creator_name") or me.name,
                 "summary": text_summary,
                 "worklog": task.get("worklog") if doc_path else None,
             },
@@ -148,9 +150,9 @@ def close_task(
         if doc_path is not None:
             text = logs.read(doc_path)
             if not has_frozen_line(text):
-                frozen = stamp_frozen(text, finished, me.email)
+                frozen = stamp_frozen(text, finished, me.label())
                 frozen = append_exec_log(
-                    frozen, exec_line(finished, me.email, "close", "结案封卷")
+                    frozen, exec_line(finished, me.label(), "close", "结案封卷")
                 )
                 logs.write(doc_path, frozen)
 
