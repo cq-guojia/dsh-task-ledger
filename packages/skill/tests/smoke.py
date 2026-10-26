@@ -293,6 +293,26 @@ def main() -> int:
         )
         shutil.rmtree(gate_home, ignore_errors=True)
 
+        # 裸 init（无 flag）非终端：只读报候选、不写文件（agent 走这条拿名单交给用户）
+        list_home = Path(tempfile.mkdtemp(prefix="ledgerkit-list-home-"))
+        r = subprocess.run(
+            [PY, "-B", str(PROGRESS), "--repo", str(repo), "init"],
+            capture_output=True,
+            text=True,
+            cwd=str(repo),
+            stdin=subprocess.DEVNULL,
+            env={**os.environ, "TASK_LEDGER_HOME": str(list_home)},
+            check=False,
+        )
+        check(
+            "裸 init 非终端只读报候选且不写文件",
+            r.returncode == 0
+            and not (list_home / ".taskledger" / "identity.json").exists()
+            and "已有的用户" in r.stdout,
+            r.stdout + r.stderr,
+        )
+        shutil.rmtree(list_home, ignore_errors=True)
+
         # 空台账契约（ledger-data.md §七）：没有任何历史文件时，--json 仍必须是 JSON。
         # 这条一破，插件把「输出不是 JSON」当失败 ⇒ 一个空工作区就能让整块看板 500（2026-10-17 真机）。
         empty = Path(tempfile.mkdtemp(prefix="ledgerkit-empty-"))

@@ -269,8 +269,28 @@ def _lock_dir(repo: Path) -> Path:
     return lock_dir
 
 
+def _print_candidates(opts: list[dict]) -> None:
+    print("这台机器还没初始化。当前仓库里已有的用户：")
+    for i, opt in enumerate(opts, 1):
+        print(f"  {i}. {opt['uuid']}  {opt['name']}")
+
+
+def _print_init_result(res: dict) -> None:
+    if res.get("already"):
+        print(
+            f"已经初始化过，未做改动：{res['name'] or res['uuid'][:8]}（{res['uuid']}）"
+        )
+        print(f"文件：{res['path']}")
+        return
+    print(f"已初始化：{res['name'] or res['uuid'][:8]}（{res['uuid']}）")
+    print(f"文件：{res['path']}")
+
+
 def _run_init(args: argparse.Namespace) -> int:
-    """init 不进 runner、不解析台账、不碰 git：只写机器身份文件。"""
+    """init 不进 runner、不解析台账、不碰 git：只写机器身份文件。
+
+    交互式：裸 init 在真终端读名册、问用户选 / 输名字；无终端（agent）只报候选、不写。
+    """
     from .. import env
     from ..actions.init_identity import init_identity
 
@@ -282,38 +302,54 @@ def _run_init(args: argparse.Namespace) -> int:
         repo = None
     claim = getattr(args, "claim", None)
     new = bool(getattr(args, "new_id", False))
-    name = getattr(args, "name", "") or ""
+    name = (getattr(args, "name", "") or "").strip()
+    tty = sys.stdin.isatty()
+
     try:
-        # 首次写身份只能由用户在真终端交互完成：agent 的 subprocess 没有 TTY，
-        # 放行就等于让它替用户挑一个身份写进本机（2026-10-26 事故）。
-        if (
-            env.read_identity() is None
-            and (claim or new or name.strip())
-            and not sys.stdin.isatty()
-        ):
-            raise Fail(
-                "写入身份必须由用户在终端里交互执行（当前没有终端）。\n"
-                "  处理：请用户在终端运行 `python3 progress.py init --repo <工作区根>`，\n"
-                "  它会列出已有身份供选择，或让 ta 输入一个新名字。"
-            )
-        res = init_identity(repo, claim=claim, new=new, name=name)
+        existing = env.read_identity()
+        if existing is not None:
+            # 已初始化：幂等空转（带不带 flag 都一样，零写）
+            res = init_identity(repo, claim=claim, new=new, name=name)
+        elif claim or new or name:
+            # flag 写操作：只接受真终端；agent 无终端调不动（2026-10-26 事故）
+            if not tty:
+                raise Fail(
+                    "写入身份必须由用户在终端里交互执行（当前没有终端）。\n"
+                    "  处理：请用户在终端运行 `python3 progress.py init --repo <工作区根>`，\n"
+                    "  它会列出已有身份供选择，或让 ta 输入一个新名字。"
+                )
+            res = init_identity(repo, claim=claim, new=new, name=name)
+        else:
+            # 裸 init：先看名册
+            res = init_identity(repo, claim=None, new=False, name="")
+            if res.get("need_choose"):
+                opts = res.get("options", [])
+                if not tty:
+                    _print_candidates(opts)
+                    print(
+                        "请重跑：init --claim=<uuid>  认领，或  init --new --name=<名字>  新建"
+                    )
+                    return 0
+                _print_candidates(opts)
+                choice = input("选编号认领，或输入 n 新建：").strip()
+                if choice.lower() == "n":
+                    prompt_name = input("输入用户名：").strip()
+                    res = init_identity(repo, claim=None, new=True, name=prompt_name)
+                else:
+                    res = init_identity(
+                        repo, claim=opts[int(choice) - 1]["uuid"], new=False, name=""
+                    )
+            else:
+                # 名册空：交互输入名字；非终端交给用户去终端跑（init_identity 会报需要名字）
+                prompt_name = input("输入用户名：").strip() if tty else ""
+                res = init_identity(repo, claim=None, new=tty, name=prompt_name)
     except Fail as exc:
         render.fail_message(exc)
         return BUSINESS
-    if res.get("need_choose"):
-        print("这台机器还没初始化。当前仓库里已有的用户：")
-        for opt in res.get("options", []):
-            print(f"  {opt['uuid']}  {opt['name']}")
-        print("请重跑：init --claim=<uuid>  认领，或  init --new --name=<名字>  新建")
-        return 0
-    if res.get("already"):
-        print(
-            f"已经初始化过，未做改动：{res['name'] or res['uuid'][:8]}（{res['uuid']}）"
-        )
-        print(f"文件：{res['path']}")
-        return 0
-    print(f"已初始化：{res['name'] or res['uuid'][:8]}（{res['uuid']}）")
-    print(f"文件：{res['path']}")
+    except (ValueError, IndexError):
+        render.fail_message(Fail("输入无效，初始化已取消。"))
+        return BUSINESS
+    _print_init_result(res)
     return 0
 
 
