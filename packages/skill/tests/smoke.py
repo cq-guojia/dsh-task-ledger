@@ -293,7 +293,7 @@ def main() -> int:
         )
         shutil.rmtree(gate_home, ignore_errors=True)
 
-        # 非终端 + --yes：用户已明确同意后允许 Agent 代跑写入
+        # --yes 已禁用：Agent 不得代写/重建身份（2026-10-26 二次事故回归）
         yes_home = Path(tempfile.mkdtemp(prefix="ledgerkit-yes-home-"))
         r = subprocess.run(
             [
@@ -315,13 +315,10 @@ def main() -> int:
             env={**os.environ, "TASK_LEDGER_HOME": str(yes_home)},
             check=False,
         )
-        yes_ident = yes_home / ".taskledger" / "identity.json"
         check(
-            "非终端 init --new --yes 允许写入",
-            r.returncode == 0
-            and yes_ident.exists()
-            and json.loads(yes_ident.read_text(encoding="utf-8")).get("name")
-            == "GateYes",
+            "非终端 init --new --yes 被拒且不写身份文件",
+            r.returncode != 0
+            and not (yes_home / ".taskledger" / "identity.json").exists(),
             r.stdout + r.stderr,
         )
         shutil.rmtree(yes_home, ignore_errors=True)

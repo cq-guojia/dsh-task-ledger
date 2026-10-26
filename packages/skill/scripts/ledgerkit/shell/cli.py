@@ -111,7 +111,7 @@ def build_parser() -> argparse.ArgumentParser:
     initp.add_argument(
         "--yes",
         action="store_true",
-        help="非交互写入确认（由 Agent 在用户明确同意后使用）",
+        help="已禁用：身份写入只能在真终端交互完成",
     )
 
     # 宿主（插件 / SKILL.md）的调用写法是 `progress.py list --repo <仓库>`：
@@ -426,17 +426,22 @@ def _run_init(args: argparse.Namespace) -> int:
     tty = sys.stdin.isatty()
 
     try:
+        if yes:
+            raise Fail(
+                "--yes 已禁用：身份写入只能在真终端交互完成，Agent 不得代写或重建身份。\n"
+                "  处理：请用户在自己的终端运行 `python3 progress.py init --repo <工作区根>`。"
+            )
         existing = env.read_identity()
         if existing is not None:
             # 已初始化：幂等空转（带不带 flag 都一样，零写）
             res = init_identity(repo, claim=claim, new=new, name=name)
         elif claim or new or name:
-            # 非终端写入必须带 --yes：Agent 只能在用户明确同意后代跑（2026-10-26 事故）
-            if not tty and not yes:
+            # 身份写入只能由用户在真终端交互完成；非终端（agent）一律拒绝（2026-10-26 事故）
+            if not tty:
                 raise Fail(
-                    "非交互写入身份需要用户明确同意。\n"
-                    "  处理：先裸跑 init（只读）把名册报给用户，取得明确同意后再加 --yes 重跑；\n"
-                    "  或请用户自己在终端运行 init（交互式选择/新建）。"
+                    "身份写入只能在真终端交互完成；Agent 不得代写或代为重建身份。\n"
+                    "  处理：请用户在自己的终端运行 `python3 progress.py init --repo <工作区根>`，\n"
+                    "  由 ta 亲自选择/新建并确认。"
                 )
             res = init_identity(repo, claim=claim, new=new, name=name)
         else:
