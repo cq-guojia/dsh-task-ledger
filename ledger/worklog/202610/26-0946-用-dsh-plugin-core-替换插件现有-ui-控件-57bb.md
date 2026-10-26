@@ -45,3 +45,4 @@
 - 2026-10-26 17:46:05 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务并认领
 - 2026-10-26 17:48:40 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 调查完成：客户端 UI 全在 5 文件；待替换 Button/Segmented/Input/Picker/Chip/Tag/EmptyState 等，排除统计+图表区；4 个缺口待确认（Tag 7→5 tone、空态/横幅、表格行、LedgerIcon）
 - 2026-10-26 17:54:53 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 控件层替换完成：ui.ts 的 Segmented/Button/IconButton/Select/SearchInput/Chip/Tag + task-row 按钮改 core；index 挂 setStyleKit；build/typecheck 过，client.js 104.8→336.2KB（floating-ui），无 codemirror/sonner；6 个 core 缺口已记
+- 2026-10-26 17:57:17 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 修浏览器激活失败 process is not defined：依赖含 process.env.NODE_ENV，tsdown.client.config.ts 加 define=production；重建后产物 process/Buffer/__dirname 引用均 0
