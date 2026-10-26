@@ -1,11 +1,10 @@
 # 20261019-0955-skill-模板增强-progress-最后更新时间-worklog-执行记录-78e3：skill 模板增强：progress 最后更新时间 + worklog 执行记录
 
-> **✅ 完成封卷**：2026-10-19 14:08:30（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
 > **创建**：2026-10-19 09:55:09（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
+> ✅ 完成封卷：2026-10-19 14:08:30（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
 > **分类**：建设 ｜ **标签**：skill、task-ledger、worklog
 
-<!-- 「> **分类**：… ｜ **标签**：…」行由脚本按 new --category / --tags 自动插在创建行后；
-     两者皆空则不写此行。close 时可用 --category / --tags 覆盖修正。 -->
+<!-- 「> **分类**：… ｜ **标签**：…」行由脚本按 new --category / --tags 插入；两者皆空则不写。 -->
 
 ## 背景
 
@@ -152,9 +151,8 @@
 
 ## 执行记录
 
-<!-- 本节由脚本维护：new / claim / set / close / log 自动追加，请勿手改。
-     要补一条就跑 progress.py log --id <任务号> --note "做了什么"。 -->
-
+<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
+     补记用 progress.py log --id <任务号> --note "一句话"。 -->
 - 2026-10-19 13:07:10 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · SKILL.md 瘦身到 9.2KB 并拆出 references（技能评审）
 - 2026-10-19 13:32:58 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · description 重写为纯触发条件（168 字符）
 - 2026-10-19 13:35:13 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 发版 skill 1.2.1 / plugin 0.0.55
