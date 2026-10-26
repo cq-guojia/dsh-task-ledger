@@ -271,6 +271,7 @@ def _lock_dir(repo: Path) -> Path:
 
 def _run_init(args: argparse.Namespace) -> int:
     """init 不进 runner、不解析台账、不碰 git：只写机器身份文件。"""
+    from .. import env
     from ..actions.init_identity import init_identity
 
     repo: Path | None = None
@@ -279,13 +280,23 @@ def _run_init(args: argparse.Namespace) -> int:
         repo = as_root(raw, source="--repo") if raw else root_of(Path.cwd().resolve())
     except Fail:
         repo = None
+    claim = getattr(args, "claim", None)
+    new = bool(getattr(args, "new_id", False))
+    name = getattr(args, "name", "") or ""
     try:
-        res = init_identity(
-            repo,
-            claim=getattr(args, "claim", None),
-            new=bool(getattr(args, "new_id", False)),
-            name=getattr(args, "name", "") or "",
-        )
+        # 首次写身份只能由用户在真终端交互完成：agent 的 subprocess 没有 TTY，
+        # 放行就等于让它替用户挑一个身份写进本机（2026-10-26 事故）。
+        if (
+            env.read_identity() is None
+            and (claim or new or name.strip())
+            and not sys.stdin.isatty()
+        ):
+            raise Fail(
+                "写入身份必须由用户在终端里交互执行（当前没有终端）。\n"
+                "  处理：请用户在终端运行 `python3 progress.py init --repo <工作区根>`，\n"
+                "  它会列出已有身份供选择，或让 ta 输入一个新名字。"
+            )
+        res = init_identity(repo, claim=claim, new=new, name=name)
     except Fail as exc:
         render.fail_message(exc)
         return BUSINESS

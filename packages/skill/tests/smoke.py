@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -262,6 +263,35 @@ def main() -> int:
             r.returncode == 0 and before["uuid"] == after["uuid"],
             r.stdout + r.stderr,
         )
+
+        # 身份闸门（2026-10-26 事故回归）：无终端时 init 写操作必须被拒，且不落身份文件
+        gate_home = Path(tempfile.mkdtemp(prefix="ledgerkit-gate-home-"))
+        r = subprocess.run(
+            [
+                PY,
+                "-B",
+                str(PROGRESS),
+                "--repo",
+                str(repo),
+                "init",
+                "--new",
+                "--name",
+                "X",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(repo),
+            stdin=subprocess.DEVNULL,
+            env={**os.environ, "TASK_LEDGER_HOME": str(gate_home)},
+            check=False,
+        )
+        check(
+            "无终端 init --new 被拒且不写身份文件",
+            r.returncode != 0
+            and not (gate_home / ".taskledger" / "identity.json").exists(),
+            r.stdout + r.stderr,
+        )
+        shutil.rmtree(gate_home, ignore_errors=True)
 
         # 空台账契约（ledger-data.md §七）：没有任何历史文件时，--json 仍必须是 JSON。
         # 这条一破，插件把「输出不是 JSON」当失败 ⇒ 一个空工作区就能让整块看板 500（2026-10-17 真机）。
