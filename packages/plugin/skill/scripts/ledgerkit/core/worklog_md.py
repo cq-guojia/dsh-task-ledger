@@ -12,7 +12,7 @@ from itertools import takewhile
 from ..errors import Fail
 from .identity import UUID_RE
 from .labels import label_line, parse_label_line
-from .time import fmt_local, normalize_time
+from .time import normalize_time
 
 EXEC_HEAD = "## 执行记录"
 EXEC_HINT = (
@@ -156,12 +156,14 @@ def _insert_after_head(lines: list[str], line: str) -> list[str]:
 
 
 def exec_line(when: str, who: str | None, kind: str, note: str) -> str:
-    """一条执行记录：`- 本地时刻 · 类型 · @某人 · 说明`。
+    """一条执行记录：`- 时刻 · 类型 · @某人 · 说明`。
 
-    时刻是**给人读的日志行**，所以在这里转成查看者本地时间（调用方一律传 UTC，
-    别在外面先转一遍）。类型取动作名（new / claim / set / release / log / close）。
+    时刻与台账其它存盘时间同口径：**UTC**（调用方一律传 UTC，这里不再转本地）。
+    正文整篇由 `readWorklog` / `show` 原样读出，脚本无法逐行回转 ⇒ 存什么就显示什么；
+    转本地是消费方（终端 / 看板）的事。
+    类型取动作名（new / claim / set / release / log / close）。
     """
-    head = f"- {fmt_local(when)} · {kind}"
+    head = f"- {when} · {kind}"
     tail = f" · @{who} · {note}" if who else f" · {note}"
     return head + tail
 
@@ -180,8 +182,8 @@ def has_frozen_line(text: str) -> bool:
 
 
 def stamp_frozen(text: str, finished: str, who: str | None = "") -> str:
-    """封卷：在头部打标记行（`finished` 传 UTC，这里转本地给人看）。"""
-    mark = f"> {FROZEN_MARK}：{fmt_local(finished)}"
+    """封卷：在头部打标记行（`finished` 传 UTC，原样写盘——见 exec_line 的口径说明）。"""
+    mark = f"> {FROZEN_MARK}：{finished}"
     if who:
         mark += f"（@{who}）"
     if FROZEN_RE.search(text or ""):
