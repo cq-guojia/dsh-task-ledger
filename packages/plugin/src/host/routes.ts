@@ -188,6 +188,7 @@ export function registerRoutes(
 				closed: result.closed,
 				trend: result.trend,
 				degraded: result.degraded,
+				warnings: result.warnings,
 			});
 		} catch (error) {
 			sendJson(res, 500, {

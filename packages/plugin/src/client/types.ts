@@ -156,6 +156,11 @@ export interface TrendPayload {
 	readonly trend: TrendPeriods;
 	/** 降级信息（op 恒为 history）：哪些工作区历史读挂了。 */
 	readonly degraded?: readonly DegradedInfo[];
+	/**
+	 * 被 skill 脚本**整行跳过**的历史行（不是十一列 / 结案时间不合法）：
+	 * 这些行不进统计 ⇒ 图与周期卡的数字已经少算了，界面必须说出口。
+	 */
+	readonly warnings?: readonly string[];
 }
 
 /** 一个读失败的工作区（host `degraded` 条目；UI 标红 + 人话原因）。 */

@@ -222,6 +222,8 @@ export function BoardHome(props: {
 	const chartEmpty = chartWeeks.every(
 		(week) => week.done === 0 && week.created === 0 && week.remaining === 0,
 	);
+	/** 被 skill 脚本整行跳过的历史行（列数不对 / 时间不合法）：图表数字已少算，要写出来。 */
+	const trendWarnings = trend?.warnings ?? [];
 
 	return h(
 		"div",
@@ -454,6 +456,22 @@ export function BoardHome(props: {
 												remainingLabel: t("chartLegendRemaining"),
 												createdLabel: t("chartLegendCreated"),
 											}),
+											// 被脚本跳过的坏历史行：数字已经少算，必须说出来（悬停看逐条原因）
+											trendWarnings.length > 0
+												? h(
+														"div",
+														{
+															style: {
+																...hintStyle,
+																color: "var(--dtl-warning)",
+															},
+															title: trendWarnings.join("\n"),
+														},
+														t("chartWarnings", {
+															n: trendWarnings.length,
+														}),
+													)
+												: null,
 										),
 									),
 

@@ -50,11 +50,16 @@ export function parseTaskList(
 	return rows;
 }
 
-/** `history --json`（`{count, filters, records}`）→ HistoryRecord[]（打上 workspace）。 */
+/**
+ * `history --json`（`{count, filters, records, warnings}`）→ 记录 + 脚本警告（都打上 workspace）。
+ *
+ * ⚠️ `warnings` **必须带出去**：脚本只认十一列历史，列数不对 / 时间不合法的行会被
+ * **整行跳过**（不是少几个字段）。丢掉 warnings 就是「趋势图少算一截还装作没发生」。
+ */
 export function parseHistoryRecords(
 	raw: unknown,
 	workspace: LedgerWorkspace,
-): HistoryRecord[] {
+): { records: HistoryRecord[]; warnings: string[] } {
 	if (!isPlainObject(raw)) {
 		throw new LedgerDataError(
 			workspace.id,
@@ -73,7 +78,11 @@ export function parseHistoryRecords(
 		if (!isPlainObject(record)) continue; // 元素级宽松：坏行跳过，不整板炸
 		rows.push(toHistoryRecord(record, workspace));
 	}
-	return rows;
+	const rawWarnings = raw.warnings;
+	const warnings = Array.isArray(rawWarnings)
+		? rawWarnings.filter((item): item is string => typeof item === "string")
+		: [];
+	return { records: rows, warnings };
 }
 
 /**

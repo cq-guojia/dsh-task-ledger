@@ -65,7 +65,10 @@ export async function readTasks(workspace, filter = {}) {
         return parseTaskList(result.data, workspace);
     });
 }
-/** 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。同样过读缓存。 */
+/**
+ * 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。同样过读缓存。
+ * 一并带回 `warnings`（被脚本整行跳过的坏行原因）——调用方必须展示，不许吞。
+ */
 export async function readHistory(workspace, filter = {}) {
     return await cached(cacheKey(workspace.id, "history", argsKey(filter, "history")), async () => {
         const result = await runLedgerScript("history", [

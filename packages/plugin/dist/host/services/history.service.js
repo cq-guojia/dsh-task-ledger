@@ -15,7 +15,7 @@ export const DEFAULT_HISTORY_LIMIT = 500;
 export async function queryClosed(workspaces, filter = {}) {
     const windowed = { months: RECENT_MONTHS, ...filter };
     const { data, degraded } = await settleWorkspaces(workspaces, "history", (workspace) => readHistory(workspace, windowed), (rows) => rows
-        .flat()
+        .flatMap((row) => row.records)
         .sort((a, b) => String(b.created ?? b.time ?? "").localeCompare(String(a.created ?? a.time ?? "")))
         .slice(0, filter.limit ?? DEFAULT_HISTORY_LIMIT));
     return { records: data, degraded };

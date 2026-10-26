@@ -135,6 +135,7 @@ export function registerRoutes(webServer, deps) {
                 closed: result.closed,
                 trend: result.trend,
                 degraded: result.degraded,
+                warnings: result.warnings,
             });
         }
         catch (error) {

@@ -1,22 +1,45 @@
 /**
  * 日期口径（纯函数层，零 IO）：本机时区、周一为一周之始（与 skill 脚本同口径）。
  * 所有函数显式收 `now`——不自己读时钟，便于单测与跨时区复现。
+ *
+ * ⚠️ **台账存盘时间是 UTC**（skill `core/time.py::now`），`--json` 原样吐 UTC，
+ * 只有人话输出才转查看者本地（`fmt_local`）。看板是给人看的 ⇒ 一律先按 UTC 解析出
+ * 真实时刻，再按本机时区取日期（等价于脚本的 `fmt_local`）。否则会出现
+ * 「脚本表格里是 10-17、看板却算进 10-16 那周」—— 两个界面同一条记录差一天。
  */
 
 function pad(value: number): string {
 	return String(value).padStart(2, "0");
 }
 
-/** Date → `YYYY-MM-DD`。 */
+/** Date → `YYYY-MM-DD`（本机时区）。 */
 export function ymd(date: Date): string {
 	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-/** 时刻串（`YYYY-MM-DD HH:mm:ss` / `YYYY-MM-DD`）→ 日期部分；解析不了回 null。 */
+/**
+ * 台账时刻串 → Date（带时刻的按 **UTC** 解析；纯日期串按本地日历，不涉及时区）。
+ * 解析不了回 null，不猜。
+ */
+function parseStamp(stamp: string): Date | null {
+	const text = stamp.trim().replace(" ", "T");
+	// 已带时区后缀（`Z` / `+08:00`）的不重复加，加了会二次偏移
+	const iso = /\d{1,2}:\d{2}/.test(text)
+		? /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(text)
+			? text
+			: `${text}Z`
+		: text;
+	const parsed = new Date(iso);
+	return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/** 时刻串（`YYYY-MM-DD HH:mm:ss` / `YYYY-MM-DD`）→ 本机时区的日期；解析不了回 null。 */
 export function dayOf(stamp: string | null | undefined): string | null {
 	if (stamp === null || stamp === undefined || stamp === "") return null;
-	const day = String(stamp).slice(0, 10);
-	return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+	const text = String(stamp);
+	if (/^\d{4}-\d{2}-\d{2}$/.test(text.trim())) return text.trim();
+	const parsed = parseStamp(text);
+	return parsed === null ? null : ymd(parsed);
 }
 
 /** 某日期所在周的周一（00:00）。 */
@@ -69,8 +92,8 @@ export function daysSince(
 	now: Date,
 ): number | null {
 	if (stamp === null || stamp === undefined || stamp === "") return null;
-	const parsed = new Date(String(stamp).replace(" ", "T"));
-	if (Number.isNaN(parsed.getTime())) return null;
+	const parsed = parseStamp(String(stamp));
+	if (parsed === null) return null;
 	const days = Math.floor((now.getTime() - parsed.getTime()) / 86_400_000);
 	return days > 0 ? days : 0;
 }

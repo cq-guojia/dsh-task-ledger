@@ -55,6 +55,7 @@ export type LocaleKey =
 	| "chartScopeAll"
 	| "chartScopeMine"
 	| "chartOnlyMine"
+	| "chartWarnings"
 	| "chartLegendDone"
 	| "chartLegendCreated"
 	| "chartLegendRemaining"
@@ -188,6 +189,7 @@ export const zh: Record<LocaleKey, string> = {
 	chartScopeAll: "所有",
 	chartScopeMine: "我的",
 	chartOnlyMine: "只看我的",
+	chartWarnings: "有 {n} 条历史行格式不对被跳过，上面的数字未计入（悬停看明细）",
 	chartLegendDone: "完成",
 	chartLegendCreated: "新增",
 	chartLegendRemaining: "未结",
@@ -327,6 +329,8 @@ export const en: Record<LocaleKey, string> = {
 	chartScopeAll: "All",
 	chartScopeMine: "Mine",
 	chartOnlyMine: "Mine only",
+	chartWarnings:
+		"{n} history rows were skipped as malformed and are not counted above (hover for detail)",
 	chartLegendDone: "Done",
 	chartLegendCreated: "Created",
 	chartLegendRemaining: "Outstanding",

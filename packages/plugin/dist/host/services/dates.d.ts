@@ -1,10 +1,15 @@
 /**
  * 日期口径（纯函数层，零 IO）：本机时区、周一为一周之始（与 skill 脚本同口径）。
  * 所有函数显式收 `now`——不自己读时钟，便于单测与跨时区复现。
+ *
+ * ⚠️ **台账存盘时间是 UTC**（skill `core/time.py::now`），`--json` 原样吐 UTC，
+ * 只有人话输出才转查看者本地（`fmt_local`）。看板是给人看的 ⇒ 一律先按 UTC 解析出
+ * 真实时刻，再按本机时区取日期（等价于脚本的 `fmt_local`）。否则会出现
+ * 「脚本表格里是 10-17、看板却算进 10-16 那周」—— 两个界面同一条记录差一天。
  */
-/** Date → `YYYY-MM-DD`。 */
+/** Date → `YYYY-MM-DD`（本机时区）。 */
 export declare function ymd(date: Date): string;
-/** 时刻串（`YYYY-MM-DD HH:mm:ss` / `YYYY-MM-DD`）→ 日期部分；解析不了回 null。 */
+/** 时刻串（`YYYY-MM-DD HH:mm:ss` / `YYYY-MM-DD`）→ 本机时区的日期；解析不了回 null。 */
 export declare function dayOf(stamp: string | null | undefined): string | null;
 /** 某日期所在周的周一（00:00）。 */
 export declare function mondayOf(day: string): Date;

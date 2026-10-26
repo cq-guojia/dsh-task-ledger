@@ -37,7 +37,7 @@ export async function queryClosed(
 		(workspace) => readHistory(workspace, windowed),
 		(rows) =>
 			rows
-				.flat()
+				.flatMap((row) => row.records)
 				.sort((a, b) =>
 					String(b.created ?? b.time ?? "").localeCompare(
 						String(a.created ?? a.time ?? ""),

@@ -21,7 +21,13 @@ export async function readTrendScope(workspace) {
         readHistory(workspace, { months: RECENT_MONTHS }),
         getCurrentIdentity(workspace),
     ]);
-    return { workspace, tasks, history, identity };
+    return {
+        workspace,
+        tasks,
+        history: history.records,
+        identity,
+        warnings: history.warnings,
+    };
 }
 /**
  * 近 N 周分组桶（完成按结案时间、新增按创建时间）× 所有 / 我的（纯函数）。
@@ -146,6 +152,8 @@ export async function getTrend(workspaces) {
         closed: computeClosedSummary(scopes, now),
         trend: computeTrendPeriods(scopes, now),
         degraded,
+        // 被脚本跳过的历史行（列数不对 / 时间不合法）：数字已经少算了，必须让界面说出口
+        warnings: scopes.flatMap((scope) => scope.warnings),
     };
 }
 /** 趋势端点用的历史 filter（窗口由本模块策略决定，repository 零默认值注入）。 */

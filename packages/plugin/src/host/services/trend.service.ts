@@ -38,13 +38,19 @@ export const WEEKLY_WEEKS = 8;
 /** 慢路径读法：单工作区 readTasks + readHistory(months) + 本机身份（并行；供 settle 逐工作区调）。 */
 export async function readTrendScope(
 	workspace: LedgerWorkspace,
-): Promise<TrendScope> {
+): Promise<TrendScope & { warnings: readonly string[] }> {
 	const [tasks, history, identity] = await Promise.all([
 		readTasks(workspace),
 		readHistory(workspace, { months: RECENT_MONTHS }),
 		getCurrentIdentity(workspace),
 	]);
-	return { workspace, tasks, history, identity };
+	return {
+		workspace,
+		tasks,
+		history: history.records,
+		identity,
+		warnings: history.warnings,
+	};
 }
 
 interface Buckets {
@@ -192,6 +198,7 @@ export async function getTrend(
 	closed: ClosedSummary;
 	trend: TrendPeriods;
 	degraded: readonly DegradedInfo[];
+	warnings: readonly string[];
 }> {
 	const now = new Date();
 	const { data: scopes, degraded } = await settleWorkspaces(
@@ -204,6 +211,8 @@ export async function getTrend(
 		closed: computeClosedSummary(scopes, now),
 		trend: computeTrendPeriods(scopes, now),
 		degraded,
+		// 被脚本跳过的历史行（列数不对 / 时间不合法）：数字已经少算了，必须让界面说出口
+		warnings: scopes.flatMap((scope) => scope.warnings),
 	};
 }
 

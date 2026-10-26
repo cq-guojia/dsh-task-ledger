@@ -29,7 +29,12 @@ export function parseTaskList(raw, workspace) {
     }
     return rows;
 }
-/** `history --json`（`{count, filters, records}`）→ HistoryRecord[]（打上 workspace）。 */
+/**
+ * `history --json`（`{count, filters, records, warnings}`）→ 记录 + 脚本警告（都打上 workspace）。
+ *
+ * ⚠️ `warnings` **必须带出去**：脚本只认十一列历史，列数不对 / 时间不合法的行会被
+ * **整行跳过**（不是少几个字段）。丢掉 warnings 就是「趋势图少算一截还装作没发生」。
+ */
 export function parseHistoryRecords(raw, workspace) {
     if (!isPlainObject(raw)) {
         throw new LedgerDataError(workspace.id, `${workspace.title}: 台账 history 输出不是对象，拒绝当成空历史`);
@@ -44,7 +49,11 @@ export function parseHistoryRecords(raw, workspace) {
             continue; // 元素级宽松：坏行跳过，不整板炸
         rows.push(toHistoryRecord(record, workspace));
     }
-    return rows;
+    const rawWarnings = raw.warnings;
+    const warnings = Array.isArray(rawWarnings)
+        ? rawWarnings.filter((item) => typeof item === "string")
+        : [];
+    return { records: rows, warnings };
 }
 /**
  * 脚本 9 列的键 → 领域字段名。

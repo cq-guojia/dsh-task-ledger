@@ -4862,6 +4862,8 @@ body[data-ds-dark-theme]{
 				t
 			]);
 			const chartEmpty = chartWeeks.every((week) => week.done === 0 && week.created === 0 && week.remaining === 0);
+			/** 被 skill 脚本整行跳过的历史行（列数不对 / 时间不合法）：图表数字已少算，要写出来。 */
+			const trendWarnings = trend?.warnings ?? [];
 			return (0, react.createElement)("div", { style: pageStyle }, (0, react.createElement)("div", { style: {
 				display: "flex",
 				justifyContent: "center"
@@ -4881,8 +4883,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.96 · 261026-230419-725`
-			}, `v0.0.96 261026-230419-725`))), (0, react.createElement)("div", { style: {
+				title: `v0.0.96 · 261026-232419-949`
+			}, `v0.0.96 261026-232419-949`))), (0, react.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-2)"
@@ -4942,7 +4944,13 @@ body[data-ds-dark-theme]{
 				doneLabel: t("chartLegendDone"),
 				remainingLabel: t("chartLegendRemaining"),
 				createdLabel: t("chartLegendCreated")
-			}))), state.status === "loading" && board === null ? null : state.status === "error" && board === null ? (0, react.createElement)("div", { style: {
+			}), trendWarnings.length > 0 ? (0, react.createElement)("div", {
+				style: {
+					...hintStyle,
+					color: "var(--dtl-warning)"
+				},
+				title: trendWarnings.join("\n")
+			}, t("chartWarnings", { n: trendWarnings.length })) : null)), state.status === "loading" && board === null ? null : state.status === "error" && board === null ? (0, react.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-2)"
@@ -5193,6 +5201,7 @@ body[data-ds-dark-theme]{
 			chartScopeAll: "所有",
 			chartScopeMine: "我的",
 			chartOnlyMine: "只看我的",
+			chartWarnings: "有 {n} 条历史行格式不对被跳过，上面的数字未计入（悬停看明细）",
 			chartLegendDone: "完成",
 			chartLegendCreated: "新增",
 			chartLegendRemaining: "未结",
@@ -5318,6 +5327,7 @@ body[data-ds-dark-theme]{
 			chartScopeAll: "All",
 			chartScopeMine: "Mine",
 			chartOnlyMine: "Mine only",
+			chartWarnings: "{n} history rows were skipped as malformed and are not counted above (hover for detail)",
 			chartLegendDone: "Done",
 			chartLegendCreated: "Created",
 			chartLegendRemaining: "Outstanding",

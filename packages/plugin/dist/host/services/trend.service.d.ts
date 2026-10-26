@@ -12,7 +12,9 @@ export declare const RECENT_MONTHS = 13;
 /** 趋势图桶数：近 8 周（2026-10-17 定稿）。 */
 export declare const WEEKLY_WEEKS = 8;
 /** 慢路径读法：单工作区 readTasks + readHistory(months) + 本机身份（并行；供 settle 逐工作区调）。 */
-export declare function readTrendScope(workspace: LedgerWorkspace): Promise<TrendScope>;
+export declare function readTrendScope(workspace: LedgerWorkspace): Promise<TrendScope & {
+    warnings: readonly string[];
+}>;
 /**
  * 近 N 周分组桶（完成按结案时间、新增按创建时间）× 所有 / 我的（纯函数）。
  *
@@ -28,6 +30,7 @@ export declare function getTrend(workspaces: readonly LedgerWorkspace[]): Promis
     closed: ClosedSummary;
     trend: TrendPeriods;
     degraded: readonly DegradedInfo[];
+    warnings: readonly string[];
 }>;
 /** 趋势端点用的历史 filter（窗口由本模块策略决定，repository 零默认值注入）。 */
 export declare function trendHistoryFilter(extra?: LedgerFilter): LedgerFilter;
