@@ -304,21 +304,23 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
         sel = 0
         try:
             tty.setraw(fd)
+            sys.stdout.write("\x1b[?25l")  # 隐藏光标
             while True:
-                sys.stdout.write("\x1b[H\x1b[J")
+                # 每帧整屏重绘（2J 清屏 + H 回家），位置无关，避免折行/行数错位
+                sys.stdout.write("\x1b[2J\x1b[H")
                 sys.stdout.write("\x1b[1;36m" + title + "\x1b[0m\n\n")
                 for i, e in enumerate(entries):
                     label = (
-                        "＋ 新建身份（自己输入名字）"
+                        "+ 新建身份（自己输入名字）"
                         if e.get("new")
                         else f"@{e['name']}   {e['uuid']}"
                     )
                     if i == sel:
-                        sys.stdout.write("  \x1b[7m ❯ " + label + " \x1b[0m\n")
+                        sys.stdout.write("\x1b[7m  ❯ " + label + "  \x1b[0m\n")
                     else:
                         sys.stdout.write("    " + label + "\n")
                 sys.stdout.write(
-                    "\n  \x1b[2m↑/↓ 移动 · Enter 确认 · Ctrl-C 退出\x1b[0m\n"
+                    "\n\x1b[2m  ↑/↓ 移动     Enter 确认     Ctrl-C 退出\x1b[0m"
                 )
                 sys.stdout.flush()
                 ch = sys.stdin.read(1)
@@ -335,14 +337,15 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
                 elif ch == "\x03":  # Ctrl-C
                     return ("cancel", None)
         finally:
+            sys.stdout.write("\x1b[?25h")  # 显示光标
+            sys.stdout.write("\x1b[2J\x1b[H")  # 退出时清掉选择框，结果从顶部打印
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
-            sys.stdout.write("\x1b[2J\x1b[H")
             sys.stdout.flush()
     except (OSError, ImportError):
         print(title)
         for i, o in enumerate(opts, 1):
             print(f"  {i}. @{o['name']}   {o['uuid']}")
-        print(f"  {n}. ＋ 新建身份")
+        print(f"  {n}. + 新建身份")
         while True:
             try:
                 c = input(f"选编号(1-{n})：").strip()
