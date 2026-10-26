@@ -17,15 +17,13 @@
 
 ## 待办
 
-- 待用户验收 `board` 命令（`python3 packages/skill/scripts/progress.py board --repo <工作区根>`）；接受后再决定要不要上 B 档全屏 TUI（滚动/筛选/详情）。
-- `ledger/board.html` 已被 TUI 方案取代、不再维护；是否删掉等用户发话（它是项目里唯一多余的产物）。
-- 未做：B 档交互（方向键滚动、Tab 切换、`/` 过滤、任务详情），A 档只有一次性输出。
-- 未做：Windows 原生终端的颜色/宽度实测（本机是 Linux）。
-- 发版口径未动：skill 版本号未 bump，等验收通过、用户说发版再走 tag。
+- 用户 2026-10-26 傍晚叫停命令行看板：`board` 子命令、`--tui`、SKILL.md 描述已全部撤销，skill 回到动手前状态，等重新定方向。
+- `ledger/board.html` 仍在工作区（未跟踪、未提交）：用户没说要删，保留待定。
+- 未做：任何方向的下一步（HTML 与 TUI 都被叫停）。
 
 ## 下一步
 
-等用户看 `board` 的实际输出给结论；若 A 档不够，再在同一数据层（`actions/board.py` 的 `BoardView`）上叠 B 档 `curses` 全屏界面。
+等用户给新方向。在拿到明确指令前，不改 `packages/` 下任何文件。
 
 ## 过程
 
@@ -43,14 +41,12 @@
 
 ## 结论
 
-**方向已从 HTML 转为 TUI**（HTML 三条路全被否：`file://` 自动读不可能、数据 `.js` 不接受、静态托管不接受）。已落地 A 档「富文本一屏看」：
+**本轮命令行看板实现已全部回退**（用户叫停：不许改 skill 描述）。`board` 子命令、`--tui` 全屏界面、SKILL.md 相关描述、smoke 断言、插件内嵌副本均已还原：
 
-- `progress.py board [--closed N]`：只读，在办按负责人分组（未认领归「公共池」）+ 最近结案；口径完全复用 `list_tasks` / `query_history`，不重算归属。
-- 实现：`actions/board.py`（`BoardView`）+ `shell/render.py::board_view`（ANSI 上色、按显示宽度裁剪）+ `registry` / `cli` 各一处注册；`SKILL.md` 补 board 小节与只读授权行。
-- 零依赖：只用 Python 标准库（`unicodedata` 算中文宽度、`shutil` 取终端宽、`os` 读 `CLICOLOR_FORCE`）；管道输出自动关色。
-- 自检：`tests/smoke.py` 新增 2 项（分组 + 公共池 + 非 TTY 不上色；`--closed 0` 不显示结案段），冒烟全绿；`koc-codelint` 13 文件全过。
-- 内嵌副本已 `copy-skill.mjs` 同步，`check-skill-copy.mjs` 一致。
-- `ledger/board.html` 保留但已不作为方向；未 bump 版本、未提交。
+- 回退方式：`git checkout --` 恢复 10 个被改文件，删除 3 个新增文件（`packages/skill/.../actions/board.py`、`.../shell/tui.py`、`packages/plugin/skill/.../actions/board.py`）。
+- 验证：`packages/skill` 与 `packages/plugin/skill` 已无 `board_view` / `BoardView` / `--tui` 残留；`check-skill-copy.mjs` 一致；无 `__pycache__`。
+- 未触碰：插件 UI 那条在途改动（`packages/plugin/src/client/*`、`dist/*`、`tsdown.client.config.ts`），以及未跟踪的 `ledger/board.html`。
+- 版本号未 bump、未提交。
 
 ## 执行记录
 
@@ -61,3 +57,4 @@
 - 2026-10-26 17:45:22 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 落地 ledger/board.html（单文件、webkitdirectory 手选目录直读原始 JSON/MD，skill 脚本零改动）；node 自检 2 在办/29 已结案、链接均存在，codelint 全过；待用户验收
 - 2026-10-26 17:51:15 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 改双模式：http 打开时按相对路径自动读同目录台账（零点击），file:// 才回退手选目录；三模式 node 实测通过，codelint 全过
 - 2026-10-26 20:52:47 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 方向转 TUI：新增只读 board 子命令（actions/board.py + render.board_view + registry/cli 注册，零依赖 ANSI 一屏）；smoke 加 2 项全绿、codelint 13→17 文件全过、内嵌副本已同步；HTML 方案按用户否决定收摊
+- 2026-10-26 20:56:31 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户叫停撤销全部命令行看板改动：git checkout 恢复 10 个文件、删 3 个新增文件，skill 与内嵌副本无残留；未碰插件 UI 在途改动，等新方向
