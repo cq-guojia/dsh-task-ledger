@@ -2,3 +2,5 @@
 # 2026-10-17 修正：架构文档原记「workspaces 走 root package.json、不另建本文件」有误，以此为准。
 packages:
   - "packages/*"
+minimumReleaseAgeExclude:
+  - dsh-plugin-core@0.4.0
