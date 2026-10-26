@@ -197,6 +197,16 @@ def main() -> int:
             bool(data_rows) and len(data_rows[0].split("|")) == 13,  # 11 列 + 首尾空
             data_rows[0] if data_rows else "(没有数据行)",
         )
+        cells = data_rows[0].split("|")[1:-1] if data_rows else []
+        check(
+            "历史行 @ 只加在名字列（owner/creator 列裸写 uuid）",
+            len(cells) == 11
+            and cells[5].strip() == ME
+            and cells[6].strip() == "@Me"
+            and cells[7].strip() == ME
+            and cells[8].strip() == "@Me",
+            data_rows[0] if data_rows else "(没有数据行)",
+        )
         body = json.loads(r.stdout)["records"]
         check(
             "历史行落盘显示名（不是 uuid）",

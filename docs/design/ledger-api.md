@@ -344,8 +344,8 @@ class HistoryStore:
 - **`row` 的十一个键**（与 `ledger-data.md` §四 的十一列一一对应，顺序也一致）：
   `{"finished", "created", "title", "category", "tags", "owner", "owner_name", "creator", "creator_name", "summary", "worklog"}`
   ——`tags` 是 `tuple[str, …]`（拼成「、」分隔的一格），`worklog` 是**相对 `ledger/`** 的路径。
-  ——`owner` / `creator` 传**裸标识**（`task["owner"]` 那个值）：`history_line` 自己加 `@`、`parse_history` 自己剥，外面别先加，否则落盘成 `@@`（`ledger-data.md` §四）。
-  ——`owner_name` / `creator_name` 传**显示名原值**（不加 `@`），是结案那一刻的快照，改名不回写旧行。
+  ——`owner` / `creator` 传**裸标识**（`task["owner"]` 那个值），落盘**不加 `@`**；`owner_name` / `creator_name` 传**显示名原值**，落盘时由 `name_cell` 加 `@`。`parse_history` 读回来把两边的 `@` 都剥掉，所以调用方两边都别先加，否则落盘成 `@@`（`ledger-data.md` §四）。
+  ——`owner_name` / `creator_name` 是结案那一刻的快照，改名不回写旧行。
 - **`append_row` 返回两个键**：
   - `text` = 追加后的新全文（调用方决定什么时候落盘）；
   - `duplicate` = 这一行已经存在，**判重规则与 `has_log` 完全一致**（共用一份实现：有末列比文件名，末列空比「创建时间 + 工作包」两列）。

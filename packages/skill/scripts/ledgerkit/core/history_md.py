@@ -32,13 +32,18 @@ def esc_cell(text: str) -> str:
 
 
 def owner_cell(owner: str | None) -> str:
-    """owner 列的展示值：人名前加 @（`@` 只是展示约定，匹配一律用裸 uuid）。"""
-    return f"@{owner}" if owner else ""
+    """owner 列的值：裸 uuid，**不加 `@`**（`@` 只加在名字列；匹配一律用裸 uuid）。"""
+    return owner or ""
 
 
 def creator_cell(creator: str | None) -> str:
-    """creator 列展示值（与 owner_cell 同一 `@` 约定）。"""
-    return f"@{creator}" if creator else ""
+    """creator 列的值（与 owner_cell 同一约定：裸 uuid，不加 `@`）。"""
+    return creator or ""
+
+
+def name_cell(name: str | None) -> str:
+    """名字列的展示值：名字前加 `@`（与过程文档 `@名字 · uuid` 同一口径）。"""
+    return f"@{name}" if name else ""
 
 
 def split_row(line: str) -> list[str]:
@@ -74,9 +79,9 @@ def history_line(
 ) -> str:
     """十一列的一行。`worklog` 收**相对 `ledger/`** 的路径，这里负责换成相对 `history/` 的链接。
 
-    owner / creator 传**裸 uuid**（`@` 由 owner_cell / creator_cell 加），外面别先加。
-    `owner_name` / `creator_name` 是**落盘的显示名快照**（结案那一刻的名字，之后改名不改旧行），
-    原值写入、**不加 `@`** —— `@` 只属于 uuid 那两列。
+    owner / creator 传**裸 uuid**、名字传**裸名字**，两处都别先加 `@`：
+    `@` 由 `name_cell` 只加在名字列（与过程文档 `@名字 · uuid` 同一口径），uuid 列永远是裸值。
+    `owner_name` / `creator_name` 是**落盘的显示名快照**（结案那一刻的名字，之后改名不改旧行）。
     """
     log_rel = to_history_rel(worklog) if worklog else ""
     tag_cell = esc_cell("、".join(tags) if tags else "")
@@ -84,8 +89,8 @@ def history_line(
     return (
         f"| {finished} | {created or ''} | {esc_cell(title)} "
         f"| {esc_cell(category or '')} | {tag_cell} "
-        f"| {esc_cell(owner_cell(owner))} | {esc_cell(owner_name or '')} "
-        f"| {esc_cell(creator_cell(creator))} | {esc_cell(creator_name or '')} "
+        f"| {esc_cell(owner_cell(owner))} | {esc_cell(name_cell(owner_name))} "
+        f"| {esc_cell(creator_cell(creator))} | {esc_cell(name_cell(creator_name))} "
         f"| {esc_cell(summary)} | {link} |\n"
     )
 
@@ -94,8 +99,8 @@ def parse_history(text: str) -> tuple[list[Row], list[str]]:
     """解析十一列历史表 → (records, warnings)。坏行（列数不对 / 时间列不合法）跳过并警告。
 
     返回的键：finished / created / title / category / tags / owner / owner_name /
-    creator / creator_name / summary / worklog / fmt / line。owner 与 creator 一律
-    **剥掉 `@`**（存储值是裸 uuid）；两个名字列是**原值**（落盘快照，可能为空）。
+    creator / creator_name / summary / worklog / fmt / line。owner 与 creator 两列
+    **剥掉 `@`**（存储值是裸 uuid）；两个名字列剥掉展示用的 `@`（落盘快照，可能为空）。
     """
     records: list[Row] = []
     warnings: list[str] = []
@@ -135,9 +140,9 @@ def parse_history(text: str) -> tuple[list[Row], list[str]]:
                     t.strip() for t in _TAG_SPLIT_RE.split(tag_cell) if t.strip()
                 ),
                 "owner": owner.strip().removeprefix("@") or None,
-                "owner_name": owner_name.strip() or None,
+                "owner_name": owner_name.strip().removeprefix("@") or None,
                 "creator": creator.strip().removeprefix("@") or None,
-                "creator_name": creator_name.strip() or None,
+                "creator_name": creator_name.strip().removeprefix("@") or None,
                 "summary": summary,
                 "worklog": (m.group(1) if m else doc.strip()) or None,
                 "fmt": "v11",
