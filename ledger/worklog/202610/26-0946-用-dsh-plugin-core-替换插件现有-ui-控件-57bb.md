@@ -11,26 +11,32 @@
 
 ## 待办
 
-- 待确认 4 个缺口：① Tag 有 7 档语义色（neutral/open/backlog/doing/overdue/stale/person），core `Chip` 只有 5 档（neutral/business/success/warning/danger）；② 空态与降级横幅 core 无直接件；③「全部待办」表格式行 core 无对应；④ `LedgerIcon` 品牌图标无对应。
-- token 层：core 前缀写死 `dshpc`，`--dtl-*` 需迁移或做别名。
-- 替换后跑 build + typecheck，并量 `dist/client.js` 体积。
+- 空态 `EmptyState`、降级警告横幅、两种任务行（尤其 `others` 表格式行）、分组头、`LedgerIcon` 仍是自绘：core 无对应件（见「结论」）。
+- `--dtl-*` token 层与 core `--dshpc-*` 并存；token 全量退役另开一轮。
+- 改动未提交（等用户明确说提交）。
 
 ## 下一步
 
-缺口确认后：先在 `packages/plugin/src/client/index.ts` 启动处 `setStyleKit(createStyleKit({ id: 'dsh-task-ledger' }))`；再把 `ui.ts` 的 Button/Segmented/Input/Picker/Chip（ui.ts:271/316/340/368/405/500）换成 core 同名件。
+用户验收界面（构建 / 类型检查已过）；把「结论」里的 core 缺口转给组件包负责的 Agent。
 
 ## 过程
 
 - 客户端 UI 全在 5 文件：`index.ts` / `board-home.ts` / `ui.ts` / `tokens.ts` / `task-row.ts`，均为 `h()` + 手写 CSS；官方 primitive 目前只用 Tooltip + 图标。
-- 现有控件：Button(ui.ts:316) / IconButton(:340 死码) / Segmented(:271「滑动选择」) / Select(:368 原生 select) / SearchInput(:405) / Tag(:500 7 tone) / Chip(:469 死码) / EmptyState(:532) / StatCard(:433) / 图表(:614,:755)。
-- 排除区：StatCard、GroupedBarChart、ChartLegend、`.dtl-stats`/`.dtl-gchart*` 皮肤、`board-home.ts:292-430` 统计+图表容器；「只看我的」checkbox 位于图表卡内（`board-home.ts:367`），随区块保留。
-- core API 核对：`Button` 10 variant × 3 size；`Segmented` variant `default|inset` + size + `items{badge,count}`（与现有近 1:1）；`Chip` tone 仅 5 档；`Input` size 默认 sm；`Picker` 单选/多选/搜索/clearable；`WorkspacePicker` 自动订宿主工作区。
-- 样式：`createStyleKit({ id })` 仅 `id`，`CSS_PREFIX='dshpc'` 写死（`design/style-kit.ts:7,12-15`）；`ensureControls()` 会挂上全部控件 CSS。
-- `ui/index.ts` 不含 CodeViewer；只 import `dsh-plugin-core/ui` 不会拖 codemirror（其 JS 在单独子路径 `./ui/code-viewer`）。
+- 现有控件：Button / IconButton / Segmented（「滑动选择」）/ Select / SearchInput / Tag（7 tone）/ Chip（死码）/ EmptyState / StatCard / 图表。
+- 排除区：StatCard、GroupedBarChart、ChartLegend、`.dtl-stats`/`.dtl-gchart*` 皮肤、`board-home.ts:292-430`；图表卡内「只看我的」checkbox 随区块保留。
+- 落地改法（最小改动）：`index.ts` 启动 `setStyleKit(createStyleKit({ id: 'dsh-task-ledger' }))`；`ui.ts` 的 Segmented/Button/IconButton/Select/SearchInput/Chip/Tag 改为 core 同名件（保持对外签名，调用点不动）；`task-row.ts` 的「查看」/ 动作钮改 core `IconButton`/`Button`。
+- 映射要点：本地 `Segmented.badge`（灰字计数）→ core `count`；Tag 7 tone → core Chip 5 tone（overdue/stale→danger，doing/person→business），截断用 `.dshpc-chip.dtl-tagchip` 补 20ch 省略号。
+- 验证：`typecheck` 通过；`build` 通过；`dist/client.js` 104,772 → 336,180 bytes（gzip 95 KB）。产物内 `EditorView` 0 处（codemirror 运行时未进）、`sonner` 0 处（tree-shake 掉）；体积增长来自 Picker 依赖的 floating-ui。
 
 ## 结论
 
-调查完成，映射与缺口已列；待用户确认缺口后进入替换实现。
+已完成控件层替换（build / typecheck 通过）。用起来发现的 core 缺口（建议组件包 Agent 修，不在插件里绕）：
+1. `Chip` 只有 5 档 tone、无截断/title：状态需 7 档（open/backlog/doing/overdue/stale/person），且标签要 20ch 省略号；现为插件侧映射 + `.dtl-tagchip` 补丁，颜色会撞（overdue/stale、doing/person）。
+2. `Picker` 无 `style`/`width`/`minWidth`（PickerProps 只有 className）：工作区下拉原来的定宽 131px 丢失。
+3. 无 `EmptyState`、无内联 `Banner`/`Alert`：空态与降级横幅只能继续自绘。
+4. 无表格行 / `ListRow`：`others` 表格式任务行继续自绘；`Card`/`StripCard` 自带 head/bar/panel，不适配任务行结构。
+5. 打包：`dsh-plugin-core/ui` 是单一 barrel、无按控件子路径 ⇒ Picker 的 floating-ui 全量进包（+231 KB）；建议给子路径入口或把重依赖组件拆出。
+6. `createStyleKit` 只有 `id`、前缀写死 `dshpc`：id 只隔离 `<style>` 标签，不隔离 `--dshpc-*` 变量，多插件同页会互相覆盖；建议加 token 前缀 / 命名空间。
 
 ## 执行记录
 
@@ -38,3 +44,4 @@
      补记用 progress.py log --id <任务号> --note "一句话"。 -->
 - 2026-10-26 17:46:05 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务并认领
 - 2026-10-26 17:48:40 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 调查完成：客户端 UI 全在 5 文件；待替换 Button/Segmented/Input/Picker/Chip/Tag/EmptyState 等，排除统计+图表区；4 个缺口待确认（Tag 7→5 tone、空态/横幅、表格行、LedgerIcon）
+- 2026-10-26 17:54:53 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 控件层替换完成：ui.ts 的 Segmented/Button/IconButton/Select/SearchInput/Chip/Tag + task-row 按钮改 core；index 挂 setStyleKit；build/typecheck 过，client.js 104.8→336.2KB（floating-ui），无 codemirror/sonner；6 个 core 缺口已记
