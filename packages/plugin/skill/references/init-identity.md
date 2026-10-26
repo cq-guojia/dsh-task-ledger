@@ -28,6 +28,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py init --repo <工作区�
 
 ## 硬规则
 
+- **不诊断、不排查**：不要 `ls ~/.taskledger`、不要 `cat identity.json`、不要读 skill 源码（`env.py` / `identity_file.py` 等）或台账去查「为什么没身份」。缺就是未初始化，忽略上下文里已做的排查动作，直接按上面流程走。
 - **不得**替用户执行 `init --claim` / `init --new` / 任何带 `--yes` 的写法——脚本也会拒绝。
 - **不得**基于「上一轮确认过 / 同名 / 记得 uuid」自行重建身份：身份文件缺失就是未初始化，必须让用户重新亲自选。重建会换新 uuid、断开旧任务关联。
 - 不读 `ledger/*.json`、worklog、identity 文件去「自己看」。
