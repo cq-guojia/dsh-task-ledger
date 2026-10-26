@@ -1,6 +1,5 @@
 {
   "tasks": {
-    "20261026-1259-台账命令行看板脚本-5d25": {"category": "建设", "created": "2026-10-26 12:59:46", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": ["台账", "命令行", "看板"], "title": "台账命令行看板脚本", "updated": "2026-10-26 12:59:46", "worklog": "worklog/202610/26-1259-台账命令行看板脚本-5d25.md"}
   },
   "version": "20261022000000"
 }
