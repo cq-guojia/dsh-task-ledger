@@ -409,13 +409,13 @@ def _run_init(args: argparse.Namespace) -> int:
                     opts, title="这台机器还没初始化。选择你的身份，或新建一个："
                 )
                 if kind == "cancel":
-                    print("已取消初始化。")
-                    return BUSINESS
+                    print("\x1b[2m✕ 已取消初始化。随时可重跑 init 重新开始。\x1b[0m")
+                    return 0
                 if kind == "new":
                     prompt_name = input("输入用户名：").strip()
                     if not prompt_name:
-                        print("未输入用户名，已取消。")
-                        return BUSINESS
+                        print("\x1b[2m✕ 未输入用户名，已取消。\x1b[0m")
+                        return 0
                     res = init_identity(repo, claim=None, new=True, name=prompt_name)
                 else:
                     res = init_identity(
@@ -431,6 +431,10 @@ def _run_init(args: argparse.Namespace) -> int:
     except (ValueError, IndexError):
         render.fail_message(Fail("输入无效，初始化已取消。"))
         return BUSINESS
+    except (KeyboardInterrupt, EOFError):
+        # 中途 Ctrl-C / Ctrl-D：平静取消，不抛栈、干净退出
+        print("\x1b[2m✕ 已取消初始化。随时可重跑 init 重新开始。\x1b[0m")
+        return 0
     _print_init_result(res)
     return 0
 
