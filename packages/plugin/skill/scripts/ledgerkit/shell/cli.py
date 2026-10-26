@@ -286,12 +286,29 @@ def _print_init_result(res: dict) -> None:
 
 
 def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
-    """交互选身份：箭头上下移动，末尾「＋ 新建身份」，Enter 确认，Ctrl-C 取消。
+    """交互式选身份：↑/↓ 移动、Enter 确认、Ctrl-C 取消，末尾「+ 新建身份」。
+
     返回 (kind, index)：kind∈{claim,new,cancel}；claim/new 时 index 为候选项下标。
-    TTY 下走 raw 光标选择；不支持 raw（非 Unix / 无 TTY）时退回编号输入。仅在 TTY 调用。
+    TTY 下用 raw 键盘 + 原地重绘（不整屏清屏、不动滚动条）；不支持时退回编号输入。
+    仅在 TTY 调用。
     """
     entries = list(opts) + [{"new": True}]
     n = len(entries)
+    height = n + 4  # 标题 + 空行 + n 个选项 + 空行 + 提示
+
+    def _frame(sel: int) -> list[str]:
+        rows = ["\x1b[1;36m" + title + "\x1b[0m", ""]
+        for i, e in enumerate(entries):
+            label = (
+                "+ 新建身份（自己输入名字）"
+                if e.get("new")
+                else f"@{e['name']}   {e['uuid']}"
+            )
+            rows.append(
+                "\x1b[7m  ❯ " + label + "  \x1b[0m" if i == sel else "    " + label
+            )
+        rows += ["", "\x1b[2m  ↑/↓ 移动     Enter 确认     Ctrl-C 退出\x1b[0m"]
+        return rows
 
     try:
         fd = sys.stdin.fileno()
@@ -302,27 +319,23 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
 
         old = termios.tcgetattr(fd)
         sel = 0
+        drew = False
+        result: tuple[str, int | None] = ("cancel", None)
         try:
             tty.setraw(fd)
             sys.stdout.write("\x1b[?25l")  # 隐藏光标
             while True:
-                # 每帧整屏重绘（2J 清屏 + H 回家），位置无关，避免折行/行数错位
-                sys.stdout.write("\x1b[2J\x1b[H")
-                sys.stdout.write("\x1b[1;36m" + title + "\x1b[0m\n\n")
-                for i, e in enumerate(entries):
-                    label = (
-                        "+ 新建身份（自己输入名字）"
-                        if e.get("new")
-                        else f"@{e['name']}   {e['uuid']}"
-                    )
-                    if i == sel:
-                        sys.stdout.write("\x1b[7m  ❯ " + label + "  \x1b[0m\n")
-                    else:
-                        sys.stdout.write("    " + label + "\n")
-                sys.stdout.write(
-                    "\n\x1b[2m  ↑/↓ 移动     Enter 确认     Ctrl-C 退出\x1b[0m"
-                )
+                rows = _frame(sel)
+                if drew:
+                    sys.stdout.write(f"\x1b[{height}A")  # 回到本块第一行
+                else:
+                    sys.stdout.write("\r\n")  # 从新行开始，避开 shell 提示
+                    drew = True
+                for row in rows:
+                    # raw 模式下 \n 不回行首，必须显式 \r\n，否则逐行右移
+                    sys.stdout.write("\r\x1b[K" + row + "\r\n")
                 sys.stdout.flush()
+
                 ch = sys.stdin.read(1)
                 if ch == "\x1b":
                     nxt = sys.stdin.read(1)
@@ -333,14 +346,21 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
                         elif k == "B":
                             sel = (sel + 1) % n
                 elif ch in ("\r", "\n"):
-                    return ("new", None) if entries[sel].get("new") else ("claim", sel)
+                    result = (
+                        ("new", None) if entries[sel].get("new") else ("claim", sel)
+                    )
+                    break
                 elif ch == "\x03":  # Ctrl-C
-                    return ("cancel", None)
+                    result = ("cancel", None)
+                    break
         finally:
             sys.stdout.write("\x1b[?25h")  # 显示光标
-            sys.stdout.write("\x1b[2J\x1b[H")  # 退出时清掉选择框，结果从顶部打印
+            if drew:
+                # 原地擦掉菜单块（不滚动主屏），光标留在块首，结果从这里打印
+                sys.stdout.write(f"\x1b[{height}A\r\x1b[J")
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
             sys.stdout.flush()
+        return result
     except (OSError, ImportError):
         print(title)
         for i, o in enumerate(opts, 1):
@@ -351,7 +371,7 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
                 c = input(f"选编号(1-{n})：").strip()
             except (EOFError, KeyboardInterrupt):
                 return ("cancel", None)
-            if c.lower() == "n":
+            if c.lower() in ("n", "new"):
                 return ("new", None)
             try:
                 idx = int(c) - 1
