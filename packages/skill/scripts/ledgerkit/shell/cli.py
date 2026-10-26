@@ -390,12 +390,9 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
 
 
 def _confirm(question: str) -> bool:
-    """Y/N 确认：Y 返回 True，N / 空 / 中断返回 False。"""
+    """Y/N 确认：Y 返回 True，N 返回 False；Ctrl-C/Ctrl-D 向上抛，当作取消退出。"""
     while True:
-        try:
-            ans = input(question + " [Y/N]：").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            return False
+        ans = input(question + " [Y/N]：").strip().lower()
         if ans in ("y", "yes"):
             return True
         if ans in ("n", "no"):
@@ -447,27 +444,33 @@ def _run_init(args: argparse.Namespace) -> int:
                         "请重跑：init --claim=<uuid>  认领，或  init --new --name=<名字>  新建"
                     )
                     return 0
-                kind, idx = _select_identity(
-                    opts, title="这台机器还没初始化。选择你的身份，或新建一个："
-                )
-                if kind == "cancel":
-                    print("\x1b[2m✕ 已取消初始化。随时可重跑 init 重新开始。\x1b[0m")
-                    return 0
-                if kind == "new":
-                    prompt_name = input("输入用户名：").strip()
-                    if not prompt_name:
-                        print("\x1b[2m✕ 未输入用户名，已取消。\x1b[0m")
+                while True:
+                    kind, idx = _select_identity(
+                        opts, title="这台机器还没初始化。选择你的身份，或新建一个："
+                    )
+                    if kind == "cancel":
+                        print(
+                            "\x1b[2m✕ 已取消初始化。随时可重跑 init 重新开始。\x1b[0m"
+                        )
                         return 0
-                    if not _confirm(f"您确认要用「{prompt_name}」这个名称新建账户吗？"):
-                        print("\x1b[2m✕ 已取消，未做任何更改。\x1b[0m")
-                        return 0
-                    res = init_identity(repo, claim=None, new=True, name=prompt_name)
-                else:
+                    if kind == "new":
+                        prompt_name = input("输入用户名：").strip()
+                        if not prompt_name:
+                            print("\x1b[2m✕ 未输入用户名，已取消。\x1b[0m")
+                            return 0
+                        if not _confirm(
+                            f"您确认要用「{prompt_name}」这个名称新建账户吗？"
+                        ):
+                            continue  # N：回到选择菜单重来
+                        res = init_identity(
+                            repo, claim=None, new=True, name=prompt_name
+                        )
+                        break
                     chosen = opts[idx]
                     if not _confirm(f"您确认是要使用「@{chosen['name']}」这个身份吗？"):
-                        print("\x1b[2m✕ 已取消，未做任何更改。\x1b[0m")
-                        return 0
+                        continue  # N：回到选择菜单重来
                     res = init_identity(repo, claim=chosen["uuid"], new=False, name="")
+                    break
             else:
                 # 名册空：交互输入名字；非终端交给用户去终端跑（init_identity 会报需要名字）
                 prompt_name = input("输入用户名：").strip() if tty else ""
