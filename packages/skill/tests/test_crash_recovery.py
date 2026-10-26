@@ -72,6 +72,9 @@ class Repo:
     def __init__(self):
         self.root = Path(tempfile.mkdtemp(prefix="dtl-cr-"))
         git(self.root, "init", "-q")
+        # 临时仓没有继承任何 git 身份，CI 上不设就 commit 失败（128）；与台账身份无关
+        git(self.root, "config", "user.email", "cr@example.com")
+        git(self.root, "config", "user.name", "cr")
         self.ident("cr", "cr@example.com")
         (self.root / "README.md").write_text("# x\n", encoding="utf-8")
         git(self.root, "add", "README.md")

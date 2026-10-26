@@ -118,6 +118,9 @@ class Fixture:
         subprocess.run(["git", "init", "--bare", "-q", str(self.remote)], check=True)
         self.a.mkdir(parents=True)
         git(self.a, "init", "-q")
+        # 临时仓没有继承任何 git 身份，CI 上不设就 commit 失败（128）；与台账身份无关
+        git(self.a, "config", "user.email", "smoke-a@example.com")
+        git(self.a, "config", "user.name", "smoke-a")
         ident(self.a, "smoke-a", "smoke-a@example.com")
         git(self.a, "remote", "add", "origin", str(self.remote))
         (self.a / "README.md").write_text("# fixture\n", encoding="utf-8")
@@ -127,6 +130,8 @@ class Fixture:
         subprocess.run(
             ["git", "clone", "-q", str(self.remote), str(self.b)], check=True
         )
+        git(self.b, "config", "user.email", "smoke-b@example.com")
+        git(self.b, "config", "user.name", "smoke-b")
         ident(self.b, "smoke-b", "smoke-b@example.com")
 
     def close(self):
