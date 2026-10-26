@@ -17,21 +17,27 @@
 
 ## 待办
 
-- 关键矛盾待讨论：浏览器安全模型下，`file://` 打开的 HTML **不能自行执行本地脚本**（相对路径 `fetch` 数据也会被拦），第 2 条与原意需重新定义可行形态。
-- 页面展示哪些内容（在办 / 已结案 / 单条详情 / 统计）未定。
-- 模板与生成物的落点（`packages/skill/` 内何处）、是否随 skill 包发版未定。
+- 待用户验收：打开 `ledger/board.html`，点「选择台账目录」选中 `ledger` 目录，看在办与已结案是否正确。
+- 验收通过后：把 `ledger/board.html` 移进 skill 包，并在建台账（`bootstrap`）时拷到 `ledger/board.html`；此时才决定 skill 发版口径。
+- 未做：单条任务详情页（过程文档目前只给跳转链接，页面内不渲染 md 全文）。
+- 未做：多个月份 history 的折叠 / 筛选；目前全部按月文件拼成一张表。
 
 ## 下一步
 
-与用户讨论上面第一条，确定可行形态（谁执行脚本、产物落在哪、怎么打开）后再定文件路径与读取方式。
+等用户对 `ledger/board.html` 的展示效果给结论；通过则改 `packages/skill/scripts/ledgerkit/actions/bootstrap.py`（建台账处）加一步模板拷贝，并把模板放到 skill 包内固定路径。
 
 ## 过程
 
-<!-- 踩坑与证据：带 revision + 文件:行号 或符号名 -->
+- **硬约束（决定了整个形态）**：`file://` 页面的 `fetch`/`XHR` 读同目录 JSON 被浏览器拒绝；唯一能免点击拿到本地内容的通道是 `<script src>` 加载 js 本体。因此「HTML 自动读原数据」不存在，「靠 JS 存路径」也无效（拿到路径照样读不了）。
+- **File System Access API（`showDirectoryPicker`）**：唯一能持久化目录句柄的 API，但 `file://` 下抛 `SecurityError`，只在 https/localhost 可用 ⇒ 「记住一次、之后免选」在纯静态下做不到（依据 Chrome 官方调试文档 + 一致技术口径，本机无浏览器未实测）。
+- **被否掉的方案**（记录以免重提）：① 实时生成整页 HTML（用户：点了才能看，等于没意义）；② 脚本顺带吐 `board.data.js` 数据快照（用户：数据必须读原数据，不接受把数据塞进 JS；且多一份数据是新的冲突源）；③ 浏览器启动参数 `--allow-file-access-from-files`（用户：不能让用户手动执行命令）。
+- **落定形态**：单个 `ledger/board.html`，内联 CSS/JS，用 `<input webkitdirectory>` 手选 `ledger` 目录后**直读原始文件**（`pool.json` / `owners.json` / `owners/*.json` / `history/*.md`），在内存渲染；不写盘、不联网。skill 脚本零改动。
+- **数据面口径**（按现有真源）：`pool.json.tasks`（公共池）+ `owners/<hash>.json.tasks`（各人名下，`identity.uuid` 在文件内）+ `owners.json.workers[uuid].name`（名字）；`history/*.md` 为 11 列表格，列序「结案时间 | 创建时间 | 标题 | 分类 | 标签 | owner | owner_name | creator | creator_name | 摘要 | 过程文档」。
+- **自检方式**：把 `board.html` 里 `<script>` 抽出来在 node 里跑（stub 掉 `document`），喂真实 `ledger/` 目录的 36 个文件，断言渲染出 2 条在办、29 条已结案、链接指向真实存在的过程文档。
 
 ## 结论
 
-<!-- 做成了什么、留了什么坑 -->
+`ledger/board.html` 已落地（本项目唯一新增文件，skill 脚本一行未改）：双击打开 → 点「选择台账目录」→ 选 `ledger` → 直读原始 JSON/MD 渲染在办分组卡片、统计卡与已结案表；过程文档可点击跳转。node 自检通过（2 在办 / 29 已结案，链接文件均存在），`koc-codelint` 全过。尚未验收，尚未移入 skill 包。
 
 ## 执行记录
 
@@ -39,3 +45,4 @@
      补记用 progress.py log --id <任务号> --note "一句话"。 -->
 - 2026-10-26 17:17:15 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务并认领
 - 2026-10-26 17:17:41 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 任务已建并认领；worklog 记下三条硬要求与待讨论点：file:// 下 HTML 不能自执行本地脚本，第 2 条形态需先定
+- 2026-10-26 17:45:22 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 落地 ledger/board.html（单文件、webkitdirectory 手选目录直读原始 JSON/MD，skill 脚本零改动）；node 自检 2 在办/29 已结案、链接均存在，codelint 全过；待用户验收

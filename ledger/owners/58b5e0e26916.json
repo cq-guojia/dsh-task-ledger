@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261026-0917-在-skill-里增加-html-台账展示页-e276": {"category": "建设", "created": "2026-10-26 09:17:15", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-26 09:17:15", "status": "doing", "tags": ["台账", "展示", "静态页面"], "title": "在 skill 里增加 HTML 台账展示页", "updated": "2026-10-26 09:17:41", "worklog": "worklog/202610/26-0917-在-skill-里增加-html-台账展示页-e276.md"},
+    "20261026-0917-在-skill-里增加-html-台账展示页-e276": {"category": "建设", "created": "2026-10-26 09:17:15", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-26 09:17:15", "status": "doing", "tags": ["台账", "展示", "静态页面"], "title": "在 skill 里增加 HTML 台账展示页", "updated": "2026-10-26 09:45:22", "worklog": "worklog/202610/26-0917-在-skill-里增加-html-台账展示页-e276.md"},
     "20261026-0940-把-dsh-plugin-core-装进项目并依赖-6788": {"category": "重构", "created": "2026-10-26 09:40:36", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-26 09:40:36", "status": "doing", "tags": ["dsh-plugin-core", "依赖安装", "基础组件"], "title": "把 dsh-plugin-core 装进项目并依赖", "updated": "2026-10-26 09:41:58", "worklog": "worklog/202610/26-0940-把-dsh-plugin-core-装进项目并依赖-6788.md"}
   },
   "version": "20261022000000"
