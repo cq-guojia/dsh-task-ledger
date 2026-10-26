@@ -307,13 +307,15 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
             rows.append(
                 "\x1b[7m  ❯ " + label + "  \x1b[0m" if i == sel else "    " + label
             )
-        rows += ["", "\x1b[2m  ↑/↓ 移动     Enter 确认     Ctrl-C 退出\x1b[0m"]
+        rows += ["", "\x1b[2m  ↑/↓ 移动     Enter 确认     ESC / Ctrl-C 退出\x1b[0m"]
         return rows
 
     try:
         fd = sys.stdin.fileno()
         if not sys.stdin.isatty():
             raise OSError("not a tty")
+        import os
+        import select
         import termios
         import tty
 
@@ -335,21 +337,25 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
                     sys.stdout.write("\x1b[2K\r" + row + "\n")
                 sys.stdout.flush()
 
-                ch = sys.stdin.read(1)
-                if ch == "\x1b":
-                    nxt = sys.stdin.read(1)
-                    if nxt in ("[", "O"):
-                        k = sys.stdin.read(1)
-                        if k == "A":
+                ch = os.read(fd, 1)
+                if ch == b"\x1b":
+                    # 区分「单独 ESC（退出）」与「方向键 ESC [ A/B」：短暂等待后续字节
+                    if not select.select([fd], [], [], 0.05)[0]:
+                        result = ("cancel", None)
+                        break
+                    nxt = os.read(fd, 1)
+                    if nxt in (b"[", b"O"):
+                        k = os.read(fd, 1)
+                        if k == b"A":
                             sel = (sel - 1) % n
-                        elif k == "B":
+                        elif k == b"B":
                             sel = (sel + 1) % n
-                elif ch in ("\r", "\n"):
+                elif ch in (b"\r", b"\n"):
                     result = (
                         ("new", None) if entries[sel].get("new") else ("claim", sel)
                     )
                     break
-                elif ch == "\x03":  # Ctrl-C
+                elif ch == b"\x03":  # Ctrl-C
                     result = ("cancel", None)
                     break
         finally:
@@ -381,6 +387,20 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
             if 0 <= idx < len(opts):
                 return ("claim", idx)
     return ("cancel", None)
+
+
+def _confirm(question: str) -> bool:
+    """Y/N 确认：Y 返回 True，N / 空 / 中断返回 False。"""
+    while True:
+        try:
+            ans = input(question + " [Y/N]：").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            return False
+        if ans in ("y", "yes"):
+            return True
+        if ans in ("n", "no"):
+            return False
+        print("请输入 Y 或 N。")
 
 
 def _run_init(args: argparse.Namespace) -> int:
@@ -438,11 +458,16 @@ def _run_init(args: argparse.Namespace) -> int:
                     if not prompt_name:
                         print("\x1b[2m✕ 未输入用户名，已取消。\x1b[0m")
                         return 0
+                    if not _confirm(f"您确认要用「{prompt_name}」这个名称新建账户吗？"):
+                        print("\x1b[2m✕ 已取消，未做任何更改。\x1b[0m")
+                        return 0
                     res = init_identity(repo, claim=None, new=True, name=prompt_name)
                 else:
-                    res = init_identity(
-                        repo, claim=opts[idx]["uuid"], new=False, name=""
-                    )
+                    chosen = opts[idx]
+                    if not _confirm(f"您确认是要使用「@{chosen['name']}」这个身份吗？"):
+                        print("\x1b[2m✕ 已取消，未做任何更改。\x1b[0m")
+                        return 0
+                    res = init_identity(repo, claim=chosen["uuid"], new=False, name="")
             else:
                 # 名册空：交互输入名字；非终端交给用户去终端跑（init_identity 会报需要名字）
                 prompt_name = input("输入用户名：").strip() if tty else ""
