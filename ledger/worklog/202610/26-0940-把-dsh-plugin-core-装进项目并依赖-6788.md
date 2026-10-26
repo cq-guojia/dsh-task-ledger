@@ -1,6 +1,7 @@
 # 20261026-0940-把-dsh-plugin-core-装进项目并依赖-6788：把 dsh-plugin-core 装进项目并依赖
 
 > **创建**：2026-10-26 09:40:36（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
+> ✅ 完成封卷：2026-10-26 17:45:56（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
 > **分类**：重构 ｜ **标签**：dsh-plugin-core、依赖安装、基础组件
 
 <!-- 「> **分类**：… ｜ **标签**：…」行由脚本按 new --category / --tags 插入；两者皆空则不写。 -->
@@ -35,3 +36,4 @@
      补记用 progress.py log --id <任务号> --note "一句话"。 -->
 - 2026-10-26 17:40:36 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务并认领
 - 2026-10-26 17:41:58 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · pnpm add 装 dsh-plugin-core@0.4.0 到 packages/plugin（package.json ^0.4.0，lock +476 行）；0.4.0 被 minimumReleaseAge 冷却拦过，已在 pnpm-workspace.yaml 记 exclude；skill 包未动
+- 2026-10-26 17:45:56 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷
