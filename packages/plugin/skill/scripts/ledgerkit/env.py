@@ -69,7 +69,7 @@ def current(repo: Path | None = None) -> Identity:
     if identity is None:
         raise Fail(
             "这台机器还没有初始化身份。\n"
-            "  处理：先运行 `progress.py init --repo <工作区根>`，输入一个名字，再执行本命令。"
+            "  处理：先运行 `progress.py init --repo <工作区根>`（交互式选择或新建身份），再执行本命令。"
         )
     name = identity.name
     if repo is not None:

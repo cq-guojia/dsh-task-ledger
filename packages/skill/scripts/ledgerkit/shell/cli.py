@@ -108,6 +108,11 @@ def build_parser() -> argparse.ArgumentParser:
     initp.add_argument("--claim", help="认领名册里已有的 uuid")
     initp.add_argument("--new", action="store_true", dest="new_id", help="新建身份")
     initp.add_argument("--name", help="新建身份时的显示名字（必填）")
+    initp.add_argument(
+        "--yes",
+        action="store_true",
+        help="非交互写入确认（由 Agent 在用户明确同意后使用）",
+    )
 
     # 宿主（插件 / SKILL.md）的调用写法是 `progress.py list --repo <仓库>`：
     # `--repo` 挂在**子命令后面**，所以每个子命令都要认；子命令给的值覆盖顶层那个。
@@ -417,6 +422,7 @@ def _run_init(args: argparse.Namespace) -> int:
     claim = getattr(args, "claim", None)
     new = bool(getattr(args, "new_id", False))
     name = (getattr(args, "name", "") or "").strip()
+    yes = bool(getattr(args, "yes", False))
     tty = sys.stdin.isatty()
 
     try:
@@ -425,12 +431,12 @@ def _run_init(args: argparse.Namespace) -> int:
             # 已初始化：幂等空转（带不带 flag 都一样，零写）
             res = init_identity(repo, claim=claim, new=new, name=name)
         elif claim or new or name:
-            # flag 写操作：只接受真终端；agent 无终端调不动（2026-10-26 事故）
-            if not tty:
+            # 非终端写入必须带 --yes：Agent 只能在用户明确同意后代跑（2026-10-26 事故）
+            if not tty and not yes:
                 raise Fail(
-                    "写入身份必须由用户在终端里交互执行（当前没有终端）。\n"
-                    "  处理：请用户在终端运行 `python3 progress.py init --repo <工作区根>`，\n"
-                    "  它会列出已有身份供选择，或让 ta 输入一个新名字。"
+                    "非交互写入身份需要用户明确同意。\n"
+                    "  处理：先裸跑 init（只读）把名册报给用户，取得明确同意后再加 --yes 重跑；\n"
+                    "  或请用户自己在终端运行 init（交互式选择/新建）。"
                 )
             res = init_identity(repo, claim=claim, new=new, name=name)
         else:

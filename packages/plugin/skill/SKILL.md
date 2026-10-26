@@ -1,7 +1,7 @@
 ---
 name: task-ledger
 description: 本地任务台账，跨会话记录在办任务的归属、进度与起止。当用户要登记一件新的事（新建任务 / 建个坑 / 这活我领了）、记录已有任务的进展（接着做 / 记一条进展 / 这轮先记下）、查看任务状态或历史（现在该做什么 / 这活谁在做 / 上周做过什么）、给任务结案或退回（做完了 / 验收通过 / 不做了 / 退回待认领）、整理标签或检查台账一致性时加载；只是改代码、讨论方案时不要用。
-version: 1.3.15
+version: 1.3.16
 allowed-tools: Read,Edit,Bash,Grep
 ---
 
@@ -15,17 +15,7 @@ allowed-tools: Read,Edit,Bash,Grep
 
 ## 身份闸门（未初始化时怎么走）
 
-**任何命令返回「这台机器还没有初始化身份」⇒ 一律停下，不许绕。** 身份是用户自己的，不是你的决定。
-
-- **查询类**（`list` / `show` / `history` / `validate`）：什么都不做。把 init 命令交给用户，等 ta 跑完再重试原命令。
-- **写入类**（`new` / `claim` / `set` / `log` / `close`）：不建、不改、不推送。先裸跑一次 `init`（只读，只把名册里已有的身份报出来）：
-  - **有名单** ⇒ 「名册里已有这些身份：<uuid 名字>。确定哪个是你的，就自己在终端跑 `init --claim <uuid>` 选它；都不是就 `init --new --name <名字>` 新建。」**报给用户，让 ta 选。**
-  - **没名单** ⇒ 「名册为空，请在终端 `init --new --name <名字>` 新建。」
-- **禁止（硬规则）**：
-  - **不替用户执行** `init --claim` / `init --new` / `init --name` —— 挑哪个身份是用户的事；
-  - **不读** `ledger/*.json`、worklog 去"自己看"；
-  - 未初始化时**不做任何写**。
-- `init` 的写操作只能由用户在终端交互执行（脚本对无终端调用直接报错）；agent **唯一**可跑的 `init` 是不带参数、只报名单的只读形式。
+**任何命令返回「这台机器还没有初始化身份」⇒ 停下，不许绕。** 身份是用户自己的，不是你的决定：不替用户选、不读 `ledger/*.json` 兜底、未初始化时不写任何东西。**具体走法（用户自跑 / 你代跑的分步流程、Y/N 与回退）见 `references/init-identity.md`，按那里一步步做。**
 
 ## 手写边界
 
@@ -45,7 +35,7 @@ allowed-tools: Read,Edit,Bash,Grep
 | `--claim <uuid>` | 认领名册里已有的 uuid（名字一起复制） |
 | `--new --name "…"` | 新建身份：生成 uuid + 名字 |
 
-干什么：写本机身份文件（`~/.taskledger/identity.json`），**一台机器只一次**，与台账无关。在终端里**裸跑 `init` 即交互式选择框**：读当前仓库名册，用**上下箭头**移动、**Enter** 认领某个身份，末尾「+ 新建身份」可输入新用户名自建；名册为空则直接让你输入用户名；选定或输入名字后需 **Y/N 确认**才写入（选 **N** 会返回选择菜单重新选，不会直接退出）；**ESC 或 Ctrl-C** 可随时取消。全程要真终端。`--claim <uuid>` / `--new --name "<名字>"` 也只接受真终端，agent 的无终端调用会被脚本拒绝。
+干什么：写本机身份文件（`~/.taskledger/identity.json`），**一台机器只一次**，与台账无关。真终端里裸跑 `init` 是交互式选择框（↑/↓ 选、Enter 认领、末尾「+ 新建身份」输名字、Y/N 确认、ESC/Ctrl-C 取消）；非终端（agent）下裸跑 `init` 只报名单，写操作须带 `--yes`。完整流程见 `references/init-identity.md`。
 
 ### new — 建任务
 
@@ -244,3 +234,4 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <工�
 | 任何非 0 退出、退出码 0 但有 `提示：` / `错误：` / `警告：`、并发冲突、`validate` 报错 | `references/troubleshooting.md` |
 | 传 `--created` / `--finished` 补录时间、看 `--json` 里的时间字段、查别人时 owner 匹配异常、看 history 列义 / 时间窗口口径 | `references/state-model.md` |
 | 拿不准一条记录够不够格、`--note` 不会写 | `references/log-note.md` |
+| 任何命令报「这台机器还没有初始化身份」、或要初始化身份 | `references/init-identity.md` |

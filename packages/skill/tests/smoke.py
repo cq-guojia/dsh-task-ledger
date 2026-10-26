@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -25,7 +26,6 @@ FAILED: list[str] = []
 
 
 def run(repo: Path, *args: str) -> subprocess.CompletedProcess:
-    import json
     import os
 
     home = Path(repo) / ".tlhome"
@@ -292,6 +292,39 @@ def main() -> int:
             r.stdout + r.stderr,
         )
         shutil.rmtree(gate_home, ignore_errors=True)
+
+        # 非终端 + --yes：用户已明确同意后允许 Agent 代跑写入
+        yes_home = Path(tempfile.mkdtemp(prefix="ledgerkit-yes-home-"))
+        r = subprocess.run(
+            [
+                PY,
+                "-B",
+                str(PROGRESS),
+                "--repo",
+                str(repo),
+                "init",
+                "--new",
+                "--name",
+                "GateYes",
+                "--yes",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(repo),
+            stdin=subprocess.DEVNULL,
+            env={**os.environ, "TASK_LEDGER_HOME": str(yes_home)},
+            check=False,
+        )
+        yes_ident = yes_home / ".taskledger" / "identity.json"
+        check(
+            "非终端 init --new --yes 允许写入",
+            r.returncode == 0
+            and yes_ident.exists()
+            and json.loads(yes_ident.read_text(encoding="utf-8")).get("name")
+            == "GateYes",
+            r.stdout + r.stderr,
+        )
+        shutil.rmtree(yes_home, ignore_errors=True)
 
         # 裸 init（无 flag）非终端：只读报候选、不写文件（agent 走这条拿名单交给用户）
         list_home = Path(tempfile.mkdtemp(prefix="ledgerkit-list-home-"))
