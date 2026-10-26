@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>任务台账</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --fg: #1b1f24;
+    --muted: #667085;
+    --line: #e3e6eb;
+    --accent: #2563eb;
+    --doing: #0f8a5f;
+    --open: #b45309;
+    --chip: #eef2f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131518;
+      --card: #1b1e23;
+      --fg: #e6e8eb;
+      --muted: #8f9aa8;
+      --line: #2b3037;
+      --accent: #6aa5ff;
+      --doing: #35c48a;
+      --open: #e0a13a;
+      --chip: #242a31;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px clamp(12px, 4vw, 48px) 64px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  .bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto 20px;
+  }
+  h1 { margin: 0; font-size: 20px; letter-spacing: .5px; }
+  .sub { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+  .btn {
+    flex: none;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  main { max-width: 1100px; margin: 0 auto; }
+  .empty {
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+  }
+  .empty h2 { margin: 0 0 8px; font-size: 15px; }
+  .empty p { margin: 6px 0; }
+  .hint { color: var(--muted); font-size: 12px; }
+  .err { color: #d94141; }
+  code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--chip);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+  }
+  .stat b { display: block; font-size: 24px; line-height: 1.2; }
+  .stat span { color: var(--muted); font-size: 12px; }
+  .block { margin-bottom: 32px; }
+  .block h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--muted);
+  }
+  .group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 18px 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .group-title .n { color: var(--muted); font-weight: 400; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+  }
+  .task {
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+  }
+  .task h3 { margin: 8px 0 4px; font-size: 14px; font-weight: 600; }
+  .task .id {
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    word-break: break-all;
+  }
+  .task .meta { margin-top: 6px; color: var(--muted); font-size: 12px; }
+  .task .wl {
+    display: inline-block;
+    margin-top: 6px;
+    color: var(--accent);
+    font-size: 12px;
+    text-decoration: none;
+  }
+  .task .wl:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 18px;
+  }
+  .badge.doing { background: color-mix(in srgb, var(--doing) 16%, transparent); color: var(--doing); }
+  .badge.open { background: color-mix(in srgb, var(--open) 16%, transparent); color: var(--open); }
+  .badge.cat { background: var(--chip); color: var(--muted); }
+  .tags { margin-left: 6px; color: var(--muted); font-size: 11px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap; }
+  td.nowrap { white-space: nowrap; color: var(--muted); }
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div>
+    <h1>任务台账</h1>
+    <p class="sub" id="meta">尚未读取数据</p>
+  </div>
+  <button class="btn" id="pick" type="button">选择台账目录</button>
+</div>
+<input type="file" id="dir" webkitdirectory directory multiple hidden>
+
+<main>
+  <section class="empty" id="empty">
+    <h2>没读到数据</h2>
+    <p>这个页面通过 <code>http</code> 打开时（IDE 内置浏览器、端口转发、本地静态服务），会自动读取同目录的台账，无需任何操作。没自动出来，就点右上角「选择台账目录」，选中这个页面所在的 <code>ledger</code> 目录——页面会直读 <code>pool.json</code>、<code>owners.json</code>、<code>owners/</code>、<code>history/</code>。</p>
+    <p class="hint">直接双击（<code>file://</code>）打开时，浏览器禁止页面读同目录文件，只能手选；而且远程机器上的台账在远端，选本地目录读到的不是它。</p>
+    <p class="err" id="err"></p>
+  </section>
+
+  <section id="board" hidden>
+    <div class="stats" id="stats"></div>
+    <section class="block">
+      <h2>在办</h2>
+      <div id="groups"></div>
+    </section>
+    <section class="block">
+      <h2>已结案</h2>
+      <div class="scroll" id="closed"></div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var input = $("dir");
+  var problems = [];
+
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  };
+
+  $("pick").addEventListener("click", function () { input.click(); });
+  input.addEventListener("change", function () {
+    if (input.files && input.files.length) load(pickerSource(input.files));
+  });
+
+  /* 两种数据来源：同目录 http（自动、零点击）/ 手选目录（file:// 下唯一出路） */
+
+  function httpSource() {
+    var monthsBack = 13;
+    return {
+      label: "同目录",
+      text: function (rel) {
+        return fetch(rel, { cache: "no-store" }).then(function (r) {
+          if (!r.ok) throw new Error(rel + " 返回 " + r.status);
+          return r.text();
+        });
+      },
+      historyFiles: function () {
+        var now = new Date(), months = [], i, d;
+        for (i = 0; i < monthsBack; i++) {
+          d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          months.push("history/" + d.getFullYear() + ("0" + (d.getMonth() + 1)).slice(-2) + ".md");
+        }
+        return Promise.all(months.map(function (rel) {
+          return fetch(rel, { cache: "no-store" }).then(
+            function (r) { return r.ok ? rel : null; },
+            function () { return null; }
+          );
+        })).then(function (list) { return list.filter(Boolean); });
+      }
+    };
+  }
+
+  function pickerSource(fileList) {
+    var files = Array.prototype.slice.call(fileList);
+    var map = new Map();
+    files.forEach(function (f) {
+      var p = f.webkitRelativePath || f.name;
+      var rel = p.indexOf("/") < 0 ? p : p.split("/").slice(1).join("/");
+      if (rel) map.set(rel, f);
+    });
+    return {
+      label: (files[0].webkitRelativePath || "").split("/")[0] || "所选目录",
+      text: function (rel) {
+        var f = map.get(rel);
+        return f ? f.text() : Promise.reject(new Error("缺少 " + rel));
+      },
+      historyFiles: function () {
+        var out = [];
+        map.forEach(function (_f, rel) {
+          if (rel.indexOf("history/") === 0 && rel.slice(-3) === ".md") out.push(rel);
+        });
+        return Promise.resolve(out);
+      }
+    };
+  }
+
+  function showError(msg) {
+    $("err").textContent = msg;
+    $("empty").hidden = false;
+    $("board").hidden = true;
+  }
+
+  function load(src) {
+    problems = [];
+    var readJson = function (rel) {
+      return src.text(rel).then(function (t) {
+        try { return JSON.parse(t); }
+        catch (e) { problems.push(rel + " 解析失败：" + e.message); return null; }
+      }, function () { return null; });
+    };
+
+    Promise.all([readJson("pool.json"), readJson("owners.json")])
+      .then(function (res) {
+        var pool = res[0], idx = res[1];
+        if (!pool && !idx) {
+          throw new Error("「" + src.label + "」里没有 pool.json / owners.json，请确认这是台账的 ledger 目录。");
+        }
+        var workers = {}, shards = [];
+        Object.keys((idx && idx.workers) || {}).forEach(function (uuid) {
+          var w = idx.workers[uuid];
+          workers[uuid] = w.name || uuid;
+          if (w.file) shards.push("owners/" + w.file);
+        });
+        return Promise.all(shards.map(readJson)).then(function (list) {
+          var tasks = [];
+          var push = function (id, t) { t = Object.assign({}, t); t.id = id; tasks.push(t); };
+          Object.keys((pool && pool.tasks) || {}).forEach(function (id) { push(id, pool.tasks[id]); });
+          list.forEach(function (shard) {
+            Object.keys((shard && shard.tasks) || {}).forEach(function (id) { push(id, shard.tasks[id]); });
+          });
+          return src.historyFiles().then(function (rels) {
+            return Promise.all(rels.map(function (rel) {
+              return src.text(rel).then(function (t) { return t; }, function () { return ""; });
+            })).then(function (texts) {
+              return { tasks: tasks, workers: workers, hist: texts, label: src.label };
+            });
+          });
+        });
+      })
+      .then(function (data) {
+        var closed = [];
+        data.hist.forEach(function (text) {
+          text.split("\n").forEach(function (line) {
+            if (line.charAt(0) !== "|") return;
+            var cells = line.split("|").slice(1, -1).map(function (c) { return c.trim(); });
+            if (cells.length < 11) return;
+            if (cells[0] === "结案时间" || /^-+$/.test(cells[0])) return;
+            closed.push({
+              finished: cells[0],
+              title: cells[2],
+              category: cells[3],
+              tags: cells[4],
+              owner: cells[6].replace(/^@/, ""),
+              summary: cells[9],
+              worklog: cells[10]
+            });
+          });
+        });
+        closed.sort(function (a, b) { return b.finished.localeCompare(a.finished); });
+        render(data.tasks, closed, data.workers, data.label);
+      })
+      .catch(function (e) { showError(e.message); });
+  }
+
+  function ownerName(t, workers) {
+    if (!t.owner) return "";
+    return t.owner_name || workers[t.owner] || t.owner.slice(0, 8);
+  }
+
+  function worklogHref(rel) {
+    if (!rel) return "";
+    var m = /\(([^)]+\.md)\)/.exec(rel);
+    var out = m ? m[1] : rel;
+    return out.replace(/^(\.\.\/)+/, "");
+  }
+
+  function render(tasks, closed, workers, dirName) {
+    var doing = tasks.filter(function (t) { return t.status === "doing"; });
+    var pool = tasks.filter(function (t) { return t.status !== "doing"; });
+
+    $("stats").innerHTML = [
+      ["在办", tasks.length],
+      ["进行中", doing.length],
+      ["待认领", pool.length],
+      ["已结案", closed.length]
+    ].map(function (p) {
+      return '<div class="stat"><b>' + p[1] + "</b><span>" + p[0] + "</span></div>";
+    }).join("");
+
+    var groups = [];
+    if (doing.length) {
+      var byOwner = new Map();
+      doing.forEach(function (t) {
+        var name = ownerName(t, workers) || "未知负责人";
+        if (!byOwner.has(name)) byOwner.set(name, []);
+        byOwner.get(name).push(t);
+      });
+      byOwner.forEach(function (list, name) { groups.push([name, list]); });
+    }
+    if (pool.length) groups.push(["公共池（未认领）", pool]);
+
+    $("groups").innerHTML = groups.length
+      ? groups.map(function (g) {
+          return '<div class="group-title">' + esc(g[0]) +
+            ' <span class="n">' + g[1].length + " 条</span></div>" +
+            '<div class="grid">' + g[1].map(function (t) { return card(t, workers); }).join("") + "</div>";
+        }).join("")
+      : '<p class="hint">没有在办任务。</p>';
+
+    $("closed").innerHTML = closed.length
+      ? "<table><thead><tr><th>结案时间</th><th>标题</th><th>分类</th><th>标签</th><th>负责人</th><th>完成了什么</th></tr></thead><tbody>" +
+        closed.map(function (c) {
+          var href = worklogHref(c.worklog);
+          var title = href
+            ? '<a class="wl" href="' + esc(href) + '" style="margin:0">' + esc(c.title) + "</a>"
+            : esc(c.title);
+          return "<tr><td class=\"nowrap\">" + esc(c.finished) + "</td><td>" + title +
+            '</td><td class="nowrap">' + esc(c.category) + '</td><td class="nowrap">' + esc(c.tags) +
+            '</td><td class="nowrap">' + esc(c.owner) + "</td><td>" + esc(c.summary) + "</td></tr>";
+        }).join("") + "</tbody></table>"
+      : '<p class="hint" style="padding:16px;margin:0">没有已结案记录。</p>';
+
+    var now = new Date();
+    var hhmm = ("0" + now.getHours()).slice(-2) + ":" + ("0" + now.getMinutes()).slice(-2);
+    $("meta").textContent = "数据来源：" + dirName + " · 读取于 " + hhmm +
+      (problems.length ? " · " + problems.length + " 个文件有问题" : "");
+    $("empty").hidden = tasks.length + closed.length > 0;
+    if (problems.length) {
+      $("err").textContent = problems.join("；");
+      $("empty").hidden = false;
+    }
+    $("board").hidden = tasks.length + closed.length === 0;
+  }
+
+  function card(t, workers) {
+    var href = worklogHref(t.worklog);
+    var tags = (t.tags || []).map(function (x) { return "#" + x; }).join(" ");
+    return '<article class="task">' +
+      '<span class="badge ' + (t.status === "doing" ? "doing" : "open") + '">' +
+        (t.status === "doing" ? "进行中" : "待认领") + "</span>" +
+      (t.category ? '<span class="badge cat">' + esc(t.category) + "</span>" : "") +
+      (tags ? '<span class="tags">' + esc(tags) + "</span>" : "") +
+      "<h3>" + esc(t.title) + "</h3>" +
+      '<div class="id">' + esc(t.id) + "</div>" +
+      '<div class="meta">创建 ' + esc(t.created || "") +
+        (t.updated ? " · 更新 " + esc(t.updated) : "") +
+        (t.owner ? " · @" + esc(ownerName(t, workers)) : "") + "</div>" +
+      (href ? '<a class="wl" href="' + esc(href) + '">过程文档 →</a>' : "") +
+      "</article>";
+  }
+
+  /* 开页先试同目录 http：能读到就直接渲染（零点击），读不到就保留手选目录那一步 */
+  (function boot() {
+    var src = httpSource();
+    src.text("pool.json").then(function () { load(src); }, function () {});
+  })();
+})();
+</script>
+</body>
+</html>
