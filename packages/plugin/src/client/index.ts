@@ -9,6 +9,8 @@
  * 宿主能力一律**本地结构化声明**，不 import 官方包（rc 接口会无声变）；
  * `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
  */
+import { createStyleKit } from "dsh-plugin-core/design";
+import { setStyleKit } from "dsh-plugin-core/ui";
 import { createElement as h } from "react";
 import { BoardHome } from "./board-home";
 import {
@@ -20,6 +22,9 @@ import {
 	zh,
 } from "./locales";
 import { LedgerIcon } from "./ui";
+
+// 核心控件样式设施：id 插件内唯一（多插件同页互不覆盖）；控件首次渲染时 ensureControls() 挂载。
+setStyleKit(createStyleKit({ id: "dsh-task-ledger" }));
 
 /** 命名空间（settings / locale / 面板 id 同名，便于对应）。 */
 /** 模块级 t 席位（侧栏 label 渲染期求值用；绑不上就回落键名，绝不上界面）。 */

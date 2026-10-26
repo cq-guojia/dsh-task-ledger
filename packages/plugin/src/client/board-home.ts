@@ -43,8 +43,13 @@ import {
 	SearchInput,
 	Segmented,
 	Select,
+	StripCard,
 	StatCard,
 } from "./ui";
+
+// 构建期由 tsdown.client.config.ts 的 define 注入（版本读 package.json，编码是编译时刻时间戳）。
+declare const __PLUGIN_VERSION__: string;
+declare const __BUILD_STAMP__: string;
 
 type Tab = "tasks" | "stats";
 
@@ -68,6 +73,16 @@ const headerStyle: Record<string, string | number> = {
 const titleStyle: Record<string, string | number> = {
 	fontSize: "var(--dtl-font-xl)",
 	fontWeight: 600,
+};
+/** 标题后的版本 + 构建编码：特别小的字（用户 2026-10-26 要求，一眼确认看到的是不是刚 build 的）。 */
+const buildTagStyle: Record<string, string | number> = {
+	marginLeft: "var(--dtl-space-2)",
+	fontSize: "10px",
+	lineHeight: "1",
+	fontWeight: 400,
+	color: "var(--dtl-fg-dim)",
+	fontVariantNumeric: "tabular-nums",
+	whiteSpace: "nowrap",
 };
 /** 统计区：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
  *  列数写死 4 → 2（媒体查询在 ui.ts 的 .dtl-stats / .dtl-stats__cards 里），
@@ -242,7 +257,19 @@ export function BoardHome(props: {
 							{ variant: "outline", size: "md", onClick: onBack },
 							`← ${t("backToConversation")}`,
 						),
-						h("div", { style: titleStyle }, t("panelTitle")),
+						h(
+							"div",
+							{ style: titleStyle },
+							t("panelTitle"),
+							h(
+								"span",
+								{
+									style: buildTagStyle,
+									title: `v${__PLUGIN_VERSION__} · ${__BUILD_STAMP__}`,
+								},
+								`v${__PLUGIN_VERSION__} ${__BUILD_STAMP__}`,
+							),
+						),
 					),
 					h(
 						"div",
@@ -267,7 +294,8 @@ export function BoardHome(props: {
 							Button,
 							{
 								variant: "outline",
-								size: "md",
+								// lg：与同排 tab 滑轨同高（用户 2026-10-26：一行控件别一大一小）
+								size: "lg",
 								icon: h(IconRefreshOutlineRegular, { size: 16 }),
 								disabled: state.refreshing,
 								title: t("refresh"),
@@ -279,7 +307,6 @@ export function BoardHome(props: {
 						),
 					),
 				),
-
 				tab === "stats"
 					? // 统计报表尚未开建（另立任务）：占位说明，不画假图表。
 						h("div", { style: hintStyle }, t("statsPlaceholder"))
@@ -548,8 +575,10 @@ export function BoardHome(props: {
 															)
 														: null,
 													h("span", { style: { flex: "1 1 auto" } }),
-													// 工作区下拉：内容自适应、下限 131（用户 2026-10-17）
+													// 工作区下拉：核心 Picker 带筛选（用户 2026-10-26）；控件统一 lg 档
 													h(Select<string>, {
+														searchable: true,
+														size: "lg",
 														value: workspaceOptions.some(
 															(option) =>
 																option.value === state.query.workspace,
@@ -563,7 +592,7 @@ export function BoardHome(props: {
 															setQuery({ workspace: next });
 														},
 													}),
-													// 搜索框：在下拉右边、与「其他待办」同宽 192（用户 2026-10-17）
+													// 搜索框：在下拉右边、与「其他待办」同宽 192（用户 2026-10-17）；统一 lg 档
 													h(
 														"div",
 														{
@@ -573,6 +602,7 @@ export function BoardHome(props: {
 															},
 														},
 														h(SearchInput, {
+															size: "lg",
 															value: state.query.keyword,
 															placeholder: t("searchPlaceholder"),
 															ariaLabel: t("searchPlaceholder"),
@@ -678,6 +708,7 @@ export function BoardHome(props: {
 																},
 															},
 															h(SearchInput, {
+																size: "lg",
 																value: state.query.othersKeyword,
 																placeholder: t("searchPlaceholder"),
 																ariaLabel: t("searchPlaceholder"),
@@ -776,41 +807,67 @@ function WorkspaceGroupView(props: {
 			: []),
 		...(group.staleCount > 0 ? [t("groupStale", { n: group.staleCount })] : []),
 	].join(" ｜ ");
+	// 段头统计条：核心 StripCard（色条 / 浅底 / 折叠 caret 全是核心外观，用户 2026-10-26 拍板）
 	return h(
 		"div",
 		{ className: "dtl-group" },
 		h(
-			"button",
+			StripCard,
 			{
-				type: "button",
-				className: "dtl-group__head",
-				"aria-expanded": open,
-				title: open ? t("collapseAria") : t("expandAria"),
-				onClick: () => {
+				accent: "business",
+				expanded: open,
+				onToggle: () => {
 					setOpen(!open);
 				},
-			},
-			// 段头标识：展开 = 打开的文件夹、收起 = 合上的文件夹（跟官方工作区显示逻辑一致）；
-			// 包里没有这对图标 ⇒ 回落成竖线
-			IconFolderOpenRegular === undefined ||
-				IconFolderCloseRegular === undefined
-				? h("span", { className: "dtl-group__bar" })
-				: h(
-						"span",
-						{
-							style: {
-								display: "inline-flex",
-								flex: "none",
-								color: "var(--dtl-fg-3)",
-							},
+				// 统计放核心 action 槽（右侧，垂直居中）；caret 由 StripCard 自动补
+				action: h(
+					"span",
+					{
+						style: {
+							fontSize: "var(--dtl-font-xs)",
+							color: "var(--dtl-fg-2)",
+							whiteSpace: "nowrap",
 						},
-						h(open ? IconFolderOpenRegular : IconFolderCloseRegular, {
-							size: 14,
-						}),
-					),
-			h("span", { className: "dtl-group__name dtl-ellipsis" }, group.title),
-			h("span", { style: { flex: "1 1 auto" } }),
-			h("span", { className: "dtl-group__stats" }, stats),
+					},
+					stats,
+				),
+			},
+			h(
+				"div",
+				{ style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 } },
+				// 段头标识：展开 = 开文件夹、收起 = 合文件夹；图标缺席就不显示（StripCard 自有色条兜底）
+				IconFolderOpenRegular === undefined ||
+					IconFolderCloseRegular === undefined
+					? null
+					: h(
+							"span",
+							{
+								style: {
+									display: "inline-flex",
+									flex: "none",
+									color: "var(--dtl-fg-3)",
+								},
+							},
+							h(open ? IconFolderOpenRegular : IconFolderCloseRegular, {
+								size: 14,
+							}),
+						),
+				h(
+					"span",
+					{
+						style: {
+							fontSize: "var(--dtl-font-lg)",
+							fontWeight: 700,
+							lineHeight: "var(--dtl-line-lg)",
+							color: "var(--dtl-fg)",
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							whiteSpace: "nowrap",
+						},
+					},
+					group.title,
+				),
+			),
 		),
 		open
 			? h(

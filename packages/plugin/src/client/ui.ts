@@ -11,13 +11,23 @@
 
 import { Tooltip } from "@deepseek-ai/dsh-client-ui-primitives";
 import {
-	type ChangeEvent,
+	Button as CoreButton,
+	Chip as CoreChip,
+	IconButton as CoreIconButton,
+	Input as CoreInput,
+	Picker as CorePicker,
+	Segmented as CoreSegmented,
+} from "dsh-plugin-core/ui";
+import {
 	type CSSProperties,
 	createElement as h,
 	type ReactNode,
 	useState,
 } from "react";
 import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
+
+/** 条带卡（段头统计条）：直接用核心外观，不包第二层皮。 */
+export { StripCard } from "dsh-plugin-core/ui";
 
 /** 基础层样式（tokens + 控件皮肤；幂等注入）。 */
 const UI_BASE_CSS = `
@@ -40,21 +50,7 @@ const UI_BASE_CSS = `
    文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
 /* 组与组**零外距**、连体（用户 2026-10-18：上间距去掉，和上面连在一起） */
 .dtl-group{margin-bottom:0;}
-/* 组标题（照参考图）：**左侧深蓝竖条 + 浅蓝底（实色）**；行高保持（≈42px）；
-   工作区名稍小一号（14px）；上缘无边 */
-.dtl-group__head{position:relative;display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;
-  padding:10px var(--dtl-space-3);border:0;border-left:5px solid var(--dtl-business);
-  border-radius:0;background:var(--dtl-group-head-bg);
-  color:inherit;font:inherit;text-align:left;cursor:pointer;}
-/* 下缘那条线**绝不用 border 画**：border-left(5px) 与 border-bottom(1px) 在左下角
-   按 miter 斜接，会切出一个斜缺角（用户 2026-10-18 实锤，不是视觉误差）⇒ 改用伪元素
-   独立 1px；定位基于 padding box ⇒ 自动从竖条内缘起笔，竖条保持整直。 */
-.dtl-group__head::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
-  background:var(--dtl-border-faint);pointer-events:none;}
-.dtl-group__name{font-size:var(--dtl-font-lg);font-weight:700;line-height:var(--dtl-line-lg);color:var(--dtl-fg);}
-.dtl-group__stats{font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);white-space:nowrap;}
-/* 组标题标识：官方文件夹图标（展开=开、收起=合）；图标缺席时回落成竖线 */
-.dtl-group__bar{width:3px;height:14px;flex:none;border-radius:2px;background:var(--dtl-business);}
+/* 组标题（段头统计条）：改由核心 StripCard 承担（色条 / 底色 / 折叠 caret 全在 core） */
 /* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
    一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
 .dtl-orow{padding:13px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
@@ -153,6 +149,8 @@ const UI_BASE_CSS = `
 .dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
 /* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
 .dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
+/* 用核心 Chip 承担标签时的截断（core Chip 无 max-width/省略号 ⇒ 这里只补布局，不改皮肤） */
+.dshpc-chip.dtl-tagchip{display:inline-block;flex:none;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;}
 /* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
 .dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 
@@ -267,141 +265,116 @@ export interface SegmentedItem<Value extends string = string> {
 	readonly badge?: number;
 }
 
-/** 分段控件（单选）：同一份结构 + size 轴；外观差异只由 variant 的两个颜色变量表达。 */
+/** 分段控件（单选）：改由核心 `Segmented` 承担（size/滑块动画全在 core，外观只有一套、无需指定变体，
+ *  见 core/src/ui/Segmented.ts 头注：2026-10-26 起已删除 variant 轴）。
+ *  本地 `badge` 是「灰字计数」语义 ⇒ 映射到 core 的 `count`（core 的 `badge` 是红色危险圆标）。 */
 export function Segmented<Value extends string>(props: {
 	items: readonly SegmentedItem<Value>[];
 	value: Value;
 	onChange: (next: Value) => void;
 	size?: "sm" | "md" | "lg";
-	variant?: "default" | "inset";
 	label: string;
 	id?: string;
 	style?: CSSProperties;
 }): ReactNode {
-	ensureUiBase();
-	const size = props.size ?? "md";
-	const variant = props.variant ?? "default";
-	return h(
-		"div",
-		{
-			role: "group",
-			"aria-label": props.label,
-			id: props.id,
-			className: `dtl-seg dtl-seg--${variant} dtl-seg--${size}`,
-			style: props.style,
-		},
-		props.items.map((item) =>
-			h(
-				"button",
-				{
-					key: item.value,
-					type: "button",
-					className: "dtl-seg__item",
-					"aria-pressed": item.value === props.value,
-					onClick: () => {
-						props.onChange(item.value);
-					},
-				},
-				item.label,
-				item.badge !== undefined && item.badge > 0
-					? h("span", { className: "dtl-seg__num" }, String(item.badge))
-					: null,
-			),
-		),
-	);
+	return h(CoreSegmented<Value>, {
+		items: props.items.map((item) => ({
+			value: item.value,
+			label: item.label,
+			count: item.badge,
+		})),
+		value: props.value,
+		onChange: props.onChange,
+		// size 不兜底：不传就吃核心默认档 lg（2026-10-26 用户对图拍板：跟核心 demo 一致，
+		// 之前适配层自作主张降成 md 导致比 demo 矮一档）
+		size: props.size,
+		label: props.label,
+		id: props.id,
+		style: props.style,
+	});
 }
 
 /* ── 按钮 / 图标钮 ────────────────────────────────────────────────── */
 
+/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 3 档）。本地默认高度 md（core 默认 lg）。 */
 export function Button(props: {
 	children?: ReactNode;
-	onClick: () => void;
+	onClick?: () => void;
 	variant?: "primary" | "outline" | "ghost";
 	size?: "sm" | "md" | "lg";
 	icon?: ReactNode;
 	disabled?: boolean;
 	title?: string;
 }): ReactNode {
-	ensureUiBase();
 	return h(
-		"button",
+		CoreButton,
 		{
-			type: "button",
-			className: `dtl-btn dtl-btn--${props.variant ?? "outline"} dtl-btn--${props.size ?? "md"}`,
-			disabled: props.disabled === true,
+			variant: props.variant,
+			size: props.size ?? "md",
+			icon: props.icon,
+			disabled: props.disabled,
 			title: props.title,
 			onClick: props.onClick,
 		},
-		props.icon,
 		props.children,
 	);
 }
 
+/** 图标钮：改由核心 `IconButton` 承担。 */
 export function IconButton(props: {
 	icon: ReactNode;
 	label: string;
-	onClick: () => void;
+	onClick?: () => void;
 	variant?: "plain" | "outline";
 	size?: "sm" | "md" | "lg";
 	disabled?: boolean;
 	title?: string;
 }): ReactNode {
-	ensureUiBase();
-	return h(
-		"button",
-		{
-			type: "button",
-			className: `dtl-iconbtn dtl-iconbtn--${props.variant ?? "plain"} dtl-iconbtn--${props.size ?? "md"}`,
-			"aria-label": props.label,
-			disabled: props.disabled === true,
-			title: props.title ?? props.label,
-			onClick: props.onClick,
-		},
-		props.icon,
-	);
+	return h(CoreIconButton, {
+		icon: props.icon,
+		label: props.label,
+		onClick: props.onClick,
+		variant: props.variant ?? "plain",
+		size: props.size ?? "md",
+		disabled: props.disabled,
+		title: props.title,
+	});
 }
 
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 
-/** 原生下拉（工作区 / 状态共用一份；宿主没有廉价下拉件 ⇒ 原生 + token 皮肤）。
- *  `width` 定宽（px）；只给 `minWidth` = 内容自适应但有下限（工作区名长短不一时用）。 */
+/** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
+ *  本地 `width`/`minWidth` 核心件暂不支持（`PickerProps` 无 style/width），由外层布局决定宽度。 */
 export function Select<Value extends string>(props: {
 	value: Value;
 	options: readonly { value: Value; label: string }[];
 	onChange: (next: Value) => void;
 	ariaLabel: string;
-	/** 定宽（px）；不给就按内容。 */
+	/** 定宽（px）；核心 Picker 暂不支持，保留签名待 core 补。 */
 	width?: number;
-	/** 最小宽度（px）；内容自适应时的下限。 */
+	/** 最小宽度（px）；核心 Picker 暂不支持，保留签名待 core 补。 */
 	minWidth?: number;
 	size?: "sm" | "md" | "lg";
+	/** 下拉内搜索框（核心 Picker 原生）。 */
+	searchable?: boolean;
 }): ReactNode {
-	ensureUiBase();
-	const size = props.size ?? "md";
-	const style: CSSProperties | undefined =
-		props.width === undefined
-			? props.minWidth === undefined
-				? undefined
-				: { minWidth: `${props.minWidth}px` }
-			: { width: `${props.width}px` };
-	return h(
-		"select",
-		{
-			className: `dtl-select dtl-select--${size}`,
-			"aria-label": props.ariaLabel,
-			style,
-			value: props.value,
-			onChange: (event: ChangeEvent<HTMLSelectElement>) => {
-				props.onChange(event.target.value as Value);
-			},
+	return h(CorePicker, {
+		options: props.options.map((option) => ({
+			value: option.value,
+			label: option.label,
+		})),
+		value: props.value,
+		onChange: (next: string | string[]) => {
+			props.onChange(next as Value);
 		},
-		props.options.map((option) =>
-			h("option", { key: option.value, value: option.value }, option.label),
-		),
-	);
+		size: props.size ?? "md",
+		searchable: props.searchable === true,
+		ariaLabel: props.ariaLabel,
+		mode: "single",
+	});
 }
 
-/** 搜索框（关键字过滤；占满剩余宽度由调用方的 flex 决定）。 */
+/** 搜索框：改由核心 `Input`（type=search）承担；默认铺满容器。 */
 export function SearchInput(props: {
 	value: string;
 	placeholder: string;
@@ -409,18 +382,13 @@ export function SearchInput(props: {
 	ariaLabel: string;
 	size?: "sm" | "md" | "lg";
 }): ReactNode {
-	ensureUiBase();
-	const size = props.size ?? "md";
-	return h("input", {
-		className: `dtl-input dtl-input--${size}`,
+	return h(CoreInput, {
 		type: "search",
-		"aria-label": props.ariaLabel,
-		placeholder: props.placeholder,
 		value: props.value,
-		spellCheck: false,
-		onChange: (event: ChangeEvent<HTMLInputElement>) => {
-			props.onChange(event.target.value);
-		},
+		onChange: props.onChange,
+		placeholder: props.placeholder,
+		size: props.size ?? "md",
+		"aria-label": props.ariaLabel,
 	});
 }
 
@@ -465,21 +433,9 @@ export function StatCard(props: {
 	);
 }
 
-/** chip（分类 / 标签 / 工作区名）。 */
+/** chip（分类 / 标签 / 工作区名）：改由核心 `Chip` 承担。 */
 export function Chip(props: { text: string; color?: string }): ReactNode {
-	ensureUiBase();
-	return h(
-		"span",
-		{
-			className: "dtl-chip",
-			style:
-				props.color === undefined
-					? undefined
-					: { background: props.color, color: "var(--dtl-on-signal)" },
-			title: props.text,
-		},
-		props.text,
-	);
+	return h(CoreChip, { tone: "neutral" }, props.text);
 }
 
 /** 标签上限宽度（字符数）：1 个中文按 2 计 ⇒ 10 个中文 = 20 个字符（与 CSS 的 20ch 对齐）。 */
@@ -492,10 +448,24 @@ function displayWidth(text: string): number {
 	return width;
 }
 
+/** 本地 7 档语义色 → 核心 `Chip` 5 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
+ *  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。 */
+const CHIP_TONE: Record<
+	"neutral" | "open" | "backlog" | "doing" | "overdue" | "stale" | "person",
+	"neutral" | "business" | "warning" | "danger"
+> = {
+	neutral: "neutral",
+	open: "neutral",
+	backlog: "warning",
+	doing: "business",
+	overdue: "danger",
+	stale: "danger",
+	person: "business",
+};
+
 /**
- * 标签（**唯一**一枚件，用户 2026-10-18）：状态 / 执行人 / #标签 都走它，只换 tone。
- * 超过 20 个字符宽 ⇒ 省略号，**且只在被截时**挂悬停提示补出全文（用户 2026-10-19：
- * 不跑马灯；没被截 ⇒ 悬停无反应）。
+ * 标签：状态 / 执行人 / #标签 都走它，只换 tone（改由核心 `Chip` 承担）。
+ * 超过 20 个字符宽 ⇒ 省略号（`.dtl-tagchip` 补），**且只在被截时**挂悬停提示补出全文。
  */
 export function Tag(props: {
 	text: string;
@@ -516,15 +486,14 @@ export function Tag(props: {
 	const { text, tone = "neutral", title, tip } = props;
 	const long = displayWidth(text) > TAG_MAX_WIDTH;
 	const label = tip ?? (long ? (title ?? text) : undefined);
-	const tag = h("span", { className: `dtl-tag dtl-tag--${tone}` }, text);
-	// 官方 Tooltip（悬停即出、支持 \n 多行、portal 逃逸祖先 overflow 裁切）
-	if (label === undefined) return tag;
+	const chip = h(CoreChip, { tone: CHIP_TONE[tone], className: "dtl-tagchip" }, text);
+	if (label === undefined) return chip;
 	return h(Tooltip, {
 		label,
 		side: "bottom",
 		portal: true,
 		maxWidth: 240,
-		children: tag,
+		children: chip,
 	});
 }
 

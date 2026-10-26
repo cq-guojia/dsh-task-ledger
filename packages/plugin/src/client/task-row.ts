@@ -31,7 +31,7 @@ import { formatDateTime } from "./format";
 import type { Translate } from "./locales";
 import { CLOSED_ACTIONS, displayName, type Row, resolveActions } from "./rows";
 import type { BoardPayload } from "./types";
-import { Tag } from "./ui";
+import { Button, IconButton, Tag } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open" | "closed";
 
@@ -133,11 +133,12 @@ export function TaskRowView(props: {
 		side: "bottom",
 		portal: true,
 		maxWidth: 240,
-		children: h(
-			"button",
-			{ type: "button", className: "dtl-viewbtn" },
-			h(IconSearchOutlineRegular, { size: 14 }),
-		),
+		children: h(IconButton, {
+			variant: "plain",
+			size: "sm",
+			label: t("viewDetail"),
+			icon: h(IconSearchOutlineRegular, { size: 14 }),
+		}),
 	});
 	const tipBtn = (
 		icon: ReactNode,
@@ -154,9 +155,9 @@ export function TaskRowView(props: {
 			portal: true,
 			maxWidth: 240,
 			children: h(
-				"button",
-				{ type: "button", className: "dtl-minibtn" },
-				...(icon ? [icon, t(actionKey)] : [t(actionKey)]),
+				Button,
+				{ variant: "ghost", size: "sm", icon: icon ?? undefined },
+				t(actionKey),
 			),
 		});
 	const claimButton = tipBtn(

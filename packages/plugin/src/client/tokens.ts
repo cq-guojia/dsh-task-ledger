@@ -68,8 +68,6 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   /* 他人任务的 doing 色：比「我的」蓝灰一档（用户 2026-10-17：要和我的蓝区分） */
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
-  /* 组标题底：左深蓝竖条后面的那层**浅蓝**（用户 2026-10-18 照参考图） */
-  --dtl-group-head-bg:#eaf1ff;
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 8%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 8%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
@@ -156,8 +154,6 @@ body[data-ds-dark-theme]{
   /* 语义色浅底在深色下压到 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
-  /* 组标题底（暗）：**实色**蓝（参考图不是半透明叠加出来的） */
-  --dtl-group-head-bg:#1e3a5f;
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 5%,transparent);
   --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 5%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
@@ -170,27 +166,8 @@ body[data-ds-dark-theme]{
  * 高度只取三档，有边框的变体用 1px 真边框 + 内部 padding 补回 ⇒ 有边 / 无边同高。
  */
 export const UI_CONTROLS_CSS = `
-/* ── 分段控件（滑动块）────────────────────────────────────────────
-   结构一套 + 两个受控轴：size(sm|md|lg) × variant(default|inset)。
-   变体只覆盖两个颜色变量（--seg-track / --seg-thumb），结构 / 尺寸 / 交互零重复。 */
-.dtl-seg{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:var(--dtl-radius-md);background:var(--seg-track);}
-.dtl-seg--default{--seg-track:var(--dtl-surface-2);--seg-thumb:var(--dtl-surface-raised);border:1px solid var(--dtl-border);}
-.dtl-seg--inset{--seg-track:var(--dtl-hover);--seg-thumb:var(--dtl-surface-raised);border:0;padding:3px;}
-.dtl-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;
-  height:calc(var(--dtl-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dtl-radius-sm);
-  background:transparent;color:var(--dtl-fg-2);font-family:inherit;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
-  font-weight:400;white-space:nowrap;cursor:pointer;
-  transition:color var(--dtl-dur-fast) var(--dtl-ease),background-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-seg--md .dtl-seg__item{height:calc(var(--dtl-control-h-md) - 6px);}
-.dtl-seg--lg .dtl-seg__item{height:calc(var(--dtl-control-h-lg) - 6px);}
-.dtl-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dtl-fg);}
-.dtl-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dtl-shadow-raised);color:var(--dtl-fg);font-weight:600;}
-.dtl-seg__item:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
-.dtl-seg__item:disabled{cursor:default;opacity:.4;}
-/* 段内计数（如「待认领 3」）：**纯文字，无底、无边、无圆角**（用户 2026-10-18：圆圈取了、字再小点）。
-   类名用 num 而不是旧 badge —— 万一宿主 DOM 里残留旧版 .dtl-seg__badge 圆圈规则，也匹配不中；0 不渲染 */
-.dtl-seg__num{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;
-  background:none;color:var(--dtl-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}
+/* ── 分段控件（滑动块）：已改由核心 Segmented 承担，外观 / 尺寸 / 滑块动画全部在 core，
+   本文件不再写任何分段控件样式（core 0.5.0 起删掉 variant 轴，外观只有一套）。── */
 
 /* ── 按钮 / 图标钮 ───────────────────────────────────────────────
    与 Segmented 同一条高度纪律；variant 只换颜色，结构 / 尺寸 / 交互只此一份。 */

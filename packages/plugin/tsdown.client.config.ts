@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { isBuiltin } from "node:module";
 import { defineConfig } from "tsdown";
 
@@ -23,6 +24,17 @@ const PLATFORM_MODULES = new Set([
 
 const PACKAGE_NAME = "dsh-task-ledger";
 
+/** 版本号 + 构建编码：构建期烤进 bundle，运行时直接读（对齐 dsh-plugin-core/demo 的 build.mjs 口径），
+ *  判「宿主里跑的是不是刚 build 的」不用猜。编码用编译时刻时间戳（非随机数）：年月日-时分秒-毫秒。 */
+const PLUGIN_VERSION = JSON.parse(
+	readFileSync(new URL("./package.json", import.meta.url), "utf8"),
+).version as string;
+const BUILD_STAMP = (() => {
+	const d = new Date();
+	const p = (n: number, w = 2) => String(n).padStart(w, "0");
+	return `${p(d.getFullYear() % 100)}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${p(d.getMilliseconds(), 3)}`;
+})();
+
 const isExternal = (specifier: string): boolean =>
 	PLATFORM_MODULES.has(specifier);
 
@@ -33,6 +45,13 @@ export default defineConfig({
 	format: "cjs",
 	platform: "browser",
 	target: "chrome99",
+	// 被打进来的依赖（floating-ui 等）含 process.env.NODE_ENV 的开发期分支，浏览器无 process ⇒
+	// 构建期定死 production，dev 警告分支变死代码一并消掉（否则激活时报 "process is not defined"）。
+	define: {
+		"process.env.NODE_ENV": JSON.stringify("production"),
+		__PLUGIN_VERSION__: JSON.stringify(PLUGIN_VERSION),
+		__BUILD_STAMP__: JSON.stringify(BUILD_STAMP),
+	},
 	dts: false,
 	clean: false,
 	sourcemap: true,
