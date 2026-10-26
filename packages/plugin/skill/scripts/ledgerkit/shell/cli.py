@@ -272,24 +272,99 @@ def _lock_dir(repo: Path) -> Path:
 def _print_candidates(opts: list[dict]) -> None:
     print("这台机器还没初始化。当前仓库里已有的用户：")
     for i, opt in enumerate(opts, 1):
-        print(f"  {i}. {opt['uuid']}  {opt['name']}")
+        print(f"  {i}. @{opt['name']}   {opt['uuid']}")
 
 
 def _print_init_result(res: dict) -> None:
+    name_disp = res.get("name") or res["uuid"][:8]
     if res.get("already"):
-        print(
-            f"已经初始化过，未做改动：{res['name'] or res['uuid'][:8]}（{res['uuid']}）"
-        )
+        print(f"已经初始化过，未做改动：@{name_disp}   {res['uuid']}")
         print(f"文件：{res['path']}")
         return
-    print(f"已初始化：{res['name'] or res['uuid'][:8]}（{res['uuid']}）")
+    print(f"\x1b[32m✓ 已初始化：\x1b[0m@{name_disp}   {res['uuid']}")
     print(f"文件：{res['path']}")
+
+
+def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
+    """交互选身份：箭头上下移动，末尾「＋ 新建身份」，Enter 确认，Ctrl-C 取消。
+    返回 (kind, index)：kind∈{claim,new,cancel}；claim/new 时 index 为候选项下标。
+    TTY 下走 raw 光标选择；不支持 raw（非 Unix / 无 TTY）时退回编号输入。仅在 TTY 调用。
+    """
+    entries = list(opts) + [{"new": True}]
+    n = len(entries)
+
+    try:
+        fd = sys.stdin.fileno()
+        if not sys.stdin.isatty():
+            raise OSError("not a tty")
+        import termios
+        import tty
+
+        old = termios.tcgetattr(fd)
+        sel = 0
+        try:
+            tty.setraw(fd)
+            while True:
+                sys.stdout.write("\x1b[H\x1b[J")
+                sys.stdout.write("\x1b[1;36m" + title + "\x1b[0m\n\n")
+                for i, e in enumerate(entries):
+                    label = (
+                        "＋ 新建身份（自己输入名字）"
+                        if e.get("new")
+                        else f"@{e['name']}   {e['uuid']}"
+                    )
+                    if i == sel:
+                        sys.stdout.write("  \x1b[7m ❯ " + label + " \x1b[0m\n")
+                    else:
+                        sys.stdout.write("    " + label + "\n")
+                sys.stdout.write(
+                    "\n  \x1b[2m↑/↓ 移动 · Enter 确认 · Ctrl-C 退出\x1b[0m\n"
+                )
+                sys.stdout.flush()
+                ch = sys.stdin.read(1)
+                if ch == "\x1b":
+                    nxt = sys.stdin.read(1)
+                    if nxt in ("[", "O"):
+                        k = sys.stdin.read(1)
+                        if k == "A":
+                            sel = (sel - 1) % n
+                        elif k == "B":
+                            sel = (sel + 1) % n
+                elif ch in ("\r", "\n"):
+                    return ("new", None) if entries[sel].get("new") else ("claim", sel)
+                elif ch == "\x03":  # Ctrl-C
+                    return ("cancel", None)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+            sys.stdout.write("\x1b[2J\x1b[H")
+            sys.stdout.flush()
+    except (OSError, ImportError):
+        print(title)
+        for i, o in enumerate(opts, 1):
+            print(f"  {i}. @{o['name']}   {o['uuid']}")
+        print(f"  {n}. ＋ 新建身份")
+        while True:
+            try:
+                c = input(f"选编号(1-{n})：").strip()
+            except (EOFError, KeyboardInterrupt):
+                return ("cancel", None)
+            if c.lower() == "n":
+                return ("new", None)
+            try:
+                idx = int(c) - 1
+            except ValueError:
+                continue
+            if idx == len(opts):
+                return ("new", None)
+            if 0 <= idx < len(opts):
+                return ("claim", idx)
+    return ("cancel", None)
 
 
 def _run_init(args: argparse.Namespace) -> int:
     """init 不进 runner、不解析台账、不碰 git：只写机器身份文件。
 
-    交互式：裸 init 在真终端读名册、问用户选 / 输名字；无终端（agent）只报候选、不写。
+    交互式：裸 init 在真终端读名册、让用户箭头选 / 新建；无终端（agent）只报候选、不写。
     """
     from .. import env
     from ..actions.init_identity import init_identity
@@ -330,14 +405,21 @@ def _run_init(args: argparse.Namespace) -> int:
                         "请重跑：init --claim=<uuid>  认领，或  init --new --name=<名字>  新建"
                     )
                     return 0
-                _print_candidates(opts)
-                choice = input("选编号认领，或输入 n 新建：").strip()
-                if choice.lower() == "n":
+                kind, idx = _select_identity(
+                    opts, title="这台机器还没初始化。选择你的身份，或新建一个："
+                )
+                if kind == "cancel":
+                    print("已取消初始化。")
+                    return BUSINESS
+                if kind == "new":
                     prompt_name = input("输入用户名：").strip()
+                    if not prompt_name:
+                        print("未输入用户名，已取消。")
+                        return BUSINESS
                     res = init_identity(repo, claim=None, new=True, name=prompt_name)
                 else:
                     res = init_identity(
-                        repo, claim=opts[int(choice) - 1]["uuid"], new=False, name=""
+                        repo, claim=opts[idx]["uuid"], new=False, name=""
                     )
             else:
                 # 名册空：交互输入名字；非终端交给用户去终端跑（init_identity 会报需要名字）
