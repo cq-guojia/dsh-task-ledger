@@ -325,15 +325,14 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
             tty.setraw(fd)
             sys.stdout.write("\x1b[?25l")  # 隐藏光标
             while True:
-                rows = _frame(sel)
                 if drew:
-                    sys.stdout.write(f"\x1b[{height}A")  # 回到本块第一行
+                    sys.stdout.write("\x1b[1A" * height)  # 相对上移回块顶
                 else:
-                    sys.stdout.write("\r\n")  # 从新行开始，避开 shell 提示
+                    sys.stdout.write("\n")  # 另起一行，不覆盖 shell 提示
                     drew = True
-                for row in rows:
-                    # raw 模式下 \n 不回行首，必须显式 \r\n，否则逐行右移
-                    sys.stdout.write("\r\x1b[K" + row + "\r\n")
+                # promptui 同款：每行「清整行 + 回车 + 内容 + LF」
+                for row in _frame(sel):
+                    sys.stdout.write("\x1b[2K\r" + row + "\n")
                 sys.stdout.flush()
 
                 ch = sys.stdin.read(1)
@@ -356,8 +355,8 @@ def _select_identity(opts: list[dict], *, title: str) -> tuple[str, int | None]:
         finally:
             sys.stdout.write("\x1b[?25h")  # 显示光标
             if drew:
-                # 原地擦掉菜单块（不滚动主屏），光标留在块首，结果从这里打印
-                sys.stdout.write(f"\x1b[{height}A\r\x1b[J")
+                # promptui 同款擦除：逐行「上移 + 清整行 + 回车」，不动主屏滚动
+                sys.stdout.write("\x1b[1A\x1b[2K\r" * height)
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
             sys.stdout.flush()
         return result
