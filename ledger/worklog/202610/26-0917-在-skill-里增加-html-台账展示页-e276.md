@@ -17,16 +17,15 @@
 
 ## 待办
 
-- 待定（用户侧）：远程 SSH 场景下用什么方式把页面以 http 打开（IDE 内置浏览器 + 端口转发 / 静态服务），本机 file:// 打开对远程台账无意义。
-- 待用户验收：通过 http 打开应零点击直接出数据；file:// 下走手选目录那条路。
-- 验收通过后：把 `ledger/board.html` 移进 skill 包，并在建台账（`bootstrap`）时拷到 `ledger/board.html`；此时才决定 skill 发版口径。
-- 未做：单条任务详情页（过程文档目前只给跳转链接，页面内不渲染 md 全文）。
-- 未做：多个月份 history 的折叠 / 筛选；目前全部按月文件拼成一张表。
-- http 模式的 history 探测只回看最近 13 个自然月（与 skill `history` 窗口一致），更早的月份在 http 模式下不会出现（手选目录模式不受此限）。
+- 待用户验收 `board` 命令（`python3 packages/skill/scripts/progress.py board --repo <工作区根>`）；接受后再决定要不要上 B 档全屏 TUI（滚动/筛选/详情）。
+- `ledger/board.html` 已被 TUI 方案取代、不再维护；是否删掉等用户发话（它是项目里唯一多余的产物）。
+- 未做：B 档交互（方向键滚动、Tab 切换、`/` 过滤、任务详情），A 档只有一次性输出。
+- 未做：Windows 原生终端的颜色/宽度实测（本机是 Linux）。
+- 发版口径未动：skill 版本号未 bump，等验收通过、用户说发版再走 tag。
 
 ## 下一步
 
-等用户对展示效果给结论；通过则改 `packages/skill/scripts/ledgerkit/actions/bootstrap.py`（建台账处）加一步模板拷贝，并把模板放到 skill 包内固定路径。
+等用户看 `board` 的实际输出给结论；若 A 档不够，再在同一数据层（`actions/board.py` 的 `BoardView`）上叠 B 档 `curses` 全屏界面。
 
 ## 过程
 
@@ -40,10 +39,18 @@
 - **双模式落地**：`boot()` 先试 `fetch("pool.json")`（相对页面路径）——成功即零点击渲染（IDE 内置浏览器 / 端口转发 / 静态服务）；失败（`file://`）才显示手选目录那条路。数据来源抽成 `httpSource()` / `pickerSource()` 两个同接口对象（`text` / `historyFiles` / `label`），渲染逻辑一份。
 - **http 模式的目录发现**：分片文件名不再靠扫目录，直接读 `owners.json.workers[uuid].file`；history 无索引可用，按「当前月起回看 13 个月」构造 `history/YYYYMM.md` 逐月探测（404 忽略）。
 - **三模式验证**（本机起临时 `python3 -m http.server` + node 跑真脚本）：http 自动 = 2 在办 / 30 行已结案、零错误；手选目录 = 同结果；选错目录 = 明确报「里没有 pool.json / owners.json」。验证后服务与临时脚本均已关闭 / 删除。
+- **一次转向记录（2026-10-26 傍晚）**：用户实际是 VS Code Remote-SSH（文件在远端、浏览器在本地），`file://` 选目录只能选到本机 ⇒ HTML 的兜底路径对远程无效；用户又明确否掉三件事：多一个数据 `.js`、装任何东西、起/配任何服务与静态托管。查证 MDN 与社区：自 CVE-2019-11730 起本地文件互不可读，`file://` 自动读没有第四条路 ⇒ HTML 方案整体收摊，改 TUI（终端在远程/本地都是同一套，天然跨环境、零依赖、零文件）。
 
 ## 结论
 
-`ledger/board.html` 已落地（本项目唯一新增文件，skill 脚本一行未改）：以 http 打开（IDE 内置浏览器 / 端口转发）→ 自动读同目录台账、零点击渲染；以 `file://` 双击 → 顶部按钮手选 `ledger` 目录后直读。渲染在办分组卡片、统计卡与已结案表，过程文档可点击跳转。三模式 node 实测通过，`koc-codelint` 全过。尚未验收，尚未移入 skill 包。
+**方向已从 HTML 转为 TUI**（HTML 三条路全被否：`file://` 自动读不可能、数据 `.js` 不接受、静态托管不接受）。已落地 A 档「富文本一屏看」：
+
+- `progress.py board [--closed N]`：只读，在办按负责人分组（未认领归「公共池」）+ 最近结案；口径完全复用 `list_tasks` / `query_history`，不重算归属。
+- 实现：`actions/board.py`（`BoardView`）+ `shell/render.py::board_view`（ANSI 上色、按显示宽度裁剪）+ `registry` / `cli` 各一处注册；`SKILL.md` 补 board 小节与只读授权行。
+- 零依赖：只用 Python 标准库（`unicodedata` 算中文宽度、`shutil` 取终端宽、`os` 读 `CLICOLOR_FORCE`）；管道输出自动关色。
+- 自检：`tests/smoke.py` 新增 2 项（分组 + 公共池 + 非 TTY 不上色；`--closed 0` 不显示结案段），冒烟全绿；`koc-codelint` 13 文件全过。
+- 内嵌副本已 `copy-skill.mjs` 同步，`check-skill-copy.mjs` 一致。
+- `ledger/board.html` 保留但已不作为方向；未 bump 版本、未提交。
 
 ## 执行记录
 
@@ -53,3 +60,4 @@
 - 2026-10-26 17:17:41 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 任务已建并认领；worklog 记下三条硬要求与待讨论点：file:// 下 HTML 不能自执行本地脚本，第 2 条形态需先定
 - 2026-10-26 17:45:22 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 落地 ledger/board.html（单文件、webkitdirectory 手选目录直读原始 JSON/MD，skill 脚本零改动）；node 自检 2 在办/29 已结案、链接均存在，codelint 全过；待用户验收
 - 2026-10-26 17:51:15 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 改双模式：http 打开时按相对路径自动读同目录台账（零点击），file:// 才回退手选目录；三模式 node 实测通过，codelint 全过
+- 2026-10-26 20:52:47 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 方向转 TUI：新增只读 board 子命令（actions/board.py + render.board_view + registry/cli 注册，零依赖 ANSI 一屏）；smoke 加 2 项全绿、codelint 13→17 文件全过、内嵌副本已同步；HTML 方案按用户否决定收摊
