@@ -18,6 +18,7 @@ from ..actions.result import (
     ShowResult,
     ValidationReport,
 )
+from ..core.identity import Identity
 from ..core.time import fmt_local
 
 
@@ -84,11 +85,33 @@ def list_view(res: ListResult, q: ListQuery | None, *, as_json: bool) -> None:
         _err(line)
 
 
+def whoami_view(identity: Identity | None, *, as_json: bool) -> None:
+    """本机身份：未初始化给 `uuid` / `name` 双 null（不是错误，调用方据此引导 init）。"""
+    if as_json:
+        _json(
+            {
+                "uuid": identity.uuid if identity else None,
+                "name": identity.name if identity else None,
+            }
+        )
+        return
+    if identity is None:
+        _out("这台机器还没有初始化身份。")
+        _out(
+            "  处理：请用户在自己的终端运行 "
+            "`progress.py init --repo <工作区根>`，由 ta 亲自选择/新建并确认。"
+        )
+        return
+    _out(f"@{identity.label()}   {identity.uuid}")
+
+
 def show_view(res: ShowResult, *, as_json: bool) -> None:
     if as_json:
         _json(
             {
                 "task": res.task,
+                # 文档自述还是回退查在办：调用方据此知道字段来源（老文档 / 文档缺失）
+                "legacy": res.legacy,
                 "worklog": {
                     "path": res.worklog.path if res.worklog else None,
                     "text": res.worklog.text if res.worklog else None,

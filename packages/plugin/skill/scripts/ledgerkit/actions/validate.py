@@ -1,7 +1,10 @@
-"""只读：台账体检。两档：默认浅度只查格式，`--deep` 才读全部历史与过程文档正文。
+"""只读：台账体检。两档：默认浅度只查格式，`--deep` 才读全部历史。
 
-浅度（默认）：池 + 各分片的字段格式、索引与文件对不对得上、**当月**历史、每篇过程文档的模板格式。
-深度（`--deep`）：历史不止当月（全部月份），过程文档再判骨架（正文填了没）。
+浅度（默认）：池 + 各分片的字段格式、索引与文件对不对得上、**当月**历史。
+深度（`--deep`）：历史不止当月（全部月份）。
+
+**两档都不读过程文档正文**（2026-10-27 用户拍板）：过程文档是附件、存量可以上万篇，
+逐篇读全文换不来体检结论，只白花时间；文档自身的格式与内容不在体检范围。
 
 只查格式，不查业务（该谁结案、逾期与否都不管）；也不查「同一任务号落在多个文件」——
 读侧只显示一次（`show` 会点名）、写侧已有防护，撞上了不关体检的事（2026-10-24 用户拍板）。
@@ -21,16 +24,9 @@ from ..core.paths import (
     to_repo_rel,
 )
 from ..core.time import now
-from ..core.worklog_md import (
-    duplicated_sections,
-    format_problems,
-    is_skeleton,
-    lacks_exec_section,
-)
 from ..store.history_store import HistoryStore
 from ..store.owners_index import OwnersIndex
 from ..store.task_store import TaskStore
-from ..store.worklog_store import WorklogStore
 from .guard import owner_of, status_of
 from .result import ValidationReport, rel
 
@@ -138,43 +134,6 @@ def _check_history(
     return checked
 
 
-def _check_worklog(
-    repo: Path,
-    logs: WorklogStore,
-    problems: list[str],
-    notices: list[str],
-    *,
-    deep: bool,
-) -> int:
-    """每篇过程文档：模板格式（浅度就查）+ 空骨架判定（只有 `--deep` 才判）。
-
-    一趟读完两件事都做 —— 格式要看全文找节标题，骨架吃同一份文本，别为此读第二遍。
-    """
-    checked = 0
-    for path in logs.all():
-        checked += 1
-        try:
-            text = logs.read(path)
-        except ValueError:
-            continue
-        if not text:
-            continue
-        where = rel(repo, path)
-        problems.extend(f"{where} 格式：{line}" for line in format_problems(text))
-        if lacks_exec_section(text):
-            notices.append(
-                f"{where} 没有「执行记录」节（老文档；写一条记录会自动补上）。"
-            )
-        dup = duplicated_sections(text)
-        if dup:
-            notices.append(
-                f"{where} 有重复的节：{'、'.join(f'`## {s}`' for s in dup)}。"
-            )
-        if deep and is_skeleton(text):
-            notices.append(f"{where} 还是骨架（正文没填）。")
-    return checked
-
-
 def validate(repo: Path, me: Identity, deep: bool = False) -> ValidationReport:
     problems: list[str] = []
     notices: list[str] = []
@@ -183,7 +142,6 @@ def validate(repo: Path, me: Identity, deep: bool = False) -> ValidationReport:
 
     index = OwnersIndex(repo)
     history = HistoryStore(repo)
-    logs = WorklogStore(repo)
 
     files, tasks = _check_task_files(repo, index, problems)
     checked += files
@@ -197,7 +155,6 @@ def validate(repo: Path, me: Identity, deep: bool = False) -> ValidationReport:
         history,
         notices,
     )
-    checked += _check_worklog(repo, logs, problems, notices, deep=deep)
 
     if not (repo / to_repo_rel(OWNERS_REL)).exists():
         notices.append("还没有 owners.json（索引）：跑一条写命令会自动建。")

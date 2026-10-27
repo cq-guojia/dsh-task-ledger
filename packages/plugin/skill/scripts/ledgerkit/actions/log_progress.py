@@ -7,7 +7,7 @@ from pathlib import Path
 from ..core.identity import Identity
 from ..core.paths import shard_rel
 from ..core.time import now
-from ..core.worklog_md import exec_line
+from ..core.worklog_md import StatusLine, exec_line
 from ..errors import Fail
 from ..store.task_store import TaskStore
 from ..store.worklog_store import WorklogStore
@@ -46,7 +46,11 @@ def log_progress(repo: Path, me: Identity, tid: str, note: str) -> Result:
                 "提示：这条任务没有过程文档，已跳过执行记录（分片的最后更新已刷）。",
             ),
         )
-    ok = logs.append_exec(path, exec_line(now(), me.stamp(), "log", text))
+    ok = logs.append_exec(
+        path,
+        exec_line(now(), me.stamp(), "log", text),
+        status=StatusLine("doing", me.name, me.uuid, now()),
+    )
     if not ok:
         return Result(
             changed=("updated",),

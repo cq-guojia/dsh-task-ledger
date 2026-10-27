@@ -99,7 +99,8 @@ def build_parser() -> argparse.ArgumentParser:
     hist.add_argument("--json", action="store_true")
 
     valp = sub.add_parser(
-        "validate", help="台账体检（默认浅度；--deep 读全部历史与过程文档）"
+        "validate",
+        help="台账体检（默认浅度；--deep 历史读全部月份；两档都不读过程文档）",
     )
     valp.add_argument("--deep", action="store_true")
     valp.add_argument("--json", action="store_true")

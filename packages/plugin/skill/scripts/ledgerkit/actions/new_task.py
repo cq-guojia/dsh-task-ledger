@@ -17,7 +17,7 @@ from ..core.paths import (
     to_repo_rel,
     worklog_rel,
 )
-from ..core.worklog_md import exec_line
+from ..core.worklog_md import StatusLine, exec_line
 from ..errors import Fail
 from ..store.atomic import ensure_dir, restore, snapshot
 from ..store.task_store import TaskStore
@@ -102,6 +102,12 @@ def new_task(
             creator=me.stamp(),
             category=category,
             tags=tag_list,
+            status=StatusLine(
+                "doing" if mine else "open",
+                me.name if mine else None,
+                me.uuid if mine else None,
+                created,
+            ),
             first_exec=exec_line(
                 created, me.stamp(), "new", "创建任务并认领" if mine else "创建任务"
             ),

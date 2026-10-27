@@ -49,6 +49,27 @@ def check(name: str, cond: bool, detail: str = "") -> None:
         FAILED.append(name)
 
 
+def worklog_path(repo: Path, tid: str) -> Path | None:
+    """这条任务的过程文档路径：文件名是任务号剥掉前 6 位年月（`paths.worklog_name`）。"""
+    tail = tid[6:] if tid[:8].isdigit() and tid[8:9] == "-" else tid
+    hits = sorted((repo / "ledger" / "worklog").rglob("*.md"))
+    return next((p for p in hits if p.stem.endswith(tail)), None)
+
+
+def worklog_text(repo: Path, tid: str) -> str:
+    """这条任务的过程文档全文；找不到给空串（状态行断言用）。"""
+    path = worklog_path(repo, tid)
+    return path.read_text(encoding="utf-8") if path is not None else ""
+
+
+def status_line(repo: Path, tid: str) -> str:
+    """头部状态行原文（`> **状态**：…`）；没有这行给空串。"""
+    for line in worklog_text(repo, tid).splitlines():
+        if line.startswith("> **状态**"):
+            return line
+    return ""
+
+
 def main() -> int:
     repo = Path(tempfile.mkdtemp(prefix="ledgerkit-smoke-"))
     subprocess.run(["git", "init", "-q", str(repo)], check=False)
@@ -85,6 +106,13 @@ def main() -> int:
         check(
             "list --json 行带 mine，自己的是 true", mine_task["mine"] is True, r.stdout
         )
+        # 文档头部状态行（镜像）：new --self 一次写盘就要有 doing + 名字 + uuid
+        head = status_line(repo, tid)
+        check(
+            "new --self 文档头部状态行是 doing + 自己",
+            head.startswith("> **状态**：doing") and "Me" in head and ME in head,
+            head or "(没有状态行)",
+        )
 
         r = run(repo, "whoami", "--json")
         check(
@@ -110,6 +138,12 @@ def main() -> int:
             r.stdout,
         )
         check("释放后那行 mine 变 false", released["mine"] is False, r.stdout)
+        head = status_line(repo, tid)
+        check(
+            "release 后文档状态行回 open",
+            head.startswith("> **状态**：open"),
+            head or "(没有状态行)",
+        )
         r = run(repo, "claim", "--id", tid)
         check("claim 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "list", "--json")
@@ -117,6 +151,12 @@ def main() -> int:
             "claim 后 status 是 doing",
             json.loads(r.stdout)[tid]["status"] == "doing",
             r.stdout,
+        )
+        head = status_line(repo, tid)
+        check(
+            "claim 后文档状态行回 doing",
+            head.startswith("> **状态**：doing") and ME in head,
+            head or "(没有状态行)",
         )
         r = run(repo, "log", "--id", tid, "--note", "冒烟记一条")
         check("log 退出码 0", r.returncode == 0, r.stderr)
@@ -195,6 +235,39 @@ def main() -> int:
         # 结案 → 历史
         r = run(repo, "close", "--id", tid, "--summary", "冒烟结案")
         check("close 退出码 0", r.returncode == 0, r.stderr)
+        head = status_line(repo, tid)
+        check(
+            "close 后文档状态行是 closed + 结案人",
+            head.startswith("> **状态**：closed") and ME in head,
+            head or "(没有状态行)",
+        )
+        # show 已结案：文档自述即可，不必再翻历史 / 索引
+        r = run(repo, "show", "--id", tid, "--json")
+        shown = json.loads(r.stdout) if r.returncode == 0 else {}
+        check(
+            "show 已结案任务读文档即可（不标 legacy）",
+            shown.get("task", {}).get("status") == "closed"
+            and shown.get("legacy") is False,
+            r.stdout[:300] + r.stderr,
+        )
+        # validate 两档都不读过程文档（2026-10-27 拍板）：文档改坏也不该进体检结论
+        doc_path = worklog_path(repo, tid)
+        intact = doc_path.read_text(encoding="utf-8") if doc_path is not None else ""
+        if doc_path is not None:
+            doc_path.write_text(
+                intact.replace("## 背景", "## 背景没了", 1), encoding="utf-8"
+            )
+        shallow = run(repo, "validate", "--json")
+        deep = run(repo, "validate", "--deep", "--json")
+        check(
+            "过程文档改坏不影响 validate（浅度 / 深度都不扫）",
+            doc_path is not None
+            and '"problems": []' in shallow.stdout
+            and '"problems": []' in deep.stdout,
+            shallow.stdout + deep.stdout,
+        )
+        if doc_path is not None:
+            doc_path.write_text(intact, encoding="utf-8")
         r = run(repo, "history", "--count-only")
         check(
             "history 计数 1",

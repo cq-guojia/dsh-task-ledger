@@ -7,7 +7,7 @@ from pathlib import Path
 from ..core.identity import Identity
 from ..core.paths import POOL_REL, shard_rel
 from ..core.time import now
-from ..core.worklog_md import exec_line
+from ..core.worklog_md import StatusLine, exec_line
 from ..errors import Fail
 from ..store.task_store import TaskStore
 from ..store.worklog_store import WorklogStore
@@ -63,7 +63,11 @@ def release(repo: Path, me: Identity, tid: str) -> Result:
     if path is None:
         note = f"任务 {tid} 已退回公共池，但过程文档没找到，跳过执行记录。"
     else:
-        logs.append_exec(path, exec_line(now(), me.stamp(), "release", "释放回公共池"))
+        logs.append_exec(
+            path,
+            exec_line(now(), me.stamp(), "release", "释放回公共池"),
+            status=StatusLine("open", None, None, now()),
+        )
     return Result(
         changed=("owner", "owner_name", "status", "updated"),
         where=rel(repo, pool.path),

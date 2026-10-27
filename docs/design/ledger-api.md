@@ -168,11 +168,11 @@ packages/skill/scripts/
     │   │                         写之前先核对三个文件有没有被别人动过；失败按字节恢复。
     │   │
     │   ├── list_tasks.py      ← 只读：查在办任务（池 + 分片，后读到的为准）
-    │   ├── show_task.py       ← 只读：单任务详情 + 过程文档全文
+    │   ├── show_task.py       ← 只读：单任务详情 + 过程文档全文（文档优先：读到头部状态行就不碰索引）
     │   ├── query_history.py   ← 只读：查已结案（按月文件逐个读、过滤、合并、倒序）
-    │   ├── validate.py        ← 只读：体检（索引与文件对不对得上、池里有没有越权、字段是否合法），
-    │   │                         外加三类"只提示、不判错"的信号：骨架文档 / 历史行格式坏 / 历史已结案仍在办
-    │   └── validate.py 的骨架判定与 `query_history` 的回链共用 `worklog_md.head_meta`
+    │   ├── validate.py        ← 只读：体检（索引与文件对不对得上、池里有没有越权、字段是否合法、
+    │   │                         历史行格式），**不读过程文档正文**
+    │   └── `query_history` 的回链与 `show` 的文档定位共用 `worklog_md` / `WorklogStore`
     │
     └── shell/                 ← 外壳：唯一跑 git、唯一打印、唯一决定退出码
         │
@@ -360,20 +360,24 @@ class HistoryStore:
 class WorklogStore:
     def __init__(self, repo: Path)
     def template(self) -> str                    # 六节模板；读不到 assets/worklog.md → 内置骨架 + 提示
-    def find(self, tid, worklog_rel: str | None) -> Path | None   # worklog_rel 是 task["worklog"] 的原值（相对 ledger/）；先按它找，找不到再扫目录
+    def find(self, tid, worklog_rel: str | None = None) -> Path | None   # 只给 tid 也能定位（命名推算 → 扫目录）；worklog_rel 是 task["worklog"] 的原值（相对 ledger/）
     def by_name(self, log_name: str) -> Path | None               # 按文件名找（历史末列回链用）
     def read(self, path) -> str
     def head_meta(self, path) -> dict            # {"created","creator","category","tags"}；读不出给空值
     def all(self) -> list[Path]                  # 递归列出全部过程文档
     def create(self, *, tid, title, created, creator, category, tags,
-               first_exec: str | None = None) -> Path   # 一次写完整篇（含首条记录）
+               status: worklog_md.StatusLine | None = None,
+               first_exec: str | None = None) -> Path   # 一次写完整篇（含状态行与首条记录）
     def write(self, path, text) -> None          # 写回的是「锚点编辑后的新全文」；不许用它替换前五节正文
-    def append_exec(self, path, line) -> bool    # 写不进返回 False，不抛
+    def append_exec(self, path, line, *, status: worklog_md.StatusLine | None = None) -> bool
+                                                 # 追加记录 + **同一次写盘**顺手刷头部状态行；写不进 False，不抛
 ```
 
 - **`template()` 是模板的唯一读者**：模板真源是 skill 的 `assets/worklog.md`（`core/paths.py` 给路径）。工具层不许读文件，所以「套模板」这个动作拆成两半：store 取文本，`core/worklog_md.render_worklog(...)` 只做字符串替换。
 - **`head_meta(path)`**：从一篇过程文档头部抽出 `created` / `creator` / 分类 / 标签四样，供历史回链与标签统计共用（这两个用途原本分散在两处，收成一个方法）。
-- **骨架检测不走 `head_meta`**：那是判定"正文有没有填"的文本问题，`validate` 用 `read()` 拿到全文后调 `core/worklog_md.is_skeleton(text)`。
+- **状态行与执行记录必须同一次落盘**：`append_exec(..., status=…)` 内部先 `append_exec_log` 再 `rewrite_status_line`，最后一次性原子写——分两写就会留下「记录写了、状态没刷」这种不报错的不一致。`status` 是 keyword-only 可选参数，旧调用不受影响。
+- **`find(tid)` 只给任务号即可**：先信记录路径、再按命名推算、最后扫目录，**不读 pool / 分片 / 历史**。`show` 靠这一点做到「看一条不必先找到任务」。
+- **`all()` / `head_meta()` 只给批量与回链用**：`validate` 不再调用（见 §3.3「两档都不读过程文档正文」）。
 
 ## 三、业务层 `actions/`：方法定义
 
@@ -606,26 +610,32 @@ def validate(repo, me, deep: bool = False) -> ValidationReport
 
 **签名统一收 `(repo, me, …)`**：`--mine` / 归属判断都要认人。只读动作不跑自举，`me` 由外壳用 `guard.current_identity(repo)` 装好传进来（env 本机身份，不写盘、不登记）。`me` 用不上也照样收，免得留一张"哪些动作要 me"的例外表。
 
+**`whoami` 不进 `actions/`**：它没有 `repo`、不解析台账、不碰 git，外壳里 `env.read_identity()` + `render.whoami_view` 就够（`cli._run_whoami`）。未初始化给 `{"uuid": null, "name": null}` 并退 0 —— 由调用方据此引导 init，不在这里报错。
+
 **五个返回对象（字段名是公开契约，插件看板直接读；外壳不许重新算）**：
 
 | 对象 | 字段 |
 |---|---|
-| `ListResult` | `rows: dict[tid, task]`（**原样任务对象**，`--json` 直接吐它）；`table: tuple[TaskRow, …]`（同一批数据的 9 字段投影，只给人话表格用）；`notices: tuple[str, …]` |
+| `ListResult` | `rows: dict[tid, task]`（**原样任务对象 + 一个 `mine` 布尔**，`--json` 直接吐它）；`table: tuple[TaskRow, …]`（同一批数据的 9 字段投影，只给人话表格用）；`notices: tuple[str, …]` |
 | `TaskRow` | `tid` / `title` / `status` / `owner`（显示名）/ `created` / `started` / `category` / `tags` / `where`（所在文件） |
-| `ShowResult` | `task: dict`；`worklog: WorklogView`；`others: tuple[str, …]`（同一个任务号还出现在哪些文件里）；`notices: tuple[str, …]` |
-| `HistoryResult` | `count`；`filters: dict`（回显生效的筛选）；`records: tuple[dict, …]`（每条 = 十一列解析后的字段，`tags` 已拆成 `tuple[str, …]`；再加 `src` 来源文件 / `fmt` 原列数 / `line` 行号三个定位用字段）；`warnings: tuple[str, …]`；`capped: bool` |
+| `ShowResult` | `task: dict`；`worklog: WorklogView`；`legacy: bool`（字段是从在办索引读的：老文档没有状态行 / 文档丢了）；`others: tuple[str, …]`（同一个任务号还出现在哪些文件里）；`notices: tuple[str, …]` |
+| `HistoryResult` | `count`；`filters: dict`（回显生效的筛选）；`records: tuple[dict, …]`（每条 = 十一列解析后的字段**再带一个 `mine` 布尔**，`tags` 已拆成 `tuple[str, …]`；再加 `src` 来源文件 / `fmt` 原列数 / `line` 行号三个定位用字段）；`warnings: tuple[str, …]`；`capped: bool` |
 | `ValidationReport` | `problems: tuple[str, …]`（**只有它影响退出码**）；`notices: tuple[str, …]`（只提示，不改退出码）；`checked_files: int`；`total_tasks: int`；`deep: bool`（本次是深度还是浅度） |
 
-- **`list --json` 吐的是 `rows`（原始任务对象），不是 `TaskRow`**：看板要 `worklog` / `creator` / `updated` / `finished` 这些字段，`TaskRow` 只给人看的表格。
-- **`rows` 的来源就是各份台账的 `TaskStore.data()["tasks"]` 按合并顺序拼起来**：不增字段、不改名、不做任何转换——里面的 `worklog` 仍是磁盘原值（相对 `ledger/`，见 §五 的基准约定），别在动作层偷偷改成相对 repo。
+- **`list --json` 吐的是 `rows`（原始任务对象 + `mine`），不是 `TaskRow`**：看板要 `worklog` / `creator` / `updated` / `finished` 这些字段，`TaskRow` 只给人看的表格。
+- **`mine` 是动作层现算、不落盘**：`row["mine"] = is_mine(row, me)`，只比 uuid（2026-10-27 拍板）；调用方不必自己拿本机 uuid 再比一次，也不用读 `~/.taskledger/identity.json`。
+- **`rows` 的来源就是各份台账的 `TaskStore.data()["tasks"]` 按合并顺序拼起来**：除 `mine` 外不增字段、不改名、不做任何转换——里面的 `worklog` 仍是磁盘原值（相对 `ledger/`，见 §五 的基准约定），别在动作层偷偷改成相对 repo。
 - **`list_tasks` 的合并顺序定死**：先池、再按索引键排序的各分片，同一任务号由分片那份胜出（见 `ledger-data.md` §八）。顺序不确定会让同一份数据两次查给出不同结果。
+- **`show_task` 是「文档优先」**：先 `WorklogStore.find(tid)` 读文档，头部有状态行 ⇒ 直接拿它回答 `status` / 负责人 / 更新时间 / 标题，**pool、分片、历史一个都不读**（已结案任务同样看得到）；没有状态行（老文档）或没有文档 ⇒ 回退 `load_task` 查在办并标 `legacy=True`；两处都没有才 `Fail`（文案与既往一致）。
 - **`validate` 分两档，只查格式不查业务**（2026-10-24 用户拍板）：
-  - 浅度（默认）读：池 + 索引登记的各分片 + `owners/` 目录、**当月**历史文件、每篇过程文档的模板格式（标题行 / 「创建」行 / 前五节齐且有序）；
-  - `--deep` 追加：全部月份的历史文件（**只认按月文件**，平铺旧文件不读）、读正文判「还是空骨架」；
-  - `problems` —— 索引与文件对不上、池里有越权、字段非法、分片主人与分区键不一致、过程文档格式坏 ⇒ 退出码 1；
-  - `notices` —— 缺「执行记录」节、有重复的节、解析历史时的警告、「历史里已结案但分片里还挂着」、空骨架（仅 `--deep`）⇒ **只提示**，退出码 0；
+  - 浅度（默认）读：池 + 索引登记的各分片 + `owners/` 目录、**当月**历史文件；
+  - `--deep` 追加：全部月份的历史文件（**只认按月文件**，平铺旧文件不读）；
+  - **两档都不读过程文档正文**（2026-10-27 用户拍板）：存量可以上万篇，逐篇读全文换不来体检结论；过程文档的格式与内容不在体检范围（`format_problems` / `is_skeleton` / `lacks_exec_section` / `duplicated_sections` 已无调用方，留作库函数）；
+  - `problems` —— 索引与文件对不上、池里有越权、字段非法、分片主人与分区键不一致 ⇒ 退出码 1；
+  - `notices` —— 解析历史时的警告、「历史里已结案但分片里还挂着」⇒ **只提示**，退出码 0；
   - 没有台账 ⇒ 什么都不算，两个都是空，退出码 0。
   - **不查「同一任务号落在多个文件」**：读侧 `show` 会点名，写侧已有防护，体检不管（同号多文件不再影响退出码）。
+
 - **报表只有**宿主侧一个来源：从 `query_history` 的 `records` 与 `list_tasks` 的 `rows` 聚合（时间线、按人工作日志、状态分布、分类 / 标签计数都从这里出）。脚本不开统计入口 —— 分类 / 标签计数要么从在办任务的 `rows` 里取，要么从历史行的分类 / 标签列取，都不需要逐篇扫过程文档。
 - **只读动作的共同约束**：不拿整命令级锁、不加文件锁、不开事务、不跑自举、不做取最新（`list` 在没有台账时要能打出空表，`validate` 一个字节都不写）。
 - **不拿锁为什么安全**：不做取最新 ⇒ 只读本地已提交的状态，不会撞上"正在刷盘"；另一个写进程留下的搬移中间态（同号在池与分片各一份）读侧本来就要容忍（`list` 只显示一次、`show` 在 stderr 说明）。
@@ -733,7 +743,7 @@ class ActionSpec:
 | `ids.py` | `id_stamp(created)`；`slugify(title)`；`make_id(title, tasks, created=None)`；`require_task_id(tid)` |
 | `identity.py` | `Identity`（`uuid` / `name` 的不可变值对象）；`normalize(who)`；`looks_like_uuid(who)`；`is_me(identity, who)` |
 | `labels.py` | `STATUSES = ("open", "doing")`（`--status` 的白名单就是它）；`done` 只能由 `close` 产生、不在此二者里；`FORMAT_VERSION`；`normalize_label(value, *, field)`；`parse_tags(raw)`；`label_line(category, tags)`；`parse_label_line(text)` |
-| `worklog_md.py` | `render_worklog(*, tid, title, created, creator, category, tags, template) -> str`；`is_skeleton(text)`；`exec_line(when, who, kind, note)`（`who` 收 `Identity.stamp()`，拼成 ` · @{名字 · uuid} · `）；`append_exec_log(text, line)`；`stamp_frozen(text, finished, who)`；`has_frozen_line(text)`；`rewrite_label_line(text, category, tags)`；`head_creator(text)`（名字）；`head_creator_uuid(text)`（uuid，老文档没落就空） |
+| `worklog_md.py` | `render_worklog(*, tid, title, created, creator, category, tags, status, template) -> str`；`StatusLine`（`status` / `name` / `uuid` / `when`）；`render_status_line(...)`；`rewrite_status_line(text, status)`（有就就地替换、没有就插到「创建」行后）；`read_status(text)`；`STATUS_VALUES = ("open", "doing", "closed")`；`is_skeleton(text)`；`exec_line(when, who, kind, note)`（`who` 收 `Identity.stamp()`，拼成 ` · @{名字 · uuid} · `）；`append_exec_log(text, line)`；`stamp_frozen(text, finished, who)`；`has_frozen_line(text)`；`rewrite_label_line(text, category, tags)`；`head_creator(text)`（名字）；`head_creator_uuid(text)`（uuid，老文档没落就空） |
 | `history_md.py` | `esc_cell(s)`；`owner_cell(owner)`；`creator_cell(creator)`；`history_line(...)`；`split_row(line)`；`is_sep_row(line)`；`parse_history(text)`（只认十一列） |
 
 五条必须守住的：
@@ -741,6 +751,7 @@ class ActionSpec:
 - **路径基准只有一个约定**：磁盘与 JSON 里存的路径**相对 `ledger/`**（格式契约，如 `task["worklog"]`）；凡是输出给人或给界面的（`Result.where`、`WorklogView.path`、`payload` 里所有 `*_path`）**一律相对 repo**。换算只在 `core/paths.py` 的 `to_repo_rel` / `to_ledger_rel` / `to_history_rel` 三处做，任何层都不许自己拼 `..`。
 - **时间只有一个例外**：所有存盘时间都是 UTC；唯一例外是过程文档「执行记录」那行的时刻 —— 它是**本地时间**，给人读的日志行，不参与任何筛选或排序。转换固定发生在 `worklog_md.exec_line(when_utc, …)` 内部（它自己调 `fmt_local`）：**调用方一律传 UTC**，别在外面先转一遍。
 - **身份只有 `uuid` 一个键**。`env.py` 只读本机身份文件（`$TASK_LEDGER_HOME/.taskledger/identity.json`，默认 `~/.taskledger/identity.json`），不读 git、不读环境变量、没有兜底。名字（`name`）只用于显示与 `--owner-name` 模糊筛，**不参与任何归属判定**；分片、历史行、`--owner` / `--mine` 一律比 uuid。
+- **对外只留 `whoami` 一个身份出口**（2026-10-27 拍板）：`env.read_identity()` 未初始化时安静返回 `None`，`whoami --json` 把它翻成 `{"uuid": null, "name": null}` 并退 0。插件 / 看板一律走这条命令，**不许自己读 `identity.json` 解析**（那是扒宿主机实现细节）。
 - **名字落盘用哪个串，看落点**：`Identity.label()` = 名字（只给人看：报错文案、界面）；`Identity.stamp()` = `名字 · uuid`（**过程文档三处落点**——头部创建行、封卷行、每条执行记录）。两者都**不带 `@`**，`@` 由落点自己加（模板创建行是 `（@<creator>）`、`exec_line` 拼 ` · @{who} · `）。过程文档是最终产物，创建人和封卷人可能不是同一个人、也可能中途改名，所以**名字和 uuid 都要留**，不靠历史表回链。
 - **`render_worklog` 只做字符串替换**：模板由 `WorklogStore.template()` 取来传进去，它自己不读文件、也不接收整条 task dict。
 - **`history_md` 自己不开文件**：它只做文本换算；凡是要读 worklog 的事都留在 store / 业务层。
@@ -800,6 +811,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 | `cmd_log` 3455 | `actions/log_progress.py` |
 | `cmd_close` 3483 | `actions/close_task.py` |
 | `cmd_list` 3716 / `cmd_show` 3854 / `cmd_history` 4219 / `cmd_validate` 4006 | `actions/list_tasks.py` / `show_task.py` / `query_history.py` / `validate.py` |
+| `cmd_whoami` | `shell/cli.py` 的 `_run_whoami` + `render.whoami_view`，**不进 actions**（不碰台账、不碰 git、不看 `--repo`） |
 | `git_presync` 1902 / `git_sync` 1357 / `_push` 922 / `_rebase_retry` 1224 / `repo_sync_lock` 820 | `shell/gitops.py` |
 | `_write_targets` 1855 | `shell/presync.py` 的 `presync_scope` |
 | `_merge_task_dicts` / `_union_merge` / `_resolve_ledger_conflict` | `shell/merge.py`（`merge_task_dicts` 去下划线 = 公开契约） |
@@ -840,6 +852,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 | `list` | `--mine --owner --owner-name --pool --status --category --tag --since --until --json` | `list_tasks(q)` |
 | `show` | `--id --json` | `show_task(tid)` |
 | `history` | `--owner --owner-name --mine --category --tag --since --until --limit --months --json --count-only` | `query_history(q)` |
+| `whoami` | `--json` | 外壳 `_run_whoami`（不进业务层；未初始化给双 null、退 0） |
 | `validate` | `--deep --json` | `validate(deep)` |
 | 全局 | `--repo`、`--no-sync` | 外壳处理，不进业务层（`--repo` 由 `resolve_repo` 消费） |
 

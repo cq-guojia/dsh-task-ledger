@@ -14,7 +14,7 @@ from pathlib import Path
 from ..actions.query import HistoryQuery, ListQuery
 from ..core.roots import as_root, root_of
 from ..core.time import to_utc
-from ..errors import BUSINESS, USAGE, Fail
+from ..errors import BUSINESS, OK, USAGE, Fail
 from . import render, runner
 from .gitops import repo_sync_lock
 
@@ -99,10 +99,14 @@ def build_parser() -> argparse.ArgumentParser:
     hist.add_argument("--json", action="store_true")
 
     valp = sub.add_parser(
-        "validate", help="台账体检（默认浅度；--deep 读全部历史与过程文档）"
+        "validate",
+        help="台账体检（默认浅度；--deep 历史读全部月份；两档都不读过程文档）",
     )
     valp.add_argument("--deep", action="store_true")
     valp.add_argument("--json", action="store_true")
+
+    who = sub.add_parser("whoami", help="我是谁（本机身份；未初始化也照常回答）")
+    who.add_argument("--json", action="store_true")
 
     initp = sub.add_parser("init", help="初始化本机身份（一台机器只一次）")
     initp.add_argument("--claim", help="认领名册里已有的 uuid")
@@ -229,6 +233,8 @@ def main(argv: list[str] | None = None) -> int:
     to_query(args)
 
     command = command_of(args)
+    if command == "whoami":
+        return _run_whoami(args)
     if command == "init":
         return _run_init(args)
     try:
@@ -403,6 +409,22 @@ def _confirm(question: str) -> bool:
         if ans in ("n", "no"):
             return False
         print("请输入 Y 或 N。")
+
+
+def _run_whoami(args: argparse.Namespace) -> int:
+    """只读机器身份：不解析台账、不碰 git、不看 `--repo`。
+
+    未初始化**不是错误**：照常回答（`uuid` / `name` 双 null），由调用方据此引导 init。
+    """
+    from .. import env
+
+    try:
+        identity = env.read_identity()
+    except Fail as exc:
+        render.fail_message(exc)
+        return BUSINESS
+    render.whoami_view(identity, as_json=bool(getattr(args, "json", False)))
+    return OK
 
 
 def _run_init(args: argparse.Namespace) -> int:
