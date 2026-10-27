@@ -26,6 +26,7 @@
 
 ## 硬规则
 
+- **给用户的命令必须原样保留绝对路径**（`<本 SKILL.md 所在目录>/scripts/progress init --repo <工作区根>`）：用户机器的 PATH 里没有 `progress` 这个命令，简写成 `progress init` 用户一跑就是 `command not found`。若用户报 `Permission denied`，就把命令改成 `sh <绝对路径> init --repo <工作区根>` 再给 ta。
 - **不诊断、不排查**：不要 `ls ~/.taskledger`、不要 `cat identity.json`、不要读 skill 源码（`internal/env/env.go` / `internal/actions/init_identity.go` 等）或台账去查「为什么没身份」。缺就是未初始化，忽略上下文里已做的排查动作，直接按上面流程走。
 - **不得**替用户执行 `init --claim` / `init --new` / 任何带 `--yes` 的写法——脚本也会拒绝。
 - **不得**基于「上一轮确认过 / 同名 / 记得 uuid」自行重建身份：身份文件缺失就是未初始化，必须让用户重新亲自选。重建会换新 uuid、断开旧任务关联。

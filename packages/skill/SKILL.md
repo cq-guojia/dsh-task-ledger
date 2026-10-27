@@ -1,7 +1,7 @@
 ---
 name: task-ledger
 description: 本地任务台账，跨会话记录在办任务的归属、进度与起止。当用户要登记一件新的事（新建任务 / 建个坑 / 这活我领了）、记录已有任务的进展（接着做 / 记一条进展 / 这轮先记下）、查看任务状态或历史（现在该做什么 / 这活谁在做 / 上周做过什么）、给任务结案或退回（做完了 / 验收通过 / 不做了 / 退回待认领）、整理标签或检查台账一致性时加载；只是改代码、讨论方案时不要用。
-version: 1.3.30
+version: 1.3.31
 allowed-tools: Read,Edit,Bash,Grep
 ---
 
@@ -179,6 +179,10 @@ allowed-tools: Read,Edit,Bash,Grep
 ```
 
 `scripts/progress` 是个薄 shell 包装，按平台 exec `scripts/bin/ledger-<os>-<arch>`（自带运行时的静态二进制；已提供 linux/amd64、darwin/arm64 与 windows/amd64）。平台或架构没有对应产物时，它会明确报错，不会静默失败。
+
+- **不需要安装任何东西**（不装解释器、不装运行时、不往 PATH 里加命令）：直接执行上面那条绝对路径即可。
+- 若报 `Permission denied`（某些安装环节会丢可执行位），前面加 `sh `：`sh <本 SKILL.md 所在目录>/scripts/progress <子命令> …`。
+- **交给用户的命令必须是这个绝对路径**，不许简写成 `progress` —— 用户机器的 PATH 里没有这个命令，简写后用户一跑就是 `command not found`。
 
 - 定位项目：`--repo <工作区根>`（**直接含有 `ledger/` 的那个目录**）给了就校验后用；不给就从当前目录逐级向上找。`ledger/` 本身、以及它下面的任何子目录都不是根，指过去会被直接拒绝（判据只看位置，不看目录里有哪些文件 —— 项目根自带 `pool.json`、`history/`、`worklog/` 都不影响）。
 - `--no-sync`（放在子命令**前**）：用户明确要求「先别同步」时才用；之后自己 `git add ledger && commit && push`。

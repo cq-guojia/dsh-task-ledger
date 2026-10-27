@@ -1,6 +1,5 @@
 #!/bin/sh
 # 台账命令入口：只按平台选对二进制再 exec，逻辑全在编译产物里。
-# 旧写法（Python 版已挪到 legacy-python/ 作对照）：python3 legacy-python/progress.py <子命令> --repo <工作区根>
 set -eu
 
 dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -11,7 +10,7 @@ case "$(uname -s)" in
 	MINGW* | MSYS* | CYGWIN*) os=windows ;;
 	*)
 		echo "错误：这个平台（$(uname -s)）还没有配套的台账二进制。" >&2
-		echo "  处理：在装有 Go 的机器上跑 packages/skill/go 的构建脚本，产出 scripts/bin/ledger-<os>-<arch>。" >&2
+		echo "  处理：在装有 Go 的机器上跑 packages/skill/src 的构建脚本，产出 scripts/bin/ledger-<os>-<arch>。" >&2
 		exit 1
 		;;
 esac
@@ -37,7 +36,7 @@ fi
 
 if [ ! -x "$bin" ]; then
 	echo "错误：找不到可执行的 $bin" >&2
-	echo "  处理：在装有 Go 的机器上跑 packages/skill/go 的构建脚本重新产出产物。" >&2
+	echo "  处理：在装有 Go 的机器上跑 packages/skill/src 的构建脚本重新产出产物。" >&2
 	exit 1
 fi
 
