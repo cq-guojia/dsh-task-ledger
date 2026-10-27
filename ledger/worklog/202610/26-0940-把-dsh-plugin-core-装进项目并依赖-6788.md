@@ -1,6 +1,7 @@
 # 20261026-0940-把-dsh-plugin-core-装进项目并依赖-6788：把 dsh-plugin-core 装进项目并依赖
 
 > **创建**：2026-10-26 09:40:36（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
+> **状态**：closed · @GuoJia-Agent（8d557c6d-7c93-43ac-8c73-5d623e82e1c6） · 更新 2026-10-26 09:45:56
 > ✅ 完成封卷：2026-10-26 17:45:56（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
 > **分类**：重构 ｜ **标签**：dsh-plugin-core、依赖安装、基础组件
 

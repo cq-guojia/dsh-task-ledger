@@ -1,6 +1,7 @@
 # 20261026-0946-用-dsh-plugin-core-替换插件现有-ui-控件-57bb：用 dsh-plugin-core 替换插件现有 UI 控件
 
 > **创建**：2026-10-26 09:46:05（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
+> **状态**：closed · @GuoJia-Agent（8d557c6d-7c93-43ac-8c73-5d623e82e1c6） · 更新 2026-10-26 15:09:15
 > ✅ 完成封卷：2026-10-26 23:09:15（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
 > **分类**：重构 ｜ **标签**：dsh-plugin-core、控件替换、界面
 
