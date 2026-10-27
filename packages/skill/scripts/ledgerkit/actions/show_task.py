@@ -34,6 +34,7 @@ def show_task(repo: Path, me: Identity, tid: str) -> ShowResult:
                 "owner_name": status.name,
                 "created": worklog_md.head_created(text),
                 "updated": status.when,
+                "finished": worklog_md.head_frozen(text),
             },
             worklog=WorklogView(path=rel(repo, path), text=text, error=None),
         )

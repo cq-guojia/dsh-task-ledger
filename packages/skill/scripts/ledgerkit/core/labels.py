@@ -15,7 +15,7 @@ LABEL_MAX_WORDS_EN = 3  # 纯 ASCII 时按「词」算
 TAGS_MAX_COUNT = 5
 
 CJK_RE = re.compile(r"[\u4e00-\u9fff]")
-LABEL_CAT_RE = re.compile(r"分类\*\*\s*[：:]\s*([^｜|]+)")
+LABEL_CAT_RE = re.compile(r"分类\*\*\s*[：:]\s*([^｜|·]+)")
 LABEL_TAG_RE = re.compile(r"标签\*\*\s*[：:]\s*(.+)$")
 _SPLIT_RE = re.compile(r"[,，、]")
 
@@ -49,21 +49,33 @@ def parse_tags(raw: str | Iterable[str] | None) -> tuple[str, ...]:
 
 
 def label_line(category: str | None, tags: Iterable[str] | None) -> str:
-    """过程文档头部的「分类/标签」行；两者皆空返回空串（此行不写）。"""
+    """过程文档头部的「分类 / 标签」行；两者皆空返回空串（此行不写）。"""
     segs: list[str] = []
     if category:
         segs.append(f"**分类**：{category}")
     tag_list = [t for t in (tags or ()) if t]
     if tag_list:
         segs.append(f"**标签**：{'、'.join(tag_list)}")
-    return "> " + " ｜ ".join(segs) if segs else ""
+    return "- " + " · ".join(segs) if segs else ""
 
 
 def parse_label_line(text: str) -> tuple[str | None, tuple[str, ...]]:
-    """从过程文档头部（第一个 `## ` 小节之前）解析分类与标签。"""
+    """从过程文档头部（第一个 `## ` 小节之前）解析分类与标签。
+
+    跳过 HTML 注释块：模板注释里举例写着「**分类**：…」，那不是数据。
+    """
+    in_comment = False
     for line in text.splitlines():
         if line.startswith("## "):
             break
+        stripped = line.lstrip()
+        if in_comment:
+            if "-->" in stripped:
+                in_comment = False
+            continue
+        if stripped.startswith("<!--"):
+            in_comment = "-->" not in stripped
+            continue
         mc = LABEL_CAT_RE.search(line)
         mt = LABEL_TAG_RE.search(line)
         if not (mc or mt):

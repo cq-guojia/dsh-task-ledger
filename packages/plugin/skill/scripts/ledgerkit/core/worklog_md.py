@@ -20,33 +20,44 @@ EXEC_HINT = (
     "<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。\n"
     '     补记用 progress.py log --id <任务号> --note "一句话"。 -->'
 )
-FROZEN_MARK = "✅ 完成封卷"
-FROZEN_RE = re.compile(r"^>\s*" + FROZEN_MARK, re.MULTILINE)
-CREATED_RE = re.compile(r"^\s*>\s*\*\*创建\*\*")
-# 头部「创建」行：`> **创建**：2026-10-06 00:00（@某人 · uuid）` —— 创建时间与发起人两个来源。
-# 括号里落 `Identity.stamp()`（`@名字 · uuid`）：名字在前给人读，uuid 在后给机器对。
-# 老文档只有名字（没有 uuid）时，下面两个函数各自返回它能读到的那一段，不报错。
+FROZEN_MARK = "封卷"
+#: 头部四行的规范顺序：分类/标签 → 状态 → 创建 → 封卷。
+#: 「分类」只在有分类 / 标签时写，「封卷」只在结案时写，另两行必有。
+HEAD_KEY_ORDER = ("meta", "status", "created", "frozen")
+#: 头部行前缀：新格式是无序列表 `- `，老文档是引用块 `> ` —— 读的时候两种都认。
+_HEAD_BULLET = r"^(?:\s*>\s?|\s*[-*]\s+)"
+FROZEN_RE = re.compile(
+    _HEAD_BULLET + r"(?:\*\*" + FROZEN_MARK + r"\*\*|✅ 完成封卷)", re.MULTILINE
+)
+#: 封卷行的时间（老文档是 `> ✅ 完成封卷：<时间>（@…）`，新格式是 `- **封卷**：<时间> · @…`）。
+_FROZEN_AT_RE = re.compile(
+    _HEAD_BULLET + r"(?:\*\*" + FROZEN_MARK + r"\*\*|✅ 完成封卷)[^：:]*[：:]\s*"
+    r"(\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?)"
+)
+# 头部「创建」行：`- **创建**：2026-10-06 00:00 · @某人 · uuid`。
+# 值一律 `时间 · @名字 · uuid`，与执行记录行同一种分隔符；老文档是 `（@名字 · uuid）`，读得到就认。
+CREATED_RE = re.compile(_HEAD_BULLET + r"\*\*创建\*\*")
 CREATED_AT_RE = re.compile(
-    r"^\s*>\s*\*\*创建\*\*\s*[：:]\s*"
+    _HEAD_BULLET + r"\*\*创建\*\*\s*[：:]\s*"
     r"(\d{4}-\d{2}-\d{2}(?: +\d{1,2}:\d{1,2}(?::\d{1,2})?)?)"
 )
-CREATOR_RE = re.compile(r"^\s*>\s*\*\*创建\*\*\s*[：:].*?（@(.+?)）")
+CREATOR_RE = re.compile(_HEAD_BULLET + r"\*\*创建\*\*\s*[：:].*?@(.+?)\s*[）)]?\s*$")
 
-# 头部「状态」行：`> **状态**：doing · @某人（uuid）· 更新 2026-10-27 08:28:22`。
+# 头部「状态」行：`- **状态**：doing · 2026-10-27 08:28:22 · @某人 · uuid`。
 # 它是**镜像**：分片 / 池里的 `status` / `owner` 才是权威，这行只是让「看一条详情」
-# 不必再翻索引（2026-10-27 用户拍板）。老文档没有这行 ⇒ 合法，读取方回退查分片。
+# 不必再翻索引。老文档没有这行 ⇒ 合法，读取方回退查分片。
 STATUS_MARK = "状态"
-STATUS_LINE_RE = re.compile(r"^\s*>\s*\*\*" + STATUS_MARK + r"\*\*")
-STATUS_RE = re.compile(r"^\s*>\s*\*\*" + STATUS_MARK + r"\*\*\s*[：:]\s*([A-Za-z_]+)")
+STATUS_LINE_RE = re.compile(_HEAD_BULLET + r"\*\*" + STATUS_MARK + r"\*\*")
+STATUS_RE = re.compile(
+    _HEAD_BULLET + r"\*\*" + STATUS_MARK + r"\*\*\s*[：:]\s*([A-Za-z_]+)"
+)
 #: 状态取值（与 `core/labels.STATUSES` + 结案后的 `closed` 同口径，全链路英文）。
 STATUS_VALUES = ("open", "doing", "closed")
 _STATUS_UUID_RE = re.compile(
     r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 )
 _STATUS_NAME_RE = re.compile(r"@([^（(·]+)")
-_STATUS_WHEN_RE = re.compile(
-    r"更新\s+(\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?)"
-)
+_STATUS_WHEN_RE = re.compile(r"(\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?)")
 _TITLE_RE = re.compile(r"^#\s*(.+?)\s*[：:]\s*(.*)$")
 
 _HEAD_RE = re.compile(r"\A(.*?)(?=^## |\Z)", re.DOTALL | re.MULTILINE)
@@ -84,10 +95,10 @@ def format_problems(text: str) -> list[str]:
     head = _head_lines(lines)
     if not any(CREATED_AT_RE.match(line) for line in head):
         problems.append(
-            "头部缺「创建」时间行（应为 `> **创建**：YYYY-MM-DD HH:MM（@某人）`）"
+            "头部缺「创建」时间行（应为 `- **创建**：YYYY-MM-DD HH:MM:SS · @某人 · uuid`）"
         )
     elif not any(CREATOR_RE.match(line) for line in head):
-        problems.append("头部「创建」行缺发起人（应为 `…（@某人）`）")
+        problems.append("头部「创建」行缺发起人（应为 `… · @某人 · uuid`）")
     # 状态行：**有就必须合法**；缺了不报——老文档没有这行是合法的（读取方回退查分片）
     for line in head:
         if not STATUS_LINE_RE.match(line):
@@ -164,8 +175,8 @@ def render_worklog(
 ) -> str:
     """把模板套成一篇过程文档（`<id>` / `<title>` / `<created>` / `<creator>` / `<status>`）。
 
-    `<status>` 只占状态行的**内容**（`doing · @某人（uuid）· 更新 …`）；模板里的
-    `> **状态**：` 前缀是字面量。不传 status ⇒ 整行删掉（不留空壳）。
+    `<status>` 只占状态行的**内容**（`doing · 时间 · @某人 · uuid`）；模板里的
+    `- **状态**：` 前缀是字面量。不传 status ⇒ 整行删掉（不留空壳）。
     """
     text = (
         template.replace("<id>", tid)
@@ -190,15 +201,50 @@ def render_worklog(
     meta = label_line(category, tags)
     if not meta:
         return text
-    return "\n".join(_insert_after_head(text.splitlines(), meta)) + "\n"
+    return "\n".join(_insert_head_line(text.splitlines(), meta, "meta")) + "\n"
 
 
-def _insert_after_head(lines: list[str], line: str) -> list[str]:
-    """把一行插到「创建」行之后（头部引用块内）；找不到创建行就插标题后。"""
-    at = next((i for i, ln in enumerate(lines) if CREATED_RE.match(ln)), None)
-    if at is None:
+_META_LINE_RE = re.compile(_HEAD_BULLET + r"\*\*(?:分类|标签)\*\*")
+
+
+def _head_key(line: str) -> str | None:
+    """这一行是头部哪个字段（`meta` / `status` / `created` / `frozen`）；都不是给 None。"""
+    if _META_LINE_RE.search(line):
+        return "meta"
+    if STATUS_LINE_RE.match(line):
+        return "status"
+    if CREATED_RE.match(line):
+        return "created"
+    if FROZEN_RE.match(line):
+        return "frozen"
+    return None
+
+
+def _insert_head_line(lines: list[str], line: str, key: str) -> list[str]:
+    """按 `HEAD_KEY_ORDER` 把一行插进头部（第一个 `## ` 之前）。
+
+    排在它后面的字段行先出现就插在那行前面；没有就接在最后一个字段行之后；
+    一个字段行都没有就插在标题（及其后的空行）下面。
+    """
+    rank = HEAD_KEY_ORDER.index(key)
+    last: int | None = None
+    for i, ln in enumerate(lines):
+        if ln.startswith("## "):
+            break
+        found = _head_key(ln)
+        if found is None:
+            continue
+        if HEAD_KEY_ORDER.index(found) > rank:
+            lines.insert(i, line)
+            return lines
+        last = i
+    if last is None:
         at = 1 if lines and lines[0].startswith("# ") else 0
-    lines.insert(at + 1, line)
+        while at + 1 < len(lines) and not lines[at + 1].strip():
+            at += 1
+        lines.insert(at + 1, line)
+    else:
+        lines.insert(last + 1, line)
     return lines
 
 
@@ -217,16 +263,14 @@ def render_status_body(
     uuid: str | None = None,
     when: str | None = None,
 ) -> str:
-    """状态行的**内容**部分（`> **状态**：` 之后那段）。"""
+    """状态行的**内容**部分（`- **状态**：` 之后那段）：`状态 · 时间 · @名字 · uuid`。"""
     parts = [status]
-    if name and uuid:
-        parts.append(f"@{name}（{uuid}）")
-    elif name:
-        parts.append(f"@{name}")
-    elif uuid:
-        parts.append(uuid)
     if when:
-        parts.append(f"更新 {when}")
+        parts.append(when)
+    if name:
+        parts.append(f"@{name}")
+    if uuid:
+        parts.append(uuid)
     return " · ".join(parts)
 
 
@@ -236,11 +280,11 @@ def render_status_line(
     uuid: str | None = None,
     when: str | None = None,
 ) -> str:
-    return f"> **{STATUS_MARK}**：{render_status_body(status, name, uuid, when)}"
+    return f"- **{STATUS_MARK}**：{render_status_body(status, name, uuid, when)}"
 
 
 def rewrite_status_line(text: str, status: StatusLine) -> str:
-    """把头部状态行改成 `status`：有就就地替换，没有就插到「创建」行后。"""
+    """把头部状态行改成 `status`：有就就地替换，没有就按头部顺序插进去。"""
     line = render_status_line(status.status, status.name, status.uuid, status.when)
     lines = (text or "").splitlines()
     for i, ln in enumerate(lines):
@@ -249,7 +293,7 @@ def rewrite_status_line(text: str, status: StatusLine) -> str:
         if STATUS_LINE_RE.match(ln):
             lines[i] = line
             return "\n".join(lines) + "\n"
-    return "\n".join(_insert_after_head(lines, line)) + "\n"
+    return "\n".join(_insert_head_line(lines, line, "status")) + "\n"
 
 
 def read_status(text: str) -> StatusLine | None:
@@ -309,25 +353,25 @@ def has_frozen_line(text: str) -> bool:
 
 
 def stamp_frozen(text: str, finished: str, who: str | None = "") -> str:
-    """封卷：在头部打标记行（`finished` 传 UTC，原样写盘——见 exec_line 的口径说明）。"""
-    mark = f"> {FROZEN_MARK}：{finished}"
+    """封卷：在头部打「封卷」行（`finished` 传 UTC，原样写盘——见 exec_line 的口径说明）。"""
+    mark = f"- **{FROZEN_MARK}**：{finished}"
     if who:
-        mark += f"（@{who}）"
+        mark += f" · @{who}"
     if FROZEN_RE.search(text or ""):
         return text
-    return "\n".join(_insert_after_head(text.splitlines(), mark)) + "\n"
+    return "\n".join(_insert_head_line(text.splitlines(), mark, "frozen")) + "\n"
 
 
 def rewrite_label_line(
     text: str, category: str | None, tags: Iterable[str] | None
 ) -> str:
-    """改写头部的分类 / 标签行：有就地替换，没有就插到创建行后。"""
+    """改写头部的分类 / 标签行：有就地替换，没有就按头部顺序插进去。"""
     line = label_line(category, tags)
     lines = text.splitlines()
     for i, ln in enumerate(lines):
         if ln.startswith("## "):
             break
-        if "**分类**" in ln or "**标签**" in ln:
+        if _META_LINE_RE.match(ln):
             if line:
                 lines[i] = line
             else:
@@ -335,7 +379,7 @@ def rewrite_label_line(
             return "\n".join(lines) + "\n"
     if not line:
         return text
-    return "\n".join(_insert_after_head(lines, line)) + "\n"
+    return "\n".join(_insert_head_line(lines, line, "meta")) + "\n"
 
 
 def head_meta(text: str) -> tuple[str | None, tuple[str, ...]]:
@@ -355,8 +399,20 @@ def head_created(text: str) -> str | None:
     return None
 
 
+def head_frozen(text: str) -> str | None:
+    """头部「封卷」行的时间（原样返回，不转时区）；没封卷 / 读不到返回 None。"""
+    for line in text.splitlines():
+        m = _FROZEN_AT_RE.match(line)
+        if m:
+            try:
+                return normalize_time(m.group(1), field="封卷")
+            except Fail:
+                return None
+    return None
+
+
 def head_creator(text: str) -> str | None:
-    """头部「创建」行括号里的发起人**名字**（不带 @、不带 uuid）；读不到返回 None。"""
+    """头部「创建」行的发起人**名字**（不带 @、不带 uuid）；读不到返回 None。"""
     for line in text.splitlines():
         m = CREATOR_RE.match(line)
         if m and m.group(1).strip():
@@ -365,7 +421,7 @@ def head_creator(text: str) -> str | None:
 
 
 def head_creator_uuid(text: str) -> str | None:
-    """头部「创建」行括号里的发起人 **uuid**；老文档没落 uuid 时返回 None。
+    """头部「创建」行的发起人 **uuid**；老文档没落 uuid 时返回 None。
 
     `UUID_RE` 带 `^$` 锚点，只能整串匹配 —— 所以先按 ` · ` 切出尾段再判，不能 search。
     """

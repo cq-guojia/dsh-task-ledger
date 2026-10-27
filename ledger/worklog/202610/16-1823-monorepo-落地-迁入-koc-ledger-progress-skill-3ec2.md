@@ -1,11 +1,13 @@
 # 20261016-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2：monorepo 落地：迁入 koc-ledger-progress skill 并发布可安装包
 
-> **创建**：2026-10-16 18:23:28（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
-> **状态**：closed · @GuoJia-Agent（8d557c6d-7c93-43ac-8c73-5d623e82e1c6） · 更新 2026-10-16 20:41:15
-> ✅ 完成封卷：2026-10-16 20:41:15（@GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6）
-> **分类**：建设 ｜ **标签**：monorepo、skill、发布
+- **分类**：建设 · **标签**：monorepo、skill、发布
+- **状态**：closed · 2026-10-16 20:41:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **创建**：2026-10-16 18:23:28 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **封卷**：2026-10-16 20:41:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 「> **分类**：… ｜ **标签**：…」行由脚本按 new --category / --tags 插入；两者皆空则不写。 -->
+<!-- 头部四行由脚本维护，顺序固定：分类/标签 → 状态 → 创建 → 封卷。
+     「- **分类**：… · **标签**：…」按 new --category / --tags 插在最上面，两者皆空则不写；
+     「- **封卷**：…」在结案时加在最后。 -->
 
 ## 背景
 

@@ -64,9 +64,9 @@ def worklog_text(repo: Path, tid: str) -> str:
 
 
 def status_line(repo: Path, tid: str) -> str:
-    """头部状态行原文（`> **状态**：…`）；没有这行给空串。"""
+    """头部状态行原文（`- **状态**：…`）；没有这行给空串。"""
     for line in worklog_text(repo, tid).splitlines():
-        if line.startswith("> **状态**"):
+        if line.startswith("- **状态**"):
             return line
     return ""
 
@@ -111,7 +111,7 @@ def main() -> int:
         head = status_line(repo, tid)
         check(
             "new --self 文档头部状态行是 doing + 自己",
-            head.startswith("> **状态**：doing") and "Me" in head and ME in head,
+            head.startswith("- **状态**：doing") and "Me" in head and ME in head,
             head or "(没有状态行)",
         )
 
@@ -142,7 +142,7 @@ def main() -> int:
         head = status_line(repo, tid)
         check(
             "release 后文档状态行回 open",
-            head.startswith("> **状态**：open"),
+            head.startswith("- **状态**：open"),
             head or "(没有状态行)",
         )
         r = run(repo, "claim", "--id", tid)
@@ -156,7 +156,7 @@ def main() -> int:
         head = status_line(repo, tid)
         check(
             "claim 后文档状态行回 doing",
-            head.startswith("> **状态**：doing") and ME in head,
+            head.startswith("- **状态**：doing") and ME in head,
             head or "(没有状态行)",
         )
         r = run(repo, "log", "--id", tid, "--note", "冒烟记一条")
@@ -239,8 +239,22 @@ def main() -> int:
         head = status_line(repo, tid)
         check(
             "close 后文档状态行是 closed + 结案人",
-            head.startswith("> **状态**：closed") and ME in head,
+            head.startswith("- **状态**：closed") and ME in head,
             head or "(没有状态行)",
+        )
+        # 头部四行顺序：分类/标签 → 状态 → 创建 → 封卷（这篇没分类，所以是 状态 → 创建 → 封卷）
+        head_lines = worklog_text(repo, tid).splitlines()
+        order = [
+            next(
+                (i for i, ln in enumerate(head_lines) if ln.startswith(mark)),
+                -1,
+            )
+            for mark in ("- **状态**", "- **创建**", "- **封卷**")
+        ]
+        check(
+            "头部顺序是 状态 → 创建 → 封卷",
+            all(i >= 0 for i in order) and order == sorted(order),
+            str(order),
         )
         # show 已结案：文档自述即可，不必再翻历史 / 索引
         r = run(repo, "show", "--id", tid, "--json")
@@ -318,7 +332,7 @@ def main() -> int:
         text = doc.read_text(encoding="utf-8")
         check(
             "过程文档头部记名字 + uuid",
-            f"（@Me · {ME}）" in text,
+            f" · @Me · {ME}" in text,
             text[:200],
         )
         check(
