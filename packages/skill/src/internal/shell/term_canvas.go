@@ -133,10 +133,11 @@ func newLineEditor(c *canvas, prompt, hint string) *lineEditor {
 	e := &lineEditor{c: c}
 	e.c.beginBlock()
 	e.c.write(prompt)    // 提示行（块顶）
-	e.c.newline()        // 空行
+	e.c.newline()        // 空行：真留一排，这一排什么都不画
+	e.c.newline()        // 再下一排 → 帮助行
 	e.c.write(dim(hint)) // 帮助行
 	e.c.newline()        // 走到块下面
-	e.c.up(2)            // 回到提示行
+	e.c.up(3)            // 回到提示行
 	e.c.toCol(displayWidth(prompt))
 	e.c.height = 3
 	return e

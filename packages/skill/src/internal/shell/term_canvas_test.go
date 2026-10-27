@@ -22,7 +22,7 @@ func TestEditorLayoutPutsCursorOnPromptLine(t *testing.T) {
 	newLineEditor(&c, "输入用户名：", "帮助")
 
 	// 提示行 → 空行 → 帮助行；光标回到提示行末尾（按显示宽度定位：12 列）。
-	want := "\r\n" + "输入用户名：" + "\r\n" + dim("帮助") + "\r\n" + "\x1b[2A" + "\r\x1b[12C"
+	want := "\r\n" + "输入用户名：" + "\r\n" + "\r\n" + dim("帮助") + "\r\n" + "\x1b[3A" + "\r\x1b[12C"
 	if got := buf.String(); got != want {
 		t.Fatalf("输入框布局不对：\n得到 %q\n期望 %q", got, want)
 	}
