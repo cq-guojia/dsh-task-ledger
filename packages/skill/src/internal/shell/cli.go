@@ -792,7 +792,7 @@ func printCandidates2(title string, options []map[string]any) {
 
 // confirm Y/N 确认：Y 返回 true，N 返回 false；ESC / EOF 当作取消。
 //
-// 输入不是 y/n 时把这一块整块抹掉重来 —— 屏幕上不留半截输入，也不留一摞提示行。
+// Y / N 确认后把确认框整块抹掉（退回菜单时屏幕干净，不留残迹）；输入非法或 ESC / EOF 同样抹掉重来。
 func confirm(question string) bool {
 	for {
 		ans, res, editor, handled := promptLineEdit(question+" [Y/N]：", "按 Y 确认 · 按 N 取消 · ESC 返回身份选择")
@@ -805,8 +805,14 @@ func confirm(question string) bool {
 		}
 		switch strings.ToLower(strings.TrimSpace(ans)) {
 		case "y", "yes":
+			if editor != nil {
+				editor.wipe()
+			}
 			return true
 		case "n", "no":
+			if editor != nil {
+				editor.wipe()
+			}
 			return false
 		}
 		if editor != nil {
@@ -830,8 +836,11 @@ const (
 // promptLine 打提示（不换行，与 input() 同形）再读一行；hint 是输入框下面那行灰色帮助。
 // 终端里走 raw 逐键读（ESC 回上一步、Backspace 退格）；拿不到 raw 终端才退回普通行读。
 func promptLine(prompt, hint string) (string, lineResult) {
-	line, res, _, handled := promptLineEdit(prompt, hint)
+	line, res, editor, handled := promptLineEdit(prompt, hint)
 	if handled {
+		if res == lineOK && editor != nil {
+			editor.wipe() // 确认后不留输入记录，退回菜单时不留残迹
+		}
 		return line, res
 	}
 	return promptLinePlain(prompt)
