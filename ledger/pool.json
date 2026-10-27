@@ -1,7 +1,6 @@
 {
   "tasks": {
-    "20261027-1519-dsh-插件重构-界面更新-方法替换-注册方式改造-1f9a": {"category": "其他", "created": "2026-10-27 15:19:22", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": ["插件", "重构", "DSH"], "title": "DSH 插件重构：界面更新、方法替换、注册方式改造", "updated": "2026-10-27 15:19:22", "worklog": "worklog/202610/27-1519-dsh-插件重构-界面更新-方法替换-注册方式改造-1f9a.md"},
-    "20261027-1519-skill-补齐底层能力-新增-stats-owners-台账根检测-并扩展-l-736d": {"category": "其他", "created": "2026-10-27 15:19:22", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": ["skill", "台账", "能力"], "title": "skill 补齐底层能力：新增 stats、owners、台账根检测，并扩展 list 状态", "updated": "2026-10-27 15:19:22", "worklog": "worklog/202610/27-1519-skill-补齐底层能力-新增-stats-owners-台账根检测-并扩展-l-736d.md"}
+    "20261027-1519-dsh-插件重构-界面更新-方法替换-注册方式改造-1f9a": {"category": "其他", "created": "2026-10-27 15:19:22", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": ["插件", "重构", "DSH"], "title": "DSH 插件重构：界面更新、方法替换、注册方式改造", "updated": "2026-10-27 15:19:22", "worklog": "worklog/202610/27-1519-dsh-插件重构-界面更新-方法替换-注册方式改造-1f9a.md"}
   },
   "version": "20261022000000"
 }

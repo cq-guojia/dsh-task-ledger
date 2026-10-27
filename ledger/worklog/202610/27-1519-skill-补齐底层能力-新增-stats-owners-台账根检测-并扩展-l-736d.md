@@ -1,7 +1,7 @@
 # 20261027-1519-skill-补齐底层能力-新增-stats-owners-台账根检测-并扩展-l-736d：skill 补齐底层能力：新增 stats、owners、台账根检测，并扩展 list 状态
 
 - **标签**：skill、台账、能力
-- **状态**：open · 2026-10-27 15:19:22
+- **状态**：doing · 2026-10-27 16:20:16 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **创建**：2026-10-27 15:19:22 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
@@ -52,3 +52,4 @@
 <!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
      补记用 progress log --id <任务号> --note "一句话"。 -->
 - 2026-10-27 15:19:22 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务
+- 2026-10-27 16:20:16 · claim · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 认领 → doing
