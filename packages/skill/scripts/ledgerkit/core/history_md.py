@@ -15,7 +15,7 @@ from .time import TIME_RE, time_key
 
 HISTORY_TITLE = "# 进度历史（已结案）"
 HISTORY_HEADER = (
-    "| 结案时间 | 创建时间 | 工作包 | 分类 | 标签 "
+    "| 结案时间 | 创建时间 | 标题 | 分类 | 标签 "
     "| owner | owner_name | creator | creator_name | 完成了什么 | 过程文档 |"
 )
 HISTORY_SEP = "|---|---|---|---|---|---|---|---|---|---|---|"

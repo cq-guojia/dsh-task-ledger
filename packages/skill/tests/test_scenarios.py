@@ -210,7 +210,7 @@ class ConcurrentClaimTest(ScenarioCase):
         for p in procs:  # 跑完即可，结果在各自的分片里，不在这里读
             p.communicate()
         # 跨机并发认领本就「不处理」（§5.7）：两边都可能各自写进自己的分片。
-        # 要保证的是：状态可恢复 —— 读侧只显示一次（show 点名同号多文件）。
+        # 要保证的是：状态可恢复 —— 读侧只显示一次。
         for clone in (fx.a, fx.b):
             git(clone, "add", "ledger")
             if git(clone, "status", "--porcelain", "ledger"):
@@ -237,14 +237,13 @@ class ConcurrentClaimTest(ScenarioCase):
         for clone in (fx.a, fx.b):
             rows = merged(clone)
             self.assertIn(tid, rows, "两边都该看得到这条任务")
-            # 读侧只显示一次，但要在 stderr 点名「这个号出现在多个文件」
-            self.assertIn(
-                "还出现在",
-                run(clone, "show", "--id", tid)[1],
-                "同号多文件必须由 show 点名",
-            )
-        # 同号多文件不再由 validate 报（2026-10-24 用户拍板：读侧 show 已点名、
-        # 写侧已有防护，体检不管这件事），断言它不因这个退 1。
+            # 2026-10-27 起 show 走「文档优先」：读到文档头部状态行就不碰 pool / 分片，
+            # 同号多文件不再点名（写侧已有防护、体检也不管）。读侧只保证显示一次。
+            code, out, err = run(clone, "list", env=NOSYNC)
+            self.assertEqual(code, 0, err)
+            self.assertEqual(out.count(tid), 1, "同号多文件在读侧只显示一次")
+        # 同号多文件不再由 validate 报（2026-10-24 用户拍板：写侧已有防护、
+        # 读侧只显示一次，体检不管这件事），断言它不因这个退 1。
         self.assertEqual(run(fx.a, "validate")[0], 0, "同号多文件不该让体检退 1")
 
 
@@ -1093,18 +1092,20 @@ class HistoryRangeTest(ScenarioCase):
 
 
 class ValidateDepthTest(ScenarioCase):
-    """validate 两档：默认浅度只查格式，`--deep` 才读全部历史与过程文档正文（2026-10-24）。"""
+    """validate 两档：默认浅度只查格式，`--deep` 才读**全部月份历史**；两档都不读过程文档正文。"""
 
-    def test_shallow_does_not_read_bodies(self):
-        """浅度不碰正文：骨架文档不提示；深度才提示。"""
+    def test_both_depths_do_not_read_bodies(self):
+        """两档都不碰正文（2026-10-27 拍板）：骨架文档在浅度与 `--deep` 下都不提示。"""
         fx = self.fx
         new_task(fx.a, "只有骨架", env=NOSYNC)
-        code, out, err = run(fx.a, "validate", env=NOSYNC)
-        self.assertEqual(code, 0, err)
-        self.assertNotIn("骨架", out + err, "浅度不该判骨架（那要读正文）")
-        code, out, err = run(fx.a, "validate", "--deep", env=NOSYNC)
-        self.assertEqual(code, 0, err)
-        self.assertIn("骨架", err, "深度要提示骨架文档")
+        for extra in ((), ("--deep",)):
+            code, out, err = run(fx.a, "validate", *extra, env=NOSYNC)
+            self.assertEqual(code, 0, err)
+            self.assertNotIn(
+                "骨架",
+                out + err,
+                f"validate {' '.join(extra) or '（浅度）'}不该判骨架（那要读正文）",
+            )
 
     def test_deep_reads_older_history_months(self):
         """浅度只读当月历史文件，深度把更早的月份也读进来。"""

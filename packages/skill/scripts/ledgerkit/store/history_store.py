@@ -53,7 +53,7 @@ class HistoryStore:
     ) -> str:
         """这个月的历史里已经有这条了吗？三态：`hit` / `miss` / `undecidable`。
 
-        有末列就比**文件名**（不比整条路径）。末列为空的行改按「创建时间 + 工作包」两列比
+        有末列就比**文件名**（不比整条路径）。末列为空的行改按「创建时间 + 标题」两列比
         —— 那种行在调用方给不出 `created` / `title` 时判不了，明说 `undecidable`，不拿 miss 冒充。
         """
         records, _ = history_md.parse_history(self.read(path))
