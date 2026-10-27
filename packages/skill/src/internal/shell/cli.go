@@ -602,7 +602,7 @@ func runInit(a *Args) int {
 						return ExitOK
 					}
 					if choice.kind == "new" {
-						typed, inRes := promptLine("输入用户名：", "ESC 返回上一步 · Enter 确认 · Backspace 退格")
+						typed, inRes := promptLine("输入用户名：", "Enter 确认 · Backspace 退格 · ESC 回身份选择")
 						if inRes == lineBack {
 							continue // ESC：回选择菜单重来
 						}
@@ -630,7 +630,7 @@ func runInit(a *Args) int {
 					break
 				}
 			} else if tty {
-				name, inRes := promptLine("输入用户名：", "ESC 取消 · Enter 确认 · Backspace 退格")
+				name, inRes := promptLine("输入用户名：", "Enter 确认 · Backspace 退格 · ESC 取消初始化")
 				if inRes != lineOK {
 					errOut(dim("✕ 已取消初始化。随时可重跑 init 重新开始。"))
 					return ExitOK
@@ -790,7 +790,7 @@ func printCandidates2(title string, options []map[string]any) {
 // confirm Y/N 确认：Y 返回 true，N 返回 false；读到 EOF 当作取消。
 func confirm(question string) bool {
 	for {
-		ans, res := promptLine(question+" [Y/N]：", "Y 确认 · N 取消 · ESC 返回上一步")
+		ans, res := promptLine(question+" [Y/N]：", "Y 确认 · N 取消 · ESC 回身份选择")
 		if res != lineOK {
 			return false
 		}
