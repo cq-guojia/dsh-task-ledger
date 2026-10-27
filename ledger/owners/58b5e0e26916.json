@@ -2,7 +2,7 @@
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
     "20261026-0917-在-skill-里增加-html-台账展示页-e276": {"category": "建设", "created": "2026-10-26 09:17:15", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-26 09:17:15", "status": "doing", "tags": ["台账", "展示", "静态页面"], "title": "在 skill 里增加 HTML 台账展示页", "updated": "2026-10-26 13:00:09", "worklog": "worklog/202610/26-0917-在-skill-里增加-html-台账展示页-e276.md"},
-    "20261026-2338-整理看板需要的底层数据方法-e2db": {"category": null, "created": "2026-10-26 23:38:53", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-27 00:28:22", "status": "doing", "tags": [], "title": "整理看板需要的底层数据方法", "updated": "2026-10-27 03:24:19", "worklog": "worklog/202610/26-2338-整理看板需要的底层数据方法-e2db.md"}
+    "20261026-2338-整理看板需要的底层数据方法-e2db": {"category": null, "created": "2026-10-26 23:38:53", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-27 00:28:22", "status": "doing", "tags": [], "title": "整理看板需要的底层数据方法", "updated": "2026-10-27 03:30:50", "worklog": "worklog/202610/26-2338-整理看板需要的底层数据方法-e2db.md"}
   },
   "version": "20261022000000"
 }
