@@ -26,7 +26,7 @@ const TREND_TIMEOUT_MS = 30_000;
 
 /**
  * 错误响应榨人话：host 路由（routes.ts）发的是 `{ error: "..." }`，那里的话是**能直接上界面的**
- * （带工作区名、python3 起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
+ * （带工作区名、台账程序起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
  */
 export function httpErrorMessage(status: number, body: string): string {
 	try {

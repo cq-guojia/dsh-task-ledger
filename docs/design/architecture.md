@@ -103,7 +103,7 @@ shell.Run（runner.go）
    - 跨文件写失败：用 `store.Snapshot` / `store.Restore` 把**本次动作刚碰过的**文件按字节还回去。这是"读进内存、失败写回"，**不是** journal —— 不落日志、不扫残留、没有启动恢复。
 7. **写前 guard 会硬拦**：`GitRepo.GuardBeforeWrite` 在取最新之前查——本地台账有未提交改动 / 有未推送的台账提交 / 有未入库的同名文件 / 处于 rebase 中间态 ⇒ 中止并说明怎么处理。detached HEAD 或无上游时只做本地提交并在 stderr 提示。`worklog` 里人写的改动先 stash、刷完再叠回。
 8. **开关只有两组**：动作是否只读由 `src/internal/actions/registry.go` 的 `ActionSpec.ReadOnly` 决定（只读 ⇒ 不取最新、不自举、不提交）；`--no-sync` / `TASK_LEDGER_NO_SYNC`（不碰 git、不拿整命令级锁）。
-9. **skill 内容单一真源**：`packages/skill/` 是唯一真源，插件内嵌副本由构建纳入（只含运行时那几项，源码不进副本），两处逐字节一致（`check-skill-copy.mjs` 守）。
+9. **skill 内容单一真源**：`packages/skill/` 是唯一真源，插件内嵌副本由构建纳入（只含运行时那几项，源码不进副本）；副本是入库产物，改完源重跑 `npm run build` 再提交即可保持一致。
 10. **开发基线 = 宿主 0.2.0-rc.2**：宿主能力一律以 [`external/`](external/) 为准，不得凭方法名猜签名。
 11. **dist 入仓**：git 直装不跑构建脚本；推送前必须 build（含 typecheck 验证）。
 12. **明暗主题只认宿主**：`body[data-ds-dark-theme]`，禁用 `prefers-color-scheme`。

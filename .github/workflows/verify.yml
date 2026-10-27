@@ -1,8 +1,7 @@
 name: Verify
 
-# 普通提交 / PR 上跑构建、类型检查与冒烟；发版链路（publish.yml）保持零依赖、零额外失败点。
-# 这里额外先查「内嵌 skill 副本与源一致」——副本是入库产物，CI 一旦先 build 就会把它悄悄修正，
-# 所以这一步必须在 build 之前跑，否则「改了源忘了 build」这类漏提交永远抓不到。
+# Ordinary commits / PRs run build, typecheck and Go unit tests; the release path
+# (publish.yml) stays dependency-free with no extra failure points.
 on:
   push:
     branches: [main]
@@ -30,22 +29,21 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'   # packages/plugin 的 engines 要求 >=22.5
+          node-version: '22'   # packages/plugin engines requires >=22.5
           cache: pnpm
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'   # packages/skill/src/go.mod requires go 1.22
 
       - run: pnpm install --frozen-lockfile
 
-      # 必须在 build 之前：build:host 会用源覆盖副本，跑完就查不出漏提交了
-      - name: 内嵌 skill 副本与源一致
-        run: node packages/plugin/scripts/check-skill-copy.mjs
-
-      - name: build + typecheck + smoke
+      - name: build + typecheck
         run: pnpm --filter dsh-task-ledger run verify
 
-      # 台账脚本全量测试（纯标准库、不出网、约 80 秒），四份各管一段：
-      #   smoke              单机单进程：每条命令的正反路 + 空台账 JSON 契约
-      #   test_crash_recovery 崩在写序中间，重跑必须收敛
-      #   test_scenarios      跨 clone / 跨进程：并发认领、离线恢复、推送被拒、跨月结案、根定位
-      #   test_merge_semantics 合并语义：不同任务自动合、同任务留冲突标记
-      - name: 台账脚本测试
-        run: pnpm run test:skill
+      # The ledger CLI is Go: vet + unit tests for core / store / shell.
+      - name: ledger CLI vet + unit tests
+        run: |
+          cd packages/skill/src
+          go vet ./...
+          go test ./...

@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
  * （比原 host/script.js 深一层 ⇒ 相对路径多一级 `../`）。
  *
  * 这是个薄 shell 包装，按平台 exec `skill/scripts/bin/ledger-<os>-<arch>`（自带运行时的
- * 静态二进制）——所以本插件不再需要系统装 python。
- * 构建时 scripts/copy-skill.mjs 把 packages/skill 拷到 packages/plugin/skill/。
+ * 静态二进制）——所以本插件不需要系统装任何运行时。
+ * 构建时 scripts/copy-skill.mjs 把 packages/skill 的运行时拷到 packages/plugin/skill/。
  */
 const DEFAULT_SCRIPT_PATH = fileURLToPath(
 	new URL("../../../skill/scripts/progress", import.meta.url),
@@ -93,7 +93,7 @@ function exec(
 		child.on("error", (error: Error) => {
 			settle({
 				ok: false,
-				error: `起不了 python3（${error.message}）——本插件需要 python3 运行内嵌 skill 脚本`,
+				error: `起不了台账程序（${error.message}）——内嵌 skill 的二进制可能缺失或不可执行`,
 			});
 		});
 		child.on("close", (code: number | null) => {
@@ -137,7 +137,7 @@ export async function runLedgerScript<T = unknown>(
 }
 
 /**
- * 写命令（claim / set）：同样是 spawn python3，但**不解析 JSON**——这些子命令打的是人话，
+ * 写命令（claim / set）：同样是 spawn 入口脚本，但**不解析 JSON**——这些子命令打的是人话，
  * 成功与否看退出码，失败时 stderr 就是能直接上界面的人话。
  */
 export async function runLedgerCommand(

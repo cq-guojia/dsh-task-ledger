@@ -50,7 +50,7 @@ export function buildClosePrompt(input) {
         "请按顺序做完这三件，然后停下：",
         "1. 读过程文档的「背景 / 待办 / 下一步」，核对这次到底做了什么、还留了什么坑。",
         `2. 用 task-ledger skill 的脚本结案（在工作区目录下、原样执行这一条命令）：`,
-        `   python3 ${SKILL_SCRIPT} close --id ${input.taskId} --repo ${input.workspacePath} --summary "<一句话说清做成了什么、留了什么坑>"`,
+        `   ${SKILL_SCRIPT} close --id ${input.taskId} --repo ${input.workspacePath} --summary "<一句话说清做成了什么、留了什么坑>"`,
         "   `--summary` 是必填参数，不许编套话；命令报错就原样报告错误，不要自己绕过、不要手改台账文件。",
         "3. 收尾即结束——这就是本条消息的全部要求。",
         "",

@@ -1,10 +1,13 @@
 name: Publish to npm
 
 # 触发：按 tag 前缀分别发布两个包（单仓 pnpm workspaces 双包）。
-#   skill-v*  → packages/skill（task-ledger，零代码、无构建步骤）
-#   plugin-v* → packages/plugin（dsh-task-ledger，占位期无构建；有代码后补 install + build）
+#   skill-v*  → packages/skill（task-ledger，零构建步骤）
+#   plugin-v* → packages/plugin（dsh-task-ledger，dist 已入仓，不重构建）
 # 信任发布（OIDC）下无需 NPM_TOKEN；provenance 自动生成。
-# ⚠️ npm 发的版本以各包 package.json 的 version 为准，不打 tag 本身——打 tag 前先改版本号，两者必须一致。
+#
+# 版本真源只有一个：**git tag**。CI 从 tag 解析版本号并写进 package.json
+# （skill 另写 SKILL.md 头部那一行），不再依赖「打 tag 前记得改版本号」这种人肉对齐——
+# tag 叫什么，npm 上就是什么。
 # ⚠️ 每个包的 npm 侧 Trusted Publisher 均已按「GitHub Actions + 本仓 + publish.yml + Allow npm publish」配置。
 on:
   push:
@@ -30,6 +33,15 @@ jobs:
 
       - run: node --version && npm --version
 
+      # 版本号取自 tag：package.json 与 SKILL.md 头部两处都由这一行产出
+      - name: 版本号取自 tag
+        run: |
+          ver="${GITHUB_REF_NAME#skill-v}"
+          npm version "$ver" --no-git-tag-version --allow-same-version
+          sed -i "s/^version: .*/version: $ver/" SKILL.md
+          echo "发布版本：$ver"
+        working-directory: packages/skill
+
       # npm 信任发布已勾选「Allow npm publish」：npm 11+ 自动走 OIDC，无需 NPM_TOKEN。
       - run: npm publish --provenance
         working-directory: packages/skill
@@ -46,6 +58,13 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - run: node --version && npm --version
+
+      - name: 版本号取自 tag
+        run: |
+          ver="${GITHUB_REF_NAME#plugin-v}"
+          npm version "$ver" --no-git-tag-version --allow-same-version
+          echo "发布版本：$ver"
+        working-directory: packages/plugin
 
       # dist 已入仓（DSH 生态规则：git 直装、装完即用）⇒ CI 直接发布仓库内产物，不重构建。
       # 若要 CI 侧兜底构建（防漏 build），在此补 install + build 两步。

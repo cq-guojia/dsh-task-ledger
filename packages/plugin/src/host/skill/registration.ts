@@ -13,7 +13,7 @@ const SKILL_DIR = fileURLToPath(new URL("../../../skill", import.meta.url));
 const SKILL_DIR_TOKEN = "<本 SKILL.md 所在目录>";
 
 /** 台账入口绝对路径（提示词里直接给「原样执行这一条」的命令用；与注册共用同一份目录知识）。
- *  它是按平台选二进制的薄包装，不需要 python。 */
+ *  它是按平台选二进制的薄包装，不需要系统装任何运行时。 */
 export const SKILL_SCRIPT = `${SKILL_DIR}/scripts/progress`;
 
 /** 宿主 ctx.skills.register 的最小面（外部事实文档的结构面）。 */

@@ -46,7 +46,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（只�
 
 ## 四、工程与产物
 
-- `dist/` 入仓；`npm run build` = host(`clean-dist` → `tsc` → `sync-skill-version` → `copy-skill`) + client(`tsc --noEmit` → `tsdown`)。
+- `dist/` 入仓；`npm run build` = host(`clean-dist` → `tsc` → `copy-skill`) + client(`tsc --noEmit` → `tsdown`)。
 - 浏览器产物是 CJS 闭包工厂（`window.__ModuleLoader__.load`），平台模块必须保留成 `require()`，其余内联；dist 入仓产物守这条。
 - `npm run build` 打 `dist/`；无 DOM 依赖的纯逻辑模块允许剥类型直读源码直测。
 - **pnpm 只认 `pnpm-workspace.yaml`**，不读 `package.json` 的 `workspaces` 字段（后者留给 npm 生态）。改 workspace 结构别只改一处。

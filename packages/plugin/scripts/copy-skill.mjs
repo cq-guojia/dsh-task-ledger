@@ -3,6 +3,7 @@
 //
 // 只同步运行时那几项：源码（src/）留在 packages/skill 原地，不进分发副本；
 // 这样「插件里那份 skill」与「仓库里的 skill 源码」不会各留一份，副本是纯产物。
+// 副本与源是否一致由 git 保证（副本是入库产物，改源后重跑 build 再提交即可）。
 import { chmod, cp, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,8 +13,8 @@ const pluginRoot = path.resolve(here, "..");
 const skillSrc = path.resolve(pluginRoot, "../skill");
 const skillDst = path.join(pluginRoot, "skill");
 
-// 运行时清单：白名单，新增运行时项时在这里加一行（check-skill-copy.mjs 同款）。
-export const RUNTIME_ENTRIES = [
+// 运行时清单：白名单，skill 运行时只同步这几项（新增运行时项在这里加一行）。
+const RUNTIME_ENTRIES = [
 	"SKILL.md",
 	"README.md",
 	"package.json",

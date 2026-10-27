@@ -1,6 +1,6 @@
 {
 	"name": "dsh-task-ledger",
-	"version": "0.0.102",
+	"version": "0.0.103",
 	"description": "Task ledger board for dsh (DeepSeek Harness): read-only board over task-ledger skill workspaces. The task-ledger skill is bundled — install the plugin, get the skill globally.",
 	"keywords": [
 		"deepseek",
@@ -25,7 +25,7 @@
 	],
 	"scripts": {
 		"build": "npm run build:host && npm run build:client",
-		"build:host": "node scripts/clean-dist.mjs && tsc && node scripts/sync-skill-version.mjs && node scripts/copy-skill.mjs",
+		"build:host": "node scripts/clean-dist.mjs && tsc && node scripts/copy-skill.mjs",
 		"build:client": "tsc --noEmit -p tsconfig.client.json && tsdown --config tsdown.client.config.ts",
 		"typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
 		"verify": "npm run build && npm run typecheck"

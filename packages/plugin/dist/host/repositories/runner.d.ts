@@ -47,7 +47,7 @@ export interface RunOptions {
  */
 export declare function runLedgerScript<T = unknown>(sub: string, args: readonly string[], opts?: RunOptions): Promise<LedgerScriptResult<T>>;
 /**
- * 写命令（claim / set）：同样是 spawn python3，但**不解析 JSON**——这些子命令打的是人话，
+ * 写命令（claim / set）：同样是 spawn 入口脚本，但**不解析 JSON**——这些子命令打的是人话，
  * 成功与否看退出码，失败时 stderr 就是能直接上界面的人话。
  */
 export declare function runLedgerCommand(sub: string, args: readonly string[], opts?: RunOptions): Promise<LedgerCommandResult>;

@@ -3627,7 +3627,7 @@ window.__ModuleLoader__.load({
 		const TREND_TIMEOUT_MS = 3e4;
 		/**
 		* 错误响应榨人话：host 路由（routes.ts）发的是 `{ error: "..." }`，那里的话是**能直接上界面的**
-		* （带工作区名、python3 起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
+		* （带工作区名、台账程序起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
 		*/
 		function httpErrorMessage(status, body) {
 			try {
@@ -4883,8 +4883,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.102 · 261027-164833-849`
-			}, `v0.0.102 261027-164833-849`))), (0, react.createElement)("div", { style: {
+				title: `v0.0.103 · 261027-165348-319`
+			}, `v0.0.103 261027-165348-319`))), (0, react.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-2)"
