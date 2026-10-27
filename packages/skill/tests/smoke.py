@@ -38,7 +38,8 @@ def run(repo: Path, *args: str) -> subprocess.CompletedProcess:
         capture_output=True,
         text=True,
         cwd=str(repo),
-        env={**os.environ, "TASK_LEDGER_HOME": str(home)},
+        # 固定时区：时间断言要可重复（存盘 UTC / 出门本机时区的换算要能验）
+        env={**os.environ, "TASK_LEDGER_HOME": str(home), "TZ": "Asia/Shanghai"},
         check=False,
     )
 
@@ -466,6 +467,45 @@ def main() -> int:
             r.stdout + r.stderr,
         )
         shutil.rmtree(list_home, ignore_errors=True)
+
+        # 时间口径：存盘一律 UTC，出门（--json 与人话）一律本机时区 —— 调用方不用再转
+        tzrepo = Path(tempfile.mkdtemp(prefix="ledgerkit-tz-"))
+        try:
+            r = run(
+                tzrepo,
+                "new",
+                "--title",
+                "时间口径",
+                "--created",
+                "2026-01-05 10:00:00",
+                "--self",
+            )
+            check("带 --created 建任务退出码 0", r.returncode == 0, r.stderr)
+            r = run(tzrepo, "list", "--json")
+            rows = json.loads(r.stdout) if r.returncode == 0 else {}
+            tid_tz = next(iter(rows), "")
+            check(
+                "list --json 的 created 是本机时区（与传入的一致）",
+                rows.get(tid_tz, {}).get("created") == "2026-01-05 10:00:00",
+                r.stdout,
+            )
+            shard_text = next(
+                iter((tzrepo / "ledger" / "owners").glob("*.json"))
+            ).read_text(encoding="utf-8")
+            check(
+                "分片里存的是 UTC（本机 10:00 → 存 02:00）",
+                '"2026-01-05 02:00:00"' in shard_text,
+                shard_text[:200],
+            )
+            r = run(tzrepo, "show", "--id", tid_tz, "--json")
+            shown = json.loads(r.stdout) if r.returncode == 0 else {}
+            check(
+                "show --json 的 created 也是本机时区",
+                shown.get("task", {}).get("created") == "2026-01-05 10:00:00",
+                r.stdout[:300] + r.stderr,
+            )
+        finally:
+            shutil.rmtree(tzrepo, ignore_errors=True)
 
         # 空台账契约（ledger-data.md §七）：没有任何历史文件时，--json 仍必须是 JSON。
         # 这条一破，插件把「输出不是 JSON」当失败 ⇒ 一个空工作区就能让整块看板 500（2026-10-17 真机）。

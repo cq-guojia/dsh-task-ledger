@@ -52,6 +52,23 @@ def _json(data: Any) -> None:
     sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
 
+#: 任务 / 历史行里要转本机时区的时间字段（存盘一律 UTC，出门一律本机时区）。
+TIME_FIELDS = ("created", "started", "updated", "finished")
+
+
+def localize_times(data: dict) -> dict:
+    """复制一份，把上面四个时间字段转成本机时区；其余字段原样。
+
+    **只动这四个**：任务号里嵌的时间戳、过程文档正文里的时间都不动（原文照旧）。
+    """
+    out = dict(data)
+    for key in TIME_FIELDS:
+        value = out.get(key)
+        if value:
+            out[key] = fmt_local(value)
+    return out
+
+
 def result(res: Result, *, as_json: bool) -> None:
     """写动作：一律人话（`--json` 不挂写动作，传进来也按人话打）。"""
     del as_json
@@ -72,7 +89,7 @@ def result(res: Result, *, as_json: bool) -> None:
 
 def list_view(res: ListResult, q: ListQuery | None, *, as_json: bool) -> None:
     if as_json:
-        _json({tid: task for tid, task in res.rows.items()})
+        _json({tid: localize_times(task) for tid, task in res.rows.items()})
         return
     if not res.table:
         _out("没有符合条件的在办任务。")
@@ -109,7 +126,7 @@ def show_view(res: ShowResult, *, as_json: bool) -> None:
     if as_json:
         _json(
             {
-                "task": res.task,
+                "task": localize_times(res.task),
                 # 文档自述还是回退查在办：调用方据此知道字段来源（老文档 / 文档缺失）
                 "legacy": res.legacy,
                 "worklog": {
@@ -148,11 +165,15 @@ def history_view(res: HistoryResult, q: HistoryQuery | None, *, as_json: bool) -
         _json({"count": res.count, "capped": res.capped})
         return
     if as_json:
+        filters = dict(res.filters)
+        for key in ("since", "until"):
+            if filters.get(key):
+                filters[key] = fmt_local(filters[key])
         _json(
             {
                 "count": res.count,
-                "filters": res.filters,
-                "records": list(res.records),
+                "filters": filters,
+                "records": [localize_times(row) for row in res.records],
                 "warnings": list(res.warnings),
                 "capped": res.capped,
             }

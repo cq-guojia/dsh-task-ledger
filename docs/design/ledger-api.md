@@ -90,7 +90,7 @@ packages/skill/scripts/
     │   │                         不许接收"一整条任务"当参数（吃了整条就会开始判 owner/status）。
     │   │
     │   ├── time.py            ← 本地时间和 UTC 互转、补零、格式化给人看。
-    │   │                         所有存盘时间都是 UTC，所有人话显示都过这里转本地。
+    │   │                         存盘一律 UTC；对外输出（人话与 --json）都过这里转本机时区。
     │   ├── paths.py           ← 路径怎么拼：某人的分片文件叫什么名、某月的历史放哪、
     │   │                         某月的 worklog 放哪、任务号怎么变成文件名。
     │   ├── ids.py             ← 任务号：从标题生成「日期-时分-标题-四位随机」、查重、形态校验。
@@ -624,6 +624,7 @@ def validate(repo, me, deep: bool = False) -> ValidationReport
 
 - **`list --json` 吐的是 `rows`（原始任务对象 + `mine`），不是 `TaskRow`**：看板要 `worklog` / `creator` / `updated` / `finished` 这些字段，`TaskRow` 只给人看的表格。
 - **`mine` 是动作层现算、不落盘**：`row["mine"] = is_mine(row, me)`，只比 uuid（2026-10-27 拍板）；调用方不必自己拿本机 uuid 再比一次，也不用读 `~/.taskledger/identity.json`。
+- **动作层的时间字段一律是存的 UTC**，转本机时区只在外壳输出时做一次（`render.localize_times`）：`created` / `started` / `updated` / `finished` 四个字段在人话与 `--json` 里都是本机时区；任务号里嵌的时间戳、过程文档正文**不转**。筛选与排序始终用 UTC 原值，别拿转好的值去比。
 - **`rows` 的来源就是各份台账的 `TaskStore.data()["tasks"]` 按合并顺序拼起来**：除 `mine` 外不增字段、不改名、不做任何转换——里面的 `worklog` 仍是磁盘原值（相对 `ledger/`，见 §五 的基准约定），别在动作层偷偷改成相对 repo。
 - **`list_tasks` 的合并顺序定死**：先池、再按索引键排序的各分片，同一任务号由分片那份胜出（见 `ledger-data.md` §八）。顺序不确定会让同一份数据两次查给出不同结果。
 - **`show_task` 是「文档优先」**：先 `WorklogStore.find(tid)` 读文档，头部有状态行 ⇒ 直接拿它回答 `status` / 负责人 / 更新时间 / 标题，**pool、分片、历史一个都不读**（已结案任务同样看得到）；没有状态行（老文档）或没有文档 ⇒ 回退 `load_task` 查在办并标 `legacy=True`；两处都没有才 `Fail`（文案与既往一致）。
@@ -749,7 +750,7 @@ class ActionSpec:
 五条必须守住的：
 
 - **路径基准只有一个约定**：磁盘与 JSON 里存的路径**相对 `ledger/`**（格式契约，如 `task["worklog"]`）；凡是输出给人或给界面的（`Result.where`、`WorklogView.path`、`payload` 里所有 `*_path`）**一律相对 repo**。换算只在 `core/paths.py` 的 `to_repo_rel` / `to_ledger_rel` / `to_history_rel` 三处做，任何层都不许自己拼 `..`。
-- **存盘时间一律 UTC，没有例外**：台账 JSON、history 行、过程文档的「创建」行 / 「状态」行 / 封卷行 / **每条执行记录行**都写 UTC（`worklog_md.exec_line(when, …)` 原样拼，不转时区；调用方一律传 `now()` 的 UTC，别在外面先转一遍）。**转本地只发生在输出层**：`render.fmt_local` 把 UTC 转成查看者本地时间，只用于 `list` / `history` / `show` 的人话输出，`--json` 一律原样给 UTC。存量老数据的执行记录行（`4ee6268` 之前）是写入者本地时间且无标记，与 UTC 行混在存量文档里无法区分 —— 已知例外，脚本不猜。
+- **存盘一律 UTC、出门一律本机时区**：台账 JSON、history 行、过程文档的「创建」行 / 「状态」行 / 封卷行 / 每条执行记录行都写 UTC（`worklog_md.exec_line(when, …)` 原样拼，不转时区；调用方一律传 `now()` 的 UTC，别在外面先转一遍）。**转本地只发生在输出层**：`render.localize_times` 把任务 / 历史行的 `created` / `started` / `updated` / `finished` 过 `fmt_local`，**人话输出与 `--json` 用同一份转换结果**，调用方拿到就能显示、不必再转。过滤入参（`--since` / `--until` / `--created` / `--finished`）按本机墙钟给，外壳 `to_utc` 转 UTC 后再比较 / 落盘。**过程文档正文原样返回**（`show --json` 的 `worklog.text` 不动）。存量老数据的执行记录行（`4ee6268` 之前）是写入者本地时间且无标记，与 UTC 行混在存量文档里无法区分 —— 已知例外，脚本不猜。
 - **身份只有 `uuid` 一个键**。`env.py` 只读本机身份文件（`$TASK_LEDGER_HOME/.taskledger/identity.json`，默认 `~/.taskledger/identity.json`），不读 git、不读环境变量、没有兜底。名字（`name`）只用于显示与 `--owner-name` 模糊筛，**不参与任何归属判定**；分片、历史行、`--owner` / `--mine` 一律比 uuid。
 - **对外只留 `whoami` 一个身份出口**（2026-10-27 拍板）：`env.read_identity()` 未初始化时安静返回 `None`，`whoami --json` 把它翻成 `{"uuid": null, "name": null}` 并退 0。插件 / 看板一律走这条命令，**不许自己读 `identity.json` 解析**（那是扒宿主机实现细节）。
 - **名字落盘用哪个串，看落点**：`Identity.label()` = 名字（只给人看：报错文案、界面）；`Identity.stamp()` = `名字 · uuid`（**过程文档三处落点**——头部创建行、封卷行、每条执行记录）。两者都**不带 `@`**，`@` 由落点自己加（模板创建行是 `（@<creator>）`、`exec_line` 拼 ` · @{who} · `）。过程文档是最终产物，创建人和封卷人可能不是同一个人、也可能中途改名，所以**名字和 uuid 都要留**，不靠历史表回链。

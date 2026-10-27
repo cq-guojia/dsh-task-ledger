@@ -24,7 +24,12 @@ close             → 历史层 + 封卷 + 移出自己名下
 - **只在补录过去时间时传**：`new --created`、`close --finished`。格式 `YYYY-MM-DD[ HH:MM[:SS]]`，按本地墙钟给、脚本内部转 UTC。`new --created` 补录时 `updated` 一并等于该时间 —— 之后补一条 `log` 把 `updated` 刷回当前。
   - 注意：任务号前缀与 worklog 月份目录按 **UTC** 推 —— UTC+8 下裸日期 `--created 2026-01-05` 存成 `2026-01-04 16:00:00`，任务号前缀变成 `20260104-1600`；临午夜补录要连时间一起传。
 - **筛选语义**：`list` 的 `--since` / `--until` 按**创建时间**；`history` 的按**结案时间**（历史文件按结案月归档，按创建时间比较会漏「上月建、本月结」的记录）。只给日期时起 = 当天 `00:00:00`、止 = 当天 `23:59:59`（含当天）。
-- **时区**：**存盘一律 UTC** —— 任务号、worklog 目录 / 文件名、台账 JSON 的 `created`/`started`/`updated`/`finished`、history 行、worklog 头部「创建」行与「状态」行、封卷行、**每条执行记录行**（`worklog_md.exec_line` 原样写调用方给的 UTC）。**只有给人看的输出转本地**：`list` / `history` / `show` 的人话输出走 `fmt_local`；`--json` 原样给 UTC，由消费方自己转。存量老数据写的是写入者本地时间、无标记，无法与 UTC 区分（JSON 是 2026-10-22 前，执行记录行是 2026-10-27 前）。
+- **时区**：**存盘一律 UTC，出门一律本机时区**。
+  - 存盘：任务号、worklog 目录 / 文件名、台账 JSON 的 `created`/`started`/`updated`/`finished`、history 行、worklog 头部「创建」行与「状态」行、封卷行、每条执行记录行。
+  - 出门：`list` / `show` / `history` 的输出（人话表格与 `--json` 同一个值）都是本机时区，**拿到的就是能直接显示的**，不要再转。
+  - 进门：`--since` / `--until` / `--created` / `--finished` 按本机墙钟给，脚本内部转 UTC 再比较 / 落盘；除这四个参数没有任何地方要调用方传时间。
+  - **过程文档正文不动**：`show --json` 的 `worklog.text` 是原文，里面的时间是当时写进去的 UTC。
+  - 存量老数据写的是写入者本地时间、无标记，无法与 UTC 区分（JSON 是 2026-10-22 前，执行记录行是 2026-10-27 前）。
 - **history 文件 11 列**：结案时间 / 创建时间 / 工作包（= `new --title` 的任务标题）/ 分类 / 标签 / owner / owner_name / creator / creator_name / 摘要 / 过程文档；排序与 `--since` / `--until` 按**结案时间**。（`history` 命令的人话输出只展示其中几列：结案时间、负责人、标题。）
 - **owner / creator 两列存的是 uuid**（与任务里一致，身份只认 uuid）；紧随其后的 `owner_name` / `creator_name` 两列**落盘**结案那一刻的显示名 —— 改名不回写旧行，看历史看到的就是当时那个名字。老行（升级前落的）没有名字时按名册兜底补一次展示值，**不回写文件**。
 

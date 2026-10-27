@@ -2,7 +2,8 @@
 
 进门规则：不读文件、不写文件、不打印；只依赖 errors。
 所有**存盘**时间都是 UTC（`YYYY-MM-DD HH:MM:SS`，不带偏移量）；
-所有**人话显示**都过 `fmt_local`；`--json` 原样吐 UTC。
+所有**对外输出**（人话表格与 `--json`）的时间字段都过 `fmt_local` 转本机时区，
+内部筛选 / 排序一律用存盘的 UTC —— 调用方拿到的时间不用再转。
 """
 
 from __future__ import annotations
