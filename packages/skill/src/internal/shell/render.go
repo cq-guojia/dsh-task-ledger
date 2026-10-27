@@ -8,8 +8,8 @@ import (
 
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/actions"
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/core"
-	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/notices"
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/jsonfmt"
+	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/notices"
 )
 
 // 唯一打印处。一个返回类型一个函数，不做统一分发；也不 flush。

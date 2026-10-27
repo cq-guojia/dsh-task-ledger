@@ -22,3 +22,6 @@ func (t *termState) restore() {}
 func (t *termState) setReadTimeout(on bool) {}
 
 func (t *termState) readKey() key { return keyCancel }
+
+// promptLineRaw 这份平台没有终端交互能力，走普通行读。
+func promptLineRaw(prompt string) (string, bool, bool) { return "", false, false }

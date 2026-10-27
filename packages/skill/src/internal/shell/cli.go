@@ -804,8 +804,12 @@ func confirm(question string) bool {
 
 var stdinReader = bufio.NewReader(os.Stdin)
 
-// promptLine 打提示（不换行，与 input() 同形）再读一行；ok=false 表示 EOF / Ctrl-D。
+// promptLine 打提示（不换行，与 input() 同形）再读一行；ok=false 表示 EOF / Ctrl-D / ESC 取消。
+// 终端里走 raw 逐键读（ESC 取消、Backspace 退格）；拿不到 raw 终端才退回普通行读。
 func promptLine(prompt string) (string, bool) {
+	if line, ok, handled := promptLineRaw(prompt); handled {
+		return line, ok
+	}
 	os.Stdout.WriteString(prompt)
 	line, err := stdinReader.ReadString('\n')
 	if err != nil && line == "" {

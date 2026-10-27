@@ -3,7 +3,9 @@
 package shell
 
 import (
+	"os"
 	"syscall"
+	"unicode/utf8"
 	"unsafe"
 )
 
@@ -138,4 +140,60 @@ func (t *termState) readKey() key {
 		return keyCancel
 	}
 	return keyNone
+}
+
+// promptLineRaw 在 raw 模式逐键读一行：ESC / Ctrl-C 取消，Enter 确认，Backspace 退格。
+// 返回 (读到的内容, 是否确认, 是否由本函数处理)；handled=false 表示拿不到 raw 终端
+// （非终端 / raw 失败），调用方退回普通行读。
+func promptLineRaw(prompt string) (string, bool, bool) {
+	fd := int(os.Stdin.Fd())
+	state, err := makeRaw(fd)
+	if err != nil {
+		return "", false, false
+	}
+	defer state.restore()
+
+	os.Stdout.WriteString(prompt)
+	var buf []byte
+	for {
+		ch, ok, err := readOne(fd)
+		if err != nil || !ok {
+			os.Stdout.WriteString("\n")
+			return "", false, true
+		}
+		switch ch {
+		case 0x1b:
+			// 单独 ESC = 取消；ESC [ / ESC O 开头的方向键序列吞掉（输入名字用不上方向键）
+			state.setReadTimeout(true)
+			next, gotNext, _ := readOne(fd)
+			state.setReadTimeout(false)
+			if gotNext && (next == '[' || next == 'O') {
+				readOne(fd) // 吞掉方向键的第三个字节
+				continue
+			}
+			os.Stdout.WriteString("\n")
+			return "", false, true
+		case '\r', '\n':
+			os.Stdout.WriteString("\n")
+			return string(buf), true, true
+		case 0x03: // Ctrl-C
+			os.Stdout.WriteString("\n")
+			return "", false, true
+		case 0x7f, 0x08: // Backspace / Ctrl-H
+			if len(buf) == 0 {
+				continue
+			}
+			_, size := utf8.DecodeLastRuneInString(string(buf))
+			if size <= 0 {
+				size = 1
+			}
+			buf = buf[:len(buf)-size]
+			for i := 0; i < size; i++ {
+				os.Stdout.WriteString("\b \b") // 一个字节一格，中文两格正好
+			}
+		default:
+			buf = append(buf, ch)
+			os.Stdout.WriteString(string(ch))
+		}
+	}
 }
