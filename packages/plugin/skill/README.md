@@ -31,8 +31,10 @@
 直接跑：
 
 ```bash
-python3 <SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <工作区根>
+<SKILL.md 所在目录>/scripts/progress <子命令> --repo <工作区根>
 ```
+
+`scripts/progress` 按平台 exec `scripts/bin/ledger-<os>-<arch>`（静态二进制；已带 linux/amd64、darwin/arm64 与 windows/amd64）。
 
 子命令：`new` `claim` `set` `log` `close` `list` `history` `show` `whoami` `validate`。命令参考（参数 / 一句话 / 举例）、任务生命周期、纪律（数据完整性 / 人类授权 / 故障处置）全在 `SKILL.md`；参数细节看 `<子命令> --help`（不要凭记忆编）。
 
@@ -46,4 +48,4 @@ python3 <SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <工作�
 
 ## 本仓自己的台账
 
-本仓库（`dsh-task-ledger`）也用 ledgerkit 管自己的活，台账数据在 `ledger/`；它和本 skill 源码 `packages/skill/` 是两回事 —— **改 skill 请别动 `ledger/`**。
+本仓库（`dsh-task-ledger`）也用自己的这套脚本（`scripts/progress` → `go/` 二进制）管自己的活，台账数据在 `ledger/`；它和本 skill 源码 `packages/skill/` 是两回事 —— **改 skill 请别动 `ledger/`**。

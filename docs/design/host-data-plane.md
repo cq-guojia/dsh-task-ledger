@@ -10,7 +10,7 @@
 
 | 层 | 文件 | 职责 | 状态 |
 |---|---|---|---|
-| 进程出口 | `repositories/runner.ts` | 全插件唯一 `spawn('python3')`，不解析台账格式 | ✅ |
+| 进程出口 | `repositories/runner.ts` | 全插件唯一 `spawn(台账程序)`（`skill/scripts/progress`，按平台 exec 内嵌二进制），不解析台账格式 | ✅ |
 | 台账读取 | `repositories/ledger.repository.ts` | 判台账存在（`hasLedger`）、读在办（pool.json + 分片）、读 history/worklog | ✅ |
 | 聚合层 | `services/*`（如 `home.service.ts`） | 统计/趋势/周期，纯计算 | ✅ |
 | 兼容壳 | `board.ts` | 拆端点后过渡组合壳，首屏转调 `services/home.service.ts::getSnapshot()` | ⚠️ 临时期 |
@@ -20,7 +20,7 @@
 
 ### 1.2 IO 散点（2026-10-24 复核；行号随重构已变，以下只列文件）
 
-台账相关的 `spawn('python3')` 唯一落在 `repositories/runner.ts`；台账/分片/worklog 读取集中在 `repositories/ledger.repository.ts`；工作区判活在 `workspace.ts`（`existsSync('ledger/pool.json')`）；SKILL.md 读取在 `skill/registration.ts`。原 §1.2 的 `script.ts`/`ledger-read.ts`/`skill-registration.ts` 等旧文件名与行号对应重构前结构，已失效（现状以 `packages/plugin/src/host/` 为准）。
+台账相关的 `spawn` 唯一落在 `repositories/runner.ts`（起内嵌 `skill/scripts/progress`，静态二进制）；台账/分片/worklog 读取集中在 `repositories/ledger.repository.ts`；工作区判活在 `workspace.ts`（`existsSync('ledger/pool.json')`）；SKILL.md 读取在 `skill/registration.ts`。原 §1.2 的 `script.ts`/`ledger-read.ts`/`skill-registration.ts` 等旧文件名与行号对应重构前结构，已失效（现状以 `packages/plugin/src/host/` 为准）。
 
 ### 1.3 三个健壮性缺口
 
@@ -48,7 +48,7 @@ fixture：`/tmp/perf3` = 空在办 + `history/202610.md` 50002 行 / 6.6MB（5 �
 **结论（推翻两个想当然）**：
 
 1. `--months` 是**文件级**过滤（只读最近 N 个月的文件）——5 万行全在单文件里时，缩窗口救不了；
-2. `--since/--until/--limit` 是 **Python 解析之后**过滤——解析整个文件的钱已经付掉，只省后面的传输；
+2. `--since/--until/--limit` 是 **脚本解析之后**过滤——解析整个文件的钱已经付掉，只省后面的传输；
 3. 单文件 5 万行的**解析硬成本 ≈ 0.9s**（`--count-only` 118ms 反证：其余 900ms 是 5 万条 JSON 的序列化 + stdout 传输 + Node 端 parse）；
 4. 首屏 `/board` 慢 = `getHomeAggregate` 白读 history：统计卡与在办列表**只需要 readTasks（91ms）**，history 只服务于趋势图与周期计数。
 
@@ -62,12 +62,12 @@ repositories/        数据访问层：**唯一知道「台账怎么读」的地
   identity.repository  读本机 identity.json 的 uuid（机器级；与工作区 / git 无关）
   records.ts           入口校验：脚本 JSON → 领域对象（含 finished/title/worklog → time/workpackage/log），坏数据抛 LedgerDataError
   cache.ts             TTL 读缓存 + 单飞去重 + invalidate() 钩子
-  runner.ts            = 现 script.ts，全插件唯一 spawn python3
+  runner.ts            = 现 script.ts，全插件唯一 spawn 台账程序（内嵌静态二进制）
 workspace.ts         调 ledger.repository.hasLedger()，不再自己 existsSync
 errors.ts            统一错误模型 + 降级结果类型（横切）
 ```
 
-**降级语义**（用户 2026-10-18 确认）：读失败 = ①台账（pool.json + 分片）坏 JSON / 缺字段 ②脚本非零退出 ③python3 起不来 ④超时。四种都记 `degraded:true + 原因`，接口仍 200，前端把该工作区**标红 + 警告**，其他工作区不受影响。
+**降级语义**（用户 2026-10-18 确认）：读失败 = ①台账（pool.json + 分片）坏 JSON / 缺字段 ②脚本非零退出 ③台账程序起不来（本平台无产物 / 丢了可执行位） ④超时。四种都记 `degraded:true + 原因`，接口仍 200，前端把该工作区**标红 + 警告**，其他工作区不受影响。
 
 **缓存语义**（用户已接受）：TTL 1.5s + `fresh=1` 绕过 + 写路径成功后 `invalidate()`（写路径归任务 4，未拍板前缓存无正确性风险）。
 
@@ -105,7 +105,7 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 |---|---|---|---|---|
 | A | 拆端点：`/board` 只回在办快照+统计卡；趋势改 `/board/trend` 按需拉 | 4429ms → **527ms** | 响应结构变化；新旧版本错配要兜底（v0.0.15 黑屏教训） | **必做** |
 | B | 缓存 TTL 1.5s + 单飞去重 + `fresh=1` 绕过 + 写路径 `invalidate()` | 重复访问 → ~0ms | 低 | 与 A 叠加 |
-| C | 脚本聚合模式：`progress.py history` 直接按周回分组计数 | 趋势也变快 | **改 skill 独立分包 = 跨包契约** | 挂起，等真出现病态大文件再做 |
+| C | 脚本聚合模式：`progress history` 直接按周回分组计数 | 趋势也变快 | **改 skill 独立分包 = 跨包契约** | 挂起，等真出现病态大文件再做 |
 | D | `RECENT_MONTHS 13 → 2`（首页趋势窗口） | 老库场景有效 | ⚠️ **会少算** | ❌ **否决**（2026-10-18 评审改口：`--months` 是文件级过滤，8 周桶在月初会横跨 3 个自然月，缩到 2 会静默漏掉更早文件里本月结案的记录 ⇒ 趋势与周期卡少算；保持 13） |
 
 缓存实现口径（三条，无黑魔法）：①进程内 `Map`，key = `op:workspace:filter`，值 = 结果 + 时间戳；②命中且 1.5s 内直接返回不起进程，同 key 并发单飞；③`fresh=1` 绕过缓存，写路径成功后 `invalidate(workspaceId)`。

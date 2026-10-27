@@ -18,10 +18,9 @@
 | 数据库说明 | `docs/design/ledger-data.md`（本项目的「数据」= 各工作区台账文件，插件只读、不自建数据库） |
 | 样式规范 | `docs/design/ui-style.md` |
 | 方法规范 | `docs/design/code-conventions.md`（client 半分层 + 脚本侧两层（L1 / L2 / 外壳）、铁律与防塌线；宿主接口核实方法写在各 `external/` **宿主接口**文档的「复核方式」节，`publish-oidc.md` 是发布链路、无此节） |
-| 接口契约 | `docs/design/ledger-api.md`（完全重构后的目录树 + 每文件职责 + 逐方法参数与返回 + 现状符号对照 + 防塌线） |
+| 接口契约 | `docs/design/ledger-api.md`（Go 实现的目录树 + 每层方法签名与职责 + 可机械检查的准入 `grep` 表 + 改完必跑的防塌线清单 + 命令行参数映射） |
 | 后端数据面 | `docs/design/host-data-plane.md`（host 三层架构、降级/缓存语义、性能实测基线与优化路线） |
-| 测试与验收判据 | `docs/design/code-conventions.md` 的「防塌线」节（判据 + 基线数字 + 口径）、`npm run verify`（build + typecheck） |
-| 迁移手册 | `docs/history-creator-upgrade.md`（存量 history 9 列 → 11 列的一次性升级步骤：补 `owner_name` / `creator_name` 两列，一次性文档，不随版本维护） |
+| 测试与验收判据 | `docs/design/ledger-api.md` §〇（分层准入 `grep`，全为 0）+ §七（`go vet` / `go test` / 三平台编译）、`npm test`、`npm run verify`（build + typecheck） |
 | 样例 | 不适用（无独立样例产出；台账文件的真实样例直接看本仓 `ledger/history/202610.md` 与 `ledger/worklog/202610/`） |
 
 ## 二、本项目补充的写作约定

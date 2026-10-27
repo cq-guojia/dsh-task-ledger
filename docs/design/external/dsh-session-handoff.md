@@ -30,13 +30,13 @@
 
 ## 三、预置提示词模板（看板按钮用）
 
-> **写入路径已定（2026-10-18，B 案按动作分流）**：认领 / 释放 / 移交由 host 代跑 `progress.py`（不开会话）；**只有「继续」和「结束」起会话**。本节只保留会话那两个模板。定案理由见 [`../architecture.md`](../architecture.md) 不变量 1。
+> **写入路径已定（2026-10-18，B 案按动作分流）**：认领 / 释放 / 移交由 host 代跑 `progress`（不开会话）；**只有「继续」和「结束」起会话**。本节只保留会话那两个模板。定案理由见 [`../architecture.md`](../architecture.md) 不变量 1。
 
 ### 会话创建的三条硬事实（落地必守）
 
 | 事实 | 后果 |
 |---|---|
-| `agents.create` 不 mount preset ⇒ agent 落到「空的全局层」，只有根作用域的东西，**fs / bash 全无** | 必须在 `setup(agentCtx)` 里 `agentPresets.mount(agentCtx, presetId)`，并把 `presetId` 写进 `meta.agentPreset`；不挂 = 模型连 `progress.py` 都跑不了 |
+| `agents.create` 不 mount preset ⇒ agent 落到「空的全局层」，只有根作用域的东西，**fs / bash 全无** | 必须在 `setup(agentCtx)` 里 `agentPresets.mount(agentCtx, presetId)`，并把 `presetId` 写进 `meta.agentPreset`；不挂 = 模型连 `progress` 都跑不了 |
 | `agentOptions.provider/model` 缺省 **≠** 走宿主默认 | 用户不选模型时由插件读 `ctx.get('agentDefaultModel').currentSelection()` 补；补不到就报错，不建会话 |
 | `meta.cwd` 只决定会话 cwd，**不会**自动归进工作区 | 建完要调该工作区实体的 `attachSession(sessionId)`，否则侧栏找不到这个会话 |
 
@@ -57,7 +57,7 @@
 >
 > 1. 读过程文档的「背景 / 待办 / 下一步」，核对这次到底做了什么、还留了什么坑。
 > 2. 用 task-ledger skill 的脚本结案（在工作区目录下、原样执行这一条命令）：
->    `python3 <SKILL_DIR>/scripts/progress.py close --id <id> --repo <工作区> --summary "<一句话说清做成了什么、留了什么坑>"`
+>    `<SKILL_DIR>/scripts/progress close --id <id> --repo <工作区> --summary "<一句话说清做成了什么、留了什么坑>"`
 >    `--summary` 是必填参数，不许编套话；命令报错就原样报告错误，不要自己绕过、不要手改台账文件。
 > 3. 收尾即结束——这就是本条消息的全部要求。
 >

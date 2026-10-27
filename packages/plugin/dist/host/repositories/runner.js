@@ -1,11 +1,14 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 /**
- * 内嵌 skill 脚本的默认路径：dist/host/repositories/runner.js → 包根 skill/scripts/progress.py
+ * 内嵌 skill 入口的默认路径：dist/host/repositories/runner.js → 包根 skill/scripts/progress
  * （比原 host/script.js 深一层 ⇒ 相对路径多一级 `../`）。
+ *
+ * 这是个薄 shell 包装，按平台 exec `skill/scripts/bin/ledger-<os>-<arch>`（自带运行时的
+ * 静态二进制）——所以本插件不再需要系统装 python。
  * 构建时 scripts/copy-skill.mjs 把 packages/skill 拷到 packages/plugin/skill/。
  */
-const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL("../../../skill/scripts/progress.py", import.meta.url));
+const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL("../../../skill/scripts/progress", import.meta.url));
 /** 单次脚本调用超时上限（ms）。实测单仓 5 万行全量 1.2s，10s 是宽松上限。 */
 const DEFAULT_TIMEOUT_MS = 10_000;
 /**
@@ -16,14 +19,14 @@ const DEFAULT_TIMEOUT_MS = 10_000;
  */
 export const WRITE_TIMEOUT_MS = 180_000;
 /**
- * 起一次 python3、收 stdout / stderr。出错一律归一成人话（起不了 python3 / 超时 / 非零退出）。
+ * 起一次台账程序、收 stdout / stderr。出错一律归一成人话（起不了程序 / 超时 / 非零退出）。
  * 解析留给调用方：读命令要 JSON，写命令要原文。
  */
 function exec(sub, args, opts) {
     const scriptPath = opts?.scriptPath ?? DEFAULT_SCRIPT_PATH;
     const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     return new Promise((resolve) => {
-        const child = spawn("python3", [scriptPath, sub, ...args], {
+        const child = spawn(scriptPath, [sub, ...args], {
             cwd: opts?.cwd,
             stdio: ["ignore", "pipe", "pipe"],
         });
@@ -60,7 +63,7 @@ function exec(sub, args, opts) {
             if (code !== 0) {
                 settle({
                     ok: false,
-                    error: stderr.trim() || `skill 脚本退出码 ${String(code)}`,
+                    error: stderr.trim() || `台账程序退出码 ${String(code)}`,
                 });
                 return;
             }
@@ -69,7 +72,7 @@ function exec(sub, args, opts) {
     });
 }
 /**
- * 读命令：spawn python3 跑内嵌 skill 脚本，收 stdout JSON。
+ * 读命令：跑内嵌台账程序，收 stdout JSON。
  * 不解析任何台账格式——解析真源只有 skill 脚本一份（2026-10-17 用户拍板）。
  *
  * @param sub - 子命令（list / history / show…）
@@ -101,7 +104,7 @@ export async function runLedgerCommand(sub, args, opts) {
     if (!result.ok)
         return result;
     const output = result.stdout.trim();
-    // 退出码 0 但 stderr 有字 = 写成功、同步失败（progress.py 的既定行为），必须带出去
+    // 退出码 0 但 stderr 有字 = 写成功、同步失败（台账程序的既定行为），必须带出去
     return result.stderr
         ? { ok: true, output, notice: result.stderr }
         : { ok: true, output };

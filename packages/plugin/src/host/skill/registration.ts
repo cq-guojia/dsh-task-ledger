@@ -12,8 +12,9 @@ const SKILL_DIR = fileURLToPath(new URL("../../../skill", import.meta.url));
 /** SKILL.md 里指示脚本位置的占位符（注册时替换为绝对路径，模型据此找到脚本）。 */
 const SKILL_DIR_TOKEN = "<本 SKILL.md 所在目录>";
 
-/** skill 脚本绝对路径（提示词里直接给「原样执行这一条」的命令用；与注册共用同一份目录知识）。 */
-export const SKILL_SCRIPT = `${SKILL_DIR}/scripts/progress.py`;
+/** 台账入口绝对路径（提示词里直接给「原样执行这一条」的命令用；与注册共用同一份目录知识）。
+ *  它是按平台选二进制的薄包装，不需要 python。 */
+export const SKILL_SCRIPT = `${SKILL_DIR}/scripts/progress`;
 
 /** 宿主 ctx.skills.register 的最小面（外部事实文档的结构面）。 */
 export interface SkillRegistration {
@@ -67,7 +68,7 @@ export function buildSkillRegistration(
 	if (content.includes(SKILL_DIR_TOKEN)) {
 		throw new Error("占位符替换失败：SKILL.md 里仍残留脚本路径占位符");
 	}
-	if (!content.includes(`${skillDir}/scripts/progress.py`)) {
+	if (!content.includes(`${skillDir}/scripts/progress`)) {
 		throw new Error("占位符替换异常：替换后找不到脚本路径");
 	}
 	return { name, description, content, path: `${skillDir}/SKILL.md` };

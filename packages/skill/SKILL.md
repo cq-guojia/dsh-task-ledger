@@ -92,7 +92,7 @@ allowed-tools: Read,Edit,Bash,Grep
 
 干什么：刷任务的最后进度时间 + 在过程文档「执行记录」节追加一行。改正文必配一条 log（见纪律）。
 
-举例：一轮干完 → `log --id <任务号> --note "改了认领即 doing（claim.py:56）；下一步同步文档"`。
+举例：一轮干完 → `log --id <任务号> --note "改了认领即 doing（internal/actions/claim.go:56）；下一步同步文档"`。
 
 ### close — 结案
 
@@ -175,8 +175,10 @@ allowed-tools: Read,Edit,Bash,Grep
 ## 怎么调用
 
 ```bash
-python3 <本 SKILL.md 所在目录>/scripts/progress.py <子命令> --repo <工作区根>
+<本 SKILL.md 所在目录>/scripts/progress <子命令> --repo <工作区根>
 ```
+
+`scripts/progress` 是个薄 shell 包装，按平台 exec `scripts/bin/ledger-<os>-<arch>`（自带运行时的静态二进制；已提供 linux/amd64、darwin/arm64 与 windows/amd64）。平台或架构没有对应产物时，它会明确报错，不会静默失败。
 
 - 定位项目：`--repo <工作区根>`（**直接含有 `ledger/` 的那个目录**）给了就校验后用；不给就从当前目录逐级向上找。`ledger/` 本身、以及它下面的任何子目录都不是根，指过去会被直接拒绝（判据只看位置，不看目录里有哪些文件 —— 项目根自带 `pool.json`、`history/`、`worklog/` 都不影响）。
 - `--no-sync`（放在子命令**前**）：用户明确要求「先别同步」时才用；之后自己 `git add ledger && commit && push`。

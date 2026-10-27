@@ -10,7 +10,7 @@
 
 /** 机器可读错误码（只增不改；`LEDGER_` 前缀避开宿主错误码空间）。 */
 export type LedgerErrorCode =
-	| "LEDGER_SCRIPT_UNAVAILABLE" // python3 起不来
+	| "LEDGER_SCRIPT_UNAVAILABLE" // 台账程序起不来（本平台无产物 / 丢了可执行位）
 	| "LEDGER_SCRIPT_TIMEOUT" // 超时（runner kill）
 	| "LEDGER_SCRIPT_FAILED" // 非零退出，stderr 原文入 message
 	| "LEDGER_SCRIPT_BAD_JSON" // stdout 不是 JSON

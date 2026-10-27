@@ -36,7 +36,7 @@ export interface RunOptions {
     cwd?: string;
 }
 /**
- * 读命令：spawn python3 跑内嵌 skill 脚本，收 stdout JSON。
+ * 读命令：跑内嵌台账程序，收 stdout JSON。
  * 不解析任何台账格式——解析真源只有 skill 脚本一份（2026-10-17 用户拍板）。
  *
  * @param sub - 子命令（list / history / show…）

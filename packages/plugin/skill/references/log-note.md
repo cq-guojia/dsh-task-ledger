@@ -35,7 +35,7 @@
 正例：
 
 ```
---note "改了认领即 doing（claim.py:56）"
+--note "改了认领即 doing（internal/actions/claim.go:56）"
 --note "验证通过：verify 25 项；下一步补 UI 的 overdue 标记"
 --note "卡在远端鉴权，缺 deploy key，等用户给"
 ```

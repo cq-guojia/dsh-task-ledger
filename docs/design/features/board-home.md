@@ -86,7 +86,7 @@
 
 **与 skill 的两条口径对齐（2026-10-26）**：
 
-- **日期一律落在「脚本人话那一天」**：台账存盘时间是 UTC，只有人话输出才转查看者本地（`core/time.py::fmt_local`）。host 侧 `services/dates.ts` 因此先把时刻串按 UTC 解析成真实时刻、再按本机时区取日期，周 / 月窗口与天数阈值（停滞 / 逾期 / 积压）都走**本地日历** ⇒ 同一条记录在 `history` 表格里与看板里是同一天；否则东八区每周一早上（UTC 还停在上周日）会整体错一天、天数在临界点翻页。
+- **日期一律落在「脚本人话那一天」**：台账存盘时间是 UTC，只有人话输出才转查看者本地（`core/time.go::FmtLocal`）。host 侧 `services/dates.ts` 因此先把时刻串按 UTC 解析成真实时刻、再按本机时区取日期，周 / 月窗口与天数阈值（停滞 / 逾期 / 积压）都走**本地日历** ⇒ 同一条记录在 `history` 表格里与看板里是同一天；否则东八区每周一早上（UTC 还停在上周日）会整体错一天、天数在临界点翻页。
 - **被脚本跳过的历史行必须说出来**：skill 只认十一列历史，列数不对 / 结案时间不合法的行被**整行跳过**并在 `history --json` 的 `warnings` 里给原因。host 把它随 `/board/trend` 下发（`warnings`），图表卡底部显示「有 N 条历史行格式不对被跳过…」（悬停看逐条原因）——吞掉它就是少算一截还装作没发生。
 
 #### 2. 筛选行（一行，控件全同高 28px、间距 8px）
@@ -155,12 +155,12 @@ host 是否还代跑 skill 脚本写台账 —— **已定：认领 / 释放 / �
 
 现成落点：`POST /api/task-ledger/close`（`host/routes.ts::registerSessionRoutes` + `host/services/session.service.ts`），请求体 `{ ws, id, message?, provider?, model? }`，响应 `{ sessionId, warning? }`；同源守卫 + 请求体 64KB 上限。
 
-认领 / 释放（不开会话）：`POST /api/task-ledger/claim` / `/release`（`host/routes.ts::registerWriteRoutes` + `host/services/ledger-write.service.ts`），请求体 `{ ws, id }`，响应 `{ ok: true }`；同样过同源守卫。host 以**该工作区为 cwd** 起 `progress.py`（身份由脚本自己从 `~/.taskledger/identity.json` 取 uuid），成功后清该工作区读缓存。客户端入口 `api.ts::requestClaim / requestRelease`。
+认领 / 释放（不开会话）：`POST /api/task-ledger/claim` / `/release`（`host/routes.ts::registerWriteRoutes` + `host/services/ledger-write.service.ts`），请求体 `{ ws, id }`，响应 `{ ok: true }`；同样过同源守卫。host 以**该工作区为 cwd** 起内嵌脚本 `skill/scripts/progress`（Go 静态二进制；身份由脚本自己从 `~/.taskledger/identity.json` 取 uuid），成功后清该工作区读缓存。客户端入口 `api.ts::requestClaim / requestRelease`。
 
 ## 五、数据与硬约束
 
 1. **数据全部真实**：界面任何数字 / 时间 / 状态来自各工作区 `ledger/` 真文件经 host 聚合，不编造、不占位（DSH 插件规则「数据真实」）。
-2. **写台账只经 skill 脚本**：插件不得手改 `pool.json` / 分片 / `history` / worklog。按钮写入路径已定（不变量 1）：认领 / 释放 / 移交 = host 代跑同一个 `progress.py`；结束 / 继续 = 起会话由 Agent 跑脚本。底线不变：用户点击按钮即 skill 红线认可的「明确指令」（close 只能由用户明确的结案指令触发 —— 按钮即该指令，结束再额外要求留言作为**内容**而非授权）。
+2. **写台账只经 skill 脚本**：插件不得手改 `pool.json` / 分片 / `history` / worklog。按钮写入路径已定（不变量 1）：认领 / 释放 / 移交 = host 代跑同一个 `scripts/progress`；结束 / 继续 = 起会话由 Agent 跑脚本。底线不变：用户点击按钮即 skill 红线认可的「明确指令」（close 只能由用户明确的结案指令触发 —— 按钮即该指令，结束再额外要求留言作为**内容**而非授权）。
 3. **刷新归前端**（用户 2026-10-17 拍板）：后端只提供按需查询，**不做 watcher / SSE / 轮询**；前端最低配 = 打开面板首读 + 手动刷新按钮。面板打开时随手刷新，关闭期间不后台轮询（个人 / 中小项目场景，一天看一会儿，计数过期无感；将来要 freshness 也是前端加慢轮询，后端不用动）。
 4. **空态三分**：未就绪（不渲染）/ 真空（虚线引导卡）/ 筛选空（小字）。
 5. **样式硬约束**（明暗判据、token、无表格件）见 [`ui-style.md`](../ui-style.md)；列表行自绘已在本文 §二 定稿。

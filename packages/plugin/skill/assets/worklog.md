@@ -30,4 +30,4 @@
 ## 执行记录
 
 <!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
+     补记用 progress log --id <任务号> --note "一句话"。 -->

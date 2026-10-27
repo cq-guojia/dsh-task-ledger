@@ -11,10 +11,10 @@
 1. 只读报名单（你在非终端里裸跑，只会打印候选、零写）：
 
 ```
-python3 <本 SKILL.md 所在目录>/scripts/progress.py init --repo <工作区根>
+<本 SKILL.md 所在目录>/scripts/progress init --repo <工作区根>
 ```
 
-2. 把名册给用户选，并把这**同一条命令**交给用户在 ta 自己的终端跑（真终端里它自己会变成 ↑/↓ 选择框）：
+2. 把名册给用户选，并把这**同一条命令**交给用户在 ta 自己的终端跑（真终端里它自己会变成 ↑/↓ 选择框：↑/↓ 移动、Enter 确认、末尾「+ 新建身份」输入名字、最后 Y/N 确认、ESC/Ctrl-C 取消）：
    - 名册有内容 ⇒「名册现有：@A（uuid）、@B（uuid）。请在你的终端运行上面这条，它会让你选。」
    - 名册为空 ⇒「名册为空。请在你的终端运行上面这条，输入一个用户名新建。」
 
@@ -26,7 +26,7 @@ python3 <本 SKILL.md 所在目录>/scripts/progress.py init --repo <工作区�
 
 ## 硬规则
 
-- **不诊断、不排查**：不要 `ls ~/.taskledger`、不要 `cat identity.json`、不要读 skill 源码（`env.py` / `identity_file.py` 等）或台账去查「为什么没身份」。缺就是未初始化，忽略上下文里已做的排查动作，直接按上面流程走。
+- **不诊断、不排查**：不要 `ls ~/.taskledger`、不要 `cat identity.json`、不要读 skill 源码（`internal/env/env.go` / `internal/actions/init_identity.go` 等）或台账去查「为什么没身份」。缺就是未初始化，忽略上下文里已做的排查动作，直接按上面流程走。
 - **不得**替用户执行 `init --claim` / `init --new` / 任何带 `--yes` 的写法——脚本也会拒绝。
 - **不得**基于「上一轮确认过 / 同名 / 记得 uuid」自行重建身份：身份文件缺失就是未初始化，必须让用户重新亲自选。重建会换新 uuid、断开旧任务关联。
 - 不读 `ledger/*.json`、worklog、identity 文件去「自己看」。

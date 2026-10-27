@@ -11,6 +11,6 @@
 		"packages/*"
 	],
 	"scripts": {
-		"test:skill": "python3 -B packages/skill/tests/smoke.py && python3 -B packages/skill/tests/test_crash_recovery.py && python3 -B packages/skill/tests/test_scenarios.py && python3 -B packages/skill/tests/test_merge_semantics.py"
+		"test": "cd packages/skill/go && go vet ./... && go test ./..."
 	}
 }
