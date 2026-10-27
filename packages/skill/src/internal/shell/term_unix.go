@@ -145,6 +145,9 @@ func (t *termState) readKey() key {
 // promptLineRaw 在 raw 模式逐键读一行：ESC 回上一步、Ctrl-C 取消、Enter 确认、Backspace 退格。
 // 输入框下面垫一行灰色帮助（hint）。返回 (读到的内容, 结果, 是否由本函数处理)；
 // handled=false 表示拿不到 raw 终端（非终端 / raw 失败），调用方退回普通行读。
+//
+// 渲染用整块重绘：光标始终停在 hint 行末尾，每键从行首重画输入行 —— 不做任何
+// 光标算术（算不准 prompt 的显示宽度，中文双宽一算就歪）。
 func promptLineRaw(prompt, hint string) (string, lineResult, bool) {
 	fd := int(os.Stdin.Fd())
 	state, err := makeRaw(fd)
@@ -153,12 +156,12 @@ func promptLineRaw(prompt, hint string) (string, lineResult, bool) {
 	}
 	defer state.restore()
 
-	os.Stdout.WriteString(prompt)
-	if hint != "" {
-		// raw 关了 OPOST：\n 只下移不回车，所以要自己写 \r\n
-		os.Stdout.WriteString("\r\n" + dim(hint) + "\x1b[1A\x1b[999C")
-	}
 	var buf []byte
+	redraw := func() {
+		os.Stdout.WriteString("\x1b[1A\x1b[2K\r" + prompt + string(buf) + "\r\n\x1b[2K\r" + dim(hint))
+	}
+	os.Stdout.WriteString(prompt + "\r\n" + dim(hint))
+
 	for {
 		ch, ok, err := readOne(fd)
 		if err != nil || !ok {
@@ -167,7 +170,7 @@ func promptLineRaw(prompt, hint string) (string, lineResult, bool) {
 		}
 		switch ch {
 		case 0x1b:
-			// 单独 ESC = 取消；ESC [ / ESC O 开头的方向键序列吞掉（输入名字用不上方向键）
+			// 单独 ESC = 回上一步；ESC [ / ESC O 开头的方向键序列吞掉（输入名字用不上方向键）
 			state.setReadTimeout(true)
 			next, gotNext, _ := readOne(fd)
 			state.setReadTimeout(false)
@@ -175,13 +178,13 @@ func promptLineRaw(prompt, hint string) (string, lineResult, bool) {
 				readOne(fd) // 吞掉方向键的第三个字节
 				continue
 			}
-			os.Stdout.WriteString("\r\n\r\n")
+			os.Stdout.WriteString("\r\n")
 			return "", lineBack, true
 		case '\r', '\n':
-			os.Stdout.WriteString("\r\n\r\n")
+			os.Stdout.WriteString("\r\n")
 			return string(buf), lineOK, true
 		case 0x03: // Ctrl-C
-			os.Stdout.WriteString("\r\n\r\n")
+			os.Stdout.WriteString("\r\n")
 			return "", lineEOF, true
 		case 0x7f, 0x08: // Backspace / Ctrl-H
 			if len(buf) == 0 {
@@ -192,12 +195,10 @@ func promptLineRaw(prompt, hint string) (string, lineResult, bool) {
 				size = 1
 			}
 			buf = buf[:len(buf)-size]
-			for i := 0; i < size; i++ {
-				os.Stdout.WriteString("\b \b") // 一个字节一格，中文两格正好
-			}
+			redraw()
 		default:
 			buf = append(buf, ch)
-			os.Stdout.WriteString(string(ch))
+			redraw()
 		}
 	}
 }
