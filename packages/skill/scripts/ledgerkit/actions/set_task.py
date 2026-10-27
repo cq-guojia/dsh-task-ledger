@@ -18,9 +18,15 @@ from ..errors import Fail
 from ..store.task_store import TaskStore
 from . import claim as claim_mod
 from . import handoff as handoff_mod
+from . import relabel as relabel_mod
 from . import release as release_mod
 from .guard import require_uuid
 from .result import Result, rel
+
+_MIXED = (
+    "--category / --tags 不能与 --release / --owner 同时给："
+    "一个是改分类标签，一个是改归属，分两次跑。"
+)
 
 
 def set_task(
@@ -30,15 +36,28 @@ def set_task(
     *,
     owner: str | None = None,
     release: bool = False,
+    category: str | None = None,
+    tags: str | tuple[str, ...] | None = None,
 ) -> Result:
-    """路由：`--release` = 释放；别人的 uuid = 交接；自己的 uuid = 已认领则空转、没认领先认领。"""
+    """路由：`--release` = 释放；别人的 uuid = 交接；自己的 uuid = 已认领则空转、没认领先认领；
+    `--category` / `--tags` = 改分类与标签（只动文档头部那行与分片字段）。
+    """
+    relabel_wanted = bool(category or tags)
     if release:
         if owner is not None:
             raise Fail("--release 与 --owner 不能同时给：释放不带人，交接不带释放。")
+        if relabel_wanted:
+            raise Fail(_MIXED)
         return release_mod.release(repo, me, tid)
-    if owner is None:
+    if owner is not None:
+        if relabel_wanted:
+            raise Fail(_MIXED)
+    else:
+        if relabel_wanted:
+            return relabel_mod.relabel(repo, me, tid, category=category, tags=tags)
         raise Fail(
-            "set 必须二选一：`--release`（释放回公共池）或 `--owner <对方 uuid>`（交接）。"
+            "set 必须给一样：`--release`（释放回公共池）/ `--owner <对方 uuid>`（交接）/ "
+            "`--category <分类>` 或 `--tags <a、b>`（改分类标签）。"
         )
     # 交接目标只收 uuid：名字查不到就当场报错，绝不去猜「他大概是这个人」
     target = require_uuid(owner, field="--owner")

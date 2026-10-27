@@ -53,7 +53,7 @@ errors.py
 | 业务层只能调数据层、工具层、`env`、`notices`、`errors` | `grep -rn "shell" actions/` 必须为 **0** |
 | 数据层只能调工具层、`env`、`notices`、`errors` | `grep -rn "actions\|shell" store/` 必须为 **0** |
 | 工具层只许 `errors` / `notices` / **同包兄弟模块**（`from .paths import …`，`history_md` 就要调 `paths.to_history_rel`）+ 标准库 | `grep -rn "from ledgerkit" core/` 只能命中 `errors` / `notices` 这两个，其余一律相对 import `from .x` |
-| 两个动作文件之间不许互相 import。**唯一例外**：`set_task.py` 可以 import `release.py` / `handoff.py` / `claim.py`（它只做路由，不碰文件） | `grep -rn "from \. import \(release\|handoff\|claim\)" actions/ \| grep -v set_task.py` 必须为 **0** |
+| 两个动作文件之间不许互相 import。**唯一例外**：`set_task.py` 可以 import `release.py` / `handoff.py` / `claim.py` / `relabel.py`（它只做路由，不碰文件） | `grep -rn "from \. import \(release\|handoff\|claim\|relabel\)" actions/ \| grep -v set_task.py` 必须为 **0** |
 | `notices.py` 任何层都可以 import，但它**只收、不打** | `grep -rn "notices\.\(warnings\|clear\)(" store/ actions/ core/` 必须为 **0**（取清单与清空只有 `render.py` / `runner.py` 能做）；`print(` 在这三个目录里同样是 0 |
 
 ## 一、目录树（完全重构后）
@@ -159,9 +159,10 @@ packages/skill/scripts/
     │   ├── new_task.py        ← 建任务：拿外壳算好的任务号写过程文档、写进池（或直接写进自己分片）。
     │   │                         中途失败要把已写的撤掉。
     │   ├── claim.py           ← 认领：先写进我的分片，再删池里那行。顺序反了任务会凭空消失。
-    │   ├── set_task.py        ← 改状态的入口：只看参数、决定走哪个动作，自己不加锁、不改文件；
-    │   │                         唯一允许 import `release.py` / `handoff.py` / `claim.py` 的动作（它只做路由）。
+    │   ├── set_task.py        ← set 的入口：只看参数、决定走哪个动作，自己不加锁、不改文件；
+    │   │                         唯一允许 import `release.py` / `handoff.py` / `claim.py` / `relabel.py` 的动作。
     │   ├── release.py         ← 释放：写回公共池，再删我分片那行，再记一笔。
+    │   ├── relabel.py         ← 改分类 / 标签：过程文档那行 + 分片两个字段，一次改动两处同步。
     │   ├── handoff.py         ← 交接：先写进对方分片，再删我分片那行，再记一笔。
     │   ├── log_progress.py    ← 记进展：刷分片的"最后更新"，再往过程文档追加一行。
     │   ├── close_task.py      ← 结案：写历史 → 封卷过程文档 → 最后删分片。
@@ -205,7 +206,7 @@ packages/skill/scripts/
 |---|---|---|
 | `core/` | 标准库、`errors`、`notices`、同目录 | 读/写文件、跑子进程、加锁、打印；接收整条 task dict 当主参；单文件超 300 行 |
 | `store/` | `core`、`env`、`notices`、`errors`、同目录 | 打印、跑 git、**调用**锁（`locks.py` 只负责定义，调用权归 `atom.py`）、判断 `owner`/`status`、接收"要写哪些文件"的指示；单方法超 25 行 |
-| `actions/` | `store`、`core`、`env`、`notices`、`errors`、同目录；**唯一跨动作引用**：`set_task.py → release.py` / `handoff.py` / `claim.py` | `open`/`read_bytes`/`read_text`/`write_text_atomic`/`print`/`subprocess`/`git_`/`json.dumps`/自己拼锁（例外只有两处：`atom.py` 里的 `ledger_lock`；`atomic.snapshot`/`restore` 只许在 `close_task.py` / `new_task.py` 里出现） |
+| `actions/` | `store`、`core`、`env`、`notices`、`errors`、同目录；**唯一跨动作引用**：`set_task.py → release.py` / `handoff.py` / `claim.py` / `relabel.py` | `open`/`read_bytes`/`read_text`/`write_text_atomic`/`print`/`subprocess`/`git_`/`json.dumps`/自己拼锁（例外只有两处：`atom.py` 里的 `ledger_lock`；`atomic.snapshot`/`restore` 只许在 `close_task.py` / `new_task.py` 里出现） |
 | `shell/` | 全部 | 做业务判断；在 `render.py` 之外打印；在 `runner.py` 与 `render.py` 之外读 `notices` |
 
 **为什么备份/恢复算 store 的活**：结案失败要「按字节还回去」，而 actions 不许碰文件。`atomic.snapshot/restore` 是唯一的还手之地 —— 别在 `close_task.py` 里自己 `read_bytes`。
@@ -543,17 +544,29 @@ def claim(repo, me, tid) -> Result
 - `worklog`：填；`payload`：`{}`。
 
 ```python
-def set_task(repo, me, tid, *, owner=None, release=False) -> Result
+def set_task(repo, me, tid, *, owner=None, release=False, category=None, tags=None) -> Result
 ```
 
 - **只做参数校验和路由，自己不加锁、不改任何文件**（它 import `release` / `handoff` / `claim`，这是全树唯一的跨动作引用）：
-  - `--release` 与 `--owner` **必须二选一**：都缺 ⇒ `Fail`；都给 ⇒ `Fail`（释放不带人、交接不带释放）。**没有"空串 = 释放"这种隐式语义**。
+  - **两组用法不能混，也不能都不给**：归属组（`--release` / `--owner`）与分类标签组（`--category` / `--tags`）。
+    - 归属组内部 `--release` 与 `--owner` **必须二选一**：都缺 ⇒ `Fail`；都给 ⇒ `Fail`。**没有"空串 = 释放"这种隐式语义**。
+    - 分类标签组 ⇒ `relabel(repo, me, tid, category=…, tags=…)`；与归属组同给 ⇒ `Fail`（分两次跑）。
+    - 两组都不给 ⇒ `Fail`，报错里列出四种可用参数。
   - `--release` ⇒ `release(repo, me, tid)`。
   - `--owner <uuid>` ⇒ 先过 `require_uuid`（非 uuid 当场 `Fail`，不做模糊匹配），再分三支：
     - 别人、已在索引里登记 ⇒ `handoff(repo, me, tid, to=…)`（没登记过 ⇒ `Fail`，不写出对别人不存在的分片）
     - 自己、这条现在不在我名下 ⇒ `claim(repo, me, tid)`
     - 自己、已经在我名下 ⇒ 幂等返回（`already_done=True`、退出码 0）
 - 「我的」只比 uuid：分片里的行、历史两列、`--owner` / `--mine` 全是 uuid；显示名（`owner_name` / `creator_name`）只用于显示与 `--owner-name` 模糊筛。**落点分两种：任务行落盘，历史行不落盘、读时按名册补**（见 `ledger-data.md` §四）。
+
+```python
+def relabel(repo, me, tid, *, category=None, tags=None) -> Result
+```
+
+- 写集：我的分片 + 过程文档。只改自己名下**在办**任务（先 `mine.get`，再 `require_owner`）；不在我分片（含已结案）⇒ `Fail`。
+- 值：给了替换、没给沿用分片里的原值；两样都空 ⇒ `Fail`。`tags` 收字符串或已切好的元组（外壳可能先切过）。
+- 写序：过程文档一次写完（`rewrite_label_line` + 追加一条 `set` 记录 + 刷状态行）→ 再写分片（`category` / `tags` / `updated`）。
+- 分片有、文档缺 ⇒ 只改分片并留一条提示，不 Fail（与 `log` 的口径一致）。
 
 ```python
 def release(repo, me, tid) -> Result
@@ -808,7 +821,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 | `ensure_ledger` 692 | `actions/bootstrap.py` |
 | `cmd_new` 3139 / `undo_new_task` 3028 | `actions/new_task.py`（撤销降为私有） |
 | `cmd_claim` 3230 | `actions/claim.py` |
-| `cmd_set` 3329 三分支 | `actions/set_task.py`（路由）+ `release.py` + `handoff.py` + `claim.py` |
+| `cmd_set` 3329 四分支 | `actions/set_task.py`（路由）+ `release.py` / `handoff.py` / `claim.py` / `relabel.py` |
 | `cmd_log` 3455 | `actions/log_progress.py` |
 | `cmd_close` 3483 | `actions/close_task.py` |
 | `cmd_list` 3716 / `cmd_show` 3854 / `cmd_history` 4219 / `cmd_validate` 4006 | `actions/list_tasks.py` / `show_task.py` / `query_history.py` / `validate.py` |
@@ -834,7 +847,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 | **`actions/` 里在 `guard.py` 之外**读**裸写 `["owner"]` / `["status"]` / `.get("owner")` / `.get("status")`**（用于判定） | — | **0**（要判就调 `is_mine` / `owner_of` / `status_of` / `in_scope`）；**写**这两个字段不算违规（`claim` / `release` / `handoff` / `set_task` 本来就要写），用赋值形态 `\["owner"\]\s*=` / `\["status"\]\s*=` 把它们从判据里排除 |
 | 四个记账本名字出现在 `store/dirty.py` 之外 | 4 个文件都有 | **0** |
 | `\bprint\(` 出现在 `notices.py` 与 `render.py` 之外 | — | **0**（唯一例外：`cli._run_init` 打 init 结果 —— 它不进 runner，也没有别的渲染入口。判据必须带词边界，否则 `fingerprint(` 会被误算） |
-| 跨动作 import（`set_task.py → release.py/handoff.py/claim.py` 除外） | — | **0** |
+| 跨动作 import（`set_task.py → release.py/handoff.py/claim.py/relabel.py` 除外） | — | **0** |
 | `scripts/progress.py` 行数 | 4657 | **≤ 40** |
 | `actions/` 单文件最大行数 | — | **≤ 300** |
 
@@ -847,7 +860,7 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 | `init` | `--claim --new --name` | `init_identity(repo, claim, new, name)`（**不进 runner**：只写机器身份 `~/.taskledger/identity.json`，不碰台账、不碰 git；`repo` 只用来读名册给人挑 uuid，可以为 None） |
 | `new` | `--title --id --created --category --tags --self` | `new_task(title, tid, created, category, tags, mine)` |
 | `claim` | `--id` | `claim(tid)` |
-| `set` | `--id --release --owner` | `set_task(tid, owner, release)` → `release` / `handoff` / `claim` |
+| `set` | `--id --release --owner --category --tags` | `set_task(tid, owner, release, category, tags)` → `release` / `handoff` / `claim` / `relabel` |
 | `log` | `--id --note` | `log_progress(tid, note)`（折叠空白，不限长度） |
 | `close` | `--id --summary --finished --category --tags` | `close_task(tid, summary, finished, category, tags)` |
 | `list` | `--mine --owner --owner-name --pool --status --category --tag --since --until --json` | `list_tasks(q)` |

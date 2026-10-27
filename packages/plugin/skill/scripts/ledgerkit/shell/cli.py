@@ -45,10 +45,14 @@ def build_parser() -> argparse.ArgumentParser:
     claim = sub.add_parser("claim", help="认领公共池里的任务")
     claim.add_argument("--id", required=True, dest="tid")
 
-    setp = sub.add_parser("set", help="释放 / 交接任务")
+    setp = sub.add_parser("set", help="释放 / 交接 / 改分类标签")
     setp.add_argument("--id", required=True, dest="tid")
     setp.add_argument("--owner", help="交给别人的 uuid（交接）")
     setp.add_argument("--release", action="store_true", help="释放回公共池")
+    setp.add_argument(
+        "--category", help="改分类（与 --tags 一起改过程文档头部分类/标签行）"
+    )
+    setp.add_argument("--tags", help="改标签，顿号 / 逗号分隔")
 
     logp = sub.add_parser("log", help="记一条进展")
     logp.add_argument("--id", required=True, dest="tid")
