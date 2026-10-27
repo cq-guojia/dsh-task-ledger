@@ -4883,8 +4883,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.100 · 261027-131036-907`
-			}, `v0.0.100 261027-131036-907`))), (0, react.createElement)("div", { style: {
+				title: `v0.0.101 · 261027-133053-718`
+			}, `v0.0.101 261027-133053-718`))), (0, react.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-2)"

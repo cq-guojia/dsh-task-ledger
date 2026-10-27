@@ -48,21 +48,20 @@ def parse_tags(raw: str | Iterable[str] | None) -> tuple[str, ...]:
     return tuple(out)
 
 
-def label_line(category: str | None, tags: Iterable[str] | None) -> str:
-    """过程文档头部的「分类 / 标签」行；两者皆空返回空串（此行不写）。"""
-    segs: list[str] = []
-    if category:
-        segs.append(f"**分类**：{category}")
+def label_line(tags: Iterable[str] | None) -> str:
+    """过程文档头部的「标签」行；标签为空返回空串（此行不写）。
+
+    分类**不进过程文档**（2026-10-27 用户拍板）：它只活在分片字段与历史表里，
+    标签可涵盖分类（「建设」「修改」这类词直接当标签写）。
+    """
     tag_list = [t for t in (tags or ()) if t]
-    if tag_list:
-        segs.append(f"**标签**：{'、'.join(tag_list)}")
-    return "- " + " · ".join(segs) if segs else ""
+    return f"- **标签**：{'、'.join(tag_list)}" if tag_list else ""
 
 
 def parse_label_line(text: str) -> tuple[str | None, tuple[str, ...]]:
     """从过程文档头部（第一个 `## ` 小节之前）解析分类与标签。
 
-    跳过 HTML 注释块：模板注释里举例写着「**分类**：…」，那不是数据。
+    跳过 HTML 注释块：模板注释里的示例不是数据。老文档的分类段照样能解析出来。
     """
     in_comment = False
     for line in text.splitlines():

@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ..core.identity import Identity
-from ..core.labels import normalize_label, parse_tags
+from ..core.labels import parse_tags
 from ..core.paths import history_path_for, shard_rel, to_repo_rel, worklog_name
 from ..core.worklog_md import (
     StatusLine,
@@ -36,7 +36,6 @@ def close_task(
     *,
     summary: str,
     finished: str,
-    category: str | None = None,
     tags: tuple[str, ...] | None = None,
 ) -> Result:
     """写序四步：改标签行 → 历史加一行 → 封卷 → 删分片（永远是最后一步）。"""
@@ -45,7 +44,6 @@ def close_task(
     text_summary = " ".join((summary or "").split())
     if not text_summary:
         raise Fail("结案要写一句「完成了什么」（--summary 不能为空）。")
-    new_category = normalize_label(category, field="分类") if category else None
     new_tags = parse_tags(tags) if tags else None
 
     logs = WorklogStore(repo)
@@ -70,8 +68,8 @@ def close_task(
     # 分片里在、但行内 owner 不是我 ⇒ 台账脏了（validate 会报⑤）：先拦下来，别用我的 uuid 记历史
     require_owner(task, tid, me)
 
-    # 历史行那两列取**最终值**：给了参数用新值，没给用任务原值，两处必须一致
-    final_category = new_category if new_category else task.get("category")
+    # 分类取任务原值（**不可改**）；标签给了参数用新值，没给沿用原值
+    final_category = task.get("category")
     final_tags = tuple(new_tags) if new_tags else tuple(task.get("tags") or ())
 
     doc_path = logs.find(tid, task.get("worklog"))
@@ -128,10 +126,10 @@ def close_task(
                     "（可能是编辑器或 git 操作），已中止、未写入任何内容；重跑一次即可。"
                 )
 
-        # ① 改标签行（给了 --category / --tags 才做，且必须在封卷之前）
-        if doc_path is not None and (new_category or new_tags):
+        # ① 改标签行（给了 --tags 才做，且必须在封卷之前）
+        if doc_path is not None and new_tags:
             text = logs.read(doc_path)
-            logs.write(doc_path, rewrite_label_line(text, final_category, final_tags))
+            logs.write(doc_path, rewrite_label_line(text, final_tags))
 
         # ② 历史加一行（先 ensure_dir：首次结案时 history/ 可能还不存在）
         ensure_dir(hist_path.parent)

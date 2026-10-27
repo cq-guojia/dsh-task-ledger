@@ -100,7 +100,6 @@ def new_task(
             title=clean_title,
             created=created,
             creator=me.stamp(),
-            category=category,
             tags=tag_list,
             status=StatusLine(
                 "doing" if mine else "open",

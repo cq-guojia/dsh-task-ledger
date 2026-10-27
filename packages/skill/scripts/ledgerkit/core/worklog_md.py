@@ -21,8 +21,8 @@ EXEC_HINT = (
     '     补记用 progress.py log --id <任务号> --note "一句话"。 -->'
 )
 FROZEN_MARK = "封卷"
-#: 头部四行的规范顺序：分类/标签 → 状态 → 创建 → 封卷。
-#: 「分类」只在有分类 / 标签时写，「封卷」只在结案时写，另两行必有。
+#: 头部四行的规范顺序：标签 → 状态 → 创建 → 封卷。
+#: 标签行只在有标签时写（分类不进文档），「封卷」只在结案时写，另两行必有。
 HEAD_KEY_ORDER = ("meta", "status", "created", "frozen")
 #: 头部行前缀：新格式是无序列表 `- `，老文档是引用块 `> ` —— 读的时候两种都认。
 _HEAD_BULLET = r"^(?:\s*>\s?|\s*[-*]\s+)"
@@ -168,7 +168,6 @@ def render_worklog(
     title: str,
     created: str,
     creator: str,
-    category: str | None = None,
     tags: Iterable[str] | None = None,
     status: StatusLine | None = None,
     template: str,
@@ -198,12 +197,13 @@ def render_worklog(
             "<status>",
             render_status_body(status.status, status.name, status.uuid, status.when),
         )
-    meta = label_line(category, tags)
+    meta = label_line(tags)
     if not meta:
         return text
     return "\n".join(_insert_head_line(text.splitlines(), meta, "meta")) + "\n"
 
 
+#: 头部「标签」行；老格式的「分类」段也一并匹配 —— 改写时整行替换，分类自然消失。
 _META_LINE_RE = re.compile(_HEAD_BULLET + r"\*\*(?:分类|标签)\*\*")
 
 
@@ -362,11 +362,9 @@ def stamp_frozen(text: str, finished: str, who: str | None = "") -> str:
     return "\n".join(_insert_head_line(text.splitlines(), mark, "frozen")) + "\n"
 
 
-def rewrite_label_line(
-    text: str, category: str | None, tags: Iterable[str] | None
-) -> str:
-    """改写头部的分类 / 标签行：有就地替换，没有就按头部顺序插进去。"""
-    line = label_line(category, tags)
+def rewrite_label_line(text: str, tags: Iterable[str] | None) -> str:
+    """改写头部的标签行：有就地替换（老文档的分类段一并清掉），没有就按头部顺序插进去。"""
+    line = label_line(tags)
     lines = text.splitlines()
     for i, ln in enumerate(lines):
         if ln.startswith("## "):

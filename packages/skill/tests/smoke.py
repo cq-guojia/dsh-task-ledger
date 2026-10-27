@@ -159,20 +159,24 @@ def main() -> int:
             head.startswith("- **状态**：doing") and ME in head,
             head or "(没有状态行)",
         )
-        # 中途补分类 / 标签：文档头部插在最上面，分片字段同步
-        r = run(repo, "set", "--id", tid, "--category", "建设", "--tags", "台账、冒烟")
-        check("set --category/--tags 退出码 0", r.returncode == 0, r.stderr)
+        # 改标签：文档头部只记标签；分类建任务时定死，之后没有任何改法（2026-10-27 拍板）
+        r = run(repo, "set", "--id", tid, "--category", "建设")
+        check("set --category 已不存在（分类不可改）", r.returncode != 0, r.stdout)
+        r = run(repo, "close", "--id", tid, "--summary", "x", "--category", "建设")
+        check("close --category 已不存在（分类不可改）", r.returncode != 0, r.stdout)
+        r = run(repo, "set", "--id", tid, "--tags", "台账、冒烟")
+        check("set --tags 退出码 0", r.returncode == 0, r.stderr)
         meta_line = worklog_text(repo, tid).splitlines()[2]
         check(
-            "set 后分类行在头部最上面",
-            meta_line == "- **分类**：建设 · **标签**：台账、冒烟",
+            "set 后文档头部只写标签（分类不进文档）",
+            meta_line == "- **标签**：台账、冒烟",
             repr(meta_line),
         )
         r = run(repo, "list", "--json")
         row = json.loads(r.stdout).get(tid, {})
         check(
-            "set 后分片的分类 / 标签同步",
-            row.get("category") == "建设" and row.get("tags") == ["台账", "冒烟"],
+            "set 后分片标签同步、分类仍为空",
+            row.get("tags") == ["台账", "冒烟"] and row.get("category") is None,
             r.stdout[:300],
         )
         r = run(repo, "log", "--id", tid, "--note", "冒烟记一条")
@@ -258,7 +262,7 @@ def main() -> int:
             head.startswith("- **状态**：closed") and ME in head,
             head or "(没有状态行)",
         )
-        # 头部四行顺序：分类/标签 → 状态 → 创建 → 封卷（这篇没分类，所以是 状态 → 创建 → 封卷）
+        # 头部四行顺序：标签 → 状态 → 创建 → 封卷（这篇没有标签，所以是 状态 → 创建 → 封卷）
         head_lines = worklog_text(repo, tid).splitlines()
         order = [
             next(

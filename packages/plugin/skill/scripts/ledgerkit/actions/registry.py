@@ -43,14 +43,14 @@ ACTIONS: dict[str, ActionSpec] = {
     "set": ActionSpec(
         set_task.set_task,
         "result",
-        params=("tid", "owner", "release", "category", "tags"),
+        params=("tid", "owner", "release", "tags"),
         lock_action="set",
     ),
     "log": ActionSpec(log_progress.log_progress, "result", params=("tid", "note")),
     "close": ActionSpec(
         close_task.close_task,
         "result",
-        params=("tid", "summary", "finished", "category", "tags"),
+        params=("tid", "summary", "finished", "tags"),
     ),
     "list": ActionSpec(
         list_tasks.list_tasks, "list_view", readonly=True, params=("q",)

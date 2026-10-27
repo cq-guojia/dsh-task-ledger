@@ -96,7 +96,7 @@ packages/skill/scripts/
     │   ├── ids.py             ← 任务号：从标题生成「日期-时分-标题-四位随机」、查重、形态校验。
     │   ├── identity.py        ← 身份这个值对象本身：`uuid` + `name`、归一化（小写去空白）、
     │   │                         uuid 形态校验、"这条算不算我的"。**只做字符串换算，不读文件**。
-    │   ├── labels.py          ← 分类和标签：长度/数量上限的校验、头部那行"分类/标签"的拼和拆。
+    │   ├── labels.py          ← 分类和标签：长度/数量上限的校验、头部「标签」行的拼与拆。
     │   ├── worklog_md.py      ← 过程文档的文本操作：套六节模板、往执行记录节追加一行、
     │   │                         盖章（封卷）、改头部标签行。全部是"给一段文字，返回新文字"。
     │   └── history_md.py      ← 历史表格的文本操作：十一列一行怎么拼、表格怎么解析。
@@ -162,7 +162,7 @@ packages/skill/scripts/
     │   ├── set_task.py        ← set 的入口：只看参数、决定走哪个动作，自己不加锁、不改文件；
     │   │                         唯一允许 import `release.py` / `handoff.py` / `claim.py` / `relabel.py` 的动作。
     │   ├── release.py         ← 释放：写回公共池，再删我分片那行，再记一笔。
-    │   ├── relabel.py         ← 改分类 / 标签：过程文档那行 + 分片两个字段，一次改动两处同步。
+    │   ├── relabel.py         ← 改标签：分片 `tags` + 过程文档头部标签行（分类不可改）。
     │   ├── handoff.py         ← 交接：先写进对方分片，再删我分片那行，再记一笔。
     │   ├── log_progress.py    ← 记进展：刷分片的"最后更新"，再往过程文档追加一行。
     │   ├── close_task.py      ← 结案：写历史 → 封卷过程文档 → 最后删分片。
@@ -375,10 +375,10 @@ class WorklogStore:
 ```
 
 - **`template()` 是模板的唯一读者**：模板真源是 skill 的 `assets/worklog.md`（`core/paths.py` 给路径）。工具层不许读文件，所以「套模板」这个动作拆成两半：store 取文本，`core/worklog_md.render_worklog(...)` 只做字符串替换。
-- **`head_meta(path)`**：从一篇过程文档头部抽出 `created` / `creator` / 分类 / 标签四样，供历史回链与标签统计共用（这两个用途原本分散在两处，收成一个方法）。
+- **`head_meta(path)`**：从一篇过程文档头部抽出 `created` / `creator` / 分类 / 标签四样——分类只可能来自**旧格式文档**（新文档不再写分类段）；**目前没有调用方**，留作库函数（分类的权威在分片与历史，不靠这行）。
 - **状态行与执行记录必须同一次落盘**：`append_exec(..., status=…)` 内部先 `append_exec_log` 再 `rewrite_status_line`，最后一次性原子写——分两写就会留下「记录写了、状态没刷」这种不报错的不一致。`status` 是 keyword-only 可选参数，旧调用不受影响。
 - **`find(tid)` 只给任务号即可**：先信记录路径、再按命名推算、最后扫目录，**不读 pool / 分片 / 历史**。`show` 靠这一点做到「看一条不必先找到任务」。
-- **`all()` / `head_meta()` 只给批量与回链用**：`validate` 不再调用（见 §3.3「两档都不读过程文档正文」）。
+- **`all()` 只给批量用、`head_meta()` 目前无人调用**：`validate` 不再调用（见 §3.3「两档都不读过程文档正文」）。
 
 ## 三、业务层 `actions/`：方法定义
 
@@ -548,7 +548,7 @@ def set_task(repo, me, tid, *, owner=None, release=False, category=None, tags=No
 ```
 
 - **只做参数校验和路由，自己不加锁、不改任何文件**（它 import `release` / `handoff` / `claim`，这是全树唯一的跨动作引用）：
-  - **两组用法不能混，也不能都不给**：归属组（`--release` / `--owner`）与分类标签组（`--category` / `--tags`）。
+  - **两组用法不能混，也不能都不给**：归属组（`--release` / `--owner`）与标签组（`--tags`）。**没有改分类的入口**（2026-10-27 删除 `--category`：分类建任务时定死）。
     - 归属组内部 `--release` 与 `--owner` **必须二选一**：都缺 ⇒ `Fail`；都给 ⇒ `Fail`。**没有"空串 = 释放"这种隐式语义**。
     - 分类标签组 ⇒ `relabel(repo, me, tid, category=…, tags=…)`；与归属组同给 ⇒ `Fail`（分两次跑）。
     - 两组都不给 ⇒ `Fail`，报错里列出四种可用参数。
@@ -601,7 +601,7 @@ def close_task(repo, me, tid, *, summary, finished: str, category=None, tags=Non
 - **`finished` 必填、不接受 `None`**：外壳已经算好（`args.finished or now()`），同一个值也用于算锁集与刷取范围。业务层不许再调时钟 —— 这是跨月刷错月份的唯一根因。
 - 写前核对：分片 / 历史 / 过程文档三个文件的 `fingerprint`，任一变了就中止；同时 `snapshot` 三份字节备用。
 - **写序四步**：
-  1. **改标签行**——给了 `--category` / `--tags` 就先改写过程文档头部那行（必须在封卷之前，否则封卷后就不许再动）；
+  1. **改标签行**——给了 `--tags` 就先改写过程文档头部那行（必须在封卷之前，否则封卷后就不许再动）；
      **历史行那十一列里的 `category` / `tags` 取最终值**：给了参数就写新值，没给就写任务原值（分片里的），两处必须一致 —— 否则历史里会留下改前的旧标签；
   2. **历史加一行**——先 `atomic.ensure_dir(HISTORY_DIR)`（首次结案时 `ledger/history/` 可能还不存在，而 `write_text_atomic` 不建父目录），再落 `append_row` 返回的新全文；
   3. **封卷过程文档**——打封卷标记 + 在执行记录里补一行，一次写完；
@@ -860,9 +860,9 @@ def current(repo=None) -> Identity   # 读 ~/.taskledger/identity.json；没有�
 | `init` | `--claim --new --name` | `init_identity(repo, claim, new, name)`（**不进 runner**：只写机器身份 `~/.taskledger/identity.json`，不碰台账、不碰 git；`repo` 只用来读名册给人挑 uuid，可以为 None） |
 | `new` | `--title --id --created --category --tags --self` | `new_task(title, tid, created, category, tags, mine)` |
 | `claim` | `--id` | `claim(tid)` |
-| `set` | `--id --release --owner --category --tags` | `set_task(tid, owner, release, category, tags)` → `release` / `handoff` / `claim` / `relabel` |
+| `set` | `--id --release --owner --tags` | `set_task(tid, owner, release, tags)` → `release` / `handoff` / `claim` / `relabel` |
 | `log` | `--id --note` | `log_progress(tid, note)`（折叠空白，不限长度） |
-| `close` | `--id --summary --finished --category --tags` | `close_task(tid, summary, finished, category, tags)` |
+| `close` | `--id --summary --finished --tags` | `close_task(tid, summary, finished, tags)` |
 | `list` | `--mine --owner --owner-name --pool --status --category --tag --since --until --json` | `list_tasks(q)` |
 | `show` | `--id --json` | `show_task(tid)` |
 | `history` | `--owner --owner-name --mine --category --tag --since --until --limit --months --json --count-only` | `query_history(q)` |
