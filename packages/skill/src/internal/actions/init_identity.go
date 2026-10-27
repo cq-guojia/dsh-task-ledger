@@ -97,6 +97,11 @@ func InitIdentity(repo string, p InitParams) (map[string]any, error) {
 		return map[string]any{"need_choose": true, "path": path, "options": options}, nil
 	default:
 		if strings.TrimSpace(p.Name) == "" {
+			if !p.New && p.Claim == nil && len(workers) == 0 {
+				// 名册为空：没有可认领的人，名字只能由用户自己在终端里输入
+				// （交互层问；agent 不得代写）。返回 need_name，不算错误。
+				return map[string]any{"need_name": true, "path": path}, nil
+			}
 			return nil, core.Failf("新建身份必须输入一个名字（--name=<名字>）。")
 		}
 		identity = core.Identity{UUID: NewUUID(), Name: strings.TrimSpace(p.Name)}

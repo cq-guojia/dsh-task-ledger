@@ -3,6 +3,7 @@
 package shell
 
 import (
+	"os"
 	"syscall"
 )
 
@@ -22,6 +23,8 @@ const (
 	enableLineInput      = 0x0002
 	enableEchoInput      = 0x0004
 	enableVTInput        = 0x0200
+	// 输出侧（输出句柄）：没有它，我们写的 ANSI 转义（清行 / 上移 / 灰色）会被原样打印成乱码。
+	enableVTProcessing = 0x0004
 )
 
 var procSetConsoleMode = syscall.NewLazyDLL("kernel32.dll").NewProc("SetConsoleMode")
@@ -50,7 +53,18 @@ func makeRaw(fd int) (*termState, error) {
 	if err := setConsoleMode(handle, want|enableVTInput); err != nil {
 		_ = setConsoleMode(handle, want)
 	}
+	enableVTOutput()
 	return &termState{fd: fd, orig: orig}, nil
+}
+
+// enableVTOutput 打开输出侧的 VT 处理：不开的话，我们写的清行 / 上移 / 灰色会被原样打印。
+func enableVTOutput() {
+	handle := syscall.Handle(os.Stdout.Fd())
+	var mode uint32
+	if err := syscall.GetConsoleMode(handle, &mode); err != nil {
+		return
+	}
+	_ = setConsoleMode(handle, mode|enableVTProcessing)
 }
 
 func setConsoleMode(handle syscall.Handle, mode uint32) error {
@@ -97,8 +111,10 @@ func readOne(fd int) (byte, bool, error) {
 }
 
 // readKey 与 unix 版同语义：方向键 → 上/下，ESC 单独按 → 取消，Enter → 确认，Ctrl-C → 取消。
-// promptLineRaw 这份平台暂不做逐键读行（走普通行读，ESC 不生效）。
-func promptLineRaw(prompt, hint string) (string, lineResult, bool) { return "", lineEOF, false }
+// promptLineEdit 这份平台暂不做逐键读行（走普通行读，ESC 不生效）。
+func promptLineEdit(prompt, hint string) (string, lineResult, *lineEditor, bool) {
+	return "", lineEOF, nil, false
+}
 
 func (t *termState) readKey() key {
 	ch, ok, err := readOne(t.fd)

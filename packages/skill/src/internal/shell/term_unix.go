@@ -4,10 +4,7 @@ package shell
 
 import (
 	"os"
-	"strconv"
-	"strings"
 	"syscall"
-	"unicode/utf8"
 	"unsafe"
 )
 
@@ -144,91 +141,49 @@ func (t *termState) readKey() key {
 	return keyNone
 }
 
-// promptLineRaw 在 raw 模式逐键读一行：ESC 回上一步、Ctrl-C 取消、Enter 确认、Backspace 退格。
-// 布局：提示行 → 空行 → 灰色帮助行；光标始终落在提示行末尾（用显示宽度定位，中文算两列）。
-// 返回 (读到的内容, 结果, 是否由本函数处理)；handled=false 表示拿不到 raw 终端
+// promptLineEdit 在 raw 模式逐键读一行：ESC 回上一步、Ctrl-C 取消、Enter 确认、Backspace 退格。
+// 布局：提示行 → 空行 → 灰色帮助行；光标始终落在提示行末尾（按显示宽度定位，中文算两列）。
+// 编辑器一并交出来：调用方遇到「输入无效」时能把这块整块抹掉重来，屏幕上不留半截输入。
+// 返回 (读到的内容, 结果, 编辑器, 是否由本函数处理)；handled=false 表示拿不到 raw 终端
 // （非终端 / raw 失败），调用方退回普通行读。
-func promptLineRaw(prompt, hint string) (string, lineResult, bool) {
+func promptLineEdit(prompt, hint string) (string, lineResult, *lineEditor, bool) {
 	fd := int(os.Stdin.Fd())
 	state, err := makeRaw(fd)
 	if err != nil {
-		return "", lineEOF, false
+		return "", lineEOF, nil, false
 	}
 	defer state.restore()
 
-	var buf []byte
-	os.Stdout.WriteString(prompt + "\r\n\r\n" + dim(hint))
-	// 光标落到「提示行 + 已输入内容」末尾：上移两行（跨过帮助行与空行）→ 回行首 → 右移对应列数。
-	// 只在开头定位这一次：之后光标跟着输出走，退格用相对左移即可，不必再算位置。
-	if w := displayWidth(prompt); w > 0 {
-		os.Stdout.WriteString("\x1b[2A\r\x1b[" + strconv.Itoa(w) + "C")
-	}
-
+	editor := newLineEditor(&screen, prompt, hint)
 	for {
 		ch, ok, err := readOne(fd)
 		if err != nil || !ok {
-			os.Stdout.WriteString("\r\n")
-			return "", lineEOF, true
+			editor.wipe()
+			return "", lineEOF, editor, true
 		}
 		switch ch {
 		case 0x1b:
 			// 单独 ESC = 回上一步；ESC [ / ESC O 开头的方向键序列吞掉（输入名字用不上方向键）
 			state.setReadTimeout(true)
 			next, gotNext, _ := readOne(fd)
-			state.setReadTimeout(false)
 			if gotNext && (next == '[' || next == 'O') {
-				readOne(fd) // 吞掉方向键的第三个字节
+				readOne(fd) // 吞掉方向键的第三个字节（仍在超时模式，不会卡住）
+				state.setReadTimeout(false)
 				continue
 			}
-			os.Stdout.WriteString("\r\n")
-			return "", lineBack, true
+			state.setReadTimeout(false)
+			editor.wipe()
+			return "", lineBack, editor, true
 		case '\r', '\n':
-			os.Stdout.WriteString("\r\n")
-			return string(buf), lineOK, true
+			editor.keep()
+			return string(editor.buf), lineOK, editor, true
 		case 0x03: // Ctrl-C
-			os.Stdout.WriteString("\r\n")
-			return "", lineEOF, true
+			editor.wipe()
+			return "", lineEOF, editor, true
 		case 0x7f, 0x08: // Backspace / Ctrl-H
-			if len(buf) == 0 {
-				continue
-			}
-			r, size := utf8.DecodeLastRuneInString(string(buf))
-			if size <= 0 {
-				size = 1
-			}
-			buf = buf[:len(buf)-size]
-			w := runeWidth(r) // 宽字符占两列
-			os.Stdout.WriteString("\x1b[" + strconv.Itoa(w) + "D")
-			os.Stdout.WriteString(strings.Repeat(" ", w))
-			os.Stdout.WriteString("\x1b[" + strconv.Itoa(w) + "D")
+			editor.backspace()
 		default:
-			buf = append(buf, ch)
-			os.Stdout.WriteString(string(ch))
+			editor.typeByte(ch)
 		}
 	}
-}
-
-// displayWidth 终端显示宽度：宽字符（中日韩、全角）算两列，其余一列。
-func displayWidth(s string) int {
-	w := 0
-	for _, r := range s {
-		w += runeWidth(r)
-	}
-	return w
-}
-
-// runeWidth 单个 rune 的显示宽度（1 或 2）。
-func runeWidth(r rune) int {
-	switch {
-	case r >= 0x1100 && r <= 0x115F, // 韩文字母
-		r >= 0x2E80 && r <= 0xA4CF,   // CJK 部首 … 彝文
-		r >= 0xAC00 && r <= 0xD7A3,   // 韩文音节
-		r >= 0xF900 && r <= 0xFAFF,   // CJK 兼容表意文字
-		r >= 0xFE30 && r <= 0xFE6F,   // CJK 兼容形式
-		r >= 0xFF00 && r <= 0xFF60,   // 全角 ASCII
-		r >= 0xFFE0 && r <= 0xFFE6,   // 全角符号
-		r >= 0x20000 && r <= 0x3FFFD: // CJK 扩展 B 起
-		return 2
-	}
-	return 1
 }

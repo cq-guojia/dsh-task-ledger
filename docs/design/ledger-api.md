@@ -273,7 +273,7 @@ func (t *termState) readKey() key
 - **`Push` 任何失败只提示、不抛**：提交已经落下去了，抛业务错会让 runner 走失败收尾，把已提交的内容从工作树抹掉。
 - **rebase 的 stage 语义与直觉相反**：`:1` 共同祖先、`:2` 上游（别人的）、`:3` 本机正在重放的提交；冲突标记里**左=远端、右=本机**，标反了会让人照着标记把别人的版本留下来。
 - **打印只在 `render.go`**，`notices` 在 `Main` 的 `defer` 里统一 flush 一次。
-- **终端交互**：`term_unix.go`（flock 平台同款：termios raw + ESC 序列）/ `term_windows.go`（控制台模式 + 扫描码，VT 输入可用时走同一套 ESC 解析）。
+- **终端交互**：画布与输入框在 `term_canvas.go`（跨平台：自己记账光标行/列，`drawRows` / `redraw` / `eraseBlock` 管「画一块 / 重画 / 抹掉」，`lineEditor` 管逐键输入与收尾）；raw 模式在 `term_unix.go`（termios raw + ESC 序列）/ `term_windows.go`（控制台模式 + 扫描码，VT 输入输出都可用时走同一套 ESC 解析）。**收尾约定**：确认 = 留下提示行当记录、抹掉空行与帮助行；取消 = 整块抹掉、光标回块顶 —— 屏幕上不留残迹。
 
 ## 五、工具层 `core/`
 
@@ -331,4 +331,3 @@ func (t *termState) readKey() key
 | `init` | `--claim` / `--new` / `--name` / `--yes`（禁用） | `InitIdentity`，只在真终端交互 |
 
 公共：`--repo <工作区根>`（命令前后都认）、`--no-sync`（**挂顶层**，放子命令后面是用法错）、`TASK_LEDGER_NO_SYNC=1`。
-

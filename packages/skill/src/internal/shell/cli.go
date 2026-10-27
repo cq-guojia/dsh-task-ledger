@@ -602,9 +602,9 @@ func runInit(a *Args) int {
 						return ExitOK
 					}
 					if choice.kind == "new" {
-						typed, inRes := promptLine("输入用户名：", "Enter 确认 · Backspace 退格 · ESC 回身份选择")
+						typed, inRes := promptLine("输入用户名：", "输入名字后按 Enter 确认 · Backspace 退格 · ESC 返回身份选择")
 						if inRes == lineBack {
-							continue // ESC：回选择菜单重来
+							continue // ESC：回选择菜单重来（这一块已抹掉，屏幕上不留残迹）
 						}
 						if inRes != lineOK {
 							errOut(dim("✕ 已取消初始化。随时可重跑 init 重新开始。"))
@@ -629,16 +629,24 @@ func runInit(a *Args) int {
 					res, err = actions.InitIdentity(repo, actions.InitParams{Claim: &uuid})
 					break
 				}
-			} else if tty {
-				name, inRes := promptLine("输入用户名：", "Enter 确认 · Backspace 退格 · ESC 取消初始化")
+			} else if need, _ := res["need_name"].(bool); need {
+				// 名册为空：没有可认领的人，只能问名字
+				if !tty {
+					out("名册为空：当前仓库里还没有任何用户。")
+					out("  处理：请用户在自己的终端运行 init 新建一个身份（真终端里会提示输入名字）。")
+					return ExitOK
+				}
+				name, inRes := promptLine("输入用户名：", "输入名字后按 Enter 确认 · Backspace 退格 · ESC 取消初始化")
 				if inRes != lineOK {
 					errOut(dim("✕ 已取消初始化。随时可重跑 init 重新开始。"))
 					return ExitOK
 				}
 				res, err = actions.InitIdentity(repo, actions.InitParams{New: true, Name: strings.TrimSpace(name)})
 			} else {
-				// 名册空：非终端不写，交给用户去真终端跑（InitIdentity 会报需要名字）
-				res, err = actions.InitIdentity(repo, actions.InitParams{})
+				// 名册空：非终端不写，交给用户去真终端跑
+				out("名册为空：当前仓库里还没有任何用户。")
+				out("  处理：请用户在自己的终端运行 init 新建一个身份。")
+				return ExitOK
 			}
 		}
 	}
@@ -679,8 +687,8 @@ type identityChoice struct {
 
 // selectIdentity 交互式选身份：↑/↓ 移动、Enter 确认、ESC / Ctrl-C 取消，末尾「+ 新建身份」。
 //
-// raw 模式、隐藏光标、相对上移回块顶 + 逐行清整行（不整屏清屏、
-// 不动滚动条）。拿不到终端（agent / 管道）或 raw 失败时退回编号输入。
+// raw 模式、隐藏光标；整块自己画（重画 / 收尾都按画布记账），退出时整块抹掉 ——
+// 屏幕上不留选择框的残迹。拿不到终端（agent / 管道）或 raw 失败时退回编号输入。
 func selectIdentity(options []map[string]any, title string) identityChoice {
 	fd := int(os.Stdin.Fd())
 	state, err := makeRaw(fd)
@@ -690,30 +698,25 @@ func selectIdentity(options []map[string]any, title string) identityChoice {
 	defer state.restore()
 
 	entries := len(options) + 1
-	height := entries + 4 // 标题 + 空行 + n 个选项 + 空行 + 提示
 	sel := 0
-	drew := false
+	drawn := false
 
 	os.Stdout.WriteString("\x1b[?25l") // 隐藏光标
 	defer func() {
 		os.Stdout.WriteString("\x1b[?25h") // 显示光标
-		if drew {
-			// 逐行「上移 + 清整行 + 回车」，不动主屏滚动
-			os.Stdout.WriteString(strings.Repeat("\x1b[1A\x1b[2K\r", height))
+		if drawn {
+			screen.eraseBlock()
 		}
 	}()
 
 	for {
-		if drew {
-			os.Stdout.WriteString(strings.Repeat("\x1b[1A", height)) // 相对上移回块顶
+		if drawn {
+			screen.redraw() // 回到块顶重画
 		} else {
-			os.Stdout.WriteString("\n") // 另起一行，不覆盖 shell 提示
-			drew = true
+			screen.beginBlock()
+			drawn = true
 		}
-		// promptui 同款：每行「清整行 + 回车 + 内容 + LF」
-		for _, row := range identityFrame(title, options, sel) {
-			os.Stdout.WriteString("\x1b[2K\r" + row + "\n")
-		}
+		screen.drawRows(identityFrame(title, options, sel))
 
 		switch state.readKey() {
 		case keyUp:
@@ -758,7 +761,7 @@ func selectIdentityByNumber(options []map[string]any, title string) identityChoi
 	n := len(options) + 1
 	out(fmt.Sprintf("  %d. + 新建身份", n))
 	for {
-		answer, res := promptLine(fmt.Sprintf("选编号(1-%d)：", n), "ESC 取消")
+		answer, res := promptLine(fmt.Sprintf("选编号(1-%d)：", n), "输入编号后按 Enter 确认 · ESC 取消")
 		if res != lineOK {
 			return identityChoice{kind: "cancel"}
 		}
@@ -787,19 +790,27 @@ func printCandidates2(title string, options []map[string]any) {
 	}
 }
 
-// confirm Y/N 确认：Y 返回 true，N 返回 false；读到 EOF 当作取消。
+// confirm Y/N 确认：Y 返回 true，N 返回 false；ESC / EOF 当作取消。
+//
+// 输入不是 y/n 时把这一块整块抹掉重来 —— 屏幕上不留半截输入，也不留一摞提示行。
 func confirm(question string) bool {
 	for {
-		ans, res := promptLine(question+" [Y/N]：", "Y 确认 · N 取消 · ESC 回身份选择")
+		ans, res, editor, handled := promptLineEdit(question+" [Y/N]：", "按 Y 确认 · 按 N 取消 · ESC 返回身份选择")
+		if !handled {
+			ans, res = promptLinePlain(question + " [Y/N]：")
+			editor = nil
+		}
 		if res != lineOK {
 			return false
 		}
-		ans = strings.ToLower(ans)
-		if ans == "y" || ans == "yes" {
+		switch strings.ToLower(strings.TrimSpace(ans)) {
+		case "y", "yes":
 			return true
-		}
-		if ans == "n" || ans == "no" {
+		case "n", "no":
 			return false
+		}
+		if editor != nil {
+			editor.wipe()
 		}
 		out("请输入 Y 或 N。")
 	}
@@ -819,16 +830,32 @@ const (
 // promptLine 打提示（不换行，与 input() 同形）再读一行；hint 是输入框下面那行灰色帮助。
 // 终端里走 raw 逐键读（ESC 回上一步、Backspace 退格）；拿不到 raw 终端才退回普通行读。
 func promptLine(prompt, hint string) (string, lineResult) {
-	if line, res, handled := promptLineRaw(prompt, hint); handled {
+	line, res, _, handled := promptLineEdit(prompt, hint)
+	if handled {
 		return line, res
 	}
+	return promptLinePlain(prompt)
+}
+
+// promptLinePlain 普通行读（非 raw 终端兜底）：打完提示，读到换行为止。
+func promptLinePlain(prompt string) (string, lineResult) {
 	os.Stdout.WriteString(prompt)
 	line, err := stdinReader.ReadString('\n')
 	if err != nil && line == "" {
 		os.Stdout.WriteString("\n")
 		return "", lineEOF
 	}
-	return strings.TrimSpace(line), lineOK
+	return strings.TrimSpace(stripControl(line)), lineOK
+}
+
+// stripControl 去掉控制字符：普通行读里 ESC 之类会被当内容带进来。
+func stripControl(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f {
+			return -1
+		}
+		return r
+	}, s)
 }
 
 func dim(text string) string { return "\x1b[2m" + text + "\x1b[0m" }
