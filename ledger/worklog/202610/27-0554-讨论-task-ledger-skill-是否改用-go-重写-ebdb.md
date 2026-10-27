@@ -1,6 +1,6 @@
 # 20261027-0554-讨论-task-ledger-skill-是否改用-go-重写-ebdb：讨论 task-ledger skill 是否改用 Go 重写
 
-- **状态**：open · 2026-10-27 05:54:11
+- **状态**：doing · 2026-10-27 06:26:51 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **创建**：2026-10-27 05:54:11 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
@@ -32,3 +32,4 @@
 <!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
      补记用 progress.py log --id <任务号> --note "一句话"。 -->
 - 2026-10-27 05:54:11 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务
+- 2026-10-27 06:26:51 · claim · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 认领 → doing

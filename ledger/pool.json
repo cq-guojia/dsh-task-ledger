@@ -1,6 +1,5 @@
 {
   "tasks": {
-    "20261027-0554-讨论-task-ledger-skill-是否改用-go-重写-ebdb": {"category": "技术选型", "created": "2026-10-27 05:54:11", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": [], "title": "讨论 task-ledger skill 是否改用 Go 重写", "updated": "2026-10-27 05:54:11", "worklog": "worklog/202610/27-0554-讨论-task-ledger-skill-是否改用-go-重写-ebdb.md"}
   },
   "version": "20261022000000"
 }
