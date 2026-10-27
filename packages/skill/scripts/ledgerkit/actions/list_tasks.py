@@ -12,7 +12,7 @@ from ..core.paths import POOL_REL
 from ..errors import Fail
 from ..store.owners_index import OwnersIndex
 from ..store.task_store import TaskStore
-from .guard import in_scope, owner_of, require_uuid, status_of
+from .guard import in_scope, is_mine, owner_of, require_uuid, status_of
 from .query import ListQuery
 from .result import ListResult, TaskRow, rel
 
@@ -52,6 +52,9 @@ def list_tasks(repo: Path, me: Identity, q: ListQuery) -> ListResult:
     kept = {
         tid: t for tid, t in rows.items() if in_scope(t, q, me=me, name_keys=name_keys)
     }
+    # 每行自带 `mine`（只比 uuid，零额外 IO）：调用方不必自己拿 uuid 再比一次
+    for task in kept.values():
+        task["mine"] = is_mine(task, me)
     table = tuple(
         TaskRow(
             tid=tid,

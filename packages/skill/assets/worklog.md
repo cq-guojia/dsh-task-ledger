@@ -1,6 +1,7 @@
 # <id>：<title>
 
 > **创建**：<created>（@<creator>）
+> **状态**：<status>
 
 <!-- 「> **分类**：… ｜ **标签**：…」行由脚本按 new --category / --tags 插入；两者皆空则不写。 -->
 

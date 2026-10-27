@@ -7,7 +7,7 @@ from pathlib import Path
 from ..core.identity import Identity, normalize
 from ..core.paths import shard_rel
 from ..core.time import now
-from ..core.worklog_md import exec_line
+from ..core.worklog_md import StatusLine, exec_line
 from ..errors import Fail
 from ..store.owners_index import OwnersIndex
 from ..store.task_store import TaskStore
@@ -62,6 +62,7 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
             logs.append_exec(
                 path,
                 exec_line(now(), me.stamp(), "set", f"交接给 @{who_stamp}（补齐）"),
+                status=StatusLine("doing", to_name, to_key, now()),
             )
         return Result(
             already_done=True,
@@ -80,7 +81,9 @@ def handoff(repo: Path, me: Identity, tid: str, *, to: str) -> Result:
         note = f"任务 {tid} 已交给 {who}，但过程文档没找到，跳过执行记录。"
     else:
         logs.append_exec(
-            path, exec_line(now(), me.stamp(), "set", f"交接给 @{who_stamp}")
+            path,
+            exec_line(now(), me.stamp(), "set", f"交接给 @{who_stamp}"),
+            status=StatusLine("doing", to_name, to_key, now()),
         )
     return Result(
         changed=("owner", "owner_name", "updated"),

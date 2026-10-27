@@ -81,6 +81,23 @@ def main() -> int:
         )
         check("new --self owner 是我", mine_task["owner"] == ME, r.stdout)
         check("new --self 记了 started", bool(mine_task["started"]), r.stdout)
+        # 每行自带 mine（只比 uuid）：调用方不必自己拿 uuid 再比一次
+        check(
+            "list --json 行带 mine，自己的是 true", mine_task["mine"] is True, r.stdout
+        )
+
+        r = run(repo, "whoami", "--json")
+        check(
+            "whoami --json 报本机身份",
+            json.loads(r.stdout) == {"uuid": ME, "name": "Me"},
+            r.stdout,
+        )
+        r = run(repo, "whoami")
+        check(
+            "whoami 人话含名字与 uuid",
+            "Me" in r.stdout and ME in r.stdout,
+            r.stdout,
+        )
 
         # 释放 → 认领（自动 doing）→ 记进展 → set 指向自己走空转
         r = run(repo, "set", "--id", tid, "--release")
@@ -92,6 +109,7 @@ def main() -> int:
             released["owner"] is None and released["owner_name"] is None,
             r.stdout,
         )
+        check("释放后那行 mine 变 false", released["mine"] is False, r.stdout)
         r = run(repo, "claim", "--id", tid)
         check("claim 退出码 0", r.returncode == 0, r.stderr)
         r = run(repo, "list", "--json")
@@ -216,6 +234,11 @@ def main() -> int:
             and body[0].get("owner") == ME,
             json.dumps(body[:1], ensure_ascii=False),
         )
+        check(
+            "历史每条记录带 mine（自己的是 true）",
+            bool(body) and body[0].get("mine") is True,
+            json.dumps(body[:1], ensure_ascii=False),
+        )
         # 过程文档三处落点（创建行 / 封卷行 / 执行记录）都记「名字 + uuid」，不靠历史表回链
         doc = next(iter((repo / "ledger" / "worklog").rglob("*.md")))
         text = doc.read_text(encoding="utf-8")
@@ -332,6 +355,24 @@ def main() -> int:
             r.stdout + r.stderr,
         )
         shutil.rmtree(yes_home, ignore_errors=True)
+
+        # whoami 未初始化也要照常回答（不是错误）：uuid / name 双 null、退 0
+        fresh_home = Path(tempfile.mkdtemp(prefix="ledgerkit-who-home-"))
+        r = subprocess.run(
+            [PY, "-B", str(PROGRESS), "whoami", "--json"],
+            capture_output=True,
+            text=True,
+            cwd=str(repo),
+            stdin=subprocess.DEVNULL,
+            env={**os.environ, "TASK_LEDGER_HOME": str(fresh_home)},
+            check=False,
+        )
+        check(
+            "whoami 未初始化给双 null 且退 0",
+            r.returncode == 0 and json.loads(r.stdout) == {"uuid": None, "name": None},
+            r.stdout + r.stderr,
+        )
+        shutil.rmtree(fresh_home, ignore_errors=True)
 
         # 裸 init（无 flag）非终端：只读报候选、不写文件（agent 走这条拿名单交给用户）
         list_home = Path(tempfile.mkdtemp(prefix="ledgerkit-list-home-"))

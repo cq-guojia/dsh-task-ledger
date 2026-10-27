@@ -12,10 +12,12 @@ from ..core.identity import Identity
 from ..core.labels import normalize_label, parse_tags
 from ..core.paths import history_path_for, shard_rel, to_repo_rel, worklog_name
 from ..core.worklog_md import (
+    StatusLine,
     append_exec_log,
     exec_line,
     has_frozen_line,
     rewrite_label_line,
+    rewrite_status_line,
     stamp_frozen,
 )
 from ..errors import Fail
@@ -99,6 +101,9 @@ def close_task(
                     frozen = append_exec_log(
                         frozen, exec_line(finished, me.stamp(), "close", "结案封卷")
                     )
+                    frozen = rewrite_status_line(
+                        frozen, StatusLine("closed", me.name, me.uuid, finished)
+                    )
                     logs.write(doc_path, frozen)
                     notes.append("补齐上次未完成的封卷。")
             if mine.get(tid) is not None:
@@ -159,6 +164,9 @@ def close_task(
                 frozen = stamp_frozen(text, finished, me.stamp())
                 frozen = append_exec_log(
                     frozen, exec_line(finished, me.stamp(), "close", "结案封卷")
+                )
+                frozen = rewrite_status_line(
+                    frozen, StatusLine("closed", me.name, me.uuid, finished)
                 )
                 logs.write(doc_path, frozen)
 

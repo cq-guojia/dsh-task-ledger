@@ -7,7 +7,7 @@ from pathlib import Path
 from ..core.identity import Identity, normalize
 from ..core.paths import POOL_REL, shard_rel
 from ..core.time import now
-from ..core.worklog_md import exec_line
+from ..core.worklog_md import StatusLine, exec_line
 from ..errors import Fail
 from ..store.owners_index import OwnersIndex
 from ..store.task_store import TaskStore
@@ -41,6 +41,7 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
                 logs.append_exec(
                     path,
                     exec_line(now(), me.uuid, "claim", "认领（补齐上次未完成的清理）"),
+                    status=StatusLine("doing", me.name, me.uuid, now()),
                 )
             return Result(
                 already_done=True,
@@ -72,7 +73,11 @@ def claim(repo: Path, me: Identity, tid: str) -> Result:
     logs = WorklogStore(repo)
     path = logs.find(tid, moved.get("worklog"))
     if path is not None:
-        logs.append_exec(path, exec_line(now(), me.stamp(), "claim", "认领 → doing"))
+        logs.append_exec(
+            path,
+            exec_line(now(), me.stamp(), "claim", "认领 → doing"),
+            status=StatusLine("doing", me.name, me.uuid, now()),
+        )
         note = None
     return Result(
         changed=("owner", "started", "updated"),

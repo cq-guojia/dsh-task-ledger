@@ -18,7 +18,7 @@ from ..core.time import now, time_key
 from ..errors import Fail
 from ..store.history_store import HistoryStore
 from ..store.owners_index import OwnersIndex
-from .guard import require_uuid
+from .guard import is_mine, require_uuid
 from .query import COUNT_CAP, HistoryQuery
 from .result import HistoryResult, rel
 
@@ -132,6 +132,8 @@ def query_history(repo: Path, me: Identity, q: HistoryQuery) -> HistoryResult:
             row["src"] = rel(repo, path)
             row["created"] = time_key(row.get("created") or "") or row.get("created")
             row["finished"] = time_key(row.get("finished") or "") or row.get("finished")
+            # 每行自带 `mine`（只比 uuid）：调用方不必自己拿 uuid 再比一次
+            row["mine"] = is_mine(row, me)
             records.append(row)
 
     index = OwnersIndex(repo)

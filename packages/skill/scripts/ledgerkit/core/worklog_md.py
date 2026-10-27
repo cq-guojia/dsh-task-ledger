@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from itertools import takewhile
+from typing import NamedTuple
 
 from ..errors import Fail
 from .identity import UUID_RE
@@ -30,6 +31,23 @@ CREATED_AT_RE = re.compile(
     r"(\d{4}-\d{2}-\d{2}(?: +\d{1,2}:\d{1,2}(?::\d{1,2})?)?)"
 )
 CREATOR_RE = re.compile(r"^\s*>\s*\*\*创建\*\*\s*[：:].*?（@(.+?)）")
+
+# 头部「状态」行：`> **状态**：doing · @某人（uuid）· 更新 2026-10-27 08:28:22`。
+# 它是**镜像**：分片 / 池里的 `status` / `owner` 才是权威，这行只是让「看一条详情」
+# 不必再翻索引（2026-10-27 用户拍板）。老文档没有这行 ⇒ 合法，读取方回退查分片。
+STATUS_MARK = "状态"
+STATUS_LINE_RE = re.compile(r"^\s*>\s*\*\*" + STATUS_MARK + r"\*\*")
+STATUS_RE = re.compile(r"^\s*>\s*\*\*" + STATUS_MARK + r"\*\*\s*[：:]\s*([A-Za-z_]+)")
+#: 状态取值（与 `core/labels.STATUSES` + 结案后的 `closed` 同口径，全链路英文）。
+STATUS_VALUES = ("open", "doing", "closed")
+_STATUS_UUID_RE = re.compile(
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+)
+_STATUS_NAME_RE = re.compile(r"@([^（(·]+)")
+_STATUS_WHEN_RE = re.compile(
+    r"更新\s+(\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?)"
+)
+_TITLE_RE = re.compile(r"^#\s*(.+?)\s*[：:]\s*(.*)$")
 
 _HEAD_RE = re.compile(r"\A(.*?)(?=^## |\Z)", re.DOTALL | re.MULTILINE)
 
@@ -70,6 +88,16 @@ def format_problems(text: str) -> list[str]:
         )
     elif not any(CREATOR_RE.match(line) for line in head):
         problems.append("头部「创建」行缺发起人（应为 `…（@某人）`）")
+    # 状态行：**有就必须合法**；缺了不报——老文档没有这行是合法的（读取方回退查分片）
+    for line in head:
+        if not STATUS_LINE_RE.match(line):
+            continue
+        m = STATUS_RE.match(line)
+        if m is None or m.group(1) not in STATUS_VALUES:
+            problems.append(
+                "头部「状态」行的值不合法（应为 " + " / ".join(STATUS_VALUES) + "）"
+            )
+        break
     heads = section_heads(body)
     missing = [s for s in REQUIRED_SECTIONS if s not in heads]
     if missing:
@@ -131,15 +159,34 @@ def render_worklog(
     creator: str,
     category: str | None = None,
     tags: Iterable[str] | None = None,
+    status: StatusLine | None = None,
     template: str,
 ) -> str:
-    """把模板套成一篇过程文档（`<id>` / `<title>` / `<created>` / `<creator>` 四个占位符）。"""
+    """把模板套成一篇过程文档（`<id>` / `<title>` / `<created>` / `<creator>` / `<status>`）。
+
+    `<status>` 只占状态行的**内容**（`doing · @某人（uuid）· 更新 …`）；模板里的
+    `> **状态**：` 前缀是字面量。不传 status ⇒ 整行删掉（不留空壳）。
+    """
     text = (
         template.replace("<id>", tid)
         .replace("<title>", title or "")
         .replace("<created>", created or "")
         .replace("<creator>", creator or "")
     )
+    if status is None:
+        text = (
+            "\n".join(
+                ln
+                for ln in text.splitlines()
+                if not (STATUS_LINE_RE.match(ln) and "<status>" in ln)
+            )
+            + "\n"
+        )
+    else:
+        text = text.replace(
+            "<status>",
+            render_status_body(status.status, status.name, status.uuid, status.when),
+        )
     meta = label_line(category, tags)
     if not meta:
         return text
@@ -153,6 +200,86 @@ def _insert_after_head(lines: list[str], line: str) -> list[str]:
         at = 1 if lines and lines[0].startswith("# ") else 0
     lines.insert(at + 1, line)
     return lines
+
+
+class StatusLine(NamedTuple):
+    """头部状态行的四样内容（`when` 传 UTC，与执行记录同口径）。"""
+
+    status: str
+    name: str | None = None
+    uuid: str | None = None
+    when: str | None = None
+
+
+def render_status_body(
+    status: str,
+    name: str | None = None,
+    uuid: str | None = None,
+    when: str | None = None,
+) -> str:
+    """状态行的**内容**部分（`> **状态**：` 之后那段）。"""
+    parts = [status]
+    if name and uuid:
+        parts.append(f"@{name}（{uuid}）")
+    elif name:
+        parts.append(f"@{name}")
+    elif uuid:
+        parts.append(uuid)
+    if when:
+        parts.append(f"更新 {when}")
+    return " · ".join(parts)
+
+
+def render_status_line(
+    status: str,
+    name: str | None = None,
+    uuid: str | None = None,
+    when: str | None = None,
+) -> str:
+    return f"> **{STATUS_MARK}**：{render_status_body(status, name, uuid, when)}"
+
+
+def rewrite_status_line(text: str, status: StatusLine) -> str:
+    """把头部状态行改成 `status`：有就就地替换，没有就插到「创建」行后。"""
+    line = render_status_line(status.status, status.name, status.uuid, status.when)
+    lines = (text or "").splitlines()
+    for i, ln in enumerate(lines):
+        if ln.startswith("## "):
+            break
+        if STATUS_LINE_RE.match(ln):
+            lines[i] = line
+            return "\n".join(lines) + "\n"
+    return "\n".join(_insert_after_head(lines, line)) + "\n"
+
+
+def read_status(text: str) -> StatusLine | None:
+    """头部状态行 → `StatusLine`；没有这行、或值不合法 ⇒ None（调用方回退查分片）。"""
+    for line in _head_lines((text or "").lstrip("\ufeff").splitlines()):
+        m = STATUS_RE.match(line)
+        if not (m and m.group(1) in STATUS_VALUES):
+            continue
+        u = _STATUS_UUID_RE.search(line)
+        name = _STATUS_NAME_RE.search(line)
+        when = _STATUS_WHEN_RE.search(line)
+        return StatusLine(
+            m.group(1),
+            (name.group(1).strip() or None) if name else None,
+            (u.group(0).lower() if u else None),
+            (when.group(1) if when else None),
+        )
+    return None
+
+
+def head_title(text: str) -> tuple[str | None, str | None]:
+    """第一行 `# <任务号>：<标题>` → (任务号, 标题)；读不出给 (None, None)。"""
+    for line in (text or "").lstrip("\ufeff").splitlines():
+        if not line.startswith("# "):
+            continue
+        m = _TITLE_RE.match(line)
+        if m:
+            return m.group(1).strip() or None, m.group(2).strip() or None
+        return None, None
+    return None, None
 
 
 def exec_line(when: str, who: str | None, kind: str, note: str) -> str:

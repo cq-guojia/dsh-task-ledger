@@ -67,6 +67,8 @@ class ShowResult:
     task: dict[str, Any] = field(default_factory=dict)
     worklog: WorklogView | None = None
     others: tuple[str, ...] = ()  # 同一个任务号还出现在哪些文件里
+    #: 字段是从**在办索引**读来的（老文档没有状态行 / 文档丢了），不是文档自述
+    legacy: bool = False
     notices: tuple[str, ...] = ()
 
 

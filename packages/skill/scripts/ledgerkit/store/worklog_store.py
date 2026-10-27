@@ -131,9 +131,10 @@ class WorklogStore:
         creator: str,
         category: str | None = None,
         tags: tuple[str, ...] = (),
+        status: worklog_md.StatusLine | None = None,
         first_exec: str | None = None,
     ) -> Path:
-        """一次写完整篇（含首条执行记录）。返回绝对路径。"""
+        """一次写完整篇（含状态行与首条执行记录）。返回绝对路径。"""
         rel = worklog_rel(tid, created)
         path = self.repo / to_repo_rel(rel)
         ensure_dir(path.parent)
@@ -144,6 +145,7 @@ class WorklogStore:
             creator=creator,
             category=category,
             tags=tags,
+            status=status,
             template=self.template(),
         )
         if first_exec:
@@ -155,14 +157,23 @@ class WorklogStore:
         """写回「锚点编辑后的新全文」；不许用它替换前五节正文。"""
         write_text_atomic(path, text)
 
-    def append_exec(self, path: Path, line: str) -> bool:
-        """追加一条执行记录；写不进返回 False，**不抛**（调用方自己决定报不报）。"""
+    def append_exec(
+        self, path: Path, line: str, *, status: worklog_md.StatusLine | None = None
+    ) -> bool:
+        """追加一条执行记录，并在**同一次写盘**里顺带刷新头部状态行（`status` 给了才刷）。
+
+        写不进返回 False，**不抛**（调用方自己决定报不报）。状态行与执行记录必须一起落地：
+        分两写就会留下「记录写了、状态没刷」这种不报错的不一致。
+        """
         try:
             text = path.read_text(encoding="utf-8-sig")
         except (OSError, UnicodeDecodeError):
             return False
         try:
-            write_text_atomic(path, worklog_md.append_exec_log(text, line))
+            new = worklog_md.append_exec_log(text, line)
+            if status is not None:
+                new = worklog_md.rewrite_status_line(new, status)
+            write_text_atomic(path, new)
         except Exception:  # noqa: BLE001 —— 写不进是这条记录的失败，不该掀翻整条命令
             return False
         return True
