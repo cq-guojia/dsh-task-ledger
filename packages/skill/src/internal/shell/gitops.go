@@ -78,11 +78,23 @@ func gitRun(args ...string) gitResult {
 
 // GitRepo 一个仓库的 git 操作面。构造不跑 git，也不收 no-sync（调不调由 runner 定）。
 type GitRepo struct {
-	Repo         string
-	upstream     string
-	upstreamDone bool
-	isRepo       bool
-	isRepoDone   bool
+	Repo          string
+	upstream      string
+	upstreamDone  bool
+	isRepo        bool
+	isRepoDone    bool
+	reachable     bool
+	reachableDone bool
+}
+
+// Reachable 远端连不连得上：拿 fetch 当探测，结果按命令缓存 —— 守卫先跑过一次，
+// SyncDown 再读缓存，既少一次网络往返，也保证两者判断依据一致。
+func (g *GitRepo) Reachable() bool {
+	if !g.reachableDone {
+		g.reachable = g.run("fetch", "--quiet").Code == 0
+		g.reachableDone = true
+	}
+	return g.reachable
 }
 
 func (g *GitRepo) run(args ...string) gitResult {
@@ -188,25 +200,25 @@ func (g *GitRepo) GuardBeforeWrite(scope actions.Scope) error {
 	if err := g.CheckRepoState(); err != nil {
 		return err
 	}
-	// 手写的过程文档不算「本地脏」：它走 SyncDown 的 stash → 快进 → 叠回，不硬拦
-	var dirty []string
-	for _, line := range g.dirty(rels) {
-		if !isWorklogPath(porcelainPath(line)) {
-			dirty = append(dirty, line)
+	// 远端连不上（离线）⇒ 本次不会 checkout 远端版本，也就不存在「远端盖掉本地」；
+	// 这时再拦住并要求 git push，只会让人在恢复联网前一条都写不了。
+	if !g.Reachable() {
+		notices.Note("提示：远端连不上（离线），本次只写本地台账，未推送的提交会在联网后按冲突合并处理。")
+		return nil
+	}
+	// 在线 + 本地有未推送的台账提交 ⇒ 不拦人，先自动推一次（走 Push 的 rebase
+	// + 按任务号语义合并，见 merge.go）。只有真同任务冲突时才报错交人工 ——
+	// 手工 git push 会绕开脚本的语义合并（gitops.go:393-395 自己写明只在自动重试时发生）。
+	if unpushed := g.unpushed(rels); len(unpushed) > 0 {
+		g.Push(3, time.Now().Add(20*time.Second))
+		if still := g.unpushed(rels); len(still) > 0 {
+			return core.Failf("本地有未推送的台账提交，自动推送没推干净：\n  %s\n"+
+				"  处理：手动跑 git pull --rebase && git push（冲突自己解）；或者加 --no-sync 只写本地。",
+				strings.Join(head(still, 10), "\n  "))
 		}
 	}
-	if len(dirty) > 0 {
-		return core.Failf("本地有未提交的台账改动：\n  %s\n  处理：先提交它们（git add <文件> && git commit），再跑本命令。",
-			strings.Join(head(dirty, 10), "\n  "))
-	}
-	if unpushed := g.unpushed(rels); len(unpushed) > 0 {
-		return core.Failf("本地有未推送的台账提交：\n  %s\n  处理：先 git push；或者加 --no-sync 只写本地（之后要记得推）。",
-			strings.Join(head(unpushed, 10), "\n  "))
-	}
-	if untracked := g.untracked(rels); len(untracked) > 0 {
-		return core.Failf("有还没入库的同名台账文件（提交会被它们挡住）：\n  %s\n  处理：先 git add 它们再跑本命令。",
-			strings.Join(head(untracked, 10), "\n  "))
-	}
+	// 「本地有未提交改动 / 有未入库的新文件」不再硬拦：
+	// 交给 SyncDown 逐文件跳过取最新 —— 签出的东西不覆盖，冲突留到推送阶段按任务号合并。
 	return nil
 }
 
@@ -220,8 +232,8 @@ func (g *GitRepo) SyncDown(scope actions.Scope) ([]SyncEntry, error) {
 	if upstream == "" {
 		return nil, nil
 	}
-	fetch := g.run("fetch", "--quiet")
-	if fetch.Code != 0 {
+	rels := g.rels(scope)
+	if !g.Reachable() {
 		// 远端连不上（离线 / 没网）：不中止 —— 台账照样写，只是这次拿不到远端最新。
 		// 提示必须给，否则用户以为同步过了（2026-10-21 红队结论）。
 		notices.Note("提示：写前拉取失败（远端连不上），本次按本地最新内容写；" +
@@ -243,10 +255,33 @@ func (g *GitRepo) SyncDown(scope actions.Scope) ([]SyncEntry, error) {
 	var out []SyncEntry
 	stashed := map[string]SyncEntry{}
 	var stashOrder []string
+	// 本地状态一次 git 调用摸清，别在循环里逐文件起子进程
+	// （每个文件一次 status + 一次 log 会把台账操作拖成几十次 git，明显卡顿）。
+	dirtySet := map[string]bool{}
+	for _, line := range g.dirty(rels) {
+		dirtySet[porcelainPath(line)] = true
+	}
+	aheadSet := map[string]bool{}
+	for _, line := range g.lines(append([]string{"diff", "--name-only", upstream + "...HEAD", "--"}, rels...)...) {
+		aheadSet[unquoteGitPath(line)] = true
+	}
+	trackedSet := map[string]bool{}
+	for _, line := range g.lines(append([]string{"ls-files", "--"}, rels...)...) {
+		trackedSet[unquoteGitPath(line)] = true
+	}
 	for _, path := range g.paths(scope) {
 		rel := relTo(g.Repo, path)
 		if exists := g.run("cat-file", "-e", upstream+":"+rel); exists.Code != 0 {
 			continue // 上游还没有这个文件：本地留着，不覆盖也不报错
+		}
+		// 本地在这一条路径上有「我的东西」⇒ 本次不取最新，保住本地内容：
+		//   - 已提交未推送：checkout 会把已提交的内容回退；
+		//   - 还没入库的新文件：stash 不带 -u 收不走，覆盖后没有副本；
+		//   - 台账文件有未提交改动：它没有 stash 备份这条退路。
+		// 过程文档且已入库的不在此列，照旧走下面的 stash → 取 → 叠回。
+		if aheadSet[rel] || !trackedSet[rel] || (!isWorklogPath(rel) && dirtySet[rel]) {
+			notices.Note("提示：" + rel + " 本地有改动（或本地领先上游），本次跳过取最新，按本地内容改。")
+			continue
 		}
 		// 「刷之前」的字节先记：手写的那版也算（叠回失败 / 命令失败时要能原样放回）
 		before := readMaybe(path)
@@ -592,8 +627,10 @@ func unquoteGitPath(raw string) string {
 }
 
 // isWorklogPath 是不是手写的过程文档（与台账文件区分：台账硬拦、过程文档放行叠回）。
+// 入参是相对 repo 的路径（ledger/worklog/…），先归一回 ledger/ 再判 —— 与 merge.go 的
+// IsAppendOnly 同一口径；不归一的话恒为 false，手写文档会被当成台账硬拦。
 func isWorklogPath(rel string) bool {
-	return strings.HasPrefix(filepath.ToSlash(rel), core.WorklogDir+"/")
+	return strings.HasPrefix(core.ToLedgerRel(rel), core.WorklogDir+"/")
 }
 
 // changedBytes 取最新之后这个文件的内容是否真变了（没变就不该进记账本：重跑幂等时提交空改动必失败）。

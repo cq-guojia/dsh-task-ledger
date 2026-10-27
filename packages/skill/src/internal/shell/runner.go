@@ -152,7 +152,9 @@ func runCommand(command string, args *Args, log *store.WriteLog) (int, error) {
 	// 记进记账本：成功时照常提交（登记必须进仓），失败时由 RollbackPresync 一起还回去 ——
 	// 否则一条失败的命令会把台账留在「已写未提交」，下一条写命令被写前 guard 拦死。
 	// 登记是幂等的，还回去下次再登记，没有损失。
-	for _, rel := range bootScope.Files {
+	// 快照范围取 scope（boot ∪ act）：过程文档被 SyncDown 跳过时不会产出 SyncEntry，
+	// 只能在这里补字节，否则命令失败时 RollbackPresync 无内容可还。
+	for _, rel := range scope.Files {
 		path := filepath.Join(repo, core.ToRepoRel(rel))
 		before, had, err := store.Snapshot(path)
 		if err != nil {
