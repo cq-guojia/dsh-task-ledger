@@ -1,4 +1,4 @@
-// 内嵌 skill 副本一致性：build:host 里的 copy-skill.mjs 把 packages/skill 整目录拷进
+// 内嵌 skill 副本一致性：build:host 里的 copy-skill.mjs 把 packages/skill 的运行时拷进
 // packages/plugin/skill。忘了 build 就会「源改了、发出去的还是旧的」——这个仓库的产物
 // 是入库的，所以这一步必须在提交前能查。
 //
@@ -6,17 +6,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { RUNTIME_ENTRIES } from "./copy-skill.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const SRC_ROOT = path.resolve(here, "../../skill");
 export const DST_ROOT = path.resolve(here, "../skill");
 
-function walk(dir, base = dir) {
+// 只比运行时那几项：源码在 packages/skill/src，不进副本（copy-skill.mjs 同款白名单）。
+function walk(dir, base) {
 	return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-		// 运行脚本产生的字节码缓存不属于分发内容，不参与比较
-		if (entry.name === "__pycache__" || entry.name.endsWith(".pyc")) return [];
-		// 测试是开发产物，不进分发副本（copy-skill.mjs 同步排除）
-		if (base === dir && entry.name === "tests") return [];
 		const abs = path.join(dir, entry.name);
 		return entry.isDirectory()
 			? walk(abs, base)
@@ -24,10 +22,19 @@ function walk(dir, base = dir) {
 	});
 }
 
+function runtimeFiles(root) {
+	return RUNTIME_ENTRIES.flatMap((entry) => {
+		const abs = path.join(root, entry);
+		if (!fs.existsSync(abs)) return [];
+		if (!fs.statSync(abs).isDirectory()) return [entry];
+		return walk(abs, root);
+	}).sort();
+}
+
 /** 比较源与副本；返回三组差异（都为空才算一致）。 */
 export function diffSkillCopy() {
-	const srcFiles = walk(SRC_ROOT).sort();
-	const dstFiles = fs.existsSync(DST_ROOT) ? walk(DST_ROOT).sort() : [];
+	const srcFiles = runtimeFiles(SRC_ROOT);
+	const dstFiles = fs.existsSync(DST_ROOT) ? runtimeFiles(DST_ROOT) : [];
 	const srcSet = new Set(srcFiles);
 	const dstSet = new Set(dstFiles);
 	return {

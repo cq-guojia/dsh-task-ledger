@@ -1,7 +1,7 @@
 # 数据说明：台账文件格式
 
-> **状态**：🔵 落码（数据格式与写序均为现状，写序表里的函数名即 `packages/skill/go/internal/actions/` 实际实现）
-> **来源**：`task-ledger` skill（`packages/skill/go/internal/` + `assets/worklog.md`）是格式真源
+> **状态**：🔵 落码（数据格式与写序均为现状，写序表里的函数名即 `packages/skill/src/internal/actions/` 实际实现）
+> **来源**：`task-ledger` skill（`packages/skill/src/internal/` + `assets/worklog.md`）是格式真源
 > **配套**：运行逻辑见 [`architecture.md`](architecture.md)；脚本分层见 [`code-conventions.md`](code-conventions.md)
 
 本项目**不自建数据库**：插件只读各工作区的台账文件。格式真源在 skill 代码，本文档只做索引级说明；字面值以代码为准。
@@ -102,7 +102,7 @@
 
 ## 六、写序 = 崩溃恢复协议
 
-每个动作的写序不是实现细节，是数据契约。崩在中间留下的状态，必须能靠「重跑一次」收敛。「函数」列即 `packages/skill/go/internal/actions/` 的实际业务函数名（每个动作一个文件）。
+每个动作的写序不是实现细节，是数据契约。崩在中间留下的状态，必须能靠「重跑一次」收敛。「函数」列即 `packages/skill/src/internal/actions/` 的实际业务函数名（每个动作一个文件）。
 
 | 动作 | 函数 | 写序 | 崩在中间 | 重跑怎么收敛 |
 |---|---|---|---|---|

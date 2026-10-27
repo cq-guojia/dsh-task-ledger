@@ -48,4 +48,4 @@
 
 ## 本仓自己的台账
 
-本仓库（`dsh-task-ledger`）也用自己的这套脚本（`scripts/progress` → `go/` 二进制）管自己的活，台账数据在 `ledger/`；它和本 skill 源码 `packages/skill/` 是两回事 —— **改 skill 请别动 `ledger/`**。
+本仓库（`dsh-task-ledger`）也用自己的这套脚本（`scripts/progress` → `src/` 编译出的二进制）管自己的活，台账数据在 `ledger/`；它和本 skill 源码 `packages/skill/` 是两回事 —— **改 skill 请别动 `ledger/`**。

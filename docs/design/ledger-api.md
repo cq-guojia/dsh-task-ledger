@@ -1,11 +1,11 @@
 # 接口契约：数据层 / 业务层 / 驱动外壳（Go 实现）
 
-> **状态**：🟢 落码（2026-10-27 全量 Go 化完成；命令行、git 同步、语义合并、终端交互都在 `packages/skill/go/`）
+> **状态**：🟢 落码（2026-10-27 全量 Go 化完成；命令行、git 同步、语义合并、终端交互都在 `packages/skill/src/`）
 > **来源**：用户 2026-10-22「完全重构，不是最小改动」+ 2026-10-27「脚本改用 Go 重写」
 > **配套**：数据形状见 [`ledger-data.md`](ledger-data.md)；分层纪律见 [`code-conventions.md`](code-conventions.md)；系统不变量见 [`architecture.md`](architecture.md)
 >
 > **本文只讲三件事**：每一层有哪些方法、各自负责什么、哪些事不许做。
-> **签名以源码为准**（下表是 2026-10-27 抽取的现状快照）；语义有疑问时先读 `packages/skill/go/internal/<层>/`，别按本文猜实现。
+> **签名以源码为准**（下表是 2026-10-27 抽取的现状快照）；语义有疑问时先读 `packages/skill/src/internal/<层>/`，别按本文猜实现。
 >
 
 ## 〇、先把词说清楚
@@ -23,7 +23,7 @@
 **依赖只能从上往下，不许反向**：
 
 ```
-cmd/ledger/main.go        ← 只把 argv 与退出码转给 shell.Main
+main.go                    ← 只把 argv 与退出码转给 shell.Main
    ↓
 shell/                    ← 取最新 → 自举 → 调动作 → 打印 → 提交推送 → 退出码
    ↓
@@ -42,7 +42,7 @@ core/                     ← 只做文本和时间的换算，一个文件都�
 
 ### 准入规则（能机械检查）
 
-| 规则 | 怎么查（在 `packages/skill/go/` 下跑） |
+| 规则 | 怎么查（在 `packages/skill/src/` 下跑） |
 |---|---|
 | 业务层不许反向依赖外壳 | `grep -rn "internal/shell" internal/actions/` 必须为 **0** |
 | 数据层不许依赖业务层 / 外壳 | `grep -rn "internal/actions\|internal/shell" internal/store/` 必须为 **0** |
@@ -64,19 +64,20 @@ packages/skill/
 │   ├── progress                 ← 入口 shim：认平台 → 校验可执行位 → exec 二进制
 │   └── bin/ledger-<os>-<arch>[.exe]   ← 三平台静态产物（linux/amd64、darwin/arm64、windows/amd64）
 │
-├── go/                          ← 现役实现（唯一被调用的一版）
-│   ├── cmd/ledger/main.go       ← 6 行：os.Exit(shell.Main(os.Args[1:]))
-│   └── internal/
-│       ├── shell/               ← 外壳：cli / runner / gitops / merge / render / help / presync / term_*
-│       ├── actions/             ← 业务层：一个动作一个文件 + registry / scope / guard / query
-│       ├── store/               ← 数据层：atomic / dirty / locks(+平台) / jsonstore / 四张表
-│       ├── core/                ← 工具层：time / paths / ids / identity / labels / worklog_md / history_md / roots / rowmap
-│       ├── env/                 ← 我是谁
-│       ├── notices/             ← 提示收集
-│       └── jsonfmt/             ← `--json` 输出排版
+└── src/                         ← 实现源码（目录名与语言无关）
+    ├── go.mod                   ← Go 模块清单
+    ├── main.go                  ← 6 行：os.Exit(shell.Main(os.Args[1:]))
+    └── internal/                ← 各层实现都在这（internal = 只许本模块内部引用）
+        ├── shell/               ← 外壳：cli / runner / gitops / merge / render / help / presync / term_*
+        ├── actions/             ← 业务层：一个动作一个文件 + registry / scope / guard / query
+        ├── store/               ← 数据层：atomic / dirty / locks(+平台) / jsonstore / 四张表
+        ├── core/                ← 工具层：time / paths / ids / identity / labels / worklog_md / history_md / roots / rowmap
+        ├── env/                 ← 我是谁
+        ├── notices/             ← 提示收集
+        └── jsonfmt/             ← `--json` 输出排版
 ```
 
-**分发时不带 `go/`**：`package.json` 的 `files` 只列 `scripts/`、`assets/`、`references/`、`SKILL.md`、`README.md`。
+**分发时不带 `src/`**：`package.json` 的 `files` 只列 `scripts/`、`assets/`、`references/`、`SKILL.md`、`README.md`；插件内嵌副本（`packages/plugin/skill/`）也只同步这几项运行时，源码不进副本。
 
 ### 1.1 拆包时最容易踩的四条
 
@@ -309,7 +310,7 @@ func (t *termState) readKey() key
 |---|---|
 | 分层没反向 | 见 §〇 的 `grep` 表，全部为 0 |
 | 没有第二处 git / 打印 / 加锁 | 同上 |
-| 构建与静态检查 | `cd packages/skill/go && go vet ./... && go test ./...` |
+| 构建与静态检查 | `cd packages/skill/src && go vet ./... && go test ./...` |
 | 三平台编得过 | `GOOS=linux GOARCH=amd64 go build ./...`、`GOOS=darwin GOARCH=arm64 …`、`GOOS=windows GOARCH=amd64 …` |
 | 命令可用性 | 在临时 git 仓库按 §八 跑一遍 new → claim → log → close 全流程，再 `validate --deep` |
 

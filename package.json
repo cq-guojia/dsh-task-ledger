@@ -11,6 +11,6 @@
 		"packages/*"
 	],
 	"scripts": {
-		"test": "cd packages/skill/go && go vet ./... && go test ./..."
+		"test": "cd packages/skill/src && go vet ./... && go test ./..."
 	}
 }

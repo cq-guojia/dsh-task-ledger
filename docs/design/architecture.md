@@ -17,9 +17,9 @@
 | 包 | 内容 | 发布触发 |
 |---|---|---|
 | `dsh-task-ledger`（`packages/plugin/`） | host 半（skill 注册 + webServer 路由 + 跨工作区读台账）+ client 半（侧栏条目 + 主面板）+ `cordis.patch.yml`；`dist/` 入仓 | tag `plugin-v*` |
-| `task-ledger`（`packages/skill/`） | SKILL.md + `scripts/progress`（入口 shim，按平台 exec `scripts/bin/ledger-<os>-<arch>`）+ `go/`（Go 实现：`internal/core` 纯换算 / `store` 数据层 / `actions` 业务层 / `shell` 驱动）+ assets + references（静态二进制） | tag `skill-v*` |
+| `task-ledger`（`packages/skill/`） | SKILL.md + `scripts/progress`（入口 shim，按平台 exec `scripts/bin/ledger-<os>-<arch>`）+ `src/`（Go 实现：`main.go` 入口 + `internal/core` 纯换算 / `store` 数据层 / `actions` 业务层 / `shell` 驱动）+ assets + references（静态二进制） | tag `skill-v*` |
 
-两包独立 semver。skill 内容唯一真源在 `packages/skill/`，插件构建时整目录拷入（内嵌副本与独立包必须同源）。
+两包独立 semver。skill 内容唯一真源在 `packages/skill/`，插件构建时只把运行时那几项（`SKILL.md` / `README.md` / `package.json` / `assets` / `references` / `scripts`）拷入内嵌副本，源码留在 `packages/skill/src/` 不进副本。
 
 ## 二、运行逻辑
 
@@ -102,8 +102,8 @@ shell.Run（runner.go）
    - 多文件：先写目标、后删源、删永远是最后一步；每个动作的重跑判据写在业务层。写序表见 [`ledger-data.md`](ledger-data.md)。
    - 跨文件写失败：用 `store.Snapshot` / `store.Restore` 把**本次动作刚碰过的**文件按字节还回去。这是"读进内存、失败写回"，**不是** journal —— 不落日志、不扫残留、没有启动恢复。
 7. **写前 guard 会硬拦**：`GitRepo.GuardBeforeWrite` 在取最新之前查——本地台账有未提交改动 / 有未推送的台账提交 / 有未入库的同名文件 / 处于 rebase 中间态 ⇒ 中止并说明怎么处理。detached HEAD 或无上游时只做本地提交并在 stderr 提示。`worklog` 里人写的改动先 stash、刷完再叠回。
-8. **开关只有两组**：动作是否只读由 `go/internal/actions/registry.go` 的 `ActionSpec.ReadOnly` 决定（只读 ⇒ 不取最新、不自举、不提交）；`--no-sync` / `TASK_LEDGER_NO_SYNC`（不碰 git、不拿整命令级锁）。
-9. **skill 内容单一真源**：`packages/skill/` 是唯一真源，插件内嵌副本由构建纳入，两处逐字节一致（`check-skill-copy.mjs` 守）。
+8. **开关只有两组**：动作是否只读由 `src/internal/actions/registry.go` 的 `ActionSpec.ReadOnly` 决定（只读 ⇒ 不取最新、不自举、不提交）；`--no-sync` / `TASK_LEDGER_NO_SYNC`（不碰 git、不拿整命令级锁）。
+9. **skill 内容单一真源**：`packages/skill/` 是唯一真源，插件内嵌副本由构建纳入（只含运行时那几项，源码不进副本），两处逐字节一致（`check-skill-copy.mjs` 守）。
 10. **开发基线 = 宿主 0.2.0-rc.2**：宿主能力一律以 [`external/`](external/) 为准，不得凭方法名猜签名。
 11. **dist 入仓**：git 直装不跑构建脚本；推送前必须 build（含 typecheck 验证）。
 12. **明暗主题只认宿主**：`body[data-ds-dark-theme]`，禁用 `prefers-color-scheme`。

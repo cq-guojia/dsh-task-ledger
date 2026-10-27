@@ -12,7 +12,7 @@
 index.ts            # 插件入口（apply）
 host/               # Node 侧：读台账 / 聚合 / 路由（不得 import client/）
 client/             # 浏览器侧：只经 HTTP 取数（不得 import host/、不得直接摸文件系统）
-skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯一真源在 packages/skill/）
+skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（只含运行时；真源在 packages/skill/）
 ```
 
 `client/` 内部（实际 12 个文件）：
@@ -46,7 +46,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 
 ## 四、工程与产物
 
-- `dist/` 入仓；`npm run build` = host(`clean-dist` → `tsc` → `copy-skill`) + client(`tsc --noEmit` → `tsdown`)。
+- `dist/` 入仓；`npm run build` = host(`clean-dist` → `tsc` → `sync-skill-version` → `copy-skill`) + client(`tsc --noEmit` → `tsdown`)。
 - 浏览器产物是 CJS 闭包工厂（`window.__ModuleLoader__.load`），平台模块必须保留成 `require()`，其余内联；dist 入仓产物守这条。
 - `npm run build` 打 `dist/`；无 DOM 依赖的纯逻辑模块允许剥类型直读源码直测。
 - **pnpm 只认 `pnpm-workspace.yaml`**，不读 `package.json` 的 `workspaces` 字段（后者留给 npm 生态）。改 workspace 结构别只改一处。
@@ -55,7 +55,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 
 **目录结构、每个文件的职责、逐方法签名全在 [`ledger-api.md`](ledger-api.md)；本节只记纪律。**
 
-物理落点：`scripts/progress`（POSIX shim：认平台 → 校验可执行位 → `exec`）→ `go/cmd/ledger/main.go`（只把参数与退出码转给 `shell.Main`）→ `go/internal/` 下四个子包 `core/`（纯换算）、`store/`（数据层）、`actions/`（业务层）、`shell/`（驱动：cli / runner / gitops / merge / render / help / presync / term_*），加三个旁路包 `notices`（进程级提示收集，只收不打印）、`env`（我是谁：读 `identity.json`，不问 git 也不解析台账）、`jsonfmt`（`--json` 屏幕输出排版）；错误类型 `core.Fail` 在 `core`，退出码常量（`ExitOK` / `ExitBusiness` / `ExitUsage` / `ExitUnexpected` / `ExitInterrupted`）在 `shell/runner.go`。入口路径与产物目录 `scripts/bin/` 都不许改名（宿主与 SKILL.md 按它们调）。
+物理落点：`scripts/progress`（POSIX shim：认平台 → 校验可执行位 → `exec`）→ `src/main.go`（只把参数与退出码转给 `shell.Main`）→ `src/internal/` 下四个子包 `core/`（纯换算）、`store/`（数据层）、`actions/`（业务层）、`shell/`（驱动：cli / runner / gitops / merge / render / help / presync / term_*），加三个旁路包 `notices`（进程级提示收集，只收不打印）、`env`（我是谁：读 `identity.json`，不问 git 也不解析台账）、`jsonfmt`（`--json` 屏幕输出排版）；错误类型 `core.Fail` 在 `core`，退出码常量（`ExitOK` / `ExitBusiness` / `ExitUsage` / `ExitUnexpected` / `ExitInterrupted`）在 `shell/runner.go`。入口路径与产物目录 `scripts/bin/` 都不许改名（宿主与 SKILL.md 按它们调）。
 
 逻辑形状是：
 
@@ -112,7 +112,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（唯�
 **判据不在这里重复**——唯一一份在 [`ledger-api.md`](ledger-api.md)：准入规则是可机械检查的 `grep` 表（§〇，全部必须为 0），改完必跑的检查清单在 §七。本节只记两件事：
 
 - 判据全部按**目录**扫（`grep -rn … internal/<层>/`），不按函数体扫；每层一条「不许依赖谁」，命中即为塌回老样子。
-- 入口那两行的口径：`scripts/progress` 只做三件事（认平台 / 校验可执行位 / `exec`），`go/cmd/ledger/main.go` 只做一件事（`os.Exit(shell.Main(os.Args[1:]))`）——谁都不许在里面写业务。见 `ledger-api.md` §一。
+- 入口那两行的口径：`scripts/progress` 只做三件事（认平台 / 校验可执行位 / `exec`），`src/main.go` 只做一件事（`os.Exit(shell.Main(os.Args[1:]))`）——谁都不许在里面写业务。见 `ledger-api.md` §一。
 
 ### 5.6 脚本不做的事（别再提）
 
