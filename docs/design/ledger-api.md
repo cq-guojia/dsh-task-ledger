@@ -749,7 +749,7 @@ class ActionSpec:
 五条必须守住的：
 
 - **路径基准只有一个约定**：磁盘与 JSON 里存的路径**相对 `ledger/`**（格式契约，如 `task["worklog"]`）；凡是输出给人或给界面的（`Result.where`、`WorklogView.path`、`payload` 里所有 `*_path`）**一律相对 repo**。换算只在 `core/paths.py` 的 `to_repo_rel` / `to_ledger_rel` / `to_history_rel` 三处做，任何层都不许自己拼 `..`。
-- **时间只有一个例外**：所有存盘时间都是 UTC；唯一例外是过程文档「执行记录」那行的时刻 —— 它是**本地时间**，给人读的日志行，不参与任何筛选或排序。转换固定发生在 `worklog_md.exec_line(when_utc, …)` 内部（它自己调 `fmt_local`）：**调用方一律传 UTC**，别在外面先转一遍。
+- **存盘时间一律 UTC，没有例外**：台账 JSON、history 行、过程文档的「创建」行 / 「状态」行 / 封卷行 / **每条执行记录行**都写 UTC（`worklog_md.exec_line(when, …)` 原样拼，不转时区；调用方一律传 `now()` 的 UTC，别在外面先转一遍）。**转本地只发生在输出层**：`render.fmt_local` 把 UTC 转成查看者本地时间，只用于 `list` / `history` / `show` 的人话输出，`--json` 一律原样给 UTC。存量老数据的执行记录行（`4ee6268` 之前）是写入者本地时间且无标记，与 UTC 行混在存量文档里无法区分 —— 已知例外，脚本不猜。
 - **身份只有 `uuid` 一个键**。`env.py` 只读本机身份文件（`$TASK_LEDGER_HOME/.taskledger/identity.json`，默认 `~/.taskledger/identity.json`），不读 git、不读环境变量、没有兜底。名字（`name`）只用于显示与 `--owner-name` 模糊筛，**不参与任何归属判定**；分片、历史行、`--owner` / `--mine` 一律比 uuid。
 - **对外只留 `whoami` 一个身份出口**（2026-10-27 拍板）：`env.read_identity()` 未初始化时安静返回 `None`，`whoami --json` 把它翻成 `{"uuid": null, "name": null}` 并退 0。插件 / 看板一律走这条命令，**不许自己读 `identity.json` 解析**（那是扒宿主机实现细节）。
 - **名字落盘用哪个串，看落点**：`Identity.label()` = 名字（只给人看：报错文案、界面）；`Identity.stamp()` = `名字 · uuid`（**过程文档三处落点**——头部创建行、封卷行、每条执行记录）。两者都**不带 `@`**，`@` 由落点自己加（模板创建行是 `（@<creator>）`、`exec_line` 拼 ` · @{who} · `）。过程文档是最终产物，创建人和封卷人可能不是同一个人、也可能中途改名，所以**名字和 uuid 都要留**，不靠历史表回链。
