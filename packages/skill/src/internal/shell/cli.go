@@ -29,7 +29,7 @@ const NoSyncEnv = "TASK_LEDGER_NO_SYNC"
 
 const usageText = `用法：progress <命令> [选项]
 
-命令：new / claim / set / log / close / list / show / history / validate / whoami / init
+命令：new / claim / set / log / close / list / stats / owners / show / history / validate / root / whoami / init
 公共选项：
   --repo <工作区根>   --no-sync   -h, --help`
 
@@ -56,15 +56,20 @@ type Args struct {
 	Until     *string
 	Limit     *int
 	Months    *int
-	Deep      bool
-	Note      string
-	Summary   string
-	Finished  string
-	Release   bool
-	Claim     *string
-	NewID     bool
-	Name      string
-	Yes       bool
+	// 年龄阈值（天）：不传用内置默认，传了覆盖（list / stats 同一套）
+	StaleDays   *int
+	OverdueDays *int
+	BacklogDays *int
+	Dir         string // root：要检测的目录（不给 = 当前目录）
+	Deep        bool
+	Note        string
+	Summary     string
+	Finished    string
+	Release     bool
+	Claim       *string
+	NewID       bool
+	Name        string
+	Yes         bool
 
 	Query        *actions.ListQuery
 	HistoryQuery *actions.HistoryQuery
@@ -78,10 +83,13 @@ var commandFlags = map[string]map[string]bool{
 	"set":      setOf("--id", "--owner", "--release", "--tags", "--repo"),
 	"log":      setOf("--id", "--note", "--repo"),
 	"close":    setOf("--id", "--summary", "--finished", "--tags", "--repo"),
-	"list":     setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--json", "--repo"),
+	"list":     setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
+	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
+	"owners":   setOf("--json", "--repo"),
 	"show":     setOf("--id", "--json", "--repo"),
 	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--since", "--until", "--limit", "--months", "--count-only", "--json", "--repo"),
 	"validate": setOf("--deep", "--json", "--repo"),
+	"root":     setOf("--dir", "--json"),
 	"whoami":   setOf("--json", "--repo"),
 	"init":     setOf("--claim", "--new", "--name", "--yes", "--repo"),
 }
@@ -99,6 +107,7 @@ func takesValue(name string) bool {
 	case "--repo", "--title", "--id", "--created", "--category", "--tags",
 		"--note", "--summary", "--finished", "--owner", "--owner-name",
 		"--status", "--tag", "--since", "--until", "--limit", "--months",
+		"--stale-days", "--overdue-days", "--backlog-days", "--dir",
 		"--claim", "--name":
 		return true
 	}
@@ -273,6 +282,24 @@ func applyFlag(a *Args, name, value string) error {
 			return usageErr("--months 需要整数：%s", value)
 		}
 		a.Months = &n
+	case "--stale-days", "--overdue-days", "--backlog-days":
+		n, err := strconv.Atoi(value)
+		if err != nil {
+			return usageErr("%s 需要整数：%s", name, value)
+		}
+		if n < 0 {
+			return usageErr("%s 不能为负数：%s", name, value)
+		}
+		switch name {
+		case "--stale-days":
+			a.StaleDays = &n
+		case "--overdue-days":
+			a.OverdueDays = &n
+		case "--backlog-days":
+			a.BacklogDays = &n
+		}
+	case "--dir":
+		a.Dir = value
 	case "--json":
 		a.JSON = true
 	case "--count-only":
@@ -351,8 +378,9 @@ func splitTags(value string) []string {
 
 // buildQuery 装配查询条件（参数 → 查询对象的装配只此一处）。
 func buildQuery(a *Args) error {
+	// list 与 stats 共用同一套在办查询条件（stats 只是不吐行，筛选与阈值完全一致）
 	switch a.Command {
-	case "list":
+	case "list", "stats":
 		scope := "all"
 		// 范围优先级：mine → pool → owner。空串的 --owner 不算范围
 		// （falsy 落到 all），但仍会传给业务层并报「只收身份 uuid」。
@@ -379,14 +407,17 @@ func buildQuery(a *Args) error {
 			return err
 		}
 		a.Query = &actions.ListQuery{
-			Scope:     scope,
-			Owner:     a.Owner,
-			OwnerName: a.OwnerName,
-			Statuses:  statuses,
-			Category:  nonEmptyPtr(a.Category),
-			Tag:       a.Tag,
-			Since:     since,
-			Until:     until,
+			Scope:       scope,
+			Owner:       a.Owner,
+			OwnerName:   a.OwnerName,
+			Statuses:    statuses,
+			Category:    nonEmptyPtr(a.Category),
+			Tag:         a.Tag,
+			Since:       since,
+			Until:       until,
+			StaleDays:   a.StaleDays,
+			OverdueDays: a.OverdueDays,
+			BacklogDays: a.BacklogDays,
 		}
 	case "history":
 		since, err := utcOf(a.Since, "--since", "")
@@ -509,6 +540,11 @@ func Main(argv []string) int {
 	if a.Command == "init" {
 		return runInit(a)
 	}
+	// root 与 whoami / init 同类：在定位仓库**之前**就要能问
+	// （「这个目录有没有台账」不能要求先有台账），不进 runner、不看 --repo
+	if a.Command == "root" {
+		return runRoot(a)
+	}
 	// 定位只做一次：解析好的工作区根挂回 Args，runner 与整命令锁都拿它
 	repo, err := ResolveRepo(a.Repo)
 	if err != nil {
@@ -542,6 +578,31 @@ func runWhoami(a *Args) int {
 		ptr = &identity
 	}
 	RenderWhoami(ptr, a.JSON)
+	return ExitOK
+}
+
+// runRoot 台账根检测：给一个目录，回答它是不是已初始化的台账根。
+// 不给 --dir 就用当前目录；判定不依赖身份、不碰 git、不读台账内容（只看结构）。
+func runRoot(a *Args) int {
+	dir := a.Dir
+	if dir == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			FailMessage("错误", "拿不到当前目录："+err.Error())
+			return ExitBusiness
+		}
+		dir = cwd
+	}
+	if a.Repo != "" {
+		// 顶层的 --repo 谁都认，root 偏偏不看它：静默忽略会让人以为指定生效了
+		errOut("提示：root 不看 --repo（它跑在定位仓库之前），本次判定的是 " + dir)
+	}
+	res, err := actions.DetectRoot(dir)
+	if err != nil {
+		FailMessage("错误", err.Error())
+		return ExitBusiness
+	}
+	RenderRoot(res, a.JSON)
 	return ExitOK
 }
 

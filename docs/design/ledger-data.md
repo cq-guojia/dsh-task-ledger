@@ -130,6 +130,10 @@
 
 `--count-only` 的两个键含义：`count` 是条数；`capped` 为 true 表示计数触到 `actions.CountCap`（10000）被封顶，此时 `count` 只是下界，**不许当精确值用**（同样不许拿它算分页）。
 
+三个给界面喂数的只读命令同样守「空也要出 JSON」：空台账下 `stats --json` 出全 0 计数 + `thresholds` 回显、`owners --json` 出 `{"count":0,"owners":{}}`、`root --json` 出 `{"root":false,"repo":null,"ledger":null,"reason":…}`（目录不存在也算「不是根」，不报错、不退非零）。
+
+派生值（`stale` / `overdue` / `backlog` 与 `age_days` / `idle_days` / `waiting_days`）**只活在 `list` / `stats` 的输出里**，任务表与历史行里一概不写 —— 想改粗细就用 `--stale-days` / `--overdue-days` / `--backlog-days` 换阈值，不许指望「存一个标记字段」。
+
 改动脚本 = 动这条契约 ⇒ 「空台账工作区」必须是受支持的行为（只读不得就地建台账）。
 
 ## 八、插件消费方式
@@ -138,5 +142,5 @@
 - **「后读到」的顺序是定死的**：先池、再按索引键排序后的各分片 ⇒ 同一号一定由分片那份胜出。顺序不确定会让同一份数据两次查给出不同结果。
 - 写入前的防撞：`claim` / `set --owner` 会在落盘前挡一道（别人分片里已有同号 / 目标分片已有不同内容 ⇒ 拒绝），但跨机同时抢仍有窗口。
 - 历史 = `history/<年月>.md` 11 列（owner = 负责人筛选面；creator = 发起人，`owner` 可被 claim 改走、「谁建的」不变；两列后各跟一列落盘的显示名快照）。
-- 报表只有一个来源：全部由宿主从 `history --json` / `list --json`（`actions.QueryHistory` / `actions.ListTasks`）的返回聚合（时间线、按人工作日志、状态分布、分类 / 标签计数）。脚本不开统计入口 —— 分类 / 标签要么在在办任务对象里、要么在历史行的分类 / 标签列里，都不需要逐篇扫过程文档。
+- 报表只有一个来源：全部由宿主从 `history --json` / `list --json` / `stats --json`（`actions.QueryHistory` / `actions.ListTasks` / `actions.StatsTasks`）的返回聚合（时间线、按人工作日志、状态分布、分类 / 标签计数）。脚本**只按在办层**开一个统计入口 `stats`（按状态 + 年龄阈值计数；周期趋势类的聚合仍由宿主自己做）—— 分类 / 标签要么在在办任务对象里、要么在历史行的分类 / 标签列里，都不需要逐篇扫过程文档。
 - 宿主侧消费（见 `external/dsh-workspace-registry.md`）：以 `pool.json` 存在判定台账、待办 / 历史一律经内嵌脚本（已分片感知）读取，不再直接读扁平 `progress.json`；老工作区未迁完前，脚本读到旧布局会在 stderr 提示，旧任务在迁完前对它等于不存在。

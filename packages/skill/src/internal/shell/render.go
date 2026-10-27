@@ -4,6 +4,7 @@ package shell
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/actions"
@@ -41,8 +42,8 @@ func RepoBanner(repo string, machine bool) {
 
 func jsonOut(data any) { os.Stdout.WriteString(jsonfmt.Marshal(data) + "\n") }
 
-// TimeFields 任务 / 历史行里要转本机时区的时间字段。
-var TimeFields = []string{"created", "started", "updated", "finished"}
+// TimeFields 存盘 UTC、出门要转本机时区的时间字段（任务 / 历史行 / 名册里的记录）。
+var TimeFields = []string{"created", "started", "updated", "finished", "joined"}
 
 // LocalizeTimes 复制一份，把四个时间字段转成本机时区；其余字段原样。
 func LocalizeTimes(data map[string]any) map[string]any {
@@ -113,11 +114,166 @@ func RenderList(res *actions.ListResult, asJSON bool) {
 		if row.Owner != nil {
 			owner = *row.Owner
 		}
-		out("  " + row.Tid + "  " + padRight(row.Status, 6) + " " + padRight(owner, 12) + " " + row.Title)
+		out("  " + row.Tid + "  " + padRight(row.Status, 6) + " " + padRight(owner, 12) + " " + row.Title + ageMark(row))
 	}
 	for _, line := range res.Notices {
 		errOut(line)
 	}
+}
+
+// ageMark 人话表格里三个年龄标记的后缀（可叠加：一条能同时中两个）。
+// 只是把 JSON 里那三个布尔露出来，判定在 actions 层，这里不重算。
+func ageMark(row actions.TaskRow) string {
+	var marks []string
+	if row.Stale {
+		marks = append(marks, "停滞")
+	}
+	if row.Overdue {
+		marks = append(marks, "逾期")
+	}
+	if row.Backlog {
+		marks = append(marks, "积压")
+	}
+	if len(marks) == 0 {
+		return ""
+	}
+	return "  [" + strings.Join(marks, "、") + "]"
+}
+
+// RenderStats stats 的输出。
+func RenderStats(res *actions.StatsResult, asJSON bool) {
+	if asJSON {
+		jsonOut(map[string]any{
+			"total":            res.Total,
+			"open":             res.Open,
+			"doing":            res.Doing,
+			"stale":            res.Stale,
+			"overdue":          res.Overdue,
+			"backlog":          res.Backlog,
+			"mine":             res.Mine,
+			"my_doing":         res.MyDoing,
+			"my_stale":         res.MyStale,
+			"my_overdue":       res.MyOverdue,
+			"oldest_open_days": intOrNull(res.OldestOpenDays),
+			"thresholds":       res.Thresholds,
+		})
+		return
+	}
+	out(fmt.Sprintf("在办 %d 条：待认领 %d、进行中 %d", res.Total, res.Open, res.Doing))
+	out(fmt.Sprintf("停滞 %d（我的 %d）　逾期 %d（我的 %d）　积压 %d",
+		res.Stale, res.MyStale, res.Overdue, res.MyOverdue, res.Backlog))
+	if res.OldestOpenDays != nil {
+		out(fmt.Sprintf("最老的待认领已等 %d 天", *res.OldestOpenDays))
+	}
+	out(fmt.Sprintf("阈值：停滞 %v 天 / 逾期 %v 天 / 积压 %v 天",
+		res.Thresholds["stale_days"], res.Thresholds["overdue_days"], res.Thresholds["backlog_days"]))
+	for _, line := range res.Notices {
+		errOut(line)
+	}
+}
+
+// RenderOwners owners 的输出。
+func RenderOwners(res *actions.OwnersResult, asJSON bool) {
+	// 遍历顺序定死：按 name（没名字的排最后）再按 uuid —— Go map 的迭代序是随机的，
+	// 同一个人名单两次跑出两种顺序会让人以为花名册变了。
+	keys := make([]string, 0, len(res.Owners))
+	for uuid := range res.Owners {
+		keys = append(keys, uuid)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		nameA := strOf(res.Owners[keys[i]]["name"])
+		nameB := strOf(res.Owners[keys[j]]["name"])
+		if nameA == "" {
+			nameA = "\uffff"
+		}
+		if nameB == "" {
+			nameB = "\uffff"
+		}
+		if nameA != nameB {
+			return nameA < nameB
+		}
+		return keys[i] < keys[j]
+	})
+	if asJSON {
+		// 必须转成 map[string]any：输出层只认这一种字典，原样塞嵌套 map 会被当成字符串整体打印
+		owners := make(map[string]any, len(res.Owners))
+		for _, uuid := range keys {
+			// joined 是存盘的 UTC，出门也要跟 list 的 created 一样转本机时区
+			owners[uuid] = LocalizeTimes(res.Owners[uuid])
+		}
+		jsonOut(map[string]any{"count": res.Count, "owners": owners})
+		return
+	}
+	if res.Count == 0 {
+		out("花名册是空的：这个工作区还没有人登记。")
+		return
+	}
+	out(fmt.Sprintf("花名册 %d 人：", res.Count))
+	for _, uuid := range keys {
+		name := strOf(res.Owners[uuid]["name"])
+		if name == "" {
+			name = "（没名字）"
+		}
+		mine := ""
+		if boolOfAny(res.Owners[uuid]["mine"]) {
+			mine = "  ← 本机"
+		}
+		out("  " + padRight("@"+name, 16) + uuid + mine)
+	}
+	for _, line := range res.Notices {
+		errOut(line)
+	}
+}
+
+// RenderRoot root（台账根检测）的输出。
+func RenderRoot(res *actions.RootResult, asJSON bool) {
+	if asJSON {
+		jsonOut(map[string]any{
+			"dir":    res.Dir,
+			"root":   res.Root,
+			"repo":   strPtr(res.Repo),
+			"ledger": strPtr(res.Ledger),
+			"reason": res.Reason,
+		})
+		return
+	}
+	if res.Root {
+		out("是台账根：" + res.Dir)
+		out("  台账目录：" + strValue(res.Ledger))
+		return
+	}
+	out("不是台账根：" + res.Dir)
+	if repo := strValue(res.Repo); repo != "" {
+		out("  往上找到的工作区根：" + repo)
+	}
+	out("  " + res.Reason)
+}
+
+// intOrNull *int → JSON 值（与 actions.intOrNil 同一件事：两处的调用方不同包，改一处记得改另一处）。
+func intOrNull(p *int) any {
+	if p == nil {
+		return nil
+	}
+	return *p
+}
+
+func boolOfAny(v any) bool {
+	value, _ := v.(bool)
+	return value
+}
+
+func strPtr(p *string) any {
+	if p == nil {
+		return nil
+	}
+	return *p
+}
+
+func strValue(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
 }
 
 // RenderWhoami 本机身份：未初始化给 uuid / name 双 null（不是错误）。

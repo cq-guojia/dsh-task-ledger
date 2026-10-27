@@ -47,7 +47,7 @@ type Result struct {
 	Notices     []string
 }
 
-// TaskRow 人话表格的一行（9 字段投影）。--json 吐的是 rows（原样任务对象），不是它。
+// TaskRow 人话表格的一行（9 字段投影 + 三个年龄标记）。--json 吐的是 rows（原样任务对象），不是它。
 type TaskRow struct {
 	Tid      string
 	Title    string
@@ -58,6 +58,9 @@ type TaskRow struct {
 	Category *string
 	Tags     []string
 	Where    *string
+	Stale    bool // 停滞：进行中、最后更新至今满阈值天数
+	Overdue  bool // 逾期：进行中、接任务至今满阈值天数
+	Backlog  bool // 积压：待认领、创建至今满阈值天数
 }
 
 // ListResult list 的返回。
@@ -65,6 +68,41 @@ type ListResult struct {
 	Rows    map[string]map[string]any
 	Table   []TaskRow
 	Notices []string
+}
+
+// StatsResult stats 的返回：在办任务按状态 + 年龄阈值数出来的各面计数。
+// thresholds 是这次实际生效的阈值（回显给调用方，界面文案不硬编码）。
+type StatsResult struct {
+	Total          int // 在办总数（= open + doing）
+	Open           int
+	Doing          int // 含旧数据的 blocked
+	Stale          int
+	Overdue        int
+	Backlog        int
+	Mine           int  // 归我的在办（任意状态）
+	MyDoing        int  // 归我的进行中
+	MyStale        int  // 归我的里停滞的
+	MyOverdue      int  // 归我的里逾期的
+	OldestOpenDays *int // 最老一条待认领躺了多少天；没有待认领为 nil
+	Thresholds     map[string]any
+	Notices        []string
+}
+
+// OwnersResult owners 的返回：该工作区花名册全量（含当前没任务的人）。
+type OwnersResult struct {
+	Count   int
+	Owners  map[string]map[string]any
+	Notices []string
+}
+
+// RootResult root 的返回：一个目录是不是已初始化的台账根。
+// Repo 是定位到的工作区根（自己就是根时等于 Dir）；一个都没有为 nil。
+type RootResult struct {
+	Dir    string
+	Root   bool
+	Repo   *string
+	Ledger *string
+	Reason string
 }
 
 // ShowResult show 的返回。

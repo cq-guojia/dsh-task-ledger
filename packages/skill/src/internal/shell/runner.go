@@ -251,6 +251,18 @@ func renderOf(spec actions.ActionSpec, value any, args *Args, asJSON bool) error
 			return core.Failf("内部错误：%s 的返回类型不是 ListResult", spec.Render)
 		}
 		RenderList(res, asJSON)
+	case "stats_view":
+		res, ok := value.(*actions.StatsResult)
+		if !ok {
+			return core.Failf("内部错误：%s 的返回类型不是 StatsResult", spec.Render)
+		}
+		RenderStats(res, asJSON)
+	case "owners_view":
+		res, ok := value.(*actions.OwnersResult)
+		if !ok {
+			return core.Failf("内部错误：%s 的返回类型不是 OwnersResult", spec.Render)
+		}
+		RenderOwners(res, asJSON)
 	case "show_view":
 		res, ok := value.(*actions.ShowResult)
 		if !ok {

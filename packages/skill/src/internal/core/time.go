@@ -73,6 +73,30 @@ func TimeKey(value string) string {
 	return value + ":00"
 }
 
+// DaysSince 存盘时间 → 距 now 多少整天（向下取整；未来记 0）；任一不可解析返回 nil。
+//
+// 只看「过去了几个自然日」，不掺时区：两侧都是存盘的 UTC 串，差值是绝对时长。
+// 调用方（停滞 / 逾期 / 积压判定）要的是「满没满 N 天」，不是「跨了几个日历日」。
+func DaysSince(stamp, now string) *int {
+	from, to := TimeKey(stamp), TimeKey(now)
+	if from == "" || to == "" {
+		return nil
+	}
+	a, err := time.ParseInLocation(stampLayout, from, time.UTC)
+	if err != nil {
+		return nil
+	}
+	b, err := time.ParseInLocation(stampLayout, to, time.UTC)
+	if err != nil {
+		return nil
+	}
+	days := int(b.Sub(a) / (24 * time.Hour))
+	if days < 0 {
+		days = 0
+	}
+	return &days
+}
+
 // FmtLocal：存盘的 UTC → 查看者本地时间，只用于人看的输出。
 func FmtLocal(stamp string) string {
 	key := TimeKey(stamp)

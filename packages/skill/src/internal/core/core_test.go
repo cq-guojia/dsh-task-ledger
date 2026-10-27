@@ -81,6 +81,37 @@ func TestRequireTaskIDRejects(t *testing.T) {
 	}
 }
 
+func TestDaysSince(t *testing.T) {
+	now := "2026-10-27 12:00:00"
+	cases := []struct {
+		stamp string
+		want  int
+	}{
+		{"2026-10-27 12:00:00", 0},
+		{"2026-10-27 11:59:59", 0},  // 差一秒不到一天
+		{"2026-10-25 12:00:00", 2},  // 整两天
+		{"2026-10-25 11:00:00", 2},  // 越过两天就按两天（向下取整）
+		{"2026-10-25 13:00:00", 1},  // 差 1 天 23 小时
+		{"2026-09-27 12:00:00", 30}, // 整三十天
+		{"2026-10-28 12:00:00", 0},  // 未来不当负数
+	}
+	for _, c := range cases {
+		got := DaysSince(c.stamp, now)
+		if got == nil {
+			t.Errorf("%q 应该算出天数", c.stamp)
+			continue
+		}
+		if *got != c.want {
+			t.Errorf("%q 距今 %d 天，期望 %d", c.stamp, *got, c.want)
+		}
+	}
+	for _, bad := range []string{"", "不是时间", "2026-10-27"} {
+		if got := DaysSince(bad, now); got != nil {
+			t.Errorf("%q 应该算不出天数（得 nil），实际 %v", bad, *got)
+		}
+	}
+}
+
 func TestParseTagsRules(t *testing.T) {
 	if _, err := ParseTags([]string{"甲", "乙", "丙"}); err != nil {
 		t.Errorf("正常标签不该报错：%v", err)

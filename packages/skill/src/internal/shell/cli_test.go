@@ -163,6 +163,76 @@ func TestJSONCountOnlyMutuallyExclusive(t *testing.T) {
 	}
 }
 
+func TestThresholdFlags(t *testing.T) {
+	// 三个阈值是可选的：传了进 ListQuery，不传留 nil（业务层回内置默认）
+	a := parse(t, "list", "--stale-days", "10", "--overdue-days", "30", "--backlog-days", "60")
+	if err := buildQuery(a); err != nil {
+		t.Fatal(err)
+	}
+	if a.Query.StaleDays == nil || *a.Query.StaleDays != 10 {
+		t.Errorf("--stale-days 没进查询：%v", a.Query.StaleDays)
+	}
+	if a.Query.OverdueDays == nil || *a.Query.OverdueDays != 30 {
+		t.Errorf("--overdue-days 没进查询：%v", a.Query.OverdueDays)
+	}
+	if a.Query.BacklogDays == nil || *a.Query.BacklogDays != 60 {
+		t.Errorf("--backlog-days 没进查询：%v", a.Query.BacklogDays)
+	}
+	bare := parse(t, "list")
+	if err := buildQuery(bare); err != nil {
+		t.Fatal(err)
+	}
+	if bare.Query.StaleDays != nil || bare.Query.OverdueDays != nil || bare.Query.BacklogDays != nil {
+		t.Error("不传阈值必须留空（由业务层给默认），不许在解析期填数")
+	}
+}
+
+func TestThresholdFlagsReject(t *testing.T) {
+	// 阈值不是整数 / 给负数 / 缺取值，全是用法错
+	for _, argv := range [][]string{
+		{"list", "--stale-days", "x"},
+		{"list", "--stale-days", "-1"},
+		{"list", "--overdue-days", "1.5"},
+		{"list", "--backlog-days"},
+		{"stats", "--stale-days", "x"},
+	} {
+		if _, err := ParseArgs(argv); err == nil {
+			t.Errorf("%v 应该报错", argv)
+		}
+	}
+}
+
+func TestStatsSharesListQuery(t *testing.T) {
+	// stats 与 list 共用同一套查询条件（含阈值）：筛选口径只有一份
+	a := parse(t, "stats", "--mine", "--status", "doing", "--stale-days", "5")
+	if err := buildQuery(a); err != nil {
+		t.Fatal(err)
+	}
+	if a.Query.Scope != "mine" {
+		t.Errorf("stats 的范围是 %q，期望 mine", a.Query.Scope)
+	}
+	if len(a.Query.Statuses) != 1 || a.Query.Statuses[0] != "doing" {
+		t.Errorf("stats 的状态筛是 %v，期望 [doing]", a.Query.Statuses)
+	}
+	if a.Query.StaleDays == nil || *a.Query.StaleDays != 5 {
+		t.Errorf("stats 的阈值没进查询：%v", a.Query.StaleDays)
+	}
+}
+
+func TestRootCommand(t *testing.T) {
+	a := parse(t, "root", "--dir", "/x/y")
+	if a.Dir != "/x/y" {
+		t.Errorf("root 的 --dir 是 %q，期望 /x/y", a.Dir)
+	}
+	// root 不看 --repo（它在定位仓库**之前**跑）
+	if _, err := ParseArgs([]string{"root", "--repo", "/x"}); err == nil {
+		t.Error("root 不该认 --repo")
+	}
+	if doc, ok := commandHelp["root"]; !ok || doc.usage == "" {
+		t.Error("root 必须有 --help 文案")
+	}
+}
+
 func TestSinceUntilDateOnly(t *testing.T) {
 	// 只给日期：下限顶 00:00:00、上限顶 23:59:59（再由 ToUTC 换算成本机时区）
 	a := parse(t, "list", "--since", "2026-10-01", "--until", "2026-10-31")

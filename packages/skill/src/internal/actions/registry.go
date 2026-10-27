@@ -82,6 +82,26 @@ var ACTIONS = map[string]ActionSpec{
 			return ListTasks(repo, me, q)
 		},
 	},
+	"stats": {
+		// 与 list 共用同一套 ListQuery（含阈值覆盖）：只数数、不吐行
+		Render:   "stats_view",
+		ReadOnly: true,
+		Params:   []string{"q"},
+		Run: func(repo string, me core.Identity, p Params) (any, error) {
+			q := ListQuery{}
+			if p.List != nil {
+				q = *p.List
+			}
+			return StatsTasks(repo, me, q)
+		},
+	},
+	"owners": {
+		Render:   "owners_view",
+		ReadOnly: true,
+		Run: func(repo string, me core.Identity, p Params) (any, error) {
+			return ListOwners(repo, me)
+		},
+	},
 	"show": {
 		Render:   "show_view",
 		ReadOnly: true,

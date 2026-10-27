@@ -227,16 +227,25 @@ func IsReadOnly(command string) bool
 | 记进展 `LogProgress` | `(repo, me, tid, note) (*Result, error)` | 刷分片 `updated` → 过程文档追加一行 |
 | 结案 `CloseTask` | `(repo, me, tid, CloseTaskParams) (*Result, error)` | 改标签行（给了 `--tags` 才做）→ 历史加一行 → 封卷 → 删分片（**永远最后一步**）；多步失败靠 `Snapshot`/`Restore` |
 
-### 3.3 只读动作（4 个）
+### 3.3 只读动作（7 个）
 
 | 动作 | 签名 |
 |---|---|
 | 列表 `ListTasks` | `(repo, me, ListQuery) (*ListResult, error)` |
+| 统计 `StatsTasks` | `(repo, me, ListQuery) (*StatsResult, error)` |
+| 花名册 `ListOwners` | `(repo, me) (*OwnersResult, error)` |
+| 台账根检测 `DetectRoot` | `(dir) (*RootResult, error)` |
 | 详情 `ShowTask` | `(repo, me, tid) (*ShowResult, error)` |
 | 历史 `QueryHistory` | `(repo, me, HistoryQuery) (*HistoryResult, error)` |
 | 体检 `Validate` | `(repo, deep bool) (*ValidationReport, error)` |
 
 只读动作**不取最新、不自举、不提交、不拿整命令锁**；`validate` 有 problems ⇒ 退出码 1。
+
+- **`ListQuery` 是 list 与 stats 共用的同一套查询条件**（范围 / 状态 / 分类 / 标签 / 创建时间 + 三个年龄阈值），合并与筛选也共用 `selectTasks`（`list_tasks.go`）—— 两边口径不许各写一份。
+- **年龄阈值一律可选**：`StaleDays` / `OverdueDays` / `BacklogDays` 是 `*int`，没给就由 `ListQuery.StaleDaysOf()` 等回内置默认（`DefaultStaleDays` 3 / `DefaultOverdueDays` 14 / `DefaultBacklogDays` 30）；给了才覆盖。派生值由 `ApplyAge`（`age.go`）写进任务字典，`stats` 只是数它们的个数。
+- **派生值只进输出、不进台账**：`stale` / `overdue` / `backlog` 与 `age_days` / `idle_days` / `waiting_days` 是 `--json` 契约的一部分，落盘字段表里没有它们。
+- `StatsTasks` 与 `ListTasks` **不合并**：一个吐行、一个吐计数，界面按需要各调一次（可以接受重复读）。
+- `DetectRoot` 签名里没有 repo / me：它是「定位仓库之前」的问题，只在目录结构（`core.HasLedger` / `core.RootOf`）上判定，与 `core.AsRoot` 同口径。
 
 ## 四、外壳 `shell/`
 
@@ -263,6 +272,9 @@ func PresyncScope(repo string, me core.Identity, action string, params map[strin
 func Run(command string, args *Args) int
 func Main(argv []string) int
 func RenderList(res *actions.ListResult, asJSON bool)
+func RenderStats(res *actions.StatsResult, asJSON bool)
+func RenderOwners(res *actions.OwnersResult, asJSON bool)
+func RenderRoot(res *actions.RootResult, asJSON bool)
 func printHelp(command string)
 func (t *termState) readKey() key
 ```
@@ -279,14 +291,14 @@ func (t *termState) readKey() key
 
 | 文件 | 关键函数 |
 |---|---|
-| `time.go` | `NormalizeTime(value, field, tid, dateOnlyRef)`、`ToUTC`、`TimeKey`、`FmtLocal`、`Now`；`Fail` / `Failf` 也定义在这里 |
+| `time.go` | `NormalizeTime(value, field, tid, dateOnlyRef)`、`ToUTC`、`TimeKey`、`FmtLocal`、`Now`、`DaysSince(stamp, now)`（距今天数，向下取整、未来记 0、不可解析回 nil）；`Fail` / `Failf` 也定义在这里 |
 | `paths.go` | `ToRepoRel` / `ToLedgerRel` / `ToHistoryRel` / `ShardRel` / `MonthOf` / `WorklogDirFor` / `WorklogName` / `WorklogRel` / `HistoryPathFor` / `SkillDir` / `WorklogTemplate` |
 | `ids.go` | `Slugify`、`IDStamp`、`MakeID(title, tasks, created)`、`RequireTaskID` |
 | `identity.go` | `Identity{uuid,name}`、`Normalize`、`LooksLikeUUID`、`IsMe`、`Label`、`Stamp` |
 | `labels.go` | `NormalizeLabel`、`ParseTags`、`SplitTags`、`LabelLine`、`ParseLabelLine` |
 | `worklog_md.go` | 建篇：`RenderWorklog`（套六节模板）、`RenderStatusLine` / `RenderStatusBody`；锚点编辑：`AppendExecLog`、`StampFrozen` / `HasFrozenLine`、`RewriteLabelLine`、`RewriteStatusLine` / `ReadStatus`；读：`HeadMeta` / `HeadTitle` / `HeadCreated` / `HeadFrozen` / `HeadCreator` / `HeadCreatorUUID`；校验：`SectionHeads` / `FormatProblems` / `DuplicatedSections` / `LacksExecSection` / `IsSkeleton`；顺序：`HeadKeyOrder` / `insertHeadLine` |
 | `history_md.go` | `HistoryLine`（十一列一行）、`ParseHistory`、`SplitRow`、`IsSepRow`、`EscCell` |
-| `roots.go` | `AsRoot`（校验 `--repo`）、`RootOf`（从 cwd 往上找 `ledger/`） |
+| `roots.go` | `AsRoot`（校验 `--repo`）、`RootOf`（从 cwd 往上找 `ledger/`）、`IsDir`、`AbsDir`、`HasLedger`（直接含 `ledger/`）、`UnderLedger`（在台账目录里） |
 | `rowmap.go` | `Row.ToMap()`（历史行 → JSON 形状） |
 
 **时间口径**：存盘一律 UTC（`ToUTC`），对外输出（人话与 `--json`）都过 `FmtLocal` 转本机时区；只给日期时 `--since` 顶 `00:00:00`、`--until` 顶 `23:59:59`。
@@ -302,7 +314,8 @@ func (t *termState) readKey() key
 | `130` | 中断 | Ctrl-C（提交开始前会回滚） |
 
 - `--help` 是「要看用法」，**退出码 0**；参数错误才是 2。
-- `--json` 一律给 `{条数/任务号: …}` 形状，键按字典序（与旧版一致即可，下游按 JSON 解析）。
+- `--json` 一律给 JSON，键按字典序（与旧版一致即可，下游按 JSON 解析）。形状两类：`list` 是 `{任务号: 任务对象}`；`stats` / `owners` / `history` / `root` 是带 `count` 或其它并列键的封装对象。
+- **`map` 里不许放指针**：`jsonfmt` 只认普通值，`*int` / `*string` 会被渲染成 `0xc000…` 的地址串。派生值要进 JSON 时先解引用（`age.go` 的 `intOrNil`），没有就放**无类型** `nil`（渲染成 `null`）。嵌套字典也得转成 `map[string]any`（见 `RenderOwners`）—— `map[string]map[string]any` 同样不在它的 case 里。
 
 ## 七、防塌线（改完必跑）
 
@@ -323,10 +336,13 @@ func (t *termState) readKey() key
 | `set` | `--id`（必填）+ `--release` / `--owner` / `--tags` 三选一 | `Release` / `Handoff` / `Relabel`（`set_task.go` 只做路由） |
 | `log` | `--id`、`--note`（都必填） | `LogProgress` |
 | `close` | `--id`、`--summary`（必填）、`--finished`、`--tags` | `CloseTaskParams` |
-| `list` | `--mine` / `--pool` / `--owner` / `--owner-name` / `--status` / `--category` / `--tag` / `--since` / `--until` / `--json` | `ListQuery`（范围优先级 mine → pool → owner） |
+| `list` | `--mine` / `--pool` / `--owner` / `--owner-name` / `--status` / `--category` / `--tag` / `--since` / `--until` / `--stale-days` / `--overdue-days` / `--backlog-days` / `--json` | `ListQuery`（范围优先级 mine → pool → owner；阈值可选，不传回默认） |
+| `stats` | 与 `list` 完全同名的那套（含三个阈值） / `--json` | `StatsTasks`（共用同一个 `ListQuery`） |
+| `owners` | `--json` | `ListOwners` |
 | `show` | `--id`、`--json` | `ShowTask` |
 | `history` | `--owner` / `--owner-name` / `--mine` / `--category` / `--tag` / `--since` / `--until` / `--months` / `--limit` / `--count-only` / `--json` | `HistoryQuery` |
 | `validate` | `--deep`、`--json` | `Validate(repo, deep)` |
+| `root` | `--dir <目录>`、`--json` | `DetectRoot`（**定位之前**旁路调用，不认 `--repo`、不依赖身份） |
 | `whoami` | `--json` | 直接读 `env`，不解析台账 |
 | `init` | `--claim` / `--new` / `--name` / `--yes`（禁用） | `InitIdentity`，只在真终端交互 |
 

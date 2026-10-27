@@ -85,7 +85,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（只�
 ### 5.2 业务动作清单
 
 `Bootstrap`（旧名 `ensure_ledger`：要写 3 个文件，由外壳单独一个 atom 包住、它自己不开事务，**必须在业务动作的 atom 之前单独跑，不得与业务动作合并进同一个 atom**）、`NewTask`、`Claim`、`Release`、`Handoff`、`Relabel`、`LogProgress`、`CloseTask`。`SetTask` 不是动作而是**路由**：`set_task.go` 只按 `--release` / `--owner` / `--tags` 分派到 `Release` / `Handoff` / `Relabel`（动作间互调的唯一例外）。`InitIdentity`（`init` 命令）只在真终端交互，不走 runner 七步。
-只读不进事务：`ListTasks` / `ShowTask` / `QueryHistory` / `Validate`。
+只读不进事务：`ListTasks` / `StatsTasks` / `ListOwners` / `ShowTask` / `QueryHistory` / `Validate`，外加唯一的例外 **`DetectRoot(dir)`** —— 它是「还没有 repo 时要问」的问题（这个目录有没有台账），签名里没有 `repo` / `me`，由外壳在定位之前旁路调用，与 `whoami` / `init` 同类。
 
 签名一律 `(repo string, me core.Identity, ...)`：写动作 `-> (*Result, error)`（**唯一例外 `Bootstrap` → `(core.Identity, error)`**），只读动作 `-> 各自的视图对象 + error`；**参数里没有 git、也没有命令行 namespace**（查询条件用 `ListQuery` / `HistoryQuery`，各动作入参是 `NewTaskParams` / `CloseTaskParams` 这类结构体）。`Result` 里的 `Changed` / `Where` / `AlreadyDone` / `Message` / `Worklog` / `Notices` **只供打印**；**提交集合只认数据层记账本记的脏集**，两者不是一回事，别拿 `Changed` 去算 git 提交范围。
 

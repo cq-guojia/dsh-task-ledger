@@ -1,7 +1,7 @@
 ---
 name: task-ledger
 description: 本地任务台账，跨会话记录在办任务的归属、进度与起止。当用户要登记一件新的事（新建任务 / 建个坑 / 这活我领了）、记录已有任务的进展（接着做 / 记一条进展 / 这轮先记下）、查看任务状态或历史（现在该做什么 / 这活谁在做 / 上周做过什么）、给任务结案或退回（做完了 / 验收通过 / 不做了 / 退回待认领）、整理标签或检查台账一致性时加载；只是改代码、讨论方案时不要用。
-version: 1.3.37
+version: 1.3.39
 allowed-tools: Read,Edit,Bash,Grep
 ---
 
@@ -21,7 +21,9 @@ allowed-tools: Read,Edit,Bash,Grep
 
 ## 命令参考
 
-十一个子命令：`init`（初始化本机身份，一台机器一次）+ 前五个写命令（`new`/`claim`/`set`/`log`/`close`）+ 后五个只读命令（`list` / `show` / `history` / `whoami` / `validate`）；何时用哪个见「任务生命周期」。参数语法看 `<子命令> --help`；下表说每个参数干什么、何时用。
+十四个子命令：`init`（初始化本机身份，一台机器一次）+ 前五个写命令（`new`/`claim`/`set`/`log`/`close`）+ 后八个只读命令（`list` / `stats` / `owners` / `show` / `history` / `root` / `whoami` / `validate`）；何时用哪个见「任务生命周期」。参数语法看 `<子命令> --help`；下表说每个参数干什么、何时用。
+
+只读命令里只有 `root` 特殊：**它在定位仓库之前跑**（「这个目录有没有台账」不能要求先有台账），不认 `--repo`、不读台账内容，只按结构判定。其余七个都先定位工作区根（带 `--repo` 或往上找）。
 
 ### init — 初始化本机身份
 
@@ -114,11 +116,50 @@ allowed-tools: Read,Edit,Bash,Grep
 | `--status open\|doing` | 按状态筛（逗号分隔可多选；合法值只有 `open` / `doing`） |
 | `--category` / `--tag` | 按分类（精确）/ 标签（包含）筛 |
 | `--since` / `--until` | 按创建时间筛（只给日期含当天） |
-| `--json` | 输出 JSON（`{任务号: 任务对象}`）；**每行带 `mine`**（是不是自己名下的，只比 uuid） |
+| `--stale-days` / `--overdue-days` / `--backlog-days` `<N>` | 覆盖年龄阈值（默认停滞 3 / 逾期 14 / 积压 30 天）；**可选**，不传就用内置默认 |
+| `--json` | 输出 JSON（`{任务号: 任务对象}`）；**每行带 `mine`**（是不是自己名下的，只比 uuid）和下面那六个年龄派生字段 |
 
 干什么：合并公共池 + 各人名下的任务，列出在办。**默认就是全量**，没有 `--all` 参数；收窄用 `--mine` / `--pool`。
 
+`--json` 的每行除台账原字段外，多给六个**只读派生值**（按任务算、不落盘，界面别自己再算一遍）：
+
+| 字段 | 含义 |
+|---|---|
+| `stale` | 停滞：进行中，最后更新至今 ≥ `--stale-days` 天（看 `updated`，缺则回退 `started` → `created`） |
+| `overdue` | 逾期：进行中，接任务至今 ≥ `--overdue-days` 天（看 `started`，缺则回退 `created`；中途更新不洗时钟） |
+| `backlog` | 积压：待认领，创建至今 ≥ `--backlog-days` 天 |
+| `age_days` / `idle_days` / `waiting_days` | 上面三个判据各自的天数（给悬停文案说人话用）；用不上的那个状态是 `null`（进行中没有 `waiting_days`，待认领没有 `age_days` / `idle_days`） |
+
+三个标记**互不覆盖**，一条可以同时中两个（进行中且既逾期又停滞）；老数据里的 `blocked` 一律按进行中判。时间取不到时天数是 `null`、标记是 `false` —— 不编造 0。人话表格里它们显示为行尾后缀（如 `… 发布流程走通 [停滞、逾期]`），不中的行不长这个尾巴。
+
+阈值 `<N>` 给 **0** 等于把这条判据关掉（只要有这个时间戳就算命中），一般不要这么传；给正整数才是「满 N 天」。
+
 举例：「现在该做什么」→ `list --mine`；「有哪些没人认领的」→ `list --pool`。
+
+### stats — 在办计数
+
+| 参数 | 含义 |
+|---|---|
+| `--mine` / `--pool` / `--owner <uuid>` / `--owner-name <片段>` | 与 `list` 完全同义（范围优先级也是 mine → pool → owner） |
+| `--status` / `--category` / `--tag` / `--since` / `--until` | 与 `list` 完全同义 |
+| `--stale-days` / `--overdue-days` / `--backlog-days` `<N>` | 同上，覆盖年龄阈值（可选） |
+| `--json` | 输出 JSON（各面计数 + 本次生效的阈值） |
+
+干什么：按**名义状态**（待认领 / 进行中）+ **年龄阈值**（停滞 / 逾期 / 积压）数出各面有多少条 —— 只数数、不吐行；要「一行一个任务」用 `list`。筛选与 `list` 同一套口径，不影响历史（范围只作用在办任务）。
+
+`--json` 的形状：`{"total","open","doing","stale","overdue","backlog","mine","my_doing","my_stale","my_overdue","oldest_open_days","thresholds"}`。`thresholds` 回显本次实际生效的三个阈值（`{"stale_days","overdue_days","backlog_days"}`）—— 界面文案照它显示，不要自己硬编码。`oldest_open_days` 是最老一条待认领躺了多少天（没有待认领是 `null`）。`mine` = 归我的在办，`my_doing` = 归我的进行中。
+
+举例：「我这有几条卡住了」→ `stats --mine`；「整体积压多严重」→ `stats --json`。
+
+### owners — 花名册
+
+| 参数 | 含义 |
+|---|---|
+| `--json` | `{"count","owners"}`：`owners` 是 `{uuid: {file, name, joined, mine}}` |
+
+干什么：把这个工作区里登记过的**所有人**都给出来（含当前没有任务的人），每条额外带 `mine`（是不是本机身份）。人选列表要列全时用它 —— 从 `list` 的在办任务里只能派生出「当前有任务的人」。
+
+举例：「筛人的下拉要列全」→ `owners --json`。
 
 ### show — 看一条任务
 
@@ -147,6 +188,23 @@ allowed-tools: Read,Edit,Bash,Grep
 干什么：按结案时间倒序排列，每条一行，只列结案时间、负责人、标题，其他都不在表格里；要摘要 / 分类 / 标签 / 完整时间加 `--json`。不给时间参数 = 最近 3 个自然月；最多 13 个月，超了直接报错。
 
 举例：「上周做过什么」→ `history --since <上周一日期>`；「今年都结掉哪些」→ `history --months 12`（超过 13 个月要分段查）。
+
+### root — 台账根检测
+
+| 参数 | 含义 |
+|---|---|
+| `--dir <目录>` | 检测哪个目录（不给 = 当前目录） |
+| `--json` | `{"dir","root","repo","ledger","reason"}` |
+
+干什么：回答「这个目录是不是已初始化的台账根」，**不读里面的台账文件** —— 判据只看结构：**直接含有 `ledger/` 就是根**（`ledger/` 本身与它下面的目录都不是），与脚本定位工作区根完全同一个口径，有没有 `pool.json` / `owners.json` 都不影响。
+
+- `root`（布尔）：这个是最终答案；
+- `repo`：顺带给出往上找到的工作区根（自己就是根时等于 `dir`，一个都没有时是 `null`）—— 拿到它就可以直接喂给其它命令的 `--repo`；
+- `reason`：一句人话说明（界面直接显示它）。
+
+它与 `whoami` 同类：**在定位仓库之前跑**，不认 `--repo`、不依赖身份、不报错退出（目录不存在也只是「不是根」，退 0）。
+
+举例：「这个目录有台账吗」→ `root --dir <候选目录> --json`。
 
 ### whoami — 我是谁
 
@@ -184,7 +242,8 @@ allowed-tools: Read,Edit,Bash,Grep
 
 - 定位项目：`--repo <工作区根>`（**直接含有 `ledger/` 的那个目录**）给了就校验后用；不给就从当前目录逐级向上找。`ledger/` 本身、以及它下面的任何子目录都不是根，指过去会被直接拒绝（判据只看位置，不看目录里有哪些文件 —— 项目根自带 `pool.json`、`history/`、`worklog/` 都不影响）。
 - `--no-sync`（放在子命令**前**）：用户明确要求「先别同步」时才用；之后自己 `git add ledger && commit && push`。
-- `--json` 只对只读命令（`list` / `show` / `history` / `whoami` / `validate`）有意义；写命令不接收 `--json`，传了是用法错。
+- `--json` 只对只读命令（`list` / `stats` / `owners` / `show` / `history` / `root` / `whoami` / `validate`）有意义；写命令不接收 `--json`，传了是用法错。
+- **给界面喂数**：要看在办用 `list`、要各面计数用 `stats`、要人选列表用 `owners`、要判断某个目录有没有台账用 `root` —— 都是只读、都不改台账；多个 / 跨工作区自己扇出，脚本一次只服务一个工作区。
 - **时间**：存盘一律 UTC，脚本对外**一律给本机时区**（人话表格与 `--json` 都是），拿到直接显示，不要再转一次；`--since` / `--until` / `--created` / `--finished` 也按本机时区给，脚本内部转 UTC 比较。过程文档正文里的时间是原文，脚本不碰。
 - 命令回执只用来确认生效；任务状态以 `show` / `list` 为准。
 
@@ -269,7 +328,7 @@ allowed-tools: Read,Edit,Bash,Grep
 | `new` / `claim` / `set` | 动手类 | 执行前复述完整参数并取得确认；**`new` 仅当用户原话点名要建且标题可直取原话时免复述**，标题需另拟或拿不准仍复述一次（`claim`/`set` 一律复述） |
 | `log` | 免确认 | 本任务的推进 / 卡点 / 交付记录直接跑，跑完一句话交代「已记执行记录：…」；要替用户下结论，先问（任务不在自己名下会直接被拒） |
 | `close` | 独立授权 | 仅认明确说「结束掉 / close 掉」（完整判定见生命周期第 8 条）；说得含糊必须反问「是要结束这个任务吗？」；**agent 自判「干完了」不算** |
-| `list` / `show` / `history` / `whoami` / `validate` | 只读 | 直接跑 |
+| `list` / `stats` / `owners` / `show` / `history` / `root` / `whoami` / `validate` | 只读 | 直接跑 |
 
 ### 故障处置（跑之后出事怎么办）
 
