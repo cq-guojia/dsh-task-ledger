@@ -602,8 +602,11 @@ func runInit(a *Args) int {
 						return ExitOK
 					}
 					if choice.kind == "new" {
-						typed, ok := promptLine("输入用户名：")
-						if !ok {
+						typed, inRes := promptLine("输入用户名：", "ESC 返回上一步 · Enter 确认 · Backspace 退格")
+						if inRes == lineBack {
+							continue // ESC：回选择菜单重来
+						}
+						if inRes != lineOK {
 							errOut(dim("✕ 已取消初始化。随时可重跑 init 重新开始。"))
 							return ExitOK
 						}
@@ -627,8 +630,8 @@ func runInit(a *Args) int {
 					break
 				}
 			} else if tty {
-				name, ok := promptLine("输入用户名：")
-				if !ok {
+				name, inRes := promptLine("输入用户名：", "ESC 取消 · Enter 确认 · Backspace 退格")
+				if inRes != lineOK {
 					errOut(dim("✕ 已取消初始化。随时可重跑 init 重新开始。"))
 					return ExitOK
 				}
@@ -755,8 +758,8 @@ func selectIdentityByNumber(options []map[string]any, title string) identityChoi
 	n := len(options) + 1
 	out(fmt.Sprintf("  %d. + 新建身份", n))
 	for {
-		answer, ok := promptLine(fmt.Sprintf("选编号(1-%d)：", n))
-		if !ok {
+		answer, res := promptLine(fmt.Sprintf("选编号(1-%d)：", n), "ESC 取消")
+		if res != lineOK {
 			return identityChoice{kind: "cancel"}
 		}
 		answer = strings.ToLower(answer)
@@ -787,8 +790,8 @@ func printCandidates2(title string, options []map[string]any) {
 // confirm Y/N 确认：Y 返回 true，N 返回 false；读到 EOF 当作取消。
 func confirm(question string) bool {
 	for {
-		ans, ok := promptLine(question + " [Y/N]：")
-		if !ok {
+		ans, res := promptLine(question+" [Y/N]：", "Y 确认 · N 取消 · ESC 返回上一步")
+		if res != lineOK {
 			return false
 		}
 		ans = strings.ToLower(ans)
@@ -804,19 +807,28 @@ func confirm(question string) bool {
 
 var stdinReader = bufio.NewReader(os.Stdin)
 
-// promptLine 打提示（不换行，与 input() 同形）再读一行；ok=false 表示 EOF / Ctrl-D / ESC 取消。
-// 终端里走 raw 逐键读（ESC 取消、Backspace 退格）；拿不到 raw 终端才退回普通行读。
-func promptLine(prompt string) (string, bool) {
-	if line, ok, handled := promptLineRaw(prompt); handled {
-		return line, ok
+// lineResult 读一行的结果。
+type lineResult int
+
+const (
+	lineOK   lineResult = iota // 读到一行
+	lineBack                   // ESC：回上一步
+	lineEOF                    // 没输入（Ctrl-D / EOF）
+)
+
+// promptLine 打提示（不换行，与 input() 同形）再读一行；hint 是输入框下面那行灰色帮助。
+// 终端里走 raw 逐键读（ESC 回上一步、Backspace 退格）；拿不到 raw 终端才退回普通行读。
+func promptLine(prompt, hint string) (string, lineResult) {
+	if line, res, handled := promptLineRaw(prompt, hint); handled {
+		return line, res
 	}
 	os.Stdout.WriteString(prompt)
 	line, err := stdinReader.ReadString('\n')
 	if err != nil && line == "" {
 		os.Stdout.WriteString("\n")
-		return "", false
+		return "", lineEOF
 	}
-	return strings.TrimSpace(line), true
+	return strings.TrimSpace(line), lineOK
 }
 
 func dim(text string) string { return "\x1b[2m" + text + "\x1b[0m" }

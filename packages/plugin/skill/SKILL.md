@@ -1,7 +1,7 @@
 ---
 name: task-ledger
 description: 本地任务台账，跨会话记录在办任务的归属、进度与起止。当用户要登记一件新的事（新建任务 / 建个坑 / 这活我领了）、记录已有任务的进展（接着做 / 记一条进展 / 这轮先记下）、查看任务状态或历史（现在该做什么 / 这活谁在做 / 上周做过什么）、给任务结案或退回（做完了 / 验收通过 / 不做了 / 退回待认领）、整理标签或检查台账一致性时加载；只是改代码、讨论方案时不要用。
-version: 1.3.32
+version: 1.3.33
 allowed-tools: Read,Edit,Bash,Grep
 ---
 
@@ -35,7 +35,7 @@ allowed-tools: Read,Edit,Bash,Grep
 | `--claim <uuid>` | 认领名册里已有的 uuid（名字一起复制） |
 | `--new --name "…"` | 新建身份：生成 uuid + 名字 |
 
-干什么：写本机身份文件（`~/.taskledger/identity.json`），**一台机器只一次**，与台账无关。真终端里裸跑 `init` 是交互式选择框（↑/↓ 选、Enter 认领、末尾「+ 新建身份」输名字、Y/N 确认、ESC/Ctrl-C 取消）；非终端（agent）下裸跑 `init` 只报名单，任何写操作都被脚本拒绝（Agent 不得代写/重建）。完整流程见 `references/init-identity.md`。
+干什么：写本机身份文件（`~/.taskledger/identity.json`），**一台机器只一次**，与台账无关。真终端里裸跑 `init` 是交互式选择框（↑/↓ 选、Enter 认领、末尾「+ 新建身份」输名字、Y/N 确认；每步下面都有一行灰色帮助，ESC 回上一步、Ctrl-C 取消）；非终端（agent）下裸跑 `init` 只报名单，任何写操作都被脚本拒绝（Agent 不得代写/重建）。完整流程见 `references/init-identity.md`。
 
 ### new — 建任务
 

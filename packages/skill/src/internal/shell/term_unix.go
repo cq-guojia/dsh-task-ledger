@@ -142,24 +142,28 @@ func (t *termState) readKey() key {
 	return keyNone
 }
 
-// promptLineRaw 在 raw 模式逐键读一行：ESC / Ctrl-C 取消，Enter 确认，Backspace 退格。
-// 返回 (读到的内容, 是否确认, 是否由本函数处理)；handled=false 表示拿不到 raw 终端
-// （非终端 / raw 失败），调用方退回普通行读。
-func promptLineRaw(prompt string) (string, bool, bool) {
+// promptLineRaw 在 raw 模式逐键读一行：ESC 回上一步、Ctrl-C 取消、Enter 确认、Backspace 退格。
+// 输入框下面垫一行灰色帮助（hint）。返回 (读到的内容, 结果, 是否由本函数处理)；
+// handled=false 表示拿不到 raw 终端（非终端 / raw 失败），调用方退回普通行读。
+func promptLineRaw(prompt, hint string) (string, lineResult, bool) {
 	fd := int(os.Stdin.Fd())
 	state, err := makeRaw(fd)
 	if err != nil {
-		return "", false, false
+		return "", lineEOF, false
 	}
 	defer state.restore()
 
 	os.Stdout.WriteString(prompt)
+	if hint != "" {
+		// raw 关了 OPOST：\n 只下移不回车，所以要自己写 \r\n
+		os.Stdout.WriteString("\r\n" + dim(hint) + "\x1b[1A\x1b[999C")
+	}
 	var buf []byte
 	for {
 		ch, ok, err := readOne(fd)
 		if err != nil || !ok {
-			os.Stdout.WriteString("\n")
-			return "", false, true
+			os.Stdout.WriteString("\r\n")
+			return "", lineEOF, true
 		}
 		switch ch {
 		case 0x1b:
@@ -171,14 +175,14 @@ func promptLineRaw(prompt string) (string, bool, bool) {
 				readOne(fd) // 吞掉方向键的第三个字节
 				continue
 			}
-			os.Stdout.WriteString("\n")
-			return "", false, true
+			os.Stdout.WriteString("\r\n\r\n")
+			return "", lineBack, true
 		case '\r', '\n':
-			os.Stdout.WriteString("\n")
-			return string(buf), true, true
+			os.Stdout.WriteString("\r\n\r\n")
+			return string(buf), lineOK, true
 		case 0x03: // Ctrl-C
-			os.Stdout.WriteString("\n")
-			return "", false, true
+			os.Stdout.WriteString("\r\n\r\n")
+			return "", lineEOF, true
 		case 0x7f, 0x08: // Backspace / Ctrl-H
 			if len(buf) == 0 {
 				continue

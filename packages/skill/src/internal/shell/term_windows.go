@@ -98,7 +98,7 @@ func readOne(fd int) (byte, bool, error) {
 
 // readKey 与 unix 版同语义：方向键 → 上/下，ESC 单独按 → 取消，Enter → 确认，Ctrl-C → 取消。
 // promptLineRaw 这份平台暂不做逐键读行（走普通行读，ESC 不生效）。
-func promptLineRaw(prompt string) (string, bool, bool) { return "", false, false }
+func promptLineRaw(prompt, hint string) (string, lineResult, bool) { return "", lineEOF, false }
 
 func (t *termState) readKey() key {
 	ch, ok, err := readOne(t.fd)
