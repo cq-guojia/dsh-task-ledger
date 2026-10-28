@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261028-0947-6d69-调整任务行数据样式": {"category": "样式调整", "created": "2026-10-28 09:47:55", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-28 09:48:12", "status": "doing", "tags": ["看板", "任务行", "样式"], "title": "调整任务行数据样式", "updated": "2026-10-28 13:03:36", "worklog": "worklog/202610/28-0947-6d69-调整任务行数据样式.md"}
+    "20261028-0947-6d69-调整任务行数据样式": {"category": "样式调整", "created": "2026-10-28 09:47:55", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-28 09:48:12", "status": "doing", "tags": ["看板", "任务行", "样式"], "title": "调整任务行数据样式", "updated": "2026-10-28 13:08:43", "worklog": "worklog/202610/28-0947-6d69-调整任务行数据样式.md"}
   },
   "version": "20261022000000"
 }
