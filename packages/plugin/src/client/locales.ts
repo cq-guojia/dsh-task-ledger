@@ -17,6 +17,7 @@ export type LocaleKey =
 	| "loading"
 	| "retry"
 	| "loadFailed"
+	| "dataLoading"
 	| "degradedTitle"
 	| "degradedItem"
 	// 统计卡
@@ -92,6 +93,7 @@ export const zh: Record<LocaleKey, string> = {
 	loading: "读取中…",
 	retry: "重试",
 	loadFailed: "读取失败",
+	dataLoading: "数据正在初始化中，请稍后。",
 	degradedTitle: "部分工作区读取失败",
 	degradedItem: "{title}：{message}",
 
@@ -169,6 +171,7 @@ export const en: Record<LocaleKey, string> = {
 	loading: "Loading…",
 	retry: "Retry",
 	loadFailed: "Load failed",
+	dataLoading: "Loading data, please wait…",
 	degradedTitle: "Some workspaces failed to load",
 	degradedItem: "{title}: {message}",
 

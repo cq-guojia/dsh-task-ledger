@@ -38,6 +38,7 @@ import {
 	Button,
 	EmptyState,
 	ensureUiBase,
+	notify,
 	SearchInput,
 	Segmented,
 	Select,
@@ -168,6 +169,8 @@ export function BoardHome(props: {
 
 	// 打开面板首读（后端纯按需，无推送无轮询）。
 	useEffect(() => {
+		// 首屏还没数据 ≠ 这一档没有任务：初始化期间给一条 Toast（只在没初始化过时给一次）。
+		if (state.board === null) notify(t("dataLoading"));
 		void refresh();
 	}, []);
 
@@ -432,7 +435,8 @@ export function BoardHome(props: {
 							variant: "outline",
 							size: "lg",
 							icon: h(IconRefreshOutlineRegular, { size: 16 }),
-							disabled: state.refreshing,
+							// 转圈 / 禁用都交核心 Button 的 loading 档，不自绘。
+							loading: state.refreshing,
 							title: t("refresh"),
 							onClick: () => {
 								void refresh();
@@ -521,12 +525,15 @@ export function BoardHome(props: {
 							),
 						),
 				regionHead,
-				view.rows.length === 0
-					? h(EmptyState, {
-							title: t("listEmpty"),
-							hint: t("listEmptyHint"),
-						})
-					: h(
+				// 首屏没数据（board === null）≠ 空结果：还没初始化就什么都不画，别拿「没有任务」骗人。
+				board === null
+					? null
+					: view.rows.length === 0
+						? h(EmptyState, {
+								title: t("listEmpty"),
+								hint: t("listEmptyHint"),
+							})
+						: h(
 								"div",
 								null,
 								view.rows

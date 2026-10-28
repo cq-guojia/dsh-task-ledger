@@ -151,13 +151,15 @@ export function Segmented<Value extends string>(props: {
 
 /* ── 按钮 / 图标钮 ────────────────────────────────────────────────── */
 
-/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 3 档）。本地默认高度 md（core 默认 lg）。 */
+/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 3 档）。本地默认高度 md（core 默认 lg）。
+ *  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。 */
 export function Button(props: {
 	children?: ReactNode;
 	onClick?: () => void;
 	variant?: "primary" | "outline" | "ghost";
 	size?: "sm" | "md" | "lg";
 	icon?: ReactNode;
+	loading?: boolean;
 	disabled?: boolean;
 	title?: string;
 }): ReactNode {
@@ -167,6 +169,7 @@ export function Button(props: {
 			variant: props.variant,
 			size: props.size ?? "md",
 			icon: props.icon,
+			loading: props.loading,
 			disabled: props.disabled,
 			title: props.title,
 			onClick: props.onClick,
@@ -195,6 +198,12 @@ export function IconButton(props: {
 		title: props.title,
 	});
 }
+
+/* ── 提示 ─────────────────────────────────────────────────────────── */
+
+/** 核心封装的 Toast 卡（灰/绿/红/黄，随明暗；默认 info 灰卡、位置 bottom-center）。
+ *  无关闭句柄，靠 `durationMs` 自退。 */
+export { notify } from "dsh-plugin-core/ui";
 
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 
