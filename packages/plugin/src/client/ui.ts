@@ -1,12 +1,13 @@
 /**
- * UI 基础层：样式单源 + 共用元件（**一类控件只有一份实现**）。
+ * UI 基础层：样式单源 + 薄包裹（**一类控件只有一份实现**）。
  *
- * 纪律（用户 2026-10-17「样式与方法一律抽象，不要反复重写」；形态抄本机
- * `dsh-task-dispatch-table` 的 `ui/tokens.ts` + `ui/controls-css.ts` + `ui/*.tsx`）：
- *  1. **样式**：颜色 / 圆角 / 字号 / 高度一律 `var(--dtl-*)`（定义只在 tokens.ts），
- *     业务文件不许再写第二份 `var(--dsw-*)`、不许自造 `--dtl-*`、不许自造高度档；
- *  2. **元件**：分段 / 按钮 / 图标钮 / 输入 / 下拉 / 卡 / chip / 空态 / 图表各一份，
- *     页面与浮标共用。官方 primitives 只留「官方做得更好」的（StateDot / MarkdownText / 图标）。
+ * 纪律（用户 2026-10-28：「以后就全用我们的核心空间库」）：
+ *  1. **控件一律来自 `dsh-plugin-core/ui`**（Button / IconButton / Input / Picker /
+ *     Segmented / Chip / StripCard），本文件只做「本插件需要的形状」薄包裹，
+ *     **不再自绘任何控件皮肤**——旧的 `.dtl-btn / .dtl-input / .dtl-select` 等一套已删除；
+ *  2. **样式**：颜色 / 圆角 / 字号一律 `var(--dtl-*)`（定义只在 tokens.ts），
+ *     业务文件不许再写第二份 `var(--dsw-*)`、不许自造 `--dtl-*`；
+ *  3. 官方 primitives 只留「官方做得更好」的（Tooltip / MarkdownText / 图标）。
  */
 
 import { Tooltip } from "@deepseek-ai/dsh-client-ui-primitives";
@@ -22,10 +23,7 @@ import {
 import { type CSSProperties, createElement as h, type ReactNode } from "react";
 import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
 
-/** 条带卡（段头统计条）：直接用核心外观，不包第二层皮。 */
-export { StripCard } from "dsh-plugin-core/ui";
-
-/** 基础层样式（tokens + 控件皮肤；幂等注入）。 */
+/** 基础层样式（tokens + 业务容器类；幂等注入）。 */
 const UI_BASE_CSS = `
 /* 统计卡：8 块（2×4）+ 右图表卡位 */
 .dtl-stat{display:flex;flex-direction:column;gap:var(--dtl-space-1);
@@ -334,11 +332,6 @@ export function StatCard(props: {
 			? null
 			: h("span", { className: "dtl-stat__hint" }, props.hint),
 	);
-}
-
-/** chip（分类 / 标签 / 工作区名）：改由核心 `Chip` 承担。 */
-export function Chip(props: { text: string; color?: string }): ReactNode {
-	return h(CoreChip, { tone: "neutral" }, props.text);
 }
 
 /** 标签上限宽度（字符数）：1 个中文按 2 计 ⇒ 10 个中文 = 20 个字符（与 CSS 的 20ch 对齐）。 */

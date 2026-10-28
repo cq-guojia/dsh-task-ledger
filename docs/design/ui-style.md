@@ -1,6 +1,6 @@
 # 样式规范
 
-> **状态**：🔵 落码（2026-10-16 初建；2026-10-17 首页落码后补全 token 层 / i18n / 元件分工；下午改版按用户要求「样式全抄 dispatch 表」收严控件皮肤与离散刻度）
+> **状态**：🔵 落码（2026-10-16 初建；2026-10-17 首页落码后补全 token 层 / i18n / 元件分工；**2026-10-28 控件层统一交回 `dsh-plugin-core`，自绘皮肤整套删除**，见 §四）
 > **来源**：姊妹仓 `dsh-task-dispatch-table` 已核实事实（0.2.0-rc.2，`ui/tokens.ts` + `ui/controls-css.ts` 逐条对照）+ 本仓 [`external/client-ui-layout.md`](external/client-ui-layout.md)
 > **配套**：外部事实详见 [`external/client-ui-layout.md`](external/client-ui-layout.md)；代码落点见 [`code-conventions.md`](code-conventions.md)
 
@@ -11,9 +11,9 @@
 
 ## 二、无表格件（已知缺口）
 
-宿主 primitives **没有 Table / DataGrid / List / 排序 / 分页 / 虚拟滚动件**；最接近的行件是 `DisclosureRow`，状态件 `StateDot`，文件类型图标 `FileTypeIcon`，约 370 个 `Icon*`。
+宿主 primitives **没有 Table / DataGrid / List / 排序 / 分页 / 虚拟滚动件**；最接近的行件是 `DisclosureRow`，文件类型图标 `FileTypeIcon`，约 370 个 `Icon*`。
 
-台账看板的列表行按官方 token 与几何自绘 —— **已定稿并落码**，见 [`features/board-home.md`](features/board-home.md) §二（`StateDot` 状态语义 open=idle / doing=ongoing / 积压·逾期·停滞=warning·overdue·danger（按时间算）/ 已结案=done；空态三分）。
+**列表行是本插件唯一的自绘件**：一行 = 左缘状态色条 / 圆点（`.dtl-rail` / `.dtl-dot`）+ 标题 + 工作区 + `#标签` + 右侧灰字，见 [`features/board-home.md`](features/board-home.md) §二。它自绘是因为宿主没有表格件，**不是因为宿主控件不好**——行内的按钮、标签、输入仍是核心控件。
 
 （注：右上 `shell.overlay` 浮标截至本版未落码，见 `features/board-home.md` §一；宿主事实如下，若实现需注意）浮层默认 `pointer-events:none`、子元素自动恢复 ⇒ 自绘条目不挡下方应用；定位用宿主变量 `--dsh-frame-overlay-top`（标题栏净空 + 20px），不要写死 top 值。
 
@@ -30,20 +30,25 @@
 
 **不需要 MutationObserver**：判据是纯 CSS 选择器，宿主 `toggleAttribute` 一改，样式立即生效——JS 侧没有「当前是什么主题」这个概念。
 
-## 四、复用官方元件，别自造
+## 四、控件全部走核心库，不许自绘皮肤（2026-10-28 定稿）
 
-能用的官方件就用，`src/client/primitives.d.ts` 只声明我们要消费的那一面（不引官方包类型，rc 版本会无声变）：
+> 用户原话：「以后就全用我们的核心空间库」「把原来老的样式也删掉、清掉——你如果不清掉，我都不知道哪些是他自己写的，哪些是用的老的」。
 
-| 用途 | 用哪个 |
-|---|---|
-| 状态点 | `StateDot` |
-| 过程正文（markdown） | `MarkdownText`（`labels` 必须引用稳定 ⇒ `useMemo`） |
-| 图标 | `Icon*`（约 370 个，色随 currentColor） |
-| 分段 / 按钮 / 图标钮 / 输入 / 下拉 / 卡 / chip / 空态 / 图表 | **自绘一套皮肤**（`ui.ts` + `tokens.ts` 的 `UI_CONTROLS_CSS`），形态抄 dispatch 表 `controls-css.ts` |
+| 用途 | 用哪个 | 本地是否还有皮肤 |
+|---|---|---|
+| 按钮 / 图标按钮 | `dsh-plugin-core/ui::Button` / `IconButton` | ❌ 无（`ui.ts` 只转 props） |
+| 输入框 / 搜索框 | `Input` | ❌ 无 |
+| 下拉 | `Picker`（含 `PickerGroup`） | ❌ 无 |
+| 分段 | `Segmented` | ❌ 无 |
+| 标签 / chip | `Chip`（`Tag` 只做宽度截断 + tone 映射） | ❌ 无 |
+| 条带卡 | `StripCard` | ❌ 无（直接 re-export 去掉后不再包一层） |
+| 提示气泡 | 官方 `Tooltip`（`dsh-client-ui-primitives`） | ❌ 无 |
+| 图标 | `Icon*`（约 370 个，色随 currentColor） | ❌ 无 |
+| 卡片容器 / 列表行 / 统计卡 / 空态 | **本插件业务壳**（`.dtl-card` / `.dtl-orow` / `.dtl-stat` / `.dtl-empty-guide`） | ✅ 仅这些 |
 
-**为什么这几个自绘**（2026-10-17 改版定稿）：官方 `Button` / `SegmentedControl` / `Input` 各自的高度、内距、圆角口径不一（姊妹仓踩过「搜索框比下拉高 2px」「官方 Input 默认 32px」），而用户要求「一行控件全同高、样式全统一」⇒ 收成一套 `.dtl-*` 皮肤：高度只取 24/28/32 三档、有边变体用 1px 真边框 + 内部 padding 补回（有边 / 无边同高）、变体只换颜色变量。官方件继续用在它确实更好的地方（StateDot / MarkdownText / 图标）。
+**判据**：核心库有的控件，一律用核心库，本地只允许薄包裹（转 props、拼 className 做布局），**不得重写高度 / 内距 / 边框 / 圆角 / 配色**。核心没有的（表格行、统计卡），才允许自绘，且颜色圆角字号只吃 `var(--dtl-*)`。
 
-宿主**没有**图表件 ⇒ 趋势图自绘（`ui.ts::GroupedBarChart`，div 柱 + token 色，无新依赖）；宿主**没有**廉价下拉件 ⇒ 原生 `select` + `appearance:none` 自绘箭头，与输入框同宗同高。
+已删除的旧皮肤（2026-10-28）：`.dtl-btn*` / `.dtl-iconbtn*` / `.dtl-input` / `.dtl-select*` / `.dtl-seg*` / `.dtl-check` / `.dtl-badge` / `.dtl-row*` / `.dtl-group` / `.dtl-tag--*` / `.dtl-gchart*` / `.dtl-worklog`，以及随之无引用的 39 个 token（控件高度三档、图表三色、旧阴影 / 圆角大档等）。趋势图与原生 `select` 组件同样已删。
 
 ## 五、文案唯一真源：`src/client/locales.ts`
 

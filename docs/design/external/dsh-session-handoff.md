@@ -70,7 +70,7 @@
 > 用户现在处理结束，以下是用户的留言：
 > <用户留言，可空>
 
-实现落点：`packages/plugin/src/host/services/session.service.ts::buildClosePrompt`。
+实现落点：~~`packages/plugin/src/host/services/session.service.ts::buildClosePrompt`~~ —— **该文件已于 2026-10-28 删除**（`/close` 端点与客户端 `requestClose` 一并移除，「结束任务」按钮当前不接）。本节保留的是**宿主 API 事实与提示词模板**，接回时按此重写，落点文件需重新创建。
 
 ## 四、复核方式（宿主升级后）
 

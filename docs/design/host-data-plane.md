@@ -1,6 +1,6 @@
 # 后端数据面：host 分层架构与性能基线
 
-> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施。**2026-10-28 收敛**：首屏 = 8 卡 + 在办列表 + 各工作区花名册，路由只启用 `/workspaces` 与 `/board/snapshot`（每工作区 `stats --json` + 两次 `history --count-only` + `list --json` + `owners --json`，跨工作区合并/求和/降级归集）；`/board`、`/board/trend`、`/task`、`/history`、`/filters` 与写端点停用，接回时按 skill 方法重写（见 `host/routes.ts` 底部注释）
+> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施。**2026-10-28 收敛并清理**：首屏 = 8 卡 + 在办列表 + 各工作区花名册，路由只注册 `/workspaces` 与 `/board/snapshot`（每工作区 `stats --json` + 两次 `history --count-only` + `list --json` + `owners --json`，跨工作区合并/求和/降级归集）。`/board`、`/board/trend`、`/task`、`/history`、`/filters`、`/claim`、`/release`、`/close` 的实现与空壳函数**已全部删除**（提交 c528eab，删 7 个文件 / 约 3800 行）：接回时按 skill 方法重写，不复用旧直读逻辑
 > **来源**：任务「后端方法抽象：台账读取查询与会话交接」用户要求（2026-10-18）：①所有与台账交互的后端能力抽象成方法；②一个地方统一读；③其他一律调用抽象方法；④架构要健壮、合理、成熟，参考业界成熟分层
 > **配套**：`architecture.md`（运行逻辑）、`code-conventions.md`（方法规范）、`ledger-data.md`（跨包数据契约）、`features/board-home.md`
 
@@ -11,9 +11,8 @@
 | 层 | 文件 | 职责 | 状态 |
 |---|---|---|---|
 | 进程出口 | `repositories/runner.ts` | 全插件唯一 `spawn(台账程序)`（`skill/scripts/progress`，按平台 exec 内嵌二进制），不解析台账格式 | ✅ |
-| 台账读取 | `repositories/ledger.repository.ts` | 判台账存在（`hasLedger`）、读在办（pool.json + 分片）、读 history/worklog | ✅ |
-| 聚合层 | `services/*`（如 `home.service.ts`） | 统计/趋势/周期，纯计算 | ✅ |
-| 兼容壳 | `board.ts` | 拆端点后过渡组合壳，首屏转调 `services/home.service.ts::getSnapshot()` | ⚠️ 临时期 |
+| 台账读取 | `repositories/ledger.repository.ts` | 判台账存在（`hasLedger`）、读在办（pool.json + 分片）、读花名册 | ✅ |
+| 聚合层 | `services/stats.service.ts`（+ `dates.ts`、`uuid` 已删） | 8 卡跨工作区求和 + 降级归集，纯计算 | ✅ |
 | 路由薄壳 | `routes.ts` | 只做协议 | ✅ |
 | 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（`existsSync('ledger/pool.json')`，分片布局） | ✅ |
 | skill 注册 | `skill/registration.ts` | 注册内嵌 `task-ledger` SKILL.md | ✅ |
@@ -28,7 +27,9 @@
 2. **无错误隔离**：`Promise.all` 一个工作区读失败 → 整板 500（0.0.6 事故同类）；
 3. **无结构护栏**：没有任何东西阻止再长出第二处 `existsSync('ledger/...')` / `spawn`。
 
-## 二、性能实测（2026-10-18，本机）
+## 二、性能实测（2026-10-18，本机；⚠️ 测的是已删除的 history 读路径）
+
+> 下表是**历史基线**，其中 `readHistory` / `getHomeAggregate` 的实现已于 2026-10-28 删除（当前只保留 `history --count-only`，用于本周 / 上周完成数）。留在这里是因为「趋势为什么慢、为什么不做」的结论仍成立。
 
 fixture：`/tmp/perf3` = 空在办 + `history/202610.md` 50002 行 / 6.6MB（5 万行全在这一个月文件里）。
 
@@ -56,13 +57,14 @@ fixture：`/tmp/perf3` = 空在办 + `history/202610.md` 50002 行 / 6.6MB（5 �
 
 ```
 routes.ts            传输层：参数解析 / 发 JSON / 错误→状态码
-services/            用例层：聚合与计算（多数是纯函数；`trend.service` 自己调 repositories 读在办 + 历史）
+services/            用例层：聚合与计算（纯函数；现只有 stats.service 与 dates.ts）
 repositories/        数据访问层：**唯一知道「台账怎么读」的地方**
-  ledger.repository    readTasks / readHistory / getTask / readWorklog / hasLedger
+  ledger.repository    readTasks / readOwners / hasLedger
+  stats.repository     readStats（stats --json）/ countClosed（history --count-only）
   identity.repository  读本机 identity.json 的 uuid（机器级；与工作区 / git 无关）
-  records.ts           入口校验：脚本 JSON → 领域对象（含 finished/title/worklog → time/workpackage/log），坏数据抛 LedgerDataError
+  records.ts           入口校验：list --json → 领域对象，坏数据抛 LedgerDataError
   cache.ts             TTL 读缓存 + 单飞去重 + invalidate() 钩子
-  runner.ts            = 现 script.ts，全插件唯一 spawn 台账程序（内嵌静态二进制）
+  runner.ts            全插件唯一 spawn 台账程序（内嵌静态二进制，读命令专用）
 workspace.ts         调 ledger.repository.hasLedger()，不再自己 existsSync
 errors.ts            统一错误模型 + 降级结果类型（横切）
 ```
@@ -112,17 +114,14 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 
 ## 五点五、版本错配兜底（拆端点的必配项）
 
-新旧 host/client 混装是常态（git 直装、用户可能只更一半），v0.0.15 有黑屏教训：
+> **已不适用（2026-10-28）**：`/board` 全量端点、`/board/trend`、`/history`、`/filters`、`/task` 与写端点均已删除，client 只剩 `/board/snapshot` 与 `/workspaces` 两条请求。只剩一种组合需要注意：
 
 | 组合 | 行为 |
 |---|---|
-| 新 client + 新 host | 首屏 `/board/snapshot`（快）+ `/board/trend`（后台） |
-| 旧 client + 新 host | 旧 client 调 `/board` 全量 ⇒ host **保留 `/board` 全量端点**（含 trend 字段）继续服务，不删 |
-| 新 client + 旧 host | 新 client 调 `/board/trend` 得 404 ⇒ **前端兜底**：趋势区显示「后端版本过旧，趋势不可用」，首屏其余部分正常渲染，不白屏 |
+| 新 client + 旧 host | 旧 host 仍注册 `/board/snapshot` ⇒ 正常；旧 host 多出来的端点没有 client 调用，无影响 |
+| 旧 client + 新 host | 旧 client 若仍调 `/board/trend` 等已删端点 ⇒ 404，**不白屏**（旧 client 自身有兜底）；这是「只更一半」的唯一代价，升级到同一版本即消失 |
 
-`/board` 全量端点标记为「兼容期专用」，下个大版本（1.x）删除，删除时在 CHANGELOG/README 明示。
-
-**实施状态**：4a（host 三端点 + 路由层断言）、4b（client 两段刷新：快照先渲染、趋势后台拉，未到/读挂各自兜底）已落地；客户端数据面需保证页面不从快照读 `closed` / `trend`（防回退）。
+本轮**不再保留兼容端点**：用户 2026-10-28 明确要求「停用的该删全删，别污染逻辑」，兼容壳一律不留。
 
 ## 六、分期
 
@@ -130,7 +129,7 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 |---|---|---|
 | 1 | 目录重组 + IO 收敛 + 错误模型/降级 + 入口校验 | 完全等价，验收通过才算完 |
 | 2 | 拆端点（A）+ 缓存（B）+ 前端降级标红 —— ✅ 已完成（4a / 4b / 步骤 5） | 新增行为 |
-| 3 | 写路径 + invalidate | ✅ 已完成：`/claim`、`/release` 走 `ledger-write.service.ts`（host 代跑同一个脚本），`/close` 走会话交接由模型执行 |
+| 3 | 写路径 + invalidate | ⏸ 曾实现（`/claim`、`/release` 走 `ledger-write.service.ts`，`/close` 走会话交接），2026-10-28 随界面收敛**已整链路删除**；接回时按 skill 方法重写 |
 
 ## 七、影响面（重构必读）
 
