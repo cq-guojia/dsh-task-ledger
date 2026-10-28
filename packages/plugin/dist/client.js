@@ -54401,8 +54401,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.113 · 261028-233730-907`
-			}, `v0.0.113 261028-233730-907`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.114 · 261028-234147-314`
+			}, `v0.0.114 261028-234147-314`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
