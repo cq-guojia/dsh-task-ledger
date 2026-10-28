@@ -1,7 +1,7 @@
 # 20261026-0917-在-skill-里增加-html-台账展示页-e276：在 skill 里增加 HTML 台账展示页
 
 - **标签**：建设、台账、展示、静态页面
-- **状态**：doing · 2026-10-26 13:00:09 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **状态**：open · 2026-10-28 09:22:28
 - **创建**：2026-10-26 09:17:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
@@ -62,3 +62,4 @@
 - 2026-10-26 20:52:47 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 方向转 TUI：新增只读 board 子命令（actions/board.py + render.board_view + registry/cli 注册，零依赖 ANSI 一屏）；smoke 加 2 项全绿、codelint 13→17 文件全过、内嵌副本已同步；HTML 方案按用户否决定收摊
 - 2026-10-26 20:56:31 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户叫停撤销全部命令行看板改动：git checkout 恢复 10 个文件、删 3 个新增文件，skill 与内嵌副本无残留；未碰插件 UI 在途改动，等新方向
 - 2026-10-26 21:00:09 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 本任务挂起：HTML 方案停止推进，需求转入新任务「台账命令行看板脚本」；worklog 已写明挂起现状与恢复前提
+- 2026-10-28 09:22:28 · release · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 释放回公共池
