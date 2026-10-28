@@ -2,9 +2,8 @@
  * 看板首页（`main` 槽整页内容）：上 = 8 统计卡 + 趋势图位（**留空**）；下 = 单区任务列表。
  *
  * 2026-10-28：列表沿用原「我的待办」卡片样式，改成**左侧六档菜单 + 右侧三个过滤**的平铺列表。
- *  - 菜单：我的待办 / 待认领 / 进行中 **真筛**；积压 / 逾期 / 停滞 **只铺样式**（`list` 还没有
- *    对应筛选参数，点了给一句说明，不假装是空结果）。
- *  - 工作区过滤 **真筛**；负责人下拉与搜索框 **只铺样式**（用户要求程序后置）。
+ *  - 菜单六档**全部真筛**（积压 / 逾期 / 停滞 用 skill 下发的布尔）；
+ *  - 工作区 / 执行人 / 搜索 **全部本地筛**（快照已含全部在办，不发请求）。
  *
  * 数据纪律：行上的 `mine` / `stale` / `overdue` / `backlog` 与阈值都来自 skill，
  * 前端只做布尔判断与渲染。刷新 = 挂载首读 + 手动刷新按钮，**不轮询**。
@@ -19,10 +18,12 @@ import {
 	type ReactNode,
 	useEffect,
 	useMemo,
+	useRef,
 	useSyncExternalStore,
 } from "react";
 import type { LocaleKey, Translate } from "./locales";
-import { ownerGroups, selectView } from "./rows";
+import { openFilePreview } from "dsh-plugin-core/explorer";
+import { ownerGroups, selectView, type Row } from "./rows";
 import {
 	boardSnapshot,
 	boardSubscribe,
@@ -108,7 +109,7 @@ const SELECT_MAX_WIDTH = 240;
 /** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
 const SEARCH_WIDTH = 192;
 
-/** 左侧六档菜单（前三档 skill 有筛选口径，后三档只铺样式）。 */
+/** 左侧六档菜单（全部本地真筛，角标 = 各档全量计数）。 */
 const TABS: readonly { value: TabFilter; label: LocaleKey }[] = [
 	{ value: "mine", label: "regionMine" },
 	{ value: "open", label: "statOpen" },
@@ -117,9 +118,6 @@ const TABS: readonly { value: TabFilter; label: LocaleKey }[] = [
 	{ value: "overdue", label: "statOverdue" },
 	{ value: "stale", label: "statStale" },
 ];
-
-/** 后三档还接不了：`list` 没有对应筛选参数（skill 只在每行给标记）。 */
-const PENDING_TABS: readonly TabFilter[] = ["backlog", "overdue", "stale"];
 
 /** 角标：>0 才给数字，0 = undefined（不标）。 */
 function orZero(n: number): number | undefined {
@@ -133,6 +131,21 @@ export function BoardHome(props: {
 	const { t, onBack } = props;
 	ensureUiBase();
 	const state = useSyncExternalStore(boardSubscribe, boardSnapshot);
+	const mountRef = useRef<HTMLDivElement>(null);
+
+	/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
+	 *  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
+	const handleView = (row: Row): void => {
+		const mount = mountRef.current;
+		if (mount === null) return;
+		const base = row.task.workspace.path.replace(/\/+$/, "");
+		const rel = row.task.worklog;
+		const path =
+			rel === null || rel === undefined || rel === ""
+				? `${base}/ledger`
+				: `${base}/ledger/${String(rel).replace(/^\/+/, "")}`;
+		openFilePreview({ mount, path });
+	};
 
 	// 打开面板首读（后端纯按需，无推送无轮询）。
 	useEffect(() => {
@@ -143,7 +156,6 @@ export function BoardHome(props: {
 	const stats = board?.stats;
 	const view = useMemo(() => selectView(state), [state]);
 	const degraded = board?.degraded ?? [];
-	const pending = PENDING_TABS.includes(state.query.tab);
 
 	/** 工作区下拉候选：宿主里所有含台账的工作区（不是从任务里反推，空工作区也要能选）。 */
 	const workspaceOptions = useMemo(
@@ -346,7 +358,7 @@ export function BoardHome(props: {
 
 	return h(
 		"div",
-		{ style: pageStyle },
+		{ ref: mountRef, style: pageStyle },
 		h(
 			"div",
 			{ style: { display: "flex", justifyContent: "center" } },
@@ -487,14 +499,12 @@ export function BoardHome(props: {
 							),
 						),
 				regionHead,
-				pending
-					? h("div", { style: hintStyle }, t("filterPending"))
-					: view.rows.length === 0
-						? h(EmptyState, {
-								title: t("listEmpty"),
-								hint: t("listEmptyHint"),
-							})
-						: h(
+				view.rows.length === 0
+					? h(EmptyState, {
+							title: t("listEmpty"),
+							hint: t("listEmptyHint"),
+						})
+					: h(
 								"div",
 								null,
 								view.rows.map((row) =>
@@ -502,7 +512,7 @@ export function BoardHome(props: {
 										key: row.key,
 										t,
 										row,
-										variant: "mine",
+										onView: handleView,
 									}),
 								),
 							),

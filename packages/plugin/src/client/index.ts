@@ -10,7 +10,7 @@
  * `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
  */
 import { createStyleKit } from "dsh-plugin-core/design";
-import { setStyleKit } from "dsh-plugin-core/ui";
+import { connectHost, setStyleKit } from "dsh-plugin-core/ui";
 import { createElement as h } from "react";
 import { BoardHome } from "./board-home";
 import {
@@ -62,6 +62,9 @@ const t: Translate = interpolateTranslate(
 );
 
 export function apply(ctx: ClientContext): void {
+	// ⓪ 接线一次：核心接管文件服务 + 会话解析 + dock 补 flex；查看钮只需给容器和路径。
+	connectHost(ctx);
+
 	// ① 字典注册（宿主语言切换 ⇒ 渲染器换 t 引用 ⇒ 整页重渲染）
 	ctx.inject(["locale"], (localeCtx) => {
 		ctx.effect(() => localeCtx.locale?.register(NS, { zh, en }));

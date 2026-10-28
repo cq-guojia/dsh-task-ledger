@@ -63,7 +63,6 @@ export type LocaleKey =
 	| "regionMine"
 	| "ownerLabel"
 	| "ownerAll"
-	| "filterPending"
 	| "listEmpty"
 	| "listEmptyHint"
 	| "ownerUnclaimed"
@@ -75,11 +74,9 @@ export type LocaleKey =
 	| "actionResume"
 	| "actionFinish"
 	| "actionRelease"
-	| "actionClaim"
 	| "tipResume"
 	| "tipFinish"
 	| "tipRelease"
-	| "tipClaim"
 	| "viewDetail"
 	| "createdAt"
 	| "fieldCreatedStamp"
@@ -141,8 +138,6 @@ export const zh: Record<LocaleKey, string> = {
 	regionMine: "我的待办",
 	ownerLabel: "执行人",
 	ownerAll: "全部执行人",
-	filterPending:
-		"这一档的筛选方法还没接：skill 的 list 还没有按积压 / 逾期 / 停滞筛行的参数",
 	listEmpty: "这一档没有任务",
 	listEmptyHint: "换个档位或工作区看看。",
 
@@ -157,8 +152,6 @@ export const zh: Record<LocaleKey, string> = {
 	tipResume: "继续推进这个任务",
 	tipFinish: "结案并写入历史",
 	tipRelease: "释放认领，让别人接手",
-	actionClaim: "认领",
-	tipClaim: "认领这个任务，变成我在做",
 	createdAt: "{who} 创建于 {when}",
 	startedAt: "{who} 开始于 {when}",
 	viewDetail: "查看详情",
@@ -224,8 +217,6 @@ export const en: Record<LocaleKey, string> = {
 	regionMine: "My todos",
 	ownerLabel: "Owner",
 	ownerAll: "Anyone",
-	filterPending:
-		"This tab has no filtering method yet: skill `list` cannot filter by backlog / overdue / stale",
 	listEmpty: "Nothing in this tab",
 	listEmptyHint: "Try another tab or workspace.",
 
@@ -240,8 +231,6 @@ export const en: Record<LocaleKey, string> = {
 	tipResume: "keep working on this task",
 	tipFinish: "close and archive it",
 	tipRelease: "release the claim for others",
-	actionClaim: "Claim",
-	tipClaim: "claim this task for yourself",
 	createdAt: "created by {who} on {when}",
 	startedAt: "{who} started on {when}",
 	viewDetail: "View details",

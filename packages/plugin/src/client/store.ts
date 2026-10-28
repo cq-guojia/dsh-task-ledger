@@ -18,14 +18,14 @@ export type TabFilter =
 	| "overdue"
 	| "stale";
 
-/** 列表筛选（工作区与菜单在浏览器里筛；负责人 / 关键字只落了样式，暂不参与过滤）。 */
+/** 列表筛选（六档菜单 / 工作区 / 执行人 / 搜索全在浏览器里筛，不发请求）。 */
 export interface Query {
 	tab: TabFilter;
 	/** 工作区 id；'' = 全部。 */
 	workspace: string;
-	/** 通用搜索（标题 / 任务号 / 人名……）——样式已铺，程序未接。 */
+	/** 通用搜索（标题 / 任务号 / 执行人 / 创建人 / 分类 / 标签，不区分大小写）。 */
 	keyword: string;
-	/** 负责人 uuid；'' = 全部——样式已铺，程序未接。 */
+	/** 负责人 uuid；'' = 全部。 */
 	owner: string;
 }
 

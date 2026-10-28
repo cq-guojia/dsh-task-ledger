@@ -1,18 +1,11 @@
 /**
- * 任务行（宿主**无表格件** ⇒ 自绘），**两种形态**（用户 2026-10-17 定稿：两区视觉必须不同，
- * 且**互不重用**）：
+ * 任务行（宿主**无表格件** ⇒ 自绘）：整行一张卡，样式照抄 dispatch-table 任务配置卡：
+ * 左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出「继续 / 结束 / 释放」；
+ * 最右常驻「查看」放大镜钮。
  *
- * A. `mine`（我的待办）= 整行一张卡，样式照抄 dispatch-table 任务配置卡：
- *    左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出
- *    「继续 / 结束 / 释放」；最右常驻「查看」放大镜钮。
- *
- * B. `others`（全部待办）= 连体长表里的一行（用户 2026-10-18 定稿）：**无卡片、无外框**，
- *    行 = 一条淡分隔线格：上下居中的状态圆点 + 任务（标题行 + 标签行；**标签行最前是状态标签**）
- *    + **执行人列**（原状态位，有执行人才摆 `@名字` 标签）+ 最右「@创建人 创建于 年-月-日 时:分:秒」
- *    （悬停掉时分秒并让位给操作钮）+ 查看。
- *    状态一律**标签型、五色**（用户 2026-10-18：原来是一排素字 / pill，现在与人员**位置互换**）：
- *    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 / 红=停滞；三个异常标签悬停给 skill 算好的
- *    天数解释（ageDays / idleDays / waitingDays 随 list 下发）。圆点颜色同色系。
+ * 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）。
+ * 状态一律**标签型、五色**（用户 2026-10-18）：灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 /
+ * 红=停滞；三个异常标签悬停给 skill 算好的天数解释（ageDays / idleDays / waitingDays 随 list 下发）。
  *
  * 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
  *
@@ -22,7 +15,6 @@
 import {
 	IconCheckOutlineRegular,
 	IconChevronRightOutlineRegular,
-	IconDownloadOutlineRegular,
 	IconSearchOutlineRegular,
 	Tooltip,
 } from "@deepseek-ai/dsh-client-ui-primitives";
@@ -65,10 +57,10 @@ function statusLabel(tone: Tone, t: Translate): string {
 export function TaskRowView(props: {
 	t: Translate;
 	row: Row;
-	/** 形态：我的待办（卡片）/ 全部待办（表格行）——两区视觉必须不同、互不重用。 */
-	variant: "mine" | "others";
+	/** 查看：弹右侧 dock 预览过程文档 / 台账文件夹。 */
+	onView?: (row: Row) => void;
 }): ReactNode {
-	const { t, row, variant } = props;
+	const { t, row } = props;
 	const tone = toneOf(row);
 	const tags = row.task.tags ?? [];
 
@@ -109,12 +101,12 @@ export function TaskRowView(props: {
 			});
 		return t("tipStale", { who, started, updated, d: dayText(task.idleDays) });
 	};
-	// 动作权限：**唯一**判定（用户 2026-10-18）——两区同一套，不许各判各的；本文件只按返回值画。
+	// 动作权限：**唯一**判定（用户 2026-10-18）——任务行同一套，不许各判各的；本文件只按返回值画。
 	const actions = resolveActions(row.task);
 
-	// 动作钮：四个 + 查看，各一份（两区共用，不许各画一套）。
+	// 动作钮：继续 / 结束 / 释放 + 查看，各一份。
 	// 悬停说明统一走官方 Tooltip（portal 逃逸裁切、hover 即出），不在 CSS 里手搓 ::after 浮层。
-	// 「查看」：两区都有、统一最右、放大镜图标（用户 2026-10-17）。
+	// 「查看」：统一最右、放大镜图标（用户 2026-10-17）。
 	const viewButton = h(Tooltip, {
 		label: t("viewDetail"),
 		side: "bottom",
@@ -125,16 +117,13 @@ export function TaskRowView(props: {
 			size: "sm",
 			label: t("viewDetail"),
 			icon: h(IconSearchOutlineRegular, { size: 14 }),
+			onClick: () => props.onView?.(row),
 		}),
 	});
 	const tipBtn = (
 		icon: ReactNode,
-		actionKey:
-			| "actionClaim"
-			| "actionResume"
-			| "actionFinish"
-			| "actionRelease",
-		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease",
+		actionKey: "actionResume" | "actionFinish" | "actionRelease",
+		tipKey: "tipResume" | "tipFinish" | "tipRelease",
 	): ReactNode =>
 		h(Tooltip, {
 			label: t(tipKey),
@@ -147,11 +136,6 @@ export function TaskRowView(props: {
 				t(actionKey),
 			),
 		});
-	const claimButton = tipBtn(
-		h(IconDownloadOutlineRegular, { size: 14 }),
-		"actionClaim",
-		"tipClaim",
-	);
 	const resumeButton = tipBtn(
 		h(IconChevronRightOutlineRegular, { size: 14 }),
 		"actionResume",
@@ -177,14 +161,10 @@ export function TaskRowView(props: {
 		});
 	};
 	const markTones = MARKS.filter((which) => row.task[which] === true);
-	// 异常标记全部摆出来；一个都没有 ⇒ 退回归属状态（待认领 / 进行中）那一枚
-	const statusTags = (
-		markTones.length > 0 ? markTones : [tone]
-	).map((which) => tagOf(which));
 	// 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）
 	const alarmTags = markTones.map((which) => tagOf(which));
 
-	// 第一行（「我的待办」卡）：标题 + 创建徽 + 异常标签
+	// 第一行：标题 + 创建徽 + 异常标签
 	const titleLine = h(
 		"div",
 		{ className: "dtl-taskrow__l1" },
@@ -203,107 +183,7 @@ export function TaskRowView(props: {
 		...alarmTags,
 	);
 
-	// 第一行（表格行）：独立类族，不沾卡片基类（用户 2026-10-18）。
-	// 只有标题 —— 创建信息挪到最右、状态进标签行，标题行不再重复一遍。
-	const orowTitleLine = h(
-		"div",
-		{ className: "dtl-orow__title" },
-		h(
-			"span",
-			{ className: "dtl-orow__name dtl-ellipsis", title: titleOf(row) },
-			titleOf(row),
-		),
-	);
-
-	// ── 形态 B：全部待办 = 真表格行（无卡片、无外框，一行一格）──
-	if (variant === "others") {
-		const owner = row.task.owner;
-		const creatorLabel = displayName(row.task.creator_name, row.task.creator);
-		const hasOwner = !(owner === null || owner === undefined || owner === "");
-		const who = creatorLabel === "" ? "—" : `@${creatorLabel}`;
-		const createdOk =
-			created !== null && created !== undefined && Date.parse(created) >= 0;
-		// 执行人的悬停提示（**只在名字被截断时才显示**，见 Tag）：全名 + **什么时候开始执行**
-		// （任务上的 started；没有就报「时间未知」，不编）
-		const startedOk =
-			row.task.started !== null &&
-			row.task.started !== undefined &&
-			Date.parse(row.task.started) >= 0;
-		const ownerName = displayName(row.task.owner_name, owner);
-		const ownerTip = t("startedAt", {
-			who: ownerName === "" ? "" : `@${ownerName}`,
-			when: startedOk
-				? formatDateTime(String(row.task.started))
-				: t("timeUnknown"),
-		});
-		// 标签行：**状态在最前**（原执行人位），#标签跟在后面（用户 2026-10-18 位置互换）
-		const tagLine = h(
-			"div",
-			{ className: "dtl-orow__tags" },
-			...statusTags,
-			tags.map((tag) => h(Tag, { key: tag, text: `#${tag}` })),
-		);
-		return h(
-			"div",
-			{ className: "dtl-orow" },
-			h(
-				"div",
-				{ className: "dtl-orow__row" },
-				// 行标识：上下居中圆点（段头是文件夹/竖线，两处刻意不同）
-				h("span", { className: `dtl-dot dtl-dot--${tone}` }),
-				h(
-					"div",
-					{ className: "dtl-tcell dtl-tcell--title" },
-					orowTitleLine,
-					tagLine,
-				),
-				// 执行人列（原状态位）：有执行人 ⇒ 一枚 @名字 标签，悬停给「谁 什么时候开始执行」
-				// （页面不许跳：右侧槽位宽度是常驻的，hover 只换可见性 ⇒ 这个提示不会跟着飘）
-				h(
-					"span",
-					{ className: "dtl-tcell dtl-tcell--status" },
-					// 名字上限 20 字（Tag 的 20ch）；超了 ⇒ 省略号 + 悬停补全名（ownerTip）
-					hasOwner
-						? h(Tag, {
-								// owner 是 uuid：显示名优先，旧数据没有才退回 uuid
-								text: `@${displayName(row.task.owner_name, owner)}`,
-								tone: "person",
-								title: ownerTip,
-							})
-						: null,
-				),
-				// 最右**一个槽**：创建信息 ⇄ 操作钮二选一（用户 2026-10-18：悬停就把创建信息整条干掉，
-				// 按钮顶上那一格；两个都常驻布局 ⇒ 行宽不变、页面不跳）
-				h(
-					"span",
-					{ className: "dtl-orow__slot" },
-					h(
-						"span",
-						{ className: "dtl-orow__created" },
-						t("createdAt", {
-							who,
-							when: createdOk
-								? formatDateTime(String(created))
-								: t("timeUnknown"),
-						}),
-					),
-					// 动作排：**同一排、同一间距**（用户 2026-10-18：查看钮不许单独一档间距）；
-					// 谁出来由 resolveActions 说了算 —— 我的 ⇒ 继续/结束/释放，待认领 ⇒ 认领
-					h(
-						"span",
-						{ className: "dtl-orow__actions" },
-						actions.claim ? claimButton : null,
-						actions.resume ? resumeButton : null,
-						actions.finish ? finishButton : null,
-						actions.release ? releaseButton : null,
-						actions.view ? viewButton : null,
-					),
-				),
-			),
-		);
-	}
-
-	// ── 形态 A：我的待办 = 卡片（dispatch 任务配置卡同款）──
+	// ── 卡片：dispatch 任务配置卡同款 ──
 	const parts: string[] = [];
 	const startRaw = row.task.started ?? row.task.created;
 	if (
@@ -355,7 +235,7 @@ export function TaskRowView(props: {
 			),
 			// 动作排：继续 / 结束 / 释放 + 查看 —— **同一排、同一间距**
 			// （用户 2026-10-18：查看钮原来是独立的一格，离前面的按钮远一档）
-			// 谁出来由 resolveActions 说了算（与下面「全部待办」**同一个方法**，不再各判各的）
+			// 谁出来由 resolveActions 说了算（同一套权限，不再各判各的）
 			h(
 				"span",
 				{ className: "dtl-taskrow__actions" },

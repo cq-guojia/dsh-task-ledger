@@ -1,8 +1,9 @@
 /**
  * 列表视图的筛选 / 排序（**唯一**实现，纯函数、不碰网络）：页面只渲染，不各写一份过滤。
  *
- * 口径（2026-10-28）：单区平铺（沿用「我的待办」卡片样式），左侧六档菜单 + 工作区过滤。
- * 行上的 `mine` / `stale` / `overdue` / `backlog` **全部是 skill 算好的**，这里只做布尔判断。
+ * 口径（2026-10-28）：单区平铺（沿用「我的待办」卡片样式），左侧六档菜单 + 工作区 / 执行人 / 搜索。
+ * 行上的 `mine` / `stale` / `overdue` / `backlog` **全部是 skill 算好的**，这里只做布尔判断；
+ * 六档、工作区、执行人、搜索**全在浏览器里筛**（快照已含全部在办，不发请求）。
  *
  * 单独成文件是为了能被冒烟直测（store.ts 引 api.ts，Node 剥类型解析不了无扩展名相对导入）。
  */
@@ -77,12 +78,7 @@ export function resolveActions(task: BoardTask): TaskActions {
 	};
 }
 
-/**
- * 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。
- *
- * ⚠️ 后三档（积压 / 逾期 / 停滞）**本轮不接**：用户要求程序后置 ⇒ 这里一律不命中，
- * 界面另给一句说明。
- */
+/** 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。 */
 function tabHit(task: BoardTask, tab: Query["tab"]): boolean {
 	switch (tab) {
 		case "mine":
@@ -91,12 +87,38 @@ function tabHit(task: BoardTask, tab: Query["tab"]): boolean {
 			return task.status === "open";
 		case "doing":
 			return task.status === "doing" || task.status === "blocked";
-		default:
-			return false;
+		case "backlog":
+			return task.backlog === true;
+		case "overdue":
+			return task.overdue === true;
+		case "stale":
+			return task.stale === true;
 	}
 }
 
-/** 当前档位 + 工作区下的平铺列表，按创建 / 开始时间倒序（沿用「我的待办」的排序口径）。 */
+/** 执行人命中：空 = 全部；否则按 uuid 精确比（取自快照的 `owner` 字段，不比名字）。 */
+function ownerHit(task: BoardTask, owner: string): boolean {
+	return owner === "" || task.owner === owner;
+}
+
+/** 搜索命中：标题 / 任务号 / 执行人 / 创建人 / 分类 / 标签 的子串匹配（不区分大小写）。 */
+function keywordHit(task: BoardTask, keyword: string): boolean {
+	const kw = keyword.trim().toLowerCase();
+	if (kw === "") return true;
+	const hay = [
+		task.title,
+		task.id,
+		displayName(task.owner_name, task.owner),
+		displayName(task.creator_name, task.creator),
+		task.category,
+		...(task.tags ?? []),
+	]
+		.filter((s): s is string => s !== null && s !== undefined && s !== "")
+		.map((s) => s.toLowerCase());
+	return hay.some((s) => s.includes(kw));
+}
+
+/** 当前筛选下的平铺列表，按创建 / 开始时间倒序（沿用「我的待办」的排序口径）。 */
 export function selectView(current: {
 	board: BoardPayload | null;
 	query: Query;
@@ -108,13 +130,12 @@ export function selectView(current: {
 	};
 	if (board === null) return empty;
 	const { tasks } = board;
+	const { tab, workspace, owner, keyword } = current.query;
 	const rows: Row[] = tasks
-		.filter((task) => tabHit(task, current.query.tab))
-		.filter(
-			(task) =>
-				current.query.workspace === "" ||
-				task.workspace.id === current.query.workspace,
-		)
+		.filter((task) => tabHit(task, tab))
+		.filter((task) => workspace === "" || task.workspace.id === workspace)
+		.filter((task) => ownerHit(task, owner))
+		.filter((task) => keywordHit(task, keyword))
 		.sort((a, b) =>
 			String(b.created ?? b.started ?? "").localeCompare(
 				String(a.created ?? a.started ?? ""),
