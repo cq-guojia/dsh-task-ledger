@@ -1,8 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261026-0917-在-skill-里增加-html-台账展示页-e276": {"category": "建设", "created": "2026-10-26 09:17:15", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-26 09:17:15", "status": "doing", "tags": ["台账", "展示", "静态页面"], "title": "在 skill 里增加 HTML 台账展示页", "updated": "2026-10-26 13:00:09", "worklog": "worklog/202610/26-0917-在-skill-里增加-html-台账展示页-e276.md"},
-    "20261027-1519-skill-补齐底层能力-新增-stats-owners-台账根检测-并扩展-l-736d": {"category": "其他", "created": "2026-10-27 15:19:22", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-27 16:20:16", "status": "doing", "tags": ["skill", "台账", "能力"], "title": "skill 补齐底层能力：新增 stats、owners、台账根检测，并扩展 list 状态", "updated": "2026-10-27 17:57:16", "worklog": "worklog/202610/27-1519-skill-补齐底层能力-新增-stats-owners-台账根检测-并扩展-l-736d.md"}
+    "20261026-0917-在-skill-里增加-html-台账展示页-e276": {"category": "建设", "created": "2026-10-26 09:17:15", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-26 09:17:15", "status": "doing", "tags": ["台账", "展示", "静态页面"], "title": "在 skill 里增加 HTML 台账展示页", "updated": "2026-10-26 13:00:09", "worklog": "worklog/202610/26-0917-在-skill-里增加-html-台账展示页-e276.md"}
   },
   "version": "20261022000000"
 }

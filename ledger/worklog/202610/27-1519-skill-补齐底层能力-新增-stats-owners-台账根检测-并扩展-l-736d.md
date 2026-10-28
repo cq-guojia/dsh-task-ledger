@@ -1,8 +1,9 @@
 # 20261027-1519-skill-补齐底层能力-新增-stats-owners-台账根检测-并扩展-l-736d：skill 补齐底层能力：新增 stats、owners、台账根检测，并扩展 list 状态
 
 - **标签**：skill、台账、能力
-- **状态**：doing · 2026-10-27 17:57:16 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **状态**：closed · 2026-10-28 01:33:48 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **创建**：2026-10-27 15:19:22 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **封卷**：2026-10-28 01:33:48 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
      「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
@@ -77,3 +78,4 @@
 - 2026-10-27 15:19:22 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务
 - 2026-10-27 16:20:16 · claim · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 认领 → doing
 - 2026-10-27 17:57:16 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 新增 stats/owners/root 三命令 + list 阈值参数与六个派生字段（actions/age.go:age.go、query_stats.go、query_owners.go、detect_root.go）；JSON 契约与分层文档同步，三平台产物重建，go test 全过；未提交待用户复核
+- 2026-10-28 01:33:48 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷
