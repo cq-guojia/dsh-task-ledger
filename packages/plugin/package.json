@@ -57,6 +57,6 @@
 		}
 	},
 	"dependencies": {
-		"dsh-plugin-core": "file:../../../dsh-plugin-core"
+		"dsh-plugin-core": "^0.8.3"
 	}
 }

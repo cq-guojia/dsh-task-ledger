@@ -40,10 +40,10 @@ import {
 	Button,
 	EmptyState,
 	ensureUiBase,
-	notify,
 	SearchInput,
 	Segmented,
 	Select,
+	showLoading,
 	StatCard,
 } from "./ui";
 
@@ -171,10 +171,18 @@ export function BoardHome(props: {
 
 	// 打开面板首读（后端纯按需，无推送无轮询）。
 	useEffect(() => {
-		// 首屏还没数据 ≠ 这一档没有任务：初始化期间给一条 Toast（只在没初始化过时给一次）。
-		if (state.board === null) notify(t("dataLoading"));
 		void refresh();
 	}, []);
+
+	// 首屏还没数据 ⇒ 开全局加载提示（核心 `showLoading` 默认位：屏幕下方居中），
+	// 数据到了 / 读取失败就关掉（它不会自动消失，句柄必须自己收）。
+	useEffect(() => {
+		if (state.board !== null || state.status === "error") return;
+		const loading = showLoading(t("loading"));
+		return () => {
+			loading.close();
+		};
+	}, [state.board, state.status]);
 
 	const board = state.board;
 	const stats = board?.stats;
@@ -565,7 +573,8 @@ export function BoardHome(props: {
 							),
 						),
 				regionHead,
-				// 首屏没数据（board === null）≠ 空结果：还没初始化就什么都不画，别拿「没有任务」骗人。
+				// 首屏没数据（board === null）≠ 空结果：什么都不画，别拿「没有任务」骗人
+				// （加载提示走屏幕下方居中的全局卡，不在区域里占位）。
 				board === null
 					? null
 					: view.rows.length === 0

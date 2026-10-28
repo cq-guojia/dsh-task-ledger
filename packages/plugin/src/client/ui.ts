@@ -22,6 +22,8 @@ import {
 	Picker as CorePicker,
 	type PickerGroup,
 	Segmented as CoreSegmented,
+	showLoading as CoreShowLoading,
+	type LoadingHandle,
 } from "dsh-plugin-core/ui";
 import { type CSSProperties, createElement as h, type ReactNode } from "react";
 import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
@@ -237,6 +239,17 @@ export function Tip(props: {
 		maxWidth: props.maxWidth ?? 240,
 		children: h("span", { className: "dtl-tip" }, props.children),
 	});
+}
+
+/**
+ * 全局加载提示：核心 `showLoading` 的**默认位（屏幕下方居中、无遮罩）**，不传定位参数
+ * （用户 2026-10-28：就地摆进面板内容区不好看，就用全局那个默认位置）。
+ *
+ *  ⚠️ 它**不会自动消失**：谁开的谁 `close()`（句柄可重复关，第二次是空操作）；
+ *  同屏只有一张卡，后一次调用顶掉前一次 ⇒ 打开面板 / 首读这种场合直接开、数据到了就关。
+ */
+export function showLoading(text?: string): LoadingHandle {
+	return CoreShowLoading({ text });
 }
 
 /** 核心封装的 Toast 卡（灰/绿/红/黄，随明暗；默认 info 灰卡、位置 bottom-center）。
