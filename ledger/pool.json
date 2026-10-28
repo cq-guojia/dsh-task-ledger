@@ -1,8 +1,7 @@
 {
   "tasks": {
     "20261026-0917-在-skill-里增加-html-台账展示页-e276": {"category": "建设", "created": "2026-10-26 09:17:15", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": "2026-10-26 09:17:15", "status": "open", "tags": ["台账", "展示", "静态页面"], "title": "在 skill 里增加 HTML 台账展示页", "updated": "2026-10-28 09:22:28", "worklog": "worklog/202610/26-0917-在-skill-里增加-html-台账展示页-e276.md"},
-    "20261028-0910-caae-上线前把核心库改回-npm-远程库": {"category": "发版", "created": "2026-10-28 09:10:47", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": ["dsh-plugin-core", "本地链接", "依赖切换"], "title": "上线前把核心库改回 NPM 远程库", "updated": "2026-10-28 09:10:47", "worklog": "worklog/202610/28-0910-caae-上线前把核心库改回-npm-远程库.md"},
-    "20261028-0947-6d69-调整任务行数据样式": {"category": "样式调整", "created": "2026-10-28 09:47:55", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": ["看板", "任务行", "样式"], "title": "调整任务行数据样式", "updated": "2026-10-28 09:47:55", "worklog": "worklog/202610/28-0947-6d69-调整任务行数据样式.md"}
+    "20261028-0910-caae-上线前把核心库改回-npm-远程库": {"category": "发版", "created": "2026-10-28 09:10:47", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": ["dsh-plugin-core", "本地链接", "依赖切换"], "title": "上线前把核心库改回 NPM 远程库", "updated": "2026-10-28 09:10:47", "worklog": "worklog/202610/28-0910-caae-上线前把核心库改回-npm-远程库.md"}
   },
   "version": "20261022000000"
 }
