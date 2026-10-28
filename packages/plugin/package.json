@@ -57,6 +57,6 @@
 		}
 	},
 	"dependencies": {
-		"dsh-plugin-core": "^0.5.0"
+		"dsh-plugin-core": "^0.6.0"
 	}
 }

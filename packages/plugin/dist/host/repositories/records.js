@@ -25,9 +25,30 @@ export function parseTaskList(raw, workspace) {
         if (id === "") {
             throw new LedgerDataError(workspace.id, `${workspace.title}: 台账存在空任务号，格式可能已变`);
         }
-        rows.push({ ...value, id, workspace });
+        rows.push(toTaskRow(value, id, workspace));
     }
     return rows;
+}
+/**
+ * 脚本的 snake_case 派生字段 → 领域 camelCase。
+ *
+ * `stale` / `overdue` / `backlog` / `mine` 与三个天数**都是 skill 算好的**（阈值判定、
+ * 身份比较都在脚本侧），插件只搬字段，不重算一遍。缺字段一律 null / false（不编 0）。
+ */
+function toTaskRow(source, id, workspace) {
+    const days = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
+    return {
+        ...source,
+        id,
+        workspace,
+        ageDays: days(source.age_days),
+        idleDays: days(source.idle_days),
+        waitingDays: days(source.waiting_days),
+        stale: source.stale === true,
+        overdue: source.overdue === true,
+        backlog: source.backlog === true,
+        mine: source.mine === true,
+    };
 }
 /**
  * `history --json`（`{count, filters, records, warnings}`）→ 记录 + 脚本警告（都打上 workspace）。

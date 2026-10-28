@@ -4,6 +4,7 @@
  * 不 import 官方包（参考插件同款纪律：宿主 rc 接口会无声变，结构化声明 + external/ 文档坐标
  * 比绑死官方类型更稳）。
  */
+import type { DegradedInfo } from "./errors.js";
 /** 一个活跃台账工作区：宿主 registry 条目 + 本地探测（ledger/progress.json 存在）。 */
 export interface LedgerWorkspace {
     /** 宿主工作区 id。 */
@@ -33,11 +34,29 @@ export interface TaskRecord {
     category?: string | null;
     tags?: string[] | null;
     worklog?: string | null;
+    age_days?: number | null;
+    idle_days?: number | null;
+    waiting_days?: number | null;
+    stale?: boolean;
+    overdue?: boolean;
+    backlog?: boolean;
+    /** 是不是本机身份名下的（skill 比 uuid 得出来的）。 */
+    mine?: boolean;
 }
-/** 一条在办任务 = 原始字段 + 任务号 + 归属工作区（读取时打上）。 */
+/**
+ * 一条在办任务 = 原始字段 + 任务号 + 归属工作区（读取时打上）
+ * + skill 算好的派生面（插件只搬字段，不重算）。
+ */
 export interface TaskRow extends TaskRecord {
     readonly id: string;
     readonly workspace: LedgerWorkspace;
+    readonly ageDays: number | null;
+    readonly idleDays: number | null;
+    readonly waitingDays: number | null;
+    readonly stale: boolean;
+    readonly overdue: boolean;
+    readonly backlog: boolean;
+    readonly mine: boolean;
 }
 /** history 一条已结案记录（脚本 history --json 的 record 形状；字段名以脚本为准）。 */
 export interface HistoryRecord {
@@ -143,6 +162,70 @@ export interface BoardStats {
     /** 最老一条待认领躺了多少天（没有待认领 = null）。 */
     readonly oldestOpenDays: number | null;
 }
+/**
+ * 8 个统计卡的面。**数字全部来自 skill**（`stats --json` + `history --count-only`），
+ * 插件只做跨工作区求和与阈值透传——不自己判停滞 / 逾期 / 积压。
+ */
+export interface BoardStatsView {
+    /** 我的进行中（skill `my_doing`）。 */
+    readonly myActive: number;
+    /** 我的逾期（skill `my_overdue`）。 */
+    readonly myOverdue: number;
+    /** 我的停滞（skill `my_stale`）。 */
+    readonly myStale: number;
+    /** 待认领（skill `open`）。 */
+    readonly open: number;
+    /** 进行中（skill `doing`，含旧数据的 blocked）。 */
+    readonly doing: number;
+    /** 逾期（skill `overdue`，按时间判定不是状态）。 */
+    readonly overdue: number;
+    /** 停滞（skill `stale`）。 */
+    readonly stale: number;
+    /** 积压（skill `backlog`）。 */
+    readonly backlog: number;
+    /** 停滞 / 逾期 / 积压阈值（天）——skill 回显，界面文案不硬编码。 */
+    readonly staleDays: number;
+    readonly overdueDays: number;
+    readonly backlogDays: number;
+    /** 最老一条待认领躺了多少天（没有待认领 = null）。 */
+    readonly oldestOpenDays: number | null;
+    /** 本周 / 上周完成数；history 全读不到时为 null（界面留 —，不拿 0 充数）。 */
+    readonly weekDone: number | null;
+    readonly lastWeekDone: number | null;
+    /** 两周的区间（界面悬停用，含边界）。 */
+    readonly weekFrom: string;
+    readonly weekTo: string;
+    readonly lastWeekFrom: string;
+    readonly lastWeekTo: string;
+}
+/** `GET /board/stats` 响应：8 卡的全部数字 + 降级信息。 */
+export interface StatsPayload {
+    readonly at: string;
+    readonly stats: BoardStatsView;
+    readonly degraded: readonly DegradedInfo[];
+}
+/** 一个工作区的花名册（skill `owners --json`：含当前没任务的人）。 */
+export interface WorkspaceOwners {
+    readonly workspaceId: string;
+    readonly workspaceTitle: string;
+    readonly owners: readonly {
+        readonly uuid: string;
+        readonly name: string;
+        readonly mine: boolean;
+    }[];
+}
+/**
+ * `GET /board/snapshot` 响应：首屏一次拿全 —— 8 卡 + 在办列表 + 工作区 + 身份 + 各工作区花名册。
+ * 列表行直接就是 skill `list --json` 的形状（含 `mine` / 三个标记 / 三个天数），
+ * 前端只筛不判。
+ */
+export interface BoardHomePayload extends StatsPayload {
+    readonly workspaces: readonly LedgerWorkspace[];
+    readonly tasks: readonly TaskRow[];
+    readonly identities: Readonly<Record<string, string | null>>;
+    /** 每个工作区的成员名单（跨工作区去重 / 分组由前端做，见 client 的 ownerGroups）。 */
+    readonly workspaceOwners: readonly WorkspaceOwners[];
+}
 /** 列表行附加工资字段（host 算，前端不判阈值）。 */
 export interface BoardTask extends TaskRow {
     /** 认领后未动天数（进行中；open 与解析不了的时间为 null）。 */
@@ -157,6 +240,8 @@ export interface BoardTask extends TaskRow {
     readonly overdue: boolean;
     /** 积压标记：待认领且创建至今满 BACKLOG_DAYS 天没人接。 */
     readonly backlog: boolean;
+    /** 归本机身份（skill 判定，前端不再比 uuid）。 */
+    readonly mine: boolean;
 }
 export interface BoardSnapshot {
     readonly at: string;

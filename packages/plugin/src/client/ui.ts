@@ -16,6 +16,7 @@ import {
 	IconButton as CoreIconButton,
 	Input as CoreInput,
 	Picker as CorePicker,
+	type PickerGroup,
 	Segmented as CoreSegmented,
 } from "dsh-plugin-core/ui";
 import {
@@ -344,21 +345,29 @@ export function IconButton(props: {
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 
 /** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
- *  本地 `width`/`minWidth` 核心件暂不支持（`PickerProps` 无 style/width），由外层布局决定宽度。 */
+ *  宽度由核心 `Picker` 原生支持（`width`/`minWidth`/`maxWidth` 落到位触发器内联样式，
+ * 超长省略号 + hover 跑马灯）；给了 `width` 即锁定定宽，否则在 min/max 间自适应。 */
 export function Select<Value extends string>(props: {
 	value: Value;
 	options: readonly { value: Value; label: string }[];
 	onChange: (next: Value) => void;
 	ariaLabel: string;
-	/** 定宽（px）；核心 Picker 暂不支持，保留签名待 core 补。 */
-	width?: number;
-	/** 最小宽度（px）；核心 Picker 暂不支持，保留签名待 core 补。 */
-	minWidth?: number;
+	/** 定宽（px 或任意 CSS 长度）；给了即忽略 min/max，触发器固定此宽。 */
+	width?: number | string;
+	/** 最小宽度（px 或任意 CSS 长度）。 */
+	minWidth?: number | string;
+	/** 最大宽度（px 或任意 CSS 长度）；超长内容省略号截断。 */
+	maxWidth?: number | string;
 	size?: "sm" | "md" | "lg";
 	/** 下拉内搜索框（核心 Picker 原生）。 */
 	searchable?: boolean;
+	/** 分组（核心 Picker 原生）；给了 `groups` 就按组渲染，`options` 仅作无分组兜底。 */
+	groups?: PickerGroup[];
+	/** 触发器（选择框）文字前的图标（核心 Picker 原生 `icon`）；选了什么它都在。 */
+	icon?: ReactNode;
 }): ReactNode {
 	return h(CorePicker, {
+		groups: props.groups,
 		options: props.options.map((option) => ({
 			value: option.value,
 			label: option.label,
@@ -371,6 +380,10 @@ export function Select<Value extends string>(props: {
 		searchable: props.searchable === true,
 		ariaLabel: props.ariaLabel,
 		mode: "single",
+		width: props.width,
+		minWidth: props.minWidth,
+		maxWidth: props.maxWidth,
+		icon: props.icon,
 	});
 }
 

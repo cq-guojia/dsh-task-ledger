@@ -52,6 +52,7 @@ export type LocaleKey =
 	| "chartEmpty"
 	| "chartLoading"
 	| "chartUnavailable"
+	| "chartNotReady"
 	| "chartScopeAll"
 	| "chartScopeMine"
 	| "chartOnlyMine"
@@ -83,6 +84,11 @@ export type LocaleKey =
 	// 列表分区
 	| "regionMine"
 	| "regionAll"
+	| "ownerLabel"
+	| "ownerAll"
+	| "filterPending"
+	| "listEmpty"
+	| "listEmptyHint"
 	| "showingCount"
 	| "groupTotal"
 	| "groupOpen"
@@ -186,6 +192,7 @@ export const zh: Record<LocaleKey, string> = {
 	chartEmpty: "近 8 周没有记录",
 	chartLoading: "趋势读取中…（列表已就绪，统计稍后到）",
 	chartUnavailable: "趋势暂时读不到（不影响上面的任务列表）",
+	chartNotReady: "趋势图待接：skill 还没有按周汇总的方法",
 	chartScopeAll: "所有",
 	chartScopeMine: "我的",
 	chartOnlyMine: "只看我的",
@@ -217,6 +224,12 @@ export const zh: Record<LocaleKey, string> = {
 
 	regionMine: "我的待办",
 	regionAll: "全部待办",
+	ownerLabel: "执行人",
+	ownerAll: "全部执行人",
+	filterPending:
+		"这一档的筛选方法还没接：skill 的 list 还没有按积压 / 逾期 / 停滞筛行的参数",
+	listEmpty: "这一档没有任务",
+	listEmptyHint: "换个档位或工作区看看。",
 	showingCount: "显示 {n} 条",
 	groupTotal: "共 {n} 条",
 	groupOpen: "待办 {n} 条",
@@ -326,6 +339,7 @@ export const en: Record<LocaleKey, string> = {
 	chartLoading: "Loading trend… (list is ready, stats will follow)",
 	chartUnavailable:
 		"Trend is unavailable right now (the task lists above are unaffected)",
+	chartNotReady: "Trend chart pending: the skill has no weekly roll-up method yet",
 	chartScopeAll: "All",
 	chartScopeMine: "Mine",
 	chartOnlyMine: "Mine only",
@@ -360,6 +374,12 @@ export const en: Record<LocaleKey, string> = {
 
 	regionMine: "My todos",
 	regionAll: "All tasks",
+	ownerLabel: "Owner",
+	ownerAll: "Anyone",
+	filterPending:
+		"This tab has no filtering method yet: skill `list` cannot filter by backlog / overdue / stale",
+	listEmpty: "Nothing in this tab",
+	listEmptyHint: "Try another tab or workspace.",
 	showingCount: "{n} shown",
 	groupTotal: "{n} total",
 	groupOpen: "{n} open",

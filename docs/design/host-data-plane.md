@@ -1,6 +1,6 @@
 # 后端数据面：host 分层架构与性能基线
 
-> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施
+> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施。**2026-10-28 收敛**：首屏 = 8 卡 + 在办列表 + 各工作区花名册，路由只启用 `/workspaces` 与 `/board/snapshot`（每工作区 `stats --json` + 两次 `history --count-only` + `list --json` + `owners --json`，跨工作区合并/求和/降级归集）；`/board`、`/board/trend`、`/task`、`/history`、`/filters` 与写端点停用，接回时按 skill 方法重写（见 `host/routes.ts` 底部注释）
 > **来源**：任务「后端方法抽象：台账读取查询与会话交接」用户要求（2026-10-18）：①所有与台账交互的后端能力抽象成方法；②一个地方统一读；③其他一律调用抽象方法；④架构要健壮、合理、成熟，参考业界成熟分层
 > **配套**：`architecture.md`（运行逻辑）、`code-conventions.md`（方法规范）、`ledger-data.md`（跨包数据契约）、`features/board-home.md`
 

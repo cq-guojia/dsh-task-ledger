@@ -32,7 +32,7 @@ export interface DegradedInfo {
 	readonly workspaceId: string;
 	readonly workspaceTitle: string;
 	/** 哪个读挂了——trend 同时读 list + history，必须能区分。 */
-	readonly op: "list" | "history";
+	readonly op: "list" | "history" | "owners";
 	readonly code: LedgerErrorCode;
 	/** 人话，可直接上界面（真源：脚本 stderr / records 校验文案）。 */
 	readonly message: string;
@@ -63,7 +63,7 @@ export async function settleWorkspaces<
 	R,
 >(
 	workspaces: readonly W[],
-	op: "list" | "history",
+	op: "list" | "history" | "owners",
 	read: (workspace: W) => Promise<T>,
 	merge: (rows: readonly T[]) => R,
 ): Promise<{ data: R; degraded: readonly DegradedInfo[] }> {

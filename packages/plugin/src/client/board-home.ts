@@ -1,49 +1,47 @@
 /**
- * 看板首页（`main` 槽整页内容）：8 统计卡 + 近 8 周趋势图 + 两区任务列表。
- * 定稿见 docs/design/features/board-home.md §二（2026-10-17 专家组改版）；
- * 按钮矩阵归「任务按钮与会话交接」任务（写入路径 A/B 未拍板），本页**不画**任务动作按钮。
+ * 看板首页（`main` 槽整页内容）：上 = 8 统计卡 + 趋势图位（**留空**）；下 = 单区任务列表。
  *
- * 刷新纪律（2026-10-17 拍板）：挂载首读 + 手动刷新按钮，**不轮询**；空态三分
- * （未就绪不渲染 / 真空引导卡 / 筛选空小字）。
+ * 2026-10-28：列表沿用原「我的待办」卡片样式，改成**左侧六档菜单 + 右侧三个过滤**的平铺列表。
+ *  - 菜单：我的待办 / 待认领 / 进行中 **真筛**；积压 / 逾期 / 停滞 **只铺样式**（`list` 还没有
+ *    对应筛选参数，点了给一句说明，不假装是空结果）。
+ *  - 工作区过滤 **真筛**；负责人下拉与搜索框 **只铺样式**（用户要求程序后置）。
+ *
+ * 数据纪律：行上的 `mine` / `stale` / `overdue` / `backlog` 与阈值都来自 skill，
+ * 前端只做布尔判断与渲染。刷新 = 挂载首读 + 手动刷新按钮，**不轮询**。
  */
-
 import {
-	IconChecklistOutlineRegular,
-	IconFlatListOutlineRegular,
 	IconFolderCloseRegular,
-	IconFolderOpenRegular,
 	IconRefreshOutlineRegular,
+	IconUsersOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import {
-	type ChangeEvent,
 	createElement as h,
 	type ReactNode,
 	useEffect,
 	useMemo,
-	useState,
+	useRef,
 	useSyncExternalStore,
 } from "react";
 import type { LocaleKey, Translate } from "./locales";
-import { isMine, selectView, type WorkspaceGroup } from "./rows";
+import { openFilePreview } from "dsh-plugin-core/explorer";
+import { ownerGroups, selectView, type Row } from "./rows";
 import {
 	boardSnapshot,
 	boardSubscribe,
 	refresh,
-	type StatusFilter,
 	setQuery,
+	type TabFilter,
 } from "./store";
 import { TaskRowView } from "./task-row";
-import type { BoardPayload, PeriodCounts } from "./types";
+import type { BoardStatsView } from "./types";
+import { getHostFiles } from "./host-files";
 import {
 	Button,
-	ChartLegend,
 	EmptyState,
 	ensureUiBase,
-	GroupedBarChart,
 	SearchInput,
 	Segmented,
 	Select,
-	StripCard,
 	StatCard,
 } from "./ui";
 
@@ -51,16 +49,25 @@ import {
 declare const __PLUGIN_VERSION__: string;
 declare const __BUILD_STAMP__: string;
 
-type Tab = "tasks" | "stats";
-
-/** 整页容器：占满中栏、自己滚动。 */
+/** 整页容器：占满中栏、自己滚动。作为 mount 的弹性子项，dock 出现时自动被挤窄。 */
 const pageStyle: Record<string, string | number> = {
 	height: "100%",
 	width: "100%",
+	flex: "1 1 auto",
+	minWidth: 0,
 	boxSizing: "border-box",
 	overflow: "auto",
 	padding: "24px 22px",
 	color: "var(--dtl-fg)",
+};
+
+/** mount：文件预览 dock 挂这一层弹性行（dock 占宽、把主区挤窄，不浮层）。 */
+const mountStyle: Record<string, string | number> = {
+	display: "flex",
+	height: "100%",
+	width: "100%",
+	boxSizing: "border-box",
+	minWidth: 0,
 };
 const headerStyle: Record<string, string | number> = {
 	display: "flex",
@@ -84,7 +91,7 @@ const buildTagStyle: Record<string, string | number> = {
 	fontVariantNumeric: "tabular-nums",
 	whiteSpace: "nowrap",
 };
-/** 统计区：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
+/** 统计区：左 8 块（2 行 × 4 列）+ 右趋势图位，参考图同款分栏。
  *  列数写死 4 → 2（媒体查询在 ui.ts 的 .dtl-stats / .dtl-stats__cards 里），
  *  绝不给 3 列——3 列会排出 3+1 的非对称（用户 2026-10-17：必须上下对称）。 */
 const statsRowStyle: Record<string, string | number> = {
@@ -92,33 +99,46 @@ const statsRowStyle: Record<string, string | number> = {
 };
 const chartCardStyle: Record<string, string | number> = {
 	display: "flex",
-	flexDirection: "column",
-	gap: "var(--dtl-space-2)",
-	padding: "var(--dtl-space-2) var(--dtl-space-3)",
+	alignItems: "center",
+	justifyContent: "center",
+	padding: "var(--dtl-space-4)",
 };
 const hintStyle: Record<string, string | number> = {
 	fontSize: "var(--dtl-font-sm)",
 	color: "var(--dtl-fg-2)",
 };
-/** 分区标题行：垂直居中（用户 2026-10-17：图标 / 标题 / 计数不许像下楼梯一样逐个低）；
- *  上下留白**翻倍**（用户 2026-10-18：两个大标题太挤）。 */
+/** 列表段头：滑块居左、过滤三件居右（用户 2026-10-28 去掉左侧标题）。 */
 const regionHeadRowStyle: Record<string, string | number> = {
 	display: "flex",
 	alignItems: "center",
-	gap: "var(--dtl-space-2)",
+	gap: "6px",
+	flexWrap: "wrap",
 	margin: "calc(var(--dtl-space-4) * 2) 0 calc(var(--dtl-space-2) * 2)",
 };
-const regionHeadTitleStyle: Record<string, string | number> = {
-	fontSize: "var(--dtl-font-lg)",
-	fontWeight: 600,
-};
-/** 工作区下拉最小宽度（用户 2026-10-17：内容自适应，下限 = 旧定宽 175 的 3/4 ≈ 131）。 */
-const WORKSPACE_SELECT_MIN = 131;
+/** 工作区 / 执行人下拉宽度：核心 Picker 现已支持 min/max（超长省略号）。
+ *  下限略大于旧 131 口径，上限兜底长名不被撑开压住后一个下拉。 */
+const SELECT_MIN_WIDTH = 140;
+const SELECT_MAX_WIDTH = 240;
 /** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
 const SEARCH_WIDTH = 192;
 
-/** 分组默认折叠阈值（组内太多条时先收起，用户点开）。 */
-const GROUP_COLLAPSE_OVER = 30;
+/** 左侧六档菜单（前三档 skill 有筛选口径，后三档只铺样式）。 */
+const TABS: readonly { value: TabFilter; label: LocaleKey }[] = [
+	{ value: "mine", label: "regionMine" },
+	{ value: "open", label: "statOpen" },
+	{ value: "doing", label: "statDoing" },
+	{ value: "backlog", label: "statBacklog" },
+	{ value: "overdue", label: "statOverdue" },
+	{ value: "stale", label: "statStale" },
+];
+
+/** 后三档还接不了：`list` 没有对应筛选参数（skill 只在每行给标记）。 */
+const PENDING_TABS: readonly TabFilter[] = ["backlog", "overdue", "stale"];
+
+/** 角标：>0 才给数字，0 = undefined（不标）。 */
+function orZero(n: number): number | undefined {
+	return n > 0 ? n : undefined;
+}
 
 export function BoardHome(props: {
 	t: Translate;
@@ -127,7 +147,27 @@ export function BoardHome(props: {
 	const { t, onBack } = props;
 	ensureUiBase();
 	const state = useSyncExternalStore(boardSubscribe, boardSnapshot);
-	const [tab, setTab] = useState<Tab>("tasks");
+	const mountRef = useRef<HTMLDivElement>(null);
+
+	/** 查看：弹右侧 dock 预览过程文档（MD）。路径 = 工作区绝对路径 + /ledger/ + 相对路径；
+	 *  绝对路径让 openFilePreview 按宿主 workspaces 快照自动匹配工作区、解析 sessionId。 */
+	const handleView = (row: Row): void => {
+		const mount = mountRef.current;
+		const files = getHostFiles();
+		if (mount === null || files === null) return;
+		const ws = row.kind === "task" ? row.task.workspace : row.record.workspace;
+		const rel =
+			row.kind === "task" ? row.task.worklog : row.record.log;
+		if (ws === undefined || ws === null || rel === null || rel === "") return;
+		const base = ws.path.replace(/\/+$/, "");
+		const tail = String(rel).replace(/^\/+/, "");
+		openFilePreview({
+			mount,
+			workspaceFiles: files,
+			path: `${base}/ledger/${tail}`,
+			rootName: ws.title,
+		});
+	};
 
 	// 打开面板首读（后端纯按需，无推送无轮询）。
 	useEffect(() => {
@@ -135,30 +175,23 @@ export function BoardHome(props: {
 	}, []);
 
 	const board = state.board;
-	const view = useMemo(() => selectView(state), [state]);
 	const stats = board?.stats;
-	// 趋势走慢路径（`/board/trend`，读 history）：晚到不影响列表；未到 / 失败时由统计卡与图表区各自兜底。
-	const trend = state.trend;
-	const periods = trend?.trend;
-	const trendPending =
-		state.trendStatus === "idle" || state.trendStatus === "loading";
-	/** 快照 + 趋势两段各自的降级工作区（op 不同，合并展示，别装没看见）。 */
-	const degraded = [...(board?.degraded ?? []), ...(trend?.degraded ?? [])];
-	// 工作区下拉候选（用户 2026-10-17）：不读系统全量工作区，只从「我的」任务里提取工作区并排重
-	// ⇒ 没有我任务的工作区不出现；口径与第一区一致（isMine 同源）。
+	const view = useMemo(() => selectView(state), [state]);
+	const degraded = board?.degraded ?? [];
+	const pending = PENDING_TABS.includes(state.query.tab);
+
+	/** 工作区下拉候选：宿主里所有含台账的工作区（不是从任务里反推，空工作区也要能选）。 */
 	const workspaceOptions = useMemo(
 		() => [
 			{ value: "", label: t("workspaceAll") },
-			...[
-				...new Map(
-					(board?.tasks ?? [])
-						.filter((task) => isMine(task, board))
-						.map((task) => [task.workspace.id, task.workspace.title]),
-				),
-			].map(([id, title]) => ({ value: id, label: title })),
+			...(board?.workspaces ?? []).map((workspace) => ({
+				value: workspace.id,
+				label: workspace.title,
+			})),
 		],
 		[board, t],
 	);
+
 	/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
 	const card = (
 		label: LocaleKey,
@@ -180,54 +213,175 @@ export function BoardHome(props: {
 			? t(key, { n: Math.round((part / whole) * 100) })
 			: "";
 
-	/** 统计台卡：不可点（首页没有已结案可筛），hover 给具体日期区间。
-	 *  趋势未到 / 读挂 ⇒ 数字留 '—'（StatCard 对 0 的处理）、小字整条不显示，**不拿 0 充数**。 */
-	const periodCard = (
+	/** 统计台卡：不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
+	const weekCard = (
 		label: LocaleKey,
-		period: PeriodCounts | undefined,
+		done: number | null,
+		from: string,
+		to: string,
 	): ReactNode =>
 		h(StatCard, {
 			label: t(label),
-			value: period?.done ?? 0,
-			hint:
-				period === undefined
-					? undefined
-					: t("statCreatedHint", { n: period.created }),
+			value: done ?? 0,
 			interactive: false,
-			title:
-				period === undefined
-					? undefined
-					: t("periodRange", { from: period.from, to: period.to }),
+			title: t("periodRange", { from, to }),
 		});
 
-	const [chartScope, setChartScope] = useState<"all" | "mine">("all");
-	const chartWeeks = useMemo(
-		() =>
-			(trend?.closed.weekly[chartScope] ?? []).map((bucket) => {
-				// 容错：host 旧版可能不带 end（客户端/宿主版本错配时），退回用 week，绝不崩面板。
-				const end = bucket.end ?? bucket.week ?? "";
-				return {
-					label: end.slice(5) || bucket.week?.slice(5) || "",
-					done: bucket.done,
-					remaining: bucket.remaining,
-					created: bucket.created,
-					title:
-						chartScope === "mine"
-							? `截至 ${end}（${t("chartOnlyMine")}）`
-							: `截至 ${end}`,
-				};
+	/** 左 8 块（2×4）+ 右趋势图位。 */
+	const statsGrid = (view: BoardStatsView): ReactNode =>
+		h(
+			"div",
+			{ className: "dtl-stats", style: statsRowStyle },
+			h(
+				"div",
+				{ className: "dtl-stats__cards" },
+				// 按列成对（用户 2026-10-19 选 A）：每列上下是同一对象的两个视角，
+				// 子集关系一眼可见 —— 积压 ⊂ 待认领、逾期 / 停滞 ⊂ 进行中。
+				// DOM 按**列序**写，CSS 的 grid-auto-flow:column 保证 4 列 / 2 列两种排布下都成对。
+				card(
+					"statMyActive",
+					view.myActive,
+					[
+						view.myOverdue > 0
+							? t("statMyOverdueHint", { n: view.myOverdue })
+							: null,
+						view.myStale > 0
+							? t("statMyStaleHint", { n: view.myStale })
+							: null,
+					]
+						.filter((part) => part !== null)
+						.join(" ｜ "),
+				),
+				card(
+					"statDoing",
+					view.doing,
+					view.doing - view.myActive > 0
+						? t("statDoingHint", { n: view.doing - view.myActive })
+						: t("statDoingAllMine"),
+				),
+				card(
+					"statOpen",
+					view.open,
+					view.oldestOpenDays === null
+						? ""
+						: t("statOpenHint", { n: view.oldestOpenDays }),
+				),
+				card(
+					"statBacklog",
+					view.backlog,
+					share(view.backlog, view.open, "statBacklogHint"),
+					t("statBacklogTitle", { n: view.backlogDays }),
+				),
+				card(
+					"statOverdue",
+					view.overdue,
+					share(view.overdue, view.doing, "statOverdueHint"),
+					t("statOverdueTitle", { n: view.overdueDays }),
+				),
+				card(
+					"statStale",
+					view.stale,
+					share(view.stale, view.doing, "statStaleHint"),
+					t("statStaleTitle", { n: view.staleDays }),
+				),
+				weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo),
+				weekCard(
+					"statLastWeekDone",
+					view.lastWeekDone,
+					view.lastWeekFrom,
+					view.lastWeekTo,
+				),
+			),
+			h(
+				"div",
+				{ className: "dtl-card", style: chartCardStyle },
+				// 趋势图：skill 侧还没有「按周汇总」方法 ⇒ 卡位留着，不画假图。
+				h("div", { style: hintStyle }, t("chartNotReady")),
+			),
+		);
+
+	/** 段头：六档菜单居左，工作区 / 执行人 / 搜索居右（用户 2026-10-28：不要左侧标题）。 */
+	const regionHead = h(
+		"div",
+		{ style: regionHeadRowStyle },
+		h(Segmented<TabFilter>, {
+			id: "dtl-list-tab",
+			value: state.query.tab,
+			label: t("statusLabel"),
+			items: TABS.map((tab) => ({
+				value: tab.value,
+				label: t(tab.label),
+				badge: orZero(view.counts[tab.value]),
+			})),
+			size: "lg",
+			onChange: (next) => {
+				setQuery({ tab: next });
+			},
+		}),
+		// 撑开中间，右侧三件靠右。
+		h("span", { style: { flex: "1 1 auto" } }),
+		// 工作区过滤：真筛。宽度靠外层定，核心 Picker 不吃 width/minWidth。
+		// 工作区下拉：核心 Picker 原生 min/max（超长省略号，不被撑开压住后一个下拉）。
+		h(
+			"div",
+			{ style: { flex: "none" } },
+			h(Select<string>, {
+				searchable: true,
+				size: "lg",
+				minWidth: SELECT_MIN_WIDTH,
+				maxWidth: SELECT_MAX_WIDTH,
+				icon: h(IconFolderCloseRegular, { size: 16 }),
+				value: workspaceOptions.some(
+					(option) => option.value === state.query.workspace,
+				)
+					? state.query.workspace
+					: "",
+				options: workspaceOptions,
+				ariaLabel: t("workspaceLabel"),
+				onChange: (next) => {
+					setQuery({ workspace: next });
+				},
 			}),
-		[trend, chartScope, t],
+		),
+		// 执行人过滤：候选 = 各工作区花名册合并（跨工作区去重 / 分组在 `ownerGroups`）。
+		// 程序未接（选了不真筛），但选项已按通用 / 工作区分好组；同样给 min/max 防撑开。
+		h(
+			"div",
+			{ style: { flex: "none" } },
+			h(Select<string>, {
+				searchable: true,
+				size: "lg",
+				minWidth: SELECT_MIN_WIDTH,
+				maxWidth: SELECT_MAX_WIDTH,
+				icon: h(IconUsersOutlineRegular, { size: 16 }),
+				value: state.query.owner,
+				options: [{ value: "", label: t("ownerAll") }],
+				groups: ownerGroups(board, workspaceOptions, t),
+				ariaLabel: t("ownerLabel"),
+				onChange: (next) => {
+					setQuery({ owner: next });
+				},
+			}),
+		),
+		// 通用搜索：**样式已铺、程序未接**（输入暂不过滤）。
+		h(
+			"div",
+			{ style: { width: `${SEARCH_WIDTH}px`, flex: "none" } },
+			h(SearchInput, {
+				size: "lg",
+				value: state.query.keyword,
+				placeholder: t("searchPlaceholder"),
+				ariaLabel: t("searchPlaceholder"),
+				onChange: (next) => {
+					setQuery({ keyword: next });
+				},
+			}),
+		),
 	);
-	const chartEmpty = chartWeeks.every(
-		(week) => week.done === 0 && week.created === 0 && week.remaining === 0,
-	);
-	/** 被 skill 脚本整行跳过的历史行（列数不对 / 时间不合法）：图表数字已少算，要写出来。 */
-	const trendWarnings = trend?.warnings ?? [];
 
 	return h(
 		"div",
-		{ style: pageStyle },
+		{ ref: mountRef, style: mountStyle },
 		h(
 			"div",
 			{ style: { display: "flex", justifyContent: "center" } },
@@ -274,634 +428,123 @@ export function BoardHome(props: {
 						),
 					),
 					h(
-						"div",
+						Button,
 						{
-							style: {
-								display: "flex",
-								alignItems: "center",
-								gap: "var(--dtl-space-2)",
+							variant: "outline",
+							size: "lg",
+							icon: h(IconRefreshOutlineRegular, { size: 16 }),
+							disabled: state.refreshing,
+							title: t("refresh"),
+							onClick: () => {
+								void refresh();
 							},
 						},
-						h(Segmented<Tab>, {
-							id: "dtl-tab",
-							value: tab,
-							label: t("panelTitle"),
-							items: [
-								{ value: "tasks", label: t("tabTasks") },
-								{ value: "stats", label: t("tabStats") },
-							],
-							onChange: setTab,
-						}),
-						h(
-							Button,
-							{
-								variant: "outline",
-								// lg：与同排 tab 滑轨同高（用户 2026-10-26：一行控件别一大一小）
-								size: "lg",
-								icon: h(IconRefreshOutlineRegular, { size: 16 }),
-								disabled: state.refreshing,
-								title: t("refresh"),
-								onClick: () => {
-									void refresh();
-								},
-							},
-							state.refreshing ? t("refreshing") : t("refresh"),
-						),
+						state.refreshing ? t("refreshing") : t("refresh"),
 					),
 				),
-				tab === "stats"
-					? // 统计报表尚未开建（另立任务）：占位说明，不画假图表。
-						h("div", { style: hintStyle }, t("statsPlaceholder"))
-					: h(
+				// 未就绪不渲染；读挂给红色原因 + 重试（不画 0 充数）。
+				state.status === "error" && board === null
+					? h(
 							"div",
-							null,
-							// ── 统计区：左 8 块（操作台 4 + 统计台 4）+ 右趋势图 ──
-							stats === undefined
-								? null
-								: h(
-										"div",
-										{ className: "dtl-stats", style: statsRowStyle },
-										h(
-											"div",
-											{ className: "dtl-stats__cards" },
-											// 按列成对（用户 2026-10-19 选 A）：每列上下是同一对象的两个视角，
-											// 子集关系一眼可见 —— 积压 ⊂ 待认领、逾期 / 停滞 ⊂ 进行中。
-											// DOM 按**列序**写，CSS 的 grid-auto-flow:column 保证 4 列 / 2 列两种排布下都成对。
-											// 小字一律给本卡独有的增量信息，**不重复全集**（用户 2026-10-19）：
-											// 三块子集卡一律报**占全集的比例**（用户 2026-10-19 二选一时定占比），0 条时整条不显示。
-											card(
-												"statMyActive",
-												stats.myActive,
-												[
-													stats.myOverdue > 0
-														? t("statMyOverdueHint", { n: stats.myOverdue })
-														: null,
-													stats.myStale > 0
-														? t("statMyStaleHint", { n: stats.myStale })
-														: null,
-												]
-													.filter((part) => part !== null)
-													.join(" ｜ "),
-											),
-											card(
-												"statDoing",
-												stats.doing,
-												stats.doing - stats.myActive > 0
-													? t("statDoingHint", {
-															n: stats.doing - stats.myActive,
-														})
-													: t("statDoingAllMine"),
-											),
-											card(
-												"statOpen",
-												stats.open,
-												stats.oldestOpenDays === null
-													? ""
-													: t("statOpenHint", { n: stats.oldestOpenDays }),
-											),
-											card(
-												"statBacklog",
-												stats.backlog,
-												share(stats.backlog, stats.open, "statBacklogHint"),
-												t("statBacklogTitle", { n: stats.backlogDays }),
-											),
-											card(
-												"statOverdue",
-												stats.overdue,
-												share(stats.overdue, stats.doing, "statOverdueHint"),
-												t("statOverdueTitle", { n: stats.overdueDays }),
-											),
-											card(
-												"statStale",
-												stats.stale,
-												share(stats.stale, stats.doing, "statStaleHint"),
-												t("statStaleTitle", { n: stats.staleDays }),
-											),
-											periodCard("statWeekDone", periods?.thisWeek),
-											periodCard("statLastWeekDone", periods?.lastWeek),
-										),
-										h(
-											"div",
-											{ className: "dtl-card", style: chartCardStyle },
-											// 右上角只留一个「只看我的」小复选框：勾上 = 我的，不勾 = 所有（用户 2026-10-17）
-											h(
-												"div",
-												{
-													style: {
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "flex-end",
-													},
-												},
-												h(
-													"label",
-													{ className: "dtl-check" },
-													h("input", {
-														type: "checkbox",
-														checked: chartScope === "mine",
-														onChange: (
-															event: ChangeEvent<HTMLInputElement>,
-														) => {
-															setChartScope(
-																event.target.checked ? "mine" : "all",
-															);
-														},
-													}),
-													t("chartOnlyMine"),
-												),
-											),
-											// 趋势是慢路径：未到给占位、读挂给兜底文案（带原因），就绪才画图——绝不画空图冒充「没有记录」。
-											trendPending
-												? h(
-														"div",
-														{
-															style: {
-																...hintStyle,
-																padding: "var(--dtl-space-4) 0",
-															},
-														},
-														t("chartLoading"),
-													)
-												: state.trendStatus === "error"
-													? h(
-															"div",
-															{
-																style: {
-																	...hintStyle,
-																	padding: "var(--dtl-space-4) 0",
-																},
-															},
-															`${t("chartUnavailable")}${state.trendError === null ? "" : `：${state.trendError}`}`,
-														)
-													: chartEmpty
-														? h(
-																"div",
-																{
-																	style: {
-																		...hintStyle,
-																		padding: "var(--dtl-space-4) 0",
-																	},
-																},
-																t("chartEmpty"),
-															)
-														: h(GroupedBarChart, {
-																weeks: chartWeeks,
-																ariaLabel: t("chartTitle"),
-																doneLabel: t("chartLegendDone"),
-																remainingLabel: t("chartLegendRemaining"),
-																createdLabel: t("chartLegendCreated"),
-															}),
-											h(ChartLegend, {
-												doneLabel: t("chartLegendDone"),
-												remainingLabel: t("chartLegendRemaining"),
-												createdLabel: t("chartLegendCreated"),
-											}),
-											// 被脚本跳过的坏历史行：数字已经少算，必须说出来（悬停看逐条原因）
-											trendWarnings.length > 0
-												? h(
-														"div",
-														{
-															style: {
-																...hintStyle,
-																color: "var(--dtl-warning)",
-															},
-															title: trendWarnings.join("\n"),
-														},
-														t("chartWarnings", {
-															n: trendWarnings.length,
-														}),
-													)
-												: null,
-										),
-									),
-
-							// ── 列表 ──
-							state.status === "loading" && board === null
-								? null // 未就绪：不渲染
-								: state.status === "error" && board === null
-									? h(
-											"div",
-											{
-												style: {
-													display: "flex",
-													alignItems: "center",
-													gap: "var(--dtl-space-2)",
-												},
-											},
-											h(
-												"span",
-												{
-													style: {
-														color: "var(--dtl-danger)",
-														fontSize: "var(--dtl-font-md)",
-													},
-												},
-												`${t("loadFailed")}：${state.error ?? ""}`,
-											),
-											h(
-												Button,
-												{
-													variant: "outline",
-													size: "sm",
-													onClick: () => {
-														void refresh();
-													},
-												},
-												t("retry"),
-											),
-										)
-									: board !== null && board.workspaces.length === 0
-										? h(EmptyState, {
-												tone: "guide",
-												title: t("emptyNoWorkspace"),
-												hint: t("emptyNoWorkspaceHint"),
-											})
-										: h(
-												"div",
-												null,
-												// 降级横幅：有工作区读挂 ⇒ 红色警告 + 人话原因（单工作区坏不拖垮其余，别装没看见）
-												board !== null && (board.degraded?.length ?? 0) > 0
-													? h(
-															"div",
-															{
-																style: {
-																	display: "flex",
-																	alignItems: "flex-start",
-																	gap: "var(--dtl-space-2)",
-																	padding:
-																		"var(--dtl-space-2) var(--dtl-space-3)",
-																	marginBottom: "var(--dtl-space-3)",
-																	border: "1px solid var(--dtl-danger)",
-																	borderRadius: "var(--dtl-radius-md)",
-																	background: "var(--dtl-danger-soft)",
-																	color: "var(--dtl-fg)",
-																	fontSize: "var(--dtl-font-sm)",
-																	lineHeight: "var(--dtl-line-sm)",
-																},
-															},
-															h(
-																"span",
-																{
-																	style: {
-																		color: "var(--dtl-danger)",
-																		flex: "none",
-																		fontWeight: 600,
-																	},
-																},
-																t("degradedTitle"),
-															),
-															h(
-																"span",
-																null,
-																degraded
-																	.map((item) =>
-																		t("degradedItem", {
-																			title: item.workspaceTitle,
-																			message: item.message,
-																		}),
-																	)
-																	.join("；"),
-															),
-														)
-													: null,
-												// 第一区：我的待办——定死全量、不过滤（用户 2026-10-17），空了给引导卡；
-												// 标题行右侧挂搜索框（只作用第三区），计数用小圆徽
-												h(
-													"div",
-													{ style: regionHeadRowStyle },
-													h(
-														"span",
-														{
-															style: {
-																color: "var(--dtl-fg-3)",
-																display: "inline-flex",
-																flex: "none",
-															},
-														},
-														h(IconChecklistOutlineRegular, { size: 16 }),
-													),
-													h(
-														"span",
-														{ style: regionHeadTitleStyle },
-														t("regionMine"),
-													),
-													view.mine.length > 0
-														? h(
-																"span",
-																{ className: "dtl-count" },
-																t("mineCount", { n: view.mine.length }),
-															)
-														: null,
-													h("span", { style: { flex: "1 1 auto" } }),
-													// 工作区下拉：核心 Picker 带筛选（用户 2026-10-26）；控件统一 lg 档
-													h(Select<string>, {
-														searchable: true,
-														size: "lg",
-														value: workspaceOptions.some(
-															(option) =>
-																option.value === state.query.workspace,
-														)
-															? state.query.workspace
-															: "",
-														options: workspaceOptions,
-														ariaLabel: t("workspaceLabel"),
-														minWidth: WORKSPACE_SELECT_MIN,
-														onChange: (next) => {
-															setQuery({ workspace: next });
-														},
-													}),
-													// 搜索框：在下拉右边、与「其他待办」同宽 192（用户 2026-10-17）；统一 lg 档
-													h(
-														"div",
-														{
-															style: {
-																width: `${SEARCH_WIDTH}px`,
-																flex: "none",
-															},
-														},
-														h(SearchInput, {
-															size: "lg",
-															value: state.query.keyword,
-															placeholder: t("searchPlaceholder"),
-															ariaLabel: t("searchPlaceholder"),
-															onChange: (next) => {
-																setQuery({ keyword: next });
-															},
-														}),
-													),
-												),
-												view.mine.length === 0
-													? h(EmptyState, {
-															tone: "guide",
-															title: t("mineEmpty"),
-															hint: t("mineEmptyHint"),
-														})
-													: view.mine.map((row) =>
-															h(TaskRowView, {
-																key: row.key,
-																t,
-																row,
-																variant: "mine",
-																board,
-															}),
-														),
-												// 第二区：全部待办 —— **永远渲染**（用户 2026-10-18：选「进行中」没数据也不能整块消失；
-												// 且不要过滤掉自己，所以含我的任务，会与第一区重叠——顶部快看 / 底部全量）；
-												// 标题行：图标 + 名 + 状态滑轨（带全量角标）+ 搜索（最右）；表格区无数据给虚线空态
-												h(
-													"div",
-													null,
-													h(
-														"div",
-														{ style: regionHeadRowStyle },
-														h(
-															"span",
-															{
-																style: {
-																	color: "var(--dtl-fg-3)",
-																	display: "inline-flex",
-																	flex: "none",
-																},
-															},
-															h(IconFlatListOutlineRegular, { size: 16 }),
-														),
-														h(
-															"span",
-															{
-																style: {
-																	...regionHeadTitleStyle,
-																	fontSize: "var(--dtl-font-md)",
-																},
-															},
-															t("regionAll"),
-														),
-														h("span", { style: { flex: "1 1 auto" } }),
-														// 状态滑轨：角标 = 第二区**全量**计数（不受滑轨自身影响）；0 不标数字
-														h(Segmented<StatusFilter>, {
-															id: "dtl-others-status",
-															value: state.query.status,
-															label: t("statusLabel"),
-															items: [
-																{
-																	value: "all",
-																	label: t("statusAll"),
-																	badge: orZero(view.allCounts.total),
-																},
-																{
-																	value: "active",
-																	label: t("statusActive"),
-																	badge: orZero(view.allCounts.doing),
-																},
-																{
-																	value: "open",
-																	label: t("statusOpen"),
-																	badge: orZero(view.allCounts.open),
-																},
-																{
-																	value: "backlog",
-																	label: t("statusBacklog"),
-																	badge: orZero(view.allCounts.backlog),
-																},
-																{
-																	value: "overdue",
-																	label: t("statusOverdue"),
-																	badge: orZero(view.allCounts.overdue),
-																},
-																{
-																	value: "stale",
-																	label: t("statusStale"),
-																	badge: orZero(view.allCounts.stale),
-																},
-															],
-															onChange: (next) => {
-																setQuery({ status: next });
-															},
-														}),
-														h(
-															"div",
-															{
-																style: {
-																	width: `${SEARCH_WIDTH}px`,
-																	flex: "none",
-																},
-															},
-															h(SearchInput, {
-																size: "lg",
-																value: state.query.othersKeyword,
-																placeholder: t("searchPlaceholder"),
-																ariaLabel: t("searchPlaceholder"),
-																onChange: (next) => {
-																	setQuery({ othersKeyword: next });
-																},
-															}),
-														),
-													),
-													view.groups.length === 0
-														? // 空态：虚线框 + 两排字 + 按钮（参考 dispatch 空态；按钮先接「回会话」，
-															// 真正的「起会话建任务」归会话交接任务）
-															h(
-																"div",
-																{
-																	className: "dtl-empty-guide",
-																	style: { marginTop: "var(--dtl-space-2)" },
-																},
-																h(
-																	"div",
-																	{
-																		style: {
-																			fontSize: "var(--dtl-font-lg)",
-																			fontWeight: 600,
-																			marginBottom: "var(--dtl-space-1)",
-																		},
-																	},
-																	t("allEmptyTitle"),
-																),
-																h(
-																	"div",
-																	{
-																		style: {
-																			fontSize: "var(--dtl-font-md)",
-																			color: "var(--dtl-fg-2)",
-																			marginBottom: "var(--dtl-space-3)",
-																		},
-																	},
-																	t("allEmptyHint"),
-																),
-																h(
-																	Button,
-																	{
-																		variant: "primary",
-																		size: "md",
-																		onClick: onBack,
-																	},
-																	t("allEmptyAction"),
-																),
-															)
-														: h(
-																"div",
-																{ style: { marginTop: "var(--dtl-space-2)" } },
-																view.groups.map((group) =>
-																	h(WorkspaceGroupView, {
-																		key: group.workspaceId,
-																		t,
-																		group,
-																		board,
-																	}),
-																),
-															),
-												),
-											),
-						),
-			),
-		),
-	);
-}
-
-/** 角标：>0 才给数字，0 = undefined（不标）。 */
-function orZero(n: number): number | undefined {
-	return n > 0 ? n : undefined;
-}
-
-/** 一个工作区分组（全部待办表格段）：段头（点+名+统计）→ 列头行 → 任务行。
- *  统计口径（用户 2026-10-18）：共 N｜待办 N｜进行中 N 常显（0 也显）；
- *  积压 / 逾期 / 停滞**只在 >0 时出现**。 */
-function WorkspaceGroupView(props: {
-	t: Translate;
-	group: WorkspaceGroup;
-	/** 传下去只为问动作权限（是不是我的）——第二区含我的任务，按钮得跟第一区一致。 */
-	board: BoardPayload | null;
-}): ReactNode {
-	const { t, group, board } = props;
-	const [open, setOpen] = useState(group.rows.length <= GROUP_COLLAPSE_OVER);
-	const stats = [
-		t("groupTotal", { n: group.total }),
-		t("groupOpen", { n: group.openCount }),
-		t("groupDoing", { n: group.doingCount }),
-		...(group.backlogCount > 0
-			? [t("groupBacklog", { n: group.backlogCount })]
-			: []),
-		...(group.overdueCount > 0
-			? [t("groupOverdue", { n: group.overdueCount })]
-			: []),
-		...(group.staleCount > 0 ? [t("groupStale", { n: group.staleCount })] : []),
-	].join(" ｜ ");
-	// 段头统计条：核心 StripCard（色条 / 浅底 / 折叠 caret 全是核心外观，用户 2026-10-26 拍板）
-	return h(
-		"div",
-		{ className: "dtl-group" },
-		h(
-			StripCard,
-			{
-				accent: "business",
-				expanded: open,
-				onToggle: () => {
-					setOpen(!open);
-				},
-				// 统计放核心 action 槽（右侧，垂直居中）；caret 由 StripCard 自动补
-				action: h(
-					"span",
-					{
-						style: {
-							fontSize: "var(--dtl-font-xs)",
-							color: "var(--dtl-fg-2)",
-							whiteSpace: "nowrap",
-						},
-					},
-					stats,
-				),
-			},
-			h(
-				"div",
-				{ style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 } },
-				// 段头标识：展开 = 开文件夹、收起 = 合文件夹；图标缺席就不显示（StripCard 自有色条兜底）
-				IconFolderOpenRegular === undefined ||
-					IconFolderCloseRegular === undefined
-					? null
-					: h(
-							"span",
 							{
 								style: {
-									display: "inline-flex",
-									flex: "none",
-									color: "var(--dtl-fg-3)",
+									display: "flex",
+									alignItems: "center",
+									gap: "var(--dtl-space-2)",
 								},
 							},
-							h(open ? IconFolderOpenRegular : IconFolderCloseRegular, {
-								size: 14,
-							}),
+							h(
+								"span",
+								{
+									style: {
+										color: "var(--dtl-danger)",
+										fontSize: "var(--dtl-font-md)",
+									},
+								},
+								`${t("loadFailed")}：${state.error ?? ""}`,
+							),
+							h(
+								Button,
+								{
+									variant: "outline",
+									size: "sm",
+									onClick: () => {
+										void refresh();
+									},
+								},
+								t("retry"),
+							),
+						)
+					: null,
+				stats === undefined ? null : statsGrid(stats),
+				// 降级横幅：有工作区读挂 ⇒ 红色警告 + 人话原因（数字会少算，别装没看见）
+				degraded.length === 0
+					? null
+					: h(
+							"div",
+							{
+								style: {
+									display: "flex",
+									alignItems: "flex-start",
+									gap: "var(--dtl-space-2)",
+									padding: "var(--dtl-space-2) var(--dtl-space-3)",
+									marginTop: "var(--dtl-space-3)",
+									border: "1px solid var(--dtl-danger)",
+									borderRadius: "var(--dtl-radius-md)",
+									background: "var(--dtl-danger-soft)",
+									color: "var(--dtl-fg)",
+									fontSize: "var(--dtl-font-sm)",
+									lineHeight: "var(--dtl-line-sm)",
+								},
+							},
+							h(
+								"span",
+								{
+									style: {
+										color: "var(--dtl-danger)",
+										flex: "none",
+										fontWeight: 600,
+									},
+								},
+								t("degradedTitle"),
+							),
+							h(
+								"span",
+								null,
+								degraded
+									.map((item) =>
+										t("degradedItem", {
+											title: item.workspaceTitle,
+											message: item.message,
+										}),
+									)
+									.join("；"),
+							),
 						),
-				h(
-					"span",
-					{
-						style: {
-							fontSize: "var(--dtl-font-lg)",
-							fontWeight: 700,
-							lineHeight: "var(--dtl-line-lg)",
-							color: "var(--dtl-fg)",
-							overflow: "hidden",
-							textOverflow: "ellipsis",
-							whiteSpace: "nowrap",
-						},
-					},
-					group.title,
-				),
+				regionHead,
+				pending
+					? h("div", { style: hintStyle }, t("filterPending"))
+					: view.rows.length === 0
+						? h(EmptyState, {
+								tone: "guide",
+								title: t("listEmpty"),
+								hint: t("listEmptyHint"),
+							})
+						: h(
+								"div",
+								null,
+								view.rows.map((row) =>
+									h(TaskRowView, {
+										key: row.key,
+										t,
+										row,
+										variant: "mine",
+										board,
+										onView: handleView,
+									}),
+								),
+							),
 			),
 		),
-		open
-			? h(
-					"div",
-					null,
-					// 无列头行（用户 2026-10-18：表头就是段头——左工作区名、右统计，不放「任务/创建人」那排）
-					group.rows.map((row) =>
-						h(TaskRowView, {
-							key: row.key,
-							t,
-							row,
-							variant: "others",
-							board,
-						}),
-					),
-				)
-			: null,
 	);
 }

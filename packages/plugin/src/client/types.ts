@@ -46,6 +46,8 @@ export interface TaskMeta {
 	readonly overdue: boolean;
 	/** 积压 = 待认领且 created 至今满 BACKLOG_DAYS 天没人接。 */
 	readonly backlog: boolean;
+	/** 归本机身份（skill 比 uuid 判定，前端不再比）。 */
+	readonly mine: boolean;
 }
 
 /** 在办行 = 任务 + host 附加字段。 */
@@ -115,37 +117,54 @@ export interface ClosedSummary {
 	};
 }
 
-/** 首页统计卡的六个面。 */
-export interface BoardStats {
+/** 8 个统计卡的面（`GET /board/snapshot`）：数字全由 host 从 skill 取，前端只渲染。 */
+export interface BoardStatsView {
 	readonly myActive: number;
 	readonly myOverdue: number;
-	/** 我的停滞（我的进行中里 ≥ staleDays 天没更新的）。 */
 	readonly myStale: number;
 	readonly open: number;
 	readonly doing: number;
-	/** 逾期（按时间判定，不是状态）。 */
 	readonly overdue: number;
 	readonly stale: number;
-	/** 积压（待认领逾期，按时间判定）。 */
 	readonly backlog: number;
-	/** 三个阈值（天）——界面文案用它，不硬编码。 */
+	/** 阈值（天），由 skill 回显——界面文案不硬编码。 */
 	readonly staleDays: number;
 	readonly overdueDays: number;
 	readonly backlogDays: number;
 	readonly oldestOpenDays: number | null;
+	/** 本周 / 上周完成数；null = 历史读不到（界面留 —，不拿 0 充数）。 */
+	readonly weekDone: number | null;
+	readonly lastWeekDone: number | null;
+	readonly weekFrom: string;
+	readonly weekTo: string;
+	readonly lastWeekFrom: string;
+	readonly lastWeekTo: string;
+}
+
+/** 一个工作区的成员名单（skill `owners --json`）。 */
+export interface WorkspaceOwners {
+	readonly workspaceId: string;
+	readonly workspaceTitle: string;
+	readonly owners: readonly {
+		readonly uuid: string;
+		readonly name: string;
+		readonly mine: boolean;
+	}[];
 }
 
 /**
- * `GET /board/snapshot` 响应（**快路径**：只读在办 + 身份，不含趋势）。
- * 兼容端点 `GET /board` 在此之上追加 closed / trend，但客户端已不走它（2026-10-18 拆端点）。
+ * `GET /board/snapshot` 响应：首屏一次拿全（8 卡 + 在办列表 + 工作区 + 身份 + 各工作区花名册）。
+ * 行上 `mine` / 三个标记 / 三个天数**都是 skill 给的**，前端只筛。
  */
 export interface BoardPayload {
 	readonly at: string;
 	readonly workspaces: readonly Workspace[];
 	readonly tasks: readonly BoardTask[];
-	readonly stats: BoardStats;
-	/** 工作区 id → 本机身份 uuid（`~/.taskledger/identity.json`，取不到为 null）——「我的待办」判定源。 */
+	readonly stats: BoardStatsView;
+	/** 工作区 id → 本机身份 uuid（取不到为 null）。行级「是不是我的」以 skill 的 `mine` 为准，这里只备查。 */
 	readonly identities: Readonly<Record<string, string | null>>;
+	/** 每个工作区的成员名单（跨工作区去重 / 分组由前端 `ownerGroups` 做）。 */
+	readonly workspaceOwners: readonly WorkspaceOwners[];
 	/** 降级信息：哪些工作区读挂了、为什么（单工作区坏不拖垮其余；空 = 全部正常）。 */
 	readonly degraded?: readonly DegradedInfo[];
 }

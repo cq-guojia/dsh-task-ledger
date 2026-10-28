@@ -1,11 +1,14 @@
 /**
- * 列表视图的筛选 / 分区 / 排序（**唯一**实现，纯函数、不碰网络）：页面只渲染，不各写一份过滤。
- * 定稿见 docs/design/features/board-home.md §二.3：两区结构（我的待办平铺 / 按工作区分组），
- * 已结案**不在首页**（去统计 tab）。
+ * 列表视图的筛选 / 排序（**唯一**实现，纯函数、不碰网络）：页面只渲染，不各写一份过滤。
+ *
+ * 口径（2026-10-28）：单区平铺（沿用「我的待办」卡片样式），左侧六档菜单 + 工作区过滤。
+ * 行上的 `mine` / `stale` / `overdue` / `backlog` **全部是 skill 算好的**，这里只做布尔判断。
  *
  * 单独成文件是为了能被冒烟直测（store.ts 引 api.ts，Node 剥类型解析不了无扩展名相对导入）。
  */
 
+import type { PickerGroup, PickerOption } from "dsh-plugin-core/ui";
+import type { Translate } from "./locales";
 import type { Query } from "./store";
 import type { BoardPayload, BoardTask, HistoryRecord } from "./types";
 
@@ -16,7 +19,7 @@ export type Row =
 
 /**
  * 界面上显示人名的**唯一**口径：显示名（`owner_name` / `creator_name`）优先，
- * 旧数据 / 名册里没名字才退回 uuid。**只用于显示与搜索** —— 归属判定一律比 uuid（见 `isMine`）。
+ * 旧数据 / 名册里没名字才退回 uuid。**只用于显示与搜索** —— 归属判定看 skill 给的 `mine`。
  */
 export function displayName(
 	name: string | null | undefined,
@@ -26,33 +29,16 @@ export function displayName(
 	return label !== "" ? label : (uuid ?? "").trim();
 }
 
-/** 一个工作区分组（计数口径：待认领 / 进行中 / 积压 / 逾期 / 停滞 / 总，供「全部待办」段头统计）。 */
-export interface WorkspaceGroup {
-	readonly workspaceId: string;
-	readonly title: string;
-	readonly doingCount: number;
-	readonly overdueCount: number;
-	readonly staleCount: number;
-	readonly backlogCount: number;
-	readonly openCount: number;
-	readonly total: number;
-	readonly rows: readonly Row[];
-}
-
-/** 两区视图：第一区我的待办 + 第二区按工作区分组（第二区含全部任务，会与第一区重叠——用户 2026-10-18 要「全部待办」）。 */
+/** 当前筛选下的单区列表 + 六档角标计数（角标是**全量**，不受工作区 / 关键字影响）。 */
 export interface BoardView {
-	readonly mine: readonly Row[];
-	readonly groups: readonly WorkspaceGroup[];
-	/** 第二区（全部待办）任务数。 */
-	readonly total: number;
-	/** 第二区全量计数（**不受状态过滤影响**，供 segmented 角标；异常标记相互独立；含我的）。 */
-	readonly allCounts: {
-		readonly total: number;
-		readonly doing: number;
+	readonly rows: readonly Row[];
+	readonly counts: {
+		readonly mine: number;
 		readonly open: number;
+		readonly doing: number;
+		readonly backlog: number;
 		readonly overdue: number;
 		readonly stale: number;
-		readonly backlog: number;
 	};
 }
 
@@ -76,24 +62,19 @@ export function sameUuid(
 	return left !== "" && left === right;
 }
 
-/** 「我的」判定：owner = 本机身份 uuid，且状态是进行中（blocked 是旧数据，照收；与 host 同口径）。 */
-export function isMine(task: BoardTask, board: BoardPayload | null): boolean {
-	if (board === null) return false;
-	const identity = board.identities[task.workspace.id] ?? null;
-	if (identity === null || identity === "") return false;
-	return (
-		sameUuid(task.owner, identity) &&
-		(task.status === "doing" || task.status === "blocked")
-	);
+/**
+ * 「我的」判定：**直接读 skill 算好的 `mine`**（`list --json` 每行带，脚本比 uuid）。
+ * 前端不再拿 identities 自己比一遍——两套真源迟早对不上。
+ */
+export function isMine(task: BoardTask, _board: BoardPayload | null): boolean {
+	return task.mine === true;
 }
 
 /**
- * 任务动作权限（**唯一**判定，两区共用——用户 2026-10-18：不许各判各的）。
- * 传任务 + 快照进去，返回「能做哪些动作」；界面只按返回值画按钮，不再自己判断是不是我的。
- * ⇒ 第二区（全部待办）里**我的**任务也能继续 / 结束 / 释放，跟第一区一模一样。
+ * 任务动作权限（**唯一**判定）：界面只按返回值画按钮，不再自己判断是不是我的。
  */
 export interface TaskActions {
-	/** 查看详情（两区、所有任务都有）。 */
+	/** 查看详情（所有任务都有）。 */
 	readonly view: boolean;
 	/** 认领：只有**没人认领**（待认领）的任务能认领。 */
 	readonly claim: boolean;
@@ -116,7 +97,7 @@ export function resolveActions(
 	};
 }
 
-/** 已结案行（统计 tab）：只有查看，没有在办动作。 */
+/** 已结案行：只有查看，没有在办动作。 */
 export const CLOSED_ACTIONS: TaskActions = {
 	view: true,
 	claim: false,
@@ -125,147 +106,67 @@ export const CLOSED_ACTIONS: TaskActions = {
 	release: false,
 };
 
-/** 状态档命中（积压 / 逾期 / 停滞由 host 标记，前端不判阈值）——只作用于第二区。 */
-function statusHit(task: BoardTask, status: Query["status"]): boolean {
-	if (status === "all") return true;
-	if (status === "active")
-		return task.status === "doing" || task.status === "blocked";
-	if (status === "open") return task.status === "open";
-	if (status === "backlog") return task.backlog === true;
-	if (status === "overdue") return task.overdue === true;
-	return task.stale === true;
-}
-
-/** 组内排序：别人的进行中在前、待认领在后；各自按创建 / 开始时间倒序。 */
-function inGroupOrder(a: Row, b: Row): number {
-	if (a.kind !== "task" || b.kind !== "task") return 0;
-	const rank = (task: BoardTask): number => (task.status === "open" ? 1 : 0);
-	if (rank(a.task) !== rank(b.task)) return rank(a.task) - rank(b.task);
-	return String(b.task.created ?? b.task.started ?? "").localeCompare(
-		String(a.task.created ?? a.task.started ?? ""),
-	);
-}
-
 /**
- * 当前筛选下的两区视图（用户 2026-10-18 调整）：
- *  - 第一区「我的待办」= 我名下 doing/blocked，吃工作区下拉 + 标题搜索，按创建时间倒序；
- *  - 第二区「全部待办」= **所有**在办任务按工作区分组（含我的——用户明确不要过滤掉自己），
- *    吃**状态档**（segmented）+ **标题 / 执行人搜索**（othersKeyword）；一个整表（外框连着）。
- *    ⇒ 我的任务会同时出现在两个区，这是预期（顶部快看 / 底部全量）。
+ * 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。
+ *
+ * ⚠️ 后三档（积压 / 逾期 / 停滞）**本轮不接**：`list` 还没有对应的筛选参数，
+ * 用户要求先只铺样式、程序后置 ⇒ 这里一律不命中，界面另给一句说明。
  */
+function tabHit(task: BoardTask, tab: Query["tab"]): boolean {
+	switch (tab) {
+		case "mine":
+			return task.mine === true;
+		case "open":
+			return task.status === "open";
+		case "doing":
+			return task.status === "doing" || task.status === "blocked";
+		default:
+			return false;
+	}
+}
+
+/** 当前档位 + 工作区下的平铺列表，按创建 / 开始时间倒序（沿用「我的待办」的排序口径）。 */
 export function selectView(current: {
 	board: BoardPayload | null;
 	query: Query;
 }): BoardView {
-	const { board, query } = current;
-	if (board === null) {
-		return {
-			mine: [],
-			groups: [],
-			total: 0,
-			allCounts: {
-				total: 0,
-				doing: 0,
-				open: 0,
-				overdue: 0,
-				stale: 0,
-				backlog: 0,
-			},
-		};
-	}
-	const allTasks = board.tasks;
-	const allCounts = {
-		total: allTasks.length,
-		doing: allTasks.filter((task) => task.status === "doing").length,
-		open: allTasks.filter((task) => task.status === "open").length,
-		overdue: allTasks.filter((task) => task.overdue === true).length,
-		stale: allTasks.filter((task) => task.stale === true).length,
-		backlog: allTasks.filter((task) => task.backlog === true).length,
+	const board = current.board;
+	const empty = {
+		rows: [] as readonly Row[],
+		counts: { mine: 0, open: 0, doing: 0, backlog: 0, overdue: 0, stale: 0 },
 	};
-	const mineRows: Row[] = board.tasks
-		.filter((task) => isMine(task, board))
+	if (board === null) return empty;
+	const { tasks } = board;
+	const rows: Row[] = tasks
+		.filter((task) => tabHit(task, current.query.tab))
 		.filter(
-			(task) => query.workspace === "" || task.workspace.id === query.workspace,
-		)
-		.filter((task) =>
-			hitKeyword(query.keyword, [
-				task.title,
-				task.id,
-				// 搜的是**人名**：uuid 是机器键，人不会拿它搜
-				displayName(task.owner_name, task.owner),
-				displayName(task.creator_name, task.creator),
-				task.category,
-				...(task.tags ?? []),
-			]),
+			(task) =>
+				current.query.workspace === "" ||
+				task.workspace.id === current.query.workspace,
 		)
 		.sort((a, b) =>
 			String(b.created ?? b.started ?? "").localeCompare(
 				String(a.created ?? a.started ?? ""),
 			),
 		)
-		.map(
-			(task): Row => ({
-				kind: "task",
-				key: `${task.workspace.id}:${task.id}`,
-				task,
-				mine: true,
-			}),
-		);
-	const rest =
-		query.scope === "mine"
-			? []
-			: board.tasks
-					.filter((task) => statusHit(task, query.status))
-					.filter((task) =>
-						hitKeyword(query.othersKeyword, [
-							task.title,
-							displayName(task.owner_name, task.owner),
-						]),
-					);
-	const byWorkspace = new Map<string, { title: string; rows: Row[] }>();
-	for (const task of rest) {
-		const entry = byWorkspace.get(task.workspace.id) ?? {
-			title: task.workspace.title,
-			rows: [],
-		};
-		// mine 必须说实话（第二区现在含全部任务，连我的也在里面）：按钮权限由 resolveActions 判，
-		// 但这一位同样是数据面，不许一律写 false。
-		entry.rows.push({
+		.map((task) => ({
 			kind: "task",
 			key: `${task.workspace.id}:${task.id}`,
 			task,
-			mine: isMine(task, board),
-		});
-		byWorkspace.set(task.workspace.id, entry);
-	}
-	const groups: WorkspaceGroup[] = [...byWorkspace.entries()]
-		.map(([workspaceId, entry]) => ({
-			workspaceId,
-			title: entry.title,
-			doingCount: entry.rows.filter(
-				(row) => row.kind === "task" && row.task.status === "doing",
-			).length,
-			overdueCount: entry.rows.filter(
-				(row) => row.kind === "task" && row.task.overdue === true,
-			).length,
-			staleCount: entry.rows.filter(
-				(row) => row.kind === "task" && row.task.stale === true,
-			).length,
-			backlogCount: entry.rows.filter(
-				(row) => row.kind === "task" && row.task.backlog === true,
-			).length,
-			openCount: entry.rows.filter(
-				(row) => row.kind === "task" && row.task.status === "open",
-			).length,
-			total: entry.rows.length,
-			rows: entry.rows.sort(inGroupOrder),
-		}))
-		.sort((a, b) => a.title.localeCompare(b.title, "zh-Hans-CN"));
+			mine: task.mine === true,
+		}));
 	return {
-		mine: mineRows,
-		groups,
-		total: groups.reduce((sum, group) => sum + group.rows.length, 0),
-		allCounts,
+		rows,
+		counts: {
+			mine: tasks.filter((task) => task.mine === true).length,
+			open: tasks.filter((task) => task.status === "open").length,
+			doing: tasks.filter(
+				(task) => task.status === "doing" || task.status === "blocked",
+			).length,
+			backlog: tasks.filter((task) => task.backlog === true).length,
+			overdue: tasks.filter((task) => task.overdue === true).length,
+			stale: tasks.filter((task) => task.stale === true).length,
+		},
 	};
 }
 
@@ -291,4 +192,58 @@ export function selectClosed(current: {
 			key: `${record.src ?? ""}:${record.time ?? ""}:${index}`,
 			record,
 		}));
+}
+
+/**
+ * 执行人下拉的分组（核心 Picker 原生支持 groups）。
+ * 跨工作区合并去重：同一 uuid 出现在 ≥2 个工作区 ⇒ 归「通用人员」组（置顶）；
+ * 只出现在一个工作区 ⇒ 归该工作区分组。空工作区（名册读挂）自然不出现。
+ * 顶部一段**空标题**（`全部执行人` + 跨工作区的通用人员，都不设标题），
+ * 只有「只在一个工作区出现」的人，才各自带工作区小标题分组。
+ * 「全部执行人」`value=""` 是当前选中的回显位；筛选逻辑后置。
+ */
+export function ownerGroups(
+	board: BoardPayload | null,
+	workspaceOptions: readonly { readonly value: string; readonly label: string }[],
+	t: Translate,
+): PickerGroup[] {
+	if (board === null) return [];
+	const byUuid = new Map<string, { name: string; ws: Set<string> }>();
+	for (const ws of board.workspaceOwners) {
+		for (const owner of ws.owners) {
+			let entry = byUuid.get(owner.uuid);
+			if (entry === undefined) {
+				entry = { name: owner.name, ws: new Set<string>() };
+				byUuid.set(owner.uuid, entry);
+			}
+			entry.ws.add(ws.workspaceId);
+		}
+	}
+	const allOption: PickerOption = { value: "", label: t("ownerAll") };
+	const shared: PickerOption[] = [];
+	const exclusive = new Map<string, PickerOption[]>();
+	for (const [uuid, entry] of byUuid) {
+		const option: PickerOption = { value: uuid, label: `@${entry.name}` };
+		if (entry.ws.size > 1) {
+			shared.push(option);
+		} else {
+			for (const wsId of entry.ws) {
+				const list = exclusive.get(wsId);
+				if (list === undefined) exclusive.set(wsId, [option]);
+				else list.push(option);
+			}
+		}
+	}
+	const groups: PickerGroup[] = [];
+	// 顶部空标题段：全部执行人（置顶）+ 跨工作区的通用人员（不单独设「通用人员」标题）。
+	groups.push({ value: "_top", label: "", options: [allOption, ...shared] });
+	// 工作区独有的人员：各自带工作区小标题分组。
+	for (const option of workspaceOptions) {
+		if (option.value === "") continue;
+		const list = exclusive.get(option.value);
+		if (list !== undefined && list.length > 0) {
+			groups.push({ value: option.value, label: option.label, options: list });
+		}
+	}
+	return groups;
 }

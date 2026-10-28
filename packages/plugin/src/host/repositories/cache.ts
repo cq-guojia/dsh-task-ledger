@@ -14,7 +14,7 @@
 export const CACHE_TTL_MS = 1_500;
 
 /** 缓存的操作种类（= skill 脚本子命令；worklog 不进缓存故不在此列）。 */
-export type CacheOp = "list" | "history";
+export type CacheOp = "list" | "history" | "stats" | "owners";
 
 const SEP = "\u0000";
 

@@ -75,10 +75,16 @@ export function TaskRowView(props: {
 	variant: "mine" | "others";
 	/** 快照：问动作权限（是不是我的 / 能不能认领），并取 host 下发的三个阈值做悬停解释。 */
 	board: BoardPayload | null;
+	/** 查看：弹右侧 dock 预览过程文档（绝对路径由 BoardHome 拼）。 */
+	onView?: (row: Row) => void;
 }): ReactNode {
 	const { t, row, variant, board } = props;
 	const tone = toneOf(row);
 	const isTask = row.kind === "task";
+	const hasWorklog =
+		isTask
+			? (row.task.worklog ?? null) !== null
+			: (row.record.log ?? null) !== null;
 	const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
 
 	// 创建日期（第一行灰徽只给日期）。
@@ -138,6 +144,8 @@ export function TaskRowView(props: {
 			size: "sm",
 			label: t("viewDetail"),
 			icon: h(IconSearchOutlineRegular, { size: 14 }),
+			disabled: !hasWorklog,
+			onClick: () => props.onView?.(row),
 		}),
 	});
 	const tipBtn = (
@@ -254,8 +262,9 @@ export function TaskRowView(props: {
 			row.task.started !== null &&
 			row.task.started !== undefined &&
 			Date.parse(row.task.started) >= 0;
+		const ownerName = displayName(isTask ? row.task.owner_name : null, owner);
 		const ownerTip = t("startedAt", {
-			who: displayName(isTask ? row.task.owner_name : null, owner),
+			who: ownerName === "" ? "" : `@${ownerName}`,
 			when: startedOk
 				? formatDateTime(String(row.task.started))
 				: t("timeUnknown"),
