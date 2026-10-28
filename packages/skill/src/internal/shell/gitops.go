@@ -155,10 +155,6 @@ func (g *GitRepo) unpushed(rels []string) []string {
 	return g.lines(append([]string{"log", upstream + "..HEAD", "--oneline", "--"}, rels...)...)
 }
 
-func (g *GitRepo) untracked(rels []string) []string {
-	return g.lines(append([]string{"ls-files", "--others", "--exclude-standard", "--"}, rels...)...)
-}
-
 // lines 跑一条 git，按行取非空输出；失败当没有。
 func (g *GitRepo) lines(args ...string) []string {
 	res := g.run(args...)
@@ -637,7 +633,7 @@ func isWorklogPath(rel string) bool {
 func changedBytes(path string, before []byte) bool {
 	after := readMaybe(path)
 	if before == nil || after == nil {
-		return !(before == nil && after == nil)
+		return before != nil || after != nil // 恰好一个拿到了内容：算「变了」
 	}
 	return !bytes.Equal(before, after)
 }
