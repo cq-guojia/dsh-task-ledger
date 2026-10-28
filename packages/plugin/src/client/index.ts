@@ -21,7 +21,6 @@ import {
 	type Translate,
 	zh,
 } from "./locales";
-import { registerHostFiles } from "./host-files";
 import { LedgerIcon } from "./ui";
 
 // 核心控件样式设施：id 插件内唯一（多插件同页互不覆盖）；控件首次渲染时 ensureControls() 挂载。
@@ -63,9 +62,6 @@ const t: Translate = interpolateTranslate(
 );
 
 export function apply(ctx: ClientContext): void {
-	// ⓪ 宿主文件服务 + 工作区列表（供「查看」钮弹出文件预览读盘 / 自动解析 sessionId）
-	registerHostFiles(ctx);
-
 	// ① 字典注册（宿主语言切换 ⇒ 渲染器换 t 引用 ⇒ 整页重渲染）
 	ctx.inject(["locale"], (localeCtx) => {
 		ctx.effect(() => localeCtx.locale?.register(NS, { zh, en }));

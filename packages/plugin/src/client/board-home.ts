@@ -19,12 +19,10 @@ import {
 	type ReactNode,
 	useEffect,
 	useMemo,
-	useRef,
 	useSyncExternalStore,
 } from "react";
 import type { LocaleKey, Translate } from "./locales";
-import { openFilePreview } from "dsh-plugin-core/explorer";
-import { ownerGroups, selectView, type Row } from "./rows";
+import { ownerGroups, selectView } from "./rows";
 import {
 	boardSnapshot,
 	boardSubscribe,
@@ -34,7 +32,6 @@ import {
 } from "./store";
 import { TaskRowView } from "./task-row";
 import type { BoardStatsView } from "./types";
-import { getHostFiles } from "./host-files";
 import {
 	Button,
 	EmptyState,
@@ -49,25 +46,14 @@ import {
 declare const __PLUGIN_VERSION__: string;
 declare const __BUILD_STAMP__: string;
 
-/** 整页容器：占满中栏、自己滚动。作为 mount 的弹性子项，dock 出现时自动被挤窄。 */
+/** 整页容器：占满中栏、自己滚动。 */
 const pageStyle: Record<string, string | number> = {
 	height: "100%",
 	width: "100%",
-	flex: "1 1 auto",
-	minWidth: 0,
 	boxSizing: "border-box",
 	overflow: "auto",
 	padding: "24px 22px",
 	color: "var(--dtl-fg)",
-};
-
-/** mount：文件预览 dock 挂这一层弹性行（dock 占宽、把主区挤窄，不浮层）。 */
-const mountStyle: Record<string, string | number> = {
-	display: "flex",
-	height: "100%",
-	width: "100%",
-	boxSizing: "border-box",
-	minWidth: 0,
 };
 const headerStyle: Record<string, string | number> = {
 	display: "flex",
@@ -147,27 +133,6 @@ export function BoardHome(props: {
 	const { t, onBack } = props;
 	ensureUiBase();
 	const state = useSyncExternalStore(boardSubscribe, boardSnapshot);
-	const mountRef = useRef<HTMLDivElement>(null);
-
-	/** 查看：弹右侧 dock 预览过程文档（MD）。路径 = 工作区绝对路径 + /ledger/ + 相对路径；
-	 *  绝对路径让 openFilePreview 按宿主 workspaces 快照自动匹配工作区、解析 sessionId。 */
-	const handleView = (row: Row): void => {
-		const mount = mountRef.current;
-		const files = getHostFiles();
-		if (mount === null || files === null) return;
-		const ws = row.kind === "task" ? row.task.workspace : row.record.workspace;
-		const rel =
-			row.kind === "task" ? row.task.worklog : row.record.log;
-		if (ws === undefined || ws === null || rel === null || rel === "") return;
-		const base = ws.path.replace(/\/+$/, "");
-		const tail = String(rel).replace(/^\/+/, "");
-		openFilePreview({
-			mount,
-			workspaceFiles: files,
-			path: `${base}/ledger/${tail}`,
-			rootName: ws.title,
-		});
-	};
 
 	// 打开面板首读（后端纯按需，无推送无轮询）。
 	useEffect(() => {
@@ -381,7 +346,7 @@ export function BoardHome(props: {
 
 	return h(
 		"div",
-		{ ref: mountRef, style: mountStyle },
+		{ style: pageStyle },
 		h(
 			"div",
 			{ style: { display: "flex", justifyContent: "center" } },
@@ -540,7 +505,6 @@ export function BoardHome(props: {
 										row,
 										variant: "mine",
 										board,
-										onView: handleView,
 									}),
 								),
 							),
