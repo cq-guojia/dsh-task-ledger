@@ -53,7 +53,7 @@ func MakeID(title string, tasks map[string]struct{}, created string) (string, er
 	}
 	stamp = IDStamp(stamp)
 	for i := 0; i < 20; i++ {
-		tid := fmt.Sprintf("%s-%s-%s", stamp, slug, tokenHex(2))
+		tid := fmt.Sprintf("%s-%s-%s", stamp, tokenHex(2), slug)
 		if _, clash := tasks[tid]; !clash {
 			return tid, nil
 		}

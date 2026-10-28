@@ -52,7 +52,7 @@ func TestToUTCThenFmtLocalRoundTrip(t *testing.T) {
 }
 
 func TestMakeIDShapeAndCollision(t *testing.T) {
-	shape := regexp.MustCompile(`^\d{8}-\d{4}-[a-z0-9-]+-[0-9a-f]{4}$`)
+	shape := regexp.MustCompile(`^\d{8}-\d{4}-[0-9a-f]{4}-[a-z0-9-]+$`)
 	tasks := map[string]struct{}{}
 	id, err := MakeID("Fix the bug", tasks, "2026-10-27 10:00:00")
 	if err != nil {
