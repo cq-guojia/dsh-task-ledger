@@ -4,8 +4,8 @@
  * 宿主事实（handler = 原始 Node req/res、发头后不抛错、重复 path 注册直接 throw）
  * 见 external/host-webserver.md。
  *
- * 2026-10-28 收敛：首屏只有 8 个统计卡 + 在办列表，只留 `/workspaces` 与 `/board/snapshot`；
- * 详情 / 历史 / 筛选项 / 趋势 / 写动作全部停用（下方注释保留，接回时按 skill 方法重写）。
+ * 2026-10-28 收敛：界面只有 8 个统计卡 + 在办列表 ⇒ 只注册 `/workspaces` 与 `/board/snapshot`。
+ * 详情 / 历史 / 筛选项 / 趋势 / 写动作的端点与实现已删除（要接回按 skill 方法重写，不复用旧直读逻辑）。
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { type RegistryWorkspace } from "./workspace.js";
@@ -25,10 +25,3 @@ export interface RouteDeps {
     readonly registry: WorkspaceRegistryLike;
 }
 export declare function registerRoutes(webServer: WebServerLike, deps: RouteDeps): void;
-export declare function registerWriteRoutes(_webServer: WebServerLike, _deps: RouteDeps): void;
-export interface SessionRouteDeps {
-    readonly registry: WorkspaceRegistryLike;
-    readonly agents: unknown;
-    readonly getService: (name: string) => unknown;
-}
-export declare function registerSessionRoutes(_webServer: WebServerLike, _deps: SessionRouteDeps): void;

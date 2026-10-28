@@ -1,12 +1,10 @@
-import type { HistoryRecord, LedgerFilter, LedgerWorkspace, TaskRow, WorkspaceOwners } from "../types.js";
+import type { LedgerFilter, LedgerWorkspace, TaskRow, WorkspaceOwners } from "../types.js";
 /**
  * LedgerFilter → skill 脚本参数（只拼调用方给了的；undefined 一律不拼，
  * 让脚本走自己的默认——插件不替脚本决定默认值）。
- *
- * **按子命令裁参数**：`list` 不认 `--limit` / `--months`，`history` 不认 `--status`，
- * 拼错一个就让 argparse 退 2、整块列表 500。口径以 `skill/shell/cli.py` 为准。
+ * 参数名以 `skill/shell/cli.go` 的 `list` 白名单为准，拼错一个就让 argparse 退 2、整块列表 500。
  */
-export declare function filterArgs(filter: LedgerFilter, sub: "list" | "history"): string[];
+export declare function filterArgs(filter: LedgerFilter): string[];
 /**
  * 台账工作区探测：走 skill `root --json`（判据是「这个目录直接含 `ledger/`」，
  * 与脚本定位工作区根同一口径；有没有 `pool.json` 不影响）。
@@ -22,22 +20,7 @@ export declare function hasLedger(workspacePath: string): Promise<boolean>;
  */
 export declare function readTasks(workspace: LedgerWorkspace, filter?: LedgerFilter): Promise<TaskRow[]>;
 /**
- * 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。同样过读缓存。
- * 一并带回 `warnings`（被脚本整行跳过的坏行原因）——调用方必须展示，不许吞。
- */
-export declare function readHistory(workspace: LedgerWorkspace, filter?: LedgerFilter): Promise<{
-    records: HistoryRecord[];
-    warnings: string[];
-}>;
-/**
  * 工作区花名册（skill `owners --json`，只读、不改台账）。跨工作区由 service 扇出。
  * 名册为空的工作区脚本会报错 ⇒ settle 收进 degraded，本工作区分组自然不出现。
  */
 export declare function readOwners(workspace: LedgerWorkspace): Promise<WorkspaceOwners>;
-/** 单条在办（展开行 / 详情用）。取不到回 null，不抛。 */
-export declare function getTask(workspace: LedgerWorkspace, taskId: string): Promise<TaskRow | null>;
-/**
- * 任务 + 过程文档正文（skill `show --json`：一次拿全，插件不再按 `ledger/` 路径自己读文件）。
- * 读不到回 null（任务不存在 / 过程文档缺失都不炸——由调用方展示原因）。
- */
-export declare function readWorklog(workspace: LedgerWorkspace, taskId: string): Promise<string | null>;

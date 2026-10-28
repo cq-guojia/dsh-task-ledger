@@ -1,16 +1,14 @@
 import { cached, cacheKey } from "./cache.js";
-import { parseHistoryRecords, parseTaskList } from "./records.js";
+import { parseTaskList } from "./records.js";
 import { runLedgerScript } from "./runner.js";
 /**
  * LedgerFilter → skill 脚本参数（只拼调用方给了的；undefined 一律不拼，
  * 让脚本走自己的默认——插件不替脚本决定默认值）。
- *
- * **按子命令裁参数**：`list` 不认 `--limit` / `--months`，`history` 不认 `--status`，
- * 拼错一个就让 argparse 退 2、整块列表 500。口径以 `skill/shell/cli.py` 为准。
+ * 参数名以 `skill/shell/cli.go` 的 `list` 白名单为准，拼错一个就让 argparse 退 2、整块列表 500。
  */
-export function filterArgs(filter, sub) {
+export function filterArgs(filter) {
     const args = [];
-    if (sub === "list" && filter.status !== undefined)
+    if (filter.status !== undefined)
         args.push("--status", filter.status);
     // 身份只收 uuid（脚本同样口径）；按名字模糊筛走 --owner-name
     if (filter.owner !== undefined)
@@ -25,12 +23,6 @@ export function filterArgs(filter, sub) {
         args.push("--since", filter.since);
     if (filter.until !== undefined)
         args.push("--until", filter.until);
-    if (sub === "history") {
-        if (filter.limit !== undefined)
-            args.push("--limit", String(filter.limit));
-        if (filter.months !== undefined)
-            args.push("--months", String(filter.months));
-    }
     return args;
 }
 /**
@@ -56,33 +48,16 @@ export async function hasLedger(workspacePath) {
  * 不静默返空（空 = 撒谎）。**过 1.5s 读缓存**（同屏多端点会反复读同一份在办）。
  */
 export async function readTasks(workspace, filter = {}) {
-    return await cached(cacheKey(workspace.id, "list", argsKey(filter, "list")), async () => {
+    return await cached(cacheKey(workspace.id, "list", argsKey(filter)), async () => {
         const result = await runLedgerScript("list", [
             "--repo",
             workspace.path,
             "--json",
-            ...filterArgs(filter, "list"),
+            ...filterArgs(filter),
         ]);
         if (!result.ok)
             throw new Error(`${workspace.title}: ${result.error}`);
         return parseTaskList(result.data, workspace);
-    });
-}
-/**
- * 已结案记录（包 `history --json`；`records` 必须存在且为数组，缺了即坏数据）。同样过读缓存。
- * 一并带回 `warnings`（被脚本整行跳过的坏行原因）——调用方必须展示，不许吞。
- */
-export async function readHistory(workspace, filter = {}) {
-    return await cached(cacheKey(workspace.id, "history", argsKey(filter, "history")), async () => {
-        const result = await runLedgerScript("history", [
-            "--repo",
-            workspace.path,
-            "--json",
-            ...filterArgs(filter, "history"),
-        ]);
-        if (!result.ok)
-            throw new Error(`${workspace.title}: ${result.error}`);
-        return parseHistoryRecords(result.data, workspace);
     });
 }
 /**
@@ -109,28 +84,6 @@ export async function readOwners(workspace) {
     });
 }
 /** 缓存键的 filter 段：脚本参数原样序列化（分隔符取不可见字符，值里带空格也不会串）。 */
-function argsKey(filter, sub) {
-    return filterArgs(filter, sub).join("\u0001");
-}
-/** 单条在办（展开行 / 详情用）。取不到回 null，不抛。 */
-export async function getTask(workspace, taskId) {
-    const rows = await readTasks(workspace);
-    return rows.find((row) => row.id === taskId) ?? null;
-}
-/**
- * 任务 + 过程文档正文（skill `show --json`：一次拿全，插件不再按 `ledger/` 路径自己读文件）。
- * 读不到回 null（任务不存在 / 过程文档缺失都不炸——由调用方展示原因）。
- */
-export async function readWorklog(workspace, taskId) {
-    const result = await runLedgerScript("show", [
-        "--repo",
-        workspace.path,
-        "--id",
-        taskId,
-        "--json",
-    ]);
-    if (!result.ok)
-        return null;
-    const text = result.data.worklog?.text;
-    return typeof text === "string" ? text : null;
+function argsKey(filter) {
+    return filterArgs(filter).join("\u0001");
 }

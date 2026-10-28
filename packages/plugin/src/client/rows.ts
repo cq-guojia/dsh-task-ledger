@@ -10,12 +10,15 @@
 import type { PickerGroup, PickerOption } from "dsh-plugin-core/ui";
 import type { Translate } from "./locales";
 import type { Query } from "./store";
-import type { BoardPayload, BoardTask, HistoryRecord } from "./types";
+import type { BoardPayload, BoardTask } from "./types";
 
-/** 列表行：在办与已结案两套形状，行件按 kind 分支（不做「统一成一个假结构」的归一化）。 */
-export type Row =
-	| { kind: "task"; key: string; task: BoardTask; mine: boolean }
-	| { kind: "closed"; key: string; record: HistoryRecord };
+/** 列表行。 */
+export interface Row {
+	readonly kind: "task";
+	readonly key: string;
+	readonly task: BoardTask;
+	readonly mine: boolean;
+}
 
 /**
  * 界面上显示人名的**唯一**口径：显示名（`owner_name` / `creator_name`）优先，
@@ -42,31 +45,11 @@ export interface BoardView {
 	};
 }
 
-/** 关键字命中（标题 / 任务号 / 人 / 分类 / 标签；已结案另含「完成了什么」）。 */
-function hitKeyword(
-	keyword: string,
-	parts: readonly (string | null | undefined)[],
-): boolean {
-	const needle = keyword.trim().toLowerCase();
-	if (needle === "") return true;
-	return parts.some((part) => part?.toLowerCase().includes(needle) === true);
-}
-
-/** uuid 比较：两边都 trim + 小写（身份键不分大小写，与脚本 `normalize` 同口径）。 */
-export function sameUuid(
-	a: string | null | undefined,
-	b: string | null | undefined,
-): boolean {
-	const left = (a ?? "").trim().toLowerCase();
-	const right = (b ?? "").trim().toLowerCase();
-	return left !== "" && left === right;
-}
-
 /**
  * 「我的」判定：**直接读 skill 算好的 `mine`**（`list --json` 每行带，脚本比 uuid）。
  * 前端不再拿 identities 自己比一遍——两套真源迟早对不上。
  */
-export function isMine(task: BoardTask, _board: BoardPayload | null): boolean {
+export function isMine(task: BoardTask): boolean {
 	return task.mine === true;
 }
 
@@ -83,11 +66,8 @@ export interface TaskActions {
 	readonly release: boolean;
 }
 
-export function resolveActions(
-	task: BoardTask,
-	board: BoardPayload | null,
-): TaskActions {
-	const mine = isMine(task, board);
+export function resolveActions(task: BoardTask): TaskActions {
+	const mine = isMine(task);
 	return {
 		view: true,
 		claim: !mine && task.status === "open",
@@ -97,20 +77,11 @@ export function resolveActions(
 	};
 }
 
-/** 已结案行：只有查看，没有在办动作。 */
-export const CLOSED_ACTIONS: TaskActions = {
-	view: true,
-	claim: false,
-	resume: false,
-	finish: false,
-	release: false,
-};
-
 /**
  * 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。
  *
- * ⚠️ 后三档（积压 / 逾期 / 停滞）**本轮不接**：`list` 还没有对应的筛选参数，
- * 用户要求先只铺样式、程序后置 ⇒ 这里一律不命中，界面另给一句说明。
+ * ⚠️ 后三档（积压 / 逾期 / 停滞）**本轮不接**：用户要求程序后置 ⇒ 这里一律不命中，
+ * 界面另给一句说明。
  */
 function tabHit(task: BoardTask, tab: Query["tab"]): boolean {
 	switch (tab) {
@@ -168,30 +139,6 @@ export function selectView(current: {
 			stale: tasks.filter((task) => task.stale === true).length,
 		},
 	};
-}
-
-/**
- * 已结案列表（统计 tab 用；首页不渲染已结案 ⇒ 这里只留数据面，供后续统计 tab 复用同一套筛选口径）。
- */
-export function selectClosed(current: {
-	history: readonly HistoryRecord[];
-	query: Query;
-}): Row[] {
-	return current.history
-		.filter((record) =>
-			hitKeyword(current.query.keyword, [
-				record.summary,
-				record.workpackage,
-				displayName(record.owner_name, record.owner),
-				record.category,
-				...(record.tags ?? []),
-			]),
-		)
-		.map((record, index) => ({
-			kind: "closed",
-			key: `${record.src ?? ""}:${record.time ?? ""}:${index}`,
-			record,
-		}));
 }
 
 /**

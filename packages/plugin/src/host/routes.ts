@@ -4,8 +4,8 @@
  * 宿主事实（handler = 原始 Node req/res、发头后不抛错、重复 path 注册直接 throw）
  * 见 external/host-webserver.md。
  *
- * 2026-10-28 收敛：首屏只有 8 个统计卡 + 在办列表，只留 `/workspaces` 与 `/board/snapshot`；
- * 详情 / 历史 / 筛选项 / 趋势 / 写动作全部停用（下方注释保留，接回时按 skill 方法重写）。
+ * 2026-10-28 收敛：界面只有 8 个统计卡 + 在办列表 ⇒ 只注册 `/workspaces` 与 `/board/snapshot`。
+ * 详情 / 历史 / 筛选项 / 趋势 / 写动作的端点与实现已删除（要接回按 skill 方法重写，不复用旧直读逻辑）。
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { invalidate } from "./repositories/cache.js";
@@ -95,43 +95,4 @@ export function registerRoutes(
 			});
 		}
 	});
-
-	/* ─────────────────── 以下端点本轮停用（接回时按 skill 方法重写） ───────────────────
-	 *
-	 * 停用原因：界面上现在只有 8 个统计卡与（留空的）趋势图，其余区块整块注释；
-	 * 这些端点的取数里还有插件自己算的部分（趋势 / 筛选项派生 / 按路径直读 worklog），
-	 * skill 补齐对应方法后再接回来，不要原样启用。
-	 *
-	 * /board            旧的「首页一次拿全」（snapshot + 8 周趋势 + 四个自然周期），已由 /board/snapshot 取代
-	 * /board/trend      近 8 周趋势（无 skill 方法）
-	 * /task             单条详情 + 过程文档
-	 * /history          已结案列表（history --json）
-	 * /filters          owner / category / tag 候选（插件自己从在办 + 历史派生）
-	 *
-	 * ────────────────────────────────────────────────────────────────────────────── */
 }
-
-/* ───────────────────────── 以下注册函数本轮停用 ─────────────────────────
- *
- * `registerWriteRoutes`（认领 / 释放）：host 直跑 skill 的 claim / set，属写动作，
- *   与「只显示 8 个统计卡」无关，本轮不注册。
- * `registerSessionRoutes`（结束任务）：起会话 + 预置提示词，同样不接。
- *
- * 两者形状与实现保留在 git 历史里（提交 24fc351 之前的 routes.ts），
- * 接回时按新的 skill 方法重写，不复用旧的直读逻辑。
- */
-export function registerWriteRoutes(
-	_webServer: WebServerLike,
-	_deps: RouteDeps,
-): void {}
-
-export interface SessionRouteDeps {
-	readonly registry: WorkspaceRegistryLike;
-	readonly agents: unknown;
-	readonly getService: (name: string) => unknown;
-}
-
-export function registerSessionRoutes(
-	_webServer: WebServerLike,
-	_deps: SessionRouteDeps,
-): void {}

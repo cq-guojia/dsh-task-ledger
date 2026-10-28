@@ -161,87 +161,20 @@ body[data-ds-dark-theme]{
 `;
 
 /**
- * 控件皮肤（L2）：**一类控件唯一实现**，抄 dispatch 表 controls-css 的规矩——
- * 只消费 var(--dtl-*)，一个颜色 / 尺寸 / 圆角 / 字号字面量都不许出现；
- * 高度只取三档，有边框的变体用 1px 真边框 + 内部 padding 补回 ⇒ 有边 / 无边同高。
+ * 业务壳样式（L2）：核心控件（Button / IconButton / Input / Picker / Segmented / Chip /
+ * StripCard）自己的皮肤全在 core，本文件**不再重写任何控件外观**——只留本插件独有的
+ * 容器类。颜色 / 圆角 / 字号一律只消费 `var(--dtl-*)`。
  */
 export const UI_CONTROLS_CSS = `
-/* ── 分段控件（滑动块）：已改由核心 Segmented 承担，外观 / 尺寸 / 滑块动画全部在 core，
-   本文件不再写任何分段控件样式（core 0.5.0 起删掉 variant 轴，外观只有一套）。── */
-
-/* ── 按钮 / 图标钮 ───────────────────────────────────────────────
-   与 Segmented 同一条高度纪律；variant 只换颜色，结构 / 尺寸 / 交互只此一份。 */
-.dtl-btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--dtl-space-1);
-  box-sizing:border-box;border:1px solid transparent;border-radius:var(--dtl-radius-md);
-  background:transparent;color:var(--dtl-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease),border-color var(--dtl-dur-fast) var(--dtl-ease),color var(--dtl-dur-fast) var(--dtl-ease),opacity var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-btn--sm{height:var(--dtl-control-h-sm);padding:0 10px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
-.dtl-btn--md{height:var(--dtl-control-h-md);padding:0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-btn--lg{height:var(--dtl-control-h-lg);padding:0 14px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-btn--primary{background:var(--dtl-accent);color:var(--dtl-fg-inverse);}
-.dtl-btn--primary:hover:not(:disabled){opacity:.9;}
-.dtl-btn--outline{background:var(--dtl-surface-1);border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
-.dtl-btn--outline:hover:not(:disabled){background:var(--dtl-hover);}
-.dtl-btn--ghost{color:var(--dtl-fg-2);}
-.dtl-btn--ghost:hover:not(:disabled){background:var(--dtl-hover);color:var(--dtl-fg);}
-.dtl-btn:focus-visible{outline:2px solid var(--dtl-business);outline-offset:2px;}
-.dtl-btn:disabled{cursor:default;opacity:.5;}
-.dtl-iconbtn{appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;
-  border:1px solid transparent;border-radius:var(--dtl-radius-sm);background:transparent;color:var(--dtl-fg-2);
-  font-family:inherit;cursor:pointer;flex:none;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease),border-color var(--dtl-dur-fast) var(--dtl-ease),color var(--dtl-dur-fast) var(--dtl-ease),opacity var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-iconbtn--sm{width:var(--dtl-control-h-sm);height:var(--dtl-control-h-sm);font-size:var(--dtl-font-sm);}
-.dtl-iconbtn--md{width:var(--dtl-control-h-md);height:var(--dtl-control-h-md);font-size:var(--dtl-font-md);}
-.dtl-iconbtn--lg{width:var(--dtl-control-h-lg);height:var(--dtl-control-h-lg);font-size:var(--dtl-font-md);}
-.dtl-iconbtn--outline{background:var(--dtl-surface-1);border-color:var(--dtl-border);color:var(--dtl-fg-2);}
-.dtl-iconbtn:hover:not(:disabled){background:var(--dtl-hover);color:var(--dtl-fg);}
-.dtl-iconbtn:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
-.dtl-iconbtn:disabled{cursor:default;opacity:.4;}
-
-/* ── 输入 / 搜索框 / 下拉 ──────────────────────────────────────── */
-.dtl-input{box-sizing:border-box;width:100%;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
-  background:var(--dtl-surface-1);color:var(--dtl-fg);font-family:inherit;outline:none;
-  transition:border-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-input--sm{height:var(--dtl-control-h-sm);padding:0 8px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
-.dtl-input--md{height:var(--dtl-control-h-md);padding:0 10px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-input--lg{height:var(--dtl-control-h-lg);padding:0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-input::placeholder{color:var(--dtl-fg-dim);}
-.dtl-input:focus{border-color:var(--dtl-business);box-shadow:0 0 0 1px var(--dtl-business);}
-.dtl-input:disabled{cursor:default;opacity:.5;}
-/* 原生 select： appearance:none + 自绘箭头 ⇒ 与输入框同宗（宿主没有廉价下拉件） */
-.dtl-select{appearance:none;-webkit-appearance:none;box-sizing:border-box;
-  border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);background:var(--dtl-surface-1);color:var(--dtl-fg);
-  font-family:inherit;outline:none;cursor:pointer;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23767d87' stroke-width='1.5'><path d='M4 6.5 8 10.5 12 6.5'/></svg>");
-  background-repeat:no-repeat;background-position:right 8px center;background-size:14px;
-  transition:border-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-select--sm{height:var(--dtl-control-h-sm);padding:0 26px 0 8px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
-.dtl-select--md{height:var(--dtl-control-h-md);padding:0 26px 0 10px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-select--lg{height:var(--dtl-control-h-lg);padding:0 26px 0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-select:focus{border-color:var(--dtl-business);box-shadow:0 0 0 1px var(--dtl-business);}
-.dtl-select:disabled{cursor:default;opacity:.5;}
-
-/* ── 卡 / chip / 空态 / 列表行（业务壳，皮肤仍只消费 token）────── */
 .dtl-card{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
   transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-card--clickable{cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;}
 .dtl-card--clickable:hover{background:var(--dtl-card-hover);}
 .dtl-card--clickable[data-active='true']{border-color:var(--dtl-business);}
 .dtl-card--clickable:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
-.dtl-chip{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-chip-bg);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);white-space:nowrap;}
-.dtl-row{display:flex;align-items:center;gap:var(--dtl-space-2);width:100%;box-sizing:border-box;
-  padding:var(--dtl-space-2) var(--dtl-space-3);border:0;border-bottom:1px solid var(--dtl-border-faint);
-  background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-row:hover{background:var(--dtl-card-hover);}
-.dtl-row:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
-.dtl-row[data-open='true']{background:var(--dtl-open-bg);}
-.dtl-row-body{padding:var(--dtl-space-2) var(--dtl-space-3) var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);
-  background:var(--dtl-open-bg-soft);font-size:var(--dtl-font-md);}
 .dtl-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 @media (prefers-reduced-motion: reduce){
-  .dtl-seg__item,.dtl-btn,.dtl-iconbtn,.dtl-input,.dtl-select,.dtl-card,.dtl-row{transition:none;}
+  .dtl-card{transition:none;}
 }
 `;

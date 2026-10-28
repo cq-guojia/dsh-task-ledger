@@ -12,13 +12,6 @@ const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL("../../../skill/scripts/progre
 /** 单次脚本调用超时上限（ms）。实测单仓 5 万行全量 1.2s，10s 是宽松上限。 */
 const DEFAULT_TIMEOUT_MS = 10_000;
 /**
- * 写命令的超时上限（ms）：脚本每条 git 调用各自 30s 超时，写前（fetch / ff / push /
- * rebase / push）与写后（push / fetch / rebase / push）串起来最坏约 270s。
- * 低到 120s 会在网络挂死时先报「超时失败」——台账其实已写入，用户一重试就是二次写入。
- * 180s 覆盖常见最坏组合，又不至于让真卡死的请求占着界面太久。
- */
-export const WRITE_TIMEOUT_MS = 180_000;
-/**
  * 起一次台账程序、收 stdout / stderr。出错一律归一成人话（起不了程序 / 超时 / 非零退出）。
  * 解析留给调用方：读命令要 JSON，写命令要原文。
  */
@@ -27,7 +20,6 @@ function exec(sub, args, opts) {
     const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     return new Promise((resolve) => {
         const child = spawn(scriptPath, [sub, ...args], {
-            cwd: opts?.cwd,
             stdio: ["ignore", "pipe", "pipe"],
         });
         let stdout = "";
@@ -79,7 +71,6 @@ function exec(sub, args, opts) {
  * @param args - 参数数组，由调用方自拼（含 --repo / --json / --months 等）
  * @param opts.scriptPath - 测试用：覆盖脚本路径
  * @param opts.timeoutMs - 覆盖超时
- * @param opts.cwd - 子进程工作目录（写命令按 cwd 定位台账用）
  */
 export async function runLedgerScript(sub, args, opts) {
     const result = await exec(sub, args, opts);
@@ -94,18 +85,4 @@ export async function runLedgerScript(sub, args, opts) {
             error: `skill 脚本输出不是 JSON：${result.stdout.slice(0, 200)}`,
         };
     }
-}
-/**
- * 写命令（claim / set）：同样是 spawn 入口脚本，但**不解析 JSON**——这些子命令打的是人话，
- * 成功与否看退出码，失败时 stderr 就是能直接上界面的人话。
- */
-export async function runLedgerCommand(sub, args, opts) {
-    const result = await exec(sub, args, opts);
-    if (!result.ok)
-        return result;
-    const output = result.stdout.trim();
-    // 退出码 0 但 stderr 有字 = 写成功、同步失败（台账程序的既定行为），必须带出去
-    return result.stderr
-        ? { ok: true, output, notice: result.stderr }
-        : { ok: true, output };
 }

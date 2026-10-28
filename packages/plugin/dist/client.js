@@ -147,7 +147,7 @@ window.__ModuleLoader__.load({
 		const CODE_VIEWER_CSS = "/* CodeViewer（只读 CodeMirror 查看器）样式。类名固定 dshpc-cv*；颜色吃 --dshpc-* token，\n   深色由 design 的 token 深色段自动生效（不写死颜色值）。 */\n.dshpc-cv{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;}\n.dshpc-cv__copy{position:absolute;top:6px;right:6px;z-index:5;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;appearance:none;border:1px solid var(--dshpc-border,rgba(128,128,128,.35));border-radius:var(--dshpc-radius-sm,6px);background:var(--dshpc-surface-1,#fff);color:var(--dshpc-fg-2,rgba(128,128,128,.95));cursor:pointer;opacity:0;transition:opacity .12s var(--dshpc-ease,ease),background .12s,color .12s;}\n.dshpc-cv:hover .dshpc-cv__copy,.dshpc-cv__copy:focus-visible{opacity:1;}\n.dshpc-cv__copy:hover{background:var(--dshpc-hover,rgba(38,49,72,.06));color:var(--dshpc-fg,#1f2328);}\n.dshpc-cv__copy svg{width:16px;height:16px;}\n.dshpc-cv__editor{flex:1 1 auto;min-height:0;overflow:hidden;}\n.dshpc-cv__editor .cm-editor{height:100%;}\n.dshpc-cv__editor .cm-scroller{overflow:auto;}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/panel-dock-css.generated.js
-		const PANEL_DOCK_CSS = "\n/* 停靠栏 = **布局成员**，不是浮层：它占宽度、把主区真正挤窄（兄弟项目 2026-09-28：\n   「分栏压过来，不是盖上去」）。所以调用方必须把它放进自己的 flex 根里。 */\n.dshpc-dock{display:flex;flex:0 0 auto;align-self:stretch;min-width:0}\n/* 开着时给主区滚动条让出一条缝：滚动条贴死分隔线很难看（用户 2026-10-28，对齐\n   dsh-better-sidebar 的留白）。全关时整条 dock 退出，缝隙一起消失、不留白边。\n   缝宽可由调用方盖 --dshpc-dock-gap；TS 侧的让位量（DOCK_GAP）要与它一致。 */\n.dshpc-dock--open{margin-left:var(--dshpc-dock-gap,1px)}\n\n/* 单栏：sticky + 100vh 让它在页面滚动时保持可见，同时仍然占宽度。\n   ⚠️ **本条刻意不设 z-index**：布局成员一旦带正 z-index，就会无条件压过宿主 portal 到 body 的\n   弹窗（兄弟项目 2026-10-05 真机事故「侧边栏盖住宿主设置弹窗」）。层序交给 DOM 顺序裁决。 */\n.dshpc-dock__panel{\n  box-sizing:border-box;position:sticky;top:0;align-self:stretch;\n  display:flex;flex-direction:column;flex:0 0 auto;\n  /* 高度默认视口高（整页场景）；嵌在定高容器里时由调用方给 --dshpc-dock-h（如 420px / 100%）。 */\n  height:var(--dshpc-dock-h,100vh);max-height:var(--dshpc-dock-h,100vh);min-width:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n  border-left:1px solid var(--dshpc-border);\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease);\n  box-shadow:var(--dshpc-shadow-2);\n  /* 入场：从 0 宽滑出来（keyframes 只写 from，终点取内联 width），打开 / 耳朵展开都走这条。 */\n  animation:dshpc-dock-in .22s var(--dshpc-ease);\n}\n/* overflow:hidden 只在动画前段（离散属性在 50% 翻转）——平时不能裁，否则挂在左缘外的\n   收起钮会被切掉一半。 */\n@keyframes dshpc-dock-in{from{width:0;opacity:0;overflow:hidden}}\n/* 收起的出场：宽度收到 0、透明淡出；落定后组件才真正摘掉这一栏（JS 延时 220ms 配合）。 */\n.dshpc-dock__panel--closing{\n  width:0!important;min-width:0!important;opacity:0;border-left-width:0;\n  transition:width .2s var(--dshpc-ease),opacity .2s var(--dshpc-ease),border-left-width .2s var(--dshpc-ease);\n}\n\n.dshpc-dock__head{\n  flex:none;display:flex;align-items:center;gap:8px;\n  /* 右侧 34px = 8(边距) + 20(关钮) + 6(呼吸)：给绝对定位的关钮留位，标题/extra 不从它底下钻 */\n  padding:10px 34px 10px 14px;\n  border-bottom:1px solid var(--dshpc-border-faint);\n}\n/* 图标位 / 标题右侧的内容位：消费方传 ReactNode，可塞多个；库只负责排布，不抢宽度。 */\n.dshpc-dock__lead{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-dock__extra{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto}\n/* 自定义头部：整行归调用方 —— 不加内边距/边框/背景，也不给关钮留内联空间（关钮是绝对定位的）。 */\n.dshpc-dock__head--custom{display:block;padding:0;border-bottom:none}\n.dshpc-dock__title{\n  flex:1 1 auto;min-width:0;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n  font-size:var(--dshpc-font-md);font-weight:600;\n}\n/* 关闭钮：20×20 方角图标位（与 Modal 的关闭钮同规格，不借 Picker 触发器皮肤）。 */\n.dshpc-dock__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-dock__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 头部关钮：绝对定位，位置与内置头完全一致（top 10 / right 8）；自定义头也用这一个位置。\n   锚点是面板本身（position:sticky 即定位上下文），不在滚动内容里，所以正文滚动它不跟滚。 */\n.dshpc-dock__close--abs{position:absolute;top:10px;right:8px;z-index:8}\n/* 浮动关钮：无头部面板用，略收一点边距。 */\n.dshpc-dock__close--floating{\n  position:absolute;top:6px;right:6px;z-index:8;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border-faint);\n}\n\n/* 内容区自己滚：面板高度锁 100vh，内容不设内部滚动就会把整页撑高。 */\n.dshpc-dock__body{flex:1 1 auto;min-height:0;overflow:auto}\n\n/* 拖拽条：左缘 6px 命中区，**自己不画任何线**。\n   hover / 拖动时把面板自己的 border-left 染成蓝（用户 2026-10-28 四轮：蓝线只准改原线，\n   不准在原线旁边加一条 —— 之前在 padding box 左缘画渐变，正好叠出双线）。\n   命中区在 padding box 上、border 在它左外侧，所以只能改面板的 border 色。\n   z-index 7 必须高于面板内容里的浮层（复制钮一类），否则命中区会被内容盖住。 */\n.dshpc-dock__resizer{\n  position:absolute;left:0;top:0;bottom:0;width:6px;\n  z-index:7;cursor:col-resize;background:transparent;\n}\n.dshpc-dock__panel:has(> .dshpc-dock__resizer:hover),\n.dshpc-dock__panel--resizing{\n  /* 原线保留「上下渐隐」工作区指示条质感：把面板自己的 border-left 换成同款渐变\n     （不是另加一条线）。面板只有这一条边框、无圆角，所以只作用在线上。 */\n  border-image:linear-gradient(180deg,transparent,var(--dshpc-business) 30% 70%,transparent) 1;\n}\n\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove，\n   向右拖进 iframe 就卡死 —— 整片让出指针事件；② contain 把重排隔离在栏内，\n   否则每帧改宽度都会牵动整页重排（兄弟项目 2026-10-04 真机「挪很久才动一下」）。 */\n.dshpc-dock.dshpc-dock--resizing iframe{pointer-events:none}\n.dshpc-dock.dshpc-dock--resizing .dshpc-dock__panel{contain:layout paint;will-change:width}\n\n/* 收起钮：**待在面板自己的框里**（用户 2026-10-28 三轮：占面板内部空间，不伸到外面去）。\n   left:0 从内侧贴着分隔线 —— 贴线的一边不描边（线是面板自己的 border-left），页签与线不重合。\n   20×44（用户 2026-10-28 四轮定尺寸）；实色底（--dshpc-plate，明暗各有实值），hover 亮一档。\n   padding-right:2px 是**视觉居中**：右侧是圆角，箭头往直线那边挪 1px（用户 2026-10-28 四轮）。 */\n.dshpc-dock__collapse{\n  position:absolute;left:0;top:50%;transform:translateY(-50%);\n  z-index:8;display:inline-flex;align-items:center;justify-content:center;\n  width:20px;height:44px;padding:0 2px 0 0;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);\n  border-left:none;\n  border-radius:0 var(--dshpc-radius-sm) var(--dshpc-radius-sm) 0;\n  background:var(--dshpc-plate);color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:16px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__collapse:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__collapse:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n\n/* 收起后的浮动耳朵：**fixed 贴右缘、垂直居中、独立于分栏**（用户 2026-10-28 定稿：\n   小页签挂中间、里面放面板图标、不显示文字，箭头与收起钮反向）。多个按收起顺序纵向堆叠。\n   z 走 dock 档（低于宿主弹窗），避免盖住宿主 portal 层。 */\n.dshpc-dock__ears{\n  position:fixed;top:50%;right:0;transform:translateY(-50%);\n  z-index:var(--dshpc-z-dock,1030);\n  display:flex;flex-direction:column;gap:8px;align-items:flex-end;\n  pointer-events:none;\n}\n.dshpc-dock__ear{\n  pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;\n  /* 与收起钮**同尺寸**（20×44，用户 2026-10-28 四轮）：上/下/左描边，贴右缘的一侧不描。\n     实色底（--dshpc-plate），不用透明色 —— 透明底下透出东西很难看。\n     padding-left:2px 是**视觉居中**：左侧是圆角，箭头往直线（右缘）那边挪 1px。 */\n  width:20px;height:44px;box-sizing:border-box;padding:0 0 0 2px;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-left:1px solid var(--dshpc-border);\n  border-right:none;\n  border-radius:var(--dshpc-radius-sm) 0 0 var(--dshpc-radius-sm);\n  background:var(--dshpc-plate);color:var(--dshpc-fg-2);\n  cursor:pointer;font-family:inherit;line-height:1;\n  animation:dshpc-ear-in .2s var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 入场：从右缘外滑进来，别「突然出现」（用户 2026-10-28）。 */\n@keyframes dshpc-ear-in{from{opacity:0;transform:translateX(14px)}}\n.dshpc-dock__ear:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__ear:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 与收起钮的箭头同一字号（16px）：收进去前后箭头一模一样大（用户 2026-10-28）。 */\n.dshpc-dock__ear-arrow{font-size:16px;color:var(--dshpc-fg-3)}\n.dshpc-dock__ear:hover .dshpc-dock__ear-arrow{color:var(--dshpc-fg)}\n/* 动效礼貌：系统声明减少动效时全部关掉（与 Segmented 同一约定），收起退化为瞬时、功能不受影响。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-dock__panel{animation:none}\n  .dshpc-dock__panel--closing{transition:none}\n  .dshpc-dock__ear{animation:none}\n}\n";
+		const PANEL_DOCK_CSS = "\n/* 停靠栏 = **布局成员**，不是浮层：它占宽度、把主区真正挤窄（兄弟项目 2026-09-28：\n   「分栏压过来，不是盖上去」）。所以调用方必须把它放进自己的 flex 根里。 */\n.dshpc-dock{display:flex;flex:0 0 auto;align-self:stretch;min-width:0}\n/* 开着时给主区滚动条让出一条缝：滚动条贴死分隔线很难看（用户 2026-10-28，对齐\n   dsh-better-sidebar 的留白）。全关时整条 dock 退出，缝隙一起消失、不留白边。\n   缝宽可由调用方盖 --dshpc-dock-gap；TS 侧的让位量（DOCK_GAP）要与它一致。 */\n.dshpc-dock--open{margin-left:var(--dshpc-dock-gap,1px)}\n\n/* 自动加的宿主行（openFilePreview 加 / 关闭即摘）：消费方那行不必自己写 flex。\n   只让「第一个非预览子项」当主区伸展，其余直接子项不动（页脚条、工具条不误伤）；\n   display 不在这里写死 —— 本来就是 grid 等布局的元素保持原样，由 TS 侧按计算值补 flex。 */\n.dshpc-dock-host{min-width:0;min-height:0}\n.dshpc-dock-host>:not([data-dshpc-file-preview]){min-width:0}\n.dshpc-dock-host>:first-child:not([data-dshpc-file-preview]){flex:1 1 auto}\n\n/* 单栏：sticky + 100vh 让它在页面滚动时保持可见，同时仍然占宽度。\n   ⚠️ **本条刻意不设 z-index**：布局成员一旦带正 z-index，就会无条件压过宿主 portal 到 body 的\n   弹窗（兄弟项目 2026-10-05 真机事故「侧边栏盖住宿主设置弹窗」）。层序交给 DOM 顺序裁决。 */\n.dshpc-dock__panel{\n  box-sizing:border-box;position:sticky;top:0;align-self:stretch;\n  display:flex;flex-direction:column;flex:0 0 auto;\n  /* 高度默认视口高（整页场景）；嵌在定高容器里时由调用方给 --dshpc-dock-h（如 420px / 100%）。 */\n  height:var(--dshpc-dock-h,100vh);max-height:var(--dshpc-dock-h,100vh);min-width:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n  border-left:1px solid var(--dshpc-border);\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease);\n  box-shadow:var(--dshpc-shadow-2);\n  /* 入场：从 0 宽滑出来（keyframes 只写 from，终点取内联 width），打开 / 耳朵展开都走这条。 */\n  animation:dshpc-dock-in .22s var(--dshpc-ease);\n}\n/* overflow:hidden 只在动画前段（离散属性在 50% 翻转）——平时不能裁，否则挂在左缘外的\n   收起钮会被切掉一半。 */\n@keyframes dshpc-dock-in{from{width:0;opacity:0;overflow:hidden}}\n/* 收起的出场：宽度收到 0、透明淡出；落定后组件才真正摘掉这一栏（JS 延时 220ms 配合）。 */\n.dshpc-dock__panel--closing{\n  width:0!important;min-width:0!important;opacity:0;border-left-width:0;\n  transition:width .2s var(--dshpc-ease),opacity .2s var(--dshpc-ease),border-left-width .2s var(--dshpc-ease);\n}\n\n.dshpc-dock__head{\n  flex:none;display:flex;align-items:center;gap:8px;\n  /* 右侧 34px = 8(边距) + 20(关钮) + 6(呼吸)：给绝对定位的关钮留位，标题/extra 不从它底下钻 */\n  padding:10px 34px 10px 14px;\n  border-bottom:1px solid var(--dshpc-border-faint);\n}\n/* 图标位 / 标题右侧的内容位：消费方传 ReactNode，可塞多个；库只负责排布，不抢宽度。 */\n.dshpc-dock__lead{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-dock__extra{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto}\n/* 自定义头部：整行归调用方 —— 不加内边距/边框/背景，也不给关钮留内联空间（关钮是绝对定位的）。 */\n.dshpc-dock__head--custom{display:block;padding:0;border-bottom:none}\n.dshpc-dock__title{\n  flex:1 1 auto;min-width:0;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n  font-size:var(--dshpc-font-md);font-weight:600;\n}\n/* 关闭钮：20×20 方角图标位（与 Modal 的关闭钮同规格，不借 Picker 触发器皮肤）。 */\n.dshpc-dock__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-dock__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 头部关钮：绝对定位，位置与内置头完全一致（top 10 / right 8）；自定义头也用这一个位置。\n   锚点是面板本身（position:sticky 即定位上下文），不在滚动内容里，所以正文滚动它不跟滚。 */\n.dshpc-dock__close--abs{position:absolute;top:10px;right:8px;z-index:8}\n/* 浮动关钮：无头部面板用，略收一点边距。 */\n.dshpc-dock__close--floating{\n  position:absolute;top:6px;right:6px;z-index:8;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border-faint);\n}\n\n/* 内容区自己滚：面板高度锁 100vh，内容不设内部滚动就会把整页撑高。 */\n.dshpc-dock__body{flex:1 1 auto;min-height:0;overflow:auto}\n\n/* 拖拽条：左缘 6px 命中区，**自己不画任何线**。\n   hover / 拖动时把面板自己的 border-left 染成蓝（用户 2026-10-28 四轮：蓝线只准改原线，\n   不准在原线旁边加一条 —— 之前在 padding box 左缘画渐变，正好叠出双线）。\n   命中区在 padding box 上、border 在它左外侧，所以只能改面板的 border 色。\n   z-index 7 必须高于面板内容里的浮层（复制钮一类），否则命中区会被内容盖住。 */\n.dshpc-dock__resizer{\n  position:absolute;left:0;top:0;bottom:0;width:6px;\n  z-index:7;cursor:col-resize;background:transparent;\n}\n.dshpc-dock__panel:has(> .dshpc-dock__resizer:hover),\n.dshpc-dock__panel--resizing{\n  /* 原线保留「上下渐隐」工作区指示条质感：把面板自己的 border-left 换成同款渐变\n     （不是另加一条线）。面板只有这一条边框、无圆角，所以只作用在线上。 */\n  border-image:linear-gradient(180deg,transparent,var(--dshpc-business) 30% 70%,transparent) 1;\n}\n\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove，\n   向右拖进 iframe 就卡死 —— 整片让出指针事件；② contain 把重排隔离在栏内，\n   否则每帧改宽度都会牵动整页重排（兄弟项目 2026-10-04 真机「挪很久才动一下」）。 */\n.dshpc-dock.dshpc-dock--resizing iframe{pointer-events:none}\n.dshpc-dock.dshpc-dock--resizing .dshpc-dock__panel{contain:layout paint;will-change:width}\n\n/* 收起钮：**待在面板自己的框里**（用户 2026-10-28 三轮：占面板内部空间，不伸到外面去）。\n   left:0 从内侧贴着分隔线 —— 贴线的一边不描边（线是面板自己的 border-left），页签与线不重合。\n   20×44（用户 2026-10-28 四轮定尺寸）；实色底（--dshpc-plate，明暗各有实值），hover 亮一档。\n   padding-right:2px 是**视觉居中**：右侧是圆角，箭头往直线那边挪 1px（用户 2026-10-28 四轮）。 */\n.dshpc-dock__collapse{\n  position:absolute;left:0;top:50%;transform:translateY(-50%);\n  z-index:8;display:inline-flex;align-items:center;justify-content:center;\n  width:20px;height:44px;padding:0 2px 0 0;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);\n  border-left:none;\n  border-radius:0 var(--dshpc-radius-sm) var(--dshpc-radius-sm) 0;\n  background:var(--dshpc-plate);color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:16px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__collapse:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__collapse:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n\n/* 收起后的浮动耳朵：**fixed 贴右缘、垂直居中、独立于分栏**（用户 2026-10-28 定稿：\n   小页签挂中间、里面放面板图标、不显示文字，箭头与收起钮反向）。多个按收起顺序纵向堆叠。\n   z 走 dock 档（低于宿主弹窗），避免盖住宿主 portal 层。 */\n.dshpc-dock__ears{\n  position:fixed;top:50%;right:0;transform:translateY(-50%);\n  z-index:var(--dshpc-z-dock,1030);\n  display:flex;flex-direction:column;gap:8px;align-items:flex-end;\n  pointer-events:none;\n}\n.dshpc-dock__ear{\n  pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;\n  /* 与收起钮**同尺寸**（20×44，用户 2026-10-28 四轮）：上/下/左描边，贴右缘的一侧不描。\n     实色底（--dshpc-plate），不用透明色 —— 透明底下透出东西很难看。\n     padding-left:2px 是**视觉居中**：左侧是圆角，箭头往直线（右缘）那边挪 1px。 */\n  width:20px;height:44px;box-sizing:border-box;padding:0 0 0 2px;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-left:1px solid var(--dshpc-border);\n  border-right:none;\n  border-radius:var(--dshpc-radius-sm) 0 0 var(--dshpc-radius-sm);\n  background:var(--dshpc-plate);color:var(--dshpc-fg-2);\n  cursor:pointer;font-family:inherit;line-height:1;\n  animation:dshpc-ear-in .2s var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 入场：从右缘外滑进来，别「突然出现」（用户 2026-10-28）。 */\n@keyframes dshpc-ear-in{from{opacity:0;transform:translateX(14px)}}\n.dshpc-dock__ear:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__ear:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 与收起钮的箭头同一字号（16px）：收进去前后箭头一模一样大（用户 2026-10-28）。 */\n.dshpc-dock__ear-arrow{font-size:16px;color:var(--dshpc-fg-3)}\n.dshpc-dock__ear:hover .dshpc-dock__ear-arrow{color:var(--dshpc-fg)}\n/* 动效礼貌：系统声明减少动效时全部关掉（与 Segmented 同一约定），收起退化为瞬时、功能不受影响。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-dock__panel{animation:none}\n  .dshpc-dock__panel--closing{transition:none}\n  .dshpc-dock__ear{animation:none}\n}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/explorer/explorer-css.generated.js
 		const EXPLORER_CSS = "/* 工作区文件浏览器（dshpc-fb-*）。\n *\n * 度量真源 = 兄弟项目 dsh-task-dispatch-table 的 src/client/archive-session-css.ts\n * （.dsh-tdt-sv-* 全族）。**逐条照抄，不许自己估**：padding / gap / 圆角 / 字号 / 行高 /\n * 边框色 / 悬停色 / 透明度动画 / 溢出策略，一一对应，改这里之前先去那边对原文。\n * 前缀与变量名换成本仓口径（--tdt-* → --dshpc-*），数值不换。\n *\n * 控件：能核心就核心（面包屑 = Button ghost、行尾 = Button outline、展开 / 图标 = IconButton、\n * 分段 = Segmented、文字 = MarqueeText）。核心控件自带的 padding / 高度 / 皮肤在本文件里\n * **按兄弟数值覆盖**（选择器带 .dshpc-fb 前缀提高特异性，确保盖得住控件默认值）。\n */\n.dshpc-fb{\n  position:relative;display:flex;flex-direction:column;height:100%;min-height:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n}\n\n/* 第一排：▾ 选层 + 面包屑 + 动作（兄弟 .dsh-tdt-sv-crumbbar）\n   ⚠️ 不能 overflow:hidden —— 下拉浮层挂在它下面，裁了就看不见。 */\n.dshpc-fb__bar{\n  position:relative;flex:none;display:flex;align-items:center;gap:2px;\n  padding:4px 10px;border-bottom:1px solid var(--dshpc-border);white-space:nowrap;\n}\n.dshpc-fb__menu-wrap{position:relative;flex:none;display:inline-flex}\n.dshpc-fb__crumbs{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:2px;overflow:hidden}\n.dshpc-fb__crumbs-measure{\n  position:absolute;top:0;left:0;display:inline-flex;align-items:center;gap:2px;\n  visibility:hidden;pointer-events:none;white-space:nowrap;\n}\n\n/* 面包屑：核心 ghost 钮，但皮肤与尺寸取兄弟 .dsh-tdt-sv-crumb（高由内容决定，不锁控制高）。 */\n.dshpc-fb .dshpc-fb__crumb{\n  appearance:none;background:0 0;border:none;height:auto;\n  padding:2px 4px;border-radius:var(--dshpc-radius-sm);\n  font:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis;\n}\n.dshpc-fb .dshpc-fb__crumb:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-fb .dshpc-fb__crumb:disabled{color:var(--dshpc-fg-2);cursor:default}\n.dshpc-fb .dshpc-fb__crumb--current{cursor:default;color:var(--dshpc-fg);font-weight:600;min-width:0}\n.dshpc-fb .dshpc-fb__crumb--current:hover{background:0 0}\n.dshpc-fb__crumb-mq{flex:1 1 auto;min-width:0}\n.dshpc-fb__crumb-sep{flex:none;color:var(--dshpc-fg-3)}\n\n/* 越界（outside-workspace）第一排：只读完整路径（兄弟 .dsh-tdt-sv-crumbbar-plain-inner）。 */\n.dshpc-fb__bar-plain{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-2);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;user-select:none;\n}\n.dshpc-fb__actions{flex:none;display:flex;align-items:center;gap:4px}\n\n/* ▾ 选层浮层（兄弟 .dsh-tdt-sv-crumbs-*）。\n   层序：兄弟是 30/31；本仓 picker 面板是 1100，遮罩必须高于它，否则菜单开着点面板不算「点外部」。 */\n.dshpc-fb__crumbs-backdrop{position:fixed;inset:0;z-index:1200;background:transparent}\n.dshpc-fb__crumbs-menu{\n  position:absolute;top:calc(100% + 4px);left:0;z-index:1201;min-width:160px;max-height:240px;overflow:auto;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-sm);\n  box-shadow:0 4px 16px rgba(0,0,0,.18);padding:4px;display:flex;flex-direction:column;\n}\n.dshpc-fb__menu-item{\n  appearance:none;background:0 0;border:none;text-align:left;font:inherit;\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);\n  padding:4px 8px;border-radius:var(--dshpc-radius-sm);color:var(--dshpc-fg);cursor:pointer;\n  max-width:280px;display:flex;align-items:center;gap:2px;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n.dshpc-fb__menu-item:hover{background:var(--dshpc-hover)}\n.dshpc-fb__menu-empty{\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);padding:4px 8px;color:var(--dshpc-fg-3);\n}\n.dshpc-fb__menu-icon{flex:none;display:inline-flex}\n.dshpc-fb__menu-chev{flex:none;color:var(--dshpc-fg-3);margin-right:1px}\n.dshpc-fb__menu-chev-slot{flex:none;width:11px;height:11px;margin-right:1px}\n.dshpc-fb__menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n\n/* 第二排（仅预览态）：文件名 + 工具（兄弟 .dsh-tdt-sv-titlebar / -preview-title-inner）。 */\n.dshpc-fb__title{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:8px 14px;border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-fb__title-inner{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;\n}\n\n/* 主体（兄弟 .dsh-tdt-sv-preview-body / -hint / -preview-err） */\n.dshpc-fb__body{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;padding:12px 14px}\n.dshpc-fb__note{font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);text-align:center;padding:12px 0}\n.dshpc-fb__err{\n  display:flex;flex-direction:column;align-items:flex-start;gap:10px;\n  font-size:var(--dshpc-font-sm);line-height:1.6;color:var(--dshpc-fg-2);padding:8px 0;\n}\n\n/* 目录树（兄弟 .dsh-tdt-sv-tree*） */\n.dshpc-fb__tree{flex:1;min-height:0;overflow:auto;padding:6px 8px}\n.dshpc-fb__row{\n  display:flex;align-items:center;gap:8px;padding:6px 8px;\n  border-radius:var(--dshpc-radius-sm);cursor:pointer;user-select:none;\n}\n.dshpc-fb__row:hover{background:var(--dshpc-hover)}\n.dshpc-fb__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px}\n.dshpc-fb__row-icon{flex:none;display:inline-flex;color:var(--dshpc-fg-2)}\n.dshpc-fb__row-name{\n  flex:1;min-width:0;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);color:var(--dshpc-fg);\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n\n/* 展开开关：核心 IconButton，命中位 20×20 + 展开时转 90°（兄弟 .dsh-tdt-sv-tree-toggle{,-open}）。 */\n.dshpc-fb .dshpc-fb__row-toggle{\n  appearance:none;background:0 0;border:none;flex:none;\n  width:20px;height:20px;padding:0;margin:0;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;justify-content:center;\n  transition:transform var(--dshpc-dur-fast) var(--dshpc-ease),background var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb .dshpc-fb__row-toggle--open{transform:rotate(90deg)}\n\n/* 行尾「进入 / 选择」：核心 outline 钮，皮肤取兄弟 .dsh-tdt-sv-tree-act（高由内容决定）。\n   平时隐身但占位（opacity 而非 display）⇒ 出现时不顶动行内布局。 */\n.dshpc-fb .dshpc-fb__row-act{\n  flex:none;margin-left:auto;appearance:none;background:0 0;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-sm);\n  height:auto;padding:2px 8px;font-size:var(--dshpc-font-sm);line-height:1.4;\n  color:var(--dshpc-fg-2);cursor:pointer;\n  opacity:0;pointer-events:none;\n  transition:opacity var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb__row:hover .dshpc-fb__row-act,.dshpc-fb .dshpc-fb__row-act:focus-visible{opacity:1;pointer-events:auto}\n.dshpc-fb .dshpc-fb__row-act:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n\n.dshpc-fb__row-children{\n  margin-left:9px;padding-left:7px;border-left:1px solid var(--dshpc-border);\n  display:flex;flex-direction:column;\n}\n.dshpc-fb__row-note{flex:none;padding:8px 10px;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3)}\n.dshpc-fb__row-err{padding:4px 8px 4px 36px;font-size:var(--dshpc-font-sm);color:var(--dshpc-danger)}\n\n/* 预览体内部容器（仅本仓预览组件用；兄弟对应 preview-fill / preview-body-code 一类）。\n   必须 border-box：渲染态 inline 加了 padding:12px 14px，content-box 下 width:100%+padding\n   会溢出父层 28px（父 .dshpc-fb 无 overflow 裁切）→ 恒多一条横滚条；border-box 把 padding\n   算进 100%，从根消除该溢出。 */\n.dshpc-fb__text{flex:1;min-height:0;overflow:auto;width:100%;box-sizing:border-box}\n.dshpc-fb__banner{padding:6px 10px;background:var(--dshpc-open-bg);color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm)}\n.dshpc-fb__more{display:flex;justify-content:center;padding:10px}\n.dshpc-fb__image{max-width:100%;border-radius:var(--dshpc-radius-sm);border:1px solid var(--dshpc-border)}\n/* iframe 的外壳（兄弟 .dsh-tdt-sv-preview-fill）：iframe 必须包在这一层里才拿得到高度——\n   裸挂 iframe 时替换元素的自动最小尺寸会让高度算不出来（表现为预览区整片空白、像没反应）。 */\n.dshpc-fb__fill{flex:1;min-height:0;display:flex;overflow:hidden;padding:0}\n.dshpc-fb__frame{flex:1;min-height:0;width:100%;height:100%;border:none;background:var(--dshpc-surface-1)}\n";
@@ -3540,11 +3540,11 @@ window.__ModuleLoader__.load({
 		* 「我的」判定：**直接读 skill 算好的 `mine`**（`list --json` 每行带，脚本比 uuid）。
 		* 前端不再拿 identities 自己比一遍——两套真源迟早对不上。
 		*/
-		function isMine(task, _board) {
+		function isMine(task) {
 			return task.mine === true;
 		}
-		function resolveActions(task, board) {
-			const mine = isMine(task, board);
+		function resolveActions(task) {
+			const mine = isMine(task);
 			return {
 				view: true,
 				claim: !mine && task.status === "open",
@@ -3553,19 +3553,11 @@ window.__ModuleLoader__.load({
 				release: mine
 			};
 		}
-		/** 已结案行：只有查看，没有在办动作。 */
-		const CLOSED_ACTIONS = {
-			view: true,
-			claim: false,
-			resume: false,
-			finish: false,
-			release: false
-		};
 		/**
 		* 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。
 		*
-		* ⚠️ 后三档（积压 / 逾期 / 停滞）**本轮不接**：`list` 还没有对应的筛选参数，
-		* 用户要求先只铺样式、程序后置 ⇒ 这里一律不命中，界面另给一句说明。
+		* ⚠️ 后三档（积压 / 逾期 / 停滞）**本轮不接**：用户要求程序后置 ⇒ 这里一律不命中，
+		* 界面另给一句说明。
 		*/
 		function tabHit(task, tab) {
 			switch (tab) {
@@ -3680,7 +3672,7 @@ window.__ModuleLoader__.load({
 				if (typeof parsed.error === "string" && parsed.error !== "") return `HTTP ${status}：${parsed.error}`;
 			} catch {}
 			const text = body.trim().slice(0, 200);
-			return text === "" ? `HTTP ${String(status)}` : `HTTP ${String(status)}：${text}`;
+			return text === "" ? `HTTP ${String(status)}` : `HTTP ${status}：${text}`;
 		}
 		/** 带超时的 JSON 取数（相对路径，同源）。 */
 		async function fetchJson(path, init = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
@@ -3705,11 +3697,7 @@ window.__ModuleLoader__.load({
 		* `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
 		*/
 		function fetchBoardSnapshot(opts = {}) {
-			return fetchJson(`/board/snapshot${freshSuffix(opts)}`);
-		}
-		/** `?fresh=1` 只在真要最新值时带；不带就吃 host 的 1.5s 缓存。 */
-		function freshSuffix(opts) {
-			return opts.fresh === true ? "?fresh=1" : "";
+			return fetchJson(`/board/snapshot${opts.fresh === true ? "?fresh=1" : ""}`);
 		}
 		//#endregion
 		//#region src/client/store.ts
@@ -3975,88 +3963,21 @@ body[data-ds-dark-theme]{
 }
 `;
 		/**
-		* 控件皮肤（L2）：**一类控件唯一实现**，抄 dispatch 表 controls-css 的规矩——
-		* 只消费 var(--dtl-*)，一个颜色 / 尺寸 / 圆角 / 字号字面量都不许出现；
-		* 高度只取三档，有边框的变体用 1px 真边框 + 内部 padding 补回 ⇒ 有边 / 无边同高。
+		* 业务壳样式（L2）：核心控件（Button / IconButton / Input / Picker / Segmented / Chip /
+		* StripCard）自己的皮肤全在 core，本文件**不再重写任何控件外观**——只留本插件独有的
+		* 容器类。颜色 / 圆角 / 字号一律只消费 `var(--dtl-*)`。
 		*/
 		const UI_CONTROLS_CSS = `
-/* ── 分段控件（滑动块）：已改由核心 Segmented 承担，外观 / 尺寸 / 滑块动画全部在 core，
-   本文件不再写任何分段控件样式（core 0.5.0 起删掉 variant 轴，外观只有一套）。── */
-
-/* ── 按钮 / 图标钮 ───────────────────────────────────────────────
-   与 Segmented 同一条高度纪律；variant 只换颜色，结构 / 尺寸 / 交互只此一份。 */
-.dtl-btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--dtl-space-1);
-  box-sizing:border-box;border:1px solid transparent;border-radius:var(--dtl-radius-md);
-  background:transparent;color:var(--dtl-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease),border-color var(--dtl-dur-fast) var(--dtl-ease),color var(--dtl-dur-fast) var(--dtl-ease),opacity var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-btn--sm{height:var(--dtl-control-h-sm);padding:0 10px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
-.dtl-btn--md{height:var(--dtl-control-h-md);padding:0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-btn--lg{height:var(--dtl-control-h-lg);padding:0 14px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-btn--primary{background:var(--dtl-accent);color:var(--dtl-fg-inverse);}
-.dtl-btn--primary:hover:not(:disabled){opacity:.9;}
-.dtl-btn--outline{background:var(--dtl-surface-1);border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
-.dtl-btn--outline:hover:not(:disabled){background:var(--dtl-hover);}
-.dtl-btn--ghost{color:var(--dtl-fg-2);}
-.dtl-btn--ghost:hover:not(:disabled){background:var(--dtl-hover);color:var(--dtl-fg);}
-.dtl-btn:focus-visible{outline:2px solid var(--dtl-business);outline-offset:2px;}
-.dtl-btn:disabled{cursor:default;opacity:.5;}
-.dtl-iconbtn{appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;
-  border:1px solid transparent;border-radius:var(--dtl-radius-sm);background:transparent;color:var(--dtl-fg-2);
-  font-family:inherit;cursor:pointer;flex:none;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease),border-color var(--dtl-dur-fast) var(--dtl-ease),color var(--dtl-dur-fast) var(--dtl-ease),opacity var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-iconbtn--sm{width:var(--dtl-control-h-sm);height:var(--dtl-control-h-sm);font-size:var(--dtl-font-sm);}
-.dtl-iconbtn--md{width:var(--dtl-control-h-md);height:var(--dtl-control-h-md);font-size:var(--dtl-font-md);}
-.dtl-iconbtn--lg{width:var(--dtl-control-h-lg);height:var(--dtl-control-h-lg);font-size:var(--dtl-font-md);}
-.dtl-iconbtn--outline{background:var(--dtl-surface-1);border-color:var(--dtl-border);color:var(--dtl-fg-2);}
-.dtl-iconbtn:hover:not(:disabled){background:var(--dtl-hover);color:var(--dtl-fg);}
-.dtl-iconbtn:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
-.dtl-iconbtn:disabled{cursor:default;opacity:.4;}
-
-/* ── 输入 / 搜索框 / 下拉 ──────────────────────────────────────── */
-.dtl-input{box-sizing:border-box;width:100%;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
-  background:var(--dtl-surface-1);color:var(--dtl-fg);font-family:inherit;outline:none;
-  transition:border-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-input--sm{height:var(--dtl-control-h-sm);padding:0 8px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
-.dtl-input--md{height:var(--dtl-control-h-md);padding:0 10px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-input--lg{height:var(--dtl-control-h-lg);padding:0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-input::placeholder{color:var(--dtl-fg-dim);}
-.dtl-input:focus{border-color:var(--dtl-business);box-shadow:0 0 0 1px var(--dtl-business);}
-.dtl-input:disabled{cursor:default;opacity:.5;}
-/* 原生 select： appearance:none + 自绘箭头 ⇒ 与输入框同宗（宿主没有廉价下拉件） */
-.dtl-select{appearance:none;-webkit-appearance:none;box-sizing:border-box;
-  border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);background:var(--dtl-surface-1);color:var(--dtl-fg);
-  font-family:inherit;outline:none;cursor:pointer;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23767d87' stroke-width='1.5'><path d='M4 6.5 8 10.5 12 6.5'/></svg>");
-  background-repeat:no-repeat;background-position:right 8px center;background-size:14px;
-  transition:border-color var(--dtl-dur-fast) var(--dtl-ease),box-shadow var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-select--sm{height:var(--dtl-control-h-sm);padding:0 26px 0 8px;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);}
-.dtl-select--md{height:var(--dtl-control-h-md);padding:0 26px 0 10px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-select--lg{height:var(--dtl-control-h-lg);padding:0 26px 0 12px;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
-.dtl-select:focus{border-color:var(--dtl-business);box-shadow:0 0 0 1px var(--dtl-business);}
-.dtl-select:disabled{cursor:default;opacity:.5;}
-
-/* ── 卡 / chip / 空态 / 列表行（业务壳，皮肤仍只消费 token）────── */
 .dtl-card{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
   transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-card--clickable{cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;}
 .dtl-card--clickable:hover{background:var(--dtl-card-hover);}
 .dtl-card--clickable[data-active='true']{border-color:var(--dtl-business);}
 .dtl-card--clickable:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
-.dtl-chip{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-chip-bg);color:var(--dtl-fg-2);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);white-space:nowrap;}
-.dtl-row{display:flex;align-items:center;gap:var(--dtl-space-2);width:100%;box-sizing:border-box;
-  padding:var(--dtl-space-2) var(--dtl-space-3);border:0;border-bottom:1px solid var(--dtl-border-faint);
-  background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-row:hover{background:var(--dtl-card-hover);}
-.dtl-row:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
-.dtl-row[data-open='true']{background:var(--dtl-open-bg);}
-.dtl-row-body{padding:var(--dtl-space-2) var(--dtl-space-3) var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);
-  background:var(--dtl-open-bg-soft);font-size:var(--dtl-font-md);}
 .dtl-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 @media (prefers-reduced-motion: reduce){
-  .dtl-seg__item,.dtl-btn,.dtl-iconbtn,.dtl-input,.dtl-select,.dtl-card,.dtl-row{transition:none;}
+  .dtl-card{transition:none;}
 }
 `;
 		//#endregion
@@ -4073,26 +3994,22 @@ body[data-ds-dark-theme]{
 		*/
 		/** 基础层样式（tokens + 控件皮肤；幂等注入）。 */
 		const UI_BASE_CSS = `
-/* 统计卡：可点、hover 淡蓝、选中蓝描边 */
+/* 统计卡：8 块（2×4）+ 右图表卡位 */
 .dtl-stat{display:flex;flex-direction:column;gap:var(--dtl-space-1);
   padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;}
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
 .dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
 
-/* 列表行：分组标题头仍走 .dtl-row-head（可点折叠）；任务行走 .dtl-taskrow（两行式，不可点） */
-.dtl-row-head{display:flex;align-items:center;gap:var(--dtl-space-2);
-  width:100%;padding:var(--dtl-space-2) var(--dtl-space-3);border:0;background:transparent;
-  color:inherit;font:inherit;text-align:left;cursor:pointer;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-row-head:hover{background:var(--dtl-card-hover);}
-.dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+/* 统计区整体：左 8 块（2 行 × 4 列）+ 右图表卡，参考图同款分栏。
+   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
+   两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
+.dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
+.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:var(--dtl-space-3);}
+.dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
+@media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
+@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
-/* 其他待办 = **一组一张表**（用户 2026-10-18 照参考图 Stripe Payments：Pending / Archived /
-   Completed 各一组）：组标题是**独立一行**——透明无底、远离上一组、贴近自己的表，
-   文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
-/* 组与组**零外距**、连体（用户 2026-10-18：上间距去掉，和上面连在一起） */
-.dtl-group{margin-bottom:0;}
-/* 组标题（段头统计条）：改由核心 StripCard 承担（色条 / 底色 / 折叠 caret 全在 core） */
 /* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
    一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
 .dtl-orow{padding:13px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
@@ -4111,7 +4028,6 @@ body[data-ds-dark-theme]{
 /* 执行人列（原状态列，用户 2026-10-18 互换）：稍放宽一档（用户 2026-10-19：原来有点挤），
    20 字的名字能基本摆全；再长由标签自己的省略号兜住，不许溢出压到右边的槽 */
 .dtl-tcell--status{flex:none;width:136px;}
-.dtl-tcell--status .dtl-tag{max-width:100%;}
 /* 悬停：**创建信息整条让位给操作钮**（用户 2026-10-18：不要「掉掉时分秒」那种半吊子，
    要整条换掉）。两个都**常驻布局**（visibility 切换、不用 display），格子宽度 = 两者较宽的
    那个 ⇒ hover 时行宽不变、**页面不跳**（跳了执行人的悬停提示就跟着飘） */
@@ -4122,9 +4038,6 @@ body[data-ds-dark-theme]{
 .dtl-orow__actions{visibility:hidden;display:flex;align-items:center;gap:6px;}
 .dtl-orow:hover .dtl-orow__created{visibility:hidden;}
 .dtl-orow:hover .dtl-orow__actions{visibility:visible;}
-/* 「查看」钮在表格行里也要常驻布局（display:none 会不算宽度 ⇒ hover 一出就又把行撑开） */
-.dtl-orow .dtl-viewbtn{display:inline-flex;visibility:hidden;}
-.dtl-orow:hover .dtl-viewbtn{visibility:visible;}
 /* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=积压 / 橙=逾期 / 红=停滞；
    6px（用户 2026-10-18：8px 太大） */
 .dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
@@ -4132,16 +4045,7 @@ body[data-ds-dark-theme]{
 .dtl-dot--backlog{background:var(--dtl-warning);}
 .dtl-dot--overdue{background:var(--dtl-overdue);}
 .dtl-dot--stale{background:var(--dtl-danger);}
-.dtl-dot--open,.dtl-dot--closed{background:var(--dtl-fg-3);}
-
-/* 「查看」钮：与行内动作钮（.dtl-minibtn）同款皮肤、**正方形（26×26，宽=高）**、
-   **默认不显、悬停才出来**（用户 2026-10-18：跟认领/继续那几个一起浮现） */
-.dtl-viewbtn{position:relative;display:none;align-items:center;justify-content:center;gap:5px;
-  flex:none;width:26px;height:26px;padding:0;border:1px solid var(--dtl-border);
-  border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-1);color:var(--dtl-fg-2);
-  font:inherit;font-size:var(--dtl-font-sm);line-height:18px;white-space:nowrap;cursor:default;}
-.dtl-viewbtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
-.dtl-taskrow__row:hover .dtl-viewbtn,.dtl-orow:hover .dtl-viewbtn{display:inline-flex;}
+.dtl-dot--open{background:var(--dtl-fg-3);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -4157,7 +4061,7 @@ body[data-ds-dark-theme]{
 .dtl-rail--backlog{background:var(--dtl-warning);}
 .dtl-rail--overdue{background:var(--dtl-overdue);}
 .dtl-rail--stale{background:var(--dtl-danger);}
-.dtl-rail--open,.dtl-rail--closed{background:var(--dtl-fg-3);}
+.dtl-rail--open{background:var(--dtl-fg-3);}
 
 /* 第一行：标题（上来就是标题）+ [YYYY-MM-DD 创建] 灰徽 + 异常 pill（baseline 对齐，dispatch 同款） */
 .dtl-taskrow__l1{display:flex;align-items:baseline;gap:6px;min-width:0;}
@@ -4174,27 +4078,8 @@ body[data-ds-dark-theme]{
 .dtl-taskrow__row:hover .dtl-taskrow__when{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
 
-/* 标签（用户 2026-10-18）：状态 / 执行人 / #标签 **共用一枚件**，只换色调。
-   最大宽度 20ch（≈10 个中文或 20 个字符）⇒ 名字上限 20 字；超出**省略号（3 个点）**，
-   悬停把全名补出来（用户 2026-10-19：不跑马灯了）。**没被截 ⇒ 悬停无反应**
-   （提示由 Tag 元件按实际宽度决定挂不挂，这里只管裁切）。 */
-.dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
-  background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
-/* 状态四色 = **实心色块**（用户 2026-10-18：彩色字看不清 ⇒ 改色块 + 反色字）：
-   待认领灰 / 进行中蓝 / 积压黄 / 逾期橙 / 停滞红（与行首圆点同色系）。
-   红黄蓝都是中调 ⇒ 白字两个主题都可读；灰块用「字色底 + 面色字」⇒ 明暗自动反过来 */
-.dtl-tag--open{background:var(--dtl-fg-3);color:var(--dtl-surface-1);font-weight:600;}
-.dtl-tag--doing{background:var(--dtl-business);color:var(--dtl-on-signal);font-weight:600;}
-.dtl-tag--backlog{background:var(--dtl-warning);color:var(--dtl-on-signal);font-weight:600;}
-.dtl-tag--overdue{background:var(--dtl-overdue);color:var(--dtl-on-signal);font-weight:600;}
-.dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
-/* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
-.dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
 /* 用核心 Chip 承担标签时的截断（core Chip 无 max-width/省略号 ⇒ 这里只补布局，不改皮肤） */
 .dshpc-chip.dtl-tagchip{display:inline-block;flex:none;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;}
-/* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
-.dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 
 /* 工作区徽标：只铺蓝底（用户 2026-10-17：描边框太抢 ⇒ 去掉；底色已提亮一档见 tokens.ts
    business-soft 8%→14% / 5%→12%），字色回正文。 */
@@ -4202,80 +4087,11 @@ body[data-ds-dark-theme]{
   background:var(--dtl-business-soft);color:var(--dtl-fg);
   font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;}
 
-/* 行内动作按钮（icon + 字，加大；悬停说明走官方 Tooltip，不在 CSS 里手搓浮层）。
-   样子先行，点击行为归「任务按钮与会话交接」任务 */
-.dtl-minibtn{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
-  border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-sm);
-  line-height:18px;white-space:nowrap;cursor:default;}
-.dtl-minibtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
-
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
 .dtl-empty-guide{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:var(--dtl-space-2);min-height:270px;padding:var(--dtl-space-4);text-align:center;
   border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
-.dtl-empty-filtered{padding:var(--dtl-space-4) 0;color:var(--dtl-fg-3);font-size:var(--dtl-font-md)}
-
-/* 浮标角标：0→n 跳变时一次脉冲，不自动消失 */
-.dtl-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;
-  border-radius:8px;background:var(--dtl-danger);color:var(--dtl-on-signal);
-  font-size:10px;line-height:16px;text-align:center;font-weight:600;}
-.dtl-badge[data-pulse="true"]{animation:dtl-pulse 900ms var(--dtl-ease) 1}
-@keyframes dtl-pulse{0%{transform:scale(.6);opacity:.4}60%{transform:scale(1.15)}100%{transform:scale(1)}}
-
-/* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
-   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
-   两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
-/* 左 8 块略收窄、右图表略放宽（用户 2026-10-17：左再短一丢丢、右长一丢丢） */
-.dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
-.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
-  gap:var(--dtl-space-3);}
-.dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
-@media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
-@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
-
-/* 「只看我的」小复选框（替掉右上角的分段切换） */
-.dtl-check{display:inline-flex;align-items:center;gap:5px;height:20px;margin-top:-2px;
-  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);cursor:pointer;user-select:none;white-space:nowrap;}
-.dtl-check input{width:12px;height:12px;margin:0;accent-color:var(--dtl-business);cursor:pointer;}
-.dtl-check:hover{color:var(--dtl-fg-2);}
-
-/* 趋势分组柱状图：绘图区高度**随卡拉伸**（flex），柱 / 刻度 / 网格全用百分比 ⇒ 与卡等高 */
-.dtl-gchart-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding-left:30px;padding-bottom:18px;}
-.dtl-gchart{position:relative;flex:1 1 auto;min-height:96px;border-bottom:1px solid var(--dtl-border);}
-.dtl-gchart__grid{position:absolute;left:0;right:0;border-top:1px solid var(--dtl-border-faint);pointer-events:none;}
-.dtl-gchart__ytick{position:absolute;left:-30px;width:26px;text-align:right;font-size:10px;line-height:12px;
-  color:var(--dtl-fg-3);transform:translateY(50%);font-variant-numeric:tabular-nums;}
-.dtl-gchart__col{position:absolute;top:0;bottom:0;min-width:0;}
-/* ⚠️ pair 必须 top/bottom 双锚（或 height:100%）：绝对定位 + 只给 bottom 时高度是 auto，
-   子元素的 height:% 没有可解析的包含块 ⇒ 整根柱子塌成 0（2026-10-17 真机教训：
-   改百分比柱高后「一个柱子都看不见，只剩数字」）。 */
-.dtl-gchart__pair{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);
-  display:flex;align-items:flex-end;gap:1px;}
-/* 三柱：完成(蓝) / 没完成(琥珀) / 新增(灰)，每根 5px、无圆角（用户 2026-10-17：太粗、不要圆弧） */
-.dtl-gchart__bar{width:5px;min-height:0;}
-.dtl-gchart__bar--done{background:var(--dtl-business);}
-.dtl-gchart__bar--remaining{background:var(--dtl-chart-remaining);}
-.dtl-gchart__bar--created{background:var(--dtl-chart-created);}
-/* hover：整列三根柱一起提亮（用户 2026-10-17：移上去应该两个都变色，不是只蓝的一根） */
-.dtl-gchart__col:hover .dtl-gchart__bar{filter:brightness(1.18);}
-.dtl-gchart__val{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:12px;
-  color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
-.dtl-gchart__label{position:absolute;left:0;right:0;bottom:-16px;text-align:center;
-  font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
-/* hover 浮卡（参考图同款：日期 + 两个数；原生 title 太慢、长相不一） */
-.dtl-gchart__tip{position:absolute;top:0;z-index:2;min-width:104px;box-sizing:border-box;
-  padding:6px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);box-shadow:var(--dtl-shadow-2);
-  font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);pointer-events:none;}
-.dtl-gchart__tip b{display:block;color:var(--dtl-fg);font-weight:600;}
-.dtl-gchart__tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
-.dtl-gchart-legend{display:flex;align-items:center;gap:var(--dtl-space-3);font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);}
-.dtl-gchart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
-
-/* 过程正文：宽度受限、长行折行 */
-.dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
 `;
 		const STYLE_ID = "dtl-ui-base";
 		/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。
@@ -4430,10 +4246,9 @@ body[data-ds-dark-theme]{
 				children: chip
 			});
 		}
-		/** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
+		/** 空态：真空引导卡（虚线）。 */
 		function EmptyState(props) {
 			ensureUiBase();
-			if (props.tone === "filtered") return (0, react.createElement)("div", { className: "dtl-empty-filtered" }, props.title);
 			return (0, react.createElement)("div", { className: "dtl-empty-guide" }, (0, react.createElement)("div", { style: {
 				fontSize: "var(--dtl-font-lg)",
 				fontWeight: 600,
@@ -4485,23 +4300,20 @@ body[data-ds-dark-theme]{
 		*    + **执行人列**（原状态位，有执行人才摆 `@名字` 标签）+ 最右「@创建人 创建于 年-月-日 时:分:秒」
 		*    （悬停掉时分秒并让位给操作钮）+ 查看。
 		*    状态一律**标签型、五色**（用户 2026-10-18：原来是一排素字 / pill，现在与人员**位置互换**）：
-		*    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 / 红=停滞；三个异常标签悬停给**配置出来的**
-		*    阈值解释（staleDays / overdueDays / backlogDays 由 host 下发）。圆点颜色同色系。
+		*    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 / 红=停滞；三个异常标签悬停给 skill 算好的
+		*    天数解释（ageDays / idleDays / waitingDays 随 list 下发）。圆点颜色同色系。
 		*
 		* 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
 		*
 		* 按钮点击行为（含查看）归「任务按钮与会话交接」任务，本文件只做样子与提示。
 		*/
-		/** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
+		/** 行标题：任务名（缺则任务号）。 */
 		function titleOf(row) {
-			if (row.kind === "task") return row.task.title || row.task.id;
-			const title = row.record.workpackage || row.record.summary || "";
-			return title !== "" ? title : row.record.src ?? "—";
+			return row.task.title || row.task.id;
 		}
-		/** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 host 按时间算出来的，不是状态）。
+		/** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 skill 按时间算出来的，不是状态）。
 		*  只决定圆点 / 左缘色条这类**单色位**——标签可以多枚，见 MARKS。 */
 		function toneOf(row) {
-			if (row.kind !== "task") return "closed";
 			if (row.task.stale === true) return "stale";
 			if (row.task.overdue === true) return "overdue";
 			if (row.task.backlog === true) return "backlog";
@@ -4515,21 +4327,19 @@ body[data-ds-dark-theme]{
 			"overdue",
 			"stale"
 		];
-		/** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
+		/** 状态文案。 */
 		function statusLabel(tone, t) {
 			if (tone === "stale") return t("statusStale");
 			if (tone === "overdue") return t("statusOverdue");
 			if (tone === "backlog") return t("statusBacklog");
 			if (tone === "open") return t("statusOpen");
-			if (tone === "doing") return t("statusActive");
-			return null;
+			return t("statusActive");
 		}
 		function TaskRowView(props) {
-			const { t, row, variant, board } = props;
+			const { t, row, variant } = props;
 			const tone = toneOf(row);
-			const isTask = row.kind === "task";
-			const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
-			const created = row.kind === "task" ? row.task.created ?? null : row.record.created ?? null;
+			const tags = row.task.tags ?? [];
+			const created = row.task.created ?? null;
 			const createdDay = created !== null && created !== void 0 && Date.parse(created) >= 0 ? formatDateTime(created).slice(0, 10) : null;
 			const stamp = (value) => value === null || value === void 0 ? t("timeUnknown") : formatDateTime(value, {
 				seconds: true,
@@ -4537,7 +4347,6 @@ body[data-ds-dark-theme]{
 			});
 			const dayText = (n) => n === null || n === void 0 ? t("daysNone") : t("daysValue", { n });
 			const detailTip = (which) => {
-				if (row.kind !== "task") return void 0;
 				const { task } = row;
 				const owner = displayName(task.owner_name, task.owner);
 				const who = owner === "" ? t("ownerUnclaimed") : `@${owner}`;
@@ -4566,7 +4375,7 @@ body[data-ds-dark-theme]{
 					d: dayText(task.idleDays)
 				});
 			};
-			const actions = isTask ? resolveActions(row.task, board) : CLOSED_ACTIONS;
+			const actions = resolveActions(row.task);
 			const viewButton = (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
 				label: t("viewDetail"),
 				side: "bottom",
@@ -4595,7 +4404,7 @@ body[data-ds-dark-theme]{
 			const finishButton = tipBtn((0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), "actionFinish", "tipFinish");
 			const releaseButton = tipBtn(null, "actionRelease", "tipRelease");
 			const tagOf = (which, tip) => {
-				const text = statusLabel(which, t) ?? "";
+				const text = statusLabel(which, t);
 				return (0, react.createElement)(Tag, {
 					key: which,
 					text,
@@ -4603,8 +4412,8 @@ body[data-ds-dark-theme]{
 					tip: tip ?? detailTip(which)
 				});
 			};
-			const markTones = isTask ? MARKS.filter((which) => row.task[which] === true) : [];
-			const statusTags = tone === "closed" ? [] : (markTones.length > 0 ? markTones : [tone]).map((which) => tagOf(which));
+			const markTones = MARKS.filter((which) => row.task[which] === true);
+			const statusTags = (markTones.length > 0 ? markTones : [tone]).map((which) => tagOf(which));
 			const alarmTags = markTones.map((which) => tagOf(which));
 			const titleLine = (0, react.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react.createElement)("span", {
 				className: "dtl-taskrow__title dtl-ellipsis",
@@ -4615,14 +4424,13 @@ body[data-ds-dark-theme]{
 				title: titleOf(row)
 			}, titleOf(row)));
 			if (variant === "others") {
-				const creator = isTask ? row.task.creator : row.record.creator;
-				const owner = isTask ? row.task.owner : null;
-				const creatorLabel = displayName(isTask ? row.task.creator_name : row.record.creator_name, creator);
+				const owner = row.task.owner;
+				const creatorLabel = displayName(row.task.creator_name, row.task.creator);
 				const hasOwner = !(owner === null || owner === void 0 || owner === "");
 				const who = creatorLabel === "" ? "—" : `@${creatorLabel}`;
 				const createdOk = created !== null && created !== void 0 && Date.parse(created) >= 0;
-				const startedOk = isTask && row.task.started !== null && row.task.started !== void 0 && Date.parse(row.task.started) >= 0;
-				const ownerName = displayName(isTask ? row.task.owner_name : null, owner);
+				const startedOk = row.task.started !== null && row.task.started !== void 0 && Date.parse(row.task.started) >= 0;
+				const ownerName = displayName(row.task.owner_name, owner);
 				const ownerTip = t("startedAt", {
 					who: ownerName === "" ? "" : `@${ownerName}`,
 					when: startedOk ? formatDateTime(String(row.task.started)) : t("timeUnknown")
@@ -4632,7 +4440,7 @@ body[data-ds-dark-theme]{
 					text: `#${tag}`
 				})));
 				return (0, react.createElement)("div", { className: "dtl-orow" }, (0, react.createElement)("div", { className: "dtl-orow__row" }, (0, react.createElement)("span", { className: `dtl-dot dtl-dot--${tone}` }), (0, react.createElement)("div", { className: "dtl-tcell dtl-tcell--title" }, orowTitleLine, tagLine), (0, react.createElement)("span", { className: "dtl-tcell dtl-tcell--status" }, hasOwner ? (0, react.createElement)(Tag, {
-					text: `@${displayName(isTask ? row.task.owner_name : null, owner)}`,
+					text: `@${displayName(row.task.owner_name, owner)}`,
 					tone: "person",
 					title: ownerTip
 				}) : null), (0, react.createElement)("span", { className: "dtl-orow__slot" }, (0, react.createElement)("span", { className: "dtl-orow__created" }, t("createdAt", {
@@ -4641,18 +4449,16 @@ body[data-ds-dark-theme]{
 				})), (0, react.createElement)("span", { className: "dtl-orow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.view ? viewButton : null))));
 			}
 			const parts = [];
-			if (isTask) {
-				const startRaw = row.task.started ?? row.task.created;
-				if (startRaw !== void 0 && startRaw !== null && startRaw !== "" && Date.parse(startRaw) >= 0) parts.push(`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`);
-				if (row.task.ageDays !== null && row.task.ageDays !== void 0) parts.push(row.task.ageDays === 0 ? t("ageToday") : t("ageDaysText", { n: row.task.ageDays }));
-			} else parts.push(`${t("fieldFinished")} ${formatDateTime(row.record.time || row.record.created || "", { fallback: t("timeUnknown") })}`);
+			const startRaw = row.task.started ?? row.task.created;
+			if (startRaw !== void 0 && startRaw !== null && startRaw !== "" && Date.parse(startRaw) >= 0) parts.push(`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`);
+			if (row.task.ageDays !== null && row.task.ageDays !== void 0) parts.push(row.task.ageDays === 0 ? t("ageToday") : t("ageDaysText", { n: row.task.ageDays }));
 			return (0, react.createElement)("div", { className: "dtl-taskrow" }, (0, react.createElement)("div", { className: "dtl-taskrow__row" }, (0, react.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0
 			} }, titleLine, (0, react.createElement)("div", { className: "dtl-taskrow__l2" }, (0, react.createElement)("span", {
 				className: "dtl-wstag dtl-ellipsis",
-				title: row.kind === "task" ? row.task.workspace.title : ""
-			}, row.kind === "task" ? row.task.workspace.title : ""), tags.map((tag) => (0, react.createElement)(Tag, {
+				title: row.task.workspace.title
+			}, row.task.workspace.title), tags.map((tag) => (0, react.createElement)(Tag, {
 				key: tag,
 				text: `#${tag}`
 			})))), (0, react.createElement)("span", { className: "dtl-taskrow__when" }, parts.length === 0 ? t("timeUnknown") : parts.join("丨")), (0, react.createElement)("span", { className: "dtl-taskrow__actions" }, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.view ? viewButton : null)));
@@ -4887,8 +4693,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.113 · 261028-145704-477`
-			}, `v0.0.113 261028-145704-477`))), (0, react.createElement)(Button, {
+				title: `v0.0.113 · 261028-154151-603`
+			}, `v0.0.113 261028-154151-603`))), (0, react.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -4930,15 +4736,13 @@ body[data-ds-dark-theme]{
 				title: item.workspaceTitle,
 				message: item.message
 			})).join("；"))), regionHead, pending ? (0, react.createElement)("div", { style: hintStyle }, t("filterPending")) : view.rows.length === 0 ? (0, react.createElement)(EmptyState, {
-				tone: "guide",
 				title: t("listEmpty"),
 				hint: t("listEmptyHint")
 			}) : (0, react.createElement)("div", null, view.rows.map((row) => (0, react.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,
-				variant: "mine",
-				board
+				variant: "mine"
 			}))))));
 		}
 		//#endregion
@@ -4947,8 +4751,6 @@ body[data-ds-dark-theme]{
 		const zh = {
 			backToConversation: "返回会话",
 			panelTitle: "任务台账",
-			tabTasks: "任务",
-			tabStats: "统计",
 			refresh: "刷新",
 			refreshing: "刷新中",
 			loading: "读取中…",
@@ -4956,7 +4758,6 @@ body[data-ds-dark-theme]{
 			loadFailed: "读取失败",
 			degradedTitle: "部分工作区读取失败",
 			degradedItem: "{title}：{message}",
-			statsPlaceholder: "统计报表尚未开建（另立任务）：这里以后放分类分布、按人完成数、时间线。",
 			statMyActive: "我的待办",
 			statMyOverdueHint: "逾期 {n}",
 			statMyStaleHint: "停滞 {n}",
@@ -4976,30 +4777,11 @@ body[data-ds-dark-theme]{
 			statBacklogTitle: "积压 = 待认领满 {n} 天没人接",
 			statWeekDone: "本周完成",
 			statLastWeekDone: "上周完成",
-			statCreatedHint: "新增 {n}",
 			daysNone: "—",
 			daysValue: "{n} 天",
-			chartTitle: "近 8 周",
-			chartCaption: "完成（按结案时间）/ 新增（按创建时间），周一起桶；我的 = owner 是我",
-			chartBucket: "{week} 当周：完成 {done} 条，新增 {created} 条",
-			chartEmpty: "近 8 周没有记录",
-			chartLoading: "趋势读取中…（列表已就绪，统计稍后到）",
-			chartUnavailable: "趋势暂时读不到（不影响上面的任务列表）",
 			chartNotReady: "趋势图待接：skill 还没有按周汇总的方法",
-			chartScopeAll: "所有",
-			chartScopeMine: "我的",
-			chartOnlyMine: "只看我的",
-			chartWarnings: "有 {n} 条历史行格式不对被跳过，上面的数字未计入（悬停看明细）",
-			chartLegendDone: "完成",
-			chartLegendCreated: "新增",
-			chartLegendRemaining: "未结",
-			chartAvg: "周均 {n}",
 			periodRange: "{from} ~ {to}",
-			scopeLabel: "范围",
-			scopeMine: "我的",
-			scopeAll: "全部工作区",
 			statusLabel: "状态",
-			statusAll: "全部",
 			statusActive: "进行中",
 			statusOpen: "待认领",
 			statusBacklog: "积压",
@@ -5014,35 +4796,13 @@ body[data-ds-dark-theme]{
 			workspaceAll: "全部工作区",
 			searchPlaceholder: "搜索",
 			regionMine: "我的待办",
-			regionAll: "全部待办",
 			ownerLabel: "执行人",
 			ownerAll: "全部执行人",
 			filterPending: "这一档的筛选方法还没接：skill 的 list 还没有按积压 / 逾期 / 停滞筛行的参数",
 			listEmpty: "这一档没有任务",
 			listEmptyHint: "换个档位或工作区看看。",
-			showingCount: "显示 {n} 条",
-			groupTotal: "共 {n} 条",
-			groupOpen: "待办 {n} 条",
-			groupDoing: "进行中 {n} 条",
-			groupBacklog: "积压 {n} 条",
-			groupOverdue: "逾期 {n} 条",
-			groupStale: "停滞 {n} 条",
-			colTask: "任务",
-			colCreator: "创建人",
-			colOwner: "执行人",
-			colStatus: "状态",
-			colTime: "时长",
-			allEmptyTitle: "没有可显示的事项",
-			allEmptyHint: "切换上面的状态过滤试试，或新建一个任务。",
-			allEmptyAction: "新建任务",
-			expandAria: "展开过程文档",
-			collapseAria: "收起",
 			ownerUnclaimed: "待认领",
-			fieldCreator: "创建",
-			fieldOwner: "执行",
-			fieldCreated: "创建",
 			fieldStarted: "开始",
-			fieldFinished: "结案",
 			timeUnknown: "时间未知",
 			ageDaysText: "已进行 {n} 天",
 			ageToday: "今天",
@@ -5057,30 +4817,12 @@ body[data-ds-dark-theme]{
 			createdAt: "{who} 创建于 {when}",
 			startedAt: "{who} 开始于 {when}",
 			viewDetail: "查看详情",
-			fieldCreatedStamp: "{day} 创建",
-			mineEmpty: "您现在没有正在进行的工作",
-			mineEmptyHint: "在某个工作区 new 一个任务，或到下面认领一条待认领任务，这里就会出现。",
-			mineCount: "{n} 条",
-			worklogTitle: "过程文档",
-			worklogPath: "路径",
-			worklogMissing: "（缺失）",
-			mdCopy: "复制",
-			mdCopied: "已复制",
-			mdFootnotes: "脚注",
-			emptyNoWorkspace: "还没有台账工作区",
-			emptyNoWorkspaceHint: "在某个项目里跑一条 task-ledger skill 的写命令（第一条会自动建档 ledger/pool.json），这里就会出现它。",
-			emptyNoTask: "一条任务都没有",
-			emptyNoTaskHint: "用 task-ledger skill 的 new 开一个任务，或让别人开在这里等你认领。",
-			emptyFiltered: "没有符合当前筛选的任务",
-			badgeTitle: "我名下待办",
-			openBoard: "打开任务台账"
+			fieldCreatedStamp: "{day} 创建"
 		};
 		/** English（与 zh 键完全对齐）。 */
 		const en = {
 			backToConversation: "Back to chat",
 			panelTitle: "Task ledger",
-			tabTasks: "Tasks",
-			tabStats: "Stats",
 			refresh: "Refresh",
 			refreshing: "Refreshing",
 			loading: "Loading…",
@@ -5088,7 +4830,6 @@ body[data-ds-dark-theme]{
 			loadFailed: "Load failed",
 			degradedTitle: "Some workspaces failed to load",
 			degradedItem: "{title}: {message}",
-			statsPlaceholder: "Stats reports are not built yet (separate task): category breakdown, completions by person, timeline.",
 			statMyActive: "My todos",
 			statMyOverdueHint: "overdue {n}",
 			statMyStaleHint: "stale {n}",
@@ -5108,30 +4849,11 @@ body[data-ds-dark-theme]{
 			statBacklogTitle: "backlog = unclaimed for {n}+ days",
 			statWeekDone: "Done this week",
 			statLastWeekDone: "Done last week",
-			statCreatedHint: "{n} created",
 			daysNone: "—",
 			daysValue: "{n}d",
-			chartTitle: "Last 8 weeks",
-			chartCaption: "done (by close time) / created (by create time), weeks start Monday; mine = owner is me",
-			chartBucket: "week of {week}: {done} done, {created} created",
-			chartEmpty: "Nothing in the last 8 weeks",
-			chartLoading: "Loading trend… (list is ready, stats will follow)",
-			chartUnavailable: "Trend is unavailable right now (the task lists above are unaffected)",
 			chartNotReady: "Trend chart pending: the skill has no weekly roll-up method yet",
-			chartScopeAll: "All",
-			chartScopeMine: "Mine",
-			chartOnlyMine: "Mine only",
-			chartWarnings: "{n} history rows were skipped as malformed and are not counted above (hover for detail)",
-			chartLegendDone: "Done",
-			chartLegendCreated: "Created",
-			chartLegendRemaining: "Outstanding",
-			chartAvg: "avg {n}/wk",
 			periodRange: "{from} ~ {to}",
-			scopeLabel: "Scope",
-			scopeMine: "Mine",
-			scopeAll: "All workspaces",
 			statusLabel: "Status",
-			statusAll: "All",
 			statusActive: "Active",
 			statusOpen: "Unclaimed",
 			statusBacklog: "Backlog",
@@ -5146,35 +4868,13 @@ body[data-ds-dark-theme]{
 			workspaceAll: "All workspaces",
 			searchPlaceholder: "Search",
 			regionMine: "My todos",
-			regionAll: "All tasks",
 			ownerLabel: "Owner",
 			ownerAll: "Anyone",
 			filterPending: "This tab has no filtering method yet: skill `list` cannot filter by backlog / overdue / stale",
 			listEmpty: "Nothing in this tab",
 			listEmptyHint: "Try another tab or workspace.",
-			showingCount: "{n} shown",
-			groupTotal: "{n} total",
-			groupOpen: "{n} open",
-			groupDoing: "{n} active",
-			groupBacklog: "{n} backlog",
-			groupOverdue: "{n} overdue",
-			groupStale: "{n} stale",
-			colTask: "Task",
-			colCreator: "Created by",
-			colOwner: "Owner",
-			colStatus: "Status",
-			colTime: "Duration",
-			allEmptyTitle: "Nothing to show",
-			allEmptyHint: "Try another status filter above, or create a task.",
-			allEmptyAction: "New task",
-			expandAria: "Expand worklog",
-			collapseAria: "Collapse",
 			ownerUnclaimed: "unclaimed",
-			fieldCreator: "created by",
-			fieldOwner: "owner",
-			fieldCreated: "created",
 			fieldStarted: "started",
-			fieldFinished: "closed",
 			timeUnknown: "unknown time",
 			ageDaysText: "active {n}d",
 			ageToday: "today",
@@ -5189,23 +4889,7 @@ body[data-ds-dark-theme]{
 			createdAt: "created by {who} on {when}",
 			startedAt: "{who} started on {when}",
 			viewDetail: "View details",
-			fieldCreatedStamp: "created {day}",
-			mineEmpty: "Nothing in progress right now",
-			mineEmptyHint: "Create a task in a workspace or claim one below, and it shows up here.",
-			mineCount: "{n} items",
-			worklogTitle: "Worklog",
-			worklogPath: "path",
-			worklogMissing: "(missing)",
-			mdCopy: "Copy",
-			mdCopied: "Copied",
-			mdFootnotes: "Footnotes",
-			emptyNoWorkspace: "No ledger workspace yet",
-			emptyNoWorkspaceHint: "Run any task-ledger skill write command in a project (the first one creates ledger/pool.json) and it shows up here.",
-			emptyNoTask: "No tasks yet",
-			emptyNoTaskHint: "Create one with the task-ledger skill new, or leave one here for others to claim.",
-			emptyFiltered: "No tasks match the current filters",
-			badgeTitle: "my todos",
-			openBoard: "Open task ledger"
+			fieldCreatedStamp: "created {day}"
 		};
 		/** 把宿主给的无参 t 包成带占位符替换的 t（模板一律 `{name}`，不依赖宿主是否支持 params）。 */
 		function interpolateTranslate(base) {

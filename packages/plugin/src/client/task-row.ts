@@ -11,8 +11,8 @@
  *    + **执行人列**（原状态位，有执行人才摆 `@名字` 标签）+ 最右「@创建人 创建于 年-月-日 时:分:秒」
  *    （悬停掉时分秒并让位给操作钮）+ 查看。
  *    状态一律**标签型、五色**（用户 2026-10-18：原来是一排素字 / pill，现在与人员**位置互换**）：
- *    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 / 红=停滞；三个异常标签悬停给**配置出来的**
- *    阈值解释（staleDays / overdueDays / backlogDays 由 host 下发）。圆点颜色同色系。
+ *    灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 / 红=停滞；三个异常标签悬停给 skill 算好的
+ *    天数解释（ageDays / idleDays / waitingDays 随 list 下发）。圆点颜色同色系。
  *
  * 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
  *
@@ -29,24 +29,19 @@ import {
 import { createElement as h, type ReactNode } from "react";
 import { formatDateTime } from "./format";
 import type { Translate } from "./locales";
-import { CLOSED_ACTIONS, displayName, type Row, resolveActions } from "./rows";
-import type { BoardPayload } from "./types";
+import { displayName, type Row, resolveActions } from "./rows";
 import { Button, IconButton, Tag } from "./ui";
 
-type Tone = "doing" | "overdue" | "stale" | "backlog" | "open" | "closed";
+type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
 
-/** 行标题：在办 = 任务名（缺则任务号）；已结案 = 任务包名（缺则「完成了什么」首句）。 */
+/** 行标题：任务名（缺则任务号）。 */
 function titleOf(row: Row): string {
-	if (row.kind === "task") return row.task.title || row.task.id;
-	// 空串也算「没有」：用 || 而不是 ??，否则空标题会顶掉摘要
-	const title = row.record.workpackage || row.record.summary || "";
-	return title !== "" ? title : (row.record.src ?? "—");
+	return row.task.title || row.task.id;
 }
 
-/** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 host 按时间算出来的，不是状态）。
+/** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 skill 按时间算出来的，不是状态）。
  *  只决定圆点 / 左缘色条这类**单色位**——标签可以多枚，见 MARKS。 */
 function toneOf(row: Row): Tone {
-	if (row.kind !== "task") return "closed";
 	if (row.task.stale === true) return "stale";
 	if (row.task.overdue === true) return "overdue";
 	if (row.task.backlog === true) return "backlog";
@@ -58,14 +53,13 @@ function toneOf(row: Row): Tone {
  *  积压与逾期 / 停滞不会共存（前者是待认领，后两者是进行中），故最多 2 枚。 */
 const MARKS = ["backlog", "overdue", "stale"] as const;
 
-/** 状态文案（已结案没有在办状态 ⇒ 不给标签）。 */
-function statusLabel(tone: Tone, t: Translate): string | null {
+/** 状态文案。 */
+function statusLabel(tone: Tone, t: Translate): string {
 	if (tone === "stale") return t("statusStale");
 	if (tone === "overdue") return t("statusOverdue");
 	if (tone === "backlog") return t("statusBacklog");
 	if (tone === "open") return t("statusOpen");
-	if (tone === "doing") return t("statusActive");
-	return null;
+	return t("statusActive");
 }
 
 export function TaskRowView(props: {
@@ -73,19 +67,13 @@ export function TaskRowView(props: {
 	row: Row;
 	/** 形态：我的待办（卡片）/ 全部待办（表格行）——两区视觉必须不同、互不重用。 */
 	variant: "mine" | "others";
-	/** 快照：问动作权限（是不是我的 / 能不能认领），并取 host 下发的三个阈值做悬停解释。 */
-	board: BoardPayload | null;
 }): ReactNode {
-	const { t, row, variant, board } = props;
+	const { t, row, variant } = props;
 	const tone = toneOf(row);
-	const isTask = row.kind === "task";
-	const tags = (row.kind === "task" ? row.task.tags : row.record.tags) ?? [];
+	const tags = row.task.tags ?? [];
 
 	// 创建日期（第一行灰徽只给日期）。
-	const created =
-		row.kind === "task"
-			? (row.task.created ?? null)
-			: (row.record.created ?? null);
+	const created = row.task.created ?? null;
 	const createdDay =
 		created !== null && created !== undefined && Date.parse(created) >= 0
 			? formatDateTime(created).slice(0, 10)
@@ -99,8 +87,7 @@ export function TaskRowView(props: {
 			: formatDateTime(value, { seconds: true, fallback: t("timeUnknown") });
 	const dayText = (n: number | null | undefined): string =>
 		n === null || n === undefined ? t("daysNone") : t("daysValue", { n });
-	const detailTip = (which: Exclude<Tone, "closed">): string | undefined => {
-		if (row.kind !== "task") return undefined;
+	const detailTip = (which: Tone): string | undefined => {
 		const { task } = row;
 		const owner = displayName(task.owner_name, task.owner);
 		const who = owner === "" ? t("ownerUnclaimed") : `@${owner}`;
@@ -123,7 +110,7 @@ export function TaskRowView(props: {
 		return t("tipStale", { who, started, updated, d: dayText(task.idleDays) });
 	};
 	// 动作权限：**唯一**判定（用户 2026-10-18）——两区同一套，不许各判各的；本文件只按返回值画。
-	const actions = isTask ? resolveActions(row.task, board) : CLOSED_ACTIONS;
+	const actions = resolveActions(row.task);
 
 	// 动作钮：四个 + 查看，各一份（两区共用，不许各画一套）。
 	// 悬停说明统一走官方 Tooltip（portal 逃逸裁切、hover 即出），不在 CSS 里手搓 ::after 浮层。
@@ -178,10 +165,10 @@ export function TaskRowView(props: {
 	// 释放：官方 rc.2 无断链图标（已全量核实）⇒ 纯文字，不用叉
 	const releaseButton = tipBtn(null, "actionRelease", "tipRelease");
 
-	// 状态标签（五色实心块，用户 2026-10-18 定稿）：已结案没有在办状态 ⇒ 不摆；
-	// 三枚异常标签带 host 配置的阈值解释（没配就不解释，不编）。
-	const tagOf = (which: Exclude<Tone, "closed">, tip?: string): ReactNode => {
-		const text = statusLabel(which, t) ?? "";
+	// 状态标签（五色实心块，用户 2026-10-18 定稿）：
+	// 三枚异常标签带 skill 下发的阈值解释（没配就不解释，不编）。
+	const tagOf = (which: Tone, tip?: string): ReactNode => {
+		const text = statusLabel(which, t);
 		return h(Tag, {
 			key: which,
 			text,
@@ -189,17 +176,11 @@ export function TaskRowView(props: {
 			tip: tip ?? detailTip(which),
 		});
 	};
-	const markTones = isTask
-		? MARKS.filter((which) => row.task[which] === true)
-		: [];
+	const markTones = MARKS.filter((which) => row.task[which] === true);
 	// 异常标记全部摆出来；一个都没有 ⇒ 退回归属状态（待认领 / 进行中）那一枚
-	const statusTags =
-		tone === "closed"
-			? []
-			: (markTones.length > 0
-					? markTones
-					: [tone as Exclude<Tone, "closed">]
-				).map((which) => tagOf(which));
+	const statusTags = (
+		markTones.length > 0 ? markTones : [tone]
+	).map((which) => tagOf(which));
 	// 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）
 	const alarmTags = markTones.map((which) => tagOf(which));
 
@@ -236,13 +217,8 @@ export function TaskRowView(props: {
 
 	// ── 形态 B：全部待办 = 真表格行（无卡片、无外框，一行一格）──
 	if (variant === "others") {
-		// 已结案行没有「执行人」列 ⇒ 那格摆**创建人**（owner 会被交接改走，不是“创建于”的人）
-		const creator = isTask ? row.task.creator : row.record.creator;
-		const owner = isTask ? row.task.owner : null;
-		const creatorLabel = displayName(
-			isTask ? row.task.creator_name : row.record.creator_name,
-			creator,
-		);
+		const owner = row.task.owner;
+		const creatorLabel = displayName(row.task.creator_name, row.task.creator);
 		const hasOwner = !(owner === null || owner === undefined || owner === "");
 		const who = creatorLabel === "" ? "—" : `@${creatorLabel}`;
 		const createdOk =
@@ -250,11 +226,10 @@ export function TaskRowView(props: {
 		// 执行人的悬停提示（**只在名字被截断时才显示**，见 Tag）：全名 + **什么时候开始执行**
 		// （任务上的 started；没有就报「时间未知」，不编）
 		const startedOk =
-			isTask &&
 			row.task.started !== null &&
 			row.task.started !== undefined &&
 			Date.parse(row.task.started) >= 0;
-		const ownerName = displayName(isTask ? row.task.owner_name : null, owner);
+		const ownerName = displayName(row.task.owner_name, owner);
 		const ownerTip = t("startedAt", {
 			who: ownerName === "" ? "" : `@${ownerName}`,
 			when: startedOk
@@ -291,7 +266,7 @@ export function TaskRowView(props: {
 					hasOwner
 						? h(Tag, {
 								// owner 是 uuid：显示名优先，旧数据没有才退回 uuid
-								text: `@${displayName(isTask ? row.task.owner_name : null, owner)}`,
+								text: `@${displayName(row.task.owner_name, owner)}`,
 								tone: "person",
 								title: ownerTip,
 							})
@@ -330,28 +305,22 @@ export function TaskRowView(props: {
 
 	// ── 形态 A：我的待办 = 卡片（dispatch 任务配置卡同款）──
 	const parts: string[] = [];
-	if (isTask) {
-		const startRaw = row.task.started ?? row.task.created;
-		if (
-			startRaw !== undefined &&
-			startRaw !== null &&
-			startRaw !== "" &&
-			Date.parse(startRaw) >= 0
-		) {
-			parts.push(
-				`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`,
-			);
-		}
-		if (row.task.ageDays !== null && row.task.ageDays !== undefined) {
-			parts.push(
-				row.task.ageDays === 0
-					? t("ageToday")
-					: t("ageDaysText", { n: row.task.ageDays }),
-			);
-		}
-	} else {
+	const startRaw = row.task.started ?? row.task.created;
+	if (
+		startRaw !== undefined &&
+		startRaw !== null &&
+		startRaw !== "" &&
+		Date.parse(startRaw) >= 0
+	) {
 		parts.push(
-			`${t("fieldFinished")} ${formatDateTime(row.record.time || row.record.created || "", { fallback: t("timeUnknown") })}`,
+			`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`,
+		);
+	}
+	if (row.task.ageDays !== null && row.task.ageDays !== undefined) {
+		parts.push(
+			row.task.ageDays === 0
+				? t("ageToday")
+				: t("ageDaysText", { n: row.task.ageDays }),
 		);
 	}
 	return h(
@@ -372,9 +341,9 @@ export function TaskRowView(props: {
 						"span",
 						{
 							className: "dtl-wstag dtl-ellipsis",
-							title: row.kind === "task" ? row.task.workspace.title : "",
+							title: row.task.workspace.title,
 						},
-						row.kind === "task" ? row.task.workspace.title : "",
+						row.task.workspace.title,
 					),
 					tags.map((tag) => h(Tag, { key: tag, text: `#${tag}` })),
 				),

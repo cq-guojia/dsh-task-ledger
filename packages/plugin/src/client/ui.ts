@@ -19,12 +19,7 @@ import {
 	type PickerGroup,
 	Segmented as CoreSegmented,
 } from "dsh-plugin-core/ui";
-import {
-	type CSSProperties,
-	createElement as h,
-	type ReactNode,
-	useState,
-} from "react";
+import { type CSSProperties, createElement as h, type ReactNode } from "react";
 import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
 
 /** 条带卡（段头统计条）：直接用核心外观，不包第二层皮。 */
@@ -32,26 +27,22 @@ export { StripCard } from "dsh-plugin-core/ui";
 
 /** 基础层样式（tokens + 控件皮肤；幂等注入）。 */
 const UI_BASE_CSS = `
-/* 统计卡：可点、hover 淡蓝、选中蓝描边 */
+/* 统计卡：8 块（2×4）+ 右图表卡位 */
 .dtl-stat{display:flex;flex-direction:column;gap:var(--dtl-space-1);
   padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;}
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
 .dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
 
-/* 列表行：分组标题头仍走 .dtl-row-head（可点折叠）；任务行走 .dtl-taskrow（两行式，不可点） */
-.dtl-row-head{display:flex;align-items:center;gap:var(--dtl-space-2);
-  width:100%;padding:var(--dtl-space-2) var(--dtl-space-3);border:0;background:transparent;
-  color:inherit;font:inherit;text-align:left;cursor:pointer;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-row-head:hover{background:var(--dtl-card-hover);}
-.dtl-row-head:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+/* 统计区整体：左 8 块（2 行 × 4 列）+ 右图表卡，参考图同款分栏。
+   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
+   两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
+.dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
+.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:var(--dtl-space-3);}
+.dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
+@media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
+@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
-/* 其他待办 = **一组一张表**（用户 2026-10-18 照参考图 Stripe Payments：Pending / Archived /
-   Completed 各一组）：组标题是**独立一行**——透明无底、远离上一组、贴近自己的表，
-   文字加粗放大；表体照旧（行下一条线 + 极浅斑马纹）。 */
-/* 组与组**零外距**、连体（用户 2026-10-18：上间距去掉，和上面连在一起） */
-.dtl-group{margin-bottom:0;}
-/* 组标题（段头统计条）：改由核心 StripCard 承担（色条 / 底色 / 折叠 caret 全在 core） */
 /* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
    一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
 .dtl-orow{padding:13px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
@@ -70,7 +61,6 @@ const UI_BASE_CSS = `
 /* 执行人列（原状态列，用户 2026-10-18 互换）：稍放宽一档（用户 2026-10-19：原来有点挤），
    20 字的名字能基本摆全；再长由标签自己的省略号兜住，不许溢出压到右边的槽 */
 .dtl-tcell--status{flex:none;width:136px;}
-.dtl-tcell--status .dtl-tag{max-width:100%;}
 /* 悬停：**创建信息整条让位给操作钮**（用户 2026-10-18：不要「掉掉时分秒」那种半吊子，
    要整条换掉）。两个都**常驻布局**（visibility 切换、不用 display），格子宽度 = 两者较宽的
    那个 ⇒ hover 时行宽不变、**页面不跳**（跳了执行人的悬停提示就跟着飘） */
@@ -81,9 +71,6 @@ const UI_BASE_CSS = `
 .dtl-orow__actions{visibility:hidden;display:flex;align-items:center;gap:6px;}
 .dtl-orow:hover .dtl-orow__created{visibility:hidden;}
 .dtl-orow:hover .dtl-orow__actions{visibility:visible;}
-/* 「查看」钮在表格行里也要常驻布局（display:none 会不算宽度 ⇒ hover 一出就又把行撑开） */
-.dtl-orow .dtl-viewbtn{display:inline-flex;visibility:hidden;}
-.dtl-orow:hover .dtl-viewbtn{visibility:visible;}
 /* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=积压 / 橙=逾期 / 红=停滞；
    6px（用户 2026-10-18：8px 太大） */
 .dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
@@ -91,16 +78,7 @@ const UI_BASE_CSS = `
 .dtl-dot--backlog{background:var(--dtl-warning);}
 .dtl-dot--overdue{background:var(--dtl-overdue);}
 .dtl-dot--stale{background:var(--dtl-danger);}
-.dtl-dot--open,.dtl-dot--closed{background:var(--dtl-fg-3);}
-
-/* 「查看」钮：与行内动作钮（.dtl-minibtn）同款皮肤、**正方形（26×26，宽=高）**、
-   **默认不显、悬停才出来**（用户 2026-10-18：跟认领/继续那几个一起浮现） */
-.dtl-viewbtn{position:relative;display:none;align-items:center;justify-content:center;gap:5px;
-  flex:none;width:26px;height:26px;padding:0;border:1px solid var(--dtl-border);
-  border-radius:var(--dtl-radius-sm);background:var(--dtl-surface-1);color:var(--dtl-fg-2);
-  font:inherit;font-size:var(--dtl-font-sm);line-height:18px;white-space:nowrap;cursor:default;}
-.dtl-viewbtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
-.dtl-taskrow__row:hover .dtl-viewbtn,.dtl-orow:hover .dtl-viewbtn{display:inline-flex;}
+.dtl-dot--open{background:var(--dtl-fg-3);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -116,7 +94,7 @@ const UI_BASE_CSS = `
 .dtl-rail--backlog{background:var(--dtl-warning);}
 .dtl-rail--overdue{background:var(--dtl-overdue);}
 .dtl-rail--stale{background:var(--dtl-danger);}
-.dtl-rail--open,.dtl-rail--closed{background:var(--dtl-fg-3);}
+.dtl-rail--open{background:var(--dtl-fg-3);}
 
 /* 第一行：标题（上来就是标题）+ [YYYY-MM-DD 创建] 灰徽 + 异常 pill（baseline 对齐，dispatch 同款） */
 .dtl-taskrow__l1{display:flex;align-items:baseline;gap:6px;min-width:0;}
@@ -133,27 +111,8 @@ const UI_BASE_CSS = `
 .dtl-taskrow__row:hover .dtl-taskrow__when{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
 
-/* 标签（用户 2026-10-18）：状态 / 执行人 / #标签 **共用一枚件**，只换色调。
-   最大宽度 20ch（≈10 个中文或 20 个字符）⇒ 名字上限 20 字；超出**省略号（3 个点）**，
-   悬停把全名补出来（用户 2026-10-19：不跑马灯了）。**没被截 ⇒ 悬停无反应**
-   （提示由 Tag 元件按实际宽度决定挂不挂，这里只管裁切）。 */
-.dtl-tag{display:inline-block;flex:none;max-width:20ch;padding:0 6px;border-radius:999px;
-  background:var(--dtl-chip-bg);color:var(--dtl-fg-3);font-size:10px;line-height:16px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
-/* 状态四色 = **实心色块**（用户 2026-10-18：彩色字看不清 ⇒ 改色块 + 反色字）：
-   待认领灰 / 进行中蓝 / 积压黄 / 逾期橙 / 停滞红（与行首圆点同色系）。
-   红黄蓝都是中调 ⇒ 白字两个主题都可读；灰块用「字色底 + 面色字」⇒ 明暗自动反过来 */
-.dtl-tag--open{background:var(--dtl-fg-3);color:var(--dtl-surface-1);font-weight:600;}
-.dtl-tag--doing{background:var(--dtl-business);color:var(--dtl-on-signal);font-weight:600;}
-.dtl-tag--backlog{background:var(--dtl-warning);color:var(--dtl-on-signal);font-weight:600;}
-.dtl-tag--overdue{background:var(--dtl-overdue);color:var(--dtl-on-signal);font-weight:600;}
-.dtl-tag--stale{background:var(--dtl-danger);color:var(--dtl-on-signal);font-weight:600;}
-/* 执行人：浅蓝底（与状态色区分：状态是「事怎么样」，人是「谁在做」） */
-.dtl-tag--person{background:var(--dtl-open-bg-soft);color:var(--dtl-fg-2);}
 /* 用核心 Chip 承担标签时的截断（core Chip 无 max-width/省略号 ⇒ 这里只补布局，不改皮肤） */
 .dshpc-chip.dtl-tagchip{display:inline-block;flex:none;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;}
-/* 分区标题里的计数：与日期徽同款中括号小字（用户 2026-10-17）；0 条不渲染 */
-.dtl-count{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 
 /* 工作区徽标：只铺蓝底（用户 2026-10-17：描边框太抢 ⇒ 去掉；底色已提亮一档见 tokens.ts
    business-soft 8%→14% / 5%→12%），字色回正文。 */
@@ -161,80 +120,11 @@ const UI_BASE_CSS = `
   background:var(--dtl-business-soft);color:var(--dtl-fg);
   font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;}
 
-/* 行内动作按钮（icon + 字，加大；悬停说明走官方 Tooltip，不在 CSS 里手搓浮层）。
-   样子先行，点击行为归「任务按钮与会话交接」任务 */
-.dtl-minibtn{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
-  border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);color:var(--dtl-fg-2);font:inherit;font-size:var(--dtl-font-sm);
-  line-height:18px;white-space:nowrap;cursor:default;}
-.dtl-minibtn:hover{border-color:var(--dtl-border-strong);color:var(--dtl-fg);}
-
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
 .dtl-empty-guide{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:var(--dtl-space-2);min-height:270px;padding:var(--dtl-space-4);text-align:center;
   border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
-.dtl-empty-filtered{padding:var(--dtl-space-4) 0;color:var(--dtl-fg-3);font-size:var(--dtl-font-md)}
-
-/* 浮标角标：0→n 跳变时一次脉冲，不自动消失 */
-.dtl-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;
-  border-radius:8px;background:var(--dtl-danger);color:var(--dtl-on-signal);
-  font-size:10px;line-height:16px;text-align:center;font-weight:600;}
-.dtl-badge[data-pulse="true"]{animation:dtl-pulse 900ms var(--dtl-ease) 1}
-@keyframes dtl-pulse{0%{transform:scale(.6);opacity:.4}60%{transform:scale(1.15)}100%{transform:scale(1)}}
-
-/* 统计区整体：左 8 块（2 行 × 4 列）+ 右趋势图，参考图同款分栏。
-   ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
-   两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
-/* 左 8 块略收窄、右图表略放宽（用户 2026-10-17：左再短一丢丢、右长一丢丢） */
-.dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
-.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
-  gap:var(--dtl-space-3);}
-.dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
-@media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
-@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
-
-/* 「只看我的」小复选框（替掉右上角的分段切换） */
-.dtl-check{display:inline-flex;align-items:center;gap:5px;height:20px;margin-top:-2px;
-  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);cursor:pointer;user-select:none;white-space:nowrap;}
-.dtl-check input{width:12px;height:12px;margin:0;accent-color:var(--dtl-business);cursor:pointer;}
-.dtl-check:hover{color:var(--dtl-fg-2);}
-
-/* 趋势分组柱状图：绘图区高度**随卡拉伸**（flex），柱 / 刻度 / 网格全用百分比 ⇒ 与卡等高 */
-.dtl-gchart-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding-left:30px;padding-bottom:18px;}
-.dtl-gchart{position:relative;flex:1 1 auto;min-height:96px;border-bottom:1px solid var(--dtl-border);}
-.dtl-gchart__grid{position:absolute;left:0;right:0;border-top:1px solid var(--dtl-border-faint);pointer-events:none;}
-.dtl-gchart__ytick{position:absolute;left:-30px;width:26px;text-align:right;font-size:10px;line-height:12px;
-  color:var(--dtl-fg-3);transform:translateY(50%);font-variant-numeric:tabular-nums;}
-.dtl-gchart__col{position:absolute;top:0;bottom:0;min-width:0;}
-/* ⚠️ pair 必须 top/bottom 双锚（或 height:100%）：绝对定位 + 只给 bottom 时高度是 auto，
-   子元素的 height:% 没有可解析的包含块 ⇒ 整根柱子塌成 0（2026-10-17 真机教训：
-   改百分比柱高后「一个柱子都看不见，只剩数字」）。 */
-.dtl-gchart__pair{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);
-  display:flex;align-items:flex-end;gap:1px;}
-/* 三柱：完成(蓝) / 没完成(琥珀) / 新增(灰)，每根 5px、无圆角（用户 2026-10-17：太粗、不要圆弧） */
-.dtl-gchart__bar{width:5px;min-height:0;}
-.dtl-gchart__bar--done{background:var(--dtl-business);}
-.dtl-gchart__bar--remaining{background:var(--dtl-chart-remaining);}
-.dtl-gchart__bar--created{background:var(--dtl-chart-created);}
-/* hover：整列三根柱一起提亮（用户 2026-10-17：移上去应该两个都变色，不是只蓝的一根） */
-.dtl-gchart__col:hover .dtl-gchart__bar{filter:brightness(1.18);}
-.dtl-gchart__val{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:12px;
-  color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
-.dtl-gchart__label{position:absolute;left:0;right:0;bottom:-16px;text-align:center;
-  font-size:10px;line-height:14px;color:var(--dtl-fg-3);white-space:nowrap;}
-/* hover 浮卡（参考图同款：日期 + 两个数；原生 title 太慢、长相不一） */
-.dtl-gchart__tip{position:absolute;top:0;z-index:2;min-width:104px;box-sizing:border-box;
-  padding:6px 8px;border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);box-shadow:var(--dtl-shadow-2);
-  font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);pointer-events:none;}
-.dtl-gchart__tip b{display:block;color:var(--dtl-fg);font-weight:600;}
-.dtl-gchart__tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
-.dtl-gchart-legend{display:flex;align-items:center;gap:var(--dtl-space-3);font-size:var(--dtl-font-xs);color:var(--dtl-fg-2);}
-.dtl-gchart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
-
-/* 过程正文：宽度受限、长行折行 */
-.dtl-worklog{max-width:72ch;font-size:var(--dtl-font-md);line-height:1.6}
 `;
 
 const STYLE_ID = "dtl-ui-base";
@@ -510,15 +400,12 @@ export function Tag(props: {
 	});
 }
 
-/** 空态：`guide` = 真空引导卡（虚线），`filtered` = 筛选空小字。 */
+/** 空态：真空引导卡（虚线）。 */
 export function EmptyState(props: {
-	tone: "guide" | "filtered";
 	title: string;
 	hint?: string;
 }): ReactNode {
 	ensureUiBase();
-	if (props.tone === "filtered")
-		return h("div", { className: "dtl-empty-filtered" }, props.title);
 	return h(
 		"div",
 		{ className: "dtl-empty-guide" },
@@ -565,201 +452,5 @@ export function LedgerIcon(props: { size?: number }): ReactNode {
 		}),
 		h("path", { d: "M50 22 V46 M78 22 V46", ...stroke }),
 		h("path", { d: "M44 66 H84 M44 86 H70", ...stroke }),
-	);
-}
-
-/* ── 趋势分组柱状图 ───────────────────────────────────────────────────── */
-
-/** 一周三根柱（完成 / 没完成 / 新增）。 */
-export interface GroupedBarWeek {
-	/** 轴标签（MM-DD）。 */
-	readonly label: string;
-	readonly done: number;
-	readonly remaining: number;
-	readonly created: number;
-	/** 悬停文案。 */
-	readonly title: string;
-}
-
-/** 千位压缩（1.2k / 12k）：y 轴刻度与柱顶数值用，避免 4 位数把刻度挤宽。 */
-function compactCount(value: number): string {
-	if (value >= 10_000) return `${Math.round(value / 1000)}k`;
-	if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
-	return String(value);
-}
-
-/** 分组柱状图（div 柱，无新依赖）：完成（蓝）/ 没完成（琥珀）/ 新增（灰）各一细柱。
- *  - 高度全用百分比 ⇒ 绘图区随卡片拉伸，图表卡与左边 8 块**完全等高**；
- *  - y 轴三档刻度 + 淡网格线；柱顶只标「完成」（3 系列 × 8 周数值会糊成一片）；
- *  - hover 整列提亮 + 浮卡（日期 + 三个数）——原生 title 太慢；
- *  - **没有**均值线与长注释（用户 2026-10-17：均值不要、注释太长不要）。 */
-export function GroupedBarChart(props: {
-	weeks: readonly GroupedBarWeek[];
-	ariaLabel: string;
-	doneLabel: string;
-	remainingLabel: string;
-	createdLabel: string;
-}): ReactNode {
-	ensureUiBase();
-	const [hover, setHover] = useState<number | null>(null);
-	const top = Math.max(
-		1,
-		props.weeks.reduce(
-			(peak, week) => Math.max(peak, week.done, week.remaining, week.created),
-			0,
-		),
-	);
-	const ticks = [0, top / 2, top];
-	const pct = (value: number): string => `${(value / top) * 100}%`;
-	const columnStyle = (index: number): Record<string, string | number> => ({
-		left: `${(index / props.weeks.length) * 100}%`,
-		right: `${((props.weeks.length - index - 1) / props.weeks.length) * 100}%`,
-	});
-	// 浮卡定位：贴边两列向内收，其余居中（否则溢出图表卡）
-	const tipStyle = (index: number): Record<string, string | number> => {
-		if (index <= 1) return { left: 0 };
-		if (index >= props.weeks.length - 2) return { right: 0 };
-		return {
-			left: `${((index + 0.5) / props.weeks.length) * 100}%`,
-			transform: "translateX(-50%)",
-		};
-	};
-	return h(
-		"div",
-		{ className: "dtl-gchart-wrap" },
-		h(
-			"div",
-			{
-				className: "dtl-gchart",
-				role: "img",
-				"aria-label": props.ariaLabel,
-				onMouseLeave: () => {
-					setHover(null);
-				},
-			},
-			ticks.map((tick) =>
-				h("div", {
-					key: `grid-${String(tick)}`,
-					className: "dtl-gchart__grid",
-					style: { bottom: pct(tick) },
-				}),
-			),
-			ticks.map((tick) =>
-				h(
-					"span",
-					{
-						key: `tick-${String(tick)}`,
-						className: "dtl-gchart__ytick",
-						style: { bottom: pct(tick) },
-					},
-					compactCount(Math.round(tick)),
-				),
-			),
-			props.weeks.map((week, index) =>
-				h(
-					"div",
-					{
-						key: week.label,
-						className: "dtl-gchart__col",
-						style: columnStyle(index),
-						onMouseEnter: () => {
-							setHover(index);
-						},
-					},
-					h(
-						"div",
-						{ className: "dtl-gchart__pair" },
-						h("span", {
-							className: "dtl-gchart__bar dtl-gchart__bar--done",
-							style: {
-								height: pct(week.done),
-								minHeight: week.done > 0 ? "2px" : undefined,
-							},
-						}),
-						h("span", {
-							className: "dtl-gchart__bar dtl-gchart__bar--remaining",
-							style: {
-								height: pct(week.remaining),
-								minHeight: week.remaining > 0 ? "2px" : undefined,
-							},
-						}),
-						h("span", {
-							className: "dtl-gchart__bar dtl-gchart__bar--created",
-							style: {
-								height: pct(week.created),
-								minHeight: week.created > 0 ? "2px" : undefined,
-							},
-						}),
-					),
-					week.done === 0
-						? null
-						: h(
-								"span",
-								{
-									className: "dtl-gchart__val",
-									style: { bottom: `calc(${pct(week.done)} + 3px)` },
-								},
-								String(week.done),
-							),
-					h("span", { className: "dtl-gchart__label" }, week.label),
-				),
-			),
-			hover === null
-				? null
-				: h(
-						"div",
-						{ className: "dtl-gchart__tip", style: tipStyle(hover) },
-						h("b", null, props.weeks[hover].title),
-						h(
-							"div",
-							null,
-							h("i", { style: { background: "var(--dtl-business)" } }),
-							`${props.doneLabel} ${props.weeks[hover].done}`,
-						),
-						h(
-							"div",
-							null,
-							h("i", { style: { background: "var(--dtl-chart-remaining)" } }),
-							`${props.remainingLabel} ${props.weeks[hover].remaining}`,
-						),
-						h(
-							"div",
-							null,
-							h("i", { style: { background: "var(--dtl-chart-created)" } }),
-							`${props.createdLabel} ${props.weeks[hover].created}`,
-						),
-					),
-		),
-	);
-}
-
-/** 图例（完成 / 没完成 / 新增 三个色块）。 */
-export function ChartLegend(props: {
-	doneLabel: string;
-	remainingLabel: string;
-	createdLabel: string;
-}): ReactNode {
-	ensureUiBase();
-	return h(
-		"div",
-		{ className: "dtl-gchart-legend" },
-		h(
-			"span",
-			null,
-			h("i", { style: { background: "var(--dtl-business)" } }),
-			props.doneLabel,
-		),
-		h(
-			"span",
-			null,
-			h("i", { style: { background: "var(--dtl-chart-remaining)" } }),
-			props.remainingLabel,
-		),
-		h(
-			"span",
-			null,
-			h("i", { style: { background: "var(--dtl-chart-created)" } }),
-			props.createdLabel,
-		),
 	);
 }

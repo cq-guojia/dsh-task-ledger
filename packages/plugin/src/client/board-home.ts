@@ -491,7 +491,6 @@ export function BoardHome(props: {
 					? h("div", { style: hintStyle }, t("filterPending"))
 					: view.rows.length === 0
 						? h(EmptyState, {
-								tone: "guide",
 								title: t("listEmpty"),
 								hint: t("listEmptyHint"),
 							})
@@ -504,7 +503,6 @@ export function BoardHome(props: {
 										t,
 										row,
 										variant: "mine",
-										board,
 									}),
 								),
 							),

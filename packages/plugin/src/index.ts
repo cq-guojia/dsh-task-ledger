@@ -46,13 +46,9 @@ export function apply(ctx: PluginContext): void {
 		}
 		registerRoutes(webServer, { registry });
 		console.info(
-			"[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/stats）",
+			"[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot）",
 		);
 	});
-
-	// ── 写端点与会话交接本轮停用（2026-10-28） ──
-	// 界面只剩首屏 8 个统计卡：认领 / 释放 / 结束任务没有入口，端点不注册，
-	// 免得对外暴露没人用的写通道。接回时按 skill 方法重写（见 host/routes.ts 底部注释）。
 
 	// ── skill 全局注册（任务 2） ──
 	// unscoped 注册落全局层，模型可 load；disposer 随插件 dispose 自动注销。
