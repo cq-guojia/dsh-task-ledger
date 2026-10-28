@@ -141,6 +141,9 @@ window.__ModuleLoader__.load({
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/controls/datetime-css.generated.js
 		const DATETIME_CSS = "/* 日期时间选择器（DateTimePicker）。类名 dshpc-dt-*；配色只吃 token，明暗随 token 切换。\n   结构：触发器（range = 一个整条：两个日期区 + 样式画的灰隔条；single = 单日期）→ 浮层\n   （两个独立端框 + 两块独立日历 + 底部动作）。\n   浮层行为与 Picker 一致：portal 到 body、贴边翻转、点外关闭、无遮罩。 */\n.dshpc-dt{position:relative;display:inline-block;font-size:13px;line-height:20px}\n.dshpc-dt__trigger{\n  display:inline-flex;align-items:center;justify-content:space-between;gap:6px;\n  max-width:100%;height:var(--dshpc-control-h-md);padding:0 8px;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-1);\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);cursor:pointer;\n}\n.dshpc-dt__trigger--sm{height:var(--dshpc-control-h-sm);font-size:12px}\n.dshpc-dt__trigger--lg{height:var(--dshpc-control-h-lg)}\n.dshpc-dt__trigger:disabled{color:var(--dshpc-fg-dim);cursor:not-allowed;opacity:.7}\n/* 焦点与基础 Input 完全同款（点击即蓝描边 + 1px 光环）。 */\n.dshpc-dt__trigger:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus)}\n.dshpc-dt__trigger-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;font-variant-numeric:tabular-nums}\n.dshpc-dt__trigger-label--empty{color:var(--dshpc-fg-dim)}\n.dshpc-dt__cal{flex:none;color:var(--dshpc-fg-3)}\n/* range 触发器：一个整条里两个日期区 + 样式画出来的灰隔条（左右两条竖边），点整条都展开。 */\n/* 组撑满触发器内容高度，隔条才能上下顶到 border。 */\n.dshpc-dt__pair-group{flex:1 1 auto;min-width:0;align-self:stretch;display:flex;align-items:center;gap:8px}\n/* 两个日期区平分（flex:1 1 0）：开始 / 结束永远一样宽，不随内容偏袒。 */\n.dshpc-dt__pair-date{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}\n.dshpc-dt__pair-date--empty{color:var(--dshpc-fg-dim)}\n/* 隔条：上下顶到触发器 border（与边框连起来），中间隔出一块；块里放「到」的符号（-，用户 2026-10-24 拍板）。 */\n.dshpc-dt__pair-sep{\n  flex:none;align-self:stretch;width:22px;margin:0;\n  display:inline-flex;align-items:center;justify-content:center;\n  background:var(--dshpc-surface-sunken);\n  border-left:1px solid var(--dshpc-border);border-right:1px solid var(--dshpc-border);\n  color:var(--dshpc-fg-3);font-size:12px;line-height:1;\n}\n/* 默认宽：**固定**（选中前后不变），数值对照参考图实测（2x 屏，换算 CSS px）后\n   统一 -6px（用户 2026-10-24：实测值留得偏多）：\n   单值 day 128 / 时·分 153.2 / 秒 174.8；区间 day 269 / 分 341.4 / 秒 377.6。\n   ch = 字体里 \"0\" 的宽（日期 tabular-nums 等宽）⇒ 写成 Nch + 常数；常数同时兜住\n   默认占位「请选择日期时间」（7 汉字）不省略。调用方要另给宽：className 传 width。 */\n.dshpc-dt__trigger--w-day{width:calc(10ch + 56px)}\n.dshpc-dt__trigger--w-minute{width:calc(16ch + 38px)}\n.dshpc-dt__trigger--w-second{width:calc(19ch + 38px)}\n.dshpc-dt__trigger--wr-day{width:calc(20ch + 125px)}\n.dshpc-dt__trigger--wr-minute{width:calc(32ch + 111px)}\n.dshpc-dt__trigger--wr-second{width:calc(38ch + 104px)}\n\n.dshpc-dt__pop{\n  z-index:60;padding:10px;user-select:none;\n  font-size:13px;line-height:20px;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border);\n  border-radius:var(--dshpc-radius-md);box-shadow:0 8px 24px rgba(15,23,42,.12);\n}\n/* 两个独立端框（range）：点哪个哪个成为当前编辑端，互不联动、只是排在一起。 */\n.dshpc-dt__ends{display:flex;gap:6px;margin-bottom:8px}\n.dshpc-dt__end{\n  flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;padding:4px 8px;\n  text-align:left;background:var(--dshpc-surface-1);\n  border:1px solid var(--dshpc-border-faint);border-radius:var(--dshpc-radius-sm);cursor:pointer;\n}\n.dshpc-dt__end--active{border-color:var(--dshpc-business);background:var(--dshpc-open-bg)}\n.dshpc-dt__end:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n.dshpc-dt__end-label{flex:none;font-size:11px;line-height:16px;color:var(--dshpc-fg-3);white-space:nowrap}\n.dshpc-dt__end-value{font-size:12px;line-height:18px;color:var(--dshpc-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}\n.dshpc-dt__end-value--empty{color:var(--dshpc-fg-dim)}\n\n.dshpc-dt__nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}\n.dshpc-dt__nav-group{display:flex;gap:2px}\n.dshpc-dt__nav-btn{\n  display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;\n  color:var(--dshpc-fg-2);background:none;border:0;border-radius:var(--dshpc-radius-sm);cursor:pointer;\n}\n.dshpc-dt__nav-btn:hover{background:var(--dshpc-surface-sunken);color:var(--dshpc-fg)}\n.dshpc-dt__nav-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-1px}\n.dshpc-dt__caption{font-size:13px;font-weight:600;color:var(--dshpc-fg);white-space:nowrap}\n\n.dshpc-dt__grid{display:grid;grid-template-columns:repeat(7,30px);gap:2px}\n.dshpc-dt__wd{height:20px;font-size:11px;line-height:20px;color:var(--dshpc-fg-3);text-align:center}\n.dshpc-dt__cell{\n  height:26px;padding:0;font-size:12px;font-variant-numeric:tabular-nums;\n  color:var(--dshpc-fg);background:none;border:0;border-radius:var(--dshpc-radius-sm);cursor:pointer;\n}\n.dshpc-dt__cell:hover{background:var(--dshpc-surface-sunken)}\n.dshpc-dt__cell:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-1px}\n.dshpc-dt__cell--out{color:var(--dshpc-fg-dim)}\n.dshpc-dt__cell--today{color:var(--dshpc-business);font-weight:600}\n/* 起 / 止端：品牌蓝实面反白（与 Segmented weekday 选中同口径）。 */\n.dshpc-dt__cell--sel{background:var(--dshpc-business);color:var(--dshpc-fg-inverse);font-weight:600}\n.dshpc-dt__cell--sel:hover{background:var(--dshpc-business-hover)}\n\n/* 两块日历面板（range：左开始、右结束，各选各的）。 */\n.dshpc-dt__panels{display:flex;gap:14px;align-items:flex-start}\n.dshpc-dt__panel{display:flex;flex-direction:column;gap:6px}\n\n.dshpc-dt__time{display:flex;align-items:flex-end;justify-content:center;gap:4px;margin-top:2px;padding-top:8px;border-top:1px solid var(--dshpc-border-faint)}\n.dshpc-dt__unit{display:flex;flex-direction:column;align-items:center;gap:2px}\n.dshpc-dt__unit-label{font-size:10px;line-height:14px;color:var(--dshpc-fg-3)}\n.dshpc-dt__step-btn{\n  display:inline-flex;align-items:center;justify-content:center;width:34px;height:14px;padding:0;\n  color:var(--dshpc-fg-2);background:none;border:0;border-radius:var(--dshpc-radius-sm);cursor:pointer;\n}\n.dshpc-dt__step-btn:hover{background:var(--dshpc-surface-sunken);color:var(--dshpc-fg)}\n.dshpc-dt__step-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-1px}\n.dshpc-dt__step-val{\n  width:34px;height:24px;padding:0;box-sizing:border-box;text-align:center;\n  font-size:13px;font-variant-numeric:tabular-nums;color:var(--dshpc-fg);\n  background:var(--dshpc-surface-sunken);border:1px solid var(--dshpc-border-faint);\n  border-radius:var(--dshpc-radius-sm);outline:none;\n}\n.dshpc-dt__step-val:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus)}\n.dshpc-dt__step-val:disabled{color:var(--dshpc-fg-dim);cursor:not-allowed}\n.dshpc-dt__sep{padding-bottom:5px;color:var(--dshpc-fg-3);font-size:12px}\n\n.dshpc-dt__foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--dshpc-border-faint)}\n.dshpc-dt__foot-side{display:flex;align-items:center;gap:6px}\n.dshpc-dt__warn{font-size:11px;color:var(--dshpc-warning-label);white-space:nowrap}\n";
 		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/controls/split-group-css.generated.js
+		const SPLIT_GROUP_CSS = "\n/* ── 拼接外壳 SplitGroup ──────────────────────────────────────────────\n   职责只有一条：把两个控件在外观上焊成一体（外框 / 圆角 / 中间 1px 分隔 / 整体聚焦圈）。\n   它**不持状态、不出联动回调** —— 选中与联动全走内件自己的 value / onChange\n   （用户 2026-10-28 拍板：外壳不必知道右边那个下拉管什么）。\n\n   ⚠️ 与内件类名有意耦合：内件是 Picker / Segmented 时由下面几条规则把它们自己的\n   边框 / 底色 / 圆角交出来，由外壳统一画。内件改名或改结构要同步改这里，\n   否则会出现双边框、双底色。\n\n   高度不写死：内件自己按 size 档（sm 24 / md 28 / lg 32）撑开，外壳跟着长。\n   两格要等高，就给内件传**同一个 size**。万一两格 size 不一致，外壳内件用 align-items:center\n   居中（不会顶对齐露白，用户 2026-10-28 截图反馈「本月偏上」后的处理）；**别用 height:100%**，\n   它会覆盖三档高度（与 --lg/--sm 同特异性且注入更晚）。\n\n   左格统一灰底（用户 2026-10-28 拍板）：滑块保留自己的灰轨，左格下拉把底色换成\n   surface-sunken；右格保持原样。层次感 = 左格是「档位/范围」，右格是「值」。 */\n   .dshpc-split{display:inline-flex;align-items:stretch;max-width:100%;overflow:hidden;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n   /* 两格宽度都由内容给；容器再窄也让内件自己省略，不让外壳被撑破 */\n   .dshpc-split > *{min-width:0;max-width:100%;}\n   /* 分隔：相邻兄弟的左描边，不额外插 DOM，hover / focus 时也不会断 */\n   .dshpc-split > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n   /* 整体聚焦：内件自己的外圈交出来，由外壳画一整圈（内件各自画会变成格内半圈） */\n   .dshpc-split:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n   /* Picker：去掉自身外框与底色；display 改成 flex，消掉 inline-block 行盒带来的基线间隙。\n      注意**不能用 height:100%**：它会和 .dshpc-picker__trigger--lg / --sm 同特异性（都是两个类），\n      且 split-group.css 在 picker.css 之后注入，会把三档高度全吃掉（md/lg 看起来一样大）。\n      改用 align-items:center —— 同 size 时两格自然等高的同时文字垂直居中；万一两格 size 不一致，\n      较矮的格也只是居中、不会顶对齐露白。 */\n   .dshpc-split .dshpc-picker{display:flex;align-items:center;}\n   .dshpc-split .dshpc-picker__trigger{border:0;border-radius:0;background:transparent;}\n   .dshpc-split .dshpc-picker__trigger:focus-visible{outline:0;}\n   /* 左格下拉：灰底（滑块的灰轨是它自己的 --dshpc-seg-track，不在这里覆盖） */\n   .dshpc-split > :first-child .dshpc-picker__trigger{background:var(--dshpc-surface-sunken);}\n   /* Segmented：只去外圆角与描边，灰轨保留；padding 保持 3px 不动 —— 它是高度契约的一部分\n    （3 + item + 3 = control-h）。bordered 那档去掉描边、把让给描边的 1px 还回 padding，\n    否则会比右边矮 2px。 */\n   .dshpc-split .dshpc-seg{border-radius:0;border:0;}\n   .dshpc-split .dshpc-seg--bordered{padding:3px;}\n";
+		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/marquee-css.generated.js
 		const MARQUEE_CSS = "/* 跑马灯（MarqueeText）：双层——外层只裁剪，内层才 transform 滚动；非 hover 内层自带省略号。\n   2026-10-20：本文件原是杂烩「select.css」（下拉 / 日历 / 时分的皮肤都装过），随着那些控件\n   一个个删完，最后只剩跑马灯，故按本包「一个 css 服务一个对象」的格局改名归档。\n   同批清掉的还有零引用的省略号类 .dshpc-ellipsis —— 本包三个用到截断的地方都没采纳它。 */\n.dshpc-mq{display:block;overflow:hidden;white-space:nowrap;}\n.dshpc-mq .dshpc-mq-in{display:inline-block;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top;}\n/* ⚠️ 跑法（用户 2026-10-03 拍板）：**跑一遍、停在尾字**（播放 1 次 + forwards），不来回弹、不无限跑。\n   滚距 = 精确溢出量 ⇒ 停下时最后一个字正好贴右缘，**不会跑进黑块**（黑块是旧手写版把\n   内层盒子裁了、按「半截文本」平移导致的）。鼠标移开 ⇒ :hover 失效 ⇒ 自动复位回省略号态。 */\n.dshpc-mq-run:hover .dshpc-mq-in{max-width:none;overflow:visible;animation:dshpc-mq-scroll var(--dshpc-mq-dur,6s) linear .4s 1 forwards;}\n@keyframes dshpc-mq-scroll{from{transform:translateX(0)}to{transform:translateX(var(--dshpc-mq-dist,-40px))}}\n/* 溢出渐影（用户 2026-10-24 拍板「左右稍微有点渐影」；官方口径 = dsh-client-ui-primitives@0.2.1-rc.2\n   PathLabel.module.css:13-15：mask-image 线性渐隐 + 28px 随官方）。⚠️ 只在 **hover 滚动态** 加：\n   静态态（三个点）不要渐影（用户 2026-10-24 二次拍板），hover 滚动时两端渐影——左缘柔化被裁的文字头。 */\n.dshpc-mq-run:hover{mask-image:linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);}\n";
 		//#endregion
@@ -190,7 +193,8 @@ window.__ModuleLoader__.load({
 			CHIP_CSS,
 			MARQUEE_CSS,
 			PANEL_DOCK_CSS,
-			CODE_VIEWER_CSS
+			CODE_VIEWER_CSS,
+			SPLIT_GROUP_CSS
 		].join("\n");
 		/**
 		* 当前插件的样式设施。
@@ -5327,16 +5331,27 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region src/client/format.ts
-		/**
-		* 客户端时间口径**单源**：补零 / 时刻串（本机时区）。
-		* 解析失败按调用方给的兜底返回（不编造时间）。
-		*
-		* 2026-10-17 改版后首页不再做时间范围过滤（时间只作用于统计卡与趋势图，由 host 聚合）
-		* ⇒ 原来的 `rangeToDates` / `withinRange` / `RangeKey` 一并删除；统计 tab 要做时间筛选时
-		* 按当时口径在此重建，别处不许再写一份。
-		*/
 		function pad2(value) {
 			return String(value).padStart(2, "0");
+		}
+		/**
+		* 相对时间（GitHub 口径，用户 2026-10-28）：<1 分钟「刚刚」、<1 小时「N 分钟前」、
+		* <24 小时「N 小时前」、<30 天「N 天前」、<12 个月「N 个月前」，再往上「N 年前」；
+		* 未来时间（时钟漂移 / 服务端超前）一律按「刚刚」，不出现「-3 分钟前」。
+		*/
+		function formatRelative(iso, t) {
+			const ms = Date.parse(iso);
+			if (Number.isNaN(ms)) return t("timeUnknown");
+			const mins = Math.floor((Date.now() - ms) / 6e4);
+			if (mins < 1) return t("relJustNow");
+			if (mins < 60) return t("relMinutes", { n: mins });
+			const hours = Math.floor(mins / 60);
+			if (hours < 24) return t("relHours", { n: hours });
+			const days = Math.floor(hours / 24);
+			if (days < 30) return t("relDays", { n: days });
+			const months = Math.floor(days / 30);
+			if (months < 12) return t("relMonths", { n: months });
+			return t("relYears", { n: Math.floor(months / 12) });
 		}
 		/** ISO → `YYYY-MM-DD HH:mm`（`seconds: true` 时补 `:ss`）；解析失败返回 `fallback`（缺省原串）。 */
 		function formatDateTime(iso, opts) {
@@ -53223,7 +53238,8 @@ window.__ModuleLoader__.load({
 				keyword: "",
 				owner: ""
 			},
-			refreshing: false
+			refreshing: false,
+			extraOwners: []
 		};
 		const listeners = /* @__PURE__ */ new Set();
 		/** 首读只触发一次（谁先订阅谁触发），之后一律靠 `refresh()`。 */
@@ -53282,6 +53298,24 @@ window.__ModuleLoader__.load({
 				...patch
 			} });
 		}
+		/**
+		* 行内点人名 = 选中下拉里的这个人（用户 2026-10-28）。
+		* 名册里没有他的人（被删 / 别的机器加的）照样能筛：顺手补进下拉候选，
+		* 所以「先看有没有」不用在这里判，合并候选时去重即可。
+		*/
+		function focusOwner(uuid, name) {
+			if (uuid === "") return;
+			set({
+				extraOwners: state.extraOwners.some((owner) => owner.uuid === uuid) ? state.extraOwners : [...state.extraOwners, {
+					uuid,
+					name
+				}],
+				query: {
+					...state.query,
+					owner: uuid
+				}
+			});
+		}
 		//#endregion
 		//#region src/client/tokens.ts
 		/**
@@ -53312,6 +53346,8 @@ body{
   --dtl-fg-2:var(--dsw-alias-label-secondary,#5c6370);
   --dtl-fg-3:var(--dsw-alias-label-tertiary,#767d87);
   --dtl-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);
+  /* 实色面上的字（工作区徽标这种铺满 business 的） */
+  --dtl-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);
 
   /* ── 面 ──────────────────────────────────────────────────────── */
   --dtl-surface-1:var(--dsw-alias-bg-layer-1,#fff);
@@ -53323,6 +53359,8 @@ body{
   /* ── 语义色 ──────────────────────────────────────────────────── */
   /* 蓝色强调 / 选中 / 焦点一律走这条 */
   --dtl-business:var(--dsw-alias-state-business-primary,#3b5bdb);
+  /* 绿：进行中（用户 2026-10-28：进行中不要蓝，用绿） */
+  --dtl-success:var(--dsw-alias-state-success-primary,#22c55e);
   /* ⚠️ 宿主是 state-warn（不是 state-warning，后者无此定义） */
   --dtl-warning:var(--dsw-alias-state-warn-primary,#f59e0b);
   --dtl-danger:var(--dsw-alias-state-error-primary,#ec1313);
@@ -53434,7 +53472,7 @@ body[data-ds-dark-theme]{
 
 /* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
 .dtl-rail{display:inline-block;width:6px;height:36px;flex:none;border-radius:var(--dtl-radius-xs);}
-.dtl-rail--doing{background:var(--dtl-business);}
+.dtl-rail--doing{background:var(--dtl-success);}
 .dtl-rail--backlog{background:var(--dtl-warning);}
 .dtl-rail--overdue{background:var(--dtl-overdue);}
 .dtl-rail--stale{background:var(--dtl-danger);}
@@ -53448,21 +53486,33 @@ body[data-ds-dark-theme]{
 /* 第二行小字：工作区 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
 .dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
-/* 右侧灰字：2026-10-17 开始丨已进行 12 天（用户 2026-10-17：不要蓝，一行灰字） */
-.dtl-taskrow__when{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
+/* 右侧三段（用户 2026-10-28）：人名（常驻、蓝、可点筛人）/ 时间（hover 让位）/ 动作钮。
+   hover 只收时间那一截，人名不动 —— 按钮出现时人名与它保持同一个 gap。 */
+.dtl-taskrow__who{flex:none;padding:0;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-size:var(--dtl-font-sm);color:var(--dtl-business);white-space:nowrap;}
+.dtl-taskrow__who:hover{text-decoration:underline;}
+.dtl-taskrow__who--plain{color:var(--dtl-fg-3);cursor:default;}
+.dtl-taskrow__meta{flex:none;overflow:hidden;text-overflow:ellipsis;
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
 .dtl-taskrow__actions{display:none;flex:none;gap:6px;}
-.dtl-taskrow__row:hover .dtl-taskrow__when{display:none;}
+.dtl-taskrow__row:hover .dtl-taskrow__meta{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
+
+/* 可点标签：点一下把标签塞进搜索框（用户 2026-10-28） */
+.dtl-clicktag{padding:0;border:0;background:none;cursor:pointer;font-family:inherit;}
+.dtl-clicktag:hover{opacity:.78;}
 
 /* 用核心 Chip 承担标签时的截断（core Chip 无 max-width/省略号 ⇒ 这里只补布局，不改皮肤） */
 .dshpc-chip.dtl-tagchip{display:inline-block;flex:none;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;}
 
-/* 工作区徽标：只铺蓝底（用户 2026-10-17：描边框太抢 ⇒ 去掉；底色已提亮一档见 tokens.ts
-   business-soft 8%→14% / 5%→12%），字色回正文。 */
-.dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-business-soft);color:var(--dtl-fg);
-  font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;}
+/* 工作区徽标：**实色** business 底 + 反白字（用户 2026-10-28：浅底太暗，要核心 --dshpc-business
+   那种亮蓝）；可点 = 按该工作区筛选。 */
+.dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border:0;border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-business);color:var(--dtl-fg-inverse);cursor:pointer;
+  font-family:inherit;font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;}
+.dtl-wstag:hover{filter:brightness(1.12);}
 
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
@@ -53599,7 +53649,7 @@ body[data-ds-dark-theme]{
 			neutral: "neutral",
 			open: "neutral",
 			backlog: "warning",
-			doing: "business",
+			doing: "success",
 			overdue: "danger",
 			stale: "danger",
 			person: "business"
@@ -53755,8 +53805,8 @@ body[data-ds-dark-theme]{
 				portal: true,
 				maxWidth: 240,
 				children: (0, react$1.createElement)(IconButton, {
-					variant: "plain",
-					size: "sm",
+					variant: "outline",
+					size: "md",
 					label: t("viewDetail"),
 					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 14 }),
 					onClick: () => props.onView?.(row)
@@ -53768,11 +53818,12 @@ body[data-ds-dark-theme]{
 				portal: true,
 				maxWidth: 240,
 				children: (0, react$1.createElement)(Button, {
-					variant: "ghost",
-					size: "sm",
+					variant: "outline",
+					size: "md",
 					icon: icon ?? void 0
 				}, t(actionKey))
 			});
+			const claimButton = tipBtn(null, "actionClaim", "tipClaim");
 			const resumeButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), "actionResume", "tipResume");
 			const finishButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), "actionFinish", "tipFinish");
 			const releaseButton = tipBtn(null, "actionRelease", "tipRelease");
@@ -53790,20 +53841,34 @@ body[data-ds-dark-theme]{
 				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
 			}, titleOf(row)), createdDay === null ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), ...alarmTags);
-			const parts = [];
-			const startRaw = row.task.started ?? row.task.created;
-			if (startRaw !== void 0 && startRaw !== null && startRaw !== "" && Date.parse(startRaw) >= 0) parts.push(`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`);
-			if (row.task.ageDays !== null && row.task.ageDays !== void 0) parts.push(row.task.ageDays === 0 ? t("ageToday") : t("ageDaysText", { n: row.task.ageDays }));
+			const isOpen = row.task.status === "open";
+			const whenRaw = isOpen ? row.task.created : row.task.updated ?? row.task.started ?? row.task.created;
+			const whenStamp = whenRaw === null || whenRaw === void 0 || Number.isNaN(Date.parse(whenRaw)) ? t("timeUnknown") : formatDateTime(whenRaw).slice(5);
+			const whoName = isOpen ? displayName(row.task.creator_name, row.task.creator) : displayName(row.task.owner_name, row.task.owner);
+			const whoUuid = (isOpen ? row.task.creator ?? "" : row.task.owner ?? "").trim();
+			const whos = (whoName === "" ? t("ownerUnclaimed") : `@${whoName}`).trim();
+			const metaText = `${isOpen ? t("whenCreated", { time: whenStamp }) : t("whenSubmitted", { time: whenStamp })} 丨 ${whenRaw === null || whenRaw === void 0 ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
+			const whoNode = isOpen || whoUuid === "" ? (0, react$1.createElement)("span", { className: "dtl-taskrow__who dtl-taskrow__who--plain" }, whos) : (0, react$1.createElement)("button", {
+				type: "button",
+				className: "dtl-taskrow__who",
+				title: t("filterByOwner", { name: whoName }),
+				onClick: () => focusOwner(whoUuid, whoName)
+			}, whos);
 			return (0, react$1.createElement)("div", { className: "dtl-taskrow" }, (0, react$1.createElement)("div", { className: "dtl-taskrow__row" }, (0, react$1.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0
-			} }, titleLine, (0, react$1.createElement)("div", { className: "dtl-taskrow__l2" }, (0, react$1.createElement)("span", {
-				className: "dtl-wstag dtl-ellipsis",
-				title: row.task.workspace.title
-			}, row.task.workspace.title), tags.map((tag) => (0, react$1.createElement)(Tag, {
+			} }, titleLine, (0, react$1.createElement)("div", { className: "dtl-taskrow__l2" }, (0, react$1.createElement)("button", {
+				type: "button",
+				className: "dtl-wstag",
+				title: t("filterByWorkspace", { name: row.task.workspace.title }),
+				onClick: () => setQuery({ workspace: row.task.workspace.id })
+			}, row.task.workspace.title), tags.map((tag) => (0, react$1.createElement)("button", {
 				key: tag,
-				text: `#${tag}`
-			})))), (0, react$1.createElement)("span", { className: "dtl-taskrow__when" }, parts.length === 0 ? t("timeUnknown") : parts.join("丨")), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.view ? viewButton : null)));
+				type: "button",
+				className: "dtl-clicktag",
+				title: t("filterByTag", { tag }),
+				onClick: () => setQuery({ keyword: tag })
+			}, (0, react$1.createElement)(Tag, { text: `#${tag}` }))))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.view ? viewButton : null)));
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -53961,6 +54026,26 @@ body[data-ds-dark-theme]{
 				value: workspace.id,
 				label: workspace.title
 			}))], [board, t]);
+			/** 执行人候选：名册分组 + 行内点过的人。名册里没有的（被删 / 别的机器加的）补进
+			*  通用组（首组）末尾，页面不刷新就一直在（用户 2026-10-28）。 */
+			const ownerOptionGroups = (0, react$1.useMemo)(() => {
+				const groups = ownerGroups(board, workspaceOptions, t);
+				const extra = state.extraOwners.filter((owner) => !groups.some((group) => group.options.some((option) => option.value === owner.uuid)));
+				if (extra.length === 0) return groups;
+				const added = extra.map((owner) => ({
+					value: owner.uuid,
+					label: `@${owner.name}`
+				}));
+				return groups.map((group, index) => index === 0 ? {
+					...group,
+					options: [...group.options, ...added]
+				} : group);
+			}, [
+				board,
+				t,
+				workspaceOptions,
+				state.extraOwners
+			]);
 			/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
 			const card = (label, value, hint, title) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
@@ -54026,7 +54111,7 @@ body[data-ds-dark-theme]{
 					value: "",
 					label: t("ownerAll")
 				}],
-				groups: ownerGroups(board, workspaceOptions, t),
+				groups: ownerOptionGroups,
 				ariaLabel: t("ownerLabel"),
 				onChange: (next) => {
 					setQuery({ owner: next });
@@ -54066,8 +54151,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.113 · 261028-173850-529`
-			}, `v0.0.113 261028-173850-529`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.113 · 261028-201530-402`
+			}, `v0.0.113 261028-201530-402`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54177,13 +54262,23 @@ body[data-ds-dark-theme]{
 			listEmptyHint: "可切换状态或工作区，查看其他记录。",
 			listLimitHint: "仅显示前 {n} 条查询结果",
 			ownerUnclaimed: "待认领",
-			fieldStarted: "开始",
 			timeUnknown: "时间未知",
-			ageDaysText: "已进行 {n} 天",
-			ageToday: "今天",
+			relJustNow: "刚刚",
+			relMinutes: "{n} 分钟前",
+			relHours: "{n} 小时前",
+			relDays: "{n} 天前",
+			relMonths: "{n} 个月前",
+			relYears: "{n} 年前",
+			whenCreated: "创建于 {time}",
+			whenSubmitted: "更新于 {time}",
+			filterByOwner: "只看 @{name} 的任务",
+			filterByWorkspace: "只看工作区 {name}",
+			filterByTag: "搜索标签 #{tag}",
+			actionClaim: "认领",
 			actionResume: "继续",
 			actionFinish: "结束",
 			actionRelease: "释放",
+			tipClaim: "把这个任务认领到自己名下",
 			tipResume: "继续推进这个任务",
 			tipFinish: "结案并写入历史",
 			tipRelease: "释放认领，让别人接手",
@@ -54247,13 +54342,23 @@ body[data-ds-dark-theme]{
 			listEmptyHint: "Switch status or workspace to see other records.",
 			listLimitHint: "Only the first {n} results are shown",
 			ownerUnclaimed: "unclaimed",
-			fieldStarted: "started",
 			timeUnknown: "unknown time",
-			ageDaysText: "active {n}d",
-			ageToday: "today",
+			relJustNow: "just now",
+			relMinutes: "{n} min ago",
+			relHours: "{n} h ago",
+			relDays: "{n} d ago",
+			relMonths: "{n} mo ago",
+			relYears: "{n} y ago",
+			whenCreated: "created {time}",
+			whenSubmitted: "updated {time}",
+			filterByOwner: "Only tasks owned by @{name}",
+			filterByWorkspace: "Only workspace {name}",
+			filterByTag: "Search tag #{tag}",
+			actionClaim: "Claim",
 			actionResume: "Resume",
 			actionFinish: "Close",
 			actionRelease: "Release",
+			tipClaim: "claim this task as mine",
 			tipResume: "keep working on this task",
 			tipFinish: "close and archive it",
 			tipRelease: "release the claim for others",

@@ -54,7 +54,7 @@ const UI_BASE_CSS = `
 
 /* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
 .dtl-rail{display:inline-block;width:6px;height:36px;flex:none;border-radius:var(--dtl-radius-xs);}
-.dtl-rail--doing{background:var(--dtl-business);}
+.dtl-rail--doing{background:var(--dtl-success);}
 .dtl-rail--backlog{background:var(--dtl-warning);}
 .dtl-rail--overdue{background:var(--dtl-overdue);}
 .dtl-rail--stale{background:var(--dtl-danger);}
@@ -68,21 +68,33 @@ const UI_BASE_CSS = `
 /* 第二行小字：工作区 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
 .dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
-/* 右侧灰字：2026-10-17 开始丨已进行 12 天（用户 2026-10-17：不要蓝，一行灰字） */
-.dtl-taskrow__when{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
+/* 右侧三段（用户 2026-10-28）：人名（常驻、蓝、可点筛人）/ 时间（hover 让位）/ 动作钮。
+   hover 只收时间那一截，人名不动 —— 按钮出现时人名与它保持同一个 gap。 */
+.dtl-taskrow__who{flex:none;padding:0;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-size:var(--dtl-font-sm);color:var(--dtl-business);white-space:nowrap;}
+.dtl-taskrow__who:hover{text-decoration:underline;}
+.dtl-taskrow__who--plain{color:var(--dtl-fg-3);cursor:default;}
+.dtl-taskrow__meta{flex:none;overflow:hidden;text-overflow:ellipsis;
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
 .dtl-taskrow__actions{display:none;flex:none;gap:6px;}
-.dtl-taskrow__row:hover .dtl-taskrow__when{display:none;}
+.dtl-taskrow__row:hover .dtl-taskrow__meta{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
+
+/* 可点标签：点一下把标签塞进搜索框（用户 2026-10-28） */
+.dtl-clicktag{padding:0;border:0;background:none;cursor:pointer;font-family:inherit;}
+.dtl-clicktag:hover{opacity:.78;}
 
 /* 用核心 Chip 承担标签时的截断（core Chip 无 max-width/省略号 ⇒ 这里只补布局，不改皮肤） */
 .dshpc-chip.dtl-tagchip{display:inline-block;flex:none;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;}
 
-/* 工作区徽标：只铺蓝底（用户 2026-10-17：描边框太抢 ⇒ 去掉；底色已提亮一档见 tokens.ts
-   business-soft 8%→14% / 5%→12%），字色回正文。 */
-.dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-business-soft);color:var(--dtl-fg);
-  font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;}
+/* 工作区徽标：**实色** business 底 + 反白字（用户 2026-10-28：浅底太暗，要核心 --dshpc-business
+   那种亮蓝）；可点 = 按该工作区筛选。 */
+.dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border:0;border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-business);color:var(--dtl-fg-inverse);cursor:pointer;
+  font-family:inherit;font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;}
+.dtl-wstag:hover{filter:brightness(1.12);}
 
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
@@ -324,12 +336,12 @@ function displayWidth(text: string): number {
  *  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。 */
 const CHIP_TONE: Record<
 	"neutral" | "open" | "backlog" | "doing" | "overdue" | "stale" | "person",
-	"neutral" | "business" | "warning" | "danger"
+	"neutral" | "business" | "success" | "warning" | "danger"
 > = {
 	neutral: "neutral",
 	open: "neutral",
 	backlog: "warning",
-	doing: "business",
+	doing: "success",
 	overdue: "danger",
 	stale: "danger",
 	person: "business",

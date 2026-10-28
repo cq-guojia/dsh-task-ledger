@@ -69,13 +69,25 @@ export type LocaleKey =
 	| "listEmptyHint"
 	| "listLimitHint"
 	| "ownerUnclaimed"
-	| "fieldStarted"
 	| "timeUnknown"
-	| "ageDaysText"
-	| "ageToday"
+	// 相对时间（GitHub 口径）
+	| "relJustNow"
+	| "relMinutes"
+	| "relHours"
+	| "relDays"
+	| "relMonths"
+	| "relYears"
+	| "whenCreated"
+	| "whenSubmitted"
+	// 行内点选 = 改筛选（人名 / 工作区 / 标签）
+	| "filterByOwner"
+	| "filterByWorkspace"
+	| "filterByTag"
+	| "actionClaim"
 	| "actionResume"
 	| "actionFinish"
 	| "actionRelease"
+	| "tipClaim"
 	| "tipResume"
 	| "tipFinish"
 	| "tipRelease"
@@ -146,13 +158,23 @@ export const zh: Record<LocaleKey, string> = {
 	listLimitHint: "仅显示前 {n} 条查询结果",
 
 	ownerUnclaimed: "待认领",
-	fieldStarted: "开始",
 	timeUnknown: "时间未知",
-	ageDaysText: "已进行 {n} 天",
-	ageToday: "今天",
+	relJustNow: "刚刚",
+	relMinutes: "{n} 分钟前",
+	relHours: "{n} 小时前",
+	relDays: "{n} 天前",
+	relMonths: "{n} 个月前",
+	relYears: "{n} 年前",
+	whenCreated: "创建于 {time}",
+	whenSubmitted: "更新于 {time}",
+	filterByOwner: "只看 @{name} 的任务",
+	filterByWorkspace: "只看工作区 {name}",
+	filterByTag: "搜索标签 #{tag}",
+	actionClaim: "认领",
 	actionResume: "继续",
 	actionFinish: "结束",
 	actionRelease: "释放",
+	tipClaim: "把这个任务认领到自己名下",
 	tipResume: "继续推进这个任务",
 	tipFinish: "结案并写入历史",
 	tipRelease: "释放认领，让别人接手",
@@ -226,13 +248,23 @@ export const en: Record<LocaleKey, string> = {
 	listLimitHint: "Only the first {n} results are shown",
 
 	ownerUnclaimed: "unclaimed",
-	fieldStarted: "started",
 	timeUnknown: "unknown time",
-	ageDaysText: "active {n}d",
-	ageToday: "today",
+	relJustNow: "just now",
+	relMinutes: "{n} min ago",
+	relHours: "{n} h ago",
+	relDays: "{n} d ago",
+	relMonths: "{n} mo ago",
+	relYears: "{n} y ago",
+	whenCreated: "created {time}",
+	whenSubmitted: "updated {time}",
+	filterByOwner: "Only tasks owned by @{name}",
+	filterByWorkspace: "Only workspace {name}",
+	filterByTag: "Search tag #{tag}",
+	actionClaim: "Claim",
 	actionResume: "Resume",
 	actionFinish: "Close",
 	actionRelease: "Release",
+	tipClaim: "claim this task as mine",
 	tipResume: "keep working on this task",
 	tipFinish: "close and archive it",
 	tipRelease: "release the claim for others",

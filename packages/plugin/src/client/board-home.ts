@@ -191,6 +191,26 @@ export function BoardHome(props: {
 		[board, t],
 	);
 
+	/** 执行人候选：名册分组 + 行内点过的人。名册里没有的（被删 / 别的机器加的）补进
+	 *  通用组（首组）末尾，页面不刷新就一直在（用户 2026-10-28）。 */
+	const ownerOptionGroups = useMemo(() => {
+		const groups = ownerGroups(board, workspaceOptions, t);
+		const extra = state.extraOwners.filter(
+			(owner) =>
+				!groups.some((group) =>
+					group.options.some((option) => option.value === owner.uuid),
+				),
+		);
+		if (extra.length === 0) return groups;
+		const added = extra.map((owner) => ({
+			value: owner.uuid,
+			label: `@${owner.name}`,
+		}));
+		return groups.map((group, index) =>
+			index === 0 ? { ...group, options: [...group.options, ...added] } : group,
+		);
+	}, [board, t, workspaceOptions, state.extraOwners]);
+
 	/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
 	const card = (
 		label: LocaleKey,
@@ -358,7 +378,7 @@ export function BoardHome(props: {
 				icon: h(IconUsersOutlineRegular, { size: 16 }),
 				value: state.query.owner,
 				options: [{ value: "", label: t("ownerAll") }],
-				groups: ownerGroups(board, workspaceOptions, t),
+				groups: ownerOptionGroups,
 				ariaLabel: t("ownerLabel"),
 				onChange: (next) => {
 					setQuery({ owner: next });

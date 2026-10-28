@@ -26,6 +26,8 @@ body{
   --dtl-fg-2:var(--dsw-alias-label-secondary,#5c6370);
   --dtl-fg-3:var(--dsw-alias-label-tertiary,#767d87);
   --dtl-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);
+  /* 实色面上的字（工作区徽标这种铺满 business 的） */
+  --dtl-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);
 
   /* ── 面 ──────────────────────────────────────────────────────── */
   --dtl-surface-1:var(--dsw-alias-bg-layer-1,#fff);
@@ -37,6 +39,8 @@ body{
   /* ── 语义色 ──────────────────────────────────────────────────── */
   /* 蓝色强调 / 选中 / 焦点一律走这条 */
   --dtl-business:var(--dsw-alias-state-business-primary,#3b5bdb);
+  /* 绿：进行中（用户 2026-10-28：进行中不要蓝，用绿） */
+  --dtl-success:var(--dsw-alias-state-success-primary,#22c55e);
   /* ⚠️ 宿主是 state-warn（不是 state-warning，后者无此定义） */
   --dtl-warning:var(--dsw-alias-state-warn-primary,#f59e0b);
   --dtl-danger:var(--dsw-alias-state-error-primary,#ec1313);

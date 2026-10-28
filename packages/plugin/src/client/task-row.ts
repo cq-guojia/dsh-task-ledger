@@ -19,9 +19,10 @@ import {
 	Tooltip,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode } from "react";
-import { formatDateTime } from "./format";
+import { formatDateTime, formatRelative } from "./format";
 import type { Translate } from "./locales";
 import { displayName, type Row, resolveActions } from "./rows";
+import { focusOwner, setQuery } from "./store";
 import { Button, IconButton, Tag } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
@@ -113,8 +114,8 @@ export function TaskRowView(props: {
 		portal: true,
 		maxWidth: 240,
 		children: h(IconButton, {
-			variant: "plain",
-			size: "sm",
+			variant: "outline",
+			size: "md",
 			label: t("viewDetail"),
 			icon: h(IconSearchOutlineRegular, { size: 14 }),
 			onClick: () => props.onView?.(row),
@@ -122,8 +123,8 @@ export function TaskRowView(props: {
 	});
 	const tipBtn = (
 		icon: ReactNode,
-		actionKey: "actionResume" | "actionFinish" | "actionRelease",
-		tipKey: "tipResume" | "tipFinish" | "tipRelease",
+		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease",
+		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease",
 	): ReactNode =>
 		h(Tooltip, {
 			label: t(tipKey),
@@ -132,10 +133,12 @@ export function TaskRowView(props: {
 			maxWidth: 240,
 			children: h(
 				Button,
-				{ variant: "ghost", size: "sm", icon: icon ?? undefined },
+				{ variant: "outline", size: "md", icon: icon ?? undefined },
 				t(actionKey),
 			),
 		});
+	// 认领：只有待认领行才有（权限见 resolveActions.claim）。功能待接，先摆按钮（用户 2026-10-28）。
+	const claimButton = tipBtn(null, "actionClaim", "tipClaim");
 	const resumeButton = tipBtn(
 		h(IconChevronRightOutlineRegular, { size: 14 }),
 		"actionResume",
@@ -183,26 +186,48 @@ export function TaskRowView(props: {
 		...alarmTags,
 	);
 
-	// ── 卡片：dispatch 任务配置卡同款 ──
-	const parts: string[] = [];
-	const startRaw = row.task.started ?? row.task.created;
-	if (
-		startRaw !== undefined &&
-		startRaw !== null &&
-		startRaw !== "" &&
-		Date.parse(startRaw) >= 0
-	) {
-		parts.push(
-			`${formatDateTime(startRaw).slice(0, 10)} ${t("fieldStarted")}`,
-		);
-	}
-	if (row.task.ageDays !== null && row.task.ageDays !== undefined) {
-		parts.push(
-			row.task.ageDays === 0
-				? t("ageToday")
-				: t("ageDaysText", { n: row.task.ageDays }),
-		);
-	}
+	// 右侧三段（用户 2026-10-28）：`@谁`（常驻、蓝、可点筛人）/ `更新于 MM-DD HH:mm 丨 3 分钟前`
+	// （hover 让位给动作钮）/ 动作钮。待认领没有归属人 ⇒ 人名位改灰字「待认领」、时间用创建时间。
+	const isOpen = row.task.status === "open";
+	const whenRaw = isOpen
+		? row.task.created
+		: (row.task.updated ?? row.task.started ?? row.task.created);
+	const whenStamp =
+		whenRaw === null || whenRaw === undefined || Number.isNaN(Date.parse(whenRaw))
+			? t("timeUnknown")
+			: formatDateTime(whenRaw).slice(5);
+	// 待认领行前面摆**创建人**（用户 2026-10-28：不是「待认领」，要「谁谁谁创建于」）。
+	const whoName = isOpen
+		? displayName(row.task.creator_name, row.task.creator)
+		: displayName(row.task.owner_name, row.task.owner);
+	const whoUuid = (
+		isOpen ? (row.task.creator ?? "") : (row.task.owner ?? "")
+	).trim();
+	const whos = (whoName === "" ? t("ownerUnclaimed") : `@${whoName}`).trim();
+	const metaText = `${
+		isOpen
+			? t("whenCreated", { time: whenStamp })
+			: t("whenSubmitted", { time: whenStamp })
+	} 丨 ${whenRaw === null || whenRaw === undefined ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
+	// 点人名 = 选中「执行人」下拉里的这个人（名册里没有也照样补进去，见 store.focusOwner）。
+	// 待认领行摆的是创建人：下拉只有执行人，点了会筛错人 ⇒ 只显示不可点。
+	const whoNode =
+		isOpen || whoUuid === ""
+			? h(
+					"span",
+					{ className: "dtl-taskrow__who dtl-taskrow__who--plain" },
+					whos,
+				)
+			: h(
+					"button",
+					{
+						type: "button",
+						className: "dtl-taskrow__who",
+						title: t("filterByOwner", { name: whoName }),
+						onClick: () => focusOwner(whoUuid, whoName),
+					},
+					whos,
+				);
 	return h(
 		"div",
 		{ className: "dtl-taskrow" },
@@ -217,28 +242,41 @@ export function TaskRowView(props: {
 				h(
 					"div",
 					{ className: "dtl-taskrow__l2" },
+					// 工作区 = 按该工作区筛选；标签 = 塞进搜索框（用户 2026-10-28）
 					h(
-						"span",
+						"button",
 						{
-							className: "dtl-wstag dtl-ellipsis",
-							title: row.task.workspace.title,
+							type: "button",
+							className: "dtl-wstag",
+							title: t("filterByWorkspace", { name: row.task.workspace.title }),
+							onClick: () => setQuery({ workspace: row.task.workspace.id }),
 						},
 						row.task.workspace.title,
 					),
-					tags.map((tag) => h(Tag, { key: tag, text: `#${tag}` })),
+					tags.map((tag) =>
+						h(
+							"button",
+							{
+								key: tag,
+								type: "button",
+								className: "dtl-clicktag",
+								title: t("filterByTag", { tag }),
+								onClick: () => setQuery({ keyword: tag }),
+							},
+							h(Tag, { text: `#${tag}` }),
+						),
+					),
 				),
 			),
-			h(
-				"span",
-				{ className: "dtl-taskrow__when" },
-				parts.length === 0 ? t("timeUnknown") : parts.join("丨"),
-			),
+			whoNode,
+			h("span", { className: "dtl-taskrow__meta" }, metaText),
 			// 动作排：继续 / 结束 / 释放 + 查看 —— **同一排、同一间距**
 			// （用户 2026-10-18：查看钮原来是独立的一格，离前面的按钮远一档）
 			// 谁出来由 resolveActions 说了算（同一套权限，不再各判各的）
 			h(
 				"span",
 				{ className: "dtl-taskrow__actions" },
+				actions.claim ? claimButton : null,
 				actions.resume ? resumeButton : null,
 				actions.finish ? finishButton : null,
 				actions.release ? releaseButton : null,

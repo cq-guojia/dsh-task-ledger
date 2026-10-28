@@ -30,6 +30,13 @@ export interface Query {
 	owner: string;
 }
 
+/** 行内点人名时补进「执行人」下拉的人：名册里已经查不到（被删 / 别的机器加的）也得能选中，
+ *  页面不刷新就一直留在下拉里（用户 2026-10-28 的口径）。 */
+export interface ExtraOwner {
+	readonly uuid: string;
+	readonly name: string;
+}
+
 export interface BoardState {
 	status: "loading" | "ready" | "error";
 	/** 首屏快照（8 卡 + 在办列表）；null = 还没回来。 */
@@ -38,6 +45,8 @@ export interface BoardState {
 	query: Query;
 	/** 手动刷新在途（按钮转圈 / 禁用）。 */
 	refreshing: boolean;
+	/** 行内点过的人（下拉候选不够时补位）；刷新页面即清空。 */
+	extraOwners: readonly ExtraOwner[];
 }
 
 const INITIAL_QUERY: Query = {
@@ -53,6 +62,7 @@ let state: BoardState = {
 	error: null,
 	query: INITIAL_QUERY,
 	refreshing: false,
+	extraOwners: [],
 };
 
 const listeners = new Set<() => void>();
@@ -107,4 +117,17 @@ export async function refresh(): Promise<void> {
 /** 改筛选：全部在浏览器里完成（快照已含全部在办），不发请求。 */
 export function setQuery(patch: Partial<Query>): void {
 	set({ query: { ...state.query, ...patch } });
+}
+
+/**
+ * 行内点人名 = 选中下拉里的这个人（用户 2026-10-28）。
+ * 名册里没有他的人（被删 / 别的机器加的）照样能筛：顺手补进下拉候选，
+ * 所以「先看有没有」不用在这里判，合并候选时去重即可。
+ */
+export function focusOwner(uuid: string, name: string): void {
+	if (uuid === "") return;
+	const extraOwners = state.extraOwners.some((owner) => owner.uuid === uuid)
+		? state.extraOwners
+		: [...state.extraOwners, { uuid, name }];
+	set({ extraOwners, query: { ...state.query, owner: uuid } });
 }
