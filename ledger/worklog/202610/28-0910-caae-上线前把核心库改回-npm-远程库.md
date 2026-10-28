@@ -10,15 +10,19 @@
 
 ## 背景
 
-<!-- 为什么做：触发它的原话 / 现象 / 链接 -->
+开发期 `packages/plugin/package.json` 用 `file:../../../dsh-plugin-core` 本地链接核心库（改完本地立即生效、避开 npm 发布几分钟的传播延迟）。**发版前必须切回 NPM 远程库**，否则发布物依赖本地路径、消费者装不上。触发原话：用户「上线前需要把本地引用的核心库变成 NPM 上的远程库」。
 
 ## 待办
 
-<!-- 还没做的、没验证的、等别人给东西的 -->
+- 核心库 `dsh-plugin-core` 先 `npm publish` 到 ledger 使用的 registry（dev 目前用本地 0.7.4）。
+- 把 `packages/plugin/package.json`（dependencies 段）的 `"dsh-plugin-core"` 从 `file:../../../dsh-plugin-core` 改为远程版本（`latest` 或精确版本）。
+- 确认 `pnpm-workspace.yaml` 的 `minimumReleaseAgeExclude` 含该发布版本（pnpm 只认精确版本，否则被「最小发布年龄」挡回旧版）。
+- `pnpm install` 后确认解析到 `node_modules/.pnpm/dsh-plugin-core@<ver>`（无 `file+`），再 build/verify。
+- 可选：评估「dev 本地 / 发版远程」自动化（`workspace:*` + pnpm publish 自动替换版本，或 `pnpm.overrides` 指向本地、发布前移除）。
 
 ## 下一步
 
-<!-- 下一个具体动作（文件:行号 级别），不要写「继续推进」 -->
+发版时依次：核心 `npm publish` → 改 `packages/plugin/package.json` 依赖为远程版本 → `pnpm update dsh-plugin-core` → `npm run verify`。
 
 ## 过程
 

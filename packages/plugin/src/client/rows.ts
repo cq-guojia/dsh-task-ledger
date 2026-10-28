@@ -37,6 +37,7 @@ export function displayName(
 export interface BoardView {
 	readonly rows: readonly Row[];
 	readonly counts: {
+		readonly all: number;
 		readonly mine: number;
 		readonly open: number;
 		readonly doing: number;
@@ -81,6 +82,8 @@ export function resolveActions(task: BoardTask): TaskActions {
 /** 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。 */
 function tabHit(task: BoardTask, tab: Query["tab"]): boolean {
 	switch (tab) {
+		case "all":
+			return true;
 		case "mine":
 			return task.mine === true;
 		case "open":
@@ -126,7 +129,7 @@ export function selectView(current: {
 	const board = current.board;
 	const empty = {
 		rows: [] as readonly Row[],
-		counts: { mine: 0, open: 0, doing: 0, backlog: 0, overdue: 0, stale: 0 },
+		counts: { all: 0, mine: 0, open: 0, doing: 0, backlog: 0, overdue: 0, stale: 0 },
 	};
 	if (board === null) return empty;
 	const { tasks } = board;
@@ -150,6 +153,7 @@ export function selectView(current: {
 	return {
 		rows,
 		counts: {
+			all: tasks.length,
 			mine: tasks.filter((task) => task.mine === true).length,
 			open: tasks.filter((task) => task.status === "open").length,
 			doing: tasks.filter(

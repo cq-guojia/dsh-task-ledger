@@ -9,8 +9,9 @@
 import { fetchBoardSnapshot } from "./api";
 import type { BoardPayload } from "./types";
 
-/** 左侧菜单六档：前三档 skill 有筛选口径，后三档等 skill 出参数（详见 rows.ts）。 */
+/** 左侧菜单七档：「全部」置顶（不过滤），其后六档各按 skill 口径筛（详见 rows.ts）。 */
 export type TabFilter =
+	| "all"
 	| "mine"
 	| "open"
 	| "doing"

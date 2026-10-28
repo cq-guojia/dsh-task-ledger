@@ -3,4 +3,5 @@
 packages:
   - "packages/*"
 minimumReleaseAgeExclude:
-  - dsh-plugin-core@0.4.0 || 0.5.0
+  # 核心库跟 registry 最新（用户 2026-10-28）：pnpm 只认精确版本，每发新版把版本号加进这条并集
+  - dsh-plugin-core@0.4.0 || 0.5.0 || 0.7.3

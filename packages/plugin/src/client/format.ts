@@ -21,3 +21,18 @@ export function formatDateTime(
 	const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 	return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
 }
+
+/** 计数缩写（统一口径）：<1000 原样；≥1000 用 K，≥100 万用 M，保留 1 位小数并去掉 .0。
+ *  例：999→"999"、1000→"1K"、1200→"1.2K"、12345→"12.3K"、1000000→"1M"。 */
+export function formatCount(n: number): string {
+	if (!Number.isFinite(n)) return String(n);
+	const sign = n < 0 ? "-" : "";
+	const abs = Math.abs(Math.trunc(n));
+	const step = (v: number, unit: string): string => {
+		const s = v >= 100 ? v.toFixed(0) : v.toFixed(1);
+		return `${sign}${s.replace(/\.0$/, "")}${unit}`;
+	};
+	if (abs >= 1_000_000) return step(abs / 1_000_000, "M");
+	if (abs >= 1_000) return step(abs / 1_000, "K");
+	return String(n);
+}

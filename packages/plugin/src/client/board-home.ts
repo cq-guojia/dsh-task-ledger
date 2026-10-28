@@ -22,6 +22,7 @@ import {
 	useSyncExternalStore,
 } from "react";
 import type { LocaleKey, Translate } from "./locales";
+import { formatCount } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
 import { ownerGroups, selectView, type Row } from "./rows";
 import {
@@ -119,20 +120,28 @@ const SELECT_MAX_WIDTH = 240;
 /** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
 const SEARCH_WIDTH = 192;
 
-/** 左侧六档菜单（全部本地真筛，角标 = 各档全量计数）。 */
+/** 列表最多渲染条数（用户 2026-10-28：内容过多时只给最新 100 条 + 底部提示）。 */
+const LIST_LIMIT = 100;
+/** 底部「截断提示」样式（临时：核心暂无对应样式，先按此观感；用户确认后再定型）。 */
+const limitHintStyle: Record<string, string | number> = {
+	marginTop: "var(--dtl-space-3)",
+	padding: "var(--dtl-space-3) var(--dtl-space-4)",
+	textAlign: "center",
+	fontSize: "var(--dtl-font-sm)",
+	lineHeight: "var(--dtl-line-sm)",
+	color: "var(--dtl-fg-3)",
+};
+
+/** 左侧菜单（「我的待办」置顶、「全部」次之，其后六档本地真筛；角标 = 各档全量计数）。 */
 const TABS: readonly { value: TabFilter; label: LocaleKey }[] = [
 	{ value: "mine", label: "regionMine" },
+	{ value: "all", label: "regionAll" },
 	{ value: "open", label: "statOpen" },
 	{ value: "doing", label: "statDoing" },
 	{ value: "backlog", label: "statBacklog" },
 	{ value: "overdue", label: "statOverdue" },
 	{ value: "stale", label: "statStale" },
 ];
-
-/** 角标：>0 才给数字，0 = undefined（不标）。 */
-function orZero(n: number): number | undefined {
-	return n > 0 ? n : undefined;
-}
 
 export function BoardHome(props: {
 	t: Translate;
@@ -188,7 +197,7 @@ export function BoardHome(props: {
 	): ReactNode =>
 		h(StatCard, {
 			label: t(label),
-			value,
+			value: formatCount(value),
 			hint,
 			title,
 			interactive: false,
@@ -209,7 +218,7 @@ export function BoardHome(props: {
 	): ReactNode =>
 		h(StatCard, {
 			label: t(label),
-			value: done ?? 0,
+			value: formatCount(done ?? 0),
 			interactive: false,
 			title: t("periodRange", { from, to }),
 		});
@@ -298,7 +307,10 @@ export function BoardHome(props: {
 			items: TABS.map((tab) => ({
 				value: tab.value,
 				label: t(tab.label),
-				badge: orZero(view.counts[tab.value]),
+				badge:
+					view.counts[tab.value] > 0
+						? formatCount(view.counts[tab.value])
+						: undefined,
 			})),
 			size: "lg",
 			onChange: (next) => {
@@ -517,15 +529,20 @@ export function BoardHome(props: {
 					: h(
 								"div",
 								null,
-								view.rows.map((row) =>
-									h(TaskRowView, {
-										key: row.key,
-										t,
-										row,
-										onView: handleView,
-									}),
-								),
+								view.rows
+									.slice(0, LIST_LIMIT)
+									.map((row) =>
+										h(TaskRowView, {
+											key: row.key,
+											t,
+											row,
+											onView: handleView,
+										}),
+									),
 							),
+				view.rows.length > LIST_LIMIT
+					? h("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT }))
+					: null,
 			),
 		),
 	);

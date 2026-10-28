@@ -127,7 +127,7 @@ window.__ModuleLoader__.load({
 		const BUTTON_CSS = "\n/* ── 按钮 / 图标钮 P2 ───────────────────────────────────────────────────\n   与 Segmented 同一条高度纪律：--dshpc-control-h-sm(24) / -md(28) / -lg(32)，\n   有边框的 variant 用 1px 真边框 + 内部 padding 补回，**有边 / 无边同高**。\n\n   三条受控轴（2026-10-19 重写，对齐主流 UI 框架的分类口径）：\n     · variant —— 外观档 = 形态 + 语义色，共 10 档：\n         primary / secondary / outline / ghost / danger / success / warning / info /\n         danger-outline（红字描边）/ link（行内链接）\n     · size —— sm / md / lg\n     · block —— 撑满父宽\n   每一档**只填 5 个局部变量**（--btn-bg / -fg / -border / -bg-hover / -bg-active），\n   结构与交互只有上面这一份；任何档位都不许再写一遍 display/height/padding。\n   自定义颜色（Button 的 color 参数）同样只覆盖这 5 个变量（token 覆盖，不是新皮肤）。\n\n   ⚠️ hover 不再用 opacity 压一层（用户 2026-10-19：「黑色和红色的按钮移上去变化太小，\n   完全感觉不到颜色变了」）⇒ 走 --dshpc-*-hover / -active 的明确混色，见 tokens-css.ts。 */\n.dshpc-btn{--btn-bg:transparent;--btn-fg:var(--dshpc-fg);--btn-border:transparent;--btn-pad:12px;\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);--btn-fg-hover:var(--btn-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;\n  box-sizing:border-box;border:1px solid var(--btn-border);border-radius:var(--dshpc-radius-md);\n  background-color:var(--btn-bg);color:var(--btn-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease),transform var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-btn--sm{--btn-pad:10px;height:var(--dshpc-control-h-sm);padding:0 var(--btn-pad);font-size:var(--dshpc-font-sm);line-height:1;}\n.dshpc-btn--md{--btn-pad:12px;height:var(--dshpc-control-h-md);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n.dshpc-btn--lg{--btn-pad:14px;height:var(--dshpc-control-h-lg);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n/* block：撑满父宽（表单底栏 / 抽屉底部的主操作） */\n.dshpc-btn--block{display:flex;width:100%;}\n/* block + 前置图标 ⇒ 文字视觉居中（2026-10-19 用户点名）：\n   内容组 [图标 + 间距 + 文字] 整体在盒内居中时，**文字**的中心会被图标推右半格。\n   把右内边距补上「图标宽 + 间距」，可用盒随之左移同量 ⇒ 文字落回视觉中心，图标贴左侧。\n   图标宽按 1.2em 估（官方图标 14/16px vs 字号 12/13px），em 随字号档自动缩放。 */\n.dshpc-btn--block.dshpc-btn--icon-start{padding-right:calc(var(--btn-pad) + 1.2em + 6px);}\n.dshpc-btn__icon,.dshpc-btn__icon-end{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-btn__icon svg,.dshpc-btn__icon-end svg{display:block;margin:0;}\n/* loading：不换 DOM 结构，只在文案前插一个同色小圈。\n   ⚠️ 2026-10-20 改画法：原来是 border:1.5px 加 border-radius:999px 画的环 —— 真机实测 computed\n   radius 就是 999px、宽高都是 12px（没被任何样式覆盖），看着却\"像圆角方\"，原因是**次像素边框\n   （1.5px）在 12px 这么小的圆上被抗锯齿插值拉毛**。改用 SVG 矢量弧：任意 DPR 下都是真圆。 */\n.dshpc-btn__spinner{display:block;flex:none;width:12px;height:12px;\n  animation:dshpc-btn-spin .7s linear infinite;}\n/* shortcut: 12px 是固定值，不随按钮字号缩放；要更大就改这一处。 */\n@keyframes dshpc-btn-spin{to{transform:rotate(360deg)}}\n\n/* 交互态：颜色变化写在变量上 ⇒ 所有档位一次生效，且变化幅度由 token 决定（够明显） */\n.dshpc-btn:hover:not(:disabled){background-color:var(--btn-bg-hover);color:var(--btn-fg-hover);}\n.dshpc-btn:active:not(:disabled){background-color:var(--btn-bg-active);transform:translateY(1px);}\n.dshpc-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-btn:disabled{cursor:default;opacity:.5;}\n\n.dshpc-btn--primary{--btn-bg:var(--dshpc-accent);--btn-fg:var(--dshpc-fg-inverse);\n  --btn-bg-hover:var(--dshpc-accent-hover);--btn-bg-active:var(--dshpc-accent-active);}\n/* secondary：中性实心（灰面），用于「取消 / 次要」这类与主操作并排的按钮 */\n.dshpc-btn--secondary{--btn-bg:var(--dshpc-hover);--btn-fg:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-active);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--outline{--btn-bg:var(--dshpc-surface-1);--btn-border:var(--dshpc-border-strong);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--ghost{--btn-fg:var(--dshpc-fg-2);--btn-fg-hover:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--danger{--btn-bg:var(--dshpc-danger);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-danger-hover);--btn-bg-active:var(--dshpc-danger-active);}\n.dshpc-btn--success{--btn-bg:var(--dshpc-success);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-success-hover);--btn-bg-active:var(--dshpc-success-active);}\n.dshpc-btn--warning{--btn-bg:var(--dshpc-warning);--btn-fg:var(--dshpc-on-warning);\n  --btn-bg-hover:var(--dshpc-warning-hover);--btn-bg-active:var(--dshpc-warning-active);}\n.dshpc-btn--info{--btn-bg:var(--dshpc-business);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-business-hover);--btn-bg-active:var(--dshpc-business-active);}\n/* danger-outline：红字描边（破坏性次要操作，如卡片上的「删除」）。\n   ⚠️ 旧修饰类 danger-ink 保留为别名（消费方可能还在挂），两者同一套皮肤。 */\n.dshpc-btn--danger-outline,.dshpc-btn--danger-ink{--btn-border:var(--dshpc-danger);--btn-fg:var(--dshpc-danger);\n  --btn-fg-hover:var(--dshpc-danger);--btn-bg-hover:var(--dshpc-danger-soft);--btn-bg-active:var(--dshpc-danger-soft);}\n/* link：行内文字链接型（会话 / 产出文件名），无底无边、品牌蓝、hover 下划线 */\n.dshpc-btn--link{--btn-fg:var(--dshpc-link);--btn-fg-hover:var(--dshpc-link);\n  --btn-bg-hover:transparent;--btn-bg-active:transparent;\n  height:auto;padding:0;border:0;background:none;font-weight:400;text-align:left;}\n.dshpc-btn--link:hover:not(:disabled){text-decoration:underline;}\n\n/* 图标钮：纯图标，方形；尺寸档的宽高与同档文字按钮等高 */\n.dshpc-iconbtn{appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;\n  border:1px solid transparent;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);\n  font-family:inherit;cursor:pointer;flex:none;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),opacity var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-iconbtn--sm{width:var(--dshpc-control-h-sm);height:var(--dshpc-control-h-sm);font-size:var(--dshpc-font-sm);}\n.dshpc-iconbtn--md{width:var(--dshpc-control-h-md);height:var(--dshpc-control-h-md);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--lg{width:var(--dshpc-control-h-lg);height:var(--dshpc-control-h-lg);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--plain{color:var(--dshpc-fg-2);}\n.dshpc-iconbtn--outline{background:var(--dshpc-surface-1);border-color:var(--dshpc-border);color:var(--dshpc-fg-2);}\n.dshpc-iconbtn--danger{color:var(--dshpc-danger);}\n.dshpc-iconbtn:hover:not(:disabled){background:var(--dshpc-hover);color:var(--dshpc-fg);}\n.dshpc-iconbtn--danger:hover:not(:disabled){background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-iconbtn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-iconbtn:disabled{cursor:default;opacity:.4;}\n\n/* ── 行式文件按钮（图标 + 文件名）P2：**全站唯一实现**（2026-10-04 收编）──────────\n   用途：「产出物 / 附件」那种**一行一个文件**的清单项（基础信息右栏产出物清单、附件区、\n   执行记录页的展开区）。平时透明、**鼠标移上去才出浅底**（沿用用户 2026-10-03 定的观感）。\n   两个形态修饰类：\n     --block   撑满父宽（清单里一项一行）\n     --inline  内容宽（跟在文字后头，如附件行）\n   收编原因：这份皮肤此前只写在 task-list.tsx 的 TASK_LIST_CSS 里（旧名 .dshpc-info-out），\n   执行记录页展开区要用同一种观感 ⇒ 上提基础层，避免再出现「各写一份外观」（同名不同皮的坑刚踩过）。 */\n.dshpc-filechip{appearance:none;-webkit-appearance:none;border:0;border-radius:var(--dshpc-radius-xs);\n  background:transparent;color:var(--dshpc-fg);font:inherit;text-align:left;cursor:pointer;min-width:0;\n  transition:background-color var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-filechip:hover:not(:disabled){background:var(--dshpc-chip-bg);}\n.dshpc-filechip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n.dshpc-filechip:disabled{cursor:default;background:transparent;color:var(--dshpc-fg-3);}\n.dshpc-filechip--block{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;\n  padding:4px 6px;font-size:var(--dshpc-font-xs);}\n.dshpc-filechip--inline{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:var(--dshpc-font-sm);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-btn,.dshpc-iconbtn,.dshpc-filechip{transition:none;}}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/controls/field-css.generated.js
-		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-dim);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover,rgba(38,49,72,.06));}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
+		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-dim);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-dim);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover,rgba(38,49,72,.06));}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/controls/loading-css.generated.js
 		const LOADING_CSS = "\n/* 运行中 / loading 的活动指示：三个小方块依次脉动。 */\n@keyframes dshpc-run-block { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8) } 40% { opacity: 1; transform: scale(1) } }\n.dshpc-run-blocks { display: inline-flex; align-items: center; gap: 3px; }\n.dshpc-run-blocks > i { width: 5px; height: 5px; border-radius: 1px; background: currentColor; animation: dshpc-run-block 1.2s ease-in-out infinite; }\n.dshpc-run-blocks > i:nth-child(2) { animation-delay: 0.15s; }\n.dshpc-run-blocks > i:nth-child(3) { animation-delay: 0.3s; }\n@media (prefers-reduced-motion: reduce) { .dshpc-run-blocks > i { animation: none; opacity: 1; } }\n";
@@ -3515,6 +3515,15 @@ window.__ModuleLoader__.load({
 		* docs/design/ui-style-guide.md §五 的流程（改基础层，一处改全站生效）。
 		*/
 		/**
+		* 角标 / 计数要不要显示，返回要显示的文本。
+		* 数字 ≤0 是「没东西可数」的老口径；字符串（`'1K'` / `'99+'`）由调用方决定，原样显示，空串不显示。
+		*/
+		function countText(value) {
+			if (value === void 0) return null;
+			if (typeof value === "number") return value > 0 ? String(value) : null;
+			return value === "" ? null : value;
+		}
+		/**
 		* 渲染一个分段控件（单选 / 多选同体）。
 		*
 		* @param props 见 {@link SegmentedProps}。
@@ -3592,6 +3601,8 @@ window.__ModuleLoader__.load({
 						onChange(next);
 					} else onChange(item.value);
 				};
+				const count = countText(item.count);
+				const badge = countText(item.badge);
 				const itemButton = (0, react$1.createElement)("button", {
 					key: item.value,
 					type: "button",
@@ -3599,7 +3610,7 @@ window.__ModuleLoader__.load({
 					"aria-pressed": on,
 					disabled,
 					onClick: handle
-				}, item.label, item.count !== void 0 && item.count > 0 ? (0, react$1.createElement)("span", { className: "dshpc-seg__count" }, String(item.count)) : null, item.badge !== void 0 && item.badge > 0 ? (0, react$1.createElement)("span", { className: "dshpc-seg__badge" }, String(item.badge)) : null);
+				}, item.label, count === null ? null : (0, react$1.createElement)("span", { className: "dshpc-seg__count" }, count), badge === null ? null : (0, react$1.createElement)("span", { className: "dshpc-seg__badge" }, badge));
 				if (item.tooltip !== void 0 && false);
 				return itemButton;
 			})]);
@@ -3954,7 +3965,7 @@ window.__ModuleLoader__.load({
 			const panelRefs = (0, react$1.useRef)(/* @__PURE__ */ new Map());
 			const panes = panesOf(props.children);
 			const { defaultWidth, minWidth: fallbackMin } = props.dock.defaults;
-			const widthOf = (pane) => state.widths[pane.id] ?? clampWidth(pane.width ?? defaultWidth, pane.minWidth ?? fallbackMin, pane.maxWidth);
+			const widthOf = (pane) => clampWidth(state.widths[pane.id] ?? pane.width ?? defaultWidth, pane.minWidth ?? fallbackMin, pane.maxWidth);
 			const earLabelOf = (id) => {
 				const pane = panes.find((item) => item.id === id);
 				if (pane === void 0) return id;
@@ -4109,8 +4120,11 @@ window.__ModuleLoader__.load({
 		/** 文本输入。默认铺满容器（width:100%，与 Textarea 同口径）；要定宽由调用方在外面包壳（如 192px 搜索槽）。 */
 		function Input(props) {
 			ensureControls();
-			const { value, onChange, placeholder, size = "lg", error, disabled, type, className, style } = props;
-			return withHint((0, react$1.createElement)("input", {
+			const { value, onChange, placeholder, size = "lg", error, disabled, type, icon, className, style } = props;
+			const [focused, setFocused] = (0, react$1.useState)(false);
+			const search = type === "search";
+			const showClear = search && value !== "" && focused && disabled !== true;
+			const input = (0, react$1.createElement)("input", {
 				ref: props.inputRef,
 				type: type ?? "text",
 				value,
@@ -4124,8 +4138,64 @@ window.__ModuleLoader__.load({
 					onChange(event.target.value);
 				},
 				onKeyDown: props.onKeyDown,
-				onBlur: props.onBlur
-			}), props.hint);
+				onFocus: () => {
+					setFocused(true);
+				},
+				onBlur: () => {
+					setFocused(false);
+					if (props.onBlur !== void 0) props.onBlur();
+				}
+			});
+			const hasIcon = icon !== void 0 && icon !== null;
+			if (!hasIcon && !search) return withHint(input, props.hint);
+			return withHint((0, react$1.createElement)("span", { className: `dshpc-iwrap dshpc-iwrap${sizeClass(size)}${showClear ? " dshpc-iwrap--clear" : ""}` }, hasIcon ? (0, react$1.createElement)("span", { className: "dshpc-iwrap__icon" }, icon) : null, input, showClear ? (0, react$1.createElement)(IconButton$1, {
+				className: "dshpc-iwrap__clear",
+				variant: "plain",
+				size,
+				icon: "×",
+				label: "清空",
+				onMouseDown: (event) => {
+					event.preventDefault();
+				},
+				onClick: () => {
+					onChange("");
+				}
+			}) : null), props.hint);
+		}
+		//#endregion
+		//#region src/client/format.ts
+		/**
+		* 客户端时间口径**单源**：补零 / 时刻串（本机时区）。
+		* 解析失败按调用方给的兜底返回（不编造时间）。
+		*
+		* 2026-10-17 改版后首页不再做时间范围过滤（时间只作用于统计卡与趋势图，由 host 聚合）
+		* ⇒ 原来的 `rangeToDates` / `withinRange` / `RangeKey` 一并删除；统计 tab 要做时间筛选时
+		* 按当时口径在此重建，别处不许再写一份。
+		*/
+		function pad2(value) {
+			return String(value).padStart(2, "0");
+		}
+		/** ISO → `YYYY-MM-DD HH:mm`（`seconds: true` 时补 `:ss`）；解析失败返回 `fallback`（缺省原串）。 */
+		function formatDateTime(iso, opts) {
+			const ms = Date.parse(iso);
+			if (Number.isNaN(ms)) return opts?.fallback ?? iso;
+			const d = new Date(ms);
+			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
+		}
+		/** 计数缩写（统一口径）：<1000 原样；≥1000 用 K，≥100 万用 M，保留 1 位小数并去掉 .0。
+		*  例：999→"999"、1000→"1K"、1200→"1.2K"、12345→"12.3K"、1000000→"1M"。 */
+		function formatCount(n) {
+			if (!Number.isFinite(n)) return String(n);
+			const sign = n < 0 ? "-" : "";
+			const abs = Math.abs(Math.trunc(n));
+			const step = (v, unit) => {
+				const s = v >= 100 ? v.toFixed(0) : v.toFixed(1);
+				return `${sign}${s.replace(/\.0$/, "")}${unit}`;
+			};
+			if (abs >= 1e6) return step(abs / 1e6, "M");
+			if (abs >= 1e3) return step(abs / 1e3, "K");
+			return String(n);
 		}
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/official.js
@@ -51095,7 +51165,7 @@ window.__ModuleLoader__.load({
 			const [copied, setCopied] = (0, react$1.useState)(false);
 			const [openDirs, setOpenDirs] = (0, react$1.useState)(/* @__PURE__ */ new Set());
 			const [childCache, setChildCache] = (0, react$1.useState)({});
-			const [, setRootNonce] = (0, react$1.useState)(0);
+			const [rootNonce, setRootNonce] = (0, react$1.useState)(0);
 			const [outside, setOutside] = (0, react$1.useState)(false);
 			const hostWorkspaces = (0, react$1.useSyncExternalStore)(workspaceList.subscribe, workspaceList.getSnapshot);
 			const anchors = props.workspaceAnchors ?? hostWorkspaces;
@@ -51256,7 +51326,9 @@ window.__ModuleLoader__.load({
 				dir,
 				viewing,
 				mode,
-				listing
+				listing,
+				rootNonce,
+				outside
 			]);
 			const reload = (0, react$1.useCallback)(() => {
 				if (viewing !== null) {
@@ -51432,10 +51504,15 @@ window.__ModuleLoader__.load({
 			]);
 			const rootAbs = rootCache.get(listSessionId);
 			const rootLabel = anchorMatch?.title ?? props.rootName ?? (rootAbs !== void 0 ? baseNameOfPath(rootAbs.replace(/\/+$/, "")) : "");
-			const crumbs = rootLabel !== "" ? [{
+			const relDir = relativizeToRoot(rootCache, listSessionId, dir);
+			const rootPending = rootAbs === void 0 && dir !== "" && isAbsoluteish(dir);
+			const crumbs = [...rootLabel !== "" ? [{
 				label: rootLabel,
 				path: ""
-			}, ...crumbsOfDir(relativizeToRoot(rootCache, listSessionId, dir))] : crumbsOfDir(dir);
+			}] : [], ...rootPending ? [{
+				label: baseNameOfPath(dir),
+				path: dir
+			}] : crumbsOfDir(relDir)];
 			const viewingIsMd = viewing !== null && /\.(md|markdown)$/i.test(viewing);
 			const viewingIsHtml = viewing !== null && /\.(html|htm)$/i.test(viewing);
 			const switchable = viewingIsMd || viewingIsHtml;
@@ -51686,7 +51763,6 @@ window.__ModuleLoader__.load({
 				maxPanels: 1,
 				defaultWidth: options.width ?? 460,
 				minWidth: options.minWidth ?? 320,
-				storageKey: false,
 				onClose: () => {
 					close();
 				}
@@ -51803,6 +51879,7 @@ window.__ModuleLoader__.load({
 		/** 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。 */
 		function tabHit(task, tab) {
 			switch (tab) {
+				case "all": return true;
 				case "mine": return task.mine === true;
 				case "open": return task.status === "open";
 				case "doing": return task.status === "doing" || task.status === "blocked";
@@ -51834,6 +51911,7 @@ window.__ModuleLoader__.load({
 			const empty = {
 				rows: [],
 				counts: {
+					all: 0,
 					mine: 0,
 					open: 0,
 					doing: 0,
@@ -51853,6 +51931,7 @@ window.__ModuleLoader__.load({
 					mine: task.mine === true
 				})),
 				counts: {
+					all: tasks.length,
 					mine: tasks.filter((task) => task.mine === true).length,
 					open: tasks.filter((task) => task.status === "open").length,
 					doing: tasks.filter((task) => task.status === "doing" || task.status === "blocked").length,
@@ -52039,27 +52118,6 @@ window.__ModuleLoader__.load({
 				...state.query,
 				...patch
 			} });
-		}
-		//#endregion
-		//#region src/client/format.ts
-		/**
-		* 客户端时间口径**单源**：补零 / 时刻串（本机时区）。
-		* 解析失败按调用方给的兜底返回（不编造时间）。
-		*
-		* 2026-10-17 改版后首页不再做时间范围过滤（时间只作用于统计卡与趋势图，由 host 聚合）
-		* ⇒ 原来的 `rangeToDates` / `withinRange` / `RangeKey` 一并删除；统计 tab 要做时间筛选时
-		* 按当时口径在此重建，别处不许再写一份。
-		*/
-		function pad2(value) {
-			return String(value).padStart(2, "0");
-		}
-		/** ISO → `YYYY-MM-DD HH:mm`（`seconds: true` 时补 `:ss`）；解析失败返回 `fallback`（缺省原串）。 */
-		function formatDateTime(iso, opts) {
-			const ms = Date.parse(iso);
-			if (Number.isNaN(ms)) return opts?.fallback ?? iso;
-			const d = new Date(ms);
-			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
 		}
 		//#endregion
 		//#region src/client/tokens.ts
@@ -52331,7 +52389,7 @@ body[data-ds-dark-theme]{
 				icon: props.icon
 			});
 		}
-		/** 搜索框：改由核心 `Input`（type=search）承担；默认铺满容器。 */
+		/** 搜索框：核心 `Input`（`type=search`）自带左侧图标槽（`icon`），这里只传放大镜图标。 */
 		function SearchInput(props) {
 			return (0, react$1.createElement)(Input, {
 				type: "search",
@@ -52339,7 +52397,8 @@ body[data-ds-dark-theme]{
 				onChange: props.onChange,
 				placeholder: props.placeholder,
 				size: props.size ?? "md",
-				"aria-label": props.ariaLabel
+				"aria-label": props.ariaLabel,
+				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 16 })
 			});
 		}
 		/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。
@@ -52662,11 +52721,26 @@ body[data-ds-dark-theme]{
 		const SELECT_MAX_WIDTH = 240;
 		/** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
 		const SEARCH_WIDTH = 192;
-		/** 左侧六档菜单（全部本地真筛，角标 = 各档全量计数）。 */
+		/** 列表最多渲染条数（用户 2026-10-28：内容过多时只给最新 100 条 + 底部提示）。 */
+		const LIST_LIMIT = 100;
+		/** 底部「截断提示」样式（临时：核心暂无对应样式，先按此观感；用户确认后再定型）。 */
+		const limitHintStyle = {
+			marginTop: "var(--dtl-space-3)",
+			padding: "var(--dtl-space-3) var(--dtl-space-4)",
+			textAlign: "center",
+			fontSize: "var(--dtl-font-sm)",
+			lineHeight: "var(--dtl-line-sm)",
+			color: "var(--dtl-fg-3)"
+		};
+		/** 左侧菜单（「我的待办」置顶、「全部」次之，其后六档本地真筛；角标 = 各档全量计数）。 */
 		const TABS = [
 			{
 				value: "mine",
 				label: "regionMine"
+			},
+			{
+				value: "all",
+				label: "regionAll"
 			},
 			{
 				value: "open",
@@ -52689,10 +52763,6 @@ body[data-ds-dark-theme]{
 				label: "statStale"
 			}
 		];
-		/** 角标：>0 才给数字，0 = undefined（不标）。 */
-		function orZero(n) {
-			return n > 0 ? n : void 0;
-		}
 		function BoardHome(props) {
 			const { t, onBack } = props;
 			ensureUiBase();
@@ -52728,7 +52798,7 @@ body[data-ds-dark-theme]{
 			/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
 			const card = (label, value, hint, title) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
-				value,
+				value: formatCount(value),
 				hint,
 				title,
 				interactive: false
@@ -52738,7 +52808,7 @@ body[data-ds-dark-theme]{
 			/** 统计台卡：不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
 			const weekCard = (label, done, from, to) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
-				value: done ?? 0,
+				value: formatCount(done ?? 0),
 				interactive: false,
 				title: t("periodRange", {
 					from,
@@ -52761,7 +52831,7 @@ body[data-ds-dark-theme]{
 				items: TABS.map((tab) => ({
 					value: tab.value,
 					label: t(tab.label),
-					badge: orZero(view.counts[tab.value])
+					badge: view.counts[tab.value] > 0 ? formatCount(view.counts[tab.value]) : void 0
 				})),
 				size: "lg",
 				onChange: (next) => {
@@ -52830,8 +52900,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.113 · 261028-161857-241`
-			}, `v0.0.113 261028-161857-241`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.113 · 261028-171639-198`
+			}, `v0.0.113 261028-171639-198`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -52875,12 +52945,12 @@ body[data-ds-dark-theme]{
 			})).join("；"))), regionHead, view.rows.length === 0 ? (0, react$1.createElement)(EmptyState, {
 				title: t("listEmpty"),
 				hint: t("listEmptyHint")
-			}) : (0, react$1.createElement)("div", null, view.rows.map((row) => (0, react$1.createElement)(TaskRowView, {
+			}) : (0, react$1.createElement)("div", null, view.rows.slice(0, LIST_LIMIT).map((row) => (0, react$1.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,
 				onView: handleView
-			}))))));
+			}))), view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null)));
 		}
 		//#endregion
 		//#region src/client/locales.ts
@@ -52933,10 +53003,12 @@ body[data-ds-dark-theme]{
 			workspaceAll: "全部工作区",
 			searchPlaceholder: "搜索",
 			regionMine: "我的待办",
+			regionAll: "全部",
 			ownerLabel: "执行人",
 			ownerAll: "全部执行人",
 			listEmpty: "这一档没有任务",
 			listEmptyHint: "换个档位或工作区看看。",
+			listLimitHint: "仅显示前 {n} 条查询结果",
 			ownerUnclaimed: "待认领",
 			fieldStarted: "开始",
 			timeUnknown: "时间未知",
@@ -53000,10 +53072,12 @@ body[data-ds-dark-theme]{
 			workspaceAll: "All workspaces",
 			searchPlaceholder: "Search",
 			regionMine: "My todos",
+			regionAll: "All",
 			ownerLabel: "Owner",
 			ownerAll: "Anyone",
 			listEmpty: "Nothing in this tab",
 			listEmptyHint: "Try another tab or workspace.",
+			listLimitHint: "Only the first {n} results are shown",
 			ownerUnclaimed: "unclaimed",
 			fieldStarted: "started",
 			timeUnknown: "unknown time",

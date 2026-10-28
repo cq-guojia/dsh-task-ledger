@@ -10,7 +10,10 @@
  *  3. 官方 primitives 只留「官方做得更好」的（Tooltip / MarkdownText / 图标）。
  */
 
-import { Tooltip } from "@deepseek-ai/dsh-client-ui-primitives";
+import {
+	IconSearchOutlineRegular,
+	Tooltip,
+} from "@deepseek-ai/dsh-client-ui-primitives";
 import {
 	Button as CoreButton,
 	Chip as CoreChip,
@@ -113,8 +116,8 @@ export function ensureUiBase(): void {
 export interface SegmentedItem<Value extends string = string> {
 	readonly value: Value;
 	readonly label: string;
-	/** 段内角标数字；`undefined` 或 ≤0 不显示。 */
-	readonly badge?: number;
+	/** 段内角标数字（或已缩写字符串如「1.2K」）；`undefined` / 空串 / "0" 不显示。 */
+	readonly badge?: number | string;
 }
 
 /** 分段控件（单选）：改由核心 `Segmented` 承担（size/滑块动画全在 core，外观只有一套、无需指定变体，
@@ -238,7 +241,7 @@ export function Select<Value extends string>(props: {
 	});
 }
 
-/** 搜索框：改由核心 `Input`（type=search）承担；默认铺满容器。 */
+/** 搜索框：核心 `Input`（`type=search`）自带左侧图标槽（`icon`），这里只传放大镜图标。 */
 export function SearchInput(props: {
 	value: string;
 	placeholder: string;
@@ -253,6 +256,7 @@ export function SearchInput(props: {
 		placeholder: props.placeholder,
 		size: props.size ?? "md",
 		"aria-label": props.ariaLabel,
+		icon: h(IconSearchOutlineRegular, { size: 16 }),
 	});
 }
 

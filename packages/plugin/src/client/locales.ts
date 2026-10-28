@@ -61,10 +61,12 @@ export type LocaleKey =
 	| "searchPlaceholder"
 	// 列表分区
 	| "regionMine"
+	| "regionAll"
 	| "ownerLabel"
 	| "ownerAll"
 	| "listEmpty"
 	| "listEmptyHint"
+	| "listLimitHint"
 	| "ownerUnclaimed"
 	| "fieldStarted"
 	| "timeUnknown"
@@ -134,10 +136,12 @@ export const zh: Record<LocaleKey, string> = {
 	searchPlaceholder: "搜索",
 
 	regionMine: "我的待办",
+	regionAll: "全部",
 	ownerLabel: "执行人",
 	ownerAll: "全部执行人",
 	listEmpty: "这一档没有任务",
 	listEmptyHint: "换个档位或工作区看看。",
+	listLimitHint: "仅显示前 {n} 条查询结果",
 
 	ownerUnclaimed: "待认领",
 	fieldStarted: "开始",
@@ -211,10 +215,12 @@ export const en: Record<LocaleKey, string> = {
 	searchPlaceholder: "Search",
 
 	regionMine: "My todos",
+	regionAll: "All",
 	ownerLabel: "Owner",
 	ownerAll: "Anyone",
 	listEmpty: "Nothing in this tab",
 	listEmptyHint: "Try another tab or workspace.",
+	listLimitHint: "Only the first {n} results are shown",
 
 	ownerUnclaimed: "unclaimed",
 	fieldStarted: "started",
