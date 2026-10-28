@@ -141,8 +141,8 @@ export const zh: Record<LocaleKey, string> = {
 	regionAll: "全部",
 	ownerLabel: "执行人",
 	ownerAll: "全部执行人",
-	listEmpty: "这一档没有任务",
-	listEmptyHint: "换个档位或工作区看看。",
+	listEmpty: "未找到匹配的任务记录",
+	listEmptyHint: "可切换状态或工作区，查看其他记录。",
 	listLimitHint: "仅显示前 {n} 条查询结果",
 
 	ownerUnclaimed: "待认领",
@@ -221,8 +221,8 @@ export const en: Record<LocaleKey, string> = {
 	regionAll: "All",
 	ownerLabel: "Owner",
 	ownerAll: "Anyone",
-	listEmpty: "Nothing in this tab",
-	listEmptyHint: "Try another tab or workspace.",
+	listEmpty: "No matching task records",
+	listEmptyHint: "Switch status or workspace to see other records.",
 	listLimitHint: "Only the first {n} results are shown",
 
 	ownerUnclaimed: "unclaimed",

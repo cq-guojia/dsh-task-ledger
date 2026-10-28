@@ -54066,8 +54066,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.113 · 261028-173120-637`
-			}, `v0.0.113 261028-173120-637`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.113 · 261028-173850-529`
+			}, `v0.0.113 261028-173850-529`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54173,8 +54173,8 @@ body[data-ds-dark-theme]{
 			regionAll: "全部",
 			ownerLabel: "执行人",
 			ownerAll: "全部执行人",
-			listEmpty: "这一档没有任务",
-			listEmptyHint: "换个档位或工作区看看。",
+			listEmpty: "未找到匹配的任务记录",
+			listEmptyHint: "可切换状态或工作区，查看其他记录。",
 			listLimitHint: "仅显示前 {n} 条查询结果",
 			ownerUnclaimed: "待认领",
 			fieldStarted: "开始",
@@ -54243,8 +54243,8 @@ body[data-ds-dark-theme]{
 			regionAll: "All",
 			ownerLabel: "Owner",
 			ownerAll: "Anyone",
-			listEmpty: "Nothing in this tab",
-			listEmptyHint: "Try another tab or workspace.",
+			listEmpty: "No matching task records",
+			listEmptyHint: "Switch status or workspace to see other records.",
 			listLimitHint: "Only the first {n} results are shown",
 			ownerUnclaimed: "unclaimed",
 			fieldStarted: "started",
