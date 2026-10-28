@@ -52094,11 +52094,8 @@ body{
 
   /* ── 面 ──────────────────────────────────────────────────────── */
   --dtl-surface-1:var(--dsw-alias-bg-layer-1,#fff);
-  /* 斑马纹：几乎贴着原色的一层（用户 2026-10-18：3% 还是太明显） */
-  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 2%,transparent);
 
   /* ── 描边（宿主真值 l1 4% / l2 10% / l3 12%）─────────────────── */
-  --dtl-border-faint:var(--dsw-alias-border-l1,#0000000a);
   --dtl-border:var(--dsw-alias-border-l2,#0000001a);
   --dtl-border-strong:var(--dsw-alias-border-l3,#0000001f);
 
@@ -52113,8 +52110,6 @@ body{
   --dtl-overdue:color-mix(in srgb,var(--dtl-warning) 55%,var(--dtl-danger));
   /* 语义色浅底：color-mix 现算 ⇒ 跟随宿主 alias，主题一换自动成立 */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
-  /* 他人任务的 doing 色：比「我的」蓝灰一档（用户 2026-10-17：要和我的蓝区分） */
-  --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
   /* ── 交互底 ──────────────────────────────────────────────────── */
@@ -52152,12 +52147,10 @@ body{
 /* ── 明暗差异的唯一落点 ─────────────────────────────────────────
    只放 alias 表达不了的固定面 / 半透明底；颜色若能靠 alias 自动跟随，一律不写在这里。 */
 body[data-ds-dark-theme]{
-  --dtl-zebra:color-mix(in srgb,var(--dtl-fg) 2.5%,transparent);
   /* 暗色下蓝要更亮、透明度更高才压得住深底 */
   --dtl-card-hover:rgba(96,165,250,.13);
   /* 语义色浅底在深色下压到 12% / 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
-  --dtl-business-dim:color-mix(in srgb,var(--dtl-business) 55%,var(--dtl-fg-3));
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
 }
 `;
@@ -52209,43 +52202,6 @@ body[data-ds-dark-theme]{
 .dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
-
-/* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
-   一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
-.dtl-orow{padding:13px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
-/* 斑马纹落在 2、4、6 行（用户 2026-10-18：原来 1、3、5 看着像从第一行就开始断层） */
-.dtl-orow:nth-of-type(even){background:var(--dtl-zebra);}
-.dtl-orow:hover{background:var(--dtl-card-hover);}
-.dtl-orow__row{display:flex;align-items:center;gap:12px;}
-.dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
-.dtl-orow__name{font-size:var(--dtl-font-md);font-weight:500;line-height:var(--dtl-line-md);min-width:0;}
-/* 第二行：状态标签 + #标签（与标题行间距拉开，用户 2026-10-18；状态位与执行人**互换**后，
-   状态搬到这里、且永远有 ⇒ 这一行不再有「空一排」的情况） */
-.dtl-orow__tags{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:7px;min-width:0;}
-/* 列：任务（弹性）/ 执行人 / 右侧槽（创建信息 ⇄ 操作钮） */
-.dtl-tcell{min-width:0;}
-.dtl-tcell--title{flex:1 1 auto;}
-/* 执行人列（原状态列，用户 2026-10-18 互换）：稍放宽一档（用户 2026-10-19：原来有点挤），
-   20 字的名字能基本摆全；再长由标签自己的省略号兜住，不许溢出压到右边的槽 */
-.dtl-tcell--status{flex:none;width:136px;}
-/* 悬停：**创建信息整条让位给操作钮**（用户 2026-10-18：不要「掉掉时分秒」那种半吊子，
-   要整条换掉）。两个都**常驻布局**（visibility 切换、不用 display），格子宽度 = 两者较宽的
-   那个 ⇒ hover 时行宽不变、**页面不跳**（跳了执行人的悬停提示就跟着飘） */
-.dtl-orow__slot{display:grid;align-items:center;justify-items:end;flex:none;
-  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
-.dtl-orow__slot>*{grid-area:1/1;}
-.dtl-orow__created{visibility:visible;}
-.dtl-orow__actions{visibility:hidden;display:flex;align-items:center;gap:6px;}
-.dtl-orow:hover .dtl-orow__created{visibility:hidden;}
-.dtl-orow:hover .dtl-orow__actions{visibility:visible;}
-/* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=积压 / 橙=逾期 / 红=停滞；
-   6px（用户 2026-10-18：8px 太大） */
-.dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
-.dtl-dot--doing{background:var(--dtl-business-dim);}
-.dtl-dot--backlog{background:var(--dtl-warning);}
-.dtl-dot--overdue{background:var(--dtl-overdue);}
-.dtl-dot--stale{background:var(--dtl-danger);}
-.dtl-dot--open{background:var(--dtl-fg-3);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -52637,14 +52593,24 @@ body[data-ds-dark-theme]{
 		* 数据纪律：行上的 `mine` / `stale` / `overdue` / `backlog` 与阈值都来自 skill，
 		* 前端只做布尔判断与渲染。刷新 = 挂载首读 + 手动刷新按钮，**不轮询**。
 		*/
-		/** 整页容器：占满中栏、自己滚动。 */
+		/** 主内容：占满、自己滚动；padding 只在内层，dock 才不会继承内边距。 */
 		const pageStyle = {
 			height: "100%",
 			width: "100%",
+			flex: "1 1 auto",
+			minWidth: 0,
 			boxSizing: "border-box",
 			overflow: "auto",
 			padding: "24px 22px",
 			color: "var(--dtl-fg)"
+		};
+		/** dock 的挂载行：**不带 padding**，dock 作为直接子项才能贴右/上/下边。 */
+		const mountStyle = {
+			display: "flex",
+			height: "100%",
+			width: "100%",
+			boxSizing: "border-box",
+			minWidth: 0
 		};
 		const headerStyle = {
 			display: "flex",
@@ -52843,8 +52809,9 @@ body[data-ds-dark-theme]{
 			})));
 			return (0, react$1.createElement)("div", {
 				ref: mountRef,
-				style: pageStyle
+				style: mountStyle
 			}, (0, react$1.createElement)("div", { style: {
+				...pageStyle,
 				display: "flex",
 				justifyContent: "center"
 			} }, (0, react$1.createElement)("div", { style: {
@@ -52863,8 +52830,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.113 · 261028-161741-368`
-			}, `v0.0.113 261028-161741-368`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.113 · 261028-161857-241`
+			}, `v0.0.113 261028-161857-241`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -52981,8 +52948,6 @@ body[data-ds-dark-theme]{
 			tipResume: "继续推进这个任务",
 			tipFinish: "结案并写入历史",
 			tipRelease: "释放认领，让别人接手",
-			createdAt: "{who} 创建于 {when}",
-			startedAt: "{who} 开始于 {when}",
 			viewDetail: "查看详情",
 			fieldCreatedStamp: "{day} 创建"
 		};
@@ -53050,8 +53015,6 @@ body[data-ds-dark-theme]{
 			tipResume: "keep working on this task",
 			tipFinish: "close and archive it",
 			tipRelease: "release the claim for others",
-			createdAt: "created by {who} on {when}",
-			startedAt: "{who} started on {when}",
 			viewDetail: "View details",
 			fieldCreatedStamp: "created {day}"
 		};

@@ -41,43 +41,6 @@ const UI_BASE_CSS = `
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
-/* 表格行（.dtl-orow）：**零重用**「我的待办」卡片基类——无框、无圆角、无外边距，
-   一行 = 一条底部分隔线 + 极浅斑马纹（用户 2026-10-18：一行一格，不是一块一块的框） */
-.dtl-orow{padding:13px var(--dtl-space-3);border-bottom:1px solid var(--dtl-border-faint);}
-/* 斑马纹落在 2、4、6 行（用户 2026-10-18：原来 1、3、5 看着像从第一行就开始断层） */
-.dtl-orow:nth-of-type(even){background:var(--dtl-zebra);}
-.dtl-orow:hover{background:var(--dtl-card-hover);}
-.dtl-orow__row{display:flex;align-items:center;gap:12px;}
-.dtl-orow__title{display:flex;align-items:baseline;gap:6px;min-width:0;}
-.dtl-orow__name{font-size:var(--dtl-font-md);font-weight:500;line-height:var(--dtl-line-md);min-width:0;}
-/* 第二行：状态标签 + #标签（与标题行间距拉开，用户 2026-10-18；状态位与执行人**互换**后，
-   状态搬到这里、且永远有 ⇒ 这一行不再有「空一排」的情况） */
-.dtl-orow__tags{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:7px;min-width:0;}
-/* 列：任务（弹性）/ 执行人 / 右侧槽（创建信息 ⇄ 操作钮） */
-.dtl-tcell{min-width:0;}
-.dtl-tcell--title{flex:1 1 auto;}
-/* 执行人列（原状态列，用户 2026-10-18 互换）：稍放宽一档（用户 2026-10-19：原来有点挤），
-   20 字的名字能基本摆全；再长由标签自己的省略号兜住，不许溢出压到右边的槽 */
-.dtl-tcell--status{flex:none;width:136px;}
-/* 悬停：**创建信息整条让位给操作钮**（用户 2026-10-18：不要「掉掉时分秒」那种半吊子，
-   要整条换掉）。两个都**常驻布局**（visibility 切换、不用 display），格子宽度 = 两者较宽的
-   那个 ⇒ hover 时行宽不变、**页面不跳**（跳了执行人的悬停提示就跟着飘） */
-.dtl-orow__slot{display:grid;align-items:center;justify-items:end;flex:none;
-  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
-.dtl-orow__slot>*{grid-area:1/1;}
-.dtl-orow__created{visibility:visible;}
-.dtl-orow__actions{visibility:hidden;display:flex;align-items:center;gap:6px;}
-.dtl-orow:hover .dtl-orow__created{visibility:hidden;}
-.dtl-orow:hover .dtl-orow__actions{visibility:visible;}
-/* 行首状态圆点：灰=待认领 / 浅蓝=进行中（比「我的」蓝灰一档）/ 黄=积压 / 橙=逾期 / 红=停滞；
-   6px（用户 2026-10-18：8px 太大） */
-.dtl-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;}
-.dtl-dot--doing{background:var(--dtl-business-dim);}
-.dtl-dot--backlog{background:var(--dtl-warning);}
-.dtl-dot--overdue{background:var(--dtl-overdue);}
-.dtl-dot--stale{background:var(--dtl-danger);}
-.dtl-dot--open{background:var(--dtl-fg-3);}
-
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
 .dtl-taskrow{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);

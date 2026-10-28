@@ -70,7 +70,6 @@ export type LocaleKey =
 	| "timeUnknown"
 	| "ageDaysText"
 	| "ageToday"
-	| "startedAt"
 	| "actionResume"
 	| "actionFinish"
 	| "actionRelease"
@@ -78,7 +77,6 @@ export type LocaleKey =
 	| "tipFinish"
 	| "tipRelease"
 	| "viewDetail"
-	| "createdAt"
 	| "fieldCreatedStamp"
 	// 空态
 	// 浮标入口
@@ -152,8 +150,6 @@ export const zh: Record<LocaleKey, string> = {
 	tipResume: "继续推进这个任务",
 	tipFinish: "结案并写入历史",
 	tipRelease: "释放认领，让别人接手",
-	createdAt: "{who} 创建于 {when}",
-	startedAt: "{who} 开始于 {when}",
 	viewDetail: "查看详情",
 	fieldCreatedStamp: "{day} 创建",
 
@@ -231,8 +227,6 @@ export const en: Record<LocaleKey, string> = {
 	tipResume: "keep working on this task",
 	tipFinish: "close and archive it",
 	tipRelease: "release the claim for others",
-	createdAt: "created by {who} on {when}",
-	startedAt: "{who} started on {when}",
 	viewDetail: "View details",
 	fieldCreatedStamp: "created {day}",
 

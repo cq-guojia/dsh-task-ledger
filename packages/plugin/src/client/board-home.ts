@@ -47,14 +47,24 @@ import {
 declare const __PLUGIN_VERSION__: string;
 declare const __BUILD_STAMP__: string;
 
-/** 整页容器：占满中栏、自己滚动。 */
+/** 主内容：占满、自己滚动；padding 只在内层，dock 才不会继承内边距。 */
 const pageStyle: Record<string, string | number> = {
 	height: "100%",
 	width: "100%",
+	flex: "1 1 auto",
+	minWidth: 0,
 	boxSizing: "border-box",
 	overflow: "auto",
 	padding: "24px 22px",
 	color: "var(--dtl-fg)",
+};
+/** dock 的挂载行：**不带 padding**，dock 作为直接子项才能贴右/上/下边。 */
+const mountStyle: Record<string, string | number> = {
+	display: "flex",
+	height: "100%",
+	width: "100%",
+	boxSizing: "border-box",
+	minWidth: 0,
 };
 const headerStyle: Record<string, string | number> = {
 	display: "flex",
@@ -358,10 +368,10 @@ export function BoardHome(props: {
 
 	return h(
 		"div",
-		{ ref: mountRef, style: pageStyle },
+		{ ref: mountRef, style: mountStyle },
 		h(
 			"div",
-			{ style: { display: "flex", justifyContent: "center" } },
+			{ style: { ...pageStyle, display: "flex", justifyContent: "center" } },
 			h(
 				"div",
 				{
