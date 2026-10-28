@@ -77,12 +77,14 @@ export type LocaleKey =
 	| "relDays"
 	| "relMonths"
 	| "relYears"
-	| "whenCreated"
 	| "whenSubmitted"
 	// 行内点选 = 改筛选（人名 / 工作区 / 标签）
 	| "filterByOwner"
 	| "filterByWorkspace"
 	| "filterByTag"
+	| "copyTaskId"
+	| "copiedTaskId"
+	| "copyFailed"
 	| "actionClaim"
 	| "actionResume"
 	| "actionFinish"
@@ -92,7 +94,7 @@ export type LocaleKey =
 	| "tipFinish"
 	| "tipRelease"
 	| "viewDetail"
-	| "fieldCreatedStamp"
+	| "fieldCreatorStamp"
 	// 空态
 	// 浮标入口
 
@@ -165,11 +167,13 @@ export const zh: Record<LocaleKey, string> = {
 	relDays: "{n} 天前",
 	relMonths: "{n} 个月前",
 	relYears: "{n} 年前",
-	whenCreated: "创建于 {time}",
 	whenSubmitted: "更新于 {time}",
 	filterByOwner: "只看 @{name} 的任务",
 	filterByWorkspace: "只看工作区 {name}",
 	filterByTag: "搜索标签 #{tag}",
+	copyTaskId: "点击复制任务 ID",
+	copiedTaskId: "已复制任务 ID",
+	copyFailed: "复制失败",
 	actionClaim: "认领",
 	actionResume: "继续",
 	actionFinish: "结束",
@@ -179,7 +183,7 @@ export const zh: Record<LocaleKey, string> = {
 	tipFinish: "结案并写入历史",
 	tipRelease: "释放认领，让别人接手",
 	viewDetail: "查看详情",
-	fieldCreatedStamp: "{day} 创建",
+	fieldCreatorStamp: "创建于 {age}",
 
 
 };
@@ -255,11 +259,13 @@ export const en: Record<LocaleKey, string> = {
 	relDays: "{n} d ago",
 	relMonths: "{n} mo ago",
 	relYears: "{n} y ago",
-	whenCreated: "created {time}",
 	whenSubmitted: "updated {time}",
 	filterByOwner: "Only tasks owned by @{name}",
 	filterByWorkspace: "Only workspace {name}",
 	filterByTag: "Search tag #{tag}",
+	copyTaskId: "Click to copy task ID",
+	copiedTaskId: "Task ID copied",
+	copyFailed: "Copy failed",
 	actionClaim: "Claim",
 	actionResume: "Resume",
 	actionFinish: "Close",
@@ -269,7 +275,7 @@ export const en: Record<LocaleKey, string> = {
 	tipFinish: "close and archive it",
 	tipRelease: "release the claim for others",
 	viewDetail: "View details",
-	fieldCreatedStamp: "created {day}",
+	fieldCreatorStamp: "created {age}",
 
 
 };

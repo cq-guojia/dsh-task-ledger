@@ -49,7 +49,7 @@ const UI_BASE_CSS = `
 .dtl-taskrow{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);
   border-radius:var(--dtl-radius-sm);margin-bottom:10px;}
 .dtl-taskrow__row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:inherit;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+  cursor:pointer;transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
 
 /* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
@@ -68,33 +68,25 @@ const UI_BASE_CSS = `
 /* 第二行小字：工作区 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
 .dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
-/* 右侧三段（用户 2026-10-28）：人名（常驻、蓝、可点筛人）/ 时间（hover 让位）/ 动作钮。
-   hover 只收时间那一截，人名不动 —— 按钮出现时人名与它保持同一个 gap。 */
-.dtl-taskrow__who{flex:none;padding:0;border:0;background:none;cursor:pointer;
-  font-family:inherit;font-size:var(--dtl-font-sm);color:var(--dtl-business);white-space:nowrap;}
-.dtl-taskrow__who:hover{text-decoration:underline;}
-.dtl-taskrow__who--plain{color:var(--dtl-fg-3);cursor:default;}
+/* 右侧（用户 2026-10-28）：工作区 Chip（常驻）/ 时间（hover 让位）/ 动作钮。
+   hover 只收时间那一截，Chip 不动 —— 按钮出现时两者保持同一个 gap。
+   人名（第二行）走核心 Button 的 link 档，这里不再有它的样式。 */
 .dtl-taskrow__meta{flex:none;overflow:hidden;text-overflow:ellipsis;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-.dtl-taskrow__actions{display:none;flex:none;gap:6px;}
+.dtl-taskrow__actions{display:none;flex:none;gap:6px;align-items:center;}
 .dtl-taskrow__row:hover .dtl-taskrow__meta{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
+/* 次级图标钮（复制 ID / 查看）：动作排里**常驻**，故比旁边那几个描边动作钮浅一档
+   （用户 2026-10-28：灰一点、别抢眼）——灰字、无底无边；hover 才回到正常字色。
+   明暗都靠 --dtl-fg-3（别名随宿主主题变），不写第二套颜色。 */
+.dtl-taskrow__actions .dtl-iconbtn--muted{color:var(--dtl-fg-3);}
+.dtl-taskrow__actions .dtl-iconbtn--muted:hover:not(:disabled){color:var(--dtl-fg);}
 
-/* 可点标签：点一下把标签塞进搜索框（用户 2026-10-28） */
-.dtl-clicktag{padding:0;border:0;background:none;cursor:pointer;font-family:inherit;}
-.dtl-clicktag:hover{opacity:.78;}
+/* 工作区 / #标签 都是核心可点 Chip（business 档），含最大宽 / 省略号 / 跑马灯，本文件不写皮肤。 */
 
-/* 用核心 Chip 承担标签时的截断（core Chip 无 max-width/省略号 ⇒ 这里只补布局，不改皮肤） */
-.dshpc-chip.dtl-tagchip{display:inline-block;flex:none;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;}
-
-/* 工作区徽标：**实色** business 底 + 反白字（用户 2026-10-28：浅底太暗，要核心 --dshpc-business
-   那种亮蓝）；可点 = 按该工作区筛选。 */
-.dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border:0;border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-business);color:var(--dtl-fg-inverse);cursor:pointer;
-  font-family:inherit;font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;}
-.dtl-wstag:hover{filter:brightness(1.12);}
+/* Tooltip 垫片（见 ui.ts 的 Tip）：只是挂官方气泡的真 DOM 锚点，不占额外版面。 */
+.dtl-tip{display:inline-flex;min-width:0;}
 
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
@@ -163,17 +155,22 @@ export function Segmented<Value extends string>(props: {
 
 /* ── 按钮 / 图标钮 ────────────────────────────────────────────────── */
 
-/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 3 档）。本地默认高度 md（core 默认 lg）。
- *  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。 */
+/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 primary/outline/ghost/link）。
+ *  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。
+ *  宽度三件（width/minWidth/maxWidth）核心已支持：给 maxWidth + 纯文字 ⇒ 核心自动省略号 +
+ *  hover 跑马灯，本层原样透传，别再自己写截断。 */
 export function Button(props: {
 	children?: ReactNode;
 	onClick?: () => void;
-	variant?: "primary" | "outline" | "ghost";
+	variant?: "primary" | "outline" | "ghost" | "link";
 	size?: "sm" | "md" | "lg";
 	icon?: ReactNode;
 	loading?: boolean;
 	disabled?: boolean;
 	title?: string;
+	width?: number | string;
+	minWidth?: number | string;
+	maxWidth?: number | string;
 }): ReactNode {
 	return h(
 		CoreButton,
@@ -184,13 +181,17 @@ export function Button(props: {
 			loading: props.loading,
 			disabled: props.disabled,
 			title: props.title,
+			width: props.width,
+			minWidth: props.minWidth,
+			maxWidth: props.maxWidth,
 			onClick: props.onClick,
 		},
 		props.children,
 	);
 }
 
-/** 图标钮：改由核心 `IconButton` 承担。 */
+/** 图标钮：改由核心 `IconButton` 承担。
+ *  `className` 只用于挂本文件的修饰类（如 `.dtl-iconbtn--muted`），不覆盖核心皮肤。 */
 export function IconButton(props: {
 	icon: ReactNode;
 	label: string;
@@ -199,6 +200,7 @@ export function IconButton(props: {
 	size?: "sm" | "md" | "lg";
 	disabled?: boolean;
 	title?: string;
+	className?: string;
 }): ReactNode {
 	return h(CoreIconButton, {
 		icon: props.icon,
@@ -208,10 +210,34 @@ export function IconButton(props: {
 		size: props.size ?? "md",
 		disabled: props.disabled,
 		title: props.title,
+		className: props.className,
 	});
 }
 
 /* ── 提示 ─────────────────────────────────────────────────────────── */
+
+/** 悬停提示（本插件**唯一**挂 Tooltip 的入口）。
+ *
+ *  ⚠️ 官方 `Tooltip` 给子元素挂 `ref` 来当锚点（`children.ref` → `cloneElement`），
+ *  而核心控件（Button / IconButton / Chip）都是**裸函数组件**（无 forwardRef）⇒ ref 被 React
+ *  丢掉、锚点永远 null、气泡静默不出现。所以这里统一垫一层**真 DOM 的 span** 当锚点：
+ *  悬停/聚焦事件冒泡到 span 照样触发，按钮仍由核心控件渲染。
+ *  `display:inline-flex` 让垫片不改变原控件在 flex 行里的尺寸与对齐。 */
+export function Tip(props: {
+	label: string;
+	/** 被提示的元素（Tooltip 只接受单个元素）。 */
+	children: ReactNode;
+	side?: "top" | "bottom" | "right";
+	maxWidth?: number;
+}): ReactNode {
+	return h(Tooltip, {
+		label: props.label,
+		side: props.side ?? "bottom",
+		portal: true,
+		maxWidth: props.maxWidth ?? 240,
+		children: h("span", { className: "dtl-tip" }, props.children),
+	});
+}
 
 /** 核心封装的 Toast 卡（灰/绿/红/黄，随明暗；默认 info 灰卡、位置 bottom-center）。
  *  无关闭句柄，靠 `durationMs` 自退。 */
@@ -322,16 +348,6 @@ export function StatCard(props: {
 	);
 }
 
-/** 标签上限宽度（字符数）：1 个中文按 2 计 ⇒ 10 个中文 = 20 个字符（与 CSS 的 20ch 对齐）。 */
-const TAG_MAX_WIDTH = 20;
-
-/** 显示宽度：全角（中 / 日 / 韩 / 全角符号）一个顶两个英文字符。 */
-function displayWidth(text: string): number {
-	let width = 0;
-	for (const char of text) width += (char.codePointAt(0) ?? 0) > 0x2e80 ? 2 : 1;
-	return width;
-}
-
 /** 本地 7 档语义色 → 核心 `Chip` 5 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
  *  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。 */
 const CHIP_TONE: Record<
@@ -348,8 +364,8 @@ const CHIP_TONE: Record<
 };
 
 /**
- * 标签：状态 / 执行人 / #标签 都走它，只换 tone（改由核心 `Chip` 承担）。
- * 超过 20 个字符宽 ⇒ 省略号（`.dtl-tagchip` 补），**且只在被截时**挂悬停提示补出全文。
+ * 标签：状态 / 工作区 / #标签 都走它，只换 tone（核心 `Chip` 承担）。
+ * 传 `maxWidth` ⇒ 核心自动折叠省略号 + hover 跑马灯，本层不再自己算宽度。
  */
 export function Tag(props: {
 	text: string;
@@ -361,24 +377,19 @@ export function Tag(props: {
 		| "overdue"
 		| "stale"
 		| "person";
-	/** 悬停提示（**被截时**才显示；默认 = 文本本身）。 */
-	title?: string;
-	/** 悬停提示（**始终**显示，状态标记的解释走它；优先于 title）。走官方 Tooltip。 */
+	/** 悬停说明（**始终**显示，状态标记的解释走它）。走官方 Tooltip。 */
 	tip?: string;
+	/** 给了就是可点的标签（核心 Chip 自动渲染成 button + hover 加深），如工作区 / #标签。 */
+	onClick?: () => void;
+	/** 最大宽：核心在超长时折叠省略号 + hover 跑马灯。 */
+	maxWidth?: number | string;
 }): ReactNode {
 	ensureUiBase();
-	const { text, tone = "neutral", title, tip } = props;
-	const long = displayWidth(text) > TAG_MAX_WIDTH;
-	const label = tip ?? (long ? (title ?? text) : undefined);
-	const chip = h(CoreChip, { tone: CHIP_TONE[tone], className: "dtl-tagchip" }, text);
-	if (label === undefined) return chip;
-	return h(Tooltip, {
-		label,
-		side: "bottom",
-		portal: true,
-		maxWidth: 240,
-		children: chip,
-	});
+	const { text, tone = "neutral", tip, onClick, maxWidth } = props;
+	const chip = h(CoreChip, { tone: CHIP_TONE[tone], onClick, maxWidth }, text);
+	if (tip === undefined) return chip;
+	// Chip 是核心裸组件 ⇒ 必须走 Tip 垫真 DOM 锚点，直接套 Tooltip 永不显气泡。
+	return h(Tip, { label: tip, children: chip });
 }
 
 /** 空态：真空引导卡（虚线）。 */

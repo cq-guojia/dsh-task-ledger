@@ -15,15 +15,15 @@
 import {
 	IconCheckOutlineRegular,
 	IconChevronRightOutlineRegular,
+	IconCopyOutlineRegular,
 	IconSearchOutlineRegular,
-	Tooltip,
 } from "@deepseek-ai/dsh-client-ui-primitives";
-import { createElement as h, type ReactNode } from "react";
+import { createElement as h, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { formatDateTime, formatRelative } from "./format";
 import type { Translate } from "./locales";
 import { displayName, type Row, resolveActions } from "./rows";
 import { focusOwner, setQuery } from "./store";
-import { Button, IconButton, Tag } from "./ui";
+import { Button, IconButton, notify, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
 
@@ -65,12 +65,13 @@ export function TaskRowView(props: {
 	const tone = toneOf(row);
 	const tags = row.task.tags ?? [];
 
-	// 创建日期（第一行灰徽只给日期）。
+	// 第一行灰徽（用户 2026-10-28）：`[@谁 创建于 2 天前]`，只读、不可点，颜色不变。
 	const created = row.task.created ?? null;
-	const createdDay =
-		created !== null && created !== undefined && Date.parse(created) >= 0
-			? formatDateTime(created).slice(0, 10)
-			: null;
+	const creatorName = displayName(row.task.creator_name, row.task.creator);
+	const creatorAge =
+		created === null || created === undefined
+			? null
+			: formatRelative(created, t);
 
 	// 标签悬停解释（用户 2026-10-19）：一律「谁 / 何时开始 / 最后更新 / 多少天」，天数由 host 下发，
 	// 前端不自行推算；缺时间就报「时间未知」，不编。
@@ -106,17 +107,20 @@ export function TaskRowView(props: {
 	const actions = resolveActions(row.task);
 
 	// 动作钮：继续 / 结束 / 释放 + 查看，各一份。
-	// 悬停说明统一走官方 Tooltip（portal 逃逸裁切、hover 即出），不在 CSS 里手搓 ::after 浮层。
+	// 悬停说明统一走 `Tip`（官方 Tooltip + 真 DOM 锚点；portal 逃逸裁切、hover 即出），
+	// 不在 CSS 里手搓 ::after 浮层。
 	// 「查看」：统一最右、放大镜图标（用户 2026-10-17）。
-	const viewButton = h(Tooltip, {
+	// 复制 / 查看两枚是**次级**动作（常驻、非主操作）⇒ 比旁边的描边动作钮浅一档（用户 2026-10-28）：
+	// 同一档尺寸（md，和动作钮同高）、无底无边的 `plain` + `.dtl-iconbtn--muted` 灰字。
+	const viewButton = h(Tip, {
 		label: t("viewDetail"),
-		side: "bottom",
-		portal: true,
-		maxWidth: 240,
 		children: h(IconButton, {
-			variant: "outline",
+			variant: "plain",
 			size: "md",
 			label: t("viewDetail"),
+			// 抑制原生 title（系统提示要悬停一两秒才出，和官方气泡抢）：核心是 `title ?? label`，空串即不渲染。
+			title: "",
+			className: "dtl-iconbtn--muted",
 			icon: h(IconSearchOutlineRegular, { size: 14 }),
 			onClick: () => props.onView?.(row),
 		}),
@@ -126,11 +130,8 @@ export function TaskRowView(props: {
 		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease",
 		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease",
 	): ReactNode =>
-		h(Tooltip, {
+		h(Tip, {
 			label: t(tipKey),
-			side: "bottom",
-			portal: true,
-			maxWidth: 240,
 			children: h(
 				Button,
 				{ variant: "outline", size: "md", icon: icon ?? undefined },
@@ -167,6 +168,36 @@ export function TaskRowView(props: {
 	// 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）
 	const alarmTags = markTones.map((which) => tagOf(which));
 
+	// 复制任务 ID（用户 2026-10-28）：放进右侧动作排（放大镜左边）。
+	// 原先摆标题后，24px 的按钮比第一行高 ⇒ hover 出现/消失会把卡片撑高再缩回，一直跳；
+	// 动作排本身 hover 才显示、且那一排高度不影响行高，放这儿不抖。
+	// 只复制**完整 ID** —— skill 的 show / claim / set 都是精确匹配，短码查不到（实测「找不到任务」）。
+	const copyButton = h(Tip, {
+		label: `${t("copyTaskId")}\n${row.task.id}`,
+		maxWidth: 320,
+		children: h(IconButton, {
+			variant: "plain",
+			size: "md",
+			label: t("copyTaskId"),
+			// 抑制原生 title（系统提示要悬停一两秒才出，和官方气泡抢）：
+			// 核心 IconButton 是 `title ?? label`，给空串即不渲染原生提示。
+			title: "",
+			className: "dtl-iconbtn--muted",
+			icon: h(IconCopyOutlineRegular, { size: 14 }),
+			onClick: () => {
+				const clipboard = navigator.clipboard;
+				if (clipboard === undefined) {
+					notify(t("copyFailed"));
+					return;
+				}
+				void clipboard.writeText(row.task.id).then(
+					() => notify(t("copiedTaskId")),
+					() => notify(t("copyFailed")),
+				);
+			},
+		}),
+	});
+
 	// 第一行：标题 + 创建徽 + 异常标签
 	const titleLine = h(
 		"div",
@@ -176,64 +207,58 @@ export function TaskRowView(props: {
 			{ className: "dtl-taskrow__title dtl-ellipsis", title: titleOf(row) },
 			titleOf(row),
 		),
-		createdDay === null
+		creatorAge === null || creatorName === ""
 			? null
 			: h(
 					"span",
 					{ className: "dtl-taskrow__stamp" },
-					`[${t("fieldCreatedStamp", { day: createdDay })}]`,
+					`[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`,
 				),
 		...alarmTags,
 	);
 
-	// 右侧三段（用户 2026-10-28）：`@谁`（常驻、蓝、可点筛人）/ `更新于 MM-DD HH:mm 丨 3 分钟前`
-	// （hover 让位给动作钮）/ 动作钮。待认领没有归属人 ⇒ 人名位改灰字「待认领」、时间用创建时间。
-	const isOpen = row.task.status === "open";
-	const whenRaw = isOpen
-		? row.task.created
-		: (row.task.updated ?? row.task.started ?? row.task.created);
+	// 右侧（用户 2026-10-28）：工作区徽标（常驻）/ `更新于 MM-DD HH:mm 丨 3 分钟前`（hover 让位）/ 动作钮。
+	const whenRaw = row.task.updated ?? row.task.started ?? row.task.created;
 	const whenStamp =
 		whenRaw === null || whenRaw === undefined || Number.isNaN(Date.parse(whenRaw))
 			? t("timeUnknown")
 			: formatDateTime(whenRaw).slice(5);
-	// 待认领行前面摆**创建人**（用户 2026-10-28：不是「待认领」，要「谁谁谁创建于」）。
-	const whoName = isOpen
-		? displayName(row.task.creator_name, row.task.creator)
-		: displayName(row.task.owner_name, row.task.owner);
-	const whoUuid = (
-		isOpen ? (row.task.creator ?? "") : (row.task.owner ?? "")
-	).trim();
-	const whos = (whoName === "" ? t("ownerUnclaimed") : `@${whoName}`).trim();
-	const metaText = `${
-		isOpen
-			? t("whenCreated", { time: whenStamp })
-			: t("whenSubmitted", { time: whenStamp })
-	} 丨 ${whenRaw === null || whenRaw === undefined ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
+	const metaText = `${t("whenSubmitted", { time: whenStamp })} 丨 ${
+		whenRaw === null || whenRaw === undefined
+			? t("timeUnknown")
+			: formatRelative(whenRaw, t)
+	}`;
+	// 第二行的人名只给**进行中**的行（用户 2026-10-28：没人认领就不写名字，创建人已经摆在标题后）。
 	// 点人名 = 选中「执行人」下拉里的这个人（名册里没有也照样补进去，见 store.focusOwner）。
-	// 待认领行摆的是创建人：下拉只有执行人，点了会筛错人 ⇒ 只显示不可点。
+	const ownerName = displayName(row.task.owner_name, row.task.owner);
+	const ownerUuid = (row.task.owner ?? "").trim();
 	const whoNode =
-		isOpen || whoUuid === ""
-			? h(
-					"span",
-					{ className: "dtl-taskrow__who dtl-taskrow__who--plain" },
-					whos,
-				)
+		row.task.status === "open" || ownerUuid === ""
+			? null
 			: h(
-					"button",
+					Button,
 					{
-						type: "button",
-						className: "dtl-taskrow__who",
-						title: t("filterByOwner", { name: whoName }),
-						onClick: () => focusOwner(whoUuid, whoName),
+						variant: "link",
+						size: "sm",
+						maxWidth: 180,
+						title: t("filterByOwner", { name: ownerName }),
+						onClick: () => focusOwner(ownerUuid, ownerName),
 					},
-					whos,
+					`@${ownerName}`,
 				);
+	// 整块可点 = 查看（用户 2026-10-28）：点空白处 / 标题 / 时间都进详情；
+	// 行内按钮（动作钮、人名、工作区、标签、放大镜）各干各的事，靠 closest('button') 让过。
+	const handleRowClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
+		const target = event.target as HTMLElement | null;
+		if (target !== null && target.closest("button") !== null) return;
+		props.onView?.(row);
+	};
 	return h(
 		"div",
 		{ className: "dtl-taskrow" },
 		h(
 			"div",
-			{ className: "dtl-taskrow__row" },
+			{ className: "dtl-taskrow__row", onClick: handleRowClick },
 			h("span", { className: `dtl-rail dtl-rail--${tone}` }),
 			h(
 				"div",
@@ -242,36 +267,30 @@ export function TaskRowView(props: {
 				h(
 					"div",
 					{ className: "dtl-taskrow__l2" },
-					// 工作区 = 按该工作区筛选；标签 = 塞进搜索框（用户 2026-10-28）
-					h(
-						"button",
-						{
-							type: "button",
-							className: "dtl-wstag",
-							title: t("filterByWorkspace", { name: row.task.workspace.title }),
-							onClick: () => setQuery({ workspace: row.task.workspace.id }),
-						},
-						row.task.workspace.title,
-					),
+					// 人名挪到第二行最左（用户 2026-10-28 换位），标签 = 塞进搜索框
+					whoNode,
 					tags.map((tag) =>
-						h(
-							"button",
-							{
-								key: tag,
-								type: "button",
-								className: "dtl-clicktag",
-								title: t("filterByTag", { tag }),
-								onClick: () => setQuery({ keyword: tag }),
-							},
-							h(Tag, { text: `#${tag}` }),
-						),
+						h(Tag, {
+							key: tag,
+							text: `#${tag}`,
+							maxWidth: 160,
+							onClick: () => setQuery({ keyword: tag }),
+						}),
 					),
 				),
 			),
-			whoNode,
+			// 工作区 = 核心可点 Chip（business 档：蓝底反白字、小标签），用户 2026-10-28 定回小号
+			h(Tag, {
+				text: row.task.workspace.title,
+				tone: "person",
+				maxWidth: 200,
+				tip: t("filterByWorkspace", { name: row.task.workspace.title }),
+				onClick: () => setQuery({ workspace: row.task.workspace.id }),
+			}),
 			h("span", { className: "dtl-taskrow__meta" }, metaText),
-			// 动作排：继续 / 结束 / 释放 + 查看 —— **同一排、同一间距**
-			// （用户 2026-10-18：查看钮原来是独立的一格，离前面的按钮远一档）
+			// 动作排：继续 / 结束 / 释放 + 复制 / 查看 —— **同一排、同一间距**
+			// （用户 2026-10-18：查看钮原来是独立的一格，离前面的按钮远一档；
+			//   2026-10-28：复制 ID 挪进来，排在放大镜左边）
 			// 谁出来由 resolveActions 说了算（同一套权限，不再各判各的）
 			h(
 				"span",
@@ -280,6 +299,7 @@ export function TaskRowView(props: {
 				actions.resume ? resumeButton : null,
 				actions.finish ? finishButton : null,
 				actions.release ? releaseButton : null,
+				copyButton,
 				actions.view ? viewButton : null,
 			),
 		),

@@ -28,7 +28,9 @@ import { ownerGroups, selectView, type Row } from "./rows";
 import {
 	boardSnapshot,
 	boardSubscribe,
+	isDefaultQuery,
 	refresh,
+	selectTab,
 	setQuery,
 	type TabFilter,
 } from "./store";
@@ -211,19 +213,28 @@ export function BoardHome(props: {
 		);
 	}, [board, t, workspaceOptions, state.extraOwners]);
 
-	/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
+	/** 统计卡：给了 `tab` 才可点 —— 点一下把下方列表切到该档，**其余筛选全部清掉**
+	 *  （搜索 / 工作区 / 执行人…，用户 2026-10-28：以后新增的筛选也一样要清）。
+	 *  高亮条件更严：只有 tab 对得上 **且** 其余筛选都还是默认值时才亮，
+	 *  任何一项被改动 ⇒ 立刻熄灭（对不上就不算选中）。 */
 	const card = (
 		label: LocaleKey,
 		value: number,
 		hint: string,
 		title?: string,
+		tab?: TabFilter,
 	): ReactNode =>
 		h(StatCard, {
 			label: t(label),
 			value: formatCount(value),
 			hint,
 			title,
-			interactive: false,
+			active:
+				tab !== undefined &&
+				state.query.tab === tab &&
+				isDefaultQuery(state.query),
+			interactive: tab !== undefined,
+			onClick: tab === undefined ? undefined : () => selectTab(tab),
 		});
 
 	/** 子集卡占比小字：分母为 0 或自己没有 ⇒ 不显示（不拿 0% 充数）。 */
@@ -270,6 +281,8 @@ export function BoardHome(props: {
 					]
 						.filter((part) => part !== null)
 						.join(" ｜ "),
+					undefined,
+					"mine",
 				),
 				card(
 					"statDoing",
@@ -277,6 +290,8 @@ export function BoardHome(props: {
 					view.doing - view.myActive > 0
 						? t("statDoingHint", { n: view.doing - view.myActive })
 						: t("statDoingAllMine"),
+					undefined,
+					"doing",
 				),
 				card(
 					"statOpen",
@@ -284,24 +299,29 @@ export function BoardHome(props: {
 					view.oldestOpenDays === null
 						? ""
 						: t("statOpenHint", { n: view.oldestOpenDays }),
+					undefined,
+					"open",
 				),
 				card(
 					"statBacklog",
 					view.backlog,
 					share(view.backlog, view.open, "statBacklogHint"),
 					t("statBacklogTitle", { n: view.backlogDays }),
+					"backlog",
 				),
 				card(
 					"statOverdue",
 					view.overdue,
 					share(view.overdue, view.doing, "statOverdueHint"),
 					t("statOverdueTitle", { n: view.overdueDays }),
+					"overdue",
 				),
 				card(
 					"statStale",
 					view.stale,
 					share(view.stale, view.doing, "statStaleHint"),
 					t("statStaleTitle", { n: view.staleDays }),
+					"stale",
 				),
 				weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo),
 				weekCard(

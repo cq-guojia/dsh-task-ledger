@@ -90,6 +90,11 @@ declare module "@deepseek-ai/dsh-client-ui-primitives" {
 		size?: number;
 		className?: string;
 	}>;
+	/** 复制（宿主 lib/types/icons/index.d.ts 核实存在，2026-10-28）。 */
+	export const IconCopyOutlineRegular: ComponentType<{
+		size?: number;
+		className?: string;
+	}>;
 	export const IconChevronRightOutlineRegular: ComponentType<{
 		size?: number;
 		className?: string;

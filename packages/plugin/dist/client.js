@@ -124,13 +124,13 @@ window.__ModuleLoader__.load({
 		const SEGMENTED_CSS = "\n/* ── 分段控件 P2 ─────────────────────────────────────────────────────\n   结构照兄弟项目 dsh-task-dispatch-table 的 Segmented 皮肤（item 无边框、hover 只提亮文字），\n   前缀 / 变量名换成本仓口径。用户额外要的两处（兄弟没有）：weekday 方块间隔（现为 2px）；段内中性计数 __count。\n   ⚠️ 2026-10-19 两次误判均已澄清：① 「宿主只认单行 CSS」——假，多行一直正常；\n   ② 「宿主吃掉 token 块之后第一条规则」——也假，真因是 tokens 模板字符串结尾多了一个反斜杠，\n   注入文本里留下字面反引号，把紧随其后的那条规则的选择器污染掉了（见 dsh-host.md §9）。\n   样式照常多行书写，不必压行；也不需要任何「牺牲规则」。 */\n/* 外观只有一套（2026-10-26）：原 variant 的 default / inset 两档在 CSS 里只差 1px 内距，\n   且 default 比文档承诺矮 2px，却让下游以为「有得选」而反复对图 ⇒ 整轴删除。\n   padding 3px 是尺寸契约的一部分：item 高度 = 控制高 − 6px，加起来正好 24 / 28 / 32。 */\n.dshpc-seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--dshpc-radius-md);--seg-thumb:var(--dshpc-surface-raised);background:var(--dshpc-seg-track);}\n.dshpc-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:calc(var(--dshpc-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);font-family:inherit;font-size:var(--dshpc-font-xs);font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:color var(--dshpc-dur-fast) var(--dshpc-ease),background-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-seg--md .dshpc-seg__item{height:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item{height:calc(var(--dshpc-control-h-lg) - 6px);}\n.dshpc-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dshpc-fg);}\n.dshpc-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);color:var(--dshpc-fg);font-weight:600;}\n.dshpc-seg__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n.dshpc-seg__item:disabled{cursor:default;opacity:.4;}\n/* 段内角标（如「异常」的数量）：语义色实面 + 反白字，0 由组件侧不渲染。必须是正圆（用户 2026-10-03）。 */\n.dshpc-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;background:var(--dshpc-danger);color:var(--dshpc-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}\n/* 段内中性计数（如筛选条「全部 11」）：纯文字、无底无边（对齐 task-ledger .dtl-seg__num 拍板口径）；0 由组件侧不渲染。 */\n.dshpc-seg__count{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;background:none;color:var(--dshpc-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}\n/* block：撑满父宽（表单行用），各段等分 */\n.dshpc-seg--block{display:flex;width:100%;}\n.dshpc-seg--block .dshpc-seg__item{flex:1 1 auto;justify-content:center;}\n/* weekday：星期多选方块。基础插件的特殊化定制（用户 2026-10-01：原 WeekdayPicker 即「蓝底 + 近似方形」）：\n   每格正方形（宽 = 段高）、选中品牌蓝反白字、**无外描边**（2026-10-18 重申）、\n   方块之间间距 gap:2px（2026-10-20 用户定稿：方块改小后 6px 显得太宽。10-18 曾从 2px 放宽到 6px，\n   两次都是用户拍板 —— 别自作主张改回去）。 */\n.dshpc-seg--weekday{--seg-track:var(--dshpc-seg-track);gap:2px;border:0;padding:3px;background:var(--seg-track);}\n.dshpc-seg--weekday .dshpc-seg__item{width:calc(var(--dshpc-control-h-lg) - 8px);padding:0;justify-content:center;}\n.dshpc-seg--weekday .dshpc-seg__item[aria-pressed='true']{background:var(--dshpc-business);color:var(--dshpc-fg-inverse);box-shadow:var(--dshpc-shadow-raised);}\n\n/* ── 单选滑动块（2026-10-26 用户：点选后选中底应「滑过去」，不是旧段消失、新段直接亮）。\n   结构 = 一块绝对定位的共用底 + 各段透明；位置/尺寸由组件量出后内联，这里只管外观与过渡。\n   --slide 只在单选挂上：多选（如星期）每段各自着色，没有唯一滑块可滑，保持原样。 */\n.dshpc-seg--slide{position:relative;}\n.dshpc-seg--slide .dshpc-seg__item{position:relative;z-index:1;}\n.dshpc-seg--slide .dshpc-seg__item[aria-pressed='true']{background:transparent;box-shadow:none;}\n.dshpc-seg__thumb{position:absolute;z-index:0;border-radius:var(--dshpc-radius-sm);background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);pointer-events:none;transition:left var(--dshpc-dur) var(--dshpc-ease),top var(--dshpc-dur) var(--dshpc-ease),width var(--dshpc-dur) var(--dshpc-ease),height var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-seg--weekday.dshpc-seg--slide .dshpc-seg__thumb{background:var(--dshpc-business);}\n\n/* ── bordered 外框（2026-10-20 用户要的第二种模式）：**只在最外面套一圈 1px 描边**，\n   里面一概不动 —— 选中片的填充色 / 阴影 / 文字色全部保持原样（weekday 的蓝面照旧），\n   这里不写任何针对 __item 的规则。\n   总高必须与无框版逐像素一致：border 1px×2 由 padding 各让 1px 抵消（3 → 2）；\n   weekday 自己声明的 3px 在文件更后面，靠双类选择器压回 2px。 */\n.dshpc-seg--bordered{border:1px solid var(--dshpc-border);padding:2px;}\n.dshpc-seg--bordered.dshpc-seg--weekday{padding:2px;}\n\n@media (prefers-reduced-motion: reduce){.dshpc-seg__item{transition:none;}.dshpc-seg__thumb{transition:none;}}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/controls/button-css.generated.js
-		const BUTTON_CSS = "\n/* ── 按钮 / 图标钮 P2 ───────────────────────────────────────────────────\n   与 Segmented 同一条高度纪律：--dshpc-control-h-sm(24) / -md(28) / -lg(32)，\n   有边框的 variant 用 1px 真边框 + 内部 padding 补回，**有边 / 无边同高**。\n\n   三条受控轴（2026-10-19 重写，对齐主流 UI 框架的分类口径）：\n     · variant —— 外观档 = 形态 + 语义色，共 10 档：\n         primary / secondary / outline / ghost / danger / success / warning / info /\n         danger-outline（红字描边）/ link（行内链接）\n     · size —— sm / md / lg\n     · block —— 撑满父宽\n   每一档**只填 5 个局部变量**（--btn-bg / -fg / -border / -bg-hover / -bg-active），\n   结构与交互只有上面这一份；任何档位都不许再写一遍 display/height/padding。\n   自定义颜色（Button 的 color 参数）同样只覆盖这 5 个变量（token 覆盖，不是新皮肤）。\n\n   ⚠️ hover 不再用 opacity 压一层（用户 2026-10-19：「黑色和红色的按钮移上去变化太小，\n   完全感觉不到颜色变了」）⇒ 走 --dshpc-*-hover / -active 的明确混色，见 tokens-css.ts。 */\n.dshpc-btn{--btn-bg:transparent;--btn-fg:var(--dshpc-fg);--btn-border:transparent;--btn-pad:12px;\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);--btn-fg-hover:var(--btn-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;\n  box-sizing:border-box;border:1px solid var(--btn-border);border-radius:var(--dshpc-radius-md);\n  background-color:var(--btn-bg);color:var(--btn-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease),transform var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-btn--sm{--btn-pad:10px;height:var(--dshpc-control-h-sm);padding:0 var(--btn-pad);font-size:var(--dshpc-font-sm);line-height:1;}\n.dshpc-btn--md{--btn-pad:12px;height:var(--dshpc-control-h-md);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n.dshpc-btn--lg{--btn-pad:14px;height:var(--dshpc-control-h-lg);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n/* block：撑满父宽（表单底栏 / 抽屉底部的主操作） */\n.dshpc-btn--block{display:flex;width:100%;}\n/* block + 前置图标 ⇒ 文字视觉居中（2026-10-19 用户点名）：\n   内容组 [图标 + 间距 + 文字] 整体在盒内居中时，**文字**的中心会被图标推右半格。\n   把右内边距补上「图标宽 + 间距」，可用盒随之左移同量 ⇒ 文字落回视觉中心，图标贴左侧。\n   图标宽按 1.2em 估（官方图标 14/16px vs 字号 12/13px），em 随字号档自动缩放。 */\n.dshpc-btn--block.dshpc-btn--icon-start{padding-right:calc(var(--btn-pad) + 1.2em + 6px);}\n.dshpc-btn__icon,.dshpc-btn__icon-end{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-btn__icon svg,.dshpc-btn__icon-end svg{display:block;margin:0;}\n/* loading：不换 DOM 结构，只在文案前插一个同色小圈。\n   ⚠️ 2026-10-20 改画法：原来是 border:1.5px 加 border-radius:999px 画的环 —— 真机实测 computed\n   radius 就是 999px、宽高都是 12px（没被任何样式覆盖），看着却\"像圆角方\"，原因是**次像素边框\n   （1.5px）在 12px 这么小的圆上被抗锯齿插值拉毛**。改用 SVG 矢量弧：任意 DPR 下都是真圆。 */\n.dshpc-btn__spinner{display:block;flex:none;width:12px;height:12px;\n  animation:dshpc-btn-spin .7s linear infinite;}\n/* shortcut: 12px 是固定值，不随按钮字号缩放；要更大就改这一处。 */\n@keyframes dshpc-btn-spin{to{transform:rotate(360deg)}}\n\n/* 交互态：颜色变化写在变量上 ⇒ 所有档位一次生效，且变化幅度由 token 决定（够明显） */\n.dshpc-btn:hover:not(:disabled){background-color:var(--btn-bg-hover);color:var(--btn-fg-hover);}\n.dshpc-btn:active:not(:disabled){background-color:var(--btn-bg-active);transform:translateY(1px);}\n.dshpc-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-btn:disabled{cursor:default;opacity:.5;}\n\n.dshpc-btn--primary{--btn-bg:var(--dshpc-accent);--btn-fg:var(--dshpc-fg-inverse);\n  --btn-bg-hover:var(--dshpc-accent-hover);--btn-bg-active:var(--dshpc-accent-active);}\n/* secondary：中性实心（灰面），用于「取消 / 次要」这类与主操作并排的按钮 */\n.dshpc-btn--secondary{--btn-bg:var(--dshpc-hover);--btn-fg:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-active);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--outline{--btn-bg:var(--dshpc-surface-1);--btn-border:var(--dshpc-border-strong);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--ghost{--btn-fg:var(--dshpc-fg-2);--btn-fg-hover:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--danger{--btn-bg:var(--dshpc-danger);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-danger-hover);--btn-bg-active:var(--dshpc-danger-active);}\n.dshpc-btn--success{--btn-bg:var(--dshpc-success);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-success-hover);--btn-bg-active:var(--dshpc-success-active);}\n.dshpc-btn--warning{--btn-bg:var(--dshpc-warning);--btn-fg:var(--dshpc-on-warning);\n  --btn-bg-hover:var(--dshpc-warning-hover);--btn-bg-active:var(--dshpc-warning-active);}\n.dshpc-btn--info{--btn-bg:var(--dshpc-business);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-business-hover);--btn-bg-active:var(--dshpc-business-active);}\n/* danger-outline：红字描边（破坏性次要操作，如卡片上的「删除」）。\n   ⚠️ 旧修饰类 danger-ink 保留为别名（消费方可能还在挂），两者同一套皮肤。 */\n.dshpc-btn--danger-outline,.dshpc-btn--danger-ink{--btn-border:var(--dshpc-danger);--btn-fg:var(--dshpc-danger);\n  --btn-fg-hover:var(--dshpc-danger);--btn-bg-hover:var(--dshpc-danger-soft);--btn-bg-active:var(--dshpc-danger-soft);}\n/* link：行内文字链接型（会话 / 产出文件名），无底无边、品牌蓝、hover 下划线 */\n.dshpc-btn--link{--btn-fg:var(--dshpc-link);--btn-fg-hover:var(--dshpc-link);\n  --btn-bg-hover:transparent;--btn-bg-active:transparent;\n  height:auto;padding:0;border:0;background:none;font-weight:400;text-align:left;}\n.dshpc-btn--link:hover:not(:disabled){text-decoration:underline;}\n\n/* 图标钮：纯图标，方形；尺寸档的宽高与同档文字按钮等高 */\n.dshpc-iconbtn{appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;\n  border:1px solid transparent;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);\n  font-family:inherit;cursor:pointer;flex:none;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),opacity var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-iconbtn--sm{width:var(--dshpc-control-h-sm);height:var(--dshpc-control-h-sm);font-size:var(--dshpc-font-sm);}\n.dshpc-iconbtn--md{width:var(--dshpc-control-h-md);height:var(--dshpc-control-h-md);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--lg{width:var(--dshpc-control-h-lg);height:var(--dshpc-control-h-lg);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--plain{color:var(--dshpc-fg-2);}\n.dshpc-iconbtn--outline{background:var(--dshpc-surface-1);border-color:var(--dshpc-border);color:var(--dshpc-fg-2);}\n.dshpc-iconbtn--danger{color:var(--dshpc-danger);}\n.dshpc-iconbtn:hover:not(:disabled){background:var(--dshpc-hover);color:var(--dshpc-fg);}\n.dshpc-iconbtn--danger:hover:not(:disabled){background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-iconbtn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-iconbtn:disabled{cursor:default;opacity:.4;}\n\n/* ── 行式文件按钮（图标 + 文件名）P2：**全站唯一实现**（2026-10-04 收编）──────────\n   用途：「产出物 / 附件」那种**一行一个文件**的清单项（基础信息右栏产出物清单、附件区、\n   执行记录页的展开区）。平时透明、**鼠标移上去才出浅底**（沿用用户 2026-10-03 定的观感）。\n   两个形态修饰类：\n     --block   撑满父宽（清单里一项一行）\n     --inline  内容宽（跟在文字后头，如附件行）\n   收编原因：这份皮肤此前只写在 task-list.tsx 的 TASK_LIST_CSS 里（旧名 .dshpc-info-out），\n   执行记录页展开区要用同一种观感 ⇒ 上提基础层，避免再出现「各写一份外观」（同名不同皮的坑刚踩过）。 */\n.dshpc-filechip{appearance:none;-webkit-appearance:none;border:0;border-radius:var(--dshpc-radius-xs);\n  background:transparent;color:var(--dshpc-fg);font:inherit;text-align:left;cursor:pointer;min-width:0;\n  transition:background-color var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-filechip:hover:not(:disabled){background:var(--dshpc-chip-bg);}\n.dshpc-filechip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n.dshpc-filechip:disabled{cursor:default;background:transparent;color:var(--dshpc-fg-3);}\n.dshpc-filechip--block{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;\n  padding:4px 6px;font-size:var(--dshpc-font-xs);}\n.dshpc-filechip--inline{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:var(--dshpc-font-sm);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-btn,.dshpc-iconbtn,.dshpc-filechip{transition:none;}}\n";
+		const BUTTON_CSS = "\n/* ── 按钮 / 图标钮 P2 ───────────────────────────────────────────────────\n   与 Segmented 同一条高度纪律：--dshpc-control-h-sm(24) / -md(28) / -lg(32)，\n   有边框的 variant 用 1px 真边框 + 内部 padding 补回，**有边 / 无边同高**。\n\n   三条受控轴（2026-10-19 重写，对齐主流 UI 框架的分类口径）：\n     · variant —— 外观档 = 形态 + 语义色，共 10 档：\n         primary / secondary / outline / ghost / danger / success / warning / info /\n         danger-outline（红字描边）/ link（行内链接）\n     · size —— sm / md / lg\n     · block —— 撑满父宽\n   每一档**只填 5 个局部变量**（--btn-bg / -fg / -border / -bg-hover / -bg-active），\n   结构与交互只有上面这一份；任何档位都不许再写一遍 display/height/padding。\n   自定义颜色（Button 的 color 参数）同样只覆盖这 5 个变量（token 覆盖，不是新皮肤）。\n\n   ⚠️ hover 不再用 opacity 压一层（用户 2026-10-19：「黑色和红色的按钮移上去变化太小，\n   完全感觉不到颜色变了」）⇒ 走 --dshpc-*-hover / -active 的明确混色，见 tokens-css.ts。 */\n.dshpc-btn{--btn-bg:transparent;--btn-fg:var(--dshpc-fg);--btn-border:transparent;--btn-pad:12px;\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);--btn-fg-hover:var(--btn-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;\n  box-sizing:border-box;border:1px solid var(--btn-border);border-radius:var(--dshpc-radius-md);\n  background-color:var(--btn-bg);color:var(--btn-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease),transform var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-btn--sm{--btn-pad:10px;height:var(--dshpc-control-h-sm);padding:0 var(--btn-pad);font-size:var(--dshpc-font-sm);line-height:1;}\n.dshpc-btn--md{--btn-pad:12px;height:var(--dshpc-control-h-md);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n.dshpc-btn--lg{--btn-pad:14px;height:var(--dshpc-control-h-lg);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n/* block：撑满父宽（表单底栏 / 抽屉底部的主操作） */\n.dshpc-btn--block{display:flex;width:100%;}\n/* block + 前置图标 ⇒ 文字视觉居中（2026-10-19 用户点名）：\n   内容组 [图标 + 间距 + 文字] 整体在盒内居中时，**文字**的中心会被图标推右半格。\n   把右内边距补上「图标宽 + 间距」，可用盒随之左移同量 ⇒ 文字落回视觉中心，图标贴左侧。\n   图标宽按 1.2em 估（官方图标 14/16px vs 字号 12/13px），em 随字号档自动缩放。 */\n.dshpc-btn--block.dshpc-btn--icon-start{padding-right:calc(var(--btn-pad) + 1.2em + 6px);}\n.dshpc-btn__icon,.dshpc-btn__icon-end{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-btn__icon svg,.dshpc-btn__icon-end svg{display:block;margin:0;}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-btn .dshpc-btn__label{min-width:0;}\n/* loading：不换 DOM 结构，只在文案前插一个同色小圈。\n   ⚠️ 2026-10-20 改画法：原来是 border:1.5px 加 border-radius:999px 画的环 —— 真机实测 computed\n   radius 就是 999px、宽高都是 12px（没被任何样式覆盖），看着却\"像圆角方\"，原因是**次像素边框\n   （1.5px）在 12px 这么小的圆上被抗锯齿插值拉毛**。改用 SVG 矢量弧：任意 DPR 下都是真圆。 */\n.dshpc-btn__spinner{display:block;flex:none;width:12px;height:12px;\n  animation:dshpc-btn-spin .7s linear infinite;}\n/* shortcut: 12px 是固定值，不随按钮字号缩放；要更大就改这一处。 */\n@keyframes dshpc-btn-spin{to{transform:rotate(360deg)}}\n\n/* 交互态：颜色变化写在变量上 ⇒ 所有档位一次生效，且变化幅度由 token 决定（够明显） */\n.dshpc-btn:hover:not(:disabled){background-color:var(--btn-bg-hover);color:var(--btn-fg-hover);}\n.dshpc-btn:active:not(:disabled){background-color:var(--btn-bg-active);transform:translateY(1px);}\n.dshpc-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-btn:disabled{cursor:default;opacity:.5;}\n\n.dshpc-btn--primary{--btn-bg:var(--dshpc-accent);--btn-fg:var(--dshpc-fg-inverse);\n  --btn-bg-hover:var(--dshpc-accent-hover);--btn-bg-active:var(--dshpc-accent-active);}\n/* secondary：中性实心（灰面），用于「取消 / 次要」这类与主操作并排的按钮 */\n.dshpc-btn--secondary{--btn-bg:var(--dshpc-hover);--btn-fg:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-active);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--outline{--btn-bg:var(--dshpc-surface-1);--btn-border:var(--dshpc-border-strong);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--ghost{--btn-fg:var(--dshpc-fg-2);--btn-fg-hover:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--danger{--btn-bg:var(--dshpc-danger);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-danger-hover);--btn-bg-active:var(--dshpc-danger-active);}\n.dshpc-btn--success{--btn-bg:var(--dshpc-success);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-success-hover);--btn-bg-active:var(--dshpc-success-active);}\n.dshpc-btn--warning{--btn-bg:var(--dshpc-warning);--btn-fg:var(--dshpc-on-warning);\n  --btn-bg-hover:var(--dshpc-warning-hover);--btn-bg-active:var(--dshpc-warning-active);}\n.dshpc-btn--info{--btn-bg:var(--dshpc-business);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-business-hover);--btn-bg-active:var(--dshpc-business-active);}\n/* danger-outline：红字描边（破坏性次要操作，如卡片上的「删除」）。\n   ⚠️ 旧修饰类 danger-ink 保留为别名（消费方可能还在挂），两者同一套皮肤。 */\n.dshpc-btn--danger-outline,.dshpc-btn--danger-ink{--btn-border:var(--dshpc-danger);--btn-fg:var(--dshpc-danger);\n  --btn-fg-hover:var(--dshpc-danger);--btn-bg-hover:var(--dshpc-danger-soft);--btn-bg-active:var(--dshpc-danger-soft);}\n/* link：行内文字链接型（会话 / 产出文件名），无底无边、品牌蓝、hover 下划线 */\n.dshpc-btn--link{--btn-fg:var(--dshpc-link);--btn-fg-hover:var(--dshpc-link);\n  --btn-bg-hover:transparent;--btn-bg-active:transparent;\n  height:auto;padding:0;border:0;background:none;font-weight:400;text-align:left;}\n.dshpc-btn--link:hover:not(:disabled){text-decoration:underline;}\n\n/* 图标钮：纯图标，方形；尺寸档的宽高与同档文字按钮等高、圆角统一吃 md（与 .dshpc-btn 同款，2026-10-28 拍板） */\n.dshpc-iconbtn{appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;\n  border:1px solid transparent;border-radius:var(--dshpc-radius-md);background:transparent;color:var(--dshpc-fg-2);\n  font-family:inherit;cursor:pointer;flex:none;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),opacity var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-iconbtn--sm{width:var(--dshpc-control-h-sm);height:var(--dshpc-control-h-sm);font-size:var(--dshpc-font-sm);}\n.dshpc-iconbtn--md{width:var(--dshpc-control-h-md);height:var(--dshpc-control-h-md);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--lg{width:var(--dshpc-control-h-lg);height:var(--dshpc-control-h-lg);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--plain{color:var(--dshpc-fg-2);}\n.dshpc-iconbtn--outline{background:var(--dshpc-surface-1);border-color:var(--dshpc-border);color:var(--dshpc-fg-2);}\n.dshpc-iconbtn--danger{color:var(--dshpc-danger);}\n.dshpc-iconbtn:hover:not(:disabled){background:var(--dshpc-hover);color:var(--dshpc-fg);}\n.dshpc-iconbtn--danger:hover:not(:disabled){background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-iconbtn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-iconbtn:disabled{cursor:default;opacity:.4;}\n\n/* ── 行式文件按钮（图标 + 文件名）P2：**全站唯一实现**（2026-10-04 收编）──────────\n   用途：「产出物 / 附件」那种**一行一个文件**的清单项（基础信息右栏产出物清单、附件区、\n   执行记录页的展开区）。平时透明、**鼠标移上去才出浅底**（沿用用户 2026-10-03 定的观感）。\n   两个形态修饰类：\n     --block   撑满父宽（清单里一项一行）\n     --inline  内容宽（跟在文字后头，如附件行）\n   收编原因：这份皮肤此前只写在 task-list.tsx 的 TASK_LIST_CSS 里（旧名 .dshpc-info-out），\n   执行记录页展开区要用同一种观感 ⇒ 上提基础层，避免再出现「各写一份外观」（同名不同皮的坑刚踩过）。 */\n.dshpc-filechip{appearance:none;-webkit-appearance:none;border:0;border-radius:var(--dshpc-radius-xs);\n  background:transparent;color:var(--dshpc-fg);font:inherit;text-align:left;cursor:pointer;min-width:0;\n  transition:background-color var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-filechip:hover:not(:disabled){background:var(--dshpc-chip-bg);}\n.dshpc-filechip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n.dshpc-filechip:disabled{cursor:default;background:transparent;color:var(--dshpc-fg-3);}\n.dshpc-filechip--block{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;\n  padding:4px 6px;font-size:var(--dshpc-font-xs);}\n.dshpc-filechip--inline{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:var(--dshpc-font-sm);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-btn,.dshpc-iconbtn,.dshpc-filechip{transition:none;}}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/controls/field-css.generated.js
-		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-dim);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-dim);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover,rgba(38,49,72,.06));}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
+		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-dim);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;height:auto;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* height:auto 必须：iconbtn--md/lg 的固定 height 会让 absolute 的 bottom 被忽略\n   （top:1 + 固定高 ⇒ 整钮错位 1px，× 显得没居中，2026-10-28 用户截图抓的）。 */\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-dim);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover,rgba(38,49,72,.06));}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/controls/loading-css.generated.js
-		const LOADING_CSS = "\n/* 运行中 / loading 的活动指示：三个小方块依次脉动。 */\n@keyframes dshpc-run-block { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8) } 40% { opacity: 1; transform: scale(1) } }\n.dshpc-run-blocks { display: inline-flex; align-items: center; gap: 3px; }\n.dshpc-run-blocks > i { width: 5px; height: 5px; border-radius: 1px; background: currentColor; animation: dshpc-run-block 1.2s ease-in-out infinite; }\n.dshpc-run-blocks > i:nth-child(2) { animation-delay: 0.15s; }\n.dshpc-run-blocks > i:nth-child(3) { animation-delay: 0.3s; }\n@media (prefers-reduced-motion: reduce) { .dshpc-run-blocks > i { animation: none; opacity: 1; } }\n";
+		const LOADING_CSS = "\n/* 运行中 / loading 的活动指示：三个小方块依次脉动。 */\n@keyframes dshpc-run-block { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8) } 40% { opacity: 1; transform: scale(1) } }\n.dshpc-run-blocks { display: inline-flex; align-items: center; gap: 3px; }\n.dshpc-run-blocks > i { width: 5px; height: 5px; border-radius: 1px; background: currentColor; animation: dshpc-run-block 1.2s ease-in-out infinite; }\n.dshpc-run-blocks > i:nth-child(2) { animation-delay: 0.15s; }\n.dshpc-run-blocks > i:nth-child(3) { animation-delay: 0.3s; }\n@media (prefers-reduced-motion: reduce) { .dshpc-run-blocks > i { animation: none; opacity: 1; } }\n\n/* ── 加载提示（LoadingToast / LoadingBlock / showLoading）───────────────────\n   两种样式共用一个灰色面（与 notify 的 info 卡同色），暗色走 body[data-ds-dark-theme]。 */\n.dshpc-loading-spin { display: block; flex: none; animation: dshpc-loading-rotate .8s linear infinite; }\n@keyframes dshpc-loading-rotate { to { transform: rotate(360deg) } }\n\n/* 样式一：横排 toast 卡（图标在左、文字在右），与 notify 的 info 卡同尺寸同色。 */\n.dshpc-loading-toast {\n  display: inline-flex; align-items: center; gap: 10px;\n  /* 不学 notify 固定 320 宽：这张卡也常被塞进表格 / 窄栏里，宽度随内容走。\n     shortcut: 下限 250px，要更宽 / 更窄就改这一处。 */\n  min-width: 250px; min-height: 48px; padding: 12px 16px; box-sizing: border-box;\n  border-radius: 10px; box-shadow: 0 6px 16px rgba(0, 0, 0, .18);\n  background: #f4f4f5; color: #18181b;\n  font-size: var(--dshpc-font-lg); line-height: var(--dshpc-line-lg);\n}\n\n/* 样式二：方块卡（转圈在上、文字在下），内距更大。 */\n.dshpc-loading-block {\n  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;\n  min-width: 132px; min-height: 132px; padding: 24px; box-sizing: border-box;\n  border-radius: var(--dshpc-radius-md); box-shadow: 0 6px 16px rgba(0, 0, 0, .18);\n  background: #f4f4f5; color: #18181b;\n  font-size: var(--dshpc-font-md); line-height: var(--dshpc-line-md);\n}\nbody[data-ds-dark-theme] .dshpc-loading-toast,\nbody[data-ds-dark-theme] .dshpc-loading-block { background: #3f3f46; color: #fafafa; }\n\n/* 全局浮层：居中、不挡点击（遮罩层单独一个 div 才挡）。\n   与 Modal 遮罩同一套让位口径：右边界读 --dshpc-page-inset-right。 */\n.dshpc-loading-overlay {\n  position: fixed; inset: 0 var(--dshpc-page-inset-right, 0px) 0 0; z-index: var(--dshpc-z-modal);\n  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;\n  padding: 24px; box-sizing: border-box; pointer-events: none;\n}\n/* 七向定位（与 Toast 的六向同名 + 正中）：默认 bottom-center，与 Sonner 提示同屏位。 */\n.dshpc-loading-overlay--top-left { align-items: flex-start; justify-content: flex-start; }\n.dshpc-loading-overlay--top-center { justify-content: flex-start; }\n.dshpc-loading-overlay--top-right { align-items: flex-end; justify-content: flex-start; }\n.dshpc-loading-overlay--bottom-left { align-items: flex-start; justify-content: flex-end; }\n.dshpc-loading-overlay--bottom-center { justify-content: flex-end; }\n.dshpc-loading-overlay--bottom-right { align-items: flex-end; justify-content: flex-end; }\n.dshpc-loading-overlay__mask { position: absolute; inset: 0; pointer-events: auto; }\n\n@media (prefers-reduced-motion: reduce) { .dshpc-loading-spin { animation: none; } }\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/controls/back-to-top-css.generated.js
 		const BACK_TO_TOP_CSS = "\n/* 回到顶部悬浮钮：圆钮、实面、投影；默认隐身，滚过阈值加 .is-visible 才显形。\n   横向 left 由组件按主内容列右缘实时算出（贴在其右侧外侧），不写死。 */\n.dshpc-backtotop{\n  position:fixed;\n  bottom:var(--dshpc-space-4);\n  z-index:var(--dshpc-z-dock);\n  width:44px;height:44px;\n  display:inline-flex;align-items:center;justify-content:center;\n  padding:0;margin:0;\n  box-sizing:border-box;\n  border:1px solid var(--dshpc-border);\n  border-radius:50%;\n  background:var(--dshpc-solid);\n  color:var(--dshpc-on-solid);\n  box-shadow:var(--dshpc-shadow-2);\n  cursor:pointer;\n  opacity:0;\n  transform:translateY(8px) scale(.92);\n  transition:opacity var(--dshpc-dur) var(--dshpc-ease),\n             transform var(--dshpc-dur) var(--dshpc-ease),\n             background-color var(--dshpc-dur-fast) var(--dshpc-ease);\n  pointer-events:none;\n}\n.dshpc-backtotop.is-visible{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}\n.dshpc-backtotop:hover{background:var(--dshpc-hover);}\n.dshpc-backtotop:active{background:var(--dshpc-active);}\n.dshpc-backtotop:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n@media (prefers-reduced-motion: reduce){\n  .dshpc-backtotop{transition:opacity var(--dshpc-dur-fast) linear;transform:none;}\n}\n";
@@ -157,10 +157,10 @@ window.__ModuleLoader__.load({
 		const CARD_CSS = "\n.dshpc-card{\n  position:relative;box-sizing:border-box;color:var(--dshpc-fg);font:inherit;text-align:left;\n  --card-accent:var(--dshpc-business);\n  --card-accent-soft:var(--dshpc-business-soft);\n}\n/* 档位 → token（照 records-timeline 的 tone 模式：一个变量切档，不写 5 套规则；浅底与色条同源）。 */\n.dshpc-card--success{--card-accent:var(--dshpc-success);--card-accent-soft:var(--dshpc-success-soft)}\n.dshpc-card--warning{--card-accent:var(--dshpc-warning);--card-accent-soft:var(--dshpc-warning-soft)}\n.dshpc-card--danger{--card-accent:var(--dshpc-danger);--card-accent-soft:var(--dshpc-danger-soft)}\n/* neutral 浅底借 chip 底（兄弟项目 mute 档同款：明暗都成立）。 */\n.dshpc-card--neutral{--card-accent:var(--dshpc-fg-4);--card-accent-soft:var(--dshpc-chip-bg)}\n\n/* 头部一行 = 色条 + 主内容 + 右侧槽，**整体垂直居中**：调用方在 action 里裸放一个元素\n   （按钮 / 文字 / 图标）不用自己套容器居中；一行两行、右边怎么放由调用方在框内自定。 */\n.dshpc-card__head{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-card__main{flex:1;min-width:0}\n.dshpc-card__side{display:flex;align-items:center;gap:6px;flex:none}\n\n/* ── 外观一 · StripCard：同色系浅底 + 1px 不可见占位边框 + 方角 + 4px 通高方角色条贴左缘 ── */\n.dshpc-card--strip{\n  padding:12px 12px 12px 20px;border:1px solid transparent;\n  background:var(--card-accent-soft,transparent);\n}\n/* 左内边距 20px = 16 留白 + 4 条宽 ⇒ 内容从色条右缘起算；色条绝对定位通高，跟着内容高度自适应。 */\n.dshpc-card--strip .dshpc-card__bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--card-accent)}\n\n/* ── 外观二 · Card：surface 底 + 1px 实色边框 + 圆角 + 行内圆角短条 ── */\n.dshpc-card--bordered{\n  /* 左内边距 12（比上/右/下 14 少 2）：竖条贴近边框；头部内缩 2px ⇒ 主内容跟着左移 2px，\n     竖条↔内容的 12px 间距不变——比「条子 left:-2 而内容不动」更正规（不靠相对定位硬补）。 */\n  padding:14px 14px 14px 12px;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-sm);\n  background:var(--dshpc-surface-1);\n}\n.dshpc-card--bordered .dshpc-card__head{gap:12px}\n/* 短条：行内 flex 项，**高度跟着内容走**（stretch），最小一行文字（--dshpc-line-md）——\n   一行文字时条子与文字齐高，不会把卡撑高；竖条距左 12（= 左内边距），距上/右/下 14。 */\n.dshpc-card--bordered .dshpc-card__bar{width:6px;flex:none;align-self:stretch;min-height:var(--dshpc-line-md);border-radius:var(--dshpc-radius-xs);background:var(--card-accent)}\n.dshpc-card__toggle{\n  display:inline-flex;align-items:center;justify-content:center;\n  width:24px;height:24px;padding:0;background:none;border:none;border-radius:6px;\n  color:var(--dshpc-fg-3);cursor:pointer;\n}\n.dshpc-card__toggle:hover{background:var(--dshpc-surface-sunken);color:var(--dshpc-fg)}\n/* 箭头是 svg（Chevron），不是字形 ⇒ 不要 font-size；inline-flex 免掉 svg 的基线留白。 */\n.dshpc-card__caret{display:inline-flex;transition:transform .15s ease}\n.dshpc-card__caret.is-open{transform:rotate(180deg)}\n.dshpc-card__panel{margin-top:8px;padding-top:8px;border-top:1px solid var(--dshpc-border-faint)}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/chip-css.generated.js
-		const CHIP_CSS = "\n/* 三条局部变量承载配色：neutral 走旧灰面；语义档换底字配对（2026-10-20 用户要多色多尺寸标签）。 */\n.dshpc-chip{--chip-bg:var(--dshpc-chip-bg);--chip-fg:var(--dshpc-fg);--chip-bg-hover:var(--dshpc-chip-bg-hover);\n  display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:1px 8px;\n  box-sizing:border-box;border-radius:var(--dshpc-radius-pill,999px);border:none;\n  background:var(--chip-bg);color:var(--chip-fg);\n  font-family:inherit;font-size:11px;line-height:18px;margin:0;\n  /* 2026-10-18：chip 是 flex 行里的常用项，禁止被压缩换行（预览站出现过文字竖排、互相叠压的挤压）。 */\n  white-space:nowrap;flex:none;\n  appearance:none;-webkit-appearance:none;\n}\n/* md 档：卡片元信息行等稍大场景；sm 即旧版默认，逐像素不动。 */\n.dshpc-chip--md{padding:2px 10px;font-size:12px;line-height:20px;}\n/* xs 档：标题后缀等极紧凑场景（2026-10-20 用户要更小标签）；16px 高、font 10。 */\n.dshpc-chip--xs{padding:0 6px;font-size:10px;line-height:16px;}\n/* 语义色实心档：底 / 字 / hover 配对与 Button 同源（黄底中高明度 ⇒ 字用 --dshpc-on-warning）。 */\n.dshpc-chip--business{--chip-bg:var(--dshpc-business);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-business-hover);}\n.dshpc-chip--success{--chip-bg:var(--dshpc-success);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-success-hover);}\n.dshpc-chip--warning{--chip-bg:var(--dshpc-warning);--chip-fg:var(--dshpc-on-warning);--chip-bg-hover:var(--dshpc-warning-hover);}\n.dshpc-chip--danger{--chip-bg:var(--dshpc-danger);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-danger-hover);}\n/* 可点态：button 渲染（见 Chip.ts），光标 + hover 加深。 */\n.dshpc-chip--clickable{cursor:pointer;transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-chip--clickable:hover:not(:disabled){background:var(--chip-bg-hover)}\n.dshpc-chip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n.dshpc-chip:disabled{cursor:default;color:var(--dshpc-fg-3)}\n@media (prefers-reduced-motion: reduce){.dshpc-chip{transition:none}}\n";
+		const CHIP_CSS = "\n/* 三条局部变量承载配色：neutral 走旧灰面；语义档换底字配对（2026-10-20 用户要多色多尺寸标签）。 */\n.dshpc-chip{--chip-bg:var(--dshpc-chip-bg);--chip-fg:var(--dshpc-fg);--chip-bg-hover:var(--dshpc-chip-bg-hover);\n  display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:1px 8px;\n  box-sizing:border-box;border-radius:var(--dshpc-radius-pill,999px);border:none;\n  background:var(--chip-bg);color:var(--chip-fg);\n  font-family:inherit;font-size:11px;line-height:18px;margin:0;\n  /* 2026-10-18：chip 是 flex 行里的常用项，禁止被压缩换行（预览站出现过文字竖排、互相叠压的挤压）。 */\n  white-space:nowrap;flex:none;\n  appearance:none;-webkit-appearance:none;\n}\n/* md 档：卡片元信息行等稍大场景；sm 即旧版默认，逐像素不动。 */\n.dshpc-chip--md{padding:2px 10px;font-size:12px;line-height:20px;}\n/* xs 档：标题后缀等极紧凑场景（2026-10-20 用户要更小标签）；16px 高、font 10。 */\n.dshpc-chip--xs{padding:0 6px;font-size:10px;line-height:16px;}\n/* 语义色实心档：底 / 字 / hover 配对与 Button 同源（黄底中高明度 ⇒ 字用 --dshpc-on-warning）。 */\n.dshpc-chip--business{--chip-bg:var(--dshpc-business);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-business-hover);}\n.dshpc-chip--success{--chip-bg:var(--dshpc-success);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-success-hover);}\n.dshpc-chip--warning{--chip-bg:var(--dshpc-warning);--chip-fg:var(--dshpc-on-warning);--chip-bg-hover:var(--dshpc-warning-hover);}\n.dshpc-chip--danger{--chip-bg:var(--dshpc-danger);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-danger-hover);}\n/* 可点态：button 渲染（见 Chip.ts），光标 + hover 加深。 */\n.dshpc-chip--clickable{cursor:pointer;transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-chip--clickable:hover:not(:disabled){background:var(--chip-bg-hover)}\n.dshpc-chip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n.dshpc-chip:disabled{cursor:default;color:var(--dshpc-fg-3)}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-chip .dshpc-chip__label{min-width:0;}\n@media (prefers-reduced-motion: reduce){.dshpc-chip{transition:none}}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/code-viewer-css.generated.js
-		const CODE_VIEWER_CSS = "/* CodeViewer（只读 CodeMirror 查看器）样式。类名固定 dshpc-cv*；颜色吃 --dshpc-* token，\n   深色由 design 的 token 深色段自动生效（不写死颜色值）。 */\n.dshpc-cv{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;}\n.dshpc-cv__copy{position:absolute;top:6px;right:6px;z-index:5;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;appearance:none;border:1px solid var(--dshpc-border,rgba(128,128,128,.35));border-radius:var(--dshpc-radius-sm,6px);background:var(--dshpc-surface-1,#fff);color:var(--dshpc-fg-2,rgba(128,128,128,.95));cursor:pointer;opacity:0;transition:opacity .12s var(--dshpc-ease,ease),background .12s,color .12s;}\n.dshpc-cv:hover .dshpc-cv__copy,.dshpc-cv__copy:focus-visible{opacity:1;}\n.dshpc-cv__copy:hover{background:var(--dshpc-hover,rgba(38,49,72,.06));color:var(--dshpc-fg,#1f2328);}\n.dshpc-cv__copy svg{width:16px;height:16px;}\n.dshpc-cv__editor{flex:1 1 auto;min-height:0;overflow:hidden;}\n.dshpc-cv__editor .cm-editor{height:100%;}\n.dshpc-cv__editor .cm-scroller{overflow:auto;}\n";
+		const CODE_VIEWER_CSS = "/* CodeViewer（只读 CodeMirror 查看器）样式。类名固定 dshpc-cv*；颜色吃 --dshpc-* token，\n   深色由 design 的 token 深色段自动生效（不写死颜色值）。 */\n.dshpc-cv{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;}\n/* 复制钮复用核心 IconButton（variant=outline / size=md）：盒型、描边、圆角（已统一 md）、底色、hover 全由核心提供；\n   这里只管「绝对定位 + 默认隐藏、hover/聚焦才显」（overlay 浮在编辑器右上角）。 */\n.dshpc-cv__copy{position:absolute;top:6px;right:6px;z-index:5;opacity:0;}\n.dshpc-cv:hover .dshpc-cv__copy,.dshpc-cv__copy:focus-visible{opacity:1;}\n.dshpc-cv__copy svg{width:16px;height:16px;}\n.dshpc-cv__editor{flex:1 1 auto;min-height:0;overflow:hidden;}\n.dshpc-cv__editor .cm-editor{height:100%;}\n.dshpc-cv__editor .cm-scroller{overflow:auto;}\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@file+..+dsh-plugin-core_@babel+runtime@8.0.8_@codemirror+autocomplete@6_fb25d1a558b879a821d1d2cb50b44735/node_modules/dsh-plugin-core/dist/ui/panel-dock-css.generated.js
 		const PANEL_DOCK_CSS = "\n/* 停靠栏 = **布局成员**，不是浮层：它占宽度、把主区真正挤窄（兄弟项目 2026-09-28：\n   「分栏压过来，不是盖上去」）。所以调用方必须把它放进自己的 flex 根里。 */\n.dshpc-dock{display:flex;flex:0 0 auto;align-self:stretch;min-width:0}\n/* 开着时给主区滚动条让出一条缝：滚动条贴死分隔线很难看（用户 2026-10-28，对齐\n   dsh-better-sidebar 的留白）。全关时整条 dock 退出，缝隙一起消失、不留白边。\n   缝宽可由调用方盖 --dshpc-dock-gap；TS 侧的让位量（DOCK_GAP）要与它一致。 */\n.dshpc-dock--open{margin-left:var(--dshpc-dock-gap,1px)}\n\n/* 自动加的宿主行（openFilePreview 加 / 关闭即摘）：消费方那行不必自己写 flex。\n   只让「第一个非预览子项」当主区伸展，其余直接子项不动（页脚条、工具条不误伤）；\n   display 不在这里写死 —— 本来就是 grid 等布局的元素保持原样，由 TS 侧按计算值补 flex。 */\n.dshpc-dock-host{min-width:0;min-height:0}\n.dshpc-dock-host>:not([data-dshpc-file-preview]){min-width:0}\n.dshpc-dock-host>:first-child:not([data-dshpc-file-preview]){flex:1 1 auto}\n\n/* 单栏：sticky + 100vh 让它在页面滚动时保持可见，同时仍然占宽度。\n   ⚠️ **本条刻意不设 z-index**：布局成员一旦带正 z-index，就会无条件压过宿主 portal 到 body 的\n   弹窗（兄弟项目 2026-10-05 真机事故「侧边栏盖住宿主设置弹窗」）。层序交给 DOM 顺序裁决。 */\n.dshpc-dock__panel{\n  box-sizing:border-box;position:sticky;top:0;align-self:stretch;\n  display:flex;flex-direction:column;flex:0 0 auto;\n  /* 高度默认视口高（整页场景）；嵌在定高容器里时由调用方给 --dshpc-dock-h（如 420px / 100%）。 */\n  height:var(--dshpc-dock-h,100vh);max-height:var(--dshpc-dock-h,100vh);min-width:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n  border-left:1px solid var(--dshpc-border);\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease);\n  box-shadow:var(--dshpc-shadow-2);\n  /* 入场：从 0 宽滑出来（keyframes 只写 from，终点取内联 width），打开 / 耳朵展开都走这条。 */\n  animation:dshpc-dock-in .22s var(--dshpc-ease);\n}\n/* overflow:hidden 只在动画前段（离散属性在 50% 翻转）——平时不能裁，否则挂在左缘外的\n   收起钮会被切掉一半。 */\n@keyframes dshpc-dock-in{from{width:0;opacity:0;overflow:hidden}}\n/* 收起的出场：宽度收到 0、透明淡出；落定后组件才真正摘掉这一栏（JS 延时 220ms 配合）。 */\n.dshpc-dock__panel--closing{\n  width:0!important;min-width:0!important;opacity:0;border-left-width:0;\n  transition:width .2s var(--dshpc-ease),opacity .2s var(--dshpc-ease),border-left-width .2s var(--dshpc-ease);\n}\n\n.dshpc-dock__head{\n  flex:none;display:flex;align-items:center;gap:8px;\n  /* 右侧 34px = 8(边距) + 20(关钮) + 6(呼吸)：给绝对定位的关钮留位，标题/extra 不从它底下钻 */\n  padding:10px 34px 10px 14px;\n  border-bottom:1px solid var(--dshpc-border-faint);\n}\n/* 图标位 / 标题右侧的内容位：消费方传 ReactNode，可塞多个；库只负责排布，不抢宽度。 */\n.dshpc-dock__lead{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-dock__extra{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto}\n/* 自定义头部：整行归调用方 —— 不加内边距/边框/背景，也不给关钮留内联空间（关钮是绝对定位的）。 */\n.dshpc-dock__head--custom{display:block;padding:0;border-bottom:none}\n.dshpc-dock__title{\n  flex:1 1 auto;min-width:0;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n  font-size:var(--dshpc-font-md);font-weight:600;\n}\n/* 关闭钮：20×20 方角图标位（与 Modal 的关闭钮同规格，不借 Picker 触发器皮肤）。 */\n.dshpc-dock__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-dock__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 头部关钮：绝对定位，位置与内置头完全一致（top 10 / right 8）；自定义头也用这一个位置。\n   锚点是面板本身（position:sticky 即定位上下文），不在滚动内容里，所以正文滚动它不跟滚。 */\n.dshpc-dock__close--abs{position:absolute;top:10px;right:8px;z-index:8}\n/* 浮动关钮：无头部面板用，略收一点边距。 */\n.dshpc-dock__close--floating{\n  position:absolute;top:6px;right:6px;z-index:8;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border-faint);\n}\n\n/* 内容区自己滚：面板高度锁 100vh，内容不设内部滚动就会把整页撑高。 */\n.dshpc-dock__body{flex:1 1 auto;min-height:0;overflow:auto}\n\n/* 拖拽条：左缘 6px 命中区，**自己不画任何线**。\n   hover / 拖动时把面板自己的 border-left 染成蓝（用户 2026-10-28 四轮：蓝线只准改原线，\n   不准在原线旁边加一条 —— 之前在 padding box 左缘画渐变，正好叠出双线）。\n   命中区在 padding box 上、border 在它左外侧，所以只能改面板的 border 色。\n   z-index 7 必须高于面板内容里的浮层（复制钮一类），否则命中区会被内容盖住。 */\n.dshpc-dock__resizer{\n  position:absolute;left:0;top:0;bottom:0;width:6px;\n  z-index:7;cursor:col-resize;background:transparent;\n}\n.dshpc-dock__panel:has(> .dshpc-dock__resizer:hover),\n.dshpc-dock__panel--resizing{\n  /* 原线保留「上下渐隐」工作区指示条质感：把面板自己的 border-left 换成同款渐变\n     （不是另加一条线）。面板只有这一条边框、无圆角，所以只作用在线上。 */\n  border-image:linear-gradient(180deg,transparent,var(--dshpc-business) 30% 70%,transparent) 1;\n}\n\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove，\n   向右拖进 iframe 就卡死 —— 整片让出指针事件；② contain 把重排隔离在栏内，\n   否则每帧改宽度都会牵动整页重排（兄弟项目 2026-10-04 真机「挪很久才动一下」）。 */\n.dshpc-dock.dshpc-dock--resizing iframe{pointer-events:none}\n.dshpc-dock.dshpc-dock--resizing .dshpc-dock__panel{contain:layout paint;will-change:width}\n\n/* 收起钮：**待在面板自己的框里**（用户 2026-10-28 三轮：占面板内部空间，不伸到外面去）。\n   left:0 从内侧贴着分隔线 —— 贴线的一边不描边（线是面板自己的 border-left），页签与线不重合。\n   20×44（用户 2026-10-28 四轮定尺寸）；实色底（--dshpc-plate，明暗各有实值），hover 亮一档。\n   padding-right:2px 是**视觉居中**：右侧是圆角，箭头往直线那边挪 1px（用户 2026-10-28 四轮）。 */\n.dshpc-dock__collapse{\n  position:absolute;left:0;top:50%;transform:translateY(-50%);\n  z-index:8;display:inline-flex;align-items:center;justify-content:center;\n  width:20px;height:44px;padding:0 2px 0 0;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);\n  border-left:none;\n  border-radius:0 var(--dshpc-radius-sm) var(--dshpc-radius-sm) 0;\n  background:var(--dshpc-plate);color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:16px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__collapse:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__collapse:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n\n/* 收起后的浮动耳朵：**fixed 贴右缘、垂直居中、独立于分栏**（用户 2026-10-28 定稿：\n   小页签挂中间、里面放面板图标、不显示文字，箭头与收起钮反向）。多个按收起顺序纵向堆叠。\n   z 走 dock 档（低于宿主弹窗），避免盖住宿主 portal 层。 */\n.dshpc-dock__ears{\n  position:fixed;top:50%;right:0;transform:translateY(-50%);\n  z-index:var(--dshpc-z-dock,1030);\n  display:flex;flex-direction:column;gap:8px;align-items:flex-end;\n  pointer-events:none;\n}\n.dshpc-dock__ear{\n  pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;\n  /* 与收起钮**同尺寸**（20×44，用户 2026-10-28 四轮）：上/下/左描边，贴右缘的一侧不描。\n     实色底（--dshpc-plate），不用透明色 —— 透明底下透出东西很难看。\n     padding-left:2px 是**视觉居中**：左侧是圆角，箭头往直线（右缘）那边挪 1px。 */\n  width:20px;height:44px;box-sizing:border-box;padding:0 0 0 2px;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-left:1px solid var(--dshpc-border);\n  border-right:none;\n  border-radius:var(--dshpc-radius-sm) 0 0 var(--dshpc-radius-sm);\n  background:var(--dshpc-plate);color:var(--dshpc-fg-2);\n  cursor:pointer;font-family:inherit;line-height:1;\n  animation:dshpc-ear-in .2s var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 入场：从右缘外滑进来，别「突然出现」（用户 2026-10-28）。 */\n@keyframes dshpc-ear-in{from{opacity:0;transform:translateX(14px)}}\n.dshpc-dock__ear:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__ear:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 与收起钮的箭头同一字号（16px）：收进去前后箭头一模一样大（用户 2026-10-28）。 */\n.dshpc-dock__ear-arrow{font-size:16px;color:var(--dshpc-fg-3)}\n.dshpc-dock__ear:hover .dshpc-dock__ear-arrow{color:var(--dshpc-fg)}\n/* 动效礼貌：系统声明减少动效时全部关掉（与 Segmented 同一约定），收起退化为瞬时、功能不受影响。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-dock__panel{animation:none}\n  .dshpc-dock__panel--closing{transition:none}\n  .dshpc-dock__ear{animation:none}\n}\n";
@@ -2502,6 +2502,7 @@ window.__ModuleLoader__.load({
 				sessionFailed: "会话加载失败",
 				sessionEmpty: "该会话暂无内容",
 				explorerLoading: "加载中…",
+				loadingDefault: "数据加载中",
 				explorerFailed: "加载失败",
 				explorerRoot: "工作区",
 				explorerTruncated: "条目过多，已截断",
@@ -2759,6 +2760,7 @@ window.__ModuleLoader__.load({
 				sessionFailed: "Failed to load session",
 				sessionEmpty: "No content in this session",
 				explorerLoading: "Loading…",
+				loadingDefault: "Loading",
 				explorerFailed: "Failed to load",
 				explorerRoot: "Workspace",
 				explorerTruncated: "Too many entries, truncated",
@@ -3327,7 +3329,14 @@ window.__ModuleLoader__.load({
 		*/
 		function Button$1(props) {
 			ensureControls();
-			const { variant = "outline", size = "lg", icon, iconRight, color, loading = false, block = false, className, style, children, ...rest } = props;
+			const { variant = "outline", size = "lg", icon, iconRight, color, loading = false, block = false, width, minWidth, maxWidth, className, style, children, ...rest } = props;
+			const widthStyle = {};
+			if (width !== void 0) widthStyle.width = width;
+			else {
+				if (minWidth !== void 0) widthStyle.minWidth = minWidth;
+				if (maxWidth !== void 0) widthStyle.maxWidth = maxWidth;
+			}
+			const marqueeLabel = maxWidth !== void 0 && width === void 0 && typeof children === "string";
 			const attrs = {
 				...rest,
 				type: rest.type ?? "button",
@@ -3335,6 +3344,7 @@ window.__ModuleLoader__.load({
 				className: buttonClass(variant, size, block, icon !== void 0 && icon !== null && !loading, className),
 				style: {
 					...colorVars(variant, color),
+					...widthStyle,
 					...style
 				}
 			};
@@ -3353,7 +3363,10 @@ window.__ModuleLoader__.load({
 				strokeWidth: 1.5,
 				strokeLinecap: "round",
 				strokeDasharray: "22 30"
-			})) : icon !== void 0 && icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon" }, icon) : null, children, iconRight !== void 0 && iconRight !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon-end" }, iconRight) : null);
+			})) : icon !== void 0 && icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon" }, icon) : null, marqueeLabel ? (0, react$1.createElement)(MarqueeText, {
+				text: children,
+				className: "dshpc-btn__label"
+			}) : children, iconRight !== void 0 && iconRight !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon-end" }, iconRight) : null);
 		}
 		/**
 		* 渲染一个纯图标按钮。
@@ -3485,14 +3498,24 @@ window.__ModuleLoader__.load({
 		/** 小标签（neutral 用现成的 `--dshpc-chip-bg`；传 `onClick` 才是可点的）。 */
 		function Chip(props) {
 			ensureControls();
-			const clickable = props.onClick !== void 0;
-			const tone = props.tone ?? "neutral";
-			const size = props.size ?? "sm";
+			const { children, tone = "neutral", size = "sm", width, minWidth, maxWidth, onClick, className } = props;
+			const clickable = onClick !== void 0;
+			const widthStyle = {};
+			if (width !== void 0) widthStyle.width = width;
+			else {
+				if (minWidth !== void 0) widthStyle.minWidth = minWidth;
+				if (maxWidth !== void 0) widthStyle.maxWidth = maxWidth;
+			}
+			const marqueeLabel = maxWidth !== void 0 && width === void 0 && typeof children === "string";
 			return (0, react$1.createElement)(clickable ? "button" : "span", {
 				type: clickable ? "button" : void 0,
-				className: `dshpc-chip${tone !== "neutral" ? ` dshpc-chip--${tone}` : ""}${size !== "sm" ? ` dshpc-chip--${size}` : ""}${clickable ? " dshpc-chip--clickable" : ""}${props.className === void 0 ? "" : ` ${props.className}`}`,
-				onClick: props.onClick
-			}, props.children ?? null);
+				className: `dshpc-chip${tone !== "neutral" ? ` dshpc-chip--${tone}` : ""}${size !== "sm" ? ` dshpc-chip--${size}` : ""}${clickable ? " dshpc-chip--clickable" : ""}${className === void 0 ? "" : ` ${className}`}`,
+				style: widthStyle,
+				onClick
+			}, marqueeLabel ? (0, react$1.createElement)(MarqueeText, {
+				text: children,
+				className: "dshpc-chip__label"
+			}) : children ?? null);
 		}
 		//#endregion
 		//#region ../../node_modules/.pnpm/sonner@2.0.8_@types+react@18.3.31_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/sonner/dist/index.mjs
@@ -51896,13 +51919,14 @@ window.__ModuleLoader__.load({
 			return (0, react$1.createElement)("div", {
 				className: `dshpc-cv${className ? ` ${className}` : ""}`,
 				style
-			}, (0, react$1.createElement)("button", {
-				type: "button",
+			}, (0, react$1.createElement)(IconButton$1, {
+				variant: "outline",
+				size: "md",
+				icon: copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular),
+				label: copied ? t("codeCopied") : t("codeCopy"),
 				className: "dshpc-cv__copy",
-				onClick: copy,
-				title: copied ? t("codeCopied") : t("codeCopy"),
-				"aria-label": copied ? t("codeCopied") : t("codeCopy")
-			}, copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular)), (0, react$1.createElement)(ReactCodeMirror, {
+				onClick: copy
+			}), (0, react$1.createElement)(ReactCodeMirror, {
 				value: text,
 				className: "dshpc-cv__editor",
 				theme: "none",
@@ -53228,16 +53252,23 @@ window.__ModuleLoader__.load({
 		* ⚠️ `getSnapshot` 必须返回**稳定引用**（每次新建对象会被判定为「一直在变」⇒ 无限重渲染），
 		* 故只在真变了时才换 `state` 对象。
 		*/
+		/** 默认筛选（也是「点统计卡切档」时的重置目标）。
+		*  ⚠️ 新增任何筛选条件都必须加进这里，否则 `isDefaultQuery` 与切档重置都会漏掉它。 */
+		const DEFAULT_QUERY = {
+			tab: "mine",
+			workspace: "",
+			keyword: "",
+			owner: ""
+		};
+		/** 除 `tab` 外，其余筛选是否都停在默认值（卡片高亮只在此前提下才算「选中了那一档」）。 */
+		function isDefaultQuery(query) {
+			return Object.keys(DEFAULT_QUERY).every((key) => key === "tab" || query[key] === DEFAULT_QUERY[key]);
+		}
 		let state = {
 			status: "loading",
 			board: null,
 			error: null,
-			query: {
-				tab: "mine",
-				workspace: "",
-				keyword: "",
-				owner: ""
-			},
+			query: DEFAULT_QUERY,
 			refreshing: false,
 			extraOwners: []
 		};
@@ -53298,6 +53329,14 @@ window.__ModuleLoader__.load({
 				...patch
 			} });
 		}
+		/** 点统计卡切档：**清掉所有筛选**（搜索 / 工作区 / 执行人…），只留这个 tab。
+		*  以后新增筛选条件也一并被清 —— 重置目标就是 `DEFAULT_QUERY`。 */
+		function selectTab(tab) {
+			set({ query: {
+				...DEFAULT_QUERY,
+				tab
+			} });
+		}
 		/**
 		* 行内点人名 = 选中下拉里的这个人（用户 2026-10-28）。
 		* 名册里没有他的人（被删 / 别的机器加的）照样能筛：顺手补进下拉候选，
@@ -53346,8 +53385,6 @@ body{
   --dtl-fg-2:var(--dsw-alias-label-secondary,#5c6370);
   --dtl-fg-3:var(--dsw-alias-label-tertiary,#767d87);
   --dtl-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);
-  /* 实色面上的字（工作区徽标这种铺满 business 的） */
-  --dtl-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);
 
   /* ── 面 ──────────────────────────────────────────────────────── */
   --dtl-surface-1:var(--dsw-alias-bg-layer-1,#fff);
@@ -53467,7 +53504,7 @@ body[data-ds-dark-theme]{
 .dtl-taskrow{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);
   border-radius:var(--dtl-radius-sm);margin-bottom:10px;}
 .dtl-taskrow__row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:inherit;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+  cursor:pointer;transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
 
 /* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
@@ -53486,33 +53523,25 @@ body[data-ds-dark-theme]{
 /* 第二行小字：工作区 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
 .dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
-/* 右侧三段（用户 2026-10-28）：人名（常驻、蓝、可点筛人）/ 时间（hover 让位）/ 动作钮。
-   hover 只收时间那一截，人名不动 —— 按钮出现时人名与它保持同一个 gap。 */
-.dtl-taskrow__who{flex:none;padding:0;border:0;background:none;cursor:pointer;
-  font-family:inherit;font-size:var(--dtl-font-sm);color:var(--dtl-business);white-space:nowrap;}
-.dtl-taskrow__who:hover{text-decoration:underline;}
-.dtl-taskrow__who--plain{color:var(--dtl-fg-3);cursor:default;}
+/* 右侧（用户 2026-10-28）：工作区 Chip（常驻）/ 时间（hover 让位）/ 动作钮。
+   hover 只收时间那一截，Chip 不动 —— 按钮出现时两者保持同一个 gap。
+   人名（第二行）走核心 Button 的 link 档，这里不再有它的样式。 */
 .dtl-taskrow__meta{flex:none;overflow:hidden;text-overflow:ellipsis;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-.dtl-taskrow__actions{display:none;flex:none;gap:6px;}
+.dtl-taskrow__actions{display:none;flex:none;gap:6px;align-items:center;}
 .dtl-taskrow__row:hover .dtl-taskrow__meta{display:none;}
 .dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
+/* 次级图标钮（复制 ID / 查看）：动作排里**常驻**，故比旁边那几个描边动作钮浅一档
+   （用户 2026-10-28：灰一点、别抢眼）——灰字、无底无边；hover 才回到正常字色。
+   明暗都靠 --dtl-fg-3（别名随宿主主题变），不写第二套颜色。 */
+.dtl-taskrow__actions .dtl-iconbtn--muted{color:var(--dtl-fg-3);}
+.dtl-taskrow__actions .dtl-iconbtn--muted:hover:not(:disabled){color:var(--dtl-fg);}
 
-/* 可点标签：点一下把标签塞进搜索框（用户 2026-10-28） */
-.dtl-clicktag{padding:0;border:0;background:none;cursor:pointer;font-family:inherit;}
-.dtl-clicktag:hover{opacity:.78;}
+/* 工作区 / #标签 都是核心可点 Chip（business 档），含最大宽 / 省略号 / 跑马灯，本文件不写皮肤。 */
 
-/* 用核心 Chip 承担标签时的截断（core Chip 无 max-width/省略号 ⇒ 这里只补布局，不改皮肤） */
-.dshpc-chip.dtl-tagchip{display:inline-block;flex:none;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;}
-
-/* 工作区徽标：**实色** business 底 + 反白字（用户 2026-10-28：浅底太暗，要核心 --dshpc-business
-   那种亮蓝）；可点 = 按该工作区筛选。 */
-.dtl-wstag{flex:none;max-width:220px;padding:1px 8px;border:0;border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-business);color:var(--dtl-fg-inverse);cursor:pointer;
-  font-family:inherit;font-size:var(--dtl-font-xs);line-height:16px;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;}
-.dtl-wstag:hover{filter:brightness(1.12);}
+/* Tooltip 垫片（见 ui.ts 的 Tip）：只是挂官方气泡的真 DOM 锚点，不占额外版面。 */
+.dtl-tip{display:inline-flex;min-width:0;}
 
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
@@ -53555,8 +53584,10 @@ body[data-ds-dark-theme]{
 				style: props.style
 			});
 		}
-		/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 3 档）。本地默认高度 md（core 默认 lg）。
-		*  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。 */
+		/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 primary/outline/ghost/link）。
+		*  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。
+		*  宽度三件（width/minWidth/maxWidth）核心已支持：给 maxWidth + 纯文字 ⇒ 核心自动省略号 +
+		*  hover 跑马灯，本层原样透传，别再自己写截断。 */
 		function Button(props) {
 			return (0, react$1.createElement)(Button$1, {
 				variant: props.variant,
@@ -53565,10 +53596,14 @@ body[data-ds-dark-theme]{
 				loading: props.loading,
 				disabled: props.disabled,
 				title: props.title,
+				width: props.width,
+				minWidth: props.minWidth,
+				maxWidth: props.maxWidth,
 				onClick: props.onClick
 			}, props.children);
 		}
-		/** 图标钮：改由核心 `IconButton` 承担。 */
+		/** 图标钮：改由核心 `IconButton` 承担。
+		*  `className` 只用于挂本文件的修饰类（如 `.dtl-iconbtn--muted`），不覆盖核心皮肤。 */
 		function IconButton(props) {
 			return (0, react$1.createElement)(IconButton$1, {
 				icon: props.icon,
@@ -53577,7 +53612,24 @@ body[data-ds-dark-theme]{
 				variant: props.variant ?? "plain",
 				size: props.size ?? "md",
 				disabled: props.disabled,
-				title: props.title
+				title: props.title,
+				className: props.className
+			});
+		}
+		/** 悬停提示（本插件**唯一**挂 Tooltip 的入口）。
+		*
+		*  ⚠️ 官方 `Tooltip` 给子元素挂 `ref` 来当锚点（`children.ref` → `cloneElement`），
+		*  而核心控件（Button / IconButton / Chip）都是**裸函数组件**（无 forwardRef）⇒ ref 被 React
+		*  丢掉、锚点永远 null、气泡静默不出现。所以这里统一垫一层**真 DOM 的 span** 当锚点：
+		*  悬停/聚焦事件冒泡到 span 照样触发，按钮仍由核心控件渲染。
+		*  `display:inline-flex` 让垫片不改变原控件在 flex 行里的尺寸与对齐。 */
+		function Tip(props) {
+			return (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+				label: props.label,
+				side: props.side ?? "bottom",
+				portal: true,
+				maxWidth: props.maxWidth ?? 240,
+				children: (0, react$1.createElement)("span", { className: "dtl-tip" }, props.children)
 			});
 		}
 		/** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
@@ -53635,14 +53687,6 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-2)"
 			} }, props.label), (0, react$1.createElement)("span", { className: "dtl-stat__value" }, shown), props.hint === void 0 || props.hint === null || props.hint === "" ? null : (0, react$1.createElement)("span", { className: "dtl-stat__hint" }, props.hint));
 		}
-		/** 标签上限宽度（字符数）：1 个中文按 2 计 ⇒ 10 个中文 = 20 个字符（与 CSS 的 20ch 对齐）。 */
-		const TAG_MAX_WIDTH = 20;
-		/** 显示宽度：全角（中 / 日 / 韩 / 全角符号）一个顶两个英文字符。 */
-		function displayWidth(text) {
-			let width = 0;
-			for (const char of text) width += (char.codePointAt(0) ?? 0) > 11904 ? 2 : 1;
-			return width;
-		}
 		/** 本地 7 档语义色 → 核心 `Chip` 5 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
 		*  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。 */
 		const CHIP_TONE = {
@@ -53655,24 +53699,20 @@ body[data-ds-dark-theme]{
 			person: "business"
 		};
 		/**
-		* 标签：状态 / 执行人 / #标签 都走它，只换 tone（改由核心 `Chip` 承担）。
-		* 超过 20 个字符宽 ⇒ 省略号（`.dtl-tagchip` 补），**且只在被截时**挂悬停提示补出全文。
+		* 标签：状态 / 工作区 / #标签 都走它，只换 tone（核心 `Chip` 承担）。
+		* 传 `maxWidth` ⇒ 核心自动折叠省略号 + hover 跑马灯，本层不再自己算宽度。
 		*/
 		function Tag(props) {
 			ensureUiBase();
-			const { text, tone = "neutral", title, tip } = props;
-			const long = displayWidth(text) > TAG_MAX_WIDTH;
-			const label = tip ?? (long ? title ?? text : void 0);
+			const { text, tone = "neutral", tip, onClick, maxWidth } = props;
 			const chip = (0, react$1.createElement)(Chip, {
 				tone: CHIP_TONE[tone],
-				className: "dtl-tagchip"
+				onClick,
+				maxWidth
 			}, text);
-			if (label === void 0) return chip;
-			return (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
-				label,
-				side: "bottom",
-				portal: true,
-				maxWidth: 240,
+			if (tip === void 0) return chip;
+			return (0, react$1.createElement)(Tip, {
+				label: tip,
 				children: chip
 			});
 		}
@@ -53763,7 +53803,8 @@ body[data-ds-dark-theme]{
 			const tone = toneOf(row);
 			const tags = row.task.tags ?? [];
 			const created = row.task.created ?? null;
-			const createdDay = created !== null && created !== void 0 && Date.parse(created) >= 0 ? formatDateTime(created).slice(0, 10) : null;
+			const creatorName = displayName(row.task.creator_name, row.task.creator);
+			const creatorAge = created === null || created === void 0 ? null : formatRelative(created, t);
 			const stamp = (value) => value === null || value === void 0 ? t("timeUnknown") : formatDateTime(value, {
 				seconds: true,
 				fallback: t("timeUnknown")
@@ -53799,24 +53840,20 @@ body[data-ds-dark-theme]{
 				});
 			};
 			const actions = resolveActions(row.task);
-			const viewButton = (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+			const viewButton = (0, react$1.createElement)(Tip, {
 				label: t("viewDetail"),
-				side: "bottom",
-				portal: true,
-				maxWidth: 240,
 				children: (0, react$1.createElement)(IconButton, {
-					variant: "outline",
+					variant: "plain",
 					size: "md",
 					label: t("viewDetail"),
+					title: "",
+					className: "dtl-iconbtn--muted",
 					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 14 }),
 					onClick: () => props.onView?.(row)
 				})
 			});
-			const tipBtn = (icon, actionKey, tipKey) => (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+			const tipBtn = (icon, actionKey, tipKey) => (0, react$1.createElement)(Tip, {
 				label: t(tipKey),
-				side: "bottom",
-				portal: true,
-				maxWidth: 240,
 				children: (0, react$1.createElement)(Button, {
 					variant: "outline",
 					size: "md",
@@ -53837,38 +53874,64 @@ body[data-ds-dark-theme]{
 				});
 			};
 			const alarmTags = MARKS.filter((which) => row.task[which] === true).map((which) => tagOf(which));
+			const copyButton = (0, react$1.createElement)(Tip, {
+				label: `${t("copyTaskId")}\n${row.task.id}`,
+				maxWidth: 320,
+				children: (0, react$1.createElement)(IconButton, {
+					variant: "plain",
+					size: "md",
+					label: t("copyTaskId"),
+					title: "",
+					className: "dtl-iconbtn--muted",
+					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutlineRegular, { size: 14 }),
+					onClick: () => {
+						const clipboard = navigator.clipboard;
+						if (clipboard === void 0) {
+							notify(t("copyFailed"));
+							return;
+						}
+						clipboard.writeText(row.task.id).then(() => notify(t("copiedTaskId")), () => notify(t("copyFailed")));
+					}
+				})
+			});
 			const titleLine = (0, react$1.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react$1.createElement)("span", {
 				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
-			}, titleOf(row)), createdDay === null ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, `[${t("fieldCreatedStamp", { day: createdDay })}]`), ...alarmTags);
-			const isOpen = row.task.status === "open";
-			const whenRaw = isOpen ? row.task.created : row.task.updated ?? row.task.started ?? row.task.created;
-			const whenStamp = whenRaw === null || whenRaw === void 0 || Number.isNaN(Date.parse(whenRaw)) ? t("timeUnknown") : formatDateTime(whenRaw).slice(5);
-			const whoName = isOpen ? displayName(row.task.creator_name, row.task.creator) : displayName(row.task.owner_name, row.task.owner);
-			const whoUuid = (isOpen ? row.task.creator ?? "" : row.task.owner ?? "").trim();
-			const whos = (whoName === "" ? t("ownerUnclaimed") : `@${whoName}`).trim();
-			const metaText = `${isOpen ? t("whenCreated", { time: whenStamp }) : t("whenSubmitted", { time: whenStamp })} 丨 ${whenRaw === null || whenRaw === void 0 ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
-			const whoNode = isOpen || whoUuid === "" ? (0, react$1.createElement)("span", { className: "dtl-taskrow__who dtl-taskrow__who--plain" }, whos) : (0, react$1.createElement)("button", {
-				type: "button",
-				className: "dtl-taskrow__who",
-				title: t("filterByOwner", { name: whoName }),
-				onClick: () => focusOwner(whoUuid, whoName)
-			}, whos);
-			return (0, react$1.createElement)("div", { className: "dtl-taskrow" }, (0, react$1.createElement)("div", { className: "dtl-taskrow__row" }, (0, react$1.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react$1.createElement)("div", { style: {
+			}, titleOf(row)), creatorAge === null || creatorName === "" ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`), ...alarmTags);
+			const whenRaw = row.task.updated ?? row.task.started ?? row.task.created;
+			const metaText = `${t("whenSubmitted", { time: whenRaw === null || whenRaw === void 0 || Number.isNaN(Date.parse(whenRaw)) ? t("timeUnknown") : formatDateTime(whenRaw).slice(5) })} 丨 ${whenRaw === null || whenRaw === void 0 ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
+			const ownerName = displayName(row.task.owner_name, row.task.owner);
+			const ownerUuid = (row.task.owner ?? "").trim();
+			const whoNode = row.task.status === "open" || ownerUuid === "" ? null : (0, react$1.createElement)(Button, {
+				variant: "link",
+				size: "sm",
+				maxWidth: 180,
+				title: t("filterByOwner", { name: ownerName }),
+				onClick: () => focusOwner(ownerUuid, ownerName)
+			}, `@${ownerName}`);
+			const handleRowClick = (event) => {
+				const target = event.target;
+				if (target !== null && target.closest("button") !== null) return;
+				props.onView?.(row);
+			};
+			return (0, react$1.createElement)("div", { className: "dtl-taskrow" }, (0, react$1.createElement)("div", {
+				className: "dtl-taskrow__row",
+				onClick: handleRowClick
+			}, (0, react$1.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0
-			} }, titleLine, (0, react$1.createElement)("div", { className: "dtl-taskrow__l2" }, (0, react$1.createElement)("button", {
-				type: "button",
-				className: "dtl-wstag",
-				title: t("filterByWorkspace", { name: row.task.workspace.title }),
-				onClick: () => setQuery({ workspace: row.task.workspace.id })
-			}, row.task.workspace.title), tags.map((tag) => (0, react$1.createElement)("button", {
+			} }, titleLine, (0, react$1.createElement)("div", { className: "dtl-taskrow__l2" }, whoNode, tags.map((tag) => (0, react$1.createElement)(Tag, {
 				key: tag,
-				type: "button",
-				className: "dtl-clicktag",
-				title: t("filterByTag", { tag }),
+				text: `#${tag}`,
+				maxWidth: 160,
 				onClick: () => setQuery({ keyword: tag })
-			}, (0, react$1.createElement)(Tag, { text: `#${tag}` }))))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.view ? viewButton : null)));
+			})))), (0, react$1.createElement)(Tag, {
+				text: row.task.workspace.title,
+				tone: "person",
+				maxWidth: 200,
+				tip: t("filterByWorkspace", { name: row.task.workspace.title }),
+				onClick: () => setQuery({ workspace: row.task.workspace.id })
+			}), (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, copyButton, actions.view ? viewButton : null)));
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -54046,13 +54109,18 @@ body[data-ds-dark-theme]{
 				workspaceOptions,
 				state.extraOwners
 			]);
-			/** 统计卡：纯展示（用户 2026-10-17：先全去掉点击，界面定稿后再议滚动 / 筛选联动）。 */
-			const card = (label, value, hint, title) => (0, react$1.createElement)(StatCard, {
+			/** 统计卡：给了 `tab` 才可点 —— 点一下把下方列表切到该档，**其余筛选全部清掉**
+			*  （搜索 / 工作区 / 执行人…，用户 2026-10-28：以后新增的筛选也一样要清）。
+			*  高亮条件更严：只有 tab 对得上 **且** 其余筛选都还是默认值时才亮，
+			*  任何一项被改动 ⇒ 立刻熄灭（对不上就不算选中）。 */
+			const card = (label, value, hint, title, tab) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
 				value: formatCount(value),
 				hint,
 				title,
-				interactive: false
+				active: tab !== void 0 && state.query.tab === tab && isDefaultQuery(state.query),
+				interactive: tab !== void 0,
+				onClick: tab === void 0 ? void 0 : () => selectTab(tab)
 			});
 			/** 子集卡占比小字：分母为 0 或自己没有 ⇒ 不显示（不拿 0% 充数）。 */
 			const share = (part, whole, key) => part > 0 && whole > 0 ? t(key, { n: Math.round(part / whole * 100) }) : "";
@@ -54070,7 +54138,7 @@ body[data-ds-dark-theme]{
 			const statsGrid = (view) => (0, react$1.createElement)("div", {
 				className: "dtl-stats",
 				style: statsRowStyle
-			}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ ")), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine")), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays })), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays })), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays })), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays })), weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)("div", {
+			}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)("div", {
 				className: "dtl-card",
 				style: chartCardStyle
 			}, (0, react$1.createElement)("div", { style: hintStyle }, t("chartNotReady"))));
@@ -54151,8 +54219,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.113 · 261028-201530-402`
-			}, `v0.0.113 261028-201530-402`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.113 · 261028-231150-826`
+			}, `v0.0.113 261028-231150-826`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54269,11 +54337,13 @@ body[data-ds-dark-theme]{
 			relDays: "{n} 天前",
 			relMonths: "{n} 个月前",
 			relYears: "{n} 年前",
-			whenCreated: "创建于 {time}",
 			whenSubmitted: "更新于 {time}",
 			filterByOwner: "只看 @{name} 的任务",
 			filterByWorkspace: "只看工作区 {name}",
 			filterByTag: "搜索标签 #{tag}",
+			copyTaskId: "点击复制任务 ID",
+			copiedTaskId: "已复制任务 ID",
+			copyFailed: "复制失败",
 			actionClaim: "认领",
 			actionResume: "继续",
 			actionFinish: "结束",
@@ -54283,7 +54353,7 @@ body[data-ds-dark-theme]{
 			tipFinish: "结案并写入历史",
 			tipRelease: "释放认领，让别人接手",
 			viewDetail: "查看详情",
-			fieldCreatedStamp: "{day} 创建"
+			fieldCreatorStamp: "创建于 {age}"
 		};
 		/** English（与 zh 键完全对齐）。 */
 		const en = {
@@ -54349,11 +54419,13 @@ body[data-ds-dark-theme]{
 			relDays: "{n} d ago",
 			relMonths: "{n} mo ago",
 			relYears: "{n} y ago",
-			whenCreated: "created {time}",
 			whenSubmitted: "updated {time}",
 			filterByOwner: "Only tasks owned by @{name}",
 			filterByWorkspace: "Only workspace {name}",
 			filterByTag: "Search tag #{tag}",
+			copyTaskId: "Click to copy task ID",
+			copiedTaskId: "Task ID copied",
+			copyFailed: "Copy failed",
 			actionClaim: "Claim",
 			actionResume: "Resume",
 			actionFinish: "Close",
@@ -54363,7 +54435,7 @@ body[data-ds-dark-theme]{
 			tipFinish: "close and archive it",
 			tipRelease: "release the claim for others",
 			viewDetail: "View details",
-			fieldCreatedStamp: "created {day}"
+			fieldCreatorStamp: "created {age}"
 		};
 		/** 把宿主给的无参 t 包成带占位符替换的 t（模板一律 `{name}`，不依赖宿主是否支持 params）。 */
 		function interpolateTranslate(base) {

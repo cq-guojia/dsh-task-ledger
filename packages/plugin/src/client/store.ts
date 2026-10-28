@@ -49,18 +49,27 @@ export interface BoardState {
 	extraOwners: readonly ExtraOwner[];
 }
 
-const INITIAL_QUERY: Query = {
+/** 默认筛选（也是「点统计卡切档」时的重置目标）。
+ *  ⚠️ 新增任何筛选条件都必须加进这里，否则 `isDefaultQuery` 与切档重置都会漏掉它。 */
+export const DEFAULT_QUERY: Query = {
 	tab: "mine",
 	workspace: "",
 	keyword: "",
 	owner: "",
 };
 
+/** 除 `tab` 外，其余筛选是否都停在默认值（卡片高亮只在此前提下才算「选中了那一档」）。 */
+export function isDefaultQuery(query: Query): boolean {
+	return (Object.keys(DEFAULT_QUERY) as (keyof Query)[]).every(
+		(key) => key === "tab" || query[key] === DEFAULT_QUERY[key],
+	);
+}
+
 let state: BoardState = {
 	status: "loading",
 	board: null,
 	error: null,
-	query: INITIAL_QUERY,
+	query: DEFAULT_QUERY,
 	refreshing: false,
 	extraOwners: [],
 };
@@ -117,6 +126,12 @@ export async function refresh(): Promise<void> {
 /** 改筛选：全部在浏览器里完成（快照已含全部在办），不发请求。 */
 export function setQuery(patch: Partial<Query>): void {
 	set({ query: { ...state.query, ...patch } });
+}
+
+/** 点统计卡切档：**清掉所有筛选**（搜索 / 工作区 / 执行人…），只留这个 tab。
+ *  以后新增筛选条件也一并被清 —— 重置目标就是 `DEFAULT_QUERY`。 */
+export function selectTab(tab: TabFilter): void {
+	set({ query: { ...DEFAULT_QUERY, tab } });
 }
 
 /**

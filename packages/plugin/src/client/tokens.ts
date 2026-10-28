@@ -26,8 +26,6 @@ body{
   --dtl-fg-2:var(--dsw-alias-label-secondary,#5c6370);
   --dtl-fg-3:var(--dsw-alias-label-tertiary,#767d87);
   --dtl-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);
-  /* 实色面上的字（工作区徽标这种铺满 business 的） */
-  --dtl-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);
 
   /* ── 面 ──────────────────────────────────────────────────────── */
   --dtl-surface-1:var(--dsw-alias-bg-layer-1,#fff);
