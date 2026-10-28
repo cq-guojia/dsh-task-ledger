@@ -1,8 +1,9 @@
 # 20261028-0910-caae-上线前把核心库改回-npm-远程库：上线前把核心库改回 NPM 远程库
 
-- **标签**：dsh-plugin-core、本地链接、依赖切换
-- **状态**：doing · 2026-10-28 15:41:03 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **标签**：dsh-plugin-core、依赖切换、CI
+- **状态**：closed · 2026-10-28 15:41:14 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **创建**：2026-10-28 09:10:47 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **封卷**：2026-10-28 15:41:14 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
      「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
@@ -40,3 +41,4 @@
 - 2026-10-28 09:10:47 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务
 - 2026-10-28 15:40:26 · claim · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 认领 → doing
 - 2026-10-28 15:41:03 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 认领并收尾：依赖由 file: 改回 npm ^0.8.3、白名单补 0.8.3、lockfile 更新；frozen-install + verify + codelint 全过，ea7348e 已推送
+- 2026-10-28 15:41:14 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷
