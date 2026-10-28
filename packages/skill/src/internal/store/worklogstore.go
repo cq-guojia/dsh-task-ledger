@@ -93,7 +93,9 @@ func (w *WorklogStore) ByName(logName string) string {
 		return direct
 	}
 	var found []string
-	filepath.Walk(base, func(p string, info os.FileInfo, err error) error {
+	// 遍历是尽力而为：单个文件读不动就在回调里放过（这里签名没有 error 可回，
+	// filepath.Walk 的返回错误只是把同一个错再报一次，显式丢掉）
+	_ = filepath.Walk(base, func(p string, info os.FileInfo, err error) error {
 		if err != nil || info == nil || info.IsDir() {
 			return nil
 		}
@@ -113,7 +115,8 @@ func (w *WorklogStore) ByName(logName string) string {
 func (w *WorklogStore) All() []string {
 	base := filepath.Join(w.Repo, core.ToRepoRel(core.WorklogDir))
 	var out []string
-	filepath.Walk(base, func(p string, info os.FileInfo, err error) error {
+	// 同上：列不到就算没有，单个目录读不动不改变结果
+	_ = filepath.Walk(base, func(p string, info os.FileInfo, err error) error {
 		if err != nil || info == nil || info.IsDir() {
 			return nil
 		}

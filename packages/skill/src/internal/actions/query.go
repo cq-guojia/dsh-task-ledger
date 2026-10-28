@@ -53,10 +53,3 @@ type HistoryQuery struct {
 	Months    *int
 	CountOnly bool
 }
-
-func strOrEmpty(p *string) string {
-	if p == nil {
-		return ""
-	}
-	return *p
-}

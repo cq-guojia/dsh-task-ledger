@@ -26,12 +26,12 @@ func ProgressLock(path string) (func(), error) {
 		return nil, core.Failf("加锁 %s 失败：%v", lockPath, err)
 	}
 	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, core.Failf("加锁 %s 失败：%v", lockPath, err)
 	}
 	return func() {
 		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
-		f.Close()
+		_ = f.Close()
 	}, nil
 }
 
@@ -52,14 +52,14 @@ func SyncLock(dir string, timeout time.Duration) (func(), error) {
 			break
 		}
 		if !time.Now().Before(deadline) {
-			f.Close()
+			_ = f.Close()
 			return nil, core.Failf("另一个会话正在同步同一份台账（已等 %d 秒），请稍后重试。", int(timeout.Seconds()))
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
 	return func() {
 		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
-		f.Close()
+		_ = f.Close()
 	}, nil
 }
 

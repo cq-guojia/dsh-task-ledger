@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -119,11 +120,12 @@ func HistoryLine(finished string, created, title, owner, summary, worklog string
 		link = "[" + logRel + "](" + logRel + ")"
 	}
 	var b strings.Builder
-	b.WriteString("| " + finished + " | " + created + " | " + EscCell(title))
-	b.WriteString(" | " + EscCell(category) + " | " + tagCell)
-	b.WriteString(" | " + EscCell(OwnerCell(owner)) + " | " + EscCell(NameCell(ownerName)))
-	b.WriteString(" | " + EscCell(CreatorCell(creator)) + " | " + EscCell(NameCell(creatorName)))
-	b.WriteString(" | " + EscCell(summary) + " | " + link + " |\n")
+	// 一次 Printf 写一行，省掉五次 WriteString 各自拼接的中间串
+	fmt.Fprintf(&b, "| %s | %s | %s", finished, created, EscCell(title))
+	fmt.Fprintf(&b, " | %s | %s", EscCell(category), tagCell)
+	fmt.Fprintf(&b, " | %s | %s", EscCell(OwnerCell(owner)), EscCell(NameCell(ownerName)))
+	fmt.Fprintf(&b, " | %s | %s", EscCell(CreatorCell(creator)), EscCell(NameCell(creatorName)))
+	fmt.Fprintf(&b, " | %s | %s |\n", EscCell(summary), link)
 	return b.String()
 }
 

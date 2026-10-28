@@ -42,8 +42,9 @@ func WriteTextAtomic(path, text string, track bool) error {
 	}
 	tmpName := tmp.Name()
 	cleanup := func() {
-		tmp.Close()
-		os.Remove(tmpName)
+		// 清理路径上的错误对调用方没有意义（真正的失败已经返回），只把它显式丢掉
+		_ = tmp.Close()
+		_ = os.Remove(tmpName)
 	}
 	if _, err := tmp.WriteString(text); err != nil {
 		cleanup()
@@ -54,15 +55,15 @@ func WriteTextAtomic(path, text string, track bool) error {
 		return core.Failf("写 %s 失败：%v", path, err)
 	}
 	if err := tmp.Close(); err != nil {
-		os.Remove(tmpName)
+		_ = os.Remove(tmpName)
 		return core.Failf("写 %s 失败：%v", path, err)
 	}
 	if err := os.Chmod(tmpName, mode); err != nil {
-		os.Remove(tmpName)
+		_ = os.Remove(tmpName)
 		return core.Failf("写 %s 失败：%v", path, err)
 	}
 	if err := os.Rename(tmpName, path); err != nil {
-		os.Remove(tmpName)
+		_ = os.Remove(tmpName)
 		return core.Failf("写 %s 失败：%v\n  处理：确认该路径可写、磁盘没满，然后重跑这条命令（文件是整份替换，不会写坏）。", path, err)
 	}
 	fsyncDir(parent)
@@ -76,7 +77,8 @@ func fsyncDir(dir string) {
 	if err != nil {
 		return
 	}
-	defer f.Close()
+	// 刷完就走：关失败不影响这几行塞的脏页已经在目录项里
+	defer func() { _ = f.Close() }()
 	_ = f.Sync()
 }
 

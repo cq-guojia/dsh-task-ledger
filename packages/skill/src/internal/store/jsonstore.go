@@ -36,7 +36,7 @@ func QuoteJSON(s string) string {
 			b.WriteString(`\f`)
 		default:
 			if r < 0x20 {
-				b.WriteString(fmt.Sprintf(`\u%04x`, r))
+				fmt.Fprintf(&b, `\u%04x`, r)
 				continue
 			}
 			b.WriteRune(r)

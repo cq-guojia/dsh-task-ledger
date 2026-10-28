@@ -16,9 +16,9 @@ import (
 // 唯一打印处。一个返回类型一个函数，不做统一分发；也不 flush。
 // FlushNotices 只在 Main 的 defer 里调一次 —— 提交 / 推送阶段冒出来的提示也才打得到。
 
-func out(text string) { os.Stdout.WriteString(text + "\n") }
+func out(text string) { writeRaw(os.Stdout, text+"\n") }
 
-func errOut(text string) { os.Stderr.WriteString(text + "\n") }
+func errOut(text string) { writeRaw(os.Stderr, text+"\n") }
 
 // FlushNotices 把 notices 一次性打到 stderr（退出前调一次，同一句只打一次）。
 func FlushNotices() {
@@ -40,7 +40,7 @@ func RepoBanner(repo string, machine bool) {
 	}
 }
 
-func jsonOut(data any) { os.Stdout.WriteString(jsonfmt.Marshal(data) + "\n") }
+func jsonOut(data any) { writeRaw(os.Stdout, jsonfmt.Marshal(data)+"\n") }
 
 // TimeFields 存盘 UTC、出门要转本机时区的时间字段（任务 / 历史行 / 名册里的记录）。
 var TimeFields = []string{"created", "started", "updated", "finished", "joined"}

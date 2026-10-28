@@ -167,7 +167,7 @@ func promptLineEdit(prompt, hint string) (string, lineResult, *lineEditor, bool)
 			state.setReadTimeout(true)
 			next, gotNext, _ := readOne(fd)
 			if gotNext && (next == '[' || next == 'O') {
-				readOne(fd) // 吞掉方向键的第三个字节（仍在超时模式，不会卡住）
+				_, _, _ = readOne(fd) // 吞掉方向键的第三个字节（仍在超时模式，不会卡住）
 				state.setReadTimeout(false)
 				continue
 			}

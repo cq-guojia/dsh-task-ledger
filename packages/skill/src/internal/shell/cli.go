@@ -762,9 +762,9 @@ func selectIdentity(options []map[string]any, title string) identityChoice {
 	sel := 0
 	drawn := false
 
-	os.Stdout.WriteString("\x1b[?25l") // 隐藏光标
+	writeRaw(os.Stdout, "\x1b[?25l") // 隐藏光标
 	defer func() {
-		os.Stdout.WriteString("\x1b[?25h") // 显示光标
+		writeRaw(os.Stdout, "\x1b[?25h") // 显示光标
 		if drawn {
 			screen.eraseBlock()
 		}
@@ -909,10 +909,10 @@ func promptLine(prompt, hint string) (string, lineResult) {
 
 // promptLinePlain 普通行读（非 raw 终端兜底）：打完提示，读到换行为止。
 func promptLinePlain(prompt string) (string, lineResult) {
-	os.Stdout.WriteString(prompt)
+	writeRaw(os.Stdout, prompt)
 	line, err := stdinReader.ReadString('\n')
 	if err != nil && line == "" {
-		os.Stdout.WriteString("\n")
+		writeRaw(os.Stdout, "\n")
 		return "", lineEOF
 	}
 	return strings.TrimSpace(stripControl(line)), lineOK

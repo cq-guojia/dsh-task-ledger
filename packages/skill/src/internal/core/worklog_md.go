@@ -37,9 +37,8 @@ var (
 	statusNameRe = regexp.MustCompile(`@([^（(·]+)`)
 	statusWhenRe = regexp.MustCompile(`(\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?)`)
 
-	titleRe     = regexp.MustCompile(`^#\s*(.+?)\s*[：:]\s*(.*)$`)
-	metaLineRe  = regexp.MustCompile(headBullet + `\*\*(?:分类|标签)\*\*`)
-	codeSection = regexp.MustCompile(`(?m)^## `)
+	titleRe    = regexp.MustCompile(`^#\s*(.+?)\s*[：:]\s*(.*)$`)
+	metaLineRe = regexp.MustCompile(headBullet + `\*\*(?:分类|标签)\*\*`)
 )
 
 // StatusValues 状态取值（与 Statuses + 结案后的 closed 同口径）。

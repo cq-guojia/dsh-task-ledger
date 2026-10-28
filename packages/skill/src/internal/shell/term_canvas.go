@@ -36,16 +36,22 @@ func newCanvas(w io.Writer) canvas {
 	return canvas{w: w, dirty: true}
 }
 
+// writeRaw 写一串字节。**终端写失败无处可报**（stdout 断了就没了），所以这里显式丢掉，
+// 不让每一步都拖一条返回值。
+func writeRaw(w io.Writer, text string) {
+	_, _ = w.Write([]byte(text))
+}
+
 // write 输出文本并推进光标列。
 func (c *canvas) write(text string) {
-	c.w.Write([]byte(text))
+	writeRaw(c.w, text)
 	c.col += displayWidth(text)
 	c.dirty = true
 }
 
 // newline 换行。raw 模式关了 OPOST，光秃秃的 "\n" 只下移不回车 —— 必须写 "\r\n"。
 func (c *canvas) newline() {
-	c.w.Write([]byte("\r\n"))
+	writeRaw(c.w, "\r\n")
 	c.row++
 	c.col = 0
 	c.dirty = false
@@ -56,7 +62,7 @@ func (c *canvas) up(n int) {
 	if n <= 0 {
 		return
 	}
-	c.w.Write([]byte("\x1b[" + strconv.Itoa(n) + "A"))
+	writeRaw(c.w, "\x1b["+strconv.Itoa(n)+"A")
 	c.row -= n
 }
 
@@ -65,24 +71,24 @@ func (c *canvas) down(n int) {
 	if n <= 0 {
 		return
 	}
-	c.w.Write([]byte("\x1b[" + strconv.Itoa(n) + "B"))
+	writeRaw(c.w, "\x1b["+strconv.Itoa(n)+"B")
 	c.row += n
 }
 
 // toCol 光标移到指定列（从行首算）。
 func (c *canvas) toCol(col int) {
 	if col <= 0 {
-		c.w.Write([]byte("\r"))
+		writeRaw(c.w, "\r")
 		c.col = 0
 		return
 	}
-	c.w.Write([]byte("\r\x1b[" + strconv.Itoa(col) + "C"))
+	writeRaw(c.w, "\r\x1b["+strconv.Itoa(col)+"C")
 	c.col = col
 }
 
 // clearLine 清整行，光标回行首。
 func (c *canvas) clearLine() {
-	c.w.Write([]byte("\x1b[2K\r"))
+	writeRaw(c.w, "\x1b[2K\r")
 	c.col = 0
 	c.dirty = false
 }
@@ -147,7 +153,7 @@ func newLineEditor(c *canvas, prompt, hint string) *lineEditor {
 func (e *lineEditor) typeByte(ch byte) {
 	if len(e.pending) == 0 && ch < 0x80 {
 		e.buf = append(e.buf, ch)
-		e.c.w.Write([]byte{ch}) // 字节原样回写：终端自己按 UTF-8 渲染
+		writeRaw(e.c.w, string(ch)) // 字节原样回写：终端自己按 UTF-8 渲染
 		e.c.col++
 		e.c.dirty = true
 		return
@@ -161,7 +167,7 @@ func (e *lineEditor) typeByte(ch byte) {
 		e.pending = nil // 不是合法 UTF-8：丢掉，不上屏
 		return
 	}
-	e.c.w.Write(e.pending)
+	writeRaw(e.c.w, string(e.pending))
 	e.buf = append(e.buf, e.pending...)
 	e.c.col += runeWidth(r)
 	e.c.dirty = true
@@ -180,7 +186,7 @@ func (e *lineEditor) backspace() {
 	e.buf = e.buf[:len(e.buf)-size]
 	w := runeWidth(r) // 宽字符占两列
 	e.c.col -= w
-	e.c.w.Write([]byte("\x1b[" + strconv.Itoa(w) + "D" + strings.Repeat(" ", w) + "\x1b[" + strconv.Itoa(w) + "D"))
+	writeRaw(e.c.w, "\x1b["+strconv.Itoa(w)+"D"+strings.Repeat(" ", w)+"\x1b["+strconv.Itoa(w)+"D")
 }
 
 // keep 收尾（确认）：留下提示行当输入记录，空行与帮助行抹掉，光标停在提示行下面。
