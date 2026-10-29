@@ -13,24 +13,24 @@ import (
 // 过程文档 worklog/<年月>/*.md：找一篇、读、列全部、建新篇、写回、追加执行记录。
 
 // FallbackTemplate 读不到 assets/worklog.md 时的内置骨架。
-const FallbackTemplate = `# <id>：<title>
+const FallbackTemplate = `# <id>: <title>
 
-- **状态**：<status>
-- **创建**：<created> · @<creator>
+- **Status**: <status>
+- **Created**: <created> · @<creator>
 
-## 背景
+## Background
 
-## 待办
+## To Do
 
-## 下一步
+## Next
 
-## 过程
+## Process
 
-## 结论
+## Conclusion
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。 -->
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit. -->
 `
 
 // WorklogStore 一个工作区的过程文档集合。

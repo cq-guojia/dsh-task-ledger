@@ -30,7 +30,7 @@ close             → 历史层 + 封卷 + 移出自己名下
   - 进门：`--since` / `--until` / `--created` / `--finished` 按本机墙钟给，脚本内部转 UTC 再比较 / 落盘；除这四个参数没有任何地方要调用方传时间。
   - **过程文档正文不动**：`show --json` 的 `worklog.text` 是原文，里面的时间是当时写进去的 UTC。
   - 存量老数据写的是写入者本地时间、无标记，无法与 UTC 区分（JSON 是 2026-10-22 前，执行记录行是 2026-10-27 前）。
-- **history 文件 11 列**：结案时间 / 创建时间 / 标题 / 分类 / 标签 / owner / owner_name / creator / creator_name / 摘要 / 过程文档；排序与 `--since` / `--until` 按**结案时间**。（`history` 命令的人话输出只展示其中几列：结案时间、负责人、标题。）
+- **history 文件 12 列**：Finished / Created / Title / Category / Tags / Owner / Owner Name / Creator / Creator Name / Summary / Result / Worklog（2026-10-29 起写英文表头；老文件 11 列无 Result，读时按 `done`）；排序与 `--since` / `--until` 按**结案时间**。（`history` 命令的人话输出只展示其中几列：结案时间、负责人、标题。）
 - **owner / creator 两列存的是 uuid**（与任务里一致，身份只认 uuid）；紧随其后的 `owner_name` / `creator_name` 两列**落盘**结案那一刻的显示名 —— 改名不回写旧行，看历史看到的就是当时那个名字。老行（升级前落的）没有名字时按名册兜底补一次展示值，**不回写文件**。
 
 ## 任务号
@@ -47,7 +47,7 @@ close             → 历史层 + 封卷 + 移出自己名下
 
 ## 历史层
 
-- 按**结案时间**分月存放，11 列（列序：owner 之后是 `owner_name`，再是 creator、`creator_name`）；`close` 写历史行时：分类用任务原值（**建任务后不可改**），标签用终值。
+- 按**结案时间**分月存放，12 列（列序：Owner 之后是 `Owner Name`，再是 Creator、`Creator Name`，Summary 之后是 Result，末列 Worklog）；`close` 写历史行时：分类用任务原值（**建任务后不可改**），标签用终值。
 - 存量平铺历史文件只读兼容、永不重写；`history` 连同它在内、按下面的月份区间合并。
 - **查询区间**：`history` 先由时间参数算出要读的月份文件，再逐个「存在才读、缺月跳过」，不扫磁盘。无时间参数默认最近 3 个自然月；`--months N`（近 N 月）与 `--since/--until`（结案时间闭区间）二选一；一次最多读 13 个历史文件（按月分文件，不区分连续/分散，只数总数），超出直接报错、不读任何文件。末列文档链接只按**文件名**消费（取 basename），链接里的 `../worklog/<年月>/` 前缀只为阅读器跳转服务，解析时忽略。
 - `history --json` 直接按文件现状解析，旧行没有的列不编造（名字列为空就按名册补展示值，不回写）；存量九列的历史文件按 `docs/history-creator-upgrade.md` 一次性升级，脚本不认旧列数。

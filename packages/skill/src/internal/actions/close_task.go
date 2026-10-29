@@ -112,8 +112,8 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 			text, err := logs.Read(docPath)
 			if err == nil && !core.HasFrozenLine(text) {
 				frozen := core.StampFrozen(text, p.Finished, me.Stamp())
-				frozen = core.AppendExecLog(frozen, core.ExecLine(p.Finished, me.Stamp(), "close", "结案封卷"))
-				frozen = core.RewriteStatusLine(frozen, core.StatusLine{Status: "closed", Name: me.Name, UUID: me.UUID, When: p.Finished})
+				frozen = core.AppendExecLog(frozen, core.ExecLine(p.Finished, me.Stamp(), "close", "sealed"))
+				frozen = core.RewriteStatusLine(frozen, core.StatusLine{Status: core.ResultDone, Name: me.Name, UUID: me.UUID, When: p.Finished})
 				_ = logs.Write(docPath, frozen)
 				notes = append(notes, "补齐上次未完成的封卷。")
 			}
@@ -158,6 +158,7 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 		"creator":      firstNonEmpty(strOfAny(task["creator"]), me.UUID),
 		"creator_name": task["creator_name"],
 		"summary":      textSummary,
+		"result":       core.ResultDone,
 		"worklog":      nil,
 	}
 	if docPath != "" {
@@ -182,8 +183,8 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 		}
 		if !core.HasFrozenLine(text) {
 			frozen := core.StampFrozen(text, p.Finished, me.Stamp())
-			frozen = core.AppendExecLog(frozen, core.ExecLine(p.Finished, me.Stamp(), "close", "结案封卷"))
-			frozen = core.RewriteStatusLine(frozen, core.StatusLine{Status: "closed", Name: me.Name, UUID: me.UUID, When: p.Finished})
+			frozen = core.AppendExecLog(frozen, core.ExecLine(p.Finished, me.Stamp(), "close", "sealed"))
+			frozen = core.RewriteStatusLine(frozen, core.StatusLine{Status: core.ResultDone, Name: me.Name, UUID: me.UUID, When: p.Finished})
 			if err := logs.Write(docPath, frozen); err != nil {
 				restoreAll()
 				return nil, err

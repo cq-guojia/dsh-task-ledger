@@ -54,7 +54,7 @@ func Claim(repo string, me core.Identity, tid string) (*Result, error) {
 				if path := logs.Find(tid, worklog); path != "" {
 					now := core.Now()
 					logs.AppendExec(path,
-						core.ExecLine(now, me.UUID, "claim", "认领（补齐上次未完成的清理）"),
+						core.ExecLine(now, me.UUID, "claim", "claimed (cleanup after a partial run)"),
 						&core.StatusLine{Status: "doing", Name: me.Name, UUID: me.UUID, When: now})
 				}
 			}
@@ -96,7 +96,7 @@ func Claim(repo string, me core.Identity, tid string) (*Result, error) {
 	worklog, _ := moved["worklog"].(string)
 	if path := logs.Find(tid, worklog); path != "" {
 		logs.AppendExec(path,
-			core.ExecLine(now, me.Stamp(), "claim", "认领 → doing"),
+			core.ExecLine(now, me.Stamp(), "claim", "claimed → doing"),
 			&core.StatusLine{Status: "doing", Name: me.Name, UUID: me.UUID, When: now})
 	} else {
 		notice = "任务 " + tid + " 已记到我的分片，过程文档没找到，跳过执行记录。"

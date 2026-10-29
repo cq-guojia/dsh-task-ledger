@@ -43,7 +43,7 @@ func writeHistoryRow(t *testing.T, repo, finished, created, title, owner string)
 	if raw, err := os.ReadFile(path); err == nil {
 		text = string(raw)
 	}
-	text += core.HistoryLine(finished, created, title, owner, "做完了", "", "建设", nil, owner, "", "")
+	text += core.HistoryLine(finished, created, title, owner, "做完了", core.ResultDone, "", "建设", nil, owner, "", "")
 	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
 		t.Fatal(err)
 	}

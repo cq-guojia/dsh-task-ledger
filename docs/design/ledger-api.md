@@ -313,7 +313,7 @@ func (t *termState) readKey() key
 | `identity.go` | `Identity{uuid,name}`、`Normalize`、`LooksLikeUUID`、`IsMe`、`Label`、`Stamp` |
 | `labels.go` | `NormalizeLabel`、`ParseTags`、`SplitTags`、`LabelLine`、`ParseLabelLine` |
 | `worklog_md.go` | 建篇：`RenderWorklog`（套六节模板）、`RenderStatusLine` / `RenderStatusBody`；锚点编辑：`AppendExecLog`、`StampFrozen` / `HasFrozenLine`、`RewriteLabelLine`、`RewriteStatusLine` / `ReadStatus`；读：`HeadMeta` / `HeadTitle` / `HeadCreated` / `HeadFrozen` / `HeadCreator` / `HeadCreatorUUID`；校验：`SectionHeads` / `FormatProblems` / `DuplicatedSections` / `LacksExecSection` / `IsSkeleton`；顺序：`HeadKeyOrder` / `insertHeadLine` |
-| `history_md.go` | `HistoryLine`（十一列一行）、`ParseHistory`、`SplitRow`、`IsSepRow`、`EscCell` |
+| `history_md.go` | `HistoryLine`（十二列一行）、`ParseHistory`（读兼容十一列）、`SplitRow`、`IsSepRow`、`EscCell` |
 | `roots.go` | `AsRoot`（校验 `--repo`）、`RootOf`（从 cwd 往上找 `ledger/`）、`IsDir`、`AbsDir`、`HasLedger`（直接含 `ledger/`）、`UnderLedger`（在台账目录里） |
 | `rowmap.go` | `Row.ToMap()`（历史行 → JSON 形状） |
 

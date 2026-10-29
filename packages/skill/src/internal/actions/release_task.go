@@ -70,7 +70,7 @@ func Release(repo string, me core.Identity, tid string) (*Result, error) {
 		notice = "任务 " + tid + " 已退回公共池，但过程文档没找到，跳过执行记录。"
 	} else {
 		logs.AppendExec(path,
-			core.ExecLine(now, me.Stamp(), "release", "释放回公共池"),
+			core.ExecLine(now, me.Stamp(), "release", "released to pool"),
 			&core.StatusLine{Status: "open", When: now})
 	}
 

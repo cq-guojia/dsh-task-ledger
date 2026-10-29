@@ -134,12 +134,17 @@ func (h *HistoryStore) AppendRow(path string, row map[string]any) (map[string]an
 	if strings.TrimSpace(text) == "" {
 		text = freshTable()
 	}
+	result := strOf(row["result"])
+	if result == "" {
+		result = core.ResultDone
+	}
 	line := core.HistoryLine(
 		strOf(row["finished"]),
 		strOf(row["created"]),
 		strOf(row["title"]),
 		strOf(row["owner"]),
 		strOf(row["summary"]),
+		result,
 		strOf(row["worklog"]),
 		strOf(row["category"]),
 		StrSliceOf(row["tags"]),

@@ -17,6 +17,7 @@ func (r Row) ToMap() map[string]any {
 		"creator":      r.Creator,
 		"creator_name": r.CreatorName,
 		"summary":      r.Summary,
+		"result":       r.Result,
 		"worklog":      r.Worklog,
 		"line":         r.Line,
 	}

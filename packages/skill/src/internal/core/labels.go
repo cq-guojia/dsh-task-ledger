@@ -21,8 +21,8 @@ const (
 
 var (
 	cjkRe      = regexp.MustCompile(`[\p{Han}]`)
-	labelCatRe = regexp.MustCompile(`分类\*\*\s*[：:]\s*([^｜|·]+)`)
-	labelTagRe = regexp.MustCompile(`标签\*\*\s*[：:]\s*(.+)$`)
+	labelCatRe = regexp.MustCompile(`(?:Category|分类)\*\*\s*[：:]\s*([^｜|·]+)`)
+	labelTagRe = regexp.MustCompile(`(?:Tags|标签)\*\*\s*[：:]\s*(.+)$`)
 	splitRe    = regexp.MustCompile(`[,，、]`)
 )
 
@@ -75,7 +75,7 @@ func SplitTags(raw string) []string {
 	return splitRe.Split(raw, -1)
 }
 
-// LabelLine 过程文档头部的「标签」行；标签为空返回空串（此行不写）。
+// LabelLine 过程文档头部的标签行；标签为空返回空串（此行不写）。
 func LabelLine(tags []string) string {
 	kept := make([]string, 0, len(tags))
 	for _, t := range tags {
@@ -86,7 +86,7 @@ func LabelLine(tags []string) string {
 	if len(kept) == 0 {
 		return ""
 	}
-	return "- **标签**：" + strings.Join(kept, "、")
+	return "- **Tags**: " + strings.Join(kept, ", ")
 }
 
 // ParseLabelLine 从过程文档头部（第一个 `## ` 小节之前）解析分类与标签；跳过 HTML 注释块。

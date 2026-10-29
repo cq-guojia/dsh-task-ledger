@@ -1,33 +1,34 @@
-# <id>：<title>
+# <id>: <title>
 
-- **状态**：<status>
-- **创建**：<created> · @<creator>
+- **Status**: <status>
+- **Created**: <created> · @<creator>
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
-<!-- 为什么做：触发它的原话 / 现象 / 链接 -->
+<!-- What this is for: the words that triggered it / the symptom / a link -->
 
-## 待办
+## To Do
 
-<!-- 还没做的、没验证的、等别人给东西的 -->
+<!-- Not done yet, not verified, waiting on somebody -->
 
-## 下一步
+## Next
 
-<!-- 下一个具体动作（文件:行号 级别），不要写「继续推进」 -->
+<!-- The next concrete action (file:line level), never "keep going" -->
 
-## 过程
+## Process
 
-<!-- 踩坑与证据：带 revision + 文件:行号 或符号名 -->
+<!-- Pitfalls and evidence: with revision + file:line or symbol names -->
 
-## 结论
+## Conclusion
 
-<!-- 做成了什么、留了什么坑 -->
+<!-- What got done, what got left behind -->
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress log --id <任务号> --note "一句话"。 -->
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->

@@ -6,17 +6,23 @@ import (
 	"strings"
 )
 
-// 历史表格的文本操作：拼十一列一行、解析十一列一行。只认十一列这一种格式。
+// 历史表格的文本操作：拼一行、解析一行。写盘用十二列，读兼容老十一列（无结果列 ⇒ done）。
 
 // HistoryTitle 历史文件的一级标题。
-const HistoryTitle = "# 进度历史（已结案）"
+const HistoryTitle = "# History (closed)"
 
-// HistoryHeader 十一列表头。
-const HistoryHeader = "| 结案时间 | 创建时间 | 标题 | 分类 | 标签 " +
-	"| owner | owner_name | creator | creator_name | 完成了什么 | 过程文档 |"
+// HistoryHeader 十二列表头。
+const HistoryHeader = "| Finished | Created | Title | Category | Tags " +
+	"| Owner | Owner Name | Creator | Creator Name | Summary | Result | Worklog |"
 
 // HistorySep 表头分隔行。
-const HistorySep = "|---|---|---|---|---|---|---|---|---|---|---|"
+const HistorySep = "|---|---|---|---|---|---|---|---|---|---|---|---|"
+
+// 结果列取值：正常结案 / 取消（老文件没有这一列，按 done 读）。
+const (
+	ResultDone      = "done"
+	ResultCancelled = "cancelled"
+)
 
 var (
 	linkRe     = regexp.MustCompile(`^\[[^\]]*\]\(([^)]*)\)$`)
@@ -36,6 +42,7 @@ type Row struct {
 	Creator     string
 	CreatorName string
 	Summary     string
+	Result      string
 	Worklog     string
 	Line        int
 }
@@ -105,11 +112,14 @@ func IsSepRow(cells []string) bool {
 }
 
 func looksLikeHeader(cells []string) bool {
-	return len(cells) > 0 && (cells[0] == "时间" || cells[0] == "结案时间")
+	if len(cells) == 0 {
+		return false
+	}
+	return cells[0] == "Finished" || cells[0] == "时间" || cells[0] == "结案时间"
 }
 
-// HistoryLine 十一列的一行。worklog 收**相对 ledger/** 的路径。
-func HistoryLine(finished string, created, title, owner, summary, worklog string, category string, tags []string, creator, ownerName, creatorName string) string {
+// HistoryLine 十二列的一行。worklog 收**相对 ledger/** 的路径。
+func HistoryLine(finished string, created, title, owner, summary, result, worklog string, category string, tags []string, creator, ownerName, creatorName string) string {
 	logRel := ""
 	if worklog != "" {
 		logRel = ToHistoryRel(worklog)
@@ -125,11 +135,11 @@ func HistoryLine(finished string, created, title, owner, summary, worklog string
 	fmt.Fprintf(&b, " | %s | %s", EscCell(category), tagCell)
 	fmt.Fprintf(&b, " | %s | %s", EscCell(OwnerCell(owner)), EscCell(NameCell(ownerName)))
 	fmt.Fprintf(&b, " | %s | %s", EscCell(CreatorCell(creator)), EscCell(NameCell(creatorName)))
-	fmt.Fprintf(&b, " | %s | %s |\n", EscCell(summary), link)
+	fmt.Fprintf(&b, " | %s | %s | %s |\n", EscCell(summary), result, link)
 	return b.String()
 }
 
-// ParseHistory 解析十一列历史表 → (records, warnings)。
+// ParseHistory 解析历史表 → (records, warnings)。写盘十二列；老十一列按 done 读。
 func ParseHistory(text string) ([]Row, []string) {
 	var records []Row
 	var warnings []string
@@ -142,8 +152,8 @@ func ParseHistory(text string) ([]Row, []string) {
 		if len(cells) == 0 || IsSepRow(cells) || looksLikeHeader(cells) {
 			continue
 		}
-		if len(cells) != 11 {
-			warnings = append(warnings, "第 "+itoa(lineno)+" 行不是十一列（历史表只认十一列），已跳过")
+		if len(cells) != 11 && len(cells) != 12 {
+			warnings = append(warnings, "第 "+itoa(lineno)+" 行不是 11/12 列（历史表只认这两种），已跳过")
 			continue
 		}
 		finished := cells[0]
@@ -157,7 +167,14 @@ func ParseHistory(text string) ([]Row, []string) {
 				tags = append(tags, t)
 			}
 		}
-		worklog := strings.TrimSpace(cells[10])
+		result, worklogCell := ResultDone, cells[10]
+		if len(cells) == 12 {
+			if v := strings.TrimSpace(cells[10]); v != "" {
+				result = v
+			}
+			worklogCell = cells[11]
+		}
+		worklog := strings.TrimSpace(worklogCell)
 		if m := linkRe.FindStringSubmatch(worklog); m != nil {
 			worklog = m[1]
 		}
@@ -172,6 +189,7 @@ func ParseHistory(text string) ([]Row, []string) {
 			Creator:     strings.TrimPrefix(strings.TrimSpace(cells[7]), "@"),
 			CreatorName: strings.TrimPrefix(strings.TrimSpace(cells[8]), "@"),
 			Summary:     cells[9],
+			Result:      result,
 			Worklog:     worklog,
 			Line:        lineno,
 		})

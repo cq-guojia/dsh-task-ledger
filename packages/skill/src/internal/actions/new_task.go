@@ -112,9 +112,9 @@ func NewTask(repo string, me core.Identity, p NewTaskParams) (*Result, error) {
 		task["started"] = p.Created
 	}
 
-	kind := "创建任务"
+	kind := "created"
 	if p.Mine {
-		kind = "创建任务并认领"
+		kind = "created and claimed"
 	}
 	line := core.StatusLine{Status: status, When: p.Created}
 	if p.Mine {

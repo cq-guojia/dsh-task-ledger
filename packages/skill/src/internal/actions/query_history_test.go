@@ -39,7 +39,7 @@ func seedHistoryRow(t *testing.T, repo, ym, finished, title, owner, ownerName, c
 	if raw, err := os.ReadFile(path); err == nil {
 		text = string(raw)
 	}
-	text += core.HistoryLine(finished, finished, title, owner, "摘要", "", category, tags, owner, ownerName, ownerName)
+	text += core.HistoryLine(finished, finished, title, owner, "摘要", core.ResultDone, "", category, tags, owner, ownerName, ownerName)
 	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
 		t.Fatal(err)
 	}

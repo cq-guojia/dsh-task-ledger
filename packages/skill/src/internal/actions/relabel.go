@@ -63,7 +63,7 @@ func Relabel(repo string, me core.Identity, tid string, tags []string) (*Result,
 		return nil, err
 	}
 	text = core.RewriteLabelLine(text, newTags)
-	text = core.AppendExecLog(text, core.ExecLine(when, me.Stamp(), "set", "改标签："+strings.Join(newTags, "、")))
+	text = core.AppendExecLog(text, core.ExecLine(when, me.Stamp(), "set", "tags: "+strings.Join(newTags, ", ")))
 	status, _ := task["status"].(string)
 	if status == "" {
 		status = "doing"

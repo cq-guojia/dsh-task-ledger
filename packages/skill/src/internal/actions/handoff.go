@@ -65,7 +65,7 @@ func Handoff(repo string, me core.Identity, tid, to string) (*Result, error) {
 		if path := logs.Find(tid, worklog); path != "" {
 			now := core.Now()
 			logs.AppendExec(path,
-				core.ExecLine(now, me.Stamp(), "set", "交接给 @"+whoStamp+"（补齐）"),
+				core.ExecLine(now, me.Stamp(), "set", "handed off to @"+whoStamp+" (cleanup)"),
 				&core.StatusLine{Status: "doing", Name: toName, UUID: toKey, When: now})
 		}
 		return &Result{
@@ -91,7 +91,7 @@ func Handoff(repo string, me core.Identity, tid, to string) (*Result, error) {
 		notice = "任务 " + tid + " 已交给 " + who + "，但过程文档没找到，跳过执行记录。"
 	} else {
 		logs.AppendExec(path,
-			core.ExecLine(now, me.Stamp(), "set", "交接给 @"+whoStamp),
+			core.ExecLine(now, me.Stamp(), "set", "handed off to @"+whoStamp),
 			&core.StatusLine{Status: "doing", Name: toName, UUID: toKey, When: now})
 	}
 	result := &Result{

@@ -23,7 +23,7 @@
 
 以上五类文件**只由脚本写**（L1 落盘、业务层定写序）。
 
-⚠️ **本仓（`dsh-task-ledger` 自己）已迁到分片布局**：`pool.json` / `owners.json` / `owners/<hash>.json` 已是新分片格式，在办任务在各人分片（未认领的在 `pool.json`）；`history/`（11 列）与 `worklog/`（六节）同步为新布局。老工作区（仍用扁平 `ledger/progress.json`）由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。**脚本不做任何旧格式兼容**：历史只认十一列，平铺历史文件不再读 —— 存量九列的历史文件按 `docs/history-creator-upgrade.md` 那份手册一次性升级。
+⚠️ **本仓（`dsh-task-ledger` 自己）已迁到分片布局**：`pool.json` / `owners.json` / `owners/<hash>.json` 已是新分片格式，在办任务在各人分片（未认领的在 `pool.json`）；`history/`（11 列）与 `worklog/`（六节）同步为新布局。老工作区（仍用扁平 `ledger/progress.json`）由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。**脚本不做任何旧格式兼容**：历史只认十一 / 十二列（十二列是本仓当前口径，十一列按 `done` 读），平铺历史文件不再读 —— 存量九列的历史文件按 `docs/history-creator-upgrade.md` 那份手册一次性升级。
 
 ## 二、任务表：`pool.json` 与 `owners/*.json`
 
@@ -61,9 +61,9 @@
 
 ## 四、已结案：`history/<年月>.md`
 
-| 结案时间 | 创建时间 | 标题 | 分类 | 标签 | owner | owner_name | creator | creator_name | 完成了什么 | 过程文档 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 2026-10-16 18:22:00 | 2026-10-16 17:42:22 | 熟悉项目初衷并搭建初始文档架构 | 建设 | 文档架构、初始化、调研 | 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 | @GuoJia-Agent | 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 | @GuoJia-Agent | 初始文档架构建成… | `../worklog/202610/16-1742-…-5563.md` |
+| Finished | Created | Title | Category | Tags | Owner | Owner Name | Creator | Creator Name | Summary | Result | Worklog |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-10-29 09:56:46 | 2026-10-29 09:56:39 | 格式冒烟 | 功能 | 甲、乙、丙 | 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 | @GuoJia-Agent | 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 | @GuoJia-Agent | 冒烟通过 | done | `../worklog/202610/29-0956-…-8ce9.md` |
 
 末列是**相对 history 文件所在目录**算出的链接（不是相对 `docs/`），所以这里用代码格式展示，别当成本页的链接。
 
@@ -73,24 +73,28 @@
 
 - 按**结案时间**分月落文件，行序按创建时间；**首列是结案时间、次列才是创建时间**（筛选口径别搞反）。
 - 这是**只追加**的表：没有删除、没有原地改行，也不做整表重排 —— 否则手写格式与 git 行级 diff 全坏。
-- **只有十一列这一种格式**：列数不对的行读时跳过并警告。存量九列的文件按 `docs/history-creator-upgrade.md` 一次性升级（在 owner 后插 `owner_name`、creator 后插 `creator_name`），脚本不在运行时兼容旧列数。
+- **写盘十二列，读兼容十一列**（2026-10-29 加 `Result` 列）：十一列的老行按 `done` 读。列数既不是 11 也不是 12 的行跳过并警告。存量九列的文件按 `docs/history-creator-upgrade.md` 一次性升级（在 owner 后插 `owner_name`、creator 后插 `creator_name`）。
+- **`Result` 列**取值 `done` / `cancelled`。`done` 由 `close` 写；`cancelled` 的写入链路 📝 待落码（`close --cancel`）。
+- 表头与一级标题自 2026-10-29 起写英文（`# History (closed)`）；老文件的中文表头仍能读，不批量改写。
 
 ## 五、过程文档：`worklog/<年月>/*.md`
 
-固定六节：**背景 / 待办 / 下一步 / 过程 / 结论 / 执行记录**。模板真源 = skill 的 `assets/worklog.md`。
+固定六节：**Background / To Do / Next / Process / Conclusion / Execution Log**（2026-10-29 起写英文，老文档的中文节名仍能读，`core.canonicalSection` 归一）。模板真源 = skill 的 `assets/worklog.md`。
 
-头部是**四行无序列表**，顺序固定（`core.HeadKeyOrder = ["meta","status","created","frozen"]`，插入位置由 `core.insertHeadLine` 按 `rankOf` 算），值一律 `字段：值 · 值 · 值`：
+头部是**四行无序列表**，顺序固定（`core.HeadKeyOrder = ["meta","status","created","frozen"]`，插入位置由 `core.insertHeadLine` 按 `rankOf` 算），值一律 `字段: 值 · 值 · 值`：
 
 ```markdown
-- **标签**：建设、DSH、台账
-- **状态**：doing · 2026-10-27 09:12:33 · @某人 · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-26 23:38:02 · @某人 · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-27 09:20:10 · @某人 · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 建设, DSH, 台账
+- **Status**: doing · 2026-10-27 09:12:33 · @某人 · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-26 23:38:02 · @某人 · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-27 09:20:10 · @某人 · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 ```
 
-- **标签**行只在给了 `--tags` 时写（**分类不进过程文档**，只进分片字段与历史行；标签可涵盖分类）；**封卷**行只在结案时写；状态行与创建行必有。
+- **Tags** 行只在给了 `--tags` 时写（**分类不进过程文档**，只进分片字段与历史行；标签可涵盖分类）；**Sealed** 行只在结案时写；状态行与创建行必有。
+
+- 老文档的头部是中文（`- **标签**：…` / `- **状态**：…` / `- **创建**：…` / `- **封卷**：…`），读的时候与英文等价，**不批量改写**；老文档里若有 `> **状态**：…` 引用块格式也认。
 - 正文（前五节）由人 / agent 写；脚本只有「建篇」（`WorklogStore.Create` → `core.RenderWorklog`）+ **四处锚点编辑**：往「执行记录」节追加一行（`core.AppendExecLog`）、封卷时加「封卷」行（`core.StampFrozen`）、改写「标签」行（`core.RewriteLabelLine`；`new` 建篇时写、`set --tags` 随时改、`close` 写终值）、改写「状态」行（`core.RewriteStatusLine`，与追加记录同一次写盘）。整篇写回只走 `WorklogStore.Write`，且传入的必须是锚点编辑后的新全文 —— 没有「整篇替换既有正文」这种能力，也不要给它加。
-- **状态行**（2026-10-27 加）取值只有 `open` / `doing` / `closed`（英文全链路统一，中文只在界面翻译层）。
+- **状态行**（2026-10-27 加）取值只有 `open` / `doing` / `done` / `cancelled`（英文全链路统一，中文只在界面翻译层）；老文档里的 `closed` 读时按 `done`（`core.canonicalStatus`）。
   - **它是镜像**：状态与归属的权威在公共池 / 分片，这行只是让 `show` 读文档就能回答，不必翻索引；
   - 由脚本在每次状态变更时顺手替换（`new` / `claim` / 释放 / 交接 / `log` 刷时间 / `close`），**人不手改**；
   - 老文档（`> **状态**：… ` 引用块格式）也认，读得到就按它回答；完全没有这行的老文档也是合法的：读取方回退查分片，`show --json` 里 `legacy: true`，不回填。
