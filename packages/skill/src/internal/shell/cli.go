@@ -34,10 +34,10 @@ const usageText = `用法：progress <命令> [选项]
 
 // Args 解析后的命令行（字段与 SKILL.md 的选项一一对应）。
 type Args struct {
-	Command   string
-	Repo      string
-	NoSync    bool
-	JSON      bool
+	Command string
+	Repo    string
+	NoSync  bool
+	JSON    bool
 
 	Title     string
 	TID       string

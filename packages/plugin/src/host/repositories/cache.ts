@@ -12,8 +12,9 @@
 /** 缓存有效期（2026-10-18 拍板 1.5s：够挡同一屏的重复读，短到不会让人看到旧数据）。 */
 export const CACHE_TTL_MS = 1_500;
 
-/** 缓存的操作种类（= skill 脚本子命令；worklog 不进缓存故不在此列）。 */
-export type CacheOp = "list" | "history" | "stats" | "owners";
+/** 缓存的操作种类（= skill 脚本子命令；worklog 不进缓存故不在此列）。
+ *  `history` 已从插件侧消失（2026-10-29：本周 / 上周完成改取 `stats --trend` 的桶），不再单列。 */
+export type CacheOp = "list" | "stats" | "owners";
 
 const SEP = "\u0000";
 
