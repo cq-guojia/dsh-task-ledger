@@ -54364,6 +54364,11 @@ body[data-ds-dark-theme]{
 				label: "statStale"
 			}
 		];
+		/** 错误原文只留第一行并截断：脚本报错常把整段用法提示塞在一行里，toast 装不下。 */
+		function firstLine(message) {
+			const line = (message.split("\n")[0] ?? "").trim();
+			return line.length > 80 ? `${line.slice(0, 80)}…` : line;
+		}
 		function BoardHome(props) {
 			const { t, onBack } = props;
 			ensureUiBase();
@@ -54394,6 +54399,24 @@ body[data-ds-dark-theme]{
 			const board = state.board;
 			const view = (0, react$1.useMemo)(() => selectView(state), [state]);
 			const degraded = board?.degraded ?? [];
+			const degradedSig = degraded.map((item) => `${item.workspaceId}|${item.op}|${item.message}`).join("\n");
+			const shownDegraded = (0, react$1.useRef)("");
+			(0, react$1.useEffect)(() => {
+				if (degradedSig === "" || degradedSig === shownDegraded.current) return;
+				shownDegraded.current = degradedSig;
+				notify(t("degradedToastTitle", { n: degraded.length }), {
+					variant: "error",
+					durationMs: 8e3,
+					description: degraded.slice(0, 2).map((item) => t("degradedItem", {
+						title: item.workspaceTitle,
+						message: firstLine(item.message)
+					})).join("；")
+				});
+			}, [
+				degradedSig,
+				degraded,
+				t
+			]);
 			/** 工作区下拉候选：宿主里所有含台账的工作区（不是从任务里反推，空工作区也要能选）。 */
 			const workspaceOptions = (0, react$1.useMemo)(() => [{
 				value: "",
@@ -54536,8 +54559,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.120 · 261029-151853-101`
-			}, `v0.0.120 261029-151853-101`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.121 · 261029-153112-306`
+			}, `v0.0.121 261029-153112-306`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54559,26 +54582,7 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					refresh();
 				}
-			}, t("retry"))) : null, board === null ? null : statsGrid(board), degraded.length === 0 ? null : (0, react$1.createElement)("div", { style: {
-				display: "flex",
-				alignItems: "flex-start",
-				gap: "var(--dtl-space-2)",
-				padding: "var(--dtl-space-2) var(--dtl-space-3)",
-				marginTop: "var(--dtl-space-3)",
-				border: "1px solid var(--dtl-danger)",
-				borderRadius: "var(--dtl-radius-md)",
-				background: "var(--dtl-danger-soft)",
-				color: "var(--dtl-fg)",
-				fontSize: "var(--dtl-font-sm)",
-				lineHeight: "var(--dtl-line-sm)"
-			} }, (0, react$1.createElement)("span", { style: {
-				color: "var(--dtl-danger)",
-				flex: "none",
-				fontWeight: 600
-			} }, t("degradedTitle")), (0, react$1.createElement)("span", null, degraded.map((item) => t("degradedItem", {
-				title: item.workspaceTitle,
-				message: item.message
-			})).join("；"))), regionHead, board === null ? null : view.rows.length === 0 ? (0, react$1.createElement)(EmptyState, {
+			}, t("retry"))) : null, board === null ? null : statsGrid(board), regionHead, board === null ? null : view.rows.length === 0 ? (0, react$1.createElement)(EmptyState, {
 				title: t("listEmpty"),
 				hint: t("listEmptyHint")
 			}) : (0, react$1.createElement)("div", null, view.rows.slice(0, LIST_LIMIT).map((row) => (0, react$1.createElement)(TaskRowView, {
@@ -54599,7 +54603,7 @@ body[data-ds-dark-theme]{
 			loading: "读取中…",
 			retry: "重试",
 			loadFailed: "读取失败",
-			degradedTitle: "部分工作区读取失败",
+			degradedToastTitle: "部分工作区读取失败（{n} 个）",
 			degradedItem: "{title}：{message}",
 			statMyActive: "我的待办",
 			statMyOverdueHint: "逾期 {n}",
@@ -54687,7 +54691,7 @@ body[data-ds-dark-theme]{
 			loading: "Loading…",
 			retry: "Retry",
 			loadFailed: "Load failed",
-			degradedTitle: "Some workspaces failed to load",
+			degradedToastTitle: "{n} workspace(s) failed to load",
 			degradedItem: "{title}: {message}",
 			statMyActive: "My todos",
 			statMyOverdueHint: "overdue {n}",

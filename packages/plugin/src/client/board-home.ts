@@ -41,6 +41,7 @@ import {
 	Button,
 	EmptyState,
 	ensureUiBase,
+	notify,
 	SearchInput,
 	Segmented,
 	Select,
@@ -137,6 +138,12 @@ const TABS: readonly { value: TabFilter; label: LocaleKey }[] = [
 	{ value: "stale", label: "statStale" },
 ];
 
+/** 错误原文只留第一行并截断：脚本报错常把整段用法提示塞在一行里，toast 装不下。 */
+function firstLine(message: string): string {
+	const line = (message.split("\n")[0] ?? "").trim();
+	return line.length > 80 ? `${line.slice(0, 80)}…` : line;
+}
+
 export function BoardHome(props: {
 	t: Translate;
 	onBack: () => void;
@@ -178,6 +185,32 @@ export function BoardHome(props: {
 	const board = state.board;
 	const view = useMemo(() => selectView(state), [state]);
 	const degraded = board?.degraded ?? [];
+
+	// 降级上报：有工作区读挂 ⇒ 核心的 error toast，一条说完（不再在页面上铺一屏原文，
+	// 用户 2026-10-29；脚本的报错常带整段用法提示，铺在卡片里把版面顶烂）。
+	// 同一批失败只弹一次：刷新后原因没变就不刷屏，变了才再弹。
+	const degradedSig = degraded
+		.map((item) => `${item.workspaceId}|${item.op}|${item.message}`)
+		.join("\n");
+	const shownDegraded = useRef("");
+	useEffect(() => {
+		if (degradedSig === "" || degradedSig === shownDegraded.current) return;
+		shownDegraded.current = degradedSig;
+		notify(t("degradedToastTitle", { n: degraded.length }), {
+			variant: "error",
+			// 这条要读得完：默认 2.6s 太短。
+			durationMs: 8000,
+			description: degraded
+				.slice(0, 2)
+				.map((item) =>
+					t("degradedItem", {
+						title: item.workspaceTitle,
+						message: firstLine(item.message),
+					}),
+				)
+				.join("；"),
+		});
+	}, [degradedSig, degraded, t]);
 
 	/** 工作区下拉候选：宿主里所有含台账的工作区（不是从任务里反推，空工作区也要能选）。 */
 	const workspaceOptions = useMemo(
@@ -521,50 +554,6 @@ export function BoardHome(props: {
 						)
 					: null,
 				board === null ? null : statsGrid(board),
-				// 降级横幅：有工作区读挂 ⇒ 红色警告 + 人话原因（数字会少算，别装没看见）
-				degraded.length === 0
-					? null
-					: h(
-							"div",
-							{
-								style: {
-									display: "flex",
-									alignItems: "flex-start",
-									gap: "var(--dtl-space-2)",
-									padding: "var(--dtl-space-2) var(--dtl-space-3)",
-									marginTop: "var(--dtl-space-3)",
-									border: "1px solid var(--dtl-danger)",
-									borderRadius: "var(--dtl-radius-md)",
-									background: "var(--dtl-danger-soft)",
-									color: "var(--dtl-fg)",
-									fontSize: "var(--dtl-font-sm)",
-									lineHeight: "var(--dtl-line-sm)",
-								},
-							},
-							h(
-								"span",
-								{
-									style: {
-										color: "var(--dtl-danger)",
-										flex: "none",
-										fontWeight: 600,
-									},
-								},
-								t("degradedTitle"),
-							),
-							h(
-								"span",
-								null,
-								degraded
-									.map((item) =>
-										t("degradedItem", {
-											title: item.workspaceTitle,
-											message: item.message,
-										}),
-									)
-									.join("；"),
-							),
-						),
 				regionHead,
 				// 首屏没数据（board === null）≠ 空结果：什么都不画，别拿「没有任务」骗人
 				// （加载提示走屏幕下方居中的全局卡，不在区域里占位）。
