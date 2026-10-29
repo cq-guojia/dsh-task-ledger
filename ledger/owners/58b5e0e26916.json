@@ -2,7 +2,7 @@
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
     "20261029-0914-1f67-看板历史查询入口与页面布局": {"category": "界面", "created": "2026-10-29 09:14:24", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-29 09:21:19", "status": "doing", "tags": ["看板", "历史查询"], "title": "看板历史查询入口与页面布局", "updated": "2026-10-29 09:21:19", "worklog": "worklog/202610/29-0914-1f67-看板历史查询入口与页面布局.md"},
-    "20261029-0925-decc-未认领任务可直接取消结案": {"category": "功能", "created": "2026-10-29 09:25:08", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-29 09:25:08", "status": "doing", "tags": ["台账", "结案", "取消", "skill"], "title": "未认领任务可直接取消结案", "updated": "2026-10-29 09:48:28", "worklog": "worklog/202610/29-0925-decc-未认领任务可直接取消结案.md"}
+    "20261029-0925-decc-未认领任务可直接取消结案": {"category": "功能", "created": "2026-10-29 09:25:08", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-29 09:25:08", "status": "doing", "tags": ["台账", "结案", "取消", "skill"], "title": "未认领任务可直接取消结案", "updated": "2026-10-29 09:58:34", "worklog": "worklog/202610/29-0925-decc-未认领任务可直接取消结案.md"}
   },
   "version": "20261022000000"
 }
