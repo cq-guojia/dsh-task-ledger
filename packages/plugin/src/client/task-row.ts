@@ -58,10 +58,13 @@ function statusLabel(tone: Tone, t: Translate): string {
 export function TaskRowView(props: {
 	t: Translate;
 	row: Row;
+	/** 单人台账：人名相关的一律不显示（用户 2026-10-29）。 */
+	solo?: boolean;
 	/** 查看：弹右侧 dock 预览过程文档 / 台账文件夹。 */
 	onView?: (row: Row) => void;
 }): ReactNode {
 	const { t, row } = props;
+	const solo = props.solo === true;
 	const tone = toneOf(row);
 	const tags = row.task.tags ?? [];
 
@@ -84,7 +87,9 @@ export function TaskRowView(props: {
 	const detailTip = (which: Tone): string | undefined => {
 		const { task } = row;
 		const owner = displayName(task.owner_name, task.owner);
-		const who = owner === "" ? t("ownerUnclaimed") : `@${owner}`;
+		// 单人台账不写人名（用户 2026-10-29）：who 传空串后，tip 首行 `{who}\n` 只剩一个前导换行，去掉
+		const who = solo ? "" : owner === "" ? t("ownerUnclaimed") : `@${owner}`;
+		const tip = (text: string): string => (solo ? text.replace(/^\n/, "") : text);
 		const started = stamp(task.started ?? task.created);
 		const updated = stamp(task.updated ?? task.started ?? task.created);
 		if (which === "open") return t("tipOpen", { created: stamp(task.created) });
@@ -93,15 +98,17 @@ export function TaskRowView(props: {
 				created: stamp(task.created),
 				d: dayText(task.waitingDays),
 			});
-		if (which === "doing") return t("tipDoing", { who, started, updated });
+		if (which === "doing") return tip(t("tipDoing", { who, started, updated }));
 		if (which === "overdue")
-			return t("tipOverdue", {
-				who,
-				started,
-				updated,
-				d: dayText(task.ageDays),
-			});
-		return t("tipStale", { who, started, updated, d: dayText(task.idleDays) });
+			return tip(
+				t("tipOverdue", {
+					who,
+					started,
+					updated,
+					d: dayText(task.ageDays),
+				}),
+			);
+		return tip(t("tipStale", { who, started, updated, d: dayText(task.idleDays) }));
 	};
 	// 动作权限：**唯一**判定（用户 2026-10-18）——任务行同一套，不许各判各的；本文件只按返回值画。
 	const actions = resolveActions(row.task);
@@ -212,7 +219,10 @@ export function TaskRowView(props: {
 			: h(
 					"span",
 					{ className: "dtl-taskrow__stamp" },
-					`[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`,
+					// 单人台账只留时间，不带名字（用户 2026-10-29）
+					solo
+						? `[${t("fieldCreatorStamp", { age: creatorAge })}]`
+						: `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`,
 				),
 		...alarmTags,
 	);
@@ -233,7 +243,7 @@ export function TaskRowView(props: {
 	const ownerName = displayName(row.task.owner_name, row.task.owner);
 	const ownerUuid = (row.task.owner ?? "").trim();
 	const whoNode =
-		row.task.status === "open" || ownerUuid === ""
+		solo || row.task.status === "open" || ownerUuid === ""
 			? null
 			: h(
 					Button,

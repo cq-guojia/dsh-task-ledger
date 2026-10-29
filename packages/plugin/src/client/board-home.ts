@@ -24,7 +24,7 @@ import {
 import type { LocaleKey, Translate } from "./locales";
 import { formatCount } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
-import { ownerGroups, selectView, type Row } from "./rows";
+import { isSoloLedger, ownerGroups, selectView, type Row } from "./rows";
 import {
 	boardSnapshot,
 	boardSubscribe,
@@ -185,6 +185,8 @@ export function BoardHome(props: {
 	const board = state.board;
 	const view = useMemo(() => selectView(state), [state]);
 	const degraded = board?.degraded ?? [];
+	/** 单人台账：执行人相关界面（下拉 / 人名 / 「只看我的」）全隐藏（用户 2026-10-29）。 */
+	const solo = isSoloLedger(board);
 
 	// 降级上报：有工作区读挂 ⇒ 核心的 error toast，一条说完（不再在页面上铺一屏原文，
 	// 用户 2026-10-29；脚本的报错常带整段用法提示，铺在卡片里把版面顶烂）。
@@ -364,10 +366,13 @@ export function BoardHome(props: {
 				),
 			),
 			// 趋势图：近 8 周 × 三柱（数字全由 skill `stats --trend` 给）；
-			// 本机身份是机器级的 ⇒ 各工作区同一个 uuid，取第一个非空即可（「只看我的」用）
+			// 本机身份是机器级的 ⇒ 各工作区同一个 uuid，取第一个非空即可（「只看我的」用）。
+			// 单人台账给 null ⇒ 图里不出「只看我的」（用户 2026-10-29）。
 			h(TrendChart, {
 				trend: payload.trend,
-				me: Object.values(payload.identities).find((uuid) => uuid !== null) ?? null,
+				me: solo
+					? null
+					: (Object.values(payload.identities).find((uuid) => uuid !== null) ?? null),
 				t,
 			}),
 		);
@@ -420,25 +425,27 @@ export function BoardHome(props: {
 			}),
 		),
 		// 执行人过滤：候选 = 各工作区花名册合并（跨工作区去重 / 分组在 `ownerGroups`）。
-		// 程序未接（选了不真筛），但选项已按通用 / 工作区分好组；同样给 min/max 防撑开。
-		h(
-			"div",
-			{ style: { flex: "none" } },
-			h(Select<string>, {
-				searchable: true,
-				size: "lg",
-				minWidth: SELECT_MIN_WIDTH,
-				maxWidth: SELECT_MAX_WIDTH,
-				icon: h(IconUsersOutlineRegular, { size: 16 }),
-				value: state.query.owner,
-				options: [{ value: "", label: t("ownerAll") }],
-				groups: ownerOptionGroups,
-				ariaLabel: t("ownerLabel"),
-				onChange: (next) => {
-					setQuery({ owner: next });
-				},
-			}),
-		),
+		// 单人台账整件隐藏（用户 2026-10-29：只有一个用户，这个下拉没有意义）。
+		solo
+			? null
+			: h(
+					"div",
+					{ style: { flex: "none" } },
+					h(Select<string>, {
+						searchable: true,
+						size: "lg",
+						minWidth: SELECT_MIN_WIDTH,
+						maxWidth: SELECT_MAX_WIDTH,
+						icon: h(IconUsersOutlineRegular, { size: 16 }),
+						value: state.query.owner,
+						options: [{ value: "", label: t("ownerAll") }],
+						groups: ownerOptionGroups,
+						ariaLabel: t("ownerLabel"),
+						onChange: (next) => {
+							setQuery({ owner: next });
+						},
+					}),
+				),
 		// 通用搜索：**样式已铺、程序未接**（输入暂不过滤）。
 		h(
 			"div",
@@ -574,6 +581,7 @@ export function BoardHome(props: {
 											key: row.key,
 											t,
 											row,
+											solo,
 											onView: handleView,
 										}),
 									),

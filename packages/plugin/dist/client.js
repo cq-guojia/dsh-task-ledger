@@ -53310,6 +53310,20 @@ window.__ModuleLoader__.load({
 			};
 		}
 		/**
+		* 单人台账：**执行人下拉的候选**（各工作区花名册合并去重，与 `ownerGroups` 同一份）里
+		* 只有 ≤ 1 个人 ⇒ 行内人名 / 创建人 / 执行人下拉 / 「只看我的」全部隐藏（用户 2026-10-29：
+		* 「只有一个人，明显就是他自己在用」）。
+		*
+		* 只看名册这一份：任务上的 owner / creator 不参与判断 —— 旧任务里留着的别人的 uuid
+		* 不该把整板拽回多人形态；某工作区名册读挂也不拦住（那时下拉本来也没人可选）。
+		*/
+		function isSoloLedger(board) {
+			if (board === null) return false;
+			const uuids = /* @__PURE__ */ new Set();
+			for (const ws of board.workspaceOwners) for (const owner of ws.owners) if (owner.uuid !== "") uuids.add(owner.uuid);
+			return uuids.size <= 1;
+		}
+		/**
 		* 执行人下拉的分组（核心 Picker 原生支持 groups）。
 		* 跨工作区合并去重：同一 uuid 出现在 ≥2 个工作区 ⇒ 归「通用人员」组（置顶）；
 		* 只出现在一个工作区 ⇒ 归该工作区分组。空工作区（名册读挂）自然不出现。
@@ -54038,6 +54052,7 @@ body[data-ds-dark-theme]{
 		}
 		function TaskRowView(props) {
 			const { t, row } = props;
+			const solo = props.solo === true;
 			const tone = toneOf(row);
 			const tags = row.task.tags ?? [];
 			const created = row.task.created ?? null;
@@ -54051,7 +54066,8 @@ body[data-ds-dark-theme]{
 			const detailTip = (which) => {
 				const { task } = row;
 				const owner = displayName(task.owner_name, task.owner);
-				const who = owner === "" ? t("ownerUnclaimed") : `@${owner}`;
+				const who = solo ? "" : owner === "" ? t("ownerUnclaimed") : `@${owner}`;
+				const tip = (text) => solo ? text.replace(/^\n/, "") : text;
 				const started = stamp(task.started ?? task.created);
 				const updated = stamp(task.updated ?? task.started ?? task.created);
 				if (which === "open") return t("tipOpen", { created: stamp(task.created) });
@@ -54059,23 +54075,23 @@ body[data-ds-dark-theme]{
 					created: stamp(task.created),
 					d: dayText(task.waitingDays)
 				});
-				if (which === "doing") return t("tipDoing", {
+				if (which === "doing") return tip(t("tipDoing", {
 					who,
 					started,
 					updated
-				});
-				if (which === "overdue") return t("tipOverdue", {
+				}));
+				if (which === "overdue") return tip(t("tipOverdue", {
 					who,
 					started,
 					updated,
 					d: dayText(task.ageDays)
-				});
-				return t("tipStale", {
+				}));
+				return tip(t("tipStale", {
 					who,
 					started,
 					updated,
 					d: dayText(task.idleDays)
-				});
+				}));
 			};
 			const actions = resolveActions(row.task);
 			const viewButton = (0, react$1.createElement)(Tip, {
@@ -54135,12 +54151,12 @@ body[data-ds-dark-theme]{
 			const titleLine = (0, react$1.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react$1.createElement)("span", {
 				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
-			}, titleOf(row)), creatorAge === null || creatorName === "" ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`), ...alarmTags);
+			}, titleOf(row)), creatorAge === null || creatorName === "" ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, solo ? `[${t("fieldCreatorStamp", { age: creatorAge })}]` : `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`), ...alarmTags);
 			const whenRaw = row.task.updated ?? row.task.started ?? row.task.created;
 			const metaText = `${t("whenSubmitted", { time: whenRaw === null || whenRaw === void 0 || Number.isNaN(Date.parse(whenRaw)) ? t("timeUnknown") : formatDateTime(whenRaw).slice(5) })} 丨 ${whenRaw === null || whenRaw === void 0 ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
 			const ownerName = displayName(row.task.owner_name, row.task.owner);
 			const ownerUuid = (row.task.owner ?? "").trim();
-			const whoNode = row.task.status === "open" || ownerUuid === "" ? null : (0, react$1.createElement)(Button, {
+			const whoNode = solo || row.task.status === "open" || ownerUuid === "" ? null : (0, react$1.createElement)(Button, {
 				variant: "link",
 				size: "sm",
 				maxWidth: 180,
@@ -54399,6 +54415,8 @@ body[data-ds-dark-theme]{
 			const board = state.board;
 			const view = (0, react$1.useMemo)(() => selectView(state), [state]);
 			const degraded = board?.degraded ?? [];
+			/** 单人台账：执行人相关界面（下拉 / 人名 / 「只看我的」）全隐藏（用户 2026-10-29）。 */
+			const solo = isSoloLedger(board);
 			const degradedSig = degraded.map((item) => `${item.workspaceId}|${item.op}|${item.message}`).join("\n");
 			const shownDegraded = (0, react$1.useRef)("");
 			(0, react$1.useEffect)(() => {
@@ -54478,7 +54496,7 @@ body[data-ds-dark-theme]{
 					style: statsRowStyle
 				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)(TrendChart, {
 					trend: payload.trend,
-					me: Object.values(payload.identities).find((uuid) => uuid !== null) ?? null,
+					me: solo ? null : Object.values(payload.identities).find((uuid) => uuid !== null) ?? null,
 					t
 				}));
 			};
@@ -54508,7 +54526,7 @@ body[data-ds-dark-theme]{
 				onChange: (next) => {
 					setQuery({ workspace: next });
 				}
-			})), (0, react$1.createElement)("div", { style: { flex: "none" } }, (0, react$1.createElement)(Select, {
+			})), solo ? null : (0, react$1.createElement)("div", { style: { flex: "none" } }, (0, react$1.createElement)(Select, {
 				searchable: true,
 				size: "lg",
 				minWidth: SELECT_MIN_WIDTH,
@@ -54559,8 +54577,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.122 · 261029-154907-512`
-			}, `v0.0.122 261029-154907-512`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.122 · 261029-164707-786`
+			}, `v0.0.122 261029-164707-786`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54589,6 +54607,7 @@ body[data-ds-dark-theme]{
 				key: row.key,
 				t,
 				row,
+				solo,
 				onView: handleView
 			}))), view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null)));
 		}

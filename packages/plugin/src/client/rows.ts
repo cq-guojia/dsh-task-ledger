@@ -167,6 +167,25 @@ export function selectView(current: {
 }
 
 /**
+ * 单人台账：**执行人下拉的候选**（各工作区花名册合并去重，与 `ownerGroups` 同一份）里
+ * 只有 ≤ 1 个人 ⇒ 行内人名 / 创建人 / 执行人下拉 / 「只看我的」全部隐藏（用户 2026-10-29：
+ * 「只有一个人，明显就是他自己在用」）。
+ *
+ * 只看名册这一份：任务上的 owner / creator 不参与判断 —— 旧任务里留着的别人的 uuid
+ * 不该把整板拽回多人形态；某工作区名册读挂也不拦住（那时下拉本来也没人可选）。
+ */
+export function isSoloLedger(board: BoardPayload | null): boolean {
+	if (board === null) return false;
+	const uuids = new Set<string>();
+	for (const ws of board.workspaceOwners) {
+		for (const owner of ws.owners) {
+			if (owner.uuid !== "") uuids.add(owner.uuid);
+		}
+	}
+	return uuids.size <= 1;
+}
+
+/**
  * 执行人下拉的分组（核心 Picker 原生支持 groups）。
  * 跨工作区合并去重：同一 uuid 出现在 ≥2 个工作区 ⇒ 归「通用人员」组（置顶）；
  * 只出现在一个工作区 ⇒ 归该工作区分组。空工作区（名册读挂）自然不出现。
