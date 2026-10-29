@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -28,7 +29,7 @@ import (
 // 当月永远实时算；缓存只加速，算错 / 写不进去都只是慢一点，不影响结果。
 
 // TrendAlgo 口径版本：一变，全部缓存视为过期（不必依赖文件时间）。
-const TrendAlgo = 2
+const TrendAlgo = 3
 
 const (
 	defaultTrendLast = "8w"
@@ -107,13 +108,13 @@ func TrendStats(repo string, me core.Identity, q TrendQuery) (*TrendResult, erro
 	if q.Granularity == "day" && len(buckets) > TrendMaxDayBuckets {
 		return nil, core.Failf("--trend day 一次最多 %d 天（本次 %d 天）⇒ 换 week / month 这类更粗的粒度。", TrendMaxDayBuckets, len(buckets))
 	}
-	firstMonth, lastMonth := trendMonthKey(lo), trendMonthKey(today)
+	firstMonth, lastMonth := trendMonthKey(lo), trendMonthKey(hi)
 
-	series, currentByOwner, roster, warnings, err := trendLoad(repo, firstMonth, lastMonth, today)
+	series, roster, warnings, err := trendLoad(repo, firstMonth, lastMonth, today)
 	if err != nil {
 		return nil, err
 	}
-	filler := trendFiller{series: series, ownerOpen: currentByOwner, roster: roster, today: today}
+	filler := trendFiller{series: series, roster: roster}
 	for i := range buckets {
 		filler.fill(&buckets[i], filter, q.ByOwner)
 	}
@@ -286,13 +287,14 @@ func trendBucketEnd(granularity, day string) string {
 	return start
 }
 
-// trendSeries 待拼桶的逐日计数：日 → 数，外加按人的逐日计数。
+// trendSeries 待拼桶的逐日计数：日 → 数，外加按人的逐日计数与逐日未结。
 type trendSeries struct {
-	added    map[string]int
-	done     map[string]int
-	open     map[string]int // 该日结束时仍未结（缓存月直接用缓存值，缺月实时倒推）
-	byOwner  map[string]*trendOwnerDays
-	firstDay string // 第一条数据出现在哪天（coverage 用）
+	added       map[string]int
+	done        map[string]int
+	open        map[string]int            // 该日结束时全局仍未结
+	openByOwner map[string]map[string]int // 该日结束时每人仍未结（= 进行中）
+	byOwner     map[string]*trendOwnerDays
+	firstDay    string // 第一条数据出现在哪天（coverage 用）
 }
 
 type trendOwnerDays struct {
@@ -303,10 +305,11 @@ type trendOwnerDays struct {
 
 func newTrendSeries() *trendSeries {
 	return &trendSeries{
-		added:   map[string]int{},
-		done:    map[string]int{},
-		open:    map[string]int{},
-		byOwner: map[string]*trendOwnerDays{},
+		added:       map[string]int{},
+		done:        map[string]int{},
+		open:        map[string]int{},
+		openByOwner: map[string]map[string]int{},
+		byOwner:     map[string]*trendOwnerDays{},
 	}
 }
 
@@ -319,6 +322,56 @@ func (s *trendSeries) owner(uuid string) *trendOwnerDays {
 	days := &trendOwnerDays{added: map[string]int{}, owned: map[string]int{}, done: map[string]int{}}
 	s.byOwner[uuid] = days
 	return days
+}
+
+// walkForward 从某月末锚点往右逐日累计：open(d) = open(d-1) + 新增(d) − 结案(d)。
+// 有了左锚就不必再从今天倒推 —— 读一段历史只需那一段的流水。
+func (s *trendSeries) walkForward(seed store.TrendAnchor, from, to string) {
+	open := seed.Open
+	owners := make(map[string]int, len(seed.Owners))
+	for uuid, n := range seed.Owners {
+		owners[uuid] = n
+	}
+	for day := from; day <= to; day = trendAddDay(day, 1) {
+		open += s.added[day] - s.done[day]
+		for uuid, days := range s.byOwner {
+			owners[uuid] += days.owned[day] - days.done[day]
+		}
+		s.open[day] = open
+		s.openByOwner[day] = cloneCounts(owners)
+	}
+}
+
+// walkBackward 没有左锚时的兜底：从今天的在办快照往回推
+// open(d) = open(d+1) + 结案(d+1) − 新增(d+1)。代价是要读到今天。
+func (s *trendSeries) walkBackward(seedOpen int, seedOwners map[string]int, from, to string) {
+	open := seedOpen
+	owners := make(map[string]int, len(seedOwners))
+	for uuid, n := range seedOwners {
+		owners[uuid] = n
+	}
+	for day := to; ; day = trendAddDay(day, -1) {
+		if day != to {
+			next := trendAddDay(day, 1)
+			open += s.done[next] - s.added[next]
+			for uuid, days := range s.byOwner {
+				owners[uuid] += days.done[next] - days.owned[next]
+			}
+		}
+		s.open[day] = open
+		s.openByOwner[day] = cloneCounts(owners)
+		if day <= from {
+			return
+		}
+	}
+}
+
+func cloneCounts(source map[string]int) map[string]int {
+	out := make(map[string]int, len(source))
+	for key, value := range source {
+		out[key] = value
+	}
+	return out
 }
 
 func (s *trendSeries) noteDay(day string) {
@@ -415,6 +468,7 @@ func (s *trendSeries) month(ym, repo, today string) *store.TrendMonth {
 		m.Days = append(m.Days, store.TrendDay{Day: day, Added: s.added[day], Done: s.done[day], Open: s.open[day]})
 	}
 	m.MonthEndOpen = s.open[days[len(days)-1]]
+	m.PerOwnerEndOpen = s.openByOwner[days[len(days)-1]]
 	perOwner := map[string][]store.TrendOwnerDay{}
 	for uuid, ownerDays := range s.byOwner {
 		var list []store.TrendOwnerDay
@@ -435,15 +489,23 @@ func (s *trendSeries) month(ym, repo, today string) *store.TrendMonth {
 	return m
 }
 
-// trendLoad 把待拼桶的全部数据准备好：当前在办快照 + 缓存月 + 缺月实时算（顺手写回缓存）。
-func trendLoad(repo, firstMonth, lastMonth, today string) (*trendSeries, map[string]int, map[string]string, []string, error) {
+// trendLoad 把待拼桶的数据准备好：当前在办快照 + 缓存月 + 缺月实时算。
+//
+// 未结有两条算路（2026-10-29 用户拍板）：
+//   - **有左锚**（上个月末各人挂着几条，见 store.TrendAnchor）⇒ 从锚往右累计，
+//     只读「那一段」的月份 ⇒ 查很久以前的一段也只要那几个月；
+//   - **没有左锚**（这个仓库第一次查旧段）⇒ 从今天的在办快照往回推到窗口起点，
+//     代价是读到今天；沿途每个月的月末未结顺手写成锚，下次就只需读那一段。
+//
+// 整月缓存只写**用户查的那几个月**（不再全跨度预热），路过的月份只留几十字节的锚。
+func trendLoad(repo, firstMonth, lastMonth, today string) (*trendSeries, map[string]string, []string, error) {
 	rows, _, index, err := activeRows(repo)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, err
 	}
 	roster, err := index.All()
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, err
 	}
 	names := make(map[string]string, len(roster))
 	for uuid, record := range roster {
@@ -464,60 +526,118 @@ func trendLoad(repo, firstMonth, lastMonth, today string) (*trendSeries, map[str
 	}
 
 	dir, caching := trendCacheDir(repo)
+	anchors := store.LoadTrendAnchors(dir, TrendAlgo)
+
+	// 上个月末的锚决定走哪条路
+	prevMonth := shiftMonth(firstMonth, -1)
+	seed, hasSeed := anchors.Months[prevMonth]
+	todayMonth := trendMonthKey(today)
+	rangeLast := lastMonth // 正向：只需要窗口结束月
+	if !hasSeed {
+		rangeLast = todayMonth // 反向：必须读到今天
+	}
+
+	var warnings []string
 	var missing []string
-	for _, ym := range monthKeysBetween(firstMonth, lastMonth) {
+	for _, ym := range monthKeysBetween(firstMonth, rangeLast) {
 		// 当月永远实时算：这个月还没过完，固化下来末尾就会缺（D12）
-		if caching && ym != lastMonth {
+		if caching && ym != todayMonth {
 			if m, ok := store.LoadTrendMonth(dir, ym, TrendAlgo); ok && store.TrendSourcesMatch(repo, m.Source) {
 				series.absorb(m)
+				// 顺手把缓存里的月末未结收进锚（老缓存也能补锚）
+				if anchor, ok := anchorOfMonth(m); ok {
+					anchors.Months[ym] = anchor
+				}
 				continue
 			}
 		}
 		missing = append(missing, ym)
 	}
-	if len(missing) == 0 {
-		return series, currentByOwner, names, nil, nil
-	}
-
-	wanted := map[string]bool{}
-	for _, ym := range missing {
-		for _, day := range trendMonthDays(ym, today) {
-			wanted[day] = true
-		}
-	}
-	// 本地月的 row 可能落在前一个 UTC 月文件里（+8 的 1 号凌晨被记在上月），所以往前多读一个月
-	warnings := series.loadSources(repo, shiftMonth(missing[0], -1), lastMonth, wanted)
-
-	// 逐日倒推未结：从今天往回扫，tail 只累计「这一天之后」的新增 / 完成
-	days := trendDayList(trendMonthFirstDay(missing[0]), today)
-	tailDone, tailAdded := 0, 0
-	for i := len(days) - 1; i >= 0; i-- {
-		day := days[i]
-		if wanted[day] {
-			series.open[day] = len(rows) + tailDone - tailAdded
-		}
-		tailDone += series.done[day]
-		tailAdded += series.added[day]
-	}
-	if caching {
+	if len(missing) > 0 {
+		wanted := map[string]bool{}
 		for _, ym := range missing {
-			if ym == lastMonth {
-				continue // 当月永远实时算（D12）：固化下来末尾几小时会缺
+			for _, day := range trendMonthDays(ym, today) {
+				wanted[day] = true
+			}
+		}
+		// 本地月的 row 可能落在前一个 UTC 月文件里（+8 的 1 号凌晨被记在上月），所以往前多读一个月
+		warnings = series.loadSources(repo, shiftMonth(missing[0], -1), rangeLast, wanted)
+		if len(missing) > 3 && !hasSeed {
+			warnings = append(warnings, trendColdStartNote(len(missing)))
+		}
+	}
+
+	end := trendMonthLastDay(rangeLast)
+	if end > today {
+		end = today
+	}
+	if hasSeed {
+		series.walkForward(seed, trendAddDay(trendMonthLastDay(prevMonth), 1), end)
+	} else {
+		// 多走一天到上月月末：顺手把上月的锚也留下（下次查这一段就有左锚）
+		series.walkBackward(len(rows), currentByOwner, trendMonthLastDay(prevMonth), today)
+	}
+
+	if caching {
+		// 整月缓存：只写用户查的那几个月（当月不写）
+		window := map[string]bool{}
+		for _, ym := range monthKeysBetween(firstMonth, lastMonth) {
+			window[ym] = true
+		}
+		for _, ym := range missing {
+			if !window[ym] || ym == todayMonth {
+				continue
 			}
 			if m := series.month(ym, repo, today); m != nil {
 				_ = store.SaveTrendMonth(dir, ym, m) // 写不进去就下次再算（Q7：静默降级）
 			}
 		}
+		// 锚：凡是算过月末的月份都留一个（几十字节）
+		for _, ym := range monthKeysBetween(prevMonth, rangeLast) {
+			if ym == todayMonth {
+				continue
+			}
+			if anchor, ok := series.monthAnchor(ym); ok {
+				anchors.Months[ym] = anchor
+			}
+		}
+		if err := store.SaveTrendAnchors(dir, anchors); err != nil {
+			warnings = append(warnings, Rel(repo, dir)+"：趋势锚点写不进去，下次会重算")
+		}
 	}
-	return series, currentByOwner, names, warnings, nil
+
+	return series, names, warnings, nil
+}
+
+// anchorOfMonth 从月缓存里取月末未结（按人明细缺了就只取全局）。
+func anchorOfMonth(m *store.TrendMonth) (store.TrendAnchor, bool) {
+	if m.PerOwnerEndOpen != nil {
+		return store.TrendAnchor{Open: m.MonthEndOpen, Owners: m.PerOwnerEndOpen}, true
+	}
+	if m.MonthEndOpen != 0 {
+		return store.TrendAnchor{Open: m.MonthEndOpen}, true
+	}
+	return store.TrendAnchor{}, false
+}
+
+// monthAnchor 某月月末的未结快照（算过才有）。
+func (s *trendSeries) monthAnchor(ym string) (store.TrendAnchor, bool) {
+	end := trendMonthLastDay(ym)
+	open, ok := s.open[end]
+	if !ok {
+		return store.TrendAnchor{}, false
+	}
+	return store.TrendAnchor{Open: open, Owners: s.openByOwner[end]}, true
+}
+
+func trendColdStartNote(months int) string {
+	return fmt.Sprintf("这段历史没有锚，本次从今天往回推、读了 %d 个月的历史（之后同段会快很多）", months)
 }
 
 // trendFiller 把逐日计数摊到桶里。
 type trendFiller struct {
-	series    *trendSeries
-	ownerOpen map[string]int // 每人当前在办
-	roster    map[string]string
-	today     string
+	series *trendSeries
+	roster map[string]string
 }
 
 func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
@@ -526,19 +646,16 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 		bucket.Added += f.series.added[day]
 		bucket.Done += f.series.done[day]
 	}
-	if open, ok := f.series.open[bucket.To]; ok {
-		bucket.Open = open
-	}
+	bucket.Open = f.series.open[bucket.To]
 	if filter == nil && !byOwner {
 		return
 	}
-	tailDone, tailOwned := f.series.ownerTail(bucket.To, f.today)
 	if filter != nil {
 		// --mine / --owner：整桶只算选中的人（按人没有剩余，Open 由 owner + 是否结案倒推）
 		bucket.Added, bucket.Done, bucket.Open = 0, 0, 0
 		cells := make(map[string]*TrendOwnerCell, len(filter))
 		for _, uuid := range filter {
-			cell := f.ownerCell(uuid, days, tailDone, tailOwned)
+			cell := f.ownerCell(uuid, days, bucket.To)
 			cells[uuid] = cell
 			bucket.Added += cell.Added
 			bucket.Done += cell.Done
@@ -551,7 +668,7 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 	}
 	cells := map[string]*TrendOwnerCell{}
 	for uuid := range f.series.byOwner {
-		cell := f.ownerCell(uuid, days, tailDone, tailOwned)
+		cell := f.ownerCell(uuid, days, bucket.To)
 		if cell.Added != 0 || cell.Done != 0 || cell.Open != 0 {
 			cells[uuid] = cell
 		}
@@ -559,41 +676,19 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 	bucket.Owners = cells
 }
 
-// ownerCell 某人某桶的三数。未结算的是：
-//
-//	open_u(t) = 我现在名下未结 + 我 t 之后结掉的 − 我 t 之后新建的
-//
-// 第三项必须减：**新建按 owner**（不是 creator）。漏掉它就会把「窗口之后才建、早已结案」
-// 的任务当成 t 时就在办 —— 早期版本就是这么错的，越靠前的桶虚高得越离谱。
-func (f *trendFiller) ownerCell(uuid string, days []string, tailDone, tailOwned map[string]int) *TrendOwnerCell {
+// ownerCell 某人某桶的三数；未结直接取「那天结束时我名下还没结的」，
+// 由 walkForward / walkBackward 统一算好（不再在桶里现场算尾巴）。
+func (f *trendFiller) ownerCell(uuid string, days []string, end string) *TrendOwnerCell {
 	ownerDays := f.series.owner(uuid)
 	cell := &TrendOwnerCell{
 		Name: f.roster[uuid],
-		Open: f.ownerOpen[uuid] + tailDone[uuid] - tailOwned[uuid],
+		Open: f.series.openByOwner[end][uuid],
 	}
 	for _, day := range days {
 		cell.Added += ownerDays.added[day]
 		cell.Done += ownerDays.done[day]
 	}
 	return cell
-}
-
-// ownerTail 某天之后到今天，每个人「结掉了几条」与「新建了几条」（都按 owner），
-// 两个尾巴一起用于倒推某人的未结。
-func (s *trendSeries) ownerTail(after, today string) (done, owned map[string]int) {
-	done = map[string]int{}
-	owned = map[string]int{}
-	for day := trendAddDay(after, 1); day <= today; day = trendAddDay(day, 1) {
-		for uuid, ownerDays := range s.byOwner {
-			if n := ownerDays.done[day]; n != 0 {
-				done[uuid] += n
-			}
-			if n := ownerDays.owned[day]; n != 0 {
-				owned[uuid] += n
-			}
-		}
-	}
-	return done, owned
 }
 
 // trendCacheDir 本机缓存目录；拿不到主目录就不缓存（不影响结果）。
@@ -653,6 +748,11 @@ func trendMonthDays(ym, today string) []string {
 func trendMonthFirstDay(ym string) string { return ym[0:4] + "-" + ym[4:6] + "-01" }
 
 func trendMonthKey(day string) string { return strings.ReplaceAll(day[0:7], "-", "") }
+
+// trendMonthLastDay 某个本地月的最后一天。
+func trendMonthLastDay(ym string) string {
+	return trendAddDay(trendAddMonth(trendMonthFirstDay(ym), 1), -1)
+}
 
 // trendDaySpan [lo, hi] 一共多少天（含两端）：按纯日期相减，不受夏令时影响。
 func trendDaySpan(lo, hi string) int {

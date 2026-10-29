@@ -185,9 +185,13 @@ func TrendCacheDir(home, repo string, offsetSeconds int) string      // 一月�
 func LoadTrendMonth(dir, ym string, algo int) (*TrendMonth, bool)    // 不存在 / 坏 JSON / algo 不符 ⇒ (nil,false)
 func SaveTrendMonth(dir, ym string, m *TrendMonth) error             // 原子写（temp + rename）
 func TrendSourcesMatch(repo string, sources []TrendSource) bool      // size + mtime_ns，任一个变了就重算
+func LoadTrendAnchors(dir string, algo int) *TrendAnchors            // 月度锚：每月末未结（全局 + 按人）
+func SaveTrendAnchors(dir string, a *TrendAnchors) error             // 原子写；写不进去只是下次重算
 ```
 
 要点：缓存只加速、不承担正确性 —— 读不出来当没有、写不进去静默降级；校验只认**该本地月自己的**源文件指纹（本地月可能横跨两个 UTC 月文件，两个都记）；`algo` 一变全部过期；当月永远实时算、不写缓存。
+
+**两层缓存（2026-10-29）**：整月缓存只写用户查的那几个月（不再全跨度预热）；`anchors.json` 记每个月末的未结（全局 + 按人，几十字节/月），倒推时顺手补上。读取时优先「最近的左锚 + 那一段的流水」正向累计，只有没有锚（第一次查某段历史）才从今天的在办快照往回推。正向与倒推必须给出同一个结果，有测试钉住。
 
 ## 三、业务层 `actions/`
 

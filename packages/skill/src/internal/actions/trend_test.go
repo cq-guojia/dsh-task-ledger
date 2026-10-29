@@ -11,12 +11,25 @@ import (
 	"time"
 
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/core"
+	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/store"
 )
 
 // 趋势统计：桶边界 / 倒推未结 / 按月缓存。
 // 断言一律用「相对今天」的日期，不写死年月 —— 跨月、跨年跑测试才不会红。
 
 func trendToday() string { return time.Now().Format(trendDayLayout) }
+
+func ptr(text string) *string { return &text }
+
+// trendCacheDirFor 测试用缓存目录（拿不到就直接失败，别静默跳过断言）。
+func trendCacheDirFor(t *testing.T, repo string) string {
+	t.Helper()
+	dir, ok := trendCacheDir(repo)
+	if !ok {
+		t.Fatal("拿不到趋势缓存目录")
+	}
+	return dir
+}
 
 // writeHistoryRow 往 finished 所属月份的历史文件追加一行（两个时间都是存盘的 UTC 串）。
 func writeHistoryRow(t *testing.T, repo, finished, created, title, owner string) {
@@ -337,6 +350,66 @@ func TestTrendCachedResultEqualsLive(t *testing.T) {
 	}
 	if reflect.DeepEqual(again, cached) {
 		t.Errorf("改了缓存里的 %s 却没影响结果 ⇒ 说明读的是源文件、缓存根本没被用上", target.Day)
+	}
+}
+
+// 左锚：查过一段历史之后，再查它右边那一段**不该再读更晚的月份**。
+// 造法：一条 2025-12-10 建、2026-03-10 结的任务 ⇒ 2025-12 那次冷查询把锚写下来；
+// 之后删掉 2026-03 的历史文件 —— 若查 2026-01 仍然算得出「未结 1」，说明用的是
+// 「2025-12 月末锚 + 2026-01 流水」正向推，而不是从今天往回倒（倒推会得 0）。
+func TestTrendUsesLeftAnchorAndSkipsLaterMonths(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("TASK_LEDGER_HOME", home)
+	repo, me := tempLedger(t)
+	mk := func(month string, day int) time.Time {
+		at, err := time.ParseInLocation("2006-01-02", fmt.Sprintf("%s-%02d", month, day), time.Local)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return at
+	}
+	created, finished := mk("2025-12", 10), mk("2026-03", 10)
+	writeHistoryRow(t, repo, localStamp(finished), localStamp(created), "跨季的任务", testUUID)
+
+	dec, err := TrendStats(repo, me, TrendQuery{Granularity: "month", Since: ptr("2025-12-01"), Until: ptr("2025-12-31")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := dec.Buckets[0].Open; got != 1 {
+		t.Fatalf("2025-12 月末未结应为 1，实际 %d", got)
+	}
+	if _, ok := store.LoadTrendAnchors(trendCacheDirFor(t, repo), TrendAlgo).Months["202512"]; !ok {
+		t.Fatal("冷查询之后应留下 202512 的锚")
+	}
+
+	// 正向（吃锚）与倒推必须给出同一个答案
+	janQuery := TrendQuery{Granularity: "month", Since: ptr("2026-01-01"), Until: ptr("2026-01-31")}
+	if err := os.Remove(filepath.Join(trendCacheDirFor(t, repo), "anchors.json")); err != nil {
+		t.Fatal(err)
+	}
+	janBackward, err := TrendStats(repo, me, janQuery)
+	if err != nil {
+		t.Fatal(err)
+	}
+	janForward, err := TrendStats(repo, me, janQuery) // 上一次倒推已把锚补回来
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(janBackward.Buckets, janForward.Buckets) {
+		t.Errorf("正向累计与倒推结果不一致：倒推 %+v / 正向 %+v", janBackward.Buckets, janForward.Buckets)
+	}
+
+	// 删掉更晚的月份：倒推路径已经不可能成立
+	historyDir := filepath.Join(repo, core.LedgerDir, core.HistoryDir)
+	if err := os.Remove(filepath.Join(historyDir, "202603.md")); err != nil {
+		t.Fatal(err)
+	}
+	jan, err := TrendStats(repo, me, janQuery)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := jan.Buckets[0].Open; got != 1 {
+		t.Errorf("有左锚时应正向推出 2026-01 月末未结 1（删掉了 3 月文件也能算），实际 %d", got)
 	}
 }
 

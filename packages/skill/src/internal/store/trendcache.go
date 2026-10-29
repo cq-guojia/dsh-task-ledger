@@ -51,6 +51,8 @@ type TrendMonth struct {
 	Source       []TrendSource              `json:"source"`
 	Days         []TrendDay                 `json:"days"`
 	PerOwner     map[string][]TrendOwnerDay `json:"per_owner"`
+	// PerOwnerEndOpen 本月末每人未结（= 进行中），下个月往后推的锚；也是锚点文件的来源。
+	PerOwnerEndOpen map[string]int `json:"per_owner_end_open,omitempty"`
 }
 
 // TrendCacheDir 某台机器、某个仓库、某个时区偏移下的缓存目录。
