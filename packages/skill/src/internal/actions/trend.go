@@ -28,7 +28,7 @@ import (
 // 当月永远实时算；缓存只加速，算错 / 写不进去都只是慢一点，不影响结果。
 
 // TrendAlgo 口径版本：一变，全部缓存视为过期（不必依赖文件时间）。
-const TrendAlgo = 1
+const TrendAlgo = 2
 
 const (
 	defaultTrendLast = "8w"
@@ -296,11 +296,10 @@ type trendSeries struct {
 }
 
 type trendOwnerDays struct {
-	added map[string]int
-	done  map[string]int
+	added map[string]int // 按 creator（展示用 = 我提的）
+	owned map[string]int // 按 owner 的新建（倒推未结用 = 我负责的，含窗口之后建的）
+	done  map[string]int // 按 owner 的结案
 }
-
-var trendNoOwner = &trendOwnerDays{added: map[string]int{}, done: map[string]int{}}
 
 func newTrendSeries() *trendSeries {
 	return &trendSeries{
@@ -311,14 +310,13 @@ func newTrendSeries() *trendSeries {
 	}
 }
 
+// owner 某人的逐日计数桶。**空 uuid 必须由调用方挡掉**：待认领 / 老数据缺 creator
+// 只进全量，不算任何人（早期版本用共享单例兜，跨次调用会串数据）。
 func (s *trendSeries) owner(uuid string) *trendOwnerDays {
-	if uuid == "" {
-		return trendNoOwner // 待认领 / 老数据缺 creator：只进全量，不算任何人
-	}
 	if days, ok := s.byOwner[uuid]; ok {
 		return days
 	}
-	days := &trendOwnerDays{added: map[string]int{}, done: map[string]int{}}
+	days := &trendOwnerDays{added: map[string]int{}, owned: map[string]int{}, done: map[string]int{}}
 	s.byOwner[uuid] = days
 	return days
 }
@@ -329,15 +327,24 @@ func (s *trendSeries) noteDay(day string) {
 	}
 }
 
-func (s *trendSeries) add(day, creator string) {
+// add 记一天的新建：全量一份 + creator（展示）+ owner（倒推未结）。
+// 两份额度不同 —— 「我提的」用于柱状图，「我负责的」只用于把未结倒推准。
+func (s *trendSeries) add(day, creator, owner string) {
 	s.added[day]++
-	s.owner(creator).added[day]++
+	if creator != "" {
+		s.owner(creator).added[day]++
+	}
+	if owner != "" {
+		s.owner(owner).owned[day]++
+	}
 	s.noteDay(day)
 }
 
 func (s *trendSeries) finish(day, owner string) {
 	s.done[day]++
-	s.owner(owner).done[day]++
+	if owner != "" {
+		s.owner(owner).done[day]++
+	}
 	s.noteDay(day)
 }
 
@@ -355,6 +362,7 @@ func (s *trendSeries) absorb(m *store.TrendMonth) {
 		days := s.owner(uuid)
 		for _, day := range list {
 			days.added[day.Day] += day.Added
+			days.owned[day.Day] += day.Owned
 			days.done[day.Day] += day.Done
 		}
 	}
@@ -384,7 +392,7 @@ func (s *trendSeries) loadSources(repo, fromMonth, toMonth string, wanted map[st
 				s.finish(day, core.Normalize(row.Owner))
 			}
 			if day := trendLocalDay(row.Created); wanted[day] {
-				s.add(day, core.Normalize(row.Creator))
+				s.add(day, core.Normalize(row.Creator), core.Normalize(row.Owner))
 			}
 		}
 	}
@@ -411,11 +419,11 @@ func (s *trendSeries) month(ym, repo, today string) *store.TrendMonth {
 	for uuid, ownerDays := range s.byOwner {
 		var list []store.TrendOwnerDay
 		for _, day := range days {
-			added, done := ownerDays.added[day], ownerDays.done[day]
-			if added == 0 && done == 0 {
+			added, owned, done := ownerDays.added[day], ownerDays.owned[day], ownerDays.done[day]
+			if added == 0 && owned == 0 && done == 0 {
 				continue
 			}
-			list = append(list, store.TrendOwnerDay{Day: day, Added: added, Done: done})
+			list = append(list, store.TrendOwnerDay{Day: day, Added: added, Owned: owned, Done: done})
 		}
 		if len(list) > 0 {
 			perOwner[uuid] = list
@@ -448,7 +456,7 @@ func trendLoad(repo, firstMonth, lastMonth, today string) (*trendSeries, map[str
 	currentByOwner := map[string]int{}
 	for _, task := range rows {
 		if day := trendLocalDay(strOfAny(task["created"])); day != "" {
-			series.add(day, core.Normalize(strOfAny(task["creator"])))
+			series.add(day, core.Normalize(strOfAny(task["creator"])), ownerOf(task))
 		}
 		if owner := ownerOf(task); owner != "" {
 			currentByOwner[owner]++
@@ -524,13 +532,13 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 	if filter == nil && !byOwner {
 		return
 	}
-	tail := f.series.ownerTail(bucket.To, f.today)
+	tailDone, tailOwned := f.series.ownerTail(bucket.To, f.today)
 	if filter != nil {
 		// --mine / --owner：整桶只算选中的人（按人没有剩余，Open 由 owner + 是否结案倒推）
 		bucket.Added, bucket.Done, bucket.Open = 0, 0, 0
 		cells := make(map[string]*TrendOwnerCell, len(filter))
 		for _, uuid := range filter {
-			cell := f.ownerCell(uuid, days, tail)
+			cell := f.ownerCell(uuid, days, tailDone, tailOwned)
 			cells[uuid] = cell
 			bucket.Added += cell.Added
 			bucket.Done += cell.Done
@@ -543,7 +551,7 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 	}
 	cells := map[string]*TrendOwnerCell{}
 	for uuid := range f.series.byOwner {
-		cell := f.ownerCell(uuid, days, tail)
+		cell := f.ownerCell(uuid, days, tailDone, tailOwned)
 		if cell.Added != 0 || cell.Done != 0 || cell.Open != 0 {
 			cells[uuid] = cell
 		}
@@ -551,9 +559,18 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 	bucket.Owners = cells
 }
 
-func (f *trendFiller) ownerCell(uuid string, days []string, tail map[string]int) *TrendOwnerCell {
+// ownerCell 某人某桶的三数。未结算的是：
+//
+//	open_u(t) = 我现在名下未结 + 我 t 之后结掉的 − 我 t 之后新建的
+//
+// 第三项必须减：**新建按 owner**（不是 creator）。漏掉它就会把「窗口之后才建、早已结案」
+// 的任务当成 t 时就在办 —— 早期版本就是这么错的，越靠前的桶虚高得越离谱。
+func (f *trendFiller) ownerCell(uuid string, days []string, tailDone, tailOwned map[string]int) *TrendOwnerCell {
 	ownerDays := f.series.owner(uuid)
-	cell := &TrendOwnerCell{Name: f.roster[uuid], Open: f.ownerOpen[uuid] + tail[uuid]}
+	cell := &TrendOwnerCell{
+		Name: f.roster[uuid],
+		Open: f.ownerOpen[uuid] + tailDone[uuid] - tailOwned[uuid],
+	}
 	for _, day := range days {
 		cell.Added += ownerDays.added[day]
 		cell.Done += ownerDays.done[day]
@@ -561,17 +578,22 @@ func (f *trendFiller) ownerCell(uuid string, days []string, tail map[string]int)
 	return cell
 }
 
-// ownerTail 某天之后到今天，每个人完成了多少条（按人倒推未结用）。
-func (s *trendSeries) ownerTail(after, today string) map[string]int {
-	out := map[string]int{}
+// ownerTail 某天之后到今天，每个人「结掉了几条」与「新建了几条」（都按 owner），
+// 两个尾巴一起用于倒推某人的未结。
+func (s *trendSeries) ownerTail(after, today string) (done, owned map[string]int) {
+	done = map[string]int{}
+	owned = map[string]int{}
 	for day := trendAddDay(after, 1); day <= today; day = trendAddDay(day, 1) {
 		for uuid, ownerDays := range s.byOwner {
 			if n := ownerDays.done[day]; n != 0 {
-				out[uuid] += n
+				done[uuid] += n
+			}
+			if n := ownerDays.owned[day]; n != 0 {
+				owned[uuid] += n
 			}
 		}
 	}
-	return out
+	return done, owned
 }
 
 // trendCacheDir 本机缓存目录；拿不到主目录就不缓存（不影响结果）。

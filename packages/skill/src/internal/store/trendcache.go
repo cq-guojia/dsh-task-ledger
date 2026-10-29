@@ -30,8 +30,9 @@ type TrendDay struct {
 // TrendOwnerDay 一个人一个本地日期的两计数（按人没有「剩余」，见 2026-10-29 H1/H2）。
 type TrendOwnerDay struct {
 	Day   string `json:"day"`
-	Added int    `json:"added"`
-	Done  int    `json:"done"`
+	Added int    `json:"added"` // 按 creator（展示：我提的）
+	Owned int    `json:"owned"` // 按 owner 的新建（倒推未结用；algo 2 起才有）
+	Done  int    `json:"done"`  // 按 owner（我结掉的）
 }
 
 // TrendSource 一个源文件的指纹。Size = -1 表示「当时这个文件不存在」——

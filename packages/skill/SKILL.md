@@ -166,6 +166,8 @@ allowed-tools: Read,Edit,Bash,Grep
 
 口径：`added` 按 `created`、`done` 按 `finished`；`open` 由「当前在办 + 今天往前倒推」得出，天然含窗口之前遗留的基线。按人明细里 `added` 按 `creator`、`done` / `open` 按 `owner`（待认领不算任何人）。
 
+按人的 `open` 只算**你名下**的任务，倒推时同时减去「你在那天之后新建的」（按 owner 计，与展示用的 creator 无关）—— 否则窗口之后才建、早已结案的任务会被当成那天就在办，越靠前的桶虚高得越离谱。负责人转交过的任务按**今天**的负责人归账。
+
 **只出 JSON**（表格由界面渲染；给 `--json` 是用法错）：
 
 ```json

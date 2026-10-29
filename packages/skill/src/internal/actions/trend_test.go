@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -143,6 +145,33 @@ func TestTrendMineAndByOwner(t *testing.T) {
 	}
 }
 
+// 按人未结的回归：**桶之后才建、早已结案**的任务不能算进更早的日子。
+// 老公式只加「之后完成」不减「之后新建」，越靠前的桶虚高得越离谱（真机 257 就是这么来的）。
+func TestTrendOwnerOpenSubtractsTasksCreatedAfterBucket(t *testing.T) {
+	t.Setenv("TASK_LEDGER_HOME", t.TempDir())
+	repo, me := tempLedger(t)
+	now := time.Now()
+	// 两条都是「两天前建、今天结」：三天前它们根本还不存在
+	writeHistoryRow(t, repo, localStamp(now), localStamp(now.AddDate(0, 0, -2)), "今天结的", testUUID)
+	writeHistoryRow(t, repo, localStamp(now), localStamp(now.AddDate(0, 0, -2)), "今天结的乙", testUUID)
+
+	res, err := TrendStats(repo, me, TrendQuery{Granularity: "day", Last: "4d", ByOwner: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	today := trendToday()
+	byDay := trendBucketsByDay(res)
+	if cell := byDay[today].Owners[testUUID]; cell != nil && cell.Open != 0 {
+		t.Errorf("今天两条都结了 ⇒ 我的未结 0，实际 %d", cell.Open)
+	}
+	if cell := byDay[trendAddDay(today, -3)].Owners[testUUID]; cell != nil && cell.Open != 0 {
+		t.Errorf("三天前这两条还没建 ⇒ 我的未结 0，实际 %d", cell.Open)
+	}
+	if cell := byDay[trendAddDay(today, -2)].Owners[testUUID]; cell == nil || cell.Open != 2 {
+		t.Errorf("两天前两条已建未结 ⇒ 我的未结 2，实际 %+v", cell)
+	}
+}
+
 func TestTrendCacheBadJSONAndSourceChange(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("TASK_LEDGER_HOME", home)
@@ -214,6 +243,100 @@ func TestTrendWideWindowIsCappedByTimeNotFiles(t *testing.T) {
 	// day 粒度另有自己的上限：一天一桶没人看十年
 	if _, err := TrendStats(repo, me, TrendQuery{Granularity: "day", Last: "400d"}); err == nil {
 		t.Error("day 粒度超过 365 天应报错，并提示换更粗的粒度")
+	}
+}
+
+// 命中缓存与实时算必须**逐字节相同**（用户 2026-10-29 明确要求）。
+// 第一次跑：无缓存，全部实时算并写缓存；第二次跑：过去月走缓存，当月照旧实时。
+func TestTrendCachedResultEqualsLive(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("TASK_LEDGER_HOME", home)
+	now := time.Now()
+	repo, me := tempLedger(t,
+		map[string]any{"tid": "20261029-0900-在办的-aaaa", "status": "doing", "owner": testUUID, "creator": testUUID,
+			"title": "还在办", "created": ago(0)},
+	)
+	// 上月的一条：建与结都在过去月 ⇒ 该月会被固化进缓存
+	writeHistoryRow(t, repo, localStamp(now.AddDate(0, 0, -35)), localStamp(now.AddDate(0, 0, -40)), "上月结的", testUUID)
+
+	q := TrendQuery{Granularity: "week", Last: "8w", ByOwner: true}
+	live, err := TrendStats(repo, me, q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 确认缓存真的落盘（否则这个测试什么也没证明）
+	var files []string
+	_ = filepath.Walk(home, func(path string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() && strings.HasSuffix(path, ".json") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if len(files) == 0 {
+		t.Fatal("过去月应写出一份趋势缓存，实际一个文件都没有")
+	}
+
+	cached, err := TrendStats(repo, me, q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(live, cached) {
+		for i := range live.Buckets {
+			if i >= len(cached.Buckets) || !reflect.DeepEqual(live.Buckets[i], cached.Buckets[i]) {
+				t.Errorf("第 %d 桶不一致：实时 %+v / 缓存 %+v", i+1, live.Buckets[i], cached.Buckets[i])
+			}
+		}
+		t.Fatalf("命中缓存与实时算的结果必须完全一致（coverage %s..%s vs %s..%s）",
+			live.CoverFrom, live.CoverTo, cached.CoverFrom, cached.CoverTo)
+	}
+
+	// 反向证明缓存**确实被读**：把缓存里窗口内某天的完成数改大，结果必须跟着变。
+	// 用字符串替换而不是 JSON 反序列化再序列化 —— 后者会把 mtime 的 int64 过一遍 float64，
+	// 指纹对不上就整月重算，等于没测到缓存路径。
+	raw, err := os.ReadFile(files[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Days []struct {
+			Day   string `json:"day"`
+			Added int    `json:"added"`
+			Done  int    `json:"done"`
+			Open  int    `json:"open"`
+		} `json:"days"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if len(doc.Days) == 0 {
+		t.Fatal("缓存里没有 days，测试前提不成立")
+	}
+	// 挑窗口内的一天（缓存文件含整月，月初那几天可能落在 8 周窗口之外）
+	from, to := live.Buckets[0].From, live.Buckets[len(live.Buckets)-1].To
+	target := doc.Days[len(doc.Days)-1]
+	for _, day := range doc.Days {
+		if day.Day >= from && day.Day <= to {
+			target = day
+			break
+		}
+	}
+	tampered := strings.Replace(string(raw),
+		fmt.Sprintf(`{"day":%q,"added":%d,"done":%d,"open":%d}`, target.Day, target.Added, target.Done, target.Open),
+		fmt.Sprintf(`{"day":%q,"added":%d,"done":%d,"open":%d}`, target.Day, target.Added, target.Done+999, target.Open),
+		1,
+	)
+	if tampered == string(raw) {
+		t.Fatal("没改到缓存（字段格式与预期不符），这个反向证明无效")
+	}
+	if err := os.WriteFile(files[0], []byte(tampered), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	again, err := TrendStats(repo, me, q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reflect.DeepEqual(again, cached) {
+		t.Errorf("改了缓存里的 %s 却没影响结果 ⇒ 说明读的是源文件、缓存根本没被用上", target.Day)
 	}
 }
 
