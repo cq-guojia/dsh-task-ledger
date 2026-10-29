@@ -21,8 +21,8 @@ const (
 
 var (
 	cjkRe      = regexp.MustCompile(`[\p{Han}]`)
-	labelCatRe = regexp.MustCompile(`(?:Category|分类)\*\*\s*[：:]\s*([^｜|·]+)`)
-	labelTagRe = regexp.MustCompile(`(?:Tags|标签)\*\*\s*[：:]\s*(.+)$`)
+	labelCatRe = regexp.MustCompile(`Category\*\*\s*:\s*([^｜|·]+)`)
+	labelTagRe = regexp.MustCompile(`Tags\*\*\s*:\s*(.+)$`)
 	splitRe    = regexp.MustCompile(`[,，、]`)
 )
 

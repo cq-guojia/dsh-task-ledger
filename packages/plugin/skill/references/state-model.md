@@ -30,7 +30,7 @@ close             → 历史层 + 封卷 + 移出自己名下
   - 进门：`--since` / `--until` / `--created` / `--finished` 按本机墙钟给，脚本内部转 UTC 再比较 / 落盘；除这四个参数没有任何地方要调用方传时间。
   - **过程文档正文不动**：`show --json` 的 `worklog.text` 是原文，里面的时间是当时写进去的 UTC。
   - 存量老数据写的是写入者本地时间、无标记，无法与 UTC 区分（JSON 是 2026-10-22 前，执行记录行是 2026-10-27 前）。
-- **history 文件 12 列**：Finished / Created / Title / Category / Tags / Owner / Owner Name / Creator / Creator Name / Summary / Result / Worklog（2026-10-29 起写英文表头；老文件 11 列无 Result，读时按 `done`）；排序与 `--since` / `--until` 按**结案时间**。（`history` 命令的人话输出只展示其中几列：结案时间、负责人、标题。）
+- **history 文件 12 列**：Finished / Created / Title / Category / Tags / Owner / Owner Name / Creator / Creator Name / Summary / Result / Worklog（2026-10-29 起写英文表头；11 列旧文件不再兼容，将统一迁移）；排序与 `--since` / `--until` 按**结案时间**。（`history` 命令的人话输出只展示其中几列：结案时间、负责人、标题。）
 - **owner / creator 两列存的是 uuid**（与任务里一致，身份只认 uuid）；紧随其后的 `owner_name` / `creator_name` 两列**落盘**结案那一刻的显示名 —— 改名不回写旧行，看历史看到的就是当时那个名字。老行（升级前落的）没有名字时按名册兜底补一次展示值，**不回写文件**。
 
 ## 任务号

@@ -16,14 +16,14 @@
 │   ├── pool.json                  # 公共池：未认领任务（owner=null、status=open）
 │   ├── owners.json                # 索引：身份 uuid → 分片文件（name 只做显示）
 │   ├── owners/<hash12>.json       # 每人一份分片：自己名下的任务
-│   ├── history/<年月>.md          # 已结案索引，按结案时间分月（11 列）
+│   ├── history/<年月>.md          # 已结案索引，按结案时间分月（12 列）
 │   └── worklog/<年月>/            # 过程正文，一任务一篇
 │       └── <日>-<时分>-<说明>-<随机码>.md
 ```
 
 以上五类文件**只由脚本写**（L1 落盘、业务层定写序）。
 
-⚠️ **本仓（`dsh-task-ledger` 自己）已迁到分片布局**：`pool.json` / `owners.json` / `owners/<hash>.json` 已是新分片格式，在办任务在各人分片（未认领的在 `pool.json`）；`history/`（11 列）与 `worklog/`（六节）同步为新布局。老工作区（仍用扁平 `ledger/progress.json`）由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。**脚本不做任何旧格式兼容**：历史只认十一 / 十二列（十二列是本仓当前口径，十一列按 `done` 读），平铺历史文件不再读 —— 存量九列的历史文件按 `docs/history-creator-upgrade.md` 那份手册一次性升级。
+⚠️ **本仓（`dsh-task-ledger` 自己）已迁到分片布局**：`pool.json` / `owners.json` / `owners/<hash>.json` 已是新分片格式，在办任务在各人分片（未认领的在 `pool.json`）；`history/`（11 列）与 `worklog/`（六节）同步为新布局。老工作区（仍用扁平 `ledger/progress.json`）由 agent 逐个手工迁；脚本读到旧布局会在 stderr 提示，旧任务在迁完之前对它等于不存在。**脚本不做任何旧格式兼容**：历史只认 12 列（十二列是本仓当前口径；11 列旧文件不再兼容，将统一迁移），平铺历史文件不再读 —— 存量九列的历史文件按 `docs/history-creator-upgrade.md` 那份手册一次性升级。
 
 ## 二、任务表：`pool.json` 与 `owners/*.json`
 
@@ -75,11 +75,11 @@
 - 这是**只追加**的表：没有删除、没有原地改行，也不做整表重排 —— 否则手写格式与 git 行级 diff 全坏。
 - **写盘十二列，读兼容十一列**（2026-10-29 加 `Result` 列）：十一列的老行按 `done` 读。列数既不是 11 也不是 12 的行跳过并警告。存量九列的文件按 `docs/history-creator-upgrade.md` 一次性升级（在 owner 后插 `owner_name`、creator 后插 `creator_name`）。
 - **`Result` 列**取值 `done` / `cancelled`。`done` 由 `close` 写；`cancelled` 的写入链路 📝 待落码（`close --cancel`）。
-- 表头与一级标题自 2026-10-29 起写英文（`# History (closed)`）；老文件的中文表头仍能读，不批量改写。
+- 表头与一级标题自 2026-10-29 起写英文（`# History (closed)`）；旧中文表头不再兼容，将统一迁移。
 
 ## 五、过程文档：`worklog/<年月>/*.md`
 
-固定六节：**Background / To Do / Next / Process / Conclusion / Execution Log**（2026-10-29 起写英文，老文档的中文节名仍能读，`core.canonicalSection` 归一）。模板真源 = skill 的 `assets/worklog.md`。
+固定六节：**Background / To Do / Next / Process / Conclusion / Execution Log**（2026-10-29 起写英文，旧中文节名不再兼容，将统一迁移）。模板真源 = skill 的 `assets/worklog.md`。
 
 头部是**四行无序列表**，顺序固定（`core.HeadKeyOrder = ["meta","status","created","frozen"]`，插入位置由 `core.insertHeadLine` 按 `rankOf` 算），值一律 `字段: 值 · 值 · 值`：
 
@@ -92,12 +92,12 @@
 
 - **Tags** 行只在给了 `--tags` 时写（**分类不进过程文档**，只进分片字段与历史行；标签可涵盖分类）；**Sealed** 行只在结案时写；状态行与创建行必有。
 
-- 老文档的头部是中文（`- **标签**：…` / `- **状态**：…` / `- **创建**：…` / `- **封卷**：…`），读的时候与英文等价，**不批量改写**；老文档里若有 `> **状态**：…` 引用块格式也认。
+- 旧中文头部（`- **标签**：…` 等）与 `> **状态**：…` 引用块格式都不再兼容，将统一迁移。
 - 正文（前五节）由人 / agent 写；脚本只有「建篇」（`WorklogStore.Create` → `core.RenderWorklog`）+ **四处锚点编辑**：往「执行记录」节追加一行（`core.AppendExecLog`）、封卷时加「封卷」行（`core.StampFrozen`）、改写「标签」行（`core.RewriteLabelLine`；`new` 建篇时写、`set --tags` 随时改、`close` 写终值）、改写「状态」行（`core.RewriteStatusLine`，与追加记录同一次写盘）。整篇写回只走 `WorklogStore.Write`，且传入的必须是锚点编辑后的新全文 —— 没有「整篇替换既有正文」这种能力，也不要给它加。
-- **状态行**（2026-10-27 加）取值只有 `open` / `doing` / `done` / `cancelled`（英文全链路统一，中文只在界面翻译层）；老文档里的 `closed` 读时按 `done`（`core.canonicalStatus`）。
+- **状态行**（2026-10-27 加）取值只有 `open` / `doing` / `done` / `cancelled`（英文全链路统一，中文只在界面翻译层）。
   - **它是镜像**：状态与归属的权威在公共池 / 分片，这行只是让 `show` 读文档就能回答，不必翻索引；
   - 由脚本在每次状态变更时顺手替换（`new` / `claim` / 释放 / 交接 / `log` 刷时间 / `close`），**人不手改**；
-  - 老文档（`> **状态**：… ` 引用块格式）也认，读得到就按它回答；完全没有这行的老文档也是合法的：读取方回退查分片，`show --json` 里 `legacy: true`，不回填。
+  - 完全没有状态行的旧文档已不再兼容：`show --json` 不再标 `legacy`，旧文件需统一迁移。
 - 末节「执行记录」**只由脚本追加**：一行固定 `- 时间 · 类型 · @谁 · uuid · 说明`，类型只有六种 `new` / `claim` / `set` / `release` / `log` / `close`（**交接记的是 `set`**，没有 `handoff` 这个类型）；只增不改。
 - **身份一律落「名字 + uuid」两个值**（`core.Identity.Stamp()` = `名字 · uuid`）：头部「创建」行与「状态」行、结案的封卷行、每条执行记录都是这个串，**不靠历史表回链**。
   文档是最终产物 —— 创建人和封卷人可能不是同一个人，也可能中途改过名，所以两个都留。读回来时 `head_creator` 取名字、`head_creator_uuid` 取 uuid，老文档只有名字时后者返回空。
@@ -147,6 +147,6 @@
 - 待办 = `pool.json` + 索引登记的全部分片里 `open` / `doing`；同一任务号出现在两个文件是搬移中断的中间态，读侧「后读到为准」只显示一次（`list` 只显示一行；`show` 文档优先，不点名同号多文件），同号多文件也不进 `validate`（写侧已有防护）。
 - **「后读到」的顺序是定死的**：先池、再按索引键排序后的各分片 ⇒ 同一号一定由分片那份胜出。顺序不确定会让同一份数据两次查给出不同结果。
 - 写入前的防撞：`claim` / `set --owner` 会在落盘前挡一道（别人分片里已有同号 / 目标分片已有不同内容 ⇒ 拒绝），但跨机同时抢仍有窗口。
-- 历史 = `history/<年月>.md` 11 列（owner = 负责人筛选面；creator = 发起人，`owner` 可被 claim 改走、「谁建的」不变；两列后各跟一列落盘的显示名快照）。
+- 历史 = `history/<年月>.md` 12 列（owner = 负责人筛选面；creator = 发起人，`owner` 可被 claim 改走、「谁建的」不变；两列后各跟一列落盘的显示名快照）。
 - 报表只有一个来源：全部由宿主从 `history --json` / `list --json` / `stats --json`（`actions.QueryHistory` / `actions.ListTasks` / `actions.StatsTasks`）的返回聚合（时间线、按人工作日志、状态分布、分类 / 标签计数）。脚本**只按在办层**开一个统计入口 `stats`（按状态 + 年龄阈值计数；周期趋势类的聚合仍由宿主自己做）—— 分类 / 标签要么在在办任务对象里、要么在历史行的分类 / 标签列里，都不需要逐篇扫过程文档。
 - 宿主侧消费（见 `external/dsh-workspace-registry.md`）：台账判定经内嵌脚本 `root --json`（判据 = 目录直接含 `ledger/`），待办 / 历史一律经内嵌脚本（已分片感知）读取，不再直接读台账文件；老工作区未迁完前，脚本读到旧布局会在 stderr 提示，旧任务在迁完前对它等于不存在。

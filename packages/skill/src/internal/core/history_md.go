@@ -112,10 +112,7 @@ func IsSepRow(cells []string) bool {
 }
 
 func looksLikeHeader(cells []string) bool {
-	if len(cells) == 0 {
-		return false
-	}
-	return cells[0] == "Finished" || cells[0] == "时间" || cells[0] == "结案时间"
+	return len(cells) > 0 && cells[0] == "Finished"
 }
 
 // HistoryLine 十二列的一行。worklog 收**相对 ledger/** 的路径。
@@ -152,8 +149,8 @@ func ParseHistory(text string) ([]Row, []string) {
 		if len(cells) == 0 || IsSepRow(cells) || looksLikeHeader(cells) {
 			continue
 		}
-		if len(cells) != 11 && len(cells) != 12 {
-			warnings = append(warnings, "第 "+itoa(lineno)+" 行不是 11/12 列（历史表只认这两种），已跳过")
+		if len(cells) != 12 {
+			warnings = append(warnings, "第 "+itoa(lineno)+" 行不是 12 列（历史表当前只认十二列），已跳过")
 			continue
 		}
 		finished := cells[0]
@@ -167,14 +164,8 @@ func ParseHistory(text string) ([]Row, []string) {
 				tags = append(tags, t)
 			}
 		}
-		result, worklogCell := ResultDone, cells[10]
-		if len(cells) == 12 {
-			if v := strings.TrimSpace(cells[10]); v != "" {
-				result = v
-			}
-			worklogCell = cells[11]
-		}
-		worklog := strings.TrimSpace(worklogCell)
+		result := strings.TrimSpace(cells[10])
+		worklog := strings.TrimSpace(cells[11])
 		if m := linkRe.FindStringSubmatch(worklog); m != nil {
 			worklog = m[1]
 		}

@@ -7,13 +7,9 @@ import (
 
 // 过程文档的文本操作：给一段文字，返回新文字。不读文件、不写文件。
 
-// 文档格式（2026-10-29 起写英文；老中文标记只读不写，见各 legacy 常量）。
+// 文档格式（2026-10-29 起一律英文；旧格式不兼容，统一迁移）。
 const (
-	// ExecHead 「执行记录」节的标题。
-	ExecHead = "## Execution Log"
-	// execLegacyHead 老文档的「执行记录」节名。
-	execLegacyHead = "## 执行记录"
-	// FrozenMark 封卷标记。
+	ExecHead   = "## Execution Log"
 	FrozenMark = "Sealed"
 )
 
@@ -24,58 +20,35 @@ const ExecHint = "<!-- Maintained by the script: appended by new / claim / set /
 // HeadKeyOrder 头部四行的规范顺序：标签 → 状态 → 创建 → 封卷。
 var HeadKeyOrder = []string{"meta", "status", "created", "frozen"}
 
-// headBullet 头部行前缀：新格式是无序列表 `- `，老文档是引用块 `> ` —— 读的时候两种都认。
-const headBullet = `^(?:\s*>\s?|\s*[-*]\s+)`
+// headBullet 头部行前缀：无序列表 `- `。
+const headBullet = `^\s*[-*]\s+`
 
 var (
-	frozenRe    = regexp.MustCompile(`(?m)` + headBullet + `(?:\*\*(?:` + FrozenMark + `|封卷)\*\*|✅ 完成封卷)`)
-	frozenAtRe  = regexp.MustCompile(`(?m)` + headBullet + `(?:\*\*(?:` + FrozenMark + `|封卷)\*\*|✅ 完成封卷)[^：:]*[：:]\s*(\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?)`)
-	createdRe   = regexp.MustCompile(headBullet + `\*\*(?:Created|创建)\*\*`)
-	createdAtRe = regexp.MustCompile(headBullet + `\*\*(?:Created|创建)\*\*\s*[：:]\s*(\d{4}-\d{2}-\d{2}(?:[ T]+\d{1,2}:\d{1,2}(?::\d{1,2})?)?)`)
-	creatorRe   = regexp.MustCompile(headBullet + `\*\*(?:Created|创建)\*\*\s*[：:].*?@(.+?)\s*[）)]?\s*$`)
+	frozenRe    = regexp.MustCompile(`(?m)` + headBullet + `\*\*` + FrozenMark + `\*\*`)
+	frozenAtRe  = regexp.MustCompile(`(?m)` + headBullet + `\*\*` + FrozenMark + `\*\*\s*:\s*(\d{4}-\d{2}-\d{2}(?:[ T]+\d{1,2}:\d{1,2}(?::\d{1,2})?)?)`)
+	createdRe   = regexp.MustCompile(headBullet + `\*\*Created\*\*`)
+	createdAtRe = regexp.MustCompile(headBullet + `\*\*Created\*\*\s*:\s*(\d{4}-\d{2}-\d{2}(?:[ T]+\d{1,2}:\d{1,2}(?::\d{1,2})?)?)`)
+	creatorRe   = regexp.MustCompile(headBullet + `\*\*Created\*\*\s*:.*?@(.+?)\s*[）)]?\s*$`)
 
-	statusLineRe = regexp.MustCompile(headBullet + `\*\*(?:Status|状态)\*\*`)
-	statusRe     = regexp.MustCompile(headBullet + `\*\*(?:Status|状态)\*\*\s*[：:]\s*([A-Za-z_]+)`)
+	statusLineRe = regexp.MustCompile(headBullet + `\*\*Status\*\*`)
+	statusRe     = regexp.MustCompile(headBullet + `\*\*Status\*\*\s*:\s*([A-Za-z_]+)`)
 
 	statusUUIDRe = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
 	statusNameRe = regexp.MustCompile(`@([^（(·]+)`)
 	statusWhenRe = regexp.MustCompile(`(\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?)`)
 
-	titleRe    = regexp.MustCompile(`^#\s*(.+?)\s*[：:]\s*(.*)$`)
-	metaLineRe = regexp.MustCompile(headBullet + `\*\*(?:Tags|分类|标签)\*\*`)
+	titleRe    = regexp.MustCompile(`^#\s*(.+?)\s*:\s*(.*)$`)
+	metaLineRe = regexp.MustCompile(headBullet + `\*\*Tags\*\*`)
 )
 
-// StatusValues 状态取值（与 Statuses + 结案后的 done / cancelled 同口径）。
+// StatusValues 状态取值。
 var StatusValues = []string{"open", "doing", "done", "cancelled"}
-
-// legacyStatus 老文档里的状态值 → 现值（只读兼容，例如 closed 一律按 done）。
-var legacyStatus = map[string]string{"closed": "done"}
-
-func canonicalStatus(value string) string {
-	if v, ok := legacyStatus[value]; ok {
-		return v
-	}
-	return value
-}
 
 // WorklogSections 过程文档应有的六节，顺序即模板顺序（真源是 assets/worklog.md）。
 var WorklogSections = []string{"Background", "To Do", "Next", "Process", "Conclusion", "Execution Log"}
 
 // RequiredSections 判「格式坏」只要求前五节。
 var RequiredSections = WorklogSections[:5]
-
-// legacySection 老中文节名 → 新英文节名（只读兼容；写盘一律英文）。
-var legacySection = map[string]string{
-	"背景": "Background", "待办": "To Do", "下一步": "Next",
-	"过程": "Process", "结论": "Conclusion", "执行记录": "Execution Log",
-}
-
-func canonicalSection(name string) string {
-	if v, ok := legacySection[name]; ok {
-		return v
-	}
-	return name
-}
 
 // stripBOM 去掉 UTF-8 BOM。
 func stripBOM(s string) string { return strings.TrimPrefix(s, "\ufeff") }
@@ -95,12 +68,12 @@ func splitLines(text string) []string {
 	return lines
 }
 
-// SectionHeads 文档里的二级标题（`## Background` → `Background`），按出现顺序；老中文节名归一到英文。
+// SectionHeads 文档里的二级标题（`## Background` → `Background`），按出现顺序。
 func SectionHeads(text string) []string {
 	var out []string
 	for _, line := range splitLines(text) {
 		if strings.HasPrefix(line, "## ") {
-			out = append(out, canonicalSection(strings.TrimSpace(line[3:])))
+			out = append(out, strings.TrimSpace(line[3:]))
 		}
 	}
 	return out
@@ -159,7 +132,7 @@ func FormatProblems(text string) []string {
 			continue
 		}
 		m := statusRe.FindStringSubmatch(line)
-		if m == nil || !contains(StatusValues, canonicalStatus(m[1])) {
+		if m == nil || !contains(StatusValues, m[1]) {
 			problems = append(problems, "头部「状态」行的值不合法（应为 "+strings.Join(StatusValues, " / ")+"）")
 		}
 		break
@@ -226,10 +199,8 @@ func LacksExecSection(text string) bool {
 }
 
 func sectionsBody(text string) string {
-	for _, head := range []string{ExecHead, execLegacyHead} {
-		if idx := strings.Index(text, "\n"+head); idx >= 0 {
-			return text[:idx]
-		}
+	if idx := strings.Index(text, "\n"+ExecHead); idx >= 0 {
+		return text[:idx]
 	}
 	return text
 }
@@ -391,9 +362,7 @@ func ReadStatus(text string) *StatusLine {
 		if m == nil {
 			continue
 		}
-		if value := canonicalStatus(m[1]); contains(StatusValues, value) {
-			m[1] = value
-		} else {
+		if !contains(StatusValues, m[1]) {
 			continue
 		}
 		var name, uuid, when string
@@ -435,12 +404,10 @@ func ExecLine(when, who, kind, note string) string {
 	return head + " · " + note
 }
 
-// AppendExecLog 把一条记录追加到「执行记录」节末尾；老文档没有这一节就先补一节（新节名英文）。
+// AppendExecLog 把一条记录追加到「执行记录」节末尾；没有这一节就先补一节。
 func AppendExecLog(text, line string) string {
-	for _, head := range []string{ExecHead, execLegacyHead} {
-		if strings.Contains(text, "\n"+head) || strings.HasPrefix(text, head) {
-			return strings.TrimRight(text, "\n") + "\n" + line + "\n"
-		}
+	if strings.Contains(text, "\n"+ExecHead) || strings.HasPrefix(text, ExecHead) {
+		return strings.TrimRight(text, "\n") + "\n" + line + "\n"
 	}
 	block := "\n" + ExecHead + "\n\n" + ExecHint + "\n" + line + "\n"
 	return strings.TrimRight(text, "\n") + "\n" + block
