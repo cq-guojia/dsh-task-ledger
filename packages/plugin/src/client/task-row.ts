@@ -1,6 +1,6 @@
 /**
  * 任务行（宿主**无表格件** ⇒ 自绘）：整行一张卡，样式照抄 dispatch-table 任务配置卡：
- * 左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出「继续 / 结束 / 释放」；
+ * 左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出「继续 / 完成 / 释放 / 取消」；
  * 最右常驻「查看」放大镜钮。
  *
  * 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）。
@@ -134,8 +134,8 @@ export function TaskRowView(props: {
 	});
 	const tipBtn = (
 		icon: ReactNode,
-		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease",
-		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease",
+		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease" | "actionCancel",
+		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease" | "tipCancel",
 	): ReactNode =>
 		h(Tip, {
 			label: t(tipKey),
@@ -159,6 +159,9 @@ export function TaskRowView(props: {
 	);
 	// 释放：官方 rc.2 无断链图标（已全量核实）⇒ 纯文字，不用叉
 	const releaseButton = tipBtn(null, "actionRelease", "tipRelease");
+	// 取消（用户 2026-10-29）：排在释放之后，纯文字与释放同规格；
+	// 出不出来由 resolveActions.cancel 判（池任务 + 我名下的才有，别人名下的不给）
+	const cancelButton = tipBtn(null, "actionCancel", "tipCancel");
 
 	// 状态标签（五色实心块，用户 2026-10-18 定稿）：
 	// 三枚异常标签带 skill 下发的阈值解释（没配就不解释，不编）。
@@ -245,13 +248,13 @@ export function TaskRowView(props: {
 	const whoNode =
 		solo || row.task.status === "open" || ownerUuid === ""
 			? null
-			: h(
+			: 				h(
 					Button,
 					{
 						variant: "link",
 						size: "sm",
 						maxWidth: 180,
-						title: t("filterByOwner", { name: ownerName }),
+						// 不加悬停提示（用户 2026-10-29）：点人名左右筛选是给内行动作，不必再解释一遍
 						onClick: () => focusOwner(ownerUuid, ownerName),
 					},
 					`@${ownerName}`,
@@ -289,18 +292,19 @@ export function TaskRowView(props: {
 					),
 				),
 			),
-			// 工作区 = 核心可点 Chip（business 档：蓝底反白字、小标签），用户 2026-10-28 定回小号
+			// 工作区 = 核心可点 Chip（business 档：蓝底反白字、小标签），用户 2026-10-28 定回小号。
+			// 不加悬停提示（用户 2026-10-29）：标签本身就是工作区名，点了按它筛选是常识。
 			h(Tag, {
 				text: row.task.workspace.title,
 				tone: "person",
 				maxWidth: 200,
-				tip: t("filterByWorkspace", { name: row.task.workspace.title }),
 				onClick: () => setQuery({ workspace: row.task.workspace.id }),
 			}),
 			h("span", { className: "dtl-taskrow__meta" }, metaText),
-			// 动作排：继续 / 结束 / 释放 + 复制 / 查看 —— **同一排、同一间距**
+			// 动作排：认领 / 继续 / 完成 / 释放 / 取消 + 复制 / 查看 —— **同一排、同一间距**
 			// （用户 2026-10-18：查看钮原来是独立的一格，离前面的按钮远一档；
-			//   2026-10-28：复制 ID 挪进来，排在放大镜左边）
+			//   2026-10-28：复制 ID 挪进来，排在放大镜左边；
+			//   2026-10-29：取消排在释放之后）
 			// 谁出来由 resolveActions 说了算（同一套权限，不再各判各的）
 			h(
 				"span",
@@ -309,6 +313,7 @@ export function TaskRowView(props: {
 				actions.resume ? resumeButton : null,
 				actions.finish ? finishButton : null,
 				actions.release ? releaseButton : null,
+				actions.cancel ? cancelButton : null,
 				copyButton,
 				actions.view ? viewButton : null,
 			),

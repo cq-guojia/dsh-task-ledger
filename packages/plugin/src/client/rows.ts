@@ -66,6 +66,11 @@ export interface TaskActions {
 	readonly resume: boolean;
 	readonly finish: boolean;
 	readonly release: boolean;
+	/**
+	 * 取消：与 skill 的 `close --cancel` 可用范围一致（用户 2026-10-29）——
+	 * 公共池（待认领）任务可直接取消，我名下的也能取消；**别人名下的不行**。
+	 */
+	readonly cancel: boolean;
 }
 
 export function resolveActions(task: BoardTask): TaskActions {
@@ -76,6 +81,7 @@ export function resolveActions(task: BoardTask): TaskActions {
 		resume: mine,
 		finish: mine,
 		release: mine,
+		cancel: mine || task.status === "open",
 	};
 }
 

@@ -53,9 +53,10 @@ const UI_BASE_CSS = `
   padding:var(--dtl-space-4);}
 .dtl-trend__legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--dtl-space-3);
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
-.dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:var(--dtl-radius-xs);
+/* 图例色块：直角方块，与柱子同一造型（用户 2026-10-29：不要圆角） */
+.dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
-.dtl-trend__dot--done{background:var(--dtl-business);}
+.dtl-trend__dot--done{background:var(--dtl-chart-done);}
 .dtl-trend__dot--open{background:var(--dtl-chart-open);}
 .dtl-trend__dot--added{background:var(--dtl-chart-added);}
 /* 「只看我的」：贴图例右侧的小复选框（原生控件 + accent-color，不自绘皮肤） */
@@ -77,11 +78,12 @@ const UI_BASE_CSS = `
 .dtl-trend__col{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;
   justify-content:flex-end;padding-bottom:14px;}
 .dtl-trend__bars{display:flex;align-items:flex-end;justify-content:center;gap:1px;flex:1 1 auto;min-height:0;}
-/* 柱宽 5px、无圆角（用户 2026-10-17：「太粗、不要圆弧」）；非零柱给 2px 下限 */
-.dtl-trend__bar{position:relative;width:5px;flex:none;min-height:2px;
+/* 柱宽 7.5px、无圆角（2026-10-17「不要圆弧」；2026-10-29 用户要求再加粗到 1.5 倍，5 → 7.5）；
+   非零柱给 2px 下限 */
+.dtl-trend__bar{position:relative;width:7.5px;flex:none;min-height:2px;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
-/* 完成柱要盖在隔壁更高的柱子上：柱顶数值会伸出 5px 柱宽，否则被邻居压掉 */
-.dtl-trend__bar--done{background:var(--dtl-business);z-index:1;}
+/* 结案柱要盖在隔壁更高的柱子上：柱顶数值会伸出柱宽，否则被邻居压掉 */
+.dtl-trend__bar--done{background:var(--dtl-chart-done);z-index:1;}
 .dtl-trend__bar--open{background:var(--dtl-chart-open);}
 .dtl-trend__bar--added{background:var(--dtl-chart-added);}
 /* hover 整列三根一起提亮（用户 2026-10-17：不是只亮蓝的一根） */

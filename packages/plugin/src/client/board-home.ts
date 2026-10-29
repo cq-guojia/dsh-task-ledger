@@ -279,7 +279,8 @@ export function BoardHome(props: {
 			? t(key, { n: Math.round((part / whole) * 100) })
 			: "";
 
-	/** 统计台卡：数字 = 结案总数（含取消）；有取消时小字拆「结案 X · 取消 Y」。
+	/** 统计台卡：数字 = **结案**（完成 + 取消）；有取消时小字拆「完成 X · 取消 Y」
+	 *  （术语 2026-10-29 用户拍板：结案是上位词，完成只指正常结案）。
 	 *  不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
 	const weekCard = (
 		label: LocaleKey,

@@ -53261,7 +53261,8 @@ window.__ModuleLoader__.load({
 				claim: !mine && task.status === "open",
 				resume: mine,
 				finish: mine,
-				release: mine
+				release: mine,
+				cancel: mine || task.status === "open"
 			};
 		}
 		/** 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。 */
@@ -53608,10 +53609,12 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
-  /* ── 趋势图三色（2026-10-29 接回图表时恢复）─────────────────────
-     完成 = 蓝（--dtl-business）、未结 = 琥珀、新增 = 灰（fg-dim，明暗自带） */
+  /* ── 趋势图三色（2026-10-29 用户定稿）───────────────────────────
+     结案 = 绿、新增 = 蓝、未结 = 琥珀；三色直接取核心 alias
+     （state-success-primary / state-business-primary / state-warn-primary），不手写色值 */
+  --dtl-chart-done:var(--dtl-success);
   --dtl-chart-open:var(--dtl-warning);
-  --dtl-chart-added:var(--dtl-fg-dim);
+  --dtl-chart-added:var(--dtl-business);
 
   /* ── 交互底 ──────────────────────────────────────────────────── */
   /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */
@@ -53711,9 +53714,10 @@ body[data-ds-dark-theme]{
   padding:var(--dtl-space-4);}
 .dtl-trend__legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--dtl-space-3);
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
-.dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:var(--dtl-radius-xs);
+/* 图例色块：直角方块，与柱子同一造型（用户 2026-10-29：不要圆角） */
+.dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
-.dtl-trend__dot--done{background:var(--dtl-business);}
+.dtl-trend__dot--done{background:var(--dtl-chart-done);}
 .dtl-trend__dot--open{background:var(--dtl-chart-open);}
 .dtl-trend__dot--added{background:var(--dtl-chart-added);}
 /* 「只看我的」：贴图例右侧的小复选框（原生控件 + accent-color，不自绘皮肤） */
@@ -53735,11 +53739,12 @@ body[data-ds-dark-theme]{
 .dtl-trend__col{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;
   justify-content:flex-end;padding-bottom:14px;}
 .dtl-trend__bars{display:flex;align-items:flex-end;justify-content:center;gap:1px;flex:1 1 auto;min-height:0;}
-/* 柱宽 5px、无圆角（用户 2026-10-17：「太粗、不要圆弧」）；非零柱给 2px 下限 */
-.dtl-trend__bar{position:relative;width:5px;flex:none;min-height:2px;
+/* 柱宽 7.5px、无圆角（2026-10-17「不要圆弧」；2026-10-29 用户要求再加粗到 1.5 倍，5 → 7.5）；
+   非零柱给 2px 下限 */
+.dtl-trend__bar{position:relative;width:7.5px;flex:none;min-height:2px;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
-/* 完成柱要盖在隔壁更高的柱子上：柱顶数值会伸出 5px 柱宽，否则被邻居压掉 */
-.dtl-trend__bar--done{background:var(--dtl-business);z-index:1;}
+/* 结案柱要盖在隔壁更高的柱子上：柱顶数值会伸出柱宽，否则被邻居压掉 */
+.dtl-trend__bar--done{background:var(--dtl-chart-done);z-index:1;}
 .dtl-trend__bar--open{background:var(--dtl-chart-open);}
 .dtl-trend__bar--added{background:var(--dtl-chart-added);}
 /* hover 整列三根一起提亮（用户 2026-10-17：不是只亮蓝的一根） */
@@ -54032,7 +54037,7 @@ body[data-ds-dark-theme]{
 		//#region src/client/task-row.ts
 		/**
 		* 任务行（宿主**无表格件** ⇒ 自绘）：整行一张卡，样式照抄 dispatch-table 任务配置卡：
-		* 左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出「继续 / 结束 / 释放」；
+		* 左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出「继续 / 完成 / 释放 / 取消」；
 		* 最右常驻「查看」放大镜钮。
 		*
 		* 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）。
@@ -54139,6 +54144,7 @@ body[data-ds-dark-theme]{
 			const resumeButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), "actionResume", "tipResume");
 			const finishButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), "actionFinish", "tipFinish");
 			const releaseButton = tipBtn(null, "actionRelease", "tipRelease");
+			const cancelButton = tipBtn(null, "actionCancel", "tipCancel");
 			const tagOf = (which, tip) => {
 				const text = statusLabel(which, t);
 				return (0, react$1.createElement)(Tag, {
@@ -54181,7 +54187,6 @@ body[data-ds-dark-theme]{
 				variant: "link",
 				size: "sm",
 				maxWidth: 180,
-				title: t("filterByOwner", { name: ownerName }),
 				onClick: () => focusOwner(ownerUuid, ownerName)
 			}, `@${ownerName}`);
 			const handleRowClick = (event) => {
@@ -54204,25 +54209,27 @@ body[data-ds-dark-theme]{
 				text: row.task.workspace.title,
 				tone: "person",
 				maxWidth: 200,
-				tip: t("filterByWorkspace", { name: row.task.workspace.title }),
 				onClick: () => setQuery({ workspace: row.task.workspace.id })
-			}), (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, copyButton, actions.view ? viewButton : null)));
+			}), (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, copyButton, actions.view ? viewButton : null)));
 		}
 		//#endregion
 		//#region src/client/trend-chart.ts
 		/**
-		* 首页趋势图（右上卡）：近 8 周 × 三根细柱 = 完成 / 未结 / 新增。
+		* 首页趋势图（右上卡）：近 8 周 × 三根细柱 = 结案 / 未结 / 新增。
+		*
+		* 术语（2026-10-29 用户拍板）：**结案 = 完成 + 取消**（上位词），图上的「结案」柱就是两者之和；
+		* 悬停时括号拆开「完成 X · 取消 Y」。skill 侧的桶仍是 `done` / `cancelled` 两个独立数，这里只做相加。
 		*
 		* 数据口径**全由 skill 算好**（`stats --trend week --last 8w --by-owner`，host 已跨工作区求和）：
-		* 完成按结案时间、新增按**创建人**、未结是「该周结束时仍未结案」（待认领 + 进行中合成一个数）。
+		* 结案按结案时间、新增按**创建人**、未结是「该周结束时仍未结案」（待认领 + 进行中合成一个数）。
 		*
 		* 「只看我的」（2026-10-29 用户定稿）：勾上 = 我的，不勾 = 所有；两套数随快照一起回来 ⇒ 勾选零请求。
-		* 按人口径 = skill 的 per-owner：`added` 按 creator（我提的）、`done` / `open` 按 owner（我负责的）。
+		* 按人口径 = skill 的 per-owner：`added` 按 creator（我提的）、`done` / `cancelled` / `open` 按 owner（我负责的）。
 		*
 		* 画法（2026-10-17 参考图口径）：
-		*  - 柱宽 5px、组内 1px、**无圆角**；柱高百分比（祖先链有确定高度，见 ui.ts 的注释）；
+		*  - 柱宽 7.5px、组内 1px、**无圆角**；柱高百分比（祖先链有确定高度，见 ui.ts 的注释）；
 		*  - y 轴三档刻度（0 / 半峰 / 峰）+ 淡网格线 + 底部基线；
-		*  - **只标「完成」数值**（三系列 × 8 周会糊成一片），未结 / 新增走 hover；
+		*  - **只标「结案」数值**（三系列 × 8 周会糊成一片），未结 / 新增走 hover；
 		*  - hover 整列三根一起提亮 + 自绘浮卡（原生 title 太慢且长相不一）——纯 CSS，无额外状态。
 		*/
 		const BAR_KINDS = [
@@ -54230,12 +54237,17 @@ body[data-ds-dark-theme]{
 			"added",
 			"open"
 		];
-		const ZERO = {
-			added: 0,
-			done: 0,
-			cancelled: 0,
-			open: 0
-		};
+		/**
+		* 四数归一：老版本 host 返回的桶可能没有 `cancelled`（甚至没有 `owners`），
+		* 缺字段按 0 —— 这是「那一类记录本来就没有」，不是拿 0 充真值。
+		* 不做这层兜底，`done + undefined` 会变成 NaN，把峰、刻度、柱高整张图一起毁掉。
+		*/
+		const norm = (cell) => ({
+			added: cell?.added ?? 0,
+			done: cell?.done ?? 0,
+			cancelled: cell?.cancelled ?? 0,
+			open: cell?.open ?? 0
+		});
 		/** 系列名：只看我的时候「未结」就是「进行中」（我的任务必然有人接）。 */
 		const labelKey = (kind, mine) => kind === "done" ? "chartDone" : kind === "added" ? "chartAdded" : mine ? "chartDoing" : "chartOpen";
 		function TrendChart(props) {
@@ -54245,19 +54257,21 @@ body[data-ds-dark-theme]{
 			const mine = mineOnly && me !== null;
 			if (buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartEmpty")));
 			/** 当前口径下这一桶的三个数：全量，或「我的」那条（没数据就是 0）。 */
-			const counts = (bucket) => mine ? bucket.owners[me] ?? ZERO : bucket;
+			const counts = (bucket) => mine ? norm(bucket.owners?.[me]) : norm(bucket);
 			/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
 			*  「只看我的」时只有进行中（我的任务必然有人接），不显示拆分行。 */
 			const breakdown = (bucket) => {
-				const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
+				const doing = Object.values(bucket.owners ?? {}).reduce((sum, cell) => sum + cell.open, 0);
 				return {
 					doing,
 					waiting: Math.max(0, bucket.open - doing)
 				};
 			};
+			/** 结案 = 完成 + 取消（用户 2026-10-29 定的上位词）；图上的「结案」柱就是它。 */
+			const closed = (cell) => cell.done + cell.cancelled;
 			const peak = buckets.reduce((max, bucket) => {
 				const cell = counts(bucket);
-				return Math.max(max, cell.added, cell.done, cell.open);
+				return Math.max(max, cell.added, closed(cell), cell.open);
 			}, 0);
 			const top = peak === 0 ? 1 : peak;
 			const ticks = [
@@ -54266,7 +54280,7 @@ body[data-ds-dark-theme]{
 				"0"
 			];
 			const bar = (bucket, kind) => {
-				const value = counts(bucket)[kind];
+				const value = kind === "done" ? closed(counts(bucket)) : counts(bucket)[kind];
 				return (0, react$1.createElement)("div", {
 					className: `dtl-trend__bar dtl-trend__bar--${kind}`,
 					style: {
@@ -54278,7 +54292,7 @@ body[data-ds-dark-theme]{
 			const column = (bucket) => (0, react$1.createElement)("div", { className: "dtl-trend__col" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
 				from: bucket.from,
 				to: bucket.to
-			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), kind === "open" && !mine ? `${t("chartOpen")} ${formatCount(counts(bucket).open)}（${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}）` : `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`))), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
+			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), kind === "done" ? `${t("chartDone")} ${formatCount(closed(counts(bucket)))}（${t("chartFinished")} ${formatCount(counts(bucket).done)} · ${t("chartCancelled")} ${formatCount(counts(bucket).cancelled)}）` : kind === "open" && !mine ? `${t("chartOpen")} ${formatCount(counts(bucket).open)}（${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}）` : `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`))), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
 			const first = buckets[0];
 			const partial = trend.coverageFrom !== "" && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
 			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(labelKey(kind, mine)))), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
@@ -54501,7 +54515,8 @@ body[data-ds-dark-theme]{
 			});
 			/** 子集卡占比小字：分母为 0 或自己没有 ⇒ 不显示（不拿 0% 充数）。 */
 			const share = (part, whole, key) => part > 0 && whole > 0 ? t(key, { n: Math.round(part / whole * 100) }) : "";
-			/** 统计台卡：数字 = 结案总数（含取消）；有取消时小字拆「结案 X · 取消 Y」。
+			/** 统计台卡：数字 = **结案**（完成 + 取消）；有取消时小字拆「完成 X · 取消 Y」
+			*  （术语 2026-10-29 用户拍板：结案是上位词，完成只指正常结案）。
 			*  不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
 			const weekCard = (label, total, cancelled, from, to) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
@@ -54606,8 +54621,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.124 · 261029-195826-322`
-			}, `v0.0.124 261029-195826-322`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261029-215620-858`
+			}, `v0.0.125 261029-215620-858`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -54688,12 +54703,14 @@ body[data-ds-dark-theme]{
 			statStaleTitle: "停滞 = 进行中满 {n} 天没更新",
 			statOverdueTitle: "逾期 = 认领后满 {n} 天还没结案",
 			statBacklogTitle: "积压 = 待认领满 {n} 天没人接",
-			statWeekDone: "本周完成",
-			statLastWeekDone: "上周完成",
-			statWeekSplit: "结案 {done} · 取消 {cancelled}",
+			statWeekDone: "本周结案",
+			statLastWeekDone: "上周结案",
+			statWeekSplit: "完成 {done} · 取消 {cancelled}",
 			daysNone: "—",
 			daysValue: "{n} 天",
-			chartDone: "完成",
+			chartDone: "结案",
+			chartFinished: "完成",
+			chartCancelled: "取消",
 			chartOpen: "未结",
 			chartAdded: "新增",
 			chartEmpty: "还没有可统计的记录",
@@ -54732,20 +54749,19 @@ body[data-ds-dark-theme]{
 			relMonths: "{n} 个月前",
 			relYears: "{n} 年前",
 			whenSubmitted: "更新于 {time}",
-			filterByOwner: "只看 @{name} 的任务",
-			filterByWorkspace: "只看工作区 {name}",
-			filterByTag: "搜索标签 #{tag}",
 			copyTaskId: "点击复制任务 ID",
 			copiedTaskId: "已复制任务 ID",
 			copyFailed: "复制失败",
 			actionClaim: "认领",
 			actionResume: "继续",
-			actionFinish: "结束",
+			actionFinish: "完成",
 			actionRelease: "释放",
-			tipClaim: "把这个任务认领到自己名下",
-			tipResume: "继续推进这个任务",
-			tipFinish: "结案并写入历史",
-			tipRelease: "释放认领，让别人接手",
+			actionCancel: "取消",
+			tipClaim: "将该任务归入本人名下，状态置为进行中",
+			tipResume: "恢复对该任务的推进",
+			tipFinish: "将该任务标记为完成，并归档入历史",
+			tipRelease: "解除本人认领，任务退回公共池",
+			tipCancel: "将该任务标记为取消并归档，不计入完成",
 			viewDetail: "查看详情",
 			fieldCreatorStamp: "创建于 {age}",
 			viewModeLabel: "视图",
@@ -54780,12 +54796,14 @@ body[data-ds-dark-theme]{
 			statStaleTitle: "stale = active with no update for {n}+ days",
 			statOverdueTitle: "overdue = claimed {n}+ days ago and still open",
 			statBacklogTitle: "backlog = unclaimed for {n}+ days",
-			statWeekDone: "Done this week",
-			statLastWeekDone: "Done last week",
-			statWeekSplit: "Closed {done} · Cancelled {cancelled}",
+			statWeekDone: "Closed this week",
+			statLastWeekDone: "Closed last week",
+			statWeekSplit: "Done {done} · Cancelled {cancelled}",
 			daysNone: "—",
 			daysValue: "{n}d",
-			chartDone: "Done",
+			chartDone: "Closed",
+			chartFinished: "Done",
+			chartCancelled: "Cancelled",
 			chartOpen: "Open",
 			chartAdded: "Added",
 			chartEmpty: "No records to chart yet",
@@ -54824,20 +54842,19 @@ body[data-ds-dark-theme]{
 			relMonths: "{n} mo ago",
 			relYears: "{n} y ago",
 			whenSubmitted: "updated {time}",
-			filterByOwner: "Only tasks owned by @{name}",
-			filterByWorkspace: "Only workspace {name}",
-			filterByTag: "Search tag #{tag}",
 			copyTaskId: "Click to copy task ID",
 			copiedTaskId: "Task ID copied",
 			copyFailed: "Copy failed",
 			actionClaim: "Claim",
 			actionResume: "Resume",
-			actionFinish: "Close",
+			actionFinish: "Finish",
 			actionRelease: "Release",
-			tipClaim: "claim this task as mine",
-			tipResume: "keep working on this task",
-			tipFinish: "close and archive it",
-			tipRelease: "release the claim for others",
+			actionCancel: "Cancel",
+			tipClaim: "assign this task to me and set it to in progress",
+			tipResume: "resume work on this task",
+			tipFinish: "mark this task as done and archive it",
+			tipRelease: "drop my claim and return the task to the public pool",
+			tipCancel: "mark this task as cancelled and archive it; not counted as done",
 			viewDetail: "View details",
 			fieldCreatorStamp: "created {age}",
 			viewModeLabel: "View",

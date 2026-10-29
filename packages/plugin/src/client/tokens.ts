@@ -49,10 +49,12 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
-  /* ── 趋势图三色（2026-10-29 接回图表时恢复）─────────────────────
-     完成 = 蓝（--dtl-business）、未结 = 琥珀、新增 = 灰（fg-dim，明暗自带） */
+  /* ── 趋势图三色（2026-10-29 用户定稿）───────────────────────────
+     结案 = 绿、新增 = 蓝、未结 = 琥珀；三色直接取核心 alias
+     （state-success-primary / state-business-primary / state-warn-primary），不手写色值 */
+  --dtl-chart-done:var(--dtl-success);
   --dtl-chart-open:var(--dtl-warning);
-  --dtl-chart-added:var(--dtl-fg-dim);
+  --dtl-chart-added:var(--dtl-business);
 
   /* ── 交互底 ──────────────────────────────────────────────────── */
   /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */

@@ -44,6 +44,8 @@ export type LocaleKey =
 	| "daysValue"
 	// 趋势图
 	| "chartDone"
+	| "chartFinished"
+	| "chartCancelled"
 	| "chartOpen"
 	| "chartAdded"
 	| "chartEmpty"
@@ -85,10 +87,6 @@ export type LocaleKey =
 	| "relMonths"
 	| "relYears"
 	| "whenSubmitted"
-	// 行内点选 = 改筛选（人名 / 工作区 / 标签）
-	| "filterByOwner"
-	| "filterByWorkspace"
-	| "filterByTag"
 	| "copyTaskId"
 	| "copiedTaskId"
 	| "copyFailed"
@@ -96,10 +94,12 @@ export type LocaleKey =
 	| "actionResume"
 	| "actionFinish"
 	| "actionRelease"
+	| "actionCancel"
 	| "tipClaim"
 	| "tipResume"
 	| "tipFinish"
 	| "tipRelease"
+	| "tipCancel"
 	| "viewDetail"
 	| "fieldCreatorStamp"
 	// 视图切换（在办 / 历史）
@@ -138,13 +138,16 @@ export const zh: Record<LocaleKey, string> = {
 	statStaleTitle: "停滞 = 进行中满 {n} 天没更新",
 	statOverdueTitle: "逾期 = 认领后满 {n} 天还没结案",
 	statBacklogTitle: "积压 = 待认领满 {n} 天没人接",
-	statWeekDone: "本周完成",
-	statLastWeekDone: "上周完成",
-	statWeekSplit: "结案 {done} · 取消 {cancelled}",
+	statWeekDone: "本周结案",
+	statLastWeekDone: "上周结案",
+	statWeekSplit: "完成 {done} · 取消 {cancelled}",
 	daysNone: "—",
 	daysValue: "{n} 天",
 
-	chartDone: "完成",
+	// 术语（2026-10-29 用户拍板）：结案 = 完成 + 取消（上位词），完成 = 正常结案，取消 = 作废
+	chartDone: "结案",
+	chartFinished: "完成",
+	chartCancelled: "取消",
 	chartOpen: "未结",
 	chartAdded: "新增",
 	chartEmpty: "还没有可统计的记录",
@@ -186,20 +189,19 @@ export const zh: Record<LocaleKey, string> = {
 	relMonths: "{n} 个月前",
 	relYears: "{n} 年前",
 	whenSubmitted: "更新于 {time}",
-	filterByOwner: "只看 @{name} 的任务",
-	filterByWorkspace: "只看工作区 {name}",
-	filterByTag: "搜索标签 #{tag}",
 	copyTaskId: "点击复制任务 ID",
 	copiedTaskId: "已复制任务 ID",
 	copyFailed: "复制失败",
 	actionClaim: "认领",
 	actionResume: "继续",
-	actionFinish: "结束",
+	actionFinish: "完成",
 	actionRelease: "释放",
-	tipClaim: "把这个任务认领到自己名下",
-	tipResume: "继续推进这个任务",
-	tipFinish: "结案并写入历史",
-	tipRelease: "释放认领，让别人接手",
+	actionCancel: "取消",
+	tipClaim: "将该任务归入本人名下，状态置为进行中",
+	tipResume: "恢复对该任务的推进",
+	tipFinish: "将该任务标记为完成，并归档入历史",
+	tipRelease: "解除本人认领，任务退回公共池",
+	tipCancel: "将该任务标记为取消并归档，不计入完成",
 	viewDetail: "查看详情",
 	fieldCreatorStamp: "创建于 {age}",
 	viewModeLabel: "视图",
@@ -238,13 +240,15 @@ export const en: Record<LocaleKey, string> = {
 	statStaleTitle: "stale = active with no update for {n}+ days",
 	statOverdueTitle: "overdue = claimed {n}+ days ago and still open",
 	statBacklogTitle: "backlog = unclaimed for {n}+ days",
-	statWeekDone: "Done this week",
-	statLastWeekDone: "Done last week",
-	statWeekSplit: "Closed {done} · Cancelled {cancelled}",
+	statWeekDone: "Closed this week",
+	statLastWeekDone: "Closed last week",
+	statWeekSplit: "Done {done} · Cancelled {cancelled}",
 	daysNone: "—",
 	daysValue: "{n}d",
 
-	chartDone: "Done",
+	chartDone: "Closed",
+	chartFinished: "Done",
+	chartCancelled: "Cancelled",
 	chartOpen: "Open",
 	chartAdded: "Added",
 	chartEmpty: "No records to chart yet",
@@ -288,20 +292,19 @@ export const en: Record<LocaleKey, string> = {
 	relMonths: "{n} mo ago",
 	relYears: "{n} y ago",
 	whenSubmitted: "updated {time}",
-	filterByOwner: "Only tasks owned by @{name}",
-	filterByWorkspace: "Only workspace {name}",
-	filterByTag: "Search tag #{tag}",
 	copyTaskId: "Click to copy task ID",
 	copiedTaskId: "Task ID copied",
 	copyFailed: "Copy failed",
 	actionClaim: "Claim",
 	actionResume: "Resume",
-	actionFinish: "Close",
+	actionFinish: "Finish",
 	actionRelease: "Release",
-	tipClaim: "claim this task as mine",
-	tipResume: "keep working on this task",
-	tipFinish: "close and archive it",
-	tipRelease: "release the claim for others",
+	actionCancel: "Cancel",
+	tipClaim: "assign this task to me and set it to in progress",
+	tipResume: "resume work on this task",
+	tipFinish: "mark this task as done and archive it",
+	tipRelease: "drop my claim and return the task to the public pool",
+	tipCancel: "mark this task as cancelled and archive it; not counted as done",
 	viewDetail: "View details",
 	fieldCreatorStamp: "created {age}",
 	viewModeLabel: "View",

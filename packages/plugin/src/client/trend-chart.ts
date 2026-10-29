@@ -1,16 +1,19 @@
 /**
- * 首页趋势图（右上卡）：近 8 周 × 三根细柱 = 完成 / 未结 / 新增。
+ * 首页趋势图（右上卡）：近 8 周 × 三根细柱 = 结案 / 未结 / 新增。
+ *
+ * 术语（2026-10-29 用户拍板）：**结案 = 完成 + 取消**（上位词），图上的「结案」柱就是两者之和；
+ * 悬停时括号拆开「完成 X · 取消 Y」。skill 侧的桶仍是 `done` / `cancelled` 两个独立数，这里只做相加。
  *
  * 数据口径**全由 skill 算好**（`stats --trend week --last 8w --by-owner`，host 已跨工作区求和）：
- * 完成按结案时间、新增按**创建人**、未结是「该周结束时仍未结案」（待认领 + 进行中合成一个数）。
+ * 结案按结案时间、新增按**创建人**、未结是「该周结束时仍未结案」（待认领 + 进行中合成一个数）。
  *
  * 「只看我的」（2026-10-29 用户定稿）：勾上 = 我的，不勾 = 所有；两套数随快照一起回来 ⇒ 勾选零请求。
- * 按人口径 = skill 的 per-owner：`added` 按 creator（我提的）、`done` / `open` 按 owner（我负责的）。
+ * 按人口径 = skill 的 per-owner：`added` 按 creator（我提的）、`done` / `cancelled` / `open` 按 owner（我负责的）。
  *
  * 画法（2026-10-17 参考图口径）：
- *  - 柱宽 5px、组内 1px、**无圆角**；柱高百分比（祖先链有确定高度，见 ui.ts 的注释）；
+ *  - 柱宽 7.5px、组内 1px、**无圆角**；柱高百分比（祖先链有确定高度，见 ui.ts 的注释）；
  *  - y 轴三档刻度（0 / 半峰 / 峰）+ 淡网格线 + 底部基线；
- *  - **只标「完成」数值**（三系列 × 8 周会糊成一片），未结 / 新增走 hover；
+ *  - **只标「结案」数值**（三系列 × 8 周会糊成一片），未结 / 新增走 hover；
  *  - hover 整列三根一起提亮 + 自绘浮卡（原生 title 太慢且长相不一）——纯 CSS，无额外状态。
  */
 import {
@@ -25,7 +28,17 @@ import type { TrendBucketView, TrendOwnerCounts, TrendView } from "./types";
 const BAR_KINDS = ["done", "added", "open"] as const;
 type BarKind = (typeof BAR_KINDS)[number];
 
-const ZERO: TrendOwnerCounts = { added: 0, done: 0, cancelled: 0, open: 0 };
+/**
+ * 四数归一：老版本 host 返回的桶可能没有 `cancelled`（甚至没有 `owners`），
+ * 缺字段按 0 —— 这是「那一类记录本来就没有」，不是拿 0 充真值。
+ * 不做这层兜底，`done + undefined` 会变成 NaN，把峰、刻度、柱高整张图一起毁掉。
+ */
+const norm = (cell: TrendOwnerCounts | undefined): TrendOwnerCounts => ({
+	added: cell?.added ?? 0,
+	done: cell?.done ?? 0,
+	cancelled: cell?.cancelled ?? 0,
+	open: cell?.open ?? 0,
+});
 
 /** 系列名：只看我的时候「未结」就是「进行中」（我的任务必然有人接）。 */
 const labelKey = (
@@ -55,25 +68,28 @@ export function TrendChart(props: {
 
 	/** 当前口径下这一桶的三个数：全量，或「我的」那条（没数据就是 0）。 */
 	const counts = (bucket: TrendBucketView): TrendOwnerCounts =>
-		mine ? (bucket.owners[me] ?? ZERO) : bucket;
+		mine ? norm(bucket.owners?.[me]) : norm(bucket);
 
 	/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
 	 *  「只看我的」时只有进行中（我的任务必然有人接），不显示拆分行。 */
 	const breakdown = (bucket: TrendBucketView): { doing: number; waiting: number } => {
-		const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
+		const doing = Object.values(bucket.owners ?? {}).reduce((sum, cell) => sum + cell.open, 0);
 		return { doing, waiting: Math.max(0, bucket.open - doing) };
 	};
+
+	/** 结案 = 完成 + 取消（用户 2026-10-29 定的上位词）；图上的「结案」柱就是它。 */
+	const closed = (cell: TrendOwnerCounts): number => cell.done + cell.cancelled;
 
 	// 峰 = 当前口径下三系列的最大值；全 0 时按 1 兜底（只防除零，柱高仍为 0）
 	const peak = buckets.reduce((max, bucket) => {
 		const cell = counts(bucket);
-		return Math.max(max, cell.added, cell.done, cell.open);
+		return Math.max(max, cell.added, closed(cell), cell.open);
 	}, 0);
 	const top = peak === 0 ? 1 : peak;
 	const ticks = [formatCount(top), formatCount(Math.ceil(top / 2)), "0"];
 
 	const bar = (bucket: TrendBucketView, kind: BarKind): ReactNode => {
-		const value = counts(bucket)[kind];
+		const value = kind === "done" ? closed(counts(bucket)) : counts(bucket)[kind];
 		return h(
 			"div",
 			{
@@ -106,9 +122,12 @@ export function TrendChart(props: {
 						"div",
 						{ className: "dtl-trend__tip-row" },
 						h("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }),
-						kind === "open" && !mine
-							? `${t("chartOpen")} ${formatCount(counts(bucket).open)}（${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}）`
-							: `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`,
+						// 结案 / 未结都带括号拆分：结案 = 完成 + 取消；未结 = 进行中 + 待认领
+						kind === "done"
+							? `${t("chartDone")} ${formatCount(closed(counts(bucket)))}（${t("chartFinished")} ${formatCount(counts(bucket).done)} · ${t("chartCancelled")} ${formatCount(counts(bucket).cancelled)}）`
+							: kind === "open" && !mine
+								? `${t("chartOpen")} ${formatCount(counts(bucket).open)}（${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}）`
+								: `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`,
 					),
 				),
 			),
