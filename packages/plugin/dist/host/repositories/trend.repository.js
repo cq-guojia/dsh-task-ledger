@@ -42,6 +42,7 @@ function parseOwners(raw, where) {
         out[uuid] = {
             added: num(cell, "added", where),
             done: num(cell, "done", where),
+            cancelled: num(cell, "cancelled", where),
             open: num(cell, "open", where),
         };
     }
@@ -80,6 +81,7 @@ export function parseTrend(raw, where) {
             to: day(item, "to", where),
             added: num(item, "added", where),
             done: num(item, "done", where),
+            cancelled: num(item, "cancelled", where),
             open: num(item, "open", where),
             ...(owners === undefined ? {} : { owners }),
         };

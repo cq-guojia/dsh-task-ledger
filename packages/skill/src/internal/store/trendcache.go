@@ -21,18 +21,20 @@ import (
 
 // TrendDay 一个本地日期的三计数。Open 是该日**结束时**仍未结案的条数。
 type TrendDay struct {
-	Day   string `json:"day"`
-	Added int    `json:"added"`
-	Done  int    `json:"done"`
-	Open  int    `json:"open"`
+	Day       string `json:"day"`
+	Added     int    `json:"added"`
+	Done      int    `json:"done"`
+	Cancelled int    `json:"cancelled"`
+	Open      int    `json:"open"`
 }
 
 // TrendOwnerDay 一个人一个本地日期的两计数（按人没有「剩余」，见 2026-10-29 H1/H2）。
 type TrendOwnerDay struct {
-	Day   string `json:"day"`
-	Added int    `json:"added"` // 按 creator（展示：我提的）
-	Owned int    `json:"owned"` // 按 owner 的新建（倒推未结用；algo 2 起才有）
-	Done  int    `json:"done"`  // 按 owner（我结掉的）
+	Day       string `json:"day"`
+	Added     int    `json:"added"`     // 按 creator（展示：我提的）
+	Owned     int    `json:"owned"`     // 按 owner 的新建（倒推未结用；algo 2 起才有）
+	Done      int    `json:"done"`      // 按 owner（我结掉的）
+	Cancelled int    `json:"cancelled"` // 按 owner（我作废的）
 }
 
 // TrendSource 一个源文件的指纹。Size = -1 表示「当时这个文件不存在」——

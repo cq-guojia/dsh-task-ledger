@@ -45,7 +45,7 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 	pool := store.NewTaskStore(repo, core.PoolRel, nil)
 	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
 
-	task, _, err := LoadTask(repo, tid)
+	task, where, err := LoadTask(repo, tid)
 	if err != nil {
 		// 池与分片都没有：唯一合法的情况是已经结过案
 		logName := core.WorklogName(tid)
@@ -63,18 +63,32 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 		return nil, err
 	}
 
-	// 归属与来源：池任务只能取消；我的任务结案/取消都行；别人的拒绝。
-	var src *store.TaskStore
+	// 归属：池任务只能取消；我名下的结案/取消都行；别人的拒绝。
 	switch owner := ownerOf(task); {
 	case owner == "":
 		if !p.Cancel {
 			return nil, core.Failf("任务 %s 还没有人认领（在公共池里），先 claim 再结案；要直接关掉它用 close --cancel。", tid)
 		}
-		src = pool
 	case core.IsMe(me, owner):
-		src = mine
 	default:
 		return nil, core.Failf("任务 %s 的负责人是 %s，不是你（%s）。", tid, owner, me.Label())
+	}
+
+	// 删哪些行按任务**实际所在文件**算：崩在 claim 中间会同时留在池与我的分片，两处都要清。
+	present := map[string]bool{}
+	for _, path := range where {
+		present[path] = true
+	}
+	var srcs []*store.TaskStore
+	var paths []string
+	for _, st := range []*store.TaskStore{pool, mine} {
+		if present[st.Path] {
+			srcs = append(srcs, st)
+			paths = append(paths, st.Path)
+		}
+	}
+	if len(srcs) == 0 {
+		return nil, core.Failf("任务 %s 不在公共池、也不在我的分片里（别人的分片不能动）。", tid)
 	}
 
 	res, execKind, execNote := core.ResultDone, "close", "sealed"
@@ -93,7 +107,6 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 	worklogRel, _ := task["worklog"].(string)
 	docPath := logs.Find(tid, worklogRel)
 
-	paths := []string{src.Path}
 	paths = append(paths, histPath)
 	if docPath != "" {
 		paths = append(paths, docPath)
@@ -215,10 +228,12 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 		}
 	}
 
-	// ④ 删来源那行（永远最后）：池任务删池，我的任务删分片
-	if err := src.Drop(tid); err != nil {
-		restoreAll()
-		return nil, err
+	// ④ 删来源那些行（永远最后）：池 / 我的分片逐个清，两处都有就清两处
+	for _, st := range srcs {
+		if err := st.Drop(tid); err != nil {
+			restoreAll()
+			return nil, err
+		}
 	}
 
 	var notices []string

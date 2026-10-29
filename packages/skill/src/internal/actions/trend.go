@@ -29,7 +29,7 @@ import (
 // 当月永远实时算；缓存只加速，算错 / 写不进去都只是慢一点，不影响结果。
 
 // TrendAlgo 口径版本：一变，全部缓存视为过期（不必依赖文件时间）。
-const TrendAlgo = 3
+const TrendAlgo = 4
 
 const (
 	defaultTrendLast = "8w"
@@ -62,20 +62,22 @@ type TrendQuery struct {
 
 // TrendOwnerCell 一个桶里某个人的三个数：新增按 creator、完成与未结按 owner。
 type TrendOwnerCell struct {
-	Name  string
-	Added int
-	Done  int
-	Open  int
+	Name      string
+	Added     int
+	Done      int
+	Cancelled int
+	Open      int
 }
 
 // TrendBucket 一个周期桶；From/To 是**本地日期**（含边界），首尾桶按请求区间裁剪。
 type TrendBucket struct {
-	From   string
-	To     string
-	Added  int
-	Done   int
-	Open   int
-	Owners map[string]*TrendOwnerCell // 只有 --by-owner 才填
+	From      string
+	To        string
+	Added     int
+	Done      int
+	Cancelled int
+	Open      int
+	Owners    map[string]*TrendOwnerCell // 只有 --by-owner 才填
 }
 
 // TrendResult 趋势统计的返回。CoverFrom 是实际有数据的第一天（前端据此显示「数据不足」）。
@@ -291,6 +293,7 @@ func trendBucketEnd(granularity, day string) string {
 type trendSeries struct {
 	added       map[string]int
 	done        map[string]int
+	cancelled   map[string]int
 	open        map[string]int            // 该日结束时全局仍未结
 	openByOwner map[string]map[string]int // 该日结束时每人仍未结（= 进行中）
 	byOwner     map[string]*trendOwnerDays
@@ -298,15 +301,17 @@ type trendSeries struct {
 }
 
 type trendOwnerDays struct {
-	added map[string]int // 按 creator（展示用 = 我提的）
-	owned map[string]int // 按 owner 的新建（倒推未结用 = 我负责的，含窗口之后建的）
-	done  map[string]int // 按 owner 的结案
+	added     map[string]int // 按 creator（展示用 = 我提的）
+	owned     map[string]int // 按 owner 的新建（倒推未结用 = 我负责的，含窗口之后建的）
+	done      map[string]int // 按 owner 的结案
+	cancelled map[string]int // 按 owner 的作废
 }
 
 func newTrendSeries() *trendSeries {
 	return &trendSeries{
 		added:       map[string]int{},
 		done:        map[string]int{},
+		cancelled:   map[string]int{},
 		open:        map[string]int{},
 		openByOwner: map[string]map[string]int{},
 		byOwner:     map[string]*trendOwnerDays{},
@@ -319,7 +324,7 @@ func (s *trendSeries) owner(uuid string) *trendOwnerDays {
 	if days, ok := s.byOwner[uuid]; ok {
 		return days
 	}
-	days := &trendOwnerDays{added: map[string]int{}, owned: map[string]int{}, done: map[string]int{}}
+	days := &trendOwnerDays{added: map[string]int{}, owned: map[string]int{}, done: map[string]int{}, cancelled: map[string]int{}}
 	s.byOwner[uuid] = days
 	return days
 }
@@ -333,9 +338,9 @@ func (s *trendSeries) walkForward(seed store.TrendAnchor, from, to string) {
 		owners[uuid] = n
 	}
 	for day := from; day <= to; day = trendAddDay(day, 1) {
-		open += s.added[day] - s.done[day]
+		open += s.added[day] - s.closed(day)
 		for uuid, days := range s.byOwner {
-			owners[uuid] += days.owned[day] - days.done[day]
+			owners[uuid] += days.owned[day] - days.closed(day)
 		}
 		s.open[day] = open
 		s.openByOwner[day] = cloneCounts(owners)
@@ -353,9 +358,9 @@ func (s *trendSeries) walkBackward(seedOpen int, seedOwners map[string]int, from
 	for day := to; ; day = trendAddDay(day, -1) {
 		if day != to {
 			next := trendAddDay(day, 1)
-			open += s.done[next] - s.added[next]
+			open += s.closed(next) - s.added[next]
 			for uuid, days := range s.byOwner {
-				owners[uuid] += days.done[next] - days.owned[next]
+				owners[uuid] += days.closed(next) - days.owned[next]
 			}
 		}
 		s.open[day] = open
@@ -393,10 +398,26 @@ func (s *trendSeries) add(day, creator, owner string) {
 	s.noteDay(day)
 }
 
-func (s *trendSeries) finish(day, owner string) {
-	s.done[day]++
+// closed 当天离开在办的总数（结案 + 作废）：未结倒推只认这个和新增。
+func (s *trendSeries) closed(day string) int { return s.done[day] + s.cancelled[day] }
+
+func (d *trendOwnerDays) closed(day string) int { return d.done[day] + d.cancelled[day] }
+
+// finish 记一次离开在办：正常结案进 done，取消进 cancelled；两者都减少未结。
+func (s *trendSeries) finish(day, owner, result string) {
+	cancelled := result == core.ResultCancelled
+	if cancelled {
+		s.cancelled[day]++
+	} else {
+		s.done[day]++
+	}
 	if owner != "" {
-		s.owner(owner).done[day]++
+		days := s.owner(owner)
+		if cancelled {
+			days.cancelled[day]++
+		} else {
+			days.done[day]++
+		}
 	}
 	s.noteDay(day)
 }
@@ -406,8 +427,9 @@ func (s *trendSeries) absorb(m *store.TrendMonth) {
 	for _, day := range m.Days {
 		s.added[day.Day] += day.Added
 		s.done[day.Day] += day.Done
+		s.cancelled[day.Day] += day.Cancelled
 		s.open[day.Day] = day.Open
-		if day.Added != 0 || day.Done != 0 {
+		if day.Added != 0 || day.Done != 0 || day.Cancelled != 0 {
 			s.noteDay(day.Day)
 		}
 	}
@@ -417,6 +439,7 @@ func (s *trendSeries) absorb(m *store.TrendMonth) {
 			days.added[day.Day] += day.Added
 			days.owned[day.Day] += day.Owned
 			days.done[day.Day] += day.Done
+			days.cancelled[day.Day] += day.Cancelled
 		}
 	}
 }
@@ -442,7 +465,7 @@ func (s *trendSeries) loadSources(repo, fromMonth, toMonth string, wanted map[st
 		}
 		for _, row := range rows {
 			if day := trendLocalDay(row.Finished); wanted[day] {
-				s.finish(day, core.Normalize(row.Owner))
+				s.finish(day, core.Normalize(row.Owner), row.Result)
 			}
 			if day := trendLocalDay(row.Created); wanted[day] {
 				s.add(day, core.Normalize(row.Creator), core.Normalize(row.Owner))
@@ -465,7 +488,7 @@ func (s *trendSeries) month(ym, repo, today string) *store.TrendMonth {
 		Days:      make([]store.TrendDay, 0, len(days)),
 	}
 	for _, day := range days {
-		m.Days = append(m.Days, store.TrendDay{Day: day, Added: s.added[day], Done: s.done[day], Open: s.open[day]})
+		m.Days = append(m.Days, store.TrendDay{Day: day, Added: s.added[day], Done: s.done[day], Cancelled: s.cancelled[day], Open: s.open[day]})
 	}
 	m.MonthEndOpen = s.open[days[len(days)-1]]
 	m.PerOwnerEndOpen = s.openByOwner[days[len(days)-1]]
@@ -473,11 +496,12 @@ func (s *trendSeries) month(ym, repo, today string) *store.TrendMonth {
 	for uuid, ownerDays := range s.byOwner {
 		var list []store.TrendOwnerDay
 		for _, day := range days {
-			added, owned, done := ownerDays.added[day], ownerDays.owned[day], ownerDays.done[day]
-			if added == 0 && owned == 0 && done == 0 {
+			added, owned := ownerDays.added[day], ownerDays.owned[day]
+			done, cancelled := ownerDays.done[day], ownerDays.cancelled[day]
+			if added == 0 && owned == 0 && done == 0 && cancelled == 0 {
 				continue
 			}
-			list = append(list, store.TrendOwnerDay{Day: day, Added: added, Owned: owned, Done: done})
+			list = append(list, store.TrendOwnerDay{Day: day, Added: added, Owned: owned, Done: done, Cancelled: cancelled})
 		}
 		if len(list) > 0 {
 			perOwner[uuid] = list
@@ -645,6 +669,7 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 	for _, day := range days {
 		bucket.Added += f.series.added[day]
 		bucket.Done += f.series.done[day]
+		bucket.Cancelled += f.series.cancelled[day]
 	}
 	bucket.Open = f.series.open[bucket.To]
 	if filter == nil && !byOwner {
@@ -652,13 +677,14 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 	}
 	if filter != nil {
 		// --mine / --owner：整桶只算选中的人（按人没有剩余，Open 由 owner + 是否结案倒推）
-		bucket.Added, bucket.Done, bucket.Open = 0, 0, 0
+		bucket.Added, bucket.Done, bucket.Cancelled, bucket.Open = 0, 0, 0, 0
 		cells := make(map[string]*TrendOwnerCell, len(filter))
 		for _, uuid := range filter {
 			cell := f.ownerCell(uuid, days, bucket.To)
 			cells[uuid] = cell
 			bucket.Added += cell.Added
 			bucket.Done += cell.Done
+			bucket.Cancelled += cell.Cancelled
 			bucket.Open += cell.Open
 		}
 		if byOwner {
@@ -669,7 +695,7 @@ func (f *trendFiller) fill(bucket *TrendBucket, filter []string, byOwner bool) {
 	cells := map[string]*TrendOwnerCell{}
 	for uuid := range f.series.byOwner {
 		cell := f.ownerCell(uuid, days, bucket.To)
-		if cell.Added != 0 || cell.Done != 0 || cell.Open != 0 {
+		if cell.Added != 0 || cell.Done != 0 || cell.Cancelled != 0 || cell.Open != 0 {
 			cells[uuid] = cell
 		}
 	}
@@ -687,6 +713,7 @@ func (f *trendFiller) ownerCell(uuid string, days []string, end string) *TrendOw
 	for _, day := range days {
 		cell.Added += ownerDays.added[day]
 		cell.Done += ownerDays.done[day]
+		cell.Cancelled += ownerDays.cancelled[day]
 	}
 	return cell
 }

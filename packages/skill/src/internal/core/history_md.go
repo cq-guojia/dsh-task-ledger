@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// 历史表格的文本操作：拼一行、解析一行。写盘用十二列，读兼容老十一列（无结果列 ⇒ done）。
+// 历史表格的文本操作：拼一行、解析一行。只认十二列；老十一列的行解析时告警跳过。
 
 // HistoryTitle 历史文件的一级标题。
 const HistoryTitle = "# History (closed)"
@@ -18,7 +18,7 @@ const HistoryHeader = "| Finished | Created | Title | Category | Tags " +
 // HistorySep 表头分隔行。
 const HistorySep = "|---|---|---|---|---|---|---|---|---|---|---|---|"
 
-// 结果列取值：正常结案 / 取消（老文件没有这一列，按 done 读）。
+// 结果列取值：正常结案 / 取消。
 const (
 	ResultDone      = "done"
 	ResultCancelled = "cancelled"
@@ -136,7 +136,7 @@ func HistoryLine(finished string, created, title, owner, summary, result, worklo
 	return b.String()
 }
 
-// ParseHistory 解析历史表 → (records, warnings)。写盘十二列；老十一列按 done 读。
+// ParseHistory 解析历史表 → (records, warnings)。只认十二列；列数不符的行告警跳过。
 func ParseHistory(text string) ([]Row, []string) {
 	var records []Row
 	var warnings []string

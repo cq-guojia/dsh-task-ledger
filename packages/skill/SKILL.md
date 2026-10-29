@@ -106,7 +106,7 @@ allowed-tools: Read,Edit,Bash,Grep
 | 参数 | 含义 |
 |---|---|
 | `--id <任务号>` | 结哪条（必填） |
-| `--summary "…"` | 结案摘要（正常结案必填）；**取消时可选**，写了就落历史「完成了什么」列并带进执行记录 |
+| `--summary "…"` | 结案摘要（正常结案必填）；**取消时可选**，写了就落历史 `Summary` 列并带进执行记录 |
 | `--cancel` | 取消：结果列 `cancelled`、状态行 `cancelled`、执行记录追加 `cancel` 一行。**不写原因也能取消** |
 | `--finished` | 给漏记的旧任务补用时，补录实际结案时间（`YYYY-MM-DD[ HH:MM[:SS]]`） |
 | `--tags` | 覆盖标签终值（写进历史行；文档头部只写标签）。**结案时最该给**：任务做完了，最清楚涉及什么；不传则沿用原标签。分类不可改，历史行用它建任务时的值 |
@@ -182,9 +182,9 @@ allowed-tools: Read,Edit,Bash,Grep
 | `--mine` / `--owner <uuid>[,<uuid>]` | 只看自己 / 某几个人（`--owner` 可给多个 uuid，与 `--mine` 互斥） |
 | `--by-owner` | 每个桶额外带按人明细（默认不返回，只给总数） |
 
-干什么：一次遍历返回**整段桶序列**（不按桶多次调用），每桶三个数 —— `added`（该桶内新建）、`done`（该桶内结案）、`open`（该桶**结束时**仍未结案）。
+干什么：一次遍历返回**整段桶序列**（不按桶多次调用），每桶四个数 —— `added`（该桶内新建）、`done`（正常结案）、`cancelled`（取消作废）、`open`（该桶**结束时**仍未结案）。
 
-口径：`added` 按 `created`、`done` 按 `finished`；`open` 由「当前在办 + 今天往前倒推」得出，天然含窗口之前遗留的基线。按人明细里 `added` 按 `creator`、`done` / `open` 按 `owner`（待认领不算任何人）。
+口径：`added` 按 `created`；`done` / `cancelled` 都按 `finished`，靠历史行 `Result` 列区分（`done` 只算正常结案，取消不算完成）；`open` 由「当前在办 + 今天往前倒推」得出，天然含窗口之前遗留的基线 —— 结案和取消**都**会让任务离开在办，倒推时两者都要减。按人明细里 `added` 按 `creator`、`done` / `open` 按 `owner`（待认领不算任何人）。
 
 按人的 `open` 只算**你名下**的任务，倒推时同时减去「你在那天之后新建的」（按 owner 计，与展示用的 creator 无关）—— 否则窗口之后才建、早已结案的任务会被当成那天就在办，越靠前的桶虚高得越离谱。负责人转交过的任务按**今天**的负责人归账。
 
@@ -195,8 +195,8 @@ allowed-tools: Read,Edit,Bash,Grep
   "granularity": "week",
   "coverage": { "from": "2026-09-01", "to": "2026-10-29" },
   "buckets": [
-    { "from": "2026-09-01", "to": "2026-09-06", "added": 3, "done": 5, "open": 12,
-      "owners": { "<uuid>": { "name": "某人", "added": 1, "done": 2, "open": 4 } } }
+    { "from": "2026-09-01", "to": "2026-09-06", "added": 3, "done": 5, "cancelled": 1, "open": 12,
+      "owners": { "<uuid>": { "name": "某人", "added": 1, "done": 2, "cancelled": 0, "open": 4 } } }
   ],
   "warnings": []
 }
@@ -248,7 +248,7 @@ allowed-tools: Read,Edit,Bash,Grep
 
 干什么：按结案时间倒序排列，每条一行，只列结案时间、负责人、标题，其他都不在表格里；要摘要 / 分类 / 标签 / 完整时间加 `--json`。不给时间参数 = 最近 3 个自然月；最多 13 个月，超了直接报错。
 
-要「某个时间窗内结案了多少」**别拿 `history` 数条数**（只覆盖 13 个月，且一给 `--limit`，`count` 就只是返回条数）—— 用 `stats --trend <粒度>` 的桶，`done` 就是该桶结案数。
+要「某个时间窗内结案了多少」**别拿 `history` 数条数**（只覆盖 13 个月，且一给 `--limit`，`count` 就只是返回条数）—— 用 `stats --trend <粒度>` 的桶，`done + cancelled` 才是该桶结案总数（`done` 只算正常结案）。
 
 举例：「上周做过什么」→ `history --since <上周一日期>`；「今年都结掉哪些」→ `history --months 12`（超过 13 个月要分段查）。
 

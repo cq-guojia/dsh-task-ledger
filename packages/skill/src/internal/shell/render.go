@@ -178,20 +178,22 @@ func RenderTrend(res *actions.TrendResult) {
 	buckets := make([]any, 0, len(res.Buckets))
 	for _, bucket := range res.Buckets {
 		item := map[string]any{
-			"from":  bucket.From,
-			"to":    bucket.To,
-			"added": bucket.Added,
-			"done":  bucket.Done,
-			"open":  bucket.Open,
+			"from":      bucket.From,
+			"to":        bucket.To,
+			"added":     bucket.Added,
+			"done":      bucket.Done,
+			"cancelled": bucket.Cancelled,
+			"open":      bucket.Open,
 		}
 		if bucket.Owners != nil {
 			owners := make(map[string]any, len(bucket.Owners))
 			for uuid, cell := range bucket.Owners {
 				owners[uuid] = map[string]any{
-					"name":  cell.Name,
-					"added": cell.Added,
-					"done":  cell.Done,
-					"open":  cell.Open,
+					"name":      cell.Name,
+					"added":     cell.Added,
+					"done":      cell.Done,
+					"cancelled": cell.Cancelled,
+					"open":      cell.Open,
 				}
 			}
 			item["owners"] = owners

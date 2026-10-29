@@ -279,16 +279,22 @@ export function BoardHome(props: {
 			? t(key, { n: Math.round((part / whole) * 100) })
 			: "";
 
-	/** 统计台卡：不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
+	/** 统计台卡：数字 = 结案总数（含取消）；有取消时小字拆「结案 X · 取消 Y」。
+	 *  不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
 	const weekCard = (
 		label: LocaleKey,
-		done: number | null,
+		total: number | null,
+		cancelled: number | null,
 		from: string,
 		to: string,
 	): ReactNode =>
 		h(StatCard, {
 			label: t(label),
-			value: formatCount(done ?? 0),
+			value: formatCount(total ?? 0),
+			hint:
+				cancelled !== null && cancelled > 0
+					? t("statWeekSplit", { done: (total ?? 0) - cancelled, cancelled })
+					: "",
 			interactive: false,
 			title: t("periodRange", { from, to }),
 		});
@@ -360,10 +366,11 @@ export function BoardHome(props: {
 					t("statStaleTitle", { n: view.staleDays }),
 					"stale",
 				),
-				weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo),
+				weekCard("statWeekDone", view.weekDone, view.weekCancelled, view.weekFrom, view.weekTo),
 				weekCard(
 					"statLastWeekDone",
 					view.lastWeekDone,
+					view.lastWeekCancelled,
 					view.lastWeekFrom,
 					view.lastWeekTo,
 				),

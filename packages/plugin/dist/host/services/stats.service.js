@@ -20,8 +20,10 @@ export function weekDoneFromTrend(trend, fallback, fallbackLast) {
     const thisWeek = buckets[buckets.length - 1];
     const lastWeek = buckets[buckets.length - 2];
     return {
-        weekDone: thisWeek === undefined ? null : thisWeek.done,
-        lastWeekDone: lastWeek === undefined ? null : lastWeek.done,
+        weekDone: thisWeek === undefined ? null : thisWeek.done + thisWeek.cancelled,
+        lastWeekDone: lastWeek === undefined ? null : lastWeek.done + lastWeek.cancelled,
+        weekCancelled: thisWeek === undefined ? null : thisWeek.cancelled,
+        lastWeekCancelled: lastWeek === undefined ? null : lastWeek.cancelled,
         weekFrom: thisWeek?.from ?? fallback.from,
         weekTo: thisWeek?.to ?? fallback.to,
         lastWeekFrom: lastWeek?.from ?? fallbackLast.from,
@@ -108,9 +110,11 @@ export async function getBoardStats(workspaces, now = new Date()) {
                 : max === null
                     ? item.oldestOpenDays
                     : Math.max(max, item.oldestOpenDays), null),
-        // 这两格由 getBoardHome 从趋势桶回填（趋势全挂时保持 null ⇒ 界面留 —）
+        // 这四个数由 getBoardHome 从趋势桶回填（趋势全挂时保持 null ⇒ 界面留 —）
         weekDone: null,
         lastWeekDone: null,
+        weekCancelled: null,
+        lastWeekCancelled: null,
         weekFrom: thisWeek.from,
         weekTo: thisWeek.to,
         lastWeekFrom: lastWeek.from,

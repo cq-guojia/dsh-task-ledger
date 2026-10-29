@@ -71,6 +71,9 @@ export interface BoardStatsView {
 	/** 本周 / 上周完成数；null = 历史读不到（界面留 —，不拿 0 充数）。 */
 	readonly weekDone: number | null;
 	readonly lastWeekDone: number | null;
+	/** 其中取消的数量（卡片小字「结案 X · 取消 Y」）；0 时不显示小字。 */
+	readonly weekCancelled: number | null;
+	readonly lastWeekCancelled: number | null;
 	readonly weekFrom: string;
 	readonly weekTo: string;
 	readonly lastWeekFrom: string;
@@ -81,6 +84,7 @@ export interface BoardStatsView {
 export interface TrendOwnerCounts {
 	readonly added: number;
 	readonly done: number;
+	readonly cancelled: number;
 	readonly open: number;
 }
 
@@ -90,6 +94,7 @@ export interface TrendBucketView {
 	readonly to: string;
 	readonly added: number;
 	readonly done: number;
+	readonly cancelled: number;
 	readonly open: number;
 	/** uuid → 按人明细（「只看我的」用）。 */
 	readonly owners: Readonly<Record<string, TrendOwnerCounts>>;

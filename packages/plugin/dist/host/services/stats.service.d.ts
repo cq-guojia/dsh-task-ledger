@@ -1,8 +1,10 @@
 import type { BoardHomePayload, LedgerWorkspace, StatsPayload, TrendView } from "../types.js";
-/** 本周 / 上周完成 = 趋势最后两个桶的「结案」（后者为上周）。 */
+/** 本周 / 上周结案总数 = 趋势最后两个桶的 done + cancelled（后者为上周）。 */
 export interface WeekDone {
     readonly weekDone: number | null;
     readonly lastWeekDone: number | null;
+    readonly weekCancelled: number | null;
+    readonly lastWeekCancelled: number | null;
     readonly weekFrom: string;
     readonly weekTo: string;
     readonly lastWeekFrom: string;

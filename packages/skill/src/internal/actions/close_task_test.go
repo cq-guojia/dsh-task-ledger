@@ -61,6 +61,36 @@ func TestCloseCancelOthersTaskRejected(t *testing.T) {
 	}
 }
 
+// 崩在 claim 中间会让同一条任务同时留在池与分片里：结案时两处都要清，不能留僵尸。
+func TestCloseDropsDuplicatePoolAndShard(t *testing.T) {
+	repo, me := tempLedger(t)
+	const tid = "20261029-1000-重复-dddd"
+	newTask := func() map[string]any {
+		return map[string]any{
+			"status": "doing", "owner": me.UUID, "owner_name": me.Name,
+			"title": "重复", "created": "2026-10-29 09:00:00",
+		}
+	}
+	pool := store.NewTaskStore(repo, core.PoolRel, nil)
+	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	if err := pool.Put(tid, newTask()); err != nil {
+		t.Fatal(err)
+	}
+	if err := mine.Put(tid, newTask()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CloseTask(repo, me, tid, CloseTaskParams{Summary: "做完了", Finished: cancelFinished}); err != nil {
+		t.Fatalf("结案应成功：%v", err)
+	}
+	// 断言用新实例：JSONStore 首次读盘后会缓存，上面的 Put 实例看到的是旧数据
+	if _, ok, _ := store.NewTaskStore(repo, core.PoolRel, nil).Get(tid); ok {
+		t.Error("池里不该还剩这条")
+	}
+	if _, ok, _ := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me).Get(tid); ok {
+		t.Error("我的分片里不该还剩这条")
+	}
+}
+
 func TestCloseCancelMyTaskKeepsSummary(t *testing.T) {
 	repo, me := tempLedger(t, map[string]any{
 		"tid": cancelTidMine, "status": "doing", "owner": testUUID,

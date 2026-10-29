@@ -103,7 +103,7 @@ func FormatProblems(text string) []string {
 	body := stripBOM(text)
 	lines := splitLines(body)
 	if len(lines) == 0 || !strings.HasPrefix(lines[0], "# ") {
-		problems = append(problems, "第一行不是标题（应为 `# <任务号>：<标题>`）")
+		problems = append(problems, "第一行不是标题（应为 `# <id>: <title>`）")
 	}
 	head := headLines(lines)
 	anyCreated := false
@@ -114,7 +114,7 @@ func FormatProblems(text string) []string {
 		}
 	}
 	if !anyCreated {
-		problems = append(problems, "头部缺「创建」时间行（应为 `- **创建**：YYYY-MM-DD HH:MM:SS · @某人 · uuid`）")
+		problems = append(problems, "头部缺「Created」时间行（应为 `- **Created**: YYYY-MM-DD HH:MM:SS · @name · uuid`）")
 	} else {
 		anyCreator := false
 		for _, line := range head {
@@ -124,7 +124,7 @@ func FormatProblems(text string) []string {
 			}
 		}
 		if !anyCreator {
-			problems = append(problems, "头部「创建」行缺发起人（应为 `… · @某人 · uuid`）")
+			problems = append(problems, "头部「Created」行缺发起人（应为 `… · @name · uuid`）")
 		}
 	}
 	for _, line := range head {
@@ -133,7 +133,7 @@ func FormatProblems(text string) []string {
 		}
 		m := statusRe.FindStringSubmatch(line)
 		if m == nil || !contains(StatusValues, m[1]) {
-			problems = append(problems, "头部「状态」行的值不合法（应为 "+strings.Join(StatusValues, " / ")+"）")
+			problems = append(problems, "头部「Status」行的值不合法（应为 "+strings.Join(StatusValues, " / ")+"）")
 		}
 		break
 	}

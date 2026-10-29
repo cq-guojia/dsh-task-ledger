@@ -22,6 +22,7 @@ const TREND_LAST = `${String(TREND_WEEKS)}w`;
 export interface OwnerCounts {
 	readonly added: number;
 	readonly done: number;
+	readonly cancelled: number;
 	readonly open: number;
 }
 
@@ -33,6 +34,8 @@ export interface TrendBucket {
 	readonly added: number;
 	/** 该周结案（全部人合计）。 */
 	readonly done: number;
+	/** 该周取消（全部人合计）。 */
+	readonly cancelled: number;
 	/** 该周结束时仍未结案（全部人合计，含窗口前遗留）。 */
 	readonly open: number;
 	/** uuid → 按人明细（「只看我的」用；没要 / 该人该周没数据则没有这个 key）。 */
@@ -92,6 +95,7 @@ function parseOwners(
 		out[uuid] = {
 			added: num(cell, "added", where),
 			done: num(cell, "done", where),
+			cancelled: num(cell, "cancelled", where),
 			open: num(cell, "open", where),
 		};
 	}
@@ -144,6 +148,7 @@ export function parseTrend(raw: unknown, where: string): WorkspaceTrend {
 			to: day(item, "to", where),
 			added: num(item, "added", where),
 			done: num(item, "done", where),
+			cancelled: num(item, "cancelled", where),
 			open: num(item, "open", where),
 			...(owners === undefined ? {} : { owners }),
 		};

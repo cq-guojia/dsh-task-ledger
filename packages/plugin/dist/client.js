@@ -54233,6 +54233,7 @@ body[data-ds-dark-theme]{
 		const ZERO = {
 			added: 0,
 			done: 0,
+			cancelled: 0,
 			open: 0
 		};
 		/** 系列名：只看我的时候「未结」就是「进行中」（我的任务必然有人接）。 */
@@ -54500,10 +54501,15 @@ body[data-ds-dark-theme]{
 			});
 			/** 子集卡占比小字：分母为 0 或自己没有 ⇒ 不显示（不拿 0% 充数）。 */
 			const share = (part, whole, key) => part > 0 && whole > 0 ? t(key, { n: Math.round(part / whole * 100) }) : "";
-			/** 统计台卡：不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
-			const weekCard = (label, done, from, to) => (0, react$1.createElement)(StatCard, {
+			/** 统计台卡：数字 = 结案总数（含取消）；有取消时小字拆「结案 X · 取消 Y」。
+			*  不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
+			const weekCard = (label, total, cancelled, from, to) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
-				value: formatCount(done ?? 0),
+				value: formatCount(total ?? 0),
+				hint: cancelled !== null && cancelled > 0 ? t("statWeekSplit", {
+					done: (total ?? 0) - cancelled,
+					cancelled
+				}) : "",
 				interactive: false,
 				title: t("periodRange", {
 					from,
@@ -54516,7 +54522,7 @@ body[data-ds-dark-theme]{
 				return (0, react$1.createElement)("div", {
 					className: "dtl-stats",
 					style: statsRowStyle
-				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)(TrendChart, {
+				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekCancelled, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekCancelled, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)(TrendChart, {
 					trend: payload.trend,
 					me: solo ? null : Object.values(payload.identities).find((uuid) => uuid !== null) ?? null,
 					t
@@ -54600,8 +54606,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.123 · 261029-192751-632`
-			}, `v0.0.123 261029-192751-632`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.124 · 261029-195826-322`
+			}, `v0.0.124 261029-195826-322`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -54684,6 +54690,7 @@ body[data-ds-dark-theme]{
 			statBacklogTitle: "积压 = 待认领满 {n} 天没人接",
 			statWeekDone: "本周完成",
 			statLastWeekDone: "上周完成",
+			statWeekSplit: "结案 {done} · 取消 {cancelled}",
 			daysNone: "—",
 			daysValue: "{n} 天",
 			chartDone: "完成",
@@ -54775,6 +54782,7 @@ body[data-ds-dark-theme]{
 			statBacklogTitle: "backlog = unclaimed for {n}+ days",
 			statWeekDone: "Done this week",
 			statLastWeekDone: "Done last week",
+			statWeekSplit: "Closed {done} · Cancelled {cancelled}",
 			daysNone: "—",
 			daysValue: "{n}d",
 			chartDone: "Done",

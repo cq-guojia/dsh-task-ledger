@@ -102,6 +102,9 @@ export interface BoardStatsView {
     /** 本周 / 上周完成数（= 趋势最后两个桶）；趋势全读不到时为 null（界面留 —）。 */
     readonly weekDone: number | null;
     readonly lastWeekDone: number | null;
+    /** 其中取消的数量（卡片小字「结案 X · 取消 Y」）；0 时不显示小字。 */
+    readonly weekCancelled: number | null;
+    readonly lastWeekCancelled: number | null;
     /** 两周的区间（界面悬停用，含边界）。 */
     readonly weekFrom: string;
     readonly weekTo: string;
@@ -118,6 +121,7 @@ export interface StatsPayload {
 export interface TrendOwnerCounts {
     readonly added: number;
     readonly done: number;
+    readonly cancelled: number;
     readonly open: number;
 }
 /** 趋势图的一根周桶（数字全由 skill `stats --trend --by-owner` 给，插件只跨工作区相加）。 */
@@ -126,6 +130,7 @@ export interface TrendBucketView {
     readonly to: string;
     readonly added: number;
     readonly done: number;
+    readonly cancelled: number;
     readonly open: number;
     /** uuid → 按人明细；「只看我的」直接取自己那条，勾选零请求。 */
     readonly owners: Readonly<Record<string, TrendOwnerCounts>>;

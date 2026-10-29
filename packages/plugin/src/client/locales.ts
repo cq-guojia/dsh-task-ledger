@@ -39,6 +39,7 @@ export type LocaleKey =
 	| "statBacklogTitle"
 	| "statWeekDone"
 	| "statLastWeekDone"
+	| "statWeekSplit"
 	| "daysNone"
 	| "daysValue"
 	// 趋势图
@@ -139,6 +140,7 @@ export const zh: Record<LocaleKey, string> = {
 	statBacklogTitle: "积压 = 待认领满 {n} 天没人接",
 	statWeekDone: "本周完成",
 	statLastWeekDone: "上周完成",
+	statWeekSplit: "结案 {done} · 取消 {cancelled}",
 	daysNone: "—",
 	daysValue: "{n} 天",
 
@@ -238,6 +240,7 @@ export const en: Record<LocaleKey, string> = {
 	statBacklogTitle: "backlog = unclaimed for {n}+ days",
 	statWeekDone: "Done this week",
 	statLastWeekDone: "Done last week",
+	statWeekSplit: "Closed {done} · Cancelled {cancelled}",
 	daysNone: "—",
 	daysValue: "{n}d",
 

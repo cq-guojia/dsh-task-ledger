@@ -312,10 +312,11 @@ func TestTrendCachedResultEqualsLive(t *testing.T) {
 	}
 	var doc struct {
 		Days []struct {
-			Day   string `json:"day"`
-			Added int    `json:"added"`
-			Done  int    `json:"done"`
-			Open  int    `json:"open"`
+			Day       string `json:"day"`
+			Added     int    `json:"added"`
+			Done      int    `json:"done"`
+			Cancelled int    `json:"cancelled"`
+			Open      int    `json:"open"`
 		} `json:"days"`
 	}
 	if err := json.Unmarshal(raw, &doc); err != nil {
@@ -334,8 +335,8 @@ func TestTrendCachedResultEqualsLive(t *testing.T) {
 		}
 	}
 	tampered := strings.Replace(string(raw),
-		fmt.Sprintf(`{"day":%q,"added":%d,"done":%d,"open":%d}`, target.Day, target.Added, target.Done, target.Open),
-		fmt.Sprintf(`{"day":%q,"added":%d,"done":%d,"open":%d}`, target.Day, target.Added, target.Done+999, target.Open),
+		fmt.Sprintf(`{"day":%q,"added":%d,"done":%d,"cancelled":%d,"open":%d}`, target.Day, target.Added, target.Done, target.Cancelled, target.Open),
+		fmt.Sprintf(`{"day":%q,"added":%d,"done":%d,"cancelled":%d,"open":%d}`, target.Day, target.Added, target.Done+999, target.Cancelled, target.Open),
 		1,
 	)
 	if tampered == string(raw) {

@@ -24,8 +24,9 @@ export function mergeTrend(rows: readonly { buckets: readonly TrendBucket[]; cov
 		to: string;
 		added: number;
 		done: number;
+		cancelled: number;
 		open: number;
-		owners: Record<string, { added: number; done: number; open: number }>;
+		owners: Record<string, { added: number; done: number; cancelled: number; open: number }>;
 	}
 	const merged = new Map<string, Acc>();
 	let coverageFrom = "";
@@ -39,6 +40,7 @@ export function mergeTrend(rows: readonly { buckets: readonly TrendBucket[]; cov
 					to: bucket.to,
 					added: 0,
 					done: 0,
+					cancelled: 0,
 					open: 0,
 					owners: {},
 				};
@@ -47,12 +49,14 @@ export function mergeTrend(rows: readonly { buckets: readonly TrendBucket[]; cov
 			// 已有对象就原地累加（同一份数据只在本函数里生成，不会被外部共享）
 			current.added += bucket.added;
 			current.done += bucket.done;
+			current.cancelled += bucket.cancelled;
 			current.open += bucket.open;
 			for (const [uuid, cell] of Object.entries(bucket.owners ?? {})) {
-				const owner = current.owners[uuid] ?? { added: 0, done: 0, open: 0 };
+				const owner = current.owners[uuid] ?? { added: 0, done: 0, cancelled: 0, open: 0 };
 				current.owners[uuid] = {
 					added: owner.added + cell.added,
 					done: owner.done + cell.done,
+					cancelled: owner.cancelled + cell.cancelled,
 					open: owner.open + cell.open,
 				};
 			}

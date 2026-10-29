@@ -25,7 +25,7 @@ import type { TrendBucketView, TrendOwnerCounts, TrendView } from "./types";
 const BAR_KINDS = ["done", "added", "open"] as const;
 type BarKind = (typeof BAR_KINDS)[number];
 
-const ZERO: TrendOwnerCounts = { added: 0, done: 0, open: 0 };
+const ZERO: TrendOwnerCounts = { added: 0, done: 0, cancelled: 0, open: 0 };
 
 /** 系列名：只看我的时候「未结」就是「进行中」（我的任务必然有人接）。 */
 const labelKey = (
