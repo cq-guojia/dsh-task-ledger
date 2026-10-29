@@ -53704,12 +53704,14 @@ body[data-ds-dark-theme]{
 /* 柱宽 5px、无圆角（用户 2026-10-17：「太粗、不要圆弧」）；非零柱给 2px 下限 */
 .dtl-trend__bar{position:relative;width:5px;flex:none;min-height:2px;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-trend__bar--done{background:var(--dtl-business);}
+/* 完成柱要盖在隔壁更高的柱子上：柱顶数值会伸出 5px 柱宽，否则被邻居压掉 */
+.dtl-trend__bar--done{background:var(--dtl-business);z-index:1;}
 .dtl-trend__bar--open{background:var(--dtl-chart-open);}
 .dtl-trend__bar--added{background:var(--dtl-chart-added);}
 /* hover 整列三根一起提亮（用户 2026-10-17：不是只亮蓝的一根） */
 .dtl-trend__col:hover .dtl-trend__bar{filter:brightness(1.18);}
-.dtl-trend__value{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+.dtl-trend__value{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  padding:1px 2px;border-radius:var(--dtl-radius-xs);background:var(--dtl-surface-1);
   font-size:10px;line-height:1;color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .dtl-trend__x{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:10px;line-height:1;
   color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
@@ -54238,7 +54240,7 @@ body[data-ds-dark-theme]{
 			const column = (bucket) => (0, react$1.createElement)("div", { className: "dtl-trend__col" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
 				from: bucket.from,
 				to: bucket.to
-			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`)), mine ? null : (0, react$1.createElement)("div", { className: "dtl-trend__tip-row dtl-trend__tip-row--sub" }, `${t("chartOfWhich")} ${t("chartDoing")} ${formatCount(breakdown(bucket).doing)}`), mine ? null : (0, react$1.createElement)("div", { className: "dtl-trend__tip-row dtl-trend__tip-row--sub" }, `${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}`)), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
+			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), kind === "open" && !mine ? `${t("chartOpen")} ${formatCount(counts(bucket).open)}（${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}）` : `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`))), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
 			const first = buckets[0];
 			const partial = trend.coverageFrom !== "" && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
 			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(labelKey(kind, mine)))), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
@@ -54534,8 +54536,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.118 · 261029-145336-423`
-			}, `v0.0.118 261029-145336-423`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.119 · 261029-145821-998`
+			}, `v0.0.119 261029-145821-998`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54628,7 +54630,6 @@ body[data-ds-dark-theme]{
 			chartMine: "只看我的",
 			chartDoing: "进行中",
 			chartWaiting: "待认领",
-			chartOfWhich: "其中",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "状态",
 			statusActive: "进行中",
@@ -54717,7 +54718,6 @@ body[data-ds-dark-theme]{
 			chartMine: "Only mine",
 			chartDoing: "In progress",
 			chartWaiting: "Unclaimed",
-			chartOfWhich: "of which",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "Status",
 			statusActive: "Active",

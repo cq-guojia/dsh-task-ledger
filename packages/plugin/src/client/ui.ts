@@ -80,12 +80,14 @@ const UI_BASE_CSS = `
 /* 柱宽 5px、无圆角（用户 2026-10-17：「太粗、不要圆弧」）；非零柱给 2px 下限 */
 .dtl-trend__bar{position:relative;width:5px;flex:none;min-height:2px;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-trend__bar--done{background:var(--dtl-business);}
+/* 完成柱要盖在隔壁更高的柱子上：柱顶数值会伸出 5px 柱宽，否则被邻居压掉 */
+.dtl-trend__bar--done{background:var(--dtl-business);z-index:1;}
 .dtl-trend__bar--open{background:var(--dtl-chart-open);}
 .dtl-trend__bar--added{background:var(--dtl-chart-added);}
 /* hover 整列三根一起提亮（用户 2026-10-17：不是只亮蓝的一根） */
 .dtl-trend__col:hover .dtl-trend__bar{filter:brightness(1.18);}
-.dtl-trend__value{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+.dtl-trend__value{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  padding:1px 2px;border-radius:var(--dtl-radius-xs);background:var(--dtl-surface-1);
   font-size:10px;line-height:1;color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .dtl-trend__x{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:10px;line-height:1;
   color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}

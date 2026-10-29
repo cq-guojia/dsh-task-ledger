@@ -50,7 +50,6 @@ export type LocaleKey =
 	| "chartMine"
 	| "chartDoing"
 	| "chartWaiting"
-	| "chartOfWhich"
 	| "periodRange"
 	// 筛选行
 	| "statusLabel"
@@ -147,7 +146,6 @@ export const zh: Record<LocaleKey, string> = {
 	chartMine: "只看我的",
 	chartDoing: "进行中",
 	chartWaiting: "待认领",
-	chartOfWhich: "其中",
 	periodRange: "{from} ~ {to}",
 
 	statusLabel: "状态",
@@ -244,7 +242,6 @@ export const en: Record<LocaleKey, string> = {
 	chartMine: "Only mine",
 	chartDoing: "In progress",
 	chartWaiting: "Unclaimed",
-	chartOfWhich: "of which",
 	periodRange: "{from} ~ {to}",
 
 	statusLabel: "Status",

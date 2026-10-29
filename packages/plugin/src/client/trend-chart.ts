@@ -106,24 +106,11 @@ export function TrendChart(props: {
 						"div",
 						{ className: "dtl-trend__tip-row" },
 						h("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }),
-						`${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`,
+						kind === "open" && !mine
+							? `${t("chartOpen")} ${formatCount(counts(bucket).open)}（${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}）`
+							: `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`,
 					),
 				),
-				// 「未结」下面再拆两行（只有「全部」才有意义：我的任务一定有人接）
-				mine
-					? null
-					: h(
-							"div",
-							{ className: "dtl-trend__tip-row dtl-trend__tip-row--sub" },
-							`${t("chartOfWhich")} ${t("chartDoing")} ${formatCount(breakdown(bucket).doing)}`,
-						),
-				mine
-					? null
-					: h(
-							"div",
-							{ className: "dtl-trend__tip-row dtl-trend__tip-row--sub" },
-							`${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}`,
-						),
 			),
 			h("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))),
 			// x 轴标**周末日期**（数据按截止日判），当周就是今天
