@@ -95,6 +95,12 @@ declare module "@deepseek-ai/dsh-client-ui-primitives" {
 		size?: number;
 		className?: string;
 	}>;
+	/** 左右 chevron（翻页箭头）：rc.2 `lib/types/icons/index.d.ts:50/53` 亲验存在，
+	 *  运行时符 `lib/index.js` 里也有同名导出，色随 currentColor（2026-10-29）。 */
+	export const IconChevronLeftOutlineRegular: ComponentType<{
+		size?: number;
+		className?: string;
+	}>;
 	export const IconChevronRightOutlineRegular: ComponentType<{
 		size?: number;
 		className?: string;

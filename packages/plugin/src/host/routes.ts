@@ -10,6 +10,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { invalidate } from "./repositories/cache.js";
 import { getBoardHome } from "./services/stats.service.js";
+import { getHistoryTrend } from "./services/history.service.js";
 import { type RegistryWorkspace, resolveWorkspaces } from "./workspace.js";
 
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 external/host-webserver.md）。 */
@@ -89,6 +90,24 @@ export function registerRoutes(
 	registerRead("/board/snapshot", async (_req, res) => {
 		try {
 			sendJson(res, 200, await getBoardHome(await workspacesOf(deps)));
+		} catch (error) {
+			sendJson(res, 500, {
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	});
+
+	// 历史页顶部日趋势（按天 + 按工作区）：只在切到历史模式时拉，不拖慢首屏。
+	registerRead("/history/trend", async (req, res) => {
+		try {
+			const raw = new URL(req.url ?? "/", "http://localhost").searchParams.get(
+				"months",
+			);
+			const months =
+				raw === null
+					? 12
+					: Math.min(12, Math.max(1, Number.parseInt(raw, 10) || 12));
+			sendJson(res, 200, await getHistoryTrend(await workspacesOf(deps), months));
 		} catch (error) {
 			sendJson(res, 500, {
 				error: error instanceof Error ? error.message : String(error),

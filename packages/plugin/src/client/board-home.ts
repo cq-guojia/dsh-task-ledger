@@ -35,9 +35,11 @@ import {
 	setQuery,
 	type TabFilter,
 } from "./store";
+import { fetchHistoryTrend } from "./api";
+import { HistoryChart, HistoryStats } from "./history-chart";
 import { TaskRowView } from "./task-row";
 import { TrendChart } from "./trend-chart";
-import type { BoardPayload } from "./types";
+import type { BoardPayload, HistoryTrendPayload } from "./types";
 import {
 	Button,
 	EmptyState,
@@ -155,6 +157,9 @@ export function BoardHome(props: {
 	const mountRef = useRef<HTMLDivElement>(null);
 	// 视图模式：在办看板 ↔ 历史查询（入口切换；历史页布局待定稿，先占位）。
 	const [viewMode, setViewMode] = useState<"active" | "history">("active");
+	// 历史页顶部数据：切到历史才拉（拉过一次就复用，切回在办不清）。
+	const [historyTrend, setHistoryTrend] = useState<HistoryTrendPayload | null>(null);
+	const [historyError, setHistoryError] = useState<string | null>(null);
 
 	/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
 	 *  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
@@ -216,6 +221,24 @@ export function BoardHome(props: {
 				.join("；"),
 		});
 	}, [degradedSig, degraded, t]);
+
+	// 历史页顶部数据：切到历史才拉；成功/失败都记一次，避免重复请求。
+	useEffect(() => {
+		if (viewMode !== "history" || historyTrend !== null || historyError !== null)
+			return;
+		let alive = true;
+		fetchHistoryTrend()
+			.then((payload) => {
+				if (alive) setHistoryTrend(payload);
+			})
+			.catch((error: unknown) => {
+				if (alive)
+					setHistoryError(error instanceof Error ? error.message : String(error));
+			});
+		return () => {
+			alive = false;
+		};
+	}, [viewMode, historyTrend, historyError]);
 
 	/** 工作区下拉候选：宿主里所有含台账的工作区（不是从任务里反推，空工作区也要能选）。 */
 	const workspaceOptions = useMemo(
@@ -561,9 +584,28 @@ export function BoardHome(props: {
 							),
 						),
 				),
-				// 历史查询页布局待定稿：切回「在办」看当前看板（历史页先留白）。
+				// 历史模式：顶部 4 数显 + 按天柱状图（独立于下方时间筛选）；在办模式：错误行。
 				viewMode === "history"
-					? null
+					? (historyError !== null
+							? h(
+									"div",
+									{
+										style: {
+											color: "var(--dtl-danger)",
+											fontSize: "var(--dtl-font-md)",
+											paddingTop: "var(--dtl-space-3)",
+										},
+									},
+									`${t("loadFailed")}：${historyError}`,
+								)
+							: historyTrend === null
+								? null
+								: h(
+										"div",
+										{ className: "dtl-stats dtl-stats--history", style: statsRowStyle },
+										h(HistoryChart, { data: historyTrend, t }),
+										h(HistoryStats, { data: historyTrend, t }),
+									))
 					: (state.status === "error" && board === null
 							? h(
 									"div",

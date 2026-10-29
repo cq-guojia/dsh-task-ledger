@@ -106,6 +106,15 @@ export type LocaleKey =
 	| "viewModeLabel"
 	| "viewActive"
 	| "viewHistory"
+	// 历史页顶部 4 数显 + 空态
+	| "historyToday"
+	| "historyWeek"
+	| "historyMonth"
+	| "historyLastMonth"
+	| "historyEmpty"
+	// 历史柱图翻页（只给无障碍名 / aria-label，按钮面上只有箭头）
+	| "historyPrevDays"
+	| "historyNextDays"
 	// 空态
 	// 浮标入口
 
@@ -207,6 +216,13 @@ export const zh: Record<LocaleKey, string> = {
 	viewModeLabel: "视图",
 	viewActive: "在办",
 	viewHistory: "历史",
+	historyToday: "今天",
+	historyWeek: "本周",
+	historyMonth: "本月",
+	historyLastMonth: "上月",
+	historyEmpty: "所选区间内没有结案记录",
+	historyPrevDays: "前 {n} 天",
+	historyNextDays: "后 {n} 天",
 
 
 };
@@ -310,6 +326,13 @@ export const en: Record<LocaleKey, string> = {
 	viewModeLabel: "View",
 	viewActive: "Active",
 	viewHistory: "History",
+	historyToday: "Today",
+	historyWeek: "This week",
+	historyMonth: "This month",
+	historyLastMonth: "Last month",
+	historyEmpty: "No closed tasks in the selected range",
+	historyPrevDays: "Previous {n} days",
+	historyNextDays: "Next {n} days",
 
 
 };

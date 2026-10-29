@@ -83,6 +83,12 @@ body{
   /* 统计卡主数字：宿主字号族最大 16px，看板主数字要更大 ⇒ 单开一档（别处不许直接写 px） */
   --dtl-font-stat:26px;
 
+  /* ── 统计卡固定高度（用户 2026-10-29 定）────────────────────────
+     卡高**只由这一条决定**，不跟内容走：小字缺行 / 小字凑巧换行都不改卡高。
+     算式 = 三行正文（标签 18 + 数字 26×1.15 + 小字 14）+ 上下 padding 24 + 两处 gap 8，
+     也就是三行都满时的自然高度 ⇒ 视觉与旧版一致，但不再被文字挤动。 */
+  --dtl-stat-h:calc(var(--dtl-space-3) * 2 + var(--dtl-line-sm) + var(--dtl-line-xs) + 1.15 * var(--dtl-font-stat) + var(--dtl-space-1) * 2);
+
   /* ── 动效 ────────────────────────────────────────────────────── */
   --dtl-dur-fast:var(--ds-transition-duration-fast,.12s);
   --dtl-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));

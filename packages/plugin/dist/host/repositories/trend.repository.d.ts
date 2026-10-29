@@ -32,5 +32,11 @@ export interface WorkspaceTrend {
 }
 /** 单工作区趋势（skill `stats --trend week --last 8w --by-owner`；过 1.5s 读缓存）。 */
 export declare function readTrend(workspace: LedgerWorkspace): Promise<WorkspaceTrend>;
+/**
+ * 历史页「新增量」曲线的取数：`stats --trend day --since --until`（明确窗口 ⇒ 不受
+ * day 粒度 365 桶上限的 --last 换算影响）。新增是真口径：按创建时间逐日统计，
+ * 含在办 / 待认领（与首页周趋势同一套 skill 算法）。
+ */
+export declare function readTrendByDay(workspace: LedgerWorkspace, since: string, until: string): Promise<WorkspaceTrend>;
 /** `stats --trend` → {@link WorkspaceTrend}（容器级严格：缺字段即坏，不当 0）。 */
 export declare function parseTrend(raw: unknown, where: string): WorkspaceTrend;

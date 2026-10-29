@@ -3913,7 +3913,7 @@ window.__ModuleLoader__.load({
 		const MOBILE_VIEWPORT_OFFSET = "16px";
 		const TOAST_LIFETIME = 4e3;
 		const TOAST_WIDTH = 356;
-		const GAP = 14;
+		const GAP$1 = 14;
 		const SWIPE_THRESHOLD = 45;
 		const TIME_BEFORE_UNMOUNT = 200;
 		function cn(...classes) {
@@ -4280,7 +4280,7 @@ window.__ModuleLoader__.load({
 			return styles;
 		}
 		const Toaster = /*#__PURE__*/ react$1.default.forwardRef(function Toaster(props, ref) {
-			const { id, invert, position = "bottom-right", hotkey = ["altKey", "KeyT"], expand, closeButton, className, offset, mobileOffset, theme = "light", richColors, duration, style, visibleToasts = VISIBLE_TOASTS_AMOUNT, toastOptions, dir = getDocumentDirection(), gap = GAP, icons, customAriaLabel, containerAriaLabel = "Notifications" } = props;
+			const { id, invert, position = "bottom-right", hotkey = ["altKey", "KeyT"], expand, closeButton, className, offset, mobileOffset, theme = "light", richColors, duration, style, visibleToasts = VISIBLE_TOASTS_AMOUNT, toastOptions, dir = getDocumentDirection(), gap = GAP$1, icons, customAriaLabel, containerAriaLabel = "Notifications" } = props;
 			const [toasts, setToasts] = react$1.default.useState([]);
 			const filteredToasts = react$1.default.useMemo(() => {
 				if (id) return toasts.filter((toast) => toast.toasterId === id);
@@ -5540,7 +5540,7 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region src/client/format.ts
-		function pad2(value) {
+		function pad2$1(value) {
 			return String(value).padStart(2, "0");
 		}
 		/**
@@ -5567,8 +5567,8 @@ window.__ModuleLoader__.load({
 			const ms = Date.parse(iso);
 			if (Number.isNaN(ms)) return opts?.fallback ?? iso;
 			const d = new Date(ms);
-			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
+			const base = `${d.getFullYear()}-${pad2$1(d.getMonth() + 1)}-${pad2$1(d.getDate())} ${pad2$1(d.getHours())}:${pad2$1(d.getMinutes())}`;
+			return opts?.seconds === true ? `${base}:${pad2$1(d.getSeconds())}` : base;
 		}
 		/** 计数缩写（统一口径）：<1000 原样；≥1000 用 K，≥100 万用 M，保留 1 位小数并去掉 .0。
 		*  例：999→"999"、1000→"1K"、1200→"1.2K"、12345→"12.3K"、1000000→"1M"。 */
@@ -53443,6 +53443,10 @@ window.__ModuleLoader__.load({
 		function fetchBoardSnapshot(opts = {}) {
 			return fetchJson(`/board/snapshot${opts.fresh === true ? "?fresh=1" : ""}`);
 		}
+		/** 历史页顶部日趋势（只在切到历史模式时拉，别拖慢首屏）。 */
+		function fetchHistoryTrend(months = 12) {
+			return fetchJson(`/history/trend?months=${months}`);
+		}
 		//#endregion
 		//#region src/client/store.ts
 		/**
@@ -53643,6 +53647,12 @@ body{
   /* 统计卡主数字：宿主字号族最大 16px，看板主数字要更大 ⇒ 单开一档（别处不许直接写 px） */
   --dtl-font-stat:26px;
 
+  /* ── 统计卡固定高度（用户 2026-10-29 定）────────────────────────
+     卡高**只由这一条决定**，不跟内容走：小字缺行 / 小字凑巧换行都不改卡高。
+     算式 = 三行正文（标签 18 + 数字 26×1.15 + 小字 14）+ 上下 padding 24 + 两处 gap 8，
+     也就是三行都满时的自然高度 ⇒ 视觉与旧版一致，但不再被文字挤动。 */
+  --dtl-stat-h:calc(var(--dtl-space-3) * 2 + var(--dtl-line-sm) + var(--dtl-line-xs) + 1.15 * var(--dtl-font-stat) + var(--dtl-space-1) * 2);
+
   /* ── 动效 ────────────────────────────────────────────────────── */
   --dtl-dur-fast:var(--ds-transition-duration-fast,.12s);
   --dtl-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));
@@ -53691,21 +53701,91 @@ body[data-ds-dark-theme]{
 		*/
 		/** 基础层样式（tokens + 业务容器类；幂等注入）。 */
 		const UI_BASE_CSS = `
-/* 统计卡：8 块（2×4）+ 右图表卡位 */
-.dtl-stat{display:flex;flex-direction:column;gap:var(--dtl-space-1);
+/* 统计卡：8 块（2×4）+ 右图表卡位
+   ⚠️ 卡高 = --dtl-stat-h 定死，**不跟内容走**（用户 2026-10-29）：小字缺行、小字换行
+   都不许改卡高，否则两个页面的卡一错位就被一眼看出来。文字一律贴顶（不用居中：
+   缺小字时居中的卡会显得空）。 */
+.dtl-stat{display:flex;flex-direction:column;justify-content:flex-start;gap:var(--dtl-space-1);
+  height:var(--dtl-stat-h);box-sizing:border-box;overflow:hidden;
   padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;}
+/* 三行文字各自的行高必须显式写死，--dtl-stat-h 的算式才对得上（别让行高继承宿主） */
+.dtl-stat__label{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
-.dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
+/* 小字锁单行：卡高定死，换行会被 overflow 裁掉 ⇒ 宁可省略号 */
+.dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* 统计区整体：左 8 块（2 行 × 4 列）+ 右图表卡，参考图同款分栏。
    ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
-   两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
+   行高也定死成 --dtl-stat-h（不是 1fr）⇒ 行不随内容涨，卡与卡之间永远等高。
+   两侧等高仍由 .dtl-stats 的 stretch + 图卡 height:100% 保证。 */
 .dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
-.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
+.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,var(--dtl-stat-h));
   gap:var(--dtl-space-3);}
-.dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
-@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
+@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,var(--dtl-stat-h));}}
+
+/* ── 历史页顶部：图表卡在左、4 数显在右（沿用主页 8 块的分栏与单块尺寸）───────
+   右栏宽 = 2 个主页单卡宽 ⇒ 4 块排 2×2，每块与主页单块同宽。
+   ⚠️ 高度不另写：卡高 / 行高都用主页那套 --dtl-stat-h，页面里不出现第二个高度口径。
+   填充按行（今日 本周 / 本月 上月）：主页那套 grid-auto-flow:column 是给成对视角用的，历史页不适用。
+   2026-10-29 用户：右栏嫌宽 ⇒ 收窄 1/5（0.85fr → 0.68fr）。 */
+.dtl-stats--history{grid-template-columns:minmax(0,1.7fr) minmax(0,0.68fr);}
+.dtl-stats--history .dtl-stats__cards{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));}
+@media (max-width:960px){.dtl-stats--history{grid-template-columns:minmax(0,1fr);}}
+/* 640 以下主页是 2 列 × 4 行，历史页只有 4 块 ⇒ 仍是 2×2，行数不能跟着变 */
+@media (max-width:640px){.dtl-stats--history .dtl-stats__cards{grid-template-rows:repeat(2,var(--dtl-stat-h));}}
+
+/* 历史日柱：柱间距 2px、悬停虚线框 + 浮卡。
+   翻页按钮**飘**在图区右上角（绝对定位，不单独占一行）——压在柱子上也无妨（用户 2026-10-29）。 */
+.dtl-hist{position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
+  /* 单列（≤960）时 height:100% 解析成 auto，光靠 flex 撑不出高度 ⇒ 用右侧两行卡的总高兜底，
+     两栏并排时这个值恰好等于 stretch 给的高度，等于没改 */
+  min-height:calc(var(--dtl-stat-h) * 2 + var(--dtl-space-3));
+  padding:var(--dtl-space-3) var(--dtl-space-4);}
+.dtl-hist__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
+  display:flex;gap:var(--dtl-space-2);}
+/* 按钮是核心 IconButton（outline 档自带 surface-1 底 + 边框）；这里只把 hover / disabled
+   也钉成不透明 —— 核心 hover 是半透明底、disabled 整体 opacity:.4，落在网格线上都会透线。
+   皮肤不重写，只补这两条；禁用的弱化改用 fg-dim 字色表达。 */
+.dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-surface-1);}
+.dtl-hist__nav .dshpc-iconbtn:disabled{opacity:1;color:var(--dtl-fg-dim);}
+.dtl-hist__plot{position:relative;flex:1 1 auto;min-height:0;}
+/* 刻度线四档：顶/底实线，中间两条虚线（用户 2026-10-29：中间要有两根刻度线） */
+.dtl-hist__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
+.dtl-hist__gridline{border-top:1px solid var(--dtl-border);}
+.dtl-hist__gridline--dashed{border-top-style:dashed;}
+.dtl-hist__gridline--base{border-top-color:var(--dtl-border-strong);}
+.dtl-hist__cols{position:absolute;inset:0;display:flex;justify-content:flex-start;gap:2px;}
+.dtl-hist__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
+  transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-hist__col:hover{filter:brightness(1.1);}
+.dtl-hist__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
+  border-radius:var(--dtl-radius-xs);pointer-events:none;}
+/* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 裁掉分段自己的角 */
+.dtl-hist__bar{width:100%;display:flex;flex-direction:column-reverse;
+  border-radius:2px 2px 0 0;overflow:hidden;}
+/* 浮卡：首行日期，下面一工作区一行（色块 + 名称 + 数量），0 值不列。
+   恒在柱子**下方**：上方会被图表顶边挤出屏幕、hover 判定又带来闪跳（用户 2026-10-29 都放下面）；
+   top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。 */
+.dtl-hist__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
+  padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);white-space:nowrap;font-size:var(--dtl-font-xs);line-height:1.5;
+  color:var(--dtl-fg-2);opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-hist__col:hover .dtl-hist__tip{opacity:1;}
+.dtl-hist__tip-date{color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
+.dtl-hist__tip-row{display:flex;align-items:center;gap:var(--dtl-space-1);
+  font-variant-numeric:tabular-nums;}
+.dtl-hist__tip-dot{display:inline-block;width:8px;height:8px;flex:none;}
+.dtl-hist__tip-count{margin-left:auto;padding-left:var(--dtl-space-3);color:var(--dtl-fg);}
+.dtl-hist__labels{display:flex;gap:2px;margin-top:2px;flex:none;}
+/* 新增量曲线：铺满 plot 的 SVG，0-100 百分比坐标（preserveAspectRatio:none 拉伸），
+   non-scaling-stroke 保证线宽不随拉伸变形；只描边不填充，色与趋势图「新增」同源 */
+.dtl-hist__line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.dtl-hist__line polyline{fill:none;stroke:var(--dtl-chart-added);stroke-width:1.5;
+  vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
+.dtl-hist__label{flex:none;text-align:center;font-size:10px;line-height:1;color:var(--dtl-fg-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;}
 
 /* ── 趋势图（右上卡：8 周 × 3 柱）────────────────────────────────
    柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
@@ -53960,10 +54040,7 @@ body[data-ds-dark-theme]{
 				"data-active": props.active === true,
 				title: props.title,
 				onClick: interactive ? props.onClick : void 0
-			}, (0, react$1.createElement)("span", { style: {
-				fontSize: "var(--dtl-font-sm)",
-				color: "var(--dtl-fg-2)"
-			} }, props.label), (0, react$1.createElement)("span", { className: "dtl-stat__value" }, shown), props.hint === void 0 || props.hint === null || props.hint === "" ? null : (0, react$1.createElement)("span", { className: "dtl-stat__hint" }, props.hint));
+			}, (0, react$1.createElement)("span", { className: "dtl-stat__label" }, props.label), (0, react$1.createElement)("span", { className: "dtl-stat__value" }, shown), props.hint === void 0 || props.hint === null || props.hint === "" ? null : (0, react$1.createElement)("span", { className: "dtl-stat__hint" }, props.hint));
 		}
 		/** 本地 7 档语义色 → 核心 `Chip` 5 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
 		*  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。 */
@@ -54032,6 +54109,309 @@ body[data-ds-dark-theme]{
 				d: "M44 66 H84 M44 86 H70",
 				...stroke
 			}));
+		}
+		//#endregion
+		//#region src/client/history-chart.ts
+		/**
+		* 历史页顶部：**图表卡在左、4 数显在右**，沿用主页 8 块的分栏与单块尺寸；不显示图例。
+		*
+		* 柱色：≥2 工作区 = 每个工作区一种颜色；仅 1 个工作区 = 完成(绿) / 取消(红) 两色。
+		* 布局：柱序居左、柱宽固定、柱间 2px；按容器宽算能放几天（屏幕越窄显示越少），右边留白。
+		* 悬停：虚线框住当天 + 浮卡给「日期 · 结案数」。
+		* 0 值：host 的 `from/to` 是有数据的最早/最晚天 ⇒ 首尾 0 天然裁掉；中间空白天补空槽保持连续。
+		* 翻页：左右各 10 天，窗口在 [from, to] 内平移。
+		*/
+		/** 工作区配色：取插件语义 token（≥5 个区会循环）。 */
+		const PALETTE = [
+			"var(--dtl-business)",
+			"var(--dtl-success)",
+			"var(--dtl-warning)",
+			"var(--dtl-overdue)",
+			"var(--dtl-danger)"
+		];
+		/** 单日槽宽：柱宽 = 槽宽。2026-10-29 用户要求加粗到 1.5 倍（10 → 15）。 */
+		const SLOT_W = 15;
+		/** 槽间距：用户没让变，保持 2px。 */
+		const GAP = 2;
+		const PAGE_DAYS = 10;
+		function pad2(n) {
+			return String(n).padStart(2, "0");
+		}
+		function ymdOf(date) {
+			return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+		}
+		function parseYmd(value) {
+			return /* @__PURE__ */ new Date(`${value}T00:00:00`);
+		}
+		function addDays(value, delta) {
+			const date = parseYmd(value);
+			date.setDate(date.getDate() + delta);
+			return ymdOf(date);
+		}
+		/** 本周一（周一为一周之始，与 skill / 趋势同口径）。 */
+		function mondayOf(value) {
+			const date = parseYmd(value);
+			date.setDate(date.getDate() - (date.getDay() + 6) % 7);
+			return ymdOf(date);
+		}
+		function monthStart(value) {
+			return `${value.slice(0, 7)}-01`;
+		}
+		function prevMonthStart(value) {
+			const date = parseYmd(monthStart(value));
+			date.setMonth(date.getMonth() - 1);
+			return ymdOf(date);
+		}
+		function closedOf(day) {
+			return day.done + day.cancelled;
+		}
+		/** 4 数显的四个数：按结案时间落在今天 / 本周 / 本月 / 上月。 */
+		function historyTotals(data) {
+			const today = ymdOf(/* @__PURE__ */ new Date());
+			const weekFrom = mondayOf(today);
+			const monthFrom = monthStart(today);
+			const lastMonthFrom = prevMonthStart(today);
+			const lastMonthTo = addDays(monthFrom, -1);
+			const sumIn = (from, to) => data.days.reduce((sum, day) => day.date >= from && day.date <= to ? sum + closedOf(day) : sum, 0);
+			return {
+				today: sumIn(today, today),
+				week: sumIn(weekFrom, today),
+				month: sumIn(monthFrom, today),
+				lastMonth: sumIn(lastMonthFrom, lastMonthTo)
+			};
+		}
+		/** 右侧 4 个方框（2×2，单块尺寸与主页统计卡一致）。 */
+		function HistoryStats(props) {
+			const { data, t } = props;
+			const totals = historyTotals(data);
+			const today = ymdOf(/* @__PURE__ */ new Date());
+			const weekFrom = mondayOf(today);
+			return (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, (0, react$1.createElement)(StatCard, {
+				label: t("historyToday"),
+				value: totals.today,
+				hint: today.slice(5)
+			}), (0, react$1.createElement)(StatCard, {
+				label: t("historyWeek"),
+				value: totals.week,
+				hint: `${weekFrom.slice(5)}~${today.slice(5)}`
+			}), (0, react$1.createElement)(StatCard, {
+				label: t("historyMonth"),
+				value: totals.month,
+				hint: today.slice(0, 7)
+			}), (0, react$1.createElement)(StatCard, {
+				label: t("historyLastMonth"),
+				value: totals.lastMonth,
+				hint: prevMonthStart(today).slice(0, 7)
+			}));
+		}
+		/** 左侧图表卡：按天堆叠柱 + y 轴 + 翻页（无图例）。 */
+		function HistoryChart(props) {
+			const { data, t } = props;
+			const plotRef = (0, react$1.useRef)(null);
+			const [width, setWidth] = (0, react$1.useState)(0);
+			const [shift, setShift] = (0, react$1.useState)(0);
+			(0, react$1.useEffect)(() => {
+				const el = plotRef.current;
+				if (el === null) return;
+				const observer = new ResizeObserver((entries) => {
+					const rect = entries[0];
+					if (rect !== void 0) setWidth(rect.contentRect.width);
+				});
+				observer.observe(el);
+				setWidth(el.clientWidth);
+				return () => observer.disconnect();
+			}, []);
+			if (data.days.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)(EmptyState, { title: t("historyEmpty") }));
+			const byDate = /* @__PURE__ */ new Map();
+			for (const day of data.days) byDate.set(day.date, day);
+			const capacity = width > 0 ? Math.max(1, Math.floor(width / 17)) : 30;
+			const rawWindowEnd = addDays(data.to, -shift);
+			const windowEnd = rawWindowEnd < data.from ? data.from : rawWindowEnd;
+			const earliest = addDays(windowEnd, -(capacity - 1));
+			const windowStart = earliest < data.from ? data.from : earliest;
+			const dates = [];
+			for (let cur = windowStart; cur <= windowEnd; cur = addDays(cur, 1)) dates.push(cur);
+			const peak = dates.reduce((max, date) => {
+				const day = byDate.get(date);
+				return day === void 0 ? max : Math.max(max, closedOf(day));
+			}, 0);
+			const multi = data.workspaces.length >= 2;
+			const colorById = /* @__PURE__ */ new Map();
+			data.workspaces.forEach((workspace, index) => {
+				colorById.set(workspace.id, PALETTE[index % PALETTE.length] ?? PALETTE[0]);
+			});
+			const segmentsOf = (day) => {
+				if (!multi) {
+					const out = [];
+					if (day.done > 0) out.push({
+						count: day.done,
+						color: "var(--dtl-success)"
+					});
+					if (day.cancelled > 0) out.push({
+						count: day.cancelled,
+						color: "var(--dtl-danger)"
+					});
+					return out;
+				}
+				const out = [];
+				for (const workspace of data.workspaces) {
+					const cell = day.byWorkspace[workspace.id];
+					const count = cell === void 0 ? 0 : cell.done + cell.cancelled;
+					if (count > 0) out.push({
+						count,
+						color: colorById.get(workspace.id) ?? PALETTE[0]
+					});
+				}
+				return out;
+			};
+			/** 浮卡：首行日期，下面**一工作区一行**（色块 + 名称 + 结案数），有几个列几个、0 值不列。
+			*  多工作区按 host 给的 workspaces 顺序（与配色分配同序）；单工作区时柱色本来就是
+			*  完成绿 / 取消红，所以拆成那两行，不硬塞一个工作区色（用户 2026-10-29）。 */
+			const rowsOf = (day) => {
+				const rows = [];
+				if (multi) for (const workspace of data.workspaces) {
+					const cell = day.byWorkspace[workspace.id];
+					const count = cell === void 0 ? 0 : cell.done + cell.cancelled;
+					if (count <= 0) continue;
+					rows.push({
+						key: workspace.id,
+						name: workspace.title,
+						count,
+						color: colorById.get(workspace.id) ?? PALETTE[0]
+					});
+				}
+				else {
+					if (day.done > 0) rows.push({
+						key: "done",
+						name: t("chartFinished"),
+						count: day.done,
+						color: "var(--dtl-success)"
+					});
+					if (day.cancelled > 0) rows.push({
+						key: "cancelled",
+						name: t("chartCancelled"),
+						count: day.cancelled,
+						color: "var(--dtl-danger)"
+					});
+				}
+				return rows;
+			};
+			const tipOf = (date, day) => {
+				const rows = rowsOf(day);
+				const added = data.addedByDay?.[date];
+				return (0, react$1.createElement)("div", { className: "dtl-hist__tip" }, (0, react$1.createElement)("div", { className: "dtl-hist__tip-date" }, date), added !== void 0 && added > 0 ? (0, react$1.createElement)("div", {
+					key: "added",
+					className: "dtl-hist__tip-row"
+				}, (0, react$1.createElement)("span", {
+					className: "dtl-hist__tip-dot",
+					style: { background: "var(--dtl-chart-added)" }
+				}), (0, react$1.createElement)("span", null, t("chartAdded")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(added))) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
+					key: row.key,
+					className: "dtl-hist__tip-row"
+				}, (0, react$1.createElement)("span", {
+					className: "dtl-hist__tip-dot",
+					style: { background: row.color }
+				}), (0, react$1.createElement)("span", null, row.name), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(row.count)))));
+			};
+			const colOf = (date) => {
+				const day = byDate.get(date);
+				const colStyle = { width: `${String(SLOT_W)}px` };
+				if (day === void 0) return (0, react$1.createElement)("div", {
+					key: date,
+					className: "dtl-hist__col",
+					style: colStyle
+				});
+				const total = closedOf(day);
+				const segments = segmentsOf(day);
+				const height = peak === 0 ? 0 : Math.max(total / peak * 100, 2);
+				return (0, react$1.createElement)("div", {
+					key: date,
+					className: "dtl-hist__col",
+					style: colStyle
+				}, (0, react$1.createElement)("div", {
+					className: "dtl-hist__bar",
+					style: { height: `${String(height)}%` }
+				}, segments.map((segment, index) => (0, react$1.createElement)("div", {
+					key: index,
+					style: {
+						height: `${String(segment.count / total * 100)}%`,
+						background: segment.color
+					}
+				}))), tipOf(date, day));
+			};
+			const labelStep = Math.max(1, Math.ceil(dates.length / 10));
+			const labelOf = (date, index) => (0, react$1.createElement)("div", {
+				key: date,
+				className: "dtl-hist__label",
+				style: { width: `${String(SLOT_W)}px` }
+			}, index % labelStep === 0 ? date.slice(5) : "");
+			const atEarliest = windowStart <= data.from;
+			const atLatest = shift <= 0;
+			/** 新增量曲线：一天一个点落在列中心，**一条线、不分工作区**（用户 2026-10-29）。
+			*  SVG 用 0-100 百分比坐标 + non-scaling-stroke ⇒ 不用测 plot 像素高，窗口缩放线宽恒定；
+			*  归一化只看曲线自己的峰值（与柱子的结案峰值各管各的），全 0 / 取数失败就不画。 */
+			const curve = () => {
+				const series = data.addedByDay;
+				if (series === void 0) return null;
+				const values = dates.map((date) => series[date] ?? 0);
+				const max = values.reduce((m, v) => v > m ? v : m, 0);
+				if (max <= 0) return null;
+				const totalW = dates.length * 17 - GAP;
+				const points = values.map((value, index) => `${((index + .5) * 17 / totalW * 100).toFixed(2)},${(100 - value / max * 96).toFixed(2)}`).join(" ");
+				return (0, react$1.createElement)("svg", {
+					className: "dtl-hist__line",
+					viewBox: "0 0 100 100",
+					preserveAspectRatio: "none",
+					"aria-hidden": true
+				}, (0, react$1.createElement)("polyline", { points }));
+			};
+			/** 翻页钮：**只画箭头** —— 核心 `IconButton` 出皮、`Icon*` 官方图标出图形，本文件不再手写
+			*  按钮样式与箭头字形（用户 2026-10-29）。悬停提示走官方 Tooltip（本仓库 `Tip` 唯一入口）；
+			*  文案只当无障碍名 + 气泡，且用 `title: ""` 压掉原生 title（照 `task-row.ts` 的惯例）。 */
+			const navButton = (dir, label, disabled, onClick) => (0, react$1.createElement)(Tip, {
+				label,
+				side: "bottom",
+				children: (0, react$1.createElement)(IconButton, {
+					icon: (0, react$1.createElement)(dir === "left" ? _deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }),
+					label,
+					title: "",
+					variant: "outline",
+					size: "sm",
+					disabled,
+					onClick
+				})
+			});
+			return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)("div", { className: "dtl-hist__nav" }, navButton("left", t("historyPrevDays", { n: PAGE_DAYS }), atEarliest, () => {
+				setShift((value) => value + PAGE_DAYS);
+			}), navButton("right", t("historyNextDays", { n: PAGE_DAYS }), atLatest, () => {
+				setShift((value) => Math.max(0, value - PAGE_DAYS));
+			})), (0, react$1.createElement)("div", { style: {
+				flex: "1 1 auto",
+				minHeight: 0,
+				display: "flex",
+				gap: "var(--dtl-space-2)"
+			} }, (0, react$1.createElement)("div", { style: {
+				display: "flex",
+				flexDirection: "column",
+				justifyContent: "space-between",
+				flex: "none",
+				minWidth: "26px",
+				paddingBottom: "12px",
+				textAlign: "right",
+				fontSize: "10px",
+				lineHeight: "1",
+				color: "var(--dtl-fg-3)",
+				fontVariantNumeric: "tabular-nums"
+			} }, (0, react$1.createElement)("span", null, String(peak)), (0, react$1.createElement)("span", null, String(Math.round(peak * 2 / 3))), (0, react$1.createElement)("span", null, String(Math.round(peak / 3))), (0, react$1.createElement)("span", null, "0")), (0, react$1.createElement)("div", { style: {
+				flex: "1 1 auto",
+				minWidth: 0,
+				display: "flex",
+				flexDirection: "column",
+				minHeight: 0
+			} }, (0, react$1.createElement)("div", {
+				className: "dtl-hist__plot",
+				ref: plotRef
+			}, (0, react$1.createElement)("div", { className: "dtl-hist__grid" }, (0, react$1.createElement)("div", { className: "dtl-hist__gridline" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-hist__cols" }, ...dates.map((date) => colOf(date))), curve()), (0, react$1.createElement)("div", { className: "dtl-hist__labels" }, ...dates.map((date, index) => labelOf(date, index))))));
 		}
 		//#endregion
 		//#region src/client/task-row.ts
@@ -54427,6 +54807,8 @@ body[data-ds-dark-theme]{
 			const state = (0, react$1.useSyncExternalStore)(boardSubscribe, boardSnapshot);
 			const mountRef = (0, react$1.useRef)(null);
 			const [viewMode, setViewMode] = (0, react$1.useState)("active");
+			const [historyTrend, setHistoryTrend] = (0, react$1.useState)(null);
+			const [historyError, setHistoryError] = (0, react$1.useState)(null);
 			/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
 			*  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
 			const handleView = (row) => {
@@ -54471,6 +54853,22 @@ body[data-ds-dark-theme]{
 				degradedSig,
 				degraded,
 				t
+			]);
+			(0, react$1.useEffect)(() => {
+				if (viewMode !== "history" || historyTrend !== null || historyError !== null) return;
+				let alive = true;
+				fetchHistoryTrend().then((payload) => {
+					if (alive) setHistoryTrend(payload);
+				}).catch((error) => {
+					if (alive) setHistoryError(error instanceof Error ? error.message : String(error));
+				});
+				return () => {
+					alive = false;
+				};
+			}, [
+				viewMode,
+				historyTrend,
+				historyError
 			]);
 			/** 工作区下拉候选：宿主里所有含台账的工作区（不是从任务里反推，空工作区也要能选）。 */
 			const workspaceOptions = (0, react$1.useMemo)(() => [{
@@ -54621,8 +55019,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261029-215620-858`
-			}, `v0.0.125 261029-215620-858`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261029-234240-784`
+			}, `v0.0.125 261029-234240-784`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -54649,7 +55047,20 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					refresh();
 				}
-			}, state.refreshing ? t("refreshing") : t("refresh")))), viewMode === "history" ? null : state.status === "error" && board === null ? (0, react$1.createElement)("div", { style: {
+			}, state.refreshing ? t("refreshing") : t("refresh")))), viewMode === "history" ? historyError !== null ? (0, react$1.createElement)("div", { style: {
+				color: "var(--dtl-danger)",
+				fontSize: "var(--dtl-font-md)",
+				paddingTop: "var(--dtl-space-3)"
+			} }, `${t("loadFailed")}：${historyError}`) : historyTrend === null ? null : (0, react$1.createElement)("div", {
+				className: "dtl-stats dtl-stats--history",
+				style: statsRowStyle
+			}, (0, react$1.createElement)(HistoryChart, {
+				data: historyTrend,
+				t
+			}), (0, react$1.createElement)(HistoryStats, {
+				data: historyTrend,
+				t
+			})) : state.status === "error" && board === null ? (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-2)"
@@ -54766,7 +55177,14 @@ body[data-ds-dark-theme]{
 			fieldCreatorStamp: "创建于 {age}",
 			viewModeLabel: "视图",
 			viewActive: "在办",
-			viewHistory: "历史"
+			viewHistory: "历史",
+			historyToday: "今天",
+			historyWeek: "本周",
+			historyMonth: "本月",
+			historyLastMonth: "上月",
+			historyEmpty: "所选区间内没有结案记录",
+			historyPrevDays: "前 {n} 天",
+			historyNextDays: "后 {n} 天"
 		};
 		/** English（与 zh 键完全对齐）。 */
 		const en = {
@@ -54859,7 +55277,14 @@ body[data-ds-dark-theme]{
 			fieldCreatorStamp: "created {age}",
 			viewModeLabel: "View",
 			viewActive: "Active",
-			viewHistory: "History"
+			viewHistory: "History",
+			historyToday: "Today",
+			historyWeek: "This week",
+			historyMonth: "This month",
+			historyLastMonth: "Last month",
+			historyEmpty: "No closed tasks in the selected range",
+			historyPrevDays: "Previous {n} days",
+			historyNextDays: "Next {n} days"
 		};
 		/** 把宿主给的无参 t 包成带占位符替换的 t（模板一律 `{name}`，不依赖宿主是否支持 params）。 */
 		function interpolateTranslate(base) {

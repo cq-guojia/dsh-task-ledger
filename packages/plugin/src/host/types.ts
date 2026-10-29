@@ -158,6 +158,37 @@ export interface TrendPayload extends TrendView {
 	readonly degraded: readonly DegradedInfo[];
 }
 
+/** 历史日趋势里某工作区一天的结案数。 */
+export interface HistoryWorkspaceDay {
+	readonly done: number;
+	readonly cancelled: number;
+}
+
+/** 历史页顶部某一天（只含"有记录"的天；中间空白天由前端补空）。 */
+export interface HistoryDay {
+	readonly date: string;
+	readonly done: number;
+	readonly cancelled: number;
+	/** 工作区 id → 当天该区的 done / cancelled（上色用）。 */
+	readonly byWorkspace: Readonly<Record<string, HistoryWorkspaceDay>>;
+}
+
+/** 历史页顶部数据：日趋势 + 工作区色表 + 有数据区间。 */
+export interface HistoryTrendView {
+	readonly workspaces: readonly { readonly id: string; readonly title: string }[];
+	readonly days: readonly HistoryDay[];
+	readonly from: string;
+	readonly to: string;
+	/** 逐日**新增**任务量（跨工作区合计，含在办 / 待认领；skill `stats --trend day`）。
+	 *  缺省 = 曲线取数失败 ⇒ 前端整条不画（不拿 0 充数）。 */
+	readonly addedByDay?: Readonly<Record<string, number>>;
+}
+
+/** 历史日趋势 + 降级。 */
+export interface HistoryTrendPayload extends HistoryTrendView {
+	readonly degraded: readonly DegradedInfo[];
+}
+
 /** 一个工作区的花名册（skill `owners --json`：含当前没任务的人）。 */
 export interface WorkspaceOwners {
 	readonly workspaceId: string;

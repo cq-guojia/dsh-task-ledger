@@ -13,8 +13,8 @@
 export const CACHE_TTL_MS = 1_500;
 
 /** 缓存的操作种类（= skill 脚本子命令；worklog 不进缓存故不在此列）。
- *  `history` 已从插件侧消失（2026-10-29：本周 / 上周完成改取 `stats --trend` 的桶），不再单列。 */
-export type CacheOp = "list" | "stats" | "owners";
+ *  `history` 供历史页顶部日趋势使用（2026-10-29 重新接入）。 */
+export type CacheOp = "history" | "list" | "stats" | "owners";
 
 const SEP = "\u0000";
 

@@ -30,21 +30,91 @@ import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
 
 /** 基础层样式（tokens + 业务容器类；幂等注入）。 */
 const UI_BASE_CSS = `
-/* 统计卡：8 块（2×4）+ 右图表卡位 */
-.dtl-stat{display:flex;flex-direction:column;gap:var(--dtl-space-1);
+/* 统计卡：8 块（2×4）+ 右图表卡位
+   ⚠️ 卡高 = --dtl-stat-h 定死，**不跟内容走**（用户 2026-10-29）：小字缺行、小字换行
+   都不许改卡高，否则两个页面的卡一错位就被一眼看出来。文字一律贴顶（不用居中：
+   缺小字时居中的卡会显得空）。 */
+.dtl-stat{display:flex;flex-direction:column;justify-content:flex-start;gap:var(--dtl-space-1);
+  height:var(--dtl-stat-h);box-sizing:border-box;overflow:hidden;
   padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;}
+/* 三行文字各自的行高必须显式写死，--dtl-stat-h 的算式才对得上（别让行高继承宿主） */
+.dtl-stat__label{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
-.dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
+/* 小字锁单行：卡高定死，换行会被 overflow 裁掉 ⇒ 宁可省略号 */
+.dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* 统计区整体：左 8 块（2 行 × 4 列）+ 右图表卡，参考图同款分栏。
    ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
-   两栏**完全等高**：cards 两行 minmax(0,1fr) 均分 + 卡 height:100% ⇒ 图表卡与左边一样高。 */
+   行高也定死成 --dtl-stat-h（不是 1fr）⇒ 行不随内容涨，卡与卡之间永远等高。
+   两侧等高仍由 .dtl-stats 的 stretch + 图卡 height:100% 保证。 */
 .dtl-stats{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--dtl-space-3);align-items:stretch;}
-.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
+.dtl-stats__cards{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,var(--dtl-stat-h));
   gap:var(--dtl-space-3);}
-.dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
-@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
+@media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,var(--dtl-stat-h));}}
+
+/* ── 历史页顶部：图表卡在左、4 数显在右（沿用主页 8 块的分栏与单块尺寸）───────
+   右栏宽 = 2 个主页单卡宽 ⇒ 4 块排 2×2，每块与主页单块同宽。
+   ⚠️ 高度不另写：卡高 / 行高都用主页那套 --dtl-stat-h，页面里不出现第二个高度口径。
+   填充按行（今日 本周 / 本月 上月）：主页那套 grid-auto-flow:column 是给成对视角用的，历史页不适用。
+   2026-10-29 用户：右栏嫌宽 ⇒ 收窄 1/5（0.85fr → 0.68fr）。 */
+.dtl-stats--history{grid-template-columns:minmax(0,1.7fr) minmax(0,0.68fr);}
+.dtl-stats--history .dtl-stats__cards{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));}
+@media (max-width:960px){.dtl-stats--history{grid-template-columns:minmax(0,1fr);}}
+/* 640 以下主页是 2 列 × 4 行，历史页只有 4 块 ⇒ 仍是 2×2，行数不能跟着变 */
+@media (max-width:640px){.dtl-stats--history .dtl-stats__cards{grid-template-rows:repeat(2,var(--dtl-stat-h));}}
+
+/* 历史日柱：柱间距 2px、悬停虚线框 + 浮卡。
+   翻页按钮**飘**在图区右上角（绝对定位，不单独占一行）——压在柱子上也无妨（用户 2026-10-29）。 */
+.dtl-hist{position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
+  /* 单列（≤960）时 height:100% 解析成 auto，光靠 flex 撑不出高度 ⇒ 用右侧两行卡的总高兜底，
+     两栏并排时这个值恰好等于 stretch 给的高度，等于没改 */
+  min-height:calc(var(--dtl-stat-h) * 2 + var(--dtl-space-3));
+  padding:var(--dtl-space-3) var(--dtl-space-4);}
+.dtl-hist__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
+  display:flex;gap:var(--dtl-space-2);}
+/* 按钮是核心 IconButton（outline 档自带 surface-1 底 + 边框）；这里只把 hover / disabled
+   也钉成不透明 —— 核心 hover 是半透明底、disabled 整体 opacity:.4，落在网格线上都会透线。
+   皮肤不重写，只补这两条；禁用的弱化改用 fg-dim 字色表达。 */
+.dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-surface-1);}
+.dtl-hist__nav .dshpc-iconbtn:disabled{opacity:1;color:var(--dtl-fg-dim);}
+.dtl-hist__plot{position:relative;flex:1 1 auto;min-height:0;}
+/* 刻度线四档：顶/底实线，中间两条虚线（用户 2026-10-29：中间要有两根刻度线） */
+.dtl-hist__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
+.dtl-hist__gridline{border-top:1px solid var(--dtl-border);}
+.dtl-hist__gridline--dashed{border-top-style:dashed;}
+.dtl-hist__gridline--base{border-top-color:var(--dtl-border-strong);}
+.dtl-hist__cols{position:absolute;inset:0;display:flex;justify-content:flex-start;gap:2px;}
+.dtl-hist__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
+  transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-hist__col:hover{filter:brightness(1.1);}
+.dtl-hist__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
+  border-radius:var(--dtl-radius-xs);pointer-events:none;}
+/* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 裁掉分段自己的角 */
+.dtl-hist__bar{width:100%;display:flex;flex-direction:column-reverse;
+  border-radius:2px 2px 0 0;overflow:hidden;}
+/* 浮卡：首行日期，下面一工作区一行（色块 + 名称 + 数量），0 值不列。
+   恒在柱子**下方**：上方会被图表顶边挤出屏幕、hover 判定又带来闪跳（用户 2026-10-29 都放下面）；
+   top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。 */
+.dtl-hist__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
+  padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);white-space:nowrap;font-size:var(--dtl-font-xs);line-height:1.5;
+  color:var(--dtl-fg-2);opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-hist__col:hover .dtl-hist__tip{opacity:1;}
+.dtl-hist__tip-date{color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
+.dtl-hist__tip-row{display:flex;align-items:center;gap:var(--dtl-space-1);
+  font-variant-numeric:tabular-nums;}
+.dtl-hist__tip-dot{display:inline-block;width:8px;height:8px;flex:none;}
+.dtl-hist__tip-count{margin-left:auto;padding-left:var(--dtl-space-3);color:var(--dtl-fg);}
+.dtl-hist__labels{display:flex;gap:2px;margin-top:2px;flex:none;}
+/* 新增量曲线：铺满 plot 的 SVG，0-100 百分比坐标（preserveAspectRatio:none 拉伸），
+   non-scaling-stroke 保证线宽不随拉伸变形；只描边不填充，色与趋势图「新增」同源 */
+.dtl-hist__line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.dtl-hist__line polyline{fill:none;stroke:var(--dtl-chart-added);stroke-width:1.5;
+  vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
+.dtl-hist__label{flex:none;text-align:center;font-size:10px;line-height:1;color:var(--dtl-fg-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;}
 
 /* ── 趋势图（右上卡：8 周 × 3 柱）────────────────────────────────
    柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
@@ -411,11 +481,7 @@ export function StatCard(props: {
 			title: props.title,
 			onClick: interactive ? props.onClick : undefined,
 		},
-		h(
-			"span",
-			{ style: { fontSize: "var(--dtl-font-sm)", color: "var(--dtl-fg-2)" } },
-			props.label,
-		),
+		h("span", { className: "dtl-stat__label" }, props.label),
 		h("span", { className: "dtl-stat__value" }, shown),
 		props.hint === undefined || props.hint === null || props.hint === ""
 			? null

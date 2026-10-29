@@ -11,8 +11,8 @@
 /** 缓存有效期（2026-10-18 拍板 1.5s：够挡同一屏的重复读，短到不会让人看到旧数据）。 */
 export declare const CACHE_TTL_MS = 1500;
 /** 缓存的操作种类（= skill 脚本子命令；worklog 不进缓存故不在此列）。
- *  `history` 已从插件侧消失（2026-10-29：本周 / 上周完成改取 `stats --trend` 的桶），不再单列。 */
-export type CacheOp = "list" | "stats" | "owners";
+ *  `history` 供历史页顶部日趋势使用（2026-10-29 重新接入）。 */
+export type CacheOp = "history" | "list" | "stats" | "owners";
 /** 缓存键：`op:workspace:filter` 三条信息都要，否则不同筛选 / 不同工作区会串味。 */
 export declare function cacheKey(workspaceId: string, op: CacheOp, detail: string): string;
 /**
