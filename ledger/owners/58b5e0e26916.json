@@ -1,6 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
+    "20261029-0807-8444-单人时隐藏执行人相关显示": {"category": "修改", "created": "2026-10-29 08:07:59", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-29 08:07:59", "status": "doing", "tags": ["界面", "执行人"], "title": "单人时隐藏执行人相关显示", "updated": "2026-10-29 08:07:59", "worklog": "worklog/202610/29-0807-8444-单人时隐藏执行人相关显示.md"}
   },
   "version": "20261022000000"
 }
