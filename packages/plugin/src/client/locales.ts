@@ -101,6 +101,10 @@ export type LocaleKey =
 	| "tipRelease"
 	| "viewDetail"
 	| "fieldCreatorStamp"
+	// 视图切换（在办 / 历史）
+	| "viewModeLabel"
+	| "viewActive"
+	| "viewHistory"
 	// 空态
 	// 浮标入口
 
@@ -196,6 +200,9 @@ export const zh: Record<LocaleKey, string> = {
 	tipRelease: "释放认领，让别人接手",
 	viewDetail: "查看详情",
 	fieldCreatorStamp: "创建于 {age}",
+	viewModeLabel: "视图",
+	viewActive: "在办",
+	viewHistory: "历史",
 
 
 };
@@ -294,6 +301,9 @@ export const en: Record<LocaleKey, string> = {
 	tipRelease: "release the claim for others",
 	viewDetail: "View details",
 	fieldCreatorStamp: "created {age}",
+	viewModeLabel: "View",
+	viewActive: "Active",
+	viewHistory: "History",
 
 
 };

@@ -19,6 +19,7 @@ import {
 	useEffect,
 	useMemo,
 	useRef,
+	useState,
 	useSyncExternalStore,
 } from "react";
 import type { LocaleKey, Translate } from "./locales";
@@ -152,6 +153,8 @@ export function BoardHome(props: {
 	ensureUiBase();
 	const state = useSyncExternalStore(boardSubscribe, boardSnapshot);
 	const mountRef = useRef<HTMLDivElement>(null);
+	// 视图模式：在办看板 ↔ 历史查询（入口切换；历史页布局待定稿，先占位）。
+	const [viewMode, setViewMode] = useState<"active" | "history">("active");
 
 	/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
 	 *  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
@@ -395,6 +398,7 @@ export function BoardHome(props: {
 						: undefined,
 			})),
 			size: "lg",
+			tone: "business",
 			onChange: (next) => {
 				setQuery({ tab: next });
 			},
@@ -510,85 +514,114 @@ export function BoardHome(props: {
 							),
 						),
 					),
-					h(
-						Button,
-						{
-							variant: "outline",
-							size: "lg",
-							icon: h(IconRefreshOutlineRegular, { size: 16 }),
-							// 转圈 / 禁用都交核心 Button 的 loading 档，不自绘。
-							loading: state.refreshing,
-							title: t("refresh"),
-							onClick: () => {
-								void refresh();
-							},
-						},
-						state.refreshing ? t("refreshing") : t("refresh"),
-					),
-				),
-				// 未就绪不渲染；读挂给红色原因 + 重试（不画 0 充数）。
-				state.status === "error" && board === null
-					? h(
+				// 视图模式切换（在办看板 ↔ 历史查询）：贴刷新按钮左侧、同高。
+						h(
 							"div",
 							{
 								style: {
 									display: "flex",
 									alignItems: "center",
-									gap: "var(--dtl-space-2)",
+									gap: "var(--dtl-space-3)",
 								},
 							},
-							h(
-								"span",
-								{
-									style: {
-										color: "var(--dtl-danger)",
-										fontSize: "var(--dtl-font-md)",
-									},
-								},
-								`${t("loadFailed")}：${state.error ?? ""}`,
-							),
+							h(Segmented<"active" | "history">, {
+								id: "dtl-view-mode",
+								value: viewMode,
+								label: t("viewModeLabel"),
+								size: "lg",
+								tone: "business",
+								items: [
+									{ value: "active", label: t("viewActive") },
+									{ value: "history", label: t("viewHistory") },
+								],
+								onChange: (next) => setViewMode(next),
+							}),
 							h(
 								Button,
 								{
 									variant: "outline",
-									size: "sm",
+									size: "lg",
+									icon: h(IconRefreshOutlineRegular, { size: 16 }),
+									// 转圈 / 禁用都交核心 Button 的 loading 档，不自绘。
+									loading: state.refreshing,
+									title: t("refresh"),
 									onClick: () => {
 										void refresh();
 									},
 								},
-								t("retry"),
+								state.refreshing ? t("refreshing") : t("refresh"),
 							),
-						)
-					: null,
-				board === null ? null : statsGrid(board),
-				regionHead,
+						),
+				),
+				// 历史查询页布局待定稿：切回「在办」看当前看板（历史页先留白）。
+				viewMode === "history"
+					? null
+					: (state.status === "error" && board === null
+							? h(
+									"div",
+									{
+										style: {
+											display: "flex",
+											alignItems: "center",
+											gap: "var(--dtl-space-2)",
+										},
+									},
+									h(
+										"span",
+										{
+											style: {
+												color: "var(--dtl-danger)",
+												fontSize: "var(--dtl-font-md)",
+											},
+										},
+										`${t("loadFailed")}：${state.error ?? ""}`,
+									),
+									h(
+										Button,
+										{
+											variant: "outline",
+											size: "sm",
+											onClick: () => {
+												void refresh();
+											},
+										},
+										t("retry"),
+									),
+								)
+							: null),
+				viewMode === "history" ? null : board === null ? null : statsGrid(board),
+				viewMode === "history" ? null : regionHead,
 				// 首屏没数据（board === null）≠ 空结果：什么都不画，别拿「没有任务」骗人
 				// （加载提示走屏幕下方居中的全局卡，不在区域里占位）。
-				board === null
+				viewMode === "history"
 					? null
-					: view.rows.length === 0
-						? h(EmptyState, {
-								title: t("listEmpty"),
-								hint: t("listEmptyHint"),
-							})
-						: h(
-								"div",
-								null,
-								view.rows
-									.slice(0, LIST_LIMIT)
-									.map((row) =>
-										h(TaskRowView, {
-											key: row.key,
-											t,
-											row,
-											solo,
-											onView: handleView,
-										}),
-									),
-							),
-				view.rows.length > LIST_LIMIT
-					? h("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT }))
-					: null,
+					: board === null
+						? null
+						: view.rows.length === 0
+							? h(EmptyState, {
+									title: t("listEmpty"),
+									hint: t("listEmptyHint"),
+								})
+							: h(
+									"div",
+									null,
+									view.rows
+										.slice(0, LIST_LIMIT)
+										.map((row) =>
+											h(TaskRowView, {
+												key: row.key,
+												t,
+												row,
+												solo,
+												onView: handleView,
+											}),
+										),
+								),
+				viewMode === "history"
+					? null
+					: view.rows.length > LIST_LIMIT
+						? h("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT }))
+						: null,
 			),
 		),
 	);
