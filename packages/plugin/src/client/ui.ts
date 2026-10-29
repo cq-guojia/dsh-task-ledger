@@ -58,6 +58,10 @@ const UI_BASE_CSS = `
 .dtl-trend__dot--done{background:var(--dtl-business);}
 .dtl-trend__dot--open{background:var(--dtl-chart-open);}
 .dtl-trend__dot--added{background:var(--dtl-chart-added);}
+/* 「只看我的」：贴图例右侧的小复选框（原生控件 + accent-color，不自绘皮肤） */
+.dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;margin-left:auto;cursor:pointer;
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+.dtl-trend__mine input{margin:0;accent-color:var(--dtl-business);}
 .dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
 .dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;
   padding-bottom:14px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;

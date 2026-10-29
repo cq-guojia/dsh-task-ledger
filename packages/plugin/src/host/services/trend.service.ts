@@ -19,25 +19,42 @@ const byFrom = (a: TrendBucket, b: TrendBucket): number =>
  * 工作区之间周界一致（同机同时区、都由 skill 的周一起算），所以直接按 `from` 归并。
  */
 export function mergeTrend(rows: readonly { buckets: readonly TrendBucket[]; coverageFrom: string; coverageTo: string }[]): TrendView {
-	const merged = new Map<string, { from: string; to: string; added: number; done: number; open: number }>();
+	interface Acc {
+		from: string;
+		to: string;
+		added: number;
+		done: number;
+		open: number;
+		owners: Record<string, { added: number; done: number; open: number }>;
+	}
+	const merged = new Map<string, Acc>();
 	let coverageFrom = "";
 	let coverageTo = "";
 	for (const row of rows) {
 		for (const bucket of row.buckets) {
-			const current = merged.get(bucket.from);
+			let current = merged.get(bucket.from);
 			if (current === undefined) {
-				merged.set(bucket.from, {
+				current = {
 					from: bucket.from,
 					to: bucket.to,
-					added: bucket.added,
-					done: bucket.done,
-					open: bucket.open,
-				});
-			} else {
-				// 已有对象就原地累加（同一份数据只在本函数里生成，不会被外部共享）
-				current.added += bucket.added;
-				current.done += bucket.done;
-				current.open += bucket.open;
+					added: 0,
+					done: 0,
+					open: 0,
+					owners: {},
+				};
+				merged.set(bucket.from, current);
+			}
+			// 已有对象就原地累加（同一份数据只在本函数里生成，不会被外部共享）
+			current.added += bucket.added;
+			current.done += bucket.done;
+			current.open += bucket.open;
+			for (const [uuid, cell] of Object.entries(bucket.owners ?? {})) {
+				const owner = current.owners[uuid] ?? { added: 0, done: 0, open: 0 };
+				current.owners[uuid] = {
+					added: owner.added + cell.added,
+					done: owner.done + cell.done,
+					open: owner.open + cell.open,
+				};
 			}
 		}
 		// 有数据的第一天取各工作区里最早的；最后一天取最晚的

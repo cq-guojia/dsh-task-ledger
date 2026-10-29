@@ -330,8 +330,13 @@ export function BoardHome(props: {
 					view.lastWeekTo,
 				),
 			),
-			// 趋势图：近 8 周 × 三柱（数字全由 skill `stats --trend` 给）
-			h(TrendChart, { trend: payload.trend, t }),
+			// 趋势图：近 8 周 × 三柱（数字全由 skill `stats --trend` 给）；
+			// 本机身份是机器级的 ⇒ 各工作区同一个 uuid，取第一个非空即可（「只看我的」用）
+			h(TrendChart, {
+				trend: payload.trend,
+				me: Object.values(payload.identities).find((uuid) => uuid !== null) ?? null,
+				t,
+			}),
 		);
 	};
 

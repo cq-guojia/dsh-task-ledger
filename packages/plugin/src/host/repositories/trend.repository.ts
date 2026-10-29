@@ -18,16 +18,25 @@ export const TREND_WEEKS = 8;
 
 const TREND_LAST = `${String(TREND_WEEKS)}w`;
 
+/** 一个人在一个周桶里的三个数（skill 口径：新增按 creator、完成 / 未结按 owner）。 */
+export interface OwnerCounts {
+	readonly added: number;
+	readonly done: number;
+	readonly open: number;
+}
+
 /** 一个周桶；`from` / `to` 是**本机时区**的日期（含边界）。 */
 export interface TrendBucket {
 	readonly from: string;
 	readonly to: string;
 	/** 该周新建。 */
 	readonly added: number;
-	/** 该周结案。 */
+	/** 该周结案（全部人合计）。 */
 	readonly done: number;
-	/** 该周结束时仍未结案。 */
+	/** 该周结束时仍未结案（全部人合计，含窗口前遗留）。 */
 	readonly open: number;
+	/** uuid → 按人明细（「只看我的」用；没要 / 该人该周没数据则没有这个 key）。 */
+	readonly owners?: Readonly<Record<string, OwnerCounts>>;
 }
 
 /** 单工作区的趋势。 */
@@ -62,7 +71,34 @@ function day(source: Record<string, unknown>, key: string, where: string): strin
 	return value;
 }
 
-/** 单工作区趋势（skill `stats --trend week --last 8w`；过 1.5s 读缓存）。 */
+/** 按人明细：没有这个字段（没要 --by-owner）返回 undefined；有就必须是合法的三数对象。 */
+function parseOwners(
+	raw: unknown,
+	where: string,
+): Readonly<Record<string, OwnerCounts>> | undefined {
+	if (raw === undefined) return undefined;
+	if (!isPlainObject(raw))
+		throw new LedgerDataError(
+			where,
+			`${where}: stats --trend 的 owners 不是对象，格式可能已变`,
+		);
+	const out: Record<string, OwnerCounts> = {};
+	for (const [uuid, cell] of Object.entries(raw)) {
+		if (!isPlainObject(cell))
+			throw new LedgerDataError(
+				where,
+				`${where}: stats --trend 里 ${uuid} 的按人明细不是对象`,
+			);
+		out[uuid] = {
+			added: num(cell, "added", where),
+			done: num(cell, "done", where),
+			open: num(cell, "open", where),
+		};
+	}
+	return out;
+}
+
+/** 单工作区趋势（skill `stats --trend week --last 8w --by-owner`；过 1.5s 读缓存）。 */
 export async function readTrend(
 	workspace: LedgerWorkspace,
 ): Promise<WorkspaceTrend> {
@@ -71,7 +107,8 @@ export async function readTrend(
 		// 趋势自带 JSON 输出，**不能**再传 --json（skill 那边是用法错）
 		const result = await runLedgerScript<unknown>(
 			"stats",
-			["--repo", workspace.path, "--trend", "week", "--last", TREND_LAST],
+			// --by-owner：一次就把「全部」与「按人」两套数都拿回来 ⇒ 勾「只看我的」零请求
+			["--repo", workspace.path, "--trend", "week", "--last", TREND_LAST, "--by-owner"],
 			// 8 周窗口最坏要读 3 个历史文件，比单月读重：给到 20s 再判超时
 			{ timeoutMs: 20_000 },
 		);
@@ -101,12 +138,14 @@ export function parseTrend(raw: unknown, where: string): WorkspaceTrend {
 	const buckets: TrendBucket[] = raw.buckets.map((item: unknown) => {
 		if (!isPlainObject(item))
 			throw new LedgerDataError(where, `${where}: stats --trend 的桶不是对象`);
+		const owners = parseOwners(item.owners, where);
 		return {
 			from: day(item, "from", where),
 			to: day(item, "to", where),
 			added: num(item, "added", where),
 			done: num(item, "done", where),
 			open: num(item, "open", where),
+			...(owners === undefined ? {} : { owners }),
 		};
 	});
 	return {

@@ -47,6 +47,7 @@ export type LocaleKey =
 	| "chartAdded"
 	| "chartEmpty"
 	| "chartPartial"
+	| "chartMine"
 	| "periodRange"
 	// 筛选行
 	| "statusLabel"
@@ -140,6 +141,7 @@ export const zh: Record<LocaleKey, string> = {
 	chartAdded: "新增",
 	chartEmpty: "还没有可统计的记录",
 	chartPartial: "{from} 起才有台账数据",
+	chartMine: "只看我的",
 	periodRange: "{from} ~ {to}",
 
 	statusLabel: "状态",
@@ -233,6 +235,7 @@ export const en: Record<LocaleKey, string> = {
 	chartAdded: "Added",
 	chartEmpty: "No records to chart yet",
 	chartPartial: "Ledger data starts {from}",
+	chartMine: "Only mine",
 	periodRange: "{from} ~ {to}",
 
 	statusLabel: "Status",

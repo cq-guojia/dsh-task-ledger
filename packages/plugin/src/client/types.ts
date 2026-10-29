@@ -77,6 +77,13 @@ export interface BoardStatsView {
 	readonly lastWeekTo: string;
 }
 
+/** 一个人在一个周桶里的三个数（新增按 creator、完成 / 未结按 owner）。 */
+export interface TrendOwnerCounts {
+	readonly added: number;
+	readonly done: number;
+	readonly open: number;
+}
+
 /** 趋势图的一根周桶（`from`/`to` 是本机时区日期，含边界）。 */
 export interface TrendBucketView {
 	readonly from: string;
@@ -84,6 +91,8 @@ export interface TrendBucketView {
 	readonly added: number;
 	readonly done: number;
 	readonly open: number;
+	/** uuid → 按人明细（「只看我的」用）。 */
+	readonly owners: Readonly<Record<string, TrendOwnerCounts>>;
 }
 
 /** 趋势图数据（host 已跨工作区求和）。`coverageFrom` = 实际有数据的第一天。 */
