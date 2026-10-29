@@ -21,6 +21,7 @@ type Params struct {
 	Deep     bool
 	List     *ListQuery
 	History  *HistoryQuery
+	Trend    *TrendQuery
 }
 
 // ActionSpec 一条命令的定义。
@@ -83,11 +84,15 @@ var ACTIONS = map[string]ActionSpec{
 		},
 	},
 	"stats": {
-		// 与 list 共用同一套 ListQuery（含阈值覆盖）：只数数、不吐行
+		// 默认与 list 共用同一套 ListQuery（含阈值覆盖）：只数数、不吐行；
+		// 带 --trend 时换成按周期分桶的趋势（两条路共用 stats 这个入口）
 		Render:   "stats_view",
 		ReadOnly: true,
 		Params:   []string{"q"},
 		Run: func(repo string, me core.Identity, p Params) (any, error) {
+			if p.Trend != nil {
+				return TrendStats(repo, me, *p.Trend)
+			}
 			q := ListQuery{}
 			if p.List != nil {
 				q = *p.List

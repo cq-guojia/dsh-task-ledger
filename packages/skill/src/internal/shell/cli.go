@@ -60,6 +60,9 @@ type Args struct {
 	StaleDays   *int
 	OverdueDays *int
 	BacklogDays *int
+	Trend       string // stats --trend <粒度>：走趋势统计，不走在办计数
+	Last        string // stats --trend 的 --last <N><d|w|m|y>
+	ByOwner     bool   // stats --trend 的 --by-owner
 	Dir         string // root：要检测的目录（不给 = 当前目录）
 	Deep        bool
 	Note        string
@@ -73,6 +76,7 @@ type Args struct {
 
 	Query        *actions.ListQuery
 	HistoryQuery *actions.HistoryQuery
+	TrendQuery   *actions.TrendQuery
 }
 
 func usageErr(format string, a ...any) error { return fmt.Errorf(format, a...) }
@@ -84,7 +88,7 @@ var commandFlags = map[string]map[string]bool{
 	"log":      setOf("--id", "--note", "--repo"),
 	"close":    setOf("--id", "--summary", "--finished", "--tags", "--repo"),
 	"list":     setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
-	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
+	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--by-owner", "--json", "--repo"),
 	"owners":   setOf("--json", "--repo"),
 	"show":     setOf("--id", "--json", "--repo"),
 	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--since", "--until", "--limit", "--months", "--count-only", "--json", "--repo"),
@@ -107,7 +111,7 @@ func takesValue(name string) bool {
 	case "--repo", "--title", "--id", "--created", "--category", "--tags",
 		"--note", "--summary", "--finished", "--owner", "--owner-name",
 		"--status", "--tag", "--since", "--until", "--limit", "--months",
-		"--stale-days", "--overdue-days", "--backlog-days", "--dir",
+		"--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--dir",
 		"--claim", "--name":
 		return true
 	}
@@ -298,6 +302,12 @@ func applyFlag(a *Args, name, value string) error {
 		case "--backlog-days":
 			a.BacklogDays = &n
 		}
+	case "--trend":
+		a.Trend = value
+	case "--last":
+		a.Last = value
+	case "--by-owner":
+		a.ByOwner = true
 	case "--dir":
 		a.Dir = value
 	case "--json":
@@ -381,6 +391,12 @@ func buildQuery(a *Args) error {
 	// list 与 stats 共用同一套在办查询条件（stats 只是不吐行，筛选与阈值完全一致）
 	switch a.Command {
 	case "list", "stats":
+		if a.Trend != "" {
+			return buildTrendQuery(a)
+		}
+		if a.Last != "" || a.ByOwner {
+			return usageErr("--last / --by-owner 只能配 --trend <day|week|month|quarter|year> 用。")
+		}
 		scope := "all"
 		// 范围优先级：mine → pool → owner。空串的 --owner 不算范围
 		// （falsy 落到 all），但仍会传给业务层并报「只收身份 uuid」。
@@ -441,6 +457,47 @@ func buildQuery(a *Args) error {
 			CountOnly: a.CountOnly,
 		}
 	}
+	return nil
+}
+
+// buildTrendQuery stats --trend：只认趋势用得上的参数。别的筛选参数直接报用法错 ——
+// 静默忽略会让人以为筛过了（趋势按时间 + 人统计，不按状态 / 分类 / 标签）。
+func buildTrendQuery(a *Args) error {
+	conflicts := []struct {
+		flag  string
+		given bool
+	}{
+		{"--pool", a.Pool},
+		{"--owner-name", a.OwnerName != nil},
+		{"--status", a.Status != ""},
+		{"--category", a.Category != ""},
+		{"--tag", a.Tag != nil},
+		{"--stale-days", a.StaleDays != nil},
+		{"--overdue-days", a.OverdueDays != nil},
+		{"--backlog-days", a.BacklogDays != nil},
+		{"--json", a.JSON}, // 趋势自带 JSON，不给第二套形状
+	}
+	for _, item := range conflicts {
+		if item.given {
+			return usageErr("stats --trend 不认 %s：趋势只按时间 + 人统计。", item.flag)
+		}
+	}
+	q := &actions.TrendQuery{
+		Granularity: a.Trend,
+		Since:       a.Since,
+		Until:       a.Until,
+		Last:        a.Last,
+		Mine:        a.Mine,
+		ByOwner:     a.ByOwner,
+	}
+	if a.Owner != nil {
+		for _, item := range strings.Split(*a.Owner, ",") {
+			if trimmed := strings.TrimSpace(item); trimmed != "" {
+				q.Owners = append(q.Owners, trimmed)
+			}
+		}
+	}
+	a.TrendQuery = q
 	return nil
 }
 

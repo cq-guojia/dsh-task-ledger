@@ -13,14 +13,23 @@ import (
 // IdentityHomeEnv 可覆写主目录（容器 / 测试用）。
 const IdentityHomeEnv = "TASK_LEDGER_HOME"
 
-// IdentityFile 机器级身份文件路径。
-func IdentityFile() (string, error) {
+// HomeDir 本机主目录（TASK_LEDGER_HOME 可覆写）：身份文件与趋势缓存都以它为基准。
+func HomeDir() (string, error) {
 	if base := os.Getenv(IdentityHomeEnv); base != "" {
-		return filepath.Join(base, ".taskledger", "identity.json"), nil
+		return base, nil
 	}
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
 		return "", core.Failf("找不到用户主目录（HOME）。\n  处理：设置环境变量 TASK_LEDGER_HOME 指向一个可写目录，再重试。")
+	}
+	return home, nil
+}
+
+// IdentityFile 机器级身份文件路径。
+func IdentityFile() (string, error) {
+	home, err := HomeDir()
+	if err != nil {
+		return "", err
 	}
 	return filepath.Join(home, ".taskledger", "identity.json"), nil
 }

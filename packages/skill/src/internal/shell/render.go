@@ -172,6 +172,44 @@ func RenderStats(res *actions.StatsResult, asJSON bool) {
 	}
 }
 
+// RenderTrend stats --trend 的输出：**只出 JSON**（表格由插件渲染），
+// 后端只回时间区间，展示标签按粒度由前端生成。
+func RenderTrend(res *actions.TrendResult) {
+	buckets := make([]any, 0, len(res.Buckets))
+	for _, bucket := range res.Buckets {
+		item := map[string]any{
+			"from":  bucket.From,
+			"to":    bucket.To,
+			"added": bucket.Added,
+			"done":  bucket.Done,
+			"open":  bucket.Open,
+		}
+		if bucket.Owners != nil {
+			owners := make(map[string]any, len(bucket.Owners))
+			for uuid, cell := range bucket.Owners {
+				owners[uuid] = map[string]any{
+					"name":  cell.Name,
+					"added": cell.Added,
+					"done":  cell.Done,
+					"open":  cell.Open,
+				}
+			}
+			item["owners"] = owners
+		}
+		buckets = append(buckets, item)
+	}
+	warnings := res.Warnings
+	if warnings == nil {
+		warnings = []string{}
+	}
+	jsonOut(map[string]any{
+		"granularity": res.Granularity,
+		"coverage":    map[string]any{"from": res.CoverFrom, "to": res.CoverTo},
+		"buckets":     buckets,
+		"warnings":    warnings,
+	})
+}
+
 // RenderOwners owners 的输出。
 func RenderOwners(res *actions.OwnersResult, asJSON bool) {
 	// 遍历顺序定死：按 name（没名字的排最后）再按 uuid —— Go map 的迭代序是随机的，

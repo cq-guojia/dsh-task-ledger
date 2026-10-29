@@ -115,7 +115,7 @@ func runCommand(command string, args *Args, log *store.WriteLog) (int, error) {
 		}
 		// 先自报读的是哪个台账：--repo 指错目录时输出会变成一片「没有任务」，不带这一行
 		// 就完全看不出读错了地方。--count-only 也出 JSON，同样不打（2026-10-25 改）
-		RepoBanner(repo, args.JSON || args.CountOnly)
+		RepoBanner(repo, args.JSON || args.CountOnly || args.Trend != "")
 		if err := renderOf(spec, value, args, args.JSON); err != nil {
 			return 0, err
 		}
@@ -252,11 +252,15 @@ func renderOf(spec actions.ActionSpec, value any, args *Args, asJSON bool) error
 		}
 		RenderList(res, asJSON)
 	case "stats_view":
-		res, ok := value.(*actions.StatsResult)
-		if !ok {
-			return core.Failf("内部错误：%s 的返回类型不是 StatsResult", spec.Render)
+		// stats 两条路（在办计数 / --trend 趋势）共用一个渲染名，按返回类型分
+		switch res := value.(type) {
+		case *actions.StatsResult:
+			RenderStats(res, asJSON)
+		case *actions.TrendResult:
+			RenderTrend(res)
+		default:
+			return core.Failf("内部错误：%s 的返回类型不是 StatsResult / TrendResult", spec.Render)
 		}
-		RenderStats(res, asJSON)
 	case "owners_view":
 		res, ok := value.(*actions.OwnersResult)
 		if !ok {
@@ -316,6 +320,7 @@ func paramsOf(command string, a *Args, repo string, me core.Identity) (actions.P
 		Deep:     a.Deep,
 		List:     a.Query,
 		History:  a.HistoryQuery,
+		Trend:    a.TrendQuery,
 	}
 	switch command {
 	case "new":

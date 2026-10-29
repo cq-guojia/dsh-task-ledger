@@ -178,6 +178,17 @@ func NewWorklogStore(repo string) *WorklogStore
 | `HistoryStore` | `Sources/MonthKey/PathFor/Read/HasLog/AppendRow/Write` | 「算新全文」(`AppendRow`) 与「落盘」(`Write`) 是两个方法：结案要控顺序。`HasLog` 是结案重跑认账的依据 |
 | `WorklogStore` | `Template/Find/ByName/All/Read/HeadMeta/Create/Write/AppendExec` | `Create` 建六节骨架；`AppendExec` 写不进只返回 `false`，**不抛**；模板读 `assets/worklog.md`，读不到用内置骨架并 `notices.Note`（模板不许在代码里再抄一份） |
 
+趋势缓存（`trendcache.go`）**不是台账表**：它落在 `~/.taskledger/cache/trend/<仓库哈希>/<offset>/<YYYYMM>.json`，本机私有、不进 git，随时可删。
+
+```go
+func TrendCacheDir(home, repo string, offsetSeconds int) string      // 一月一文件；offset 编码成 +0800
+func LoadTrendMonth(dir, ym string, algo int) (*TrendMonth, bool)    // 不存在 / 坏 JSON / algo 不符 ⇒ (nil,false)
+func SaveTrendMonth(dir, ym string, m *TrendMonth) error             // 原子写（temp + rename）
+func TrendSourcesMatch(repo string, sources []TrendSource) bool      // size + mtime_ns，任一个变了就重算
+```
+
+要点：缓存只加速、不承担正确性 —— 读不出来当没有、写不进去静默降级；校验只认**该本地月自己的**源文件指纹（本地月可能横跨两个 UTC 月文件，两个都记）；`algo` 一变全部过期；当月永远实时算、不写缓存。
+
 ## 三、业务层 `actions/`
 
 ### 3.1 共用件
@@ -201,7 +212,7 @@ type Params struct {                     // 外壳把命令行装成它，动作
     Release bool
     Note, Summary, Finished string
     Deep bool
-    List *ListQuery; History *HistoryQuery
+    List *ListQuery; History *HistoryQuery; Trend *TrendQuery
 }
 
 func Atom(repo string, rels ...string) (func(), error)        // 拿锁 → 干活 → 放锁；失败也要放
@@ -233,6 +244,7 @@ func IsReadOnly(command string) bool
 |---|---|
 | 列表 `ListTasks` | `(repo, me, ListQuery) (*ListResult, error)` |
 | 统计 `StatsTasks` | `(repo, me, ListQuery) (*StatsResult, error)` |
+| 趋势 `TrendStats` | `(repo, me, TrendQuery) (*TrendResult, error)` |
 | 花名册 `ListOwners` | `(repo, me) (*OwnersResult, error)` |
 | 台账根检测 `DetectRoot` | `(dir) (*RootResult, error)` |
 | 详情 `ShowTask` | `(repo, me, tid) (*ShowResult, error)` |
@@ -324,6 +336,7 @@ func (t *termState) readKey() key
 | 分层没反向 | 见 §〇 的 `grep` 表，全部为 0 |
 | 没有第二处 git / 打印 / 加锁 | 同上 |
 | 构建与静态检查 | `cd packages/skill/src && go vet ./... && go test ./...` |
+| 趋势上限口径 | `MaxHistoryFiles`（13）只归 `history`；`stats --trend` 用 `TrendMaxDays`（3660 天 ≈ 10 年）+ `TrendMaxDayBuckets`（365 天），**按时间不按文件数** |
 | 三平台编得过 | `GOOS=linux GOARCH=amd64 go build ./...`、`GOOS=darwin GOARCH=arm64 …`、`GOOS=windows GOARCH=amd64 …` |
 | 命令可用性 | 在临时 git 仓库按 §八 跑一遍 new → claim → log → close 全流程，再 `validate --deep` |
 
@@ -338,6 +351,7 @@ func (t *termState) readKey() key
 | `close` | `--id`、`--summary`（必填）、`--finished`、`--tags` | `CloseTaskParams` |
 | `list` | `--mine` / `--pool` / `--owner` / `--owner-name` / `--status` / `--category` / `--tag` / `--since` / `--until` / `--stale-days` / `--overdue-days` / `--backlog-days` / `--json` | `ListQuery`（范围优先级 mine → pool → owner；阈值可选，不传回默认） |
 | `stats` | 与 `list` 完全同名的那套（含三个阈值） / `--json` | `StatsTasks`（共用同一个 `ListQuery`） |
+| `stats --trend` | `--trend <day\|week\|month\|quarter\|year>` + `--since` / `--until` 或 `--last <N><d\|w\|m\|y>`（默认 `8w`）+ `--mine` / `--owner <uuid>[,<uuid>]` / `--by-owner` | `TrendQuery` ⇒ `TrendStats`；**不认** `--pool` / `--owner-name` / `--status` / `--category` / `--tag` / 三个阈值 / `--json`（自带 JSON），给了就是用法错 |
 | `owners` | `--json` | `ListOwners` |
 | `show` | `--id`、`--json` | `ShowTask` |
 | `history` | `--owner` / `--owner-name` / `--mine` / `--category` / `--tag` / `--since` / `--until` / `--months` / `--limit` / `--count-only` / `--json` | `HistoryQuery` |
