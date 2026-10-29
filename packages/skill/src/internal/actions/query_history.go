@@ -129,9 +129,18 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 	if err != nil {
 		return nil, err
 	}
+	if q.CountOnly && q.Limit != nil {
+		return nil, core.Failf("--count-only 与 --limit 不能同时用：计数不截断，列表才截断。")
+	}
+	effSince, effUntil, err := historyWindow(keys, q)
+	if err != nil {
+		return nil, err
+	}
 	history := store.NewHistoryStore(repo)
 	var records []map[string]any
 	var warnings []string
+	counted := 0
+	capped := false
 	for _, ym := range keys {
 		path := filepath.Join(repo, core.ToRepoRel(core.HistoryDir), ym+".md")
 		if fi, err := os.Stat(path); err != nil || fi.IsDir() {
@@ -146,6 +155,18 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 			warnings = append(warnings, Rel(repo, path)+"："+w)
 		}
 		for _, row := range rows {
+			if !rowMatches(row, q, me, effSince, effUntil) {
+				continue
+			}
+			// 计数只要数字：不建 map、不排序、不读名册；够 CountCap 就停（对外仍是 10000 + capped）。
+			if q.CountOnly {
+				counted++
+				if counted > CountCap {
+					counted, capped = CountCap, true
+					break
+				}
+				continue
+			}
 			item := row.ToMap()
 			item["src"] = Rel(repo, path)
 			if key := core.TimeKey(row.Created); key != "" {
@@ -157,32 +178,18 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 			item["mine"] = core.IsMe(me, row.Owner)
 			records = append(records, item)
 		}
+		if capped {
+			break
+		}
+	}
+	if q.CountOnly {
+		return &HistoryResult{Count: counted, Capped: capped, Warnings: warnings}, nil
 	}
 
 	index := store.NewOwnersIndex(repo)
 	roster, err := index.All()
 	if err != nil {
 		return nil, err
-	}
-	if q.Mine {
-		wanted := core.Normalize(me.UUID)
-		records = filterRecords(records, func(r map[string]any) bool {
-			return core.Normalize(strOfAny(r["owner"])) == wanted
-		})
-	} else if q.Owner != nil {
-		key := core.Normalize(*q.Owner)
-		records = filterRecords(records, func(r map[string]any) bool {
-			return core.Normalize(strOfAny(r["owner"])) == key
-		})
-	}
-	if q.OwnerName != nil {
-		needle := strings.ToLower(strings.TrimSpace(*q.OwnerName))
-		records = filterRecords(records, func(r map[string]any) bool {
-			if strings.Contains(strings.ToLower(strOfAny(r["owner_name"])), needle) {
-				return true
-			}
-			return strings.Contains(core.Normalize(strOfAny(r["owner"])), needle)
-		})
 	}
 
 	// 没名字的老行按名册兜底补一次（只补展示值，不回写文件）
@@ -199,55 +206,10 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 			}
 		}
 	}
-	if q.Category != nil {
-		records = filterRecords(records, func(r map[string]any) bool {
-			return strOfAny(r["category"]) == *q.Category
-		})
-	}
-	if q.Tag != nil {
-		records = filterRecords(records, func(r map[string]any) bool {
-			for _, t := range store.StrSliceOf(r["tags"]) {
-				if t == *q.Tag {
-					return true
-				}
-			}
-			return false
-		})
-	}
-
-	loKey, hiKey := keys[0], keys[len(keys)-1]
-	for _, k := range keys {
-		if k < loKey {
-			loKey = k
-		}
-		if k > hiKey {
-			hiKey = k
-		}
-	}
-	effSince := fmt.Sprintf("%s-%s-01 00:00:00", loKey[0:4], loKey[4:6])
-	if q.Since != nil {
-		effSince = *q.Since
-	}
-	effUntil := monthEnd(hiKey)
-	if q.Until != nil {
-		effUntil = *q.Until
-	}
-	if effSince > effUntil {
-		return nil, core.Failf("时间区间反了：--since（%s）晚于 --until（%s）。\n  处理：把两端换过来；只给一端就只给一端。", effSince, effUntil)
-	}
-	records = filterRecords(records, func(r map[string]any) bool {
-		finished := strOfAny(r["finished"])
-		return finished >= effSince && finished <= effUntil
-	})
-
 	sort.SliceStable(records, func(i, j int) bool {
 		return strOfAny(records[i]["finished"]) > strOfAny(records[j]["finished"])
 	})
 
-	if q.CountOnly && q.Limit != nil {
-		return nil, core.Failf("--count-only 与 --limit 不能同时用：计数不截断，列表才截断。")
-	}
-	capped := false
 	if q.Limit != nil {
 		limit := *q.Limit
 		if limit < 1 {
@@ -257,9 +219,6 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 		if capped {
 			records = records[:limit]
 		}
-	} else if q.CountOnly && len(records) > CountCap {
-		capped = true
-		records = records[:CountCap]
 	}
 
 	filters := map[string]any{
@@ -282,14 +241,66 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 	}, nil
 }
 
-func filterRecords(rows []map[string]any, keep func(map[string]any) bool) []map[string]any {
-	out := make([]map[string]any, 0, len(rows))
-	for _, row := range rows {
-		if keep(row) {
-			out = append(out, row)
+// historyWindow 生效的结案时间窗口：有 --since / --until 就用，否则按本次要读的月份文件两端兜。
+func historyWindow(keys []string, q HistoryQuery) (string, string, error) {
+	loKey, hiKey := keys[0], keys[len(keys)-1]
+	for _, k := range keys {
+		if k < loKey {
+			loKey = k
+		}
+		if k > hiKey {
+			hiKey = k
 		}
 	}
-	return out
+	effSince := fmt.Sprintf("%s-%s-01 00:00:00", loKey[0:4], loKey[4:6])
+	if q.Since != nil {
+		effSince = *q.Since
+	}
+	effUntil := monthEnd(hiKey)
+	if q.Until != nil {
+		effUntil = *q.Until
+	}
+	if effSince > effUntil {
+		return "", "", core.Failf("时间区间反了：--since（%s）晚于 --until（%s）。\n  处理：把两端换过来；只给一端就只给一端。", effSince, effUntil)
+	}
+	return effSince, effUntil, nil
+}
+
+// rowMatches 一条历史行是否命中查询条件。列表与 --count-only 共用这一套判据：
+// 各写一份迟早对不上数（计数口径必须与列表行数一致）。
+func rowMatches(row core.Row, q HistoryQuery, me core.Identity, effSince, effUntil string) bool {
+	owner := core.Normalize(row.Owner)
+	if q.Mine {
+		if owner != core.Normalize(me.UUID) {
+			return false
+		}
+	} else if q.Owner != nil && owner != core.Normalize(*q.Owner) {
+		return false
+	}
+	if q.OwnerName != nil {
+		needle := strings.ToLower(strings.TrimSpace(*q.OwnerName))
+		if !strings.Contains(strings.ToLower(row.OwnerName), needle) &&
+			!strings.Contains(owner, needle) {
+			return false
+		}
+	}
+	if q.Category != nil && row.Category != *q.Category {
+		return false
+	}
+	if q.Tag != nil {
+		found := false
+		for _, t := range row.Tags {
+			if t == *q.Tag {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	finished := core.TimeKey(row.Finished)
+	return finished >= effSince && finished <= effUntil
 }
 
 func ptrValue(p *string) any {
