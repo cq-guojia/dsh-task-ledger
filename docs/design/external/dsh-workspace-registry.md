@@ -1,4 +1,4 @@
-> 2026-10-22 起 skill 侧台账已改为「池 + 分片 + 索引」并全链路 UTC；**宿主侧已适配**：以 `ledger/pool.json` 存在判定台账、待办 / 历史一律经内嵌脚本（已分片感知）读取，不再直接读扁平 `progress.json`。
+> 2026-10-22 起 skill 侧台账已改为「池 + 分片 + 索引」并全链路 UTC；**宿主侧已适配**：台账判定经内嵌脚本 `root --json`（判据 = 目录直接含 `ledger/`）、待办 / 历史一律经内嵌脚本（已分片感知）读取，不再直接读台账文件。
 
 # 宿主工作区注册表（ctx.workspaceRegistry）
 
@@ -9,7 +9,7 @@
 
 ## 一、结论
 
-**宿主直接提供全量工作区列表**：host 半插件经 `ctx.workspaceRegistry.list()` 拿到有序的工作区实体数组，每个实体带 canonical 绝对路径（`path`）。本插件的「工作区发现」= 拿这个列表 + 逐个查 `<path>/ledger/pool.json`（或经内嵌脚本读分片）判定台账存在，**不需要自建配置源**（用户 2026-10-17 拍板：「他都会带给你」）。
+**宿主直接提供全量工作区列表**：host 半插件经 `ctx.workspaceRegistry.list()` 拿到有序的工作区实体数组，每个实体带 canonical 绝对路径（`path`）。本插件的「工作区发现」= 拿这个列表 + 逐个对 `<path>` 跑内嵌脚本 `root --json` 判定台账存在（判据是目录直接含 `ledger/`，不看里面有哪些文件），**不需要自建配置源**（用户 2026-10-17 拍板：「他都会带给你」）。
 
 ## 二、逐条事实与出处
 
@@ -22,7 +22,7 @@
 
 ## 三、对本插件的落地含义
 
-1. `resolveWorkspaces()` **不吃配置参数**：调 `ctx.workspaceRegistry.list()` 取全量，对每个 `workspace.path` 以 `ledger/pool.json` 存在判定台账活跃（待办 / 历史经内嵌脚本读分片）；无台账 / 未初始化的跳过（展示形态已定「隐藏」，后端无此概念）。
+1. `resolveWorkspaces()` **不吃配置参数**：调 `ctx.workspaceRegistry.list()` 取全量，对每个 `workspace.path` 跑内嵌脚本 `root --json` 判定台账活跃（判据 = 目录直接含 `ledger/`，不看里面有哪些文件；待办 / 历史同样经脚本读）；无台账 / 未初始化的跳过（展示形态已定「隐藏」，后端无此概念）。
 2. 跨工作区读台账的 `--repo` 参数直接用 `workspace.path`（宿主已 realpath 归一，无需再归一）。
 3. 补充源（registry 未收录的目录，如从没在 dsh 里添加过的项目）暂不做；形态待拍板，见 [`../architecture.md`](../architecture.md) §五。
 

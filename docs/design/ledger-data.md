@@ -143,4 +143,4 @@
 - 写入前的防撞：`claim` / `set --owner` 会在落盘前挡一道（别人分片里已有同号 / 目标分片已有不同内容 ⇒ 拒绝），但跨机同时抢仍有窗口。
 - 历史 = `history/<年月>.md` 11 列（owner = 负责人筛选面；creator = 发起人，`owner` 可被 claim 改走、「谁建的」不变；两列后各跟一列落盘的显示名快照）。
 - 报表只有一个来源：全部由宿主从 `history --json` / `list --json` / `stats --json`（`actions.QueryHistory` / `actions.ListTasks` / `actions.StatsTasks`）的返回聚合（时间线、按人工作日志、状态分布、分类 / 标签计数）。脚本**只按在办层**开一个统计入口 `stats`（按状态 + 年龄阈值计数；周期趋势类的聚合仍由宿主自己做）—— 分类 / 标签要么在在办任务对象里、要么在历史行的分类 / 标签列里，都不需要逐篇扫过程文档。
-- 宿主侧消费（见 `external/dsh-workspace-registry.md`）：以 `pool.json` 存在判定台账、待办 / 历史一律经内嵌脚本（已分片感知）读取，不再直接读扁平 `progress.json`；老工作区未迁完前，脚本读到旧布局会在 stderr 提示，旧任务在迁完前对它等于不存在。
+- 宿主侧消费（见 `external/dsh-workspace-registry.md`）：台账判定经内嵌脚本 `root --json`（判据 = 目录直接含 `ledger/`），待办 / 历史一律经内嵌脚本（已分片感知）读取，不再直接读台账文件；老工作区未迁完前，脚本读到旧布局会在 stderr 提示，旧任务在迁完前对它等于不存在。

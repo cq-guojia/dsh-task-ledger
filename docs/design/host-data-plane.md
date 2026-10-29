@@ -14,12 +14,12 @@
 | 台账读取 | `repositories/ledger.repository.ts` | 判台账存在（`hasLedger`）、读在办（pool.json + 分片）、读花名册 | ✅ |
 | 聚合层 | `services/stats.service.ts`（+ `dates.ts`、`uuid` 已删） | 8 卡跨工作区求和 + 降级归集，纯计算 | ✅ |
 | 路由薄壳 | `routes.ts` | 只做协议 | ✅ |
-| 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（`existsSync('ledger/pool.json')`，分片布局） | ✅ |
+| 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（走 skill `root --json`，判据是目录直接含 `ledger/`；插件不拼台账文件路径） | ✅ |
 | skill 注册 | `skill/registration.ts` | 注册内嵌 `task-ledger` SKILL.md | ✅ |
 
 ### 1.2 IO 散点（2026-10-24 复核；行号随重构已变，以下只列文件）
 
-台账相关的 `spawn` 唯一落在 `repositories/runner.ts`（起内嵌 `skill/scripts/progress`，静态二进制）；台账/分片/worklog 读取集中在 `repositories/ledger.repository.ts`；工作区判活在 `workspace.ts`（`existsSync('ledger/pool.json')`）；SKILL.md 读取在 `skill/registration.ts`。原 §1.2 的 `script.ts`/`ledger-read.ts`/`skill-registration.ts` 等旧文件名与行号对应重构前结构，已失效（现状以 `packages/plugin/src/host/` 为准）。
+台账相关的 `spawn` 唯一落在 `repositories/runner.ts`（起内嵌 `skill/scripts/progress`，静态二进制）；台账/分片/worklog 读取集中在 `repositories/ledger.repository.ts`；工作区判活经 `workspace.ts` → `hasLedger()` 走 skill `root --json`（插件内无 `node:fs` 读台账，唯一 `node:fs` 是 `skill/registration.ts` 读 SKILL.md）；SKILL.md 读取在 `skill/registration.ts`。原 §1.2 的 `script.ts`/`ledger-read.ts`/`skill-registration.ts` 等旧文件名与行号对应重构前结构，已失效（现状以 `packages/plugin/src/host/` 为准）。
 
 ### 1.3 三个健壮性缺口
 
