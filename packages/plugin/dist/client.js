@@ -53682,6 +53682,10 @@ body[data-ds-dark-theme]{
 .dtl-trend__dot--done{background:var(--dtl-business);}
 .dtl-trend__dot--open{background:var(--dtl-chart-open);}
 .dtl-trend__dot--added{background:var(--dtl-chart-added);}
+/* 「只看我的」：贴图例右侧的小复选框（原生控件 + accent-color，不自绘皮肤） */
+.dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;margin-left:auto;cursor:pointer;
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+.dtl-trend__mine input{margin:0;accent-color:var(--dtl-business);}
 .dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
 .dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;
   padding-bottom:14px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;
@@ -54168,25 +54172,41 @@ body[data-ds-dark-theme]{
 		/**
 		* 首页趋势图（右上卡）：近 8 周 × 三根细柱 = 完成 / 未结 / 新增。
 		*
-		* 数据口径**全由 skill 算好**（`stats --trend week --last 8w`，host 已跨工作区求和）：
-		* 完成按结案时间、新增按创建时间、未结是「该周结束时仍未结案」。本文件只负责画。
+		* 数据口径**全由 skill 算好**（`stats --trend week --last 8w --by-owner`，host 已跨工作区求和）：
+		* 完成按结案时间、新增按**创建人**、未结是「该周结束时仍未结案」（待认领 + 进行中合成一个数）。
 		*
-		* 画法（2026-10-17 参考图口径，2026-10-29 接回）：
+		* 「只看我的」（2026-10-29 用户定稿）：勾上 = 我的，不勾 = 所有；两套数随快照一起回来 ⇒ 勾选零请求。
+		* 按人口径 = skill 的 per-owner：`added` 按 creator（我提的）、`done` / `open` 按 owner（我负责的）。
+		*
+		* 画法（2026-10-17 参考图口径）：
 		*  - 柱宽 5px、组内 1px、**无圆角**；柱高百分比（祖先链有确定高度，见 ui.ts 的注释）；
 		*  - y 轴三档刻度（0 / 半峰 / 峰）+ 淡网格线 + 底部基线；
 		*  - **只标「完成」数值**（三系列 × 8 周会糊成一片），未结 / 新增走 hover；
-		*  - hover 整列三根一起提亮 + 自绘浮卡（原生 title 太慢且长相不一）——纯 CSS，无 React 状态。
+		*  - hover 整列三根一起提亮 + 自绘浮卡（原生 title 太慢且长相不一）——纯 CSS，无额外状态。
 		*/
 		const BAR_KINDS = [
 			"done",
 			"open",
 			"added"
 		];
+		const ZERO = {
+			added: 0,
+			done: 0,
+			open: 0
+		};
+		const labelKey = (kind) => kind === "done" ? "chartDone" : kind === "open" ? "chartOpen" : "chartAdded";
 		function TrendChart(props) {
-			const { trend, t } = props;
+			const { trend, me, t } = props;
+			const [mineOnly, setMineOnly] = (0, react$1.useState)(false);
 			const buckets = trend.buckets;
+			const mine = mineOnly && me !== null;
 			if (buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartEmpty")));
-			const peak = buckets.reduce((max, bucket) => Math.max(max, bucket.added, bucket.done, bucket.open), 0);
+			/** 当前口径下这一桶的三个数：全量，或「我的」那条（没数据就是 0）。 */
+			const counts = (bucket) => mine ? bucket.owners[me] ?? ZERO : bucket;
+			const peak = buckets.reduce((max, bucket) => {
+				const cell = counts(bucket);
+				return Math.max(max, cell.added, cell.done, cell.open);
+			}, 0);
 			const top = peak === 0 ? 1 : peak;
 			const ticks = [
 				formatCount(top),
@@ -54194,7 +54214,7 @@ body[data-ds-dark-theme]{
 				"0"
 			];
 			const bar = (bucket, kind) => {
-				const value = bucket[kind];
+				const value = counts(bucket)[kind];
 				return (0, react$1.createElement)("div", {
 					className: `dtl-trend__bar dtl-trend__bar--${kind}`,
 					style: {
@@ -54206,10 +54226,16 @@ body[data-ds-dark-theme]{
 			const column = (bucket) => (0, react$1.createElement)("div", { className: "dtl-trend__col" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
 				from: bucket.from,
 				to: bucket.to
-			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), `${t(kind === "done" ? "chartDone" : kind === "open" ? "chartOpen" : "chartAdded")} ${formatCount(bucket[kind])}`))), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
+			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), `${t(labelKey(kind))} ${formatCount(counts(bucket)[kind])}`))), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
 			const first = buckets[0];
 			const partial = trend.coverageFrom !== "" && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
-			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(kind === "done" ? "chartDone" : kind === "open" ? "chartOpen" : "chartAdded")))), (0, react$1.createElement)("div", { className: "dtl-trend__body" }, (0, react$1.createElement)("div", { className: "dtl-trend__axis" }, ...ticks.map((tick) => (0, react$1.createElement)("span", null, tick))), (0, react$1.createElement)("div", { className: "dtl-trend__plot" }, (0, react$1.createElement)("div", { className: "dtl-trend__grid" }, (0, react$1.createElement)("div", { className: "dtl-trend__gridline" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-trend__cols" }, ...buckets.map(column)))), partial);
+			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(labelKey(kind)))), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
+				type: "checkbox",
+				checked: mineOnly,
+				onChange: (event) => {
+					setMineOnly(event.target.checked);
+				}
+			}), t("chartMine"))), (0, react$1.createElement)("div", { className: "dtl-trend__body" }, (0, react$1.createElement)("div", { className: "dtl-trend__axis" }, ...ticks.map((tick) => (0, react$1.createElement)("span", null, tick))), (0, react$1.createElement)("div", { className: "dtl-trend__plot" }, (0, react$1.createElement)("div", { className: "dtl-trend__grid" }, (0, react$1.createElement)("div", { className: "dtl-trend__gridline" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-trend__cols" }, ...buckets.map(column)))), partial);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -54415,6 +54441,7 @@ body[data-ds-dark-theme]{
 					style: statsRowStyle
 				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)(TrendChart, {
 					trend: payload.trend,
+					me: Object.values(payload.identities).find((uuid) => uuid !== null) ?? null,
 					t
 				}));
 			};
@@ -54495,8 +54522,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.115 · 261029-122852-185`
-			}, `v0.0.115 261029-122852-185`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.116 · 261029-132126-295`
+			}, `v0.0.116 261029-132126-295`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54586,6 +54613,7 @@ body[data-ds-dark-theme]{
 			chartAdded: "新增",
 			chartEmpty: "还没有可统计的记录",
 			chartPartial: "{from} 起才有台账数据",
+			chartMine: "只看我的",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "状态",
 			statusActive: "进行中",
@@ -54671,6 +54699,7 @@ body[data-ds-dark-theme]{
 			chartAdded: "Added",
 			chartEmpty: "No records to chart yet",
 			chartPartial: "Ledger data starts {from}",
+			chartMine: "Only mine",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "Status",
 			statusActive: "Active",

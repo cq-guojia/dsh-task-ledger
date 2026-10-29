@@ -29,12 +29,32 @@ function day(source, key, where) {
         throw new LedgerDataError(where, `${where}: stats --trend 输出缺少日期字段 ${key}，格式可能已变`);
     return value;
 }
-/** 单工作区趋势（skill `stats --trend week --last 8w`；过 1.5s 读缓存）。 */
+/** 按人明细：没有这个字段（没要 --by-owner）返回 undefined；有就必须是合法的三数对象。 */
+function parseOwners(raw, where) {
+    if (raw === undefined)
+        return undefined;
+    if (!isPlainObject(raw))
+        throw new LedgerDataError(where, `${where}: stats --trend 的 owners 不是对象，格式可能已变`);
+    const out = {};
+    for (const [uuid, cell] of Object.entries(raw)) {
+        if (!isPlainObject(cell))
+            throw new LedgerDataError(where, `${where}: stats --trend 里 ${uuid} 的按人明细不是对象`);
+        out[uuid] = {
+            added: num(cell, "added", where),
+            done: num(cell, "done", where),
+            open: num(cell, "open", where),
+        };
+    }
+    return out;
+}
+/** 单工作区趋势（skill `stats --trend week --last 8w --by-owner`；过 1.5s 读缓存）。 */
 export async function readTrend(workspace) {
     // 缓存 op 仍记 "stats"（脚本子命令就是 stats），detail 里写清是哪个窗口的趋势
     return await cached(cacheKey(workspace.id, "stats", `trend:${TREND_LAST}`), async () => {
         // 趋势自带 JSON 输出，**不能**再传 --json（skill 那边是用法错）
-        const result = await runLedgerScript("stats", ["--repo", workspace.path, "--trend", "week", "--last", TREND_LAST], 
+        const result = await runLedgerScript("stats", 
+        // --by-owner：一次就把「全部」与「按人」两套数都拿回来 ⇒ 勾「只看我的」零请求
+        ["--repo", workspace.path, "--trend", "week", "--last", TREND_LAST, "--by-owner"], 
         // 8 周窗口最坏要读 3 个历史文件，比单月读重：给到 20s 再判超时
         { timeoutMs: 20_000 });
         if (!result.ok)
@@ -54,12 +74,14 @@ export function parseTrend(raw, where) {
     const buckets = raw.buckets.map((item) => {
         if (!isPlainObject(item))
             throw new LedgerDataError(where, `${where}: stats --trend 的桶不是对象`);
+        const owners = parseOwners(item.owners, where);
         return {
             from: day(item, "from", where),
             to: day(item, "to", where),
             added: num(item, "added", where),
             done: num(item, "done", where),
             open: num(item, "open", where),
+            ...(owners === undefined ? {} : { owners }),
         };
     });
     return {

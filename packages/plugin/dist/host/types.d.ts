@@ -114,13 +114,21 @@ export interface StatsPayload {
     readonly stats: BoardStatsView;
     readonly degraded: readonly DegradedInfo[];
 }
-/** 趋势图的一根周桶（数字全由 skill `stats --trend` 给，插件只跨工作区相加）。 */
+/** 一个人在一个周桶里的三个数（新增按 creator、完成 / 未结按 owner，都是 skill 的口径）。 */
+export interface TrendOwnerCounts {
+    readonly added: number;
+    readonly done: number;
+    readonly open: number;
+}
+/** 趋势图的一根周桶（数字全由 skill `stats --trend --by-owner` 给，插件只跨工作区相加）。 */
 export interface TrendBucketView {
     readonly from: string;
     readonly to: string;
     readonly added: number;
     readonly done: number;
     readonly open: number;
+    /** uuid → 按人明细；「只看我的」直接取自己那条，勾选零请求。 */
+    readonly owners: Readonly<Record<string, TrendOwnerCounts>>;
 }
 /** 趋势图数据：近 8 周桶序列 + 实际有数据的第一天。 */
 export interface TrendView {
