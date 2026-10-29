@@ -65,10 +65,11 @@ var commandHelp = map[string]helpDoc{
 		},
 	},
 	"close": {
-		usage: "progress close --id <任务号> --summary <摘要> [选项]",
+		usage: "progress close --id <任务号> (--summary <摘要> | --cancel) [选项]",
 		options: []helpOption{
 			{"--id <任务号>", "结哪条（必填）"},
-			{"--summary <摘要>", "结案摘要（必填；放弃写「放弃：原因」）"},
+			{"--summary <摘要>", "结案摘要（正常结案必填；取消可省略，写了就落历史备注）"},
+			{"--cancel", "取消 / 作废 ⇒ 结果 cancelled。只有用户明确说「取消 / 作废」才加；说「关闭 / 结案 / 结束」或「不做了 / 先放一放」一律不加"},
 			{"--finished <时间>", "补录实际结案时间（YYYY-MM-DD[ HH:MM[:SS]]）"},
 			{"--tags <a、b>", "覆盖标签终值"},
 			{"--repo <工作区根>", "同上"},

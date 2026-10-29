@@ -73,8 +73,8 @@
 
 - 按**结案时间**分月落文件，行序按创建时间；**首列是结案时间、次列才是创建时间**（筛选口径别搞反）。
 - 这是**只追加**的表：没有删除、没有原地改行，也不做整表重排 —— 否则手写格式与 git 行级 diff 全坏。
-- **写盘十二列，读兼容十一列**（2026-10-29 加 `Result` 列）：十一列的老行按 `done` 读。列数既不是 11 也不是 12 的行跳过并警告。存量九列的文件按 `docs/history-creator-upgrade.md` 一次性升级（在 owner 后插 `owner_name`、creator 后插 `creator_name`）。
-- **`Result` 列**取值 `done` / `cancelled`。`done` 由 `close` 写；`cancelled` 的写入链路 📝 待落码（`close --cancel`）。
+- **写盘与读取都只认十二列**（2026-10-29 加 `Result` 列）：11 列及更早的旧文件不再兼容、统一迁移；列数不对的行跳过并警告。存量九列的文件按 `docs/history-creator-upgrade.md` 一次性升级（在 owner 后插 `owner_name`、creator 后插 `creator_name`）。
+- **`Result` 列**取值 `done` / `cancelled`：`done` = 正常结案，`cancelled` = `close --cancel`。取消行的 `owner` / `owner_name` 是**执行取消的人**，备注（可省）落 `Summary` 列，原创建者仍在 `creator` / `creator_name`。
 - 表头与一级标题自 2026-10-29 起写英文（`# History (closed)`）；旧中文表头不再兼容，将统一迁移。
 
 ## 五、过程文档：`worklog/<年月>/*.md`

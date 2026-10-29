@@ -160,7 +160,7 @@ func LockScope(repo string, me core.Identity, action string, params map[string]a
 		if len(finished) >= 7 {
 			history = core.HistoryPathFor(finished)
 		}
-		return Scope{Files: mergeRel([]string{mine, history}, wfiles), Dirs: wdirs}, nil
+		return Scope{Files: mergeRel([]string{mine, pool, history}, wfiles), Dirs: wdirs}, nil
 	}
 	// 全部分支已覆盖 LockActions，走到这里说明表与分支不同步
 	return Scope{}, core.Failf("lock_scope 没有处理 %q", action)

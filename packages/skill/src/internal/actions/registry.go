@@ -18,6 +18,7 @@ type Params struct {
 	Note     string
 	Summary  string
 	Finished string
+	Cancel   bool
 	Deep     bool
 	List     *ListQuery
 	History  *HistoryQuery
@@ -66,9 +67,9 @@ var ACTIONS = map[string]ActionSpec{
 	},
 	"close": {
 		Render: "result",
-		Params: []string{"tid", "summary", "finished", "tags"},
+		Params: []string{"tid", "summary", "finished", "tags", "cancel"},
 		Run: func(repo string, me core.Identity, p Params) (any, error) {
-			return CloseTask(repo, me, p.Tid, CloseTaskParams{Summary: p.Summary, Finished: p.Finished, Tags: p.Tags})
+			return CloseTask(repo, me, p.Tid, CloseTaskParams{Summary: p.Summary, Finished: p.Finished, Tags: p.Tags, Cancel: p.Cancel})
 		},
 	},
 	"list": {

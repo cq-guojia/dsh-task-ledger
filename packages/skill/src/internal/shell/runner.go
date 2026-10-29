@@ -316,6 +316,7 @@ func paramsOf(command string, a *Args, repo string, me core.Identity) (actions.P
 		Note:     a.Note,
 		Summary:  a.Summary,
 		Finished: a.Finished,
+		Cancel:   a.Cancel,
 		Deep:     a.Deep,
 		List:     a.Query,
 		History:  a.HistoryQuery,

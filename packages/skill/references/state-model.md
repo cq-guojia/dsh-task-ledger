@@ -1,6 +1,6 @@
 # 状态与时间模型
 
-> TL;DR：状态只有 `open` / `doing`；`done` 由 `close` 产生。认领即 `doing`（`claim` / `new --self` 都直接置）。`started` = 首次认领时间，释放不清、重新认领不刷新。`updated` 由 `new/claim/set/log` 刷新。身份由脚本自取，agent 不传 owner。
+> TL;DR：状态只有 `open` / `doing`；`done`（正常结案）/ `cancelled`（取消，`close --cancel`）由 `close` 产生。认领即 `doing`（`claim` / `new --self` 都直接置）。`started` = 首次认领时间，释放不清、重新认领不刷新。`updated` 由 `new/claim/set/log` 刷新。身份由脚本自取，agent 不传 owner。
 
 ## 状态机
 
@@ -14,7 +14,7 @@ close             → 历史层 + 封卷 + 移出自己名下
 ```
 
 - **`started` 是外卖计时器**：首次认领盖上之后，释放（`set --release`）不清、重新认领不刷新 —— 逾期时钟从首次认领一口气跑到结案，转手不重置。防的是「眼看要超时，释放掉再认领回来洗时钟」；全链路没有重置 `started` 的命令（`claim` 的 `or now()` 只在它为空时才盖值；`set` 原样保留）。接手一个已超时的任务，一接单即逾期：单子已经迟了，谁端着谁负责；责任归属看执行记录流水（谁认领 / 谁释放逐笔有记录），计时器只回答「这单迟没迟」。
-- 状态只有 `open` / `doing` 两种在办值；`done` 由 `close` 产生（任务从分片消失，只留在历史里）。**没有 `blocked`**，也没有改状态的命令。
+- 状态只有 `open` / `doing` 两种在办值；`done` / `cancelled` 由 `close` 产生（任务从池或分片消失，只留在历史里；`cancelled` 是 `close --cancel`）。**没有 `blocked`**，也没有改状态的命令。
 - 认领 / 释放 / 交接一律先写目标、再删原处，崩在中间会同一任务号短暂出现在两处 —— 重跑一次同一条命令即幂等收敛（`already_done`），或按 `validate` 的提示删掉多余那份。
 
 ## 时间
@@ -43,7 +43,7 @@ close             → 历史层 + 封卷 + 移出自己名下
 - 没有 `identity.json`（未初始化）**直接报错**，提示先跑 `init`（一台机器一次）；不再有兜底身份，也不读 git / 环境变量。
 - 全站只认 UUID 这一个身份键；`list --owner` / `history --owner` **只收 uuid**（形态不是 UUID 直接报错，不静默返回空），没有 `me` 缩写，「自己」用 `--mine`。
 - **名字不进任何判定**：按人模糊找只能走 `--owner-name <片段>`（对名册里的 `name` 做子串、不分大小写匹配，换成 uuid 集合再筛），它只是查询便利，认领 / 释放 / 交接 / 「我的」一律只比 uuid。任务上的 `owner_name` 是冗余显示字段，改名不影响归属。
-- `close` / `log` 只对自己名下的任务生效，不在名下直接拒绝；`set --release` 对已在公共池里的任务是幂等空转（退 0）；`set --owner <自己>` 会把公共池里的任务认领到自己名下。
+- `log` 只对自己名下的任务生效；`close` 对自己名下的做结案/取消，对公共池任务只能 `--cancel`（`close --cancel`），别人名下的拒绝；`set --release` 对已在公共池里的任务是幂等空转（退 0）；`set --owner <自己>` 会把公共池里的任务认领到自己名下。
 
 ## 历史层
 

@@ -215,6 +215,7 @@ type Params struct {                     // 外壳把命令行装成它，动作
     Owner *string
     Release bool
     Note, Summary, Finished string
+    Cancel bool
     Deep bool
     List *ListQuery; History *HistoryQuery; Trend *TrendQuery
 }
@@ -352,7 +353,7 @@ func (t *termState) readKey() key
 | `claim` | `--id`（必填） | `Claim(repo, me, tid)` |
 | `set` | `--id`（必填）+ `--release` / `--owner` / `--tags` 三选一 | `Release` / `Handoff` / `Relabel`（`set_task.go` 只做路由） |
 | `log` | `--id`、`--note`（都必填） | `LogProgress` |
-| `close` | `--id`、`--summary`（必填）、`--finished`、`--tags` | `CloseTaskParams` |
+| `close` | `--id`、`--summary`（正常结案必填，取消可省）、`--cancel`、`--finished`、`--tags` | `CloseTaskParams` |
 | `list` | `--mine` / `--pool` / `--owner` / `--owner-name` / `--status` / `--category` / `--tag` / `--since` / `--until` / `--stale-days` / `--overdue-days` / `--backlog-days` / `--json` | `ListQuery`（范围优先级 mine → pool → owner；阈值可选，不传回默认） |
 | `stats` | 与 `list` 完全同名的那套（含三个阈值） / `--json` | `StatsTasks`（共用同一个 `ListQuery`） |
 | `stats --trend` | `--trend <day\|week\|month\|quarter\|year>` + `--since` / `--until` 或 `--last <N><d\|w\|m\|y>`（默认 `8w`）+ `--mine` / `--owner <uuid>[,<uuid>]` / `--by-owner` | `TrendQuery` ⇒ `TrendStats`；**不认** `--pool` / `--owner-name` / `--status` / `--category` / `--tag` / 三个阈值 / `--json`（自带 JSON），给了就是用法错 |

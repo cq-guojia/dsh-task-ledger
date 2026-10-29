@@ -66,6 +66,7 @@ type Args struct {
 	Note        string
 	Summary     string
 	Finished    string
+	Cancel      bool
 	Release     bool
 	Claim       *string
 	NewID       bool
@@ -84,7 +85,7 @@ var commandFlags = map[string]map[string]bool{
 	"claim":    setOf("--id", "--repo"),
 	"set":      setOf("--id", "--owner", "--release", "--tags", "--repo"),
 	"log":      setOf("--id", "--note", "--repo"),
-	"close":    setOf("--id", "--summary", "--finished", "--tags", "--repo"),
+	"close":    setOf("--id", "--summary", "--finished", "--tags", "--cancel", "--repo"),
 	"list":     setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
 	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--by-owner", "--json", "--repo"),
 	"owners":   setOf("--json", "--repo"),
@@ -320,6 +321,8 @@ func applyFlag(a *Args, name, value string) error {
 		a.Finished = value
 	case "--release":
 		a.Release = true
+	case "--cancel":
+		a.Cancel = true
 	case "--claim":
 		a.Claim = nonEmptyPtr(value)
 	case "--new":
@@ -352,8 +355,8 @@ func requireFlags(a *Args) error {
 			return usageErr("log 缺少 --note")
 		}
 	case "close":
-		if a.Summary == "" {
-			return usageErr("close 缺少 --summary")
+		if a.Summary == "" && !a.Cancel {
+			return usageErr("close 缺少 --summary（取消可用 --cancel 省略）")
 		}
 	}
 	return nil
