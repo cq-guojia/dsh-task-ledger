@@ -114,8 +114,7 @@ func runCommand(command string, args *Args, log *store.WriteLog) (int, error) {
 			return 0, err
 		}
 		// 先自报读的是哪个台账：--repo 指错目录时输出会变成一片「没有任务」，不带这一行
-		// 就完全看不出读错了地方。--count-only 也出 JSON，同样不打（2026-10-25 改）
-		RepoBanner(repo, args.JSON || args.CountOnly || args.Trend != "")
+		RepoBanner(repo, args.JSON || args.Trend != "")
 		if err := renderOf(spec, value, args, args.JSON); err != nil {
 			return 0, err
 		}

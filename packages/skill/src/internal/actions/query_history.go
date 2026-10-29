@@ -129,9 +129,6 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 	if err != nil {
 		return nil, err
 	}
-	if q.CountOnly && q.Limit != nil {
-		return nil, core.Failf("--count-only 与 --limit 不能同时用：计数不截断，列表才截断。")
-	}
 	effSince, effUntil, err := historyWindow(keys, q)
 	if err != nil {
 		return nil, err
@@ -139,8 +136,6 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 	history := store.NewHistoryStore(repo)
 	var records []map[string]any
 	var warnings []string
-	counted := 0
-	capped := false
 	for _, ym := range keys {
 		path := filepath.Join(repo, core.ToRepoRel(core.HistoryDir), ym+".md")
 		if fi, err := os.Stat(path); err != nil || fi.IsDir() {
@@ -158,15 +153,6 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 			if !rowMatches(row, q, me, effSince, effUntil) {
 				continue
 			}
-			// 计数只要数字：不建 map、不排序、不读名册；够 CountCap 就停（对外仍是 10000 + capped）。
-			if q.CountOnly {
-				counted++
-				if counted > CountCap {
-					counted, capped = CountCap, true
-					break
-				}
-				continue
-			}
 			item := row.ToMap()
 			item["src"] = Rel(repo, path)
 			if key := core.TimeKey(row.Created); key != "" {
@@ -178,12 +164,6 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 			item["mine"] = core.IsMe(me, row.Owner)
 			records = append(records, item)
 		}
-		if capped {
-			break
-		}
-	}
-	if q.CountOnly {
-		return &HistoryResult{Count: counted, Capped: capped, Warnings: warnings}, nil
 	}
 
 	index := store.NewOwnersIndex(repo)
@@ -210,6 +190,7 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 		return strOfAny(records[i]["finished"]) > strOfAny(records[j]["finished"])
 	})
 
+	capped := false
 	if q.Limit != nil {
 		limit := *q.Limit
 		if limit < 1 {
@@ -266,8 +247,8 @@ func historyWindow(keys []string, q HistoryQuery) (string, string, error) {
 	return effSince, effUntil, nil
 }
 
-// rowMatches 一条历史行是否命中查询条件。列表与 --count-only 共用这一套判据：
-// 各写一份迟早对不上数（计数口径必须与列表行数一致）。
+// rowMatches 一条历史行是否命中查询条件。`count` 与列表行数必须是同一套判据算出来的：
+// 各写一份迟早对不上数。
 func rowMatches(row core.Row, q HistoryQuery, me core.Identity, effSince, effUntil string) bool {
 	owner := core.Normalize(row.Owner)
 	if q.Mine {

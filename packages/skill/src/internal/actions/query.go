@@ -2,9 +2,6 @@ package actions
 
 // 查询条件长什么样。外壳把命令行装成它，界面直接构造它 —— 动作层不认识命令行参数。
 
-// CountCap --count-only 的封顶：超过就 capped=true。
-const CountCap = 10000
-
 // 年龄阈值的内置默认（天）：停滞 / 逾期 / 积压各答一个问题，互不覆盖。
 // 不传就用这三个值，传了按调用方的值算 —— 参数永远是「覆盖」，不是「必填」。
 const (
@@ -51,5 +48,4 @@ type HistoryQuery struct {
 	Until     *string
 	Limit     *int
 	Months    *int
-	CountOnly bool
 }

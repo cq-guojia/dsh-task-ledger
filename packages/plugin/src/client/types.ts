@@ -136,7 +136,7 @@ export interface BoardPayload {
 export interface DegradedInfo {
 	readonly workspaceId: string;
 	readonly workspaceTitle: string;
-	readonly op: "list" | "history" | "owners" | "trend";
+	readonly op: "list" | "owners" | "trend";
 	readonly code: string;
 	readonly message: string;
 }

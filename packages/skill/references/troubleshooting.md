@@ -24,7 +24,7 @@
 - **「--release 与 --owner 不能同时给」**：释放不带人、交接不带释放，分开跑两次。
 - **「--owner 只收身份 uuid（形如 …），不接受名字 / 邮箱：X」**：身份参数传了名字。改传 uuid；要按显示名找人就加到查询里：`list --owner-name <片段>` / `history --owner-name <片段>`。
 - **「--owner 不能和 --mine / --pool 一起用」**：范围只能选一种。要按某个人筛就 `--owner <uuid>`，要看自己的就 `--mine`。
-- **「--count-only 与 --limit 不能同时用」/「--limit 必须 ≥ 1」**：计数不截断、列表才截断；`--limit 0` 没有意义。
+- **「--limit 必须 ≥ 1」**：`--limit 0` 没有意义。
 - **「时间区间反了：--since（…）晚于 --until（…）」**：两端换过来。
 - **「认领目标不是 uuid：X」**：`init --claim` 抄了老台账的邮箱 / 名字键。老台账先迁到 uuid 身份；这台机器先 `init --new --name=<名字>`。
 - **「名册里没有 uuid=X」**：`init --claim` 抄了一个不在 `owners.json` 里的 uuid。不带参数跑一次 `init` 看可选用户再选。

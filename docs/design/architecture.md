@@ -53,7 +53,7 @@ git 只在命令的**前后两端**，业务中间不碰 git —— 这一点重
 ```
 shell.Main（cli.go）
   ├─ 解析参数（ParseArgs；--help 退 0，用法错退 2）
-  ├─ TASK_LEDGER_NO_SYNC ⇒ NoSync；--json 与 --count-only 互斥；buildQuery 预加工查询条件
+  ├─ TASK_LEDGER_NO_SYNC ⇒ NoSync；buildQuery 预加工查询条件
   ├─ whoami / init 就地短路（不定位工作区、不碰台账）
   ├─ 定位工作区 ResolveRepo：--repo 走 core.AsRoot 校验；否则 core.RootOf 从 cwd 往上找；
   │      找不到就报错，**不在当前目录建台账**；并校验 ledger/ 本身不是根

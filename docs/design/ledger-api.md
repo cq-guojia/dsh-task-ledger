@@ -325,7 +325,7 @@ func (t *termState) readKey() key
 |---|---|---|
 | `0` | 成功 | — |
 | `1` | 业务错 | `core.Fail`：任务不存在、不是你的、参数不合法、仓库中间态；`validate` 有 problems |
-| `2` | 用法错 | 命令/参数不认识、必填缺失、`--json` 与 `--count-only` 同给 |
+| `2` | 用法错 | 命令/参数不认识、必填缺失 |
 | `3` | 未预期异常 | 非 `Fail` 的 error |
 | `130` | 中断 | Ctrl-C（提交开始前会回滚） |
 
@@ -358,7 +358,7 @@ func (t *termState) readKey() key
 | `stats --trend` | `--trend <day\|week\|month\|quarter\|year>` + `--since` / `--until` 或 `--last <N><d\|w\|m\|y>`（默认 `8w`）+ `--mine` / `--owner <uuid>[,<uuid>]` / `--by-owner` | `TrendQuery` ⇒ `TrendStats`；**不认** `--pool` / `--owner-name` / `--status` / `--category` / `--tag` / 三个阈值 / `--json`（自带 JSON），给了就是用法错 |
 | `owners` | `--json` | `ListOwners` |
 | `show` | `--id`、`--json` | `ShowTask` |
-| `history` | `--owner` / `--owner-name` / `--mine` / `--category` / `--tag` / `--since` / `--until` / `--months` / `--limit` / `--count-only` / `--json` | `HistoryQuery` |
+| `history` | `--owner` / `--owner-name` / `--mine` / `--category` / `--tag` / `--since` / `--until` / `--months` / `--limit` / `--json` | `HistoryQuery` |
 | `validate` | `--deep`、`--json` | `Validate(repo, deep)` |
 | `root` | `--dir <目录>`、`--json` | `DetectRoot`（**定位之前**旁路调用，不认 `--repo`、不依赖身份） |
 | `whoami` | `--json` | 直接读 `env`，不解析台账 |

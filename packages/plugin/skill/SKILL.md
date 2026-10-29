@@ -224,7 +224,6 @@ allowed-tools: Read,Edit,Bash,Grep
 | `--since` / `--until` | 按**结案时间**筛（只给日期含当天） |
 | `--months N` | 最近 N 个自然月（与 `--since` / `--until` **互斥**，同传直接报错） |
 | `--limit N` | 最近 N 条 |
-| `--count-only` | 只输出 `{"count","capped"}`（与 `--json`、`--limit` 都互斥） |
 | `--json` | JSON 输出；**每条记录带 `mine`**（是不是自己结的，只比 uuid） |
 
 干什么：按结案时间倒序排列，每条一行，只列结案时间、负责人、标题，其他都不在表格里；要摘要 / 分类 / 标签 / 完整时间加 `--json`。不给时间参数 = 最近 3 个自然月；最多 13 个月，超了直接报错。

@@ -21,7 +21,6 @@ import (
 
 // 命令行：只做解析与装配，不碰文件。
 //
-// - --json 与 --count-only 互斥（退出码 2）。
 // - TASK_LEDGER_NO_SYNC **只在这里读一次**，折成 args.NoSync 往下传。
 
 // NoSyncEnv 只写本地、不取最新 / 不提交 / 不推送。
@@ -39,7 +38,6 @@ type Args struct {
 	Repo      string
 	NoSync    bool
 	JSON      bool
-	CountOnly bool
 
 	Title     string
 	TID       string
@@ -91,7 +89,7 @@ var commandFlags = map[string]map[string]bool{
 	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--by-owner", "--json", "--repo"),
 	"owners":   setOf("--json", "--repo"),
 	"show":     setOf("--id", "--json", "--repo"),
-	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--since", "--until", "--limit", "--months", "--count-only", "--json", "--repo"),
+	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--since", "--until", "--limit", "--months", "--json", "--repo"),
 	"validate": setOf("--deep", "--json", "--repo"),
 	"root":     setOf("--dir", "--json"),
 	"whoami":   setOf("--json", "--repo"),
@@ -312,8 +310,6 @@ func applyFlag(a *Args, name, value string) error {
 		a.Dir = value
 	case "--json":
 		a.JSON = true
-	case "--count-only":
-		a.CountOnly = true
 	case "--deep":
 		a.Deep = true
 	case "--note":
@@ -454,7 +450,6 @@ func buildQuery(a *Args) error {
 			Until:     until,
 			Limit:     a.Limit,
 			Months:    a.Months,
-			CountOnly: a.CountOnly,
 		}
 	}
 	return nil
@@ -582,10 +577,6 @@ func Main(argv []string) int {
 	}
 	if os.Getenv(NoSyncEnv) != "" {
 		a.NoSync = true
-	}
-	if a.JSON && a.CountOnly {
-		errOut("用法错误：--json 与 --count-only 不能同时用")
-		return ExitUsage
 	}
 	if err := buildQuery(a); err != nil {
 		FailMessage("错误", err.Error())

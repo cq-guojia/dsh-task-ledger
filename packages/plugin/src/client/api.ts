@@ -62,7 +62,7 @@ export async function fetchJson<T>(
 }
 
 /**
- * 首屏快照：8 卡 + 在办列表（host 侧每工作区跑 skill `stats` / 两次 `history --count-only` / `list`）。
+ * 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
  * `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
  */
 export function fetchBoardSnapshot(

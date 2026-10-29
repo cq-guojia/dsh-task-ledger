@@ -85,7 +85,7 @@ export function registerRoutes(
 		}
 	});
 
-	// 首屏一次拿全：8 卡（skill `stats` + 两次 `history --count-only`）+ 在办列表（`list --json`）。
+	// 首屏一次拿全：8 卡（skill `stats`；本周/上周完成取趋势最后两个桶）+ 在办列表（`list --json`）+ 趋势。
 	registerRead("/board/snapshot", async (_req, res) => {
 		try {
 			sendJson(res, 200, await getBoardHome(await workspacesOf(deps)));

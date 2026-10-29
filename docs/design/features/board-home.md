@@ -1,6 +1,6 @@
 # 功能：台账看板首页（board-home）
 
-> **状态**：🔵 首页已落码并改版（2026-10-17：整页 + 中英 / 明暗；下午按专家组方案重做统计区 / 筛选轴 / 列表两区）。**2026-10-28 收敛**：上部 8 统计卡（数字改由 skill `stats` / `history --count-only` 提供，插件不再自算）+ 趋势图只留卡位、不画图（skill 还没有按周汇总的方法）；下部单区列表沿用「我的待办」卡片样式，左侧六档菜单（我的待办 / 待认领 / 进行中 **真筛**；积压 / 逾期 / 停滞 **只铺样式** —— `list` 没有按这三档筛行的参数）+ 工作区过滤（**真筛**）+ 执行人下拉（候选由 skill `owners --json` 按工作区扇出、前端跨工作区合并去重，核心 Picker `groups` 渲染为「通用人员 / 各工作区分组」；**选了真筛留待下一步**）+ 搜索框（**只铺样式**）；任务动作按钮与统计 tab 仍停用。段头控件间距 6px。⚠️ §三 按钮矩阵**未落码**——台账**写入路径待定**（见 architecture.md 不变量 1），拍板前不先斩后奏；统计 tab 只落了占位（归「统计报表」任务）。**2026-10-28 代码清理**：趋势图组件（`ui.ts::GroupedBarChart` / `ChartLegend`）、已结案列表渲染（`rows.ts::selectClosed` + `task-row.ts` 的 closed 分支）、筛选候选端点（`/filters`）与全部写端点（`/claim`、`/release`、`/close`）的实现**已删除**；本文里写「自绘图表 / 两区列表 / 已结案行 / 写按钮」的段落属于**未接回的设计草案**，不是现状
+> **状态**：🔵 首页已落码并改版（2026-10-17：整页 + 中英 / 明暗；下午按专家组方案重做统计区 / 筛选轴 / 列表两区）。**2026-10-28 收敛**：上部 8 统计卡（数字改由 skill `stats` 提供，插件不再自算；当时并用的 `history --count-only` 已于 2026-10-29 删除，本周 / 上周完成改取趋势桶，见下文数据来源）+ 趋势图只留卡位、不画图（skill 还没有按周汇总的方法）；下部单区列表沿用「我的待办」卡片样式，左侧六档菜单（我的待办 / 待认领 / 进行中 **真筛**；积压 / 逾期 / 停滞 **只铺样式** —— `list` 没有按这三档筛行的参数）+ 工作区过滤（**真筛**）+ 执行人下拉（候选由 skill `owners --json` 按工作区扇出、前端跨工作区合并去重，核心 Picker `groups` 渲染为「通用人员 / 各工作区分组」；**选了真筛留待下一步**）+ 搜索框（**只铺样式**）；任务动作按钮与统计 tab 仍停用。段头控件间距 6px。⚠️ §三 按钮矩阵**未落码**——台账**写入路径待定**（见 architecture.md 不变量 1），拍板前不先斩后奏；统计 tab 只落了占位（归「统计报表」任务）。**2026-10-28 代码清理**：趋势图组件（`ui.ts::GroupedBarChart` / `ChartLegend`）、已结案列表渲染（`rows.ts::selectClosed` + `task-row.ts` 的 closed 分支）、筛选候选端点（`/filters`）与全部写端点（`/claim`、`/release`、`/close`）的实现**已删除**；本文里写「自绘图表 / 两区列表 / 已结案行 / 写按钮」的段落属于**未接回的设计草案**，不是现状
 > **来源**：用户需求原话（2026-10-16 深夜对话：入口形式 / 首页构想 / 任务按钮逻辑）+ 需求讨论结案任务结论
 > **配套**：架构见 [`../architecture.md`](../architecture.md)；数据见 [`../ledger-data.md`](../ledger-data.md)；样式见 [`../ui-style.md`](../ui-style.md)；宿主事实见 [`../external/client-ui-layout.md`](../external/client-ui-layout.md) 与 [`../external/dsh-session-handoff.md`](../external/dsh-session-handoff.md)
 
@@ -82,7 +82,7 @@
 - 空台账：卡里给「还没有可统计的记录」，不画 0 柱；窗口早于台账起点 ⇒ 卡底部小字「{from} 起才有台账数据」（取 `coverage.from`）。
 - 趋势读挂了**不拖垮整板**：`trend.service.ts` 自己吞「全部失败」（其余三块照常 200），失败进 `degraded`（`op: "trend"`）。
 
-**数据来源（2026-10-29 现状）**：只有一条读端点 `/board/snapshot`（每工作区 `stats --json` + 两次 `history --count-only` + `list --json` + `owners --json` + `stats --trend week --last 8w --by-owner`）。8 卡里只有「本周完成 / 上周完成」与趋势图碰历史口径（`--count-only` 不解析明细、`--trend` 由 skill 按月缓存），其余全来自在办数据。
+**数据来源（2026-10-29 现状）**：只有一条读端点 `/board/snapshot`（每工作区 `stats --json` + `list --json` + `owners --json` + `stats --trend week --last 8w --by-owner`）。「本周完成 / 上周完成」不再单独查 history —— 直接取趋势桶的最后两个（少两次脚本调用，口径与图表一致）；`history` 从此只负责列表。
 
 **与 skill 的两条口径对齐（2026-10-26）**：
 

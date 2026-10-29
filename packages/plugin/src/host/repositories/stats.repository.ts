@@ -3,7 +3,8 @@
  *
  * - 在办各面（待认领 / 进行中 / 积压 / 逾期 / 停滞 / 我的）→ `stats --json`；
  *   阈值、mine 判定、最老待认领天数都由 skill 算好回显。
- * - 本周 / 上周完成 → `history --count-only`（结案时间落在区间内；区间界线由插件算，日期窗口归插件）。
+ * - 本周 / 上周完成 → **不再单独查 history**（2026-10-29）：由趋势（`stats --trend week`）
+ *   的最后两个桶直接给出，少两次脚本调用、口径也跟图表完全一致。
  *
  * 形状不符一律抛 {@link LedgerDataError}（不拿 0 充数）。
  */
@@ -28,13 +29,6 @@ export interface WorkspaceStats {
 	readonly staleDays: number;
 	readonly overdueDays: number;
 	readonly backlogDays: number;
-}
-
-/** 一个时间窗口内的结案数（`history --count-only`）。 */
-export interface ClosedCount {
-	readonly count: number;
-	/** count 到了 skill 的封顶（10000）⇒ 真实值只多不少。 */
-	readonly capped: boolean;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -98,41 +92,4 @@ export function parseStats(raw: unknown, where: string): WorkspaceStats {
 		overdueDays: num(thresholds, "overdue_days", where),
 		backlogDays: num(thresholds, "backlog_days", where),
 	};
-}
-
-/**
- * 一个时间窗口内结案了多少条（skill `history --count-only`）。
- * 区间写进缓存键：本周 / 上周两个窗口各算一次，别互相串味。
- */
-export async function countClosed(
-	workspace: LedgerWorkspace,
-	window: { readonly from: string; readonly to: string },
-): Promise<ClosedCount> {
-	return await cached(
-		cacheKey(workspace.id, "history", `count:${window.from}~${window.to}`),
-		async () => {
-			const result = await runLedgerScript<unknown>("history", [
-				"--repo",
-				workspace.path,
-				"--count-only",
-				"--since",
-				window.from,
-				"--until",
-				window.to,
-			]);
-			if (!result.ok) throw new Error(`${workspace.title}: ${result.error}`);
-			if (!isPlainObject(result.data))
-				throw new LedgerDataError(
-					workspace.title,
-					`${workspace.title}: history --count-only 输出不是对象`,
-				);
-			const count = result.data.count;
-			if (typeof count !== "number" || !Number.isFinite(count))
-				throw new LedgerDataError(
-					workspace.title,
-					`${workspace.title}: history --count-only 缺 count 数字`,
-				);
-			return { count, capped: result.data.capped === true };
-		},
-	);
 }

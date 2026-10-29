@@ -1,69 +1,55 @@
 /**
  * 8 个统计卡的用例（首屏唯一端点 `/board/stats`）。
  *
- * 数字真源全在 skill：每工作区跑 `stats --json`（在办各面）与两次
- * `history --count-only`（本周 / 上周完成），本文件只做跨工作区求和与降级归集。
- * 趋势图（近 8 周）由 `trend.service.ts` 走 `stats --trend` 单独算，随首屏一起打包回来。
+ * 数字真源全在 skill：每工作区跑 `stats --json`（在办各面），本文件只做跨工作区求和与降级归集。
+ * 「本周 / 上周完成」不再单独查 history —— 直接取趋势桶（`stats --trend week`）的最后两个，
+ * 少两次脚本调用，口径也跟图表一致（2026-10-29）。
  */
-import {
-	type DegradedInfo,
-	codeOf,
-	messageOf,
-	settleWorkspaces,
-} from "../errors.js";
+import { type DegradedInfo, settleWorkspaces } from "../errors.js";
 import { getCurrentIdentity } from "../repositories/identity.repository.js";
 import { getBoardTrend } from "./trend.service.js";
 import { readOwners, readTasks } from "../repositories/ledger.repository.js";
-import {
-	countClosed,
-	readStats,
-	type WorkspaceStats,
-} from "../repositories/stats.repository.js";
+import { readStats, type WorkspaceStats } from "../repositories/stats.repository.js";
 import type {
 	BoardHomePayload,
 	BoardStatsView,
 	LedgerWorkspace,
 	StatsPayload,
 	TaskRow,
+	TrendView,
 } from "../types.js";
 import { weekWindow } from "./dates.js";
 
-interface WeekCounts {
-	/** 全部工作区合计数；一个都读不到为 null（界面留 —）。 */
-	readonly done: number | null;
-	readonly degraded: readonly DegradedInfo[];
+/** 本周 / 上周完成 = 趋势最后两个桶的「结案」（后者为上周）。 */
+export interface WeekDone {
+	readonly weekDone: number | null;
+	readonly lastWeekDone: number | null;
+	readonly weekFrom: string;
+	readonly weekTo: string;
+	readonly lastWeekFrom: string;
+	readonly lastWeekTo: string;
 }
 
 /**
- * 一个自然周的结案数（跨工作区求和）。
- * 部分工作区失败 ⇒ 数字偏小，degraded 会带出去（界面标红，不装没看见）。
+ * 从趋势桶里取「本周 / 上周完成」。
+ * 趋势为空（全挂）⇒ 两个数都给 null（界面留 —，不拿 0 充数）。
  */
-async function countWeek(
-	workspaces: readonly LedgerWorkspace[],
-	window: { readonly from: string; readonly to: string },
-): Promise<WeekCounts> {
-	const settled = await Promise.allSettled(
-		workspaces.map((workspace) => countClosed(workspace, window)),
-	);
-	let done = 0;
-	let ok = 0;
-	const degraded: DegradedInfo[] = [];
-	settled.forEach((result, i) => {
-		if (result.status === "fulfilled") {
-			done += result.value.count;
-			ok += 1;
-			return;
-		}
-		const workspace = workspaces[i];
-		degraded.push({
-			workspaceId: workspace.id,
-			workspaceTitle: workspace.title,
-			op: "history",
-			code: codeOf(result.reason),
-			message: messageOf(result.reason),
-		});
-	});
-	return { done: ok === 0 && workspaces.length > 0 ? null : done, degraded };
+export function weekDoneFromTrend(
+	trend: TrendView,
+	fallback: { readonly from: string; readonly to: string },
+	fallbackLast: { readonly from: string; readonly to: string },
+): WeekDone {
+	const buckets = trend.buckets;
+	const thisWeek = buckets[buckets.length - 1];
+	const lastWeek = buckets[buckets.length - 2];
+	return {
+		weekDone: thisWeek === undefined ? null : thisWeek.done,
+		lastWeekDone: lastWeek === undefined ? null : lastWeek.done,
+		weekFrom: thisWeek?.from ?? fallback.from,
+		weekTo: thisWeek?.to ?? fallback.to,
+		lastWeekFrom: lastWeek?.from ?? fallbackLast.from,
+		lastWeekTo: lastWeek?.to ?? fallbackLast.to,
+	};
 }
 
 interface TaskScope {
@@ -112,8 +98,14 @@ export async function getBoardHome(
 		identities[scope.workspace.id] = scope.identity;
 		tasks.push(...scope.tasks);
 	}
+	const weeks = weekDoneFromTrend(
+		trend,
+		weekWindow(0, now),
+		weekWindow(-1, now),
+	);
 	return {
 		...statsPayload,
+		stats: { ...statsPayload.stats, ...weeks },
 		trend: { buckets: trend.buckets, coverageFrom: trend.coverageFrom, coverageTo: trend.coverageTo },
 		workspaces,
 		tasks,
@@ -134,11 +126,7 @@ export async function getBoardStats(
 ): Promise<StatsPayload> {
 	const thisWeek = weekWindow(0, now);
 	const lastWeek = weekWindow(-1, now);
-	const [perWorkspace, thisWeekCounts, lastWeekCounts] = await Promise.all([
-		settleWorkspaces(workspaces, "list", readStats, (rows) => rows),
-		countWeek(workspaces, thisWeek),
-		countWeek(workspaces, lastWeek),
-	]);
+	const perWorkspace = await settleWorkspaces(workspaces, "list", readStats, (rows) => rows);
 	const sum = (pick: (stats: WorkspaceStats) => number): number =>
 		perWorkspace.data.reduce((total, stats) => total + pick(stats), 0);
 	// 阈值由 skill 回显；没传过覆盖值 ⇒ 各工作区一致，取首个即可。
@@ -168,8 +156,9 @@ export async function getBoardStats(
 									: Math.max(max, item.oldestOpenDays),
 						null,
 					),
-		weekDone: thisWeekCounts.done,
-		lastWeekDone: lastWeekCounts.done,
+		// 这两格由 getBoardHome 从趋势桶回填（趋势全挂时保持 null ⇒ 界面留 —）
+		weekDone: null,
+		lastWeekDone: null,
 		weekFrom: thisWeek.from,
 		weekTo: thisWeek.to,
 		lastWeekFrom: lastWeek.from,
@@ -178,10 +167,6 @@ export async function getBoardStats(
 	return {
 		at: now.toISOString(),
 		stats,
-		degraded: [
-			...perWorkspace.degraded,
-			...thisWeekCounts.degraded,
-			...lastWeekCounts.degraded,
-		],
+		degraded: perWorkspace.degraded,
 	};
 }

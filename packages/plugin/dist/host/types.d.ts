@@ -73,7 +73,7 @@ export interface LedgerFilter {
     until?: string;
 }
 /**
- * 8 个统计卡的面。**数字全部来自 skill**（`stats --json` + `history --count-only`），
+ * 8 个统计卡的面。**数字全部来自 skill**（在办各面取 `stats --json`，本周/上周完成取趋势桶），
  * 插件只做跨工作区求和与阈值透传——不自己判停滞 / 逾期 / 积压。
  */
 export interface BoardStatsView {
@@ -99,7 +99,7 @@ export interface BoardStatsView {
     readonly backlogDays: number;
     /** 最老一条待认领躺了多少天（没有待认领 = null）。 */
     readonly oldestOpenDays: number | null;
-    /** 本周 / 上周完成数；history 全读不到时为 null（界面留 —，不拿 0 充数）。 */
+    /** 本周 / 上周完成数（= 趋势最后两个桶）；趋势全读不到时为 null（界面留 —）。 */
     readonly weekDone: number | null;
     readonly lastWeekDone: number | null;
     /** 两周的区间（界面悬停用，含边界）。 */

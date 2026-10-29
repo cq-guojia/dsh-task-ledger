@@ -1,6 +1,6 @@
 # 后端数据面：host 分层架构与性能基线
 
-> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施。**2026-10-28 收敛并清理**：首屏 = 8 卡 + 在办列表 + 各工作区花名册，路由只注册 `/workspaces` 与 `/board/snapshot`（每工作区 `stats --json` + 两次 `history --count-only` + `list --json` + `owners --json`，跨工作区合并/求和/降级归集）。`/board`、`/board/trend`、`/task`、`/history`、`/filters`、`/claim`、`/release`、`/close` 的实现与空壳函数**已全部删除**（提交 c528eab，删 7 个文件 / 约 3800 行）：接回时按 skill 方法重写，不复用旧直读逻辑
+> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施。**2026-10-28 收敛并清理**：首屏 = 8 卡 + 在办列表 + 各工作区花名册，路由只注册 `/workspaces` 与 `/board/snapshot`（每工作区 `stats --json` + `stats --trend week` + `list --json` + `owners --json`，跨工作区合并/求和/降级归集）。`/board`、`/board/trend`、`/task`、`/history`、`/filters`、`/claim`、`/release`、`/close` 的实现与空壳函数**已全部删除**（提交 c528eab，删 7 个文件 / 约 3800 行）：接回时按 skill 方法重写，不复用旧直读逻辑
 > **来源**：任务「后端方法抽象：台账读取查询与会话交接」用户要求（2026-10-18）：①所有与台账交互的后端能力抽象成方法；②一个地方统一读；③其他一律调用抽象方法；④架构要健壮、合理、成熟，参考业界成熟分层
 > **配套**：`architecture.md`（运行逻辑）、`code-conventions.md`（方法规范）、`ledger-data.md`（跨包数据契约）、`features/board-home.md`
 
@@ -29,7 +29,7 @@
 
 ## 二、性能实测（2026-10-18，本机；⚠️ 测的是已删除的 history 读路径）
 
-> 下表是**历史基线**，其中 `readHistory` / `getHomeAggregate` 的实现已于 2026-10-28 删除（当前只保留 `history --count-only`，用于本周 / 上周完成数）。留在这里是因为「趋势为什么慢、为什么不做」的结论仍成立。
+> 下表是**历史基线**，其中 `readHistory` / `getHomeAggregate` 的实现已于 2026-10-28 删除（2026-10-29 起连 `history --count-only` 也删了：本周 / 上周完成改取趋势桶的最后两个，history 只负责列表）。留在这里是因为「趋势为什么慢、为什么不做」的结论仍成立。
 
 fixture：`/tmp/perf3` = 空在办 + `history/202610.md` 50002 行 / 6.6MB（5 万行全在这一个月文件里）。
 
@@ -60,7 +60,7 @@ routes.ts            传输层：参数解析 / 发 JSON / 错误→状态码
 services/            用例层：聚合与计算（纯函数；现只有 stats.service 与 dates.ts）
 repositories/        数据访问层：**唯一知道「台账怎么读」的地方**
   ledger.repository    readTasks / readOwners / hasLedger
-  stats.repository     readStats（stats --json）/ countClosed（history --count-only）
+  stats.repository     readStats（stats --json）
   identity.repository  读本机 identity.json 的 uuid（机器级；与工作区 / git 无关）
   records.ts           入口校验：list --json → 领域对象，坏数据抛 LedgerDataError
   cache.ts             TTL 读缓存 + 单飞去重 + invalidate() 钩子
@@ -134,7 +134,7 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 ## 七、影响面（重构必读）
 
 - host 文件重组时，`dist/` 产物路径的下游引用要同步（原 smoke 的 5 处硬编码 `import('../dist/host/*.js')` 已随 smoke 删除移除）；
-- 对外契约不许变：`list --json` = 任务号为键的对象；`history --json` = `{count,filters,records}`；`--count-only` = `{count,capped}`；错误人话文案守返回结构与文案；
+- 对外契约不许变：`list --json` = 任务号为键的对象；`history --json` = `{count,filters,records}`；（`--count-only` 已于 2026-10-29 删除，计数一律走 `stats --trend`）；错误人话文案守返回结构与文案；
 - host 新文件 tsc 自动纳入（`tsconfig.json` include `src`）；client 禁止 import host；
 - API 前缀两份副本：`host/routes.ts` 与 `client/api.ts` 各一份 `API_PREFIX`，改要同步；
 - 文档同步：`ledger-data.md`（点名 runLedgerScript 处）、`architecture.md`、`code-conventions.md`、`board-home.md`、`external/dsh-workspace-registry.md`。

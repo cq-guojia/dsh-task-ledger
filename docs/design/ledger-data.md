@@ -124,11 +124,11 @@
 
 | 规则 | 反例（2026-10-17 真机 500） |
 |---|---|
-| 带 `--json` / `--count-only` 时，**空结果也要出 JSON**：`history --json` → `{"count":0,"filters":{…},"records":[],"warnings":[],"capped":false}`、`history --count-only` → `{"count":0,"capped":false}`、`list --json` → `{}`（任务号为键的对象） | `history` 在「没有任何历史文件」时直接打人话就 return ⇒ 插件抛错 ⇒ 整条看板 500。**一个空台账工作区就能让看板打不开** |
+| 带 `--json` 时，**空结果也要出 JSON**：`history --json` → `{"count":0,"filters":{…},"records":[],"warnings":[],"capped":false}`、`list --json` → `{}`（任务号为键的对象） | `history` 在「没有任何历史文件」时直接打人话就 return ⇒ 插件抛错 ⇒ 整条看板 500。**一个空台账工作区就能让看板打不开** |
 | 人话只走 stdout 的非 JSON 模式，或 stderr | 提示类信息本来就在 stderr，别混进 stdout |
 | 真失败照旧非零退出 + stderr 原文（不伪装成空 JSON） | 空 ≠ 错：空是合法数据，错才是错 |
 
-`--count-only` 的两个键含义：`count` 是条数；`capped` 为 true 表示计数触到 `actions.CountCap`（10000）被封顶，此时 `count` 只是下界，**不许当精确值用**（同样不许拿它算分页）。
+`history --json` 的 `capped`：为 true 表示 `--limit` 把列表截断了（`count` 是**返回条数**，截断前总数只能靠放宽 `--limit` 再查）。`--count-only`（以及封顶常量 `actions.CountCap`）已于 2026-10-29 删除 —— 统计口径一律走 `stats --trend` 的桶（自带区间裁剪与月缓存）。
 
 三个给界面喂数的只读命令同样守「空也要出 JSON」：空台账下 `stats --json` 出全 0 计数 + `thresholds` 回显、`owners --json` 出 `{"count":0,"owners":{}}`、`root --json` 出 `{"root":false,"repo":null,"ledger":null,"reason":…}`（目录不存在也算「不是根」，不报错、不退非零）。
 

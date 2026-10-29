@@ -388,11 +388,6 @@ func RenderShow(res *actions.ShowResult, asJSON bool) {
 
 // RenderHistory history 的输出。
 func RenderHistory(res *actions.HistoryResult, q *actions.HistoryQuery, asJSON bool) {
-	// --count-only 是计数口径：固定两个键的 JSON，与 --json 互斥
-	if q != nil && q.CountOnly {
-		jsonOut(map[string]any{"count": res.Count, "capped": res.Capped})
-		return
-	}
 	if asJSON {
 		filters := make(map[string]any, len(res.Filters))
 		for k, v := range res.Filters {

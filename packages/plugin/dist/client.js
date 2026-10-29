@@ -53402,7 +53402,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		/**
-		* 首屏快照：8 卡 + 在办列表（host 侧每工作区跑 skill `stats` / 两次 `history --count-only` / `list`）。
+		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
 		* `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
 		*/
 		function fetchBoardSnapshot(opts = {}) {
@@ -54536,8 +54536,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.119 · 261029-145821-998`
-			}, `v0.0.119 261029-145821-998`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.120 · 261029-151853-101`
+			}, `v0.0.120 261029-151853-101`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),

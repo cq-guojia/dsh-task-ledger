@@ -142,7 +142,6 @@ var commandHelp = map[string]helpDoc{
 			{"--until <日期>", "按结案时间上限（只给日期含当天）"},
 			{"--months <N>", "最近 N 个自然月（与 --since / --until 互斥；最多 13）"},
 			{"--limit <N>", "最近 N 条"},
-			{"--count-only", "只出 {count, capped}（与 --json / --limit 互斥）"},
 			{"--json", "JSON 输出；每条带 mine"},
 			{"--repo <工作区根>", "同上"},
 		},

@@ -156,13 +156,6 @@ func TestListScopePrecedence(t *testing.T) {
 		}
 	}
 }
-
-func TestJSONCountOnlyMutuallyExclusive(t *testing.T) {
-	if code := Main([]string{"history", "--json", "--count-only"}); code != ExitUsage {
-		t.Fatalf("--json 与 --count-only 同时给应是用法错（2），实际 %d", code)
-	}
-}
-
 func TestThresholdFlags(t *testing.T) {
 	// 三个阈值是可选的：传了进 ListQuery，不传留 nil（业务层回内置默认）
 	a := parse(t, "list", "--stale-days", "10", "--overdue-days", "30", "--backlog-days", "60")
