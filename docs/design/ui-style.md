@@ -50,6 +50,8 @@
 
 已删除的旧皮肤（2026-10-28）：`.dtl-btn*` / `.dtl-iconbtn*` / `.dtl-input` / `.dtl-select*` / `.dtl-seg*` / `.dtl-check` / `.dtl-badge` / `.dtl-row*` / `.dtl-group` / `.dtl-tag--*` / `.dtl-gchart*` / `.dtl-worklog`，以及随之无引用的 39 个 token（控件高度三档、图表三色、旧阴影 / 圆角大档等）。趋势图与原生 `select` 组件同样已删。
 
+**2026-10-29 趋势图接回**：图表色只恢复两档 —— `--dtl-chart-open`（琥珀，取 `--dtl-warning`）与 `--dtl-chart-added`（灰，取 `--dtl-fg-dim`，明暗自带）；「完成」直接用既有的 `--dtl-business`，不再单独造一个蓝。柱 / 浮卡样式全在 `ui.ts` 的 `.dtl-trend*` 一组类里，组件 `client/trend-chart.ts` 不写内联色值。
+
 ## 五、文案唯一真源：`src/client/locales.ts`
 
 - 命名空间 `dsh-task-ledger`，`zh` / `en` **两档键必须完全对齐**；界面上**不许出现未登记的硬编码中文**。

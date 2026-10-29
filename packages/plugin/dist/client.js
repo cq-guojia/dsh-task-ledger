@@ -53574,6 +53574,11 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
+  /* ── 趋势图三色（2026-10-29 接回图表时恢复）─────────────────────
+     完成 = 蓝（--dtl-business）、未结 = 琥珀、新增 = 灰（fg-dim，明暗自带） */
+  --dtl-chart-open:var(--dtl-warning);
+  --dtl-chart-added:var(--dtl-fg-dim);
+
   /* ── 交互底 ──────────────────────────────────────────────────── */
   /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */
   --dtl-card-hover:rgba(37,99,235,.07);
@@ -53664,6 +53669,55 @@ body[data-ds-dark-theme]{
 .dtl-stats__cards > .dtl-stat{height:100%;box-sizing:border-box;}
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
+
+/* ── 趋势图（右上卡：8 周 × 3 柱）────────────────────────────────
+   柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
+   2026-10-17 真机教训：百分比高度没有确定父高时整列柱消失，只剩数字。 */
+.dtl-trend{height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
+  padding:var(--dtl-space-4);}
+.dtl-trend__legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--dtl-space-3);
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+.dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:var(--dtl-radius-xs);
+  vertical-align:middle;}
+.dtl-trend__dot--done{background:var(--dtl-business);}
+.dtl-trend__dot--open{background:var(--dtl-chart-open);}
+.dtl-trend__dot--added{background:var(--dtl-chart-added);}
+.dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
+.dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;
+  padding-bottom:14px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;
+  color:var(--dtl-fg-3);}
+.dtl-trend__plot{position:relative;flex:1 1 auto;min-width:0;}
+/* 网格：只在绘图区内（底部 14px 留给 x 轴日期），三档刻度与三条线一一对应 */
+.dtl-trend__grid{position:absolute;left:0;right:0;top:0;bottom:14px;display:flex;flex-direction:column;
+  justify-content:space-between;}
+.dtl-trend__gridline{border-top:1px solid var(--dtl-border);}
+.dtl-trend__gridline--base{border-top-color:var(--dtl-border-strong);}
+.dtl-trend__cols{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:stretch;
+  gap:var(--dtl-space-2);}
+.dtl-trend__col{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;
+  justify-content:flex-end;padding-bottom:14px;}
+.dtl-trend__bars{display:flex;align-items:flex-end;justify-content:center;gap:1px;flex:1 1 auto;min-height:0;}
+/* 柱宽 5px、无圆角（用户 2026-10-17：「太粗、不要圆弧」）；非零柱给 2px 下限 */
+.dtl-trend__bar{position:relative;width:5px;flex:none;min-height:2px;
+  transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-trend__bar--done{background:var(--dtl-business);}
+.dtl-trend__bar--open{background:var(--dtl-chart-open);}
+.dtl-trend__bar--added{background:var(--dtl-chart-added);}
+/* hover 整列三根一起提亮（用户 2026-10-17：不是只亮蓝的一根） */
+.dtl-trend__col:hover .dtl-trend__bar{filter:brightness(1.18);}
+.dtl-trend__value{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+  font-size:10px;line-height:1;color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dtl-trend__x{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:10px;line-height:1;
+  color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
+/* hover 浮卡：自绘（原生 title 太慢且长相不一） */
+.dtl-trend__tip{position:absolute;left:50%;bottom:calc(100% - 10px);z-index:2;transform:translateX(-50%);
+  padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);white-space:nowrap;
+  font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-fg-2);
+  opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
+.dtl-trend__tip-row{font-variant-numeric:tabular-nums;}
+.dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -54110,6 +54164,54 @@ body[data-ds-dark-theme]{
 			}), (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, copyButton, actions.view ? viewButton : null)));
 		}
 		//#endregion
+		//#region src/client/trend-chart.ts
+		/**
+		* 首页趋势图（右上卡）：近 8 周 × 三根细柱 = 完成 / 未结 / 新增。
+		*
+		* 数据口径**全由 skill 算好**（`stats --trend week --last 8w`，host 已跨工作区求和）：
+		* 完成按结案时间、新增按创建时间、未结是「该周结束时仍未结案」。本文件只负责画。
+		*
+		* 画法（2026-10-17 参考图口径，2026-10-29 接回）：
+		*  - 柱宽 5px、组内 1px、**无圆角**；柱高百分比（祖先链有确定高度，见 ui.ts 的注释）；
+		*  - y 轴三档刻度（0 / 半峰 / 峰）+ 淡网格线 + 底部基线；
+		*  - **只标「完成」数值**（三系列 × 8 周会糊成一片），未结 / 新增走 hover；
+		*  - hover 整列三根一起提亮 + 自绘浮卡（原生 title 太慢且长相不一）——纯 CSS，无 React 状态。
+		*/
+		const BAR_KINDS = [
+			"done",
+			"open",
+			"added"
+		];
+		function TrendChart(props) {
+			const { trend, t } = props;
+			const buckets = trend.buckets;
+			if (buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartEmpty")));
+			const peak = buckets.reduce((max, bucket) => Math.max(max, bucket.added, bucket.done, bucket.open), 0);
+			const top = peak === 0 ? 1 : peak;
+			const ticks = [
+				formatCount(top),
+				formatCount(Math.ceil(top / 2)),
+				"0"
+			];
+			const bar = (bucket, kind) => {
+				const value = bucket[kind];
+				return (0, react$1.createElement)("div", {
+					className: `dtl-trend__bar dtl-trend__bar--${kind}`,
+					style: {
+						height: `${String(value / top * 100)}%`,
+						minHeight: value > 0 ? "2px" : "0"
+					}
+				}, kind === "done" && value > 0 ? (0, react$1.createElement)("span", { className: "dtl-trend__value" }, formatCount(value)) : null);
+			};
+			const column = (bucket) => (0, react$1.createElement)("div", { className: "dtl-trend__col" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
+				from: bucket.from,
+				to: bucket.to
+			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), `${t(kind === "done" ? "chartDone" : kind === "open" ? "chartOpen" : "chartAdded")} ${formatCount(bucket[kind])}`))), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
+			const first = buckets[0];
+			const partial = trend.coverageFrom !== "" && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
+			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(kind === "done" ? "chartDone" : kind === "open" ? "chartOpen" : "chartAdded")))), (0, react$1.createElement)("div", { className: "dtl-trend__body" }, (0, react$1.createElement)("div", { className: "dtl-trend__axis" }, ...ticks.map((tick) => (0, react$1.createElement)("span", null, tick))), (0, react$1.createElement)("div", { className: "dtl-trend__plot" }, (0, react$1.createElement)("div", { className: "dtl-trend__grid" }, (0, react$1.createElement)("div", { className: "dtl-trend__gridline" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-trend__cols" }, ...buckets.map(column)))), partial);
+		}
+		//#endregion
 		//#region src/client/board-home.ts
 		/**
 		* 看板首页（`main` 槽整页内容）：上 = 8 统计卡 + 趋势图位（**留空**）；下 = 单区任务列表。
@@ -54166,16 +54268,6 @@ body[data-ds-dark-theme]{
 		*  列数写死 4 → 2（媒体查询在 ui.ts 的 .dtl-stats / .dtl-stats__cards 里），
 		*  绝不给 3 列——3 列会排出 3+1 的非对称（用户 2026-10-17：必须上下对称）。 */
 		const statsRowStyle = { marginBottom: "var(--dtl-space-4)" };
-		const chartCardStyle = {
-			display: "flex",
-			alignItems: "center",
-			justifyContent: "center",
-			padding: "var(--dtl-space-4)"
-		};
-		const hintStyle = {
-			fontSize: "var(--dtl-font-sm)",
-			color: "var(--dtl-fg-2)"
-		};
 		/** 列表段头：滑块居左、过滤三件居右（用户 2026-10-28 去掉左侧标题）。 */
 		const regionHeadRowStyle = {
 			display: "flex",
@@ -54260,7 +54352,6 @@ body[data-ds-dark-theme]{
 				};
 			}, [state.board, state.status]);
 			const board = state.board;
-			const stats = board?.stats;
 			const view = (0, react$1.useMemo)(() => selectView(state), [state]);
 			const degraded = board?.degraded ?? [];
 			/** 工作区下拉候选：宿主里所有含台账的工作区（不是从任务里反推，空工作区也要能选）。 */
@@ -54316,14 +54407,17 @@ body[data-ds-dark-theme]{
 					to
 				})
 			});
-			/** 左 8 块（2×4）+ 右趋势图位。 */
-			const statsGrid = (view) => (0, react$1.createElement)("div", {
-				className: "dtl-stats",
-				style: statsRowStyle
-			}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)("div", {
-				className: "dtl-card",
-				style: chartCardStyle
-			}, (0, react$1.createElement)("div", { style: hintStyle }, t("chartNotReady"))));
+			/** 左 8 块（2×4）+ 右趋势图。 */
+			const statsGrid = (payload) => {
+				const view = payload.stats;
+				return (0, react$1.createElement)("div", {
+					className: "dtl-stats",
+					style: statsRowStyle
+				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)(TrendChart, {
+					trend: payload.trend,
+					t
+				}));
+			};
 			/** 段头：六档菜单居左，工作区 / 执行人 / 搜索居右（用户 2026-10-28：不要左侧标题）。 */
 			const regionHead = (0, react$1.createElement)("div", { style: regionHeadRowStyle }, (0, react$1.createElement)(Segmented, {
 				id: "dtl-list-tab",
@@ -54401,8 +54495,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.115 · 261029-121428-122`
-			}, `v0.0.115 261029-121428-122`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.115 · 261029-122852-185`
+			}, `v0.0.115 261029-122852-185`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54424,7 +54518,7 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					refresh();
 				}
-			}, t("retry"))) : null, stats === void 0 ? null : statsGrid(stats), degraded.length === 0 ? null : (0, react$1.createElement)("div", { style: {
+			}, t("retry"))) : null, board === null ? null : statsGrid(board), degraded.length === 0 ? null : (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "flex-start",
 				gap: "var(--dtl-space-2)",
@@ -54487,7 +54581,11 @@ body[data-ds-dark-theme]{
 			statLastWeekDone: "上周完成",
 			daysNone: "—",
 			daysValue: "{n} 天",
-			chartNotReady: "趋势图待接：skill 还没有按周汇总的方法",
+			chartDone: "完成",
+			chartOpen: "未结",
+			chartAdded: "新增",
+			chartEmpty: "还没有可统计的记录",
+			chartPartial: "{from} 起才有台账数据",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "状态",
 			statusActive: "进行中",
@@ -54568,7 +54666,11 @@ body[data-ds-dark-theme]{
 			statLastWeekDone: "Done last week",
 			daysNone: "—",
 			daysValue: "{n}d",
-			chartNotReady: "Trend chart pending: the skill has no weekly roll-up method yet",
+			chartDone: "Done",
+			chartOpen: "Open",
+			chartAdded: "Added",
+			chartEmpty: "No records to chart yet",
+			chartPartial: "Ledger data starts {from}",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "Status",
 			statusActive: "Active",

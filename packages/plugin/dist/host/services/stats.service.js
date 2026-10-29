@@ -3,10 +3,11 @@
  *
  * 数字真源全在 skill：每工作区跑 `stats --json`（在办各面）与两次
  * `history --count-only`（本周 / 上周完成），本文件只做跨工作区求和与降级归集。
- * 趋势图（近 8 周）没有 skill 方法，本轮不提供数据。
+ * 趋势图（近 8 周）由 `trend.service.ts` 走 `stats --trend` 单独算，随首屏一起打包回来。
  */
 import { codeOf, messageOf, settleWorkspaces, } from "../errors.js";
 import { getCurrentIdentity } from "../repositories/identity.repository.js";
+import { getBoardTrend } from "./trend.service.js";
 import { readOwners, readTasks } from "../repositories/ledger.repository.js";
 import { countClosed, readStats, } from "../repositories/stats.repository.js";
 import { weekWindow } from "./dates.js";
@@ -60,10 +61,11 @@ function dedupe(rows) {
  * 三条读并行（`stats` / `list` / `owners`），各自缓存；一个工作区坏只进 degraded，其余照常。
  */
 export async function getBoardHome(workspaces, now = new Date()) {
-    const [statsPayload, taskScope, ownerScope] = await Promise.all([
+    const [statsPayload, taskScope, ownerScope, trend] = await Promise.all([
         getBoardStats(workspaces, now),
         settleWorkspaces(workspaces, "list", readTaskScope, (rows) => rows),
         settleWorkspaces(workspaces, "owners", readOwners, (rows) => rows),
+        getBoardTrend(workspaces),
     ]);
     const identities = {};
     const tasks = [];
@@ -73,6 +75,7 @@ export async function getBoardHome(workspaces, now = new Date()) {
     }
     return {
         ...statsPayload,
+        trend: { buckets: trend.buckets, coverageFrom: trend.coverageFrom, coverageTo: trend.coverageTo },
         workspaces,
         tasks,
         identities,
@@ -81,6 +84,7 @@ export async function getBoardHome(workspaces, now = new Date()) {
             ...statsPayload.degraded,
             ...taskScope.degraded,
             ...ownerScope.degraded,
+            ...trend.degraded,
         ]),
     };
 }

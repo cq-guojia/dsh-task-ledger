@@ -46,6 +46,55 @@ const UI_BASE_CSS = `
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));}}
 
+/* ── 趋势图（右上卡：8 周 × 3 柱）────────────────────────────────
+   柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
+   2026-10-17 真机教训：百分比高度没有确定父高时整列柱消失，只剩数字。 */
+.dtl-trend{height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
+  padding:var(--dtl-space-4);}
+.dtl-trend__legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--dtl-space-3);
+  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+.dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:var(--dtl-radius-xs);
+  vertical-align:middle;}
+.dtl-trend__dot--done{background:var(--dtl-business);}
+.dtl-trend__dot--open{background:var(--dtl-chart-open);}
+.dtl-trend__dot--added{background:var(--dtl-chart-added);}
+.dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
+.dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;
+  padding-bottom:14px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;
+  color:var(--dtl-fg-3);}
+.dtl-trend__plot{position:relative;flex:1 1 auto;min-width:0;}
+/* 网格：只在绘图区内（底部 14px 留给 x 轴日期），三档刻度与三条线一一对应 */
+.dtl-trend__grid{position:absolute;left:0;right:0;top:0;bottom:14px;display:flex;flex-direction:column;
+  justify-content:space-between;}
+.dtl-trend__gridline{border-top:1px solid var(--dtl-border);}
+.dtl-trend__gridline--base{border-top-color:var(--dtl-border-strong);}
+.dtl-trend__cols{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:stretch;
+  gap:var(--dtl-space-2);}
+.dtl-trend__col{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;
+  justify-content:flex-end;padding-bottom:14px;}
+.dtl-trend__bars{display:flex;align-items:flex-end;justify-content:center;gap:1px;flex:1 1 auto;min-height:0;}
+/* 柱宽 5px、无圆角（用户 2026-10-17：「太粗、不要圆弧」）；非零柱给 2px 下限 */
+.dtl-trend__bar{position:relative;width:5px;flex:none;min-height:2px;
+  transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-trend__bar--done{background:var(--dtl-business);}
+.dtl-trend__bar--open{background:var(--dtl-chart-open);}
+.dtl-trend__bar--added{background:var(--dtl-chart-added);}
+/* hover 整列三根一起提亮（用户 2026-10-17：不是只亮蓝的一根） */
+.dtl-trend__col:hover .dtl-trend__bar{filter:brightness(1.18);}
+.dtl-trend__value{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+  font-size:10px;line-height:1;color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dtl-trend__x{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:10px;line-height:1;
+  color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
+/* hover 浮卡：自绘（原生 title 太慢且长相不一） */
+.dtl-trend__tip{position:absolute;left:50%;bottom:calc(100% - 10px);z-index:2;transform:translateX(-50%);
+  padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);white-space:nowrap;
+  font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-fg-2);
+  opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
+.dtl-trend__tip-row{font-variant-numeric:tabular-nums;}
+.dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
 .dtl-taskrow{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);

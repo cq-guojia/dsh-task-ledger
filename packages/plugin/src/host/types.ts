@@ -123,6 +123,27 @@ export interface StatsPayload {
 	readonly degraded: readonly DegradedInfo[];
 }
 
+/** 趋势图的一根周桶（数字全由 skill `stats --trend` 给，插件只跨工作区相加）。 */
+export interface TrendBucketView {
+	readonly from: string;
+	readonly to: string;
+	readonly added: number;
+	readonly done: number;
+	readonly open: number;
+}
+
+/** 趋势图数据：近 8 周桶序列 + 实际有数据的第一天。 */
+export interface TrendView {
+	readonly buckets: readonly TrendBucketView[];
+	readonly coverageFrom: string;
+	readonly coverageTo: string;
+}
+
+/** 趋势数据 + 降级（自带一条，免得拖垮整个快照）。 */
+export interface TrendPayload extends TrendView {
+	readonly degraded: readonly DegradedInfo[];
+}
+
 /** 一个工作区的花名册（skill `owners --json`：含当前没任务的人）。 */
 export interface WorkspaceOwners {
 	readonly workspaceId: string;
@@ -140,6 +161,8 @@ export interface WorkspaceOwners {
  * 前端只筛不判。
  */
 export interface BoardHomePayload extends StatsPayload {
+	/** 首页右侧趋势图（近 8 周）。 */
+	readonly trend: TrendView;
 	readonly workspaces: readonly LedgerWorkspace[];
 	readonly tasks: readonly TaskRow[];
 	readonly identities: Readonly<Record<string, string | null>>;

@@ -77,6 +77,22 @@ export interface BoardStatsView {
 	readonly lastWeekTo: string;
 }
 
+/** 趋势图的一根周桶（`from`/`to` 是本机时区日期，含边界）。 */
+export interface TrendBucketView {
+	readonly from: string;
+	readonly to: string;
+	readonly added: number;
+	readonly done: number;
+	readonly open: number;
+}
+
+/** 趋势图数据（host 已跨工作区求和）。`coverageFrom` = 实际有数据的第一天。 */
+export interface TrendView {
+	readonly buckets: readonly TrendBucketView[];
+	readonly coverageFrom: string;
+	readonly coverageTo: string;
+}
+
 /** 一个工作区的成员名单（skill `owners --json`）。 */
 export interface WorkspaceOwners {
 	readonly workspaceId: string;
@@ -97,6 +113,8 @@ export interface BoardPayload {
 	readonly workspaces: readonly Workspace[];
 	readonly tasks: readonly BoardTask[];
 	readonly stats: BoardStatsView;
+	/** 近 8 周趋势（host 已按周跨工作区求和；全挂时 buckets 为空）。 */
+	readonly trend: TrendView;
 	/** 工作区 id → 本机身份 uuid（取不到为 null）。行级「是不是我的」以 skill 的 `mine` 为准，这里只备查。 */
 	readonly identities: Readonly<Record<string, string | null>>;
 	/** 每个工作区的成员名单（跨工作区去重 / 分组由前端 `ownerGroups` 做）。 */
@@ -109,7 +127,7 @@ export interface BoardPayload {
 export interface DegradedInfo {
 	readonly workspaceId: string;
 	readonly workspaceTitle: string;
-	readonly op: "list" | "history" | "owners";
+	readonly op: "list" | "history" | "owners" | "trend";
 	readonly code: string;
 	readonly message: string;
 }

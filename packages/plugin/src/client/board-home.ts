@@ -35,7 +35,8 @@ import {
 	type TabFilter,
 } from "./store";
 import { TaskRowView } from "./task-row";
-import type { BoardStatsView } from "./types";
+import { TrendChart } from "./trend-chart";
+import type { BoardPayload } from "./types";
 import {
 	Button,
 	EmptyState,
@@ -97,16 +98,6 @@ const buildTagStyle: Record<string, string | number> = {
  *  绝不给 3 列——3 列会排出 3+1 的非对称（用户 2026-10-17：必须上下对称）。 */
 const statsRowStyle: Record<string, string | number> = {
 	marginBottom: "var(--dtl-space-4)",
-};
-const chartCardStyle: Record<string, string | number> = {
-	display: "flex",
-	alignItems: "center",
-	justifyContent: "center",
-	padding: "var(--dtl-space-4)",
-};
-const hintStyle: Record<string, string | number> = {
-	fontSize: "var(--dtl-font-sm)",
-	color: "var(--dtl-fg-2)",
 };
 /** 列表段头：滑块居左、过滤三件居右（用户 2026-10-28 去掉左侧标题）。 */
 const regionHeadRowStyle: Record<string, string | number> = {
@@ -185,7 +176,6 @@ export function BoardHome(props: {
 	}, [state.board, state.status]);
 
 	const board = state.board;
-	const stats = board?.stats;
 	const view = useMemo(() => selectView(state), [state]);
 	const degraded = board?.degraded ?? [];
 
@@ -265,9 +255,10 @@ export function BoardHome(props: {
 			title: t("periodRange", { from, to }),
 		});
 
-	/** 左 8 块（2×4）+ 右趋势图位。 */
-	const statsGrid = (view: BoardStatsView): ReactNode =>
-		h(
+	/** 左 8 块（2×4）+ 右趋势图。 */
+	const statsGrid = (payload: BoardPayload): ReactNode => {
+		const view = payload.stats;
+		return h(
 			"div",
 			{ className: "dtl-stats", style: statsRowStyle },
 			h(
@@ -339,13 +330,10 @@ export function BoardHome(props: {
 					view.lastWeekTo,
 				),
 			),
-			h(
-				"div",
-				{ className: "dtl-card", style: chartCardStyle },
-				// 趋势图：skill 侧还没有「按周汇总」方法 ⇒ 卡位留着，不画假图。
-				h("div", { style: hintStyle }, t("chartNotReady")),
-			),
+			// 趋势图：近 8 周 × 三柱（数字全由 skill `stats --trend` 给）
+			h(TrendChart, { trend: payload.trend, t }),
 		);
+	};
 
 	/** 段头：六档菜单居左，工作区 / 执行人 / 搜索居右（用户 2026-10-28：不要左侧标题）。 */
 	const regionHead = h(
@@ -527,7 +515,7 @@ export function BoardHome(props: {
 							),
 						)
 					: null,
-				stats === undefined ? null : statsGrid(stats),
+				board === null ? null : statsGrid(board),
 				// 降级横幅：有工作区读挂 ⇒ 红色警告 + 人话原因（数字会少算，别装没看见）
 				degraded.length === 0
 					? null

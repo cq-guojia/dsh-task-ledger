@@ -42,7 +42,11 @@ export type LocaleKey =
 	| "daysNone"
 	| "daysValue"
 	// 趋势图
-	| "chartNotReady"
+	| "chartDone"
+	| "chartOpen"
+	| "chartAdded"
+	| "chartEmpty"
+	| "chartPartial"
 	| "periodRange"
 	// 筛选行
 	| "statusLabel"
@@ -131,7 +135,11 @@ export const zh: Record<LocaleKey, string> = {
 	daysNone: "—",
 	daysValue: "{n} 天",
 
-	chartNotReady: "趋势图待接：skill 还没有按周汇总的方法",
+	chartDone: "完成",
+	chartOpen: "未结",
+	chartAdded: "新增",
+	chartEmpty: "还没有可统计的记录",
+	chartPartial: "{from} 起才有台账数据",
 	periodRange: "{from} ~ {to}",
 
 	statusLabel: "状态",
@@ -220,7 +228,11 @@ export const en: Record<LocaleKey, string> = {
 	daysNone: "—",
 	daysValue: "{n}d",
 
-	chartNotReady: "Trend chart pending: the skill has no weekly roll-up method yet",
+	chartDone: "Done",
+	chartOpen: "Open",
+	chartAdded: "Added",
+	chartEmpty: "No records to chart yet",
+	chartPartial: "Ledger data starts {from}",
 	periodRange: "{from} ~ {to}",
 
 	statusLabel: "Status",

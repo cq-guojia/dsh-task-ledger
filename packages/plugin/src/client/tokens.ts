@@ -49,6 +49,11 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
+  /* ── 趋势图三色（2026-10-29 接回图表时恢复）─────────────────────
+     完成 = 蓝（--dtl-business）、未结 = 琥珀、新增 = 灰（fg-dim，明暗自带） */
+  --dtl-chart-open:var(--dtl-warning);
+  --dtl-chart-added:var(--dtl-fg-dim);
+
   /* ── 交互底 ──────────────────────────────────────────────────── */
   /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */
   --dtl-card-hover:rgba(37,99,235,.07);

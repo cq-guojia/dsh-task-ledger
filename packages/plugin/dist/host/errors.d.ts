@@ -19,8 +19,8 @@ export declare class LedgerDataError extends Error {
 export interface DegradedInfo {
     readonly workspaceId: string;
     readonly workspaceTitle: string;
-    /** 哪个读挂了——trend 同时读 list + history，必须能区分。 */
-    readonly op: "list" | "history" | "owners";
+    /** 哪个读挂了（skill 子命令；趋势走 `stats --trend`，单独一档便于区分）。 */
+    readonly op: "list" | "history" | "owners" | "trend";
     readonly code: LedgerErrorCode;
     /** 人话，可直接上界面（真源：脚本 stderr / records 校验文案）。 */
     readonly message: string;
