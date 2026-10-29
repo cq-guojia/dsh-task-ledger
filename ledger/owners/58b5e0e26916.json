@@ -1,6 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
+    "20261029-0105-8e26-历史计数走-count-only-快路径": {"category": "性能优化", "created": "2026-10-29 01:05:43", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-29 01:05:43", "status": "doing", "tags": ["台账", "历史", "计数"], "title": "历史计数走 count-only 快路径", "updated": "2026-10-29 01:05:43", "worklog": "worklog/202610/29-0105-8e26-历史计数走-count-only-快路径.md"}
   },
   "version": "20261022000000"
 }
