@@ -1,14 +1,15 @@
-# 20261026-0917-在-skill-里增加-html-台账展示页-e276：在 skill 里增加 HTML 台账展示页
+# 20261026-0917-在-skill-里增加-html-台账展示页-e276: 在 skill 里增加 HTML 台账展示页
 
-- **标签**：建设、台账、展示、静态页面
-- **状态**：open · 2026-10-28 09:22:28
-- **创建**：2026-10-26 09:17:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 建设, 台账, 展示, 静态页面
+- **Status**: open · 2026-10-28 09:22:28
+- **Created**: 2026-10-26 09:17:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 用户原话（2026-10-26）：现在的工作台账，让用户直接去看台账文件、还是去看 MD 文件，都特别不方便；想在 skill 里增加一个 HTML，把 HTML 的样式都写好，借助它去调用脚本，把台账的所有内容都读出来，用 HTML 形式显示。
 
@@ -18,17 +19,17 @@
 2. **脚本调用**：HTML 去找相对目录里的脚本执行，把内容读出来放到静态页面上。
 3. **纯静态展示**：不能有服务器，点开就能展示。
 
-## 待办
+## To Do
 
 - **本任务挂起（2026-10-26）**：HTML 方案停在此处，不再推进；需求已转到新任务「台账命令行看板脚本」（走命令行、不改 skill）。
 - 挂起时的状态：`ledger/board.html` 仍在工作区（未跟踪、未提交），命令行看板的试做改动已全部撤销，skill 与动手前一致。
 - 恢复前提：用户明确要走 HTML 路线（远程零点击这条路已确认无解，恢复时只需处理本地手选目录形态）。
 
-## 下一步
+## Next
 
 无。等同用户决定：要么重新启动 HTML 路线，要么本任务直接关闭。
 
-## 过程
+## Process
 
 - **硬约束（决定了整个形态）**：`file://` 页面的 `fetch`/`XHR` 读同目录 JSON 被浏览器拒绝；唯一能免点击拿到本地内容的通道是 `<script src>` 加载 js 本体。因此「HTML 自动读原数据」不存在，「靠 JS 存路径」也无效（拿到路径照样读不了）。
 - **File System Access API（`showDirectoryPicker`）**：唯一能持久化目录句柄的 API，但 `file://` 下抛 `SecurityError`，只在 https/localhost 可用 ⇒ 「记住一次、之后免选」在纯静态下做不到（依据 Chrome 官方调试文档 + 一致技术口径，本机无浏览器未实测）。
@@ -42,7 +43,7 @@
 - **三模式验证**（本机起临时 `python3 -m http.server` + node 跑真脚本）：http 自动 = 2 在办 / 30 行已结案、零错误；手选目录 = 同结果；选错目录 = 明确报「里没有 pool.json / owners.json」。验证后服务与临时脚本均已关闭 / 删除。
 - **一次转向记录（2026-10-26 傍晚）**：用户实际是 VS Code Remote-SSH（文件在远端、浏览器在本地），`file://` 选目录只能选到本机 ⇒ HTML 的兜底路径对远程无效；用户又明确否掉三件事：多一个数据 `.js`、装任何东西、起/配任何服务与静态托管。查证 MDN 与社区：自 CVE-2019-11730 起本地文件互不可读，`file://` 自动读没有第四条路 ⇒ HTML 方案整体收摊，改 TUI（终端在远程/本地都是同一套，天然跨环境、零依赖、零文件）。
 
-## 结论
+## Conclusion
 
 **本轮命令行看板实现已全部回退**（用户叫停：不许改 skill 描述）。`board` 子命令、`--tui` 全屏界面、SKILL.md 相关描述、smoke 断言、插件内嵌副本均已还原：
 
@@ -51,15 +52,15 @@
 - 未触碰：插件 UI 那条在途改动（`packages/plugin/src/client/*`、`dist/*`、`tsdown.client.config.ts`），以及未跟踪的 `ledger/board.html`。
 - 版本号未 bump、未提交。
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
-- 2026-10-26 17:17:15 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务并认领
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
+- 2026-10-26 17:17:15 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · created and claimed
 - 2026-10-26 17:17:41 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 任务已建并认领；worklog 记下三条硬要求与待讨论点：file:// 下 HTML 不能自执行本地脚本，第 2 条形态需先定
 - 2026-10-26 17:45:22 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 落地 ledger/board.html（单文件、webkitdirectory 手选目录直读原始 JSON/MD，skill 脚本零改动）；node 自检 2 在办/29 已结案、链接均存在，codelint 全过；待用户验收
 - 2026-10-26 17:51:15 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 改双模式：http 打开时按相对路径自动读同目录台账（零点击），file:// 才回退手选目录；三模式 node 实测通过，codelint 全过
 - 2026-10-26 20:52:47 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 方向转 TUI：新增只读 board 子命令（actions/board.py + render.board_view + registry/cli 注册，零依赖 ANSI 一屏）；smoke 加 2 项全绿、codelint 13→17 文件全过、内嵌副本已同步；HTML 方案按用户否决定收摊
 - 2026-10-26 20:56:31 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户叫停撤销全部命令行看板改动：git checkout 恢复 10 个文件、删 3 个新增文件，skill 与内嵌副本无残留；未碰插件 UI 在途改动，等新方向
 - 2026-10-26 21:00:09 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 本任务挂起：HTML 方案停止推进，需求转入新任务「台账命令行看板脚本」；worklog 已写明挂起现状与恢复前提
-- 2026-10-28 09:22:28 · release · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 释放回公共池
+- 2026-10-28 09:22:28 · release · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · released to pool

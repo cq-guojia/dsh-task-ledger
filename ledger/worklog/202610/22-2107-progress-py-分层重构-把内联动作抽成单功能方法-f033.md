@@ -1,15 +1,16 @@
-# 20261022-2107-progress-py-分层重构-把内联动作抽成单功能方法-f033：progress.py 分层重构：把内联动作抽成单功能方法
+# 20261022-2107-progress-py-分层重构-把内联动作抽成单功能方法-f033: progress.py 分层重构：把内联动作抽成单功能方法
 
-- **标签**：重构、台账、脚本、分层
-- **状态**：closed · 2026-10-23 00:38:37 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-22 21:07:23 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-23 00:38:37 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 重构, 台账, 脚本, 分层
+- **Status**: done · 2026-10-23 00:38:37 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-22 21:07:23 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-23 00:38:37 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 **触发**：2026-10-22 晚在加固 `packages/skill/scripts/progress.py`（A 类 12 条 + B1/B2 已入库 `fa1c0b3` / `dce20f4`；
 按用户要求做了两路只读审查，得 9 条新问题，其中 #4 计数口径、#7 封卷判定已修并推 `05fe693`）。
@@ -25,7 +26,7 @@
 2. 锁顺序各写各的：初始化锁 3 个路径、`close` 锁分片+历史、`set` 交接另锁对方分片、`tags` 锁 1 个 —— 顺序不统一，迟早互相等锁。
 3. 动作无法复用：UI 想按一下「释放」，只能把整条命令跑一遍（连参数校验、写后提交一起跑），因为「释放」不是一个可以被调用的东西。
 
-## 待办
+## To Do
 
 > 现状盘点已完成（2026-10-22 多轮只读评审，结论见「过程」末节），下面按**新方案**的阶段排。
 
@@ -35,13 +36,13 @@
 4. **阶段四 · 删旧机制**：4 套回滚 → 1 套（`atom` + 写序 + 幂等）；补 `fsync` 父目录；修 `close` 跨月时 presync 只刷单月历史的上界缺陷（改「当月 + 上月」）。
 5. **每步验证**：单测（`packages/skill/tests`）→ 临时仓手工场景 → `koc-codelint` → 内嵌副本同步（`npm run build:host` + `node scripts/check-skill-copy.mjs`）。
 
-## 下一步
+## Next
 
 开工第一件事：**只做阶段一的 `JsonStore` + `atom` 两个东西**（其余不动），跑一遍现有单测证明零行为变化。第二个提交再把 `release` 搬成 L2 函数（`cmd_set` 的释放分支先改成调它），验证三条：释放后 pool 有、分片无、worklog 多一行，以及「崩在两步之间重跑只补删」。
 
 行号会随改动漂移，以**符号名**为准（2026-10-22 的坐标：`cmd_new`≈3139、`cmd_claim`≈3230、`cmd_set`≈3329、`cmd_log`≈3455、`cmd_close`≈3483、`cmd_tags`≈3862）。
 
-## 过程
+## Process
 
 **2026-10-22 已核实的现状**（供开工直接用，不必重查）：
 
@@ -196,19 +197,19 @@ def run(action, args):
 1. `write_text_atomic` 只 `fsync` 了文件、没 `fsync` 父目录 → 掉电可能丢 rename 的目录项。
 2. `close` 不带 `--finished` 时，presync 用一次 `now()`、`close` 自己再用一次 → 跨月那一瞬会「刷 9 月、写 10 月」= 漏刷 = 覆盖远端。改法：`close` 的 presync 上界取「当月 + 上月」。
 
-## 结论
+## Conclusion
 
 - **方案已定稿**（2026-10-22）：两层 + 外壳，见「过程」末节；现状盘点与多轮评审结论也都在那一节。
 - **设计文档已定稿**：`docs/design/` 四份（新增 `ledger-api.md`，同步 `architecture.md` / `code-conventions.md` / `ledger-data.md`）落到「照着就能写 `ledgerkit/`」的粒度；专家评审共 7 轮，最后两轮收敛到 0 条新增问题。
 - **已在文档里锁死的三条口径**：① 事务 = 外壳 `with atom(...)` 包住业务调用，动作自己不拿锁；② 提交集合只认记账本，`already_done` 不跳提交、只有 `dry_run` 跳；③ `code-conventions.md` §5.7 记了不处理清单 —— 用户手改坏文件、多机并发冲突、改前读多个文件不报备。
 - **尚未动代码**：`progress.py` 仍是 4657 行原样，零改动。本任务到此结案，实施 `ledgerkit/` 另开新任务。
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
 - 2026-10-22 21:07:23 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务（doing）
 - 2026-10-22 21:07:54 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 建档：背景/待办/下一步/过程写清现状与已拍板口径；下一步先出六命令写入序列盘点表
 - 2026-10-22 21:45:08 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 方案定稿：两层（L1 文件 / L2 业务）+ git 归外壳，否掉 journal 与四层；写入过程末节
 - 2026-10-23 00:38:22 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 文档定稿：ledger-api.md 新建，另三份同步，评审 7 轮收敛到 0 条；结论节写明结案、实施另开任务
-- 2026-10-23 00:38:37 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案：设计文档定稿：docs/design/ 四份（新增 ledger-api.md）落到可直接照写 ledgerkit 的粒度，专家评审 7 轮收敛到 0 条新增问题；锁死外壳拿锁、提交集合只认记账本、§5.7 不处理清单三条口径。代码零改动，实施工作另开新任务。
+- 2026-10-23 00:38:37 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed

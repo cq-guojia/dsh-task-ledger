@@ -1,19 +1,20 @@
-# 20261023-1117-重写-skill-的-skill-md-适配分片台账-去冗余-纯执行导向-3637：重写 skill 的 SKILL.md：适配分片台账、去冗余、纯执行导向
+# 20261023-1117-重写-skill-的-skill-md-适配分片台账-去冗余-纯执行导向-3637: 重写 skill 的 SKILL.md：适配分片台账、去冗余、纯执行导向
 
-- **标签**：文档、skill、提示词
-- **状态**：closed · 2026-10-24 15:10:26 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-23 11:17:54 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-24 15:10:26 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 文档, skill, 提示词
+- **Status**: done · 2026-10-24 15:10:26 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-23 11:17:54 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-24 15:10:26 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 用户要求重写 `packages/skill/SKILL.md`：代码已全量重构为分片台账（ledgerkit 四层包），文档还按重构前逻辑写，且冗余。用户原话：「下面的按需读，别全读」「他要理解为什么？他要不要理解理解人类的起源啊」——执行者不需要设计原理，照做即可。本轮只梳理、不动手，重写等授权。
 
-## 待办
+## To Do
 
 - 讨论轮结论（用户不懂 skill 编写，要求自行参考专业规范裁定，不再问用户）：① 命令参考内联种子（pdf 按频率拆分 + <500 行预算 + 用户偏好）；② 纪律三合一（数据完整性/人类授权/故障处置，mgechev 反模式依据）；③ 举例只在命令参考、生命周期只写何时调什么；④ 书写体改命令式祈使句（skill-creator + mgechev 明确要求）；⑤ claim/doing 文档按代码现状写，bug 单独报
 - **claim 不置 doing 已修复**（第六轮，用户拍板「改」）：claim.py:56 认领即置 doing（旧 blocked 池里任务也可认领、非 open/blocked 拒绝并指向 validate），执行记录写「认领 → doing」；new_task.py:67/73 `--self` 建出来即 doing + started（「建并认领」一个命令组合完成，不留半成品）；smoke.py 补 4 条断言（new --self 三状 + claim 后 doing）。4 个测试文件全过、koc-codelint 仅剩 .bak 一条（用户指令保留，提交/重建前删）
@@ -25,18 +26,18 @@
 - 重建插件内嵌副本前先删 SKILL.md.bak 与 references.bak/，否则会被 copy-skill 拷进插件、check-skill-copy 报 extra
 - 发版前：版本 bump（SKILL.md frontmatter 与 package.json 现均为 1.3.0，保持同值再升）+ AGENTS.md 要求的 skill-v / plugin-v 双 tag（等用户明说发版）
 
-## 下一步
+## Next
 
 - 插件内嵌副本重建（packages/plugin 跑 build:host）：先删 SKILL.md.bak 与 references.bak/，否则会被 copy-skill 拷进插件、check-skill-copy 报 extra；重建后跑 check-skill-copy + npm run verify
 - README.md 同步：references 索引（6→3）、design.md 死链
 - 插件注释 ledger-write.service.ts:39-42「owner / started 清空」按外卖计时器模型改口（动了插件要重建）
 - 发版前：版本 bump（frontmatter 与 package.json 现均为 1.3.0）+ skill-v / plugin-v 双 tag（等用户明说发版）
 
-## 结论（补充）
+## Conclusion (addendum)
 
 第七轮文档重写落地（4 文件定稿）：SKILL.md 253 行 / 17.2 KB，7 节结构 —— 什么时候用 / 台账文件（表 + 禁手改与唯一可手写两条边界）/ 命令参考（10 方法各：参数表 + 干什么 + 举例；分类标签口径并入 new）/ 怎么调用（纯机制）/ 任务生命周期（9 步，含「我们来做 X」决策树：先 list --mine → 池里有先问「未认领，认领吗」→ 都没有才 new --self）/ 过程文档（唯一可手写 + 六节表 + 收工三步）/ 纪律（数据完整性 / 人类授权 / 故障处置三子块，每规一条只出现一次）/ references（3 行）。state-model.md 校正（认领即 doing、new --self 即 doing、started 外卖计时器不清）；troubleshooting.md、log-note.md 沿用已校正版。验证：smoke 等价断言 8/8 + 祈使句无「你」+ 陈旧口径零残留 + 「禁手改」规则全文仅 1 处
 
-## 过程
+## Process
 
 专家组会诊（三位并行只读专家）+ 主持人复核：
 
@@ -62,7 +63,7 @@
 - 外部调研（GitHub 写得好的）：① nickolasclarke/writing-cli-skills —— SKILL.md 管工作流与判断、references 管命令语法；Explore→Query / Find→Inspect→Operate 两范式；<500 行；引 `--help` 不罗列 flag；② mgechev/skills-best-practices —— <500 行、祈使句、JIT 指针、反模式清单（散文式指令 / 冗余逻辑）；③ anthropics/skills 的 pdf —— 按频率拆分：高频操作内联 + Quick Reference 表、长尾外移；④ webapp-testing —— 决策树 + 脚本黑盒 + Common Pitfall
 - **代码核实（建 / 认领）**：`new` 无 `--self` → pool.json（open、owner 空、started 空）；`new --self` → 自己分片（owner=我、**status 仍是 open**）；`claim` → 搬进自己分片、补 started/updated，**status 不动**。旧版 progress.py:2148-2155 的 claim 会校验 open 并置 `doing` —— 新 claim.py 两样都丢了（state-model.md:9 状态机图还写着 claim→doing；活证据：本任务 `status=open`、`started=None`）。看板侧证据见下条，定性为 bug 待修
 
-## 结论
+## Conclusion
 
 **硬伤 top 6**（全文 17 处，详见各组报告）：
 
@@ -90,11 +91,11 @@
 - WHY 本体归仓库 docs/design/（并入 architecture.md / ledger-data.md 还是单独一篇登记进 docs/README.md，待用户定）
 - 不新增 commands.md：`--help` 就是参数真源，手写第二份必腐烂——本次 20 处硬伤大部分源自手写参数面
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
-- 2026-10-23 19:17:54 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
+- 2026-10-23 19:17:54 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · created
 - 2026-10-23 19:30:51 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 专家组会诊+代码复核：SKILL.md 与分片台账 17 处硬伤（release 语义/时区/list 参数/自动补推/traceback 边…），定目标结构：正文 ~105 行纯执行、references 6→3、design.md 移出；等用户拍板后重写
 - 2026-10-23 19:48:28 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 备份+清空+通读 7 文件：结构定为 1 种子+3 分支共 4 个；新定性 3 处矛盾（身份兜底不报错/new --self=open/tags 计数）；design.md 6 处口径列了搬迁清单
 - 2026-10-23 20:00:58 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 落盘 4 文件：种子 132 行纯执行（20 处硬伤全修）+ references 6→3；smoke 等价断言 8/8 过；design.md 未重建等用户定去向；README/版本/插件副本按「其他文件不用管」未动
@@ -116,4 +117,4 @@
 - 2026-10-24 01:16:52 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 三轮专家组（提示词8.5/技能终审/项目7）：按用户三把尺子砍种子 14 处废话（机制解释/不言自明/元说明），17.9→17.0 KB，用户要求的 4~20 字保留；术语统一（工作包=标题）、成果→过程文档、手动 pull 路径去掉按任务号合并的过度承诺（文档+脚本提示同步）、CI 注释幽灵修正；门禁全绿未提交等审
 - 2026-10-24 16:42:50 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · SKILL.md 对齐 history 实际口径：--since/--until 按结案时间（含当天）、--months 与二者互斥、默认近 3 个自然月、一次最多读 13 个历史文件（超限报错且不读任何文件）、缺月跳过；同步命令表/示例/查询速查/正文回链/参考索引 6 处，references/state-model.md 原有内容已覆盖无需改；copy-skill 同步内嵌副本，check-skill-copy 通过
 - 2026-10-24 17:10:15 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 用户口径：SKILL.md 是给调用方的提示词，只写「返回什么、要什么加 --json、多久、超了报错」，不写实现细节（不写读几个文件/怎么跳缺月/扫不扫磁盘）；history 段已按此精简并提交 d8396a8
-- 2026-10-24 23:10:26 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷
+- 2026-10-24 23:10:26 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed

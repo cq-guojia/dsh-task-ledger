@@ -1,30 +1,31 @@
-# 20261021-1108-修复写前预同步覆盖-worklog-正文-改为定向取最新-eca0：修复写前预同步覆盖 worklog 正文（改为定向取最新）
+# 20261021-1108-修复写前预同步覆盖-worklog-正文-改为定向取最新-eca0: 修复写前预同步覆盖 worklog 正文（改为定向取最新）
 
-- **标签**：基建、台账、同步、数据安全
-- **状态**：closed · 2026-10-21 11:46:55 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-21 11:08:43 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-21 11:46:55 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 基建, 台账, 同步, 数据安全
+- **Status**: done · 2026-10-21 11:46:55 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-21 11:08:43 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-21 11:46:55 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 兄弟工作区 dsh-plugin-core 的 Agent 反馈：写满 worklog 正文后，每跑一次 `log`，正文就变回模板骨架，只有「执行记录」稳定累积。现场证据——该 worklog 的提交历史里 `new` 是 +32 行骨架，之后每次 `claim`/`log` 都只有 +1 行，正文从未进入任何一次提交。
 
 根因在写前预同步：`git_presync()` 对**整个 `ledger/`** 执行 `git checkout <upstream> -- ledger/`，用远端版本覆盖工作树，本地未提交的正文被直接丢弃且无法恢复（从未 `git add` 过就没有 blob 可捞）。而 `SKILL.md:78` 教的就是「改完正文立刻 log」，两者必然相撞。`record_exec` 的「读全文→只追加末节」本身没问题，它读到的是已经被覆盖后的骨架。
 
-## 待办
+## To Do
 
 - 待用户验收：看 `npm run verify` 的 28 项（新增「写前同步」与「内嵌副本一致」两条）、看 `packages/skill/scripts/progress.py` 里 `_presync_guard` 的三道中止条件
 - 版本号与 tag 等用户统一指令，本轮未 bump（`SKILL.md` 的 version 行仍是 1.2.6，统一升级时一并处理）
 
-## 下一步
+## Next
 
 先补 `packages/plugin/scripts/smoke.mjs` 的 git 远端用例（bare remote + 两份 clone），再改文档，最后 build + verify。
 
-## 过程
+## Process
 
 - 判定：不是编辑工具未落盘、不是 BOM。`record_exec` 是「基于磁盘当前内容追加」，若磁盘是满的就会保留；真正丢正文的是它前面的 `git checkout`。
 - 采用「定向取最新」：只取 `ledger/progress.json` 与 `ledger/history/`（脚本独占写），`ledger/worklog/` 只补远端有、本地缺的新文件，已有文件一个字不碰。
@@ -39,7 +40,7 @@
 - 收窄时踩到两个连带坑：① presync 补下的 worklog 新文件如果不入 `CHANGED_FILES`，会以未跟踪状态留在工作树，之后 `git rebase` 直接被它挡住（`untracked working tree files would be overwritten by checkout`）——改成 `track=True` 随本次提交入库；② `_rebase_retry` 的干净检查改为 `--untracked-files=no`，只看已跟踪文件的改动，避免无关未跟踪文件阻止自动合并。
 - 另一个认知：`rebase` 是整仓操作，会把远端那次提交里的其他月历史文件和别人的 worklog 一并合进工作树——所以「只刷目标月」只约束写前同步的主动写入，验证用结构断言（`smoke.mjs` 的「history 不整目录枚举」）守，不用运行时断言。
 
-## 结论
+## Conclusion
 
 - 写前同步改为**定向取最新**：只刷 `ledger/progress.json` 与 `ledger/history/`，`worklog/` 只补本地缺的新文件。实测「手写正文 → log」正文原样保留、执行记录正常追加，原 bug 不再复现。
 - 三道中止护栏实测生效：脏 `progress.json` 时非 0 退出且文件字节不变；有未推送台账提交时非 0 退出且 HEAD 不变；`--no-sync` 与离线场景仍能正常写。
@@ -47,12 +48,12 @@
 - 遗留：内嵌副本与源在 `SKILL.md` version 行上仍未对齐（等统一升版一并处理）；跨机同时改同一条任务仍需人工合并（已按用户口径写进 README / troubleshooting）。
 - **本轮未发版**，版本号与 tag 等用户统一指令。
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
 - 2026-10-21 11:08:43 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务（doing）
 - 2026-10-21 11:11:27 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 重写写前预同步：只定向取 progress.json 与 history，worklog 只补缺失新文件，另加三道中止护栏
 - 2026-10-21 11:18:17 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 补 smoke 六场景用例、verify.yml、副本一致性检查；verify 28 项与 codelint 全过，正文保留已验证
 - 2026-10-21 11:36:42 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 历史层收窄为 close 只刷结案月文件；补下 worklog 改为入库、rebase 干净检查排除未跟踪；verify 29 项与 codelint 全过
-- 2026-10-21 11:46:55 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案：写前同步改为定向取最新：只刷 progress.json 与结案月历史，worklog 只补本地缺的新文件；三道护栏（未推送提交／未提交改动／未入库同名）命中即中止；29 项 smoke 通过，原 bug 不复现
+- 2026-10-21 11:46:55 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed

@@ -1,15 +1,16 @@
-# 20261019-0955-skill-模板增强-progress-最后更新时间-worklog-执行记录-78e3：skill 模板增强：progress 最后更新时间 + worklog 执行记录
+# 20261019-0955-skill-模板增强-progress-最后更新时间-worklog-执行记录-78e3: skill 模板增强：progress 最后更新时间 + worklog 执行记录
 
-- **标签**：建设、skill、task-ledger、worklog
-- **状态**：closed · 2026-10-19 14:08:30 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-19 09:55:09 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-19 14:08:30 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 建设, skill, task-ledger, worklog
+- **Status**: done · 2026-10-19 14:08:30 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-19 09:55:09 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-19 14:08:30 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 用户 2026-10-19 提出对 task-ledger skill 模板的两处增强（原话要点）：
 
@@ -20,7 +21,7 @@
 5. progress 老数据无所谓（项目自测中，只有用户在用）；稍后用户给项目清单，写一次性脚本把各项目「最后更新时间」统一补成创建时间；
 6. 本轮只做：落工作记录 → 专家团讨论（合理性 / 会不会出错 / 更好方案）→ 汇报，不动代码。
 
-## 待办
+## To Do
 
 - [x] 专家团讨论：需求合理性、风险点、更优方案
 - [x] 脚本 + 模板 + host 判定实现（执行记录节 / `log` 子命令 / `updated` / 阻塞 7 天 + 停滞 3 天）
@@ -28,11 +29,11 @@
 - [ ] 一次性迁移脚本：把各项目老 `progress.json` 的 `updated` 补成 `created`（等用户给项目清单）
 - [ ] 设置项：阻塞 7 天 / 停滞 3 天做成用户可配（本轮写死默认值）
 
-## 下一步
+## Next
 
 等用户定 UI 排布；拿到项目清单后跑迁移脚本；两阈值按需做成设置项。
 
-## 过程
+## Process
 
 已核实的代码事实（结论依据）：
 
@@ -147,17 +148,16 @@
 9. **更优方案两条**：A=不加列，把「推进于 Y」并进最右时间槽/mine 卡 tooltip；B=取消新节，脚本自动往「过程」节顶部追加里程碑行（AI 零动作，五节契约不动）。
 10. **顺手发现的既存坑**（不属本任务）：`set --owner`/`claim` 会刷 `started`（progress.py:1276/1328）⇒ 交接即清零 ageDays，换 3 次手的任务永远不停滞。
 
-## 结论
+## Conclusion
 
-<!-- 收尾时填：做成了什么、留了什么坑。
-     例：已修复，但只覆盖 UTF-8；GBK 另开任务 -->
+<!-- What got done, what got left behind -->
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
 - 2026-10-19 13:07:10 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · SKILL.md 瘦身到 9.2KB 并拆出 references（技能评审）
 - 2026-10-19 13:32:58 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · description 重写为纯触发条件（168 字符）
 - 2026-10-19 13:35:13 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 发版 skill 1.2.1 / plugin 0.0.55
 - 2026-10-19 13:47:57 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 改正文必配日志写进铁律，发版 1.2.2 / 0.0.56
-- 2026-10-19 14:08:30 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案：skill 1.2.2 / plugin 0.0.56 已发布：worklog 新增「执行记录」节（脚本维护、一行一事件带类型）、progress.json 新增 updated、取消 blocked 状态（阻塞 7 天/停滞 3 天改由看板按时间算）、新增 log 子命令与改正文必配日志的硬规则、老 worklog 自动补节；SKILL.md 瘦身 26KB→9.2KB 并拆出 references，description 改为纯路由，交接从提示词下线（脚本 set --owner 保留给 UI）；历史表 9 列分隔符 bug 修复，9 个仓库存量补 updated 并修分隔符。遗留：看板 UI（overdue 标记与统计卡）与阈值设置项。
+- 2026-10-19 14:08:30 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed

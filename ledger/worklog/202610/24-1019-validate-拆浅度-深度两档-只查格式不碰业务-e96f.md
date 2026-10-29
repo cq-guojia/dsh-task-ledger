@@ -1,27 +1,28 @@
-# 20261024-1019-validate-拆浅度-深度两档-只查格式不碰业务-e96f：validate 拆浅度/深度两档，只查格式不碰业务
+# 20261024-1019-validate-拆浅度-深度两档-只查格式不碰业务-e96f: validate 拆浅度/深度两档，只查格式不碰业务
 
-- **标签**：功能重构、validate、体检、浅度深度
-- **状态**：closed · 2026-10-24 10:41:44 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-24 10:19:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-24 10:41:44 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 功能重构, validate, 体检, 浅度深度
+- **Status**: done · 2026-10-24 10:41:44 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-24 10:19:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-24 10:41:44 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 `validate` 每次全量扫（全部 worklog + 池 + 各分片 + history + owners），任务越多越慢；还混了一条业务味的检查（同一任务号落在多个文件）。用户 2026-10-24 定口径：只查格式、不碰业务；拆浅度（默认）/ 深度（`--deep`）两档；同号重复不查（读侧 `show` 已点名、写侧已有防护，不是体检职责）。
 
-## 待办
+## To Do
 
 - 无（结案）。遗留一项：**真异步**（后台常驻 + 断点续跑 + 结果落盘）未做 —— 检查已按「一批文件一个函数」拆开（`_check_task_files` / `_check_history` / `_check_worklog`），将来接异步只换外壳调度，检查逻辑不动。
 
-## 下一步
+## Next
 
 - 无。
 
-## 过程
+## Process
 
 - **取舍证据**：格式检查要扫「六节标题齐不齐」⇒ 必须读全文，「深度只读头部就能省一大截」不成立；因此把两趟遍历合成一趟（`_check_worklog` 一次读文本、格式与骨架共用），深度不多付 worklog IO。浅度相对深度真正省的是**历史月份文件**。
 - **存量实测**（决定 problems / notices 的分界）：29 篇过程文档里 12 篇缺 `## 执行记录`、2 篇有重复节、0 篇缺前五节 ⇒ 缺执行记录节与重复节只进 `notices`，否则本仓天天退 1；前五节缺失或乱序才进 `problems`。
@@ -29,7 +30,7 @@
 - **测试连带**：删掉「同号多文件」检查后，`test_scenarios.ConcurrentClaimTest` 里那条断言同步改成「不该退 1」（`show` 点名同号多文件的行为不变）。
 - **验证**：79 项测试全过（新增 4 项：浅度不判骨架 / 格式坏退 1 / 重复节只提示 / 深度多读历史月份）；插件 `verify` 32 项全过；`koc-codelint` 六层全过（`ruff --fix` 修 3 处排版）。
 
-## 结论
+## Conclusion
 
 `progress.py validate` = 浅度（池 + 各分片字段格式、孤儿分片、当月历史、过程文档模板格式），`--deep` 再加全部历史月份与空骨架判定；`problems` 8 类（格式与结构），`notices` 含缺执行记录节 / 重复节 / 历史对账 / （深度）空骨架。契约同步到 `SKILL.md`（改为「台账不对劲别手改、让用户跑 validate」）、`references/troubleshooting.md`、`docs/design/ledger-api.md`。
 
@@ -37,10 +38,10 @@
 1. `_history_paths` 里 `now()` 调了两次拼月份键（`now()[0:4] + now()[5:7]`），跨年 / 跨月那一瞬理论上可能拼错，概率可忽略；
 2. 浅度只读 UTC 当月的历史文件 ⇒ 本地每月 1 号前 8 小时（UTC 还在上月），刚结案、写进上月文件的记录不在浅度对账范围内 —— 提示级漏报，`--deep` 覆盖。
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
-- 2026-10-24 18:19:15 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务并认领
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
+- 2026-10-24 18:19:15 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · created and claimed
 - 2026-10-24 18:30:17 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 落地两档：浅度（默认）=池+各分片字段格式+孤儿分片+当月历史+过程文档模板格式（标题/创建行/前五节齐且有序）；--deep 再读全部历史月份并判空骨架。删掉「同号多文件」检查（show 已点名）。实测：存量 29 篇里 12 篇缺执行记录节、2 篇有重复节、0 篇缺前五节——故缺节/重复只进 notices；格式要扫六节必须读全文，深度不多付 IO（合并成一趟），真正省的是历史月份。79 测试 + smoke 32 项 + codelint 六层全过
-- 2026-10-24 18:41:44 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷
+- 2026-10-24 18:41:44 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed

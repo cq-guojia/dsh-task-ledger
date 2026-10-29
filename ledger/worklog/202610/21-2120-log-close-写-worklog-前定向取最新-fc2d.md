@@ -1,29 +1,30 @@
-# 20261021-2120-log-close-写-worklog-前定向取最新-fc2d：log/close 写 worklog 前定向取最新
+# 20261021-2120-log-close-写-worklog-前定向取最新-fc2d: log/close 写 worklog 前定向取最新
 
-- **标签**：修复、同步、worklog
-- **状态**：closed · 2026-10-21 22:52:42 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-21 21:20:18 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-21 22:52:42 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 修复, 同步, worklog
+- **Status**: done · 2026-10-21 22:52:42 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-21 21:20:18 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-21 22:52:42 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 用户原话：「log 可不一样，你不获取很容易忘的好吗？」——两台机器（家里 / 公司）各写 worklog，忘了 `git pull` 就接着写，`log` 会基于旧版「读全文 → 追加 → 写回」，把远端那次改动整段写没。
 
 写前同步原本只刷 `progress.json` 与 `close` 的月历史文件（`managed` 列表），`worklog/` 只补「本地缺的新文件」，已有正文一个字不碰 —— 这是 20261021-1108 为防覆盖手写正文做的取舍，代价是同一 worklog 被别处改过时无人兜底。
 
-## 待办
+## To Do
 
 - 待用户验收：两台机器改同一 worklog 的场景，远端内容必须保住。
 
-## 下一步
+## Next
 
 用户验收该看两件事：① 远端干净、本地落后时 `log` 自动快进、远端正文进得来；② 本地有手写未提交时 `log` 提示走 stash 叠回，合不了就中止并给处理步骤。
 
-## 过程
+## Process
 
 **实证 bug 存在。** 临时仓复现：b 侧改 worklog 并推送 → a 侧（落后）手写正文未提交 → a 跑 `log`，结果 `REMOTE-MARK` 出现 0 次、`git status` 为 `ahead 1, behind 1`，rebase 撞冲突后 abort，远端那次改动在磁盘上消失。
 
@@ -35,7 +36,7 @@
 
 **验证。** 同一临时仓复跑：`REMOTE-MARK` 1 次、`LOCAL-HANDWRITE` 1 次、`stash list` 有 1 条、状态 `UU` 且给出「解决冲突 → `git add` → `git stash drop`」的处理顺序。`npm run verify` 31 项通过（新增两条用例）；`koc-codelint` 六层全过（L3 格式经 `--fix` 后重跑）。
 
-## 结论
+## Conclusion
 
 - `log` / `close` 写已有 worklog 前，会先把它刷成远端最新；本地有手写改动时走 stash 叠回，两边内容都不丢。
 - 两边真的改了同一处 → 中止本次命令、保留冲突标记与 stash，提示按「编辑 → `git add` → `git stash drop`」收尾；不允许静默用旧版覆盖。
@@ -43,12 +44,12 @@
 - 遗留：`close` 不带 `--category/--tags` 时不写 worklog 正文，不触发刷新（本就不需要）。
 - 补记（2026-10-21）：本任务的机制建立在「单文件 `progress.json` + 同一 worklog 被多方改写」这一前提上；相关问题已有新方向接手，本任务就此封卷，不再在本文推进。
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
 - 2026-10-21 21:20:18 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务（doing）
 - 2026-10-21 21:24:58 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 写前对目标 worklog 走 stash 叠回，两边内容都保住；verify 31 项通过
 - 2026-10-21 21:26:29 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 仅在落后远端时才提示未刷新，避免手写后每次 log 都吵
 - 2026-10-21 22:52:05 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结论补记：前提是同一 worklog 被多方改写，已由新方向接手，本任务封卷
-- 2026-10-21 22:52:42 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案：worklog 写前定向刷新 + stash 叠回已落地（verify 31 项）；随单文件前提一并交新方向
+- 2026-10-21 22:52:42 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed

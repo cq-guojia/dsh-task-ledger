@@ -1,29 +1,30 @@
-# 20261026-0946-用-dsh-plugin-core-替换插件现有-ui-控件-57bb：用 dsh-plugin-core 替换插件现有 UI 控件
+# 20261026-0946-用-dsh-plugin-core-替换插件现有-ui-控件-57bb: 用 dsh-plugin-core 替换插件现有 UI 控件
 
-- **标签**：重构、dsh-plugin-core、控件替换、界面
-- **状态**：closed · 2026-10-26 15:09:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-26 09:46:05 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-26 15:09:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 重构, dsh-plugin-core, 控件替换, 界面
+- **Status**: done · 2026-10-26 15:09:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-26 09:46:05 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-26 15:09:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 用户要求：除页面顶部「统计 + 图表」整块外，把插件现有 UI 控件全部替换为 dsh-plugin-core（已引入 v0.4.0）的控件；重点含列表里的框 / 提示 / 按钮，以及「滑动选择」（分段控件）。
 
-## 待办
+## To Do
 
 - 空态 `EmptyState`、降级警告横幅、两种任务行（尤其 `others` 表格式行）、分组头、`LedgerIcon` 仍是自绘：core 无对应件（见「结论」）。
 - `--dtl-*` token 层与 core `--dshpc-*` 并存；token 全量退役另开一轮。
 - 改动未提交（等用户明确说提交）。
 
-## 下一步
+## Next
 
 用户验收界面（构建 / 类型检查已过）；把「结论」里的 core 缺口转给组件包负责的 Agent。
 
-## 过程
+## Process
 
 - 客户端 UI 全在 5 文件：`index.ts` / `board-home.ts` / `ui.ts` / `tokens.ts` / `task-row.ts`，均为 `h()` + 手写 CSS；官方 primitive 目前只用 Tooltip + 图标。
 - 现有控件：Button / IconButton / Segmented（「滑动选择」）/ Select / SearchInput / Tag（7 tone）/ Chip（死码）/ EmptyState / StatCard / 图表。
@@ -32,7 +33,7 @@
 - 映射要点：本地 `Segmented.badge`（灰字计数）→ core `count`；Tag 7 tone → core Chip 5 tone（overdue/stale→danger，doing/person→business），截断用 `.dshpc-chip.dtl-tagchip` 补 20ch 省略号。
 - 验证：`typecheck` 通过；`build` 通过；`dist/client.js` 104,772 → 336,180 bytes（gzip 95 KB）。产物内 `EditorView` 0 处（codemirror 运行时未进）、`sonner` 0 处（tree-shake 掉）；体积增长来自 Picker 依赖的 floating-ui。
 
-## 结论
+## Conclusion
 
 已完成控件层替换（build / typecheck 通过）。用起来发现的 core 缺口（建议组件包 Agent 修，不在插件里绕）：
 1. `Chip` 只有 5 档 tone、无截断/title：状态需 7 档（open/backlog/doing/overdue/stale/person），且标签要 20ch 省略号；现为插件侧映射 + `.dtl-tagchip` 补丁，颜色会撞（overdue/stale、doing/person）。
@@ -42,11 +43,11 @@
 5. 打包：`dsh-plugin-core/ui` 是单一 barrel、无按控件子路径 ⇒ Picker 的 floating-ui 全量进包（+231 KB）；建议给子路径入口或把重依赖组件拆出。
 6. `createStyleKit` 只有 `id`、前缀写死 `dshpc`：id 只隔离 `<style>` 标签，不隔离 `--dshpc-*` 变量，多插件同页会互相覆盖；建议加 token 前缀 / 命名空间。
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
-- 2026-10-26 17:46:05 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务并认领
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
+- 2026-10-26 17:46:05 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · created and claimed
 - 2026-10-26 17:48:40 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 调查完成：客户端 UI 全在 5 文件；待替换 Button/Segmented/Input/Picker/Chip/Tag/EmptyState 等，排除统计+图表区；4 个缺口待确认（Tag 7→5 tone、空态/横幅、表格行、LedgerIcon）
 - 2026-10-26 17:54:53 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 控件层替换完成：ui.ts 的 Segmented/Button/IconButton/Select/SearchInput/Chip/Tag + task-row 按钮改 core；index 挂 setStyleKit；build/typecheck 过，client.js 104.8→336.2KB（floating-ui），无 codemirror/sonner；6 个 core 缺口已记
 - 2026-10-26 17:57:17 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 修浏览器激活失败 process is not defined：依赖含 process.env.NODE_ENV，tsdown.client.config.ts 加 define=production；重建后产物 process/Buffer/__dirname 引用均 0
@@ -56,4 +57,4 @@
 - 2026-10-26 21:22:57 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 同环境对照条定案：用户拍板 inset 变体是对的（demo SectionHead 示例同口径）。状态滑轨恢复完整 6 段 + variant:"inset"；两条对照滑轨均为核心原样（default padding 2 / inset padding 3，只差一个 variant prop），核心无问题、插件未自加样式。临时对照条暂留待用户确认后删。build v0.0.96 261026-212243-675
 - 2026-10-26 22:40:59 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 核心 0.5.0 已修复（Segmented 删除 variant 轴、外观统一为一套灰底轨道+白片、padding 统一 3px）：插件依赖升 ^0.4.0→^0.5.0 并 pnpm update 拉到 0.5.0。按新文档清理：ui.ts 适配层去掉 variant 透传、board-home 状态滑轨去掉 variant:inset、删除临时对照条（状态+JSX 整段）、tokens.ts 删除迁移前 .dtl-seg 死代码（其注释描述的是已被删的 variant 轴）。typecheck/build 过，产物 v0.0.96 261026-224047-879
 - 2026-10-26 22:58:25 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 用户拍板两件事：①标题行控件统一型号——工作区下拉/两处搜索框显式 size:lg（状态滑轨本就是核心默认 lg），一行内不再一大一小；②工作区下拉换核心带筛选（Picker searchable 透传，选项数据源不变仍只列有我任务的工作区）；③工作区分组段头整条换核心 StripCard(accent business, 统计入 action 槽, 折叠走核心 caret)，删自绘 .dtl-group__head 系 CSS 与 --dtl-group-head-bg token。build v0.0.96 261026-225812-547
-- 2026-10-26 23:09:15 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷
+- 2026-10-26 23:09:15 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed

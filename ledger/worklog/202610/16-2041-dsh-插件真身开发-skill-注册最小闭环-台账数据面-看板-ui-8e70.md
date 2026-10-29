@@ -1,15 +1,16 @@
-# 20261016-2041-dsh-插件真身开发-skill-注册最小闭环-台账数据面-看板-ui-8e70：DSH 插件真身开发：skill 注册最小闭环 → 台账数据面 → 看板 UI
+# 20261016-2041-dsh-插件真身开发-skill-注册最小闭环-台账数据面-看板-ui-8e70: DSH 插件真身开发：skill 注册最小闭环 → 台账数据面 → 看板 UI
 
-- **标签**：设计、DSH、看板、需求
-- **状态**：closed · 2026-10-16 22:57:17 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-16 20:41:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-16 22:57:17 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 设计, DSH, 看板, 需求
+- **Status**: done · 2026-10-16 22:57:17 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-16 20:41:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-16 22:57:17 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 前任务「monorepo 落地：迁入 koc-ledger-progress skill 并发布可安装包」已结案：
 `task-ledger@1.0.1` 经 `skill-v1.0.1` tag 由 GitHub Actions OIDC 信任发布上线
@@ -30,7 +31,7 @@
 - skill 内容真源：`packages/skill/`（构建时纳入插件包）
 - 台账数据格式：`docs/design/ledger-data.md`（progress.json / history 8 列 / worklog 五节）
 
-## 待办
+## To Do
 
 - **host 半最小闭环（先做）**：`packages/plugin` 工程化（TS 构建、dist 入仓）+
   `apply` 时 `ctx.skills.register` 注册内嵌 skill 副本 ⇒ 验收点：装插件 → 模型能
@@ -44,7 +45,7 @@
 - 发布前：`publish.yml` 的 plugin job 补 install + build（注释已留位）；版本走
   `plugin-v*`（现 0.0.4）
 
-## 下一步
+## Next
 
 **已拍板**（2026-10-16 深夜，用户原话「全按你推荐的来，该落文档就落文档」）：
 
@@ -58,7 +59,7 @@
 - 开发拆分为 5 个后续任务（见进度表）：插件工程化与 skill 注册 → 台账数据面 → 看板首页 →
   任务按钮与会话交接 → 统计报表。
 
-## 过程
+## Process
 
 ### 2026-10-16 深夜：看板 UI 立项调研（入口选型 + 页面构想，用户要求「先讨论不动手」）
 
@@ -106,12 +107,11 @@
 （未就绪/真空引导卡/筛选空）；确认框自绘；数据 = HTTP 增量（rev）+ SSE 单例
 （无轮询）；`--tdt-*` token 一律映射 `--dsw-*`。
 
-## 结论
+## Conclusion
 
-<!-- 收尾时填：做成了什么、留了什么坑。
-     例：已修复，但只覆盖 UTF-8；GBK 另开任务 -->
+<!-- What got done, what got left behind -->
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->

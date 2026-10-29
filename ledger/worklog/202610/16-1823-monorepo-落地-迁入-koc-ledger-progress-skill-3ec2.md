@@ -1,15 +1,16 @@
-# 20261016-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2：monorepo 落地：迁入 koc-ledger-progress skill 并发布可安装包
+# 20261016-1823-monorepo-落地-迁入-koc-ledger-progress-skill-3ec2: monorepo 落地：迁入 koc-ledger-progress skill 并发布可安装包
 
-- **标签**：建设、monorepo、skill、发布
-- **状态**：closed · 2026-10-16 20:41:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-16 18:23:28 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-16 20:41:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: 建设, monorepo, skill, 发布
+- **Status**: done · 2026-10-16 20:41:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-16 18:23:28 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-16 20:41:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 前任务「熟悉项目初衷并搭建初始文档架构」已结案并提交（`3ab2d7f`，文档架构 + 0.2.0-rc.2
 开发基线落地）。用户指示（原话）：「如果基础的弄完了，就把这个任务结束掉，把东西提交
@@ -30,7 +31,7 @@
 **顺序**：本任务只做 skill 包（迁入 + 配置 + 发版 + 安装验证）；DSH 插件（host/client
 两半）在本任务之后另建。
 
-## 待办
+## To Do
 
 - ✅ **迁入 skill 内容**（用户 2026-10-16 授权「先 copy 过来吧」）：已拷入
   `packages/skill/`，`diff -r` 与规范源逐字节一致；4 个文件 = README.md / SKILL.md /
@@ -60,12 +61,12 @@
 - ⚠️ 待用户确认（移交后续）：NAS-Docker 规范源目录改名（`_Skills/koc-ledger-progress/` →
   `task-ledger/`）+ rulemux 重新同步；EXE001 修复落点（应落规范源）
 
-## 下一步
+## Next
 
 本任务已结案。DSH 插件开发（host/client 两半）按用户既定规划**另建任务**——
 「把 skill 安装弄好之后，我们再去做 DSH 的插件」。
 
-## 过程
+## Process
 
 1. **拷贝完成**（用户 2026-10-16 授权「先 copy 过来吧」）：规范源
    `/workspace/NAS-Docker/_Skills/koc-ledger-progress/` → `packages/skill/`，
@@ -126,12 +127,11 @@
    ⇒ **CI 发布后至少等 2 分钟再验证、且必须重查**。GitHub API 拉 run 日志需认证
    （403），但 npm 侧结果已确认链路通。
 
-## 结论
+## Conclusion
 
-<!-- 收尾时填：做成了什么、留了什么坑。
-     例：已修复，但只覆盖 UTF-8；GBK 另开任务 -->
+<!-- What got done, what got left behind -->
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress.py log --id <任务号> --note "一句话"。 -->
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->

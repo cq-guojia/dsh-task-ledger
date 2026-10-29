@@ -1,15 +1,16 @@
-# 20261027-1519-skill-补齐底层能力-新增-stats-owners-台账根检测-并扩展-l-736d：skill 补齐底层能力：新增 stats、owners、台账根检测，并扩展 list 状态
+# 20261027-1519-skill-补齐底层能力-新增-stats-owners-台账根检测-并扩展-l-736d: skill 补齐底层能力：新增 stats、owners、台账根检测，并扩展 list 状态
 
-- **标签**：skill、台账、能力
-- **状态**：closed · 2026-10-28 01:33:48 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **创建**：2026-10-27 15:19:22 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
-- **封卷**：2026-10-28 01:33:48 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Tags**: skill, 台账, 能力
+- **Status**: done · 2026-10-28 01:33:48 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Created**: 2026-10-27 15:19:22 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-10-28 01:33:48 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
-<!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
-     「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
-     「- **封卷**：…」在结案时加在最后。 -->
+<!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
+     The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
+     (category goes to the ledger and history only, never into this document).
+     The `- **Sealed**: …` line is appended on close. -->
 
-## 背景
+## Background
 
 由「盘点 DSH 插件底层能力」（`20261027-1330-盘点-dsh-插件底层能力-8cd1`）拆分而来：补齐/改造 skill 数据面能力，供 DSH 插件调用。
 
@@ -29,20 +30,20 @@
 - 范围只作用活跃任务（池 open + 进行中 doing），历史不动。
 - 底层已有方法尽量薄封装，不重写。
 
-## 待办
+## To Do
 
 - [x] 新增 `stats`（参数化计数，独立于 list）
 - [x] 新增 `owners --json`（薄封装 `OwnersIndex.All()`）
 - [x] 新增 台账根检测命令 `root`
 - [x] 给 `list` 加阈值参数 + 派生状态字段（停滞 / 逾期 / 积压）
 
-## 下一步
+## Next
 
 - 交给用户复核（**未提交**）；确认后先提交 skill 侧改动，再启动 DSH 插件侧任务 `20261027-1519-dsh-插件重构-界面更新-方法替换-注册方式改造-1f9a`
 
-## 过程
+## Process
 
-<!-- 踩坑与证据：带 revision + 文件:行号 或符号名 -->
+<!-- Pitfalls and evidence: with revision + file:line or symbol names -->
 
 ### 落地形状（四个动作 + 一层共用关系）
 
@@ -60,7 +61,7 @@
 4. **未知状态口径分叉**：原先 `AgeOf` 只在 `status == "open"` 时算等待天数，而 `stats` 把「非 doing」全算进 `open` ⇒ 一条未知状态的任务进了 open 面却不参与 `oldest_open_days`。改成 `default` 分支一律按待认领算，两边同一判据。
 5. **`root` 顶层 `--repo` 会被引误解**：顶层 `--repo` 谁都认，`root` 偏偏不看它，静默忽略会让人以为指定生效了 ⇒ 给了 stderr 提示（`shell/cli.go:549`）。
 
-## 结论
+## Conclusion
 
 三个只读命令（`stats` / `owners` / `root`）+ `list` 的阈值参数与六个派生字段全部落码：
 
@@ -71,11 +72,11 @@
 
 **留给 Task2（插件侧）**：插件现在还在自己算 `StaleDays/OverdueDays/BacklogDays` 与三个标记（`packages/plugin/src/host/services/home.service.ts:22`），改调 `stats` / `list` 后的 slug 映射待插件任务做。版本从 1.3.37 / 1.3.38 提到 **1.3.39**（两侧同步），tag 未打。
 
-## 执行记录
+## Execution Log
 
-<!-- 本节由脚本维护：new / claim / set / release / log / close 自动追加，请勿手改。
-     补记用 progress log --id <任务号> --note "一句话"。 -->
-- 2026-10-27 15:19:22 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务
-- 2026-10-27 16:20:16 · claim · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 认领 → doing
+<!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
+     Backfill with: progress log --id <id> --note "...". -->
+- 2026-10-27 15:19:22 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · created
+- 2026-10-27 16:20:16 · claim · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · claimed → doing
 - 2026-10-27 17:57:16 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 新增 stats/owners/root 三命令 + list 阈值参数与六个派生字段（actions/age.go:age.go、query_stats.go、query_owners.go、detect_root.go）；JSON 契约与分层文档同步，三平台产物重建，go test 全过；未提交待用户复核
-- 2026-10-28 01:33:48 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷
+- 2026-10-28 01:33:48 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed
