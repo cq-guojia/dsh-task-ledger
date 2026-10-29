@@ -1,8 +1,9 @@
 # 20261029-0105-8e26-历史计数走-count-only-快路径：历史计数走 count-only 快路径
 
-- **标签**：台账、历史、计数
-- **状态**：doing · 2026-10-29 01:08:43 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **标签**：台账、历史、计数、性能
+- **状态**：closed · 2026-10-29 01:30:59 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **创建**：2026-10-29 01:05:43 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **封卷**：2026-10-29 01:30:59 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- 头部四行由脚本维护，顺序固定：标签 → 状态 → 创建 → 封卷。
      「- **标签**：…」按 new --tags 插在最上面，没有标签就不写（分类只进台账与历史，不进本文档）；
@@ -53,3 +54,4 @@ count 与 list 行数口径一致。
      补记用 progress log --id <任务号> --note "一句话"。 -->
 - 2026-10-29 01:05:43 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 创建任务并认领
 - 2026-10-29 01:08:43 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · query_history.go:计数分支跳过 ToMap/名册/排序并在 CountCap 即停，列表与计数共用 rowMatches；新增 query_history_test.go；npm test + 三平台产物 + plugin build 全过
+- 2026-10-29 01:30:59 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案封卷
