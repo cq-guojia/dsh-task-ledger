@@ -22,13 +22,17 @@ import { formatCount } from "./format";
 import type { Translate } from "./locales";
 import type { TrendBucketView, TrendOwnerCounts, TrendView } from "./types";
 
-const BAR_KINDS = ["done", "open", "added"] as const;
+const BAR_KINDS = ["done", "added", "open"] as const;
 type BarKind = (typeof BAR_KINDS)[number];
 
 const ZERO: TrendOwnerCounts = { added: 0, done: 0, open: 0 };
 
-const labelKey = (kind: BarKind): "chartDone" | "chartOpen" | "chartAdded" =>
-	kind === "done" ? "chartDone" : kind === "open" ? "chartOpen" : "chartAdded";
+/** 系列名：只看我的时候「未结」就是「进行中」（我的任务必然有人接）。 */
+const labelKey = (
+	kind: BarKind,
+	mine: boolean,
+): "chartDone" | "chartOpen" | "chartAdded" | "chartDoing" =>
+	kind === "done" ? "chartDone" : kind === "added" ? "chartAdded" : mine ? "chartDoing" : "chartOpen";
 
 export function TrendChart(props: {
 	trend: TrendView;
@@ -102,13 +106,24 @@ export function TrendChart(props: {
 						"div",
 						{ className: "dtl-trend__tip-row" },
 						h("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }),
-						`${t(labelKey(kind))} ${formatCount(counts(bucket)[kind])}`,
+						`${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`,
 					),
 				),
-				// 未结再拆两段（只有「全部」才有意义：我的任务一定有人接）
+				// 「未结」下面再拆两行（只有「全部」才有意义：我的任务一定有人接）
 				mine
 					? null
-					: h("div", { className: "dtl-trend__tip-row dtl-trend__tip-row--sub" }, `${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}`),
+					: h(
+							"div",
+							{ className: "dtl-trend__tip-row dtl-trend__tip-row--sub" },
+							`${t("chartOfWhich")} ${t("chartDoing")} ${formatCount(breakdown(bucket).doing)}`,
+						),
+				mine
+					? null
+					: h(
+							"div",
+							{ className: "dtl-trend__tip-row dtl-trend__tip-row--sub" },
+							`${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}`,
+						),
 			),
 			h("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))),
 			// x 轴标**周末日期**（数据按截止日判），当周就是今天
@@ -136,7 +151,7 @@ export function TrendChart(props: {
 					"span",
 					null,
 					h("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }),
-					t(labelKey(kind)),
+					t(labelKey(kind, mine)),
 				),
 			),
 			// 右侧「只看我的」：只作用于这张图，不动统计卡；数据已随快照回来，勾选不发请求

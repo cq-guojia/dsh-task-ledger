@@ -54188,15 +54188,16 @@ body[data-ds-dark-theme]{
 		*/
 		const BAR_KINDS = [
 			"done",
-			"open",
-			"added"
+			"added",
+			"open"
 		];
 		const ZERO = {
 			added: 0,
 			done: 0,
 			open: 0
 		};
-		const labelKey = (kind) => kind === "done" ? "chartDone" : kind === "open" ? "chartOpen" : "chartAdded";
+		/** 系列名：只看我的时候「未结」就是「进行中」（我的任务必然有人接）。 */
+		const labelKey = (kind, mine) => kind === "done" ? "chartDone" : kind === "added" ? "chartAdded" : mine ? "chartDoing" : "chartOpen";
 		function TrendChart(props) {
 			const { trend, me, t } = props;
 			const [mineOnly, setMineOnly] = (0, react$1.useState)(false);
@@ -54237,10 +54238,10 @@ body[data-ds-dark-theme]{
 			const column = (bucket) => (0, react$1.createElement)("div", { className: "dtl-trend__col" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
 				from: bucket.from,
 				to: bucket.to
-			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), `${t(labelKey(kind))} ${formatCount(counts(bucket)[kind])}`)), mine ? null : (0, react$1.createElement)("div", { className: "dtl-trend__tip-row dtl-trend__tip-row--sub" }, `${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}`)), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
+			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`)), mine ? null : (0, react$1.createElement)("div", { className: "dtl-trend__tip-row dtl-trend__tip-row--sub" }, `${t("chartOfWhich")} ${t("chartDoing")} ${formatCount(breakdown(bucket).doing)}`), mine ? null : (0, react$1.createElement)("div", { className: "dtl-trend__tip-row dtl-trend__tip-row--sub" }, `${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}`)), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
 			const first = buckets[0];
 			const partial = trend.coverageFrom !== "" && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
-			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(labelKey(kind)))), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
+			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(labelKey(kind, mine)))), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
 				type: "checkbox",
 				checked: mineOnly,
 				onChange: (event) => {
@@ -54533,8 +54534,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.117 · 261029-144427-989`
-			}, `v0.0.117 261029-144427-989`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.118 · 261029-145336-423`
+			}, `v0.0.118 261029-145336-423`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54627,6 +54628,7 @@ body[data-ds-dark-theme]{
 			chartMine: "只看我的",
 			chartDoing: "进行中",
 			chartWaiting: "待认领",
+			chartOfWhich: "其中",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "状态",
 			statusActive: "进行中",
@@ -54715,6 +54717,7 @@ body[data-ds-dark-theme]{
 			chartMine: "Only mine",
 			chartDoing: "In progress",
 			chartWaiting: "Unclaimed",
+			chartOfWhich: "of which",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "Status",
 			statusActive: "Active",
