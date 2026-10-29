@@ -97,6 +97,8 @@ const UI_BASE_CSS = `
   opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
 .dtl-trend__tip-row{font-variant-numeric:tabular-nums;}
+/* 未结的拆分行：缩进 + 淡一档，读起来是「未结」的注脚 */
+.dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-fg-3);}
 .dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；

@@ -53,6 +53,13 @@ export function TrendChart(props: {
 	const counts = (bucket: TrendBucketView): TrendOwnerCounts =>
 		mine ? (bucket.owners[me] ?? ZERO) : bucket;
 
+	/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
+	 *  「只看我的」时只有进行中（我的任务必然有人接），不显示拆分行。 */
+	const breakdown = (bucket: TrendBucketView): { doing: number; waiting: number } => {
+		const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
+		return { doing, waiting: Math.max(0, bucket.open - doing) };
+	};
+
 	// 峰 = 当前口径下三系列的最大值；全 0 时按 1 兜底（只防除零，柱高仍为 0）
 	const peak = buckets.reduce((max, bucket) => {
 		const cell = counts(bucket);
@@ -98,6 +105,10 @@ export function TrendChart(props: {
 						`${t(labelKey(kind))} ${formatCount(counts(bucket)[kind])}`,
 					),
 				),
+				// 未结再拆两段（只有「全部」才有意义：我的任务一定有人接）
+				mine
+					? null
+					: h("div", { className: "dtl-trend__tip-row dtl-trend__tip-row--sub" }, `${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}`),
 			),
 			h("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))),
 			// x 轴标**周末日期**（数据按截止日判），当周就是今天

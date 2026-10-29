@@ -53721,6 +53721,8 @@ body[data-ds-dark-theme]{
   opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
 .dtl-trend__tip-row{font-variant-numeric:tabular-nums;}
+/* 未结的拆分行：缩进 + 淡一档，读起来是「未结」的注脚 */
+.dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-fg-3);}
 .dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
@@ -54203,6 +54205,15 @@ body[data-ds-dark-theme]{
 			if (buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartEmpty")));
 			/** 当前口径下这一桶的三个数：全量，或「我的」那条（没数据就是 0）。 */
 			const counts = (bucket) => mine ? bucket.owners[me] ?? ZERO : bucket;
+			/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
+			*  「只看我的」时只有进行中（我的任务必然有人接），不显示拆分行。 */
+			const breakdown = (bucket) => {
+				const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
+				return {
+					doing,
+					waiting: Math.max(0, bucket.open - doing)
+				};
+			};
 			const peak = buckets.reduce((max, bucket) => {
 				const cell = counts(bucket);
 				return Math.max(max, cell.added, cell.done, cell.open);
@@ -54226,7 +54237,7 @@ body[data-ds-dark-theme]{
 			const column = (bucket) => (0, react$1.createElement)("div", { className: "dtl-trend__col" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
 				from: bucket.from,
 				to: bucket.to
-			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), `${t(labelKey(kind))} ${formatCount(counts(bucket)[kind])}`))), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
+			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), `${t(labelKey(kind))} ${formatCount(counts(bucket)[kind])}`)), mine ? null : (0, react$1.createElement)("div", { className: "dtl-trend__tip-row dtl-trend__tip-row--sub" }, `${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}`)), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
 			const first = buckets[0];
 			const partial = trend.coverageFrom !== "" && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
 			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(labelKey(kind)))), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
@@ -54522,8 +54533,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.116 · 261029-132126-295`
-			}, `v0.0.116 261029-132126-295`))), (0, react$1.createElement)(Button, {
+				title: `v0.0.117 · 261029-144427-989`
+			}, `v0.0.117 261029-144427-989`))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -54614,6 +54625,8 @@ body[data-ds-dark-theme]{
 			chartEmpty: "还没有可统计的记录",
 			chartPartial: "{from} 起才有台账数据",
 			chartMine: "只看我的",
+			chartDoing: "进行中",
+			chartWaiting: "待认领",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "状态",
 			statusActive: "进行中",
@@ -54700,6 +54713,8 @@ body[data-ds-dark-theme]{
 			chartEmpty: "No records to chart yet",
 			chartPartial: "Ledger data starts {from}",
 			chartMine: "Only mine",
+			chartDoing: "In progress",
+			chartWaiting: "Unclaimed",
 			periodRange: "{from} ~ {to}",
 			statusLabel: "Status",
 			statusActive: "Active",
