@@ -68,7 +68,10 @@ import {
 declare const __PLUGIN_VERSION__: string;
 declare const __BUILD_STAMP__: string;
 
-/** 主内容：占满、自己滚动；padding 只在内层，dock 才不会继承内边距。 */
+/** 主内容：占满、自己滚动；padding 只在内层，dock 才不会继承内边距。
+ *  ⚠️ 底部不留 padding：滚到底的留白改由内容末尾的 `.dtl-page-foot` 实体块承担
+ *  （用户 2026-10-30：最后一条贴着浏览器底边 —— 滚动容器未必是这一层，
+ *   挂在这一层的 padding-bottom 就落空了，实体块跟着内容走才不会丢）。 */
 const pageStyle: Record<string, string | number> = {
 	height: "100%",
 	width: "100%",
@@ -76,7 +79,7 @@ const pageStyle: Record<string, string | number> = {
 	minWidth: 0,
 	boxSizing: "border-box",
 	overflow: "auto",
-	padding: "24px 22px",
+	padding: "24px 22px 0",
 	color: "var(--dtl-fg)",
 };
 /** dock 的挂载行：**不带 padding**，dock 作为直接子项才能贴右/上/下边。 */
@@ -791,6 +794,8 @@ export function BoardHome(props: {
 					: view.rows.length > LIST_LIMIT
 						? h("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT }))
 						: null,
+				// 页脚留白：滚到底时最后一条卡不贴浏览器底边（高度与上方内边距同档）
+				h("div", { className: "dtl-page-foot" }),
 			),
 		),
 	);

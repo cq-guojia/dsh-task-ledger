@@ -247,6 +247,9 @@ const UI_BASE_CSS = `
 .dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-tip-fg-dim);}
 .dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 
+/* 页面滚动到底的留白：实体块跟着内容走（滚到最底时最后一条卡不贴浏览器底边） */
+.dtl-page-foot{height:24px;flex:none;}
+
 /* 按工作区分组（用户 2026-10-30）：组头是核心 SectionHead（自带 12px 下边距），
    这里只补组与组之间的留白 —— 首个组不再多一层 */
 .dtl-group + .dtl-group{margin-top:var(--dtl-space-4);}

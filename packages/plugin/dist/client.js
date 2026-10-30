@@ -53905,6 +53905,9 @@ body[data-ds-dark-theme]{
 .dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-tip-fg-dim);}
 .dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 
+/* 页面滚动到底的留白：实体块跟着内容走（滚到最底时最后一条卡不贴浏览器底边） */
+.dtl-page-foot{height:24px;flex:none;}
+
 /* 按工作区分组（用户 2026-10-30）：组头是核心 SectionHead（自带 12px 下边距），
    这里只补组与组之间的留白 —— 首个组不再多一层 */
 .dtl-group + .dtl-group{margin-top:var(--dtl-space-4);}
@@ -55016,7 +55019,10 @@ body[data-ds-dark-theme]{
 		* 数据纪律：行上的 `mine` / `stale` / `overdue` / `backlog` 与阈值都来自 skill，
 		* 前端只做布尔判断与渲染。刷新 = 挂载首读 + 手动刷新按钮，**不轮询**。
 		*/
-		/** 主内容：占满、自己滚动；padding 只在内层，dock 才不会继承内边距。 */
+		/** 主内容：占满、自己滚动；padding 只在内层，dock 才不会继承内边距。
+		*  ⚠️ 底部不留 padding：滚到底的留白改由内容末尾的 `.dtl-page-foot` 实体块承担
+		*  （用户 2026-10-30：最后一条贴着浏览器底边 —— 滚动容器未必是这一层，
+		*   挂在这一层的 padding-bottom 就落空了，实体块跟着内容走才不会丢）。 */
 		const pageStyle = {
 			height: "100%",
 			width: "100%",
@@ -55024,7 +55030,7 @@ body[data-ds-dark-theme]{
 			minWidth: 0,
 			boxSizing: "border-box",
 			overflow: "auto",
-			padding: "24px 22px",
+			padding: "24px 22px 0",
 			color: "var(--dtl-fg)"
 		};
 		/** dock 的挂载行：**不带 padding**，dock 作为直接子项才能贴右/上/下边。 */
@@ -55397,8 +55403,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261030-174818-946`
-			}, `v0.0.125 261030-174818-946`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261030-175629-310`
+			}, `v0.0.125 261030-175629-310`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -55477,7 +55483,7 @@ body[data-ds-dark-theme]{
 					solo,
 					onView: handleView
 				})));
-			})), viewMode === "history" ? null : view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null)));
+			})), viewMode === "history" ? null : view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null, (0, react$1.createElement)("div", { className: "dtl-page-foot" }))));
 		}
 		//#endregion
 		//#region src/client/locales.ts
