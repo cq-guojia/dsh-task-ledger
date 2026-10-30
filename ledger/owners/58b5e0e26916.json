@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261030-0758-115a-首页在办趋势图改造": {"category": "功能建设", "created": "2026-10-30 07:58:16", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-30 07:58:16", "status": "doing", "tags": ["看板", "趋势图", "首页"], "title": "首页在办趋势图改造", "updated": "2026-10-30 08:04:33", "worklog": "worklog/202610/30-0758-115a-首页在办趋势图改造.md"}
+    "20261030-0758-115a-首页在办趋势图改造": {"category": "功能建设", "created": "2026-10-30 07:58:16", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-30 07:58:16", "status": "doing", "tags": ["看板", "趋势图", "首页"], "title": "首页在办趋势图改造", "updated": "2026-10-30 08:13:50", "worklog": "worklog/202610/30-0758-115a-首页在办趋势图改造.md"}
   },
   "version": "20261022000000"
 }
