@@ -29,7 +29,14 @@ import {
 import type { LocaleKey, Translate } from "./locales";
 import { formatCount } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
-import { groupRows, isSoloLedger, ownerGroups, selectView, type Row } from "./rows";
+import {
+	groupRows,
+	isSoloLedger,
+	ownerGroups,
+	selectView,
+	type GroupTab,
+	type Row,
+} from "./rows";
 import {
 	boardSnapshot,
 	boardSubscribe,
@@ -125,13 +132,15 @@ const SEARCH_WIDTH = 192;
 
 /** 列表最多渲染条数（用户 2026-10-28：内容过多时只给最新 100 条 + 底部提示）。 */
 const LIST_LIMIT = 100;
-/** 组头计数小字（跟在组名后面，比组名小一档）。 */
-const groupCountStyle: Record<string, string | number> = {
-	marginLeft: "var(--dtl-space-2)",
-	fontSize: "var(--dtl-font-xs)",
-	fontWeight: 400,
-	color: "var(--dtl-fg-3)",
-};
+/** 组头计数：按「待认领 → 进行中 → 积压 → 逾期 → 停滞」排，` · ` 分隔；
+ *  **0 的档整段不出现**（用户 2026-10-30：不显示 0，也不显示杠），「我的待办」不列。 */
+const GROUP_STATS: readonly { value: GroupTab; label: LocaleKey }[] = [
+	{ value: "open", label: "statOpen" },
+	{ value: "doing", label: "statDoing" },
+	{ value: "backlog", label: "statBacklog" },
+	{ value: "overdue", label: "statOverdue" },
+	{ value: "stale", label: "statStale" },
+];
 /** 底部「截断提示」样式（临时：核心暂无对应样式，先按此观感；用户确认后再定型）。 */
 const limitHintStyle: Record<string, string | number> = {
 	marginTop: "var(--dtl-space-3)",
@@ -731,23 +740,40 @@ export function BoardHome(props: {
 									null,
 									// 按工作区分组（用户 2026-10-30）：组头 = 核心 SectionHead；
 									// 组顺序 / 组内顺序全在 rows.selectView 排好，这里只切段渲染。
-									...groupRows(view.rows.slice(0, LIST_LIMIT)).map((group) =>
-										h(
+									...groupRows(view.rows.slice(0, LIST_LIMIT)).map((group) => {
+										// 0 的档不列；全 0 时整段不出现（不留一段空白 + 8px 外边距）
+										const counts = GROUP_STATS.filter(
+											(item) => group.counts[item.value] > 0,
+										)
+											.map(
+												(item) =>
+													`${t(item.label)} ${group.counts[item.value]}`,
+											)
+											.join(" · ");
+										return h(
 											"div",
 											{ key: group.workspace.id, className: "dtl-group" },
-											h(SectionHead, {
-												icon: h(IconFolderCloseRegular, { size: 16 }),
-												title: h(
-													"span",
-													null,
-													group.workspace.title,
-													h(
+											// 组头整体右移 4px（用户 2026-10-30：竖线 + 后面整条内容一起挪），
+											// 只包组头，任务卡不动。
+											h(
+												"div",
+												{ className: "dtl-group__head" },
+												h(SectionHead, {
+													icon: h("span", { className: "dtl-group__rule" }),
+													title: h(
 														"span",
-														{ style: groupCountStyle },
-														t("groupCount", { n: group.rows.length }),
+														null,
+														group.workspace.title,
+														counts === ""
+															? null
+															: h(
+																	"span",
+																	{ className: "dtl-group__count" },
+																	counts,
+																),
 													),
-												),
-											}),
+												}),
+											),
 											...group.rows.map((row) =>
 												h(TaskRowView, {
 													key: row.key,
@@ -757,8 +783,8 @@ export function BoardHome(props: {
 													onView: handleView,
 												}),
 											),
-										),
-									),
+										);
+									}),
 								),
 				viewMode === "history"
 					? null

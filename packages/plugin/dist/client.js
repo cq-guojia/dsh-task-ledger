@@ -53216,8 +53216,17 @@ window.__ModuleLoader__.load({
 			if (task.status === "doing" || task.status === "blocked") return task.mine === true ? 0 : 1;
 			return task.backlog === true ? 2 : 3;
 		}
+		/** 组头要数的那几档（不含「全部」和「我的待办」）：与左侧菜单同一套判据。 */
+		const GROUP_TABS = [
+			"open",
+			"doing",
+			"backlog",
+			"overdue",
+			"stale"
+		];
 		/** 按工作区切段：**顺序不在这里定** —— `selectView` 已按「工作区注册序 + 组内优先级」排好，
-		*  这里只把连续同区的行切开（纯函数，冒烟可直测）。 */
+		*  这里只把连续同区的行切开，顺带数该组各档（纯函数，冒烟可直测）。
+		*  计数口径 = 组内**当前显示的行**，与左侧六档菜单同一个 `tabHit` ⇒ 组头数字和列出来的行对得上。 */
 		function groupRows(rows) {
 			const groups = [];
 			for (const row of rows) {
@@ -53228,7 +53237,20 @@ window.__ModuleLoader__.load({
 					rows: [row]
 				});
 			}
-			return groups;
+			return groups.map((group) => {
+				const counts = {
+					open: 0,
+					doing: 0,
+					backlog: 0,
+					overdue: 0,
+					stale: 0
+				};
+				for (const row of group.rows) for (const tab of GROUP_TABS) if (tabHit(row.task, tab)) counts[tab] += 1;
+				return {
+					...group,
+					counts
+				};
+			});
 		}
 		/** 当前筛选下的平铺列表，已按「工作区分组 + 组内优先级 + 时间倒序」排好。 */
 		function selectView(current) {
@@ -53886,6 +53908,13 @@ body[data-ds-dark-theme]{
 /* 按工作区分组（用户 2026-10-30）：组头是核心 SectionHead（自带 12px 下边距），
    这里只补组与组之间的留白 —— 首个组不再多一层 */
 .dtl-group + .dtl-group{margin-top:var(--dtl-space-4);}
+/* 组头左侧的细竖线（替代图标）+ 组名后的分档条数（0 的档由 JS 直接不渲染，不占位） */
+.dtl-group__rule{width:3px;height:14px;flex:none;background:var(--dtl-fg-3);
+  border-radius:var(--dtl-radius-xs);}
+.dtl-group__count{margin-left:var(--dtl-space-2);font-size:var(--dtl-font-xs);font-weight:400;
+  color:var(--dtl-fg-3);white-space:nowrap;}
+/* 组头整体右移 4px（与任务卡左缘留一点视觉差，用户 2026-10-30） */
+.dtl-group__head{padding-left:var(--dtl-space-1);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -55048,13 +55077,30 @@ body[data-ds-dark-theme]{
 		const SEARCH_WIDTH = 192;
 		/** 列表最多渲染条数（用户 2026-10-28：内容过多时只给最新 100 条 + 底部提示）。 */
 		const LIST_LIMIT = 100;
-		/** 组头计数小字（跟在组名后面，比组名小一档）。 */
-		const groupCountStyle = {
-			marginLeft: "var(--dtl-space-2)",
-			fontSize: "var(--dtl-font-xs)",
-			fontWeight: 400,
-			color: "var(--dtl-fg-3)"
-		};
+		/** 组头计数：按「待认领 → 进行中 → 积压 → 逾期 → 停滞」排，` · ` 分隔；
+		*  **0 的档整段不出现**（用户 2026-10-30：不显示 0，也不显示杠），「我的待办」不列。 */
+		const GROUP_STATS = [
+			{
+				value: "open",
+				label: "statOpen"
+			},
+			{
+				value: "doing",
+				label: "statDoing"
+			},
+			{
+				value: "backlog",
+				label: "statBacklog"
+			},
+			{
+				value: "overdue",
+				label: "statOverdue"
+			},
+			{
+				value: "stale",
+				label: "statStale"
+			}
+		];
 		/** 底部「截断提示」样式（临时：核心暂无对应样式，先按此观感；用户确认后再定型）。 */
 		const limitHintStyle = {
 			marginTop: "var(--dtl-space-3)",
@@ -55351,8 +55397,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261030-172248-868`
-			}, `v0.0.125 261030-172248-868`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261030-174818-946`
+			}, `v0.0.125 261030-174818-946`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -55416,19 +55462,22 @@ body[data-ds-dark-theme]{
 			})) : view.rows.length === 0 ? (0, react$1.createElement)(EmptyState, {
 				title: t("listEmpty"),
 				hint: t("listEmptyHint")
-			}) : (0, react$1.createElement)("div", null, ...groupRows(view.rows.slice(0, LIST_LIMIT)).map((group) => (0, react$1.createElement)("div", {
-				key: group.workspace.id,
-				className: "dtl-group"
-			}, (0, react$1.createElement)(SectionHead, {
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 16 }),
-				title: (0, react$1.createElement)("span", null, group.workspace.title, (0, react$1.createElement)("span", { style: groupCountStyle }, t("groupCount", { n: group.rows.length })))
-			}), ...group.rows.map((row) => (0, react$1.createElement)(TaskRowView, {
-				key: row.key,
-				t,
-				row,
-				solo,
-				onView: handleView
-			}))))), viewMode === "history" ? null : view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null)));
+			}) : (0, react$1.createElement)("div", null, ...groupRows(view.rows.slice(0, LIST_LIMIT)).map((group) => {
+				const counts = GROUP_STATS.filter((item) => group.counts[item.value] > 0).map((item) => `${t(item.label)} ${group.counts[item.value]}`).join(" · ");
+				return (0, react$1.createElement)("div", {
+					key: group.workspace.id,
+					className: "dtl-group"
+				}, (0, react$1.createElement)("div", { className: "dtl-group__head" }, (0, react$1.createElement)(SectionHead, {
+					icon: (0, react$1.createElement)("span", { className: "dtl-group__rule" }),
+					title: (0, react$1.createElement)("span", null, group.workspace.title, counts === "" ? null : (0, react$1.createElement)("span", { className: "dtl-group__count" }, counts))
+				})), ...group.rows.map((row) => (0, react$1.createElement)(TaskRowView, {
+					key: row.key,
+					t,
+					row,
+					solo,
+					onView: handleView
+				})));
+			})), viewMode === "history" ? null : view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null)));
 		}
 		//#endregion
 		//#region src/client/locales.ts
@@ -55499,7 +55548,6 @@ body[data-ds-dark-theme]{
 			listEmpty: "未找到匹配的任务记录",
 			listEmptyHint: "可切换状态或工作区，查看其他记录。",
 			listLimitHint: "仅显示前 {n} 条查询结果",
-			groupCount: "{n} 条",
 			ownerUnclaimed: "待认领",
 			timeUnknown: "时间未知",
 			relJustNow: "刚刚",
@@ -55610,7 +55658,6 @@ body[data-ds-dark-theme]{
 			listEmpty: "No matching task records",
 			listEmptyHint: "Switch status or workspace to see other records.",
 			listLimitHint: "Only the first {n} results are shown",
-			groupCount: "{n} tasks",
 			ownerUnclaimed: "unclaimed",
 			timeUnknown: "unknown time",
 			relJustNow: "just now",

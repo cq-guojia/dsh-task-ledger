@@ -250,6 +250,13 @@ const UI_BASE_CSS = `
 /* 按工作区分组（用户 2026-10-30）：组头是核心 SectionHead（自带 12px 下边距），
    这里只补组与组之间的留白 —— 首个组不再多一层 */
 .dtl-group + .dtl-group{margin-top:var(--dtl-space-4);}
+/* 组头左侧的细竖线（替代图标）+ 组名后的分档条数（0 的档由 JS 直接不渲染，不占位） */
+.dtl-group__rule{width:3px;height:14px;flex:none;background:var(--dtl-fg-3);
+  border-radius:var(--dtl-radius-xs);}
+.dtl-group__count{margin-left:var(--dtl-space-2);font-size:var(--dtl-font-xs);font-weight:400;
+  color:var(--dtl-fg-3);white-space:nowrap;}
+/* 组头整体右移 4px（与任务卡左缘留一点视觉差，用户 2026-10-30） */
+.dtl-group__head{padding-left:var(--dtl-space-1);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */

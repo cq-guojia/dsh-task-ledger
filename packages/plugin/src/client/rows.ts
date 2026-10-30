@@ -140,14 +140,22 @@ function rankOf(task: BoardTask): number {
 	return task.backlog === true ? 2 : 3;
 }
 
-/** 一个工作区的分组（组头 + 该区行）。 */
+/** 组头要数的那几档（不含「全部」和「我的待办」）：与左侧菜单同一套判据。 */
+const GROUP_TABS = ["open", "doing", "backlog", "overdue", "stale"] as const;
+export type GroupTab = (typeof GROUP_TABS)[number];
+/** 该组各档条数（0 的档界面不显示）。 */
+export type GroupCounts = Readonly<Record<GroupTab, number>>;
+
+/** 一个工作区的分组（组头 + 该区行 + 该区各档计数）。 */
 export interface WorkspaceGroup {
 	readonly workspace: Workspace;
 	readonly rows: readonly Row[];
+	readonly counts: GroupCounts;
 }
 
 /** 按工作区切段：**顺序不在这里定** —— `selectView` 已按「工作区注册序 + 组内优先级」排好，
- *  这里只把连续同区的行切开（纯函数，冒烟可直测）。 */
+ *  这里只把连续同区的行切开，顺带数该组各档（纯函数，冒烟可直测）。
+ *  计数口径 = 组内**当前显示的行**，与左侧六档菜单同一个 `tabHit` ⇒ 组头数字和列出来的行对得上。 */
 export function groupRows(rows: readonly Row[]): readonly WorkspaceGroup[] {
 	const groups: { workspace: Workspace; rows: Row[] }[] = [];
 	for (const row of rows) {
@@ -158,7 +166,19 @@ export function groupRows(rows: readonly Row[]): readonly WorkspaceGroup[] {
 			groups.push({ workspace: row.task.workspace, rows: [row] });
 		}
 	}
-	return groups;
+	return groups.map((group) => {
+		const counts: Record<GroupTab, number> = {
+			open: 0,
+			doing: 0,
+			backlog: 0,
+			overdue: 0,
+			stale: 0,
+		};
+		for (const row of group.rows) {
+			for (const tab of GROUP_TABS) if (tabHit(row.task, tab)) counts[tab] += 1;
+		}
+		return { ...group, counts };
+	});
 }
 
 /** 当前筛选下的平铺列表，已按「工作区分组 + 组内优先级 + 时间倒序」排好。 */
