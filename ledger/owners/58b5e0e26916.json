@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261030-0912-e6ff-在办列表按工作区分组展示": {"category": "样式调整", "created": "2026-10-30 09:12:48", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-30 09:19:15", "status": "doing", "tags": ["在办列表", "分组展示"], "title": "在办列表按工作区分组展示", "updated": "2026-10-30 13:10:23", "worklog": "worklog/202610/30-0912-e6ff-在办列表按工作区分组展示.md"}
+    "20261030-0912-e6ff-在办列表按工作区分组展示": {"category": "样式调整", "created": "2026-10-30 09:12:48", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-30 09:19:15", "status": "doing", "tags": ["在办列表", "分组展示"], "title": "在办列表按工作区分组展示", "updated": "2026-10-30 13:23:28", "worklog": "worklog/202610/30-0912-e6ff-在办列表按工作区分组展示.md"}
   },
   "version": "20261022000000"
 }
