@@ -97,17 +97,15 @@ export function registerRoutes(
 		}
 	});
 
-	// 历史页顶部日趋势（按天 + 按工作区）：只在切到历史模式时拉，不拖慢首屏。
+	// 历史页顶部趋势（粒度 day/week/month，桶全在 skill）：切粒度 = 重新请求，host 有读缓存。
 	registerRead("/history/trend", async (req, res) => {
 		try {
 			const raw = new URL(req.url ?? "/", "http://localhost").searchParams.get(
-				"months",
+				"gran",
 			);
-			const months =
-				raw === null
-					? 12
-					: Math.min(12, Math.max(1, Number.parseInt(raw, 10) || 12));
-			sendJson(res, 200, await getHistoryTrend(await workspacesOf(deps), months));
+			const gran =
+				raw === "week" || raw === "month" ? raw : ("day" as const);
+			sendJson(res, 200, await getHistoryTrend(await workspacesOf(deps), gran));
 		} catch (error) {
 			sendJson(res, 500, {
 				error: error instanceof Error ? error.message : String(error),

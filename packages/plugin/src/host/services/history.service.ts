@@ -1,110 +1,171 @@
 /**
- * 历史页顶部日趋势：把各工作区的结案记录按 **天 + 工作区** 聚合。
- * 只返回"有记录的天"（中间空白天由前端补空并做首尾裁剪），并带上工作区色表。
+ * 历史页顶部趋势：**数字真源是 skill `stats --trend <gran>`**，本文件只做两件事 ——
+ * ① 每工作区拉「当前粒度 + day」两套桶（day 服务 4 数显与窗口锚点）；
+ * ② 跨工作区**求和**。周期切分、新增口径、补空桶全在 skill
+ * （用户 2026-10-30 定：聚合算法不自己写，本地只加总，免得与核心口径漂移）。
  */
 import { settleWorkspaces } from "../errors.js";
-import {
-	HISTORY_MONTHS,
-	type HistoryRecord,
-	readHistoryRecords,
-} from "../repositories/history.repository.js";
-import { readTrendByDay } from "../repositories/trend.repository.js";
-import type { HistoryDay, HistoryTrendPayload, LedgerWorkspace } from "../types.js";
+import { readTrendGran, type WorkspaceTrend } from "../repositories/trend.repository.js";
+import type {
+	HistoryBucket,
+	HistoryGran,
+	HistoryTrendPayload,
+	HistoryTotals,
+	LedgerWorkspace,
+} from "../types.js";
 
-interface WorkspaceRecords {
-	readonly workspace: LedgerWorkspace;
-	readonly records: readonly HistoryRecord[];
+function pad2(n: number): string {
+	return String(n).padStart(2, "0");
 }
 
-interface DayCell {
-	done: number;
-	cancelled: number;
-	readonly byWorkspace: Record<string, { done: number; cancelled: number }>;
+function ymdOf(date: Date): string {
+	return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function addDays(value: string, delta: number): string {
+	const date = new Date(`${value}T00:00:00`);
+	date.setDate(date.getDate() + delta);
+	return ymdOf(date);
+}
+
+/** 本周一（周一为一周之始，与 skill 同口径）。 */
+function mondayOf(value: string): string {
+	const date = new Date(`${value}T00:00:00`);
+	date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+	return ymdOf(date);
+}
+
+function monthStart(value: string): string {
+	return `${value.slice(0, 7)}-01`;
+}
+
+function prevMonthStart(value: string): string {
+	const date = new Date(`${monthStart(value)}T00:00:00`);
+	date.setMonth(date.getMonth() - 1);
+	return ymdOf(date);
+}
+
+interface WorkspaceTrends {
+	readonly workspace: LedgerWorkspace;
+	/** 当前粒度的桶（柱 / 曲线）。 */
+	readonly granTrend: WorkspaceTrend;
+	/** day 粒度的桶（4 数显 + from/to 判定；skill 有物理缓存，多粒度共用一次读盘）。 */
+	readonly dayTrend: WorkspaceTrend;
 }
 
 export async function getHistoryTrend(
 	workspaces: readonly LedgerWorkspace[],
-	months: number = HISTORY_MONTHS,
+	gran: HistoryGran = "day",
 ): Promise<HistoryTrendPayload> {
+	const today = ymdOf(new Date());
+	// 窗口 = 最近 365 个自然日：day 粒度恰好顶满 skill 的 365 桶上限又不越线；周 / 月桶更少
+	const since = addDays(today, -364);
 	const settled = await settleWorkspaces<
 		LedgerWorkspace,
-		WorkspaceRecords,
-		readonly WorkspaceRecords[]
+		WorkspaceTrends,
+		readonly WorkspaceTrends[]
 	>(
 		workspaces,
 		"history",
-		async (workspace) => ({
-			workspace,
-			records: await readHistoryRecords(workspace, months),
-		}),
+		async (workspace) => {
+			// gran = day 时两套是同一份（同 cacheKey）⇒ 共用一个 Promise，不跑两遍脚本
+			const granRun = readTrendGran(workspace, gran, since, today);
+			const dayRun = gran === "day" ? granRun : readTrendGran(workspace, "day", since, today);
+			const [granTrend, dayTrend] = await Promise.all([granRun, dayRun]);
+			return { workspace, granTrend, dayTrend };
+		},
 		(rows) => rows,
 	);
 
-	const byDate = new Map<string, DayCell>();
-	for (const { workspace, records } of settled.data) {
-		for (const record of records) {
-			const date = record.finished.slice(0, 10);
-			if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
-			let cell = byDate.get(date);
-			if (cell === undefined) {
-				cell = { done: 0, cancelled: 0, byWorkspace: {} };
-				byDate.set(date, cell);
-			}
-			const cancelled = record.result === "cancelled";
-			if (cancelled) cell.cancelled += 1;
-			else cell.done += 1;
-			let ws = cell.byWorkspace[workspace.id];
-			if (ws === undefined) {
-				ws = { done: 0, cancelled: 0 };
-				cell.byWorkspace[workspace.id] = ws;
-			}
-			if (cancelled) ws.cancelled += 1;
-			else ws.done += 1;
+	// ① 柱 / 曲线：当前粒度，按桶起始日跨工作区求和 —— 本地唯一的「算法」就是加法
+	const merged = new Map<
+		string,
+		{
+			to: string;
+			done: number;
+			cancelled: number;
+			added: number;
+			byWorkspace: Record<string, { done: number; cancelled: number }>;
+		}
+	>();
+	for (const { workspace, granTrend } of settled.data) {
+		for (const bucket of granTrend.buckets) {
+			const acc = merged.get(bucket.from) ?? {
+				to: bucket.to,
+				done: 0,
+				cancelled: 0,
+				added: 0,
+				byWorkspace: {},
+			};
+			acc.to = bucket.to;
+			acc.done += bucket.done;
+			acc.cancelled += bucket.cancelled;
+			acc.added += bucket.added;
+			const ws = acc.byWorkspace[workspace.id] ?? { done: 0, cancelled: 0 };
+			ws.done += bucket.done;
+			ws.cancelled += bucket.cancelled;
+			acc.byWorkspace[workspace.id] = ws;
+			merged.set(bucket.from, acc);
 		}
 	}
 
-	const days: HistoryDay[] = [...byDate.entries()]
+	// ② day 桶：from / to（有数据的天，柱图窗口锚点）+ 4 数显求和
+	const dayMap = new Map<string, { done: number; cancelled: number; added: number }>();
+	for (const { dayTrend } of settled.data) {
+		for (const bucket of dayTrend.buckets) {
+			const acc = dayMap.get(bucket.from) ?? { done: 0, cancelled: 0, added: 0 };
+			acc.done += bucket.done;
+			acc.cancelled += bucket.cancelled;
+			acc.added += bucket.added;
+			dayMap.set(bucket.from, acc);
+		}
+	}
+	let from = "";
+	let to = "";
+	for (const [key, cell] of dayMap) {
+		if (cell.done + cell.cancelled + cell.added <= 0) continue;
+		if (from === "" || key < from) from = key;
+		if (key > to) to = key;
+	}
+
+	const sumIn = (rangeFrom: string, rangeTo: string): number => {
+		let sum = 0;
+		for (const [key, cell] of dayMap) {
+			if (key >= rangeFrom && key <= rangeTo) sum += cell.done + cell.cancelled;
+		}
+		return sum;
+	};
+	const totals: HistoryTotals = {
+		today: sumIn(today, today),
+		week: sumIn(mondayOf(today), today),
+		month: sumIn(monthStart(today), today),
+		lastMonth: sumIn(prevMonthStart(today), addDays(monthStart(today), -1)),
+	};
+
+	// 桶裁到「from 所在周期 ~ to 所在周期」：窗口外全是 0 桶，不值得过进程边界
+	const fromKey =
+		gran === "day" ? from : gran === "week" ? mondayOf(from || today) : monthStart(from || today);
+	const buckets: HistoryBucket[] = from === "" ? [] : [...merged.entries()]
 		.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
-		.map(([date, cell]) => ({
-			date,
+		.filter(([key]) => key >= fromKey && key <= to)
+		.map(([key, cell]) => ({
+			key,
+			to: cell.to,
 			done: cell.done,
 			cancelled: cell.cancelled,
+			added: cell.added,
 			byWorkspace: cell.byWorkspace,
 		}));
-
-	const from = days[0]?.date ?? "";
-	const to = days[days.length - 1]?.date ?? "";
-
-	// 新增量曲线（叠加在柱图上的折线，**一条线、不分工作区**）：与柱图同窗口逐日取
-	// `stats --trend day`，跨工作区求和。曲线只是柱图的附加物 —— 读挂（含 day 粒度
-	// 365 桶上限这类 skill 拒算）就整条不下发、不进 degraded，柱图照常。
-	let addedByDay: Record<string, number> | undefined;
-	if (from !== "" && to !== "") {
-		const settledAdded = await Promise.allSettled(
-			workspaces.map((workspace) => readTrendByDay(workspace, from, to)),
-		);
-		const merged: Record<string, number> = {};
-		let any = false;
-		for (const result of settledAdded) {
-			if (result.status !== "fulfilled") continue;
-			any = true;
-			for (const bucket of result.value.buckets) {
-				// day 粒度桶 from === to，按天归并即逐日新增
-				merged[bucket.from] = (merged[bucket.from] ?? 0) + bucket.added;
-			}
-		}
-		if (any) addedByDay = merged;
-	}
 
 	return {
 		workspaces: workspaces.map((workspace) => ({
 			id: workspace.id,
 			title: workspace.title,
 		})),
-		days,
+		buckets,
+		totals,
 		from,
 		to,
-		...(addedByDay === undefined ? {} : { addedByDay }),
 		degraded: settled.degraded,
 	};
 }

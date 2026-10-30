@@ -107,28 +107,48 @@ export interface TrendView {
 	readonly coverageTo: string;
 }
 
-/** 历史日趋势里某工作区一天的结案数。 */
-export interface HistoryWorkspaceDay {
+/** 历史趋势的周期粒度（一根柱 = 一个周期；桶的切分与口径全在 skill）。 */
+export type HistoryGran = "day" | "week" | "month";
+
+/** 历史趋势里某工作区一个周期内的结案数。 */
+export interface HistoryWorkspaceCell {
 	readonly done: number;
 	readonly cancelled: number;
 }
 
-/** 历史页顶部某一天（只含"有记录"的天；中间空白天由前端补空）。 */
-export interface HistoryDay {
-	readonly date: string;
+/**
+ * 历史页顶部的一个周期桶：**数字真源是 skill `stats --trend <gran>`**，
+ * host 只做跨工作区求和（用户 2026-10-30 定：不自己写聚合算法）。
+ */
+export interface HistoryBucket {
+	/** 周期起始日（日 = 当天、周 = 周一、月 = 1 号；skill 口径）。 */
+	readonly key: string;
+	/** 周期结束日（含边界；skill 口径，浮卡的区间标题用）。 */
+	readonly to: string;
 	readonly done: number;
 	readonly cancelled: number;
-	readonly byWorkspace: Readonly<Record<string, HistoryWorkspaceDay>>;
+	/** 该周期新建（含在办 / 待认领）。 */
+	readonly added: number;
+	/** 工作区 id → 该区该周期的 done / cancelled（分色用）。 */
+	readonly byWorkspace: Readonly<Record<string, HistoryWorkspaceCell>>;
 }
 
-/** `/history/trend` 响应：日趋势 + 工作区色表 + 有数据区间。 */
+/** 历史页顶部 4 数显（host 从 day 桶求和）。 */
+export interface HistoryTotals {
+	readonly today: number;
+	readonly week: number;
+	readonly month: number;
+	readonly lastMonth: number;
+}
+
+/** `/history/trend` 响应：当前粒度桶序列 + 4 数显 + 有数据区间。 */
 export interface HistoryTrendPayload {
 	readonly workspaces: readonly { readonly id: string; readonly title: string }[];
-	readonly days: readonly HistoryDay[];
+	readonly buckets: readonly HistoryBucket[];
+	readonly totals: HistoryTotals;
+	/** 有数据的最早 / 最晚**天**（由 day 桶判定，柱图与翻页窗口的锚点）。 */
 	readonly from: string;
 	readonly to: string;
-	/** 逐日**新增**任务量（跨工作区合计、含在办；曲线真源）。缺省 = 取数失败 ⇒ 不画曲线。 */
-	readonly addedByDay?: Readonly<Record<string, number>>;
 	readonly degraded?: readonly DegradedInfo[];
 }
 

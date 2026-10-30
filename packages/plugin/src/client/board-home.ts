@@ -39,7 +39,7 @@ import { fetchHistoryTrend } from "./api";
 import { HistoryChart, HistoryStats } from "./history-chart";
 import { TaskRowView } from "./task-row";
 import { TrendChart } from "./trend-chart";
-import type { BoardPayload, HistoryTrendPayload } from "./types";
+import type { BoardPayload, HistoryGran, HistoryTrendPayload } from "./types";
 import {
 	Button,
 	EmptyState,
@@ -158,7 +158,12 @@ export function BoardHome(props: {
 	// 视图模式：在办看板 ↔ 历史查询（入口切换；历史页布局待定稿，先占位）。
 	const [viewMode, setViewMode] = useState<"active" | "history">("active");
 	// 历史页顶部数据：切到历史才拉（拉过一次就复用，切回在办不清）。
-	const [historyTrend, setHistoryTrend] = useState<HistoryTrendPayload | null>(null);
+	// 数据按粒度各存一份：切粒度 = 重新请求（桶的口径在 skill，host 有读缓存）；gran 真源在页面层。
+	const [gran, setGran] = useState<HistoryGran>("day");
+	const [historyByGran, setHistoryByGran] = useState<
+		Partial<Record<HistoryGran, HistoryTrendPayload>>
+	>({});
+	const historyTrend = historyByGran[gran] ?? null;
 	const [historyError, setHistoryError] = useState<string | null>(null);
 
 	/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
@@ -227,9 +232,10 @@ export function BoardHome(props: {
 		if (viewMode !== "history" || historyTrend !== null || historyError !== null)
 			return;
 		let alive = true;
-		fetchHistoryTrend()
+		fetchHistoryTrend(gran)
 			.then((payload) => {
-				if (alive) setHistoryTrend(payload);
+				if (alive)
+					setHistoryByGran((prev) => ({ ...prev, [gran]: payload }));
 			})
 			.catch((error: unknown) => {
 				if (alive)
@@ -238,7 +244,7 @@ export function BoardHome(props: {
 		return () => {
 			alive = false;
 		};
-	}, [viewMode, historyTrend, historyError]);
+	}, [viewMode, gran, historyTrend, historyError]);
 
 	/** 工作区下拉候选：宿主里所有含台账的工作区（不是从任务里反推，空工作区也要能选）。 */
 	const workspaceOptions = useMemo(
@@ -603,7 +609,12 @@ export function BoardHome(props: {
 								: h(
 										"div",
 										{ className: "dtl-stats dtl-stats--history", style: statsRowStyle },
-										h(HistoryChart, { data: historyTrend, t }),
+										h(HistoryChart, {
+											data: historyTrend,
+											t,
+											gran,
+											onGranChange: setGran,
+										}),
 										h(HistoryStats, { data: historyTrend, t }),
 									))
 					: (state.status === "error" && board === null

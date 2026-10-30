@@ -2,11 +2,12 @@
  * 历史页顶部：**图表卡在左、4 数显在右**，沿用主页 8 块的分栏与单块尺寸；不显示图例。
  *
  * 柱：一根 = 一个周期（日 / 周 / 月，右上角切换，默认日），高度 = 该周期的结案数。
+ * 数字真源是 skill `stats --trend <gran>`（切粒度 = 重新请求，host 有读缓存），
+ * 本文件**只做展示**：切片、配色、画图 —— 聚合与求和都在 host / skill（用户 2026-10-30 定）。
  * 柱色：≥2 工作区 = 叠加分段、每区一色；仅 1 个工作区 = 完成(绿) / 取消(红) 两段。
- * 曲线：**新增任务量**（一条线、不分工作区），数据来自 skill `stats --trend day`。
+ * 曲线：**新增任务量**（一条线、不分工作区），每个周期一个点，跟柱对齐。
  * 布局：柱序居左、柱宽固定、柱间 2px；按容器宽算能放几个周期（屏幕越窄越少），右边留白。
  * 翻页：步长随粒度（用户 2026-10-29 定）——日 10 天 / 周 4 周 / 月 3 月。
- * 0 值：host 的 `from/to` 是有数据的最早/最晚天 ⇒ 首尾 0 天然裁掉；中间空白期补空槽保持连续。
  */
 import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
 import {
@@ -14,7 +15,7 @@ import {
 	IconChevronRightOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { LocaleKey, Translate } from "./locales";
-import type { HistoryDay, HistoryTrendPayload } from "./types";
+import type { HistoryBucket, HistoryGran, HistoryTrendPayload } from "./types";
 import { EmptyState, IconButton, Segmented, StatCard, Tip } from "./ui";
 
 /** 工作区配色：取插件语义 token（≥5 个区会循环）。 */
@@ -33,18 +34,15 @@ const GAP = 2;
 /** x 轴标签的最小间距（小于这个就跳着显示，免得挤成一团）。 */
 const LABEL_MIN_PITCH = 40;
 
-/** 周期粒度（一根柱代表多长）。 */
-type Gran = "day" | "week" | "month";
-
 /** 翻页步长：按一次左右箭头走几个周期（用户 2026-10-29 定）。 */
-const GRAN_STEP: Record<Gran, number> = { day: 10, week: 4, month: 3 };
+const GRAN_STEP: Record<HistoryGran, number> = { day: 10, week: 4, month: 3 };
 /** 各粒度的单位名（用于翻页提示「前 4 周」里的单位）。 */
-const GRAN_UNIT: Record<Gran, LocaleKey> = {
+const GRAN_UNIT: Record<HistoryGran, LocaleKey> = {
 	day: "historyGranDay",
 	week: "historyGranWeek",
 	month: "historyGranMonth",
 };
-const GRAN_VALUES: readonly Gran[] = ["day", "week", "month"];
+const GRAN_VALUES: readonly HistoryGran[] = ["day", "week", "month"];
 
 /** 浮卡里的一行：色块 + 名称 + 数量。 */
 interface TipRow {
@@ -52,21 +50,6 @@ interface TipRow {
 	name: string;
 	count: number;
 	color: string;
-}
-
-/** 一根柱（一个周期）的视图数据：由按天的记录在客户端聚合而来。 */
-interface BucketView {
-	/** 周期起始日期（YYYY-MM-DD）；月的 key 是当月 1 号。 */
-	key: string;
-	/** 浮卡标题：日 = 日期，周 = 起止区间，月 = 年月。 */
-	title: string;
-	/** x 轴标签。 */
-	label: string;
-	done: number;
-	cancelled: number;
-	/** 该周期的新增量（有取数失败的可能 ⇒ 由调用方判 0 不画）。 */
-	added: number;
-	byWorkspace: Record<string, { done: number; cancelled: number }>;
 }
 
 function pad2(n: number): string {
@@ -77,25 +60,9 @@ function ymdOf(date: Date): string {
 	return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 }
 
-function parseYmd(value: string): Date {
-	return new Date(`${value}T00:00:00`);
-}
-
-function addDays(value: string, delta: number): string {
-	const date = parseYmd(value);
-	date.setDate(date.getDate() + delta);
-	return ymdOf(date);
-}
-
-function addMonths(value: string, delta: number): string {
-	const date = parseYmd(value);
-	date.setMonth(date.getMonth() + delta);
-	return ymdOf(date);
-}
-
-/** 本周一（周一为一周之始，与 skill / 趋势同口径）。 */
+/** 本周一（周一为一周之始，与 skill 同口径）。 */
 function mondayOf(value: string): string {
-	const date = parseYmd(value);
+	const date = new Date(`${value}T00:00:00`);
 	date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
 	return ymdOf(date);
 }
@@ -105,49 +72,18 @@ function monthStart(value: string): string {
 }
 
 function prevMonthStart(value: string): string {
-	const date = parseYmd(monthStart(value));
+	const date = new Date(`${monthStart(value)}T00:00:00`);
 	date.setMonth(date.getMonth() - 1);
 	return ymdOf(date);
 }
 
-function closedOf(day: HistoryDay): number {
-	return day.done + day.cancelled;
-}
-
-export interface HistoryTotals {
-	readonly today: number;
-	readonly week: number;
-	readonly month: number;
-	readonly lastMonth: number;
-}
-
-/** 4 数显的四个数：按结案时间落在今天 / 本周 / 本月 / 上月。 */
-export function historyTotals(data: HistoryTrendPayload): HistoryTotals {
-	const today = ymdOf(new Date());
-	const weekFrom = mondayOf(today);
-	const monthFrom = monthStart(today);
-	const lastMonthFrom = prevMonthStart(today);
-	const lastMonthTo = addDays(monthFrom, -1);
-	const sumIn = (from: string, to: string): number =>
-		data.days.reduce(
-			(sum, day) => (day.date >= from && day.date <= to ? sum + closedOf(day) : sum),
-			0,
-		);
-	return {
-		today: sumIn(today, today),
-		week: sumIn(weekFrom, today),
-		month: sumIn(monthFrom, today),
-		lastMonth: sumIn(lastMonthFrom, lastMonthTo),
-	};
-}
-
-/** 右侧 4 个方框（2×2，单块尺寸与主页统计卡一致）。 */
+/** 右侧 4 个方框（2×2，单块尺寸与主页统计卡一致）；数字由 host 从 day 桶求和下发。 */
 export function HistoryStats(props: {
 	data: HistoryTrendPayload;
 	t: Translate;
 }): ReactNode {
 	const { data, t } = props;
-	const totals = historyTotals(data);
+	const totals = data.totals;
 	const today = ymdOf(new Date());
 	const weekFrom = mondayOf(today);
 	// 每块带一行小字（覆盖区间）——与主页统计卡同结构 ⇒ 同尺寸、同高度。
@@ -173,13 +109,15 @@ export function HistoryStats(props: {
 export function HistoryChart(props: {
 	data: HistoryTrendPayload;
 	t: Translate;
+	/** 当前粒度（真源在页面层；切粒度 = 重新请求 `/history/trend`）。 */
+	gran: HistoryGran;
+	onGranChange: (next: HistoryGran) => void;
 }): ReactNode {
-	const { data, t } = props;
+	const { data, t, gran, onGranChange } = props;
 	const plotRef = useRef<HTMLDivElement>(null);
 	const [width, setWidth] = useState(0);
 	/** 从最新周期往回翻了几次（每次走 GRAN_STEP 个周期）。 */
 	const [shift, setShift] = useState(0);
-	const [gran, setGran] = useState<Gran>("day");
 
 	useEffect(() => {
 		const el = plotRef.current;
@@ -193,7 +131,7 @@ export function HistoryChart(props: {
 		return () => observer.disconnect();
 	}, []);
 
-	if (data.days.length === 0) {
+	if (data.buckets.length === 0) {
 		return h(
 			"div",
 			{ className: "dtl-card dtl-hist" },
@@ -209,75 +147,11 @@ export function HistoryChart(props: {
 			? capacity
 			: Math.max(step, Math.round(capacity / (gran === "week" ? 7 : 30)));
 
-	/** 某天属于哪个周期（周期的 key = 起始日）。 */
-	const bucketOf = (date: string): string =>
-		gran === "day" ? date : gran === "week" ? mondayOf(date) : monthStart(date);
-	/** 某周期的最后一天。 */
-	const endOf = (key: string): string =>
-		gran === "day" ? key : gran === "week" ? addDays(key, 6) : addDays(addMonths(key, 1), -1);
-	/** 下一个周期的 key。 */
-	const nextOf = (key: string): string =>
-		gran === "day" ? addDays(key, 1) : gran === "week" ? addDays(key, 7) : addMonths(key, 1);
-
-	// 全窗口的周期序列：[from 所在周期, to 所在周期]，中间无缺（空白期补空槽保持连续）
-	const allKeys: string[] = [];
-	for (let cur = bucketOf(data.from); cur <= data.to; cur = nextOf(cur)) {
-		allKeys.push(cur);
-	}
-
-	const last = Math.max(0, allKeys.length - 1);
+	// 窗口：payload.buckets 已按 [from, to] 裁成连续桶；从最新往回 shift × step 个周期
+	const last = data.buckets.length - 1;
 	const endIndex = Math.max(0, Math.min(last, last - shift * step));
 	const startIndex = Math.max(0, endIndex - (perScreen - 1));
-	const keys = allKeys.slice(startIndex, endIndex + 1);
-
-	// 按天记录 → 周期
-	const daysOfKey = new Map<string, HistoryDay[]>();
-	for (const day of data.days) {
-		const key = bucketOf(day.date);
-		const list = daysOfKey.get(key);
-		if (list === undefined) daysOfKey.set(key, [day]);
-		else list.push(day);
-	}
-
-	const series = data.addedByDay;
-	const buckets: BucketView[] = keys.map((key) => {
-		const days = daysOfKey.get(key) ?? [];
-		const byWorkspace: Record<string, { done: number; cancelled: number }> = {};
-		let done = 0;
-		let cancelled = 0;
-		for (const day of days) {
-			done += day.done;
-			cancelled += day.cancelled;
-			for (const [id, cell] of Object.entries(day.byWorkspace)) {
-				const acc = byWorkspace[id] ?? { done: 0, cancelled: 0 };
-				byWorkspace[id] = {
-					done: acc.done + cell.done,
-					cancelled: acc.cancelled + cell.cancelled,
-				};
-			}
-		}
-		// 新增量：按周期内的**每一天**求和（addedByDay 是按天给的，结案记录只覆盖有结案的天）
-		let added = 0;
-		if (series !== undefined) {
-			for (let cur = key; cur <= endOf(key); cur = addDays(cur, 1)) {
-				added += series[cur] ?? 0;
-			}
-		}
-		return {
-			key,
-			title:
-				gran === "day"
-					? key
-					: gran === "week"
-						? t("periodRange", { from: key, to: endOf(key) })
-						: key.slice(0, 7),
-			label: gran === "month" ? key.slice(0, 7) : key.slice(5),
-			done,
-			cancelled,
-			added,
-			byWorkspace,
-		};
-	});
+	const buckets = data.buckets.slice(startIndex, endIndex + 1);
 
 	const peak = buckets.reduce(
 		(max, bucket) => Math.max(max, bucket.done + bucket.cancelled),
@@ -290,7 +164,7 @@ export function HistoryChart(props: {
 		colorById.set(workspace.id, PALETTE[index % PALETTE.length] ?? PALETTE[0]);
 	});
 
-	const segmentsOf = (bucket: BucketView): { count: number; color: string }[] => {
+	const segmentsOf = (bucket: HistoryBucket): { count: number; color: string }[] => {
 		if (!multi) {
 			const out: { count: number; color: string }[] = [];
 			if (bucket.done > 0) out.push({ count: bucket.done, color: "var(--dtl-success)" });
@@ -311,7 +185,7 @@ export function HistoryChart(props: {
 	/** 浮卡：首行周期，下面**一工作区一行**（色块 + 名称 + 结案数），有几个列几个、0 值不列。
 	 *  多工作区按 host 给的 workspaces 顺序（与配色分配同序）；单工作区时柱色本来就是
 	 *  完成绿 / 取消红，所以拆成那两行，不硬塞一个工作区色（用户 2026-10-29）。 */
-	const rowsOf = (bucket: BucketView): TipRow[] => {
+	const rowsOf = (bucket: HistoryBucket): TipRow[] => {
 		const rows: TipRow[] = [];
 		if (multi) {
 			for (const workspace of data.workspaces) {
@@ -344,13 +218,21 @@ export function HistoryChart(props: {
 		return rows;
 	};
 
-	const tipOf = (bucket: BucketView): ReactNode => {
+	/** 浮卡标题：日 = 当天、周 = 起止区间、月 = 年月（桶边界是 skill 口径）。 */
+	const titleOf = (bucket: HistoryBucket): string =>
+		gran === "day"
+			? bucket.key
+			: gran === "week"
+				? t("periodRange", { from: bucket.key, to: bucket.to })
+				: bucket.key.slice(0, 7);
+
+	const tipOf = (bucket: HistoryBucket): ReactNode => {
 		const rows = rowsOf(bucket);
-		// 「新增」一行：整个周期汇总、不分工作区，与曲线同色；0 / 取不到就不列（0 不充数）
+		// 「新增」一行：整个周期汇总、不分工作区，与曲线同色；0 就不列（0 不充数）
 		return h(
 			"div",
 			{ className: "dtl-hist__tip" },
-			h("div", { className: "dtl-hist__tip-date" }, bucket.title),
+			h("div", { className: "dtl-hist__tip-date" }, titleOf(bucket)),
 			bucket.added > 0
 				? h(
 						"div",
@@ -379,7 +261,7 @@ export function HistoryChart(props: {
 	};
 
 	const colStyle: Record<string, string | number> = { width: `${String(SLOT_W)}px` };
-	const colOf = (bucket: BucketView): ReactNode => {
+	const colOf = (bucket: HistoryBucket): ReactNode => {
 		const total = bucket.done + bucket.cancelled;
 		if (total <= 0) {
 			return h("div", { key: bucket.key, className: "dtl-hist__col", style: colStyle });
@@ -407,29 +289,29 @@ export function HistoryChart(props: {
 	};
 
 	const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH / (SLOT_W + GAP)));
-	const labelOf = (bucket: BucketView, index: number): ReactNode =>
+	const labelOf = (bucket: HistoryBucket, index: number): ReactNode =>
 		h(
 			"div",
 			{ key: bucket.key, className: "dtl-hist__label", style: colStyle },
-			index % labelStep === 0 ? bucket.label : "",
+			index % labelStep === 0 ? (gran === "month" ? bucket.key.slice(0, 7) : bucket.key.slice(5)) : "",
 		);
 
 	const atEarliest = startIndex <= 0;
 	const atLatest = shift <= 0;
 
 	/** 新增量曲线：一周期一个点落在柱中心，**一条线、不分工作区**（用户 2026-10-29）。
-	 *  SVG 用 0-100 百分比坐标 + non-scaling-stroke ⇒ 不用测 plot 像素高，窗口缩放线宽恒定；
-	 *  归一化只看曲线自己的峰值（与柱子的结案峰值各管各的），全 0 / 取数失败就不画。 */
+	 *  x 用「列中心 / plot 实宽」的真实占比 —— 周 / 月模式柱子只占左边一小条，
+	 *  曲线必须跟着柱走，不许铺满图宽（用户 2026-10-30）。
+	 *  归一化只看曲线自己的峰值（与柱子的结案峰值各管各的），全 0 就不画。 */
 	const curve = (): ReactNode => {
-		if (series === undefined) return null;
+		if (width <= 0) return null;
 		const values = buckets.map((bucket) => bucket.added);
 		const max = values.reduce((m, v) => (v > m ? v : m), 0);
 		if (max <= 0) return null;
-		const totalW = buckets.length * (SLOT_W + GAP) - GAP;
 		const points = values
 			.map(
 				(value, index) =>
-					`${((((index + 0.5) * (SLOT_W + GAP)) / totalW) * 100).toFixed(2)},${(100 - (value / max) * 96).toFixed(2)}`,
+					`${((((index + 0.5) * (SLOT_W + GAP)) / width) * 100).toFixed(3)},${(100 - (value / max) * 96).toFixed(2)}`,
 			)
 			.join(" ");
 		return h(
@@ -481,19 +363,21 @@ export function HistoryChart(props: {
 		h(
 			"div",
 			{ className: "dtl-hist__nav" },
-			h(Segmented<Gran>, {
+			h(Segmented<HistoryGran>, {
 				id: "dtl-hist-gran",
 				value: gran,
 				size: "sm",
+				// 轨道底与卡片同色、看不出轮廓 ⇒ 用核心的带描边款勾出边界（用户 2026-10-30）
+				bordered: true,
 				label: t("historyGranLabel"),
 				items: GRAN_VALUES.map((value) => ({
 					value,
 					label: t(GRAN_UNIT[value]),
 				})),
-				// 换粒度 = 换一套桶 ⇒ 回到最新一屏，免得窗口落在旧窗口之外
-				onChange: (next: Gran) => {
-					setGran(next);
+				// 切粒度 = 换一套 skill 桶：页面层重新请求，窗口回到最新
+				onChange: (next: HistoryGran) => {
 					setShift(0);
+					onGranChange(next);
 				},
 			}),
 			navButton("left", t("historyPrev", { n: step, unit }), atEarliest, () => {

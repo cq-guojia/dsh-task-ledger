@@ -64,13 +64,13 @@ export async function readTrend(workspace) {
     });
 }
 /**
- * 历史页「新增量」曲线的取数：`stats --trend day --since --until`（明确窗口 ⇒ 不受
- * day 粒度 365 桶上限的 --last 换算影响）。新增是真口径：按创建时间逐日统计，
- * 含在办 / 待认领（与首页周趋势同一套 skill 算法）。
+ * 历史页趋势的取数：`stats --trend <gran> --since --until`（明确窗口 ⇒ 不受
+ * day 粒度 365 桶上限的 --last 换算影响）。桶的切分 / 新增口径 / 补空桶全在 skill
+ * （用户 2026-10-30 定：聚合算法不自己写，host 只做跨工作区求和）。
  */
-export async function readTrendByDay(workspace, since, until) {
-    return await cached(cacheKey(workspace.id, "stats", `trend:day:${since}:${until}`), async () => {
-        const result = await runLedgerScript("stats", ["--repo", workspace.path, "--trend", "day", "--since", since, "--until", until], 
+export async function readTrendGran(workspace, gran, since, until) {
+    return await cached(cacheKey(workspace.id, "stats", `trend:${gran}:${since}:${until}`), async () => {
+        const result = await runLedgerScript("stats", ["--repo", workspace.path, "--trend", gran, "--since", since, "--until", until], 
         // 与周趋势同档：整年窗口最坏要读十几个历史文件
         { timeoutMs: 20_000 });
         if (!result.ok)

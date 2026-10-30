@@ -268,6 +268,8 @@ export function Segmented<Value extends string>(props: {
 	value: Value;
 	onChange: (next: Value) => void;
 	size?: "sm" | "md" | "lg";
+	/** 最外层 1px 描边框（透传核心 `bordered`；落在同色底上时用描边把轮廓勾出来）。 */
+	bordered?: boolean;
 	/** 选中片配色（透传核心 `tone`；内置色名走核心两主题配色，business = 业务主色）。 */
 	tone?: "business" | "success" | "warning" | "danger" | { bg: string; fg: string };
 	label: string;
@@ -285,6 +287,7 @@ export function Segmented<Value extends string>(props: {
 		// size 不兜底：不传就吃核心默认档 lg（2026-10-26 用户对图拍板：跟核心 demo 一致，
 		// 之前适配层自作主张降成 md 导致比 demo 矮一档）
 		size: props.size,
+		bordered: props.bordered === true,
 		tone: props.tone,
 		label: props.label,
 		id: props.id,

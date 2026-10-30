@@ -3913,7 +3913,7 @@ window.__ModuleLoader__.load({
 		const MOBILE_VIEWPORT_OFFSET = "16px";
 		const TOAST_LIFETIME = 4e3;
 		const TOAST_WIDTH = 356;
-		const GAP$1 = 14;
+		const GAP = 14;
 		const SWIPE_THRESHOLD = 45;
 		const TIME_BEFORE_UNMOUNT = 200;
 		function cn(...classes) {
@@ -4280,7 +4280,7 @@ window.__ModuleLoader__.load({
 			return styles;
 		}
 		const Toaster = /*#__PURE__*/ react$1.default.forwardRef(function Toaster(props, ref) {
-			const { id, invert, position = "bottom-right", hotkey = ["altKey", "KeyT"], expand, closeButton, className, offset, mobileOffset, theme = "light", richColors, duration, style, visibleToasts = VISIBLE_TOASTS_AMOUNT, toastOptions, dir = getDocumentDirection(), gap = GAP$1, icons, customAriaLabel, containerAriaLabel = "Notifications" } = props;
+			const { id, invert, position = "bottom-right", hotkey = ["altKey", "KeyT"], expand, closeButton, className, offset, mobileOffset, theme = "light", richColors, duration, style, visibleToasts = VISIBLE_TOASTS_AMOUNT, toastOptions, dir = getDocumentDirection(), gap = GAP, icons, customAriaLabel, containerAriaLabel = "Notifications" } = props;
 			const [toasts, setToasts] = react$1.default.useState([]);
 			const filteredToasts = react$1.default.useMemo(() => {
 				if (id) return toasts.filter((toast) => toast.toasterId === id);
@@ -53443,9 +53443,9 @@ window.__ModuleLoader__.load({
 		function fetchBoardSnapshot(opts = {}) {
 			return fetchJson(`/board/snapshot${opts.fresh === true ? "?fresh=1" : ""}`);
 		}
-		/** 历史页顶部日趋势（只在切到历史模式时拉，别拖慢首屏）。 */
-		function fetchHistoryTrend(months = 12) {
-			return fetchJson(`/history/trend?months=${months}`);
+		/** 历史页顶部趋势（gran = 柱图粒度；切粒度 = 重新请求，host 有读缓存）。 */
+		function fetchHistoryTrend(gran = "day") {
+			return fetchJson(`/history/trend?gran=${gran}`);
 		}
 		//#endregion
 		//#region src/client/store.ts
@@ -53931,6 +53931,7 @@ body[data-ds-dark-theme]{
 				value: props.value,
 				onChange: props.onChange,
 				size: props.size,
+				bordered: props.bordered === true,
 				tone: props.tone,
 				label: props.label,
 				id: props.id,
@@ -54121,11 +54122,12 @@ body[data-ds-dark-theme]{
 		* 历史页顶部：**图表卡在左、4 数显在右**，沿用主页 8 块的分栏与单块尺寸；不显示图例。
 		*
 		* 柱：一根 = 一个周期（日 / 周 / 月，右上角切换，默认日），高度 = 该周期的结案数。
+		* 数字真源是 skill `stats --trend <gran>`（切粒度 = 重新请求，host 有读缓存），
+		* 本文件**只做展示**：切片、配色、画图 —— 聚合与求和都在 host / skill（用户 2026-10-30 定）。
 		* 柱色：≥2 工作区 = 叠加分段、每区一色；仅 1 个工作区 = 完成(绿) / 取消(红) 两段。
-		* 曲线：**新增任务量**（一条线、不分工作区），数据来自 skill `stats --trend day`。
+		* 曲线：**新增任务量**（一条线、不分工作区），每个周期一个点，跟柱对齐。
 		* 布局：柱序居左、柱宽固定、柱间 2px；按容器宽算能放几个周期（屏幕越窄越少），右边留白。
 		* 翻页：步长随粒度（用户 2026-10-29 定）——日 10 天 / 周 4 周 / 月 3 月。
-		* 0 值：host 的 `from/to` 是有数据的最早/最晚天 ⇒ 首尾 0 天然裁掉；中间空白期补空槽保持连续。
 		*/
 		/** 工作区配色：取插件语义 token（≥5 个区会循环）。 */
 		const PALETTE = [
@@ -54137,8 +54139,6 @@ body[data-ds-dark-theme]{
 		];
 		/** 单周期槽宽：柱宽 = 槽宽。2026-10-29 用户要求加粗到 1.5 倍（10 → 15）。 */
 		const SLOT_W = 15;
-		/** 槽间距：用户没让变，保持 2px。 */
-		const GAP = 2;
 		/** x 轴标签的最小间距（小于这个就跳着显示，免得挤成一团）。 */
 		const LABEL_MIN_PITCH = 40;
 		/** 翻页步长：按一次左右箭头走几个周期（用户 2026-10-29 定）。 */
@@ -54164,22 +54164,9 @@ body[data-ds-dark-theme]{
 		function ymdOf(date) {
 			return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 		}
-		function parseYmd(value) {
-			return /* @__PURE__ */ new Date(`${value}T00:00:00`);
-		}
-		function addDays(value, delta) {
-			const date = parseYmd(value);
-			date.setDate(date.getDate() + delta);
-			return ymdOf(date);
-		}
-		function addMonths(value, delta) {
-			const date = parseYmd(value);
-			date.setMonth(date.getMonth() + delta);
-			return ymdOf(date);
-		}
-		/** 本周一（周一为一周之始，与 skill / 趋势同口径）。 */
+		/** 本周一（周一为一周之始，与 skill 同口径）。 */
 		function mondayOf(value) {
-			const date = parseYmd(value);
+			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
 			date.setDate(date.getDate() - (date.getDay() + 6) % 7);
 			return ymdOf(date);
 		}
@@ -54187,32 +54174,14 @@ body[data-ds-dark-theme]{
 			return `${value.slice(0, 7)}-01`;
 		}
 		function prevMonthStart(value) {
-			const date = parseYmd(monthStart(value));
+			const date = /* @__PURE__ */ new Date(`${monthStart(value)}T00:00:00`);
 			date.setMonth(date.getMonth() - 1);
 			return ymdOf(date);
 		}
-		function closedOf(day) {
-			return day.done + day.cancelled;
-		}
-		/** 4 数显的四个数：按结案时间落在今天 / 本周 / 本月 / 上月。 */
-		function historyTotals(data) {
-			const today = ymdOf(/* @__PURE__ */ new Date());
-			const weekFrom = mondayOf(today);
-			const monthFrom = monthStart(today);
-			const lastMonthFrom = prevMonthStart(today);
-			const lastMonthTo = addDays(monthFrom, -1);
-			const sumIn = (from, to) => data.days.reduce((sum, day) => day.date >= from && day.date <= to ? sum + closedOf(day) : sum, 0);
-			return {
-				today: sumIn(today, today),
-				week: sumIn(weekFrom, today),
-				month: sumIn(monthFrom, today),
-				lastMonth: sumIn(lastMonthFrom, lastMonthTo)
-			};
-		}
-		/** 右侧 4 个方框（2×2，单块尺寸与主页统计卡一致）。 */
+		/** 右侧 4 个方框（2×2，单块尺寸与主页统计卡一致）；数字由 host 从 day 桶求和下发。 */
 		function HistoryStats(props) {
 			const { data, t } = props;
-			const totals = historyTotals(data);
+			const totals = data.totals;
 			const today = ymdOf(/* @__PURE__ */ new Date());
 			const weekFrom = mondayOf(today);
 			return (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, (0, react$1.createElement)(StatCard, {
@@ -54235,12 +54204,11 @@ body[data-ds-dark-theme]{
 		}
 		/** 左侧图表卡：周期堆叠柱 + 新增量曲线 + y 轴 + 粒度切换 / 翻页（无图例）。 */
 		function HistoryChart(props) {
-			const { data, t } = props;
+			const { data, t, gran, onGranChange } = props;
 			const plotRef = (0, react$1.useRef)(null);
 			const [width, setWidth] = (0, react$1.useState)(0);
 			/** 从最新周期往回翻了几次（每次走 GRAN_STEP 个周期）。 */
 			const [shift, setShift] = (0, react$1.useState)(0);
-			const [gran, setGran] = (0, react$1.useState)("day");
 			(0, react$1.useEffect)(() => {
 				const el = plotRef.current;
 				if (el === null) return;
@@ -54252,64 +54220,14 @@ body[data-ds-dark-theme]{
 				setWidth(el.clientWidth);
 				return () => observer.disconnect();
 			}, []);
-			if (data.days.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)(EmptyState, { title: t("historyEmpty") }));
+			if (data.buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)(EmptyState, { title: t("historyEmpty") }));
 			const step = GRAN_STEP[gran];
 			const capacity = width > 0 ? Math.max(1, Math.floor(width / 17)) : 30;
 			const perScreen = gran === "day" ? capacity : Math.max(step, Math.round(capacity / (gran === "week" ? 7 : 30)));
-			/** 某天属于哪个周期（周期的 key = 起始日）。 */
-			const bucketOf = (date) => gran === "day" ? date : gran === "week" ? mondayOf(date) : monthStart(date);
-			/** 某周期的最后一天。 */
-			const endOf = (key) => gran === "day" ? key : gran === "week" ? addDays(key, 6) : addDays(addMonths(key, 1), -1);
-			/** 下一个周期的 key。 */
-			const nextOf = (key) => gran === "day" ? addDays(key, 1) : gran === "week" ? addDays(key, 7) : addMonths(key, 1);
-			const allKeys = [];
-			for (let cur = bucketOf(data.from); cur <= data.to; cur = nextOf(cur)) allKeys.push(cur);
-			const last = Math.max(0, allKeys.length - 1);
+			const last = data.buckets.length - 1;
 			const endIndex = Math.max(0, Math.min(last, last - shift * step));
 			const startIndex = Math.max(0, endIndex - (perScreen - 1));
-			const keys = allKeys.slice(startIndex, endIndex + 1);
-			const daysOfKey = /* @__PURE__ */ new Map();
-			for (const day of data.days) {
-				const key = bucketOf(day.date);
-				const list = daysOfKey.get(key);
-				if (list === void 0) daysOfKey.set(key, [day]);
-				else list.push(day);
-			}
-			const series = data.addedByDay;
-			const buckets = keys.map((key) => {
-				const days = daysOfKey.get(key) ?? [];
-				const byWorkspace = {};
-				let done = 0;
-				let cancelled = 0;
-				for (const day of days) {
-					done += day.done;
-					cancelled += day.cancelled;
-					for (const [id, cell] of Object.entries(day.byWorkspace)) {
-						const acc = byWorkspace[id] ?? {
-							done: 0,
-							cancelled: 0
-						};
-						byWorkspace[id] = {
-							done: acc.done + cell.done,
-							cancelled: acc.cancelled + cell.cancelled
-						};
-					}
-				}
-				let added = 0;
-				if (series !== void 0) for (let cur = key; cur <= endOf(key); cur = addDays(cur, 1)) added += series[cur] ?? 0;
-				return {
-					key,
-					title: gran === "day" ? key : gran === "week" ? t("periodRange", {
-						from: key,
-						to: endOf(key)
-					}) : key.slice(0, 7),
-					label: gran === "month" ? key.slice(0, 7) : key.slice(5),
-					done,
-					cancelled,
-					added,
-					byWorkspace
-				};
-			});
+			const buckets = data.buckets.slice(startIndex, endIndex + 1);
 			const peak = buckets.reduce((max, bucket) => Math.max(max, bucket.done + bucket.cancelled), 0);
 			const multi = data.workspaces.length >= 2;
 			const colorById = /* @__PURE__ */ new Map();
@@ -54372,9 +54290,14 @@ body[data-ds-dark-theme]{
 				}
 				return rows;
 			};
+			/** 浮卡标题：日 = 当天、周 = 起止区间、月 = 年月（桶边界是 skill 口径）。 */
+			const titleOf = (bucket) => gran === "day" ? bucket.key : gran === "week" ? t("periodRange", {
+				from: bucket.key,
+				to: bucket.to
+			}) : bucket.key.slice(0, 7);
 			const tipOf = (bucket) => {
 				const rows = rowsOf(bucket);
-				return (0, react$1.createElement)("div", { className: "dtl-hist__tip" }, (0, react$1.createElement)("div", { className: "dtl-hist__tip-date" }, bucket.title), bucket.added > 0 ? (0, react$1.createElement)("div", {
+				return (0, react$1.createElement)("div", { className: "dtl-hist__tip" }, (0, react$1.createElement)("div", { className: "dtl-hist__tip-date" }, titleOf(bucket)), bucket.added > 0 ? (0, react$1.createElement)("div", {
 					key: "added",
 					className: "dtl-hist__tip-row"
 				}, (0, react$1.createElement)("span", {
@@ -54418,19 +54341,19 @@ body[data-ds-dark-theme]{
 				key: bucket.key,
 				className: "dtl-hist__label",
 				style: colStyle
-			}, index % labelStep === 0 ? bucket.label : "");
+			}, index % labelStep === 0 ? gran === "month" ? bucket.key.slice(0, 7) : bucket.key.slice(5) : "");
 			const atEarliest = startIndex <= 0;
 			const atLatest = shift <= 0;
 			/** 新增量曲线：一周期一个点落在柱中心，**一条线、不分工作区**（用户 2026-10-29）。
-			*  SVG 用 0-100 百分比坐标 + non-scaling-stroke ⇒ 不用测 plot 像素高，窗口缩放线宽恒定；
-			*  归一化只看曲线自己的峰值（与柱子的结案峰值各管各的），全 0 / 取数失败就不画。 */
+			*  x 用「列中心 / plot 实宽」的真实占比 —— 周 / 月模式柱子只占左边一小条，
+			*  曲线必须跟着柱走，不许铺满图宽（用户 2026-10-30）。
+			*  归一化只看曲线自己的峰值（与柱子的结案峰值各管各的），全 0 就不画。 */
 			const curve = () => {
-				if (series === void 0) return null;
+				if (width <= 0) return null;
 				const values = buckets.map((bucket) => bucket.added);
 				const max = values.reduce((m, v) => v > m ? v : m, 0);
 				if (max <= 0) return null;
-				const totalW = buckets.length * 17 - GAP;
-				const points = values.map((value, index) => `${((index + .5) * 17 / totalW * 100).toFixed(2)},${(100 - value / max * 96).toFixed(2)}`).join(" ");
+				const points = values.map((value, index) => `${((index + .5) * 17 / width * 100).toFixed(3)},${(100 - value / max * 96).toFixed(2)}`).join(" ");
 				return (0, react$1.createElement)("svg", {
 					className: "dtl-hist__line",
 					viewBox: "0 0 100 100",
@@ -54459,14 +54382,15 @@ body[data-ds-dark-theme]{
 				id: "dtl-hist-gran",
 				value: gran,
 				size: "sm",
+				bordered: true,
 				label: t("historyGranLabel"),
 				items: GRAN_VALUES.map((value) => ({
 					value,
 					label: t(GRAN_UNIT[value])
 				})),
 				onChange: (next) => {
-					setGran(next);
 					setShift(0);
+					onGranChange(next);
 				}
 			}), navButton("left", t("historyPrev", {
 				n: step,
@@ -54900,7 +54824,9 @@ body[data-ds-dark-theme]{
 			const state = (0, react$1.useSyncExternalStore)(boardSubscribe, boardSnapshot);
 			const mountRef = (0, react$1.useRef)(null);
 			const [viewMode, setViewMode] = (0, react$1.useState)("active");
-			const [historyTrend, setHistoryTrend] = (0, react$1.useState)(null);
+			const [gran, setGran] = (0, react$1.useState)("day");
+			const [historyByGran, setHistoryByGran] = (0, react$1.useState)({});
+			const historyTrend = historyByGran[gran] ?? null;
 			const [historyError, setHistoryError] = (0, react$1.useState)(null);
 			/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
 			*  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
@@ -54950,8 +54876,11 @@ body[data-ds-dark-theme]{
 			(0, react$1.useEffect)(() => {
 				if (viewMode !== "history" || historyTrend !== null || historyError !== null) return;
 				let alive = true;
-				fetchHistoryTrend().then((payload) => {
-					if (alive) setHistoryTrend(payload);
+				fetchHistoryTrend(gran).then((payload) => {
+					if (alive) setHistoryByGran((prev) => ({
+						...prev,
+						[gran]: payload
+					}));
 				}).catch((error) => {
 					if (alive) setHistoryError(error instanceof Error ? error.message : String(error));
 				});
@@ -54960,6 +54889,7 @@ body[data-ds-dark-theme]{
 				};
 			}, [
 				viewMode,
+				gran,
 				historyTrend,
 				historyError
 			]);
@@ -55112,8 +55042,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261030-001111-485`
-			}, `v0.0.125 261030-001111-485`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261030-083056-613`
+			}, `v0.0.125 261030-083056-613`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -55149,7 +55079,9 @@ body[data-ds-dark-theme]{
 				style: statsRowStyle
 			}, (0, react$1.createElement)(HistoryChart, {
 				data: historyTrend,
-				t
+				t,
+				gran,
+				onGranChange: setGran
 			}), (0, react$1.createElement)(HistoryStats, {
 				data: historyTrend,
 				t
