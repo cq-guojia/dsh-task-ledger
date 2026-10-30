@@ -21,7 +21,7 @@ import {
 	Input as CoreInput,
 	Picker as CorePicker,
 	type PickerGroup,
-	LoadingBlock as CoreLoadingBlock,
+	Loader as CoreLoader,
 	Segmented as CoreSegmented,
 	showLoading as CoreShowLoading,
 	type LoadingHandle,
@@ -41,6 +41,10 @@ const UI_BASE_CSS = `
 /* 三行文字各自的行高必须显式写死，--dtl-stat-h 的算式才对得上（别让行高继承宿主） */
 .dtl-stat__label{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
+/* 大数字后面紧跟的小字（历史页「28 完成 27 · 取消 1」那行）：基线对齐、不参与大字号 */
+.dtl-stat__main{display:flex;align-items:baseline;gap:var(--dtl-space-2);min-width:0;}
+.dtl-stat__sub{font-size:var(--dtl-font-xs);font-weight:400;line-height:var(--dtl-line-xs);
+  color:var(--dtl-fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 /* 小字锁单行：卡高定死，换行会被 overflow 裁掉 ⇒ 宁可省略号 */
 .dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -55,16 +59,14 @@ const UI_BASE_CSS = `
 @media (max-width:960px){.dtl-stats{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:640px){.dtl-stats__cards{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,var(--dtl-stat-h));}}
 
-/* ── 历史页顶部：图表卡在左、4 数显在右（沿用主页 8 块的分栏与单块尺寸）───────
-   右栏宽 = 2 个主页单卡宽 ⇒ 4 块排 2×2，每块与主页单块同宽。
-   ⚠️ 高度不另写：卡高 / 行高都用主页那套 --dtl-stat-h，页面里不出现第二个高度口径。
-   填充按行（今日 本周 / 本月 上月）：主页那套 grid-auto-flow:column 是给成对视角用的，历史页不适用。
-   2026-10-29 用户：右栏嫌宽 ⇒ 收窄 1/5（0.85fr → 0.68fr）。 */
-.dtl-stats--history{grid-template-columns:minmax(0,1.7fr) minmax(0,0.68fr);}
-.dtl-stats--history .dtl-stats__cards{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));}
+/* ── 历史页顶部：图表卡在左、4 块数显在右（今天 / 本周 / 本月 / 本季度）──────
+   2 列 × 2 行，块高 = --dtl-stat-h（与待办页统计卡同高，总高不变）；
+   块宽 = 高 × 1.92（用户 2026-10-30 两次加宽），样式直接吃待办页那套 .dtl-stat，不另写皮肤。 */
+.dtl-stats--history{grid-template-columns:minmax(0,1fr) auto;}
+.dtl-stats--history .dtl-stats__cards{grid-auto-flow:row;
+  grid-template-columns:repeat(2,calc(var(--dtl-stat-h) * 1.92));
+  grid-template-rows:repeat(2,var(--dtl-stat-h));}
 @media (max-width:960px){.dtl-stats--history{grid-template-columns:minmax(0,1fr);}}
-/* 640 以下主页是 2 列 × 4 行，历史页只有 4 块 ⇒ 仍是 2×2，行数不能跟着变 */
-@media (max-width:640px){.dtl-stats--history .dtl-stats__cards{grid-template-rows:repeat(2,var(--dtl-stat-h));}}
 
 /* 历史日柱：柱间距 2px、悬停虚线框 + 浮卡。
    翻页按钮**飘**在图区右上角（绝对定位，不单独占一行）——压在柱子上也无妨（用户 2026-10-29）。 */
@@ -101,12 +103,13 @@ const UI_BASE_CSS = `
 .dtl-hist__bar{width:100%;display:flex;flex-direction:column-reverse;
   border-radius:2px 2px 0 0;overflow:hidden;
   /* 入场：柱子从基线逐列升起来（只动 transform，不碰高度 ⇒ 不动布局、不影响 hover 命中）。
-     延迟取列上内联的 --lc-i（列序号，封顶 20）⇒ 换粒度 / 翻页时整批新节点正好重放一遍，
-     这就是「切换动效」（用户 2026-10-30；思路同 dsh-context 的 animate-lc-bar-in）。
+     延迟取列上内联的 --lc-d：**整屏错峰总时长固定 120ms**，由 JS 按「第几列 / 共几列」算好
+     （原来按列序号 ×24ms 累加、还封了 20，宽屏上就变成「前 20 根慢慢来、后面一批同时冒」，
+     看着像分批出现 —— 用户 2026-10-30 抓到的问题）。
      backwards 必须：延迟期间先停在起始帧，否则会先满怀高度再闪回 0。 */
   transform-origin:bottom;
   animation:dtl-bar-in .3s var(--dtl-ease) backwards;
-  animation-delay:calc(var(--lc-i,0) * 24ms);}
+  animation-delay:var(--lc-d,0ms);}
 @keyframes dtl-bar-in{from{transform:scaleY(0);}to{transform:scaleY(1);}}
 @media (prefers-reduced-motion: reduce){.dtl-hist__bar{animation:none;}}
 /* 浮卡：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
@@ -405,6 +408,9 @@ export function Tip(props: {
 	});
 }
 
+/** 加载图标：核心 `Loader` 原样透出（无背景、无定位；形态 `ring` / `blocks`、尺寸 xs~xl 都走核心档位）。 */
+export const Loader = CoreLoader;
+
 /**
  * 全局加载提示：核心 `showLoading` 的**默认位（屏幕下方居中、无遮罩）**，不传定位参数
  * （用户 2026-10-28：就地摆进面板内容区不好看，就用全局那个默认位置）。
@@ -414,11 +420,6 @@ export function Tip(props: {
  */
 export function showLoading(text?: string): LoadingHandle {
 	return CoreShowLoading({ text });
-}
-
-/** 就地加载卡（转圈在上、文案在下）：数据未到时的骨架位，摆在要占位的容器正中。 */
-export function LoadingBlock(props: { text: string }): ReactNode {
-	return CoreLoadingBlock({ text: props.text });
 }
 
 /** 核心封装的 Toast 卡（灰/绿/红/黄，随明暗；默认 info 灰卡、位置 bottom-center）。
@@ -497,18 +498,21 @@ export function SearchInput(props: {
  *  `interactive: false` = 纯展示卡（统计台：首页没有已结案可筛，不装可点）。 */
 export function StatCard(props: {
 	label: string;
-	value: string | number;
+	/** 数字，或调用方拼好的富文本（如「28 完成 27 · 取消 1」里的「28 + 小字」组合）。 */
+	value: ReactNode;
 	hint?: ReactNode;
 	active?: boolean;
 	interactive?: boolean;
+	/** 0 照实显示成 `0`（默认把 0 显示成「—」，历史页的计数需要真 0）。 */
+	showZero?: boolean;
 	title?: string;
 	onClick?: () => void;
 }): ReactNode {
 	ensureUiBase();
 	const interactive =
 		props.interactive !== false && props.onClick !== undefined;
-	const shown =
-		props.value === 0 || props.value === "0" ? "—" : String(props.value);
+	const zero = props.value === 0 || props.value === "0";
+	const shown = zero && props.showZero !== true ? "—" : props.value;
 	return h(
 		interactive ? "button" : "div",
 		{

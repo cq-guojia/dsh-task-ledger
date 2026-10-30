@@ -133,12 +133,22 @@ export interface HistoryBucket {
 	readonly byWorkspace: Readonly<Record<string, HistoryWorkspaceCell>>;
 }
 
-/** 历史页顶部 4 数显（host 从 day 桶求和）。 */
+/** 一个周期的结案拆分（合计 = done + cancelled）。 */
+export interface PeriodCount {
+	readonly done: number;
+	readonly cancelled: number;
+}
+
+/** 历史页顶部数显（host 从 day 桶求和）。 */
 export interface HistoryTotals {
-	readonly today: number;
-	readonly week: number;
-	readonly month: number;
-	readonly lastMonth: number;
+	readonly today: PeriodCount;
+	readonly yesterday: PeriodCount;
+	readonly week: PeriodCount;
+	readonly lastWeek: PeriodCount;
+	readonly month: PeriodCount;
+	readonly lastMonth: PeriodCount;
+	readonly quarter: PeriodCount;
+	readonly lastQuarter: PeriodCount;
 }
 
 /** `/history/trend` 响应：当前粒度桶序列 + 4 数显。

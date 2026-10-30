@@ -33,7 +33,9 @@ export function displayName(
 	return label !== "" ? label : (uuid ?? "").trim();
 }
 
-/** 当前筛选下的单区列表 + 六档角标计数（角标是**全量**，不受工作区 / 关键字影响）。 */
+/** 当前筛选下的单区列表 + 六档角标计数。
+ *  角标口径（用户 2026-10-30 纠正）：**先按档位无关的筛选（工作区 / 执行人 / 搜索）收窄**，
+ *  再逐档数 —— 改了工作区角标跟着重算；但**不吃档位本身**，否则选中某档就把它自己算成 0 条。 */
 export interface BoardView {
 	readonly rows: readonly Row[];
 	readonly counts: {
@@ -140,11 +142,30 @@ export function selectView(current: {
 	if (board === null) return empty;
 	const { tasks } = board;
 	const { tab, workspace, owner, keyword } = current.query;
-	const rows: Row[] = tasks
-		.filter((task) => tabHit(task, tab))
+	// 计数与列表共用这一层「档位无关」的范围：角标只随工作区 / 执行人 / 搜索变。
+	const scope = tasks
 		.filter((task) => workspace === "" || task.workspace.id === workspace)
 		.filter((task) => ownerHit(task, owner))
-		.filter((task) => keywordHit(task, keyword))
+		.filter((task) => keywordHit(task, keyword));
+	const counts: Record<keyof BoardView["counts"], number> = {
+		all: scope.length,
+		mine: 0,
+		open: 0,
+		doing: 0,
+		backlog: 0,
+		overdue: 0,
+		stale: 0,
+	};
+	for (const task of scope) {
+		if (task.mine === true) counts.mine += 1;
+		if (task.status === "open") counts.open += 1;
+		if (task.status === "doing" || task.status === "blocked") counts.doing += 1;
+		if (task.backlog === true) counts.backlog += 1;
+		if (task.overdue === true) counts.overdue += 1;
+		if (task.stale === true) counts.stale += 1;
+	}
+	const rows: Row[] = scope
+		.filter((task) => tabHit(task, tab))
 		.sort((a, b) =>
 			String(b.created ?? b.started ?? "").localeCompare(
 				String(a.created ?? a.started ?? ""),
@@ -156,20 +177,7 @@ export function selectView(current: {
 			task,
 			mine: task.mine === true,
 		}));
-	return {
-		rows,
-		counts: {
-			all: tasks.length,
-			mine: tasks.filter((task) => task.mine === true).length,
-			open: tasks.filter((task) => task.status === "open").length,
-			doing: tasks.filter(
-				(task) => task.status === "doing" || task.status === "blocked",
-			).length,
-			backlog: tasks.filter((task) => task.backlog === true).length,
-			overdue: tasks.filter((task) => task.overdue === true).length,
-			stale: tasks.filter((task) => task.stale === true).length,
-		},
-	};
+	return { rows, counts };
 }
 
 /**

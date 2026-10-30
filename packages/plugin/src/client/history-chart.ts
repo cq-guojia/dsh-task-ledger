@@ -15,11 +15,11 @@ import {
 	IconChevronRightOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { LocaleKey, Translate } from "./locales";
-import type { HistoryBucket, HistoryGran, HistoryTrendPayload } from "./types";
+import type { HistoryBucket, HistoryGran, HistoryTrendPayload, PeriodCount } from "./types";
 import {
 	EmptyState,
 	IconButton,
-	LoadingBlock,
+	Loader,
 	Segmented,
 	StatCard,
 	Tip,
@@ -35,8 +35,9 @@ const colorAt = (index: number): string =>
 const SLOT_W = 15;
 /** 槽间距：用户没让变，保持 2px。 */
 const GAP = 2;
-/** 入场动画的错峰上限：第 20 列之后共用同一档延迟（再往后延迟太长，右边要等好几秒）。 */
-const STAGGER_CAP = 20;
+/** 入场动画的**整屏**错峰总时长：延迟按「第几列 / 共几列」摊到这段时间里，
+ *  不跟列数累加 ⇒ 宽屏上也不会出现「前几根先出来、后一批等半天才凑一起」。 */
+const STAGGER_MS = 120;
 
 /** x 轴标签的最小间距（小于这个就跳着显示，免得挤成一团）。月是 `2026-10` 七位，
  *  比 `10-30` 宽一截 ⇒ 单独放宽，跨度落到 4 个槽标一次（用户 2026-10-30 嫌月标签太密）。 */
@@ -84,12 +85,6 @@ function monthStart(value: string): string {
 	return `${value.slice(0, 7)}-01`;
 }
 
-function prevMonthStart(value: string): string {
-	const date = new Date(`${monthStart(value)}T00:00:00`);
-	date.setMonth(date.getMonth() - 1);
-	return ymdOf(date);
-}
-
 function addDays(value: string, delta: number): string {
 	const date = new Date(`${value}T00:00:00`);
 	date.setDate(date.getDate() + delta);
@@ -125,8 +120,12 @@ function endOf(gran: HistoryGran, key: string): string {
 			: addDays(addMonths(key, 1), -1);
 }
 
-/** 右侧 4 个方框（2×2，单块尺寸与主页统计卡一致）；数字由 host 从 day 桶求和下发。
- *  数据没到（null）= 四块全显示横杠：骨架高度不变，页面不跳（用户 2026-10-30）。 */
+/** 右侧 4 块（2 列 × 2 行）：今日 / 本周 / 本月 / 本季度结案数，样式吃待办页统计卡。
+ *  每块三行（用户 2026-10-30 定稿）：
+ *    今日结案
+ *    28  取消 1                 ← 大数字 = 本期总数；小字只补「取消 N」，没取消就不显示
+ *    昨日丨完成 6 · 取消 1      ← 上一期，竖线分隔后写完整拆分（没取消就只写「完成 6」）
+ *  ⚠️ `showZero`：这几格是**计数**，0 必须照实显示（待办页那套默认把 0 显示成「—」）。 */
 export function HistoryStats(props: {
 	data: HistoryTrendPayload | null;
 	t: Translate;
@@ -134,32 +133,43 @@ export function HistoryStats(props: {
 	const { data, t } = props;
 	const totals = data?.totals;
 	const dash = "—";
-	const today = ymdOf(new Date());
-	const weekFrom = mondayOf(today);
-	// 每块带一行小字（覆盖区间）——与主页统计卡同结构 ⇒ 同尺寸、同高度。
+	const totalOf = (period: PeriodCount | undefined): string =>
+		period === undefined ? dash : compactTick(period.done + period.cancelled);
+	/** 本期小字：只补取消数（总数已是大数字，不再重复写「完成」）。 */
+	const cancelOf = (period: PeriodCount): string | null =>
+		period.cancelled > 0 ? `取消 ${compactTick(period.cancelled)}` : null;
+	/** 上一期写法：`完成 X · 取消 Y`；没取消就只留 `完成 X`。 */
+	const splitOf = (period: PeriodCount): string =>
+		period.cancelled > 0
+			? `完成 ${compactTick(period.done)} · 取消 ${compactTick(period.cancelled)}`
+			: `完成 ${compactTick(period.done)}`;
+	const cell = (
+		label: string,
+		period: PeriodCount | undefined,
+		prevLabel: string,
+		prev: PeriodCount | undefined,
+	): ReactNode => {
+		const sub = period === undefined ? null : cancelOf(period);
+		return h(StatCard, {
+			// 「今日」+「结案」拼出「今日结案」（chartDone = 结案）
+			label: `${label}${t("chartDone")}`,
+			value: h(
+				"span",
+				{ className: "dtl-stat__main" },
+				h("span", null, totalOf(period)),
+				sub === null ? null : h("span", { className: "dtl-stat__sub" }, sub),
+			),
+			hint: prev === undefined ? `${prevLabel}丨${dash}` : `${prevLabel}丨${splitOf(prev)}`,
+			showZero: true,
+		});
+	};
 	return h(
 		"div",
 		{ className: "dtl-stats__cards" },
-		h(StatCard, {
-			label: t("historyToday"),
-			value: totals === undefined ? dash : totals.today,
-			hint: today.slice(5),
-		}),
-		h(StatCard, {
-			label: t("historyWeek"),
-			value: totals === undefined ? dash : totals.week,
-			hint: `${weekFrom.slice(5)}~${today.slice(5)}`,
-		}),
-		h(StatCard, {
-			label: t("historyMonth"),
-			value: totals === undefined ? dash : totals.month,
-			hint: today.slice(0, 7),
-		}),
-		h(StatCard, {
-			label: t("historyLastMonth"),
-			value: totals === undefined ? dash : totals.lastMonth,
-			hint: prevMonthStart(today).slice(0, 7),
-		}),
+		cell(t("historyToday"), totals?.today, t("historyYesterday"), totals?.yesterday),
+		cell(t("historyWeek"), totals?.week, t("historyLastWeek"), totals?.lastWeek),
+		cell(t("historyMonth"), totals?.month, t("historyLastMonth"), totals?.lastMonth),
+		cell(t("historyQuarter"), totals?.quarter, t("historyLastQuarter"), totals?.lastQuarter),
 	);
 }
 
@@ -191,14 +201,86 @@ export function HistoryChart(props: {
 		return () => observer.disconnect();
 	}, [plotEl]);
 
+	const step = GRAN_STEP[gran];
+	const unit = t(GRAN_UNIT[gran]);
+
+	/** 翻页钮：**只画箭头** —— 核心 `IconButton` 出皮、`Icon*` 官方图标出图形，本文件不再手写
+	 *  按钮样式与箭头字形（用户 2026-10-29）。悬停提示走官方 Tooltip（本仓库 `Tip` 唯一入口）；
+	 *  文案只当无障碍名 + 气泡，且用 `title: ""` 压掉原生 title（照 `task-row.ts` 的惯例）。 */
+	const navButton = (
+		dir: "left" | "right",
+		label: string,
+		onClick: () => void,
+	): ReactNode =>
+		h(Tip, {
+			label,
+			side: "bottom",
+			children: h(IconButton, {
+				icon: h(
+					dir === "left"
+						? IconChevronLeftOutlineRegular
+						: IconChevronRightOutlineRegular,
+					{ size: 14 },
+				),
+				label,
+				title: "",
+				variant: "outline",
+				size: "sm",
+				onClick,
+			}),
+		});
+
+	/** 右上角控件：翻页箭头在左、粒度滑动框居右（用户 2026-10-30）。
+	 *  加载 / 空态也一并渲染 —— 否则切粒度时这排控件会闪掉再回来。 */
+	const nav = h(
+		"div",
+		{ className: "dtl-hist__nav" },
+		navButton("left", t("historyPrev", { n: step, unit }), () => {
+			setShift((value) => value + 1);
+		}),
+		navButton("right", t("historyNext", { n: step, unit }), () => {
+			setShift((value) => Math.max(0, value - 1));
+		}),
+		h(Segmented<HistoryGran>, {
+			id: "dtl-hist-gran",
+			value: gran,
+			size: "sm",
+			// 不描边：轨道就用核心自带的底（自带底色本就有轮廓），不外包一层自定义底
+			//（用户 2026-10-30：先看核心原样）
+			// 选中片用业务主色（与顶部「在办 / 历史」切换同款，用户 2026-10-30）
+			tone: "business",
+			label: t("historyGranLabel"),
+			items: GRAN_VALUES.map((value) => ({
+				value,
+				label: t(GRAN_UNIT[value]),
+			})),
+			// 切粒度 = 换一套 skill 桶：页面层重新请求，窗口回到最新
+			onChange: (next: HistoryGran) => {
+				setShift(0);
+				onGranChange(next);
+			},
+		}),
+	);
+
 	if (data === null) {
+		// 没读完 = 图区正中间一个最大号的三块加载（核心 `Loader` blocks 档）：无卡面、无遮罩、无文案
 		return h(
 			"div",
-			{
-				className: "dtl-card dtl-hist",
-				style: { alignItems: "center", justifyContent: "center" },
-			},
-			h(LoadingBlock, { text: t("loading") }),
+			{ className: "dtl-card dtl-hist" },
+			nav,
+			h(
+				"div",
+				{
+					style: {
+						flex: "1 1 auto",
+						minHeight: 0,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+					},
+				},
+				h(Loader, { variant: "blocks", size: "xl" }),
+			),
 		);
 	}
 
@@ -206,11 +288,11 @@ export function HistoryChart(props: {
 		return h(
 			"div",
 			{ className: "dtl-card dtl-hist" },
+			nav,
 			h(EmptyState, { title: t("historyEmpty") }),
 		);
 	}
 
-	const step = GRAN_STEP[gran];
 	// 一屏几根柱：只跟宽度走（日就看 N 天、周就看 N 周、月就看 N 月，不折算）
 	const perScreen = width > 0 ? Math.max(1, Math.floor(width / (SLOT_W + GAP))) : 30;
 
@@ -370,12 +452,14 @@ export function HistoryChart(props: {
 	const colStyle: Record<string, string | number> = { width: `${String(SLOT_W)}px` };
 	const colOf = (bucket: HistoryBucket, index: number): ReactNode => {
 		const total = bucket.done + bucket.cancelled;
-		// 入场动画的错峰序号：写在列上（CSS 变量会继承到柱体），柱子的 animation-delay 用它。
+		// 入场延迟：按「第几列 / 共几列」摊进 STAGGER_MS 这段固定时长（写在列上，CSS 变量继承到
+		// 柱体，柱子的 animation-delay 用它）。**不按列序号累加** —— 那样宽屏上最后一列要等快 1 秒，
+		// 再叠加封顶就变成「一批先冒、一批后冒」（用户 2026-10-30 说像分批出现）。
 		// key 里带批次（粒度 + 翻页次数）：翻页时新旧窗口有大半列 key 相同，React 会复用 DOM
-		// ⇒ 那几根柱子不重放动画（用户 2026-10-30 看到的「有的柱子一直在那」）。带批次才整批重建。
+		// ⇒ 那几根柱子不重放动画。带批次才整批重建。
 		const style: Record<string, string | number> = {
 			...colStyle,
-			"--lc-i": String(Math.min(index, STAGGER_CAP)),
+			"--lc-d": `${String(Math.round((index / Math.max(1, buckets.length - 1)) * STAGGER_MS))}ms`,
 		};
 		const colKey = `${gran}:${String(shift)}:${bucket.key}`;
 		// 空列也挂浮卡：柱可以为空、x 轴标签也可以跳着不画，但悬停时该周期的时间必须显出来
@@ -463,68 +547,10 @@ export function HistoryChart(props: {
 		);
 	};
 
-	/** 翻页钮：**只画箭头** —— 核心 `IconButton` 出皮、`Icon*` 官方图标出图形，本文件不再手写
-	 *  按钮样式与箭头字形（用户 2026-10-29）。悬停提示走官方 Tooltip（本仓库 `Tip` 唯一入口）；
-	 *  文案只当无障碍名 + 气泡，且用 `title: ""` 压掉原生 title（照 `task-row.ts` 的惯例）。 */
-	const navButton = (
-		dir: "left" | "right",
-		label: string,
-		onClick: () => void,
-	): ReactNode =>
-		h(Tip, {
-			label,
-			side: "bottom",
-			children: h(IconButton, {
-				icon: h(
-					dir === "left"
-						? IconChevronLeftOutlineRegular
-						: IconChevronRightOutlineRegular,
-					{ size: 14 },
-				),
-				label,
-				title: "",
-				variant: "outline",
-				size: "sm",
-				onClick,
-			}),
-		});
-
-	const unit = t(GRAN_UNIT[gran]);
-
 	return h(
 		"div",
 		{ className: "dtl-card dtl-hist" },
-		// 粒度 + 翻页：绝对定位飘在图区右上角，不单独占一行（用户 2026-10-29）；
-		// 排布：翻页箭头在左、粒度滑动框居右（用户 2026-10-30）
-		h(
-			"div",
-			{ className: "dtl-hist__nav" },
-			navButton("left", t("historyPrev", { n: step, unit }), () => {
-				setShift((value) => value + 1);
-			}),
-			navButton("right", t("historyNext", { n: step, unit }), () => {
-				setShift((value) => Math.max(0, value - 1));
-			}),
-			h(Segmented<HistoryGran>, {
-				id: "dtl-hist-gran",
-				value: gran,
-				size: "sm",
-				// 不描边：轨道就用核心自带的底（自带底色本就有轮廓），不外包一层自定义底
-				//（用户 2026-10-30：先看核心原样）
-				// 选中片用业务主色（与顶部「在办 / 历史」切换同款，用户 2026-10-30）
-				tone: "business",
-				label: t("historyGranLabel"),
-				items: GRAN_VALUES.map((value) => ({
-					value,
-					label: t(GRAN_UNIT[value]),
-				})),
-				// 切粒度 = 换一套 skill 桶：页面层重新请求，窗口回到最新
-				onChange: (next: HistoryGran) => {
-					setShift(0);
-					onGranChange(next);
-				},
-			}),
-		),
+		nav,
 		// 图体：左 y 轴 + 柱区（弹性填充高度）
 		h(
 			"div",

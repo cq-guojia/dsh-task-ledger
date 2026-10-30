@@ -31,6 +31,12 @@ function prevMonthStart(value) {
     date.setMonth(date.getMonth() - 1);
     return ymdOf(date);
 }
+/** 所在季度首日（自然季度：1 / 4 / 7 / 10 月）。 */
+function quarterStart(value) {
+    const date = new Date(`${monthStart(value)}T00:00:00`);
+    date.setMonth(date.getMonth() - (date.getMonth() % 3));
+    return ymdOf(date);
+}
 export async function getHistoryTrend(workspaces, gran = "day") {
     const today = ymdOf(new Date());
     // 窗口 = 最近 365 个自然日：day 粒度恰好顶满 skill 的 365 桶上限又不越线；周 / 月桶更少
@@ -76,18 +82,29 @@ export async function getHistoryTrend(workspaces, gran = "day") {
         }
     }
     const sumIn = (rangeFrom, rangeTo) => {
-        let sum = 0;
+        let done = 0;
+        let cancelled = 0;
         for (const [key, cell] of dayMap) {
-            if (key >= rangeFrom && key <= rangeTo)
-                sum += cell.done + cell.cancelled;
+            if (key < rangeFrom || key > rangeTo)
+                continue;
+            done += cell.done;
+            cancelled += cell.cancelled;
         }
-        return sum;
+        return { done, cancelled };
     };
+    const yesterday = addDays(today, -1);
+    const lastWeekEnd = addDays(mondayOf(today), -1);
+    const quarterFrom = quarterStart(today);
+    const lastQuarterEnd = addDays(quarterFrom, -1);
     const totals = {
         today: sumIn(today, today),
+        yesterday: sumIn(yesterday, yesterday),
         week: sumIn(mondayOf(today), today),
+        lastWeek: sumIn(addDays(mondayOf(today), -7), lastWeekEnd),
         month: sumIn(monthStart(today), today),
         lastMonth: sumIn(prevMonthStart(today), addDays(monthStart(today), -1)),
+        quarter: sumIn(quarterFrom, today),
+        lastQuarter: sumIn(quarterStart(lastQuarterEnd), lastQuarterEnd),
     };
     // 整段窗口直接下发（不按有数据范围裁剪）：翻页边界交给前端按 key 补空槽，
     // 免得「正好显示完就不能翻、中间空一大段反而能翻」这种判断（用户 2026-10-30）

@@ -130,7 +130,7 @@ const limitHintStyle: Record<string, string | number> = {
 	color: "var(--dtl-fg-3)",
 };
 
-/** 左侧菜单（「我的待办」置顶、「全部」次之，其后六档本地真筛；角标 = 各档全量计数）。 */
+/** 左侧菜单（「我的待办」置顶、「全部」次之，其后六档本地真筛；角标 = 当前工作区 / 执行人 / 搜索范围内各档计数）。 */
 const TABS: readonly { value: TabFilter; label: LocaleKey }[] = [
 	{ value: "mine", label: "regionMine" },
 	{ value: "all", label: "regionAll" },
@@ -165,12 +165,19 @@ export function BoardHome(props: {
 	>({});
 	const historyTrend = historyByGran[gran] ?? null;
 	const [historyError, setHistoryError] = useState<string | null>(null);
-	// 上一次成功拉到的数据（不分粒度）：切粒度时先拿它顶住，新桶到了再整体换掉 ——
-	// 页面不消失、不闪（用户 2026-10-30）；只有首读（连一份都没有）才走骨架。
-	const lastTrendRef = useRef<HistoryTrendPayload | null>(null);
+	// 上一次成功拉到的数据：切粒度时先拿它顶住，新桶到了再整体换掉 —— 页面不消失。
+	// ⚠️ 必须记着它属于哪个粒度：别粒度的桶 key 对不上当前窗口，画出来是「整屏空柱」，
+	// 数据一到柱子再冒出来 ⇒ 就是用户看到的那下莫名闪烁（2026-10-30 抓到）。
+	const lastTrendRef = useRef<{ gran: HistoryGran; payload: HistoryTrendPayload } | null>(null);
 	useEffect(() => {
-		if (historyTrend !== null) lastTrendRef.current = historyTrend;
+		if (historyTrend !== null) lastTrendRef.current = { gran, payload: historyTrend };
 	});
+	// 只认同粒度的那份兜底；换粒度且没缓存 ⇒ null（走核心加载态），不拿错粒度的数据充数
+	const shownTrend =
+		historyTrend ??
+		(lastTrendRef.current !== null && lastTrendRef.current.gran === gran
+			? lastTrendRef.current.payload
+			: null);
 
 	/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
 	 *  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
@@ -621,13 +628,13 @@ export function BoardHome(props: {
 										"div",
 										{ className: "dtl-stats dtl-stats--history", style: statsRowStyle },
 										h(HistoryChart, {
-											data: historyTrend ?? lastTrendRef.current,
+											data: shownTrend,
 											t,
 											gran,
 											onGranChange: setGran,
 										}),
 										h(HistoryStats, {
-											data: historyTrend ?? lastTrendRef.current,
+											data: shownTrend,
 											t,
 										}),
 									))

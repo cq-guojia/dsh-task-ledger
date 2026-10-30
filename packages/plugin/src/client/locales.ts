@@ -109,11 +109,15 @@ export type LocaleKey =
 	| "viewModeLabel"
 	| "viewActive"
 	| "viewHistory"
-	// 历史页顶部 4 数显 + 空态
+	// 历史页顶部 6 数显 + 空态
 	| "historyToday"
+	| "historyYesterday"
 	| "historyWeek"
+	| "historyLastWeek"
 	| "historyMonth"
 	| "historyLastMonth"
+	| "historyQuarter"
+	| "historyLastQuarter"
 	| "historyEmpty"
 	// 历史柱图：粒度切换（日 / 周 / 月）+ 翻页（步长随粒度：10 日 / 4 周 / 3 月）
 	| "historyGranLabel"
@@ -225,10 +229,14 @@ export const zh: Record<LocaleKey, string> = {
 	viewModeLabel: "视图",
 	viewActive: "在办",
 	viewHistory: "历史",
-	historyToday: "今天",
+	historyToday: "今日",
+	historyYesterday: "昨日",
 	historyWeek: "本周",
+	historyLastWeek: "上周",
 	historyMonth: "本月",
 	historyLastMonth: "上月",
+	historyQuarter: "本季度",
+	historyLastQuarter: "上季度",
 	historyEmpty: "所选区间内没有结案记录",
 	historyGranLabel: "粒度",
 	historyGranDay: "日",
@@ -342,9 +350,13 @@ export const en: Record<LocaleKey, string> = {
 	viewActive: "Active",
 	viewHistory: "History",
 	historyToday: "Today",
+	historyYesterday: "Yesterday",
 	historyWeek: "This week",
+	historyLastWeek: "Last week",
 	historyMonth: "This month",
 	historyLastMonth: "Last month",
+	historyQuarter: "This quarter",
+	historyLastQuarter: "Last quarter",
 	historyEmpty: "No closed tasks in the selected range",
 	historyGranLabel: "Granularity",
 	historyGranDay: "Day",
