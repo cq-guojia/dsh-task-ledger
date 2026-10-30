@@ -73,7 +73,8 @@ const UI_BASE_CSS = `
 
 /* 历史日柱：柱间距 2px、悬停虚线框 + 浮卡。
    翻页按钮**飘**在图区右上角（绝对定位，不单独占一行）——压在柱子上也无妨（用户 2026-10-29）。 */
-.dtl-hist{position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
+/* z-index:1 同趋势图：浮卡要被下方那排 input / select 压着还是压过去，全靠这层 */
+.dtl-hist{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
   /* 单列（≤960）时 height:100% 解析成 auto，光靠 flex 撑不出高度 ⇒ 用右侧两行卡的总高兜底，
      两栏并排时这个值恰好等于 stretch 给的高度，等于没改 */
   min-height:calc(var(--dtl-stat-h) * 2 + var(--dtl-space-3));
@@ -118,27 +119,28 @@ const UI_BASE_CSS = `
 @media (prefers-reduced-motion: reduce){.dtl-hist__bar{animation:none;}}
 /* 浮卡：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
    恒在柱子**下方**：上方会被图表顶边挤出屏幕、hover 判定又带来闪跳（用户 2026-10-29 都放下面）；
-   top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。 */
+   top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。
+   底色取 --dtl-tip-bg（掺一档前景色的浅灰）：纯卡底色在浅色主题下跟白底糊住、边界看不清
+   （用户 2026-10-30 试过官方 Tooltip 又退回自绘，就是为了这个底色）。 */
 .dtl-hist__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
-  padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);white-space:nowrap;font-size:var(--dtl-font-xs);line-height:1.5;
-  color:var(--dtl-fg-2);opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+  padding:var(--dtl-space-2);border:1px solid var(--dtl-tip-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-tip-bg);white-space:nowrap;font-size:var(--dtl-font-xs);line-height:1.5;
+  color:var(--dtl-tip-fg);opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-hist__col:hover .dtl-hist__tip{opacity:1;}
-.dtl-hist__tip-date{color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
+.dtl-hist__tip-date{color:var(--dtl-tip-fg-dim);font-variant-numeric:tabular-nums;}
 .dtl-hist__tip-row{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-variant-numeric:tabular-nums;}
-/* 总计行（结案任务）：不加色块、不缩进 —— 它是明细之和，不属于任何一个工作区颜色 */
+/* 总计行（结案任务）：加粗，它是明细之和，不属于任何一个工作区颜色 */
 .dtl-hist__tip-total{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-weight:600;font-variant-numeric:tabular-nums;}
 /* 总计与明细之间的分隔虚线（用户 2026-10-30） */
-.dtl-hist__tip-sep{border-top:1px dashed var(--dtl-border-strong);margin:var(--dtl-space-1) 0;
+.dtl-hist__tip-sep{border-top:1px dashed var(--dtl-tip-border);margin:var(--dtl-space-1) 0;
   height:0;}
 .dtl-hist__tip-dot{display:inline-block;width:8px;height:8px;flex:none;}
-/* 总计行的图例块：8×8 方块里几条**横向**色带上下等分（与柱子的分段同向，柱子里的段也是
-   横着叠的；不是左右并排的竖条） */
+/* 总计行的图例块：8×8 方块里几条**横向**色带上下等分（与柱子的分段同向） */
 .dtl-hist__tip-dot--split{display:inline-flex;flex-direction:column;overflow:hidden;}
 .dtl-hist__tip-dot--split > span{flex:1 1 0;min-height:0;}
-.dtl-hist__tip-count{margin-left:auto;padding-left:var(--dtl-space-3);color:var(--dtl-fg);}
+.dtl-hist__tip-count{margin-left:auto;padding-left:var(--dtl-space-3);color:var(--dtl-tip-fg);}
 /* x 轴日期行：高度定死 10px（文字绝对定位，不吃行高），首末钳制靠内联 left / right */
 .dtl-hist__labels{display:flex;gap:2px;margin-top:2px;flex:none;height:10px;}
 /* 新增量曲线：铺满 plot 的 SVG，0-100 百分比坐标（preserveAspectRatio:none 拉伸），
@@ -155,9 +157,12 @@ const UI_BASE_CSS = `
 /* ── 趋势图（首页右上卡：每周两根柱 + 新增曲线；2026-10-30 改版，画法对齐历史页）──────
    柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
    2026-10-17 真机教训：百分比高度没有确定父高时整列柱消失，只剩数字。 */
-/* z-index：浮卡要盖住页面下方那排筛选控件（input / select），否则 hover 提示被挡
-   ⇒ 整张卡自成一个层叠上下文，浮卡在其中再抬一层。
+/* position:relative 是给右上角那对「飘」着的翻页箭头当定位上下文（浮卡已改官方 Tooltip 的
+   传送门，不再需要 z-index）。
    上下留白不对称（用户 2026-10-30：图例离顶太远、离图太近）⇒ 顶 10 / 图例与图之间 12。 */
+/* position:relative 既给右上角那对「飘」着的翻页箭头当定位上下文，也配合 z-index:1 —— 浮卡是
+   卡里的绝对定位子元素，不把整张卡抬成一层压过页面下方那排 input / select，就会被它们挡住
+   （用户 2026-10-30 连报两次，别删这个 z-index）。 */
 .dtl-trend{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;
   flex-direction:column;gap:var(--dtl-space-3);
   padding:10px var(--dtl-space-4) var(--dtl-space-4);}
@@ -230,17 +235,21 @@ const UI_BASE_CSS = `
 .dtl-trend__line{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;}
 .dtl-trend__line polyline{fill:none;stroke:var(--dtl-chart-line);stroke-width:1.5;
   vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
-/* hover 浮卡：恒在柱子**下方**（上方会被卡片顶边挤出屏幕，用户 2026-10-29 同历史页） */
+/* hover 浮卡：恒在柱子**下方**（上方会被卡片顶边挤出屏幕）；深灰底 + 浅字同历史页 */
 .dtl-trend__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
-  padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);white-space:nowrap;
-  font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-fg-2);
+  padding:var(--dtl-space-2);border:1px solid var(--dtl-tip-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-tip-bg);white-space:nowrap;
+  font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-tip-fg);
   opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
 .dtl-trend__tip-row{font-variant-numeric:tabular-nums;}
 /* 未结的拆分行：缩进 + 淡一档，读起来是「未结」的注脚 */
-.dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-fg-3);}
+.dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-tip-fg-dim);}
 .dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+
+/* 按工作区分组（用户 2026-10-30）：组头是核心 SectionHead（自带 12px 下边距），
+   这里只补组与组之间的留白 —— 首个组不再多一层 */
+.dtl-group + .dtl-group{margin-top:var(--dtl-space-4);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -460,6 +469,9 @@ export function showLoading(text?: string): LoadingHandle {
 /** 核心封装的 Toast 卡（灰/绿/红/黄，随明暗；默认 info 灰卡、位置 bottom-center）。
  *  无关闭句柄，靠 `durationMs` 自退。 */
 export { notify } from "dsh-plugin-core/ui";
+
+/** 分区标题（icon + 标题 + 右槽）：列表按工作区分组的组头，核心原样，不再包一层。 */
+export { SectionHead } from "dsh-plugin-core/ui";
 
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 

@@ -80,6 +80,8 @@ export type LocaleKey =
 	| "listEmpty"
 	| "listEmptyHint"
 	| "listLimitHint"
+	// 工作区分组组头（组名后的条数）
+	| "groupCount"
 	| "ownerUnclaimed"
 	| "timeUnknown"
 	// 相对时间（GitHub 口径）
@@ -201,6 +203,7 @@ export const zh: Record<LocaleKey, string> = {
 	listEmpty: "未找到匹配的任务记录",
 	listEmptyHint: "可切换状态或工作区，查看其他记录。",
 	listLimitHint: "仅显示前 {n} 条查询结果",
+	groupCount: "{n} 条",
 
 	ownerUnclaimed: "待认领",
 	timeUnknown: "时间未知",
@@ -321,6 +324,7 @@ export const en: Record<LocaleKey, string> = {
 	listEmpty: "No matching task records",
 	listEmptyHint: "Switch status or workspace to see other records.",
 	listLimitHint: "Only the first {n} results are shown",
+	groupCount: "{n} tasks",
 
 	ownerUnclaimed: "unclaimed",
 	timeUnknown: "unknown time",

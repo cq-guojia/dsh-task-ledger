@@ -197,12 +197,7 @@ export function TrendChart(props: {
 		{ key: "added", label: t("chartAdded"), color: "var(--dtl-chart-line)" },
 	];
 
-	const row = (
-		key: string,
-		label: string,
-		count: number,
-		color: string,
-	): ReactNode =>
+	const row = (key: string, label: string, count: number, color: string): ReactNode =>
 		count > 0
 			? h(
 					"div",
@@ -224,7 +219,8 @@ export function TrendChart(props: {
 				{ className: "dtl-trend__tip-row" },
 				t("periodRange", { from: bucket.from, to: bucket.to }),
 			),
-			row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-chart-line)"),
+			// 圆点在深灰浮卡上：曲线那支灰是随主题变的，浅色主题下会糊进底色 ⇒ 用浮卡自己的浅灰
+			row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"),
 			row("done", t("chartFinished"), cell.done, "var(--dtl-chart-done)"),
 			row("cancelled", t("chartCancelled"), cell.cancelled, "var(--dtl-danger)"),
 			row("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, "var(--dtl-chart-open)"),

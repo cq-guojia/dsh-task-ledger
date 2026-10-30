@@ -29,7 +29,7 @@ import {
 import type { LocaleKey, Translate } from "./locales";
 import { formatCount } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
-import { isSoloLedger, ownerGroups, selectView, type Row } from "./rows";
+import { groupRows, isSoloLedger, ownerGroups, selectView, type Row } from "./rows";
 import {
 	boardSnapshot,
 	boardSubscribe,
@@ -51,6 +51,7 @@ import {
 	Loader,
 	notify,
 	SearchInput,
+	SectionHead,
 	Segmented,
 	Select,
 	StatCard,
@@ -124,6 +125,13 @@ const SEARCH_WIDTH = 192;
 
 /** 列表最多渲染条数（用户 2026-10-28：内容过多时只给最新 100 条 + 底部提示）。 */
 const LIST_LIMIT = 100;
+/** 组头计数小字（跟在组名后面，比组名小一档）。 */
+const groupCountStyle: Record<string, string | number> = {
+	marginLeft: "var(--dtl-space-2)",
+	fontSize: "var(--dtl-font-xs)",
+	fontWeight: 400,
+	color: "var(--dtl-fg-3)",
+};
 /** 底部「截断提示」样式（临时：核心暂无对应样式，先按此观感；用户确认后再定型）。 */
 const limitHintStyle: Record<string, string | number> = {
 	marginTop: "var(--dtl-space-3)",
@@ -721,17 +729,36 @@ export function BoardHome(props: {
 							: h(
 									"div",
 									null,
-									view.rows
-										.slice(0, LIST_LIMIT)
-										.map((row) =>
-											h(TaskRowView, {
-												key: row.key,
-												t,
-												row,
-												solo,
-												onView: handleView,
+									// 按工作区分组（用户 2026-10-30）：组头 = 核心 SectionHead；
+									// 组顺序 / 组内顺序全在 rows.selectView 排好，这里只切段渲染。
+									...groupRows(view.rows.slice(0, LIST_LIMIT)).map((group) =>
+										h(
+											"div",
+											{ key: group.workspace.id, className: "dtl-group" },
+											h(SectionHead, {
+												icon: h(IconFolderCloseRegular, { size: 16 }),
+												title: h(
+													"span",
+													null,
+													group.workspace.title,
+													h(
+														"span",
+														{ style: groupCountStyle },
+														t("groupCount", { n: group.rows.length }),
+													),
+												),
 											}),
+											...group.rows.map((row) =>
+												h(TaskRowView, {
+													key: row.key,
+													t,
+													row,
+													solo,
+													onView: handleView,
+												}),
+											),
 										),
+									),
 								),
 				viewMode === "history"
 					? null

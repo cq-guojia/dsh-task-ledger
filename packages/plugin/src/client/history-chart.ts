@@ -443,7 +443,7 @@ export function HistoryChart(props: {
 		};
 		const colKey = `${gran}:${String(shift)}:${bucket.key}`;
 		// 空列也挂浮卡：柱可以为空、x 轴标签也可以跳着不画，但悬停时该周期的时间必须显出来
-		//（用户 2026-10-30）。floats 里没有 0 值行 ⇒ 这类浮卡只剩一行日期。
+		//（用户 2026-10-30）。没有 0 值行 ⇒ 这类浮卡只剩一行日期。
 		if (total <= 0) {
 			return h("div", { key: colKey, className: "dtl-hist__col", style }, tipOf(bucket));
 		}

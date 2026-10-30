@@ -1,7 +1,8 @@
 /**
  * 列表视图的筛选 / 排序（**唯一**实现，纯函数、不碰网络）：页面只渲染，不各写一份过滤。
  *
- * 口径（2026-10-28）：单区平铺（沿用「我的待办」卡片样式），左侧六档菜单 + 工作区 / 执行人 / 搜索。
+ * 口径（2026-10-30）：**按工作区分组**（组头 SectionHead），组内按「我在做 → 别人在做 →
+ * 积压待认领 → 其余待认领」排优先级；组顺序 = 宿主注册的工作区顺序（固定，不跟任务数跳）。
  * 行上的 `mine` / `stale` / `overdue` / `backlog` **全部是 skill 算好的**，这里只做布尔判断；
  * 六档、工作区、执行人、搜索**全在浏览器里筛**（快照已含全部在办，不发请求）。
  *
@@ -11,7 +12,7 @@
 import type { PickerGroup, PickerOption } from "dsh-plugin-core/ui";
 import type { Translate } from "./locales";
 import type { Query } from "./store";
-import type { BoardPayload, BoardTask } from "./types";
+import type { BoardPayload, BoardTask, Workspace } from "./types";
 
 /** 列表行。 */
 export interface Row {
@@ -129,7 +130,38 @@ function keywordHit(task: BoardTask, keyword: string): boolean {
 	return hay.some((s) => s.includes(kw));
 }
 
-/** 当前筛选下的平铺列表，按创建 / 开始时间倒序（沿用「我的待办」的排序口径）。 */
+/**
+ * 组内优先级（用户 2026-10-30）：我在做 → 别人在做 → 积压待认领 → 其余待认领。
+ * 越靠前越需要本人动手；同档再按时间倒序（沿用「我的待办」的老口径）。
+ */
+function rankOf(task: BoardTask): number {
+	const doing = task.status === "doing" || task.status === "blocked";
+	if (doing) return task.mine === true ? 0 : 1;
+	return task.backlog === true ? 2 : 3;
+}
+
+/** 一个工作区的分组（组头 + 该区行）。 */
+export interface WorkspaceGroup {
+	readonly workspace: Workspace;
+	readonly rows: readonly Row[];
+}
+
+/** 按工作区切段：**顺序不在这里定** —— `selectView` 已按「工作区注册序 + 组内优先级」排好，
+ *  这里只把连续同区的行切开（纯函数，冒烟可直测）。 */
+export function groupRows(rows: readonly Row[]): readonly WorkspaceGroup[] {
+	const groups: { workspace: Workspace; rows: Row[] }[] = [];
+	for (const row of rows) {
+		const last = groups[groups.length - 1];
+		if (last !== undefined && last.workspace.id === row.task.workspace.id) {
+			last.rows.push(row);
+		} else {
+			groups.push({ workspace: row.task.workspace, rows: [row] });
+		}
+	}
+	return groups;
+}
+
+/** 当前筛选下的平铺列表，已按「工作区分组 + 组内优先级 + 时间倒序」排好。 */
 export function selectView(current: {
 	board: BoardPayload | null;
 	query: Query;
@@ -164,12 +196,19 @@ export function selectView(current: {
 		if (task.overdue === true) counts.overdue += 1;
 		if (task.stale === true) counts.stale += 1;
 	}
+	// 组顺序 = 宿主注册的工作区顺序（不随任务增减跳动）；不在列表里的兜底排最后。
+	// ⚠️ sort 必须先把「工作区」这一档比完再比组内优先级，否则同区行不连续、切不出组。
+	const wsOrder = new Map(board.workspaces.map((ws, index) => [ws.id, index]));
 	const rows: Row[] = scope
 		.filter((task) => tabHit(task, tab))
-		.sort((a, b) =>
-			String(b.created ?? b.started ?? "").localeCompare(
-				String(a.created ?? a.started ?? ""),
-			),
+		.sort(
+			(a, b) =>
+				(wsOrder.get(a.workspace.id) ?? Number.MAX_SAFE_INTEGER) -
+					(wsOrder.get(b.workspace.id) ?? Number.MAX_SAFE_INTEGER) ||
+				rankOf(a) - rankOf(b) ||
+				String(b.created ?? b.started ?? "").localeCompare(
+					String(a.created ?? a.started ?? ""),
+				),
 		)
 		.map((task) => ({
 			kind: "task",

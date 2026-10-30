@@ -4840,6 +4840,44 @@ window.__ModuleLoader__.load({
 			})]);
 		}
 		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.12.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_098a2ccd8a53f295ad0979106693a6a3/node_modules/dsh-plugin-core/dist/ui/SectionHead.js
+		/**
+		* 模块标题行（UI 基础层）：**icon + 标题 + 右侧控件** 三段式。
+		*
+		* 2026-10-08 设置页重构时定型：每块 = 标题行 + 一块内容，标题行左侧 icon、右侧留给该块的控件
+		* （日志块的自动刷新 / 刷新钮，表查询块的表切换）。此前三个块各写一个 `h3`，形态不统一。
+		*
+		* 排版规则：字号 / 行高 / 字色走 `--dshpc-*` token；`right` 用 `flex:1` + `justifyContent:flex-end`
+		* 靠右（比 `marginLeft:auto` 稳：内容再宽也始终贴右，不会塌成靠左）；标题 `flex:none` 不被压缩。
+		*/
+		function SectionHead(props) {
+			return (0, react$1.createElement)("div", { style: {
+				display: "flex",
+				alignItems: "center",
+				gap: "var(--dshpc-space-2)",
+				marginBottom: "var(--dshpc-space-3)"
+			} }, (0, react$1.createElement)("span", { style: {
+				display: "inline-flex",
+				alignItems: "center",
+				flex: "none",
+				lineHeight: "var(--dshpc-line-lg)",
+				color: "var(--dshpc-fg-3)"
+			} }, props.icon), (0, react$1.createElement)("span", { style: {
+				fontSize: "var(--dshpc-font-lg)",
+				lineHeight: "var(--dshpc-line-lg)",
+				fontWeight: 600,
+				color: "var(--dshpc-fg)",
+				flex: "none"
+			} }, props.title), props.right === void 0 ? null : (0, react$1.createElement)("div", { style: {
+				flex: 1,
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "flex-end",
+				gap: "var(--dshpc-space-2)",
+				minWidth: 0
+			} }, props.right));
+		}
+		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.12.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_098a2ccd8a53f295ad0979106693a6a3/node_modules/dsh-plugin-core/dist/ui/resizer.js
 		/** 开始一次拖拽调宽（监听 window 的 pointermove / pointerup，松手自动清理）。 */
 		function startResizeLayoutWidth(opts) {
@@ -53170,7 +53208,29 @@ window.__ModuleLoader__.load({
 				...task.tags ?? []
 			].filter((s) => s !== null && s !== void 0 && s !== "").map((s) => s.toLowerCase()).some((s) => s.includes(kw));
 		}
-		/** 当前筛选下的平铺列表，按创建 / 开始时间倒序（沿用「我的待办」的排序口径）。 */
+		/**
+		* 组内优先级（用户 2026-10-30）：我在做 → 别人在做 → 积压待认领 → 其余待认领。
+		* 越靠前越需要本人动手；同档再按时间倒序（沿用「我的待办」的老口径）。
+		*/
+		function rankOf(task) {
+			if (task.status === "doing" || task.status === "blocked") return task.mine === true ? 0 : 1;
+			return task.backlog === true ? 2 : 3;
+		}
+		/** 按工作区切段：**顺序不在这里定** —— `selectView` 已按「工作区注册序 + 组内优先级」排好，
+		*  这里只把连续同区的行切开（纯函数，冒烟可直测）。 */
+		function groupRows(rows) {
+			const groups = [];
+			for (const row of rows) {
+				const last = groups[groups.length - 1];
+				if (last !== void 0 && last.workspace.id === row.task.workspace.id) last.rows.push(row);
+				else groups.push({
+					workspace: row.task.workspace,
+					rows: [row]
+				});
+			}
+			return groups;
+		}
+		/** 当前筛选下的平铺列表，已按「工作区分组 + 组内优先级 + 时间倒序」排好。 */
 		function selectView(current) {
 			const board = current.board;
 			const empty = {
@@ -53206,8 +53266,9 @@ window.__ModuleLoader__.load({
 				if (task.overdue === true) counts.overdue += 1;
 				if (task.stale === true) counts.stale += 1;
 			}
+			const wsOrder = new Map(board.workspaces.map((ws, index) => [ws.id, index]));
 			return {
-				rows: scope.filter((task) => tabHit(task, tab)).sort((a, b) => String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
+				rows: scope.filter((task) => tabHit(task, tab)).sort((a, b) => (wsOrder.get(a.workspace.id) ?? Number.MAX_SAFE_INTEGER) - (wsOrder.get(b.workspace.id) ?? Number.MAX_SAFE_INTEGER) || rankOf(a) - rankOf(b) || String(b.created ?? b.started ?? "").localeCompare(String(a.created ?? a.started ?? ""))).map((task) => ({
 					kind: "task",
 					key: `${task.workspace.id}:${task.id}`,
 					task,
@@ -53519,6 +53580,13 @@ body{
      在卡片底色上掺一档前景色 ⇒ 不透明（压得住下面的刻度线）又比卡面略深，
      明暗两主题都跟着 fg / surface 自动走 */
   --dtl-btn-soft:color-mix(in srgb,var(--dtl-fg) 8%,var(--dtl-surface-1));
+  /* 图表浮卡：**明暗两主题用同一支深灰底 + 浅字**（用户 2026-10-30 定稿）——
+     掺色的浅灰在浅色主题下仍然像白底、跟页面糊在一起；干脆做成固定深色小片，
+     两套主题都不用再猜对比度。色值写死在这里，别处不许再手写。 */
+  --dtl-tip-bg:#23262c;
+  --dtl-tip-border:rgba(255,255,255,.14);
+  --dtl-tip-fg:#f2f4f7;
+  --dtl-tip-fg-dim:#a8b0ba;
 
   /* ── 圆角（宿主真值 4/8/12）───────────────────────────────────── */
   --dtl-radius-xs:var(--dsw-radius-xs,4px);
@@ -53641,7 +53709,8 @@ body[data-ds-dark-theme]{
 
 /* 历史日柱：柱间距 2px、悬停虚线框 + 浮卡。
    翻页按钮**飘**在图区右上角（绝对定位，不单独占一行）——压在柱子上也无妨（用户 2026-10-29）。 */
-.dtl-hist{position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
+/* z-index:1 同趋势图：浮卡要被下方那排 input / select 压着还是压过去，全靠这层 */
+.dtl-hist{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
   /* 单列（≤960）时 height:100% 解析成 auto，光靠 flex 撑不出高度 ⇒ 用右侧两行卡的总高兜底，
      两栏并排时这个值恰好等于 stretch 给的高度，等于没改 */
   min-height:calc(var(--dtl-stat-h) * 2 + var(--dtl-space-3));
@@ -53686,27 +53755,28 @@ body[data-ds-dark-theme]{
 @media (prefers-reduced-motion: reduce){.dtl-hist__bar{animation:none;}}
 /* 浮卡：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
    恒在柱子**下方**：上方会被图表顶边挤出屏幕、hover 判定又带来闪跳（用户 2026-10-29 都放下面）；
-   top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。 */
+   top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。
+   底色取 --dtl-tip-bg（掺一档前景色的浅灰）：纯卡底色在浅色主题下跟白底糊住、边界看不清
+   （用户 2026-10-30 试过官方 Tooltip 又退回自绘，就是为了这个底色）。 */
 .dtl-hist__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
-  padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);white-space:nowrap;font-size:var(--dtl-font-xs);line-height:1.5;
-  color:var(--dtl-fg-2);opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+  padding:var(--dtl-space-2);border:1px solid var(--dtl-tip-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-tip-bg);white-space:nowrap;font-size:var(--dtl-font-xs);line-height:1.5;
+  color:var(--dtl-tip-fg);opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-hist__col:hover .dtl-hist__tip{opacity:1;}
-.dtl-hist__tip-date{color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
+.dtl-hist__tip-date{color:var(--dtl-tip-fg-dim);font-variant-numeric:tabular-nums;}
 .dtl-hist__tip-row{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-variant-numeric:tabular-nums;}
-/* 总计行（结案任务）：不加色块、不缩进 —— 它是明细之和，不属于任何一个工作区颜色 */
+/* 总计行（结案任务）：加粗，它是明细之和，不属于任何一个工作区颜色 */
 .dtl-hist__tip-total{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-weight:600;font-variant-numeric:tabular-nums;}
 /* 总计与明细之间的分隔虚线（用户 2026-10-30） */
-.dtl-hist__tip-sep{border-top:1px dashed var(--dtl-border-strong);margin:var(--dtl-space-1) 0;
+.dtl-hist__tip-sep{border-top:1px dashed var(--dtl-tip-border);margin:var(--dtl-space-1) 0;
   height:0;}
 .dtl-hist__tip-dot{display:inline-block;width:8px;height:8px;flex:none;}
-/* 总计行的图例块：8×8 方块里几条**横向**色带上下等分（与柱子的分段同向，柱子里的段也是
-   横着叠的；不是左右并排的竖条） */
+/* 总计行的图例块：8×8 方块里几条**横向**色带上下等分（与柱子的分段同向） */
 .dtl-hist__tip-dot--split{display:inline-flex;flex-direction:column;overflow:hidden;}
 .dtl-hist__tip-dot--split > span{flex:1 1 0;min-height:0;}
-.dtl-hist__tip-count{margin-left:auto;padding-left:var(--dtl-space-3);color:var(--dtl-fg);}
+.dtl-hist__tip-count{margin-left:auto;padding-left:var(--dtl-space-3);color:var(--dtl-tip-fg);}
 /* x 轴日期行：高度定死 10px（文字绝对定位，不吃行高），首末钳制靠内联 left / right */
 .dtl-hist__labels{display:flex;gap:2px;margin-top:2px;flex:none;height:10px;}
 /* 新增量曲线：铺满 plot 的 SVG，0-100 百分比坐标（preserveAspectRatio:none 拉伸），
@@ -53723,9 +53793,12 @@ body[data-ds-dark-theme]{
 /* ── 趋势图（首页右上卡：每周两根柱 + 新增曲线；2026-10-30 改版，画法对齐历史页）──────
    柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
    2026-10-17 真机教训：百分比高度没有确定父高时整列柱消失，只剩数字。 */
-/* z-index：浮卡要盖住页面下方那排筛选控件（input / select），否则 hover 提示被挡
-   ⇒ 整张卡自成一个层叠上下文，浮卡在其中再抬一层。
+/* position:relative 是给右上角那对「飘」着的翻页箭头当定位上下文（浮卡已改官方 Tooltip 的
+   传送门，不再需要 z-index）。
    上下留白不对称（用户 2026-10-30：图例离顶太远、离图太近）⇒ 顶 10 / 图例与图之间 12。 */
+/* position:relative 既给右上角那对「飘」着的翻页箭头当定位上下文，也配合 z-index:1 —— 浮卡是
+   卡里的绝对定位子元素，不把整张卡抬成一层压过页面下方那排 input / select，就会被它们挡住
+   （用户 2026-10-30 连报两次，别删这个 z-index）。 */
 .dtl-trend{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;
   flex-direction:column;gap:var(--dtl-space-3);
   padding:10px var(--dtl-space-4) var(--dtl-space-4);}
@@ -53798,17 +53871,21 @@ body[data-ds-dark-theme]{
 .dtl-trend__line{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;}
 .dtl-trend__line polyline{fill:none;stroke:var(--dtl-chart-line);stroke-width:1.5;
   vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
-/* hover 浮卡：恒在柱子**下方**（上方会被卡片顶边挤出屏幕，用户 2026-10-29 同历史页） */
+/* hover 浮卡：恒在柱子**下方**（上方会被卡片顶边挤出屏幕）；深灰底 + 浅字同历史页 */
 .dtl-trend__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
-  padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);white-space:nowrap;
-  font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-fg-2);
+  padding:var(--dtl-space-2);border:1px solid var(--dtl-tip-border);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-tip-bg);white-space:nowrap;
+  font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-tip-fg);
   opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
 .dtl-trend__tip-row{font-variant-numeric:tabular-nums;}
 /* 未结的拆分行：缩进 + 淡一档，读起来是「未结」的注脚 */
-.dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-fg-3);}
+.dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-tip-fg-dim);}
 .dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+
+/* 按工作区分组（用户 2026-10-30）：组头是核心 SectionHead（自带 12px 下边距），
+   这里只补组与组之间的留白 —— 首个组不再多一层 */
+.dtl-group + .dtl-group{margin-top:var(--dtl-space-4);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -54789,7 +54866,7 @@ body[data-ds-dark-theme]{
 				return (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
 					from: bucket.from,
 					to: bucket.to
-				})), row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-chart-line)"), row("done", t("chartFinished"), cell.done, "var(--dtl-chart-done)"), row("cancelled", t("chartCancelled"), cell.cancelled, "var(--dtl-danger)"), row("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, "var(--dtl-chart-open)"), mine || cell.open <= 0 ? null : (0, react$1.createElement)("div", {
+				})), row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), row("done", t("chartFinished"), cell.done, "var(--dtl-chart-done)"), row("cancelled", t("chartCancelled"), cell.cancelled, "var(--dtl-danger)"), row("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, "var(--dtl-chart-open)"), mine || cell.open <= 0 ? null : (0, react$1.createElement)("div", {
 					key: "split",
 					className: "dtl-trend__tip-row dtl-trend__tip-row--sub"
 				}, `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
@@ -54971,6 +55048,13 @@ body[data-ds-dark-theme]{
 		const SEARCH_WIDTH = 192;
 		/** 列表最多渲染条数（用户 2026-10-28：内容过多时只给最新 100 条 + 底部提示）。 */
 		const LIST_LIMIT = 100;
+		/** 组头计数小字（跟在组名后面，比组名小一档）。 */
+		const groupCountStyle = {
+			marginLeft: "var(--dtl-space-2)",
+			fontSize: "var(--dtl-font-xs)",
+			fontWeight: 400,
+			color: "var(--dtl-fg-3)"
+		};
 		/** 底部「截断提示」样式（临时：核心暂无对应样式，先按此观感；用户确认后再定型）。 */
 		const limitHintStyle = {
 			marginTop: "var(--dtl-space-3)",
@@ -55267,8 +55351,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261030-170039-397`
-			}, `v0.0.125 261030-170039-397`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261030-172248-868`
+			}, `v0.0.125 261030-172248-868`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -55332,13 +55416,19 @@ body[data-ds-dark-theme]{
 			})) : view.rows.length === 0 ? (0, react$1.createElement)(EmptyState, {
 				title: t("listEmpty"),
 				hint: t("listEmptyHint")
-			}) : (0, react$1.createElement)("div", null, view.rows.slice(0, LIST_LIMIT).map((row) => (0, react$1.createElement)(TaskRowView, {
+			}) : (0, react$1.createElement)("div", null, ...groupRows(view.rows.slice(0, LIST_LIMIT)).map((group) => (0, react$1.createElement)("div", {
+				key: group.workspace.id,
+				className: "dtl-group"
+			}, (0, react$1.createElement)(SectionHead, {
+				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 16 }),
+				title: (0, react$1.createElement)("span", null, group.workspace.title, (0, react$1.createElement)("span", { style: groupCountStyle }, t("groupCount", { n: group.rows.length })))
+			}), ...group.rows.map((row) => (0, react$1.createElement)(TaskRowView, {
 				key: row.key,
 				t,
 				row,
 				solo,
 				onView: handleView
-			}))), viewMode === "history" ? null : view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null)));
+			}))))), viewMode === "history" ? null : view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null)));
 		}
 		//#endregion
 		//#region src/client/locales.ts
@@ -55409,6 +55499,7 @@ body[data-ds-dark-theme]{
 			listEmpty: "未找到匹配的任务记录",
 			listEmptyHint: "可切换状态或工作区，查看其他记录。",
 			listLimitHint: "仅显示前 {n} 条查询结果",
+			groupCount: "{n} 条",
 			ownerUnclaimed: "待认领",
 			timeUnknown: "时间未知",
 			relJustNow: "刚刚",
@@ -55519,6 +55610,7 @@ body[data-ds-dark-theme]{
 			listEmpty: "No matching task records",
 			listEmptyHint: "Switch status or workspace to see other records.",
 			listLimitHint: "Only the first {n} results are shown",
+			groupCount: "{n} tasks",
 			ownerUnclaimed: "unclaimed",
 			timeUnknown: "unknown time",
 			relJustNow: "just now",
