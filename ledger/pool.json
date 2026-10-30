@@ -1,7 +1,6 @@
 {
   "tasks": {
-    "20261026-0917-在-skill-里增加-html-台账展示页-e276": {"category": "建设", "created": "2026-10-26 09:17:15", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": "2026-10-26 09:17:15", "status": "open", "tags": ["台账", "展示", "静态页面"], "title": "在 skill 里增加 HTML 台账展示页", "updated": "2026-10-28 09:22:28", "worklog": "worklog/202610/26-0917-在-skill-里增加-html-台账展示页-e276.md"},
-    "20261030-1357-182f-历史记录列表": {"category": "功能建设", "created": "2026-10-30 13:57:49", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": null, "status": "open", "tags": [], "title": "历史记录列表", "updated": "2026-10-30 13:57:49", "worklog": "worklog/202610/30-1357-182f-历史记录列表.md"}
+    "20261026-0917-在-skill-里增加-html-台账展示页-e276": {"category": "建设", "created": "2026-10-26 09:17:15", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": "2026-10-26 09:17:15", "status": "open", "tags": ["台账", "展示", "静态页面"], "title": "在 skill 里增加 HTML 台账展示页", "updated": "2026-10-28 09:22:28", "worklog": "worklog/202610/26-0917-在-skill-里增加-html-台账展示页-e276.md"}
   },
   "version": "20261022000000"
 }
