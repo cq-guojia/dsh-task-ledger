@@ -18,8 +18,11 @@ import (
 const historyOtherUUID = "11111111-2222-3333-4444-555555555555"
 
 // historyMonth 相对今天偏移 offset 个月的年月（YYYYMM）。
+// 先归到当月 1 号再偏移：直接拿今天偏移，月末（如 10-31 减一个月 = 9-31）会被归一化成下个月，月份算错。
 func historyMonth(offset int) string {
-	return time.Now().AddDate(0, offset, 0).Format("200601")
+	now := time.Now()
+	first := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	return first.AddDate(0, offset, 0).Format("200601")
 }
 
 // historyAt 某年月的第 d 天 + 时刻，拼成与存盘同形的串。
@@ -146,5 +149,49 @@ func TestHistoryLimitTruncates(t *testing.T) {
 	}
 	if res.Count != 3 || res.Capped {
 		t.Fatalf("不截断应 3 条且不 capped，实际 count=%d capped=%v", res.Count, res.Capped)
+	}
+
+	// limit 正好等于总数：不多不少 ⇒ 不 capped（多收一条的判断不能误报）。
+	three := 3
+	res, err = QueryHistory(repo, me, HistoryQuery{Since: &from, Until: &to, Limit: &three})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Count != 3 || res.Capped {
+		t.Fatalf("limit=总数应 3 条且不 capped，实际 count=%d capped=%v", res.Count, res.Capped)
+	}
+}
+
+// --keyword 只匹配标题 / 摘要 / 标签，大小写不敏感；命中的行照常按结案时间倒序。
+func TestHistoryKeyword(t *testing.T) {
+	repo, me := tempLedger(t)
+	ym := historyMonth(0)
+	from := historyAt(ym, "01", "00:00:00")
+	to := historyAt(ym, "28", "23:59:59")
+
+	seedHistoryRow(t, repo, ym, historyAt(ym, "10", "10:00:00"), "Fix Header", testUUID, "甲", "建设", []string{"看板"})
+	seedHistoryRow(t, repo, ym, historyAt(ym, "11", "10:00:00"), "别的事情", testUUID, "甲", "建设", []string{"无关"})
+
+	cases := []struct {
+		name    string
+		keyword string
+		want    int
+	}{
+		{"标题命中", "header", 1}, // 大小写不敏感
+		{"标签命中", "看板", 1},     // 搜的是标签列
+		{"摘要命中", "摘要", 2},     // seedHistoryRow 的摘要固定为「摘要」，两行都中
+		{"无命中", "完全不存在的词", 0},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			kw := c.keyword
+			res, err := QueryHistory(repo, me, HistoryQuery{Since: &from, Until: &to, Keyword: &kw})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if res.Count != c.want {
+				t.Fatalf("keyword %q 应命中 %d 条，实际 %d", c.keyword, c.want, res.Count)
+			}
+		})
 	}
 }

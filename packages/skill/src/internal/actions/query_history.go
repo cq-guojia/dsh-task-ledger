@@ -136,7 +136,12 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 	history := store.NewHistoryStore(repo)
 	var records []map[string]any
 	var warnings []string
-	// 历史表按结案顺序追加 ⇒ 月份从新到旧、月内从尾到首遍历，天然就是结案时间倒序，不再排序
+	// 历史表按结案顺序追加 ⇒ 月份从新到旧、月内从尾到首遍历，天然就是结案时间倒序，不再排序。
+	// 带 --limit 时多收一条：凑够就停（更早的月份完全不读），并用多出来那条判断 capped。
+	want := 0
+	if q.Limit != nil {
+		want = *q.Limit + 1
+	}
 	for i := len(keys) - 1; i >= 0; i-- {
 		ym := keys[i]
 		path := filepath.Join(repo, core.ToRepoRel(core.HistoryDir), ym+".md")
@@ -151,13 +156,14 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 		for _, w := range warns {
 			warnings = append(warnings, Rel(repo, path)+"："+w)
 		}
+		src := Rel(repo, path)
 		for j := len(rows) - 1; j >= 0; j-- {
 			row := rows[j]
 			if !rowMatches(row, q, me, effSince, effUntil) {
 				continue
 			}
 			item := row.ToMap()
-			item["src"] = Rel(repo, path)
+			item["src"] = src
 			if key := core.TimeKey(row.Created); key != "" {
 				item["created"] = key
 			}
@@ -166,6 +172,12 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 			}
 			item["mine"] = core.IsMe(me, row.Owner)
 			records = append(records, item)
+			if want > 0 && len(records) >= want {
+				break
+			}
+		}
+		if want > 0 && len(records) >= want {
+			break
 		}
 	}
 
@@ -207,6 +219,7 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 		"mine":       q.Mine,
 		"category":   ptrValue(q.Category),
 		"tag":        ptrValue(q.Tag),
+		"keyword":    ptrValue(q.Keyword),
 		"since":      ptrValue(q.Since),
 		"until":      ptrValue(q.Until),
 		"limit":      intValue(q.Limit),
@@ -267,6 +280,11 @@ func rowMatches(row core.Row, q HistoryQuery, me core.Identity, effSince, effUnt
 	if q.Category != nil && row.Category != *q.Category {
 		return false
 	}
+	if q.Keyword != nil {
+		if needle := strings.ToLower(strings.TrimSpace(*q.Keyword)); needle != "" && !keywordHit(row, needle) {
+			return false
+		}
+	}
 	if q.Tag != nil {
 		found := false
 		for _, t := range row.Tags {
@@ -281,6 +299,20 @@ func rowMatches(row core.Row, q HistoryQuery, me core.Identity, effSince, effUnt
 	}
 	finished := core.TimeKey(row.Finished)
 	return finished >= effSince && finished <= effUntil
+}
+
+// keywordHit 标题 / 摘要 / 标签 的子串匹配（needle 已转小写）。
+func keywordHit(row core.Row, needle string) bool {
+	if strings.Contains(strings.ToLower(row.Title), needle) ||
+		strings.Contains(strings.ToLower(row.Summary), needle) {
+		return true
+	}
+	for _, tag := range row.Tags {
+		if strings.Contains(strings.ToLower(tag), needle) {
+			return true
+		}
+	}
+	return false
 }
 
 func ptrValue(p *string) any {

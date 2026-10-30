@@ -133,8 +133,9 @@ const SELECT_MAX_WIDTH = 240;
 /** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
 const SEARCH_WIDTH = 192;
 
-/** 列表最多渲染条数（用户 2026-10-28：内容过多时只给最新 100 条 + 底部提示）。 */
-const LIST_LIMIT = 100;
+/** **单个工作区**最多渲染条数（用户 2026-10-30：原来是整体 100 条，改成每区各自 100 条，
+ *  超了在该区列表末尾给一条提示；不再有全局截断 —— 「我的待办」与「全部」同一条规则）。 */
+const WS_LIMIT = 100;
 /** 组头计数：按「待认领 → 进行中 → 积压 → 逾期 → 停滞」排，` · ` 分隔；
  *  **0 的档整段不出现**（用户 2026-10-30：不显示 0，也不显示杠），「我的待办」不列。 */
 const GROUP_STATS: readonly { value: GroupTab; label: LocaleKey }[] = [
@@ -144,11 +145,10 @@ const GROUP_STATS: readonly { value: GroupTab; label: LocaleKey }[] = [
 	{ value: "overdue", label: "statOverdue" },
 	{ value: "stale", label: "statStale" },
 ];
-/** 底部「截断提示」样式（临时：核心暂无对应样式，先按此观感；用户确认后再定型）。 */
+/** 组内「已截断」提示样式（核心暂无对应件；灰小字、贴在该组最后一张卡下方，观感定型后再收口）。 */
 const limitHintStyle: Record<string, string | number> = {
-	marginTop: "var(--dtl-space-3)",
-	padding: "var(--dtl-space-3) var(--dtl-space-4)",
-	textAlign: "center",
+	marginTop: "var(--dtl-space-2)",
+	padding: "0 var(--dtl-space-2)",
 	fontSize: "var(--dtl-font-sm)",
 	lineHeight: "var(--dtl-line-sm)",
 	color: "var(--dtl-fg-3)",
@@ -547,7 +547,7 @@ export function BoardHome(props: {
 						},
 					}),
 				),
-		// 通用搜索：**样式已铺、程序未接**（输入暂不过滤）。
+		// 通用搜索：真筛（`rows.ts::keywordHit`，与其余筛选一样纯本地）。
 		h(
 			"div",
 			{ style: { width: `${SEARCH_WIDTH}px`, flex: "none" } },
@@ -743,7 +743,7 @@ export function BoardHome(props: {
 									null,
 									// 按工作区分组（用户 2026-10-30）：组头 = 核心 SectionHead；
 									// 组顺序 / 组内顺序全在 rows.selectView 排好，这里只切段渲染。
-									...groupRows(view.rows.slice(0, LIST_LIMIT)).map((group) => {
+									...groupRows(view.rows).map((group) => {
 										// 0 的档不列；全 0 时整段不出现（不留一段空白 + 8px 外边距）
 										const counts = GROUP_STATS.filter(
 											(item) => group.counts[item.value] > 0,
@@ -753,6 +753,9 @@ export function BoardHome(props: {
 													`${t(item.label)} ${group.counts[item.value]}`,
 											)
 											.join(" · ");
+										// 截断按**每个工作区各自 100 条**（用户 2026-10-30），组头计数仍是全量
+										const shown = group.rows.slice(0, WS_LIMIT);
+										const truncated = group.rows.length > WS_LIMIT;
 										return h(
 											"div",
 											{ key: group.workspace.id, className: "dtl-group" },
@@ -777,7 +780,7 @@ export function BoardHome(props: {
 													),
 												}),
 											),
-											...group.rows.map((row) =>
+											...shown.map((row) =>
 												h(TaskRowView, {
 													key: row.key,
 													t,
@@ -786,14 +789,16 @@ export function BoardHome(props: {
 													onView: handleView,
 												}),
 											),
+											truncated
+												? h(
+														"div",
+														{ style: limitHintStyle },
+														t("wsLimitHint", { n: WS_LIMIT }),
+													)
+												: null,
 										);
 									}),
 								),
-				viewMode === "history"
-					? null
-					: view.rows.length > LIST_LIMIT
-						? h("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT }))
-						: null,
 				// 页脚留白：滚到底时最后一条卡不贴浏览器底边（高度与上方内边距同档）
 				h("div", { className: "dtl-page-foot" }),
 			),

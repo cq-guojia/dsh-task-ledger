@@ -44,6 +44,7 @@ type HistoryQuery struct {
 	Mine      bool
 	Category  *string
 	Tag       *string
+	Keyword   *string // 标题 / 摘要 / 标签 的子串匹配（大小写不敏感）
 	Since     *string // 比 finished
 	Until     *string
 	Limit     *int

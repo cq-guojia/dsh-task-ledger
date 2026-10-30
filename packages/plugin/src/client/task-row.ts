@@ -1,11 +1,14 @@
 /**
  * 任务行（宿主**无表格件** ⇒ 自绘）：整行一张卡，样式照抄 dispatch-table 任务配置卡：
- * 左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出「继续 / 完成 / 释放 / 取消」；
+ * 左缘 6×36 状态条 + 标题行 + 第二行标签；右侧执行人名 + 灰字时长；悬停出「继续 / 完成 / 释放 / 取消」；
  * 最右常驻「查看」放大镜钮。
  *
- * 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）。
+ * 标签排最前的一定是**状态本身**（待认领 / 进行中），异常标记跟在后面（用户 2026-10-30）。
  * 状态一律**标签型、五色**（用户 2026-10-18）：灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 /
  * 红=停滞；三个异常标签悬停给 skill 算好的天数解释（ageDays / idleDays / waitingDays 随 list 下发）。
+ *
+ * 行内**不再显示工作区**（列表已按工作区分组，组头写着，用户 2026-10-30）——原来那个位置换成了
+ * 执行人名（蓝字，不是标签）。
  *
  * 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
  *
@@ -14,7 +17,9 @@
 
 import {
 	IconCheckOutlineRegular,
+	IconChevronLeftOutlineRegular,
 	IconChevronRightOutlineRegular,
+	IconCloseOutlineRegular,
 	IconCopyOutlineRegular,
 	IconSearchOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
@@ -132,16 +137,17 @@ export function TaskRowView(props: {
 			onClick: () => props.onView?.(row),
 		}),
 	});
+	// 文字动作钮：**灰底、不带边**（核心 `secondary` 档，用户 2026-10-30：原来那圈描边不要）。
 	const tipBtn = (
 		icon: ReactNode,
-		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease" | "actionCancel",
-		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease" | "tipCancel",
+		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease",
+		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease",
 	): ReactNode =>
 		h(Tip, {
 			label: t(tipKey),
 			children: h(
 				Button,
-				{ variant: "outline", size: "md", icon: icon ?? undefined },
+				{ variant: "secondary", size: "md", icon: icon ?? undefined },
 				t(actionKey),
 			),
 		});
@@ -157,11 +163,25 @@ export function TaskRowView(props: {
 		"actionFinish",
 		"tipFinish",
 	);
-	// 释放：官方 rc.2 无断链图标（已全量核实）⇒ 纯文字，不用叉
-	const releaseButton = tipBtn(null, "actionRelease", "tipRelease");
-	// 取消（用户 2026-10-29）：排在释放之后，纯文字与释放同规格；
+	// 释放 = 退回公共池：左向箭头（与「继续」的右箭头成一进一出，用户 2026-10-30）
+	const releaseButton = tipBtn(
+		h(IconChevronLeftOutlineRegular, { size: 14 }),
+		"actionRelease",
+		"tipRelease",
+	);
+	// 取消（用户 2026-10-29，2026-10-30 改图标）：一枚小叉，与复制 / 查看同款次级图标钮（灰字无边）；
 	// 出不出来由 resolveActions.cancel 判（池任务 + 我名下的才有，别人名下的不给）
-	const cancelButton = tipBtn(null, "actionCancel", "tipCancel");
+	const cancelButton = h(Tip, {
+		label: t("tipCancel"),
+		children: h(IconButton, {
+			variant: "plain",
+			size: "md",
+			label: t("actionCancel"),
+			title: "",
+			className: "dtl-iconbtn--muted",
+			icon: h(IconCloseOutlineRegular, { size: 14 }),
+		}),
+	});
 
 	// 状态标签（五色实心块，用户 2026-10-18 定稿）：
 	// 三枚异常标签带 skill 下发的阈值解释（没配就不解释，不编）。
@@ -175,8 +195,11 @@ export function TaskRowView(props: {
 		});
 	};
 	const markTones = MARKS.filter((which) => row.task[which] === true);
-	// 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）
-	const alarmTags = markTones.map((which) => tagOf(which));
+	// 第一枚永远是**状态本身**（待认领 / 进行中），异常标记跟在后面（用户 2026-10-30）
+	const statusTags = [
+		tagOf(row.task.status === "open" ? "open" : "doing"),
+		...markTones.map((which) => tagOf(which)),
+	];
 
 	// 复制任务 ID（用户 2026-10-28）：放进右侧动作排（放大镜左边）。
 	// 原先摆标题后，24px 的按钮比第一行高 ⇒ hover 出现/消失会把卡片撑高再缩回，一直跳；
@@ -208,7 +231,7 @@ export function TaskRowView(props: {
 		}),
 	});
 
-	// 第一行：标题 + 创建徽 + 异常标签
+	// 第一行：标题 + 创建徽（标签全在第二行，状态标签打头，用户 2026-10-30）
 	const titleLine = h(
 		"div",
 		{ className: "dtl-taskrow__l1" },
@@ -227,10 +250,9 @@ export function TaskRowView(props: {
 						? `[${t("fieldCreatorStamp", { age: creatorAge })}]`
 						: `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`,
 				),
-		...alarmTags,
 	);
 
-	// 右侧（用户 2026-10-28）：工作区徽标（常驻）/ `更新于 MM-DD HH:mm 丨 3 分钟前`（hover 让位）/ 动作钮。
+	// 右侧（用户 2026-10-28）：执行人名（常驻，代替原工作区徽标）/ `更新于 MM-DD HH:mm 丨 3 分钟前`（hover 让位）/ 动作钮。
 	const whenRaw = row.task.updated ?? row.task.started ?? row.task.created;
 	const whenStamp =
 		whenRaw === null || whenRaw === undefined || Number.isNaN(Date.parse(whenRaw))
@@ -241,14 +263,15 @@ export function TaskRowView(props: {
 			? t("timeUnknown")
 			: formatRelative(whenRaw, t)
 	}`;
-	// 第二行的人名只给**进行中**的行（用户 2026-10-28：没人认领就不写名字，创建人已经摆在标题后）。
-	// 点人名 = 选中「执行人」下拉里的这个人（名册里没有也照样补进去，见 store.focusOwner）。
+	// 执行人名只给**进行中**的行（用户 2026-10-28：没人认领就不写名字，创建人已经摆在标题后）。
+	// 纯蓝字、不是标签（用户 2026-10-30）；占的是原工作区徽标那一格 —— 列表已按工作区分组，
+	// 行内再写一遍工作区名是重复的。点人名 = 选中「执行人」下拉里的这个人（名册里没有也照样补进去，见 store.focusOwner）。
 	const ownerName = displayName(row.task.owner_name, row.task.owner);
 	const ownerUuid = (row.task.owner ?? "").trim();
 	const whoNode =
 		solo || row.task.status === "open" || ownerUuid === ""
 			? null
-			: 				h(
+			: h(
 					Button,
 					{
 						variant: "link",
@@ -260,7 +283,7 @@ export function TaskRowView(props: {
 					`@${ownerName}`,
 				);
 	// 整块可点 = 查看（用户 2026-10-28）：点空白处 / 标题 / 时间都进详情；
-	// 行内按钮（动作钮、人名、工作区、标签、放大镜）各干各的事，靠 closest('button') 让过。
+	// 行内按钮（动作钮、人名、标签、放大镜）各干各的事，靠 closest('button') 让过。
 	const handleRowClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
 		const target = event.target as HTMLElement | null;
 		if (target !== null && target.closest("button") !== null) return;
@@ -280,8 +303,8 @@ export function TaskRowView(props: {
 				h(
 					"div",
 					{ className: "dtl-taskrow__l2" },
-					// 人名挪到第二行最左（用户 2026-10-28 换位），标签 = 塞进搜索框
-					whoNode,
+					// 状态标签打头（用户 2026-10-30），#标签 = 塞进搜索框
+					...statusTags,
 					tags.map((tag) =>
 						h(Tag, {
 							key: tag,
@@ -292,14 +315,8 @@ export function TaskRowView(props: {
 					),
 				),
 			),
-			// 工作区 = 核心可点 Chip（business 档：蓝底反白字、小标签），用户 2026-10-28 定回小号。
-			// 不加悬停提示（用户 2026-10-29）：标签本身就是工作区名，点了按它筛选是常识。
-			h(Tag, {
-				text: row.task.workspace.title,
-				tone: "person",
-				maxWidth: 200,
-				onClick: () => setQuery({ workspace: row.task.workspace.id }),
-			}),
+			// 执行人名（蓝字，原工作区徽标的位置，用户 2026-10-30）
+			whoNode,
 			h("span", { className: "dtl-taskrow__meta" }, metaText),
 			// 动作排：认领 / 继续 / 完成 / 释放 / 取消 + 复制 / 查看 —— **同一排、同一间距**
 			// （用户 2026-10-18：查看钮原来是独立的一格，离前面的按钮远一档；

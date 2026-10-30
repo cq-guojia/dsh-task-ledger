@@ -45,6 +45,13 @@ const FALLBACK_WEEKS = 13;
 /** 入场动画的**整屏**错峰总时长（跟历史页同款：延迟按列摊，不按序号累加）。 */
 const STAGGER_MS = 120;
 
+/** 柱子 / 图例 / 浮卡共用的五种颜色（真值在 tokens.ts，改色只改那里）。 */
+const C_DONE = "var(--dtl-chart-done)";
+const C_CANCELLED = "var(--dtl-danger)";
+const C_DOING = "var(--dtl-chart-doing)";
+const C_OPEN = "var(--dtl-chart-open)";
+const C_LINE = "var(--dtl-chart-line)";
+
 /**
  * 四数归一：老版本 host 返回的桶可能没有 `cancelled`（甚至没有 `owners`），
  * 缺字段按 0 —— 这是「那一类记录本来就没有」，不是拿 0 充真值。
@@ -121,8 +128,9 @@ export function TrendChart(props: {
 		mine ? norm(bucket.owners[me]) : norm(bucket);
 
 	/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
-	 *  「只看我的」时只有进行中（我的任务必然有人接），不显示拆分行。 */
+	 *  「只看我的」时全是进行中（我的任务必然有人接），整根都是那一段。 */
 	const breakdown = (bucket: TrendBucketView): { doing: number; waiting: number } => {
+		if (mine) return { doing: counts(bucket).open, waiting: 0 };
 		const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
 		return { doing, waiting: Math.max(0, bucket.open - doing) };
 	};
@@ -183,18 +191,30 @@ export function TrendChart(props: {
 
 	const weekUnit = t("historyGranWeek");
 
-	/** 图例：四个色块 = 柱子两段 + 未结柱 + 曲线，与图里颜色一一对应。 */
-	const legend: readonly { key: string; label: string; color: string }[] = [
-		{ key: "done", label: t("chartFinished"), color: "var(--dtl-chart-done)" },
-		{ key: "cancelled", label: t("chartCancelled"), color: "var(--dtl-danger)" },
+	/** 色块：一色 = 直接用父级那块 8×8 上色；两色 = 上下两半的方块（上段与柱子里叠在上面的
+	 *  那一段同色，用户 2026-10-30：「进行中」在上、「待认领」在下，图例和柱子一个朝向）。
+	 *  一色时**不能**走子 span —— 子 span 没有尺寸，方块会是空的（2026-10-30 该 bug）。 */
+	const dot = (colors: readonly string[]): ReactNode =>
+		colors.length > 1
+			? h(
+					"span",
+					{ className: "dtl-trend__dot dtl-trend__dot--split" },
+					...colors.map((color, index) => h("span", { key: index, style: { background: color } })),
+				)
+			: h("span", { className: "dtl-trend__dot", style: { background: colors[0] ?? "transparent" } });
+
+	/** 图例：两枚上下两段的方块（已结案 = 取消在上 / 完成在下、未结 = 进行中在上 / 待认领在下）
+	 *  + 新增曲线。只看我的时未结整根都是进行中，那枚不拆（用户 2026-10-30）。 */
+	const legend: readonly { key: string; label: string; colors: readonly string[] }[] = [
+		{ key: "closed", label: t("chartClosed"), colors: [C_CANCELLED, C_DONE] },
 		{
 			key: "open",
 			// 只看我的时「未结」叫「进行中」（我的任务必然有人接）
 			label: t(mine ? "chartDoing" : "chartOpen"),
-			color: "var(--dtl-chart-open)",
+			colors: mine ? [C_DOING] : [C_DOING, C_OPEN],
 		},
 		// 曲线用中性灰：柱子已经占了 business 蓝，曲线再用蓝就分不清了（用户 2026-10-30）
-		{ key: "added", label: t("chartAdded"), color: "var(--dtl-chart-line)" },
+		{ key: "added", label: t("chartAdded"), colors: [C_LINE] },
 	];
 
 	const row = (key: string, label: string, count: number, color: string): ReactNode =>
@@ -207,10 +227,37 @@ export function TrendChart(props: {
 				)
 			: null;
 
-	/** 浮卡：周期 → 新建 / 完成 / 取消 / 未结（0 值不列），未结再补一行进行中 · 待认领。 */
+	/** 浮卡的一行总数（带色块）+ 缩进的拆分注脚（用户 2026-10-30：总数一行、下跟「X N · Y M」）。 */
+	const totalRow = (
+		key: string,
+		label: string,
+		count: number,
+		colors: readonly string[],
+		sub: string,
+	): ReactNode[] =>
+		count > 0
+			? [
+					h(
+						"div",
+						{ key, className: "dtl-trend__tip-row" },
+						dot(colors),
+						`${label} ${formatCount(count)}`,
+					),
+					sub === ""
+						? null
+						: h(
+								"div",
+								{ key: `${key}-sub`, className: "dtl-trend__tip-row dtl-trend__tip-row--sub" },
+								sub,
+							),
+				]
+			: [];
+
+	/** 浮卡：周期 → 新建 → 已结案（下跟完成 / 取消）→ 未结（下跟进行中 / 待认领）；0 值不列。 */
 	const tipOf = (bucket: TrendBucketView): ReactNode => {
 		const cell = counts(bucket);
 		const split = breakdown(bucket);
+		const total = closed(cell);
 		return h(
 			"div",
 			{ className: "dtl-trend__tip" },
@@ -221,25 +268,33 @@ export function TrendChart(props: {
 			),
 			// 圆点在深灰浮卡上：曲线那支灰是随主题变的，浅色主题下会糊进底色 ⇒ 用浮卡自己的浅灰
 			row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"),
-			row("done", t("chartFinished"), cell.done, "var(--dtl-chart-done)"),
-			row("cancelled", t("chartCancelled"), cell.cancelled, "var(--dtl-danger)"),
-			row("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, "var(--dtl-chart-open)"),
-			mine || cell.open <= 0
-				? null
-				: h(
-						"div",
-						{ key: "split", className: "dtl-trend__tip-row dtl-trend__tip-row--sub" },
-						`${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`,
-					),
+			...totalRow(
+				"closed",
+				t("chartClosed"),
+				total,
+				[C_CANCELLED, C_DONE],
+				`${t("chartFinished")} ${formatCount(cell.done)} · ${t("chartCancelled")} ${formatCount(cell.cancelled)}`,
+			),
+			...totalRow(
+				"open",
+				t(mine ? "chartDoing" : "chartOpen"),
+				cell.open,
+				mine ? [C_DOING] : [C_DOING, C_OPEN],
+				// 只看我的时全是进行中，拆分行没有信息量
+				mine
+					? ""
+					: `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`,
+			),
 		);
 	};
 
 	const colStyle: Record<string, string | number> = { width: `${String(COL_W)}px` };
 
-	/** 一根柱 = 一个周：左结案（底绿完成 / 顶红取消，两段叠一根）、右未结。 */
+	/** 一根柱 = 一个周：左结案（底蓝完成 / 顶红取消）、右未结（底琥珀待认领 / 顶绿进行中）。 */
 	const colOf = (bucket: TrendBucketView, index: number): ReactNode => {
 		const cell = counts(bucket);
 		const total = closed(cell);
+		const split = breakdown(bucket);
 		const height = (value: number): string => `${String((value / top) * 100)}%`;
 		// 入场延迟：按「第几列 / 共几列」摊进 STAGGER_MS；key 带批次（翻页次数）⇒ 翻页整批重放
 		const style: Record<string, string | number> = {
@@ -259,7 +314,7 @@ export function TrendChart(props: {
 								className: "dtl-trend__bar dtl-trend__bar--closed",
 								style: { height: height(total) },
 							},
-							// 取消叠在顶端（用户 2026-10-30：取消在上、红色；完成是柱体本身的绿）
+							// 取消叠在顶端（用户 2026-10-30：取消在上、红色；完成是柱体本身的蓝）
 							cell.cancelled > 0
 								? h("span", {
 										className: "dtl-trend__seg dtl-trend__seg--cancelled",
@@ -271,10 +326,22 @@ export function TrendChart(props: {
 						)
 					: null,
 				cell.open > 0
-					? h("div", {
-							className: "dtl-trend__bar dtl-trend__bar--open",
-							style: { height: height(cell.open) },
-						})
+					? h(
+							"div",
+							{
+								className: "dtl-trend__bar dtl-trend__bar--open",
+								style: { height: height(cell.open) },
+							},
+							// 进行中叠在顶端、待认领是柱体本身的琥珀（用户 2026-10-30：与图例同朝向）
+							split.doing > 0
+								? h("span", {
+										className: "dtl-trend__seg dtl-trend__seg--doing",
+										style: {
+											height: `${String((split.doing / cell.open) * 100)}%`,
+										},
+									})
+								: null,
+						)
 					: null,
 			),
 			tipOf(bucket),
@@ -340,12 +407,7 @@ export function TrendChart(props: {
 			"div",
 			{ className: "dtl-trend__legend" },
 			...legend.map((item) =>
-				h(
-					"span",
-					{ key: item.key },
-					h("span", { className: "dtl-trend__dot", style: { background: item.color } }),
-					item.label,
-				),
+				h("span", { key: item.key }, dot(item.colors), item.label),
 			),
 			// 右侧「只看我的」：只作用于这张图，不动统计卡；数据已随快照回来，勾选不发请求
 			me === null

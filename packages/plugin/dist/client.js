@@ -53584,10 +53584,12 @@ body{
 
   /* ── 图表色（2026-10-30 用户改版）───────────────────────────────
      首页趋势图：完成 = **蓝**（business，用户 2026-10-30「绿色那个柱子不好看，用 business 蓝」）、
-     取消 = 红、未结 = 琥珀；新增曲线另走一档**中性灰**——柱子已经占了蓝，曲线也用蓝就分不清了。
-     三色仍直接取核心 alias（state-business / state-warn / state-error），不手写色值。
+     取消 = 红；未结那根拆两段（用户 2026-10-30）—— 进行中 = 绿、待认领 = 琥珀；
+     新增曲线另走一档**中性灰**——柱子已经占了蓝，曲线也用蓝就分不清了。
+     色值仍直接取核心 alias（state-business / state-success / state-warn / state-error），不手写。
      历史页柱色仍是「完成绿 / 取消红」，曲线沿用 --dtl-chart-added（蓝）。 */
   --dtl-chart-done:var(--dtl-business);
+  --dtl-chart-doing:var(--dtl-success);
   --dtl-chart-open:var(--dtl-warning);
   --dtl-chart-added:var(--dtl-business);
   --dtl-chart-line:var(--dtl-fg-3);
@@ -53829,6 +53831,10 @@ body[data-ds-dark-theme]{
 /* 图例色块：直角方块，与柱子同一造型（用户 2026-10-29：不要圆角） */
 .dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
+/* 上下两半的色块（用户 2026-10-30）：上半 = 柱子里叠在上面那一段 ——
+   已结案（取消红在上 / 完成蓝在下）、未结（进行中绿在上 / 待认领琥珀在下）。 */
+.dtl-trend__dot--split{display:inline-flex;flex-direction:column;overflow:hidden;}
+.dtl-trend__dot--split > span{flex:1 1 0;min-height:0;}
 /* 「只看我的」：跟在图例后面（右侧那角留给翻页箭头，用户 2026-10-30） */
 .dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;cursor:pointer;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
@@ -53868,12 +53874,13 @@ body[data-ds-dark-theme]{
   transform-origin:bottom;animation:dtl-bar-in .3s var(--dtl-ease) backwards;
   animation-delay:var(--lc-d,0ms);}
 @media (prefers-reduced-motion: reduce){.dtl-trend__bar{animation:none;}}
-/* 完成 = business 蓝（用户 2026-10-30：绿的不好看）、未结 = 琥珀 */
+/* 结案柱 = 完成 business 蓝（用户 2026-10-30：绿的不好看）；未结柱底 = 待认领琥珀 */
 .dtl-trend__bar--closed{background-color:var(--dtl-chart-done);}
 .dtl-trend__bar--open{background-color:var(--dtl-chart-open);}
-/* 取消那一段叠在结案柱顶端（红在上、蓝在下，用户 2026-10-30）；圆角交给父级裁 */
+/* 叠在柱顶端的那一段（用户 2026-10-30）：结案柱顶 = 取消红、未结柱顶 = 进行中绿；圆角交给父级裁 */
 .dtl-trend__seg{position:absolute;left:0;right:0;top:0;}
 .dtl-trend__seg--cancelled{background-color:var(--dtl-danger);}
+.dtl-trend__seg--doing{background-color:var(--dtl-chart-doing);}
 /* 柱面斜纹：**两个图表共用这一条**（历史页 .dtl-hist__bar / 首页 .dtl-trend__bar）——
    一根柱铺一层 45° 覆盖层（伪元素画在最上面），不碰任何分段的底色，也不依赖谁先谁后；
    父级圆角 + overflow 裁切把覆盖层一起裁成圆角（用户 2026-10-30：同一个东西只留一种实现）。
@@ -53940,12 +53947,12 @@ body[data-ds-dark-theme]{
 .dtl-taskrow__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);min-width:0;flex:0 1 auto;}
 .dtl-taskrow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-/* 第二行小字：工作区 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
+/* 第二行小字：状态标签 · 异常标签 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
 .dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
-/* 右侧（用户 2026-10-28）：工作区 Chip（常驻）/ 时间（hover 让位）/ 动作钮。
-   hover 只收时间那一截，Chip 不动 —— 按钮出现时两者保持同一个 gap。
-   人名（第二行）走核心 Button 的 link 档，这里不再有它的样式。 */
+/* 右侧（用户 2026-10-28）：执行人名（常驻）/ 时间（hover 让位）/ 动作钮。
+   hover 只收时间那一截，人名不动 —— 按钮出现时两者保持同一个 gap。
+   人名走核心 Button 的 link 档（品牌蓝），这里不再有它的样式。 */
 .dtl-taskrow__meta{flex:none;overflow:hidden;text-overflow:ellipsis;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
@@ -54006,7 +54013,7 @@ body[data-ds-dark-theme]{
 				style: props.style
 			});
 		}
-		/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 primary/outline/ghost/link）。
+		/** 按钮：改由核心 `Button` 承担（18 档 variant 里本地用 primary/secondary/outline/ghost/link）。
 		*  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。
 		*  宽度三件（width/minWidth/maxWidth）核心已支持：给 maxWidth + 纯文字 ⇒ 核心自动省略号 +
 		*  hover 跑马灯，本层原样透传，别再自己写截断。 */
@@ -54108,11 +54115,13 @@ body[data-ds-dark-theme]{
 				onClick: interactive ? props.onClick : void 0
 			}, (0, react$1.createElement)("span", { className: "dtl-stat__label" }, props.label), (0, react$1.createElement)("span", { className: "dtl-stat__value" }, shown), props.hint === void 0 || props.hint === null || props.hint === "" ? null : (0, react$1.createElement)("span", { className: "dtl-stat__hint" }, props.hint));
 		}
-		/** 本地 7 档语义色 → 核心 `Chip` 5 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
-		*  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。 */
+		/** 本地 7 档语义色 → 核心 `Chip` 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
+		*  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。
+		*  待认领用 `slate`（实心灰）而不是 `neutral`：neutral 那层浅灰跟 #标签 长得一模一样，
+		*  状态标签要跟任务行左缘那条灰竖线一个色（用户 2026-10-30）。 */
 		const CHIP_TONE = {
 			neutral: "neutral",
-			open: "neutral",
+			open: "slate",
 			backlog: "warning",
 			doing: "success",
 			overdue: "danger",
@@ -54560,12 +54569,15 @@ body[data-ds-dark-theme]{
 		//#region src/client/task-row.ts
 		/**
 		* 任务行（宿主**无表格件** ⇒ 自绘）：整行一张卡，样式照抄 dispatch-table 任务配置卡：
-		* 左缘 6×36 状态条 + 标题行 + 第二行工作区/标签；右侧灰字时长；悬停出「继续 / 完成 / 释放 / 取消」；
+		* 左缘 6×36 状态条 + 标题行 + 第二行标签；右侧执行人名 + 灰字时长；悬停出「继续 / 完成 / 释放 / 取消」；
 		* 最右常驻「查看」放大镜钮。
 		*
-		* 「我的待办」卡只摆异常标记（进行中只靠左缘色条，不再重复一枚）。
+		* 标签排最前的一定是**状态本身**（待认领 / 进行中），异常标记跟在后面（用户 2026-10-30）。
 		* 状态一律**标签型、五色**（用户 2026-10-18）：灰=待认领 / 蓝=进行中 / 黄=积压 / 橙=逾期 /
 		* 红=停滞；三个异常标签悬停给 skill 算好的天数解释（ageDays / idleDays / waitingDays 随 list 下发）。
+		*
+		* 行内**不再显示工作区**（列表已按工作区分组，组头写着，用户 2026-10-30）——原来那个位置换成了
+		* 执行人名（蓝字，不是标签）。
 		*
 		* 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
 		*
@@ -54658,7 +54670,7 @@ body[data-ds-dark-theme]{
 			const tipBtn = (icon, actionKey, tipKey) => (0, react$1.createElement)(Tip, {
 				label: t(tipKey),
 				children: (0, react$1.createElement)(Button, {
-					variant: "outline",
+					variant: "secondary",
 					size: "md",
 					icon: icon ?? void 0
 				}, t(actionKey))
@@ -54666,8 +54678,18 @@ body[data-ds-dark-theme]{
 			const claimButton = tipBtn(null, "actionClaim", "tipClaim");
 			const resumeButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), "actionResume", "tipResume");
 			const finishButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), "actionFinish", "tipFinish");
-			const releaseButton = tipBtn(null, "actionRelease", "tipRelease");
-			const cancelButton = tipBtn(null, "actionCancel", "tipCancel");
+			const releaseButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular, { size: 14 }), "actionRelease", "tipRelease");
+			const cancelButton = (0, react$1.createElement)(Tip, {
+				label: t("tipCancel"),
+				children: (0, react$1.createElement)(IconButton, {
+					variant: "plain",
+					size: "md",
+					label: t("actionCancel"),
+					title: "",
+					className: "dtl-iconbtn--muted",
+					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 })
+				})
+			});
 			const tagOf = (which, tip) => {
 				const text = statusLabel(which, t);
 				return (0, react$1.createElement)(Tag, {
@@ -54677,7 +54699,8 @@ body[data-ds-dark-theme]{
 					tip: tip ?? detailTip(which)
 				});
 			};
-			const alarmTags = MARKS.filter((which) => row.task[which] === true).map((which) => tagOf(which));
+			const markTones = MARKS.filter((which) => row.task[which] === true);
+			const statusTags = [tagOf(row.task.status === "open" ? "open" : "doing"), ...markTones.map((which) => tagOf(which))];
 			const copyButton = (0, react$1.createElement)(Tip, {
 				label: `${t("copyTaskId")}\n${row.task.id}`,
 				maxWidth: 320,
@@ -54701,7 +54724,7 @@ body[data-ds-dark-theme]{
 			const titleLine = (0, react$1.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react$1.createElement)("span", {
 				className: "dtl-taskrow__title dtl-ellipsis",
 				title: titleOf(row)
-			}, titleOf(row)), creatorAge === null || creatorName === "" ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, solo ? `[${t("fieldCreatorStamp", { age: creatorAge })}]` : `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`), ...alarmTags);
+			}, titleOf(row)), creatorAge === null || creatorName === "" ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, solo ? `[${t("fieldCreatorStamp", { age: creatorAge })}]` : `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`));
 			const whenRaw = row.task.updated ?? row.task.started ?? row.task.created;
 			const metaText = `${t("whenSubmitted", { time: whenRaw === null || whenRaw === void 0 || Number.isNaN(Date.parse(whenRaw)) ? t("timeUnknown") : formatDateTime(whenRaw).slice(5) })} 丨 ${whenRaw === null || whenRaw === void 0 ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
 			const ownerName = displayName(row.task.owner_name, row.task.owner);
@@ -54723,17 +54746,12 @@ body[data-ds-dark-theme]{
 			}, (0, react$1.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0
-			} }, titleLine, (0, react$1.createElement)("div", { className: "dtl-taskrow__l2" }, whoNode, tags.map((tag) => (0, react$1.createElement)(Tag, {
+			} }, titleLine, (0, react$1.createElement)("div", { className: "dtl-taskrow__l2" }, ...statusTags, tags.map((tag) => (0, react$1.createElement)(Tag, {
 				key: tag,
 				text: `#${tag}`,
 				maxWidth: 160,
 				onClick: () => setQuery({ keyword: tag })
-			})))), (0, react$1.createElement)(Tag, {
-				text: row.task.workspace.title,
-				tone: "person",
-				maxWidth: 200,
-				onClick: () => setQuery({ workspace: row.task.workspace.id })
-			}), (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, copyButton, actions.view ? viewButton : null)));
+			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, copyButton, actions.view ? viewButton : null)));
 		}
 		//#endregion
 		//#region src/client/trend-chart.ts
@@ -54771,6 +54789,12 @@ body[data-ds-dark-theme]{
 		const FALLBACK_WEEKS = 13;
 		/** 入场动画的**整屏**错峰总时长（跟历史页同款：延迟按列摊，不按序号累加）。 */
 		const STAGGER_MS = 120;
+		/** 柱子 / 图例 / 浮卡共用的五种颜色（真值在 tokens.ts，改色只改那里）。 */
+		const C_DONE = "var(--dtl-chart-done)";
+		const C_CANCELLED = "var(--dtl-danger)";
+		const C_DOING = "var(--dtl-chart-doing)";
+		const C_OPEN = "var(--dtl-chart-open)";
+		const C_LINE = "var(--dtl-chart-line)";
 		/**
 		* 四数归一：老版本 host 返回的桶可能没有 `cancelled`（甚至没有 `owners`），
 		* 缺字段按 0 —— 这是「那一类记录本来就没有」，不是拿 0 充真值。
@@ -54815,8 +54839,12 @@ body[data-ds-dark-theme]{
 			/** 当前口径下这一桶的数：全量，或「我的」那条（没数据就是 0）。 */
 			const counts = (bucket) => mine ? norm(bucket.owners[me]) : norm(bucket);
 			/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
-			*  「只看我的」时只有进行中（我的任务必然有人接），不显示拆分行。 */
+			*  「只看我的」时全是进行中（我的任务必然有人接），整根都是那一段。 */
 			const breakdown = (bucket) => {
+				if (mine) return {
+					doing: counts(bucket).open,
+					waiting: 0
+				};
 				const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
 				return {
 					doing,
@@ -54861,27 +54889,33 @@ body[data-ds-dark-theme]{
 				})
 			});
 			const weekUnit = t("historyGranWeek");
-			/** 图例：四个色块 = 柱子两段 + 未结柱 + 曲线，与图里颜色一一对应。 */
+			/** 色块：一色 = 直接用父级那块 8×8 上色；两色 = 上下两半的方块（上段与柱子里叠在上面的
+			*  那一段同色，用户 2026-10-30：「进行中」在上、「待认领」在下，图例和柱子一个朝向）。
+			*  一色时**不能**走子 span —— 子 span 没有尺寸，方块会是空的（2026-10-30 该 bug）。 */
+			const dot = (colors) => colors.length > 1 ? (0, react$1.createElement)("span", { className: "dtl-trend__dot dtl-trend__dot--split" }, ...colors.map((color, index) => (0, react$1.createElement)("span", {
+				key: index,
+				style: { background: color }
+			}))) : (0, react$1.createElement)("span", {
+				className: "dtl-trend__dot",
+				style: { background: colors[0] ?? "transparent" }
+			});
+			/** 图例：两枚上下两段的方块（已结案 = 取消在上 / 完成在下、未结 = 进行中在上 / 待认领在下）
+			*  + 新增曲线。只看我的时未结整根都是进行中，那枚不拆（用户 2026-10-30）。 */
 			const legend = [
 				{
-					key: "done",
-					label: t("chartFinished"),
-					color: "var(--dtl-chart-done)"
-				},
-				{
-					key: "cancelled",
-					label: t("chartCancelled"),
-					color: "var(--dtl-danger)"
+					key: "closed",
+					label: t("chartClosed"),
+					colors: [C_CANCELLED, C_DONE]
 				},
 				{
 					key: "open",
 					label: t(mine ? "chartDoing" : "chartOpen"),
-					color: "var(--dtl-chart-open)"
+					colors: mine ? [C_DOING] : [C_DOING, C_OPEN]
 				},
 				{
 					key: "added",
 					label: t("chartAdded"),
-					color: "var(--dtl-chart-line)"
+					colors: [C_LINE]
 				}
 			];
 			const row = (key, label, count, color) => count > 0 ? (0, react$1.createElement)("div", {
@@ -54891,23 +54925,30 @@ body[data-ds-dark-theme]{
 				className: "dtl-trend__dot",
 				style: { background: color }
 			}), `${label} ${formatCount(count)}`) : null;
-			/** 浮卡：周期 → 新建 / 完成 / 取消 / 未结（0 值不列），未结再补一行进行中 · 待认领。 */
+			/** 浮卡的一行总数（带色块）+ 缩进的拆分注脚（用户 2026-10-30：总数一行、下跟「X N · Y M」）。 */
+			const totalRow = (key, label, count, colors, sub) => count > 0 ? [(0, react$1.createElement)("div", {
+				key,
+				className: "dtl-trend__tip-row"
+			}, dot(colors), `${label} ${formatCount(count)}`), sub === "" ? null : (0, react$1.createElement)("div", {
+				key: `${key}-sub`,
+				className: "dtl-trend__tip-row dtl-trend__tip-row--sub"
+			}, sub)] : [];
+			/** 浮卡：周期 → 新建 → 已结案（下跟完成 / 取消）→ 未结（下跟进行中 / 待认领）；0 值不列。 */
 			const tipOf = (bucket) => {
 				const cell = counts(bucket);
 				const split = breakdown(bucket);
+				const total = closed(cell);
 				return (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
 					from: bucket.from,
 					to: bucket.to
-				})), row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), row("done", t("chartFinished"), cell.done, "var(--dtl-chart-done)"), row("cancelled", t("chartCancelled"), cell.cancelled, "var(--dtl-danger)"), row("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, "var(--dtl-chart-open)"), mine || cell.open <= 0 ? null : (0, react$1.createElement)("div", {
-					key: "split",
-					className: "dtl-trend__tip-row dtl-trend__tip-row--sub"
-				}, `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
+				})), row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), ...totalRow("closed", t("chartClosed"), total, [C_CANCELLED, C_DONE], `${t("chartFinished")} ${formatCount(cell.done)} · ${t("chartCancelled")} ${formatCount(cell.cancelled)}`), ...totalRow("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, mine ? [C_DOING] : [C_DOING, C_OPEN], mine ? "" : `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
 			};
 			const colStyle = { width: `${String(COL_W)}px` };
-			/** 一根柱 = 一个周：左结案（底绿完成 / 顶红取消，两段叠一根）、右未结。 */
+			/** 一根柱 = 一个周：左结案（底蓝完成 / 顶红取消）、右未结（底琥珀待认领 / 顶绿进行中）。 */
 			const colOf = (bucket, index) => {
 				const cell = counts(bucket);
 				const total = closed(cell);
+				const split = breakdown(bucket);
 				const height = (value) => `${String(value / top * 100)}%`;
 				const style = {
 					...colStyle,
@@ -54929,7 +54970,10 @@ body[data-ds-dark-theme]{
 				}) : null) : null, cell.open > 0 ? (0, react$1.createElement)("div", {
 					className: "dtl-trend__bar dtl-trend__bar--open",
 					style: { height: height(cell.open) }
-				}) : null), tipOf(bucket));
+				}, split.doing > 0 ? (0, react$1.createElement)("span", {
+					className: "dtl-trend__seg dtl-trend__seg--doing",
+					style: { height: `${String(split.doing / cell.open * 100)}%` }
+				}) : null) : null), tipOf(bucket));
 			};
 			const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH / PITCH));
 			/** 最后一个真正画出文字的位置：它得右对齐，否则末位数字会顶出卡片。 */
@@ -54967,10 +55011,7 @@ body[data-ds-dark-theme]{
 			};
 			const first = slots[0];
 			const partial = trend.coverageFrom !== "" && first !== void 0 && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
-			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...legend.map((item) => (0, react$1.createElement)("span", { key: item.key }, (0, react$1.createElement)("span", {
-				className: "dtl-trend__dot",
-				style: { background: item.color }
-			}), item.label)), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
+			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...legend.map((item) => (0, react$1.createElement)("span", { key: item.key }, dot(item.colors), item.label)), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
 				type: "checkbox",
 				checked: mineOnly,
 				onChange: (event) => {
@@ -55081,8 +55122,9 @@ body[data-ds-dark-theme]{
 		const SELECT_MAX_WIDTH = 240;
 		/** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
 		const SEARCH_WIDTH = 192;
-		/** 列表最多渲染条数（用户 2026-10-28：内容过多时只给最新 100 条 + 底部提示）。 */
-		const LIST_LIMIT = 100;
+		/** **单个工作区**最多渲染条数（用户 2026-10-30：原来是整体 100 条，改成每区各自 100 条，
+		*  超了在该区列表末尾给一条提示；不再有全局截断 —— 「我的待办」与「全部」同一条规则）。 */
+		const WS_LIMIT = 100;
 		/** 组头计数：按「待认领 → 进行中 → 积压 → 逾期 → 停滞」排，` · ` 分隔；
 		*  **0 的档整段不出现**（用户 2026-10-30：不显示 0，也不显示杠），「我的待办」不列。 */
 		const GROUP_STATS = [
@@ -55107,11 +55149,10 @@ body[data-ds-dark-theme]{
 				label: "statStale"
 			}
 		];
-		/** 底部「截断提示」样式（临时：核心暂无对应样式，先按此观感；用户确认后再定型）。 */
+		/** 组内「已截断」提示样式（核心暂无对应件；灰小字、贴在该组最后一张卡下方，观感定型后再收口）。 */
 		const limitHintStyle = {
-			marginTop: "var(--dtl-space-3)",
-			padding: "var(--dtl-space-3) var(--dtl-space-4)",
-			textAlign: "center",
+			marginTop: "var(--dtl-space-2)",
+			padding: "0 var(--dtl-space-2)",
 			fontSize: "var(--dtl-font-sm)",
 			lineHeight: "var(--dtl-line-sm)",
 			color: "var(--dtl-fg-3)"
@@ -55403,8 +55444,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261030-175629-310`
-			}, `v0.0.125 261030-175629-310`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261031-010625-749`
+			}, `v0.0.125 261031-010625-749`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -55468,22 +55509,24 @@ body[data-ds-dark-theme]{
 			})) : view.rows.length === 0 ? (0, react$1.createElement)(EmptyState, {
 				title: t("listEmpty"),
 				hint: t("listEmptyHint")
-			}) : (0, react$1.createElement)("div", null, ...groupRows(view.rows.slice(0, LIST_LIMIT)).map((group) => {
+			}) : (0, react$1.createElement)("div", null, ...groupRows(view.rows).map((group) => {
 				const counts = GROUP_STATS.filter((item) => group.counts[item.value] > 0).map((item) => `${t(item.label)} ${group.counts[item.value]}`).join(" · ");
+				const shown = group.rows.slice(0, WS_LIMIT);
+				const truncated = group.rows.length > WS_LIMIT;
 				return (0, react$1.createElement)("div", {
 					key: group.workspace.id,
 					className: "dtl-group"
 				}, (0, react$1.createElement)("div", { className: "dtl-group__head" }, (0, react$1.createElement)(SectionHead, {
 					icon: (0, react$1.createElement)("span", { className: "dtl-group__rule" }),
 					title: (0, react$1.createElement)("span", null, group.workspace.title, counts === "" ? null : (0, react$1.createElement)("span", { className: "dtl-group__count" }, counts))
-				})), ...group.rows.map((row) => (0, react$1.createElement)(TaskRowView, {
+				})), ...shown.map((row) => (0, react$1.createElement)(TaskRowView, {
 					key: row.key,
 					t,
 					row,
 					solo,
 					onView: handleView
-				})));
-			})), viewMode === "history" ? null : view.rows.length > LIST_LIMIT ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("listLimitHint", { n: LIST_LIMIT })) : null, (0, react$1.createElement)("div", { className: "dtl-page-foot" }))));
+				})), truncated ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("wsLimitHint", { n: WS_LIMIT })) : null);
+			})), (0, react$1.createElement)("div", { className: "dtl-page-foot" }))));
 		}
 		//#endregion
 		//#region src/client/locales.ts
@@ -55521,6 +55564,7 @@ body[data-ds-dark-theme]{
 			daysNone: "—",
 			daysValue: "{n} 天",
 			chartDone: "结案",
+			chartClosed: "已结案",
 			chartFinished: "完成",
 			chartCancelled: "取消",
 			chartOpen: "未结",
@@ -55553,7 +55597,7 @@ body[data-ds-dark-theme]{
 			ownerAll: "全部执行人",
 			listEmpty: "未找到匹配的任务记录",
 			listEmptyHint: "可切换状态或工作区，查看其他记录。",
-			listLimitHint: "仅显示前 {n} 条查询结果",
+			wsLimitHint: "本工作区记录较多，此处仅列出前 {n} 条；其余记录未予显示，如需查阅请缩小筛选范围。",
 			ownerUnclaimed: "待认领",
 			timeUnknown: "时间未知",
 			relJustNow: "刚刚",
@@ -55631,6 +55675,7 @@ body[data-ds-dark-theme]{
 			daysNone: "—",
 			daysValue: "{n}d",
 			chartDone: "Closed",
+			chartClosed: "Closed",
 			chartFinished: "Done",
 			chartCancelled: "Cancelled",
 			chartOpen: "Open",
@@ -55663,7 +55708,7 @@ body[data-ds-dark-theme]{
 			ownerAll: "Anyone",
 			listEmpty: "No matching task records",
 			listEmptyHint: "Switch status or workspace to see other records.",
-			listLimitHint: "Only the first {n} results are shown",
+			wsLimitHint: "This workspace has more records than shown; only the first {n} are listed. Narrow the filters to see the rest.",
 			ownerUnclaimed: "unclaimed",
 			timeUnknown: "unknown time",
 			relJustNow: "just now",

@@ -171,6 +171,10 @@ const UI_BASE_CSS = `
 /* 图例色块：直角方块，与柱子同一造型（用户 2026-10-29：不要圆角） */
 .dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
+/* 上下两半的色块（用户 2026-10-30）：上半 = 柱子里叠在上面那一段 ——
+   已结案（取消红在上 / 完成蓝在下）、未结（进行中绿在上 / 待认领琥珀在下）。 */
+.dtl-trend__dot--split{display:inline-flex;flex-direction:column;overflow:hidden;}
+.dtl-trend__dot--split > span{flex:1 1 0;min-height:0;}
 /* 「只看我的」：跟在图例后面（右侧那角留给翻页箭头，用户 2026-10-30） */
 .dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;cursor:pointer;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
@@ -210,12 +214,13 @@ const UI_BASE_CSS = `
   transform-origin:bottom;animation:dtl-bar-in .3s var(--dtl-ease) backwards;
   animation-delay:var(--lc-d,0ms);}
 @media (prefers-reduced-motion: reduce){.dtl-trend__bar{animation:none;}}
-/* 完成 = business 蓝（用户 2026-10-30：绿的不好看）、未结 = 琥珀 */
+/* 结案柱 = 完成 business 蓝（用户 2026-10-30：绿的不好看）；未结柱底 = 待认领琥珀 */
 .dtl-trend__bar--closed{background-color:var(--dtl-chart-done);}
 .dtl-trend__bar--open{background-color:var(--dtl-chart-open);}
-/* 取消那一段叠在结案柱顶端（红在上、蓝在下，用户 2026-10-30）；圆角交给父级裁 */
+/* 叠在柱顶端的那一段（用户 2026-10-30）：结案柱顶 = 取消红、未结柱顶 = 进行中绿；圆角交给父级裁 */
 .dtl-trend__seg{position:absolute;left:0;right:0;top:0;}
 .dtl-trend__seg--cancelled{background-color:var(--dtl-danger);}
+.dtl-trend__seg--doing{background-color:var(--dtl-chart-doing);}
 /* 柱面斜纹：**两个图表共用这一条**（历史页 .dtl-hist__bar / 首页 .dtl-trend__bar）——
    一根柱铺一层 45° 覆盖层（伪元素画在最上面），不碰任何分段的底色，也不依赖谁先谁后；
    父级圆角 + overflow 裁切把覆盖层一起裁成圆角（用户 2026-10-30：同一个东西只留一种实现）。
@@ -282,12 +287,12 @@ const UI_BASE_CSS = `
 .dtl-taskrow__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);min-width:0;flex:0 1 auto;}
 .dtl-taskrow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-/* 第二行小字：工作区 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
+/* 第二行小字：状态标签 · 异常标签 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
 .dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
-/* 右侧（用户 2026-10-28）：工作区 Chip（常驻）/ 时间（hover 让位）/ 动作钮。
-   hover 只收时间那一截，Chip 不动 —— 按钮出现时两者保持同一个 gap。
-   人名（第二行）走核心 Button 的 link 档，这里不再有它的样式。 */
+/* 右侧（用户 2026-10-28）：执行人名（常驻）/ 时间（hover 让位）/ 动作钮。
+   hover 只收时间那一截，人名不动 —— 按钮出现时两者保持同一个 gap。
+   人名走核心 Button 的 link 档（品牌蓝），这里不再有它的样式。 */
 .dtl-taskrow__meta{flex:none;overflow:hidden;text-overflow:ellipsis;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
@@ -378,14 +383,14 @@ export function Segmented<Value extends string>(props: {
 
 /* ── 按钮 / 图标钮 ────────────────────────────────────────────────── */
 
-/** 按钮：改由核心 `Button` 承担（10 档 variant 里本地用 primary/outline/ghost/link）。
+/** 按钮：改由核心 `Button` 承担（18 档 variant 里本地用 primary/secondary/outline/ghost/link）。
  *  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。
  *  宽度三件（width/minWidth/maxWidth）核心已支持：给 maxWidth + 纯文字 ⇒ 核心自动省略号 +
  *  hover 跑马灯，本层原样透传，别再自己写截断。 */
 export function Button(props: {
 	children?: ReactNode;
 	onClick?: () => void;
-	variant?: "primary" | "outline" | "ghost" | "link";
+	variant?: "primary" | "secondary" | "outline" | "ghost" | "link";
 	size?: "sm" | "md" | "lg";
 	icon?: ReactNode;
 	loading?: boolean;
@@ -587,14 +592,16 @@ export function StatCard(props: {
 	);
 }
 
-/** 本地 7 档语义色 → 核心 `Chip` 5 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
- *  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。 */
+/** 本地 7 档语义色 → 核心 `Chip` 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
+ *  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。
+ *  待认领用 `slate`（实心灰）而不是 `neutral`：neutral 那层浅灰跟 #标签 长得一模一样，
+ *  状态标签要跟任务行左缘那条灰竖线一个色（用户 2026-10-30）。 */
 const CHIP_TONE: Record<
 	"neutral" | "open" | "backlog" | "doing" | "overdue" | "stale" | "person",
-	"neutral" | "business" | "success" | "warning" | "danger"
+	"neutral" | "slate" | "business" | "success" | "warning" | "danger"
 > = {
 	neutral: "neutral",
-	open: "neutral",
+	open: "slate",
 	backlog: "warning",
 	doing: "success",
 	overdue: "danger",

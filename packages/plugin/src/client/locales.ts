@@ -44,6 +44,7 @@ export type LocaleKey =
 	| "daysValue"
 	// 趋势图
 	| "chartDone"
+	| "chartClosed"
 	| "chartFinished"
 	| "chartCancelled"
 	| "chartOpen"
@@ -79,7 +80,7 @@ export type LocaleKey =
 	| "ownerAll"
 	| "listEmpty"
 	| "listEmptyHint"
-	| "listLimitHint"
+	| "wsLimitHint"
 	| "ownerUnclaimed"
 	| "timeUnknown"
 	// 相对时间（GitHub 口径）
@@ -166,6 +167,7 @@ export const zh: Record<LocaleKey, string> = {
 
 	// 术语（2026-10-29 用户拍板）：结案 = 完成 + 取消（上位词），完成 = 正常结案，取消 = 作废
 	chartDone: "结案",
+	chartClosed: "已结案",
 	chartFinished: "完成",
 	chartCancelled: "取消",
 	chartOpen: "未结",
@@ -200,7 +202,7 @@ export const zh: Record<LocaleKey, string> = {
 	ownerAll: "全部执行人",
 	listEmpty: "未找到匹配的任务记录",
 	listEmptyHint: "可切换状态或工作区，查看其他记录。",
-	listLimitHint: "仅显示前 {n} 条查询结果",
+	wsLimitHint: "本工作区记录较多，此处仅列出前 {n} 条；其余记录未予显示，如需查阅请缩小筛选范围。",
 
 	ownerUnclaimed: "待认领",
 	timeUnknown: "时间未知",
@@ -284,6 +286,7 @@ export const en: Record<LocaleKey, string> = {
 	daysValue: "{n}d",
 
 	chartDone: "Closed",
+	chartClosed: "Closed",
 	chartFinished: "Done",
 	chartCancelled: "Cancelled",
 	chartOpen: "Open",
@@ -320,7 +323,7 @@ export const en: Record<LocaleKey, string> = {
 	ownerAll: "Anyone",
 	listEmpty: "No matching task records",
 	listEmptyHint: "Switch status or workspace to see other records.",
-	listLimitHint: "Only the first {n} results are shown",
+	wsLimitHint: "This workspace has more records than shown; only the first {n} are listed. Narrow the filters to see the rest.",
 
 	ownerUnclaimed: "unclaimed",
 	timeUnknown: "unknown time",

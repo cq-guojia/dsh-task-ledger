@@ -51,10 +51,12 @@ body{
 
   /* ── 图表色（2026-10-30 用户改版）───────────────────────────────
      首页趋势图：完成 = **蓝**（business，用户 2026-10-30「绿色那个柱子不好看，用 business 蓝」）、
-     取消 = 红、未结 = 琥珀；新增曲线另走一档**中性灰**——柱子已经占了蓝，曲线也用蓝就分不清了。
-     三色仍直接取核心 alias（state-business / state-warn / state-error），不手写色值。
+     取消 = 红；未结那根拆两段（用户 2026-10-30）—— 进行中 = 绿、待认领 = 琥珀；
+     新增曲线另走一档**中性灰**——柱子已经占了蓝，曲线也用蓝就分不清了。
+     色值仍直接取核心 alias（state-business / state-success / state-warn / state-error），不手写。
      历史页柱色仍是「完成绿 / 取消红」，曲线沿用 --dtl-chart-added（蓝）。 */
   --dtl-chart-done:var(--dtl-business);
+  --dtl-chart-doing:var(--dtl-success);
   --dtl-chart-open:var(--dtl-warning);
   --dtl-chart-added:var(--dtl-business);
   --dtl-chart-line:var(--dtl-fg-3);

@@ -50,6 +50,7 @@ type Args struct {
 	OwnerName *string
 	Status    string
 	Tag       *string
+	Keyword   *string // history --keyword：标题 / 摘要 / 标签 的子串匹配
 	Since     *string
 	Until     *string
 	Limit     *int
@@ -90,7 +91,7 @@ var commandFlags = map[string]map[string]bool{
 	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--by-owner", "--json", "--repo"),
 	"owners":   setOf("--json", "--repo"),
 	"show":     setOf("--id", "--json", "--repo"),
-	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--since", "--until", "--limit", "--months", "--json", "--repo"),
+	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--keyword", "--since", "--until", "--limit", "--months", "--json", "--repo"),
 	"validate": setOf("--deep", "--json", "--repo"),
 	"root":     setOf("--dir", "--json"),
 	"whoami":   setOf("--json", "--repo"),
@@ -109,7 +110,7 @@ func takesValue(name string) bool {
 	switch name {
 	case "--repo", "--title", "--id", "--created", "--category", "--tags",
 		"--note", "--summary", "--finished", "--owner", "--owner-name",
-		"--status", "--tag", "--since", "--until", "--limit", "--months",
+		"--status", "--tag", "--keyword", "--since", "--until", "--limit", "--months",
 		"--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--dir",
 		"--claim", "--name":
 		return true
@@ -269,6 +270,8 @@ func applyFlag(a *Args, name, value string) error {
 		a.Status = value
 	case "--tag":
 		a.Tag = nonEmptyPtr(value)
+	case "--keyword":
+		a.Keyword = nonEmptyPtr(value)
 	case "--since":
 		a.Since = nonEmptyPtr(value)
 	case "--until":
@@ -449,6 +452,7 @@ func buildQuery(a *Args) error {
 			Mine:      a.Mine,
 			Category:  nonEmptyPtr(a.Category),
 			Tag:       a.Tag,
+			Keyword:   a.Keyword,
 			Since:     since,
 			Until:     until,
 			Limit:     a.Limit,
