@@ -2979,9 +2979,6 @@ window.__ModuleLoader__.load({
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.12.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_098a2ccd8a53f295ad0979106693a6a3/node_modules/dsh-plugin-core/dist/ui/controls/field-css.generated.js
 		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-dim);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;height:auto;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* height:auto 必须：iconbtn--md/lg 的固定 height 会让 absolute 的 bottom 被忽略\n   （top:1 + 固定高 ⇒ 整钮错位 1px，× 显得没居中，2026-10-28 用户截图抓的）。 */\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-dim);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover,rgba(38,49,72,.06));}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.12.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_098a2ccd8a53f295ad0979106693a6a3/node_modules/dsh-plugin-core/dist/ui/controls/loading-css.generated.js
-		const LOADING_CSS = "\n/* 运行中 / loading 的活动指示：三个小方块依次脉动。 */\n@keyframes dshpc-run-block { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8) } 40% { opacity: 1; transform: scale(1) } }\n.dshpc-run-blocks { display: inline-flex; align-items: center; gap: 3px; }\n.dshpc-run-blocks > i { width: 5px; height: 5px; border-radius: 1px; background: currentColor; animation: dshpc-run-block 1.2s ease-in-out infinite; }\n.dshpc-run-blocks > i:nth-child(2) { animation-delay: 0.15s; }\n.dshpc-run-blocks > i:nth-child(3) { animation-delay: 0.3s; }\n@media (prefers-reduced-motion: reduce) { .dshpc-run-blocks > i { animation: none; opacity: 1; } }\n\n/* ── 加载提示（LoadingToast / LoadingBlock / showLoading）───────────────────\n   两种样式共用一个灰色面（与 notify 的 info 卡同色），暗色走 body[data-ds-dark-theme]。\n   卡里的转圈图标不自绘：复用 Loader（size sm / md），环的画法与动画只有 controls/loader.css 一份。 */\n\n/* 样式一：横排 toast 卡（图标在左、文字在右），与 notify 的 info 卡同尺寸同色。 */\n.dshpc-loading-toast {\n  display: inline-flex; align-items: center; gap: 10px;\n  /* 不学 notify 固定 320 宽：这张卡也常被塞进表格 / 窄栏里，宽度随内容走。\n     shortcut: 下限 250px，要更宽 / 更窄就改这一处。 */\n  min-width: 250px; min-height: 48px; padding: 12px 16px; box-sizing: border-box;\n  border-radius: 10px; box-shadow: 0 6px 16px rgba(0, 0, 0, .18);\n  background: #f4f4f5; color: #18181b;\n  font-size: var(--dshpc-font-lg); line-height: var(--dshpc-line-lg);\n}\n\n/* 样式二：方块卡（转圈在上、文字在下），内距更大。 */\n.dshpc-loading-block {\n  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;\n  min-width: 132px; min-height: 132px; padding: 24px; box-sizing: border-box;\n  border-radius: var(--dshpc-radius-md); box-shadow: 0 6px 16px rgba(0, 0, 0, .18);\n  background: #f4f4f5; color: #18181b;\n  font-size: var(--dshpc-font-md); line-height: var(--dshpc-line-md);\n}\nbody[data-ds-dark-theme] .dshpc-loading-toast,\nbody[data-ds-dark-theme] .dshpc-loading-block { background: #3f3f46; color: #fafafa; }\n\n/* 全局浮层：居中、不挡点击（遮罩层单独一个 div 才挡）。\n   与 Modal 遮罩同一套让位口径：右边界读 --dshpc-page-inset-right。 */\n.dshpc-loading-overlay {\n  position: fixed; inset: 0 var(--dshpc-page-inset-right, 0px) 0 0; z-index: var(--dshpc-z-modal);\n  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;\n  padding: 24px; box-sizing: border-box; pointer-events: none;\n}\n/* 七向定位（与 Toast 的六向同名 + 正中）：默认 bottom-center，与 Sonner 提示同屏位。 */\n.dshpc-loading-overlay--top-left { align-items: flex-start; justify-content: flex-start; }\n.dshpc-loading-overlay--top-center { justify-content: flex-start; }\n.dshpc-loading-overlay--top-right { align-items: flex-end; justify-content: flex-start; }\n.dshpc-loading-overlay--bottom-left { align-items: flex-start; justify-content: flex-end; }\n.dshpc-loading-overlay--bottom-center { justify-content: flex-end; }\n.dshpc-loading-overlay--bottom-right { align-items: flex-end; justify-content: flex-end; }\n.dshpc-loading-overlay__mask { position: absolute; inset: 0; pointer-events: auto; }\n";
-		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.12.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_098a2ccd8a53f295ad0979106693a6a3/node_modules/dsh-plugin-core/dist/ui/controls/loader-css.generated.js
 		const LOADER_CSS = "/* ── Loader：统一的加载动画图标（无背景 / 无定位 / 颜色跟随 currentColor）────────\n   形态 × 尺寸两轴正交：形态管几何与动画；尺寸档只改 width / height，几何按\n   viewBox=\"0 0 24 24\" 等比缩放 —— 一套几何吃五档，12px 时描边即 1.5px、48px 时 6px，\n   视觉重量一致，不用逐个尺寸换算 calc。\n\n   边界：本控件**只管图标本身**。背景 / 圆角 / 内距 / 阴影 / 定位（fixed、居中、漂浮）\n   一律归调用方 —— 套 Chip、套 Card，或自己包一个 div。 */\n\n.dshpc-loader { display: inline-block; flex: none; vertical-align: middle; line-height: 0; color: inherit; }\n\n.dshpc-loader--xs { width: 12px; height: 12px; }\n.dshpc-loader--sm { width: 16px; height: 16px; }\n.dshpc-loader--md { width: 24px; height: 24px; }\n.dshpc-loader--lg { width: 32px; height: 32px; }\n.dshpc-loader--xl { width: 48px; height: 48px; }\n\n/* 形态一 ring：开口弧整体旋转。必须走 SVG 矢量弧 —— 次像素边框画圆在 12px 下会被\n   抗锯齿拉毛、看着像圆角方（2026-10-20 真机实测，曾被误判成 border-radius 被覆盖）。 */\n.dshpc-loader--ring { animation: dshpc-loader-rotate .8s linear infinite; }\n@keyframes dshpc-loader-rotate { to { transform: rotate(360deg) } }\n\n/* 形态二 blocks：三个方块依次脉动放大。\n   transform-box: fill-box 是 SVG 子元素做 CSS transform 的必要条件 —— 否则 origin\n   落在 viewBox 原点，节点会绕着左上角飞出去。 */\n.dshpc-loader__node { transform-box: fill-box; transform-origin: center; }\n.dshpc-loader--blocks .dshpc-loader__node { animation: dshpc-loader-blink 1.2s ease-in-out infinite; }\n.dshpc-loader__node:nth-child(2) { animation-delay: .15s; }\n.dshpc-loader__node:nth-child(3) { animation-delay: .3s; }\n@keyframes dshpc-loader-blink {\n  0%, 80%, 100% { opacity: .25; transform: scale(.8) }\n  40% { opacity: 1; transform: scale(1) }\n}\n\n/* 降低动效：停在「全部可见、实体大小」，而不是停在动画中途的半透明小点。 */\n@media (prefers-reduced-motion: reduce) {\n  .dshpc-loader--ring { animation: none; }\n  .dshpc-loader__node { animation: none; opacity: 1; transform: none; }\n}\n";
 		//#endregion
@@ -4843,165 +4840,6 @@ window.__ModuleLoader__.load({
 			})]);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.12.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_098a2ccd8a53f295ad0979106693a6a3/node_modules/dsh-plugin-core/dist/ui/loading-host.js
-		/** 全局注册表键：Symbol.for 跨 bundle 副本天然共享同一个符号。 */
-		const LOADING_HOST_KEY = Symbol.for("dsh-plugin-core/loading-host");
-		/** 全局单例：已注册则直接返回（不触发 create），否则建一个并注册。 */
-		function claimLoadingHost(create) {
-			const g = globalThis;
-			const existing = g[LOADING_HOST_KEY];
-			if (existing !== void 0) return existing;
-			const created = create();
-			g[LOADING_HOST_KEY] = created;
-			return created;
-		}
-		/** 浮层定位类名（`center` 走基础规则，不需要修饰类）。 */
-		/**
-		* 为什么这里要自注入 `LOADING_CSS`：拿这个类名的调用方通常是**自己画**浮层
-		* （否则直接渲染 `Loading` 组件即可），那时 core 里没有任何组件被渲染 ⇒ 没人登记这份 CSS
-		* ⇒ 浮层会裸奔。类名出口处登记一次，任何拿类名自绘的路径都有样式（幂等）。
-		*/
-		function loadingOverlayClass(position) {
-			ensureComponentStyles("loading", LOADING_CSS);
-			return `dshpc-loading-overlay dshpc-loading-overlay--${position}`;
-		}
-		/**
-		* 全局**只有一个槽位**：任何一次 `show` 都顶掉上一条，屏幕上永远最多一张加载卡
-		* （N 种样式、N 个插件、连点多少次都一样）。被顶掉那次的句柄再 `close()` 是空操作，
-		* 不会误关后一张。
-		*/
-		function createLoadingSlot() {
-			let seq = 0;
-			let current = null;
-			return {
-				current: () => current,
-				show(request) {
-					const id = ++seq;
-					current = {
-						id,
-						request
-					};
-					let closed = false;
-					return { close() {
-						if (closed || current?.id !== id) return;
-						closed = true;
-						current = null;
-					} };
-				}
-			};
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.12.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_098a2ccd8a53f295ad0979106693a6a3/node_modules/dsh-plugin-core/dist/ui/Loading.js
-		/**
-		* 全局浮动 Loading 指示器（UI 基础层 · P1）。
-		*
-		* @deprecated 这是「自带定位 + 自带 pill 背景」的复合件，不属于通用加载图标。
-		*   只要图标请用 {@link Loader}（无背景、无定位，背景与位置归调用方）；
-		*   要居中 / 带文案的整卡请继续用 {@link LoadingToast} / {@link LoadingBlock}。
-		*   本组件保留不删（消费方可能还在用），但新代码不要再用。
-		*
-		* 用法：
-		*   <Loading />
-		*
-		* 行为：
-		* - fixed 定位在主内容容器右下角，**不占布局空间**；
-		* - 右侧贴齐主内容容器右边缘（`anchorId` 默认 `dshpc-main`），底部留 16px；
-		* - **三个小方块依次脉动，无任何文案**（基础抽象统一外观，禁止加字；用户 2026-10-06）；
-		* - 监听窗口 resize / scroll / 内容盒 resize，自动跟住内容宽度。
-		*
-		* 配套 also 导出 `<RunningBlocks />`：同样的三个脉动方块（无文案），
-		* 用于表格单元格里的「运行中」状态指示。
-		*
-		* 文档登记：docs/design/ui-foundation.md §二「唯一实现表」。
-		*/
-		function textOf(props) {
-			return props.text ?? (props.translate ?? t$2)("loadingDefault");
-		}
-		/** 样式一：横排提示卡（转圈在左、文字在右），灰色底与 notify 的 info 卡同色。就地渲染，位置随调用方。 */
-		function LoadingToast(props) {
-			ensureComponentStyles("loading", LOADING_CSS);
-			return (0, react$1.createElement)("div", {
-				className: "dshpc-loading-toast",
-				role: "status",
-				"aria-live": "polite"
-			}, (0, react$1.createElement)(Loader$2, { size: "sm" }), (0, react$1.createElement)("span", null, textOf(props)));
-		}
-		/** 样式二：方块卡（转圈在上、文字在下，内距更大）。就地渲染，位置随调用方。 */
-		function LoadingBlock(props) {
-			ensureComponentStyles("loading", LOADING_CSS);
-			return (0, react$1.createElement)("div", {
-				className: "dshpc-loading-block",
-				role: "status",
-				"aria-live": "polite"
-			}, (0, react$1.createElement)(Loader$2, { size: "md" }), (0, react$1.createElement)("span", null, textOf(props)));
-		}
-		function createLoadingHost() {
-			const slot = createLoadingSlot();
-			let root = null;
-			let container = null;
-			function flush() {
-				const state = slot.current();
-				if (state === null) {
-					root?.unmount();
-					container?.remove();
-					root = null;
-					container = null;
-					return;
-				}
-				if (root === null) {
-					container = document.createElement("div");
-					container.setAttribute("data-dshpc-loading-host", "");
-					document.body.appendChild(container);
-					root = (0, react_dom_client.createRoot)(container);
-				}
-				ensureComponentStyles("loading", LOADING_CSS, getStyleKit());
-				const { request } = state;
-				const opacity = Math.min(1, Math.max(0, request.maskOpacity));
-				root.render((0, react$1.createElement)("div", { className: loadingOverlayClass(request.position) }, request.mask ? (0, react$1.createElement)("div", {
-					className: "dshpc-loading-overlay__mask",
-					style: { background: `rgba(0, 0, 0, ${opacity})` }
-				}) : null, request.variant === "block" ? (0, react$1.createElement)(LoadingBlock, {
-					text: request.text,
-					translate: request.translate
-				}) : (0, react$1.createElement)(LoadingToast, {
-					text: request.text,
-					translate: request.translate
-				})));
-			}
-			return { show(request) {
-				const handle = slot.show(request);
-				flush();
-				return { close() {
-					handle.close();
-					flush();
-				} };
-			} };
-		}
-		/**
-		* 命令式加载提示（全局唯一浮层，**不自动消失**）。所有插件、所有位置调用都落在**同一处**
-		* （默认屏幕下方居中，与 Toast 同屏位），且屏幕上永远只有一张卡 —— 后一次调用直接顶掉
-		* 前一次，被顶掉那次的句柄再 `close()` 是空操作。收起只能靠自己调 `close()`。
-		*
-		* ```ts
-		* const loading = showLoading({ text: '正在保存…', mask: true, maskOpacity: 0.3 })
-		* await save()
-		* loading.close()
-		* ```
-		*
-		* 无 `document` 时静默返回空句柄（Node 单测 / SSR 不炸）。
-		*/
-		function showLoading$1(opts) {
-			if (typeof document === "undefined") return { close: () => {} };
-			return claimLoadingHost(createLoadingHost).show({
-				text: opts?.text,
-				variant: opts?.variant ?? "toast",
-				position: opts?.position ?? "bottom-center",
-				mask: opts?.mask === true,
-				maskOpacity: opts?.maskOpacity ?? 0,
-				translate: opts?.translate
-			});
-		}
-		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.12.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_098a2ccd8a53f295ad0979106693a6a3/node_modules/dsh-plugin-core/dist/ui/resizer.js
 		/** 开始一次拖拽调宽（监听 window 的 pointermove / pointerup，松手自动清理）。 */
 		function startResizeLayoutWidth(opts) {
@@ -5554,8 +5392,24 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region src/client/format.ts
-		function pad2$1(value) {
+		function pad2(value) {
 			return String(value).padStart(2, "0");
+		}
+		/** `Date` → 本机时区的 `YYYY-MM-DD`（图表按天 / 周切桶用）。 */
+		function ymdOf(date) {
+			return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+		}
+		/** `YYYY-MM-DD` 前后挪几天（本机时区）。 */
+		function addDays(value, delta) {
+			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
+			date.setDate(date.getDate() + delta);
+			return ymdOf(date);
+		}
+		/** 本周一（周一为一周之始，与 skill 同口径）。 */
+		function mondayOf(value) {
+			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
+			date.setDate(date.getDate() - (date.getDay() + 6) % 7);
+			return ymdOf(date);
 		}
 		/**
 		* 相对时间（GitHub 口径，用户 2026-10-28）：<1 分钟「刚刚」、<1 小时「N 分钟前」、
@@ -5581,8 +5435,8 @@ window.__ModuleLoader__.load({
 			const ms = Date.parse(iso);
 			if (Number.isNaN(ms)) return opts?.fallback ?? iso;
 			const d = new Date(ms);
-			const base = `${d.getFullYear()}-${pad2$1(d.getMonth() + 1)}-${pad2$1(d.getDate())} ${pad2$1(d.getHours())}:${pad2$1(d.getMinutes())}`;
-			return opts?.seconds === true ? `${base}:${pad2$1(d.getSeconds())}` : base;
+			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
 		}
 		/** 计数缩写（统一口径）：<1000 原样；≥1000 用 K，≥100 万用 M，保留 1 位小数并去掉 .0。
 		*  例：999→"999"、1000→"1K"、1200→"1.2K"、12345→"12.3K"、1000000→"1M"。 */
@@ -53645,12 +53499,18 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
-  /* ── 趋势图三色（2026-10-29 用户定稿）───────────────────────────
-     结案 = 绿、新增 = 蓝、未结 = 琥珀；三色直接取核心 alias
-     （state-success-primary / state-business-primary / state-warn-primary），不手写色值 */
-  --dtl-chart-done:var(--dtl-success);
+  /* ── 图表色（2026-10-30 用户改版）───────────────────────────────
+     首页趋势图：完成 = **蓝**（business，用户 2026-10-30「绿色那个柱子不好看，用 business 蓝」）、
+     取消 = 红、未结 = 琥珀；新增曲线另走一档**中性灰**——柱子已经占了蓝，曲线也用蓝就分不清了。
+     三色仍直接取核心 alias（state-business / state-warn / state-error），不手写色值。
+     历史页柱色仍是「完成绿 / 取消红」，曲线沿用 --dtl-chart-added（蓝）。 */
+  --dtl-chart-done:var(--dtl-business);
   --dtl-chart-open:var(--dtl-warning);
   --dtl-chart-added:var(--dtl-business);
+  --dtl-chart-line:var(--dtl-fg-3);
+  /* 柱面斜纹用的半透明条：取卡底色 ⇒ 明暗主题自动跟着走，看着像柱子上开了几道细缝
+     （2026-10-30 三改：32% → 18% → 8%，要很淡） */
+  --dtl-chart-stripe:color-mix(in srgb,var(--dtl-surface-1) 8%,transparent);
 
   /* ── 交互底 ──────────────────────────────────────────────────── */
   /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */
@@ -53757,6 +53617,9 @@ body[data-ds-dark-theme]{
 .dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
+/* 局部加载：核心 Loader（三块脉动）居中，只占没数据的那一块，不盖整页 */
+.dtl-loading{display:flex;align-items:center;justify-content:center;padding:var(--dtl-space-4) 0;}
+
 /* 统计区整体：左 8 块（2 行 × 4 列）+ 右图表卡，参考图同款分栏。
    ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
    行高也定死成 --dtl-stat-h（不是 1fr）⇒ 行不随内容涨，卡与卡之间永远等高。
@@ -53807,8 +53670,9 @@ body[data-ds-dark-theme]{
 .dtl-hist__col:hover{filter:brightness(1.1);}
 .dtl-hist__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
   border-radius:var(--dtl-radius-xs);pointer-events:none;}
-/* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 裁掉分段自己的角 */
-.dtl-hist__bar{width:100%;display:flex;flex-direction:column-reverse;
+/* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 把内部分段的方角裁成圆角
+   （与首页趋势图的柱子**同一套**：父级圆角 + overflow 裁切 + ::after 斜纹，见 .dtl-chart-stripe） */
+.dtl-hist__bar{position:relative;width:100%;display:flex;flex-direction:column-reverse;
   border-radius:2px 2px 0 0;overflow:hidden;
   /* 入场：柱子从基线逐列升起来（只动 transform，不碰高度 ⇒ 不动布局、不影响 hover 命中）。
      延迟取列上内联的 --lc-d：**整屏错峰总时长固定 120ms**，由 JS 按「第几列 / 共几列」算好
@@ -53856,55 +53720,86 @@ body[data-ds-dark-theme]{
    首列 / 末列由内联 left / right 钳回边界内 */
 .dtl-hist__label > span{position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;}
 
-/* ── 趋势图（右上卡：8 周 × 3 柱）────────────────────────────────
+/* ── 趋势图（首页右上卡：每周两根柱 + 新增曲线；2026-10-30 改版，画法对齐历史页）──────
    柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
    2026-10-17 真机教训：百分比高度没有确定父高时整列柱消失，只剩数字。 */
-.dtl-trend{height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
-  padding:var(--dtl-space-4);}
+/* z-index：浮卡要盖住页面下方那排筛选控件（input / select），否则 hover 提示被挡
+   ⇒ 整张卡自成一个层叠上下文，浮卡在其中再抬一层。
+   上下留白不对称（用户 2026-10-30：图例离顶太远、离图太近）⇒ 顶 10 / 图例与图之间 12。 */
+.dtl-trend{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;
+  flex-direction:column;gap:var(--dtl-space-3);
+  padding:10px var(--dtl-space-4) var(--dtl-space-4);}
 .dtl-trend__legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--dtl-space-3);
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 /* 图例色块：直角方块，与柱子同一造型（用户 2026-10-29：不要圆角） */
 .dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
-.dtl-trend__dot--done{background:var(--dtl-chart-done);}
-.dtl-trend__dot--open{background:var(--dtl-chart-open);}
-.dtl-trend__dot--added{background:var(--dtl-chart-added);}
-/* 「只看我的」：贴图例右侧的小复选框（原生控件 + accent-color，不自绘皮肤） */
-.dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;margin-left:auto;cursor:pointer;
+/* 「只看我的」：跟在图例后面（右侧那角留给翻页箭头，用户 2026-10-30） */
+.dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;cursor:pointer;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 .dtl-trend__mine input{margin:0;accent-color:var(--dtl-business);}
+/* 翻页箭头：**飘**在卡片右上角（绝对定位，不跟图例挤一排 —— 放一排会把整排文字行撑高，
+   用户 2026-10-30）；底取 --dtl-btn-soft（不透明，压得住下面的刻度线），与历史页同款 */
+.dtl-trend__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
+  display:flex;gap:var(--dtl-space-1);}
+.dtl-trend__nav .dshpc-iconbtn{background:var(--dtl-btn-soft);border-color:transparent;}
 .dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
 .dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;
-  padding-bottom:14px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;
+  padding-bottom:12px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;
   color:var(--dtl-fg-3);}
 .dtl-trend__plot{position:relative;flex:1 1 auto;min-width:0;}
-/* 网格：只在绘图区内（底部 14px 留给 x 轴日期），三档刻度与三条线一一对应 */
-.dtl-trend__grid{position:absolute;left:0;right:0;top:0;bottom:14px;display:flex;flex-direction:column;
-  justify-content:space-between;}
+/* 刻度线五档：顶部不画（正好从右上角控件后面穿过）、中间三档（¾ / ½ / ¼）**全虚线**、
+   底部基线实线（用户 2026-10-30：中间的线都用虚线，不要实线） */
+.dtl-trend__grid{position:absolute;inset:0;display:flex;flex-direction:column;
+  justify-content:space-between;pointer-events:none;}
 .dtl-trend__gridline{border-top:1px solid var(--dtl-border);}
+.dtl-trend__gridline--dashed{border-top-style:dashed;}
+.dtl-trend__gridline--none{border-top:none;}
 .dtl-trend__gridline--base{border-top-color:var(--dtl-border-strong);}
-.dtl-trend__cols{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:stretch;
-  gap:var(--dtl-space-2);}
-.dtl-trend__col{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;
-  justify-content:flex-end;padding-bottom:14px;}
-.dtl-trend__bars{display:flex;align-items:flex-end;justify-content:center;gap:1px;flex:1 1 auto;min-height:0;}
-/* 柱宽 7.5px、无圆角（2026-10-17「不要圆弧」；2026-10-29 用户要求再加粗到 1.5 倍，5 → 7.5）；
-   非零柱给 2px 下限 */
-.dtl-trend__bar{position:relative;width:7.5px;flex:none;min-height:2px;
+/* 柱序居左、组宽固定（组宽 / 组间距由 trend-chart.ts 内联给，这里只管排布） */
+.dtl-trend__cols{position:absolute;inset:0;display:flex;justify-content:flex-start;}
+.dtl-trend__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
-/* 结案柱要盖在隔壁更高的柱子上：柱顶数值会伸出柱宽，否则被邻居压掉 */
-.dtl-trend__bar--done{background:var(--dtl-chart-done);z-index:1;}
-.dtl-trend__bar--open{background:var(--dtl-chart-open);}
-.dtl-trend__bar--added{background:var(--dtl-chart-added);}
-/* hover 整列三根一起提亮（用户 2026-10-17：不是只亮蓝的一根） */
-.dtl-trend__col:hover .dtl-trend__bar{filter:brightness(1.18);}
-.dtl-trend__value{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
-  padding:1px 2px;border-radius:var(--dtl-radius-xs);background:var(--dtl-surface-1);
-  font-size:10px;line-height:1;color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
-.dtl-trend__x{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:10px;line-height:1;
-  color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
-/* hover 浮卡：自绘（原生 title 太慢且长相不一） */
-.dtl-trend__tip{position:absolute;left:50%;bottom:calc(100% - 10px);z-index:2;transform:translateX(-50%);
+.dtl-trend__col:hover{filter:brightness(1.1);}
+/* hover：整组（两根柱）一个虚线框，不是一根一个（用户 2026-10-30） */
+.dtl-trend__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
+  border-radius:var(--dtl-radius-xs);pointer-events:none;}
+.dtl-trend__bars{display:flex;align-items:flex-end;justify-content:flex-start;flex:1 1 auto;min-height:0;}
+/* 柱宽**固定** 11.25px（= trend-chart.ts 的 BAR_W，组宽 / 一屏几周都按它算，改一处两边一起改）：
+   某周没有未结时只剩一根柱，**不许被拉宽**（用户 2026-10-30）。柱顶 2px 圆角、非零柱 2px 下限。
+   入场动画沿用历史页那套 transform（只动 transform，不碰高度 ⇒ 不动布局） */
+.dtl-trend__bar{position:relative;flex:none;width:11.25px;min-height:2px;
+  border-radius:2px 2px 0 0;overflow:hidden;
+  transform-origin:bottom;animation:dtl-bar-in .3s var(--dtl-ease) backwards;
+  animation-delay:var(--lc-d,0ms);}
+@media (prefers-reduced-motion: reduce){.dtl-trend__bar{animation:none;}}
+/* 完成 = business 蓝（用户 2026-10-30：绿的不好看）、未结 = 琥珀 */
+.dtl-trend__bar--closed{background-color:var(--dtl-chart-done);}
+.dtl-trend__bar--open{background-color:var(--dtl-chart-open);}
+/* 取消那一段叠在结案柱顶端（红在上、蓝在下，用户 2026-10-30）；圆角交给父级裁 */
+.dtl-trend__seg{position:absolute;left:0;right:0;top:0;}
+.dtl-trend__seg--cancelled{background-color:var(--dtl-danger);}
+/* 柱面斜纹：**两个图表共用这一条**（历史页 .dtl-hist__bar / 首页 .dtl-trend__bar）——
+   一根柱铺一层 45° 覆盖层（伪元素画在最上面），不碰任何分段的底色，也不依赖谁先谁后；
+   父级圆角 + overflow 裁切把覆盖层一起裁成圆角（用户 2026-10-30：同一个东西只留一种实现）。
+   斜条 2px、条间（柱色本体）4px、透明度见 --dtl-chart-stripe */
+.dtl-hist__bar::after,.dtl-trend__bar::after{content:"";position:absolute;inset:0;
+  pointer-events:none;background-image:repeating-linear-gradient(45deg,
+  var(--dtl-chart-stripe) 0 2px,transparent 2px 6px);}
+/* x 轴日期行：高度定死 10px（文字绝对定位，不吃行高），首末钳制靠内联 left / right */
+.dtl-trend__labels{display:flex;margin-top:2px;flex:none;height:10px;}
+.dtl-trend__label{position:relative;flex:none;font-size:10px;line-height:1;color:var(--dtl-fg-3);
+  font-variant-numeric:tabular-nums;}
+.dtl-trend__label > span{position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;}
+/* 新增量曲线：铺满 plot 的 SVG，0-100 百分比坐标（preserveAspectRatio:none 拉伸），
+   non-scaling-stroke 保证线宽不随拉伸变形。
+   z-index 2 ⇒ **压在柱子上面**（用户 2026-10-30），浮卡再高一层；线色走中性灰
+   （柱子已经是蓝的，曲线再用蓝就分不清了） */
+.dtl-trend__line{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;}
+.dtl-trend__line polyline{fill:none;stroke:var(--dtl-chart-line);stroke-width:1.5;
+  vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
+/* hover 浮卡：恒在柱子**下方**（上方会被卡片顶边挤出屏幕，用户 2026-10-29 同历史页） */
+.dtl-trend__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
   padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
   background:var(--dtl-surface-1);white-space:nowrap;
   font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-fg-2);
@@ -54052,16 +53947,6 @@ body[data-ds-dark-theme]{
 		}
 		/** 加载图标：核心 `Loader` 原样透出（无背景、无定位；形态 `ring` / `blocks`、尺寸 xs~xl 都走核心档位）。 */
 		const Loader = Loader$2;
-		/**
-		* 全局加载提示：核心 `showLoading` 的**默认位（屏幕下方居中、无遮罩）**，不传定位参数
-		* （用户 2026-10-28：就地摆进面板内容区不好看，就用全局那个默认位置）。
-		*
-		*  ⚠️ 它**不会自动消失**：谁开的谁 `close()`（句柄可重复关，第二次是空操作）；
-		*  同屏只有一张卡，后一次调用顶掉前一次 ⇒ 打开面板 / 首读这种场合直接开、数据到了就关。
-		*/
-		function showLoading(text) {
-			return showLoading$1({ text });
-		}
 		/** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
 		*  宽度由核心 `Picker` 原生支持（`width`/`minWidth`/`maxWidth` 落到位触发器内联样式，
 		* 超长省略号 + hover 跑马灯）；给了 `width` 即锁定定宽，否则在 min/max 间自适应。 */
@@ -54202,10 +54087,10 @@ body[data-ds-dark-theme]{
 		const SLOT_W = 15;
 		/** 入场动画的**整屏**错峰总时长：延迟按「第几列 / 共几列」摊到这段时间里，
 		*  不跟列数累加 ⇒ 宽屏上也不会出现「前几根先出来、后一批等半天才凑一起」。 */
-		const STAGGER_MS = 120;
+		const STAGGER_MS$1 = 120;
 		/** x 轴标签的最小间距（小于这个就跳着显示，免得挤成一团）。月是 `2026-10` 七位，
 		*  比 `10-30` 宽一截 ⇒ 单独放宽，跨度落到 4 个槽标一次（用户 2026-10-30 嫌月标签太密）。 */
-		const LABEL_MIN_PITCH = {
+		const LABEL_MIN_PITCH$1 = {
 			day: 40,
 			week: 40,
 			month: 62
@@ -54227,29 +54112,12 @@ body[data-ds-dark-theme]{
 			"week",
 			"month"
 		];
-		function pad2(n) {
-			return String(n).padStart(2, "0");
-		}
-		function ymdOf(date) {
-			return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-		}
 		/** y 轴刻度紧凑格式：≥1000 走 1.3K / 13K（用户 2026-10-30：左侧只留 3~4 位数字的宽度）。 */
 		function compactTick(value) {
 			return value < 1e3 ? String(value) : `${String(Math.round(value / 100) / 10)}K`;
 		}
-		/** 本周一（周一为一周之始，与 skill 同口径）。 */
-		function mondayOf(value) {
-			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
-			date.setDate(date.getDate() - (date.getDay() + 6) % 7);
-			return ymdOf(date);
-		}
 		function monthStart(value) {
 			return `${value.slice(0, 7)}-01`;
-		}
-		function addDays(value, delta) {
-			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
-			date.setDate(date.getDate() + delta);
-			return ymdOf(date);
 		}
 		function addMonths(value, delta) {
 			const date = /* @__PURE__ */ new Date(`${monthStart(value)}T00:00:00`);
@@ -54490,7 +54358,7 @@ body[data-ds-dark-theme]{
 				const total = bucket.done + bucket.cancelled;
 				const style = {
 					...colStyle,
-					"--lc-d": `${String(Math.round(index / Math.max(1, buckets.length - 1) * STAGGER_MS))}ms`
+					"--lc-d": `${String(Math.round(index / Math.max(1, buckets.length - 1) * STAGGER_MS$1))}ms`
 				};
 				const colKey = `${gran}:${String(shift)}:${bucket.key}`;
 				if (total <= 0) return (0, react$1.createElement)("div", {
@@ -54515,7 +54383,7 @@ body[data-ds-dark-theme]{
 					}
 				}))), tipOf(bucket));
 			};
-			const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH[gran] / 17));
+			const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH$1[gran] / 17));
 			/** 最后一个真正画出文字的槽：它得右对齐，否则末位数字会顶出卡片。 */
 			const lastLabelIndex = buckets.length - 1 - (buckets.length - 1) % labelStep;
 			const labelOf = (bucket, index) => {
@@ -54761,28 +54629,39 @@ body[data-ds-dark-theme]{
 		//#endregion
 		//#region src/client/trend-chart.ts
 		/**
-		* 首页趋势图（右上卡）：近 8 周 × 三根细柱 = 结案 / 未结 / 新增。
+		* 首页趋势图（右上卡）：**每周两根柱 + 一条新增曲线**（2026-10-30 用户改版）。
 		*
-		* 术语（2026-10-29 用户拍板）：**结案 = 完成 + 取消**（上位词），图上的「结案」柱就是两者之和；
-		* 悬停时括号拆开「完成 X · 取消 Y」。skill 侧的桶仍是 `done` / `cancelled` 两个独立数，这里只做相加。
+		* 术语（2026-10-29 用户拍板）：**结案 = 完成 + 取消**（上位词）。结案柱一根里上下两段 ——
+		* 底蓝 = 完成、顶红 = 取消（用户 2026-10-30：有取消才多一段，取消在上；完成色从绿改 business 蓝）；
+		* 第二根柱 = 未结。「新增」不再占柱，改成历史页那种曲线（各自归一化，不跟柱共用量程），
+		* 线色取中性灰 —— 柱子已经是蓝的。
 		*
-		* 数据口径**全由 skill 算好**（`stats --trend week --last 8w --by-owner`，host 已跨工作区求和）：
+		* 数据口径**全由 skill 算好**（`stats --trend week --last 26w --by-owner`，host 已跨工作区求和）：
 		* 结案按结案时间、新增按**创建人**、未结是「该周结束时仍未结案」（待认领 + 进行中合成一个数）。
 		*
 		* 「只看我的」（2026-10-29 用户定稿）：勾上 = 我的，不勾 = 所有；两套数随快照一起回来 ⇒ 勾选零请求。
-		* 按人口径 = skill 的 per-owner：`added` 按 creator（我提的）、`done` / `cancelled` / `open` 按 owner（我负责的）。
 		*
-		* 画法（2026-10-17 参考图口径）：
-		*  - 柱宽 7.5px、组内 1px、**无圆角**；柱高百分比（祖先链有确定高度，见 ui.ts 的注释）；
-		*  - y 轴三档刻度（0 / 半峰 / 峰）+ 淡网格线 + 底部基线；
-		*  - **只标「结案」数值**（三系列 × 8 周会糊成一片），未结 / 新增走 hover；
-		*  - hover 整列三根一起提亮 + 自绘浮卡（原生 title 太慢且长相不一）——纯 CSS，无额外状态。
+		* 画法对齐历史页（用户 2026-10-30）：柱宽 11.25px（固定，缺未结那根也不许拉宽）、组内 1px /
+		* 组间 10px、柱顶 2px 圆角、柱面带 45° 斜纹、悬停整组（两根柱）一个虚线框；
+		* y 轴五档（中间三档全虚线，底基线实线）；
+		* 一屏几周按容器实宽算（宽屏也不会铺出空柱），右上角**绝对定位**的左右箭头一次翻 4 周。
 		*/
-		const BAR_KINDS = [
-			"done",
-			"added",
-			"open"
-		];
+		/** 同组两根柱的间距（用户 2026-10-30：跟原来一样 1px）。 */
+		const BAR_GAP = 1;
+		/** 两组之间的间距（用户 2026-10-30：3px → 6px → 10px，一直嫌挤）。 */
+		const GROUP_GAP = 10;
+		/** 一组 = 两根柱 + 组内间距。 */
+		const COL_W = 23.5;
+		/** 一组的横向占宽（含组间距）。 */
+		const PITCH = 33.5;
+		/** 翻页步长：一次 4 周（用户 2026-10-30）。 */
+		const WEEK_STEP = 4;
+		/** x 轴标签的最小间距（小于这个就隔一个标一个，免得挤成一团）。 */
+		const LABEL_MIN_PITCH = 40;
+		/** 数据还没到 / 宽度没量到时按几周排（≈ 卡片默认宽度能放的列数）。 */
+		const FALLBACK_WEEKS = 13;
+		/** 入场动画的**整屏**错峰总时长（跟历史页同款：延迟按列摊，不按序号累加）。 */
+		const STAGGER_MS = 120;
 		/**
 		* 四数归一：老版本 host 返回的桶可能没有 `cancelled`（甚至没有 `owners`），
 		* 缺字段按 0 —— 这是「那一类记录本来就没有」，不是拿 0 充真值。
@@ -54794,69 +54673,239 @@ body[data-ds-dark-theme]{
 			cancelled: cell?.cancelled ?? 0,
 			open: cell?.open ?? 0
 		});
-		/** 系列名：只看我的时候「未结」就是「进行中」（我的任务必然有人接）。 */
-		const labelKey = (kind, mine) => kind === "done" ? "chartDone" : kind === "added" ? "chartAdded" : mine ? "chartDoing" : "chartOpen";
 		function TrendChart(props) {
 			const { trend, me, t } = props;
 			const [mineOnly, setMineOnly] = (0, react$1.useState)(false);
-			const buckets = trend.buckets;
+			/** 从最新一周往回翻了几次（每次 WEEK_STEP 周）。 */
+			const [shift, setShift] = (0, react$1.useState)(0);
+			const [plotEl, setPlotEl] = (0, react$1.useState)(null);
+			const [width, setWidth] = (0, react$1.useState)(0);
 			const mine = mineOnly && me !== null;
+			(0, react$1.useEffect)(() => {
+				if (plotEl === null) return;
+				const observer = new ResizeObserver((entries) => {
+					const rect = entries[0];
+					if (rect !== void 0) setWidth(rect.contentRect.width);
+				});
+				observer.observe(plotEl);
+				setWidth(plotEl.clientWidth);
+				return () => observer.disconnect();
+			}, [plotEl]);
+			if (trend === null) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { style: {
+				flex: "1 1 auto",
+				minHeight: 0,
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center"
+			} }, (0, react$1.createElement)(Loader, {
+				variant: "blocks",
+				size: "xl"
+			})));
+			const buckets = trend.buckets;
 			if (buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartEmpty")));
-			/** 当前口径下这一桶的三个数：全量，或「我的」那条（没数据就是 0）。 */
-			const counts = (bucket) => mine ? norm(bucket.owners?.[me]) : norm(bucket);
+			/** 当前口径下这一桶的数：全量，或「我的」那条（没数据就是 0）。 */
+			const counts = (bucket) => mine ? norm(bucket.owners[me]) : norm(bucket);
 			/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
 			*  「只看我的」时只有进行中（我的任务必然有人接），不显示拆分行。 */
 			const breakdown = (bucket) => {
-				const doing = Object.values(bucket.owners ?? {}).reduce((sum, cell) => sum + cell.open, 0);
+				const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
 				return {
 					doing,
 					waiting: Math.max(0, bucket.open - doing)
 				};
 			};
-			/** 结案 = 完成 + 取消（用户 2026-10-29 定的上位词）；图上的「结案」柱就是它。 */
+			/** 结案 = 完成 + 取消（用户 2026-10-29 定的上位词）；结案柱整根高就是它。 */
 			const closed = (cell) => cell.done + cell.cancelled;
-			const peak = buckets.reduce((max, bucket) => {
-				const cell = counts(bucket);
-				return Math.max(max, cell.added, closed(cell), cell.open);
+			const fit = width > 0 ? Math.max(1, Math.floor((width + GROUP_GAP) / PITCH)) : FALLBACK_WEEKS;
+			const perScreen = Math.min(fit, buckets.length);
+			const byKey = new Map(buckets.map((bucket) => [bucket.from, bucket]));
+			const lastKey = mondayOf(ymdOf(/* @__PURE__ */ new Date()));
+			const slots = [];
+			for (let back = perScreen - 1; back >= 0; back -= 1) {
+				const key = addDays(lastKey, -(shift * WEEK_STEP + back) * 7);
+				slots.push(byKey.get(key) ?? {
+					from: key,
+					to: addDays(key, 6),
+					added: 0,
+					done: 0,
+					cancelled: 0,
+					open: 0,
+					owners: {}
+				});
+			}
+			const peak = slots.reduce((max, slot) => {
+				const cell = counts(slot);
+				return Math.max(max, closed(cell), cell.open);
 			}, 0);
 			const top = peak === 0 ? 1 : peak;
-			const ticks = [
-				formatCount(top),
-				formatCount(Math.ceil(top / 2)),
-				"0"
+			/** 翻页钮：**只画箭头**（核心 `IconButton` 出皮、官方图标出图形）；悬停提示走官方 Tooltip。 */
+			const navButton = (dir, label, onClick) => (0, react$1.createElement)(Tip, {
+				label,
+				side: "bottom",
+				children: (0, react$1.createElement)(IconButton, {
+					icon: (0, react$1.createElement)(dir === "left" ? _deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }),
+					label,
+					title: "",
+					variant: "outline",
+					size: "sm",
+					onClick
+				})
+			});
+			const weekUnit = t("historyGranWeek");
+			/** 图例：四个色块 = 柱子两段 + 未结柱 + 曲线，与图里颜色一一对应。 */
+			const legend = [
+				{
+					key: "done",
+					label: t("chartFinished"),
+					color: "var(--dtl-chart-done)"
+				},
+				{
+					key: "cancelled",
+					label: t("chartCancelled"),
+					color: "var(--dtl-danger)"
+				},
+				{
+					key: "open",
+					label: t(mine ? "chartDoing" : "chartOpen"),
+					color: "var(--dtl-chart-open)"
+				},
+				{
+					key: "added",
+					label: t("chartAdded"),
+					color: "var(--dtl-chart-line)"
+				}
 			];
-			const bar = (bucket, kind) => {
-				const value = kind === "done" ? closed(counts(bucket)) : counts(bucket)[kind];
-				return (0, react$1.createElement)("div", {
-					className: `dtl-trend__bar dtl-trend__bar--${kind}`,
-					style: {
-						height: `${String(value / top * 100)}%`,
-						minHeight: value > 0 ? "2px" : "0"
-					}
-				}, kind === "done" && value > 0 ? (0, react$1.createElement)("span", { className: "dtl-trend__value" }, formatCount(value)) : null);
+			const row = (key, label, count, color) => count > 0 ? (0, react$1.createElement)("div", {
+				key,
+				className: "dtl-trend__tip-row"
+			}, (0, react$1.createElement)("span", {
+				className: "dtl-trend__dot",
+				style: { background: color }
+			}), `${label} ${formatCount(count)}`) : null;
+			/** 浮卡：周期 → 新建 / 完成 / 取消 / 未结（0 值不列），未结再补一行进行中 · 待认领。 */
+			const tipOf = (bucket) => {
+				const cell = counts(bucket);
+				const split = breakdown(bucket);
+				return (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
+					from: bucket.from,
+					to: bucket.to
+				})), row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-chart-line)"), row("done", t("chartFinished"), cell.done, "var(--dtl-chart-done)"), row("cancelled", t("chartCancelled"), cell.cancelled, "var(--dtl-danger)"), row("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, "var(--dtl-chart-open)"), mine || cell.open <= 0 ? null : (0, react$1.createElement)("div", {
+					key: "split",
+					className: "dtl-trend__tip-row dtl-trend__tip-row--sub"
+				}, `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
 			};
-			const column = (bucket) => (0, react$1.createElement)("div", { className: "dtl-trend__col" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
-				from: bucket.from,
-				to: bucket.to
-			})), ...BAR_KINDS.map((kind) => (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), kind === "done" ? `${t("chartDone")} ${formatCount(closed(counts(bucket)))}（${t("chartFinished")} ${formatCount(counts(bucket).done)} · ${t("chartCancelled")} ${formatCount(counts(bucket).cancelled)}）` : kind === "open" && !mine ? `${t("chartOpen")} ${formatCount(counts(bucket).open)}（${t("chartDoing")} ${formatCount(breakdown(bucket).doing)} · ${t("chartWaiting")} ${formatCount(breakdown(bucket).waiting)}）` : `${t(labelKey(kind, mine))} ${formatCount(counts(bucket)[kind])}`))), (0, react$1.createElement)("div", { className: "dtl-trend__bars" }, ...BAR_KINDS.map((kind) => bar(bucket, kind))), (0, react$1.createElement)("div", { className: "dtl-trend__x" }, bucket.to.slice(5)));
-			const first = buckets[0];
-			const partial = trend.coverageFrom !== "" && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
-			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...BAR_KINDS.map((kind) => (0, react$1.createElement)("span", null, (0, react$1.createElement)("span", { className: `dtl-trend__dot dtl-trend__dot--${kind}` }), t(labelKey(kind, mine)))), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
+			const colStyle = { width: `${String(COL_W)}px` };
+			/** 一根柱 = 一个周：左结案（底绿完成 / 顶红取消，两段叠一根）、右未结。 */
+			const colOf = (bucket, index) => {
+				const cell = counts(bucket);
+				const total = closed(cell);
+				const height = (value) => `${String(value / top * 100)}%`;
+				const style = {
+					...colStyle,
+					"--lc-d": `${String(Math.round(index / Math.max(1, slots.length - 1) * STAGGER_MS))}ms`
+				};
+				return (0, react$1.createElement)("div", {
+					key: `${String(shift)}:${bucket.from}`,
+					className: "dtl-trend__col",
+					style
+				}, (0, react$1.createElement)("div", {
+					className: "dtl-trend__bars",
+					style: { gap: `${String(BAR_GAP)}px` }
+				}, total > 0 ? (0, react$1.createElement)("div", {
+					className: "dtl-trend__bar dtl-trend__bar--closed",
+					style: { height: height(total) }
+				}, cell.cancelled > 0 ? (0, react$1.createElement)("span", {
+					className: "dtl-trend__seg dtl-trend__seg--cancelled",
+					style: { height: `${String(cell.cancelled / total * 100)}%` }
+				}) : null) : null, cell.open > 0 ? (0, react$1.createElement)("div", {
+					className: "dtl-trend__bar dtl-trend__bar--open",
+					style: { height: height(cell.open) }
+				}) : null), tipOf(bucket));
+			};
+			const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH / PITCH));
+			/** 最后一个真正画出文字的位置：它得右对齐，否则末位数字会顶出卡片。 */
+			const lastLabelIndex = slots.length - 1 - (slots.length - 1) % labelStep;
+			/** x 轴标**周末日期**（数据按截止日判），当前周就是今天。 */
+			const labelOf = (bucket, index) => {
+				const text = index % labelStep === 0 ? bucket.to.slice(5) : "";
+				const anchor = text === "" ? null : index === 0 ? {
+					left: "0",
+					transform: "none"
+				} : index === lastLabelIndex ? {
+					left: "auto",
+					right: "0",
+					transform: "none"
+				} : null;
+				return (0, react$1.createElement)("div", {
+					key: bucket.from,
+					className: "dtl-trend__label",
+					style: colStyle
+				}, text === "" ? null : (0, react$1.createElement)("span", { style: anchor ?? void 0 }, text));
+			};
+			/** 新增量曲线：一周一个点落在柱组中心，**只看自己的峰值**（不跟柱共用量程），全 0 就不画。 */
+			const curve = () => {
+				if (width <= 0) return null;
+				const values = slots.map((slot) => counts(slot).added);
+				const max = values.reduce((m, v) => v > m ? v : m, 0);
+				if (max <= 0) return null;
+				const points = values.map((value, index) => `${((index + .5) * PITCH / width * 100).toFixed(3)},${(100 - value / max * 96).toFixed(2)}`).join(" ");
+				return (0, react$1.createElement)("svg", {
+					className: "dtl-trend__line",
+					viewBox: "0 0 100 100",
+					preserveAspectRatio: "none",
+					"aria-hidden": true
+				}, (0, react$1.createElement)("polyline", { points }));
+			};
+			const first = slots[0];
+			const partial = trend.coverageFrom !== "" && first !== void 0 && trend.coverageFrom > first.from ? (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartPartial", { from: trend.coverageFrom })) : null;
+			return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__legend" }, ...legend.map((item) => (0, react$1.createElement)("span", { key: item.key }, (0, react$1.createElement)("span", {
+				className: "dtl-trend__dot",
+				style: { background: item.color }
+			}), item.label)), me === null ? null : (0, react$1.createElement)("label", { className: "dtl-trend__mine" }, (0, react$1.createElement)("input", {
 				type: "checkbox",
 				checked: mineOnly,
 				onChange: (event) => {
 					setMineOnly(event.target.checked);
 				}
-			}), t("chartMine"))), (0, react$1.createElement)("div", { className: "dtl-trend__body" }, (0, react$1.createElement)("div", { className: "dtl-trend__axis" }, ...ticks.map((tick) => (0, react$1.createElement)("span", null, tick))), (0, react$1.createElement)("div", { className: "dtl-trend__plot" }, (0, react$1.createElement)("div", { className: "dtl-trend__grid" }, (0, react$1.createElement)("div", { className: "dtl-trend__gridline" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-trend__cols" }, ...buckets.map(column)))), partial);
+			}), t("chartMine"))), (0, react$1.createElement)("div", { className: "dtl-trend__nav" }, navButton("left", t("historyPrev", {
+				n: WEEK_STEP,
+				unit: weekUnit
+			}), () => {
+				setShift((value) => value + 1);
+			}), navButton("right", t("historyNext", {
+				n: WEEK_STEP,
+				unit: weekUnit
+			}), () => {
+				setShift((value) => Math.max(0, value - 1));
+			})), (0, react$1.createElement)("div", { className: "dtl-trend__body" }, (0, react$1.createElement)("div", { className: "dtl-trend__axis" }, (0, react$1.createElement)("span", null, formatCount(peak)), (0, react$1.createElement)("span", null, formatCount(Math.round(peak * 3 / 4))), (0, react$1.createElement)("span", null, formatCount(Math.round(peak / 2))), (0, react$1.createElement)("span", null, formatCount(Math.round(peak / 4))), (0, react$1.createElement)("span", null, "0")), (0, react$1.createElement)("div", { style: {
+				flex: "1 1 auto",
+				minWidth: 0,
+				display: "flex",
+				flexDirection: "column",
+				minHeight: 0
+			} }, (0, react$1.createElement)("div", {
+				className: "dtl-trend__plot",
+				ref: setPlotEl
+			}, (0, react$1.createElement)("div", { className: "dtl-trend__grid" }, (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--none" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-trend__gridline dtl-trend__gridline--base" })), (0, react$1.createElement)("div", {
+				className: "dtl-trend__cols",
+				style: { gap: `${String(GROUP_GAP)}px` }
+			}, ...slots.map(colOf)), curve()), (0, react$1.createElement)("div", {
+				className: "dtl-trend__labels",
+				style: { gap: `${String(GROUP_GAP)}px` }
+			}, ...slots.map(labelOf)))), partial);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
 		/**
-		* 看板首页（`main` 槽整页内容）：上 = 8 统计卡 + 趋势图位（**留空**）；下 = 单区任务列表。
+		* 看板首页（`main` 槽整页内容）：上 = 8 统计卡 + 趋势图；下 = 单区任务列表。
 		*
 		* 2026-10-28：列表沿用原「我的待办」卡片样式，改成**左侧六档菜单 + 右侧三个过滤**的平铺列表。
 		*  - 菜单六档**全部真筛**（积压 / 逾期 / 停滞 用 skill 下发的布尔）；
 		*  - 工作区 / 执行人 / 搜索 **全部本地筛**（快照已含全部在办，不发请求）。
+		*
+		* 2026-10-30 首屏加载改版（用户：不要整页 loading，也别铺骨架）：跟历史页一个口径 ——
+		* 8 块卡只画标题 + 「—」、图表卡里一个三点 Loader、列表位一个三点 Loader（最大号）；
+		* 快照一到就地替换。原来那层屏幕下方的全局 `showLoading` 已删。
 		*
 		* 数据纪律：行上的 `mine` / `stale` / `overdue` / `backlog` 与阈值都来自 skill，
 		* 前端只做布尔判断与渲染。刷新 = 挂载首读 + 手动刷新按钮，**不轮询**。
@@ -54962,6 +55011,18 @@ body[data-ds-dark-theme]{
 				label: "statStale"
 			}
 		];
+		/** 8 块统计卡的标题（DOM 列序，与 `statsGrid` 里的排布一致）：
+		*  首屏没数据时只画标题 + 「—」，跟历史页那 4 块一个口径（用户 2026-10-30）。 */
+		const STAT_LABELS = [
+			"statMyActive",
+			"statDoing",
+			"statOpen",
+			"statBacklog",
+			"statOverdue",
+			"statStale",
+			"statWeekDone",
+			"statLastWeekDone"
+		];
 		/** 错误原文只留第一行并截断：脚本报错常把整段用法提示塞在一行里，toast 装不下。 */
 		function firstLine(message) {
 			const line = (message.split("\n")[0] ?? "").trim();
@@ -55000,13 +55061,6 @@ body[data-ds-dark-theme]{
 			(0, react$1.useEffect)(() => {
 				refresh();
 			}, []);
-			(0, react$1.useEffect)(() => {
-				if (state.board !== null || state.status === "error") return;
-				const loading = showLoading(t("loading"));
-				return () => {
-					loading.close();
-				};
-			}, [state.board, state.status]);
 			const board = state.board;
 			const view = (0, react$1.useMemo)(() => selectView(state), [state]);
 			const degraded = board?.degraded ?? [];
@@ -55109,8 +55163,22 @@ body[data-ds-dark-theme]{
 					to
 				})
 			});
-			/** 左 8 块（2×4）+ 右趋势图。 */
+			/** 左 8 块（2×4）+ 右趋势图。
+			*  首读没到（`payload = null`）⇒ 8 块只画标题 + 「—」、图表卡里一个三点加载（跟历史页同一套，
+			*  用户 2026-10-30：不铺骨架，加载完才出东西）。 */
 			const statsGrid = (payload) => {
+				if (payload === null) return (0, react$1.createElement)("div", {
+					className: "dtl-stats",
+					style: statsRowStyle
+				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, ...STAT_LABELS.map((label) => (0, react$1.createElement)(StatCard, {
+					key: label,
+					label: t(label),
+					value: "—"
+				}))), (0, react$1.createElement)(TrendChart, {
+					trend: null,
+					me: null,
+					t
+				}));
 				const view = payload.stats;
 				return (0, react$1.createElement)("div", {
 					className: "dtl-stats",
@@ -55199,8 +55267,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261030-154747-746`
-			}, `v0.0.125 261030-154747-746`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261030-170039-397`
+			}, `v0.0.125 261030-170039-397`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -55258,7 +55326,10 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					refresh();
 				}
-			}, t("retry"))) : null, viewMode === "history" ? null : board === null ? null : statsGrid(board), viewMode === "history" ? null : regionHead, viewMode === "history" ? null : board === null ? null : view.rows.length === 0 ? (0, react$1.createElement)(EmptyState, {
+			}, t("retry"))) : null, viewMode === "history" ? null : statsGrid(board), viewMode === "history" ? null : regionHead, viewMode === "history" ? null : board === null ? state.status === "error" ? null : (0, react$1.createElement)("div", { className: "dtl-loading" }, (0, react$1.createElement)(Loader, {
+				variant: "blocks",
+				size: "xl"
+			})) : view.rows.length === 0 ? (0, react$1.createElement)(EmptyState, {
 				title: t("listEmpty"),
 				hint: t("listEmptyHint")
 			}) : (0, react$1.createElement)("div", null, view.rows.slice(0, LIST_LIMIT).map((row) => (0, react$1.createElement)(TaskRowView, {

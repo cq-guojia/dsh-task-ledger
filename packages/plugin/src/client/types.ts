@@ -182,7 +182,7 @@ export interface BoardPayload {
 	readonly workspaces: readonly Workspace[];
 	readonly tasks: readonly BoardTask[];
 	readonly stats: BoardStatsView;
-	/** 近 8 周趋势（host 已按周跨工作区求和；全挂时 buckets 为空）。 */
+	/** 近 26 周趋势（host 已按周跨工作区求和；全挂时 buckets 为空）。 */
 	readonly trend: TrendView;
 	/** 工作区 id → 本机身份 uuid（取不到为 null）。行级「是不是我的」以 skill 的 `mine` 为准，这里只备查。 */
 	readonly identities: Readonly<Record<string, string | null>>;

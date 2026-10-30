@@ -49,6 +49,9 @@ const UI_BASE_CSS = `
 .dtl-stat__hint{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
+/* 局部加载：核心 Loader（三块脉动）居中，只占没数据的那一块，不盖整页 */
+.dtl-loading{display:flex;align-items:center;justify-content:center;padding:var(--dtl-space-4) 0;}
+
 /* 统计区整体：左 8 块（2 行 × 4 列）+ 右图表卡，参考图同款分栏。
    ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
    行高也定死成 --dtl-stat-h（不是 1fr）⇒ 行不随内容涨，卡与卡之间永远等高。
@@ -99,8 +102,9 @@ const UI_BASE_CSS = `
 .dtl-hist__col:hover{filter:brightness(1.1);}
 .dtl-hist__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
   border-radius:var(--dtl-radius-xs);pointer-events:none;}
-/* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 裁掉分段自己的角 */
-.dtl-hist__bar{width:100%;display:flex;flex-direction:column-reverse;
+/* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 把内部分段的方角裁成圆角
+   （与首页趋势图的柱子**同一套**：父级圆角 + overflow 裁切 + ::after 斜纹，见 .dtl-chart-stripe） */
+.dtl-hist__bar{position:relative;width:100%;display:flex;flex-direction:column-reverse;
   border-radius:2px 2px 0 0;overflow:hidden;
   /* 入场：柱子从基线逐列升起来（只动 transform，不碰高度 ⇒ 不动布局、不影响 hover 命中）。
      延迟取列上内联的 --lc-d：**整屏错峰总时长固定 120ms**，由 JS 按「第几列 / 共几列」算好
@@ -148,55 +152,86 @@ const UI_BASE_CSS = `
    首列 / 末列由内联 left / right 钳回边界内 */
 .dtl-hist__label > span{position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;}
 
-/* ── 趋势图（右上卡：8 周 × 3 柱）────────────────────────────────
+/* ── 趋势图（首页右上卡：每周两根柱 + 新增曲线；2026-10-30 改版，画法对齐历史页）──────
    柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
    2026-10-17 真机教训：百分比高度没有确定父高时整列柱消失，只剩数字。 */
-.dtl-trend{height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
-  padding:var(--dtl-space-4);}
+/* z-index：浮卡要盖住页面下方那排筛选控件（input / select），否则 hover 提示被挡
+   ⇒ 整张卡自成一个层叠上下文，浮卡在其中再抬一层。
+   上下留白不对称（用户 2026-10-30：图例离顶太远、离图太近）⇒ 顶 10 / 图例与图之间 12。 */
+.dtl-trend{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;
+  flex-direction:column;gap:var(--dtl-space-3);
+  padding:10px var(--dtl-space-4) var(--dtl-space-4);}
 .dtl-trend__legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--dtl-space-3);
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 /* 图例色块：直角方块，与柱子同一造型（用户 2026-10-29：不要圆角） */
 .dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
-.dtl-trend__dot--done{background:var(--dtl-chart-done);}
-.dtl-trend__dot--open{background:var(--dtl-chart-open);}
-.dtl-trend__dot--added{background:var(--dtl-chart-added);}
-/* 「只看我的」：贴图例右侧的小复选框（原生控件 + accent-color，不自绘皮肤） */
-.dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;margin-left:auto;cursor:pointer;
+/* 「只看我的」：跟在图例后面（右侧那角留给翻页箭头，用户 2026-10-30） */
+.dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;cursor:pointer;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 .dtl-trend__mine input{margin:0;accent-color:var(--dtl-business);}
+/* 翻页箭头：**飘**在卡片右上角（绝对定位，不跟图例挤一排 —— 放一排会把整排文字行撑高，
+   用户 2026-10-30）；底取 --dtl-btn-soft（不透明，压得住下面的刻度线），与历史页同款 */
+.dtl-trend__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
+  display:flex;gap:var(--dtl-space-1);}
+.dtl-trend__nav .dshpc-iconbtn{background:var(--dtl-btn-soft);border-color:transparent;}
 .dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
 .dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;
-  padding-bottom:14px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;
+  padding-bottom:12px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;
   color:var(--dtl-fg-3);}
 .dtl-trend__plot{position:relative;flex:1 1 auto;min-width:0;}
-/* 网格：只在绘图区内（底部 14px 留给 x 轴日期），三档刻度与三条线一一对应 */
-.dtl-trend__grid{position:absolute;left:0;right:0;top:0;bottom:14px;display:flex;flex-direction:column;
-  justify-content:space-between;}
+/* 刻度线五档：顶部不画（正好从右上角控件后面穿过）、中间三档（¾ / ½ / ¼）**全虚线**、
+   底部基线实线（用户 2026-10-30：中间的线都用虚线，不要实线） */
+.dtl-trend__grid{position:absolute;inset:0;display:flex;flex-direction:column;
+  justify-content:space-between;pointer-events:none;}
 .dtl-trend__gridline{border-top:1px solid var(--dtl-border);}
+.dtl-trend__gridline--dashed{border-top-style:dashed;}
+.dtl-trend__gridline--none{border-top:none;}
 .dtl-trend__gridline--base{border-top-color:var(--dtl-border-strong);}
-.dtl-trend__cols{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:stretch;
-  gap:var(--dtl-space-2);}
-.dtl-trend__col{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;
-  justify-content:flex-end;padding-bottom:14px;}
-.dtl-trend__bars{display:flex;align-items:flex-end;justify-content:center;gap:1px;flex:1 1 auto;min-height:0;}
-/* 柱宽 7.5px、无圆角（2026-10-17「不要圆弧」；2026-10-29 用户要求再加粗到 1.5 倍，5 → 7.5）；
-   非零柱给 2px 下限 */
-.dtl-trend__bar{position:relative;width:7.5px;flex:none;min-height:2px;
+/* 柱序居左、组宽固定（组宽 / 组间距由 trend-chart.ts 内联给，这里只管排布） */
+.dtl-trend__cols{position:absolute;inset:0;display:flex;justify-content:flex-start;}
+.dtl-trend__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
-/* 结案柱要盖在隔壁更高的柱子上：柱顶数值会伸出柱宽，否则被邻居压掉 */
-.dtl-trend__bar--done{background:var(--dtl-chart-done);z-index:1;}
-.dtl-trend__bar--open{background:var(--dtl-chart-open);}
-.dtl-trend__bar--added{background:var(--dtl-chart-added);}
-/* hover 整列三根一起提亮（用户 2026-10-17：不是只亮蓝的一根） */
-.dtl-trend__col:hover .dtl-trend__bar{filter:brightness(1.18);}
-.dtl-trend__value{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
-  padding:1px 2px;border-radius:var(--dtl-radius-xs);background:var(--dtl-surface-1);
-  font-size:10px;line-height:1;color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
-.dtl-trend__x{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:10px;line-height:1;
-  color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
-/* hover 浮卡：自绘（原生 title 太慢且长相不一） */
-.dtl-trend__tip{position:absolute;left:50%;bottom:calc(100% - 10px);z-index:2;transform:translateX(-50%);
+.dtl-trend__col:hover{filter:brightness(1.1);}
+/* hover：整组（两根柱）一个虚线框，不是一根一个（用户 2026-10-30） */
+.dtl-trend__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
+  border-radius:var(--dtl-radius-xs);pointer-events:none;}
+.dtl-trend__bars{display:flex;align-items:flex-end;justify-content:flex-start;flex:1 1 auto;min-height:0;}
+/* 柱宽**固定** 11.25px（= trend-chart.ts 的 BAR_W，组宽 / 一屏几周都按它算，改一处两边一起改）：
+   某周没有未结时只剩一根柱，**不许被拉宽**（用户 2026-10-30）。柱顶 2px 圆角、非零柱 2px 下限。
+   入场动画沿用历史页那套 transform（只动 transform，不碰高度 ⇒ 不动布局） */
+.dtl-trend__bar{position:relative;flex:none;width:11.25px;min-height:2px;
+  border-radius:2px 2px 0 0;overflow:hidden;
+  transform-origin:bottom;animation:dtl-bar-in .3s var(--dtl-ease) backwards;
+  animation-delay:var(--lc-d,0ms);}
+@media (prefers-reduced-motion: reduce){.dtl-trend__bar{animation:none;}}
+/* 完成 = business 蓝（用户 2026-10-30：绿的不好看）、未结 = 琥珀 */
+.dtl-trend__bar--closed{background-color:var(--dtl-chart-done);}
+.dtl-trend__bar--open{background-color:var(--dtl-chart-open);}
+/* 取消那一段叠在结案柱顶端（红在上、蓝在下，用户 2026-10-30）；圆角交给父级裁 */
+.dtl-trend__seg{position:absolute;left:0;right:0;top:0;}
+.dtl-trend__seg--cancelled{background-color:var(--dtl-danger);}
+/* 柱面斜纹：**两个图表共用这一条**（历史页 .dtl-hist__bar / 首页 .dtl-trend__bar）——
+   一根柱铺一层 45° 覆盖层（伪元素画在最上面），不碰任何分段的底色，也不依赖谁先谁后；
+   父级圆角 + overflow 裁切把覆盖层一起裁成圆角（用户 2026-10-30：同一个东西只留一种实现）。
+   斜条 2px、条间（柱色本体）4px、透明度见 --dtl-chart-stripe */
+.dtl-hist__bar::after,.dtl-trend__bar::after{content:"";position:absolute;inset:0;
+  pointer-events:none;background-image:repeating-linear-gradient(45deg,
+  var(--dtl-chart-stripe) 0 2px,transparent 2px 6px);}
+/* x 轴日期行：高度定死 10px（文字绝对定位，不吃行高），首末钳制靠内联 left / right */
+.dtl-trend__labels{display:flex;margin-top:2px;flex:none;height:10px;}
+.dtl-trend__label{position:relative;flex:none;font-size:10px;line-height:1;color:var(--dtl-fg-3);
+  font-variant-numeric:tabular-nums;}
+.dtl-trend__label > span{position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;}
+/* 新增量曲线：铺满 plot 的 SVG，0-100 百分比坐标（preserveAspectRatio:none 拉伸），
+   non-scaling-stroke 保证线宽不随拉伸变形。
+   z-index 2 ⇒ **压在柱子上面**（用户 2026-10-30），浮卡再高一层；线色走中性灰
+   （柱子已经是蓝的，曲线再用蓝就分不清了） */
+.dtl-trend__line{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;}
+.dtl-trend__line polyline{fill:none;stroke:var(--dtl-chart-line);stroke-width:1.5;
+  vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
+/* hover 浮卡：恒在柱子**下方**（上方会被卡片顶边挤出屏幕，用户 2026-10-29 同历史页） */
+.dtl-trend__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
   padding:var(--dtl-space-2);border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
   background:var(--dtl-surface-1);white-space:nowrap;
   font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-fg-2);

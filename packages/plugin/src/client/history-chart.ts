@@ -15,6 +15,7 @@ import {
 	IconChevronRightOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { LocaleKey, Translate } from "./locales";
+import { addDays, mondayOf, ymdOf } from "./format";
 import type { HistoryBucket, HistoryGran, HistoryTrendPayload, PeriodCount } from "./types";
 import {
 	EmptyState,
@@ -61,34 +62,13 @@ interface TipRow {
 	color: string;
 }
 
-function pad2(n: number): string {
-	return String(n).padStart(2, "0");
-}
-
-function ymdOf(date: Date): string {
-	return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-}
-
 /** y 轴刻度紧凑格式：≥1000 走 1.3K / 13K（用户 2026-10-30：左侧只留 3~4 位数字的宽度）。 */
 function compactTick(value: number): string {
 	return value < 1000 ? String(value) : `${String(Math.round(value / 100) / 10)}K`;
 }
 
-/** 本周一（周一为一周之始，与 skill 同口径）。 */
-function mondayOf(value: string): string {
-	const date = new Date(`${value}T00:00:00`);
-	date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
-	return ymdOf(date);
-}
-
 function monthStart(value: string): string {
 	return `${value.slice(0, 7)}-01`;
-}
-
-function addDays(value: string, delta: number): string {
-	const date = new Date(`${value}T00:00:00`);
-	date.setDate(date.getDate() + delta);
-	return ymdOf(date);
 }
 
 function addMonths(value: string, delta: number): string {

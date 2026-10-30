@@ -49,12 +49,18 @@ body{
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
-  /* ── 趋势图三色（2026-10-29 用户定稿）───────────────────────────
-     结案 = 绿、新增 = 蓝、未结 = 琥珀；三色直接取核心 alias
-     （state-success-primary / state-business-primary / state-warn-primary），不手写色值 */
-  --dtl-chart-done:var(--dtl-success);
+  /* ── 图表色（2026-10-30 用户改版）───────────────────────────────
+     首页趋势图：完成 = **蓝**（business，用户 2026-10-30「绿色那个柱子不好看，用 business 蓝」）、
+     取消 = 红、未结 = 琥珀；新增曲线另走一档**中性灰**——柱子已经占了蓝，曲线也用蓝就分不清了。
+     三色仍直接取核心 alias（state-business / state-warn / state-error），不手写色值。
+     历史页柱色仍是「完成绿 / 取消红」，曲线沿用 --dtl-chart-added（蓝）。 */
+  --dtl-chart-done:var(--dtl-business);
   --dtl-chart-open:var(--dtl-warning);
   --dtl-chart-added:var(--dtl-business);
+  --dtl-chart-line:var(--dtl-fg-3);
+  /* 柱面斜纹用的半透明条：取卡底色 ⇒ 明暗主题自动跟着走，看着像柱子上开了几道细缝
+     （2026-10-30 三改：32% → 18% → 8%，要很淡） */
+  --dtl-chart-stripe:color-mix(in srgb,var(--dtl-surface-1) 8%,transparent);
 
   /* ── 交互底 ──────────────────────────────────────────────────── */
   /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */

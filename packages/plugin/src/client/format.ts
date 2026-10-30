@@ -12,6 +12,25 @@ export function pad2(value: number | string): string {
 	return String(value).padStart(2, "0");
 }
 
+/** `Date` → 本机时区的 `YYYY-MM-DD`（图表按天 / 周切桶用）。 */
+export function ymdOf(date: Date): string {
+	return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+/** `YYYY-MM-DD` 前后挪几天（本机时区）。 */
+export function addDays(value: string, delta: number): string {
+	const date = new Date(`${value}T00:00:00`);
+	date.setDate(date.getDate() + delta);
+	return ymdOf(date);
+}
+
+/** 本周一（周一为一周之始，与 skill 同口径）。 */
+export function mondayOf(value: string): string {
+	const date = new Date(`${value}T00:00:00`);
+	date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+	return ymdOf(date);
+}
+
 /**
  * 相对时间（GitHub 口径，用户 2026-10-28）：<1 分钟「刚刚」、<1 小时「N 分钟前」、
  * <24 小时「N 小时前」、<30 天「N 天前」、<12 个月「N 个月前」，再往上「N 年前」；

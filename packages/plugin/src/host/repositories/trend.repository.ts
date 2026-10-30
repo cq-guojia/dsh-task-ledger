@@ -1,5 +1,5 @@
 /**
- * 趋势面取数：近 8 周的「完成 / 未结 / 新增」，**整段桶序列一次拿回**（skill `stats --trend`）。
+ * 趋势面取数：近 26 周的「完成 / 未结 / 新增」，**整段桶序列一次拿回**（skill `stats --trend`）。
  *
  * 为什么不再拼现有方法：`history` 只给明细、且按**结案时间**过滤（新增取不到）；
  * 插件侧拉全量明细再聚合已被实测否决（20 万条 3s+、30MB 过进程边界）。
@@ -13,8 +13,12 @@ import type { LedgerWorkspace } from "../types.js";
 import { cached, cacheKey } from "./cache.js";
 import { runLedgerScript } from "./runner.js";
 
-/** 趋势图的窗口（周数）：与首页右侧卡位一致（2026-10-17 定稿「近 8 周」）。 */
-export const TREND_WEEKS = 8;
+/**
+ * 趋势图的窗口（周数）：近半年。
+ * 2026-10-30 由 8 周放宽 —— 卡片按宽度能放几周就放几周（宽屏 12~14 周），
+ * 8 周不够铺满，也没得翻页；26 周 ≈ 4 屏，左右箭头一次翻 4 周。
+ */
+export const TREND_WEEKS = 26;
 
 const TREND_LAST = `${String(TREND_WEEKS)}w`;
 
@@ -102,7 +106,7 @@ function parseOwners(
 	return out;
 }
 
-/** 单工作区趋势（skill `stats --trend week --last 8w --by-owner`；过 1.5s 读缓存）。 */
+/** 单工作区趋势（skill `stats --trend week --last 26w --by-owner`；过 1.5s 读缓存）。 */
 export async function readTrend(
 	workspace: LedgerWorkspace,
 ): Promise<WorkspaceTrend> {
@@ -113,7 +117,7 @@ export async function readTrend(
 			"stats",
 			// --by-owner：一次就把「全部」与「按人」两套数都拿回来 ⇒ 勾「只看我的」零请求
 			["--repo", workspace.path, "--trend", "week", "--last", TREND_LAST, "--by-owner"],
-			// 8 周窗口最坏要读 3 个历史文件，比单月读重：给到 20s 再判超时
+			// 半年窗口最坏要读 7 个历史文件（skill 有月度缓存），比单月读重：给到 20s 再判超时
 			{ timeoutMs: 20_000 },
 		);
 		if (!result.ok) throw new Error(`${workspace.title}: ${result.error}`);

@@ -1,9 +1,13 @@
 /**
- * 看板首页（`main` 槽整页内容）：上 = 8 统计卡 + 趋势图位（**留空**）；下 = 单区任务列表。
+ * 看板首页（`main` 槽整页内容）：上 = 8 统计卡 + 趋势图；下 = 单区任务列表。
  *
  * 2026-10-28：列表沿用原「我的待办」卡片样式，改成**左侧六档菜单 + 右侧三个过滤**的平铺列表。
  *  - 菜单六档**全部真筛**（积压 / 逾期 / 停滞 用 skill 下发的布尔）；
  *  - 工作区 / 执行人 / 搜索 **全部本地筛**（快照已含全部在办，不发请求）。
+ *
+ * 2026-10-30 首屏加载改版（用户：不要整页 loading，也别铺骨架）：跟历史页一个口径 ——
+ * 8 块卡只画标题 + 「—」、图表卡里一个三点 Loader、列表位一个三点 Loader（最大号）；
+ * 快照一到就地替换。原来那层屏幕下方的全局 `showLoading` 已删。
  *
  * 数据纪律：行上的 `mine` / `stale` / `overdue` / `backlog` 与阈值都来自 skill，
  * 前端只做布尔判断与渲染。刷新 = 挂载首读 + 手动刷新按钮，**不轮询**。
@@ -44,11 +48,11 @@ import {
 	Button,
 	EmptyState,
 	ensureUiBase,
+	Loader,
 	notify,
 	SearchInput,
 	Segmented,
 	Select,
-	showLoading,
 	StatCard,
 } from "./ui";
 
@@ -141,6 +145,19 @@ const TABS: readonly { value: TabFilter; label: LocaleKey }[] = [
 	{ value: "stale", label: "statStale" },
 ];
 
+/** 8 块统计卡的标题（DOM 列序，与 `statsGrid` 里的排布一致）：
+ *  首屏没数据时只画标题 + 「—」，跟历史页那 4 块一个口径（用户 2026-10-30）。 */
+const STAT_LABELS: readonly LocaleKey[] = [
+	"statMyActive",
+	"statDoing",
+	"statOpen",
+	"statBacklog",
+	"statOverdue",
+	"statStale",
+	"statWeekDone",
+	"statLastWeekDone",
+];
+
 /** 错误原文只留第一行并截断：脚本报错常把整段用法提示塞在一行里，toast 装不下。 */
 function firstLine(message: string): string {
 	const line = (message.split("\n")[0] ?? "").trim();
@@ -198,15 +215,8 @@ export function BoardHome(props: {
 		void refresh();
 	}, []);
 
-	// 首屏还没数据 ⇒ 开全局加载提示（核心 `showLoading` 默认位：屏幕下方居中），
-	// 数据到了 / 读取失败就关掉（它不会自动消失，句柄必须自己收）。
-	useEffect(() => {
-		if (state.board !== null || state.status === "error") return;
-		const loading = showLoading(t("loading"));
-		return () => {
-			loading.close();
-		};
-	}, [state.board, state.status]);
+	// 首读不再开全局加载提示（用户 2026-10-30）：骨架 + 各块局部的三点加载自己表达「在加载」，
+	// 数据到了就地替换，不拿一层浮层盖住整页。
 
 	const board = state.board;
 	const view = useMemo(() => selectView(state), [state]);
@@ -342,8 +352,24 @@ export function BoardHome(props: {
 			title: t("periodRange", { from, to }),
 		});
 
-	/** 左 8 块（2×4）+ 右趋势图。 */
-	const statsGrid = (payload: BoardPayload): ReactNode => {
+	/** 左 8 块（2×4）+ 右趋势图。
+	 *  首读没到（`payload = null`）⇒ 8 块只画标题 + 「—」、图表卡里一个三点加载（跟历史页同一套，
+	 *  用户 2026-10-30：不铺骨架，加载完才出东西）。 */
+	const statsGrid = (payload: BoardPayload | null): ReactNode => {
+		if (payload === null) {
+			return h(
+				"div",
+				{ className: "dtl-stats", style: statsRowStyle },
+				h(
+					"div",
+					{ className: "dtl-stats__cards" },
+					...STAT_LABELS.map((label) =>
+						h(StatCard, { key: label, label: t(label), value: "—" }),
+					),
+				),
+				h(TrendChart, { trend: null, me: null, t }),
+			);
+		}
 		const view = payload.stats;
 		return h(
 			"div",
@@ -418,7 +444,8 @@ export function BoardHome(props: {
 					view.lastWeekTo,
 				),
 			),
-			// 趋势图：近 8 周 × 三柱（数字全由 skill `stats --trend` 给）；
+			// 趋势图：每周两根柱（结案 / 未结）+ 新增曲线，一屏几周按卡宽算、箭头翻 4 周
+			//（数字全由 skill `stats --trend` 给）；
 			// 本机身份是机器级的 ⇒ 各工作区同一个 uuid，取第一个非空即可（「只看我的」用）。
 			// 单人台账给 null ⇒ 图里不出「只看我的」（用户 2026-10-29）。
 			h(TrendChart, {
@@ -671,14 +698,21 @@ export function BoardHome(props: {
 									),
 								)
 							: null),
-				viewMode === "history" ? null : board === null ? null : statsGrid(board),
+				// 数据没到也照常画这一行（8 块骨架 + 图表骨架），数据一到就地换掉
+				viewMode === "history" ? null : statsGrid(board),
 				viewMode === "history" ? null : regionHead,
-				// 首屏没数据（board === null）≠ 空结果：什么都不画，别拿「没有任务」骗人
-				// （加载提示走屏幕下方居中的全局卡，不在区域里占位）。
+				// 首屏没数据（board === null）≠ 空结果：列表位只放局部加载，别拿「没有任务」骗人；
+				// 读挂了由上面那行错误 + 重试承担，列表位不再空转。
 				viewMode === "history"
 					? null
 					: board === null
-						? null
+						? state.status === "error"
+							? null
+							: h(
+									"div",
+									{ className: "dtl-loading" },
+									h(Loader, { variant: "blocks", size: "xl" }),
+								)
 						: view.rows.length === 0
 							? h(EmptyState, {
 									title: t("listEmpty"),

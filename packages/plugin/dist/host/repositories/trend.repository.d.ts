@@ -1,6 +1,10 @@
 import type { LedgerWorkspace } from "../types.js";
-/** 趋势图的窗口（周数）：与首页右侧卡位一致（2026-10-17 定稿「近 8 周」）。 */
-export declare const TREND_WEEKS = 8;
+/**
+ * 趋势图的窗口（周数）：近半年。
+ * 2026-10-30 由 8 周放宽 —— 卡片按宽度能放几周就放几周（宽屏 12~14 周），
+ * 8 周不够铺满，也没得翻页；26 周 ≈ 4 屏，左右箭头一次翻 4 周。
+ */
+export declare const TREND_WEEKS = 26;
 /** 一个人在一个周桶里的三个数（skill 口径：新增按 creator、完成 / 未结按 owner）。 */
 export interface OwnerCounts {
     readonly added: number;
@@ -30,7 +34,7 @@ export interface WorkspaceTrend {
     readonly coverageFrom: string;
     readonly coverageTo: string;
 }
-/** 单工作区趋势（skill `stats --trend week --last 8w --by-owner`；过 1.5s 读缓存）。 */
+/** 单工作区趋势（skill `stats --trend week --last 26w --by-owner`；过 1.5s 读缓存）。 */
 export declare function readTrend(workspace: LedgerWorkspace): Promise<WorkspaceTrend>;
 /**
  * 历史页趋势的取数：`stats --trend <gran> --since --until`（明确窗口 ⇒ 不受

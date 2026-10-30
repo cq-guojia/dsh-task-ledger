@@ -233,7 +233,7 @@ export interface WorkspaceOwners {
  * 前端只筛不判。
  */
 export interface BoardHomePayload extends StatsPayload {
-	/** 首页右侧趋势图（近 8 周）。 */
+	/** 首页右侧趋势图（近 26 周）。 */
 	readonly trend: TrendView;
 	readonly workspaces: readonly LedgerWorkspace[];
 	readonly tasks: readonly TaskRow[];
