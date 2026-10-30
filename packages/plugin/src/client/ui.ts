@@ -79,12 +79,17 @@ const UI_BASE_CSS = `
    皮肤不重写，只补这两条；禁用的弱化改用 fg-dim 字色表达。 */
 .dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-surface-1);}
 .dtl-hist__nav .dshpc-iconbtn:disabled{opacity:1;color:var(--dtl-fg-dim);}
+/* 粒度滑动框（核心 Segmented）同样落在网格线上 ⇒ 底也钉成不透明 */
+.dtl-hist__nav .dshpc-seg{background:var(--dtl-surface-1);}
 .dtl-hist__plot{position:relative;flex:1 1 auto;min-height:0;}
 /* 刻度线四档：顶/底实线，中间两条虚线（用户 2026-10-29：中间要有两根刻度线） */
 .dtl-hist__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
 .dtl-hist__gridline{border-top:1px solid var(--dtl-border);}
 .dtl-hist__gridline--dashed{border-top-style:dashed;}
 .dtl-hist__gridline--base{border-top-color:var(--dtl-border-strong);}
+/* 顶部那条不画（它正好从右上角那排控件后面穿过）⇒ 留一个等距占位，让下面的线仍落在
+   ¾ / ½ / ¼ / 0 四档刻度上，与 y 轴五个数字一一对应 */
+.dtl-hist__gridline--none{border-top:none;}
 .dtl-hist__cols{position:absolute;inset:0;display:flex;justify-content:flex-start;gap:2px;}
 .dtl-hist__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}

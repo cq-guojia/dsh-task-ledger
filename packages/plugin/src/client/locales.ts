@@ -112,9 +112,13 @@ export type LocaleKey =
 	| "historyMonth"
 	| "historyLastMonth"
 	| "historyEmpty"
-	// 历史柱图翻页（只给无障碍名 / aria-label，按钮面上只有箭头）
-	| "historyPrevDays"
-	| "historyNextDays"
+	// 历史柱图：粒度切换（日 / 周 / 月）+ 翻页（步长随粒度：10 日 / 4 周 / 3 月）
+	| "historyGranLabel"
+	| "historyGranDay"
+	| "historyGranWeek"
+	| "historyGranMonth"
+	| "historyPrev"
+	| "historyNext"
 	// 空态
 	// 浮标入口
 
@@ -221,8 +225,12 @@ export const zh: Record<LocaleKey, string> = {
 	historyMonth: "本月",
 	historyLastMonth: "上月",
 	historyEmpty: "所选区间内没有结案记录",
-	historyPrevDays: "前 {n} 天",
-	historyNextDays: "后 {n} 天",
+	historyGranLabel: "粒度",
+	historyGranDay: "日",
+	historyGranWeek: "周",
+	historyGranMonth: "月",
+	historyPrev: "前 {n} {unit}",
+	historyNext: "后 {n} {unit}",
 
 
 };
@@ -331,8 +339,12 @@ export const en: Record<LocaleKey, string> = {
 	historyMonth: "This month",
 	historyLastMonth: "Last month",
 	historyEmpty: "No closed tasks in the selected range",
-	historyPrevDays: "Previous {n} days",
-	historyNextDays: "Next {n} days",
+	historyGranLabel: "Granularity",
+	historyGranDay: "Day",
+	historyGranWeek: "Week",
+	historyGranMonth: "Month",
+	historyPrev: "Previous {n} {unit}s",
+	historyNext: "Next {n} {unit}s",
 
 
 };

@@ -53750,12 +53750,17 @@ body[data-ds-dark-theme]{
    皮肤不重写，只补这两条；禁用的弱化改用 fg-dim 字色表达。 */
 .dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-surface-1);}
 .dtl-hist__nav .dshpc-iconbtn:disabled{opacity:1;color:var(--dtl-fg-dim);}
+/* 粒度滑动框（核心 Segmented）同样落在网格线上 ⇒ 底也钉成不透明 */
+.dtl-hist__nav .dshpc-seg{background:var(--dtl-surface-1);}
 .dtl-hist__plot{position:relative;flex:1 1 auto;min-height:0;}
 /* 刻度线四档：顶/底实线，中间两条虚线（用户 2026-10-29：中间要有两根刻度线） */
 .dtl-hist__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
 .dtl-hist__gridline{border-top:1px solid var(--dtl-border);}
 .dtl-hist__gridline--dashed{border-top-style:dashed;}
 .dtl-hist__gridline--base{border-top-color:var(--dtl-border-strong);}
+/* 顶部那条不画（它正好从右上角那排控件后面穿过）⇒ 留一个等距占位，让下面的线仍落在
+   ¾ / ½ / ¼ / 0 四档刻度上，与 y 轴五个数字一一对应 */
+.dtl-hist__gridline--none{border-top:none;}
 .dtl-hist__cols{position:absolute;inset:0;display:flex;justify-content:flex-start;gap:2px;}
 .dtl-hist__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
@@ -54115,11 +54120,12 @@ body[data-ds-dark-theme]{
 		/**
 		* 历史页顶部：**图表卡在左、4 数显在右**，沿用主页 8 块的分栏与单块尺寸；不显示图例。
 		*
-		* 柱色：≥2 工作区 = 每个工作区一种颜色；仅 1 个工作区 = 完成(绿) / 取消(红) 两色。
-		* 布局：柱序居左、柱宽固定、柱间 2px；按容器宽算能放几天（屏幕越窄显示越少），右边留白。
-		* 悬停：虚线框住当天 + 浮卡给「日期 · 结案数」。
-		* 0 值：host 的 `from/to` 是有数据的最早/最晚天 ⇒ 首尾 0 天然裁掉；中间空白天补空槽保持连续。
-		* 翻页：左右各 10 天，窗口在 [from, to] 内平移。
+		* 柱：一根 = 一个周期（日 / 周 / 月，右上角切换，默认日），高度 = 该周期的结案数。
+		* 柱色：≥2 工作区 = 叠加分段、每区一色；仅 1 个工作区 = 完成(绿) / 取消(红) 两段。
+		* 曲线：**新增任务量**（一条线、不分工作区），数据来自 skill `stats --trend day`。
+		* 布局：柱序居左、柱宽固定、柱间 2px；按容器宽算能放几个周期（屏幕越窄越少），右边留白。
+		* 翻页：步长随粒度（用户 2026-10-29 定）——日 10 天 / 周 4 周 / 月 3 月。
+		* 0 值：host 的 `from/to` 是有数据的最早/最晚天 ⇒ 首尾 0 天然裁掉；中间空白期补空槽保持连续。
 		*/
 		/** 工作区配色：取插件语义 token（≥5 个区会循环）。 */
 		const PALETTE = [
@@ -54129,11 +54135,29 @@ body[data-ds-dark-theme]{
 			"var(--dtl-overdue)",
 			"var(--dtl-danger)"
 		];
-		/** 单日槽宽：柱宽 = 槽宽。2026-10-29 用户要求加粗到 1.5 倍（10 → 15）。 */
+		/** 单周期槽宽：柱宽 = 槽宽。2026-10-29 用户要求加粗到 1.5 倍（10 → 15）。 */
 		const SLOT_W = 15;
 		/** 槽间距：用户没让变，保持 2px。 */
 		const GAP = 2;
-		const PAGE_DAYS = 10;
+		/** x 轴标签的最小间距（小于这个就跳着显示，免得挤成一团）。 */
+		const LABEL_MIN_PITCH = 40;
+		/** 翻页步长：按一次左右箭头走几个周期（用户 2026-10-29 定）。 */
+		const GRAN_STEP = {
+			day: 10,
+			week: 4,
+			month: 3
+		};
+		/** 各粒度的单位名（用于翻页提示「前 4 周」里的单位）。 */
+		const GRAN_UNIT = {
+			day: "historyGranDay",
+			week: "historyGranWeek",
+			month: "historyGranMonth"
+		};
+		const GRAN_VALUES = [
+			"day",
+			"week",
+			"month"
+		];
 		function pad2(n) {
 			return String(n).padStart(2, "0");
 		}
@@ -54146,6 +54170,11 @@ body[data-ds-dark-theme]{
 		function addDays(value, delta) {
 			const date = parseYmd(value);
 			date.setDate(date.getDate() + delta);
+			return ymdOf(date);
+		}
+		function addMonths(value, delta) {
+			const date = parseYmd(value);
+			date.setMonth(date.getMonth() + delta);
 			return ymdOf(date);
 		}
 		/** 本周一（周一为一周之始，与 skill / 趋势同口径）。 */
@@ -54204,12 +54233,14 @@ body[data-ds-dark-theme]{
 				hint: prevMonthStart(today).slice(0, 7)
 			}));
 		}
-		/** 左侧图表卡：按天堆叠柱 + y 轴 + 翻页（无图例）。 */
+		/** 左侧图表卡：周期堆叠柱 + 新增量曲线 + y 轴 + 粒度切换 / 翻页（无图例）。 */
 		function HistoryChart(props) {
 			const { data, t } = props;
 			const plotRef = (0, react$1.useRef)(null);
 			const [width, setWidth] = (0, react$1.useState)(0);
+			/** 从最新周期往回翻了几次（每次走 GRAN_STEP 个周期）。 */
 			const [shift, setShift] = (0, react$1.useState)(0);
+			const [gran, setGran] = (0, react$1.useState)("day");
 			(0, react$1.useEffect)(() => {
 				const el = plotRef.current;
 				if (el === null) return;
@@ -54222,40 +54253,85 @@ body[data-ds-dark-theme]{
 				return () => observer.disconnect();
 			}, []);
 			if (data.days.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)(EmptyState, { title: t("historyEmpty") }));
-			const byDate = /* @__PURE__ */ new Map();
-			for (const day of data.days) byDate.set(day.date, day);
+			const step = GRAN_STEP[gran];
 			const capacity = width > 0 ? Math.max(1, Math.floor(width / 17)) : 30;
-			const rawWindowEnd = addDays(data.to, -shift);
-			const windowEnd = rawWindowEnd < data.from ? data.from : rawWindowEnd;
-			const earliest = addDays(windowEnd, -(capacity - 1));
-			const windowStart = earliest < data.from ? data.from : earliest;
-			const dates = [];
-			for (let cur = windowStart; cur <= windowEnd; cur = addDays(cur, 1)) dates.push(cur);
-			const peak = dates.reduce((max, date) => {
-				const day = byDate.get(date);
-				return day === void 0 ? max : Math.max(max, closedOf(day));
-			}, 0);
+			const perScreen = gran === "day" ? capacity : Math.max(step, Math.round(capacity / (gran === "week" ? 7 : 30)));
+			/** 某天属于哪个周期（周期的 key = 起始日）。 */
+			const bucketOf = (date) => gran === "day" ? date : gran === "week" ? mondayOf(date) : monthStart(date);
+			/** 某周期的最后一天。 */
+			const endOf = (key) => gran === "day" ? key : gran === "week" ? addDays(key, 6) : addDays(addMonths(key, 1), -1);
+			/** 下一个周期的 key。 */
+			const nextOf = (key) => gran === "day" ? addDays(key, 1) : gran === "week" ? addDays(key, 7) : addMonths(key, 1);
+			const allKeys = [];
+			for (let cur = bucketOf(data.from); cur <= data.to; cur = nextOf(cur)) allKeys.push(cur);
+			const last = Math.max(0, allKeys.length - 1);
+			const endIndex = Math.max(0, Math.min(last, last - shift * step));
+			const startIndex = Math.max(0, endIndex - (perScreen - 1));
+			const keys = allKeys.slice(startIndex, endIndex + 1);
+			const daysOfKey = /* @__PURE__ */ new Map();
+			for (const day of data.days) {
+				const key = bucketOf(day.date);
+				const list = daysOfKey.get(key);
+				if (list === void 0) daysOfKey.set(key, [day]);
+				else list.push(day);
+			}
+			const series = data.addedByDay;
+			const buckets = keys.map((key) => {
+				const days = daysOfKey.get(key) ?? [];
+				const byWorkspace = {};
+				let done = 0;
+				let cancelled = 0;
+				for (const day of days) {
+					done += day.done;
+					cancelled += day.cancelled;
+					for (const [id, cell] of Object.entries(day.byWorkspace)) {
+						const acc = byWorkspace[id] ?? {
+							done: 0,
+							cancelled: 0
+						};
+						byWorkspace[id] = {
+							done: acc.done + cell.done,
+							cancelled: acc.cancelled + cell.cancelled
+						};
+					}
+				}
+				let added = 0;
+				if (series !== void 0) for (let cur = key; cur <= endOf(key); cur = addDays(cur, 1)) added += series[cur] ?? 0;
+				return {
+					key,
+					title: gran === "day" ? key : gran === "week" ? t("periodRange", {
+						from: key,
+						to: endOf(key)
+					}) : key.slice(0, 7),
+					label: gran === "month" ? key.slice(0, 7) : key.slice(5),
+					done,
+					cancelled,
+					added,
+					byWorkspace
+				};
+			});
+			const peak = buckets.reduce((max, bucket) => Math.max(max, bucket.done + bucket.cancelled), 0);
 			const multi = data.workspaces.length >= 2;
 			const colorById = /* @__PURE__ */ new Map();
 			data.workspaces.forEach((workspace, index) => {
 				colorById.set(workspace.id, PALETTE[index % PALETTE.length] ?? PALETTE[0]);
 			});
-			const segmentsOf = (day) => {
+			const segmentsOf = (bucket) => {
 				if (!multi) {
 					const out = [];
-					if (day.done > 0) out.push({
-						count: day.done,
+					if (bucket.done > 0) out.push({
+						count: bucket.done,
 						color: "var(--dtl-success)"
 					});
-					if (day.cancelled > 0) out.push({
-						count: day.cancelled,
+					if (bucket.cancelled > 0) out.push({
+						count: bucket.cancelled,
 						color: "var(--dtl-danger)"
 					});
 					return out;
 				}
 				const out = [];
 				for (const workspace of data.workspaces) {
-					const cell = day.byWorkspace[workspace.id];
+					const cell = bucket.byWorkspace[workspace.id];
 					const count = cell === void 0 ? 0 : cell.done + cell.cancelled;
 					if (count > 0) out.push({
 						count,
@@ -54264,13 +54340,13 @@ body[data-ds-dark-theme]{
 				}
 				return out;
 			};
-			/** 浮卡：首行日期，下面**一工作区一行**（色块 + 名称 + 结案数），有几个列几个、0 值不列。
+			/** 浮卡：首行周期，下面**一工作区一行**（色块 + 名称 + 结案数），有几个列几个、0 值不列。
 			*  多工作区按 host 给的 workspaces 顺序（与配色分配同序）；单工作区时柱色本来就是
 			*  完成绿 / 取消红，所以拆成那两行，不硬塞一个工作区色（用户 2026-10-29）。 */
-			const rowsOf = (day) => {
+			const rowsOf = (bucket) => {
 				const rows = [];
 				if (multi) for (const workspace of data.workspaces) {
-					const cell = day.byWorkspace[workspace.id];
+					const cell = bucket.byWorkspace[workspace.id];
 					const count = cell === void 0 ? 0 : cell.done + cell.cancelled;
 					if (count <= 0) continue;
 					rows.push({
@@ -54281,31 +54357,30 @@ body[data-ds-dark-theme]{
 					});
 				}
 				else {
-					if (day.done > 0) rows.push({
+					if (bucket.done > 0) rows.push({
 						key: "done",
 						name: t("chartFinished"),
-						count: day.done,
+						count: bucket.done,
 						color: "var(--dtl-success)"
 					});
-					if (day.cancelled > 0) rows.push({
+					if (bucket.cancelled > 0) rows.push({
 						key: "cancelled",
 						name: t("chartCancelled"),
-						count: day.cancelled,
+						count: bucket.cancelled,
 						color: "var(--dtl-danger)"
 					});
 				}
 				return rows;
 			};
-			const tipOf = (date, day) => {
-				const rows = rowsOf(day);
-				const added = data.addedByDay?.[date];
-				return (0, react$1.createElement)("div", { className: "dtl-hist__tip" }, (0, react$1.createElement)("div", { className: "dtl-hist__tip-date" }, date), added !== void 0 && added > 0 ? (0, react$1.createElement)("div", {
+			const tipOf = (bucket) => {
+				const rows = rowsOf(bucket);
+				return (0, react$1.createElement)("div", { className: "dtl-hist__tip" }, (0, react$1.createElement)("div", { className: "dtl-hist__tip-date" }, bucket.title), bucket.added > 0 ? (0, react$1.createElement)("div", {
 					key: "added",
 					className: "dtl-hist__tip-row"
 				}, (0, react$1.createElement)("span", {
 					className: "dtl-hist__tip-dot",
 					style: { background: "var(--dtl-chart-added)" }
-				}), (0, react$1.createElement)("span", null, t("chartAdded")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(added))) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
+				}), (0, react$1.createElement)("span", null, t("chartAdded")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(bucket.added))) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
 					key: row.key,
 					className: "dtl-hist__tip-row"
 				}, (0, react$1.createElement)("span", {
@@ -54313,19 +54388,18 @@ body[data-ds-dark-theme]{
 					style: { background: row.color }
 				}), (0, react$1.createElement)("span", null, row.name), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(row.count)))));
 			};
-			const colOf = (date) => {
-				const day = byDate.get(date);
-				const colStyle = { width: `${String(SLOT_W)}px` };
-				if (day === void 0) return (0, react$1.createElement)("div", {
-					key: date,
+			const colStyle = { width: `${String(SLOT_W)}px` };
+			const colOf = (bucket) => {
+				const total = bucket.done + bucket.cancelled;
+				if (total <= 0) return (0, react$1.createElement)("div", {
+					key: bucket.key,
 					className: "dtl-hist__col",
 					style: colStyle
 				});
-				const total = closedOf(day);
-				const segments = segmentsOf(day);
+				const segments = segmentsOf(bucket);
 				const height = peak === 0 ? 0 : Math.max(total / peak * 100, 2);
 				return (0, react$1.createElement)("div", {
-					key: date,
+					key: bucket.key,
 					className: "dtl-hist__col",
 					style: colStyle
 				}, (0, react$1.createElement)("div", {
@@ -54337,26 +54411,25 @@ body[data-ds-dark-theme]{
 						height: `${String(segment.count / total * 100)}%`,
 						background: segment.color
 					}
-				}))), tipOf(date, day));
+				}))), tipOf(bucket));
 			};
-			const labelStep = Math.max(1, Math.ceil(dates.length / 10));
-			const labelOf = (date, index) => (0, react$1.createElement)("div", {
-				key: date,
+			const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH / 17));
+			const labelOf = (bucket, index) => (0, react$1.createElement)("div", {
+				key: bucket.key,
 				className: "dtl-hist__label",
-				style: { width: `${String(SLOT_W)}px` }
-			}, index % labelStep === 0 ? date.slice(5) : "");
-			const atEarliest = windowStart <= data.from;
+				style: colStyle
+			}, index % labelStep === 0 ? bucket.label : "");
+			const atEarliest = startIndex <= 0;
 			const atLatest = shift <= 0;
-			/** 新增量曲线：一天一个点落在列中心，**一条线、不分工作区**（用户 2026-10-29）。
+			/** 新增量曲线：一周期一个点落在柱中心，**一条线、不分工作区**（用户 2026-10-29）。
 			*  SVG 用 0-100 百分比坐标 + non-scaling-stroke ⇒ 不用测 plot 像素高，窗口缩放线宽恒定；
 			*  归一化只看曲线自己的峰值（与柱子的结案峰值各管各的），全 0 / 取数失败就不画。 */
 			const curve = () => {
-				const series = data.addedByDay;
 				if (series === void 0) return null;
-				const values = dates.map((date) => series[date] ?? 0);
+				const values = buckets.map((bucket) => bucket.added);
 				const max = values.reduce((m, v) => v > m ? v : m, 0);
 				if (max <= 0) return null;
-				const totalW = dates.length * 17 - GAP;
+				const totalW = buckets.length * 17 - GAP;
 				const points = values.map((value, index) => `${((index + .5) * 17 / totalW * 100).toFixed(2)},${(100 - value / max * 96).toFixed(2)}`).join(" ");
 				return (0, react$1.createElement)("svg", {
 					className: "dtl-hist__line",
@@ -54381,10 +54454,30 @@ body[data-ds-dark-theme]{
 					onClick
 				})
 			});
-			return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)("div", { className: "dtl-hist__nav" }, navButton("left", t("historyPrevDays", { n: PAGE_DAYS }), atEarliest, () => {
-				setShift((value) => value + PAGE_DAYS);
-			}), navButton("right", t("historyNextDays", { n: PAGE_DAYS }), atLatest, () => {
-				setShift((value) => Math.max(0, value - PAGE_DAYS));
+			const unit = t(GRAN_UNIT[gran]);
+			return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)("div", { className: "dtl-hist__nav" }, (0, react$1.createElement)(Segmented, {
+				id: "dtl-hist-gran",
+				value: gran,
+				size: "sm",
+				label: t("historyGranLabel"),
+				items: GRAN_VALUES.map((value) => ({
+					value,
+					label: t(GRAN_UNIT[value])
+				})),
+				onChange: (next) => {
+					setGran(next);
+					setShift(0);
+				}
+			}), navButton("left", t("historyPrev", {
+				n: step,
+				unit
+			}), atEarliest, () => {
+				setShift((value) => value + 1);
+			}), navButton("right", t("historyNext", {
+				n: step,
+				unit
+			}), atLatest, () => {
+				setShift((value) => Math.max(0, value - 1));
 			})), (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minHeight: 0,
@@ -54402,7 +54495,7 @@ body[data-ds-dark-theme]{
 				lineHeight: "1",
 				color: "var(--dtl-fg-3)",
 				fontVariantNumeric: "tabular-nums"
-			} }, (0, react$1.createElement)("span", null, String(peak)), (0, react$1.createElement)("span", null, String(Math.round(peak * 2 / 3))), (0, react$1.createElement)("span", null, String(Math.round(peak / 3))), (0, react$1.createElement)("span", null, "0")), (0, react$1.createElement)("div", { style: {
+			} }, (0, react$1.createElement)("span", null, String(peak)), (0, react$1.createElement)("span", null, String(Math.round(peak * 3 / 4))), (0, react$1.createElement)("span", null, String(Math.round(peak / 2))), (0, react$1.createElement)("span", null, String(Math.round(peak / 4))), (0, react$1.createElement)("span", null, "0")), (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0,
 				display: "flex",
@@ -54411,7 +54504,7 @@ body[data-ds-dark-theme]{
 			} }, (0, react$1.createElement)("div", {
 				className: "dtl-hist__plot",
 				ref: plotRef
-			}, (0, react$1.createElement)("div", { className: "dtl-hist__grid" }, (0, react$1.createElement)("div", { className: "dtl-hist__gridline" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-hist__cols" }, ...dates.map((date) => colOf(date))), curve()), (0, react$1.createElement)("div", { className: "dtl-hist__labels" }, ...dates.map((date, index) => labelOf(date, index))))));
+			}, (0, react$1.createElement)("div", { className: "dtl-hist__grid" }, (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--none" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-hist__cols" }, ...buckets.map(colOf)), curve()), (0, react$1.createElement)("div", { className: "dtl-hist__labels" }, ...buckets.map((bucket, index) => labelOf(bucket, index))))));
 		}
 		//#endregion
 		//#region src/client/task-row.ts
@@ -55019,8 +55112,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261029-234240-784`
-			}, `v0.0.125 261029-234240-784`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261030-001111-485`
+			}, `v0.0.125 261030-001111-485`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -55183,8 +55276,12 @@ body[data-ds-dark-theme]{
 			historyMonth: "本月",
 			historyLastMonth: "上月",
 			historyEmpty: "所选区间内没有结案记录",
-			historyPrevDays: "前 {n} 天",
-			historyNextDays: "后 {n} 天"
+			historyGranLabel: "粒度",
+			historyGranDay: "日",
+			historyGranWeek: "周",
+			historyGranMonth: "月",
+			historyPrev: "前 {n} {unit}",
+			historyNext: "后 {n} {unit}"
 		};
 		/** English（与 zh 键完全对齐）。 */
 		const en = {
@@ -55283,8 +55380,12 @@ body[data-ds-dark-theme]{
 			historyMonth: "This month",
 			historyLastMonth: "Last month",
 			historyEmpty: "No closed tasks in the selected range",
-			historyPrevDays: "Previous {n} days",
-			historyNextDays: "Next {n} days"
+			historyGranLabel: "Granularity",
+			historyGranDay: "Day",
+			historyGranWeek: "Week",
+			historyGranMonth: "Month",
+			historyPrev: "Previous {n} {unit}s",
+			historyNext: "Next {n} {unit}s"
 		};
 		/** 把宿主给的无参 t 包成带占位符替换的 t（模板一律 `{name}`，不依赖宿主是否支持 params）。 */
 		function interpolateTranslate(base) {
