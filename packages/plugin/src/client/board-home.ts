@@ -165,6 +165,12 @@ export function BoardHome(props: {
 	>({});
 	const historyTrend = historyByGran[gran] ?? null;
 	const [historyError, setHistoryError] = useState<string | null>(null);
+	// 上一次成功拉到的数据（不分粒度）：切粒度时先拿它顶住，新桶到了再整体换掉 ——
+	// 页面不消失、不闪（用户 2026-10-30）；只有首读（连一份都没有）才走骨架。
+	const lastTrendRef = useRef<HistoryTrendPayload | null>(null);
+	useEffect(() => {
+		if (historyTrend !== null) lastTrendRef.current = historyTrend;
+	});
 
 	/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
 	 *  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
@@ -584,13 +590,20 @@ export function BoardHome(props: {
 									title: t("refresh"),
 									onClick: () => {
 										void refresh();
+										// 手动刷新 = 全部重来：host 缓存由 fresh=1 全清，前端历史缓存一并清掉，
+										// 切回哪个粒度都重新读（用户 2026-10-30：点到每一个再重新读）
+										setHistoryByGran({});
+										lastTrendRef.current = null;
+										setHistoryError(null);
 									},
 								},
 								state.refreshing ? t("refreshing") : t("refresh"),
 							),
 						),
 				),
-				// 历史模式：顶部 4 数显 + 按天柱状图（独立于下方时间筛选）；在办模式：错误行。
+				// 历史模式：顶部 4 数显 + 按周期柱状图（独立于下方时间筛选）；在办模式：错误行。
+				// 渲染条件用「上次成功的数据」兜底：切粒度 / 首读都**不卸载这一块** ——
+				// 首读显示骨架（加载卡 + 横杠），切粒度显示旧图，等新桶到了再整体换（不闪）。
 				viewMode === "history"
 					? (historyError !== null
 							? h(
@@ -604,18 +617,19 @@ export function BoardHome(props: {
 									},
 									`${t("loadFailed")}：${historyError}`,
 								)
-							: historyTrend === null
-								? null
-								: h(
+							: h(
 										"div",
 										{ className: "dtl-stats dtl-stats--history", style: statsRowStyle },
 										h(HistoryChart, {
-											data: historyTrend,
+											data: historyTrend ?? lastTrendRef.current,
 											t,
 											gran,
 											onGranChange: setGran,
 										}),
-										h(HistoryStats, { data: historyTrend, t }),
+										h(HistoryStats, {
+											data: historyTrend ?? lastTrendRef.current,
+											t,
+										}),
 									))
 					: (state.status === "error" && board === null
 							? h(

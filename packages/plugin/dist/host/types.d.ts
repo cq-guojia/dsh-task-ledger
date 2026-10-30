@@ -175,18 +175,16 @@ export interface HistoryTotals {
     readonly month: number;
     readonly lastMonth: number;
 }
-/** 历史页顶部数据：当前粒度的桶序列 + 4 数显 + 有数据区间。 */
+/** 历史页顶部数据：当前粒度的桶序列 + 4 数显。
+ *  桶只覆盖最近 365 天（skill 的 day 粒度上限）；更早的窗口由前端按 key 补空槽。 */
 export interface HistoryTrendView {
     readonly workspaces: readonly {
         readonly id: string;
         readonly title: string;
     }[];
-    /** 桶序列（升序、连续无缺，覆盖 [from, to] 所在周期；空桶 = 该周期无结案）。 */
+    /** 桶序列（升序；空桶 = 该周期无结案）。 */
     readonly buckets: readonly HistoryBucket[];
     readonly totals: HistoryTotals;
-    /** 有数据的最早 / 最晚**天**（由 day 桶判定，柱图与翻页窗口的锚点）。 */
-    readonly from: string;
-    readonly to: string;
 }
 /** 历史日趋势 + 降级。 */
 export interface HistoryTrendPayload extends HistoryTrendView {

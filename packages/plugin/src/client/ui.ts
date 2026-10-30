@@ -21,6 +21,7 @@ import {
 	Input as CoreInput,
 	Picker as CorePicker,
 	type PickerGroup,
+	LoadingBlock as CoreLoadingBlock,
 	Segmented as CoreSegmented,
 	showLoading as CoreShowLoading,
 	type LoadingHandle,
@@ -71,16 +72,16 @@ const UI_BASE_CSS = `
   /* 单列（≤960）时 height:100% 解析成 auto，光靠 flex 撑不出高度 ⇒ 用右侧两行卡的总高兜底，
      两栏并排时这个值恰好等于 stretch 给的高度，等于没改 */
   min-height:calc(var(--dtl-stat-h) * 2 + var(--dtl-space-3));
-  padding:var(--dtl-space-3) var(--dtl-space-4);}
+  /* 上边共多留 25px（用户 2026-10-30：10 + 10 + 5）：border-box + 卡高不变 ⇒
+     压的是图区，外框高度一点没变 */
+  padding:calc(var(--dtl-space-3) + 25px) var(--dtl-space-4) var(--dtl-space-3);}
 .dtl-hist__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
   display:flex;gap:var(--dtl-space-2);}
-/* 按钮是核心 IconButton（outline 档自带 surface-1 底 + 边框）；这里只把 hover / disabled
-   也钉成不透明 —— 核心 hover 是半透明底、disabled 整体 opacity:.4，落在网格线上都会透线。
-   皮肤不重写，只补这两条；禁用的弱化改用 fg-dim 字色表达。 */
-.dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-surface-1);}
+/* 翻页箭头 = 「有底、无边框」款（用户 2026-10-30）：核心 IconButton 没有「实心无描边」这一档
+   （plain 无底 / outline 有底带边）⇒ 这里给它换底、把描边抹平。底取 --dtl-btn-soft（不透明，
+   压得住下面的刻度线）。hover 仍走核心那档灰底；disabled 的弱化改用 fg-dim 字色表达。 */
+.dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-btn-soft);border-color:transparent;}
 .dtl-hist__nav .dshpc-iconbtn:disabled{opacity:1;color:var(--dtl-fg-dim);}
-/* 粒度滑动框（核心 Segmented）同样落在网格线上 ⇒ 底也钉成不透明 */
-.dtl-hist__nav .dshpc-seg{background:var(--dtl-surface-1);}
 .dtl-hist__plot{position:relative;flex:1 1 auto;min-height:0;}
 /* 刻度线四档：顶/底实线，中间两条虚线（用户 2026-10-29：中间要有两根刻度线） */
 .dtl-hist__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
@@ -98,8 +99,17 @@ const UI_BASE_CSS = `
   border-radius:var(--dtl-radius-xs);pointer-events:none;}
 /* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 裁掉分段自己的角 */
 .dtl-hist__bar{width:100%;display:flex;flex-direction:column-reverse;
-  border-radius:2px 2px 0 0;overflow:hidden;}
-/* 浮卡：首行日期，下面一工作区一行（色块 + 名称 + 数量），0 值不列。
+  border-radius:2px 2px 0 0;overflow:hidden;
+  /* 入场：柱子从基线逐列升起来（只动 transform，不碰高度 ⇒ 不动布局、不影响 hover 命中）。
+     延迟取列上内联的 --lc-i（列序号，封顶 20）⇒ 换粒度 / 翻页时整批新节点正好重放一遍，
+     这就是「切换动效」（用户 2026-10-30；思路同 dsh-context 的 animate-lc-bar-in）。
+     backwards 必须：延迟期间先停在起始帧，否则会先满怀高度再闪回 0。 */
+  transform-origin:bottom;
+  animation:dtl-bar-in .3s var(--dtl-ease) backwards;
+  animation-delay:calc(var(--lc-i,0) * 24ms);}
+@keyframes dtl-bar-in{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+@media (prefers-reduced-motion: reduce){.dtl-hist__bar{animation:none;}}
+/* 浮卡：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
    恒在柱子**下方**：上方会被图表顶边挤出屏幕、hover 判定又带来闪跳（用户 2026-10-29 都放下面）；
    top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。 */
 .dtl-hist__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
@@ -110,16 +120,30 @@ const UI_BASE_CSS = `
 .dtl-hist__tip-date{color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 .dtl-hist__tip-row{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-variant-numeric:tabular-nums;}
+/* 总计行（结案任务）：不加色块、不缩进 —— 它是明细之和，不属于任何一个工作区颜色 */
+.dtl-hist__tip-total{display:flex;align-items:center;gap:var(--dtl-space-1);
+  font-weight:600;font-variant-numeric:tabular-nums;}
+/* 总计与明细之间的分隔虚线（用户 2026-10-30） */
+.dtl-hist__tip-sep{border-top:1px dashed var(--dtl-border-strong);margin:var(--dtl-space-1) 0;
+  height:0;}
 .dtl-hist__tip-dot{display:inline-block;width:8px;height:8px;flex:none;}
+/* 总计行的图例块：8×8 方块里几条**横向**色带上下等分（与柱子的分段同向，柱子里的段也是
+   横着叠的；不是左右并排的竖条） */
+.dtl-hist__tip-dot--split{display:inline-flex;flex-direction:column;overflow:hidden;}
+.dtl-hist__tip-dot--split > span{flex:1 1 0;min-height:0;}
 .dtl-hist__tip-count{margin-left:auto;padding-left:var(--dtl-space-3);color:var(--dtl-fg);}
-.dtl-hist__labels{display:flex;gap:2px;margin-top:2px;flex:none;}
+/* x 轴日期行：高度定死 10px（文字绝对定位，不吃行高），首末钳制靠内联 left / right */
+.dtl-hist__labels{display:flex;gap:2px;margin-top:2px;flex:none;height:10px;}
 /* 新增量曲线：铺满 plot 的 SVG，0-100 百分比坐标（preserveAspectRatio:none 拉伸），
    non-scaling-stroke 保证线宽不随拉伸变形；只描边不填充，色与趋势图「新增」同源 */
 .dtl-hist__line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
 .dtl-hist__line polyline{fill:none;stroke:var(--dtl-chart-added);stroke-width:1.5;
   vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
-.dtl-hist__label{flex:none;text-align:center;font-size:10px;line-height:1;color:var(--dtl-fg-3);
-  font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dtl-hist__label{position:relative;flex:none;font-size:10px;line-height:1;color:var(--dtl-fg-3);
+  font-variant-numeric:tabular-nums;}
+/* 日期文字以列中心为锚点向两侧展开（用户 2026-10-30：不从卡片最左 / 最右起排）；
+   首列 / 末列由内联 left / right 钳回边界内 */
+.dtl-hist__label > span{position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;}
 
 /* ── 趋势图（右上卡：8 周 × 3 柱）────────────────────────────────
    柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
@@ -390,6 +414,11 @@ export function Tip(props: {
  */
 export function showLoading(text?: string): LoadingHandle {
 	return CoreShowLoading({ text });
+}
+
+/** 就地加载卡（转圈在上、文案在下）：数据未到时的骨架位，摆在要占位的容器正中。 */
+export function LoadingBlock(props: { text: string }): ReactNode {
+	return CoreLoadingBlock({ text: props.text });
 }
 
 /** 核心封装的 Toast 卡（灰/绿/红/黄，随明暗；默认 info 灰卡、位置 bottom-center）。

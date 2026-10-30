@@ -141,14 +141,12 @@ export interface HistoryTotals {
 	readonly lastMonth: number;
 }
 
-/** `/history/trend` 响应：当前粒度桶序列 + 4 数显 + 有数据区间。 */
+/** `/history/trend` 响应：当前粒度桶序列 + 4 数显。
+ *  桶只覆盖最近 365 天；更早的窗口由前端按 key 补空槽（今天永远是最右一格）。 */
 export interface HistoryTrendPayload {
 	readonly workspaces: readonly { readonly id: string; readonly title: string }[];
 	readonly buckets: readonly HistoryBucket[];
 	readonly totals: HistoryTotals;
-	/** 有数据的最早 / 最晚**天**（由 day 桶判定，柱图与翻页窗口的锚点）。 */
-	readonly from: string;
-	readonly to: string;
 	readonly degraded?: readonly DegradedInfo[];
 }
 

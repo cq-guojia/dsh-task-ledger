@@ -109,7 +109,7 @@ export async function getHistoryTrend(
 		}
 	}
 
-	// ② day 桶：from / to（有数据的天，柱图窗口锚点）+ 4 数显求和
+	// ② day 桶：4 数显求和
 	const dayMap = new Map<string, { done: number; cancelled: number; added: number }>();
 	for (const { dayTrend } of settled.data) {
 		for (const bucket of dayTrend.buckets) {
@@ -119,13 +119,6 @@ export async function getHistoryTrend(
 			acc.added += bucket.added;
 			dayMap.set(bucket.from, acc);
 		}
-	}
-	let from = "";
-	let to = "";
-	for (const [key, cell] of dayMap) {
-		if (cell.done + cell.cancelled + cell.added <= 0) continue;
-		if (from === "" || key < from) from = key;
-		if (key > to) to = key;
 	}
 
 	const sumIn = (rangeFrom: string, rangeTo: string): number => {
@@ -142,12 +135,10 @@ export async function getHistoryTrend(
 		lastMonth: sumIn(prevMonthStart(today), addDays(monthStart(today), -1)),
 	};
 
-	// 桶裁到「from 所在周期 ~ to 所在周期」：窗口外全是 0 桶，不值得过进程边界
-	const fromKey =
-		gran === "day" ? from : gran === "week" ? mondayOf(from || today) : monthStart(from || today);
-	const buckets: HistoryBucket[] = from === "" ? [] : [...merged.entries()]
+	// 整段窗口直接下发（不按有数据范围裁剪）：翻页边界交给前端按 key 补空槽，
+	// 免得「正好显示完就不能翻、中间空一大段反而能翻」这种判断（用户 2026-10-30）
+	const buckets: HistoryBucket[] = [...merged.entries()]
 		.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
-		.filter(([key]) => key >= fromKey && key <= to)
 		.map(([key, cell]) => ({
 			key,
 			to: cell.to,
@@ -164,8 +155,6 @@ export async function getHistoryTrend(
 		})),
 		buckets,
 		totals,
-		from,
-		to,
 		degraded: settled.degraded,
 	};
 }

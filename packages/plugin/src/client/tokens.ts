@@ -59,6 +59,10 @@ body{
   /* ── 交互底 ──────────────────────────────────────────────────── */
   /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */
   --dtl-card-hover:rgba(37,99,235,.07);
+  /* 「有底无边」控件底（图表右上角翻页箭头，用户 2026-10-30）：
+     在卡片底色上掺一档前景色 ⇒ 不透明（压得住下面的刻度线）又比卡面略深，
+     明暗两主题都跟着 fg / surface 自动走 */
+  --dtl-btn-soft:color-mix(in srgb,var(--dtl-fg) 8%,var(--dtl-surface-1));
 
   /* ── 圆角（宿主真值 4/8/12）───────────────────────────────────── */
   --dtl-radius-xs:var(--dsw-radius-xs,4px);
@@ -99,6 +103,8 @@ body{
 body[data-ds-dark-theme]{
   /* 暗色下蓝要更亮、透明度更高才压得住深底 */
   --dtl-card-hover:rgba(96,165,250,.13);
+  /* 暗底上掺白 8% 太浅 ⇒ 提到 12%，仍与卡面同族（不是另一套皮肤） */
+  --dtl-btn-soft:color-mix(in srgb,var(--dtl-fg) 12%,var(--dtl-surface-1));
   /* 语义色浅底在深色下压到 12% / 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);

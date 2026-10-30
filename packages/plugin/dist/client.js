@@ -4917,7 +4917,7 @@ window.__ModuleLoader__.load({
 			}, spin(16), (0, react$1.createElement)("span", null, textOf(props)));
 		}
 		/** 样式二：方块卡（转圈在上、文字在下，内距更大）。就地渲染，位置随调用方。 */
-		function LoadingBlock(props) {
+		function LoadingBlock$1(props) {
 			ensureControls();
 			return (0, react$1.createElement)("div", {
 				className: "dshpc-loading-block",
@@ -4950,7 +4950,7 @@ window.__ModuleLoader__.load({
 				root.render((0, react$1.createElement)("div", { className: loadingOverlayClass(request.position) }, request.mask ? (0, react$1.createElement)("div", {
 					className: "dshpc-loading-overlay__mask",
 					style: { background: `rgba(0, 0, 0, ${opacity})` }
-				}) : null, request.variant === "block" ? (0, react$1.createElement)(LoadingBlock, {
+				}) : null, request.variant === "block" ? (0, react$1.createElement)(LoadingBlock$1, {
 					text: request.text,
 					translate: request.translate
 				}) : (0, react$1.createElement)(LoadingToast, {
@@ -53623,6 +53623,10 @@ body{
   /* ── 交互底 ──────────────────────────────────────────────────── */
   /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */
   --dtl-card-hover:rgba(37,99,235,.07);
+  /* 「有底无边」控件底（图表右上角翻页箭头，用户 2026-10-30）：
+     在卡片底色上掺一档前景色 ⇒ 不透明（压得住下面的刻度线）又比卡面略深，
+     明暗两主题都跟着 fg / surface 自动走 */
+  --dtl-btn-soft:color-mix(in srgb,var(--dtl-fg) 8%,var(--dtl-surface-1));
 
   /* ── 圆角（宿主真值 4/8/12）───────────────────────────────────── */
   --dtl-radius-xs:var(--dsw-radius-xs,4px);
@@ -53663,6 +53667,8 @@ body{
 body[data-ds-dark-theme]{
   /* 暗色下蓝要更亮、透明度更高才压得住深底 */
   --dtl-card-hover:rgba(96,165,250,.13);
+  /* 暗底上掺白 8% 太浅 ⇒ 提到 12%，仍与卡面同族（不是另一套皮肤） */
+  --dtl-btn-soft:color-mix(in srgb,var(--dtl-fg) 12%,var(--dtl-surface-1));
   /* 语义色浅底在深色下压到 12% / 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
@@ -53742,16 +53748,16 @@ body[data-ds-dark-theme]{
   /* 单列（≤960）时 height:100% 解析成 auto，光靠 flex 撑不出高度 ⇒ 用右侧两行卡的总高兜底，
      两栏并排时这个值恰好等于 stretch 给的高度，等于没改 */
   min-height:calc(var(--dtl-stat-h) * 2 + var(--dtl-space-3));
-  padding:var(--dtl-space-3) var(--dtl-space-4);}
+  /* 上边共多留 25px（用户 2026-10-30：10 + 10 + 5）：border-box + 卡高不变 ⇒
+     压的是图区，外框高度一点没变 */
+  padding:calc(var(--dtl-space-3) + 25px) var(--dtl-space-4) var(--dtl-space-3);}
 .dtl-hist__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
   display:flex;gap:var(--dtl-space-2);}
-/* 按钮是核心 IconButton（outline 档自带 surface-1 底 + 边框）；这里只把 hover / disabled
-   也钉成不透明 —— 核心 hover 是半透明底、disabled 整体 opacity:.4，落在网格线上都会透线。
-   皮肤不重写，只补这两条；禁用的弱化改用 fg-dim 字色表达。 */
-.dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-surface-1);}
+/* 翻页箭头 = 「有底、无边框」款（用户 2026-10-30）：核心 IconButton 没有「实心无描边」这一档
+   （plain 无底 / outline 有底带边）⇒ 这里给它换底、把描边抹平。底取 --dtl-btn-soft（不透明，
+   压得住下面的刻度线）。hover 仍走核心那档灰底；disabled 的弱化改用 fg-dim 字色表达。 */
+.dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-btn-soft);border-color:transparent;}
 .dtl-hist__nav .dshpc-iconbtn:disabled{opacity:1;color:var(--dtl-fg-dim);}
-/* 粒度滑动框（核心 Segmented）同样落在网格线上 ⇒ 底也钉成不透明 */
-.dtl-hist__nav .dshpc-seg{background:var(--dtl-surface-1);}
 .dtl-hist__plot{position:relative;flex:1 1 auto;min-height:0;}
 /* 刻度线四档：顶/底实线，中间两条虚线（用户 2026-10-29：中间要有两根刻度线） */
 .dtl-hist__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
@@ -53769,8 +53775,17 @@ body[data-ds-dark-theme]{
   border-radius:var(--dtl-radius-xs);pointer-events:none;}
 /* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 裁掉分段自己的角 */
 .dtl-hist__bar{width:100%;display:flex;flex-direction:column-reverse;
-  border-radius:2px 2px 0 0;overflow:hidden;}
-/* 浮卡：首行日期，下面一工作区一行（色块 + 名称 + 数量），0 值不列。
+  border-radius:2px 2px 0 0;overflow:hidden;
+  /* 入场：柱子从基线逐列升起来（只动 transform，不碰高度 ⇒ 不动布局、不影响 hover 命中）。
+     延迟取列上内联的 --lc-i（列序号，封顶 20）⇒ 换粒度 / 翻页时整批新节点正好重放一遍，
+     这就是「切换动效」（用户 2026-10-30；思路同 dsh-context 的 animate-lc-bar-in）。
+     backwards 必须：延迟期间先停在起始帧，否则会先满怀高度再闪回 0。 */
+  transform-origin:bottom;
+  animation:dtl-bar-in .3s var(--dtl-ease) backwards;
+  animation-delay:calc(var(--lc-i,0) * 24ms);}
+@keyframes dtl-bar-in{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+@media (prefers-reduced-motion: reduce){.dtl-hist__bar{animation:none;}}
+/* 浮卡：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
    恒在柱子**下方**：上方会被图表顶边挤出屏幕、hover 判定又带来闪跳（用户 2026-10-29 都放下面）；
    top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。 */
 .dtl-hist__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
@@ -53781,16 +53796,30 @@ body[data-ds-dark-theme]{
 .dtl-hist__tip-date{color:var(--dtl-fg-3);font-variant-numeric:tabular-nums;}
 .dtl-hist__tip-row{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-variant-numeric:tabular-nums;}
+/* 总计行（结案任务）：不加色块、不缩进 —— 它是明细之和，不属于任何一个工作区颜色 */
+.dtl-hist__tip-total{display:flex;align-items:center;gap:var(--dtl-space-1);
+  font-weight:600;font-variant-numeric:tabular-nums;}
+/* 总计与明细之间的分隔虚线（用户 2026-10-30） */
+.dtl-hist__tip-sep{border-top:1px dashed var(--dtl-border-strong);margin:var(--dtl-space-1) 0;
+  height:0;}
 .dtl-hist__tip-dot{display:inline-block;width:8px;height:8px;flex:none;}
+/* 总计行的图例块：8×8 方块里几条**横向**色带上下等分（与柱子的分段同向，柱子里的段也是
+   横着叠的；不是左右并排的竖条） */
+.dtl-hist__tip-dot--split{display:inline-flex;flex-direction:column;overflow:hidden;}
+.dtl-hist__tip-dot--split > span{flex:1 1 0;min-height:0;}
 .dtl-hist__tip-count{margin-left:auto;padding-left:var(--dtl-space-3);color:var(--dtl-fg);}
-.dtl-hist__labels{display:flex;gap:2px;margin-top:2px;flex:none;}
+/* x 轴日期行：高度定死 10px（文字绝对定位，不吃行高），首末钳制靠内联 left / right */
+.dtl-hist__labels{display:flex;gap:2px;margin-top:2px;flex:none;height:10px;}
 /* 新增量曲线：铺满 plot 的 SVG，0-100 百分比坐标（preserveAspectRatio:none 拉伸），
    non-scaling-stroke 保证线宽不随拉伸变形；只描边不填充，色与趋势图「新增」同源 */
 .dtl-hist__line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
 .dtl-hist__line polyline{fill:none;stroke:var(--dtl-chart-added);stroke-width:1.5;
   vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
-.dtl-hist__label{flex:none;text-align:center;font-size:10px;line-height:1;color:var(--dtl-fg-3);
-  font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dtl-hist__label{position:relative;flex:none;font-size:10px;line-height:1;color:var(--dtl-fg-3);
+  font-variant-numeric:tabular-nums;}
+/* 日期文字以列中心为锚点向两侧展开（用户 2026-10-30：不从卡片最左 / 最右起排）；
+   首列 / 末列由内联 left / right 钳回边界内 */
+.dtl-hist__label > span{position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;}
 
 /* ── 趋势图（右上卡：8 周 × 3 柱）────────────────────────────────
    柱高是百分比 ⇒ 祖先链必须有**确定高度**（卡 height:100% → body flex:1 → plot 绝对铺满）；
@@ -53996,6 +54025,10 @@ body[data-ds-dark-theme]{
 		function showLoading(text) {
 			return showLoading$1({ text });
 		}
+		/** 就地加载卡（转圈在上、文案在下）：数据未到时的骨架位，摆在要占位的容器正中。 */
+		function LoadingBlock(props) {
+			return LoadingBlock$1({ text: props.text });
+		}
 		/** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
 		*  宽度由核心 `Picker` 原生支持（`width`/`minWidth`/`maxWidth` 落到位触发器内联样式，
 		* 超长省略号 + hover 跑马灯）；给了 `width` 即锁定定宽，否则在 min/max 间自适应。 */
@@ -54129,18 +54162,20 @@ body[data-ds-dark-theme]{
 		* 布局：柱序居左、柱宽固定、柱间 2px；按容器宽算能放几个周期（屏幕越窄越少），右边留白。
 		* 翻页：步长随粒度（用户 2026-10-29 定）——日 10 天 / 周 4 周 / 月 3 月。
 		*/
-		/** 工作区配色：取插件语义 token（≥5 个区会循环）。 */
-		const PALETTE = [
-			"var(--dtl-business)",
-			"var(--dtl-success)",
-			"var(--dtl-warning)",
-			"var(--dtl-overdue)",
-			"var(--dtl-danger)"
-		];
+		/** 工作区配色：色相环按黄金角 137.5° 取 24 档，相邻色差最大、互相不重复
+		*  （用户 2026-10-30：内置二三十个够用，按工作区顺序依次分配；中亮度中饱和，明暗底都成立）。 */
+		const colorAt = (index) => `hsl(${String(Math.round(index * 137.5 % 360))}deg 62% 52%)`;
 		/** 单周期槽宽：柱宽 = 槽宽。2026-10-29 用户要求加粗到 1.5 倍（10 → 15）。 */
 		const SLOT_W = 15;
-		/** x 轴标签的最小间距（小于这个就跳着显示，免得挤成一团）。 */
-		const LABEL_MIN_PITCH = 40;
+		/** 入场动画的错峰上限：第 20 列之后共用同一档延迟（再往后延迟太长，右边要等好几秒）。 */
+		const STAGGER_CAP = 20;
+		/** x 轴标签的最小间距（小于这个就跳着显示，免得挤成一团）。月是 `2026-10` 七位，
+		*  比 `10-30` 宽一截 ⇒ 单独放宽，跨度落到 4 个槽标一次（用户 2026-10-30 嫌月标签太密）。 */
+		const LABEL_MIN_PITCH = {
+			day: 40,
+			week: 40,
+			month: 62
+		};
 		/** 翻页步长：按一次左右箭头走几个周期（用户 2026-10-29 定）。 */
 		const GRAN_STEP = {
 			day: 10,
@@ -54164,6 +54199,10 @@ body[data-ds-dark-theme]{
 		function ymdOf(date) {
 			return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 		}
+		/** y 轴刻度紧凑格式：≥1000 走 1.3K / 13K（用户 2026-10-30：左侧只留 3~4 位数字的宽度）。 */
+		function compactTick(value) {
+			return value < 1e3 ? String(value) : `${String(Math.round(value / 100) / 10)}K`;
+		}
 		/** 本周一（周一为一周之始，与 skill 同口径）。 */
 		function mondayOf(value) {
 			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
@@ -54178,61 +54217,102 @@ body[data-ds-dark-theme]{
 			date.setMonth(date.getMonth() - 1);
 			return ymdOf(date);
 		}
-		/** 右侧 4 个方框（2×2，单块尺寸与主页统计卡一致）；数字由 host 从 day 桶求和下发。 */
+		function addDays(value, delta) {
+			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
+			date.setDate(date.getDate() + delta);
+			return ymdOf(date);
+		}
+		function addMonths(value, delta) {
+			const date = /* @__PURE__ */ new Date(`${monthStart(value)}T00:00:00`);
+			date.setMonth(date.getMonth() + delta);
+			return ymdOf(date);
+		}
+		/** 某天属于哪个周期（桶 key = 周期起始日，与 skill 口径一致）。 */
+		function keyOf(gran, date) {
+			return gran === "day" ? date : gran === "week" ? mondayOf(date) : monthStart(date);
+		}
+		/** 周期 key 前后挪几个周期。 */
+		function shiftKey(gran, key, delta) {
+			return gran === "day" ? addDays(key, delta) : gran === "week" ? addDays(key, delta * 7) : addMonths(key, delta);
+		}
+		/** 周期最后一天（浮卡的区间标题用）。 */
+		function endOf(gran, key) {
+			return gran === "day" ? key : gran === "week" ? addDays(key, 6) : addDays(addMonths(key, 1), -1);
+		}
+		/** 右侧 4 个方框（2×2，单块尺寸与主页统计卡一致）；数字由 host 从 day 桶求和下发。
+		*  数据没到（null）= 四块全显示横杠：骨架高度不变，页面不跳（用户 2026-10-30）。 */
 		function HistoryStats(props) {
 			const { data, t } = props;
-			const totals = data.totals;
+			const totals = data?.totals;
+			const dash = "—";
 			const today = ymdOf(/* @__PURE__ */ new Date());
 			const weekFrom = mondayOf(today);
 			return (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, (0, react$1.createElement)(StatCard, {
 				label: t("historyToday"),
-				value: totals.today,
+				value: totals === void 0 ? dash : totals.today,
 				hint: today.slice(5)
 			}), (0, react$1.createElement)(StatCard, {
 				label: t("historyWeek"),
-				value: totals.week,
+				value: totals === void 0 ? dash : totals.week,
 				hint: `${weekFrom.slice(5)}~${today.slice(5)}`
 			}), (0, react$1.createElement)(StatCard, {
 				label: t("historyMonth"),
-				value: totals.month,
+				value: totals === void 0 ? dash : totals.month,
 				hint: today.slice(0, 7)
 			}), (0, react$1.createElement)(StatCard, {
 				label: t("historyLastMonth"),
-				value: totals.lastMonth,
+				value: totals === void 0 ? dash : totals.lastMonth,
 				hint: prevMonthStart(today).slice(0, 7)
 			}));
 		}
-		/** 左侧图表卡：周期堆叠柱 + 新增量曲线 + y 轴 + 粒度切换 / 翻页（无图例）。 */
+		/** 左侧图表卡：周期堆叠柱 + 新增量曲线 + y 轴 + 粒度切换 / 翻页（无图例）。
+		*  `data = null`（首读未到）⇒ 骨架卡：卡壳高度与有数据时一致，中间核心加载卡 ⇒ 页面不跳。 */
 		function HistoryChart(props) {
 			const { data, t, gran, onGranChange } = props;
-			const plotRef = (0, react$1.useRef)(null);
+			const [plotEl, setPlotEl] = (0, react$1.useState)(null);
 			const [width, setWidth] = (0, react$1.useState)(0);
 			/** 从最新周期往回翻了几次（每次走 GRAN_STEP 个周期）。 */
 			const [shift, setShift] = (0, react$1.useState)(0);
 			(0, react$1.useEffect)(() => {
-				const el = plotRef.current;
-				if (el === null) return;
+				if (plotEl === null) return;
 				const observer = new ResizeObserver((entries) => {
 					const rect = entries[0];
 					if (rect !== void 0) setWidth(rect.contentRect.width);
 				});
-				observer.observe(el);
-				setWidth(el.clientWidth);
+				observer.observe(plotEl);
+				setWidth(plotEl.clientWidth);
 				return () => observer.disconnect();
-			}, []);
+			}, [plotEl]);
+			if (data === null) return (0, react$1.createElement)("div", {
+				className: "dtl-card dtl-hist",
+				style: {
+					alignItems: "center",
+					justifyContent: "center"
+				}
+			}, (0, react$1.createElement)(LoadingBlock, { text: t("loading") }));
 			if (data.buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)(EmptyState, { title: t("historyEmpty") }));
 			const step = GRAN_STEP[gran];
-			const capacity = width > 0 ? Math.max(1, Math.floor(width / 17)) : 30;
-			const perScreen = gran === "day" ? capacity : Math.max(step, Math.round(capacity / (gran === "week" ? 7 : 30)));
-			const last = data.buckets.length - 1;
-			const endIndex = Math.max(0, Math.min(last, last - shift * step));
-			const startIndex = Math.max(0, endIndex - (perScreen - 1));
-			const buckets = data.buckets.slice(startIndex, endIndex + 1);
+			const perScreen = width > 0 ? Math.max(1, Math.floor(width / 17)) : 30;
+			const byKey = new Map(data.buckets.map((bucket) => [bucket.key, bucket]));
+			const lastKey = keyOf(gran, ymdOf(/* @__PURE__ */ new Date()));
+			const offset = shift * step;
+			const buckets = [];
+			for (let back = perScreen - 1; back >= 0; back -= 1) {
+				const key = shiftKey(gran, lastKey, -(offset + back));
+				buckets.push(byKey.get(key) ?? {
+					key,
+					to: endOf(gran, key),
+					done: 0,
+					cancelled: 0,
+					added: 0,
+					byWorkspace: {}
+				});
+			}
 			const peak = buckets.reduce((max, bucket) => Math.max(max, bucket.done + bucket.cancelled), 0);
 			const multi = data.workspaces.length >= 2;
 			const colorById = /* @__PURE__ */ new Map();
 			data.workspaces.forEach((workspace, index) => {
-				colorById.set(workspace.id, PALETTE[index % PALETTE.length] ?? PALETTE[0]);
+				colorById.set(workspace.id, colorAt(index));
 			});
 			const segmentsOf = (bucket) => {
 				if (!multi) {
@@ -54253,7 +54333,7 @@ body[data-ds-dark-theme]{
 					const count = cell === void 0 ? 0 : cell.done + cell.cancelled;
 					if (count > 0) out.push({
 						count,
-						color: colorById.get(workspace.id) ?? PALETTE[0]
+						color: colorById.get(workspace.id) ?? colorAt(0)
 					});
 				}
 				return out;
@@ -54271,7 +54351,7 @@ body[data-ds-dark-theme]{
 						key: workspace.id,
 						name: workspace.title,
 						count,
-						color: colorById.get(workspace.id) ?? PALETTE[0]
+						color: colorById.get(workspace.id) ?? colorAt(0)
 					});
 				}
 				else {
@@ -54295,15 +54375,34 @@ body[data-ds-dark-theme]{
 				from: bucket.key,
 				to: bucket.to
 			}) : bucket.key.slice(0, 7);
+			/** 总计行的图例块（用户 2026-10-30）：**固定两/三段等分**，不按本列实际有几段去算 ——
+			*  只借色板前 3 色当示例，横着一条条叠（与柱子的分段同向，柱里的段也是横着叠的）。
+			*  单工作区时柱子本来就是「完成绿 / 取消红」两段，图例跟着给两段，别硬凑三色。 */
+			const legendColors = multi ? [
+				colorAt(0),
+				colorAt(1),
+				colorAt(2)
+			] : ["var(--dtl-success)", "var(--dtl-danger)"];
+			const legend = (0, react$1.createElement)("span", { className: "dtl-hist__tip-dot dtl-hist__tip-dot--split" }, ...legendColors.map((color, index) => (0, react$1.createElement)("span", {
+				key: index,
+				style: { background: color }
+			})));
 			const tipOf = (bucket) => {
 				const rows = rowsOf(bucket);
+				const closed = bucket.done + bucket.cancelled;
 				return (0, react$1.createElement)("div", { className: "dtl-hist__tip" }, (0, react$1.createElement)("div", { className: "dtl-hist__tip-date" }, titleOf(bucket)), bucket.added > 0 ? (0, react$1.createElement)("div", {
 					key: "added",
 					className: "dtl-hist__tip-row"
 				}, (0, react$1.createElement)("span", {
 					className: "dtl-hist__tip-dot",
 					style: { background: "var(--dtl-chart-added)" }
-				}), (0, react$1.createElement)("span", null, t("chartAdded")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(bucket.added))) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
+				}), (0, react$1.createElement)("span", null, t("chartCreatedTasks")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(bucket.added))) : null, closed > 0 ? (0, react$1.createElement)("div", {
+					key: "closed",
+					className: "dtl-hist__tip-total"
+				}, legend, (0, react$1.createElement)("span", null, t("chartClosedTasks")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(closed))) : null, rows.length > 0 ? (0, react$1.createElement)("div", {
+					key: "sep",
+					className: "dtl-hist__tip-sep"
+				}) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
 					key: row.key,
 					className: "dtl-hist__tip-row"
 				}, (0, react$1.createElement)("span", {
@@ -54312,19 +54411,24 @@ body[data-ds-dark-theme]{
 				}), (0, react$1.createElement)("span", null, row.name), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(row.count)))));
 			};
 			const colStyle = { width: `${String(SLOT_W)}px` };
-			const colOf = (bucket) => {
+			const colOf = (bucket, index) => {
 				const total = bucket.done + bucket.cancelled;
+				const style = {
+					...colStyle,
+					"--lc-i": String(Math.min(index, STAGGER_CAP))
+				};
+				const colKey = `${gran}:${String(shift)}:${bucket.key}`;
 				if (total <= 0) return (0, react$1.createElement)("div", {
-					key: bucket.key,
+					key: colKey,
 					className: "dtl-hist__col",
-					style: colStyle
-				});
+					style
+				}, tipOf(bucket));
 				const segments = segmentsOf(bucket);
 				const height = peak === 0 ? 0 : Math.max(total / peak * 100, 2);
 				return (0, react$1.createElement)("div", {
-					key: bucket.key,
+					key: colKey,
 					className: "dtl-hist__col",
-					style: colStyle
+					style
 				}, (0, react$1.createElement)("div", {
 					className: "dtl-hist__bar",
 					style: { height: `${String(height)}%` }
@@ -54336,14 +54440,25 @@ body[data-ds-dark-theme]{
 					}
 				}))), tipOf(bucket));
 			};
-			const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH / 17));
-			const labelOf = (bucket, index) => (0, react$1.createElement)("div", {
-				key: bucket.key,
-				className: "dtl-hist__label",
-				style: colStyle
-			}, index % labelStep === 0 ? gran === "month" ? bucket.key.slice(0, 7) : bucket.key.slice(5) : "");
-			const atEarliest = startIndex <= 0;
-			const atLatest = shift <= 0;
+			const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH[gran] / 17));
+			/** 最后一个真正画出文字的槽：它得右对齐，否则末位数字会顶出卡片。 */
+			const lastLabelIndex = buckets.length - 1 - (buckets.length - 1) % labelStep;
+			const labelOf = (bucket, index) => {
+				const text = index % labelStep === 0 ? gran === "month" ? bucket.key.slice(0, 7) : bucket.key.slice(5) : "";
+				const anchor = text === "" ? null : index === 0 ? {
+					left: "0",
+					transform: "none"
+				} : index === lastLabelIndex ? {
+					left: "auto",
+					right: "0",
+					transform: "none"
+				} : null;
+				return (0, react$1.createElement)("div", {
+					key: bucket.key,
+					className: "dtl-hist__label",
+					style: colStyle
+				}, text === "" ? null : (0, react$1.createElement)("span", { style: anchor ?? void 0 }, text));
+			};
 			/** 新增量曲线：一周期一个点落在柱中心，**一条线、不分工作区**（用户 2026-10-29）。
 			*  x 用「列中心 / plot 实宽」的真实占比 —— 周 / 月模式柱子只占左边一小条，
 			*  曲线必须跟着柱走，不许铺满图宽（用户 2026-10-30）。
@@ -54364,7 +54479,7 @@ body[data-ds-dark-theme]{
 			/** 翻页钮：**只画箭头** —— 核心 `IconButton` 出皮、`Icon*` 官方图标出图形，本文件不再手写
 			*  按钮样式与箭头字形（用户 2026-10-29）。悬停提示走官方 Tooltip（本仓库 `Tip` 唯一入口）；
 			*  文案只当无障碍名 + 气泡，且用 `title: ""` 压掉原生 title（照 `task-row.ts` 的惯例）。 */
-			const navButton = (dir, label, disabled, onClick) => (0, react$1.createElement)(Tip, {
+			const navButton = (dir, label, onClick) => (0, react$1.createElement)(Tip, {
 				label,
 				side: "bottom",
 				children: (0, react$1.createElement)(IconButton, {
@@ -54373,16 +54488,25 @@ body[data-ds-dark-theme]{
 					title: "",
 					variant: "outline",
 					size: "sm",
-					disabled,
 					onClick
 				})
 			});
 			const unit = t(GRAN_UNIT[gran]);
-			return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)("div", { className: "dtl-hist__nav" }, (0, react$1.createElement)(Segmented, {
+			return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, (0, react$1.createElement)("div", { className: "dtl-hist__nav" }, navButton("left", t("historyPrev", {
+				n: step,
+				unit
+			}), () => {
+				setShift((value) => value + 1);
+			}), navButton("right", t("historyNext", {
+				n: step,
+				unit
+			}), () => {
+				setShift((value) => Math.max(0, value - 1));
+			}), (0, react$1.createElement)(Segmented, {
 				id: "dtl-hist-gran",
 				value: gran,
 				size: "sm",
-				bordered: true,
+				tone: "business",
 				label: t("historyGranLabel"),
 				items: GRAN_VALUES.map((value) => ({
 					value,
@@ -54392,16 +54516,6 @@ body[data-ds-dark-theme]{
 					setShift(0);
 					onGranChange(next);
 				}
-			}), navButton("left", t("historyPrev", {
-				n: step,
-				unit
-			}), atEarliest, () => {
-				setShift((value) => value + 1);
-			}), navButton("right", t("historyNext", {
-				n: step,
-				unit
-			}), atLatest, () => {
-				setShift((value) => Math.max(0, value - 1));
 			})), (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minHeight: 0,
@@ -54412,14 +54526,14 @@ body[data-ds-dark-theme]{
 				flexDirection: "column",
 				justifyContent: "space-between",
 				flex: "none",
-				minWidth: "26px",
+				minWidth: "20px",
 				paddingBottom: "12px",
 				textAlign: "right",
 				fontSize: "10px",
 				lineHeight: "1",
 				color: "var(--dtl-fg-3)",
 				fontVariantNumeric: "tabular-nums"
-			} }, (0, react$1.createElement)("span", null, String(peak)), (0, react$1.createElement)("span", null, String(Math.round(peak * 3 / 4))), (0, react$1.createElement)("span", null, String(Math.round(peak / 2))), (0, react$1.createElement)("span", null, String(Math.round(peak / 4))), (0, react$1.createElement)("span", null, "0")), (0, react$1.createElement)("div", { style: {
+			} }, (0, react$1.createElement)("span", null, compactTick(peak)), (0, react$1.createElement)("span", null, compactTick(Math.round(peak * 3 / 4))), (0, react$1.createElement)("span", null, compactTick(Math.round(peak / 2))), (0, react$1.createElement)("span", null, compactTick(Math.round(peak / 4))), (0, react$1.createElement)("span", null, "0")), (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0,
 				display: "flex",
@@ -54427,7 +54541,7 @@ body[data-ds-dark-theme]{
 				minHeight: 0
 			} }, (0, react$1.createElement)("div", {
 				className: "dtl-hist__plot",
-				ref: plotRef
+				ref: setPlotEl
 			}, (0, react$1.createElement)("div", { className: "dtl-hist__grid" }, (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--none" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-hist__cols" }, ...buckets.map(colOf)), curve()), (0, react$1.createElement)("div", { className: "dtl-hist__labels" }, ...buckets.map((bucket, index) => labelOf(bucket, index))))));
 		}
 		//#endregion
@@ -54828,6 +54942,10 @@ body[data-ds-dark-theme]{
 			const [historyByGran, setHistoryByGran] = (0, react$1.useState)({});
 			const historyTrend = historyByGran[gran] ?? null;
 			const [historyError, setHistoryError] = (0, react$1.useState)(null);
+			const lastTrendRef = (0, react$1.useRef)(null);
+			(0, react$1.useEffect)(() => {
+				if (historyTrend !== null) lastTrendRef.current = historyTrend;
+			});
 			/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
 			*  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
 			const handleView = (row) => {
@@ -55042,8 +55160,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.125 · 261030-083056-613`
-			}, `v0.0.125 261030-083056-613`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.125 · 261030-115511-051`
+			}, `v0.0.125 261030-115511-051`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -55069,21 +55187,24 @@ body[data-ds-dark-theme]{
 				title: t("refresh"),
 				onClick: () => {
 					refresh();
+					setHistoryByGran({});
+					lastTrendRef.current = null;
+					setHistoryError(null);
 				}
 			}, state.refreshing ? t("refreshing") : t("refresh")))), viewMode === "history" ? historyError !== null ? (0, react$1.createElement)("div", { style: {
 				color: "var(--dtl-danger)",
 				fontSize: "var(--dtl-font-md)",
 				paddingTop: "var(--dtl-space-3)"
-			} }, `${t("loadFailed")}：${historyError}`) : historyTrend === null ? null : (0, react$1.createElement)("div", {
+			} }, `${t("loadFailed")}：${historyError}`) : (0, react$1.createElement)("div", {
 				className: "dtl-stats dtl-stats--history",
 				style: statsRowStyle
 			}, (0, react$1.createElement)(HistoryChart, {
-				data: historyTrend,
+				data: historyTrend ?? lastTrendRef.current,
 				t,
 				gran,
 				onGranChange: setGran
 			}), (0, react$1.createElement)(HistoryStats, {
-				data: historyTrend,
+				data: historyTrend ?? lastTrendRef.current,
 				t
 			})) : state.status === "error" && board === null ? (0, react$1.createElement)("div", { style: {
 				display: "flex",
@@ -55149,6 +55270,8 @@ body[data-ds-dark-theme]{
 			chartCancelled: "取消",
 			chartOpen: "未结",
 			chartAdded: "新增",
+			chartCreatedTasks: "新建任务",
+			chartClosedTasks: "结案任务",
 			chartEmpty: "还没有可统计的记录",
 			chartPartial: "{from} 起才有台账数据",
 			chartMine: "只看我的",
@@ -55253,6 +55376,8 @@ body[data-ds-dark-theme]{
 			chartCancelled: "Cancelled",
 			chartOpen: "Open",
 			chartAdded: "Added",
+			chartCreatedTasks: "Created",
+			chartClosedTasks: "Closed",
 			chartEmpty: "No records to chart yet",
 			chartPartial: "Ledger data starts {from}",
 			chartMine: "Only mine",

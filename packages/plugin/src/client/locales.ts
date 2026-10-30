@@ -48,6 +48,9 @@ export type LocaleKey =
 	| "chartCancelled"
 	| "chartOpen"
 	| "chartAdded"
+	// 日柱浮卡的两行小计（比「新增 / 结案」更完整的说法，表头用，用户 2026-10-30）
+	| "chartCreatedTasks"
+	| "chartClosedTasks"
 	| "chartEmpty"
 	| "chartPartial"
 	| "chartMine"
@@ -163,6 +166,8 @@ export const zh: Record<LocaleKey, string> = {
 	chartCancelled: "取消",
 	chartOpen: "未结",
 	chartAdded: "新增",
+	chartCreatedTasks: "新建任务",
+	chartClosedTasks: "结案任务",
 	chartEmpty: "还没有可统计的记录",
 	chartPartial: "{from} 起才有台账数据",
 	chartMine: "只看我的",
@@ -275,6 +280,8 @@ export const en: Record<LocaleKey, string> = {
 	chartCancelled: "Cancelled",
 	chartOpen: "Open",
 	chartAdded: "Added",
+	chartCreatedTasks: "Created",
+	chartClosedTasks: "Closed",
 	chartEmpty: "No records to chart yet",
 	chartPartial: "Ledger data starts {from}",
 	chartMine: "Only mine",
