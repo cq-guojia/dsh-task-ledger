@@ -90,6 +90,33 @@ func TestHistoryFilters(t *testing.T) {
 	}
 }
 
+// 不再排序：月份倒序 + 文件内倒序读，直接得到结案时间倒序。
+func TestHistoryDescendingWithoutSort(t *testing.T) {
+	repo, me := tempLedger(t)
+	ym := historyMonth(0)
+	prev := historyMonth(-1)
+	seedHistoryRow(t, repo, prev, historyAt(prev, "20", "09:00:00"), "上月旧", testUUID, "甲", "建设", nil)
+	for _, day := range []string{"10", "11", "12"} {
+		seedHistoryRow(t, repo, ym, historyAt(ym, day, "10:00:00"), "本月"+day, testUUID, "甲", "建设", nil)
+	}
+
+	from := historyAt(prev, "01", "00:00:00")
+	to := historyAt(ym, "28", "23:59:59")
+	res, err := QueryHistory(repo, me, HistoryQuery{Since: &from, Until: &to})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"本月12", "本月11", "本月10", "上月旧"}
+	if len(res.Records) != len(want) {
+		t.Fatalf("应 %d 条，实际 %d", len(want), len(res.Records))
+	}
+	for i, title := range want {
+		if got, _ := res.Records[i]["title"].(string); got != title {
+			t.Fatalf("第 %d 条是 %q，应为 %q（结案时间倒序）", i+1, got, title)
+		}
+	}
+}
+
 // --limit 截断：count 是**返回条数**，capped 说明还有更多没返回（2026-10-29 口径）。
 func TestHistoryLimitTruncates(t *testing.T) {
 	repo, me := tempLedger(t)

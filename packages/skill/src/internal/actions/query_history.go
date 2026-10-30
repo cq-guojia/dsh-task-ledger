@@ -136,7 +136,9 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 	history := store.NewHistoryStore(repo)
 	var records []map[string]any
 	var warnings []string
-	for _, ym := range keys {
+	// 历史表按结案顺序追加 ⇒ 月份从新到旧、月内从尾到首遍历，天然就是结案时间倒序，不再排序
+	for i := len(keys) - 1; i >= 0; i-- {
+		ym := keys[i]
 		path := filepath.Join(repo, core.ToRepoRel(core.HistoryDir), ym+".md")
 		if fi, err := os.Stat(path); err != nil || fi.IsDir() {
 			continue // 该月无记录 ⇒ 跳过，不报错
@@ -149,7 +151,8 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 		for _, w := range warns {
 			warnings = append(warnings, Rel(repo, path)+"："+w)
 		}
-		for _, row := range rows {
+		for j := len(rows) - 1; j >= 0; j-- {
+			row := rows[j]
 			if !rowMatches(row, q, me, effSince, effUntil) {
 				continue
 			}
@@ -186,10 +189,6 @@ func QueryHistory(repo string, me core.Identity, q HistoryQuery) (*HistoryResult
 			}
 		}
 	}
-	sort.SliceStable(records, func(i, j int) bool {
-		return strOfAny(records[i]["finished"]) > strOfAny(records[j]["finished"])
-	})
-
 	capped := false
 	if q.Limit != nil {
 		limit := *q.Limit
