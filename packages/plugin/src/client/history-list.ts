@@ -42,17 +42,30 @@ export interface HistoryListProps {
 	readonly onOpen: (filePath: string) => void;
 }
 
-/** 当天某个工作区的一段（= 一张小表，表头第一格是这个工作区名）。 */
+/** 当天某个工作区的一段（同一天里按工作区分段，段首一行写工作区名）。 */
 interface WorkspaceBlock {
 	readonly id: string;
 	readonly title: string;
 	readonly rows: readonly TableRow[];
 }
 
-/** 一天的块：一个日期标题 + 若干工作区小表。 */
+/** 一天的块：一个日期标题 + **一张表**（表内按工作区分段）。 */
 interface DayBlock {
 	readonly day: string;
 	readonly groups: readonly WorkspaceBlock[];
+}
+
+/** 工作区段首行（跨满全列）。 */
+function workspaceRow(title: string, colSpan: number): TableRow {
+	return {
+		key: `ws:${title}`,
+		cells: {
+			task: {
+				content: h("div", { className: "dtl-histlist__ws" }, title),
+				colSpan,
+			},
+		},
+	};
 }
 
 /** 一条记录 → 一行。第一列排版**照抄待办行**：标题 + `[@谁 创建于 X 前]` 灰徽，第二行标签。 */
@@ -247,14 +260,14 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	/** 点行 = 选中 + 把路径交给核心（不做任何合并 / 排队 / 延迟）。 */
 	const handleRowClick = (row: TableRow): void => {
 		const key = String(row.key);
-		if (key.startsWith("day:")) return;
+		if (key.startsWith("day:") || key.startsWith("ws:")) return;
 		setSelected(key);
 		const file = fileOf.get(key);
 		if (file !== undefined) props.onOpen(file);
 	};
 
-	const isVeryLast = (dayIndex: number, groupIndex: number, block: DayBlock): boolean =>
-		dayIndex === days.length - 1 && groupIndex === block.groups.length - 1;
+	/** 一天的表格列数：跨列的段首行要盖满。 */
+	const colSpan = props.solo ? 3 : 4;
 
 	const body =
 		days.length === 0
@@ -268,6 +281,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 						loading,
 					}),
 				]
+			// 一天**一张表**（用户 2026-10-31）：表头只出一次，天内按工作区分段
+			// （段首一行写工作区名）。多个表垒起来会让每段表头上叠出两条线。
 			: days.map((block, dayIndex) =>
 					h(
 						"div",
@@ -277,25 +292,23 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							{ className: "dtl-histlist__daytitle" },
 							h(SectionHead, { title: block.day, accent: "default" }),
 						),
-						...block.groups.map((group, groupIndex) =>
-							h(Table, {
-								key: group.id,
-								columns: columnsOf(group.title),
-								rows: group.rows,
-								ariaLabel: group.title,
-								className: "dtl-histlist__table",
-								// 左右也要外框（用户 2026-10-31）⇒ 四边都画
-								borders: "all",
-								selectedKeys: selected === null ? [] : [selected],
-								onRowClick: handleRowClick,
-								// 滚动加载只挂整页最后一张表：每张都挂会重复触发。
-								// ⚠️ hasMore 只看本地还剩几片 —— capped 只说明 host 那侧窗口被截断，
-								// 不该拿它停掉还能翻的本地分页（之前就是这样把用户卡在「没有更多数据」）。
-								...(isVeryLast(dayIndex, groupIndex, block)
-									? { onLoadMore: loadMore, hasMore }
-									: {}),
-							}),
-						),
+						h(Table, {
+							columns: columnsOf(t("histColTask")),
+							rows: block.groups.flatMap((group) => [
+								workspaceRow(group.title, colSpan),
+								...group.rows,
+							]),
+							ariaLabel: block.day,
+							className: "dtl-histlist__table",
+							// 左右也要外框（用户 2026-10-31）⇒ 四边都画
+							borders: "all",
+							selectedKeys: selected === null ? [] : [selected],
+							onRowClick: handleRowClick,
+							// 滚动加载只挂最后一天：每天一张表，每张都挂会重复触发
+							...(dayIndex === days.length - 1
+								? { onLoadMore: loadMore, hasMore }
+								: {}),
+						}),
 					),
 				);
 

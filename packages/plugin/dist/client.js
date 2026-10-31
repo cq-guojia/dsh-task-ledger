@@ -54592,8 +54592,11 @@ body[data-ds-dark-theme]{
 .dtl-histlist .dshpc-table__cell{padding:var(--dtl-space-3);}
 /* 日期那行（竖线 + 日期）整体右移 4px（用户 2026-10-31） */
 .dtl-histlist__daytitle{margin-left:4px;}
-/* 每天一块（日期 SectionHead + 当天各工作区的小表）：块与块之间留白 */
+/* 每天一块（日期 SectionHead + 当天**一张**表）：块与块之间留白 */
 .dtl-histlist__dayblock + .dtl-histlist__dayblock{margin-top:var(--dtl-space-4);}
+/* 天内的工作区分段行（跨满全列）：负 margin 抵消单元格内距，比数据行矮一档 */
+.dtl-histlist__ws{margin:calc(var(--dtl-space-3) * -1) 0;padding:var(--dtl-space-2) 0;
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-3);font-weight:600;}
 /* 同一天里相邻的工作区小表**紧挨着**（用户 2026-10-31：两个工作区之间不要空格），
    分隔只靠各自表头底色与边框，不额外留 margin */
 /* 第一列**照抄待办行**（2026-10-31）：标题 + 创建徽一行、标签一行 */
@@ -55217,6 +55220,16 @@ body[data-ds-dark-theme]{
 		const PAGE_MIN = 20;
 		const SELECT_MIN_WIDTH$1 = 140;
 		const SELECT_MAX_WIDTH$1 = 240;
+		/** 工作区段首行（跨满全列）。 */
+		function workspaceRow(title, colSpan) {
+			return {
+				key: `ws:${title}`,
+				cells: { task: {
+					content: (0, react$1.createElement)("div", { className: "dtl-histlist__ws" }, title),
+					colSpan
+				} }
+			};
+		}
 		/** 一条记录 → 一行。第一列排版**照抄待办行**：标题 + `[@谁 创建于 X 前]` 灰徽，第二行标签。 */
 		function rowOf(record, opts) {
 			const stop = (event) => event.stopPropagation();
@@ -55379,12 +55392,13 @@ body[data-ds-dark-theme]{
 			/** 点行 = 选中 + 把路径交给核心（不做任何合并 / 排队 / 延迟）。 */
 			const handleRowClick = (row) => {
 				const key = String(row.key);
-				if (key.startsWith("day:")) return;
+				if (key.startsWith("day:") || key.startsWith("ws:")) return;
 				setSelected(key);
 				const file = fileOf.get(key);
 				if (file !== void 0) props.onOpen(file);
 			};
-			const isVeryLast = (dayIndex, groupIndex, block) => dayIndex === days.length - 1 && groupIndex === block.groups.length - 1;
+			/** 一天的表格列数：跨列的段首行要盖满。 */
+			const colSpan = props.solo ? 3 : 4;
 			const body = days.length === 0 ? [(0, react$1.createElement)(Table$1, {
 				key: "state",
 				columns: columnsOf(t("histColTask")),
@@ -55398,20 +55412,19 @@ body[data-ds-dark-theme]{
 			}, (0, react$1.createElement)("div", { className: "dtl-histlist__daytitle" }, (0, react$1.createElement)(SectionHead, {
 				title: block.day,
 				accent: "default"
-			})), ...block.groups.map((group, groupIndex) => (0, react$1.createElement)(Table$1, {
-				key: group.id,
-				columns: columnsOf(group.title),
-				rows: group.rows,
-				ariaLabel: group.title,
+			})), (0, react$1.createElement)(Table$1, {
+				columns: columnsOf(t("histColTask")),
+				rows: block.groups.flatMap((group) => [workspaceRow(group.title, colSpan), ...group.rows]),
+				ariaLabel: block.day,
 				className: "dtl-histlist__table",
 				borders: "all",
 				selectedKeys: selected === null ? [] : [selected],
 				onRowClick: handleRowClick,
-				...isVeryLast(dayIndex, groupIndex, block) ? {
+				...dayIndex === days.length - 1 ? {
 					onLoadMore: loadMore,
 					hasMore
 				} : {}
-			}))));
+			})));
 			return (0, react$1.createElement)("div", { className: "dtl-histlist" }, (0, react$1.createElement)("div", { className: "dtl-histlist__filters" }, (0, react$1.createElement)(Select, {
 				searchable: true,
 				size: "lg",
@@ -56367,8 +56380,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261031-172816-371`
-			}, `v0.0.126 261031-172816-371`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261031-174354-761`
+			}, `v0.0.126 261031-174354-761`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

@@ -330,8 +330,11 @@ const UI_BASE_CSS = `
 .dtl-histlist .dshpc-table__cell{padding:var(--dtl-space-3);}
 /* 日期那行（竖线 + 日期）整体右移 4px（用户 2026-10-31） */
 .dtl-histlist__daytitle{margin-left:4px;}
-/* 每天一块（日期 SectionHead + 当天各工作区的小表）：块与块之间留白 */
+/* 每天一块（日期 SectionHead + 当天**一张**表）：块与块之间留白 */
 .dtl-histlist__dayblock + .dtl-histlist__dayblock{margin-top:var(--dtl-space-4);}
+/* 天内的工作区分段行（跨满全列）：负 margin 抵消单元格内距，比数据行矮一档 */
+.dtl-histlist__ws{margin:calc(var(--dtl-space-3) * -1) 0;padding:var(--dtl-space-2) 0;
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-3);font-weight:600;}
 /* 同一天里相邻的工作区小表**紧挨着**（用户 2026-10-31：两个工作区之间不要空格），
    分隔只靠各自表头底色与边框，不额外留 margin */
 /* 第一列**照抄待办行**（2026-10-31）：标题 + 创建徽一行、标签一行 */
