@@ -266,13 +266,9 @@ const UI_BASE_CSS = `
 /* 按工作区分组（用户 2026-10-30）：组头是核心 SectionHead（自带 12px 下边距），
    这里只补组与组之间的留白 —— 首个组不再多一层 */
 .dtl-group + .dtl-group{margin-top:var(--dtl-space-4);}
-/* 组头左侧的细竖线（替代图标）+ 组名后的分档条数（0 的档由 JS 直接不渲染，不占位） */
-.dtl-group__rule{width:3px;height:14px;flex:none;background:var(--dtl-fg-3);
-  border-radius:var(--dtl-radius-xs);}
+/* 组头：组名本身是 Tag，这里只补组名后的分档条数（0 的档由 JS 直接不渲染，不占位） */
 .dtl-group__count{margin-left:var(--dtl-space-2);font-size:var(--dtl-font-xs);font-weight:400;
   color:var(--dtl-fg-3);white-space:nowrap;}
-/* 组头整体右移 4px（与任务卡左缘留一点视觉差，用户 2026-10-30） */
-.dtl-group__head{padding-left:var(--dtl-space-1);}
 
 /* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
    hover 只亮主行；右侧 时间⇄按钮排 互换） */
@@ -675,20 +671,21 @@ export function StatCard(props: {
 
 /** 本地 7 档语义色 → 核心 `Chip` 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
  *  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。
- *  待认领用 `slate`（实心灰）而不是 `neutral`：neutral 那层浅灰跟 #标签 长得一模一样，
- *  状态标签要跟任务行左缘那条灰竖线一个色（用户 2026-10-30）。 */
+ *  待认领原用 `slate`（实心深灰），浅色主题下太重 ⇒ 改回 `neutral` 浅灰
+ *  （用户 2026-11-01；代价是跟 #标签 同色，靠 `#` 前缀与排位区分）。
+ *  工作区用 `cyan`（用户 2026-11-01）。 */
 const CHIP_TONE: Record<
 	"neutral" | "open" | "backlog" | "doing" | "overdue" | "stale" | "person" | "workspace",
-	"neutral" | "slate" | "business" | "success" | "warning" | "danger"
+	"neutral" | "slate" | "business" | "success" | "warning" | "danger" | "cyan"
 > = {
 	neutral: "neutral",
-	open: "slate",
+	open: "neutral",
 	backlog: "warning",
 	doing: "success",
 	overdue: "danger",
 	stale: "danger",
 	person: "business",
-	workspace: "business",
+	workspace: "cyan",
 };
 
 /**

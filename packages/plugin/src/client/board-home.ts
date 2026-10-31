@@ -70,6 +70,7 @@ import {
 	Segmented,
 	Select,
 	StatCard,
+	Tag,
 } from "./ui";
 
 // 构建期由 tsdown.client.config.ts 的 define 注入（版本读 package.json，编码是编译时刻时间戳）。
@@ -831,27 +832,24 @@ export function BoardHome(props: {
 										return h(
 											"div",
 											{ key: group.workspace.id, className: "dtl-group" },
-											// 组头整体右移 4px（用户 2026-10-30：竖线 + 后面整条内容一起挪），
-											// 只包组头，任务卡不动。
-											h(
-												"div",
-												{ className: "dtl-group__head" },
-												h(SectionHead, {
-													icon: h("span", { className: "dtl-group__rule" }),
-													title: h(
-														"span",
-														null,
-														group.workspace.title,
-														counts === ""
-															? null
-															: h(
-																	"span",
-																	{ className: "dtl-group__count" },
-																	counts,
-																),
-													),
-												}),
-											),
+											// 组头贴左不缩进；工作区名 = 带背景的标签（用户 2026-11-01：cyan）。
+											h(SectionHead, {
+												title: h(
+													"span",
+													null,
+													h(Tag, {
+														text: group.workspace.title,
+														tone: "workspace",
+													}),
+													counts === ""
+														? null
+														: h(
+																"span",
+																{ className: "dtl-group__count" },
+																counts,
+															),
+												),
+											}),
 											...shown.map((row) =>
 												h(TaskRowView, {
 													key: row.key,

@@ -2,5 +2,6 @@
 # 2026-10-17 修正：架构文档原记「workspaces 走 root package.json、不另建本文件」有误，以此为准。
 packages:
   - "packages/*"
+# 不写死版本号：裸包名 = 该包所有版本都跳过 minimumReleaseAge（追最新，用户 2026-11-01）
 minimumReleaseAgeExclude:
-  - dsh-plugin-core@0.4.0 || 0.5.0 || 0.7.3 || 0.8.3 || 0.10.0 || 0.12.0 || 0.13.0 || 0.14.0 || 0.14.1 || 0.14.2 || 0.14.2 || 0.15.0
+  - dsh-plugin-core
