@@ -3019,15 +3019,6 @@ window.__ModuleLoader__.load({
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/controls/split-group-css.generated.js
 		const SPLIT_GROUP_CSS = "\n/* ── 拼接外壳 SplitGroup ──────────────────────────────────────────────\n   职责只有一条：把两个控件在外观上焊成一体（外框 / 圆角 / 中间 1px 分隔 / 整体聚焦圈）。\n   它**不持状态、不出联动回调** —— 选中与联动全走内件自己的 value / onChange\n   （用户 2026-10-28 拍板：外壳不必知道右边那个下拉管什么）。\n\n   ⚠️ 与内件类名有意耦合：内件是 Picker / Segmented 时由下面几条规则把它们自己的\n   边框 / 底色 / 圆角交出来，由外壳统一画。内件改名或改结构要同步改这里，\n   否则会出现双边框、双底色。\n\n   高度不写死：内件自己按 size 档（sm 24 / md 28 / lg 32）撑开，外壳跟着长。\n   两格要等高，就给内件传**同一个 size**。万一两格 size 不一致，外壳内件用 align-items:center\n   居中（不会顶对齐露白，用户 2026-10-28 截图反馈「本月偏上」后的处理）；**别用 height:100%**，\n   它会覆盖三档高度（与 --lg/--sm 同特异性且注入更晚）。\n\n   左格统一灰底（用户 2026-10-28 拍板）：滑块保留自己的灰轨，左格下拉把底色换成\n   surface-sunken；右格保持原样。层次感 = 左格是「档位/范围」，右格是「值」。 */\n   .dshpc-split{display:inline-flex;align-items:stretch;max-width:100%;overflow:hidden;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n   /* 两格宽度都由内容给；容器再窄也让内件自己省略，不让外壳被撑破 */\n   .dshpc-split > *{min-width:0;max-width:100%;}\n   /* 分隔：相邻兄弟的左描边，不额外插 DOM，hover / focus 时也不会断 */\n   .dshpc-split > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n   /* 整体聚焦：内件自己的外圈交出来，由外壳画一整圈（内件各自画会变成格内半圈） */\n   .dshpc-split:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n   /* Picker：去掉自身外框与底色；display 改成 flex，消掉 inline-block 行盒带来的基线间隙。\n      注意**不能用 height:100%**：它会和 .dshpc-picker__trigger--lg / --sm 同特异性（都是两个类），\n      且 split-group.css 在 picker.css 之后注入，会把三档高度全吃掉（md/lg 看起来一样大）。\n      改用 align-items:center —— 同 size 时两格自然等高的同时文字垂直居中；万一两格 size 不一致，\n      较矮的格也只是居中、不会顶对齐露白。 */\n   .dshpc-split .dshpc-picker{display:flex;align-items:center;}\n   .dshpc-split .dshpc-picker__trigger{border:0;border-radius:0;background:transparent;}\n   .dshpc-split .dshpc-picker__trigger:focus-visible{outline:0;}\n   /* 左格下拉：灰底（滑块的灰轨是它自己的 --dshpc-seg-track，不在这里覆盖） */\n   .dshpc-split > :first-child .dshpc-picker__trigger{background:var(--dshpc-surface-sunken);}\n   /* Segmented：只去外圆角与描边，灰轨保留；padding 保持 3px 不动 —— 它是高度契约的一部分\n    （3 + item + 3 = control-h）。bordered 那档去掉描边、把让给描边的 1px 还回 padding，\n    否则会比右边矮 2px。 */\n   .dshpc-split .dshpc-seg{border-radius:0;border:0;}\n   .dshpc-split .dshpc-seg--bordered{padding:3px;}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/controls/table-css.generated.js
-		const TABLE_BASE_CSS = "/* ── 表格基础层（结构 + 交互 + 空态）─────────────────────────────────────\n   外观分档 = 分组件 + 分文件：本文件只放所有外观共用的部分；\n   表头底色、分隔线、悬浮 / 选中色由皮肤文件负责（table-plain.css 是第一档）。\n   皮肤选择器一律挂在 .dshpc-table--<skin> 下，与基础层不同名 —— 注入顺序不影响胜负\n   （test/css-contract.test.mjs 禁止跨常量同名选择器）。\n   圆角裁剪 / 横向滚动归调用方容器，本层不设 overflow；也不做表头吸顶：\n   分组表头是多行，统一 top:0 会在滚动时互相盖住（要吸顶请在外层容器处理）。 */\n\n.dshpc-table{--dshpc-table-pad-x:var(--dshpc-space-3);--dshpc-table-head-h:44px;--dshpc-table-row-h:48px;\n  width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;box-sizing:border-box;\n  color:var(--dshpc-fg);font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 密度三档：只改行高与水平内距，配色与分隔线归皮肤。compact / comfortable 各一行，\n   新增档位在此追加；列级 padding 走内联 style 覆盖（不在这里再开一套变量）。\n   默认水平内距 12px（space-3）—— 参考稿的色块间距，16px 偏松。 */\n.dshpc-table--density-compact{--dshpc-table-pad-x:var(--dshpc-space-2);--dshpc-table-head-h:36px;--dshpc-table-row-h:36px;}\n.dshpc-table--density-comfortable{--dshpc-table-pad-x:var(--dshpc-space-4);--dshpc-table-head-h:52px;--dshpc-table-row-h:60px;}\n\n.dshpc-table__head-cell,.dshpc-table__cell{box-sizing:border-box;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  text-align:left;vertical-align:middle;font-weight:400;}\n\n/* 表头 44 / 数据行 48 是 default 档（参考稿密度）；height 在 table-cell 上是最小高，\n   多行内容会自动把行撑高，不会被截断。 */\n.dshpc-table__head-cell{height:var(--dshpc-table-head-h);font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg-2);}\n.dshpc-table__head-cell--group{text-align:center;}\n.dshpc-table__cell{height:var(--dshpc-table-row-h);}\n\n.dshpc-table__head-cell--center,.dshpc-table__cell--center{text-align:center;}\n.dshpc-table__head-cell--right,.dshpc-table__cell--right{text-align:right;}\n\n.dshpc-table__row{transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n/* 只有传了 onRowClick 的行才是可点的（数据属性由组件按此打）。 */\n.dshpc-table__row[data-interactive='true']{cursor:pointer;}\n.dshpc-table__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n\n/* 斑马纹是通用能力（表级 striped 开关），放在基础层：底色取 token，各档皮肤不必各自实现。\n   选择器刻意只到 3 个类级别（表级 + 行 + :nth-child）；皮肤层的行态规则带 __body 上下文\n   + 属性选择器，必然是 4 级 ⇒ 与注入顺序无关地压过它。\n   2026-10-30 真机事故：这里曾写满 4 级（多了一个 __body），与选中的 4 级相同 ⇒ 基础层\n   比皮肤后注入，偶数行永远被斑马纹盖住（「单数行能选中、双数行点了没反应」）。 */\n.dshpc-table--striped .dshpc-table__row:nth-child(even){background:var(--dshpc-plate);}\n\n/* 分组通栏：一个表格里放多个板块（工作区 A / 工作区 B）时，每组先来一行横跨全部列的大标题，\n   然后才是这一组自己的表头与数据行。结构 + 底色归基础层（只用 token，各档皮肤共同成立）；\n   通栏底走 --dshpc-table-banner-bg（与表头互换的那一档，2026-10-30 用户定）；\n   通栏与组表头之间画一条线（用户 2026-10-30：那之间也要有 border）；\n   组与组之间用通栏顶线隔开，第一组顶部不画（外框已经在那儿，画了就成双线）。 */\n.dshpc-table__group-cell{height:var(--dshpc-table-head-h);padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;background:var(--dshpc-table-banner-bg);border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  text-align:left;vertical-align:middle;font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg);}\n.dshpc-table__group-body:first-of-type .dshpc-table__group-cell{border-top:0;}\n\n/* 通栏标题的固定标签（短竖线）与排版由 SectionHead 自带（4px 圆头），本层不再画。 */\n\n.dshpc-table__empty{height:80px;padding:0 var(--dshpc-space-4);text-align:center;\n  color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n\n/* 加载态行（加载更多 / 没有更多 / 整表加载）：单元格自身不画边框（底部状态行的顶线由皮肤补），内容居中；\n   整表加载默认占位 160px（可由 loadingHeight 覆盖），底部那行只占一行高。 */\n.dshpc-table__state-cell{padding:0;border:0;text-align:center;vertical-align:middle;}\n.dshpc-table__state{display:flex;align-items:center;justify-content:center;\n  gap:var(--dshpc-space-2);min-height:40px;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state--full{flex-direction:column;min-height:160px;gap:var(--dshpc-space-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state-text{line-height:1;}\n/* 底部哨兵：零高、无边框、无内容，只给 IntersectionObserver 一个落点。 */\n.dshpc-table__sentinel>td{height:0;padding:0;border:0;line-height:0;}\n\n/* 内建分页的外壳：表格在上、分页条在下，间距走 space-3（分页条自己管左右对齐）。 */\n.dshpc-table-frame{display:flex;flex-direction:column;gap:var(--dshpc-space-3);}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/controls/table-plain-css.generated.js
-		const TABLE_PLAIN_CSS = "/* ── 外观一 · Plain（第一个样式：白卡片上的轻量表格）─────────────────────\n   特征：外框 + 灰底表头（含下边线，双行分组表头也清楚）、竖向分隔线、\n   数据行只保留极淡底线（不画重横线）、行悬浮淡蓝、选中行淡蓝底 + 左侧 3px 蓝竖条。\n   选择器全部挂在 .dshpc-table--plain 下，和基础层不同名（注入顺序无关）。\n   竖分隔线按列声明（格子上的 data-divider），不用相邻兄弟选择器 —— 后者会让每行首格\n   永远没有左线（用户 2026-10-30 真机看到的 Name 左侧缺线），且单元格跨列后会画错位置。\n   后续外观照此另建：table-grid.css / table-zebra.css，各自一个组件、各自 import 自己那份。 */\n\n/* 外框四态：all 四边 / x 只有左右 / y 只有上下 / none 全不要。\n   组件总会按 borders 属性和上对应 class，故这里不存在「无 class 的裸表」。\n   「不要左右两条边」就是 borders='y'。 */\n.dshpc-table--plain.dshpc-table--borders-all{border:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-x{border-left:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-y{border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-none{border:0;}\n\n/* 表头：中性灰底 + 下边线。底色走 --dshpc-table-head-bg（= --dshpc-surface-sunken，\n   与通栏那层灰同源；2026-10-30 用户二次定案：表头 / 通栏互换底色）；下边线兜住分组表头的第二层。 */\n.dshpc-table--plain .dshpc-table__head-cell{\n  background:var(--dshpc-table-head-bg);\n  border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-table--plain .dshpc-table__head-cell--group{color:var(--dshpc-fg-3);}\n\n/* 表头多色：列级 headerTone 打到 data-header-tone，浅底 + 同色文字。\n   色值全部来自 token（soft 底 / 实色字），暗色主题自动跟随，不写死任何 hex。\n   这组规则比上方灰底规则多一个属性选择器，必然覆盖默认灰底。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='business']{background:var(--dshpc-business-soft);color:var(--dshpc-business);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='success']{background:var(--dshpc-success-soft);color:var(--dshpc-success);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='warning']{background:var(--dshpc-warning-soft);color:var(--dshpc-warning);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='danger']{background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='purple']{background:var(--dshpc-purple-soft);color:var(--dshpc-purple);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='pink']{background:var(--dshpc-pink-soft);color:var(--dshpc-pink);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='cyan']{background:var(--dshpc-cyan-soft);color:var(--dshpc-cyan);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='teal']{background:var(--dshpc-teal-soft);color:var(--dshpc-teal);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='orange']{background:var(--dshpc-orange-soft);color:var(--dshpc-orange);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='indigo']{background:var(--dshpc-indigo-soft);color:var(--dshpc-indigo);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='rose']{background:var(--dshpc-rose-soft);color:var(--dshpc-rose);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='slate']{background:var(--dshpc-slate-soft);color:var(--dshpc-slate);}\n\n/* 竖分隔线：按列声明，**默认不画**。组件只给 divider: true 的列打 data-divider='left'，\n   首列恒不画（那是外框的位置）。默认表格 = 只有横线、没有一条竖线；\n   要「列间有线」就给对应列 divider:true。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-divider='left'],\n.dshpc-table--plain .dshpc-table__cell[data-divider='left']{border-left:1px solid var(--dshpc-border);}\n\n/* 数据行之间的极淡底线：只帮眼睛「分行」，不回到粗横线表格的老样子。 */\n.dshpc-table--plain .dshpc-table__row + .dshpc-table__row .dshpc-table__cell{\n  border-top:1px solid var(--dshpc-border-faint);\n}\n\n/* 底部状态行（加载更多 / 到底）：整行通栏，与上方数据行之间补一条实线。\n   只补顶线：左右两条不由这一格重复画 —— borders=all / x 时表级外框已经兜住；\n   borders=y / none 本来就没有左右边。整表加载占位行不加（表头已有下边线，再加就成双线）。 */\n.dshpc-table--plain .dshpc-table__state-row--footer .dshpc-table__state-cell{\n  border-top:1px solid var(--dshpc-border);\n}\n\n/* 没有左右外框时（borders=y）底部状态行下面那条表底线也去掉：\n   状态行只留上方一条实线，否则图标 / 文案下方还多一条孤线（2026-10-31 用户定）。\n   borders=none 本来就没有底边，无需在此重复。 */\n.dshpc-table--plain.dshpc-table--borders-y.dshpc-table--foot-no-bottom{border-bottom:0;}\n\n/* 行悬浮：只在可点行上给反馈，静态表格不误导用户以为能点。\n   底色是极淡中性灰（--dshpc-table-row-hover：亮色一层淡黑 ≈1.5%，暗色一层淡白 ≈3%）——\n   2026-10-30 用户：hover 要特别淡的灰、不要淡蓝（第二次又要求再浅一半）。带 __body 上下文是为了压过基础层的斑马纹（见 table.css）。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-interactive='true']:hover{background:var(--dshpc-table-row-hover);}\n\n/* 选中行：淡蓝底 + 左侧蓝竖条。用背景渐变画条，避免 tr 上伪元素 / 定位的兼容问题；\n   两条选择器同一份声明：悬浮态（多一个属性 + 伪类）不会盖掉选中态。\n   底色用 business-soft（比悬浮再明确一档但仍是浅色），条本身才是「选中」的信号。\n   特异性 4 级，高于基础层的斑马纹（3 级）⇒ 偶数行也能正常选中。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'],\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'][data-interactive='true']:hover{\n  background:linear-gradient(to right,var(--dshpc-business) 3px,var(--dshpc-business-soft) 3px);\n}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/controls/pagination-css.generated.js
-		const PAGINATION_CSS = "/* ── 分页（‹ Previous 1 2 3 … 36 Next ›）────────────────────────────────────\n   当前页 = 蓝色圆角方块 + 白字（实心面的字必须走 --dshpc-on-signal，不许用主题反色）；\n   其余页码是纯文字按钮，悬浮只给极淡中性底。对齐由 --left / --center / --right 三个修饰决定，\n   组件默认 right。颜色全部走 token，明暗自动跟随宿主。 */\n\n.dshpc-pagination{display:flex;align-items:center;gap:var(--dshpc-space-2);flex-wrap:wrap;\n  font-size:var(--dshpc-font-sm);line-height:1;color:var(--dshpc-fg-2);}\n\n.dshpc-pagination--left{justify-content:flex-start;}\n.dshpc-pagination--center{justify-content:center;}\n.dshpc-pagination--right{justify-content:flex-end;}\n\n.dshpc-pagination__total{color:var(--dshpc-fg-3);margin-inline-end:var(--dshpc-space-1);}\n\n.dshpc-pagination__pages{display:flex;align-items:center;gap:2px;}\n\n/* 页码 / 上下页 = 核心 Button（当前页 info 实心蓝、其余 ghost），箭头 = 全站唯一 Chevron。\n   这里只补尺寸与间距，不重画按钮皮肤；两级选择器压过 .dshpc-btn--md 的内距。 */\n.dshpc-pagination .dshpc-pagination__page{padding:0 6px;min-width:28px;}\n.dshpc-pagination .dshpc-pagination__nav{padding:0 var(--dshpc-space-2);}\n\n.dshpc-pagination__ellipsis{display:inline-flex;align-items:center;justify-content:center;\n  min-width:28px;height:28px;color:var(--dshpc-fg-3);}\n\n.dshpc-pagination__simple{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;\n  color:var(--dshpc-fg);}\n\n/* 简洁模式只留箭头：文字标签隐藏，箭头仍然可见（无障碍名还在 aria-label 上）。 */\n.dshpc-pagination--simple .dshpc-pagination__text{display:none;}\n\n/* 每页条数下拉 = 核心 Picker（箭头是全站唯一的 Chevron）：只收窄不参与伸缩。 */\n.dshpc-pagination__size{flex:none;}\n";
-		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/controls/section-head-css.generated.js
 		const SECTION_HEAD_CSS = "/* 分区标题行：标签（可选，画出来的短竖线）/ icon + 标题 + 右侧控件。 */\n.dshpc-section-head{display:flex;align-items:center;gap:var(--dshpc-space-2);\n  margin-bottom:var(--dshpc-space-3);}\n.dshpc-section-head--flush{margin-bottom:0;}\n\n.dshpc-section-head__bar{flex:none;width:4px;height:1em;border-radius:999px;\n  font-size:var(--dshpc-font-lg);background:var(--dshpc-fg-2);}\n\n.dshpc-section-head__icon{display:inline-flex;align-items:center;flex:none;\n  line-height:var(--dshpc-line-lg);color:var(--dshpc-fg-3);}\n\n.dshpc-section-head__title{font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);\n  font-weight:600;color:var(--dshpc-fg);flex:none;}\n\n.dshpc-section-head__right{flex:1;display:flex;align-items:center;\n  justify-content:flex-end;gap:var(--dshpc-space-2);min-width:0;}\n";
 		//#endregion
@@ -3615,171 +3606,6 @@ window.__ModuleLoader__.load({
 			}) : children ?? null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/pagination-logic.js
-		/**
-		* 分页纯逻辑：总页数、页码夹取、省略号窗口、当前页可见区间。
-		*
-		* 零 React 运行时依赖（只 `import type`，编译后不留痕迹），可被 node 单测直接引。
-		*
-		* 口径照通行的分页约定（Ant Design / MUI / Element Plus 一致）：
-		* 调用方只给「当前页 / 每页条数 / 总条数」，总页数与省略窗口一律由这里算，
-		* **消费方永远不自己算页数、也不自己拼页码**。
-		*/
-		/** 总页数：`ceil(total / pageSize)`，至少 1 页（空数据也显示单页）。 */
-		function pageCountOf(total, pageSize) {
-			return Math.max(1, Math.ceil(Math.max(0, Math.floor(total)) / Math.max(1, Math.floor(pageSize))));
-		}
-		/** 把页码夹回 `[1, pageCount]`（越界 / NaN 一律落到第 1 页）。 */
-		function clampPage(page, pageCount) {
-			const count = Math.max(1, Math.floor(pageCount));
-			if (!Number.isFinite(page)) return 1;
-			return Math.min(Math.max(1, Math.floor(page)), count);
-		}
-		/**
-		* 当前页在数据里的区间（1 起的闭区间行号）。
-		* 空数据返回 `[0, 0]`（调用方据此显示「共 0 条」而不是「第 0-0 条」）。
-		*/
-		function pageRange(page, pageSize, total) {
-			const rows = Math.max(0, Math.floor(total));
-			if (rows === 0) return [0, 0];
-			const size = Math.max(1, Math.floor(pageSize));
-			const from = (clampPage(page, pageCountOf(rows, size)) - 1) * size + 1;
-			return [from, Math.min(rows, from + size - 1)];
-		}
-		function range(start, end) {
-			const out = [];
-			for (let n = start; n <= end; n += 1) out.push(n);
-			return out;
-		}
-		/**
-		* 页码条上的项序列（含省略号占位）。
-		*
-		* 窗口算法照 MUI 的实现：首尾各固定 `boundaryCount` 页，当前页两侧各留 `siblingCount` 页，
-		* 中间不足的部分收成 `'gap'`。默认 1 / 1 —— 最多 7 个位置（与 Element Plus `pager-count: 7` 等价）。
-		*
-		* 关键细节（各家一致，别改成「有缝就画省略号」）：间隔**正好 1 页**时直接显示那个页号，
-		* 不画省略号，否则会出现 `1 2 … 4` 这种丑态。
-		*/
-		function pageItems(page, pageCount, siblingCount = 1, boundaryCount = 1) {
-			const count = Math.max(1, Math.floor(pageCount));
-			const current = clampPage(page, count);
-			const boundary = Math.max(0, Math.floor(boundaryCount));
-			const siblings = Math.max(0, Math.floor(siblingCount));
-			const startPages = range(1, Math.min(boundary, count));
-			const endPages = range(Math.max(count - boundary + 1, boundary + 1), count);
-			const siblingsStart = Math.max(Math.min(current - siblings, count - boundary - siblings * 2 - 1), boundary + 2);
-			const siblingsEnd = Math.min(Math.max(current + siblings, boundary + siblings * 2 + 2), endPages.length > 0 ? endPages[0] - 2 : count - 1);
-			const items = [...startPages];
-			if (siblingsStart > boundary + 2) items.push("gap");
-			else if (boundary + 1 < count - boundary) items.push(boundary + 1);
-			items.push(...range(siblingsStart, siblingsEnd));
-			if (siblingsEnd < count - boundary - 1) items.push("gap");
-			else if (count - boundary > boundary) items.push(count - boundary);
-			items.push(...endPages);
-			return items;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/Pagination.js
-		/**
-		* 分页（`‹ Previous  1 [2] 3 … 36  Next ›`）。
-		*
-		* 受控组件：页码由调用方持有，这里只发 `onChange(page, pageSize)`。
-		* 样式只 import 自己那份 CSS（`PAGINATION_CSS`），引它就只打包这一份。
-		*/
-		function Pagination(props) {
-			ensureComponentStyles("pagination", PAGINATION_CSS);
-			const tt = props.translate ?? t$2;
-			const pageSize = Math.max(1, Math.floor(props.pageSize ?? 10));
-			const total = Math.max(0, Math.floor(props.total));
-			const count = pageCountOf(total, pageSize);
-			const page = clampPage(props.page, count);
-			if (props.hideOnSinglePage === true && count <= 1) return null;
-			const disabled = props.disabled === true;
-			const [from, to] = pageRange(page, pageSize, total);
-			const go = (next) => {
-				if (disabled) return;
-				const target = clampPage(next, count);
-				if (target !== page) props.onChange(target, pageSize);
-			};
-			const navClass = [
-				"dshpc-pagination",
-				`dshpc-pagination--${props.align ?? "right"}`,
-				props.simple === true ? "dshpc-pagination--simple" : "",
-				props.className ?? ""
-			].filter((s) => s !== "").join(" ");
-			const totalNode = (() => {
-				const showTotal = props.showTotal;
-				if (showTotal === void 0 || showTotal === false) return null;
-				if (typeof showTotal === "function") return showTotal(total, from, to);
-				return total === 0 ? tt("paginationTotalZero") : tt("paginationTotal", {
-					from,
-					to,
-					total
-				});
-			})();
-			const pageButton = (n) => (0, react$1.createElement)(Button$1, {
-				key: n,
-				variant: n === page ? "info" : "ghost",
-				size: "md",
-				className: "dshpc-pagination__page",
-				"aria-current": n === page ? "page" : void 0,
-				"aria-label": tt("paginationPage", { n }),
-				disabled,
-				onClick: () => go(n)
-			}, n);
-			const navButton = (direction) => {
-				const isPrev = direction === "prev";
-				const label = isPrev ? tt("paginationPrev") : tt("paginationNext");
-				return (0, react$1.createElement)(Button$1, {
-					variant: "ghost",
-					size: "md",
-					className: "dshpc-pagination__nav",
-					icon: isPrev ? (0, react$1.createElement)(Chevron, {
-						dir: "left",
-						size: 14
-					}) : void 0,
-					iconRight: isPrev ? void 0 : (0, react$1.createElement)(Chevron, {
-						dir: "right",
-						size: 14
-					}),
-					"aria-label": label,
-					disabled: disabled || (isPrev ? page <= 1 : page >= count),
-					onClick: () => go(isPrev ? page - 1 : page + 1)
-				}, (0, react$1.createElement)("span", { className: "dshpc-pagination__text" }, label));
-			};
-			const middle = props.simple === true ? [(0, react$1.createElement)("span", {
-				key: "simple",
-				className: "dshpc-pagination__simple"
-			}, `${String(page)} / ${String(count)}`)] : pageItems(page, count, props.siblingCount, props.boundaryCount).map((item, index) => item === "gap" ? (0, react$1.createElement)("span", {
-				key: `gap-${String(index)}`,
-				className: "dshpc-pagination__ellipsis",
-				"aria-hidden": "true"
-			}, "…") : pageButton(item));
-			const options = props.pageSizeOptions ?? [];
-			const sizeNode = options.length === 0 ? null : (0, react$1.createElement)(Picker, {
-				className: "dshpc-pagination__size",
-				minWidth: "auto",
-				mode: "single",
-				options: options.map((size) => ({
-					value: String(size),
-					label: tt("paginationPageSizeOption", { n: size })
-				})),
-				value: String(pageSize),
-				disabled,
-				ariaLabel: tt("paginationPageSizeAria"),
-				onChange: (value) => {
-					const next = Number(value);
-					if (!Number.isFinite(next) || next < 1) return;
-					props.onChange(1, next);
-				}
-			});
-			return (0, react$1.createElement)("nav", {
-				className: navClass,
-				style: props.style,
-				"aria-label": props.ariaLabel ?? tt("paginationAria")
-			}, totalNode === null ? null : (0, react$1.createElement)("span", { className: "dshpc-pagination__total" }, totalNode), (0, react$1.createElement)("div", { className: "dshpc-pagination__pages" }, navButton("prev"), ...middle, navButton("next")), sizeNode);
-		}
-		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/SectionHead.js
 		/**
 		* 模块标题行（UI 基础层）：**标签（可选，画出来的短竖线）/ icon（可选）+ 标题 + 右侧控件**。
@@ -3827,384 +3653,6 @@ window.__ModuleLoader__.load({
 				"aria-hidden": "true",
 				style: accent === "default" ? void 0 : barStyleOf(accent)
 			}), props.icon === void 0 ? null : (0, react$1.createElement)("span", { className: "dshpc-section-head__icon" }, props.icon), (0, react$1.createElement)("span", { className: "dshpc-section-head__title" }, props.title), props.right === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-section-head__right" }, props.right));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/table-logic.js
-		/**
-		* 单元格值是不是「对象写法」（跨列 / 跨行 / 对齐）。
-		*
-		* 判别不引 React：React 元素一定有 `$$typeof`（内部标记），而单元格对象没有 ——
-		* 用它把「传进来一个 React 元素」和「传进来一个单元格配置」分开。
-		* 放在纯逻辑层，node 单测可直接覆盖。
-		*/
-		function isTableCellSpec(value) {
-			if (typeof value !== "object" || value === null) return false;
-			if ("$$typeof" in value) return false;
-			return "content" in value;
-		}
-		/** 按深度优先顺序取全部叶子列（表格的列顺序 = 数据格的列顺序）。 */
-		function leafColumns(columns) {
-			const out = [];
-			for (const column of columns) {
-				const children = column.children;
-				if (children === void 0 || children.length === 0) out.push(column);
-				else out.push(...leafColumns(children));
-			}
-			return out;
-		}
-		/** 列树深度 = 表头行数（全叶子列时为 1）。 */
-		function tableDepth(columns) {
-			let depth = 1;
-			for (const column of columns) {
-				const children = column.children;
-				if (children === void 0 || children.length === 0) continue;
-				depth = Math.max(depth, 1 + tableDepth(children));
-			}
-			return depth;
-		}
-		/**
-		* 列树 → 逐行表头。
-		*
-		* - 叶子列：`rowSpan = 深度 - 当前层`，一直竖跨到表头底部；
-		* - 分组列：`colSpan = 其下叶子数`，`rowSpan = 1`。
-		*
-		* 例：`[ID, Patient[Name, Age], Status]` ⇒ 第 0 行 `[ID(1×2), Patient(2×1), Status(1×2)]`，
-		* 第 1 行 `[Name(1×1), Age(1×1)]`。
-		*/
-		function headerRows(columns) {
-			const rows = [];
-			const depth = tableDepth(columns);
-			for (let level = 0; level < depth; level += 1) rows.push([]);
-			const visit = (column, level) => {
-				const children = column.children;
-				if (children === void 0 || children.length === 0) {
-					rows[level].push({
-						column,
-						colSpan: 1,
-						rowSpan: depth - level,
-						leafKeys: [column.key]
-					});
-					return [column.key];
-				}
-				const keys = [];
-				for (const child of children) keys.push(...visit(child, level + 1));
-				rows[level].push({
-					column,
-					colSpan: keys.length,
-					rowSpan: 1,
-					leafKeys: keys
-				});
-				return keys;
-			};
-			for (const column of columns) visit(column, 0);
-			return rows;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/table-shared.js
-		function widthOf(width) {
-			if (width === void 0) return void 0;
-			return typeof width === "number" ? `${width}px` : width;
-		}
-		/** 列级水平内距（覆盖 density 档）；不传交给 CSS。 */
-		function padStyle(column) {
-			return column.padding === void 0 ? void 0 : { paddingInline: `${column.padding}px` };
-		}
-		function alignClass(prefix, align) {
-			return align === void 0 || align === "left" ? "" : ` ${prefix}--${align}`;
-		}
-		/**
-		* 某列在叶子序列里的位置决定画不画左竖线：
-		* 首列恒不画（那是外框的位置）；其余列只在「想要线」时画。
-		* 分组列自己不写 `divider` 时，跟随它第一个叶子列 —— 组头的左缘和第一个子列的左缘
-		* 是同一条线，否则「组头无线、下面子列有线」会断成两截（2026-10-30 用户真机指出）。
-		*/
-		function dividerAttr(leafIndex, wanted) {
-			if (leafIndex === 0) return void 0;
-			return wanted === true ? "left" : void 0;
-		}
-		/**
-		* 表格共享渲染壳（**内部件，不进公开导出**）。
-		*
-		* 职责：基础层样式登记 + 语义化 `<table>` 结构 + 表头分组计算 + 行交互 + 列/单元格配置落地。
-		* 外观（表头底色 / 分隔线 / 悬浮 / 选中）由调用方的皮肤 CSS 负责：每个公开组件
-		* （`Table`、将来的 `TableGrid` / `TableZebra`）只 import 自己那份皮肤，并把自己的
-		* modifier class 传进来。这样消费方引哪个就只打包哪个 —— 绝不用 `variant` 汇总多份皮肤。
-		*/
-		function tableShell(skinClass, props, options = {}) {
-			ensureComponentStyles("table-core", TABLE_BASE_CSS);
-			const tt = props.translate ?? t$2;
-			const headRows = headerRows(props.columns);
-			const leaves = leafColumns(props.columns);
-			const leafIndexByKey = /* @__PURE__ */ new Map();
-			leaves.forEach((column, index) => {
-				leafIndexByKey.set(column.key, index);
-			});
-			const selected = new Set(props.selectedKeys ?? []);
-			const onRowClick = props.onRowClick;
-			const density = props.density ?? "default";
-			const borders = props.borders ?? "y";
-			/** 表头一行：分组表头按层级逐行渲染（每组重复渲染它，分组模式也要表头）。 */
-			const headRowOf = (cells, level) => (0, react$1.createElement)("tr", {
-				key: `head-${level}`,
-				className: "dshpc-table__head-row"
-			}, ...cells.map((cell) => {
-				const group = cell.colSpan > 1;
-				const firstLeafIndex = leafIndexByKey.get(cell.leafKeys[0] ?? "");
-				const firstLeaf = firstLeafIndex === void 0 ? void 0 : leaves[firstLeafIndex];
-				const className = `dshpc-table__head-cell${group ? " dshpc-table__head-cell--group" : ""}${alignClass("dshpc-table__head-cell", cell.column.align)}`;
-				const tone = cell.column.headerTone;
-				return (0, react$1.createElement)("th", {
-					key: cell.column.key,
-					scope: group ? "colgroup" : "col",
-					colSpan: cell.colSpan > 1 ? cell.colSpan : void 0,
-					rowSpan: cell.rowSpan > 1 ? cell.rowSpan : void 0,
-					className,
-					style: padStyle(cell.column),
-					"data-divider": firstLeafIndex === void 0 ? void 0 : dividerAttr(firstLeafIndex, cell.column.divider ?? firstLeaf?.divider),
-					"data-header-tone": tone === void 0 || tone === "default" ? void 0 : tone
-				}, cell.column.title);
-			}));
-			/**
-			* 跨行单元格（rowSpan）把上下几行连成一个视觉块：块里任意一行被选中，整块都算选中。
-			* 先按 rowSpan 求每行所属块的范围 [start, end]，再判断块内有没有选中行 ——
-			* 不依赖点击的是块里的哪一行，也不要求调用方自己展开。
-			*/
-			const selectedBlocksOf = (rows) => {
-				const blocks = rows.map((_, index) => ({
-					start: index,
-					end: index
-				}));
-				rows.forEach((row, index) => {
-					for (const cell of Object.values(row.cells)) {
-						if (!isTableCellSpec(cell) || cell.rowSpan === void 0 || cell.rowSpan <= 1) continue;
-						const end = Math.min(index + cell.rowSpan - 1, rows.length - 1);
-						for (let line = index; line <= end; line += 1) {
-							const block = blocks[line];
-							if (block === void 0) continue;
-							block.start = Math.min(block.start, index);
-							block.end = Math.max(block.end, end);
-						}
-					}
-				});
-				return blocks.map((block) => {
-					for (let line = block.start; line <= block.end; line += 1) {
-						const row = rows[line];
-						if (row !== void 0 && selected.has(row.key)) return true;
-					}
-					return false;
-				});
-			};
-			/** 一组数据行（选中 / 可点 / 单元格配置都在这里落地）。 */
-			const dataRowsOf = (rows, offset = 0) => {
-				const selectedBlocks = selectedBlocksOf(rows);
-				return rows.map((row, index) => (0, react$1.createElement)("tr", {
-					key: row.key,
-					className: "dshpc-table__row",
-					"data-selected": selectedBlocks[index] === true ? "true" : void 0,
-					"data-interactive": onRowClick === void 0 ? void 0 : "true",
-					tabIndex: onRowClick === void 0 ? void 0 : 0,
-					onClick: onRowClick === void 0 ? void 0 : () => onRowClick(row, offset + index),
-					onKeyDown: onRowClick === void 0 ? void 0 : (event) => {
-						if (event.key !== "Enter" && event.key !== " ") return;
-						event.preventDefault();
-						onRowClick(row, offset + index);
-					}
-				}, ...leaves.map((column, leafIndex) => {
-					const cell = row.cells[column.key];
-					if (cell === void 0) return null;
-					let spec;
-					let content;
-					if (isTableCellSpec(cell)) {
-						spec = cell;
-						content = cell.content;
-					} else content = cell;
-					const align = spec?.align ?? column.align;
-					return (0, react$1.createElement)("td", {
-						key: column.key,
-						className: `dshpc-table__cell${alignClass("dshpc-table__cell", align)}`,
-						style: padStyle(column),
-						colSpan: spec?.colSpan !== void 0 && spec.colSpan > 1 ? spec.colSpan : void 0,
-						rowSpan: spec?.rowSpan !== void 0 && spec.rowSpan > 1 ? spec.rowSpan : void 0,
-						"data-divider": dividerAttr(leafIndex, column.divider)
-					}, content ?? null);
-				})));
-			};
-			const colSpan = leaves.length > 0 ? leaves.length : void 0;
-			const emptyRow = (0, react$1.createElement)("tr", {
-				key: "empty",
-				className: "dshpc-table__row"
-			}, (0, react$1.createElement)("td", {
-				className: "dshpc-table__empty",
-				colSpan
-			}, props.emptyText ?? tt("tableEmpty")));
-			const loadingRow = (0, react$1.createElement)("tr", {
-				key: "loading",
-				className: "dshpc-table__state-row"
-			}, (0, react$1.createElement)("td", {
-				className: "dshpc-table__state-cell",
-				colSpan
-			}, (0, react$1.createElement)("div", {
-				className: "dshpc-table__state dshpc-table__state--full",
-				style: props.loadingHeight === void 0 ? void 0 : { height: `${props.loadingHeight}px` }
-			}, (0, react$1.createElement)(Loader$2, {
-				variant: "blocks",
-				size: "xl",
-				label: tt("tableLoading")
-			}))));
-			const infinite = props.onLoadMore !== void 0;
-			const loadingMore = infinite && props.loadingMore === true;
-			const showNoMore = infinite && !loadingMore && props.hasMore === false && props.noMoreText !== false;
-			const footerRows = [];
-			if (loadingMore) footerRows.push((0, react$1.createElement)("tr", {
-				key: "more",
-				className: "dshpc-table__state-row dshpc-table__state-row--footer"
-			}, (0, react$1.createElement)("td", {
-				className: "dshpc-table__state-cell",
-				colSpan
-			}, (0, react$1.createElement)("div", { className: "dshpc-table__state" }, (0, react$1.createElement)(Loader$2, {
-				variant: "blocks",
-				size: "md",
-				label: tt("tableLoadingMore")
-			})))));
-			else if (showNoMore) footerRows.push((0, react$1.createElement)("tr", {
-				key: "end",
-				className: "dshpc-table__state-row dshpc-table__state-row--footer"
-			}, (0, react$1.createElement)("td", {
-				className: "dshpc-table__state-cell",
-				colSpan
-			}, (0, react$1.createElement)("div", { className: "dshpc-table__state" }, (0, react$1.createElement)("span", { className: "dshpc-table__state-text" }, props.noMoreText === void 0 ? tt("tableNoMore") : props.noMoreText)))));
-			const sentinelRow = infinite && props.hasMore !== false && options.sentinelRef !== void 0 ? (0, react$1.createElement)("tr", {
-				key: "sentinel",
-				ref: options.sentinelRef,
-				className: "dshpc-table__sentinel",
-				"aria-hidden": "true"
-			}, (0, react$1.createElement)("td", { colSpan })) : null;
-			const flatFoot = footerRows.length > 0 && (borders === "y" || borders === "none");
-			const tableClass = [
-				"dshpc-table",
-				skinClass,
-				`dshpc-table--density-${density}`,
-				`dshpc-table--borders-${borders}`,
-				props.striped === true ? "dshpc-table--striped" : "",
-				flatFoot ? "dshpc-table--foot-no-bottom" : "",
-				props.className ?? ""
-			].filter((s) => s !== "").join(" ");
-			const groupFoot = footerRows.length > 0 || sentinelRow !== null ? (0, react$1.createElement)("tbody", {
-				key: "group-foot",
-				className: "dshpc-table__body"
-			}, ...footerRows, sentinelRow) : null;
-			const groups = props.groups ?? [];
-			const body = groups.length > 0 ? [...groups.map((group, groupIndex) => (0, react$1.createElement)("tbody", {
-				key: group.key,
-				className: "dshpc-table__body dshpc-table__group-body"
-			}, (0, react$1.createElement)("tr", { className: "dshpc-table__group-row" }, (0, react$1.createElement)("th", {
-				className: "dshpc-table__group-cell",
-				scope: "colgroup",
-				colSpan: leaves.length > 0 ? leaves.length : void 0
-			}, (0, react$1.createElement)(SectionHead, {
-				title: group.title,
-				accent: props.groupAccent ?? "default",
-				flush: true
-			}))), ...headRows.map((cells, level) => headRowOf(cells, `g${groupIndex}-${level}`)), ...dataRowsOf(group.rows, 0))), ...groupFoot === null ? [] : [groupFoot]] : [(0, react$1.createElement)("tbody", {
-				key: "body",
-				className: "dshpc-table__body"
-			}, props.loading === true && (props.rows?.length ?? 0) === 0 ? loadingRow : props.rows !== void 0 && props.rows.length > 0 ? dataRowsOf(props.rows) : emptyRow, ...footerRows, sentinelRow)];
-			return (0, react$1.createElement)("table", {
-				className: tableClass,
-				style: props.style,
-				"aria-label": props.ariaLabel
-			}, leaves.length === 0 ? null : (0, react$1.createElement)("colgroup", null, ...leaves.map((column) => (0, react$1.createElement)("col", {
-				key: column.key,
-				style: widthOf(column.width) === void 0 ? void 0 : { width: widthOf(column.width) }
-			}))), groups.length > 0 ? null : (0, react$1.createElement)("thead", { className: "dshpc-table__head" }, ...headRows.map((cells, level) => headRowOf(cells, level))), ...body);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.15.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_b1d0998b5eebd628a216711dc83b33a1/node_modules/dsh-plugin-core/dist/ui/Table.js
-		/**
-		* 底部哨兵的滚动监听：哨兵进入视口（提前 200px）就调一次 `onLoadMore`。
-		* `enabled` 由调用方决定（分页 / 分组模式下关掉）；正在加载或已到底时 `blockedRef` 挡住重复触发。
-		*/
-		function useLoadMoreSentinel(props, enabled) {
-			const nodeRef = (0, react$1.useRef)(null);
-			const onLoadMoreRef = (0, react$1.useRef)(props.onLoadMore);
-			const blockedRef = (0, react$1.useRef)(true);
-			(0, react$1.useEffect)(() => {
-				onLoadMoreRef.current = props.onLoadMore;
-				blockedRef.current = !enabled || props.onLoadMore === void 0 || props.loading === true || props.loadingMore === true || props.hasMore === false;
-			});
-			const refCallback = (0, react$1.useRef)((node) => {
-				nodeRef.current = node;
-			}).current;
-			(0, react$1.useEffect)(() => {
-				if (!enabled || typeof IntersectionObserver === "undefined") return;
-				const node = nodeRef.current;
-				if (node === null) return;
-				const observer = new IntersectionObserver((entries) => {
-					if (entries.some((entry) => entry.isIntersecting) && !blockedRef.current) onLoadMoreRef.current?.();
-				}, { rootMargin: "0px 0px 200px 0px" });
-				observer.observe(node);
-				return () => {
-					observer.disconnect();
-				};
-			}, [enabled]);
-			return refCallback;
-		}
-		/**
-		* 表格 · 第一档外观（Plain）：白卡片上的无线框表格。
-		*
-		* 特征：双行分组表头（columns 嵌套 `children` 自动算 colSpan / rowSpan）、竖向浅分隔线、
-		* **无横向行线**、行悬浮淡蓝、选中行淡蓝底 + 左侧蓝竖条。
-		*
-		* 只 import 自己这份皮肤 CSS（`TABLE_PLAIN_CSS`）：消费方引 `Table` 就只打包这一份。
-		* 将来的 `TableGrid` / `TableZebra` 是同族独立组件、各自一份 CSS —— **不做 variant**，
-		* 否则两份皮肤会同时进包。
-		*
-		* ```tsx
-		* h(Table, {
-		*   columns: [
-		*     { key: 'id', title: 'ID', width: 120 },
-		*     { key: 'study', title: 'Study', children: [
-		*       { key: 'date', title: 'Date', width: 130 },
-		*       { key: 'modality', title: 'Modality', width: 110 },
-		*     ]},
-		*   ],
-		*   rows: [{ key: 'S-1', cells: { id: 'S-1', date: '2026-10-24', modality: 'CT' } }],
-		*   onRowClick: (row) => select(row.key),
-		* })
-		* ```
-		*/
-		function Table$1(props) {
-			ensureComponentStyles("table-plain", TABLE_PLAIN_CSS);
-			const pager = props.pagination;
-			const grouped = (props.groups?.length ?? 0) > 0;
-			const infinite = pager === void 0;
-			const sentinelRef = useLoadMoreSentinel(props, infinite);
-			if (pager === void 0 || grouped) return tableShell("dshpc-table--plain", pager === void 0 ? props : {
-				...props,
-				onLoadMore: void 0,
-				loadingMore: void 0,
-				hasMore: void 0,
-				noMoreText: void 0
-			}, { sentinelRef: infinite ? sentinelRef : void 0 });
-			const pageSize = Math.max(1, Math.floor(pager.pageSize ?? 10));
-			const allRows = props.rows ?? [];
-			const local = pager.total === void 0;
-			const total = local ? allRows.length : Math.max(0, Math.floor(pager.total ?? 0));
-			const page = clampPage(pager.page, pageCountOf(total, pageSize));
-			const rows = local ? allRows.slice((page - 1) * pageSize, page * pageSize) : allRows;
-			return (0, react$1.createElement)("div", { className: "dshpc-table-frame" }, tableShell("dshpc-table--plain", {
-				...props,
-				rows,
-				onLoadMore: void 0,
-				loadingMore: void 0,
-				hasMore: void 0,
-				noMoreText: void 0
-			}, {}), (0, react$1.createElement)(Pagination, {
-				...pager,
-				page,
-				total,
-				align: pager.align ?? "right"
-			}));
 		}
 		//#endregion
 		//#region ../../node_modules/.pnpm/sonner@2.0.8_@types+react@18.3.31_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/sonner/dist/index.mjs
@@ -54427,9 +53875,10 @@ window.__ModuleLoader__.load({
 		function fetchHistoryTrend(gran = "day") {
 			return fetchJson(`/history/trend?gran=${gran}`);
 		}
-		/** 历史页列表：整窗一次取回（近一年），分页由前端按天切片。 */
+		/** 历史页列表：**一次只取一个自然月**（`ym` = `YYYY-MM`），整月全量回本地，滚动由前端开窗。 */
 		function fetchHistoryList(query) {
 			const params = new URLSearchParams();
+			params.set("ym", query.ym);
 			if (query.workspace !== void 0 && query.workspace !== "") params.set("workspace", query.workspace);
 			if (query.owner !== void 0 && query.owner !== "") params.set("owner", query.owner);
 			const suffix = params.toString();
@@ -54585,6 +54034,11 @@ body{
   /* ── 描边（宿主真值 l1 4% / l2 10% / l3 12%）─────────────────── */
   --dtl-border:var(--dsw-alias-border-l2,#0000001a);
   --dtl-border-strong:var(--dsw-alias-border-l3,#0000001f);
+  /* 行间极淡底线（表格分行用，比 --dtl-border 还淡一档） */
+  --dtl-border-faint:var(--dshpc-border-faint,var(--dsw-alias-border-l1,#0000000a));
+  /* 表格表头底 / 行悬浮底：**取核心 token**，明暗与宿主主题一起走，不在这里另写一套色值 */
+  --dtl-table-head-bg:var(--dshpc-table-head-bg,var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06)));
+  --dtl-table-row-hover:var(--dshpc-table-row-hover,rgba(15,15,15,.015));
 
   /* ── 语义色 ──────────────────────────────────────────────────── */
   /* 蓝色强调 / 选中 / 焦点一律走这条 */
@@ -55015,15 +54469,35 @@ body[data-ds-dark-theme]{
 .dtl-histlist__filters-side{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto;}
 
 .dtl-histlist__error{color:var(--dtl-danger);font-size:var(--dtl-font-md);padding:var(--dtl-space-2) 0;}
-/* 核心表格默认内距偏紧（用户 2026-10-31：统一放大一档） */
-.dtl-histlist .dshpc-table__cell{padding:var(--dtl-space-3);}
-/* 每天一块（当天**一张**表）：块与块之间不再留白，连成一整块（用户 2026-10-31） */
-.dtl-histlist__dayblock + .dtl-histlist__dayblock{margin-top:0;}
-/* 相邻两张表相接处只留一条线：有下一张表时取消上表底边（用户 2026-10-31） */
-.dtl-histlist__dayblock:has(+ .dtl-histlist__dayblock) .dshpc-table{border-bottom:0;}
-/* 天内的工作区分段行改用核心 SectionHead（accent=business），样式归核心，不在此手搓 */
-/* 同一天里相邻的工作区小表**紧挨着**（用户 2026-10-31：两个工作区之间不要空格），
-   分隔只靠各自表头底色与边框，不额外留 margin */
+/* ── 表格（2026-11-01 起自己画，只渲染窗口内的行）────────────────────────
+   外观逐条照抄核心 Table 的 plain 皮肤：四边外框、灰底表头 + 下边线、行间极淡底线、
+   行悬浮极淡灰、选中行淡蓝底 + 左侧 3px 蓝竖条。唯一的结构差别是「一天一张表」
+   合成「一张表 + 每天一行日期头」—— 原来相邻两张表的边框本来就合并成一条线。 */
+.dtl-histlist__table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;
+  box-sizing:border-box;border:1px solid var(--dtl-border);
+  color:var(--dtl-fg);font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+.dtl-histlist__cell,.dtl-histlist__headcell{box-sizing:border-box;text-align:left;vertical-align:middle;
+  font-weight:400;}
+/* 数据格内距比核心默认放大一档（用户 2026-10-31） */
+.dtl-histlist__cell{height:48px;padding:var(--dtl-space-3);}
+.dtl-histlist__headcell{height:44px;padding:var(--dtl-space-1) var(--dtl-space-3);
+  background:var(--dtl-table-head-bg);border-bottom:1px solid var(--dtl-border);
+  font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
+/* 每天一行日期头：上边线就是原来两张表相接的那条线；整张表的第一行不画（外框已有） */
+.dtl-histlist__dayrow .dtl-histlist__headcell{border-top:1px solid var(--dtl-border);}
+.dtl-histlist__dayrow[data-first='true'] .dtl-histlist__headcell{border-top:0;}
+.dtl-histlist__row{transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-histlist__row[data-interactive='true']{cursor:pointer;}
+.dtl-histlist__row[data-interactive='true']:hover{background:var(--dtl-table-row-hover);}
+.dtl-histlist__row[data-selected='true'],
+.dtl-histlist__row[data-selected='true'][data-interactive='true']:hover{
+  background:linear-gradient(to right,var(--dtl-business) 3px,var(--dtl-business-soft) 3px);}
+.dtl-histlist__row:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+.dtl-histlist__row + .dtl-histlist__row .dtl-histlist__cell{border-top:1px solid var(--dtl-border-faint);}
+/* 屏幕外的行用两个等高占位行顶着滚动高度：无内距、无边框，高度由 JS 给 */
+.dtl-histlist__spacer>td{padding:0;border:0;}
+.dtl-histlist__empty{height:80px;padding:0 var(--dtl-space-4);text-align:center;
+  color:var(--dtl-fg-3);font-size:var(--dtl-font-sm);}
 /* 第一列：标题一行、标签一行（创建徽已挪到「创建人」列，2026-10-31） */
 .dtl-histlist__task{display:flex;flex-direction:column;min-width:0;}
 .dtl-histlist__head{display:flex;align-items:baseline;gap:6px;min-width:0;}
@@ -55041,8 +54515,12 @@ body[data-ds-dark-theme]{
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;}
 .dtl-histlist__time-mark{flex:none;width:12px;font-size:var(--dtl-font-xs);font-weight:600;
   color:var(--dtl-fg-3);text-align:left;}
-/* 第二行标签：与待办行同间距（space-2、上留 6px） */
-.dtl-histlist__tags{display:flex;flex-wrap:wrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;}
+/* 第二行标签：与待办行同间距（space-2、上留 6px）；**只摆一行**（行高定死，换行会把
+   虚拟窗口算歪），超出的收成「+N」（组件里给） */
+.dtl-histlist__tags{display:flex;flex-wrap:nowrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;
+  overflow:hidden;}
+.dtl-histlist__tags-rest{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);
+  line-height:var(--dtl-line-sm);}
 `;
 		const STYLE_ID = "dtl-ui-base";
 		/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。
@@ -55696,16 +55174,15 @@ body[data-ds-dark-theme]{
 		/**
 		* 历史页下半部分：筛选行（工作区 / 执行人）+ 结案记录表格。
 		*
-		* 结构：
-		*    [日期 | 执行人 | 开始时间 | 结束时间]   ← 表头第一格为「日期」，每天一张表
+		* 结构（与改版前逐像素一致）：
+		*    [日期 | 创建人 | 执行人 | 时间]   ← 表头第一格为「日期」，每天一行
 		*      C.dsh-plugin-core                    ← 当天某工作区一段，段首一行跨满全列写工作区名
 		*      任务行…
-		*    [W.NAS-Docker | …]
-		*      任务行…
-		* 某天所有工作区加起来不到 `PAGE_MIN` 条就并到后一天一起展示（「再读一天」）。
 		*
-		* 分页：host 一次下发整窗（近一年），这里**本地按天切片**（每片至少 PAGE_MIN 条、
-		* 以整天为界），翻页零请求；滚动到底由最后一张表的哨兵触发。
+		* 渲染：**一张表，只画窗口内的行**（2026-11-01）。原来是一天一张表，块间无间距、
+		* 相邻边框合并 ⇒ 合成一张表后仍是「每天插一行日期头」，外观不变。
+		* 屏幕外的行用首尾两个等高占位行撑住滚动高度 ⇒ DOM 行数与总条数无关。
+		* 分页、按天分片全部取消：整月数据一次取回、全在内存，滚动时只按行号重算窗口。
 		*/
 		const WEEKDAY_KEYS = [
 			"weekdaySun",
@@ -55737,25 +55214,16 @@ body[data-ds-dark-theme]{
 			const index = new Date(year, month - 1, date).getDay();
 			return t(WEEKDAY_KEYS[index] ?? "weekdaySun");
 		}
-		/** 一片至少多少条；不足就把后面整天并进来（用户：一天不到 20 条就再读一天）。 */
-		const PAGE_MIN = 20;
 		const SELECT_MIN_WIDTH$1 = 140;
 		const SELECT_MAX_WIDTH$1 = 240;
-		/** 工作区段首行（跨满全列）：工作区名包成 business 实心底色的标签（2026-10-31 用户定）。 */
-		function workspaceRow(title, colSpan) {
-			return {
-				key: `ws:${title}`,
-				cells: { task: {
-					content: (0, react$1.createElement)(Tag, {
-						text: title,
-						tone: "workspace"
-					}),
-					colSpan
-				} }
-			};
-		}
-		/** 一条记录 → 一行。第一列：标题 + 标签（创建徽已挪到「创建人」列，2026-10-31 用户定）。 */
-		function rowOf(record, opts) {
+		/** 窗口上下各多画的像素：快速拖动时不留白。 */
+		const OVERSCAN_PX = 600;
+		/** 一行最多摆几个标签，其余收成 `+N`（行高必须定死，标签不能换行）。 */
+		const MAX_TAGS = 3;
+		/** 首帧量行高时先画多少行（够带上日期头 / 工作区段头 / 记录三种行就行）。 */
+		const MEASURE_ROWS = 40;
+		/** 记录 → 各列内容。第一列：标题 + 标签（创建徽已挪到「创建人」列，2026-10-31 用户定）。 */
+		function cellsOf(record, opts) {
 			const stop = (event) => event.stopPropagation();
 			const who = opts.solo || record.ownerName === "" ? record.ownerName : (0, react$1.createElement)("span", { onClick: stop }, (0, react$1.createElement)(Button, {
 				variant: "link",
@@ -55766,41 +55234,94 @@ body[data-ds-dark-theme]{
 			const creatorName = displayName(record.creatorName, record.creator);
 			const created = record.created.slice(0, 16);
 			const finished = record.finished.slice(0, 16);
+			const shown = record.tags.slice(0, MAX_TAGS);
+			const rest = record.tags.length - shown.length;
 			return {
-				key: record.key,
-				cells: {
-					task: (0, react$1.createElement)("div", { className: "dtl-histlist__task" }, (0, react$1.createElement)("div", { className: "dtl-histlist__head" }, (0, react$1.createElement)("span", {
-						className: "dtl-histlist__title",
-						title: record.summary
-					}, record.title)), record.tags.length === 0 ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__tags" }, ...record.tags.map((tag) => (0, react$1.createElement)(Tag, {
-						key: tag,
-						text: `#${tag}`,
-						maxWidth: 160
-					})))),
-					creator: (0, react$1.createElement)("div", { className: "dtl-histlist__creator" }, (0, react$1.createElement)("span", { className: "dtl-histlist__creator-name" }, creatorName === "" ? "" : `@${creatorName}`), (0, react$1.createElement)("span", { className: "dtl-histlist__creator-time" }, created)),
-					owner: who,
-					time: (0, react$1.createElement)("div", { className: "dtl-histlist__time" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-row" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-mark" }, "S"), created), (0, react$1.createElement)("span", { className: "dtl-histlist__time-row" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-mark" }, "E"), finished))
-				}
+				task: (0, react$1.createElement)("div", { className: "dtl-histlist__task" }, (0, react$1.createElement)("div", { className: "dtl-histlist__head" }, (0, react$1.createElement)("span", {
+					className: "dtl-histlist__title",
+					title: record.summary
+				}, record.title)), record.tags.length === 0 ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__tags" }, ...shown.map((tag) => (0, react$1.createElement)(Tag, {
+					key: tag,
+					text: `#${tag}`,
+					maxWidth: 160
+				})), rest > 0 ? (0, react$1.createElement)("span", {
+					key: "+n",
+					className: "dtl-histlist__tags-rest"
+				}, `+${String(rest)}`) : null)),
+				creator: (0, react$1.createElement)("div", { className: "dtl-histlist__creator" }, (0, react$1.createElement)("span", { className: "dtl-histlist__creator-name" }, creatorName === "" ? "" : `@${creatorName}`), (0, react$1.createElement)("span", { className: "dtl-histlist__creator-time" }, created)),
+				owner: who,
+				time: (0, react$1.createElement)("div", { className: "dtl-histlist__time" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-row" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-mark" }, "S"), created), (0, react$1.createElement)("span", { className: "dtl-histlist__time-row" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-mark" }, "E"), finished))
 			};
 		}
-		/** 按天切片：每片至少 PAGE_MIN 条、以整天为界（不足就续下一天）。 */
-		function sliceByDay(records) {
-			const pages = [];
-			let current = [];
-			let index = 0;
-			while (index < records.length) {
-				const day = records[index].finished.slice(0, 10);
-				while (index < records.length && records[index].finished.slice(0, 10) === day) {
-					current.push(records[index]);
-					index += 1;
+		/** 记录 → 拍平的行序列：一天一行日期头，天内按工作区分段（段序与工作区下拉一致）。 */
+		function buildItems(records, orderOf) {
+			const out = [];
+			const days = [];
+			for (const record of records) {
+				const day = record.finished.slice(0, 10);
+				let block = days[days.length - 1];
+				if (block === void 0 || block.day !== day) {
+					block = {
+						day,
+						groups: /* @__PURE__ */ new Map()
+					};
+					days.push(block);
 				}
-				if (current.length >= PAGE_MIN) {
-					pages.push(current);
-					current = [];
+				let group = block.groups.get(record.workspaceId);
+				if (group === void 0) {
+					group = {
+						title: record.workspaceTitle,
+						rows: []
+					};
+					block.groups.set(record.workspaceId, group);
+				}
+				group.rows.push(record);
+			}
+			for (const block of days) {
+				out.push({
+					kind: "day",
+					key: `day:${block.day}`,
+					day: block.day
+				});
+				const groups = [...block.groups.entries()].sort((a, b) => orderOf(a[0]) - orderOf(b[0]));
+				for (const [id, group] of groups) {
+					out.push({
+						kind: "ws",
+						key: `ws:${block.day}:${id}`,
+						day: block.day,
+						title: group.title
+					});
+					for (const record of group.rows) out.push({
+						kind: "rec",
+						key: record.key,
+						day: block.day,
+						record
+					});
 				}
 			}
-			if (current.length > 0) pages.push(current);
-			return pages;
+			return out;
+		}
+		/** 行起点表（`offsets[i]` = 第 i 行顶边）。二分查「某个像素位置落到第几行」。 */
+		function offsetsOf(items, heights) {
+			const out = new Float64Array(items.length + 1);
+			for (let index = 0; index < items.length; index += 1) {
+				const kind = items[index].kind;
+				out[index + 1] = out[index] + (kind === "day" ? heights.day : kind === "ws" ? heights.ws : heights.rec);
+			}
+			return out;
+		}
+		/** 最大的 i，使 `offsets[i] <= value`（`offsets` 单调递增）。 */
+		function rowAt(offsets, value) {
+			const last = offsets.length - 2;
+			if (last < 0) return 0;
+			let lo = 0;
+			let hi = last;
+			while (lo < hi) {
+				const mid = lo + hi + 1 >> 1;
+				if (offsets[mid] <= value) lo = mid;
+				else hi = mid - 1;
+			}
+			return lo;
 		}
 		function HistoryList(props) {
 			const { t } = props;
@@ -55809,36 +55330,49 @@ body[data-ds-dark-theme]{
 			const [records, setRecords] = (0, react$1.useState)([]);
 			const [loading, setLoading] = (0, react$1.useState)(true);
 			const [error, setError] = (0, react$1.useState)(null);
-			const [pageCount, setPageCount] = (0, react$1.useState)(1);
-			const now = /* @__PURE__ */ new Date();
-			const currentYear = now.getFullYear();
-			const currentMonth = now.getMonth() + 1;
-			const [yearPart, monthPart] = props.ym.split("-").map(Number);
-			const year = yearPart ?? currentYear;
-			const month = monthPart ?? currentMonth;
-			const setYearMonth = (nextYear, nextMonth) => {
-				props.onYmChange(`${String(nextYear)}-${String(nextMonth).padStart(2, "0")}`);
-			};
-			/** 选中行的 key（核心 Table 的选中态：淡蓝底 + 左竖条）。 */
+			/** 选中行的 key（淡蓝底 + 左竖条）。 */
 			const [selected, setSelected] = (0, react$1.useState)(null);
 			/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
 			const pendingOpen = (0, react$1.useRef)(null);
 			/** 已经处理过的滚动请求 token（同一次点击只滚一次）。 */
 			const lastScrollToken = (0, react$1.useRef)(-1);
+			/** 取过的月份（`ym|工作区|执行人` → 记录 + 取回时刻）：来回切月不再请求，60 秒后重取。 */
+			const monthCache = (0, react$1.useRef)(/* @__PURE__ */ new Map());
+			/** 三类行的固定行高：首帧量一次，之后所有偏移都按它算。 */
+			const [heights, setHeights] = (0, react$1.useState)(null);
+			/** 表格本身（**不是**外层容器：容器里还有筛选条，行号偏移从表格顶边算）。 */
+			const tableRef = (0, react$1.useRef)(null);
+			/** 当前渲染的窗口（行号闭区间）。 */
+			const [range, setRange] = (0, react$1.useState)({
+				start: 0,
+				end: -1
+			});
 			(0, react$1.useEffect)(() => () => {
 				if (pendingOpen.current !== null) window.clearTimeout(pendingOpen.current);
 			}, []);
 			(0, react$1.useEffect)(() => {
 				let alive = true;
+				const key = `${props.ym}|${workspace}|${owner}`;
+				const hit = monthCache.current.get(key);
+				if (hit !== void 0 && Date.now() - hit.at < 6e4) {
+					setRecords(hit.records);
+					setLoading(false);
+					setError(null);
+					return;
+				}
 				setLoading(true);
 				setError(null);
 				setRecords([]);
-				setPageCount(1);
 				fetchHistoryList({
+					ym: props.ym,
 					workspace,
 					owner
 				}).then((payload) => {
 					if (!alive) return;
+					monthCache.current.set(key, {
+						records: payload.records,
+						at: Date.now()
+					});
 					setRecords(payload.records);
 				}).catch((reason) => {
 					if (alive) setError(reason instanceof Error ? reason.message : String(reason));
@@ -55848,135 +55382,130 @@ body[data-ds-dark-theme]{
 				return () => {
 					alive = false;
 				};
-			}, [workspace, owner]);
-			/** 只留所选年月：`finished` 形如 `YYYY-MM-DD HH:mm`，取前 7 位比 `YYYY-MM`。 */
-			const scoped = (0, react$1.useMemo)(() => {
-				const prefix = `${year}-${String(month).padStart(2, "0")}`;
-				return records.filter((record) => record.finished.slice(0, 7) === prefix);
 			}, [
-				month,
-				records,
-				year
+				owner,
+				props.ym,
+				workspace
 			]);
-			const pages = (0, react$1.useMemo)(() => sliceByDay(scoped), [scoped]);
-			const hasMore = pageCount < pages.length;
-			const visible = (0, react$1.useMemo)(() => pages.slice(0, pageCount).flat(), [pageCount, pages]);
-			const loadMore = (0, react$1.useCallback)(() => {
-				setPageCount((count) => count + 1);
-			}, []);
 			const orderOf = (0, react$1.useCallback)((id) => {
 				const index = props.workspaceOptions.findIndex((option) => option.value === id);
 				return index < 0 ? Number.MAX_SAFE_INTEGER : index;
 			}, [props.workspaceOptions]);
-			const days = (0, react$1.useMemo)(() => {
-				const out = [];
-				for (const record of visible) {
-					const day = record.finished.slice(0, 10);
-					let block = out[out.length - 1];
-					if (block === void 0 || block.day !== day) {
-						block = {
-							day,
-							groups: /* @__PURE__ */ new Map()
-						};
-						out.push(block);
-					}
-					let group = block.groups.get(record.workspaceId);
-					if (group === void 0) {
-						group = {
-							title: record.workspaceTitle,
-							rows: []
-						};
-						block.groups.set(record.workspaceId, group);
-					}
-					group.rows.push(rowOf(record, {
-						solo: props.solo,
-						t,
-						onOwner: setOwner
-					}));
-				}
-				return out.map((block) => ({
-					day: block.day,
-					groups: [...block.groups.entries()].sort((a, b) => orderOf(a[0]) - orderOf(b[0])).map(([id, group]) => ({
-						id,
-						title: group.title,
-						rows: group.rows
-					}))
-				}));
+			const items = (0, react$1.useMemo)(() => buildItems(records, orderOf), [orderOf, records]);
+			const offsets = (0, react$1.useMemo)(() => heights === null ? null : offsetsOf(items, heights), [heights, items]);
+			(0, react$1.useLayoutEffect)(() => {
+				if (heights !== null) return;
+				const table = tableRef.current;
+				if (table === null) return;
+				const heightOf = (kind) => {
+					const node = table.querySelector(`[data-kind='${kind}']`);
+					return node === null ? 0 : node.getBoundingClientRect().height;
+				};
+				const day = heightOf("day");
+				const ws = heightOf("ws");
+				const rec = heightOf("rec");
+				if (day > 0 && ws > 0 && rec > 0) setHeights({
+					day,
+					ws,
+					rec
+				});
+			});
+			/** 按滚动位置重算窗口；不在可视区时窗口为空（占位行撑住滚动高度）。 */
+			const recompute = (0, react$1.useCallback)(() => {
+				const table = tableRef.current;
+				const container = props.scrollContainer();
+				if (table === null || container === null || offsets === null) return;
+				const containerRect = container.getBoundingClientRect();
+				const tableRect = table.getBoundingClientRect();
+				const base = container.scrollTop + (tableRect.top - containerRect.top);
+				const from = container.scrollTop - base - OVERSCAN_PX;
+				const to = container.scrollTop + container.clientHeight - base + OVERSCAN_PX;
+				const last = offsets.length - 2;
+				const start = Math.max(0, rowAt(offsets, Math.max(0, from)));
+				const end = Math.min(last, rowAt(offsets, Math.max(0, to)));
+				setRange((prev) => prev.start === start && prev.end === end ? prev : {
+					start,
+					end
+				});
+			}, [offsets, props.scrollContainer]);
+			(0, react$1.useLayoutEffect)(() => {
+				recompute();
+			}, [recompute]);
+			(0, react$1.useEffect)(() => {
+				const container = props.scrollContainer();
+				if (container === null || offsets === null) return;
+				let frame = 0;
+				const onScroll = () => {
+					if (frame !== 0) return;
+					frame = requestAnimationFrame(() => {
+						frame = 0;
+						recompute();
+					});
+				};
+				container.addEventListener("scroll", onScroll, { passive: true });
+				const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => recompute());
+				observer?.observe(container);
+				recompute();
+				return () => {
+					container.removeEventListener("scroll", onScroll);
+					observer?.disconnect();
+					if (frame !== 0) cancelAnimationFrame(frame);
+				};
 			}, [
-				orderOf,
-				props.solo,
-				t,
-				visible
+				offsets,
+				props.scrollContainer,
+				recompute
 			]);
 			(0, react$1.useEffect)(() => {
 				const target = props.scrollTo;
 				if (target === null || target.token === lastScrollToken.current) return;
-				if (loading) return;
-				/** 这个 token 就此用掉：本地记一份（同一个挂载周期内不重复滚），并请页面层清空。 */
+				if (loading || offsets === null || items.length === 0) return;
 				const finish = () => {
 					lastScrollToken.current = target.token;
 					props.onScrolled();
 				};
-				const dayOf = (record) => record.finished.slice(0, 10);
-				const fallback = scoped.find((record) => dayOf(record) < target.date) ?? scoped[scoped.length - 1];
-				const day = scoped.some((record) => dayOf(record) === target.date) ? target.date : fallback?.finished.slice(0, 10);
-				if (day === void 0) {
+				const index = items.findIndex((item) => item.kind === "day" && item.day <= target.date);
+				const table = tableRef.current;
+				const container = props.scrollContainer();
+				if (index < 0 || table === null || container === null) {
 					finish();
 					return;
 				}
-				const pageOfTarget = pages.findIndex((page) => page.some((record) => dayOf(record) === day));
-				if (pageOfTarget >= pageCount) {
-					setPageCount((count) => Math.max(count, pageOfTarget + 1));
-					return;
-				}
-				const el = Array.from(document.querySelectorAll("[data-dsh-day]")).find((node) => node.dataset.dshDay === day);
-				if (el === void 0) return;
-				lastScrollToken.current = target.token;
-				el.scrollIntoView({
-					block: "start",
+				const containerRect = container.getBoundingClientRect();
+				const tableRect = table.getBoundingClientRect();
+				const base = container.scrollTop + (tableRect.top - containerRect.top);
+				container.scrollTo({
+					top: base + offsets[index],
 					behavior: "smooth"
 				});
-				props.onScrolled();
+				finish();
 			}, [
-				days,
+				items,
 				loading,
-				pageCount,
-				pages,
+				offsets,
 				props.onScrolled,
-				props.scrollTo,
-				scoped
+				props.scrollContainer,
+				props.scrollTo
 			]);
-			const columnsOf = (0, react$1.useCallback)((title) => [
-				{
-					key: "task",
-					title
-				},
-				{
-					key: "creator",
-					title: t("histColCreator"),
-					width: 175
-				},
-				...props.solo ? [] : [{
-					key: "owner",
-					title: t("histColOwner"),
-					width: 140
-				}],
-				{
-					key: "time",
-					title: t("histColTime"),
-					width: 185
-				}
-			], [props.solo, t]);
+			const columns = props.solo ? [175, 185] : [
+				175,
+				140,
+				185
+			];
+			const colSpan = columns.length + 1;
+			const labels = props.solo ? [t("histColCreator"), t("histColTime")] : [
+				t("histColCreator"),
+				t("histColOwner"),
+				t("histColTime")
+			];
 			/** 行 key → 过程文档路径（没有 worklog 的不在表里 ⇒ 点了只选中、不打开）。 */
 			const fileOf = (0, react$1.useMemo)(() => {
 				const map = /* @__PURE__ */ new Map();
-				for (const record of visible) if (record.filePath !== "") map.set(record.key, record.filePath);
+				for (const record of records) if (record.filePath !== "") map.set(record.key, record.filePath);
 				return map;
-			}, [visible]);
+			}, [records]);
 			/** 点行 = 选中 + 把路径交给核心。选中态当场提交；dock 的打开推到本帧绘制之后。 */
-			const handleRowClick = (row) => {
-				const key = String(row.key);
-				if (key.startsWith("day:") || key.startsWith("ws:")) return;
+			const handleRowClick = (key) => {
 				setSelected(key);
 				const file = fileOf.get(key);
 				if (file === void 0) return;
@@ -55986,88 +55515,193 @@ body[data-ds-dark-theme]{
 					props.onOpen(file);
 				}, 0);
 			};
-			/** 一天的表格列数：跨列的段首行要盖满。 */
-			const colSpan = props.solo ? 3 : 4;
 			/** 可选年份：今年往前 5 年。 */
+			const now = /* @__PURE__ */ new Date();
+			const currentYear = now.getFullYear();
+			const currentMonth = now.getMonth() + 1;
+			const [yearPart, monthPart] = props.ym.split("-").map(Number);
+			const year = yearPart ?? currentYear;
+			const month = monthPart ?? currentMonth;
+			const setYearMonth = (nextYear, nextMonth) => {
+				props.onYmChange(`${String(nextYear)}-${String(nextMonth).padStart(2, "0")}`);
+			};
 			const years = (0, react$1.useMemo)(() => Array.from({ length: 6 }, (_, index) => currentYear - index), [currentYear]);
-			/** 今年只显示到当月（用户 2026-10-31：「只显示到当前月份」），往年 12 个月全显示。 */
+			/** 今年只显示到当月（用户 2026-10-31），往年 12 个月全显示。 */
 			const shownMonths = year === currentYear ? currentMonth : 12;
-			const body = days.length === 0 ? [(0, react$1.createElement)(Table$1, {
-				key: "state",
-				columns: columnsOf(t("histColDate")),
-				rows: [],
-				ariaLabel: t("histListLabel"),
-				emptyText: t("historyEmpty"),
-				loading
-			})] : days.map((block, dayIndex) => (0, react$1.createElement)("div", {
-				key: block.day,
-				className: "dtl-histlist__dayblock",
-				"data-dsh-day": block.day
-			}, (0, react$1.createElement)(Table$1, {
-				columns: columnsOf((0, react$1.createElement)(SectionHead, {
-					title: `${block.day} · ${weekdayOf(block.day, t)}`,
-					accent: "default",
-					flush: true
-				})),
-				rows: block.groups.flatMap((group) => [workspaceRow(group.title, colSpan), ...group.rows]),
-				ariaLabel: block.day,
-				className: "dtl-histlist__table",
-				borders: "all",
-				selectedKeys: selected === null ? [] : [selected],
-				onRowClick: handleRowClick,
-				...dayIndex === days.length - 1 ? {
-					onLoadMore: loadMore,
-					hasMore
-				} : {}
+			/** 三类行各自的行高：量出来之前不写（首帧按自然高度量），量出来之后每行都钉死 ——
+			*  没有标签的行也占满同样的高度，否则偏移会一格一格错下去。 */
+			const cellHeight = (kind) => heights === null ? void 0 : { height: `${String(heights[kind])}px` };
+			const dayRow = (day, first) => (0, react$1.createElement)("tr", {
+				key: `day:${day}`,
+				className: "dtl-histlist__dayrow",
+				"data-kind": "day",
+				"data-first": first ? "true" : void 0
+			}, (0, react$1.createElement)("th", {
+				className: "dtl-histlist__headcell",
+				scope: "col",
+				style: cellHeight("day")
+			}, (0, react$1.createElement)(SectionHead, {
+				title: `${day} · ${weekdayOf(day, t)}`,
+				accent: "default",
+				flush: true
+			})), ...labels.map((label) => (0, react$1.createElement)("th", {
+				key: label,
+				className: "dtl-histlist__headcell",
+				scope: "col",
+				style: cellHeight("day")
+			}, label)));
+			const wsRow = (item) => (0, react$1.createElement)("tr", {
+				key: item.key,
+				className: "dtl-histlist__row",
+				"data-kind": "ws"
+			}, (0, react$1.createElement)("td", {
+				className: "dtl-histlist__cell",
+				colSpan,
+				style: cellHeight("ws")
+			}, (0, react$1.createElement)(Tag, {
+				text: item.title ?? "",
+				tone: "workspace"
 			})));
-			return (0, react$1.createElement)("div", { className: "dtl-histlist" }, (0, react$1.createElement)("div", { className: "dtl-histlist__filters" }, (0, react$1.createElement)("div", { className: "dtl-histlist__filters-main" }, (0, react$1.createElement)(SplitGroup, { label: t("histMonthLabel") }, (0, react$1.createElement)(Select, {
-				size: "lg",
-				width: 96,
-				value: String(year),
-				options: years.map((item) => ({
-					value: String(item),
-					label: String(item)
-				})),
-				ariaLabel: t("histYearLabel"),
-				onChange: (next) => {
-					const nextYear = Number(next);
-					setYearMonth(nextYear, Math.min(month, nextYear === currentYear ? currentMonth : 12));
-				}
-			}), (0, react$1.createElement)(Segmented, {
-				size: "lg",
-				tone: "business",
-				label: t("histMonthLabel"),
-				items: Array.from({ length: shownMonths }, (_, index) => ({
-					value: String(index + 1),
-					label: t(MONTH_KEYS[index] ?? "month1")
-				})),
-				value: String(month),
-				onChange: (next) => setYearMonth(year, Number(next))
-			}))), (0, react$1.createElement)("div", { className: "dtl-histlist__filters-side" }, (0, react$1.createElement)(Select, {
-				searchable: true,
-				size: "lg",
-				minWidth: SELECT_MIN_WIDTH$1,
-				maxWidth: SELECT_MAX_WIDTH$1,
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 16 }),
-				value: workspace,
-				options: props.workspaceOptions,
-				ariaLabel: t("workspaceLabel"),
-				onChange: setWorkspace
-			}), props.solo ? null : (0, react$1.createElement)(Select, {
-				searchable: true,
-				size: "lg",
-				minWidth: SELECT_MIN_WIDTH$1,
-				maxWidth: SELECT_MAX_WIDTH$1,
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconUsersOutlineRegular, { size: 16 }),
-				value: owner,
-				options: [{
-					value: "",
-					label: t("ownerAll")
-				}],
-				groups: props.ownerGroups,
-				ariaLabel: t("ownerLabel"),
-				onChange: setOwner
-			}))), error === null ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__error" }, `${t("loadFailed")}：${error}`), ...body);
+			const recRow = (record) => {
+				const cells = cellsOf(record, {
+					solo: props.solo,
+					onOwner: setOwner
+				});
+				const keys = props.solo ? [
+					"task",
+					"creator",
+					"time"
+				] : [
+					"task",
+					"creator",
+					"owner",
+					"time"
+				];
+				return (0, react$1.createElement)("tr", {
+					key: record.key,
+					className: "dtl-histlist__row",
+					"data-kind": "rec",
+					"data-interactive": "true",
+					"data-selected": selected === record.key ? "true" : void 0,
+					tabIndex: 0,
+					onClick: () => {
+						handleRowClick(record.key);
+					},
+					onKeyDown: (event) => {
+						if (event.key !== "Enter" && event.key !== " ") return;
+						event.preventDefault();
+						handleRowClick(record.key);
+					}
+				}, ...keys.map((key) => (0, react$1.createElement)("td", {
+					key,
+					className: "dtl-histlist__cell",
+					style: cellHeight("rec")
+				}, cells[key] ?? null)));
+			};
+			/** 表格外壳：colgroup 只给固定列宽，首列吃掉剩余宽度（与改版前同一条算式）。 */
+			const tableOf = (rows, extra) => (0, react$1.createElement)("table", {
+				className: "dtl-histlist__table",
+				ref: extra?.ref,
+				"aria-label": t("histListLabel")
+			}, (0, react$1.createElement)("colgroup", null, (0, react$1.createElement)("col", { key: "task" }), ...columns.map((width, index) => (0, react$1.createElement)("col", {
+				key: String(index),
+				style: { width: `${String(width)}px` }
+			}))), (0, react$1.createElement)("tbody", null, ...rows));
+			const last = items.length - 1;
+			const measuring = heights === null;
+			const start = measuring ? 0 : Math.min(range.start, last);
+			const end = measuring ? Math.min(last, 39) : Math.min(range.end, last);
+			const rows = [];
+			if (!measuring && start > 0) rows.push((0, react$1.createElement)("tr", {
+				key: "spacer-top",
+				className: "dtl-histlist__spacer",
+				"aria-hidden": "true"
+			}, (0, react$1.createElement)("td", {
+				colSpan,
+				style: { height: `${String(offsets?.[start] ?? 0)}px` }
+			})));
+			for (let index = start; index <= end; index += 1) {
+				const item = items[index];
+				if (item === void 0) continue;
+				if (item.kind === "day") rows.push(dayRow(item.day, index === 0));
+				else if (item.kind === "ws") rows.push(wsRow(item));
+				else if (item.record !== void 0) rows.push(recRow(item.record));
+			}
+			if (measuring && last >= MEASURE_ROWS) rows.push((0, react$1.createElement)("tr", {
+				key: "spacer-measure",
+				className: "dtl-histlist__spacer",
+				"aria-hidden": "true"
+			}, (0, react$1.createElement)("td", {
+				colSpan,
+				style: { height: `${String((last + 1 - MEASURE_ROWS) * 80)}px` }
+			})));
+			if (!measuring && end < last) rows.push((0, react$1.createElement)("tr", {
+				key: "spacer-bottom",
+				className: "dtl-histlist__spacer",
+				"aria-hidden": "true"
+			}, (0, react$1.createElement)("td", {
+				colSpan,
+				style: { height: `${String((offsets?.[last + 1] ?? 0) - (offsets?.[end + 1] ?? 0))}px` }
+			})));
+			const body = items.length === 0 ? tableOf([(0, react$1.createElement)("tr", { key: "state" }, (0, react$1.createElement)("td", {
+				className: "dtl-histlist__cell dtl-histlist__empty",
+				colSpan
+			}, loading ? (0, react$1.createElement)(Loader, {
+				variant: "blocks",
+				size: "xl"
+			}) : t("historyEmpty")))], { ref: tableRef }) : tableOf(rows, { ref: tableRef });
+			return (0, react$1.createElement)("div", { className: "dtl-histlist" }, filtersOf(), error === null ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__error" }, `${t("loadFailed")}：${error}`), body);
+			/** 筛选行（工作区 / 执行人 + 年月）。 */
+			function filtersOf() {
+				return (0, react$1.createElement)("div", { className: "dtl-histlist__filters" }, (0, react$1.createElement)("div", { className: "dtl-histlist__filters-main" }, (0, react$1.createElement)(SplitGroup, { label: t("histMonthLabel") }, (0, react$1.createElement)(Select, {
+					size: "lg",
+					width: 96,
+					value: String(year),
+					options: years.map((item) => ({
+						value: String(item),
+						label: String(item)
+					})),
+					ariaLabel: t("histYearLabel"),
+					onChange: (next) => {
+						const nextYear = Number(next);
+						setYearMonth(nextYear, Math.min(month, nextYear === currentYear ? currentMonth : 12));
+					}
+				}), (0, react$1.createElement)(Segmented, {
+					size: "lg",
+					tone: "business",
+					label: t("histMonthLabel"),
+					items: Array.from({ length: shownMonths }, (_, index) => ({
+						value: String(index + 1),
+						label: t(MONTH_KEYS[index] ?? "month1")
+					})),
+					value: String(month),
+					onChange: (next) => setYearMonth(year, Number(next))
+				}))), (0, react$1.createElement)("div", { className: "dtl-histlist__filters-side" }, (0, react$1.createElement)(Select, {
+					searchable: true,
+					size: "lg",
+					minWidth: SELECT_MIN_WIDTH$1,
+					maxWidth: SELECT_MAX_WIDTH$1,
+					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 16 }),
+					value: workspace,
+					options: props.workspaceOptions,
+					ariaLabel: t("workspaceLabel"),
+					onChange: setWorkspace
+				}), props.solo ? null : (0, react$1.createElement)(Select, {
+					searchable: true,
+					size: "lg",
+					minWidth: SELECT_MIN_WIDTH$1,
+					maxWidth: SELECT_MAX_WIDTH$1,
+					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconUsersOutlineRegular, { size: 16 }),
+					value: owner,
+					options: [{
+						value: "",
+						label: t("ownerAll")
+					}],
+					groups: props.ownerGroups,
+					ariaLabel: t("ownerLabel"),
+					onChange: setOwner
+				})));
+			}
 		}
 		//#endregion
 		//#region src/client/task-row.ts
@@ -57033,8 +56667,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-003229-809`
-			}, `v0.0.126 261101-003229-809`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-005202-184`
+			}, `v0.0.126 261101-005202-184`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -57107,7 +56741,8 @@ body[data-ds-dark-theme]{
 				ym: histYm,
 				onYmChange: setHistYm,
 				scrollTo: histScroll,
-				onScrolled: clearHistScroll
+				onScrolled: clearHistScroll,
+				scrollContainer: toolbarScroll
 			}) : board === null ? state.status === "error" ? null : (0, react$1.createElement)("div", { className: "dtl-loading" }, (0, react$1.createElement)(Loader, {
 				variant: "blocks",
 				size: "xl"

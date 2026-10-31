@@ -15,6 +15,8 @@
 
 **列表行是本插件唯一的自绘件**：一行 = 左缘状态色条 / 圆点（`.dtl-rail` / `.dtl-dot`）+ 标题 + 工作区 + `#标签` + 右侧灰字，见 [`features/board-home.md`](features/board-home.md) §二。它自绘是因为宿主没有表格件，**不是因为宿主控件不好**——行内的按钮、标签、输入仍是核心控件。
 
+**历史页表格也是自绘件**（2026-11-01）：`.dtl-histlist__table` / `__cell` / `__headcell` / `__row` / `__dayrow` / `__spacer`，写在 `ui.ts`。自绘的原因是**核心 `Table` 支撑不了窗口化渲染**（整表逐行渲染、没有插入占位行的口子），不是外观另起一套：四边外框、灰底表头 + 下边线、行间极淡底线、行悬浮、选中淡蓝底 + 左竖条逐条对齐核心 plain 皮肤；表头底与行悬浮底在 `tokens.ts` 里 alias 核心 token（`--dtl-table-head-bg` / `--dtl-table-row-hover` / `--dtl-border-faint`），不另写色值。**以后核心 `Table` 支持窗口化时，这套应当收回去**。
+
 （注：右上 `shell.overlay` 浮标截至本版未落码，见 `features/board-home.md` §一；宿主事实如下，若实现需注意）浮层默认 `pointer-events:none`、子元素自动恢复 ⇒ 自绘条目不挡下方应用；定位用宿主变量 `--dsh-frame-overlay-top`（标题栏净空 + 20px），不要写死 top 值。
 
 ## 三、token 层：`--dtl-*`（唯一落点 `src/client/tokens.ts`）

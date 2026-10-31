@@ -83,12 +83,14 @@ export function fetchHistoryTrend(gran: HistoryGran = "day"): Promise<HistoryTre
 	return fetchJson<HistoryTrendPayload>(`/history/trend?gran=${gran}`);
 }
 
-/** 历史页列表：整窗一次取回（近一年），分页由前端按天切片。 */
+/** 历史页列表：**一次只取一个自然月**（`ym` = `YYYY-MM`），整月全量回本地，滚动由前端开窗。 */
 export function fetchHistoryList(query: {
+	ym: string;
 	workspace?: string;
 	owner?: string;
 }): Promise<HistoryListPayload> {
 	const params = new URLSearchParams();
+	params.set("ym", query.ym);
 	if (query.workspace !== undefined && query.workspace !== "")
 		params.set("workspace", query.workspace);
 	if (query.owner !== undefined && query.owner !== "")

@@ -62,7 +62,7 @@ export function registerRoutes(webServer, deps) {
             });
         }
     });
-    // 历史页列表：一页结案明细（工作区 / 执行人筛在 host，日期窗暂由前端给固定近一年）。
+    // 历史页列表：**只取选中的那个月**（工作区 / 执行人 / 年月筛都在 host）。
     registerRead("/history/list", async (req, res) => {
         try {
             const params = new URL(req.url ?? "/", "http://localhost").searchParams;
@@ -72,7 +72,11 @@ export function registerRoutes(webServer, deps) {
                 ? all
                 : all.filter((workspace) => workspace.id === workspaceId);
             const owner = params.get("owner") ?? "";
-            sendJson(res, 200, await getHistoryList(scoped, owner === "" ? {} : { owner }));
+            const ym = params.get("ym") ?? "";
+            sendJson(res, 200, await getHistoryList(scoped, {
+                ym,
+                ...(owner === "" ? {} : { owner }),
+            }));
         }
         catch (error) {
             sendJson(res, 500, {

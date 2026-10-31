@@ -129,21 +129,27 @@ export async function getHistoryTrend(workspaces, gran = "day") {
         degraded: settled.degraded,
     };
 }
-/** 一年窗口的读取上限：正常个人台账远够；超了就是 `capped`，列表底部不再追加。
- *  shortcut: 一年超 5000 条时列表会被截断，等真有人跑满再改成按月/按天窗口分次读。 */
-const HISTORY_WINDOW_ROWS = 5000;
+/** `YYYY-MM` → 该月首末时刻（与存盘同形的串，脚本直接字符串比较）。 */
+function monthRange(ym) {
+    const year = Number(ym.slice(0, 4));
+    const month = Number(ym.slice(5, 7));
+    // 0 基月份：传 month 就是「下个月 1 号」，退一秒即本月末
+    const end = new Date(new Date(year, month, 1).getTime() - 1000);
+    return { since: `${ym}-01 00:00:00`, until: `${ym}-${pad2(end.getDate())} 23:59:59` };
+}
 /**
- * 历史明细跨工作区合并：按结案时间倒序、按 `key` 去重，**一次下发整窗**。
- * 分页不在这里做 —— 前端按「整天凑够 20 条」切片，切页零请求。
+ * 历史明细跨工作区合并：按结案时间倒序、按 `key` 去重，整月一次下发。
+ * 分页不在这里做 —— 整月都在前端内存里，滚动由前端按行号开窗（不再按天切片翻页）。
  */
 export async function getHistoryList(workspaces, query) {
     const today = ymdOf(new Date());
-    const since = `${addDays(today, -364)} 00:00:00`;
-    const until = `${today} 23:59:59`;
+    const ym = query.ym !== undefined && /^\d{4}-\d{2}$/.test(query.ym)
+        ? query.ym
+        : today.slice(0, 7);
+    const { since, until } = monthRange(ym);
     const settled = await settleWorkspaces(workspaces, "history", (workspace) => readHistory(workspace, {
         since,
         until,
-        limit: HISTORY_WINDOW_ROWS,
         ...(query.owner === undefined ? {} : { owner: query.owner }),
     }), (rows) => rows);
     const seen = new Set();
@@ -159,7 +165,8 @@ export async function getHistoryList(workspaces, query) {
     merged.sort((a, b) => (a.finished < b.finished ? 1 : a.finished > b.finished ? -1 : 0));
     return {
         records: merged,
-        capped: settled.data.some((page) => page.capped),
+        // 整月不再设条数上限（2026-11-01）⇒ 恒为 false；字段留着是为了不动下发形状
+        capped: false,
         degraded: settled.degraded,
     };
 }

@@ -1,28 +1,37 @@
 /**
  * 历史页下半部分：筛选行（工作区 / 执行人）+ 结案记录表格。
  *
- * 结构：
- *    [日期 | 执行人 | 开始时间 | 结束时间]   ← 表头第一格为「日期」，每天一张表
+ * 结构（与改版前逐像素一致）：
+ *    [日期 | 创建人 | 执行人 | 时间]   ← 表头第一格为「日期」，每天一行
  *      C.dsh-plugin-core                    ← 当天某工作区一段，段首一行跨满全列写工作区名
  *      任务行…
- *    [W.NAS-Docker | …]
- *      任务行…
- * 某天所有工作区加起来不到 `PAGE_MIN` 条就并到后一天一起展示（「再读一天」）。
  *
- * 分页：host 一次下发整窗（近一年），这里**本地按天切片**（每片至少 PAGE_MIN 条、
- * 以整天为界），翻页零请求；滚动到底由最后一张表的哨兵触发。
+ * 渲染：**一张表，只画窗口内的行**（2026-11-01）。原来是一天一张表，块间无间距、
+ * 相邻边框合并 ⇒ 合成一张表后仍是「每天插一行日期头」，外观不变。
+ * 屏幕外的行用首尾两个等高占位行撑住滚动高度 ⇒ DOM 行数与总条数无关。
+ * 分页、按天分片全部取消：整月数据一次取回、全在内存，滚动时只按行号重算窗口。
  */
 import {
 	IconFolderCloseRegular,
 	IconUsersOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
-import { Table, type PickerGroup, type TableColumn, type TableRow } from "dsh-plugin-core/ui";
-import { createElement as h, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import type { PickerGroup } from "dsh-plugin-core/ui";
+import {
+	createElement as h,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+	type ReactNode,
+	type Ref,
+} from "react";
 import { fetchHistoryList } from "./api";
 import type { Translate } from "./locales";
 import { displayName } from "./rows";
 import type { HistoryRecord } from "./types";
-import { Select, Button, SectionHead, Segmented, SplitGroup, Tag } from "./ui";
+import { Select, Button, SectionHead, Segmented, SplitGroup, Tag, Loader } from "./ui";
 
 const WEEKDAY_KEYS = [
 	"weekdaySun",
@@ -57,10 +66,14 @@ function weekdayOf(day: string, t: Translate): string {
 	return t(WEEKDAY_KEYS[index] ?? "weekdaySun");
 }
 
-/** 一片至少多少条；不足就把后面整天并进来（用户：一天不到 20 条就再读一天）。 */
-const PAGE_MIN = 20;
 const SELECT_MIN_WIDTH = 140;
 const SELECT_MAX_WIDTH = 240;
+/** 窗口上下各多画的像素：快速拖动时不留白。 */
+const OVERSCAN_PX = 600;
+/** 一行最多摆几个标签，其余收成 `+N`（行高必须定死，标签不能换行）。 */
+const MAX_TAGS = 3;
+/** 首帧量行高时先画多少行（够带上日期头 / 工作区段头 / 记录三种行就行）。 */
+const MEASURE_ROWS = 40;
 
 export interface HistoryListProps {
 	readonly t: Translate;
@@ -78,46 +91,38 @@ export interface HistoryListProps {
 	/** 这次滚动请求已经处理完 ⇒ 请页面层清掉 `scrollTo`（列表切走会卸载、ref 归零，
 	 *  留着旧 token 会在切回来时再滚一遍）。 */
 	readonly onScrolled: () => void;
+	/** 页面滚动层（`.dtl-page`）：虚拟窗口按它的可视区算，不是 window。 */
+	readonly scrollContainer: () => HTMLElement | null;
 }
 
-/** 当天某个工作区的一段（同一天里按工作区分段，段首一行写工作区名）。 */
-interface WorkspaceBlock {
-	readonly id: string;
-	readonly title: string;
-	readonly rows: readonly TableRow[];
-}
+/** 一行是什么：日期头 / 工作区段头 / 记录。 */
+type RowKind = "day" | "ws" | "rec";
 
-/** 一天的块：一个日期标题 + **一张表**（表内按工作区分段）。 */
-interface DayBlock {
+interface Item {
+	readonly kind: RowKind;
+	readonly key: string;
+	/** 所属日期（三种行都有，按天跳转时用）。 */
 	readonly day: string;
-	readonly groups: readonly WorkspaceBlock[];
+	readonly title?: string;
+	readonly record?: HistoryRecord;
 }
 
-/** 工作区段首行（跨满全列）：工作区名包成 business 实心底色的标签（2026-10-31 用户定）。 */
-function workspaceRow(title: string, colSpan: number): TableRow {
-	return {
-		key: `ws:${title}`,
-		cells: {
-			task: {
-				content: h(Tag, { text: title, tone: "workspace" }),
-				colSpan,
-			},
-		},
-	};
+/** 三类行的固定行高（首帧量出来，之后偏移全靠它算）。 */
+interface Heights {
+	readonly day: number;
+	readonly ws: number;
+	readonly rec: number;
 }
 
-/** 一条记录 → 一行。第一列：标题 + 标签（创建徽已挪到「创建人」列，2026-10-31 用户定）。 */
-function rowOf(
+/** 记录 → 各列内容。第一列：标题 + 标签（创建徽已挪到「创建人」列，2026-10-31 用户定）。 */
+function cellsOf(
 	record: HistoryRecord,
 	opts: {
 		readonly solo: boolean;
-		readonly t: Translate;
 		readonly onOwner: (uuid: string) => void;
 	},
-): TableRow {
-	// 行内点击会被 Table 的行点击接走（打开文档）。**标签目前不设自己的点击行为，必须放行冒泡**
-	// （2026-10-31 用户真机：标签那一行是跨满第一列全宽的 div，它拦了冒泡 ⇒ 点标签、点第一列右侧
-	// 那段空白都没反应）；以后给标签单独做方法时再就地拦。人名仍就地拦 = 点人名是「切执行人筛选」。
+): Record<string, ReactNode> {
+	// 行内点击会被行点击接走（打开文档）。人名就地拦 = 点人名是「切执行人筛选」。
 	const stop = (event: { stopPropagation: () => void }): void => event.stopPropagation();
 	const who =
 		opts.solo || record.ownerName === ""
@@ -125,7 +130,6 @@ function rowOf(
 			: h(
 					"span",
 					{ onClick: stop },
-					// 与待办行一致：蓝字、不是标签；点人名 = 把执行人筛选切到这个人
 					h(
 						Button,
 						{
@@ -137,84 +141,129 @@ function rowOf(
 						`@${record.ownerName}`,
 					),
 				);
-	// 创建人列：名字 + 创建时间（绝对时刻；原来的「创建于 X 前」灰徽已取消）
 	const creatorName = displayName(record.creatorName, record.creator);
 	const created = record.created.slice(0, 16);
 	const finished = record.finished.slice(0, 16);
+	// 标签只摆一行：超出的收成 `+N`（行高必须定死，换行会把虚拟窗口算歪）
+	const shown = record.tags.slice(0, MAX_TAGS);
+	const rest = record.tags.length - shown.length;
 	return {
-		key: record.key,
-		cells: {
-			task: h(
+		task: h(
+			"div",
+			{ className: "dtl-histlist__task" },
+			h(
 				"div",
-				{ className: "dtl-histlist__task" },
+				{ className: "dtl-histlist__head" },
 				h(
-					"div",
-					{ className: "dtl-histlist__head" },
-					h(
-						"span",
-						{ className: "dtl-histlist__title", title: record.summary },
-						record.title,
+					"span",
+					{ className: "dtl-histlist__title", title: record.summary },
+					record.title,
+				),
+			),
+			record.tags.length === 0
+				? null
+				: h(
+						"div",
+						{ className: "dtl-histlist__tags" },
+						...shown.map((tag) => h(Tag, { key: tag, text: `#${tag}`, maxWidth: 160 })),
+						rest > 0
+							? h(
+									"span",
+									{ key: "+n", className: "dtl-histlist__tags-rest" },
+									`+${String(rest)}`,
+								)
+							: null,
 					),
-				),
-				record.tags.length === 0
-					? null
-					: h(
-							"div",
-							{ className: "dtl-histlist__tags" },
-							...record.tags.map((tag) =>
-								h(Tag, { key: tag, text: `#${tag}`, maxWidth: 160 }),
-							),
-						),
+		),
+		creator: h(
+			"div",
+			{ className: "dtl-histlist__creator" },
+			h(
+				"span",
+				{ className: "dtl-histlist__creator-name" },
+				creatorName === "" ? "" : `@${creatorName}`,
 			),
-			creator: h(
-				"div",
-				{ className: "dtl-histlist__creator" },
-				h(
-					"span",
-					{ className: "dtl-histlist__creator-name" },
-					creatorName === "" ? "" : `@${creatorName}`,
-				),
-				h("span", { className: "dtl-histlist__creator-time" }, created),
+			h("span", { className: "dtl-histlist__creator-time" }, created),
+		),
+		owner: who,
+		time: h(
+			"div",
+			{ className: "dtl-histlist__time" },
+			h(
+				"span",
+				{ className: "dtl-histlist__time-row" },
+				h("span", { className: "dtl-histlist__time-mark" }, "S"),
+				created,
 			),
-			owner: who,
-			time: h(
-				"div",
-				{ className: "dtl-histlist__time" },
-				h(
-					"span",
-					{ className: "dtl-histlist__time-row" },
-					h("span", { className: "dtl-histlist__time-mark" }, "S"),
-					created,
-				),
-				h(
-					"span",
-					{ className: "dtl-histlist__time-row" },
-					h("span", { className: "dtl-histlist__time-mark" }, "E"),
-					finished,
-				),
+			h(
+				"span",
+				{ className: "dtl-histlist__time-row" },
+				h("span", { className: "dtl-histlist__time-mark" }, "E"),
+				finished,
 			),
-		},
+		),
 	};
 }
 
-/** 按天切片：每片至少 PAGE_MIN 条、以整天为界（不足就续下一天）。 */
-function sliceByDay(records: readonly HistoryRecord[]): readonly (readonly HistoryRecord[])[] {
-	const pages: HistoryRecord[][] = [];
-	let current: HistoryRecord[] = [];
-	let index = 0;
-	while (index < records.length) {
-		const day = records[index].finished.slice(0, 10);
-		while (index < records.length && records[index].finished.slice(0, 10) === day) {
-			current.push(records[index]);
-			index += 1;
+/** 记录 → 拍平的行序列：一天一行日期头，天内按工作区分段（段序与工作区下拉一致）。 */
+function buildItems(
+	records: readonly HistoryRecord[],
+	orderOf: (id: string) => number,
+): readonly Item[] {
+	const out: Item[] = [];
+	const days: {
+		day: string;
+		groups: Map<string, { title: string; rows: HistoryRecord[] }>;
+	}[] = [];
+	for (const record of records) {
+		const day = record.finished.slice(0, 10);
+		let block = days[days.length - 1];
+		if (block === undefined || block.day !== day) {
+			block = { day, groups: new Map() };
+			days.push(block);
 		}
-		if (current.length >= PAGE_MIN) {
-			pages.push(current);
-			current = [];
+		let group = block.groups.get(record.workspaceId);
+		if (group === undefined) {
+			group = { title: record.workspaceTitle, rows: [] };
+			block.groups.set(record.workspaceId, group);
+		}
+		group.rows.push(record);
+	}
+	for (const block of days) {
+		out.push({ kind: "day", key: `day:${block.day}`, day: block.day });
+		const groups = [...block.groups.entries()].sort((a, b) => orderOf(a[0]) - orderOf(b[0]));
+		for (const [id, group] of groups) {
+			out.push({ kind: "ws", key: `ws:${block.day}:${id}`, day: block.day, title: group.title });
+			for (const record of group.rows)
+				out.push({ kind: "rec", key: record.key, day: block.day, record });
 		}
 	}
-	if (current.length > 0) pages.push(current);
-	return pages;
+	return out;
+}
+
+/** 行起点表（`offsets[i]` = 第 i 行顶边）。二分查「某个像素位置落到第几行」。 */
+function offsetsOf(items: readonly Item[], heights: Heights): Float64Array {
+	const out = new Float64Array(items.length + 1);
+	for (let index = 0; index < items.length; index += 1) {
+		const kind = items[index].kind;
+		out[index + 1] =
+			out[index] + (kind === "day" ? heights.day : kind === "ws" ? heights.ws : heights.rec);
+	}
+	return out;
+}
+
+/** 最大的 i，使 `offsets[i] <= value`（`offsets` 单调递增）。 */
+function rowAt(offsets: Float64Array, value: number): number {
+	const last = offsets.length - 2;
+	if (last < 0) return 0;
+	let lo = 0;
+	let hi = last;
+	while (lo < hi) {
+		const mid = (lo + hi + 1) >> 1;
+		if (offsets[mid] <= value) lo = mid;
+		else hi = mid - 1;
+	}
+	return lo;
 }
 
 export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
@@ -224,9 +273,190 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const [records, setRecords] = useState<readonly HistoryRecord[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [pageCount, setPageCount] = useState(1);
-	// 时间筛选（用户 2026-10-31）：一次只看一个月。月份受控在页面层（与上方图表共用），
-	// 数据仍由 host 固定取近一年，年月在前端本地过滤。
+	/** 选中行的 key（淡蓝底 + 左竖条）。 */
+	const [selected, setSelected] = useState<string | null>(null);
+	/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
+	const pendingOpen = useRef<number | null>(null);
+	/** 已经处理过的滚动请求 token（同一次点击只滚一次）。 */
+	const lastScrollToken = useRef<number>(-1);
+	/** 取过的月份（`ym|工作区|执行人` → 记录 + 取回时刻）：来回切月不再请求，60 秒后重取。 */
+	const monthCache = useRef(new Map<string, { records: readonly HistoryRecord[]; at: number }>());
+	/** 三类行的固定行高：首帧量一次，之后所有偏移都按它算。 */
+	const [heights, setHeights] = useState<Heights | null>(null);
+	/** 表格本身（**不是**外层容器：容器里还有筛选条，行号偏移从表格顶边算）。 */
+	const tableRef = useRef<HTMLTableElement | null>(null);
+	/** 当前渲染的窗口（行号闭区间）。 */
+	const [range, setRange] = useState<{ start: number; end: number }>({ start: 0, end: -1 });
+
+	useEffect(
+		() => () => {
+			if (pendingOpen.current !== null) window.clearTimeout(pendingOpen.current);
+		},
+		[],
+	);
+
+	// 首屏 + 筛选 / 月份变化：**只取选中的那个月**（date 窗在 host 侧收窄）
+	useEffect(() => {
+		let alive = true;
+		const key = `${props.ym}|${workspace}|${owner}`;
+		const hit = monthCache.current.get(key);
+		if (hit !== undefined && Date.now() - hit.at < 60_000) {
+			setRecords(hit.records);
+			setLoading(false);
+			setError(null);
+			return;
+		}
+		setLoading(true);
+		setError(null);
+		setRecords([]);
+		fetchHistoryList({ ym: props.ym, workspace, owner })
+			.then((payload) => {
+				if (!alive) return;
+				monthCache.current.set(key, { records: payload.records, at: Date.now() });
+				setRecords(payload.records);
+			})
+			.catch((reason: unknown) => {
+				if (alive) setError(reason instanceof Error ? reason.message : String(reason));
+			})
+			.finally(() => {
+				if (alive) setLoading(false);
+			});
+		return () => {
+			alive = false;
+		};
+	}, [owner, props.ym, workspace]);
+
+	// 天 → 工作区段（段序跟「全部工作区」下拉一致）
+	const orderOf = useCallback(
+		(id: string): number => {
+			const index = props.workspaceOptions.findIndex((option) => option.value === id);
+			return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+		},
+		[props.workspaceOptions],
+	);
+	const items = useMemo(() => buildItems(records, orderOf), [orderOf, records]);
+	const offsets = useMemo(
+		() => (heights === null ? null : offsetsOf(items, heights)),
+		[heights, items],
+	);
+
+	// 首帧：先按自然高度画前几行，量出三类行的真实行高（样式一改自动跟着走，不许在 JS 里写死像素），
+	// 量到之后整表换成「定高 + 窗口」。量的就是真行，不另建探针表 —— 少一份可能对不上的样式。
+	useLayoutEffect(() => {
+		if (heights !== null) return;
+		const table = tableRef.current;
+		if (table === null) return;
+		const heightOf = (kind: RowKind): number => {
+			const node = table.querySelector<HTMLElement>(`[data-kind='${kind}']`);
+			return node === null ? 0 : node.getBoundingClientRect().height;
+		};
+		const day = heightOf("day");
+		const ws = heightOf("ws");
+		const rec = heightOf("rec");
+		if (day > 0 && ws > 0 && rec > 0) setHeights({ day, ws, rec });
+	});
+
+	/** 按滚动位置重算窗口；不在可视区时窗口为空（占位行撑住滚动高度）。 */
+	const recompute = useCallback((): void => {
+		const table = tableRef.current;
+		const container = props.scrollContainer();
+		if (table === null || container === null || offsets === null) return;
+		const containerRect = container.getBoundingClientRect();
+		const tableRect = table.getBoundingClientRect();
+		// 表格第一行在容器坐标系里的位置（容器滚动 + 相对偏移）—— 必须用表格，不能用包住筛选条的外层
+		const base = container.scrollTop + (tableRect.top - containerRect.top);
+		const from = container.scrollTop - base - OVERSCAN_PX;
+		const to = container.scrollTop + container.clientHeight - base + OVERSCAN_PX;
+		const last = offsets.length - 2;
+		const start = Math.max(0, rowAt(offsets, Math.max(0, from)));
+		const end = Math.min(last, rowAt(offsets, Math.max(0, to)));
+		setRange((prev) => (prev.start === start && prev.end === end ? prev : { start, end }));
+	}, [offsets, props.scrollContainer]);
+
+	// 首帧（行高量完、行起点表变了的这一刻）先在绘制前算一次窗口，否则会闪一帧空表
+	useLayoutEffect(() => {
+		recompute();
+	}, [recompute]);
+
+	useEffect(() => {
+		const container = props.scrollContainer();
+		if (container === null || offsets === null) return;
+		let frame = 0;
+		const onScroll = (): void => {
+			if (frame !== 0) return;
+			frame = requestAnimationFrame(() => {
+				frame = 0;
+				recompute();
+			});
+		};
+		container.addEventListener("scroll", onScroll, { passive: true });
+		const observer =
+			typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => recompute());
+		observer?.observe(container);
+		recompute();
+		return () => {
+			container.removeEventListener("scroll", onScroll);
+			observer?.disconnect();
+			if (frame !== 0) cancelAnimationFrame(frame);
+		};
+	}, [offsets, props.scrollContainer, recompute]);
+
+	// 点图表里的日 / 周 / 「本周结案」卡 ⇒ 滚到列表里那一天（用户 2026-10-31）。
+	// 整天都在内存里 ⇒ 直接按行号算位置；目标天没有记录时落到「目标日或更早的最近一天」。
+	useEffect(() => {
+		const target = props.scrollTo;
+		if (target === null || target.token === lastScrollToken.current) return;
+		// ⚠️ 必须先判 loading：首帧 records 还空时，会把「数据没到」算成「本月没有记录」
+		if (loading || offsets === null || items.length === 0) return;
+		const finish = (): void => {
+			lastScrollToken.current = target.token;
+			props.onScrolled();
+		};
+		const index = items.findIndex((item) => item.kind === "day" && item.day <= target.date);
+		const table = tableRef.current;
+		const container = props.scrollContainer();
+		if (index < 0 || table === null || container === null) {
+			// 本月没有目标日或更早的天：没有可滚的位置，直接记为已处理
+			finish();
+			return;
+		}
+		const containerRect = container.getBoundingClientRect();
+		const tableRect = table.getBoundingClientRect();
+		const base = container.scrollTop + (tableRect.top - containerRect.top);
+		container.scrollTo({ top: base + offsets[index], behavior: "smooth" });
+		finish();
+	}, [items, loading, offsets, props.onScrolled, props.scrollContainer, props.scrollTo]);
+
+	// 单人台账：执行人整列不摆（与待办里「单人不显示执行人名」同一条规矩）
+	const columns = props.solo ? ([175, 185] as const) : ([175, 140, 185] as const);
+	const colSpan = columns.length + 1;
+	const labels = props.solo
+		? [t("histColCreator"), t("histColTime")]
+		: [t("histColCreator"), t("histColOwner"), t("histColTime")];
+
+	/** 行 key → 过程文档路径（没有 worklog 的不在表里 ⇒ 点了只选中、不打开）。 */
+	const fileOf = useMemo(() => {
+		const map = new Map<string, string>();
+		for (const record of records)
+			if (record.filePath !== "") map.set(record.key, record.filePath);
+		return map;
+	}, [records]);
+
+	/** 点行 = 选中 + 把路径交给核心。选中态当场提交；dock 的打开推到本帧绘制之后。 */
+	const handleRowClick = (key: string): void => {
+		setSelected(key);
+		const file = fileOf.get(key);
+		if (file === undefined) return;
+		// 2026-10-31 真机：点五六次才有选中样式。根因是这里同步打开 dock（核心要建 React 根、
+		// 改宿主布局、强制重排），把 setSelected 的 commit + paint 一起拖到它后面。
+		if (pendingOpen.current !== null) window.clearTimeout(pendingOpen.current);
+		pendingOpen.current = window.setTimeout(() => {
+			pendingOpen.current = null;
+			props.onOpen(file);
+		}, 0);
+	};
+
+	/** 可选年份：今年往前 5 年。 */
 	const now = new Date();
 	const currentYear = now.getFullYear();
 	const currentMonth = now.getMonth() + 1;
@@ -236,233 +466,168 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const setYearMonth = (nextYear: number, nextMonth: number): void => {
 		props.onYmChange(`${String(nextYear)}-${String(nextMonth).padStart(2, "0")}`);
 	};
-	/** 选中行的 key（核心 Table 的选中态：淡蓝底 + 左竖条）。 */
-	const [selected, setSelected] = useState<string | null>(null);
-	/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
-	const pendingOpen = useRef<number | null>(null);
-	/** 已经处理过的滚动请求 token（同一次点击只滚一次）。 */
-	const lastScrollToken = useRef<number>(-1);
-	useEffect(
-		() => () => {
-			if (pendingOpen.current !== null) window.clearTimeout(pendingOpen.current);
-		},
-		[],
-	);
-
-	// 首屏 + 筛选变化：整表重来（筛选在 host 侧做）
-	useEffect(() => {
-		let alive = true;
-		setLoading(true);
-		setError(null);
-		setRecords([]);
-		setPageCount(1);
-		fetchHistoryList({ workspace, owner })
-			.then((payload) => {
-				if (!alive) return;
-				setRecords(payload.records);
-			})
-			.catch((reason: unknown) => {
-				if (alive)
-					setError(reason instanceof Error ? reason.message : String(reason));
-			})
-			.finally(() => {
-				if (alive) setLoading(false);
-			});
-		return () => {
-			alive = false;
-		};
-	}, [workspace, owner]);
-
-	/** 只留所选年月：`finished` 形如 `YYYY-MM-DD HH:mm`，取前 7 位比 `YYYY-MM`。 */
-	const scoped = useMemo(() => {
-		const prefix = `${year}-${String(month).padStart(2, "0")}`;
-		return records.filter((record) => record.finished.slice(0, 7) === prefix);
-	}, [month, records, year]);
-	const pages = useMemo(() => sliceByDay(scoped), [scoped]);
-	const hasMore = pageCount < pages.length;
-	const visible = useMemo(() => pages.slice(0, pageCount).flat(), [pageCount, pages]);
-	const loadMore = useCallback(() => {
-		setPageCount((count) => count + 1);
-	}, []);
-
-	// 天 → 工作区段（段序跟「全部工作区」下拉一致，翻页追加不会跳位）
-	const orderOf = useCallback(
-		(id: string): number => {
-			const index = props.workspaceOptions.findIndex((option) => option.value === id);
-			return index < 0 ? Number.MAX_SAFE_INTEGER : index;
-		},
-		[props.workspaceOptions],
-	);
-	const days = useMemo<readonly DayBlock[]>(() => {
-		const out: { day: string; groups: Map<string, { title: string; rows: TableRow[] }> }[] = [];
-		for (const record of visible) {
-			const day = record.finished.slice(0, 10);
-			let block = out[out.length - 1];
-			if (block === undefined || block.day !== day) {
-				block = { day, groups: new Map() };
-				out.push(block);
-			}
-			let group = block.groups.get(record.workspaceId);
-			if (group === undefined) {
-				group = { title: record.workspaceTitle, rows: [] };
-				block.groups.set(record.workspaceId, group);
-			}
-			group.rows.push(rowOf(record, { solo: props.solo, t, onOwner: setOwner }));
-		}
-		return out.map((block) => ({
-			day: block.day,
-			groups: [...block.groups.entries()]
-				.sort((a, b) => orderOf(a[0]) - orderOf(b[0]))
-				.map(([id, group]) => ({ id, title: group.title, rows: group.rows })),
-		}));
-	}, [orderOf, props.solo, t, visible]);
-
-	// 点图表里的日 / 周 / 「本周结案」卡 ⇒ 页面滚到列表里那一天（用户 2026-10-31）。
-	// 两层等待，少一层就滚偏：
-	//  ① **数据**：列表是整窗一次拉回、前端按天分页，只渲染第一页 ⇒ 先把分页扩到目标天
-	//     所在的那一页，等它渲染出来、days 变了再重进本 effect（中间几页照常渲染，不跳过）；
-	//  ② **定位**：目标天**没有记录**时（周末、或被工作区/执行人滤掉）落到「目标日或更早的
-	//     最近一天」。这一步必须在**全量** scoped 里算 —— 老实现只在已渲染的块里找最近，
-	//     于是点「上周结案」（上周日多半没结案）会停在第一页最后一天（用户 2026-10-31 真机）。
-	useEffect(() => {
-		const target = props.scrollTo;
-		if (target === null || target.token === lastScrollToken.current) return;
-		// ⚠️ 必须**先**判 loading：首帧 records 还空时，下面会把「数据没到」算成「本月没有记录」
-		// 并把 token 记成已处理 —— 之后数据到了也不会再滚（用户 2026-10-31 真机：完全不动）
-		if (loading) return;
-		/** 这个 token 就此用掉：本地记一份（同一个挂载周期内不重复滚），并请页面层清空。 */
-		const finish = (): void => {
-			lastScrollToken.current = target.token;
-			props.onScrolled();
-		};
-		const dayOf = (record: HistoryRecord): string => record.finished.slice(0, 10);
-		const fallback =
-			scoped.find((record) => dayOf(record) < target.date) ?? scoped[scoped.length - 1];
-		const day = scoped.some((record) => dayOf(record) === target.date)
-			? target.date
-			: fallback?.finished.slice(0, 10);
-		if (day === undefined) {
-			// 本月一条记录都没有：没有可滚的位置，直接记为已处理，别挂在那里等
-			finish();
-			return;
-		}
-		const pageOfTarget = pages.findIndex((page) => page.some((record) => dayOf(record) === day));
-		if (pageOfTarget >= pageCount) {
-			// 数据已在内存，只是本地分页没渲染 ⇒ 扩到那一页就等下一次（不标记 token）
-			setPageCount((count) => Math.max(count, pageOfTarget + 1));
-			return;
-		}
-		const el = Array.from(document.querySelectorAll<HTMLElement>("[data-dsh-day]")).find(
-			(node) => node.dataset.dshDay === day,
-		);
-		// 那一天还没渲染出来 ⇒ 不标记 token，等 days 变化再进
-		if (el === undefined) return;
-		lastScrollToken.current = target.token;
-		el.scrollIntoView({ block: "start", behavior: "smooth" });
-		props.onScrolled();
-	}, [days, loading, pageCount, pages, props.onScrolled, props.scrollTo, scoped]);
-
-	// 单人台账：执行人整列不摆（与待办里「单人不显示执行人名」同一条规矩）
-	const columnsOf = useCallback(
-		(title: ReactNode): readonly TableColumn[] => [
-			{ key: "task", title },
-			{ key: "creator", title: t("histColCreator"), width: 175 },
-			...(props.solo
-				? []
-				: [{ key: "owner", title: t("histColOwner"), width: 140 }]),
-			{ key: "time", title: t("histColTime"), width: 185 },
-		],
-		[props.solo, t],
-	);
-
-	/** 行 key → 过程文档路径（没有 worklog 的不在表里 ⇒ 点了只选中、不打开）。 */
-	const fileOf = useMemo(() => {
-		const map = new Map<string, string>();
-		for (const record of visible)
-			if (record.filePath !== "") map.set(record.key, record.filePath);
-		return map;
-	}, [visible]);
-
-	/** 点行 = 选中 + 把路径交给核心。选中态当场提交；dock 的打开推到本帧绘制之后。 */
-	const handleRowClick = (row: TableRow): void => {
-		const key = String(row.key);
-		if (key.startsWith("day:") || key.startsWith("ws:")) return;
-		setSelected(key);
-		const file = fileOf.get(key);
-		if (file === undefined) return;
-		// 2026-10-31 真机：点五六次才有选中样式。根因是这里同步打开 dock（核心要建 React 根、
-		// 改宿主布局、强制重排），把 setSelected 的 commit + paint 一起拖到它后面。
-		// 先提交选中，再把「扔链接给 dock」推到本帧绘制之后；连点时只开最后一个（新的取消旧的）。
-		if (pendingOpen.current !== null) window.clearTimeout(pendingOpen.current);
-		pendingOpen.current = window.setTimeout(() => {
-			pendingOpen.current = null;
-			props.onOpen(file);
-		}, 0);
-	};
-
-	/** 一天的表格列数：跨列的段首行要盖满。 */
-	const colSpan = props.solo ? 3 : 4;
-
-	/** 可选年份：今年往前 5 年。 */
 	const years = useMemo(
 		() => Array.from({ length: 6 }, (_, index) => currentYear - index),
 		[currentYear],
 	);
-	/** 今年只显示到当月（用户 2026-10-31：「只显示到当前月份」），往年 12 个月全显示。 */
+	/** 今年只显示到当月（用户 2026-10-31），往年 12 个月全显示。 */
 	const shownMonths = year === currentYear ? currentMonth : 12;
 
+	/** 三类行各自的行高：量出来之前不写（首帧按自然高度量），量出来之后每行都钉死 ——
+	 *  没有标签的行也占满同样的高度，否则偏移会一格一格错下去。 */
+	const cellHeight = (kind: RowKind): { height: string } | undefined =>
+		heights === null ? undefined : { height: `${String(heights[kind])}px` };
+
+	const dayRow = (day: string, first: boolean): ReactNode =>
+		h(
+			"tr",
+			{
+				key: `day:${day}`,
+				className: "dtl-histlist__dayrow",
+				"data-kind": "day",
+				"data-first": first ? "true" : undefined,
+			},
+			h(
+				"th",
+				{ className: "dtl-histlist__headcell", scope: "col", style: cellHeight("day") },
+				h(SectionHead, {
+					title: `${day} · ${weekdayOf(day, t)}`,
+					accent: "default",
+					flush: true,
+				}),
+			),
+			...labels.map((label) =>
+				h(
+					"th",
+					{ key: label, className: "dtl-histlist__headcell", scope: "col", style: cellHeight("day") },
+					label,
+				),
+			),
+		);
+
+	const wsRow = (item: Item): ReactNode =>
+		h(
+			"tr",
+			{ key: item.key, className: "dtl-histlist__row", "data-kind": "ws" },
+			h(
+				"td",
+				{ className: "dtl-histlist__cell", colSpan, style: cellHeight("ws") },
+				h(Tag, { text: item.title ?? "", tone: "workspace" }),
+			),
+		);
+
+	const recRow = (record: HistoryRecord): ReactNode => {
+		const cells = cellsOf(record, { solo: props.solo, onOwner: setOwner });
+		const keys = props.solo ? (["task", "creator", "time"] as const) : (["task", "creator", "owner", "time"] as const);
+		return h(
+			"tr",
+			{
+				key: record.key,
+				className: "dtl-histlist__row",
+				"data-kind": "rec",
+				"data-interactive": "true",
+				"data-selected": selected === record.key ? "true" : undefined,
+				tabIndex: 0,
+				onClick: () => {
+					handleRowClick(record.key);
+				},
+				onKeyDown: (event: { key: string; preventDefault: () => void }) => {
+					if (event.key !== "Enter" && event.key !== " ") return;
+					event.preventDefault();
+					handleRowClick(record.key);
+				},
+			},
+			...keys.map((key) =>
+				h("td", { key, className: "dtl-histlist__cell", style: cellHeight("rec") }, cells[key] ?? null),
+			),
+		);
+	};
+
+	/** 表格外壳：colgroup 只给固定列宽，首列吃掉剩余宽度（与改版前同一条算式）。 */
+	const tableOf = (rows: readonly ReactNode[], extra?: { ref?: Ref<HTMLTableElement> }): ReactNode =>
+		h(
+			"table",
+			{ className: "dtl-histlist__table", ref: extra?.ref, "aria-label": t("histListLabel") },
+			h(
+				"colgroup",
+				null,
+				h("col", { key: "task" }),
+				...columns.map((width, index) => h("col", { key: String(index), style: { width: `${String(width)}px` } })),
+			),
+			h("tbody", null, ...rows),
+		);
+
+	const last = items.length - 1;
+	// 行高还没量到：先把前几十行按自然高度画出来（量完这一帧就换成定高窗口）
+	const measuring = heights === null;
+	const start = measuring ? 0 : Math.min(range.start, last);
+	const end = measuring ? Math.min(last, MEASURE_ROWS - 1) : Math.min(range.end, last);
+	const rows: ReactNode[] = [];
+	if (!measuring && start > 0)
+		rows.push(
+			h(
+				"tr",
+				{ key: "spacer-top", className: "dtl-histlist__spacer", "aria-hidden": "true" },
+				h("td", { colSpan, style: { height: `${String(offsets?.[start] ?? 0)}px` } }),
+			),
+		);
+	for (let index = start; index <= end; index += 1) {
+		const item = items[index];
+		if (item === undefined) continue;
+		if (item.kind === "day") rows.push(dayRow(item.day, index === 0));
+		else if (item.kind === "ws") rows.push(wsRow(item));
+		else if (item.record !== undefined) rows.push(recRow(item.record));
+	}
+	// 量行高那一帧：没画出来的尾巴先用「够高」的占位顶着，免得内容一短、浏览器把滚动位置夹到
+	// 顶上（切回来再滚一次那种跳）。这一帧在绘制前就被替换，用户看不到。
+	if (measuring && last >= MEASURE_ROWS)
+		rows.push(
+			h(
+				"tr",
+				{ key: "spacer-measure", className: "dtl-histlist__spacer", "aria-hidden": "true" },
+				h("td", { colSpan, style: { height: `${String((last + 1 - MEASURE_ROWS) * 80)}px` } }),
+			),
+		);
+	if (!measuring && end < last)
+		rows.push(
+			h(
+				"tr",
+				{ key: "spacer-bottom", className: "dtl-histlist__spacer", "aria-hidden": "true" },
+				h("td", {
+					colSpan,
+					style: { height: `${String((offsets?.[last + 1] ?? 0) - (offsets?.[end + 1] ?? 0))}px` },
+				}),
+			),
+		);
+
 	const body =
-		days.length === 0
-			? [
-					h(Table, {
-						key: "state",
-						columns: columnsOf(t("histColDate")),
-						rows: [],
-						ariaLabel: t("histListLabel"),
-						emptyText: t("historyEmpty"),
-						loading,
-					}),
-				]
-			// 一天**一张表**（用户 2026-10-31）：表头只出一次，天内按工作区分段
-			// （段首一行写工作区名）。多个表垒起来会让每段表头上叠出两条线。
-			: days.map((block, dayIndex) =>
+		items.length === 0
+			? tableOf([
 					h(
-						"div",
-						{
-							key: block.day,
-							className: "dtl-histlist__dayblock",
-							"data-dsh-day": block.day,
-						},
-						h(Table, {
-							columns: columnsOf(
-								h(SectionHead, {
-									title: `${block.day} · ${weekdayOf(block.day, t)}`,
-									accent: "default",
-									flush: true,
-								}),
-							),
-							rows: block.groups.flatMap((group) => [
-								workspaceRow(group.title, colSpan),
-								...group.rows,
-							]),
-							ariaLabel: block.day,
-							className: "dtl-histlist__table",
-							// 左右也要外框（用户 2026-10-31）⇒ 四边都画
-							borders: "all",
-							selectedKeys: selected === null ? [] : [selected],
-							onRowClick: handleRowClick,
-							// 滚动加载只挂最后一天：每天一张表，每张都挂会重复触发
-							...(dayIndex === days.length - 1
-								? { onLoadMore: loadMore, hasMore }
-								: {}),
-						}),
+						"tr",
+						{ key: "state" },
+						h(
+							"td",
+							{ className: "dtl-histlist__cell dtl-histlist__empty", colSpan },
+							loading ? h(Loader, { variant: "blocks", size: "xl" }) : t("historyEmpty"),
+						),
 					),
-				);
+				], { ref: tableRef })
+			: tableOf(rows, { ref: tableRef });
 
 	return h(
 		"div",
 		{ className: "dtl-histlist" },
-		h(
+		filtersOf(),
+		error === null
+			? null
+			: h("div", { className: "dtl-histlist__error" }, `${t("loadFailed")}：${error}`),
+		body,
+	);
+
+	/** 筛选行（工作区 / 执行人 + 年月）。 */
+	function filtersOf(): ReactNode {
+		return h(
 			"div",
 			{ className: "dtl-histlist__filters" },
 			h(
@@ -528,10 +693,6 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							onChange: setOwner,
 						}),
 			),
-		),
-		error === null
-			? null
-			: h("div", { className: "dtl-histlist__error" }, `${t("loadFailed")}：${error}`),
-		...body,
-	);
+		);
+	}
 }

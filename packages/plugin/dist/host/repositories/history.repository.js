@@ -41,9 +41,9 @@ export async function readHistory(workspace, options) {
         options.since,
         "--until",
         options.until,
-        "--limit",
-        String(options.limit),
     ];
+    if (options.limit !== undefined)
+        args.push("--limit", String(options.limit));
     if (options.owner !== undefined)
         args.push("--owner", options.owner);
     return await cached(cacheKey(workspace.id, "history", args.slice(2).join("\u0001")), async () => {

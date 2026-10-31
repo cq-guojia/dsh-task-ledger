@@ -795,6 +795,7 @@ export function BoardHome(props: {
 							onYmChange: setHistYm,
 							scrollTo: histScroll,
 							onScrolled: clearHistScroll,
+							scrollContainer: toolbarScroll,
 						})
 					: board === null
 						? state.status === "error"

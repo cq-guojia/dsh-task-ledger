@@ -336,15 +336,35 @@ const UI_BASE_CSS = `
 .dtl-histlist__filters-side{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto;}
 
 .dtl-histlist__error{color:var(--dtl-danger);font-size:var(--dtl-font-md);padding:var(--dtl-space-2) 0;}
-/* 核心表格默认内距偏紧（用户 2026-10-31：统一放大一档） */
-.dtl-histlist .dshpc-table__cell{padding:var(--dtl-space-3);}
-/* 每天一块（当天**一张**表）：块与块之间不再留白，连成一整块（用户 2026-10-31） */
-.dtl-histlist__dayblock + .dtl-histlist__dayblock{margin-top:0;}
-/* 相邻两张表相接处只留一条线：有下一张表时取消上表底边（用户 2026-10-31） */
-.dtl-histlist__dayblock:has(+ .dtl-histlist__dayblock) .dshpc-table{border-bottom:0;}
-/* 天内的工作区分段行改用核心 SectionHead（accent=business），样式归核心，不在此手搓 */
-/* 同一天里相邻的工作区小表**紧挨着**（用户 2026-10-31：两个工作区之间不要空格），
-   分隔只靠各自表头底色与边框，不额外留 margin */
+/* ── 表格（2026-11-01 起自己画，只渲染窗口内的行）────────────────────────
+   外观逐条照抄核心 Table 的 plain 皮肤：四边外框、灰底表头 + 下边线、行间极淡底线、
+   行悬浮极淡灰、选中行淡蓝底 + 左侧 3px 蓝竖条。唯一的结构差别是「一天一张表」
+   合成「一张表 + 每天一行日期头」—— 原来相邻两张表的边框本来就合并成一条线。 */
+.dtl-histlist__table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;
+  box-sizing:border-box;border:1px solid var(--dtl-border);
+  color:var(--dtl-fg);font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+.dtl-histlist__cell,.dtl-histlist__headcell{box-sizing:border-box;text-align:left;vertical-align:middle;
+  font-weight:400;}
+/* 数据格内距比核心默认放大一档（用户 2026-10-31） */
+.dtl-histlist__cell{height:48px;padding:var(--dtl-space-3);}
+.dtl-histlist__headcell{height:44px;padding:var(--dtl-space-1) var(--dtl-space-3);
+  background:var(--dtl-table-head-bg);border-bottom:1px solid var(--dtl-border);
+  font-size:var(--dtl-font-sm);font-weight:600;color:var(--dtl-fg-2);}
+/* 每天一行日期头：上边线就是原来两张表相接的那条线；整张表的第一行不画（外框已有） */
+.dtl-histlist__dayrow .dtl-histlist__headcell{border-top:1px solid var(--dtl-border);}
+.dtl-histlist__dayrow[data-first='true'] .dtl-histlist__headcell{border-top:0;}
+.dtl-histlist__row{transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-histlist__row[data-interactive='true']{cursor:pointer;}
+.dtl-histlist__row[data-interactive='true']:hover{background:var(--dtl-table-row-hover);}
+.dtl-histlist__row[data-selected='true'],
+.dtl-histlist__row[data-selected='true'][data-interactive='true']:hover{
+  background:linear-gradient(to right,var(--dtl-business) 3px,var(--dtl-business-soft) 3px);}
+.dtl-histlist__row:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+.dtl-histlist__row + .dtl-histlist__row .dtl-histlist__cell{border-top:1px solid var(--dtl-border-faint);}
+/* 屏幕外的行用两个等高占位行顶着滚动高度：无内距、无边框，高度由 JS 给 */
+.dtl-histlist__spacer>td{padding:0;border:0;}
+.dtl-histlist__empty{height:80px;padding:0 var(--dtl-space-4);text-align:center;
+  color:var(--dtl-fg-3);font-size:var(--dtl-font-sm);}
 /* 第一列：标题一行、标签一行（创建徽已挪到「创建人」列，2026-10-31） */
 .dtl-histlist__task{display:flex;flex-direction:column;min-width:0;}
 .dtl-histlist__head{display:flex;align-items:baseline;gap:6px;min-width:0;}
@@ -362,8 +382,12 @@ const UI_BASE_CSS = `
   font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;}
 .dtl-histlist__time-mark{flex:none;width:12px;font-size:var(--dtl-font-xs);font-weight:600;
   color:var(--dtl-fg-3);text-align:left;}
-/* 第二行标签：与待办行同间距（space-2、上留 6px） */
-.dtl-histlist__tags{display:flex;flex-wrap:wrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;}
+/* 第二行标签：与待办行同间距（space-2、上留 6px）；**只摆一行**（行高定死，换行会把
+   虚拟窗口算歪），超出的收成「+N」（组件里给） */
+.dtl-histlist__tags{display:flex;flex-wrap:nowrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;
+  overflow:hidden;}
+.dtl-histlist__tags-rest{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);
+  line-height:var(--dtl-line-sm);}
 `;
 
 const STYLE_ID = "dtl-ui-base";

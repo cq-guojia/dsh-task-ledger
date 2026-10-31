@@ -1,6 +1,6 @@
 # 后端数据面：host 分层架构与性能基线
 
-> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施。**2026-10-28 收敛并清理**：首屏 = 8 卡 + 在办列表 + 各工作区花名册，路由只注册 `/workspaces` 与 `/board/snapshot`（每工作区 `stats --json` + `stats --trend week --last 26w` + `stats --trend day --last 182d` + `list --json` + `owners --json`，跨工作区合并/求和/降级归集）。`/board`、`/board/trend`、`/task`、`/history`、`/filters`、`/claim`、`/release`、`/close` 的实现与空壳函数**已全部删除**（提交 c528eab，删 7 个文件 / 约 3800 行）：接回时按 skill 方法重写，不复用旧直读逻辑
+> **状态**：🔵 已拍板（用户 2026-10-18 接受：三层 + repositories 四件套 + 拆端点 + 缓存；C 改脚本挂起）；分期 1/2 合并实施。**2026-10-28 收敛并清理**：首屏 = 8 卡 + 在办列表 + 各工作区花名册，首屏路由 `/workspaces` 与 `/board/snapshot`（每工作区 `stats --json` + `stats --trend week --last 26w` + `stats --trend day --last 182d` + `list --json` + `owners --json`，跨工作区合并/求和/降级归集）。`/board`、`/board/trend`、`/task`、`/history`、`/filters`、`/claim`、`/release`、`/close` 的实现与空壳函数**已全部删除**（提交 c528eab，删 7 个文件 / 约 3800 行）：接回时按 skill 方法重写，不复用旧直读逻辑。**2026-11-01 起历史页两条只读端点已按 skill 方法重写接回**：`/history/trend`（`stats --trend <gran>`）与 `/history/list`（按月窗口，见 §三「历史列表口径」）
 > **来源**：任务「后端方法抽象：台账读取查询与会话交接」用户要求（2026-10-18）：①所有与台账交互的后端能力抽象成方法；②一个地方统一读；③其他一律调用抽象方法；④架构要健壮、合理、成熟，参考业界成熟分层
 > **配套**：`architecture.md`（运行逻辑）、`code-conventions.md`（方法规范）、`ledger-data.md`（跨包数据契约）、`features/board-home.md`
 
@@ -83,6 +83,8 @@ errors.ts            统一错误模型 + 降级结果类型（横切）
 
 `fresh=1` 在**所有读路由**上生效（`registerRead` 包装：先 `invalidate()` 再算）；客户端手动刷新 / 首读都带它。命中的返回是同一引用（不复制），调用方只读——上层 service 全是纯计算。
 
+**历史列表口径（2026-11-01 改）**：`GET /history/list?ym=YYYY-MM[&workspace=&owner=]` —— **一次只取选中的那个自然月**（`--since 月初 00:00:00 --until 月末 23:59:59`，**不传 `--limit`**），跨工作区按结案时间倒序合并去重后整月下发。原来「近一年窗口 + 每工作区 5000 条封顶」**已删**：窗口收窄到月、条数不设上限（下发的 `capped` 恒为 false，字段留着不动形状）。前端不再做按月过滤，改成按 `ym` 请求 + 60 秒本地缓存；整月在内存里，滚动由前端开窗（DOM 行数与总条数无关）。
+
 ## 四、量级实测（2026-10-18，用户规模假设：10 工作区 × 每月 1000~5000 条）
 
 fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文件（真实造库，非估算）。
@@ -114,7 +116,7 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 
 ## 五点五、版本错配兜底（拆端点的必配项）
 
-> **已不适用（2026-10-28）**：`/board` 全量端点、`/board/trend`、`/history`、`/filters`、`/task` 与写端点均已删除，client 只剩 `/board/snapshot` 与 `/workspaces` 两条请求。只剩一种组合需要注意：
+> **已不适用（2026-10-28）**：`/board` 全量端点、`/board/trend`、`/history`、`/filters`、`/task` 与写端点均已删除。现行 client 请求只有四条：`/workspaces`、`/board/snapshot`、`/history/trend`、`/history/list`。只剩一种组合需要注意：
 
 | 组合 | 行为 |
 |---|---|

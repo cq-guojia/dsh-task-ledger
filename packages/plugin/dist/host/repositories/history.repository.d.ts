@@ -9,7 +9,8 @@ export interface HistoryQueryOptions {
     /** `YYYY-MM-DD HH:MM:SS`（与存盘同形的串，脚本直接字符串比较）。 */
     readonly since: string;
     readonly until: string;
-    readonly limit: number;
+    /** 不给 = 整月全量（2026-11-01 起历史列表按整月取，不再封顶）。 */
+    readonly limit?: number;
     /** 执行人 uuid；不给 = 不限。 */
     readonly owner?: string;
 }

@@ -33,6 +33,11 @@ body{
   /* ── 描边（宿主真值 l1 4% / l2 10% / l3 12%）─────────────────── */
   --dtl-border:var(--dsw-alias-border-l2,#0000001a);
   --dtl-border-strong:var(--dsw-alias-border-l3,#0000001f);
+  /* 行间极淡底线（表格分行用，比 --dtl-border 还淡一档） */
+  --dtl-border-faint:var(--dshpc-border-faint,var(--dsw-alias-border-l1,#0000000a));
+  /* 表格表头底 / 行悬浮底：**取核心 token**，明暗与宿主主题一起走，不在这里另写一套色值 */
+  --dtl-table-head-bg:var(--dshpc-table-head-bg,var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06)));
+  --dtl-table-row-hover:var(--dshpc-table-row-hover,rgba(15,15,15,.015));
 
   /* ── 语义色 ──────────────────────────────────────────────────── */
   /* 蓝色强调 / 选中 / 焦点一律走这条 */
