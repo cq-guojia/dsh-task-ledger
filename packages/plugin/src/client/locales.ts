@@ -110,6 +110,9 @@ export type LocaleKey =
 	| "viewModeLabel"
 	| "viewActive"
 	| "viewHistory"
+	/** 快捷工具栏（核心 QuickToolbar）：回顶部按钮 + 工具栏无障碍名。 */
+	| "backToTop"
+	| "quickToolbarAria"
 	// 历史页顶部 6 数显 + 空态
 	| "historyToday"
 	| "historyYesterday"
@@ -261,6 +264,8 @@ export const zh: Record<LocaleKey, string> = {
 	viewModeLabel: "视图",
 	viewActive: "在办",
 	viewHistory: "历史",
+	backToTop: "回到顶部",
+	quickToolbarAria: "快捷工具栏",
 	historyToday: "今日",
 	historyYesterday: "昨日",
 	historyWeek: "本周",
@@ -411,6 +416,8 @@ export const en: Record<LocaleKey, string> = {
 	viewModeLabel: "View",
 	viewActive: "Active",
 	viewHistory: "History",
+	backToTop: "Back to top",
+	quickToolbarAria: "Quick toolbar",
 	historyToday: "Today",
 	historyYesterday: "Yesterday",
 	historyWeek: "This week",

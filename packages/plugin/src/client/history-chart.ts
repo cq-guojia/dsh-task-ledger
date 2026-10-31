@@ -176,6 +176,10 @@ export function HistoryChart(props: {
 	gran: HistoryGran;
 	/** 列表选中的月份（`YYYY-MM`）：图表窗口按它定位（用户 2026-10-31）。 */
 	anchorYm: string;
+	/** 点柱子选月份：回写到页面，下面列表跟着换月（用户 2026-10-31）。 */
+	onPickMonth: (ym: string) => void;
+	/** 点日 / 周：回写具体哪一天，页面负责把列表滚到那一天（用户 2026-10-31）。 */
+	onPickDate: (date: string) => void;
 	onGranChange: (next: HistoryGran) => void;
 }): ReactNode {
 	const { data, t, gran, onGranChange } = props;
@@ -185,6 +189,9 @@ export function HistoryChart(props: {
 	const [width, setWidth] = useState(0);
 	/** 从最新周期往回翻了几次（每次走 GRAN_STEP 个周期）。 */
 	const [shift, setShift] = useState(0);
+	/** 点柱子后的窗口锁定：只对「那次点击的月份 + 同一粒度」生效；
+	 *  从下面列表换月份时自动失效，回到按月份居中（用户 2026-10-31）。 */
+	const [pin, setPin] = useState<{ end: string; ym: string; gran: HistoryGran } | null>(null);
 
 	useEffect(() => {
 		if (plotEl === null) return;
@@ -211,6 +218,15 @@ export function HistoryChart(props: {
 	// 锚点取「月中」而不是月末：月末当锚点会让整月挤在左半边、月初被切掉（用户 2026-10-31
 	// 实测：选 9 月时 9/1、9/2 没了、后面倒是一堆 10 月）。当前月靠下面的「夹到今天」自动贴右。
 	const anchorKey = keyOf(gran, middleDayOfMonth(props.anchorYm));
+
+	/** 一屏几根柱：只跟宽度走（不折算）。放早返回之前 —— 点柱子重定位也要用它。 */
+	const perScreen = width > 0 ? Math.max(1, Math.floor(width / (SLOT_W + GAP))) : 30;
+	const halfWindow = Math.floor((perScreen - 1) / 2);
+	/** 把某个桶摆到窗口中间所需的「窗口末端」；不能越过今天（未来没数据）。 */
+	const endCentering = (bucketKey: string): string => {
+		const desired = shiftKey(gran, bucketKey, perScreen - 1 - halfWindow);
+		return desired > todayKey ? todayKey : desired;
+	};
 
 	/** 选中月的日期范围；**与它有交叠的桶都算选中**（日=当月各天，周=跨到该月的各周，月=该月）。
 	 *  2026-10-31 用户定：不是只亮一根，而是整段底色。 */
@@ -308,17 +324,27 @@ export function HistoryChart(props: {
 		);
 	}
 
-	// 一屏几根柱：只跟宽度走（日就看 N 天、周就看 N 周、月就看 N 月，不折算）
-	const perScreen = width > 0 ? Math.max(1, Math.floor(width / (SLOT_W + GAP))) : 30;
-
-	// 窗口：选中月尽量**居中**（用户 2026-10-31）——锚点右侧留足半屏；右侧不够（未来没那么多
-	// 数据）就把窗口末端贴到今天。选当前月时锚点 = 今天 ⇒ 自然落在最右一格。
+	// 窗口：选中月尽量**居中**；点过柱子就用那次锁定的末端（点月份 = 窗口不动）。
 	// 翻页不设边界 —— 数据窗口（最近 365 天）之外一律补空槽（柱没有、曲线是直线）。
 	const byKey = new Map(data.buckets.map((bucket) => [bucket.key, bucket]));
-	const offset = shift * step;
-	const half = Math.floor((perScreen - 1) / 2);
-	const desiredEnd = shiftKey(gran, anchorKey, perScreen - 1 - half);
-	const endKey = shiftKey(gran, desiredEnd > todayKey ? todayKey : desiredEnd, -offset);
+	const pinnedEnd = pin !== null && pin.ym === props.anchorYm && pin.gran === gran ? pin.end : null;
+	const endKey = shiftKey(gran, pinnedEnd ?? endCentering(anchorKey), -shift * step);
+
+	/** 点一根柱子 = 快捷选择（用户 2026-10-31 定稿）：**图表自己不动**，
+	 *  只把「选了哪个月 / 哪一天」告诉页面；滚动到列表里的位置由页面负责。
+	 *  月 → 只切月份；周 → 切月 + 滚到该周最后一天；日 → 切月 + 滚到那一天。
+	 *  空桶也有锚点（每格都渲染），所以不找"最近有数据"、不轮询。 */
+	const pickBar = (bucket: HistoryBucket): void => {
+		if (gran === "month") {
+			const ym = bucket.key.slice(0, 7);
+			setPin({ end: endKey, ym, gran }); // 锁住窗口：换月不让图表跳
+			props.onPickMonth(ym);
+			return;
+		}
+		const date = gran === "day" ? bucket.key : bucket.to;
+		setPin({ end: endKey, ym: date.slice(0, 7), gran });
+		props.onPickDate(date);
+	};
 	const buckets: HistoryBucket[] = [];
 	for (let back = perScreen - 1; back >= 0; back -= 1) {
 		const key = shiftKey(gran, endKey, -back);
@@ -487,13 +513,17 @@ export function HistoryChart(props: {
 		// 空列也挂浮卡：柱可以为空、x 轴标签也可以跳着不画，但悬停时该周期的时间必须显出来
 		//（用户 2026-10-30）。没有 0 值行 ⇒ 这类浮卡只剩一行日期。
 		if (total <= 0) {
-			return h("div", { key: colKey, className, style }, tipOf(bucket));
+			return h(
+				"div",
+				{ key: colKey, className, style, onClick: () => pickBar(bucket) },
+				tipOf(bucket),
+			);
 		}
 		const segments = segmentsOf(bucket);
 		const height = peak === 0 ? 0 : Math.max((total / peak) * 100, 2);
 		return h(
 			"div",
-			{ key: colKey, className, style },
+			{ key: colKey, className, style, onClick: () => pickBar(bucket) },
 			h(
 				"div",
 				{ className: "dtl-hist__bar", style: { height: `${String(height)}%` } },

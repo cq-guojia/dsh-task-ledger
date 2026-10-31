@@ -20,6 +20,7 @@ import {
 import {
 	createElement as h,
 	type ReactNode,
+	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
@@ -63,6 +64,7 @@ import {
 	ensureUiBase,
 	Loader,
 	notify,
+	QuickToolbar,
 	SearchInput,
 	SectionHead,
 	Segmented,
@@ -198,6 +200,13 @@ export function BoardHome(props: {
 	ensureUiBase();
 	const state = useSyncExternalStore(boardSubscribe, boardSnapshot);
 	const mountRef = useRef<HTMLDivElement>(null);
+	/** 内容滚动层（`pageStyle` 那一层）：快捷工具栏的「回到顶部」滚它（不是 window）。 */
+	const scrollRef = useRef<HTMLDivElement>(null);
+	/** 核心内容区（max-width 1280 那层）：快捷工具栏横向贴它的**右缘外侧**，不挂窗口右下角。 */
+	const contentRef = useRef<HTMLDivElement>(null);
+	/** 两个 ref 的取值回调：引用要稳（核心按引用做 effect 依赖，每次新建会反复重算位置）。 */
+	const toolbarAnchor = useCallback((): HTMLElement | null => contentRef.current, []);
+	const toolbarScroll = useCallback((): HTMLElement | null => scrollRef.current, []);
 	// 视图模式：在办看板 ↔ 历史查询（入口切换；历史页布局待定稿，先占位）。
 	const [viewMode, setViewMode] = useState<"active" | "history">("active");
 	// 首页趋势图的粒度（日 / 周），默认日（用户 2026-10-31 起要；收尾时把默认从周翻到日）。两档桶都随快照下来 ⇒ 切换零请求。
@@ -210,6 +219,8 @@ export function BoardHome(props: {
 		const today = new Date();
 		return `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 	});
+	// 点图表里的日 / 周：把列表滚到那一天（token 每次点击自增，同一天连点也能再滚）
+	const [histScroll, setHistScroll] = useState<{ date: string; token: number } | null>(null);
 	const [historyByGran, setHistoryByGran] = useState<
 		Partial<Record<HistoryGran, HistoryTrendPayload>>
 	>({});
@@ -372,7 +383,9 @@ export function BoardHome(props: {
 
 	/** 统计台卡：数字 = **结案**（完成 + 取消）；有取消时小字拆「完成 X · 取消 Y」
 	 *  （术语 2026-10-29 用户拍板：结案是上位词，完成只指正常结案）。
-	 *  不可点，hover 给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。 */
+	 *  点一下 = 跳历史页 + 选到该周所在月 + 滚到那周的锚点（用户 2026-10-31）；
+	 *  hover 仍给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。
+	 *  锚点取区间末日（本周 = 今天、上周 = 上周日）：列表按天倒序，从这天往下正好覆盖整周。 */
 	const weekCard = (
 		label: LocaleKey,
 		total: number | null,
@@ -387,8 +400,12 @@ export function BoardHome(props: {
 				cancelled !== null && cancelled > 0
 					? t("statWeekSplit", { done: (total ?? 0) - cancelled, cancelled })
 					: "",
-			interactive: false,
 			title: t("periodRange", { from, to }),
+			onClick: () => {
+				setViewMode("history");
+				setHistYm(to.slice(0, 7));
+				setHistScroll((prev) => ({ date: to, token: (prev?.token ?? 0) + 1 }));
+			},
 		});
 
 	/** 左 8 块（2×4）+ 右趋势图。
@@ -595,10 +612,11 @@ export function BoardHome(props: {
 		{ ref: mountRef, style: mountStyle },
 		h(
 			"div",
-			{ style: { ...pageStyle, display: "flex", justifyContent: "center" } },
+			{ ref: scrollRef, style: { ...pageStyle, display: "flex", justifyContent: "center" } },
 			h(
 				"div",
 				{
+					ref: contentRef,
 					style: {
 						width: "100%",
 						maxWidth: "1280px",
@@ -706,6 +724,14 @@ export function BoardHome(props: {
 											t,
 											gran,
 											anchorYm: histYm,
+											onPickMonth: setHistYm,
+											onPickDate: (date) => {
+												setHistYm(date.slice(0, 7));
+												setHistScroll((prev) => ({
+													date,
+													token: (prev?.token ?? 0) + 1,
+												}));
+											},
 											onGranChange: setGran,
 										}),
 										h(HistoryStats, {
@@ -760,6 +786,7 @@ export function BoardHome(props: {
 							onOpen: openPreview,
 							ym: histYm,
 							onYmChange: setHistYm,
+							scrollTo: histScroll,
 						})
 					: board === null
 						? state.status === "error"
@@ -838,6 +865,15 @@ export function BoardHome(props: {
 				// 页脚留白：滚到底时最后一条卡不贴浏览器底边（高度与上方内边距同档）
 				h("div", { className: "dtl-page-foot" }),
 			),
+			// 快捷工具栏（核心 QuickToolbar，内置「回到顶部」）：核心区有 max-width，横向贴
+			// 内容区右缘外侧，不挂窗口右下角（用户 2026-10-31）；纵向按核心约定恒贴屏幕底边。
+			// 挂在视图切换之外 ⇒ 在办 / 历史两页共用这一处，切页不重挂、按钮不闪。
+			h(QuickToolbar, {
+				anchor: toolbarAnchor,
+				scrollContainer: toolbarScroll,
+				backToTop: { label: t("backToTop") },
+				ariaLabel: t("quickToolbarAria"),
+			}),
 		),
 	);
 }

@@ -73,8 +73,9 @@ const UI_BASE_CSS = `
 
 /* 历史日柱：柱间距 2px、悬停虚线框 + 浮卡。
    翻页按钮**飘**在图区右上角（绝对定位，不单独占一行）——压在柱子上也无妨（用户 2026-10-29）。 */
-/* z-index:1 同趋势图：浮卡要被下方那排 input / select 压着还是压过去，全靠这层 */
-.dtl-hist{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
+/* 浮卡层级：核心 Segmented 的段本身是 z-index:1，和原来的 z-index:1 打平 ⇒ 后出现的滑块
+   把悬停浮卡盖住了（用户 2026-10-31：浮卡被「一月/二月…」压住）。这里抬到 3 稳压它。 */
+.dtl-hist{position:relative;z-index:3;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
   /* 单列（≤960）时 height:100% 解析成 auto，光靠 flex 撑不出高度 ⇒ 用右侧两行卡的总高兜底，
      两栏并排时这个值恰好等于 stretch 给的高度，等于没改 */
   min-height:calc(var(--dtl-stat-h) * 2 + var(--dtl-space-3));
@@ -99,10 +100,12 @@ const UI_BASE_CSS = `
 .dtl-hist__gridline--none{border-top:none;}
 .dtl-hist__cols{position:absolute;inset:0;display:flex;justify-content:flex-start;gap:2px;}
 .dtl-hist__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
-  transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
+  transition:filter var(--dtl-dur-fast) var(--dtl-ease);cursor:pointer;}
 .dtl-hist__col:hover{filter:brightness(1.1);}
-/* 选中月的每一格：与 hover 同形状的填充块（不画边线），一格一格连成一排（用户 2026-10-31） */
-.dtl-hist__col--focus{background:var(--dtl-business-soft);border-radius:var(--dtl-radius-xs);}
+/* 选中月的每一格：与 hover 同形状的填充块（不画边线），一格一格连成一排。
+   用中性灰、比原 business 底再淡一档，不抢柱子（用户 2026-10-31） */
+.dtl-hist__col--focus{background:color-mix(in srgb,var(--dtl-fg) 6%,transparent);
+  border-radius:var(--dtl-radius-xs);}
 .dtl-hist__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
   border-radius:var(--dtl-radius-xs);pointer-events:none;}
 /* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 把内部分段的方角裁成圆角
@@ -537,6 +540,10 @@ export { SectionHead } from "dsh-plugin-core/ui";
 /** 拼接外壳：左下拉 + 右滑块焊成一体（外框 / 分隔 / 聚焦圈归核心）。
  *  注意：`Segmented` 本文件已有同名适配层，不要再从核心重复导出。 */
 export { SplitGroup } from "dsh-plugin-core/ui";
+
+/** 快捷工具栏（核心 0.15.0 起，内置「回到顶部」）：右侧一列圆钮。
+ *  `anchor` 给核心内容区容器 ⇒ 横向贴它的右缘外侧；不给才挂整个窗口右下角（本项目不要那种）。 */
+export { QuickToolbar } from "dsh-plugin-core/ui";
 
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 

@@ -73,6 +73,8 @@ export interface HistoryListProps {
 	/** 选中的月份（`YYYY-MM`）：受控在页面层，与上方图表联动（用户 2026-10-31）。 */
 	readonly ym: string;
 	readonly onYmChange: (next: string) => void;
+	/** 点图表日 / 周后要滚到的那一天；`token` 每次点击自增（同一天连点也能再滚）。 */
+	readonly scrollTo: { date: string; token: number } | null;
 }
 
 /** 当天某个工作区的一段（同一天里按工作区分段，段首一行写工作区名）。 */
@@ -235,6 +237,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const [selected, setSelected] = useState<string | null>(null);
 	/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
 	const pendingOpen = useRef<number | null>(null);
+	/** 已经处理过的滚动请求 token（同一次点击只滚一次）。 */
+	const lastScrollToken = useRef<number>(-1);
 	useEffect(
 		() => () => {
 			if (pendingOpen.current !== null) window.clearTimeout(pendingOpen.current);
@@ -310,6 +314,44 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		}));
 	}, [orderOf, props.solo, t, visible]);
 
+	// 点图表里的日 / 周 / 「本周结案」卡 ⇒ 页面滚到列表里那一天（用户 2026-10-31）。
+	// 两层等待，少一层就滚偏：
+	//  ① **数据**：列表是整窗一次拉回、前端按天分页，只渲染第一页 ⇒ 先把分页扩到目标天
+	//     所在的那一页，等它渲染出来、days 变了再重进本 effect（中间几页照常渲染，不跳过）；
+	//  ② **定位**：目标天**没有记录**时（周末、或被工作区/执行人滤掉）落到「目标日或更早的
+	//     最近一天」。这一步必须在**全量** scoped 里算 —— 老实现只在已渲染的块里找最近，
+	//     于是点「上周结案」（上周日多半没结案）会停在第一页最后一天（用户 2026-10-31 真机）。
+	useEffect(() => {
+		const target = props.scrollTo;
+		if (target === null || target.token === lastScrollToken.current) return;
+		const dayOf = (record: HistoryRecord): string => record.finished.slice(0, 10);
+		const fallback =
+			scoped.find((record) => dayOf(record) < target.date) ?? scoped[scoped.length - 1];
+		const day = scoped.some((record) => dayOf(record) === target.date)
+			? target.date
+			: fallback?.finished.slice(0, 10);
+		if (day === undefined) {
+			// 本月一条记录都没有：没有可滚的位置，直接记为已处理，别挂在那里等
+			lastScrollToken.current = target.token;
+			return;
+		}
+		const pageOfTarget = pages.findIndex((page) => page.some((record) => dayOf(record) === day));
+		if (pageOfTarget >= pageCount) {
+			// 数据已在内存，只是本地分页没渲染 ⇒ 扩到那一页就等下一次（不标记 token）
+			setPageCount((count) => Math.max(count, pageOfTarget + 1));
+			return;
+		}
+		// 记录还没到（首读 / 换筛选）：等它到，此时滚了一定不准
+		if (loading) return;
+		const el = Array.from(document.querySelectorAll<HTMLElement>("[data-dsh-day]")).find(
+			(node) => node.dataset.dshDay === day,
+		);
+		// 那一天还没渲染出来 ⇒ 不标记 token，等 days 变化再进
+		if (el === undefined) return;
+		lastScrollToken.current = target.token;
+		el.scrollIntoView({ block: "start", behavior: "smooth" });
+	}, [days, loading, pageCount, pages, props.scrollTo, scoped]);
+
 	// 单人台账：执行人整列不摆（与待办里「单人不显示执行人名」同一条规矩）
 	const columnsOf = useCallback(
 		(title: ReactNode): readonly TableColumn[] => [
@@ -376,7 +418,11 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			: days.map((block, dayIndex) =>
 					h(
 						"div",
-						{ key: block.day, className: "dtl-histlist__dayblock" },
+						{
+							key: block.day,
+							className: "dtl-histlist__dayblock",
+							"data-dsh-day": block.day,
+						},
 						h(Table, {
 							columns: columnsOf(
 								h(SectionHead, {
