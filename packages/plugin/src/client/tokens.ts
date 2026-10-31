@@ -52,6 +52,9 @@ body{
   --dtl-overdue:color-mix(in srgb,var(--dtl-warning) 55%,var(--dtl-danger));
   /* 语义色浅底：color-mix 现算 ⇒ 跟随宿主 alias，主题一换自动成立 */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
+  /* 待认领标签底：中性灰，比 #标签 那层（chip-bg 7% 黑）深一档、又不到深灰块（用户 2026-11-01）；
+     由 --dtl-fg 现算 ⇒ 暗色下自动变成 13% 白，不用另开明暗分支 */
+  --dtl-chip-strong:color-mix(in srgb,var(--dtl-fg) 13%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
   /* ── 图表色（2026-10-30 用户改版）───────────────────────────────

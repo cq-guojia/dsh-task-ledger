@@ -54062,6 +54062,9 @@ body{
   --dtl-overdue:color-mix(in srgb,var(--dtl-warning) 55%,var(--dtl-danger));
   /* 语义色浅底：color-mix 现算 ⇒ 跟随宿主 alias，主题一换自动成立 */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 14%,transparent);
+  /* 待认领标签底：中性灰，比 #标签 那层（chip-bg 7% 黑）深一档、又不到深灰块（用户 2026-11-01）；
+     由 --dtl-fg 现算 ⇒ 暗色下自动变成 13% 白，不用另开明暗分支 */
+  --dtl-chip-strong:color-mix(in srgb,var(--dtl-fg) 13%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
 
   /* ── 图表色（2026-10-30 用户改版）───────────────────────────────
@@ -54427,6 +54430,10 @@ body[data-ds-dark-theme]{
 .dtl-rail--overdue{background:var(--dtl-overdue);}
 .dtl-rail--stale{background:var(--dtl-danger);}
 .dtl-rail--open{background:var(--dtl-fg-3);}
+/* 待认领标签：灰系，比 #标签 那层深一档、又不到深灰块（用户 2026-11-01；实心 slate 太深、
+   纯 neutral 又跟 #标签 一个样、蓝色系不要）。只喂核心 Chip 自己的 --chip-* 变量，
+   并抬一级优先级压过 .dshpc-chip--business，不覆盖它的皮肤。 */
+.dshpc-chip.dtl-chip--open{--chip-bg:var(--dtl-chip-strong);--chip-fg:var(--dtl-fg);}
 
 /* 第一行：标题（上来就是标题）+ [YYYY-MM-DD 创建] 灰徽 + 异常 pill（baseline 对齐，dispatch 同款） */
 .dtl-taskrow__l1{display:flex;align-items:baseline;gap:6px;min-width:0;}
@@ -54668,8 +54675,8 @@ body[data-ds-dark-theme]{
 		}
 		/** 本地 7 档语义色 → 核心 `Chip` 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
 		*  overdue 与 stale 都落到 danger、doing 与 person 落到 business（需 core 补 tone 才能精确）。
-		*  待认领原用 `slate`（实心深灰），浅色主题下太重 ⇒ 改回 `neutral` 浅灰
-		*  （用户 2026-11-01；代价是跟 #标签 同色，靠 `#` 前缀与排位区分）。
+		*  待认领：灰系，但比 #标签 那层深一档 —— 底色由 `.dtl-chip--open` 换掉（实心 slate 浅色主题下
+		*  太重、纯 neutral 又跟 #标签 一个样，用户 2026-11-01）。
 		*  工作区用 `cyan`（用户 2026-11-01）。 */
 		const CHIP_TONE = {
 			neutral: "neutral",
@@ -54690,6 +54697,7 @@ body[data-ds-dark-theme]{
 			const { text, tone = "neutral", tip, onClick, maxWidth } = props;
 			const chip = (0, react$1.createElement)(Chip, {
 				tone: CHIP_TONE[tone],
+				className: tone === "open" ? "dtl-chip--open" : void 0,
 				onClick,
 				maxWidth
 			}, text);
@@ -56702,8 +56710,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-011359-556`
-			}, `v0.0.126 261101-011359-556`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-020451-138`
+			}, `v0.0.126 261101-020451-138`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

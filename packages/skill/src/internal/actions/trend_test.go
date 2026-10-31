@@ -358,6 +358,46 @@ func TestTrendCachedResultEqualsLive(t *testing.T) {
 // 造法：一条 2025-12-10 建、2026-03-10 结的任务 ⇒ 2025-12 那次冷查询把锚写下来；
 // 之后删掉 2026-03 的历史文件 —— 若查 2026-01 仍然算得出「未结 1」，说明用的是
 // 「2025-12 月末锚 + 2026-01 流水」正向推，而不是从今天往回倒（倒推会得 0）。
+// 在办任务的创建日落在已过完的月份 ⇒ 那个月**不进整月缓存**。
+// 旧口径把它也存进缓存里，运行时又按在办加一份 ⇒ 未结从那天起永远多 1（2026-11-01 真机）。
+func TestTrendOpenTaskMonthIsNotCached(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("TASK_LEDGER_HOME", home)
+	// 上个月建的、至今没结（在办）⇒ 它的创建日落在一个已过完的月份里
+	created := time.Now().AddDate(0, -1, 0)
+	repo, me := tempLedger(t, map[string]any{
+		"tid": "20261026-0917-跨月在办-aaaa", "status": "open",
+		"title": "跨月在办", "created": localStamp(created),
+	})
+
+	q := TrendQuery{Granularity: "month", Last: "3m"}
+	first, err := TrendStats(repo, me, q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 第二次会走到「吃缓存」那条路：未结不该比第一次多 1
+	second, err := TrendStats(repo, me, q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(first.Buckets, second.Buckets) {
+		t.Errorf("同一段历史连查两次结果不一致（在办任务被重复计数）：第一次 %+v / 第二次 %+v", first.Buckets, second.Buckets)
+	}
+	ym := created.Format("200601")
+	for _, bucket := range second.Buckets {
+		if bucket.From != created.Format("2006-01")+"-01" {
+			continue
+		}
+		// 真值：那条任务从创建那天起一直挂着 ⇒ 该月末未结 1
+		if bucket.Open != 1 {
+			t.Errorf("%s 月末未结应为 1（只有那一条在办），实际 %d", ym, bucket.Open)
+		}
+	}
+	if _, statErr := os.Stat(filepath.Join(trendCacheDirFor(t, repo), ym+".json")); statErr == nil {
+		t.Errorf("%s 有在办任务创建，不该落整月缓存（缓存里再存一份就会重复计数）", ym)
+	}
+}
+
 func TestTrendUsesLeftAnchorAndSkipsLaterMonths(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("TASK_LEDGER_HOME", home)

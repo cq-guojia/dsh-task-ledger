@@ -29,7 +29,8 @@ import (
 // 当月永远实时算；缓存只加速，算错 / 写不进去都只是慢一点，不影响结果。
 
 // TrendAlgo 口径版本：一变，全部缓存视为过期（不必依赖文件时间）。
-const TrendAlgo = 4
+// 5（2026-11-01）：月缓存不再存放「有在办任务创建」的月份 —— 4 及以前的缓存可能带着未结 +1。
+const TrendAlgo = 5
 
 const (
 	defaultTrendLast = "8w"
@@ -540,9 +541,12 @@ func trendLoad(repo, firstMonth, lastMonth, today string) (*trendSeries, map[str
 
 	series := newTrendSeries()
 	currentByOwner := map[string]int{}
+	// 有在办任务创建的本地月：这些月不进整月缓存（见下方保存处）。
+	openMonths := map[string]bool{}
 	for _, task := range rows {
 		if day := trendLocalDay(strOfAny(task["created"])); day != "" {
 			series.add(day, core.Normalize(strOfAny(task["creator"])), ownerOf(task))
+			openMonths[trendMonthKey(day)] = true
 		}
 		if owner := ownerOf(task); owner != "" {
 			currentByOwner[owner]++
@@ -610,6 +614,12 @@ func trendLoad(repo, firstMonth, lastMonth, today string) (*trendSeries, map[str
 		}
 		for _, ym := range missing {
 			if !window[ym] || ym == todayMonth {
+				continue
+			}
+			// 在办任务的创建**不能进缓存**：它不在历史文件里（源文件指纹查不到它的增删），
+			// 缓存里存一份、运行时又按在办加一份 ⇒ 那条任务从创建日起让未结永远多 1
+			// （2026-11-01 真机：10 月缓存 + 10-26 的在办任务 ⇒ 10-31 未结算成 3，真值 2）。
+			if openMonths[ym] {
 				continue
 			}
 			if m := series.month(ym, repo, today); m != nil {
