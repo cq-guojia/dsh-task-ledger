@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261031-1731-0c73-修复趋势未结重复计数": {"category": "缺陷修复", "created": "2026-10-31 17:31:31", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-31 17:31:31", "status": "doing", "tags": ["趋势", "缓存", "未结"], "title": "修复趋势未结重复计数", "updated": "2026-10-31 17:31:31", "worklog": "worklog/202610/31-1731-0c73-修复趋势未结重复计数.md"}
+    "20261031-1731-0c73-修复趋势未结重复计数": {"category": "缺陷修复", "created": "2026-10-31 17:31:31", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-10-31 17:31:31", "status": "doing", "tags": ["趋势", "缓存", "未结"], "title": "修复趋势未结重复计数", "updated": "2026-10-31 17:44:06", "worklog": "worklog/202610/31-1731-0c73-修复趋势未结重复计数.md"}
   },
   "version": "20261022000000"
 }
