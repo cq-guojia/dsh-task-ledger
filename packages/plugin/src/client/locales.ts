@@ -127,6 +127,12 @@ export type LocaleKey =
 	| "historyGranMonth"
 	| "historyPrev"
 	| "historyNext"
+	// 历史列表（表格）
+	| "histColTask"
+	| "histColOwner"
+	| "histColStart"
+	| "histColEnd"
+	| "histListLabel"
 	// 空态
 	// 浮标入口
 
@@ -246,6 +252,11 @@ export const zh: Record<LocaleKey, string> = {
 	historyGranMonth: "月",
 	historyPrev: "前 {n} {unit}",
 	historyNext: "后 {n} {unit}",
+	histColTask: "任务",
+	histColOwner: "执行人",
+	histColStart: "开始时间",
+	histColEnd: "结束时间",
+	histListLabel: "结案记录",
 
 
 };
@@ -367,6 +378,11 @@ export const en: Record<LocaleKey, string> = {
 	historyGranMonth: "Month",
 	historyPrev: "Previous {n} {unit}s",
 	historyNext: "Next {n} {unit}s",
+	histColTask: "Task",
+	histColOwner: "Owner",
+	histColStart: "Started",
+	histColEnd: "Closed",
+	histListLabel: "Closed tasks",
 
 
 };

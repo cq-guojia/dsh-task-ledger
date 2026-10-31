@@ -165,6 +165,33 @@ export interface HistoryTrendPayload {
 
 
 
+/** 一条已结案记录（`/history/list` 的一项；`key` 用于翻页去重）。 */
+export interface HistoryRecord {
+	readonly key: string;
+	readonly workspaceId: string;
+	readonly workspaceTitle: string;
+	readonly title: string;
+	readonly summary: string;
+	readonly category: string;
+	readonly tags: readonly string[];
+	readonly result: string;
+	readonly owner: string;
+	readonly ownerName: string;
+	readonly creator: string;
+	readonly creatorName: string;
+	readonly created: string;
+	readonly finished: string;
+	/** 过程文档绝对路径；空串 = 这行没有 worklog，不可点开。 */
+	readonly filePath: string;
+}
+
+/** `/history/list` 响应：近一年窗口内的全部结案记录（分页由前端按天切片）。 */
+export interface HistoryListPayload {
+	readonly records: readonly HistoryRecord[];
+	readonly capped: boolean;
+	readonly degraded?: readonly DegradedInfo[];
+}
+
 /** 一个工作区的成员名单（skill `owners --json`）。 */
 export interface WorkspaceOwners {
 	readonly workspaceId: string;

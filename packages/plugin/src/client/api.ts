@@ -8,7 +8,12 @@
  * 而不带 reason 时浏览器把 error.message 填成「signal is aborted without reason」，
  * 看不出是超时（姊妹仓 2026-10-07 真机教训）。
  */
-import type { BoardPayload, HistoryGran, HistoryTrendPayload } from "./types";
+import type {
+	BoardPayload,
+	HistoryGran,
+	HistoryListPayload,
+	HistoryTrendPayload,
+} from "./types";
 
 /** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
 export const API_PREFIX = "api/task-ledger";
@@ -76,4 +81,20 @@ export function fetchBoardSnapshot(
 /** 历史页顶部趋势（gran = 柱图粒度；切粒度 = 重新请求，host 有读缓存）。 */
 export function fetchHistoryTrend(gran: HistoryGran = "day"): Promise<HistoryTrendPayload> {
 	return fetchJson<HistoryTrendPayload>(`/history/trend?gran=${gran}`);
+}
+
+/** 历史页列表：整窗一次取回（近一年），分页由前端按天切片。 */
+export function fetchHistoryList(query: {
+	workspace?: string;
+	owner?: string;
+}): Promise<HistoryListPayload> {
+	const params = new URLSearchParams();
+	if (query.workspace !== undefined && query.workspace !== "")
+		params.set("workspace", query.workspace);
+	if (query.owner !== undefined && query.owner !== "")
+		params.set("owner", query.owner);
+	const suffix = params.toString();
+	return fetchJson<HistoryListPayload>(
+		`/history/list${suffix === "" ? "" : `?${suffix}`}`,
+	);
 }

@@ -201,6 +201,35 @@ export interface HistoryTrendView {
 export interface HistoryTrendPayload extends HistoryTrendView {
     readonly degraded: readonly DegradedInfo[];
 }
+/** 一条已结案记录（skill `history --json` 的 records 项 + 工作区身份）。 */
+export interface HistoryRecord {
+    /** 唯一键 `${src}:${line}`：翻页时跨页重复的那几条靠它去重。 */
+    readonly key: string;
+    readonly workspaceId: string;
+    readonly workspaceTitle: string;
+    readonly title: string;
+    readonly summary: string;
+    readonly category: string;
+    readonly tags: readonly string[];
+    /** done / cancelled（skill 口径）。 */
+    readonly result: string;
+    readonly owner: string;
+    readonly ownerName: string;
+    readonly creator: string;
+    readonly creatorName: string;
+    readonly created: string;
+    readonly finished: string;
+    /** 过程文档绝对路径；空串 = 这行没有 worklog，不可点开。 */
+    readonly filePath: string;
+}
+/** `/history/list` 响应：近一年窗口内的结案记录（按结案时间倒序）。
+ *  分页不在这里做 —— 前端按「整天凑够 20 条」切片展示。 */
+export interface HistoryListPayload {
+    readonly records: readonly HistoryRecord[];
+    /** 窗口内记录超过读取上限（一年 5000 条）：此时列表底部不再追加。 */
+    readonly capped: boolean;
+    readonly degraded: readonly DegradedInfo[];
+}
 /** 一个工作区的花名册（skill `owners --json`：含当前没任务的人）。 */
 export interface WorkspaceOwners {
     readonly workspaceId: string;

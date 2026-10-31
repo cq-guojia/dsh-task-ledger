@@ -318,6 +318,31 @@ const UI_BASE_CSS = `
 .dtl-empty-guide{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:var(--dtl-space-2);min-height:270px;padding:var(--dtl-space-4);text-align:center;
   border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
+
+/* 历史页列表（2026-10-31）：筛选行 + 核心 Table。
+   ⚠️ 类名前缀是 dtl-histlist，**不能叫 .dtl-hist** —— 那个已被历史图表卡占用
+   （带 padding / min-height / flex），撞上就把图表整块撑歪。
+   列不画竖线（列定义不写 divider）；每行第一列是任务名 + 标签两行，与待办行同款。 */
+.dtl-histlist{margin-top:var(--dtl-space-4);}
+.dtl-histlist__filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:var(--dtl-space-3);}
+.dtl-histlist__error{color:var(--dtl-danger);font-size:var(--dtl-font-md);padding:var(--dtl-space-2) 0;}
+/* 核心表格默认内距偏紧（用户 2026-10-31：统一放大一档） */
+.dtl-histlist .dshpc-table__cell{padding:var(--dtl-space-3);}
+/* 日期那行（竖线 + 日期）整体右移 4px（用户 2026-10-31） */
+.dtl-histlist__daytitle{margin-left:4px;}
+/* 每天一块（日期 SectionHead + 当天各工作区的小表）：块与块之间留白 */
+.dtl-histlist__dayblock + .dtl-histlist__dayblock{margin-top:var(--dtl-space-4);}
+/* 同一天里相邻的工作区小表**紧挨着**（用户 2026-10-31：两个工作区之间不要空格），
+   分隔只靠各自表头底色与边框，不额外留 margin */
+/* 第一列**照抄待办行**（2026-10-31）：标题 + 创建徽一行、标签一行 */
+.dtl-histlist__task{display:flex;flex-direction:column;min-width:0;}
+.dtl-histlist__head{display:flex;align-items:baseline;gap:6px;min-width:0;}
+.dtl-histlist__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);
+  min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dtl-histlist__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+/* 第二行标签：与待办行同间距（space-2、上留 6px） */
+.dtl-histlist__tags{display:flex;flex-wrap:wrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;}
 `;
 
 const STYLE_ID = "dtl-ui-base";

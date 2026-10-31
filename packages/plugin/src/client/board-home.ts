@@ -48,6 +48,7 @@ import {
 } from "./store";
 import { fetchHistoryTrend } from "./api";
 import { HistoryChart, HistoryStats } from "./history-chart";
+import { HistoryList } from "./history-list";
 import { TaskRowView } from "./task-row";
 import { TrendChart } from "./trend-chart";
 import type {
@@ -222,6 +223,12 @@ export function BoardHome(props: {
 		(lastTrendRef.current !== null && lastTrendRef.current.gran === gran
 			? lastTrendRef.current.payload
 			: null);
+
+	/** 右侧 dock 打开一个台账文件（历史页点行也走这条：与「查看」同一条链路）。 */
+	const openPreview = (filePath: string): void => {
+		const mount = mountRef.current;
+		if (mount !== null) openFilePreview({ mount, path: filePath });
+	};
 
 	/** 查看：右侧 dock 预览过程文档；没有就打开台账文件夹（目录树）。
 	 *  文件服务 / 会话 / flex 全由核心（connectHost 接线）接管，这里只给容器 + 路径。 */
@@ -739,7 +746,13 @@ export function BoardHome(props: {
 				// 首屏没数据（board === null）≠ 空结果：列表位只放局部加载，别拿「没有任务」骗人；
 				// 读挂了由上面那行错误 + 重试承担，列表位不再空转。
 				viewMode === "history"
-					? null
+					? h(HistoryList, {
+							t,
+							workspaceOptions,
+							ownerGroups: ownerOptionGroups,
+							solo,
+							onOpen: openPreview,
+						})
 					: board === null
 						? state.status === "error"
 							? null

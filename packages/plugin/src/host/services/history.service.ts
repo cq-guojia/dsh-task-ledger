@@ -5,10 +5,13 @@
  * （用户 2026-10-30 定：聚合算法不自己写，本地只加总，免得与核心口径漂移）。
  */
 import { settleWorkspaces } from "../errors.js";
+import { readHistory } from "../repositories/history.repository.js";
 import { readTrendGran, type WorkspaceTrend } from "../repositories/trend.repository.js";
 import type {
 	HistoryBucket,
 	HistoryGran,
+	HistoryListPayload,
+	HistoryRecord,
 	HistoryTrendPayload,
 	HistoryTotals,
 	LedgerWorkspace,
@@ -174,6 +177,61 @@ export async function getHistoryTrend(
 		})),
 		buckets,
 		totals,
+		degraded: settled.degraded,
+	};
+}
+
+/** 历史列表的查询：日期窗固定近一年，只剩执行人一个筛选（工作区在路由层收窄）。 */
+export interface HistoryListQuery {
+	/** 执行人 uuid。 */
+	readonly owner?: string;
+}
+
+/** 一年窗口的读取上限：正常个人台账远够；超了就是 `capped`，列表底部不再追加。
+ *  shortcut: 一年超 5000 条时列表会被截断，等真有人跑满再改成按月/按天窗口分次读。 */
+const HISTORY_WINDOW_ROWS = 5000;
+
+/**
+ * 历史明细跨工作区合并：按结案时间倒序、按 `key` 去重，**一次下发整窗**。
+ * 分页不在这里做 —— 前端按「整天凑够 20 条」切片，切页零请求。
+ */
+export async function getHistoryList(
+	workspaces: readonly LedgerWorkspace[],
+	query: HistoryListQuery,
+): Promise<HistoryListPayload> {
+	const today = ymdOf(new Date());
+	const since = `${addDays(today, -364)} 00:00:00`;
+	const until = `${today} 23:59:59`;
+	const settled = await settleWorkspaces<
+		LedgerWorkspace,
+		{ records: HistoryRecord[]; capped: boolean },
+		readonly { records: HistoryRecord[]; capped: boolean }[]
+	>(
+		workspaces,
+		"history",
+		(workspace) =>
+			readHistory(workspace, {
+				since,
+				until,
+				limit: HISTORY_WINDOW_ROWS,
+				...(query.owner === undefined ? {} : { owner: query.owner }),
+			}),
+		(rows) => rows,
+	);
+
+	const seen = new Set<string>();
+	const merged: HistoryRecord[] = [];
+	for (const page of settled.data) {
+		for (const record of page.records) {
+			if (seen.has(record.key)) continue;
+			seen.add(record.key);
+			merged.push(record);
+		}
+	}
+	merged.sort((a, b) => (a.finished < b.finished ? 1 : a.finished > b.finished ? -1 : 0));
+	return {
+		records: merged,
+		capped: settled.data.some((page) => page.capped),
 		degraded: settled.degraded,
 	};
 }

@@ -10,7 +10,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { invalidate } from "./repositories/cache.js";
 import { getBoardHome } from "./services/stats.service.js";
-import { getHistoryTrend } from "./services/history.service.js";
+import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { type RegistryWorkspace, resolveWorkspaces } from "./workspace.js";
 
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 external/host-webserver.md）。 */
@@ -106,6 +106,29 @@ export function registerRoutes(
 			const gran =
 				raw === "week" || raw === "month" ? raw : ("day" as const);
 			sendJson(res, 200, await getHistoryTrend(await workspacesOf(deps), gran));
+		} catch (error) {
+			sendJson(res, 500, {
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	});
+
+	// 历史页列表：一页结案明细（工作区 / 执行人筛在 host，日期窗暂由前端给固定近一年）。
+	registerRead("/history/list", async (req, res) => {
+		try {
+			const params = new URL(req.url ?? "/", "http://localhost").searchParams;
+			const all = await workspacesOf(deps);
+			const workspaceId = params.get("workspace") ?? "";
+			const scoped =
+				workspaceId === ""
+					? all
+					: all.filter((workspace) => workspace.id === workspaceId);
+			const owner = params.get("owner") ?? "";
+			sendJson(
+				res,
+				200,
+				await getHistoryList(scoped, owner === "" ? {} : { owner }),
+			);
 		} catch (error) {
 			sendJson(res, 500, {
 				error: error instanceof Error ? error.message : String(error),

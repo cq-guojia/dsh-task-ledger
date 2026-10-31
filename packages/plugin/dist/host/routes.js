@@ -1,6 +1,6 @@
 import { invalidate } from "./repositories/cache.js";
 import { getBoardHome } from "./services/stats.service.js";
-import { getHistoryTrend } from "./services/history.service.js";
+import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { resolveWorkspaces } from "./workspace.js";
 /** API 前缀（唯一真源就在这一处）。 */
 const API_PREFIX = "/api/task-ledger";
@@ -55,6 +55,24 @@ export function registerRoutes(webServer, deps) {
             const raw = new URL(req.url ?? "/", "http://localhost").searchParams.get("gran");
             const gran = raw === "week" || raw === "month" ? raw : "day";
             sendJson(res, 200, await getHistoryTrend(await workspacesOf(deps), gran));
+        }
+        catch (error) {
+            sendJson(res, 500, {
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
+    });
+    // 历史页列表：一页结案明细（工作区 / 执行人筛在 host，日期窗暂由前端给固定近一年）。
+    registerRead("/history/list", async (req, res) => {
+        try {
+            const params = new URL(req.url ?? "/", "http://localhost").searchParams;
+            const all = await workspacesOf(deps);
+            const workspaceId = params.get("workspace") ?? "";
+            const scoped = workspaceId === ""
+                ? all
+                : all.filter((workspace) => workspace.id === workspaceId);
+            const owner = params.get("owner") ?? "";
+            sendJson(res, 200, await getHistoryList(scoped, owner === "" ? {} : { owner }));
         }
         catch (error) {
             sendJson(res, 500, {
