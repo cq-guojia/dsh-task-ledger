@@ -324,26 +324,39 @@ const UI_BASE_CSS = `
    （带 padding / min-height / flex），撞上就把图表整块撑歪。
    列不画竖线（列定义不写 divider）；每行第一列是任务名 + 标签两行，与待办行同款。 */
 .dtl-histlist{margin-top:var(--dtl-space-4);}
-.dtl-histlist__filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:var(--dtl-space-3);}
+/* 筛选行（用户 2026-10-31）：左边「年份 + 月份块」，右边「工作区 / 执行人」 */
+.dtl-histlist__filters{display:flex;align-items:center;justify-content:space-between;gap:var(--dtl-space-3);
+  flex-wrap:wrap;margin-bottom:var(--dtl-space-3);}
+.dtl-histlist__filters-main{display:flex;align-items:center;gap:var(--dtl-space-2);flex-wrap:wrap;min-width:0;}
+.dtl-histlist__filters-side{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto;}
+
 .dtl-histlist__error{color:var(--dtl-danger);font-size:var(--dtl-font-md);padding:var(--dtl-space-2) 0;}
 /* 核心表格默认内距偏紧（用户 2026-10-31：统一放大一档） */
 .dtl-histlist .dshpc-table__cell{padding:var(--dtl-space-3);}
-/* 日期那行（竖线 + 日期）整体右移 4px（用户 2026-10-31） */
-.dtl-histlist__daytitle{margin-left:4px;}
-/* 每天一块（日期 SectionHead + 当天**一张**表）：块与块之间留白 */
-.dtl-histlist__dayblock + .dtl-histlist__dayblock{margin-top:var(--dtl-space-4);}
-/* 天内的工作区分段行（跨满全列）：负 margin 抵消单元格内距，比数据行矮一档 */
-.dtl-histlist__ws{margin:calc(var(--dtl-space-3) * -1) 0;padding:var(--dtl-space-2) 0;
-  font-size:var(--dtl-font-sm);color:var(--dtl-fg-3);font-weight:600;}
+/* 每天一块（当天**一张**表）：块与块之间不再留白，连成一整块（用户 2026-10-31） */
+.dtl-histlist__dayblock + .dtl-histlist__dayblock{margin-top:0;}
+/* 相邻两张表相接处只留一条线：有下一张表时取消上表底边（用户 2026-10-31） */
+.dtl-histlist__dayblock:has(+ .dtl-histlist__dayblock) .dshpc-table{border-bottom:0;}
+/* 天内的工作区分段行改用核心 SectionHead（accent=business），样式归核心，不在此手搓 */
 /* 同一天里相邻的工作区小表**紧挨着**（用户 2026-10-31：两个工作区之间不要空格），
    分隔只靠各自表头底色与边框，不额外留 margin */
-/* 第一列**照抄待办行**（2026-10-31）：标题 + 创建徽一行、标签一行 */
+/* 第一列：标题一行、标签一行（创建徽已挪到「创建人」列，2026-10-31） */
 .dtl-histlist__task{display:flex;flex-direction:column;min-width:0;}
 .dtl-histlist__head{display:flex;align-items:baseline;gap:6px;min-width:0;}
 .dtl-histlist__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);
   min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.dtl-histlist__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
+/* 创建人列：@名字 / 创建时间 两排 */
+.dtl-histlist__creator{display:flex;flex-direction:column;min-width:0;gap:2px;}
+.dtl-histlist__creator-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:var(--dtl-font-md);color:var(--dtl-fg);}
+.dtl-histlist__creator-time{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
+/* 执行时间列：开始 / 结束 两排，前面用 S / E 标记区分 */
+.dtl-histlist__time{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.dtl-histlist__time-row{display:flex;align-items:baseline;gap:6px;white-space:nowrap;
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);font-variant-numeric:tabular-nums;}
+.dtl-histlist__time-mark{flex:none;width:12px;font-size:var(--dtl-font-xs);font-weight:600;
+  color:var(--dtl-fg-3);text-align:left;}
 /* 第二行标签：与待办行同间距（space-2、上留 6px） */
 .dtl-histlist__tags{display:flex;flex-wrap:wrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;}
 `;
@@ -519,6 +532,10 @@ export { notify } from "dsh-plugin-core/ui";
 /** 分区标题（icon + 标题 + 右槽）：列表按工作区分组的组头，核心原样，不再包一层。 */
 export { SectionHead } from "dsh-plugin-core/ui";
 
+/** 拼接外壳：左下拉 + 右滑块焊成一体（外框 / 分隔 / 聚焦圈归核心）。
+ *  注意：`Segmented` 本文件已有同名适配层，不要再从核心重复导出。 */
+export { SplitGroup } from "dsh-plugin-core/ui";
+
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 
 /** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
@@ -628,7 +645,7 @@ export function StatCard(props: {
  *  待认领用 `slate`（实心灰）而不是 `neutral`：neutral 那层浅灰跟 #标签 长得一模一样，
  *  状态标签要跟任务行左缘那条灰竖线一个色（用户 2026-10-30）。 */
 const CHIP_TONE: Record<
-	"neutral" | "open" | "backlog" | "doing" | "overdue" | "stale" | "person",
+	"neutral" | "open" | "backlog" | "doing" | "overdue" | "stale" | "person" | "workspace",
 	"neutral" | "slate" | "business" | "success" | "warning" | "danger"
 > = {
 	neutral: "neutral",
@@ -638,6 +655,7 @@ const CHIP_TONE: Record<
 	overdue: "danger",
 	stale: "danger",
 	person: "business",
+	workspace: "business",
 };
 
 /**
@@ -653,7 +671,8 @@ export function Tag(props: {
 		| "doing"
 		| "overdue"
 		| "stale"
-		| "person";
+		| "person"
+		| "workspace";
 	/** 悬停说明（**始终**显示，状态标记的解释走它）。走官方 Tooltip。 */
 	tip?: string;
 	/** 给了就是可点的标签（核心 Chip 自动渲染成 button + hover 加深），如工作区 / #标签。 */

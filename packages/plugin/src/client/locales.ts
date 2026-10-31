@@ -129,10 +129,34 @@ export type LocaleKey =
 	| "historyNext"
 	// 历史列表（表格）
 	| "histColTask"
+	| "histColDate"
+	| "histColCreator"
 	| "histColOwner"
 	| "histColStart"
 	| "histColEnd"
+	| "histColTime"
 	| "histListLabel"
+	| "weekdaySun"
+	| "weekdayMon"
+	| "weekdayTue"
+	| "weekdayWed"
+	| "weekdayThu"
+	| "weekdayFri"
+	| "weekdaySat"
+	| "histYearLabel"
+	| "histMonthLabel"
+	| "month1"
+	| "month2"
+	| "month3"
+	| "month4"
+	| "month5"
+	| "month6"
+	| "month7"
+	| "month8"
+	| "month9"
+	| "month10"
+	| "month11"
+	| "month12"
 	// 空态
 	// 浮标入口
 
@@ -253,10 +277,34 @@ export const zh: Record<LocaleKey, string> = {
 	historyPrev: "前 {n} {unit}",
 	historyNext: "后 {n} {unit}",
 	histColTask: "任务",
+	histColDate: "日期",
+	histColCreator: "创建人",
 	histColOwner: "执行人",
 	histColStart: "开始时间",
 	histColEnd: "结束时间",
+	histColTime: "执行时间",
 	histListLabel: "结案记录",
+	weekdaySun: "星期日",
+	weekdayMon: "星期一",
+	weekdayTue: "星期二",
+	weekdayWed: "星期三",
+	weekdayThu: "星期四",
+	weekdayFri: "星期五",
+	weekdaySat: "星期六",
+	histYearLabel: "年份",
+	histMonthLabel: "月份",
+	month1: "一月",
+	month2: "二月",
+	month3: "三月",
+	month4: "四月",
+	month5: "五月",
+	month6: "六月",
+	month7: "七月",
+	month8: "八月",
+	month9: "九月",
+	month10: "十月",
+	month11: "十一月",
+	month12: "十二月",
 
 
 };
@@ -379,10 +427,34 @@ export const en: Record<LocaleKey, string> = {
 	historyPrev: "Previous {n} {unit}s",
 	historyNext: "Next {n} {unit}s",
 	histColTask: "Task",
+	histColDate: "Date",
+	histColCreator: "Creator",
 	histColOwner: "Owner",
 	histColStart: "Started",
 	histColEnd: "Closed",
+	histColTime: "Execution",
 	histListLabel: "Closed tasks",
+	weekdaySun: "Sunday",
+	weekdayMon: "Monday",
+	weekdayTue: "Tuesday",
+	weekdayWed: "Wednesday",
+	weekdayThu: "Thursday",
+	weekdayFri: "Friday",
+	weekdaySat: "Saturday",
+	histYearLabel: "Year",
+	histMonthLabel: "Month",
+	month1: "Jan",
+	month2: "Feb",
+	month3: "Mar",
+	month4: "Apr",
+	month5: "May",
+	month6: "Jun",
+	month7: "Jul",
+	month8: "Aug",
+	month9: "Sep",
+	month10: "Oct",
+	month11: "Nov",
+	month12: "Dec",
 
 
 };

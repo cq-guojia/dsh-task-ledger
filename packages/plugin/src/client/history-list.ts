@@ -1,14 +1,12 @@
 /**
  * 历史页下半部分：筛选行（工作区 / 执行人）+ 结案记录表格。
  *
- * 结构（2026-10-31 用户定稿）：
- *  2026-10-31                       ← 每天一个 SectionHead（带短竖线）
- *    [C.dsh-plugin-core | 执行人 | 开始时间 | 结束时间]   ← 当天每个工作区一小段，
- *    任务行…                                              表头第一格直接写工作区名
- *    [W.NAS-Docker | 执行人 | 开始时间 | 结束时间]
- *    任务行…
- *  2026-10-30
- *    …
+ * 结构：
+ *    [日期 | 执行人 | 开始时间 | 结束时间]   ← 表头第一格为「日期」，每天一张表
+ *      C.dsh-plugin-core                    ← 当天某工作区一段，段首一行跨满全列写工作区名
+ *      任务行…
+ *    [W.NAS-Docker | …]
+ *      任务行…
  * 某天所有工作区加起来不到 `PAGE_MIN` 条就并到后一天一起展示（「再读一天」）。
  *
  * 分页：host 一次下发整窗（近一年），这里**本地按天切片**（每片至少 PAGE_MIN 条、
@@ -19,13 +17,45 @@ import {
 	IconUsersOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { Table, type PickerGroup, type TableColumn, type TableRow } from "dsh-plugin-core/ui";
-import { createElement as h, useCallback, useEffect, useMemo, useState } from "react";
+import { createElement as h, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fetchHistoryList } from "./api";
-import { formatRelative } from "./format";
 import type { Translate } from "./locales";
 import { displayName } from "./rows";
 import type { HistoryRecord } from "./types";
-import { Select, Button, SectionHead, Tag } from "./ui";
+import { Select, Button, SectionHead, Segmented, SplitGroup, Tag } from "./ui";
+
+const WEEKDAY_KEYS = [
+	"weekdaySun",
+	"weekdayMon",
+	"weekdayTue",
+	"weekdayWed",
+	"weekdayThu",
+	"weekdayFri",
+	"weekdaySat",
+] as const;
+
+const MONTH_KEYS = [
+	"month1",
+	"month2",
+	"month3",
+	"month4",
+	"month5",
+	"month6",
+	"month7",
+	"month8",
+	"month9",
+	"month10",
+	"month11",
+	"month12",
+] as const;
+
+/** `2026-10-31` → 本地化星期（随 `t` 走中英）。按年月日构造本地时间，避免 UTC 偏移。 */
+function weekdayOf(day: string, t: Translate): string {
+	const [year, month, date] = day.split("-").map(Number);
+	if (year === undefined || month === undefined || date === undefined) return "";
+	const index = new Date(year, month - 1, date).getDay();
+	return t(WEEKDAY_KEYS[index] ?? "weekdaySun");
+}
 
 /** 一片至少多少条；不足就把后面整天并进来（用户：一天不到 20 条就再读一天）。 */
 const PAGE_MIN = 20;
@@ -55,20 +85,20 @@ interface DayBlock {
 	readonly groups: readonly WorkspaceBlock[];
 }
 
-/** 工作区段首行（跨满全列）。 */
+/** 工作区段首行（跨满全列）：工作区名包成 business 实心底色的标签（2026-10-31 用户定）。 */
 function workspaceRow(title: string, colSpan: number): TableRow {
 	return {
 		key: `ws:${title}`,
 		cells: {
 			task: {
-				content: h("div", { className: "dtl-histlist__ws" }, title),
+				content: h(Tag, { text: title, tone: "workspace" }),
 				colSpan,
 			},
 		},
 	};
 }
 
-/** 一条记录 → 一行。第一列排版**照抄待办行**：标题 + `[@谁 创建于 X 前]` 灰徽，第二行标签。 */
+/** 一条记录 → 一行。第一列：标题 + 标签（创建徽已挪到「创建人」列，2026-10-31 用户定）。 */
 function rowOf(
 	record: HistoryRecord,
 	opts: {
@@ -77,8 +107,9 @@ function rowOf(
 		readonly onOwner: (uuid: string) => void;
 	},
 ): TableRow {
-	// 行内点击会被 Table 的行点击接走（打开文档）⇒ 标签 / 人名这些「自己的事」先拦住冒泡；
-	// 待办行是同一套做法（`target.closest("button")`），只是这里 Table 不给事件对象，只能就地拦。
+	// 行内点击会被 Table 的行点击接走（打开文档）。**标签目前不设自己的点击行为，必须放行冒泡**
+	// （2026-10-31 用户真机：标签那一行是跨满第一列全宽的 div，它拦了冒泡 ⇒ 点标签、点第一列右侧
+	// 那段空白都没反应）；以后给标签单独做方法时再就地拦。人名仍就地拦 = 点人名是「切执行人筛选」。
 	const stop = (event: { stopPropagation: () => void }): void => event.stopPropagation();
 	const who =
 		opts.solo || record.ownerName === ""
@@ -98,15 +129,10 @@ function rowOf(
 						`@${record.ownerName}`,
 					),
 				);
-	// 创建徽：与待办同一套文案与格式；单人台账只留时间、不写名字
-	const creatorAge = record.created === "" ? null : formatRelative(record.created, opts.t);
+	// 创建人列：名字 + 创建时间（绝对时刻；原来的「创建于 X 前」灰徽已取消）
 	const creatorName = displayName(record.creatorName, record.creator);
-	const stampText =
-		creatorAge === null
-			? ""
-			: opts.solo || creatorName === ""
-				? `[${opts.t("fieldCreatorStamp", { age: creatorAge })}]`
-				: `[@${creatorName} ${opts.t("fieldCreatorStamp", { age: creatorAge })}]`;
+	const created = record.created.slice(0, 16);
+	const finished = record.finished.slice(0, 16);
 	return {
 		key: record.key,
 		cells: {
@@ -121,23 +147,44 @@ function rowOf(
 						{ className: "dtl-histlist__title", title: record.summary },
 						record.title,
 					),
-					stampText === ""
-						? null
-						: h("span", { className: "dtl-histlist__stamp" }, stampText),
 				),
 				record.tags.length === 0
 					? null
 					: h(
 							"div",
-							{ className: "dtl-histlist__tags", onClick: stop },
+							{ className: "dtl-histlist__tags" },
 							...record.tags.map((tag) =>
 								h(Tag, { key: tag, text: `#${tag}`, maxWidth: 160 }),
 							),
 						),
 			),
+			creator: h(
+				"div",
+				{ className: "dtl-histlist__creator" },
+				h(
+					"span",
+					{ className: "dtl-histlist__creator-name" },
+					creatorName === "" ? "" : `@${creatorName}`,
+				),
+				h("span", { className: "dtl-histlist__creator-time" }, created),
+			),
 			owner: who,
-			start: record.created.slice(0, 16),
-			end: record.finished.slice(0, 16),
+			time: h(
+				"div",
+				{ className: "dtl-histlist__time" },
+				h(
+					"span",
+					{ className: "dtl-histlist__time-row" },
+					h("span", { className: "dtl-histlist__time-mark" }, "S"),
+					created,
+				),
+				h(
+					"span",
+					{ className: "dtl-histlist__time-row" },
+					h("span", { className: "dtl-histlist__time-mark" }, "E"),
+					finished,
+				),
+			),
 		},
 	};
 }
@@ -170,8 +217,23 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [pageCount, setPageCount] = useState(1);
+	// 时间筛选（用户 2026-10-31）：一次只看一个月。数据仍由 host 固定取近一年，
+	// 年月在前端本地过滤；host 支持按月查询后再换成真查询。
+	const now = new Date();
+	const currentYear = now.getFullYear();
+	const currentMonth = now.getMonth() + 1;
+	const [year, setYear] = useState(currentYear);
+	const [month, setMonth] = useState(currentMonth);
 	/** 选中行的 key（核心 Table 的选中态：淡蓝底 + 左竖条）。 */
 	const [selected, setSelected] = useState<string | null>(null);
+	/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
+	const pendingOpen = useRef<number | null>(null);
+	useEffect(
+		() => () => {
+			if (pendingOpen.current !== null) window.clearTimeout(pendingOpen.current);
+		},
+		[],
+	);
 
 	// 首屏 + 筛选变化：整表重来（筛选在 host 侧做）
 	useEffect(() => {
@@ -197,7 +259,12 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		};
 	}, [workspace, owner]);
 
-	const pages = useMemo(() => sliceByDay(records), [records]);
+	/** 只留所选年月：`finished` 形如 `YYYY-MM-DD HH:mm`，取前 7 位比 `YYYY-MM`。 */
+	const scoped = useMemo(() => {
+		const prefix = `${year}-${String(month).padStart(2, "0")}`;
+		return records.filter((record) => record.finished.slice(0, 7) === prefix);
+	}, [month, records, year]);
+	const pages = useMemo(() => sliceByDay(scoped), [scoped]);
 	const hasMore = pageCount < pages.length;
 	const visible = useMemo(() => pages.slice(0, pageCount).flat(), [pageCount, pages]);
 	const loadMore = useCallback(() => {
@@ -238,13 +305,13 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 
 	// 单人台账：执行人整列不摆（与待办里「单人不显示执行人名」同一条规矩）
 	const columnsOf = useCallback(
-		(title: string): readonly TableColumn[] => [
+		(title: ReactNode): readonly TableColumn[] => [
 			{ key: "task", title },
+			{ key: "creator", title: t("histColCreator"), width: 175 },
 			...(props.solo
 				? []
 				: [{ key: "owner", title: t("histColOwner"), width: 140 }]),
-			{ key: "start", title: t("histColStart"), width: 150 },
-			{ key: "end", title: t("histColEnd"), width: 150 },
+			{ key: "time", title: t("histColTime"), width: 185 },
 		],
 		[props.solo, t],
 	);
@@ -257,24 +324,40 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		return map;
 	}, [visible]);
 
-	/** 点行 = 选中 + 把路径交给核心（不做任何合并 / 排队 / 延迟）。 */
+	/** 点行 = 选中 + 把路径交给核心。选中态当场提交；dock 的打开推到本帧绘制之后。 */
 	const handleRowClick = (row: TableRow): void => {
 		const key = String(row.key);
 		if (key.startsWith("day:") || key.startsWith("ws:")) return;
 		setSelected(key);
 		const file = fileOf.get(key);
-		if (file !== undefined) props.onOpen(file);
+		if (file === undefined) return;
+		// 2026-10-31 真机：点五六次才有选中样式。根因是这里同步打开 dock（核心要建 React 根、
+		// 改宿主布局、强制重排），把 setSelected 的 commit + paint 一起拖到它后面。
+		// 先提交选中，再把「扔链接给 dock」推到本帧绘制之后；连点时只开最后一个（新的取消旧的）。
+		if (pendingOpen.current !== null) window.clearTimeout(pendingOpen.current);
+		pendingOpen.current = window.setTimeout(() => {
+			pendingOpen.current = null;
+			props.onOpen(file);
+		}, 0);
 	};
 
 	/** 一天的表格列数：跨列的段首行要盖满。 */
 	const colSpan = props.solo ? 3 : 4;
+
+	/** 可选年份：今年往前 5 年。 */
+	const years = useMemo(
+		() => Array.from({ length: 6 }, (_, index) => currentYear - index),
+		[currentYear],
+	);
+	/** 今年只显示到当月（用户 2026-10-31：「只显示到当前月份」），往年 12 个月全显示。 */
+	const shownMonths = year === currentYear ? currentMonth : 12;
 
 	const body =
 		days.length === 0
 			? [
 					h(Table, {
 						key: "state",
-						columns: columnsOf(t("histColTask")),
+						columns: columnsOf(t("histColDate")),
 						rows: [],
 						ariaLabel: t("histListLabel"),
 						emptyText: t("historyEmpty"),
@@ -287,13 +370,14 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 					h(
 						"div",
 						{ key: block.day, className: "dtl-histlist__dayblock" },
-						h(
-							"div",
-							{ className: "dtl-histlist__daytitle" },
-							h(SectionHead, { title: block.day, accent: "default" }),
-						),
 						h(Table, {
-							columns: columnsOf(t("histColTask")),
+							columns: columnsOf(
+								h(SectionHead, {
+									title: `${block.day} · ${weekdayOf(block.day, t)}`,
+									accent: "default",
+									flush: true,
+								}),
+							),
 							rows: block.groups.flatMap((group) => [
 								workspaceRow(group.title, colSpan),
 								...group.rows,
@@ -318,31 +402,71 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		h(
 			"div",
 			{ className: "dtl-histlist__filters" },
-			h(Select<string>, {
-				searchable: true,
-				size: "lg",
-				minWidth: SELECT_MIN_WIDTH,
-				maxWidth: SELECT_MAX_WIDTH,
-				icon: h(IconFolderCloseRegular, { size: 16 }),
-				value: workspace,
-				options: props.workspaceOptions,
-				ariaLabel: t("workspaceLabel"),
-				onChange: setWorkspace,
-			}),
-			props.solo
-				? null
-				: h(Select<string>, {
-						searchable: true,
+			h(
+				"div",
+				{ className: "dtl-histlist__filters-main" },
+				// 核心 SplitGroup：左 = 年份下拉（Picker），右 = 月份滑动块（Segmented），
+				// 两格焊成一体。两格传同一个 size 才等高（核心约定）。
+				h(
+					SplitGroup,
+					{ label: t("histMonthLabel") },
+					h(Select<string>, {
 						size: "lg",
-						minWidth: SELECT_MIN_WIDTH,
-						maxWidth: SELECT_MAX_WIDTH,
-						icon: h(IconUsersOutlineRegular, { size: 16 }),
-						value: owner,
-						options: [{ value: "", label: t("ownerAll") }],
-						groups: props.ownerGroups,
-						ariaLabel: t("ownerLabel"),
-						onChange: setOwner,
+						width: 96,
+						value: String(year),
+						options: years.map((item) => ({ value: String(item), label: String(item) })),
+						ariaLabel: t("histYearLabel"),
+						onChange: (next) => {
+							const nextYear = Number(next);
+							setYear(nextYear);
+							setMonth((current) =>
+								Math.min(current, nextYear === currentYear ? currentMonth : 12),
+							);
+						},
 					}),
+					h(Segmented<string>, {
+						size: "lg",
+						// 选中片用 business 蓝，不用核心默认的灰/白片（用户 2026-10-31）
+						tone: "business",
+						label: t("histMonthLabel"),
+						items: Array.from({ length: shownMonths }, (_, index) => ({
+							value: String(index + 1),
+							label: t(MONTH_KEYS[index] ?? "month1"),
+						})),
+						value: String(month),
+						onChange: (next) => setMonth(Number(next)),
+					}),
+				),
+			),
+			h(
+				"div",
+				{ className: "dtl-histlist__filters-side" },
+				h(Select<string>, {
+					searchable: true,
+					size: "lg",
+					minWidth: SELECT_MIN_WIDTH,
+					maxWidth: SELECT_MAX_WIDTH,
+					icon: h(IconFolderCloseRegular, { size: 16 }),
+					value: workspace,
+					options: props.workspaceOptions,
+					ariaLabel: t("workspaceLabel"),
+					onChange: setWorkspace,
+				}),
+				props.solo
+					? null
+					: h(Select<string>, {
+							searchable: true,
+							size: "lg",
+							minWidth: SELECT_MIN_WIDTH,
+							maxWidth: SELECT_MAX_WIDTH,
+							icon: h(IconUsersOutlineRegular, { size: 16 }),
+							value: owner,
+							options: [{ value: "", label: t("ownerAll") }],
+							groups: props.ownerGroups,
+							ariaLabel: t("ownerLabel"),
+							onChange: setOwner,
+						}),
+			),
 		),
 		error === null
 			? null
