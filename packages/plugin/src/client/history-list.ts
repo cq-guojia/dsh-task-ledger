@@ -273,6 +273,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const [records, setRecords] = useState<readonly HistoryRecord[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	/** 当前 `records` 属于哪个月：切月首帧还是旧月份的数据，滚动请求必须等它对上再处理。 */
+	const [loadedYm, setLoadedYm] = useState<string | null>(null);
 	/** 选中行的 key（淡蓝底 + 左竖条）。 */
 	const [selected, setSelected] = useState<string | null>(null);
 	/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
@@ -302,6 +304,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		const hit = monthCache.current.get(key);
 		if (hit !== undefined && Date.now() - hit.at < 60_000) {
 			setRecords(hit.records);
+			setLoadedYm(props.ym);
 			setLoading(false);
 			setError(null);
 			return;
@@ -309,11 +312,13 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		setLoading(true);
 		setError(null);
 		setRecords([]);
+		setLoadedYm(null);
 		fetchHistoryList({ ym: props.ym, workspace, owner })
 			.then((payload) => {
 				if (!alive) return;
 				monthCache.current.set(key, { records: payload.records, at: Date.now() });
 				setRecords(payload.records);
+				setLoadedYm(props.ym);
 			})
 			.catch((reason: unknown) => {
 				if (alive) setError(reason instanceof Error ? reason.message : String(reason));
@@ -407,7 +412,9 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		const target = props.scrollTo;
 		if (target === null || target.token === lastScrollToken.current) return;
 		// ⚠️ 必须先判 loading：首帧 records 还空时，会把「数据没到」算成「本月没有记录」
-		if (loading || offsets === null || items.length === 0) return;
+		// ⚠️ 还要判月份：点别的月的柱子时，这一帧拿到的仍是上个月的行（loading 还没翻成 true），
+		// 在旧行里找不到目标日就会把 token 记成「已处理」⇒ 新数据到了也不再滚（用户 2026-11-01 真机）。
+		if (loading || offsets === null || items.length === 0 || loadedYm !== props.ym) return;
 		const finish = (): void => {
 			lastScrollToken.current = target.token;
 			props.onScrolled();
@@ -425,7 +432,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		const base = container.scrollTop + (tableRect.top - containerRect.top);
 		container.scrollTo({ top: base + offsets[index], behavior: "smooth" });
 		finish();
-	}, [items, loading, offsets, props.onScrolled, props.scrollContainer, props.scrollTo]);
+	}, [items, loadedYm, loading, offsets, props.onScrolled, props.scrollContainer, props.scrollTo, props.ym]);
 
 	// 单人台账：执行人整列不摆（与待办里「单人不显示执行人名」同一条规矩）
 	const columns = props.solo ? ([175, 185] as const) : ([175, 140, 185] as const);

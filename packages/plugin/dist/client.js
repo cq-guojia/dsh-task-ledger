@@ -55352,6 +55352,8 @@ body[data-ds-dark-theme]{
 			const [records, setRecords] = (0, react$1.useState)([]);
 			const [loading, setLoading] = (0, react$1.useState)(true);
 			const [error, setError] = (0, react$1.useState)(null);
+			/** 当前 `records` 属于哪个月：切月首帧还是旧月份的数据，滚动请求必须等它对上再处理。 */
+			const [loadedYm, setLoadedYm] = (0, react$1.useState)(null);
 			/** 选中行的 key（淡蓝底 + 左竖条）。 */
 			const [selected, setSelected] = (0, react$1.useState)(null);
 			/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
@@ -55378,6 +55380,7 @@ body[data-ds-dark-theme]{
 				const hit = monthCache.current.get(key);
 				if (hit !== void 0 && Date.now() - hit.at < 6e4) {
 					setRecords(hit.records);
+					setLoadedYm(props.ym);
 					setLoading(false);
 					setError(null);
 					return;
@@ -55385,6 +55388,7 @@ body[data-ds-dark-theme]{
 				setLoading(true);
 				setError(null);
 				setRecords([]);
+				setLoadedYm(null);
 				fetchHistoryList({
 					ym: props.ym,
 					workspace,
@@ -55396,6 +55400,7 @@ body[data-ds-dark-theme]{
 						at: Date.now()
 					});
 					setRecords(payload.records);
+					setLoadedYm(props.ym);
 				}).catch((reason) => {
 					if (alive) setError(reason instanceof Error ? reason.message : String(reason));
 				}).finally(() => {
@@ -55481,7 +55486,7 @@ body[data-ds-dark-theme]{
 			(0, react$1.useEffect)(() => {
 				const target = props.scrollTo;
 				if (target === null || target.token === lastScrollToken.current) return;
-				if (loading || offsets === null || items.length === 0) return;
+				if (loading || offsets === null || items.length === 0 || loadedYm !== props.ym) return;
 				const finish = () => {
 					lastScrollToken.current = target.token;
 					props.onScrolled();
@@ -55503,11 +55508,13 @@ body[data-ds-dark-theme]{
 				finish();
 			}, [
 				items,
+				loadedYm,
 				loading,
 				offsets,
 				props.onScrolled,
 				props.scrollContainer,
-				props.scrollTo
+				props.scrollTo,
+				props.ym
 			]);
 			const columns = props.solo ? [175, 185] : [
 				175,
@@ -56710,8 +56717,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-020451-138`
-			}, `v0.0.126 261101-020451-138`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-023938-936`
+			}, `v0.0.126 261101-023938-936`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
