@@ -54505,6 +54505,8 @@ body[data-ds-dark-theme]{
 .dtl-hist__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-hist__col:hover{filter:brightness(1.1);}
+/* 选中月的每一格：与 hover 同形状的填充块（不画边线），一格一格连成一排（用户 2026-10-31） */
+.dtl-hist__col--focus{background:var(--dtl-business-soft);border-radius:var(--dtl-radius-xs);}
 .dtl-hist__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
   border-radius:var(--dtl-radius-xs);pointer-events:none;}
 /* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 把内部分段的方角裁成圆角
@@ -55031,6 +55033,18 @@ body[data-ds-dark-theme]{
 			date.setMonth(date.getMonth() + delta);
 			return ymdOf(date);
 		}
+		/** `2026-02` → `2026-02-28`（该月最后一天；`new Date(y, m, 0)` 就是上月末）。 */
+		function lastDayOfMonth(ym) {
+			const [yearPart, monthPart] = ym.split("-").map(Number);
+			const days = new Date(yearPart ?? 1970, monthPart ?? 1, 0).getDate();
+			return `${ym}-${String(days).padStart(2, "0")}`;
+		}
+		/** `2026-09` → `2026-09-16`（月中间那天）：拿它当锚点，整月才会落在窗口正中。 */
+		function middleDayOfMonth(ym) {
+			const [yearPart, monthPart] = ym.split("-").map(Number);
+			const days = new Date(yearPart ?? 1970, monthPart ?? 1, 0).getDate();
+			return `${ym}-${String(Math.ceil(days / 2)).padStart(2, "0")}`;
+		}
 		/** 某天属于哪个周期（桶 key = 周期起始日，与 skill 口径一致）。 */
 		function keyOf(gran, date) {
 			return gran === "day" ? date : gran === "week" ? mondayOf(date) : monthStart(date);
@@ -55087,8 +55101,18 @@ body[data-ds-dark-theme]{
 				setWidth(plotEl.clientWidth);
 				return () => observer.disconnect();
 			}, [plotEl]);
+			(0, react$1.useEffect)(() => {
+				setShift(0);
+			}, [gran, props.anchorYm]);
 			const step = GRAN_STEP[gran];
 			const unit = t(GRAN_UNIT[gran]);
+			const todayKey = keyOf(gran, ymdOf(/* @__PURE__ */ new Date()));
+			const anchorKey = keyOf(gran, middleDayOfMonth(props.anchorYm));
+			/** 选中月的日期范围；**与它有交叠的桶都算选中**（日=当月各天，周=跨到该月的各周，月=该月）。
+			*  2026-10-31 用户定：不是只亮一根，而是整段底色。 */
+			const focusFirst = `${props.anchorYm}-01`;
+			const focusLast = lastDayOfMonth(props.anchorYm);
+			const inFocus = (bucket) => bucket.key <= focusLast && bucket.to >= focusFirst;
 			/** 翻页钮：**只画箭头** —— 核心 `IconButton` 出皮、`Icon*` 官方图标出图形，本文件不再手写
 			*  按钮样式与箭头字形（用户 2026-10-29）。悬停提示走官方 Tooltip（本仓库 `Tip` 唯一入口）；
 			*  文案只当无障碍名 + 气泡，且用 `title: ""` 压掉原生 title（照 `task-row.ts` 的惯例）。 */
@@ -55144,11 +55168,13 @@ body[data-ds-dark-theme]{
 			if (data.buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-hist" }, nav, (0, react$1.createElement)(EmptyState, { title: t("historyEmpty") }));
 			const perScreen = width > 0 ? Math.max(1, Math.floor(width / 17)) : 30;
 			const byKey = new Map(data.buckets.map((bucket) => [bucket.key, bucket]));
-			const lastKey = keyOf(gran, ymdOf(/* @__PURE__ */ new Date()));
 			const offset = shift * step;
+			const half = Math.floor((perScreen - 1) / 2);
+			const desiredEnd = shiftKey(gran, anchorKey, perScreen - 1 - half);
+			const endKey = shiftKey(gran, desiredEnd > todayKey ? todayKey : desiredEnd, -offset);
 			const buckets = [];
 			for (let back = perScreen - 1; back >= 0; back -= 1) {
-				const key = shiftKey(gran, lastKey, -(offset + back));
+				const key = shiftKey(gran, endKey, -back);
 				buckets.push(byKey.get(key) ?? {
 					key,
 					to: endOf(gran, key),
@@ -55263,6 +55289,7 @@ body[data-ds-dark-theme]{
 			const colStyle = { width: `${String(SLOT_W)}px` };
 			const colOf = (bucket, index) => {
 				const total = bucket.done + bucket.cancelled;
+				const className = inFocus(bucket) ? "dtl-hist__col dtl-hist__col--focus" : "dtl-hist__col";
 				const style = {
 					...colStyle,
 					"--lc-d": `${String(Math.round(index / Math.max(1, buckets.length - 1) * STAGGER_MS$1))}ms`
@@ -55270,14 +55297,14 @@ body[data-ds-dark-theme]{
 				const colKey = `${gran}:${String(shift)}:${bucket.key}`;
 				if (total <= 0) return (0, react$1.createElement)("div", {
 					key: colKey,
-					className: "dtl-hist__col",
+					className,
 					style
 				}, tipOf(bucket));
 				const segments = segmentsOf(bucket);
 				const height = peak === 0 ? 0 : Math.max(total / peak * 100, 2);
 				return (0, react$1.createElement)("div", {
 					key: colKey,
-					className: "dtl-hist__col",
+					className,
 					style
 				}, (0, react$1.createElement)("div", {
 					className: "dtl-hist__bar",
@@ -55476,8 +55503,12 @@ body[data-ds-dark-theme]{
 			const now = /* @__PURE__ */ new Date();
 			const currentYear = now.getFullYear();
 			const currentMonth = now.getMonth() + 1;
-			const [year, setYear] = (0, react$1.useState)(currentYear);
-			const [month, setMonth] = (0, react$1.useState)(currentMonth);
+			const [yearPart, monthPart] = props.ym.split("-").map(Number);
+			const year = yearPart ?? currentYear;
+			const month = monthPart ?? currentMonth;
+			const setYearMonth = (nextYear, nextMonth) => {
+				props.onYmChange(`${String(nextYear)}-${String(nextMonth).padStart(2, "0")}`);
+			};
 			/** 选中行的 key（核心 Table 的选中态：淡蓝底 + 左竖条）。 */
 			const [selected, setSelected] = (0, react$1.useState)(null);
 			/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
@@ -55649,8 +55680,7 @@ body[data-ds-dark-theme]{
 				ariaLabel: t("histYearLabel"),
 				onChange: (next) => {
 					const nextYear = Number(next);
-					setYear(nextYear);
-					setMonth((current) => Math.min(current, nextYear === currentYear ? currentMonth : 12));
+					setYearMonth(nextYear, Math.min(month, nextYear === currentYear ? currentMonth : 12));
 				}
 			}), (0, react$1.createElement)(Segmented, {
 				size: "lg",
@@ -55661,7 +55691,7 @@ body[data-ds-dark-theme]{
 					label: t(MONTH_KEYS[index] ?? "month1")
 				})),
 				value: String(month),
-				onChange: (next) => setMonth(Number(next))
+				onChange: (next) => setYearMonth(year, Number(next))
 			}))), (0, react$1.createElement)("div", { className: "dtl-histlist__filters-side" }, (0, react$1.createElement)(Select, {
 				searchable: true,
 				size: "lg",
@@ -56373,6 +56403,10 @@ body[data-ds-dark-theme]{
 			const [viewMode, setViewMode] = (0, react$1.useState)("active");
 			const [trendGran, setTrendGran] = (0, react$1.useState)("day");
 			const [gran, setGran] = (0, react$1.useState)("day");
+			const [histYm, setHistYm] = (0, react$1.useState)(() => {
+				const today = /* @__PURE__ */ new Date();
+				return `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+			});
 			const [historyByGran, setHistoryByGran] = (0, react$1.useState)({});
 			const historyTrend = historyByGran[gran] ?? null;
 			const [historyError, setHistoryError] = (0, react$1.useState)(null);
@@ -56617,8 +56651,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261031-222213-803`
-			}, `v0.0.126 261031-222213-803`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261031-224428-448`
+			}, `v0.0.126 261031-224428-448`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -56659,6 +56693,7 @@ body[data-ds-dark-theme]{
 				data: shownTrend,
 				t,
 				gran,
+				anchorYm: histYm,
 				onGranChange: setGran
 			}), (0, react$1.createElement)(HistoryStats, {
 				data: shownTrend,
@@ -56681,7 +56716,9 @@ body[data-ds-dark-theme]{
 				workspaceOptions,
 				ownerGroups: ownerOptionGroups,
 				solo,
-				onOpen: openPreview
+				onOpen: openPreview,
+				ym: histYm,
+				onYmChange: setHistYm
 			}) : board === null ? state.status === "error" ? null : (0, react$1.createElement)("div", { className: "dtl-loading" }, (0, react$1.createElement)(Loader, {
 				variant: "blocks",
 				size: "xl"

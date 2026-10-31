@@ -77,6 +77,20 @@ function addMonths(value: string, delta: number): string {
 	return ymdOf(date);
 }
 
+/** `2026-02` → `2026-02-28`（该月最后一天；`new Date(y, m, 0)` 就是上月末）。 */
+function lastDayOfMonth(ym: string): string {
+	const [yearPart, monthPart] = ym.split("-").map(Number);
+	const days = new Date(yearPart ?? 1970, monthPart ?? 1, 0).getDate();
+	return `${ym}-${String(days).padStart(2, "0")}`;
+}
+
+/** `2026-09` → `2026-09-16`（月中间那天）：拿它当锚点，整月才会落在窗口正中。 */
+function middleDayOfMonth(ym: string): string {
+	const [yearPart, monthPart] = ym.split("-").map(Number);
+	const days = new Date(yearPart ?? 1970, monthPart ?? 1, 0).getDate();
+	return `${ym}-${String(Math.ceil(days / 2)).padStart(2, "0")}`;
+}
+
 /** 某天属于哪个周期（桶 key = 周期起始日，与 skill 口径一致）。 */
 function keyOf(gran: HistoryGran, date: string): string {
 	return gran === "day" ? date : gran === "week" ? mondayOf(date) : monthStart(date);
@@ -160,6 +174,8 @@ export function HistoryChart(props: {
 	t: Translate;
 	/** 当前粒度（真源在页面层；切粒度 = 重新请求 `/history/trend`）。 */
 	gran: HistoryGran;
+	/** 列表选中的月份（`YYYY-MM`）：图表窗口按它定位（用户 2026-10-31）。 */
+	anchorYm: string;
 	onGranChange: (next: HistoryGran) => void;
 }): ReactNode {
 	const { data, t, gran, onGranChange } = props;
@@ -181,8 +197,27 @@ export function HistoryChart(props: {
 		return () => observer.disconnect();
 	}, [plotEl]);
 
+	// 换月份 / 换粒度：翻页归零，窗口重新按锚点定位（用户 2026-10-31）
+	useEffect(() => {
+		setShift(0);
+	}, [gran, props.anchorYm]);
+
 	const step = GRAN_STEP[gran];
 	const unit = t(GRAN_UNIT[gran]);
+
+	/** 今天所在桶；选中月就是当前月 ⇒ 锚点 = 今天，否则 = 该月最后一天（用户 2026-10-31）。 */
+	const todayYmd = ymdOf(new Date());
+	const todayKey = keyOf(gran, todayYmd);
+	// 锚点取「月中」而不是月末：月末当锚点会让整月挤在左半边、月初被切掉（用户 2026-10-31
+	// 实测：选 9 月时 9/1、9/2 没了、后面倒是一堆 10 月）。当前月靠下面的「夹到今天」自动贴右。
+	const anchorKey = keyOf(gran, middleDayOfMonth(props.anchorYm));
+
+	/** 选中月的日期范围；**与它有交叠的桶都算选中**（日=当月各天，周=跨到该月的各周，月=该月）。
+	 *  2026-10-31 用户定：不是只亮一根，而是整段底色。 */
+	const focusFirst = `${props.anchorYm}-01`;
+	const focusLast = lastDayOfMonth(props.anchorYm);
+	const inFocus = (bucket: HistoryBucket): boolean =>
+		bucket.key <= focusLast && bucket.to >= focusFirst;
 
 	/** 翻页钮：**只画箭头** —— 核心 `IconButton` 出皮、`Icon*` 官方图标出图形，本文件不再手写
 	 *  按钮样式与箭头字形（用户 2026-10-29）。悬停提示走官方 Tooltip（本仓库 `Tip` 唯一入口）；
@@ -276,14 +311,17 @@ export function HistoryChart(props: {
 	// 一屏几根柱：只跟宽度走（日就看 N 天、周就看 N 周、月就看 N 月，不折算）
 	const perScreen = width > 0 ? Math.max(1, Math.floor(width / (SLOT_W + GAP))) : 30;
 
-	// 窗口：**今天永远是最右一根**，往前数满一屏；翻页不设边界 —— 数据窗口（最近 365 天）
-	// 之外一律补空槽（柱没有、曲线是直线），所以永远能翻（用户 2026-10-30）
+	// 窗口：选中月尽量**居中**（用户 2026-10-31）——锚点右侧留足半屏；右侧不够（未来没那么多
+	// 数据）就把窗口末端贴到今天。选当前月时锚点 = 今天 ⇒ 自然落在最右一格。
+	// 翻页不设边界 —— 数据窗口（最近 365 天）之外一律补空槽（柱没有、曲线是直线）。
 	const byKey = new Map(data.buckets.map((bucket) => [bucket.key, bucket]));
-	const lastKey = keyOf(gran, ymdOf(new Date()));
 	const offset = shift * step;
+	const half = Math.floor((perScreen - 1) / 2);
+	const desiredEnd = shiftKey(gran, anchorKey, perScreen - 1 - half);
+	const endKey = shiftKey(gran, desiredEnd > todayKey ? todayKey : desiredEnd, -offset);
 	const buckets: HistoryBucket[] = [];
 	for (let back = perScreen - 1; back >= 0; back -= 1) {
-		const key = shiftKey(gran, lastKey, -(offset + back));
+		const key = shiftKey(gran, endKey, -back);
 		buckets.push(
 			byKey.get(key) ?? {
 				key,
@@ -300,6 +338,8 @@ export function HistoryChart(props: {
 		(max, bucket) => Math.max(max, bucket.done + bucket.cancelled),
 		0,
 	);
+
+
 
 	const multi = data.workspaces.length >= 2;
 	const colorById = new Map<string, string>();
@@ -432,6 +472,8 @@ export function HistoryChart(props: {
 	const colStyle: Record<string, string | number> = { width: `${String(SLOT_W)}px` };
 	const colOf = (bucket: HistoryBucket, index: number): ReactNode => {
 		const total = bucket.done + bucket.cancelled;
+		// 选中月的每一格：与 hover 同形状的填充块，不画边线（用户 2026-10-31）
+		const className = inFocus(bucket) ? "dtl-hist__col dtl-hist__col--focus" : "dtl-hist__col";
 		// 入场延迟：按「第几列 / 共几列」摊进 STAGGER_MS 这段固定时长（写在列上，CSS 变量继承到
 		// 柱体，柱子的 animation-delay 用它）。**不按列序号累加** —— 那样宽屏上最后一列要等快 1 秒，
 		// 再叠加封顶就变成「一批先冒、一批后冒」（用户 2026-10-30 说像分批出现）。
@@ -445,13 +487,13 @@ export function HistoryChart(props: {
 		// 空列也挂浮卡：柱可以为空、x 轴标签也可以跳着不画，但悬停时该周期的时间必须显出来
 		//（用户 2026-10-30）。没有 0 值行 ⇒ 这类浮卡只剩一行日期。
 		if (total <= 0) {
-			return h("div", { key: colKey, className: "dtl-hist__col", style }, tipOf(bucket));
+			return h("div", { key: colKey, className, style }, tipOf(bucket));
 		}
 		const segments = segmentsOf(bucket);
 		const height = peak === 0 ? 0 : Math.max((total / peak) * 100, 2);
 		return h(
 			"div",
-			{ key: colKey, className: "dtl-hist__col", style },
+			{ key: colKey, className, style },
 			h(
 				"div",
 				{ className: "dtl-hist__bar", style: { height: `${String(height)}%` } },

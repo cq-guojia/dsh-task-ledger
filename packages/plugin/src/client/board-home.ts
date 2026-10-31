@@ -205,6 +205,11 @@ export function BoardHome(props: {
 	// 历史页顶部数据：切到历史才拉（拉过一次就复用，切回在办不清）。
 	// 数据按粒度各存一份：切粒度 = 重新请求（桶的口径在 skill，host 有读缓存）；gran 真源在页面层。
 	const [gran, setGran] = useState<HistoryGran>("day");
+	// 历史页选中的月份（`YYYY-MM`）：列表与上方图表共用 —— 图表按它定位窗口（用户 2026-10-31）
+	const [histYm, setHistYm] = useState<string>(() => {
+		const today = new Date();
+		return `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+	});
 	const [historyByGran, setHistoryByGran] = useState<
 		Partial<Record<HistoryGran, HistoryTrendPayload>>
 	>({});
@@ -700,6 +705,7 @@ export function BoardHome(props: {
 											data: shownTrend,
 											t,
 											gran,
+											anchorYm: histYm,
 											onGranChange: setGran,
 										}),
 										h(HistoryStats, {
@@ -752,6 +758,8 @@ export function BoardHome(props: {
 							ownerGroups: ownerOptionGroups,
 							solo,
 							onOpen: openPreview,
+							ym: histYm,
+							onYmChange: setHistYm,
 						})
 					: board === null
 						? state.status === "error"

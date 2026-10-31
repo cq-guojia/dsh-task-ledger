@@ -70,6 +70,9 @@ export interface HistoryListProps {
 	readonly solo: boolean;
 	/** 点行：在右侧 dock 打开该行的过程文档（与在办页「查看」同一条链路）。 */
 	readonly onOpen: (filePath: string) => void;
+	/** 选中的月份（`YYYY-MM`）：受控在页面层，与上方图表联动（用户 2026-10-31）。 */
+	readonly ym: string;
+	readonly onYmChange: (next: string) => void;
 }
 
 /** 当天某个工作区的一段（同一天里按工作区分段，段首一行写工作区名）。 */
@@ -217,13 +220,17 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [pageCount, setPageCount] = useState(1);
-	// 时间筛选（用户 2026-10-31）：一次只看一个月。数据仍由 host 固定取近一年，
-	// 年月在前端本地过滤；host 支持按月查询后再换成真查询。
+	// 时间筛选（用户 2026-10-31）：一次只看一个月。月份受控在页面层（与上方图表共用），
+	// 数据仍由 host 固定取近一年，年月在前端本地过滤。
 	const now = new Date();
 	const currentYear = now.getFullYear();
 	const currentMonth = now.getMonth() + 1;
-	const [year, setYear] = useState(currentYear);
-	const [month, setMonth] = useState(currentMonth);
+	const [yearPart, monthPart] = props.ym.split("-").map(Number);
+	const year = yearPart ?? currentYear;
+	const month = monthPart ?? currentMonth;
+	const setYearMonth = (nextYear: number, nextMonth: number): void => {
+		props.onYmChange(`${String(nextYear)}-${String(nextMonth).padStart(2, "0")}`);
+	};
 	/** 选中行的 key（核心 Table 的选中态：淡蓝底 + 左竖条）。 */
 	const [selected, setSelected] = useState<string | null>(null);
 	/** 延后的「打开文档」定时器：先让选中样式提交并绘制，再把链接扔给 dock。 */
@@ -418,10 +425,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 						ariaLabel: t("histYearLabel"),
 						onChange: (next) => {
 							const nextYear = Number(next);
-							setYear(nextYear);
-							setMonth((current) =>
-								Math.min(current, nextYear === currentYear ? currentMonth : 12),
-							);
+							const cap = nextYear === currentYear ? currentMonth : 12;
+							setYearMonth(nextYear, Math.min(month, cap));
 						},
 					}),
 					h(Segmented<string>, {
@@ -434,7 +439,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							label: t(MONTH_KEYS[index] ?? "month1"),
 						})),
 						value: String(month),
-						onChange: (next) => setMonth(Number(next)),
+						onChange: (next) => setYearMonth(year, Number(next)),
 					}),
 				),
 			),

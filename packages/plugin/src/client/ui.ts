@@ -101,6 +101,8 @@ const UI_BASE_CSS = `
 .dtl-hist__col{position:relative;flex:none;display:flex;flex-direction:column;justify-content:flex-end;
   transition:filter var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-hist__col:hover{filter:brightness(1.1);}
+/* 选中月的每一格：与 hover 同形状的填充块（不画边线），一格一格连成一排（用户 2026-10-31） */
+.dtl-hist__col--focus{background:var(--dtl-business-soft);border-radius:var(--dtl-radius-xs);}
 .dtl-hist__col:hover::after{content:"";position:absolute;inset:0;border:1px dashed var(--dtl-fg-3);
   border-radius:var(--dtl-radius-xs);pointer-events:none;}
 /* 柱体：顶端两角 2px 圆角（底端贴基线保持直角）；overflow 把内部分段的方角裁成圆角
