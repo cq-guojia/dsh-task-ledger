@@ -9,7 +9,7 @@
  * 形状不符一律抛 {@link LedgerDataError}（不拿 0 充数）。
  */
 import { LedgerDataError } from "../errors.js";
-import type { LedgerWorkspace } from "../types.js";
+import type { BoardTrendGran, LedgerWorkspace } from "../types.js";
 import { cached, cacheKey } from "./cache.js";
 import { runLedgerScript } from "./runner.js";
 
@@ -20,7 +20,14 @@ import { runLedgerScript } from "./runner.js";
  */
 export const TREND_WEEKS = 26;
 
-const TREND_LAST = `${String(TREND_WEEKS)}w`;
+/**
+ * 首页趋势图按粒度的一次取数窗口：周 26 周、日 182 天（同一段时间 ⇒ 切档不换可翻范围）。
+ * skill 的 day 粒度上限是 365 桶（见 `TrendMaxDayBuckets`），182 天在线内。
+ */
+const TREND_LAST: Record<BoardTrendGran, string> = {
+	day: `${String(TREND_WEEKS * 7)}d`,
+	week: `${String(TREND_WEEKS)}w`,
+};
 
 /** 一个人在一个周桶里的三个数（skill 口径：新增按 creator、完成 / 未结按 owner）。 */
 export interface OwnerCounts {
@@ -106,17 +113,19 @@ function parseOwners(
 	return out;
 }
 
-/** 单工作区趋势（skill `stats --trend week --last 26w --by-owner`；过 1.5s 读缓存）。 */
-export async function readTrend(
+/** 单工作区趋势（skill `stats --trend <gran> --last <N> --by-owner`；过 1.5s 读缓存）。 */
+export async function readBoardTrend(
 	workspace: LedgerWorkspace,
+	gran: BoardTrendGran,
 ): Promise<WorkspaceTrend> {
+	const last = TREND_LAST[gran];
 	// 缓存 op 仍记 "stats"（脚本子命令就是 stats），detail 里写清是哪个窗口的趋势
-	return await cached(cacheKey(workspace.id, "stats", `trend:${TREND_LAST}`), async () => {
+	return await cached(cacheKey(workspace.id, "stats", `trend:${gran}:${last}`), async () => {
 		// 趋势自带 JSON 输出，**不能**再传 --json（skill 那边是用法错）
 		const result = await runLedgerScript<unknown>(
 			"stats",
 			// --by-owner：一次就把「全部」与「按人」两套数都拿回来 ⇒ 勾「只看我的」零请求
-			["--repo", workspace.path, "--trend", "week", "--last", TREND_LAST, "--by-owner"],
+			["--repo", workspace.path, "--trend", gran, "--last", last, "--by-owner"],
 			// 半年窗口最坏要读 7 个历史文件（skill 有月度缓存），比单月读重：给到 20s 再判超时
 			{ timeoutMs: 20_000 },
 		);

@@ -17,7 +17,14 @@ import { runLedgerScript } from "./runner.js";
  * 8 周不够铺满，也没得翻页；26 周 ≈ 4 屏，左右箭头一次翻 4 周。
  */
 export const TREND_WEEKS = 26;
-const TREND_LAST = `${String(TREND_WEEKS)}w`;
+/**
+ * 首页趋势图按粒度的一次取数窗口：周 26 周、日 182 天（同一段时间 ⇒ 切档不换可翻范围）。
+ * skill 的 day 粒度上限是 365 桶（见 `TrendMaxDayBuckets`），182 天在线内。
+ */
+const TREND_LAST = {
+    day: `${String(TREND_WEEKS * 7)}d`,
+    week: `${String(TREND_WEEKS)}w`,
+};
 function isPlainObject(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -52,14 +59,15 @@ function parseOwners(raw, where) {
     }
     return out;
 }
-/** 单工作区趋势（skill `stats --trend week --last 26w --by-owner`；过 1.5s 读缓存）。 */
-export async function readTrend(workspace) {
+/** 单工作区趋势（skill `stats --trend <gran> --last <N> --by-owner`；过 1.5s 读缓存）。 */
+export async function readBoardTrend(workspace, gran) {
+    const last = TREND_LAST[gran];
     // 缓存 op 仍记 "stats"（脚本子命令就是 stats），detail 里写清是哪个窗口的趋势
-    return await cached(cacheKey(workspace.id, "stats", `trend:${TREND_LAST}`), async () => {
+    return await cached(cacheKey(workspace.id, "stats", `trend:${gran}:${last}`), async () => {
         // 趋势自带 JSON 输出，**不能**再传 --json（skill 那边是用法错）
         const result = await runLedgerScript("stats", 
         // --by-owner：一次就把「全部」与「按人」两套数都拿回来 ⇒ 勾「只看我的」零请求
-        ["--repo", workspace.path, "--trend", "week", "--last", TREND_LAST, "--by-owner"], 
+        ["--repo", workspace.path, "--trend", gran, "--last", last, "--by-owner"], 
         // 半年窗口最坏要读 7 个历史文件（skill 有月度缓存），比单月读重：给到 20s 再判超时
         { timeoutMs: 20_000 });
         if (!result.ok)

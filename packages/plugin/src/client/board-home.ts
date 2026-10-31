@@ -50,7 +50,12 @@ import { fetchHistoryTrend } from "./api";
 import { HistoryChart, HistoryStats } from "./history-chart";
 import { TaskRowView } from "./task-row";
 import { TrendChart } from "./trend-chart";
-import type { BoardPayload, HistoryGran, HistoryTrendPayload } from "./types";
+import type {
+	BoardPayload,
+	HistoryGran,
+	HistoryTrendPayload,
+	TrendGran,
+} from "./types";
 import {
 	Button,
 	EmptyState,
@@ -194,6 +199,8 @@ export function BoardHome(props: {
 	const mountRef = useRef<HTMLDivElement>(null);
 	// 视图模式：在办看板 ↔ 历史查询（入口切换；历史页布局待定稿，先占位）。
 	const [viewMode, setViewMode] = useState<"active" | "history">("active");
+	// 首页趋势图的粒度（日 / 周），默认日（用户 2026-10-31 起要；收尾时把默认从周翻到日）。两档桶都随快照下来 ⇒ 切换零请求。
+	const [trendGran, setTrendGran] = useState<TrendGran>("day");
 	// 历史页顶部数据：切到历史才拉（拉过一次就复用，切回在办不清）。
 	// 数据按粒度各存一份：切粒度 = 重新请求（桶的口径在 skill，host 有读缓存）；gran 真源在页面层。
 	const [gran, setGran] = useState<HistoryGran>("day");
@@ -387,7 +394,13 @@ export function BoardHome(props: {
 						h(StatCard, { key: label, label: t(label), value: "—" }),
 					),
 				),
-				h(TrendChart, { trend: null, me: null, t }),
+				h(TrendChart, {
+					trend: null,
+					me: null,
+					t,
+					gran: trendGran,
+					onGranChange: setTrendGran,
+				}),
 			);
 		}
 		const view = payload.stats;
@@ -469,11 +482,13 @@ export function BoardHome(props: {
 			// 本机身份是机器级的 ⇒ 各工作区同一个 uuid，取第一个非空即可（「只看我的」用）。
 			// 单人台账给 null ⇒ 图里不出「只看我的」（用户 2026-10-29）。
 			h(TrendChart, {
-				trend: payload.trend,
+				trend: trendGran === "day" ? payload.trendDay : payload.trend,
 				me: solo
 					? null
 					: (Object.values(payload.identities).find((uuid) => uuid !== null) ?? null),
 				t,
+				gran: trendGran,
+				onGranChange: setTrendGran,
 			}),
 		);
 	};

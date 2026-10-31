@@ -8,7 +8,7 @@
  * 全挂时返回空桶 + inherited degraded，界面显示空态（真源口径见 errors.ts 的 settleWorkspaces 注释）。
  */
 import { codeOf, messageOf } from "../errors.js";
-import { readTrend } from "../repositories/trend.repository.js";
+import { readBoardTrend } from "../repositories/trend.repository.js";
 const byFrom = (a, b) => a.from < b.from ? -1 : a.from > b.from ? 1 : 0;
 /**
  * 跨工作区求和：同一天起止的周桶相加。
@@ -63,8 +63,8 @@ export function mergeTrend(rows) {
     };
 }
 /** 趋势图数据：逐工作区读、坏的进 degraded，全挂给空桶（不抛）。 */
-export async function getBoardTrend(workspaces) {
-    const settled = await Promise.allSettled(workspaces.map((workspace) => readTrend(workspace)));
+export async function getBoardTrendGran(workspaces, gran) {
+    const settled = await Promise.allSettled(workspaces.map((workspace) => readBoardTrend(workspace, gran)));
     const rows = [];
     const degraded = [];
     settled.forEach((result, i) => {

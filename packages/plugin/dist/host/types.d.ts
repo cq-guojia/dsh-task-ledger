@@ -117,7 +117,9 @@ export interface StatsPayload {
     readonly stats: BoardStatsView;
     readonly degraded: readonly DegradedInfo[];
 }
-/** 一个人在一个周桶里的三个数（新增按 creator、完成 / 未结按 owner，都是 skill 的口径）。 */
+/** 首页趋势图的周期粒度（日 / 周；历史页那档 month 这里不要，见 HistoryGran）。 */
+export type BoardTrendGran = "day" | "week";
+/** 一个人在一个周期桶里的三个数（新增按 creator、完成 / 未结按 owner，都是 skill 的口径）。 */
 export interface TrendOwnerCounts {
     readonly added: number;
     readonly done: number;
@@ -217,6 +219,8 @@ export interface WorkspaceOwners {
 export interface BoardHomePayload extends StatsPayload {
     /** 首页右侧趋势图（近 26 周）。 */
     readonly trend: TrendView;
+    /** 同一段时间的**日档**桶（近 26 周的天数）：两份一起下发 ⇒ 切「日 / 周」零请求。 */
+    readonly trendDay: TrendView;
     readonly workspaces: readonly LedgerWorkspace[];
     readonly tasks: readonly TaskRow[];
     readonly identities: Readonly<Record<string, string | null>>;

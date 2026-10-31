@@ -8,8 +8,8 @@
  * 全挂时返回空桶 + inherited degraded，界面显示空态（真源口径见 errors.ts 的 settleWorkspaces 注释）。
  */
 import { type DegradedInfo, codeOf, messageOf } from "../errors.js";
-import { readTrend, type TrendBucket } from "../repositories/trend.repository.js";
-import type { LedgerWorkspace, TrendPayload, TrendView } from "../types.js";
+import { readBoardTrend, type TrendBucket } from "../repositories/trend.repository.js";
+import type { BoardTrendGran, LedgerWorkspace, TrendPayload, TrendView } from "../types.js";
 
 const byFrom = (a: TrendBucket, b: TrendBucket): number =>
 	a.from < b.from ? -1 : a.from > b.from ? 1 : 0;
@@ -75,13 +75,14 @@ export function mergeTrend(rows: readonly { buckets: readonly TrendBucket[]; cov
 }
 
 /** 趋势图数据：逐工作区读、坏的进 degraded，全挂给空桶（不抛）。 */
-export async function getBoardTrend(
+export async function getBoardTrendGran(
 	workspaces: readonly LedgerWorkspace[],
+	gran: BoardTrendGran,
 ): Promise<TrendPayload> {
 	const settled = await Promise.allSettled(
-		workspaces.map((workspace) => readTrend(workspace)),
+		workspaces.map((workspace) => readBoardTrend(workspace, gran)),
 	);
-	const rows: Awaited<ReturnType<typeof readTrend>>[] = [];
+	const rows: Awaited<ReturnType<typeof readBoardTrend>>[] = [];
 	const degraded: DegradedInfo[] = [];
 	settled.forEach((result, i) => {
 		if (result.status === "fulfilled") {

@@ -80,7 +80,10 @@ export interface BoardStatsView {
 	readonly lastWeekTo: string;
 }
 
-/** 一个人在一个周桶里的三个数（新增按 creator、完成 / 未结按 owner）。 */
+/** 首页趋势图的周期粒度（一根 = 一个周期；桶的切分与口径全在 skill）。 */
+export type TrendGran = "day" | "week";
+
+/** 一个人在一个周期桶里的三个数（新增按 creator、完成 / 未结按 owner）。 */
 export interface TrendOwnerCounts {
 	readonly added: number;
 	readonly done: number;
@@ -88,7 +91,7 @@ export interface TrendOwnerCounts {
 	readonly open: number;
 }
 
-/** 趋势图的一根周桶（`from`/`to` 是本机时区日期，含边界）。 */
+/** 趋势图的一根周期桶（`from`/`to` 是本机时区日期，含边界；日档 `to` = `from`）。 */
 export interface TrendBucketView {
 	readonly from: string;
 	readonly to: string;
@@ -184,6 +187,8 @@ export interface BoardPayload {
 	readonly stats: BoardStatsView;
 	/** 近 26 周趋势（host 已按周跨工作区求和；全挂时 buckets 为空）。 */
 	readonly trend: TrendView;
+	/** 同一段时间的日档桶（切「日」用；两份一起下发 ⇒ 切换零请求）。 */
+	readonly trendDay: TrendView;
 	/** 工作区 id → 本机身份 uuid（取不到为 null）。行级「是不是我的」以 skill 的 `mine` 为准，这里只备查。 */
 	readonly identities: Readonly<Record<string, string | null>>;
 	/** 每个工作区的成员名单（跨工作区去重 / 分组由前端 `ownerGroups` 做）。 */

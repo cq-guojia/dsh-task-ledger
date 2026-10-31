@@ -166,8 +166,10 @@ const UI_BASE_CSS = `
 .dtl-trend{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;
   flex-direction:column;gap:var(--dtl-space-3);
   padding:10px var(--dtl-space-4) var(--dtl-space-4);}
+/* padding-right 是给右上角那排控件（翻页箭头 + 粒度切换）让位：它绝对定位飘在卡片右上角，
+   正好压在这一行上方 ⇒ 不预留就会跟「只看我的」叠在一起（宽屏也有 ~160px 的控件宽） */
 .dtl-trend__legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--dtl-space-3);
-  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+  padding-right:160px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 /* 图例色块：直角方块，与柱子同一造型（用户 2026-10-29：不要圆角） */
 .dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
@@ -179,10 +181,11 @@ const UI_BASE_CSS = `
 .dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;cursor:pointer;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 .dtl-trend__mine input{margin:0;accent-color:var(--dtl-business);}
-/* 翻页箭头：**飘**在卡片右上角（绝对定位，不跟图例挤一排 —— 放一排会把整排文字行撑高，
-   用户 2026-10-30）；底取 --dtl-btn-soft（不透明，压得住下面的刻度线），与历史页同款 */
+/* 右上角控件：**飘**在卡片右上角（绝对定位，不跟图例挤一排 —— 放一排会把整排文字行撑高，
+   用户 2026-10-30）。左两个翻页箭头、右一个粒度切换（日 / 周），排布与历史页同一套；
+   底取 --dtl-btn-soft（不透明，压得住下面的刻度线） */
 .dtl-trend__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
-  display:flex;gap:var(--dtl-space-1);}
+  display:flex;align-items:center;gap:var(--dtl-space-2);}
 .dtl-trend__nav .dshpc-iconbtn{background:var(--dtl-btn-soft);border-color:transparent;}
 .dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
 .dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;

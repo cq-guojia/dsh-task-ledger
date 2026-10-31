@@ -6,15 +6,19 @@
  * 第二根柱 = 未结。「新增」不再占柱，改成历史页那种曲线（各自归一化，不跟柱共用量程），
  * 线色取中性灰 —— 柱子已经是蓝的。
  *
- * 数据口径**全由 skill 算好**（`stats --trend week --last 26w --by-owner`，host 已跨工作区求和）：
- * 结案按结案时间、新增按**创建人**、未结是「该周结束时仍未结案」（待认领 + 进行中合成一个数）。
+ * 数据口径**全由 skill 算好**（`stats --trend day|week --last <N> --by-owner`，host 已跨工作区求和）：
+ * 结案按结案时间、新增按**创建人**、未结是「该周期结束时仍未结案」（待认领 + 进行中合成一个数）。
  *
  * 「只看我的」（2026-10-29 用户定稿）：勾上 = 我的，不勾 = 所有；两套数随快照一起回来 ⇒ 勾选零请求。
+ *
+ * 日 / 周切换（2026-10-31）：右上角 **Segmented**（与历史页同款，只要「日」「周」两档，默认日）。
+ * 切档**不换画法** —— 日档就是「一天一组两根柱」，柱宽 / 间距 / 配色 / 图例 / 浮卡结构全与周档一致；
+ * 两套桶都随快照一起下发（`stats --trend day|week`，host 跨工作区求和）⇒ 切换零请求。
  *
  * 画法对齐历史页（用户 2026-10-30）：柱宽 11.25px（固定，缺未结那根也不许拉宽）、组内 1px /
  * 组间 10px、柱顶 2px 圆角、柱面带 45° 斜纹、悬停整组（两根柱）一个虚线框；
  * y 轴五档（中间三档全虚线，底基线实线）；
- * 一屏几周按容器实宽算（宽屏也不会铺出空柱），右上角**绝对定位**的左右箭头一次翻 4 周。
+ * 一屏几格按容器实宽算（宽屏也不会铺出空柱），右上角**绝对定位**的左右箭头一次翻 10 日 / 4 周。
  */
 import {
 	IconChevronLeftOutlineRegular,
@@ -22,9 +26,9 @@ import {
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { addDays, formatCount, mondayOf, ymdOf } from "./format";
-import type { Translate } from "./locales";
-import type { TrendBucketView, TrendOwnerCounts, TrendView } from "./types";
-import { IconButton, Loader, Tip } from "./ui";
+import type { LocaleKey, Translate } from "./locales";
+import type { TrendBucketView, TrendGran, TrendOwnerCounts, TrendView } from "./types";
+import { IconButton, Loader, Segmented, Tip } from "./ui";
 
 /** 柱宽：原 7.5px 的 1.5 倍（用户 2026-10-30）。 */
 const BAR_W = 11.25;
@@ -36,12 +40,19 @@ const GROUP_GAP = 10;
 const COL_W = BAR_W * 2 + BAR_GAP;
 /** 一组的横向占宽（含组间距）。 */
 const PITCH = COL_W + GROUP_GAP;
-/** 翻页步长：一次 4 周（用户 2026-10-30）。 */
-const WEEK_STEP = 4;
+/** 翻页步长：一次走几个周期（与历史页同口径：日 10 / 周 4）。 */
+const STEP: Record<TrendGran, number> = { day: 10, week: 4 };
+/** 各粒度的单位名（翻页提示「前 4 周」里的那个字）。 */
+const UNIT: Record<TrendGran, LocaleKey> = {
+	day: "historyGranDay",
+	week: "historyGranWeek",
+};
+const GRAN_VALUES: readonly TrendGran[] = ["day", "week"];
 /** x 轴标签的最小间距（小于这个就隔一个标一个，免得挤成一团）。 */
 const LABEL_MIN_PITCH = 40;
-/** 数据还没到 / 宽度没量到时按几周排（≈ 卡片默认宽度能放的列数）。 */
-const FALLBACK_WEEKS = 13;
+/** 数据还没到 / 宽度没量到时按几格排（≈ 卡片默认宽度能放的列数）。
+ *  组宽与粒度无关（日 / 周一样宽）⇒ 两档共用这一个值。 */
+const FALLBACK_SLOTS = 13;
 /** 入场动画的**整屏**错峰总时长（跟历史页同款：延迟按列摊，不按序号累加）。 */
 const STAGGER_MS = 120;
 
@@ -70,10 +81,13 @@ export function TrendChart(props: {
 	/** 本机身份 uuid；拿不到就不给「只看我的」（不猜）。 */
 	me: string | null;
 	t: Translate;
+	/** 当前粒度（真源在页面层；切换零请求 —— 两档桶都随快照下来了）。 */
+	gran: TrendGran;
+	onGranChange: (next: TrendGran) => void;
 }): ReactNode {
-	const { trend, me, t } = props;
+	const { trend, me, t, gran, onGranChange } = props;
 	const [mineOnly, setMineOnly] = useState(false);
-	/** 从最新一周往回翻了几次（每次 WEEK_STEP 周）。 */
+	/** 从最新一个周期往回翻了几次（每次 STEP[gran] 个周期）。 */
 	const [shift, setShift] = useState(0);
 	// callback ref：plot 是**条件渲染**的（空态时不存在），对象 ref 的 effect 只跑一次
 	// 会扑空、之后再也不重跑 ⇒ 宽度永远是 0（一屏几周就算不出来）。挂载即接线。
@@ -92,82 +106,8 @@ export function TrendChart(props: {
 		return () => observer.disconnect();
 	}, [plotEl]);
 
-	// 首读未到 ⇒ 卡里就一个三点加载，**不画线、不铺刻度**（用户 2026-10-30：跟历史页一样，
-	// 加载时图里本来就是空的）
-	if (trend === null) {
-		return h(
-			"div",
-			{ className: "dtl-card dtl-trend" },
-			h(
-				"div",
-				{
-					style: {
-						flex: "1 1 auto",
-						minHeight: 0,
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-					},
-				},
-				h(Loader, { variant: "blocks", size: "xl" }),
-			),
-		);
-	}
-
-	const buckets = trend.buckets;
-	if (buckets.length === 0) {
-		return h(
-			"div",
-			{ className: "dtl-card dtl-trend" },
-			h("div", { className: "dtl-trend__foot" }, t("chartEmpty")),
-		);
-	}
-
-	/** 当前口径下这一桶的数：全量，或「我的」那条（没数据就是 0）。 */
-	const counts = (bucket: TrendBucketView): TrendOwnerCounts =>
-		mine ? norm(bucket.owners[me]) : norm(bucket);
-
-	/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
-	 *  「只看我的」时全是进行中（我的任务必然有人接），整根都是那一段。 */
-	const breakdown = (bucket: TrendBucketView): { doing: number; waiting: number } => {
-		if (mine) return { doing: counts(bucket).open, waiting: 0 };
-		const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
-		return { doing, waiting: Math.max(0, bucket.open - doing) };
-	};
-
-	/** 结案 = 完成 + 取消（用户 2026-10-29 定的上位词）；结案柱整根高就是它。 */
-	const closed = (cell: TrendOwnerCounts): number => cell.done + cell.cancelled;
-
-	// 一屏几周：按容器实宽算，但不超过 skill 给的桶数（宽屏上不铺一排空柱，翻页才有意义）
-	const fit = width > 0 ? Math.max(1, Math.floor((width + GROUP_GAP) / PITCH)) : FALLBACK_WEEKS;
-	const perScreen = Math.min(fit, buckets.length);
-
-	// 窗口：**今天所在那周永远是最右一根**，往前数满一屏；翻出去超出数据的补空槽
-	// （26 周窗口之外没有桶 ⇒ 柱子没有、曲线是直线，跟历史页同一套做法）
-	const byKey = new Map(buckets.map((bucket) => [bucket.from, bucket]));
-	const lastKey = mondayOf(ymdOf(new Date()));
-	const slots: TrendBucketView[] = [];
-	for (let back = perScreen - 1; back >= 0; back -= 1) {
-		const key = addDays(lastKey, -(shift * WEEK_STEP + back) * 7);
-		slots.push(
-			byKey.get(key) ?? {
-				from: key,
-				to: addDays(key, 6),
-				added: 0,
-				done: 0,
-				cancelled: 0,
-				open: 0,
-				owners: {},
-			},
-		);
-	}
-
-	const peak = slots.reduce((max, slot) => {
-		const cell = counts(slot);
-		return Math.max(max, closed(cell), cell.open);
-	}, 0);
-	// 只防除零（柱高仍为 0）：刻度照实给 0，不拿 1 充数
-	const top = peak === 0 ? 1 : peak;
+	const step = STEP[gran];
+	const unit = t(UNIT[gran]);
 
 	/** 翻页钮：**只画箭头**（核心 `IconButton` 出皮、官方图标出图形）；悬停提示走官方 Tooltip。 */
 	const navButton = (dir: "left" | "right", label: string, onClick: () => void): ReactNode =>
@@ -189,7 +129,114 @@ export function TrendChart(props: {
 			}),
 		});
 
-	const weekUnit = t("historyGranWeek");
+	/** 右上角控件：翻页箭头在左、粒度滑动框居右（跟历史页同一排布）。
+	 *  加载 / 空态也一并渲染 —— 否则切粒度时这排控件会闪掉再回来。 */
+	const nav = h(
+		"div",
+		{ className: "dtl-trend__nav" },
+		navButton("left", t("historyPrev", { n: step, unit }), () => {
+			setShift((value) => value + 1);
+		}),
+		navButton("right", t("historyNext", { n: step, unit }), () => {
+			setShift((value) => Math.max(0, value - 1));
+		}),
+		h(Segmented<TrendGran>, {
+			id: "dtl-trend-gran",
+			value: gran,
+			size: "sm",
+			// 选中片用业务主色（与历史页粒度切换、顶部「在办 / 历史」同款）
+			tone: "business",
+			label: t("historyGranLabel"),
+			items: GRAN_VALUES.map((value) => ({ value, label: t(UNIT[value]) })),
+			// 切粒度 = 换一套 skill 桶（页面层已经两份都拿着）⇒ 只把窗口拨回最新
+			onChange: (next: TrendGran) => {
+				setShift(0);
+				onGranChange(next);
+			},
+		}),
+	);
+
+	// 首读未到 ⇒ 卡里就一个三点加载，**不画线、不铺刻度**（用户 2026-10-30：跟历史页一样，
+	// 加载时图里本来就是空的）
+	if (trend === null) {
+		return h(
+			"div",
+			{ className: "dtl-card dtl-trend" },
+			nav,
+			h(
+				"div",
+				{
+					style: {
+						flex: "1 1 auto",
+						minHeight: 0,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+					},
+				},
+				h(Loader, { variant: "blocks", size: "xl" }),
+			),
+		);
+	}
+
+	const buckets = trend.buckets;
+	if (buckets.length === 0) {
+		return h(
+			"div",
+			{ className: "dtl-card dtl-trend" },
+			nav,
+			h("div", { className: "dtl-trend__foot" }, t("chartEmpty")),
+		);
+	}
+
+	/** 当前口径下这一桶的数：全量，或「我的」那条（没数据就是 0）。 */
+	const counts = (bucket: TrendBucketView): TrendOwnerCounts =>
+		mine ? norm(bucket.owners[me]) : norm(bucket);
+
+	/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
+	 *  「只看我的」时全是进行中（我的任务必然有人接），整根都是那一段。 */
+	const breakdown = (bucket: TrendBucketView): { doing: number; waiting: number } => {
+		if (mine) return { doing: counts(bucket).open, waiting: 0 };
+		const doing = Object.values(bucket.owners).reduce((sum, cell) => sum + cell.open, 0);
+		return { doing, waiting: Math.max(0, bucket.open - doing) };
+	};
+
+	/** 结案 = 完成 + 取消（用户 2026-10-29 定的上位词）；结案柱整根高就是它。 */
+	const closed = (cell: TrendOwnerCounts): number => cell.done + cell.cancelled;
+
+	// 一屏几格：按容器实宽算，但不超过 skill 给的桶数（宽屏上不铺一排空柱，翻页才有意义）
+	const fit = width > 0 ? Math.max(1, Math.floor((width + GROUP_GAP) / PITCH)) : FALLBACK_SLOTS;
+	const perScreen = Math.min(fit, buckets.length);
+
+	// 窗口：**今天所在那格永远是最右一根**，往前数满一屏；翻出去超出数据的补空槽
+	// （26 周窗口之外没有桶 ⇒ 柱子没有、曲线是直线，跟历史页同一套做法）
+	const byKey = new Map(buckets.map((bucket) => [bucket.from, bucket]));
+	/** 一格几天：日 1 / 周 7。 */
+	const span = gran === "day" ? 1 : 7;
+	/** 最后一格的 key：日 = 今天、周 = 今天所在的周一（与 skill 的周一起算同口径）。 */
+	const lastKey = gran === "day" ? ymdOf(new Date()) : mondayOf(ymdOf(new Date()));
+	const slots: TrendBucketView[] = [];
+	for (let back = perScreen - 1; back >= 0; back -= 1) {
+		const key = addDays(lastKey, -(shift * step + back) * span);
+		slots.push(
+			byKey.get(key) ?? {
+				from: key,
+				to: addDays(key, span - 1),
+				added: 0,
+				done: 0,
+				cancelled: 0,
+				open: 0,
+				owners: {},
+			},
+		);
+	}
+
+	const peak = slots.reduce((max, slot) => {
+		const cell = counts(slot);
+		return Math.max(max, closed(cell), cell.open);
+	}, 0);
+	// 只防除零（柱高仍为 0）：刻度照实给 0，不拿 1 充数
+	const top = peak === 0 ? 1 : peak;
 
 	/** 色块：一色 = 直接用父级那块 8×8 上色；两色 = 上下两半的方块（上段与柱子里叠在上面的
 	 *  那一段同色，用户 2026-10-30：「进行中」在上、「待认领」在下，图例和柱子一个朝向）。
@@ -253,6 +300,12 @@ export function TrendChart(props: {
 				]
 			: [];
 
+	/** 浮卡标题：日 = 当天（起止同一天，写成区间是废话）、周 = 起止区间。 */
+	const periodOf = (bucket: TrendBucketView): string =>
+		gran === "day"
+			? bucket.from
+			: t("periodRange", { from: bucket.from, to: bucket.to });
+
 	/** 浮卡：周期 → 新建 → 已结案（下跟完成 / 取消）→ 未结（下跟进行中 / 待认领）；0 值不列。 */
 	const tipOf = (bucket: TrendBucketView): ReactNode => {
 		const cell = counts(bucket);
@@ -261,11 +314,7 @@ export function TrendChart(props: {
 		return h(
 			"div",
 			{ className: "dtl-trend__tip" },
-			h(
-				"div",
-				{ className: "dtl-trend__tip-row" },
-				t("periodRange", { from: bucket.from, to: bucket.to }),
-			),
+			h("div", { className: "dtl-trend__tip-row" }, periodOf(bucket)),
 			// 圆点在深灰浮卡上：曲线那支灰是随主题变的，浅色主题下会糊进底色 ⇒ 用浮卡自己的浅灰
 			row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"),
 			...totalRow(
@@ -290,20 +339,25 @@ export function TrendChart(props: {
 
 	const colStyle: Record<string, string | number> = { width: `${String(COL_W)}px` };
 
-	/** 一根柱 = 一个周：左结案（底蓝完成 / 顶红取消）、右未结（底琥珀待认领 / 顶绿进行中）。 */
+	/** 一根柱 = 一个周期：左结案（底蓝完成 / 顶红取消）、右未结（底琥珀待认领 / 顶绿进行中）。 */
 	const colOf = (bucket: TrendBucketView, index: number): ReactNode => {
 		const cell = counts(bucket);
 		const total = closed(cell);
 		const split = breakdown(bucket);
 		const height = (value: number): string => `${String((value / top) * 100)}%`;
-		// 入场延迟：按「第几列 / 共几列」摊进 STAGGER_MS；key 带批次（翻页次数）⇒ 翻页整批重放
+		// 入场延迟：按「第几列 / 共几列」摊进 STAGGER_MS；key 带批次（粒度 + 翻页次数）
+		// ⇒ 翻页 / 切档都整批重放（不带的話旧窗口有大半列 key 相同，React 复用 DOM 不重放）
 		const style: Record<string, string | number> = {
 			...colStyle,
 			"--lc-d": `${String(Math.round((index / Math.max(1, slots.length - 1)) * STAGGER_MS))}ms`,
 		};
 		return h(
 			"div",
-			{ key: `${String(shift)}:${bucket.from}`, className: "dtl-trend__col", style },
+			{
+				key: `${gran}:${String(shift)}:${bucket.from}`,
+				className: "dtl-trend__col",
+				style,
+			},
 			h(
 				"div",
 				{ className: "dtl-trend__bars", style: { gap: `${String(BAR_GAP)}px` } },
@@ -351,7 +405,7 @@ export function TrendChart(props: {
 	const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH / PITCH));
 	/** 最后一个真正画出文字的位置：它得右对齐，否则末位数字会顶出卡片。 */
 	const lastLabelIndex = slots.length - 1 - ((slots.length - 1) % labelStep);
-	/** x 轴标**周末日期**（数据按截止日判），当前周就是今天。 */
+	/** x 轴标**周期截止日 MM-DD**（数据按截止日判）：周 = 周日、日 = 当天，当前格就是今天。 */
 	const labelOf = (bucket: TrendBucketView, index: number): ReactNode => {
 		const text = index % labelStep === 0 ? bucket.to.slice(5) : "";
 		// 锚点以**列中心**向两侧展开；首列左对齐、末个有字列右对齐，只把这两头钳回卡片内
@@ -425,18 +479,9 @@ export function TrendChart(props: {
 						t("chartMine"),
 					),
 		),
-		// 翻页箭头：绝对定位飘在卡片右上角（不进图例那一排，否则整排会被按钮撑高）；
-		// 跟历史页一样一次翻 4 周，往前不设边界（翻出去是空槽）
-		h(
-			"div",
-			{ className: "dtl-trend__nav" },
-			navButton("left", t("historyPrev", { n: WEEK_STEP, unit: weekUnit }), () => {
-				setShift((value) => value + 1);
-			}),
-			navButton("right", t("historyNext", { n: WEEK_STEP, unit: weekUnit }), () => {
-				setShift((value) => Math.max(0, value - 1));
-			}),
-		),
+		// 右上角控件：翻页箭头 + 粒度切换，绝对定位飘在卡片右上角
+		//（不进图例那一排，否则整排会被按钮撑高）；往前不设边界（翻出去是空槽）
+		nav,
 		// 图体：左 y 轴 + 柱区（弹性填充高度）
 		h(
 			"div",

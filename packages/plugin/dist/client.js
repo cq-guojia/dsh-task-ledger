@@ -53826,8 +53826,10 @@ body[data-ds-dark-theme]{
 .dtl-trend{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;
   flex-direction:column;gap:var(--dtl-space-3);
   padding:10px var(--dtl-space-4) var(--dtl-space-4);}
+/* padding-right 是给右上角那排控件（翻页箭头 + 粒度切换）让位：它绝对定位飘在卡片右上角，
+   正好压在这一行上方 ⇒ 不预留就会跟「只看我的」叠在一起（宽屏也有 ~160px 的控件宽） */
 .dtl-trend__legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--dtl-space-3);
-  font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
+  padding-right:160px;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 /* 图例色块：直角方块，与柱子同一造型（用户 2026-10-29：不要圆角） */
 .dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
@@ -53839,10 +53841,11 @@ body[data-ds-dark-theme]{
 .dtl-trend__mine{display:inline-flex;align-items:center;gap:4px;cursor:pointer;
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
 .dtl-trend__mine input{margin:0;accent-color:var(--dtl-business);}
-/* 翻页箭头：**飘**在卡片右上角（绝对定位，不跟图例挤一排 —— 放一排会把整排文字行撑高，
-   用户 2026-10-30）；底取 --dtl-btn-soft（不透明，压得住下面的刻度线），与历史页同款 */
+/* 右上角控件：**飘**在卡片右上角（绝对定位，不跟图例挤一排 —— 放一排会把整排文字行撑高，
+   用户 2026-10-30）。左两个翻页箭头、右一个粒度切换（日 / 周），排布与历史页同一套；
+   底取 --dtl-btn-soft（不透明，压得住下面的刻度线） */
 .dtl-trend__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
-  display:flex;gap:var(--dtl-space-1);}
+  display:flex;align-items:center;gap:var(--dtl-space-2);}
 .dtl-trend__nav .dshpc-iconbtn{background:var(--dtl-btn-soft);border-color:transparent;}
 .dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
 .dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;
@@ -54225,7 +54228,7 @@ body[data-ds-dark-theme]{
 			week: "historyGranWeek",
 			month: "historyGranMonth"
 		};
-		const GRAN_VALUES = [
+		const GRAN_VALUES$1 = [
 			"day",
 			"week",
 			"month"
@@ -54333,7 +54336,7 @@ body[data-ds-dark-theme]{
 				size: "sm",
 				tone: "business",
 				label: t("historyGranLabel"),
-				items: GRAN_VALUES.map((value) => ({
+				items: GRAN_VALUES$1.map((value) => ({
 					value,
 					label: t(GRAN_UNIT[value])
 				})),
@@ -54763,15 +54766,19 @@ body[data-ds-dark-theme]{
 		* 第二根柱 = 未结。「新增」不再占柱，改成历史页那种曲线（各自归一化，不跟柱共用量程），
 		* 线色取中性灰 —— 柱子已经是蓝的。
 		*
-		* 数据口径**全由 skill 算好**（`stats --trend week --last 26w --by-owner`，host 已跨工作区求和）：
-		* 结案按结案时间、新增按**创建人**、未结是「该周结束时仍未结案」（待认领 + 进行中合成一个数）。
+		* 数据口径**全由 skill 算好**（`stats --trend day|week --last <N> --by-owner`，host 已跨工作区求和）：
+		* 结案按结案时间、新增按**创建人**、未结是「该周期结束时仍未结案」（待认领 + 进行中合成一个数）。
 		*
 		* 「只看我的」（2026-10-29 用户定稿）：勾上 = 我的，不勾 = 所有；两套数随快照一起回来 ⇒ 勾选零请求。
+		*
+		* 日 / 周切换（2026-10-31）：右上角 **Segmented**（与历史页同款，只要「日」「周」两档，默认日）。
+		* 切档**不换画法** —— 日档就是「一天一组两根柱」，柱宽 / 间距 / 配色 / 图例 / 浮卡结构全与周档一致；
+		* 两套桶都随快照一起下发（`stats --trend day|week`，host 跨工作区求和）⇒ 切换零请求。
 		*
 		* 画法对齐历史页（用户 2026-10-30）：柱宽 11.25px（固定，缺未结那根也不许拉宽）、组内 1px /
 		* 组间 10px、柱顶 2px 圆角、柱面带 45° 斜纹、悬停整组（两根柱）一个虚线框；
 		* y 轴五档（中间三档全虚线，底基线实线）；
-		* 一屏几周按容器实宽算（宽屏也不会铺出空柱），右上角**绝对定位**的左右箭头一次翻 4 周。
+		* 一屏几格按容器实宽算（宽屏也不会铺出空柱），右上角**绝对定位**的左右箭头一次翻 10 日 / 4 周。
 		*/
 		/** 同组两根柱的间距（用户 2026-10-30：跟原来一样 1px）。 */
 		const BAR_GAP = 1;
@@ -54781,12 +54788,22 @@ body[data-ds-dark-theme]{
 		const COL_W = 23.5;
 		/** 一组的横向占宽（含组间距）。 */
 		const PITCH = 33.5;
-		/** 翻页步长：一次 4 周（用户 2026-10-30）。 */
-		const WEEK_STEP = 4;
+		/** 翻页步长：一次走几个周期（与历史页同口径：日 10 / 周 4）。 */
+		const STEP = {
+			day: 10,
+			week: 4
+		};
+		/** 各粒度的单位名（翻页提示「前 4 周」里的那个字）。 */
+		const UNIT = {
+			day: "historyGranDay",
+			week: "historyGranWeek"
+		};
+		const GRAN_VALUES = ["day", "week"];
 		/** x 轴标签的最小间距（小于这个就隔一个标一个，免得挤成一团）。 */
 		const LABEL_MIN_PITCH = 40;
-		/** 数据还没到 / 宽度没量到时按几周排（≈ 卡片默认宽度能放的列数）。 */
-		const FALLBACK_WEEKS = 13;
+		/** 数据还没到 / 宽度没量到时按几格排（≈ 卡片默认宽度能放的列数）。
+		*  组宽与粒度无关（日 / 周一样宽）⇒ 两档共用这一个值。 */
+		const FALLBACK_SLOTS = 13;
 		/** 入场动画的**整屏**错峰总时长（跟历史页同款：延迟按列摊，不按序号累加）。 */
 		const STAGGER_MS = 120;
 		/** 柱子 / 图例 / 浮卡共用的五种颜色（真值在 tokens.ts，改色只改那里）。 */
@@ -54807,9 +54824,9 @@ body[data-ds-dark-theme]{
 			open: cell?.open ?? 0
 		});
 		function TrendChart(props) {
-			const { trend, me, t } = props;
+			const { trend, me, t, gran, onGranChange } = props;
 			const [mineOnly, setMineOnly] = (0, react$1.useState)(false);
-			/** 从最新一周往回翻了几次（每次 WEEK_STEP 周）。 */
+			/** 从最新一个周期往回翻了几次（每次 STEP[gran] 个周期）。 */
 			const [shift, setShift] = (0, react$1.useState)(0);
 			const [plotEl, setPlotEl] = (0, react$1.useState)(null);
 			const [width, setWidth] = (0, react$1.useState)(0);
@@ -54824,7 +54841,49 @@ body[data-ds-dark-theme]{
 				setWidth(plotEl.clientWidth);
 				return () => observer.disconnect();
 			}, [plotEl]);
-			if (trend === null) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { style: {
+			const step = STEP[gran];
+			const unit = t(UNIT[gran]);
+			/** 翻页钮：**只画箭头**（核心 `IconButton` 出皮、官方图标出图形）；悬停提示走官方 Tooltip。 */
+			const navButton = (dir, label, onClick) => (0, react$1.createElement)(Tip, {
+				label,
+				side: "bottom",
+				children: (0, react$1.createElement)(IconButton, {
+					icon: (0, react$1.createElement)(dir === "left" ? _deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }),
+					label,
+					title: "",
+					variant: "outline",
+					size: "sm",
+					onClick
+				})
+			});
+			/** 右上角控件：翻页箭头在左、粒度滑动框居右（跟历史页同一排布）。
+			*  加载 / 空态也一并渲染 —— 否则切粒度时这排控件会闪掉再回来。 */
+			const nav = (0, react$1.createElement)("div", { className: "dtl-trend__nav" }, navButton("left", t("historyPrev", {
+				n: step,
+				unit
+			}), () => {
+				setShift((value) => value + 1);
+			}), navButton("right", t("historyNext", {
+				n: step,
+				unit
+			}), () => {
+				setShift((value) => Math.max(0, value - 1));
+			}), (0, react$1.createElement)(Segmented, {
+				id: "dtl-trend-gran",
+				value: gran,
+				size: "sm",
+				tone: "business",
+				label: t("historyGranLabel"),
+				items: GRAN_VALUES.map((value) => ({
+					value,
+					label: t(UNIT[value])
+				})),
+				onChange: (next) => {
+					setShift(0);
+					onGranChange(next);
+				}
+			}));
+			if (trend === null) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, nav, (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minHeight: 0,
 				display: "flex",
@@ -54835,7 +54894,7 @@ body[data-ds-dark-theme]{
 				size: "xl"
 			})));
 			const buckets = trend.buckets;
-			if (buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartEmpty")));
+			if (buckets.length === 0) return (0, react$1.createElement)("div", { className: "dtl-card dtl-trend" }, nav, (0, react$1.createElement)("div", { className: "dtl-trend__foot" }, t("chartEmpty")));
 			/** 当前口径下这一桶的数：全量，或「我的」那条（没数据就是 0）。 */
 			const counts = (bucket) => mine ? norm(bucket.owners[me]) : norm(bucket);
 			/** 未结拆两段：进行中 = 各人未结之和；待认领 = 未结 − 进行中。
@@ -54853,16 +54912,19 @@ body[data-ds-dark-theme]{
 			};
 			/** 结案 = 完成 + 取消（用户 2026-10-29 定的上位词）；结案柱整根高就是它。 */
 			const closed = (cell) => cell.done + cell.cancelled;
-			const fit = width > 0 ? Math.max(1, Math.floor((width + GROUP_GAP) / PITCH)) : FALLBACK_WEEKS;
+			const fit = width > 0 ? Math.max(1, Math.floor((width + GROUP_GAP) / PITCH)) : FALLBACK_SLOTS;
 			const perScreen = Math.min(fit, buckets.length);
 			const byKey = new Map(buckets.map((bucket) => [bucket.from, bucket]));
-			const lastKey = mondayOf(ymdOf(/* @__PURE__ */ new Date()));
+			/** 一格几天：日 1 / 周 7。 */
+			const span = gran === "day" ? 1 : 7;
+			/** 最后一格的 key：日 = 今天、周 = 今天所在的周一（与 skill 的周一起算同口径）。 */
+			const lastKey = gran === "day" ? ymdOf(/* @__PURE__ */ new Date()) : mondayOf(ymdOf(/* @__PURE__ */ new Date()));
 			const slots = [];
 			for (let back = perScreen - 1; back >= 0; back -= 1) {
-				const key = addDays(lastKey, -(shift * WEEK_STEP + back) * 7);
+				const key = addDays(lastKey, -(shift * step + back) * span);
 				slots.push(byKey.get(key) ?? {
 					from: key,
-					to: addDays(key, 6),
+					to: addDays(key, span - 1),
 					added: 0,
 					done: 0,
 					cancelled: 0,
@@ -54875,20 +54937,6 @@ body[data-ds-dark-theme]{
 				return Math.max(max, closed(cell), cell.open);
 			}, 0);
 			const top = peak === 0 ? 1 : peak;
-			/** 翻页钮：**只画箭头**（核心 `IconButton` 出皮、官方图标出图形）；悬停提示走官方 Tooltip。 */
-			const navButton = (dir, label, onClick) => (0, react$1.createElement)(Tip, {
-				label,
-				side: "bottom",
-				children: (0, react$1.createElement)(IconButton, {
-					icon: (0, react$1.createElement)(dir === "left" ? _deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }),
-					label,
-					title: "",
-					variant: "outline",
-					size: "sm",
-					onClick
-				})
-			});
-			const weekUnit = t("historyGranWeek");
 			/** 色块：一色 = 直接用父级那块 8×8 上色；两色 = 上下两半的方块（上段与柱子里叠在上面的
 			*  那一段同色，用户 2026-10-30：「进行中」在上、「待认领」在下，图例和柱子一个朝向）。
 			*  一色时**不能**走子 span —— 子 span 没有尺寸，方块会是空的（2026-10-30 该 bug）。 */
@@ -54933,18 +54981,20 @@ body[data-ds-dark-theme]{
 				key: `${key}-sub`,
 				className: "dtl-trend__tip-row dtl-trend__tip-row--sub"
 			}, sub)] : [];
+			/** 浮卡标题：日 = 当天（起止同一天，写成区间是废话）、周 = 起止区间。 */
+			const periodOf = (bucket) => gran === "day" ? bucket.from : t("periodRange", {
+				from: bucket.from,
+				to: bucket.to
+			});
 			/** 浮卡：周期 → 新建 → 已结案（下跟完成 / 取消）→ 未结（下跟进行中 / 待认领）；0 值不列。 */
 			const tipOf = (bucket) => {
 				const cell = counts(bucket);
 				const split = breakdown(bucket);
 				const total = closed(cell);
-				return (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, t("periodRange", {
-					from: bucket.from,
-					to: bucket.to
-				})), row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), ...totalRow("closed", t("chartClosed"), total, [C_CANCELLED, C_DONE], `${t("chartFinished")} ${formatCount(cell.done)} · ${t("chartCancelled")} ${formatCount(cell.cancelled)}`), ...totalRow("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, mine ? [C_DOING] : [C_DOING, C_OPEN], mine ? "" : `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
+				return (0, react$1.createElement)("div", { className: "dtl-trend__tip" }, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, periodOf(bucket)), row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), ...totalRow("closed", t("chartClosed"), total, [C_CANCELLED, C_DONE], `${t("chartFinished")} ${formatCount(cell.done)} · ${t("chartCancelled")} ${formatCount(cell.cancelled)}`), ...totalRow("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, mine ? [C_DOING] : [C_DOING, C_OPEN], mine ? "" : `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
 			};
 			const colStyle = { width: `${String(COL_W)}px` };
-			/** 一根柱 = 一个周：左结案（底蓝完成 / 顶红取消）、右未结（底琥珀待认领 / 顶绿进行中）。 */
+			/** 一根柱 = 一个周期：左结案（底蓝完成 / 顶红取消）、右未结（底琥珀待认领 / 顶绿进行中）。 */
 			const colOf = (bucket, index) => {
 				const cell = counts(bucket);
 				const total = closed(cell);
@@ -54955,7 +55005,7 @@ body[data-ds-dark-theme]{
 					"--lc-d": `${String(Math.round(index / Math.max(1, slots.length - 1) * STAGGER_MS))}ms`
 				};
 				return (0, react$1.createElement)("div", {
-					key: `${String(shift)}:${bucket.from}`,
+					key: `${gran}:${String(shift)}:${bucket.from}`,
 					className: "dtl-trend__col",
 					style
 				}, (0, react$1.createElement)("div", {
@@ -54978,7 +55028,7 @@ body[data-ds-dark-theme]{
 			const labelStep = Math.max(1, Math.ceil(LABEL_MIN_PITCH / PITCH));
 			/** 最后一个真正画出文字的位置：它得右对齐，否则末位数字会顶出卡片。 */
 			const lastLabelIndex = slots.length - 1 - (slots.length - 1) % labelStep;
-			/** x 轴标**周末日期**（数据按截止日判），当前周就是今天。 */
+			/** x 轴标**周期截止日 MM-DD**（数据按截止日判）：周 = 周日、日 = 当天，当前格就是今天。 */
 			const labelOf = (bucket, index) => {
 				const text = index % labelStep === 0 ? bucket.to.slice(5) : "";
 				const anchor = text === "" ? null : index === 0 ? {
@@ -55017,17 +55067,7 @@ body[data-ds-dark-theme]{
 				onChange: (event) => {
 					setMineOnly(event.target.checked);
 				}
-			}), t("chartMine"))), (0, react$1.createElement)("div", { className: "dtl-trend__nav" }, navButton("left", t("historyPrev", {
-				n: WEEK_STEP,
-				unit: weekUnit
-			}), () => {
-				setShift((value) => value + 1);
-			}), navButton("right", t("historyNext", {
-				n: WEEK_STEP,
-				unit: weekUnit
-			}), () => {
-				setShift((value) => Math.max(0, value - 1));
-			})), (0, react$1.createElement)("div", { className: "dtl-trend__body" }, (0, react$1.createElement)("div", { className: "dtl-trend__axis" }, (0, react$1.createElement)("span", null, formatCount(peak)), (0, react$1.createElement)("span", null, formatCount(Math.round(peak * 3 / 4))), (0, react$1.createElement)("span", null, formatCount(Math.round(peak / 2))), (0, react$1.createElement)("span", null, formatCount(Math.round(peak / 4))), (0, react$1.createElement)("span", null, "0")), (0, react$1.createElement)("div", { style: {
+			}), t("chartMine"))), nav, (0, react$1.createElement)("div", { className: "dtl-trend__body" }, (0, react$1.createElement)("div", { className: "dtl-trend__axis" }, (0, react$1.createElement)("span", null, formatCount(peak)), (0, react$1.createElement)("span", null, formatCount(Math.round(peak * 3 / 4))), (0, react$1.createElement)("span", null, formatCount(Math.round(peak / 2))), (0, react$1.createElement)("span", null, formatCount(Math.round(peak / 4))), (0, react$1.createElement)("span", null, "0")), (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0,
 				display: "flex",
@@ -55211,6 +55251,7 @@ body[data-ds-dark-theme]{
 			const state = (0, react$1.useSyncExternalStore)(boardSubscribe, boardSnapshot);
 			const mountRef = (0, react$1.useRef)(null);
 			const [viewMode, setViewMode] = (0, react$1.useState)("active");
+			const [trendGran, setTrendGran] = (0, react$1.useState)("day");
 			const [gran, setGran] = (0, react$1.useState)("day");
 			const [historyByGran, setHistoryByGran] = (0, react$1.useState)({});
 			const historyTrend = historyByGran[gran] ?? null;
@@ -55354,16 +55395,20 @@ body[data-ds-dark-theme]{
 				}))), (0, react$1.createElement)(TrendChart, {
 					trend: null,
 					me: null,
-					t
+					t,
+					gran: trendGran,
+					onGranChange: setTrendGran
 				}));
 				const view = payload.stats;
 				return (0, react$1.createElement)("div", {
 					className: "dtl-stats",
 					style: statsRowStyle
 				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekCancelled, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekCancelled, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)(TrendChart, {
-					trend: payload.trend,
+					trend: trendGran === "day" ? payload.trendDay : payload.trend,
 					me: solo ? null : Object.values(payload.identities).find((uuid) => uuid !== null) ?? null,
-					t
+					t,
+					gran: trendGran,
+					onGranChange: setTrendGran
 				}));
 			};
 			/** 段头：六档菜单居左，工作区 / 执行人 / 搜索居右（用户 2026-10-28：不要左侧标题）。 */
@@ -55444,8 +55489,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261031-010833-024`
-			}, `v0.0.126 261031-010833-024`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261031-131524-171`
+			}, `v0.0.126 261031-131524-171`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

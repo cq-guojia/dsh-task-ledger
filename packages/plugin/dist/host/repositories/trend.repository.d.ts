@@ -1,4 +1,4 @@
-import type { LedgerWorkspace } from "../types.js";
+import type { BoardTrendGran, LedgerWorkspace } from "../types.js";
 /**
  * 趋势图的窗口（周数）：近半年。
  * 2026-10-30 由 8 周放宽 —— 卡片按宽度能放几周就放几周（宽屏 12~14 周），
@@ -34,8 +34,8 @@ export interface WorkspaceTrend {
     readonly coverageFrom: string;
     readonly coverageTo: string;
 }
-/** 单工作区趋势（skill `stats --trend week --last 26w --by-owner`；过 1.5s 读缓存）。 */
-export declare function readTrend(workspace: LedgerWorkspace): Promise<WorkspaceTrend>;
+/** 单工作区趋势（skill `stats --trend <gran> --last <N> --by-owner`；过 1.5s 读缓存）。 */
+export declare function readBoardTrend(workspace: LedgerWorkspace, gran: BoardTrendGran): Promise<WorkspaceTrend>;
 /**
  * 历史页趋势的取数：`stats --trend <gran> --since --until`（明确窗口 ⇒ 不受
  * day 粒度 365 桶上限的 --last 换算影响）。桶的切分 / 新增口径 / 补空桶全在 skill

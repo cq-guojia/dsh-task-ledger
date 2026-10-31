@@ -7,7 +7,7 @@
  */
 import { type DegradedInfo, settleWorkspaces } from "../errors.js";
 import { getCurrentIdentity } from "../repositories/identity.repository.js";
-import { getBoardTrend } from "./trend.service.js";
+import { getBoardTrendGran } from "./trend.service.js";
 import { readOwners, readTasks } from "../repositories/ledger.repository.js";
 import { readStats, type WorkspaceStats } from "../repositories/stats.repository.js";
 import type {
@@ -56,6 +56,19 @@ export function weekDoneFromTrend(
 	};
 }
 
+/** 趋势载荷 → 下发视图（`TrendPayload` 多带一份 degraded，界面不要）。 */
+function viewOf(trend: {
+	readonly buckets: TrendView["buckets"];
+	readonly coverageFrom: string;
+	readonly coverageTo: string;
+}): TrendView {
+	return {
+		buckets: trend.buckets,
+		coverageFrom: trend.coverageFrom,
+		coverageTo: trend.coverageTo,
+	};
+}
+
 interface TaskScope {
 	readonly workspace: LedgerWorkspace;
 	readonly tasks: readonly TaskRow[];
@@ -83,19 +96,26 @@ function dedupe(rows: readonly DegradedInfo[]): DegradedInfo[] {
 }
 
 /**
- * 首屏一次拿全：8 卡 + 在办列表 + 工作区 + 身份 + 各工作区花名册。
- * 三条读并行（`stats` / `list` / `owners`），各自缓存；一个工作区坏只进 degraded，其余照常。
+ * 首屏一次拿全：8 卡 + 在办列表 + 工作区 + 身份 + 各工作区花名册 + 趋势两档（周 / 日）。
+ * 四路并行（`stats` / `list` / `owners` / 趋势），各自缓存；一个工作区坏只进 degraded，其余照常。
  */
 export async function getBoardHome(
 	workspaces: readonly LedgerWorkspace[],
 	now: Date = new Date(),
 ): Promise<BoardHomePayload> {
-	const [statsPayload, taskScope, ownerScope, trend] = await Promise.all([
+	const [statsPayload, taskScope, ownerScope, trends] = await Promise.all([
 		getBoardStats(workspaces, now),
 		settleWorkspaces(workspaces, "list", readTaskScope, (rows) => rows),
 		settleWorkspaces(workspaces, "owners", readOwners, (rows) => rows),
-		getBoardTrend(workspaces),
+		// 周 / 日两档：先周后日 —— 冷缓存时周档顺手把月度缓存写下去，日档再读就是命中。
+		// 两段窗口覆盖的是同一批月份，并行跑等于把同一批历史文件读两遍。
+		(async () => ({
+			week: await getBoardTrendGran(workspaces, "week"),
+			day: await getBoardTrendGran(workspaces, "day"),
+		}))(),
 	]);
+	const trend = trends.week;
+	const trendDay = trends.day;
 	const identities: Record<string, string | null> = {};
 	const tasks: TaskRow[] = [];
 	for (const scope of taskScope.data) {
@@ -110,7 +130,8 @@ export async function getBoardHome(
 	return {
 		...statsPayload,
 		stats: { ...statsPayload.stats, ...weeks },
-		trend: { buckets: trend.buckets, coverageFrom: trend.coverageFrom, coverageTo: trend.coverageTo },
+		trend: viewOf(trend),
+		trendDay: viewOf(trendDay),
 		workspaces,
 		tasks,
 		identities,
@@ -120,6 +141,7 @@ export async function getBoardHome(
 			...taskScope.degraded,
 			...ownerScope.degraded,
 			...trend.degraded,
+			...trendDay.degraded,
 		]),
 	};
 }
