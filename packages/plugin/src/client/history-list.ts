@@ -75,6 +75,9 @@ export interface HistoryListProps {
 	readonly onYmChange: (next: string) => void;
 	/** 点图表日 / 周后要滚到的那一天；`token` 每次点击自增（同一天连点也能再滚）。 */
 	readonly scrollTo: { date: string; token: number } | null;
+	/** 这次滚动请求已经处理完 ⇒ 请页面层清掉 `scrollTo`（列表切走会卸载、ref 归零，
+	 *  留着旧 token 会在切回来时再滚一遍）。 */
+	readonly onScrolled: () => void;
 }
 
 /** 当天某个工作区的一段（同一天里按工作区分段，段首一行写工作区名）。 */
@@ -327,6 +330,11 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		// ⚠️ 必须**先**判 loading：首帧 records 还空时，下面会把「数据没到」算成「本月没有记录」
 		// 并把 token 记成已处理 —— 之后数据到了也不会再滚（用户 2026-10-31 真机：完全不动）
 		if (loading) return;
+		/** 这个 token 就此用掉：本地记一份（同一个挂载周期内不重复滚），并请页面层清空。 */
+		const finish = (): void => {
+			lastScrollToken.current = target.token;
+			props.onScrolled();
+		};
 		const dayOf = (record: HistoryRecord): string => record.finished.slice(0, 10);
 		const fallback =
 			scoped.find((record) => dayOf(record) < target.date) ?? scoped[scoped.length - 1];
@@ -335,7 +343,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			: fallback?.finished.slice(0, 10);
 		if (day === undefined) {
 			// 本月一条记录都没有：没有可滚的位置，直接记为已处理，别挂在那里等
-			lastScrollToken.current = target.token;
+			finish();
 			return;
 		}
 		const pageOfTarget = pages.findIndex((page) => page.some((record) => dayOf(record) === day));
@@ -351,7 +359,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		if (el === undefined) return;
 		lastScrollToken.current = target.token;
 		el.scrollIntoView({ block: "start", behavior: "smooth" });
-	}, [days, loading, pageCount, pages, props.scrollTo, scoped]);
+		props.onScrolled();
+	}, [days, loading, pageCount, pages, props.onScrolled, props.scrollTo, scoped]);
 
 	// 单人台账：执行人整列不摆（与待办里「单人不显示执行人名」同一条规矩）
 	const columnsOf = useCallback(

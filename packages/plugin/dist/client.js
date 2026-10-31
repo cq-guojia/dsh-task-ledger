@@ -55912,11 +55912,16 @@ body[data-ds-dark-theme]{
 				const target = props.scrollTo;
 				if (target === null || target.token === lastScrollToken.current) return;
 				if (loading) return;
+				/** 这个 token 就此用掉：本地记一份（同一个挂载周期内不重复滚），并请页面层清空。 */
+				const finish = () => {
+					lastScrollToken.current = target.token;
+					props.onScrolled();
+				};
 				const dayOf = (record) => record.finished.slice(0, 10);
 				const fallback = scoped.find((record) => dayOf(record) < target.date) ?? scoped[scoped.length - 1];
 				const day = scoped.some((record) => dayOf(record) === target.date) ? target.date : fallback?.finished.slice(0, 10);
 				if (day === void 0) {
-					lastScrollToken.current = target.token;
+					finish();
 					return;
 				}
 				const pageOfTarget = pages.findIndex((page) => page.some((record) => dayOf(record) === day));
@@ -55931,11 +55936,13 @@ body[data-ds-dark-theme]{
 					block: "start",
 					behavior: "smooth"
 				});
+				props.onScrolled();
 			}, [
 				days,
 				loading,
 				pageCount,
 				pages,
+				props.onScrolled,
 				props.scrollTo,
 				scoped
 			]);
@@ -56759,6 +56766,17 @@ body[data-ds-dark-theme]{
 				return `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 			});
 			const [histScroll, setHistScroll] = (0, react$1.useState)(null);
+			const histScrollSeq = (0, react$1.useRef)(0);
+			const requestHistScroll = (0, react$1.useCallback)((date) => {
+				histScrollSeq.current += 1;
+				setHistScroll({
+					date,
+					token: histScrollSeq.current
+				});
+			}, []);
+			const clearHistScroll = (0, react$1.useCallback)(() => {
+				setHistScroll(null);
+			}, []);
 			const [historyByGran, setHistoryByGran] = (0, react$1.useState)({});
 			const historyTrend = historyByGran[gran] ?? null;
 			const [historyError, setHistoryError] = (0, react$1.useState)(null);
@@ -56898,10 +56916,7 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					setViewMode("history");
 					setHistYm(to.slice(0, 7));
-					setHistScroll((prev) => ({
-						date: to,
-						token: (prev?.token ?? 0) + 1
-					}));
+					requestHistScroll(to);
 				}
 			});
 			/** 左 8 块（2×4）+ 右趋势图。
@@ -57018,8 +57033,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261031-235945-300`
-			}, `v0.0.126 261031-235945-300`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-003229-809`
+			}, `v0.0.126 261101-003229-809`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -57064,10 +57079,7 @@ body[data-ds-dark-theme]{
 				onPickMonth: setHistYm,
 				onPickDate: (date) => {
 					setHistYm(date.slice(0, 7));
-					setHistScroll((prev) => ({
-						date,
-						token: (prev?.token ?? 0) + 1
-					}));
+					requestHistScroll(date);
 				},
 				onGranChange: setGran
 			}), (0, react$1.createElement)(HistoryStats, {
@@ -57094,7 +57106,8 @@ body[data-ds-dark-theme]{
 				onOpen: openPreview,
 				ym: histYm,
 				onYmChange: setHistYm,
-				scrollTo: histScroll
+				scrollTo: histScroll,
+				onScrolled: clearHistScroll
 			}) : board === null ? state.status === "error" ? null : (0, react$1.createElement)("div", { className: "dtl-loading" }, (0, react$1.createElement)(Loader, {
 				variant: "blocks",
 				size: "xl"

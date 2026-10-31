@@ -219,8 +219,18 @@ export function BoardHome(props: {
 		const today = new Date();
 		return `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 	});
-	// 点图表里的日 / 周：把列表滚到那一天（token 每次点击自增，同一天连点也能再滚）
+	// 点图表里的日 / 周：把列表滚到那一天（token 每次点击自增，同一天连点也能再滚）。
+	// token 由独立递增器发号、滚完由列表回调清空：列表切走会卸载，组件里的 ref 跟着归零，
+	// 留着旧 token 就会「切回来又滚一次」（用户 2026-11-01 真机）。
 	const [histScroll, setHistScroll] = useState<{ date: string; token: number } | null>(null);
+	const histScrollSeq = useRef(0);
+	const requestHistScroll = useCallback((date: string): void => {
+		histScrollSeq.current += 1;
+		setHistScroll({ date, token: histScrollSeq.current });
+	}, []);
+	const clearHistScroll = useCallback((): void => {
+		setHistScroll(null);
+	}, []);
 	const [historyByGran, setHistoryByGran] = useState<
 		Partial<Record<HistoryGran, HistoryTrendPayload>>
 	>({});
@@ -404,7 +414,7 @@ export function BoardHome(props: {
 			onClick: () => {
 				setViewMode("history");
 				setHistYm(to.slice(0, 7));
-				setHistScroll((prev) => ({ date: to, token: (prev?.token ?? 0) + 1 }));
+				requestHistScroll(to);
 			},
 		});
 
@@ -727,10 +737,7 @@ export function BoardHome(props: {
 											onPickMonth: setHistYm,
 											onPickDate: (date) => {
 												setHistYm(date.slice(0, 7));
-												setHistScroll((prev) => ({
-													date,
-													token: (prev?.token ?? 0) + 1,
-												}));
+												requestHistScroll(date);
 											},
 											onGranChange: setGran,
 										}),
@@ -787,6 +794,7 @@ export function BoardHome(props: {
 							ym: histYm,
 							onYmChange: setHistYm,
 							scrollTo: histScroll,
+							onScrolled: clearHistScroll,
 						})
 					: board === null
 						? state.status === "error"
