@@ -55911,6 +55911,7 @@ body[data-ds-dark-theme]{
 			(0, react$1.useEffect)(() => {
 				const target = props.scrollTo;
 				if (target === null || target.token === lastScrollToken.current) return;
+				if (loading) return;
 				const dayOf = (record) => record.finished.slice(0, 10);
 				const fallback = scoped.find((record) => dayOf(record) < target.date) ?? scoped[scoped.length - 1];
 				const day = scoped.some((record) => dayOf(record) === target.date) ? target.date : fallback?.finished.slice(0, 10);
@@ -55923,7 +55924,6 @@ body[data-ds-dark-theme]{
 					setPageCount((count) => Math.max(count, pageOfTarget + 1));
 					return;
 				}
-				if (loading) return;
 				const el = Array.from(document.querySelectorAll("[data-dsh-day]")).find((node) => node.dataset.dshDay === day);
 				if (el === void 0) return;
 				lastScrollToken.current = target.token;
@@ -57018,8 +57018,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261031-235348-295`
-			}, `v0.0.126 261031-235348-295`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261031-235945-300`
+			}, `v0.0.126 261031-235945-300`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

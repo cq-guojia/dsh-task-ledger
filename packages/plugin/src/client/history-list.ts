@@ -324,6 +324,9 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	useEffect(() => {
 		const target = props.scrollTo;
 		if (target === null || target.token === lastScrollToken.current) return;
+		// ⚠️ 必须**先**判 loading：首帧 records 还空时，下面会把「数据没到」算成「本月没有记录」
+		// 并把 token 记成已处理 —— 之后数据到了也不会再滚（用户 2026-10-31 真机：完全不动）
+		if (loading) return;
 		const dayOf = (record: HistoryRecord): string => record.finished.slice(0, 10);
 		const fallback =
 			scoped.find((record) => dayOf(record) < target.date) ?? scoped[scoped.length - 1];
@@ -341,8 +344,6 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			setPageCount((count) => Math.max(count, pageOfTarget + 1));
 			return;
 		}
-		// 记录还没到（首读 / 换筛选）：等它到，此时滚了一定不准
-		if (loading) return;
 		const el = Array.from(document.querySelectorAll<HTMLElement>("[data-dsh-day]")).find(
 			(node) => node.dataset.dshDay === day,
 		);
