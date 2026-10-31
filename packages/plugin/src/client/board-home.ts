@@ -28,7 +28,7 @@ import {
 	useSyncExternalStore,
 } from "react";
 import type { LocaleKey, Translate } from "./locales";
-import { formatCount } from "./format";
+import { formatCount, pad2, ymdOf } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
 import {
 	groupRows,
@@ -48,7 +48,7 @@ import {
 	type TabFilter,
 } from "./store";
 import { fetchHistoryTrend } from "./api";
-import { HistoryChart, HistoryStats } from "./history-chart";
+import { HistoryChart, HistoryStats, type PeriodPick } from "./history-chart";
 import { HistoryList } from "./history-list";
 import { TaskRowView } from "./task-row";
 import { TrendChart } from "./trend-chart";
@@ -224,6 +224,8 @@ export function BoardHome(props: {
 	// token 由独立递增器发号、滚完由列表回调清空：列表切走会卸载，组件里的 ref 跟着归零，
 	// 留着旧 token 就会「切回来又滚一次」（用户 2026-11-01 真机）。
 	const [histScroll, setHistScroll] = useState<{ date: string; token: number } | null>(null);
+	/** 点右侧 4 格的跳转令牌：每次自增 ⇒ 图表把翻页 / 点柱锁定归零（用户 2026-11-01）。 */
+	const [histJump, setHistJump] = useState(0);
 	const histScrollSeq = useRef(0);
 	const requestHistScroll = useCallback((date: string): void => {
 		histScrollSeq.current += 1;
@@ -232,6 +234,28 @@ export function BoardHome(props: {
 	const clearHistScroll = useCallback((): void => {
 		setHistScroll(null);
 	}, []);
+	/** 点历史页右侧 4 格 = 图表与列表一起跳过去（用户 2026-11-01）：
+	 *  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，列表跟着滚到今天；
+	 *  本季度 ⇒ 没有「季」这档粒度，图切「月」并选季度最后一个月，
+	 *  没到的月份夹回本月（11 月点 ⇒ 选 11 月，8 月点 ⇒ 选 8 月）。 */
+	const pickHistoryPeriod = useCallback(
+		(period: PeriodPick): void => {
+			const today = ymdOf(new Date());
+			const ym = today.slice(0, 7);
+			setHistJump((value) => value + 1);
+			if (period === "quarter") {
+				const month = Number(ym.slice(5, 7));
+				const lastOfQuarter = Math.min(Math.ceil(month / 3) * 3, month);
+				setGran("month");
+				setHistYm(`${ym.slice(0, 4)}-${pad2(lastOfQuarter)}`);
+				return;
+			}
+			setGran(period === "today" ? "day" : period);
+			setHistYm(ym);
+			requestHistScroll(today);
+		},
+		[requestHistScroll],
+	);
 	const [historyByGran, setHistoryByGran] = useState<
 		Partial<Record<HistoryGran, HistoryTrendPayload>>
 	>({});
@@ -741,10 +765,12 @@ export function BoardHome(props: {
 												requestHistScroll(date);
 											},
 											onGranChange: setGran,
+											jump: histJump,
 										}),
 										h(HistoryStats, {
 											data: shownTrend,
 											t,
+											onPick: pickHistoryPeriod,
 										}),
 									))
 					: (state.status === "error" && board === null

@@ -114,15 +114,21 @@ function endOf(gran: HistoryGran, key: string): string {
 			: addDays(addMonths(key, 1), -1);
 }
 
+/** 右侧 4 块对应的周期（点一下 = 图 + 列表一起跳到该周期，用户 2026-11-01）。 */
+export type PeriodPick = "today" | "week" | "month" | "quarter";
+
 /** 右侧 4 块（2 列 × 2 行）：今日 / 本周 / 本月 / 本季度结案数，样式吃待办页统计卡。
  *  每块三行（用户 2026-10-30 定稿）：
  *    今日结案
  *    28  取消 1                 ← 大数字 = 本期总数；小字只补「取消 N」，没取消就不显示
  *    昨日丨完成 6 · 取消 1      ← 上一期，竖线分隔后写完整拆分（没取消就只写「完成 6」）
- *  ⚠️ `showZero`：这几格是**计数**，0 必须照实显示（待办页那套默认把 0 显示成「—」）。 */
+ *  ⚠️ `showZero`：这几格是**计数**，0 必须照实显示（待办页那套默认把 0 显示成「—」）。
+ *  四格可点（用户 2026-11-01）：点哪格由页面把图表粒度 + 选中周期挪过去。 */
 export function HistoryStats(props: {
 	data: HistoryTrendPayload | null;
 	t: Translate;
+	/** 点某格：页面负责切粒度 + 选周期。 */
+	onPick: (period: PeriodPick) => void;
 }): ReactNode {
 	const { data, t } = props;
 	const totals = data?.totals;
@@ -138,6 +144,7 @@ export function HistoryStats(props: {
 			? `完成 ${compactTick(period.done)} · 取消 ${compactTick(period.cancelled)}`
 			: `完成 ${compactTick(period.done)}`;
 	const cell = (
+		pick: PeriodPick,
 		label: string,
 		period: PeriodCount | undefined,
 		prevLabel: string,
@@ -155,15 +162,24 @@ export function HistoryStats(props: {
 			),
 			hint: prev === undefined ? `${prevLabel}丨${dash}` : `${prevLabel}丨${splitOf(prev)}`,
 			showZero: true,
+			onClick: () => {
+				props.onPick(pick);
+			},
 		});
 	};
 	return h(
 		"div",
 		{ className: "dtl-stats__cards" },
-		cell(t("historyToday"), totals?.today, t("historyYesterday"), totals?.yesterday),
-		cell(t("historyWeek"), totals?.week, t("historyLastWeek"), totals?.lastWeek),
-		cell(t("historyMonth"), totals?.month, t("historyLastMonth"), totals?.lastMonth),
-		cell(t("historyQuarter"), totals?.quarter, t("historyLastQuarter"), totals?.lastQuarter),
+		cell("today", t("historyToday"), totals?.today, t("historyYesterday"), totals?.yesterday),
+		cell("week", t("historyWeek"), totals?.week, t("historyLastWeek"), totals?.lastWeek),
+		cell("month", t("historyMonth"), totals?.month, t("historyLastMonth"), totals?.lastMonth),
+		cell(
+			"quarter",
+			t("historyQuarter"),
+			totals?.quarter,
+			t("historyLastQuarter"),
+			totals?.lastQuarter,
+		),
 	);
 }
 
@@ -181,6 +197,9 @@ export function HistoryChart(props: {
 	/** 点日 / 周：回写具体哪一天，页面负责把列表滚到那一天（用户 2026-10-31）。 */
 	onPickDate: (date: string) => void;
 	onGranChange: (next: HistoryGran) => void;
+	/** 点右侧 4 格时页面自增的令牌：每次变 ⇒ 翻页归零、解除点柱锁定，
+	 *  窗口重新按选中月份定位（粒度 / 月份都没变时也照样跳，用户 2026-11-01）。 */
+	jump: number;
 }): ReactNode {
 	const { data, t, gran, onGranChange } = props;
 	// callback ref：plot 是**条件渲染**的（骨架 / 空态时不存在），对象 ref 的 effect 只跑一次
@@ -208,6 +227,12 @@ export function HistoryChart(props: {
 	useEffect(() => {
 		setShift(0);
 	}, [gran, props.anchorYm]);
+
+	// 点右侧 4 格：即使粒度 / 月份没变也要回到该周期 ⇒ 连点柱锁的窗口一起解掉（用户 2026-11-01）
+	useEffect(() => {
+		setShift(0);
+		setPin(null);
+	}, [props.jump]);
 
 	const step = GRAN_STEP[gran];
 	const unit = t(GRAN_UNIT[gran]);

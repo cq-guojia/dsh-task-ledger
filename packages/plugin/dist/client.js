@@ -54824,7 +54824,8 @@ body[data-ds-dark-theme]{
 		*    今日结案
 		*    28  取消 1                 ← 大数字 = 本期总数；小字只补「取消 N」，没取消就不显示
 		*    昨日丨完成 6 · 取消 1      ← 上一期，竖线分隔后写完整拆分（没取消就只写「完成 6」）
-		*  ⚠️ `showZero`：这几格是**计数**，0 必须照实显示（待办页那套默认把 0 显示成「—」）。 */
+		*  ⚠️ `showZero`：这几格是**计数**，0 必须照实显示（待办页那套默认把 0 显示成「—」）。
+		*  四格可点（用户 2026-11-01）：点哪格由页面把图表粒度 + 选中周期挪过去。 */
 		function HistoryStats(props) {
 			const { data, t } = props;
 			const totals = data?.totals;
@@ -54834,16 +54835,19 @@ body[data-ds-dark-theme]{
 			const cancelOf = (period) => period.cancelled > 0 ? `取消 ${compactTick(period.cancelled)}` : null;
 			/** 上一期写法：`完成 X · 取消 Y`；没取消就只留 `完成 X`。 */
 			const splitOf = (period) => period.cancelled > 0 ? `完成 ${compactTick(period.done)} · 取消 ${compactTick(period.cancelled)}` : `完成 ${compactTick(period.done)}`;
-			const cell = (label, period, prevLabel, prev) => {
+			const cell = (pick, label, period, prevLabel, prev) => {
 				const sub = period === void 0 ? null : cancelOf(period);
 				return (0, react$1.createElement)(StatCard, {
 					label: `${label}${t("chartDone")}`,
 					value: (0, react$1.createElement)("span", { className: "dtl-stat__main" }, (0, react$1.createElement)("span", null, totalOf(period)), sub === null ? null : (0, react$1.createElement)("span", { className: "dtl-stat__sub" }, sub)),
 					hint: prev === void 0 ? `${prevLabel}丨${dash}` : `${prevLabel}丨${splitOf(prev)}`,
-					showZero: true
+					showZero: true,
+					onClick: () => {
+						props.onPick(pick);
+					}
 				});
 			};
-			return (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, cell(t("historyToday"), totals?.today, t("historyYesterday"), totals?.yesterday), cell(t("historyWeek"), totals?.week, t("historyLastWeek"), totals?.lastWeek), cell(t("historyMonth"), totals?.month, t("historyLastMonth"), totals?.lastMonth), cell(t("historyQuarter"), totals?.quarter, t("historyLastQuarter"), totals?.lastQuarter));
+			return (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, cell("today", t("historyToday"), totals?.today, t("historyYesterday"), totals?.yesterday), cell("week", t("historyWeek"), totals?.week, t("historyLastWeek"), totals?.lastWeek), cell("month", t("historyMonth"), totals?.month, t("historyLastMonth"), totals?.lastMonth), cell("quarter", t("historyQuarter"), totals?.quarter, t("historyLastQuarter"), totals?.lastQuarter));
 		}
 		/** 左侧图表卡：周期堆叠柱 + 新增量曲线 + y 轴 + 粒度切换 / 翻页（无图例）。
 		*  `data = null`（首读未到）⇒ 骨架卡：卡壳高度与有数据时一致，中间核心加载卡 ⇒ 页面不跳。 */
@@ -54869,6 +54873,10 @@ body[data-ds-dark-theme]{
 			(0, react$1.useEffect)(() => {
 				setShift(0);
 			}, [gran, props.anchorYm]);
+			(0, react$1.useEffect)(() => {
+				setShift(0);
+				setPin(null);
+			}, [props.jump]);
 			const step = GRAN_STEP[gran];
 			const unit = t(GRAN_UNIT[gran]);
 			const todayKey = keyOf(gran, ymdOf(/* @__PURE__ */ new Date()));
@@ -56406,6 +56414,8 @@ body[data-ds-dark-theme]{
 				return `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 			});
 			const [histScroll, setHistScroll] = (0, react$1.useState)(null);
+			/** 点右侧 4 格的跳转令牌：每次自增 ⇒ 图表把翻页 / 点柱锁定归零（用户 2026-11-01）。 */
+			const [histJump, setHistJump] = (0, react$1.useState)(0);
 			const histScrollSeq = (0, react$1.useRef)(0);
 			const requestHistScroll = (0, react$1.useCallback)((date) => {
 				histScrollSeq.current += 1;
@@ -56417,6 +56427,25 @@ body[data-ds-dark-theme]{
 			const clearHistScroll = (0, react$1.useCallback)(() => {
 				setHistScroll(null);
 			}, []);
+			/** 点历史页右侧 4 格 = 图表与列表一起跳过去（用户 2026-11-01）：
+			*  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，列表跟着滚到今天；
+			*  本季度 ⇒ 没有「季」这档粒度，图切「月」并选季度最后一个月，
+			*  没到的月份夹回本月（11 月点 ⇒ 选 11 月，8 月点 ⇒ 选 8 月）。 */
+			const pickHistoryPeriod = (0, react$1.useCallback)((period) => {
+				const today = ymdOf(/* @__PURE__ */ new Date());
+				const ym = today.slice(0, 7);
+				setHistJump((value) => value + 1);
+				if (period === "quarter") {
+					const month = Number(ym.slice(5, 7));
+					const lastOfQuarter = Math.min(Math.ceil(month / 3) * 3, month);
+					setGran("month");
+					setHistYm(`${ym.slice(0, 4)}-${pad2(lastOfQuarter)}`);
+					return;
+				}
+				setGran(period === "today" ? "day" : period);
+				setHistYm(ym);
+				requestHistScroll(today);
+			}, [requestHistScroll]);
 			const [historyByGran, setHistoryByGran] = (0, react$1.useState)({});
 			const historyTrend = historyByGran[gran] ?? null;
 			const [historyError, setHistoryError] = (0, react$1.useState)(null);
@@ -56673,8 +56702,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-010829-493`
-			}, `v0.0.126 261101-010829-493`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-011359-556`
+			}, `v0.0.126 261101-011359-556`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -56721,10 +56750,12 @@ body[data-ds-dark-theme]{
 					setHistYm(date.slice(0, 7));
 					requestHistScroll(date);
 				},
-				onGranChange: setGran
+				onGranChange: setGran,
+				jump: histJump
 			}), (0, react$1.createElement)(HistoryStats, {
 				data: shownTrend,
-				t
+				t,
+				onPick: pickHistoryPeriod
 			})) : state.status === "error" && board === null ? (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
