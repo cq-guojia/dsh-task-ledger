@@ -54501,7 +54501,9 @@ body[data-ds-dark-theme]{
   word-break:break-all;}
 .dtl-profile__hint{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-acts{display:flex;align-items:center;gap:var(--dtl-space-2);flex:0 0 auto;flex-wrap:wrap;}
-.dtl-profile__main .dtl-acts{margin-top:var(--dtl-space-1);justify-content:center;}
+/* 身份卡的按钮排与上面文字拉开（用户 2026-11-01：要 1.5~2 倍）——
+   原间距 = 外层 flex gap 4 + 这里 4 = 8px，现在 4 + 12 = 16px（2 倍，间距只许用四拍档位）。 */
+.dtl-profile__main .dtl-acts{margin-top:var(--dtl-space-3);justify-content:center;}
 
 /* 流程小图：三列 —— 左「装 skill」/ 中「工作区里（建→领→结）」/ 右「面板查看」。
    风格参照 archify 的设计系统：**扁平无阴影、颜色只承担语义、圆角 control 档、
@@ -56723,20 +56725,14 @@ body[data-ds-dark-theme]{
 		/**
 		* 身份与设置（滑轨第三段，跟「待办 / 历史」平级）。
 		*
-		* ⚠️ 当前处于**样式预览**阶段（用户 2026-11-01：「先不用写程序，就把样式写出来，先确定样式」）：
-		* 上面左栏把「有身份 / 没身份」两种状态**同时摆出来**看得清楚，名字用指定的示例值。
-		* 样式定稿后把示例值换成真实身份（`props.identity`），预览那段删掉即可。
+		* 身份卡按**真实身份**二选一（用户 2026-11-01：不并列两张）：有身份 = 绿条 + 真实名字 / uuid，
+		* 没身份 = 红条 + 去建的引导；色条方位走核心 `Card` 的 `bar.side`（当前在**上边**，仍在挑）。
 		*
 		* 版式：上半左栏两张（有身份 / 没身份）、右栏「台账怎么跑」四格小图（纯 CSS）；
 		* 下半台账目录表格。写动作（显示 / 改名 / 移除 / 添加）仍空着，下一轮接。
 		*/
 		/** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 		const notYet = () => {};
-		/** 样式预览用的示例身份（定稿后删）。 */
-		const PREVIEW = {
-			name: "GuoJia-Agent",
-			uuid: "3f9c2a71"
-		};
 		function SettingsPage(props) {
 			const { t, onSwitched } = props;
 			const [userOpen, setUserOpen] = (0, react$1.useState)(false);
@@ -56817,6 +56813,8 @@ body[data-ds-dark-theme]{
 			const openUserModal = () => {
 				setUserOpen(true);
 			};
+			/** 本机到底有没有身份（`uuid` / `name` 任一为空都算没有）—— 卡片配色与内容都按它二选一。 */
+			const hasIdentity = props.identity.uuid !== null && props.identity.name !== null;
 			const profileOf = (who, uuid) => {
 				if (who === null || uuid === null) return (0, react$1.createElement)("div", { className: "dtl-profile" }, (0, react$1.createElement)("div", { className: "dtl-avatar dtl-avatar--empty" }, "?"), (0, react$1.createElement)("div", { className: "dtl-profile__main" }, (0, react$1.createElement)("div", { className: "dtl-profile__name" }, t("settingsNoIdentityTitle")), (0, react$1.createElement)("div", { className: "dtl-profile__hint" }, t("settingsNoIdentityHint")), (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
 					variant: "primary",
@@ -56953,7 +56951,10 @@ body[data-ds-dark-theme]{
 				placeholder: t("settingsAddPlaceholder"),
 				"aria-label": t("settingsAddPlaceholder")
 			}))) : null;
-			return (0, react$1.createElement)("div", { className: "dtl-set" }, (0, react$1.createElement)("div", { className: "dtl-hero" }, (0, react$1.createElement)("div", { className: "dtl-hero__col" }, (0, react$1.createElement)(Card, { accent: "success" }, profileOf(PREVIEW.name, PREVIEW.uuid))), (0, react$1.createElement)("div", { className: "dtl-hero__flow" }, (0, react$1.createElement)(Surface, { padding: "lg" }, flow))), (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)("div", { className: "dtl-set__head" }, (0, react$1.createElement)("div", null, (0, react$1.createElement)("div", { className: "dtl-set__title" }, t("settingsDirsTitle")), (0, react$1.createElement)("div", { className: "dtl-set__hint" }, t("settingsDirsHint"))), (0, react$1.createElement)(Button, {
+			return (0, react$1.createElement)("div", { className: "dtl-set" }, (0, react$1.createElement)("div", { className: "dtl-hero" }, (0, react$1.createElement)("div", { className: "dtl-hero__col" }, (0, react$1.createElement)(Card, {
+				accent: hasIdentity ? "success" : "danger",
+				bar: { side: "top" }
+			}, hasIdentity ? profileOf(props.identity.name, props.identity.uuid) : profileOf(null, null))), (0, react$1.createElement)("div", { className: "dtl-hero__flow" }, (0, react$1.createElement)(Surface, { padding: "lg" }, flow))), (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)("div", { className: "dtl-set__head" }, (0, react$1.createElement)("div", null, (0, react$1.createElement)("div", { className: "dtl-set__title" }, t("settingsDirsTitle")), (0, react$1.createElement)("div", { className: "dtl-set__hint" }, t("settingsDirsHint"))), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "sm",
 				onClick: () => {
@@ -57436,8 +57437,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-232207-362`
-			}, `v0.0.126 261101-232207-362`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-233435-036`
+			}, `v0.0.126 261101-233435-036`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

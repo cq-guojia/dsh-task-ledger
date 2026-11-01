@@ -189,7 +189,9 @@ export const UI_CONTROLS_CSS = `
   word-break:break-all;}
 .dtl-profile__hint{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-acts{display:flex;align-items:center;gap:var(--dtl-space-2);flex:0 0 auto;flex-wrap:wrap;}
-.dtl-profile__main .dtl-acts{margin-top:var(--dtl-space-1);justify-content:center;}
+/* 身份卡的按钮排与上面文字拉开（用户 2026-11-01：要 1.5~2 倍）——
+   原间距 = 外层 flex gap 4 + 这里 4 = 8px，现在 4 + 12 = 16px（2 倍，间距只许用四拍档位）。 */
+.dtl-profile__main .dtl-acts{margin-top:var(--dtl-space-3);justify-content:center;}
 
 /* 流程小图：三列 —— 左「装 skill」/ 中「工作区里（建→领→结）」/ 右「面板查看」。
    风格参照 archify 的设计系统：**扁平无阴影、颜色只承担语义、圆角 control 档、
