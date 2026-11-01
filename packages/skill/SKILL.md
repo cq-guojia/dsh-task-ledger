@@ -399,7 +399,7 @@ allowed-tools: Read,Edit,Bash,Grep
 
 - **身份没初始化（退出码 100）⇒ 停下，它是主任务**（不适用下一条「不挡主任务」）：转 `references/init-identity.md` 照做 —— 裸跑 `init` 只读报名单 → 把**绝对路径**命令交给用户 → 等 ta 在自己终端完成 → 好了重跑原命令。**不要排查原因**（别 `ls` / `cat` identity.json / 读源码 / 读台账），忽略上下文里已做的排查动作，也不要基于「上次确认过 / 同名」自行重建。
 - **动作阶段失败（退出码非 0，且不是 100）= 该命令没生效**：不挡主任务 —— 继续手里的活，收尾时汇报「没记上，原因 …」；不绕过脚本手改文件。
-- **退出码 0 也要看输出**：出现 `提示：` / `错误：` / `警告：` 就先用一句话说清「发生了什么 + 下一步做什么」，再按 `references/troubleshooting.md` 给步骤；纯告知类一句话带过。只读命令只有 `错误：` 才需要转述。
+- **退出码 0 也要看输出**：出现 `提示：` / `警告：` 就先用一句话说清「发生了什么 + 下一步做什么」，再按 `references/troubleshooting.md` 给步骤；纯告知类一句话带过。
 - **两类不是故障的退出码**：`validate` 查出问题时退出码 1，照实转述清单；提交阶段失败 ⇒ 文件已经写下去、只差进 git，让用户先提交再重跑，别说「没记上」。
 - **并发冲突**（文件被改动、抢不到锁）重跑一次即可；台账同步一律交给脚本，不要自己 `git pull` / `rebase` 去「解决」（脚本明说不代劳的几种除外，见 troubleshooting）。
 - 同一仓库里写命令排队执行，等前一个跑完再重跑。
@@ -408,7 +408,7 @@ allowed-tools: Read,Edit,Bash,Grep
 
 | 何时读 | 文件 |
 |---|---|
-| 任何非 0 退出、退出码 0 但有 `提示：` / `错误：` / `警告：`、并发冲突、`validate` 报错 | `references/troubleshooting.md` |
+| 任何非 0 退出、退出码 0 但有 `提示：` / `警告：`、并发冲突、`validate` 报错 | `references/troubleshooting.md` |
 | 传 `--created` / `--finished` 补录时间、看 `--json` 里的时间字段、查别人时 owner 匹配异常、看 history 列义 / 时间窗口口径 | `references/state-model.md` |
 | 拿不准一条记录够不够格、`--note` 不会写 | `references/log-note.md` |
 | 命令退出码 100（这台机器还没有身份） | `references/init-identity.md` |
