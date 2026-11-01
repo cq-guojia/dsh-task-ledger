@@ -6,14 +6,6 @@ import type { LedgerFilter, LedgerWorkspace, TaskRow, WorkspaceOwners } from "..
  */
 export declare function filterArgs(filter: LedgerFilter): string[];
 /**
- * 台账工作区探测：走 skill `root --json`（判据是「这个目录直接含 `ledger/`」，
- * 与脚本定位工作区根同一口径；有没有 `pool.json` 不影响）。
- *
- * 曾经的 `<path>/ledger/pool.json` 直查已废——布局知识只留 skill 一份。
- * 程序起不来时抛错（不静默把工作区藏掉）。
- */
-export declare function hasLedger(workspacePath: string): Promise<boolean>;
-/**
  * 在办任务（包 `list --json`；结果过 records 入口校验后打上 workspace）。
  * 脚本失败 / 形状不符抛错——由 service 层捕获进 degraded，路由层转 500 + 人话，
  * 不静默返空（空 = 撒谎）。**过 1.5s 读缓存**（同屏多端点会反复读同一份在办）。

@@ -163,6 +163,19 @@ var commandHelp = map[string]helpDoc{
 			{"--json", "{dir, root, repo, ledger, reason}：是不是已初始化的台账根"},
 		},
 	},
+	// 机器级台账目录清单（不进 SKILL.md：agent 记账不靠它，看板才靠它）
+	"dirs": {
+		usage: "progress dirs [--dir <目录> (--add [--name <名字>] | --hide | --unhide)] [--json]",
+		options: []helpOption{
+			{"（无参数）", "列出清单；顺手清掉失效条目（目录没了 / 已经不是台账）"},
+			{"--dir <目录>", "操作哪个目录（支持 ~；会归一成绝对路径）"},
+			{"--add", "登记进来（已在清单里则不动，不覆盖已有名字）"},
+			{"--name <名字>", "配合 --add：新登记这条的显示名字（不给就用目录名）"},
+			{"--hide", "看板不显示它；功能一切照常，台账照样读写"},
+			{"--unhide", "恢复显示"},
+			{"--json", "{dirs:[{path,name,hidden}], removed, added, reason, warnings}"},
+		},
+	},
 	"whoami": {
 		usage: "progress whoami [--json]",
 		options: []helpOption{

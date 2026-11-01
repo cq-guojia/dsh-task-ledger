@@ -4,6 +4,7 @@ package shell
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -287,6 +288,59 @@ func RenderRoot(res *actions.RootResult, asJSON bool) {
 		out("  往上找到的工作区根：" + repo)
 	}
 	out("  " + res.Reason)
+}
+
+// RenderDirs dirs（台账目录清单）的输出。
+func RenderDirs(res *actions.DirsResult, asJSON bool) {
+	if asJSON {
+		dirs := make([]map[string]any, 0, len(res.Dirs))
+		for _, dir := range res.Dirs {
+			dirs = append(dirs, map[string]any{
+				"path":   dir.Path,
+				"name":   dir.Name,
+				"hidden": dir.Hidden,
+			})
+		}
+		warnings := res.Warnings
+		if warnings == nil {
+			warnings = []string{}
+		}
+		jsonOut(map[string]any{
+			"dirs":     dirs,
+			"removed":  res.Removed,
+			"added":    res.Added,
+			"reason":   res.Reason,
+			"warnings": warnings,
+		})
+		return
+	}
+	if res.Reason != "" {
+		out("没加进清单：" + res.Reason)
+	}
+	if len(res.Dirs) == 0 {
+		out("台账目录清单是空的。")
+		out("  处理：进一次看板会自动登记 DSH 的工作区；别的目录用 progress dirs --dir <路径> --add。")
+	} else {
+		out(fmt.Sprintf("台账目录（%d 个）：", len(res.Dirs)))
+		for _, dir := range res.Dirs {
+			mark := "  "
+			if dir.Hidden {
+				mark = "隐藏"
+			}
+			name := dir.Name
+			if name == "" {
+				name = filepath.Base(dir.Path)
+			}
+			// 名字超过 20 字时 padRight 不截断，必须自带一个分隔空格，否则和路径黏在一起
+			out("  " + mark + "  " + padRight(name, 20) + " " + dir.Path)
+		}
+	}
+	if res.Removed > 0 {
+		out(fmt.Sprintf("已清掉 %d 条失效记录（目录没了或已经不是台账）。", res.Removed))
+	}
+	for _, line := range res.Warnings {
+		errOut(line)
+	}
 }
 
 // intOrNull *int → JSON 值（与 actions.intOrNil 同一件事：两处的调用方不同包，改一处记得改另一处）。

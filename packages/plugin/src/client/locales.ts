@@ -186,7 +186,7 @@ export const zh: Record<LocaleKey, string> = {
 	loading: "读取中…",
 	retry: "重试",
 	loadFailed: "读取失败",
-	degradedToastTitle: "部分工作区读取失败（{n} 个）",
+	degradedToastTitle: "部分台账读取失败（{n} 个）",
 	degradedItem: "{title}：{message}",
 
 	settingsEntry: "身份与设置",
@@ -253,8 +253,8 @@ export const zh: Record<LocaleKey, string> = {
 	tipDoing: "{who}\n开始执行：{started}\n最后更新：{updated}",
 	tipOverdue: "{who}\n开始执行：{started}\n最后更新：{updated}\n已逾期 {d}",
 	tipStale: "{who}\n开始执行：{started}\n最后更新：{updated}\n已停滞 {d}",
-	workspaceLabel: "工作区",
-	workspaceAll: "全部工作区",
+	workspaceLabel: "台账",
+	workspaceAll: "全部台账",
 	searchPlaceholder: "搜索",
 
 	regionMine: "我的待办",
@@ -262,8 +262,8 @@ export const zh: Record<LocaleKey, string> = {
 	ownerLabel: "执行人",
 	ownerAll: "全部执行人",
 	listEmpty: "未找到匹配的任务记录",
-	listEmptyHint: "可切换状态或工作区，查看其他记录。",
-	wsLimitHint: "本工作区记录较多，此处仅列出前 {n} 条；其余记录未予显示，如需查阅请缩小筛选范围。",
+	listEmptyHint: "可切换状态或台账，查看其他记录。",
+	wsLimitHint: "本台账记录较多，此处仅列出前 {n} 条；其余记录未予显示，如需查阅请缩小筛选范围。",
 
 	ownerUnclaimed: "待认领",
 	timeUnknown: "时间未知",
@@ -351,7 +351,7 @@ export const en: Record<LocaleKey, string> = {
 	loading: "Loading…",
 	retry: "Retry",
 	loadFailed: "Load failed",
-	degradedToastTitle: "{n} workspace(s) failed to load",
+	degradedToastTitle: "{n} ledger(s) failed to load",
 	degradedItem: "{title}: {message}",
 
 	settingsEntry: "Identity & settings",
@@ -420,8 +420,8 @@ export const en: Record<LocaleKey, string> = {
 		"{who}\nStarted: {started}\nLast updated: {updated}\nOverdue by {d}",
 	tipStale:
 		"{who}\nStarted: {started}\nLast updated: {updated}\nStalled for {d}",
-	workspaceLabel: "Workspace",
-	workspaceAll: "All workspaces",
+	workspaceLabel: "Ledger",
+	workspaceAll: "All ledgers",
 	searchPlaceholder: "Search",
 
 	regionMine: "My todos",
@@ -429,8 +429,8 @@ export const en: Record<LocaleKey, string> = {
 	ownerLabel: "Owner",
 	ownerAll: "Anyone",
 	listEmpty: "No matching task records",
-	listEmptyHint: "Switch status or workspace to see other records.",
-	wsLimitHint: "This workspace has more records than shown; only the first {n} are listed. Narrow the filters to see the rest.",
+	listEmptyHint: "Switch status or ledger to see other records.",
+	wsLimitHint: "This ledger has more records than shown; only the first {n} are listed. Narrow the filters to see the rest.",
 
 	ownerUnclaimed: "unclaimed",
 	timeUnknown: "unknown time",

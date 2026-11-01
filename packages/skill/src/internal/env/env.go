@@ -34,6 +34,15 @@ func IdentityFile() (string, error) {
 	return filepath.Join(home, ".taskledger", "identity.json"), nil
 }
 
+// DirsFile 机器级台账目录清单路径：与身份文件同域，**与身份无关**（没 init 也要能读写）。
+func DirsFile() (string, error) {
+	home, err := HomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".taskledger", "ledgers.json"), nil
+}
+
 // ReadIdentity 读机器身份；文件不存在、空文件、坏 JSON、没 uuid 一律 (Identity{}, false)。
 func ReadIdentity() (core.Identity, bool, error) {
 	path, err := IdentityFile()

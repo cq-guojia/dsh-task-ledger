@@ -12,9 +12,9 @@ export interface RegistryWorkspace {
     readonly attachSession?: (sessionId: string) => Promise<void>;
 }
 /**
- * 工作区发现：宿主 registry 全量 → 逐个问 skill `root`（这个目录是不是台账根），
- * 只留是的。没有 `ledger/` 的目录后端不可见（2026-10-17 拍板）。
+ * 台账目录发现（2026-11-01 改口径）：**按机器级清单读**，不再按宿主工作区读。
  *
- * 探测走 repository 的 hasLedger()——本文件不碰 node:fs（IO 唯一出口纪律）。
+ * 宿主 registry 只剩一件事：替清单**补登记**（扫到的工作区里清单还没有的，加进去）。
+ * 隐藏 = 全局不看：过滤在这里做一次，下游（统计卡 / 趋势 / 列表 / 名册）全吃它的输出。
  */
 export declare function resolveWorkspaces(registryList: readonly RegistryWorkspace[]): Promise<LedgerWorkspace[]>;

@@ -28,7 +28,7 @@ const NoSyncEnv = "TASK_LEDGER_NO_SYNC"
 
 const usageText = `用法：progress <命令> [选项]
 
-命令：new / claim / set / log / close / list / stats / owners / show / history / validate / root / whoami / init / switch
+命令：new / claim / set / log / close / list / stats / owners / show / history / validate / root / dirs / whoami / init / switch
 公共选项：
   --repo <工作区根>   --no-sync   -h, --help`
 
@@ -62,7 +62,10 @@ type Args struct {
 	Trend       string // stats --trend <粒度>：走趋势统计，不走在办计数
 	Last        string // stats --trend 的 --last <N><d|w|m|y>
 	ByOwner     bool   // stats --trend 的 --by-owner
-	Dir         string // root：要检测的目录（不给 = 当前目录）
+	Dir         string // root / dirs：要检测或操作的目录（root 不给 = 当前目录）
+	DirAdd      bool   // dirs --add：登记（已在清单里就更新名字）
+	DirHide     bool   // dirs --hide：看板不显示
+	DirUnhide   bool   // dirs --unhide：恢复显示
 	Deep        bool
 	Note        string
 	Summary     string
@@ -94,6 +97,7 @@ var commandFlags = map[string]map[string]bool{
 	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--keyword", "--since", "--until", "--limit", "--months", "--json", "--repo"),
 	"validate": setOf("--deep", "--json", "--repo"),
 	"root":     setOf("--dir", "--json"),
+	"dirs":     setOf("--dir", "--name", "--add", "--hide", "--unhide", "--json"),
 	"whoami":   setOf("--json", "--repo"),
 	"init":     setOf("--claim", "--new", "--name", "--yes", "--repo"),
 	// switch 只给界面用（不进 SKILL.md）：换成本机身份或建一个全新的，允许覆盖已有身份。
@@ -314,6 +318,12 @@ func applyFlag(a *Args, name, value string) error {
 		a.ByOwner = true
 	case "--dir":
 		a.Dir = value
+	case "--add":
+		a.DirAdd = true
+	case "--hide":
+		a.DirHide = true
+	case "--unhide":
+		a.DirUnhide = true
 	case "--json":
 		a.JSON = true
 	case "--deep":
@@ -355,6 +365,22 @@ func requireFlags(a *Args) error {
 		}
 	}
 	switch a.Command {
+	case "dirs":
+		picked := 0
+		for _, given := range []bool{a.DirAdd, a.DirHide, a.DirUnhide} {
+			if given {
+				picked++
+			}
+		}
+		if picked > 1 {
+			return usageErr("dirs 的 --add / --hide / --unhide 只能给一个")
+		}
+		if a.Dir == "" && picked > 0 {
+			return usageErr("dirs 缺少 --dir（要操作哪个台账目录）")
+		}
+		if a.Dir != "" && picked == 0 {
+			return usageErr("dirs 给了 --dir 就要指明动作：--add / --hide / --unhide（三个都不给 = 列出清单）")
+		}
 	case "log":
 		if a.Note == "" {
 			return usageErr("log 缺少 --note")
@@ -609,6 +635,11 @@ func Main(argv []string) int {
 	if a.Command == "root" {
 		return runRoot(a)
 	}
+	// dirs 同理，而且更彻底：清单记的是「本机有哪些台账」，与任何单个工作区无关，
+	// 也不该被身份闸门挡住（没 init 的机器同样要能读写）。
+	if a.Command == "dirs" {
+		return runDirs(a)
+	}
 	// 定位只做一次：解析好的工作区根挂回 Args，runner 与整命令锁都拿它
 	repo, err := ResolveRepo(a.Repo)
 	if err != nil {
@@ -667,6 +698,31 @@ func runRoot(a *Args) int {
 		return ExitBusiness
 	}
 	RenderRoot(res, a.JSON)
+	return ExitOK
+}
+
+// runDirs 机器级台账目录清单：不定位仓库、不读身份、不碰 git。
+// 不带动作 = 列出（顺手清掉失效条目）；--add / --hide / --unhide 各吃一个 --dir。
+func runDirs(a *Args) int {
+	var (
+		res *actions.DirsResult
+		err error
+	)
+	switch {
+	case a.DirAdd:
+		res, err = actions.AddDir(a.Dir, a.Name)
+	case a.DirHide:
+		res, err = actions.SetHidden(a.Dir, true)
+	case a.DirUnhide:
+		res, err = actions.SetHidden(a.Dir, false)
+	default:
+		res, err = actions.ListDirs()
+	}
+	if err != nil {
+		FailMessage("错误", err.Error())
+		return ExitBusiness
+	}
+	RenderDirs(res, a.JSON)
 	return ExitOK
 }
 

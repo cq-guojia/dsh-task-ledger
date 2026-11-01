@@ -170,3 +170,7 @@ func LockScope(repo string, me core.Identity, action string, params map[string]a
 func Atom(repo string, rels ...string) (func(), error) {
 	return store.LedgerLock(repo, rels...)
 }
+
+// DirsLock 台账目录清单（~/.taskledger/ledgers.json）的互斥。
+// 它不在任何仓库里，所以不走 LedgerLock；锁调用仍然只出现在本文件（准入规则）。
+func DirsLock(path string) (func(), error) { return store.ProgressLock(path) }

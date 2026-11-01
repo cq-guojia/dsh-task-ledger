@@ -30,6 +30,8 @@
         │  host 经内嵌 skill 脚本（Go 二进制子进程，scripts/progress → scripts/bin/ledger-<os>-<arch>）只读
         ▼
 host 半：routes → services（纯计算）→ repositories（唯一知道台账怎么读）
+        │  台账清单 ~/.taskledger/ledgers.json 决定「读哪些目录」（skill `dirs`；宿主 registry 只负责补登记）
+        ▼
         │  HTTP（Desktop 走 IPC bridge）
         ▼
 client 半：侧栏条目（带计数）+ 主面板（任务 / 统计两 tab）
@@ -117,7 +119,7 @@ shell.Run（runner.go）
 
 ## 五、待拍板
 
-- 工作区**补充源**的配置形态（主来源已定 = `ctx.workspaceRegistry.list()`）；
+- ~~工作区**补充源**的配置形态~~ —— 2026-11-01 已拍板：机器级清单 `~/.taskledger/ledgers.json` 是**唯一**台账来源，`ctx.workspaceRegistry.list()` 降为登记来源（见 [`features/ledger-dirs.md`](features/ledger-dirs.md)）；
 - UI API 路由的鉴权方案（见不变量「路由自持鉴权」）；
 - Desktop（Electron）表面真机表现；
 - 结束会话的收尾（模型跑完 ⇒ 自动归档 + 通知用户）：用户 2026-10-18 说先放着。
