@@ -160,10 +160,12 @@ export const UI_CONTROLS_CSS = `
   gap:var(--dtl-space-3);flex-wrap:wrap;}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
-   高度拉平（align-items:stretch）——两侧卡片顶部和底部对齐，不留参差。 */
+   两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：
+   行高取两侧较高者，左右子项都 flex:1 撑满 ⇒ 左卡跟着右边长、右边也跟着卡片长，永远齐平。 */
 .dtl-hero{display:grid;grid-template-columns:320px minmax(0,1fr);
   gap:var(--dtl-space-3);align-items:stretch;}
 .dtl-hero__col{display:flex;flex-direction:column;gap:var(--dtl-space-3);min-width:0;}
+.dtl-hero__col > *{flex:1 1 auto;}
 .dtl-hero__flow{display:flex;min-width:0;}
 .dtl-hero__flow > *{flex:1 1 auto;}
 @media (max-width:760px){
@@ -193,40 +195,35 @@ export const UI_CONTROLS_CSS = `
    原间距 = 外层 flex gap 4 + 这里 4 = 8px，现在 4 + 12 = 16px（2 倍，间距只许用四拍档位）。 */
 .dtl-profile__main .dtl-acts{margin-top:var(--dtl-space-3);justify-content:center;}
 
-/* 流程小图：三列 —— 左「装 skill」/ 中「工作区里（建→领→结）」/ 右「面板查看」。
-   风格参照 archify 的设计系统：**扁平无阴影、颜色只承担语义、圆角 control 档、
-   中间那列用纵向 chip 串起三步**。 */
-.dtl-flow{min-width:0;display:flex;flex-direction:column;}
-.dtl-flow__title{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
-.dtl-flow__rail{display:flex;align-items:center;gap:var(--dtl-space-2);
-  margin-top:var(--dtl-space-3);flex-wrap:wrap;}
-.dtl-flow__stage{display:flex;flex-direction:column;align-items:center;gap:var(--dtl-space-1);
-  flex:1 1 0;min-width:0;text-align:center;}
-/* 节点方框 = 核心 Surface（白底 / 1px 边 / 圆角 8 / 内距 8）：语义色只改它的边色变量，
-   扁平（无阴影），颜色只表达语义、不装饰 */
-.dshpc-surface.dtl-flow__box{display:flex;align-items:center;justify-content:center;gap:var(--dtl-space-1);
-  width:100%;--surface-border:var(--dtl-border-strong);}
-.dshpc-surface.dtl-flow__box--neutral{--surface-border:var(--dtl-border-strong);color:var(--dtl-fg-2);}
-.dshpc-surface.dtl-flow__box--business{--surface-border:var(--dtl-business);color:var(--dtl-business);}
-.dshpc-surface.dtl-flow__box--success{--surface-border:var(--dtl-success);color:var(--dtl-success);}
-.dtl-flow__num{flex:none;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
-  font-weight:600;color:inherit;}
-.dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;
-  color:inherit;}
-.dtl-flow__desc{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
-/* 中间那列的纵向三步：淡底 chip + ↓ */
-.dtl-flow__stack{display:flex;flex-direction:column;align-items:center;gap:var(--dtl-space-1);
-  width:100%;margin-top:var(--dtl-space-1);}
-.dtl-flow__chip{display:block;width:100%;box-sizing:border-box;
-  padding:var(--dtl-space-1) var(--dtl-space-2);border-radius:var(--dtl-radius-xs);
-  background:var(--dtl-business-soft);font-size:var(--dtl-font-sm);
-  line-height:var(--dtl-line-sm);color:var(--dtl-fg);}
-.dtl-flow__down{color:var(--dtl-fg-dim);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);}
-.dtl-flow__arrow{flex:none;color:var(--dtl-fg-dim);font-size:var(--dtl-font-md);
-  line-height:var(--dtl-line-md);}
-@media (max-width:760px){
-  .dtl-flow__rail{flex-direction:column;align-items:stretch;}
-  .dtl-flow__arrow{align-self:center;transform:rotate(90deg);}
+/* 三步说明（用户 2026-11-01 定稿）：一个**大框**（核心 Surface）里用**实线**隔成三块完整的格，
+   **没有大标题**。每块排版照常见「三步」卡（图标徽标在左上、步骤名在右上、粗体标题、短说明）：
+   顶部一行「图标 + 第 N 步」两端对齐 → 小标题 → 说明。
+   整块撑满右栏高度 ⇒ 与左边身份卡等高，竖线也跟着顶到框的上下边。 */
+.dshpc-surface.dtl-flow__frame{flex:1 1 auto;min-height:0;min-width:0;display:flex;}
+.dtl-flow__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  flex:1 1 auto;min-height:0;min-width:0;}
+.dtl-flow__cell{display:flex;flex-direction:column;align-items:flex-start;gap:var(--dtl-space-2);
+  padding:var(--dtl-space-4);box-sizing:border-box;min-width:0;}
+/* 分块：实线，顶到框的上下边（外缘由大框自己描） */
+.dtl-flow__cell + .dtl-flow__cell{border-left:1px solid var(--dtl-border);}
+/* 顶部一行：图标徽标在左、「第一步」在右，两端对齐 */
+.dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
+  gap:var(--dtl-space-2);width:100%;}
+/* 步骤名：写明白「第一步 / 第二步 / 第三步」，不用 ①②③ 这种符号 */
+.dtl-flow__step{flex:none;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  font-weight:600;color:var(--dtl-fg-3);letter-spacing:0.02em;}
+/* 图标徽标：32 见方 + 语义色浅底 */
+.dtl-flow__icon{flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:var(--dtl-radius-sm);}
+.dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;color:var(--dtl-fg);}
+.dtl-flow__icon--neutral{background:var(--dtl-chip-strong);color:var(--dtl-fg-2);}
+.dtl-flow__icon--business{background:var(--dtl-business-soft);color:var(--dtl-business);}
+.dtl-flow__icon--success{background:var(--dtl-success-soft);color:var(--dtl-success);}
+.dtl-flow__desc{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
+/* 窄面板：三块落成一列，实线跟着改横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
+@media (max-width:900px){
+  .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
+  .dtl-flow__cell + .dtl-flow__cell{border-left:0;border-top:1px solid var(--dtl-border);}
 }
 
 /* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */

@@ -53,15 +53,15 @@ export type LocaleKey =
 	| "settingsAddPlaceholder"
 	| "settingsAddConfirm"
 	// 设置页 · 流程小图与表格表头
-	| "settingsFlowTitle"
 	| "settingsFlow1"
 	| "settingsFlow1Desc"
 	| "settingsFlow2"
-	| "settingsFlow2Create"
-	| "settingsFlow2Claim"
-	| "settingsFlow2Close"
+	| "settingsFlow2Desc"
 	| "settingsFlow3"
 	| "settingsFlow3Desc"
+	| "settingsFlowStep1"
+	| "settingsFlowStep2"
+	| "settingsFlowStep3"
 	| "settingsColDir"
 	| "settingsColPath"
 	| "settingsColActions"
@@ -255,15 +255,15 @@ export const zh: Record<LocaleKey, string> = {
 	settingsAddPlaceholder: "台账根目录的绝对路径",
 	settingsAddConfirm: "添加",
 
-	settingsFlowTitle: "台账工作流",
+	settingsFlowStep1: "第一步",
+	settingsFlowStep2: "第二步",
+	settingsFlowStep3: "第三步",
 	settingsFlow1: "安装 skill",
-	settingsFlow1Desc: "DSH 内已内置",
-	settingsFlow2: "工作区里",
-	settingsFlow2Create: "建任务",
-	settingsFlow2Claim: "领任务",
-	settingsFlow2Close: "结案",
-	settingsFlow3: "面板查看",
-	settingsFlow3Desc: "统计 · 历史",
+	settingsFlow1Desc: "DeepSeek 端装插件，其他 AI 端装同款 skill；装完即可在对话里直接调用。",
+	settingsFlow2: "工作区内操作",
+	settingsFlow2Desc: "让 Agent 创建任务；它执行时更新进度，做完即结案留档。",
+	settingsFlow3: "面板内查看",
+	settingsFlow3Desc: "待办、历史与统计都在面板里，可查询筛选，只读不改。",
 	settingsColDir: "目录",
 	settingsColPath: "路径",
 	settingsColActions: "操作",
@@ -455,15 +455,15 @@ export const en: Record<LocaleKey, string> = {
 	settingsAddPlaceholder: "Absolute path of the ledger root",
 	settingsAddConfirm: "Add",
 
-	settingsFlowTitle: "Ledger workflow",
+	settingsFlowStep1: "Step 1",
+	settingsFlowStep2: "Step 2",
+	settingsFlowStep3: "Step 3",
 	settingsFlow1: "Install the skill",
-	settingsFlow1Desc: "Bundled in DSH",
-	settingsFlow2: "In the workspace",
-	settingsFlow2Create: "Create",
-	settingsFlow2Claim: "Claim",
-	settingsFlow2Close: "Close",
+	settingsFlow1Desc: "Install the plugin on DeepSeek, or the skill on other AI clients; it is then callable in chat.",
+	settingsFlow2: "Work in a workspace",
+	settingsFlow2Desc: "Ask the agent to create a task; it reports progress while working and closes it when done.",
 	settingsFlow3: "Review in the panel",
-	settingsFlow3Desc: "Summary · history",
+	settingsFlow3Desc: "Board, history and stats live in the panel — filterable, read-only.",
 	settingsColDir: "Folder",
 	settingsColPath: "Path",
 	settingsColActions: "Actions",

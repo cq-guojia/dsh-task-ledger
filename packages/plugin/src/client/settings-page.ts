@@ -7,6 +7,11 @@
  * 版式：上半左栏两张（有身份 / 没身份）、右栏「台账怎么跑」四格小图（纯 CSS）；
  * 下半台账目录表格。写动作（显示 / 改名 / 移除 / 添加）仍空着，下一轮接。
  */
+import {
+	IconChecklistOutlineRegular,
+	IconDownloadOutlineRegular,
+	IconFlatListOutlineRegular,
+} from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
@@ -177,53 +182,57 @@ export function SettingsPage(props: {
 		);
 	};
 
-	/* ── 上半 · 右：台账工作流（三个方框 + 箭头）─────────────────── */
+	/* ── 上半 · 右：三步说明（**没有大标题**，三块用实线隔成完整的宽格，用户 2026-11-01 定）────
+	   每块自上而下：序号 + 小标题 → 图标 → 说明。 */
 
-	/** 一列：编号方框 + 下面一行小字。 */
-	const stage = (num: string, name: string, desc: string, tone: string): ReactNode =>
+	/** 一块（照常见「三步」卡）：左上图标徽标 + 右上「第一步」标签 → 粗体小标题 → 说明。 */
+	const stepCell = (
+		step: string,
+		tone: "neutral" | "business" | "success",
+		icon: ReactNode,
+		title: string,
+		desc: string,
+	): ReactNode =>
 		h(
 			"div",
-			{ className: "dtl-flow__stage" },
+			{ className: "dtl-flow__cell" },
 			h(
-				Surface,
-				{ className: `dtl-flow__box dtl-flow__box--${tone}`, padding: "sm" },
-				h("span", { className: "dtl-flow__num" }, num),
-				h("span", { className: "dtl-flow__name" }, name),
+				"div",
+				{ className: "dtl-flow__top" },
+				h("span", { className: `dtl-flow__icon dtl-flow__icon--${tone}` }, icon),
+				h("span", { className: "dtl-flow__step" }, step),
 			),
+			h("div", { className: "dtl-flow__name" }, title),
 			h("div", { className: "dtl-flow__desc" }, desc),
 		);
 
 	const flow = h(
-		"div",
-		{ className: "dtl-flow" },
-		h("div", { className: "dtl-flow__title" }, t("settingsFlowTitle")),
+		Surface,
+		{ className: "dtl-flow__frame", padding: null },
 		h(
 			"div",
-			{ className: "dtl-flow__rail" },
-			stage("1", t("settingsFlow1"), t("settingsFlow1Desc"), "neutral"),
-			h("span", { className: "dtl-flow__arrow" }, "→"),
-			// 中间一列：工作区里，纵向三步（建 → 领 → 结）
-			h(
-				"div",
-				{ className: "dtl-flow__stage" },
-				h(
-					Surface,
-					{ className: "dtl-flow__box dtl-flow__box--business", padding: "sm" },
-					h("span", { className: "dtl-flow__num" }, "2"),
-					h("span", { className: "dtl-flow__name" }, t("settingsFlow2")),
-				),
-				h(
-					"div",
-					{ className: "dtl-flow__stack" },
-					h("span", { className: "dtl-flow__chip" }, t("settingsFlow2Create")),
-					h("span", { className: "dtl-flow__down" }, "↓"),
-					h("span", { className: "dtl-flow__chip" }, t("settingsFlow2Claim")),
-					h("span", { className: "dtl-flow__down" }, "↓"),
-					h("span", { className: "dtl-flow__chip" }, t("settingsFlow2Close")),
-				),
+			{ className: "dtl-flow__grid" },
+			stepCell(
+				t("settingsFlowStep1"),
+				"neutral",
+				h(IconDownloadOutlineRegular, { size: 18 }),
+				t("settingsFlow1"),
+				t("settingsFlow1Desc"),
 			),
-			h("span", { className: "dtl-flow__arrow" }, "→"),
-			stage("3", t("settingsFlow3"), t("settingsFlow3Desc"), "success"),
+			stepCell(
+				t("settingsFlowStep2"),
+				"business",
+				h(IconChecklistOutlineRegular, { size: 18 }),
+				t("settingsFlow2"),
+				t("settingsFlow2Desc"),
+			),
+			stepCell(
+				t("settingsFlowStep3"),
+				"success",
+				h(IconFlatListOutlineRegular, { size: 18 }),
+				t("settingsFlow3"),
+				t("settingsFlow3Desc"),
+			),
 		),
 	);
 
@@ -460,19 +469,21 @@ export function SettingsPage(props: {
 				"div",
 				{ className: "dtl-hero__col" },
 				// 只摆**一张**卡、按真实身份二选一（用户 2026-11-01：不用两张都摆，正常判断该显示哪张）。
-				// 有身份 = 绿条 + 真实名字 / uuid；没身份 = 红条 + 引导去建。色条方位当前在**上边**（bar.side='top'）。
+				// 有身份 = 绿条 + 真实名字 / uuid；没身份 = 红条 + 引导去建。
+				// 色条回到**左边**（上下都试过，用户 2026-11-01 定：上下都不好看）。
 				h(
 					Card,
 					{
 						accent: hasIdentity ? "success" : "danger",
-						bar: { side: "top" },
+						bar: { side: "left" },
 					},
 					hasIdentity
 						? profileOf(props.identity.name, props.identity.uuid)
 						: profileOf(null, null),
 				),
 			),
-			h("div", { className: "dtl-hero__flow" }, h(Surface, { padding: "lg" }, flow)),
+			// 右栏 = 一个**大框**（标题也在框内），不再外面再套一层 Surface
+			h("div", { className: "dtl-hero__flow" }, flow),
 		),
 		h(
 			Surface,
@@ -537,13 +548,15 @@ export type SettingsLocaleKey = Extract<
 	| "settingsAddHint"
 	| "settingsAddPlaceholder"
 	| "settingsAddConfirm"
-	| "settingsFlowTitle"
 	| "settingsFlow1"
 	| "settingsFlow1Desc"
 	| "settingsFlow2"
 	| "settingsFlow2Desc"
 	| "settingsFlow3"
 	| "settingsFlow3Desc"
+	| "settingsFlowStep1"
+	| "settingsFlowStep2"
+	| "settingsFlowStep3"
 	| "settingsColDir"
 	| "settingsColPath"
 	| "settingsColActions"
