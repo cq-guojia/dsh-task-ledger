@@ -179,6 +179,17 @@ var commandHelp = map[string]helpDoc{
 			{"--repo <工作区根>", "同上"},
 		},
 	},
+	// 给界面（看板的身份页）用：允许覆盖已有身份、不受真终端限制。agent 那边不列这条。
+	"switch": {
+		usage: "progress switch [--new --name <名字> | --claim <uuid>] [--json]",
+		options: []helpOption{
+			{"--new", "换成一个全新身份（配 --name）"},
+			{"--name <名字>", "新身份的显示名字"},
+			{"--claim <uuid>", "换成名册里已有的某个人"},
+			{"--json", "{uuid, name}：换完的身份"},
+			{"--repo <工作区根>", "同上"},
+		},
+	},
 }
 
 // printHelp 打某个命令（空串 = 顶层）的帮助。

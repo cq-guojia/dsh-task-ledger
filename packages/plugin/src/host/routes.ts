@@ -9,6 +9,13 @@
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { invalidate } from "./repositories/cache.js";
+import { scriptPath } from "./repositories/runner.js";
+import {
+	getIdentity,
+	getRoster,
+	switchIdentity,
+	type SwitchInput,
+} from "./services/identity.service.js";
 import { getBoardHome } from "./services/stats.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { type RegistryWorkspace, resolveWorkspaces } from "./workspace.js";
@@ -40,6 +47,65 @@ const API_PREFIX = "/api/task-ledger";
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
 	res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
 	res.end(JSON.stringify(body));
+}
+
+/** 请求体上限：身份写入只带一个名字 / 一个 uuid，8 KB 富余。 */
+const MAX_BODY_BYTES = 8 * 1024;
+
+/** 读原始请求体（宿主给的 handler 是裸 Node req，没有解析过的 body）。 */
+function readBody(req: IncomingMessage): Promise<string> {
+	return new Promise((resolve, reject) => {
+		let text = "";
+		req.on("data", (chunk: Buffer) => {
+			text += chunk.toString();
+			if (text.length > MAX_BODY_BYTES) {
+				reject(new Error("参数：请求体过大"));
+				req.destroy();
+			}
+		});
+		req.on("end", () => resolve(text));
+		req.on("error", reject);
+	});
+}
+
+/** 400 与 500 靠这个前缀区分：参数类错误一律在文案前加「参数：」。 */
+const BAD_REQUEST = "参数：";
+
+/** 界面上给用户复制到终端的 init 命令（有工作区就带上 --repo，否则脚本找不到台账）。 */
+function initCommandOf(repoPath: string): string {
+	const head = `sh "${scriptPath()}" init`;
+	return repoPath === "" ? head : `${head} --repo "${repoPath}"`;
+}
+
+/** 换身份请求体 → 动作参数（名字 / uuid 的合法性由 skill 再判一次，这里只挡形状）。 */
+async function switchInputOf(
+	req: IncomingMessage,
+	deps: RouteDeps,
+): Promise<SwitchInput> {
+	let raw: unknown;
+	try {
+		raw = JSON.parse(await readBody(req));
+	} catch {
+		throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
+	}
+	const body = (raw ?? {}) as Record<string, unknown>;
+	if (body.action === "new") {
+		const name = typeof body.name === "string" ? body.name.trim() : "";
+		if (name === "") throw new Error(`${BAD_REQUEST}新建身份必须填名字`);
+		return { action: "new", name };
+	}
+	if (body.action === "claim") {
+		const uuid = typeof body.uuid === "string" ? body.uuid.trim() : "";
+		if (uuid === "") throw new Error(`${BAD_REQUEST}认领身份必须给 uuid`);
+		const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
+		const workspace = (await workspacesOf(deps)).find(
+			(item) => item.id === workspaceId,
+		);
+		if (workspace === undefined)
+			throw new Error(`${BAD_REQUEST}找不到这个工作区，读不了名册`);
+		return { action: "claim", uuid, repo: workspace.path };
+	}
+	throw new Error(`${BAD_REQUEST}action 只能是 new / claim`);
 }
 
 /** 每请求重新解析工作区（registry 可能刚变；`root` 探测是本地结构判定，微秒级）。 */
@@ -75,6 +141,54 @@ export function registerRoutes(
 			},
 		});
 	};
+
+	// 本机身份：`{uuid, name}`，未初始化双 null（退 0，不是错误）。界面进页面的第一件事就是它 ——
+	// 没身份时后续的快照请求根本不会发（身份闸门在 skill 侧挡着，快照会 500）。
+	registerRead("/identity", async (_req, res) => {
+		try {
+			const identity = await getIdentity();
+			sendJson(res, 200, {
+				...identity,
+				// 界面上要直接给用户复制到终端的命令（绝对路径 —— PATH 里没有 progress）
+				initCommand: initCommandOf((await workspacesOf(deps))[0]?.path ?? ""),
+			});
+		} catch (error) {
+			sendJson(res, 500, {
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	});
+
+	// 可以认领的人：各工作区名册（没身份也能读；读挂的工作区直接跳过）。
+	registerRead("/identity/roster", async (_req, res) => {
+		try {
+			sendJson(res, 200, await getRoster(await workspacesOf(deps)));
+		} catch (error) {
+			sendJson(res, 500, {
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	});
+
+	// 换身份（建新的 / 认领名册里的）。宿主路由不区分 method ⇒ 自己判；写操作必须 POST。
+	webServer.register({
+		kind: "exact",
+		path: `${API_PREFIX}/identity/switch`,
+		handler: async (req, res) => {
+			if (req.method !== "POST") {
+				sendJson(res, 405, { error: "身份写入只接受 POST" });
+				return;
+			}
+			try {
+				sendJson(res, 200, await switchIdentity(await switchInputOf(req, deps)));
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				sendJson(res, message.startsWith("参数：") ? 400 : 500, {
+					error: message.replace(/^参数：/, ""),
+				});
+			}
+		},
+	});
 
 	registerRead("/workspaces", async (_req, res) => {
 		try {

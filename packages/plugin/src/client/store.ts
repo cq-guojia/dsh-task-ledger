@@ -6,8 +6,8 @@
  * ⚠️ `getSnapshot` 必须返回**稳定引用**（每次新建对象会被判定为「一直在变」⇒ 无限重渲染），
  * 故只在真变了时才换 `state` 对象。
  */
-import { fetchBoardSnapshot } from "./api";
-import type { BoardPayload } from "./types";
+import { fetchBoardSnapshot, fetchIdentity } from "./api";
+import type { BoardPayload, IdentityView } from "./types";
 
 /** 左侧菜单七档：「全部」置顶（不过滤），其后六档各按 skill 口径筛（详见 rows.ts）。 */
 export type TabFilter =
@@ -39,8 +39,10 @@ export interface ExtraOwner {
 
 export interface BoardState {
 	status: "loading" | "ready" | "error";
-	/** 首屏快照（8 卡 + 在办列表）；null = 还没回来。 */
+	/** 首屏快照（8 卡 + 在办列表）；null = 还没回来（或根本没身份，压根没请求）。 */
 	board: BoardPayload | null;
+	/** 本机身份；null = 还没取到（首读在途）。`uuid === null` = 这台机器还没有身份。 */
+	identity: IdentityView | null;
 	error: string | null;
 	query: Query;
 	/** 手动刷新在途（按钮转圈 / 禁用）。 */
@@ -68,6 +70,7 @@ export function isDefaultQuery(query: Query): boolean {
 let state: BoardState = {
 	status: "loading",
 	board: null,
+	identity: null,
 	error: null,
 	query: DEFAULT_QUERY,
 	refreshing: false,
@@ -104,11 +107,24 @@ export function boardSubscribe(listener: () => void): () => void {
 	};
 }
 
-/** 重读首屏。带 `fresh=1`：本函数只由首读与手动刷新触发，都要最新值。 */
+/**
+ * 重读首屏。**先问身份，再拉快照**（2026-11-01 拍板：没身份就把整个面板换成设置页）：
+ * skill 侧所有读命令都过身份闸门，没身份时快照必然 500 —— 所以那种情况连请求都不发，
+ * 并发报错、错误去重这些事就不存在了。带 `fresh=1`：本函数只由首读与手动刷新触发。
+ */
 export async function refresh(): Promise<void> {
 	const token = ++runToken;
 	set({ refreshing: true });
 	try {
+		const identity = await fetchIdentity();
+		if (token !== runToken) return;
+		// 只在真变了才换对象（getSnapshot 必须稳定，否则无限重渲染）
+		if (identity.uuid !== state.identity?.uuid || identity.name !== state.identity?.name)
+			set({ identity });
+		if (identity.uuid === null) {
+			set({ status: "ready", board: null, error: null });
+			return;
+		}
 		const board = await fetchBoardSnapshot({ fresh: true });
 		if (token !== runToken) return;
 		set({ status: "ready", board, error: null });

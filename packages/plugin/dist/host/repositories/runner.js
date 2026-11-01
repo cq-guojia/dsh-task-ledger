@@ -11,6 +11,10 @@ import { fileURLToPath } from "node:url";
 const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL("../../../skill/scripts/progress", import.meta.url));
 /** 单次脚本调用超时上限（ms）。实测单仓 5 万行全量 1.2s，10s 是宽松上限。 */
 const DEFAULT_TIMEOUT_MS = 10_000;
+/** 脚本绝对路径（界面上要写给用户复制的命令用；别在别处再拼一份）。 */
+export function scriptPath() {
+    return DEFAULT_SCRIPT_PATH;
+}
 /**
  * 起一次台账程序、收 stdout / stderr。出错一律归一成人话（起不了程序 / 超时 / 非零退出）。
  * 解析留给调用方：读命令要 JSON，写命令要原文。

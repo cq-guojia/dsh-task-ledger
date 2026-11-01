@@ -148,4 +148,9 @@ declare module "@deepseek-ai/dsh-client-ui-primitives" {
 		size?: number;
 		className?: string;
 	}>;
+	/** 设置（齿轮）：`icons/index.d.ts` 与 `lib/index.js` 都有同名导出（2026-11-01 亲验）。 */
+	export const IconSettingsOutlineRegular: ComponentType<{
+		size?: number;
+		className?: string;
+	}>;
 }

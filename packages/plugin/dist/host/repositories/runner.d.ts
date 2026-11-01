@@ -1,3 +1,5 @@
+/** 脚本绝对路径（界面上要写给用户复制的命令用；别在别处再拼一份）。 */
+export declare function scriptPath(): string;
 export type LedgerScriptResult<T> = {
     ok: true;
     data: T;

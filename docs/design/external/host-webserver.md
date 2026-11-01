@@ -20,6 +20,7 @@
 | 无响应超时 / 不主动回收 | 全文件无 `server.timeout` / `setTimeout` / 对已建立响应的回收逻辑 | `lib/index.js`（全文） |
 | 宿主无 TLS / 鉴权 / 同源 | *"No server-wide TLS, authentication, or origin policy — route owners … enforce their own request policy."* | `README.md:113` |
 | 重复 `(kind,path)` 注册直接 throw | `if (table.has(route.path)) throw new Error(...)` | `lib/index.js:177-184` |
+| 路由**没有** method 维度 | `WebRoute` 类型只有 `kind` / `path` / `handler`，无 `method` 字段；判重也只看 path ⇒ 一个 path 只能注册一次，GET/POST 由 handler 自己看 `req.method`（2026-11-01 为身份写端点核过） | `lib/types/index.d.ts:33-38`、`lib/index.js:177-184` |
 | 主动断仅两种情况 | ① handler 抛错且已发头 ⇒ `res.destroy()`；② 插件 dispose ⇒ `server.close()` + `closeAllConnections()` | `lib/index.js:248-256`、`:306-319` |
 
 ## 三、对本插件的落地含义

@@ -1,16 +1,37 @@
 import { runLedgerScript } from "./runner.js";
-/**
- * 本机身份 uuid —— 走 skill `whoami --json`（**不再自己读 identity.json**：
- * `$TASK_LEDGER_HOME` / 默认目录 / 文件格式都是 skill 的知识，插件不复制第二份）。
- *
- * **只取 `uuid`**：`name` 是冗余显示字段，不参与任何判定（按名字比 owner 永远比不到）。
- * 未初始化时 skill 回 `{"uuid":null}`（退 0），这里同样回 null ⇒ 「我的」按 0 计（不谎报）。
- * 程序起不来看不出身份，也只回 null。
- */
-export async function getCurrentIdentity(_workspace) {
+const UNKNOWN_IDENTITY = { uuid: null, name: null };
+function viewOf(data) {
+    const uuid = typeof data.uuid === "string" ? data.uuid.trim() : "";
+    const name = typeof data.name === "string" ? data.name.trim() : "";
+    return {
+        uuid: uuid === "" ? null : uuid.toLowerCase(),
+        name: name === "" ? null : name,
+    };
+}
+export async function readIdentity() {
     const result = await runLedgerScript("whoami", ["--json"]);
     if (!result.ok)
-        return null;
-    const uuid = typeof result.data.uuid === "string" ? result.data.uuid.trim() : "";
-    return uuid === "" ? null : uuid.toLowerCase();
+        return UNKNOWN_IDENTITY;
+    return viewOf(result.data);
+}
+/** 只要 uuid（看板行级的「是不是我的」以 skill 的 `mine` 为准，这里只备查）。 */
+export async function getCurrentIdentity(_workspace) {
+    return (await readIdentity()).uuid;
+}
+/**
+ * 换身份。调的是隐藏命令 `switch`（不进 SKILL.md）：它允许覆盖已有身份、不受真终端限制，
+ * 正是 `init` 做不到的两件事。失败把人话抛给路由（→ 500 → 界面原地显示）。
+ */
+export async function switchIdentity(input) {
+    const args = ["--json"];
+    if (input.action === "new") {
+        args.push("--new", "--name", input.name);
+    }
+    else {
+        args.push("--claim", input.uuid, "--repo", input.repo);
+    }
+    const result = await runLedgerScript("switch", args);
+    if (!result.ok)
+        throw new Error(result.error);
+    return viewOf(result.data);
 }

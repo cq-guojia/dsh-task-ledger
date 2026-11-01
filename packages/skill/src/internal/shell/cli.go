@@ -28,7 +28,7 @@ const NoSyncEnv = "TASK_LEDGER_NO_SYNC"
 
 const usageText = `用法：progress <命令> [选项]
 
-命令：new / claim / set / log / close / list / stats / owners / show / history / validate / root / whoami / init
+命令：new / claim / set / log / close / list / stats / owners / show / history / validate / root / whoami / init / switch
 公共选项：
   --repo <工作区根>   --no-sync   -h, --help`
 
@@ -96,6 +96,8 @@ var commandFlags = map[string]map[string]bool{
 	"root":     setOf("--dir", "--json"),
 	"whoami":   setOf("--json", "--repo"),
 	"init":     setOf("--claim", "--new", "--name", "--yes", "--repo"),
+	// switch 只给界面用（不进 SKILL.md）：换成本机身份或建一个全新的，允许覆盖已有身份。
+	"switch": setOf("--claim", "--new", "--name", "--json", "--repo"),
 }
 
 func setOf(items ...string) map[string]bool {
@@ -361,6 +363,10 @@ func requireFlags(a *Args) error {
 		if a.Summary == "" && !a.Cancel {
 			return usageErr("close 缺少 --summary（取消可用 --cancel 省略）")
 		}
+	case "switch":
+		if a.Claim == nil && !a.NewID {
+			return usageErr("switch 要么 --new --name=<名字>，要么 --claim=<uuid>")
+		}
 	}
 	return nil
 }
@@ -595,6 +601,9 @@ func Main(argv []string) int {
 	if a.Command == "init" {
 		return runInit(a)
 	}
+	if a.Command == "switch" {
+		return runSwitch(a)
+	}
 	// root 与 whoami / init 同类：在定位仓库**之前**就要能问
 	// （「这个目录有没有台账」不能要求先有台账），不进 runner、不看 --repo
 	if a.Command == "root" {
@@ -771,6 +780,33 @@ func runInit(a *Args) int {
 		return ExitBusiness
 	}
 	printInitResult(res)
+	return ExitOK
+}
+
+// runSwitch 给界面用：换身份 / 建全新身份。与 init 同类（只写机器身份文件），
+// 但**不受 tty 限制、允许覆盖已有身份** —— 这正是 init 做不到的两件事。
+// 不进 SKILL.md：agent 拿不到这条命令，也就不会去替用户换身份。
+func runSwitch(a *Args) int {
+	repo := ""
+	if a.Repo != "" {
+		if root, err := core.AsRoot(a.Repo, "--repo"); err == nil {
+			repo = root
+		}
+	} else if cwd, err := os.Getwd(); err == nil {
+		repo = core.RootOf(cwd)
+	}
+	res, err := actions.SwitchIdentity(repo, actions.SwitchParams{Claim: a.Claim, New: a.NewID, Name: a.Name})
+	if err != nil {
+		FailMessage("错误", err.Error())
+		return ExitBusiness
+	}
+	uuid, _ := res["uuid"].(string)
+	name, _ := res["name"].(string)
+	if a.JSON {
+		jsonOut(map[string]any{"uuid": uuid, "name": name})
+		return ExitOK
+	}
+	out("已切换身份：@" + name + "   " + uuid)
 	return ExitOK
 }
 

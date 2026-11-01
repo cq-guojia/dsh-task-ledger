@@ -16,6 +16,11 @@ const DEFAULT_SCRIPT_PATH = fileURLToPath(
 /** 单次脚本调用超时上限（ms）。实测单仓 5 万行全量 1.2s，10s 是宽松上限。 */
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+/** 脚本绝对路径（界面上要写给用户复制的命令用；别在别处再拼一份）。 */
+export function scriptPath(): string {
+	return DEFAULT_SCRIPT_PATH;
+}
+
 export type LedgerScriptResult<T> =
 	| { ok: true; data: T }
 	| { ok: false; error: string };

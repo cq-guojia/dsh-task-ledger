@@ -88,7 +88,11 @@ func runCommand(command string, args *Args, log *store.WriteLog) (int, error) {
 	repo := args.Repo
 	me, err := actions.CurrentIdentity(repo)
 	if err != nil {
-		return 0, err
+		// owners 例外：登录前要先能列出名册，没身份也得跑（mine 全 false）
+		if !spec.OptionalIdentity {
+			return 0, err
+		}
+		me = core.Identity{}
 	}
 	syncing := !args.NoSync
 

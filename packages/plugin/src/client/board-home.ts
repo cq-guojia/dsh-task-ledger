@@ -15,6 +15,7 @@
 import {
 	IconFolderCloseRegular,
 	IconRefreshOutlineRegular,
+	IconSettingsOutlineRegular,
 	IconUsersOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import {
@@ -62,6 +63,7 @@ import {
 	Button,
 	EmptyState,
 	ensureUiBase,
+	IconButton,
 	Loader,
 	notify,
 	QuickToolbar,
@@ -72,6 +74,7 @@ import {
 	StatCard,
 	Tag,
 } from "./ui";
+import { SettingsPage } from "./settings-page";
 
 // 构建期由 tsdown.client.config.ts 的 define 注入（版本读 package.json，编码是编译时刻时间戳）。
 declare const __PLUGIN_VERSION__: string;
@@ -210,6 +213,8 @@ export function BoardHome(props: {
 	const toolbarScroll = useCallback((): HTMLElement | null => scrollRef.current, []);
 	// 视图模式：在办看板 ↔ 历史查询（入口切换；历史页布局待定稿，先占位）。
 	const [viewMode, setViewMode] = useState<"active" | "history">("active");
+	// 身份与设置页（用户 2026-11-01）：右上角齿轮进；没身份时它不是「进」而是整页顶掉看板。
+	const [showSettings, setShowSettings] = useState(false);
 	// 首页趋势图的粒度（日 / 周），默认日（用户 2026-10-31 起要；收尾时把默认从周翻到日）。两档桶都随快照下来 ⇒ 切换零请求。
 	const [trendGran, setTrendGran] = useState<TrendGran>("day");
 	// 历史页顶部数据：切到历史才拉（拉过一次就复用，切回在办不清）。
@@ -642,6 +647,23 @@ export function BoardHome(props: {
 		),
 	);
 
+	// 没身份 ⇒ 整个面板就是身份页（登录闸，用户 2026-11-01 拍板：不做提示条、不做「先看看」）；
+	// 有身份 ⇒ 齿轮进来的是同一页，带「返回看板」。身份还没取到时按原骨架继续画（不闪一屏别的）。
+	const identity = state.identity;
+	if (identity !== null && (identity.uuid === null || showSettings)) {
+		return h(SettingsPage, {
+			t,
+			identity,
+			onBack: () => {
+				setShowSettings(false);
+			},
+			onSwitched: () => {
+				setShowSettings(false);
+				void refresh();
+			},
+		});
+	}
+
 	return h(
 		"div",
 		{ ref: mountRef, style: mountStyle },
@@ -712,6 +734,14 @@ export function BoardHome(props: {
 									{ value: "history", label: t("viewHistory") },
 								],
 								onChange: (next) => setViewMode(next),
+							}),
+							// 身份与设置（用户 2026-11-01：放在刷新左边，齿轮图标）。
+							h(IconButton, {
+								icon: h(IconSettingsOutlineRegular, { size: 16 }),
+								label: t("settingsEntry"),
+								title: t("settingsEntry"),
+								size: "lg",
+								onClick: () => setShowSettings(true),
 							}),
 							h(
 								Button,

@@ -225,10 +225,28 @@ export interface BoardPayload {
 }
 
 /** 一个读失败的工作区（host `degraded` 条目；UI 标红 + 人话原因）。 */
+
 export interface DegradedInfo {
 	readonly workspaceId: string;
 	readonly workspaceTitle: string;
 	readonly op: "list" | "owners" | "trend" | "history";
 	readonly code: string;
 	readonly message: string;
+}
+
+/** 本机身份（`/identity`）：`uuid` 为 null = 这台机器还没有身份（不是错误，skill 退 0）。 */
+export interface IdentityView {
+	readonly uuid: string | null;
+	readonly name: string | null;
+	/** 可粘贴到终端的 init 命令（host 拼好的绝对路径；不在界面上手拼）。 */
+	readonly initCommand?: string;
+}
+
+/** `/identity/roster`：可以认领的人，按工作区分组（读不到名册的工作区不在列表里）。 */
+export interface RosterPayload {
+	readonly workspaces: readonly {
+		readonly id: string;
+		readonly title: string;
+		readonly owners: readonly { readonly uuid: string; readonly name: string }[];
+	}[];
 }

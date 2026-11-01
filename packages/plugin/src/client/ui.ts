@@ -569,6 +569,9 @@ export { SplitGroup } from "dsh-plugin-core/ui";
  *  `anchor` 给核心内容区容器 ⇒ 横向贴它的右缘外侧；不给才挂整个窗口右下角（本项目不要那种）。 */
 export { QuickToolbar } from "dsh-plugin-core/ui";
 
+/** 文本输入（核心唯一实现：size sm/md/lg、error 描红、hint 问号一气呵成）。 */
+export { Input } from "dsh-plugin-core/ui";
+
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 
 /** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。

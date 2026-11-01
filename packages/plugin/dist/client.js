@@ -53873,6 +53873,22 @@ window.__ModuleLoader__.load({
 				clearTimeout(timer);
 			}
 		}
+		/** 本机身份：进面板的**第一个**请求（没身份时快照会 500，所以必须先问它）。 */
+		function fetchIdentity() {
+			return fetchJson("/identity");
+		}
+		/** 可以认领的人：各工作区名册（没身份也能读）。 */
+		function fetchRoster() {
+			return fetchJson("/identity/roster");
+		}
+		/** 换身份：建全新的，或认领某个工作区名册里已有的人。返回换完之后的身份。 */
+		function postSwitchIdentity(body) {
+			return fetchJson("/identity/switch", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(body)
+			});
+		}
 		/**
 		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
 		* `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
@@ -53918,6 +53934,7 @@ window.__ModuleLoader__.load({
 		let state = {
 			status: "loading",
 			board: null,
+			identity: null,
 			error: null,
 			query: DEFAULT_QUERY,
 			refreshing: false,
@@ -53951,11 +53968,26 @@ window.__ModuleLoader__.load({
 				listeners.delete(listener);
 			};
 		}
-		/** 重读首屏。带 `fresh=1`：本函数只由首读与手动刷新触发，都要最新值。 */
+		/**
+		* 重读首屏。**先问身份，再拉快照**（2026-11-01 拍板：没身份就把整个面板换成设置页）：
+		* skill 侧所有读命令都过身份闸门，没身份时快照必然 500 —— 所以那种情况连请求都不发，
+		* 并发报错、错误去重这些事就不存在了。带 `fresh=1`：本函数只由首读与手动刷新触发。
+		*/
 		async function refresh() {
 			const token = ++runToken;
 			set({ refreshing: true });
 			try {
+				const identity = await fetchIdentity();
+				if (token !== runToken) return;
+				if (identity.uuid !== state.identity?.uuid || identity.name !== state.identity?.name) set({ identity });
+				if (identity.uuid === null) {
+					set({
+						status: "ready",
+						board: null,
+						error: null
+					});
+					return;
+				}
 				const board = await fetchBoardSnapshot({ fresh: true });
 				if (token !== runToken) return;
 				set({
@@ -56249,6 +56281,199 @@ body[data-ds-dark-theme]{
 			}, ...slots.map(labelOf)))), partial);
 		}
 		//#endregion
+		//#region src/client/settings-page.ts
+		/**
+		* 身份与设置页（2026-11-01 用户拍板：进面板先问身份，没身份就把整个面板换成这一页）。
+		*
+		* 本页第一版只做「能用起来所需的最小集」：
+		*  - 没身份：新建一个 / 认领某本台账里已有的人 / 复制终端命令自己跑；
+		*  - 有身份：只显示「我是谁」（切换与改名入口按用户要求推迟，暂不做）。
+		*
+		* 换身份之后由 `onSwitched` 让看板整轮重读（uuid 变了，mine / 统计全变）。
+		*/
+		const pageStyle$1 = {
+			height: "100%",
+			width: "100%",
+			flex: "1 1 auto",
+			minWidth: 0,
+			boxSizing: "border-box",
+			overflow: "auto",
+			padding: "24px 22px 0",
+			color: "var(--dtl-fg)"
+		};
+		const innerStyle = {
+			width: "100%",
+			maxWidth: "720px",
+			margin: "0 auto",
+			boxSizing: "border-box"
+		};
+		const headerStyle$1 = {
+			display: "flex",
+			alignItems: "center",
+			gap: "var(--dtl-space-3)",
+			flexWrap: "wrap",
+			marginBottom: "var(--dtl-space-4)"
+		};
+		const titleStyle$1 = {
+			fontSize: "var(--dtl-font-xl)",
+			fontWeight: 600
+		};
+		const cardStyle = {
+			padding: "var(--dtl-space-4)",
+			marginBottom: "var(--dtl-space-4)",
+			border: "1px solid var(--dtl-border)",
+			borderRadius: "var(--dtl-radius-md)",
+			background: "var(--dtl-surface-1)"
+		};
+		const cardTitleStyle = {
+			fontSize: "var(--dtl-font-md)",
+			fontWeight: 600,
+			marginBottom: "var(--dtl-space-2)"
+		};
+		const hintStyle = {
+			fontSize: "var(--dtl-font-sm)",
+			lineHeight: "var(--dtl-line-sm)",
+			color: "var(--dtl-fg-3)"
+		};
+		const rowStyle = {
+			display: "flex",
+			alignItems: "center",
+			gap: "var(--dtl-space-2)",
+			marginTop: "var(--dtl-space-3)"
+		};
+		const errorStyle = {
+			marginTop: "var(--dtl-space-2)",
+			fontSize: "var(--dtl-font-sm)",
+			color: "var(--dtl-danger)"
+		};
+		const ownerRowStyle = {
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "space-between",
+			gap: "var(--dtl-space-2)",
+			padding: "6px 0"
+		};
+		const rosterGroupStyle = { marginTop: "var(--dtl-space-3)" };
+		const codeStyle = {
+			display: "block",
+			marginTop: "var(--dtl-space-2)",
+			padding: "var(--dtl-space-2)",
+			borderRadius: "var(--dtl-radius-sm)",
+			background: "var(--dtl-table-head-bg)",
+			fontSize: "var(--dtl-font-sm)",
+			lineHeight: "var(--dtl-line-sm)",
+			whiteSpace: "pre-wrap",
+			wordBreak: "break-all",
+			userSelect: "all"
+		};
+		function SettingsPage(props) {
+			const { t, identity, onBack, onSwitched } = props;
+			const [name, setName] = (0, react$1.useState)("");
+			const [roster, setRoster] = (0, react$1.useState)(null);
+			const [pending, setPending] = (0, react$1.useState)(null);
+			const [error, setError] = (0, react$1.useState)(null);
+			const known = identity.uuid !== null;
+			(0, react$1.useEffect)(() => {
+				if (known) return;
+				let alive = true;
+				fetchRoster().then((payload) => {
+					if (alive) setRoster(payload);
+				}).catch(() => {
+					if (alive) setRoster({ workspaces: [] });
+				});
+				return () => {
+					alive = false;
+				};
+			}, [known]);
+			const run = async (key, action) => {
+				if (pending !== null) return;
+				setPending(key);
+				setError(null);
+				try {
+					await action();
+					onSwitched();
+				} catch (failure) {
+					setError(failure instanceof Error ? failure.message : String(failure));
+				} finally {
+					setPending(null);
+				}
+			};
+			const create = () => {
+				const trimmed = name.trim();
+				if (trimmed === "") return;
+				run("new", () => postSwitchIdentity({
+					action: "new",
+					name: trimmed
+				}));
+			};
+			const claim = (uuid, workspace) => {
+				run(`claim:${uuid}`, () => postSwitchIdentity({
+					action: "claim",
+					uuid,
+					workspace
+				}));
+			};
+			const candidates = (roster?.workspaces ?? []).filter((group) => group.owners.length > 0);
+			const body = known ? (0, react$1.createElement)("div", { style: cardStyle }, (0, react$1.createElement)("div", { style: cardTitleStyle }, t("settingsCurrent")), (0, react$1.createElement)("div", null, `@${identity.name ?? ""}`, (0, react$1.createElement)("span", { style: {
+				...hintStyle,
+				marginLeft: "var(--dtl-space-2)"
+			} }, identity.uuid ?? ""))) : [
+				(0, react$1.createElement)("div", {
+					key: "new",
+					style: cardStyle
+				}, (0, react$1.createElement)("div", { style: cardTitleStyle }, t("settingsNoIdentityTitle")), (0, react$1.createElement)("div", { style: hintStyle }, t("settingsNoIdentityHint")), (0, react$1.createElement)("div", { style: rowStyle }, (0, react$1.createElement)("div", { style: {
+					flex: "1 1 auto",
+					minWidth: 0
+				} }, (0, react$1.createElement)(Input, {
+					value: name,
+					onChange: setName,
+					placeholder: t("settingsNamePlaceholder"),
+					size: "lg",
+					"aria-label": t("settingsNamePlaceholder"),
+					disabled: pending !== null,
+					onKeyDown: (event) => {
+						if (event.key !== "Enter") return;
+						event.preventDefault();
+						create();
+					}
+				})), (0, react$1.createElement)(Button, {
+					variant: "primary",
+					size: "lg",
+					loading: pending === "new",
+					disabled: pending !== null || name.trim() === "",
+					onClick: create
+				}, t("settingsCreate"))), error === null ? null : (0, react$1.createElement)("div", { style: errorStyle }, t("settingsFailed", { message: error }))),
+				(0, react$1.createElement)("div", {
+					key: "roster",
+					style: cardStyle
+				}, (0, react$1.createElement)("div", { style: cardTitleStyle }, t("settingsUseExisting")), roster === null ? (0, react$1.createElement)(Loader, {
+					variant: "blocks",
+					size: "md"
+				}) : candidates.length === 0 ? (0, react$1.createElement)("div", { style: hintStyle }, t("settingsRosterEmpty")) : candidates.map((group) => (0, react$1.createElement)("div", {
+					key: group.id,
+					style: rosterGroupStyle
+				}, (0, react$1.createElement)("div", { style: hintStyle }, group.title), ...group.owners.map((owner) => (0, react$1.createElement)("div", {
+					key: owner.uuid,
+					style: ownerRowStyle
+				}, (0, react$1.createElement)("span", null, `@${owner.name}`), (0, react$1.createElement)(Button, {
+					variant: "outline",
+					size: "sm",
+					loading: pending === `claim:${owner.uuid}`,
+					disabled: pending !== null,
+					onClick: () => claim(owner.uuid, group.id)
+				}, t("settingsUseThis"))))))),
+				(0, react$1.createElement)("div", {
+					key: "terminal",
+					style: cardStyle
+				}, (0, react$1.createElement)("div", { style: hintStyle }, t("settingsTerminalHint")), (0, react$1.createElement)("code", { style: codeStyle }, identity.initCommand ?? "progress init"))
+			];
+			return (0, react$1.createElement)("div", { style: pageStyle$1 }, (0, react$1.createElement)("div", { style: innerStyle }, (0, react$1.createElement)("div", { style: headerStyle$1 }, known ? (0, react$1.createElement)(Button, {
+				variant: "outline",
+				size: "md",
+				onClick: onBack
+			}, `← ${t("settingsBack")}`) : null, (0, react$1.createElement)("div", { style: titleStyle$1 }, t("settingsTitle"))), body));
+		}
+		//#endregion
 		//#region src/client/board-home.ts
 		/**
 		* 看板首页（`main` 槽整页内容）：上 = 8 统计卡 + 趋势图；下 = 单区任务列表。
@@ -56422,6 +56647,7 @@ body[data-ds-dark-theme]{
 			const toolbarAnchor = (0, react$1.useCallback)(() => contentRef.current, []);
 			const toolbarScroll = (0, react$1.useCallback)(() => scrollRef.current, []);
 			const [viewMode, setViewMode] = (0, react$1.useState)("active");
+			const [showSettings, setShowSettings] = (0, react$1.useState)(false);
 			const [trendGran, setTrendGran] = (0, react$1.useState)("day");
 			const [gran, setGran] = (0, react$1.useState)("day");
 			const [histYm, setHistYm] = (0, react$1.useState)(() => {
@@ -56688,6 +56914,18 @@ body[data-ds-dark-theme]{
 					setQuery({ keyword: next });
 				}
 			})));
+			const identity = state.identity;
+			if (identity !== null && (identity.uuid === null || showSettings)) return (0, react$1.createElement)(SettingsPage, {
+				t,
+				identity,
+				onBack: () => {
+					setShowSettings(false);
+				},
+				onSwitched: () => {
+					setShowSettings(false);
+					refresh();
+				}
+			});
 			return (0, react$1.createElement)("div", {
 				ref: mountRef,
 				style: mountStyle
@@ -56717,8 +56955,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-023938-936`
-			}, `v0.0.126 261101-023938-936`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-160639-957`
+			}, `v0.0.126 261101-160639-957`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -56736,6 +56974,12 @@ body[data-ds-dark-theme]{
 					label: t("viewHistory")
 				}],
 				onChange: (next) => setViewMode(next)
+			}), (0, react$1.createElement)(IconButton, {
+				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSettingsOutlineRegular, { size: 16 }),
+				label: t("settingsEntry"),
+				title: t("settingsEntry"),
+				size: "lg",
+				onClick: () => setShowSettings(true)
 			}), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
@@ -56838,6 +57082,19 @@ body[data-ds-dark-theme]{
 			loadFailed: "读取失败",
 			degradedToastTitle: "部分工作区读取失败（{n} 个）",
 			degradedItem: "{title}：{message}",
+			settingsEntry: "身份与设置",
+			settingsTitle: "身份与设置",
+			settingsBack: "返回看板",
+			settingsNoIdentityTitle: "这台机器还没有身份",
+			settingsNoIdentityHint: "看板靠身份记账：谁领的、谁做的。建一个就能开始。",
+			settingsNamePlaceholder: "你的名字",
+			settingsCreate: "创建身份",
+			settingsUseExisting: "或者用已有的身份",
+			settingsRosterEmpty: "这些项目里还没有任何人建过身份。",
+			settingsTerminalHint: "也可以在终端里自己跑：",
+			settingsCurrent: "当前身份",
+			settingsFailed: "没成功：{message}",
+			settingsUseThis: "用这个",
 			statMyActive: "我的待办",
 			statMyOverdueHint: "逾期 {n}",
 			statMyStaleHint: "停滞 {n}",
@@ -56980,6 +57237,19 @@ body[data-ds-dark-theme]{
 			loadFailed: "Load failed",
 			degradedToastTitle: "{n} workspace(s) failed to load",
 			degradedItem: "{title}: {message}",
+			settingsEntry: "Identity & settings",
+			settingsTitle: "Identity & settings",
+			settingsBack: "Back to board",
+			settingsNoIdentityTitle: "This machine has no identity yet",
+			settingsNoIdentityHint: "The board is keyed by identity: who claimed it, who did it. Create one to start.",
+			settingsNamePlaceholder: "Your name",
+			settingsCreate: "Create identity",
+			settingsUseExisting: "Or use an existing identity",
+			settingsRosterEmpty: "No one has an identity in these projects yet.",
+			settingsTerminalHint: "Or run it yourself in a terminal:",
+			settingsCurrent: "Current identity",
+			settingsFailed: "Failed: {message}",
+			settingsUseThis: "Use this",
 			statMyActive: "My todos",
 			statMyOverdueHint: "overdue {n}",
 			statMyStaleHint: "stale {n}",

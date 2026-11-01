@@ -13,6 +13,8 @@ import type {
 	HistoryGran,
 	HistoryListPayload,
 	HistoryTrendPayload,
+	IdentityView,
+	RosterPayload,
 } from "./types";
 
 /** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
@@ -64,6 +66,29 @@ export async function fetchJson<T>(
 	} finally {
 		clearTimeout(timer);
 	}
+}
+
+/** 本机身份：进面板的**第一个**请求（没身份时快照会 500，所以必须先问它）。 */
+export function fetchIdentity(): Promise<IdentityView> {
+	return fetchJson<IdentityView>("/identity");
+}
+
+/** 可以认领的人：各工作区名册（没身份也能读）。 */
+export function fetchRoster(): Promise<RosterPayload> {
+	return fetchJson<RosterPayload>("/identity/roster");
+}
+
+/** 换身份：建全新的，或认领某个工作区名册里已有的人。返回换完之后的身份。 */
+export function postSwitchIdentity(
+	body:
+		| { readonly action: "new"; readonly name: string }
+		| { readonly action: "claim"; readonly uuid: string; readonly workspace: string },
+): Promise<IdentityView> {
+	return fetchJson<IdentityView>("/identity/switch", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(body),
+	});
 }
 
 /**

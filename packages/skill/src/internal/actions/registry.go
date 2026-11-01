@@ -27,11 +27,12 @@ type Params struct {
 
 // ActionSpec 一条命令的定义。
 type ActionSpec struct {
-	Render     string // 渲染函数名：result / list_view / show_view / history_view / validate_view
-	ReadOnly   bool
-	LockAction string   // 交给 LockScope 的动作名；默认同命令名
-	Params     []string // 从参数里挑哪些键传给动作
-	Run        func(repo string, me core.Identity, p Params) (any, error)
+	Render           string // 渲染函数名：result / list_view / show_view / history_view / validate_view
+	ReadOnly         bool
+	OptionalIdentity bool     // 没初始化身份也能跑（目前只有 owners：登录前要先列出名册）
+	LockAction       string   // 交给 LockScope 的动作名；默认同命令名
+	Params           []string // 从参数里挑哪些键传给动作
+	Run              func(repo string, me core.Identity, p Params) (any, error)
 }
 
 // ACTIONS 命令名册。
@@ -104,6 +105,9 @@ var ACTIONS = map[string]ActionSpec{
 	"owners": {
 		Render:   "owners_view",
 		ReadOnly: true,
+		// 读名册不需要身份：登录页要先把「这个仓库里已经有哪些人」列给人选。
+		// 没身份时 me 是零值，行上的 mine 全 false（比不到任何人，语义正确）。
+		OptionalIdentity: true,
 		Run: func(repo string, me core.Identity, p Params) (any, error) {
 			return ListOwners(repo, me)
 		},

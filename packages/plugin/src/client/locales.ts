@@ -19,6 +19,20 @@ export type LocaleKey =
 	| "loadFailed"
 	| "degradedToastTitle"
 	| "degradedItem"
+	// 身份与设置页
+	| "settingsEntry"
+	| "settingsTitle"
+	| "settingsBack"
+	| "settingsNoIdentityTitle"
+	| "settingsNoIdentityHint"
+	| "settingsNamePlaceholder"
+	| "settingsCreate"
+	| "settingsUseExisting"
+	| "settingsRosterEmpty"
+	| "settingsTerminalHint"
+	| "settingsCurrent"
+	| "settingsFailed"
+	| "settingsUseThis"
 	// 统计卡
 	| "statMyActive"
 	| "statOpen"
@@ -175,6 +189,20 @@ export const zh: Record<LocaleKey, string> = {
 	degradedToastTitle: "部分工作区读取失败（{n} 个）",
 	degradedItem: "{title}：{message}",
 
+	settingsEntry: "身份与设置",
+	settingsTitle: "身份与设置",
+	settingsBack: "返回看板",
+	settingsNoIdentityTitle: "这台机器还没有身份",
+	settingsNoIdentityHint: "看板靠身份记账：谁领的、谁做的。建一个就能开始。",
+	settingsNamePlaceholder: "你的名字",
+	settingsCreate: "创建身份",
+	settingsUseExisting: "或者用已有的身份",
+	settingsRosterEmpty: "这些项目里还没有任何人建过身份。",
+	settingsTerminalHint: "也可以在终端里自己跑：",
+	settingsCurrent: "当前身份",
+	settingsFailed: "没成功：{message}",
+	settingsUseThis: "用这个",
+
 	statMyActive: "我的待办",
 	statMyOverdueHint: "逾期 {n}",
 	statMyStaleHint: "停滞 {n}",
@@ -325,6 +353,21 @@ export const en: Record<LocaleKey, string> = {
 	loadFailed: "Load failed",
 	degradedToastTitle: "{n} workspace(s) failed to load",
 	degradedItem: "{title}: {message}",
+
+	settingsEntry: "Identity & settings",
+	settingsTitle: "Identity & settings",
+	settingsBack: "Back to board",
+	settingsNoIdentityTitle: "This machine has no identity yet",
+	settingsNoIdentityHint:
+		"The board is keyed by identity: who claimed it, who did it. Create one to start.",
+	settingsNamePlaceholder: "Your name",
+	settingsCreate: "Create identity",
+	settingsUseExisting: "Or use an existing identity",
+	settingsRosterEmpty: "No one has an identity in these projects yet.",
+	settingsTerminalHint: "Or run it yourself in a terminal:",
+	settingsCurrent: "Current identity",
+	settingsFailed: "Failed: {message}",
+	settingsUseThis: "Use this",
 
 	statMyActive: "My todos",
 	statMyOverdueHint: "overdue {n}",
