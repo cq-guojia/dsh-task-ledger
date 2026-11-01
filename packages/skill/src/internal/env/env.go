@@ -75,7 +75,7 @@ func Current(repo string) (core.Identity, error) {
 		return core.Identity{}, err
 	}
 	if !ok {
-		return core.Identity{}, core.Failf("这台机器还没有初始化身份。\n  处理：这是未初始化，不是故障——不要 ls / cat identity.json / 读源码或台账去排查。\n  请让用户在自己的终端运行 `progress init --repo <工作区根>`，由 ta 亲自选择/新建并确认；\n  Agent 只能裸跑 init 只读把名册报给 ta。细则见 references/init-identity.md。")
+		return core.Identity{}, core.FailCode(core.FailIdentityMissing, "这台机器还没有初始化身份。\n  处理：这是未初始化，不是故障——不要 ls / cat identity.json / 读源码或台账去排查。\n  请让用户在自己的终端运行 `progress init --repo <工作区根>`，由 ta 亲自选择/新建并确认；\n  Agent 只能裸跑 init 只读把名册报给 ta。细则见 references/init-identity.md。")
 	}
 	if repo != "" {
 		if name, err := workspaceName(repo, identity.UUID); err == nil && name != "" {

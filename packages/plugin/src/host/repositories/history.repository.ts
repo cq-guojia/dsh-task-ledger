@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { HistoryRecord, LedgerWorkspace } from "../types.js";
 import { cached, cacheKey } from "./cache.js";
-import { runLedgerScript } from "./runner.js";
+import { failureOf, runLedgerScript } from "./runner.js";
 
 /**
  * 历史明细（skill `history --json`）：按**结案时间**过滤，新→旧。
@@ -80,7 +80,7 @@ export async function readHistory(
 		cacheKey(workspace.id, "history", args.slice(2).join("\u0001")),
 		async () => {
 			const result = await runLedgerScript<RawHistory>("history", args);
-			if (!result.ok) throw new Error(`${workspace.title}: ${result.error}`);
+			if (!result.ok) throw failureOf(result, `${workspace.title}: `, workspace.id);
 			const rows = result.data.records;
 			if (!Array.isArray(rows))
 				throw new Error(`${workspace.title}: history 输出缺 records 数组`);

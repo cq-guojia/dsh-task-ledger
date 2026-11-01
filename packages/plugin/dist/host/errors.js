@@ -7,6 +7,16 @@
  * - **全局失败**（所有工作区都读不到 / 编程错误）：照旧抛，路由转 500 + 人话。
  *   防止「台账程序根本没装」被集体降级成一片绿色空板——那等于界面撒谎。
  */
+/** 这台机器还没有身份。message 仍是脚本原文（可直接上界面），码用来分流。 */
+export class IdentityMissingError extends Error {
+    code = "LEDGER_IDENTITY_MISSING";
+    workspaceId;
+    constructor(message, workspaceId = null) {
+        super(message);
+        this.name = "IdentityMissingError";
+        this.workspaceId = workspaceId;
+    }
+}
 /** 台账数据形状不符（容器级校验失败）。message 带工作区名 + 人话，可直接上界面。 */
 export class LedgerDataError extends Error {
     code = "LEDGER_DATA_INVALID";

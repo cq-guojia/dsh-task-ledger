@@ -11,7 +11,7 @@
 import { LedgerDataError } from "../errors.js";
 import type { LedgerWorkspace } from "../types.js";
 import { cached, cacheKey } from "./cache.js";
-import { runLedgerScript } from "./runner.js";
+import { failureOf, runLedgerScript } from "./runner.js";
 
 /** `stats --json` 的领域投影（只收界面用到的面）。 */
 export interface WorkspaceStats {
@@ -55,7 +55,7 @@ export async function readStats(
 			workspace.path,
 			"--json",
 		]);
-		if (!result.ok) throw new Error(`${workspace.title}: ${result.error}`);
+		if (!result.ok) throw failureOf(result, `${workspace.title}: `, workspace.id);
 		return parseStats(result.data, workspace.title);
 	});
 }

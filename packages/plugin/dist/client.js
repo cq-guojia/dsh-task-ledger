@@ -53843,17 +53843,33 @@ window.__ModuleLoader__.load({
 		/** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
 		const API_PREFIX = "api/task-ledger";
 		const DEFAULT_TIMEOUT_MS = 8e3;
+		/** 这次失败是不是「没有身份」——是的话整个面板要切成身份页，而不是显示错误。 */
+		function isIdentityMissing(error) {
+			return error !== null && typeof error === "object" && "code" in error && error.code === "LEDGER_IDENTITY_MISSING";
+		}
+		/** host 返回的失败响应（带人话 + 机器可读码）。 */
+		var HttpError = class extends Error {
+			code;
+			constructor(message, code) {
+				super(message);
+				this.name = "HttpError";
+				this.code = code;
+			}
+		};
 		/**
-		* 错误响应榨人话：host 路由（routes.ts）发的是 `{ error: "..." }`，那里的话是**能直接上界面的**
+		* 错误响应榨人话：host 路由（routes.ts）发的是 `{ error, code }`，`error` 是**能直接上界面的**
 		* （带工作区名、台账程序起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
 		*/
-		function httpErrorMessage(status, body) {
+		function errorOf(status, body) {
+			let message = "";
+			let code = null;
 			try {
 				const parsed = JSON.parse(body);
-				if (typeof parsed.error === "string" && parsed.error !== "") return `HTTP ${status}：${parsed.error}`;
+				if (typeof parsed.error === "string") message = parsed.error;
+				if (typeof parsed.code === "string") code = parsed.code;
 			} catch {}
-			const text = body.trim().slice(0, 200);
-			return text === "" ? `HTTP ${String(status)}` : `HTTP ${status}：${text}`;
+			if (message === "") message = body.trim().slice(0, 200);
+			return new HttpError(message === "" ? `HTTP ${String(status)}` : `HTTP ${status}：${message}`, code);
 		}
 		/** 带超时的 JSON 取数（相对路径，同源）。 */
 		async function fetchJson(path, init = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
@@ -53867,7 +53883,7 @@ window.__ModuleLoader__.load({
 					signal: controller.signal,
 					cache: "no-store"
 				});
-				if (!res.ok) throw new Error(httpErrorMessage(res.status, await res.text().catch(() => "")));
+				if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
 				return await res.json();
 			} finally {
 				clearTimeout(timer);
@@ -53997,6 +54013,10 @@ window.__ModuleLoader__.load({
 				});
 			} catch (error) {
 				if (token !== runToken) return;
+				if (isIdentityMissing(error)) {
+					markIdentityMissing();
+					return;
+				}
 				set({
 					status: "error",
 					error: error instanceof Error ? error.message : String(error)
@@ -54004,6 +54024,22 @@ window.__ModuleLoader__.load({
 			} finally {
 				if (token === runToken) set({ refreshing: false });
 			}
+		}
+		/**
+		* 任何请求报「没身份」都走这里（用户 2026-11-01：身份就是登录闸，任何时候没有就整页切过去）。
+		* 身份一空，面板的条件渲染自然变成身份页 —— 不需要额外的「跳转」代码。
+		*/
+		function markIdentityMissing() {
+			if (state.identity?.uuid === null) return;
+			set({
+				identity: {
+					uuid: null,
+					name: null
+				},
+				board: null,
+				status: "ready",
+				error: null
+			});
 		}
 		/** 改筛选：全部在浏览器里完成（快照已含全部在办），不发请求。 */
 		function setQuery(patch) {
@@ -55434,7 +55470,12 @@ body[data-ds-dark-theme]{
 					setRecords(payload.records);
 					setLoadedYm(props.ym);
 				}).catch((reason) => {
-					if (alive) setError(reason instanceof Error ? reason.message : String(reason));
+					if (!alive) return;
+					if (isIdentityMissing(reason)) {
+						markIdentityMissing();
+						return;
+					}
+					setError(reason instanceof Error ? reason.message : String(reason));
 				}).finally(() => {
 					if (alive) setLoading(false);
 				});
@@ -56753,7 +56794,12 @@ body[data-ds-dark-theme]{
 						[gran]: payload
 					}));
 				}).catch((error) => {
-					if (alive) setHistoryError(error instanceof Error ? error.message : String(error));
+					if (!alive) return;
+					if (isIdentityMissing(error)) {
+						markIdentityMissing();
+						return;
+					}
+					setHistoryError(error instanceof Error ? error.message : String(error));
 				});
 				return () => {
 					alive = false;
@@ -56955,8 +57001,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-160639-957`
-			}, `v0.0.126 261101-160639-957`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-172855-205`
+			}, `v0.0.126 261101-172855-205`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

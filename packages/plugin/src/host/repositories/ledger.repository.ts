@@ -6,7 +6,7 @@ import type {
 } from "../types.js";
 import { cached, cacheKey } from "./cache.js";
 import { parseTaskList } from "./records.js";
-import { runLedgerScript } from "./runner.js";
+import { failureOf, runLedgerScript } from "./runner.js";
 
 /**
  * LedgerFilter → skill 脚本参数（只拼调用方给了的；undefined 一律不拼，
@@ -63,7 +63,7 @@ export async function readTasks(
 				"--json",
 				...filterArgs(filter),
 			]);
-			if (!result.ok) throw new Error(`${workspace.title}: ${result.error}`);
+			if (!result.ok) throw failureOf(result, `${workspace.title}: `, workspace.id);
 			return parseTaskList(result.data, workspace);
 		},
 	);
@@ -82,7 +82,7 @@ export async function readOwners(
 			const result = await runLedgerScript<{
 				owners?: Record<string, { name?: string; mine?: boolean }>;
 			}>("owners", ["--repo", workspace.path, "--json"]);
-			if (!result.ok) throw new Error(`${workspace.title}: ${result.error}`);
+			if (!result.ok) throw failureOf(result, `${workspace.title}: `, workspace.id);
 			const owners = Object.entries(result.data.owners ?? {}).map(
 				([uuid, value]) => ({
 					uuid,

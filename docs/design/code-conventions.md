@@ -55,7 +55,7 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（只�
 
 **目录结构、每个文件的职责、逐方法签名全在 [`ledger-api.md`](ledger-api.md)；本节只记纪律。**
 
-物理落点：`scripts/progress`（POSIX shim：认平台 → 校验可执行位 → `exec`）→ `src/main.go`（只把参数与退出码转给 `shell.Main`）→ `src/internal/` 下四个子包 `core/`（纯换算）、`store/`（数据层）、`actions/`（业务层）、`shell/`（驱动：cli / runner / gitops / merge / render / help / presync / term_*），加三个旁路包 `notices`（进程级提示收集，只收不打印）、`env`（我是谁：读 `identity.json`，不问 git 也不解析台账）、`jsonfmt`（`--json` 屏幕输出排版）；错误类型 `core.Fail` 在 `core`，退出码常量（`ExitOK` / `ExitBusiness` / `ExitUsage` / `ExitUnexpected` / `ExitInterrupted`）在 `shell/runner.go`。入口路径与产物目录 `scripts/bin/` 都不许改名（宿主与 SKILL.md 按它们调）。
+物理落点：`scripts/progress`（POSIX shim：认平台 → 校验可执行位 → `exec`）→ `src/main.go`（只把参数与退出码转给 `shell.Main`）→ `src/internal/` 下四个子包 `core/`（纯换算）、`store/`（数据层）、`actions/`（业务层）、`shell/`（驱动：cli / runner / gitops / merge / render / help / presync / term_*），加三个旁路包 `notices`（进程级提示收集，只收不打印）、`env`（我是谁：读 `identity.json`，不问 git 也不解析台账）、`jsonfmt`（`--json` 屏幕输出排版）；错误类型 `core.Fail` 在 `core`，退出码常量（`ExitOK` / `ExitBusiness` / `ExitUsage` / `ExitUnexpected` / `ExitIdentityMissing` / `ExitInterrupted`）在 `shell/runner.go`。入口路径与产物目录 `scripts/bin/` 都不许改名（宿主与 SKILL.md 按它们调）。
 
 逻辑形状是：
 

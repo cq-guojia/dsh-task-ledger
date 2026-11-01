@@ -27,9 +27,10 @@ import {
 	type ReactNode,
 	type Ref,
 } from "react";
-import { fetchHistoryList } from "./api";
+import { fetchHistoryList, isIdentityMissing } from "./api";
 import type { Translate } from "./locales";
 import { displayName } from "./rows";
+import { markIdentityMissing } from "./store";
 import type { HistoryRecord } from "./types";
 import { Select, Button, SectionHead, Segmented, SplitGroup, Tag, Loader } from "./ui";
 
@@ -321,7 +322,13 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 				setLoadedYm(props.ym);
 			})
 			.catch((reason: unknown) => {
-				if (alive) setError(reason instanceof Error ? reason.message : String(reason));
+				if (!alive) return;
+				// 没身份不是「这一月读挂了」：整页切身份页（用户 2026-11-01 的登录闸口径）
+				if (isIdentityMissing(reason)) {
+					markIdentityMissing();
+					return;
+				}
+				setError(reason instanceof Error ? reason.message : String(reason));
 			})
 			.finally(() => {
 				if (alive) setLoading(false);

@@ -43,12 +43,13 @@ import {
 	boardSnapshot,
 	boardSubscribe,
 	isDefaultQuery,
+	markIdentityMissing,
 	refresh,
 	selectTab,
 	setQuery,
 	type TabFilter,
 } from "./store";
-import { fetchHistoryTrend } from "./api";
+import { fetchHistoryTrend, isIdentityMissing } from "./api";
 import { HistoryChart, HistoryStats, type PeriodPick } from "./history-chart";
 import { HistoryList } from "./history-list";
 import { TaskRowView } from "./task-row";
@@ -351,8 +352,13 @@ export function BoardHome(props: {
 					setHistoryByGran((prev) => ({ ...prev, [gran]: payload }));
 			})
 			.catch((error: unknown) => {
-				if (alive)
-					setHistoryError(error instanceof Error ? error.message : String(error));
+				if (!alive) return;
+				// 没身份不是「历史读挂了」：整页切身份页（用户 2026-11-01 的登录闸口径）
+				if (isIdentityMissing(error)) {
+					markIdentityMissing();
+					return;
+				}
+				setHistoryError(error instanceof Error ? error.message : String(error));
 			});
 		return () => {
 			alive = false;

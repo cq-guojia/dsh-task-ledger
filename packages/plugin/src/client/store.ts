@@ -6,7 +6,7 @@
  * ⚠️ `getSnapshot` 必须返回**稳定引用**（每次新建对象会被判定为「一直在变」⇒ 无限重渲染），
  * 故只在真变了时才换 `state` 对象。
  */
-import { fetchBoardSnapshot, fetchIdentity } from "./api";
+import { fetchBoardSnapshot, fetchIdentity, isIdentityMissing } from "./api";
 import type { BoardPayload, IdentityView } from "./types";
 
 /** 左侧菜单七档：「全部」置顶（不过滤），其后六档各按 skill 口径筛（详见 rows.ts）。 */
@@ -130,6 +130,10 @@ export async function refresh(): Promise<void> {
 		set({ status: "ready", board, error: null });
 	} catch (error) {
 		if (token !== runToken) return;
+		if (isIdentityMissing(error)) {
+			markIdentityMissing();
+			return;
+		}
 		set({
 			status: "error",
 			error: error instanceof Error ? error.message : String(error),
@@ -137,6 +141,20 @@ export async function refresh(): Promise<void> {
 	} finally {
 		if (token === runToken) set({ refreshing: false });
 	}
+}
+
+/**
+ * 任何请求报「没身份」都走这里（用户 2026-11-01：身份就是登录闸，任何时候没有就整页切过去）。
+ * 身份一空，面板的条件渲染自然变成身份页 —— 不需要额外的「跳转」代码。
+ */
+export function markIdentityMissing(): void {
+	if (state.identity?.uuid === null) return;
+	set({
+		identity: { uuid: null, name: null },
+		board: null,
+		status: "ready",
+		error: null,
+	});
 }
 
 /** 改筛选：全部在浏览器里完成（快照已含全部在办），不发请求。 */

@@ -330,6 +330,7 @@ func (t *termState) readKey() key
 | `1` | 业务错 | `core.Fail`：任务不存在、不是你的、参数不合法、仓库中间态；`validate` 有 problems |
 | `2` | 用法错 | 命令/参数不认识、必填缺失 |
 | `3` | 未预期异常 | 非 `Fail` 的 error |
+| `100` | 没身份（未认证） | `core.FailCode(core.FailIdentityMissing, …)`：`env.Current` 未初始化。**文案不变**，只是多一个机器可读码，插件 host 据此给 `LEDGER_IDENTITY_MISSING`（2026-11-01 拍板取值 100：刻意远离 1/2/3 与 128+n 信号区） |
 | `130` | 中断 | Ctrl-C（提交开始前会回滚） |
 
 - `--help` 是「要看用法」，**退出码 0**；参数错误才是 2。

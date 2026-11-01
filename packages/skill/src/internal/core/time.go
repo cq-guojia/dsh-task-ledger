@@ -18,12 +18,24 @@ var timeRe = regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$`)
 var timeInRe = regexp.MustCompile(`^(\d{4})-(\d{1,2})-(\d{1,2})(?: +(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$`)
 
 // Fail 是业务错误：抛出即中止，由外壳转成「错误：…」并给退出码 1。
-type Fail struct{ Msg string }
+// Code 是机器可读分类（空 = 通用业务错），外壳据此挑专门的退出码；**文案不变**。
+type Fail struct {
+	Msg  string
+	Code string
+}
 
 func (f *Fail) Error() string { return f.Msg }
 
+// FailIdentityMissing 这台机器还没有身份。退出码 4，调用方靠它对上「该引导用户去建身份」。
+const FailIdentityMissing = "identity_missing"
+
 // Failf 造一个业务错误。
 func Failf(format string, a ...any) error { return &Fail{Msg: fmt.Sprintf(format, a...)} }
+
+// FailCode 造一个带机器可读分类的业务错误。
+func FailCode(code, format string, a ...any) error {
+	return &Fail{Msg: fmt.Sprintf(format, a...), Code: code}
+}
 
 // Now 当前时刻（UTC，到秒）。
 func Now() string { return time.Now().UTC().Format(stampLayout) }

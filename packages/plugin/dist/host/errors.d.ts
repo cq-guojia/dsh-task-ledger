@@ -8,7 +8,13 @@
  *   防止「台账程序根本没装」被集体降级成一片绿色空板——那等于界面撒谎。
  */
 /** 机器可读错误码（只增不改；`LEDGER_` 前缀避开宿主错误码空间）。 */
-export type LedgerErrorCode = "LEDGER_SCRIPT_UNAVAILABLE" | "LEDGER_SCRIPT_TIMEOUT" | "LEDGER_SCRIPT_FAILED" | "LEDGER_SCRIPT_BAD_JSON" | "LEDGER_DATA_INVALID";
+export type LedgerErrorCode = "LEDGER_SCRIPT_UNAVAILABLE" | "LEDGER_SCRIPT_TIMEOUT" | "LEDGER_SCRIPT_FAILED" | "LEDGER_SCRIPT_BAD_JSON" | "LEDGER_DATA_INVALID" | "LEDGER_IDENTITY_MISSING";
+/** 这台机器还没有身份。message 仍是脚本原文（可直接上界面），码用来分流。 */
+export declare class IdentityMissingError extends Error {
+    readonly code: LedgerErrorCode;
+    readonly workspaceId: string | null;
+    constructor(message: string, workspaceId?: string | null);
+}
 /** 台账数据形状不符（容器级校验失败）。message 带工作区名 + 人话，可直接上界面。 */
 export declare class LedgerDataError extends Error {
     readonly code: LedgerErrorCode;

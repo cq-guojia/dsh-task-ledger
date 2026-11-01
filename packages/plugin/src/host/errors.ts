@@ -14,7 +14,19 @@ export type LedgerErrorCode =
 	| "LEDGER_SCRIPT_TIMEOUT" // 超时（runner kill）
 	| "LEDGER_SCRIPT_FAILED" // 非零退出，stderr 原文入 message
 	| "LEDGER_SCRIPT_BAD_JSON" // stdout 不是 JSON
-	| "LEDGER_DATA_INVALID"; // 是 JSON 但形状不符（records.ts 抛）
+	| "LEDGER_DATA_INVALID" // 是 JSON 但形状不符（records.ts 抛）
+	| "LEDGER_IDENTITY_MISSING"; // 这台机器还没有身份（脚本退出码 4）——界面据此整页切身份页
+
+/** 这台机器还没有身份。message 仍是脚本原文（可直接上界面），码用来分流。 */
+export class IdentityMissingError extends Error {
+	readonly code: LedgerErrorCode = "LEDGER_IDENTITY_MISSING";
+	readonly workspaceId: string | null;
+	constructor(message: string, workspaceId: string | null = null) {
+		super(message);
+		this.name = "IdentityMissingError";
+		this.workspaceId = workspaceId;
+	}
+}
 
 /** 台账数据形状不符（容器级校验失败）。message 带工作区名 + 人话，可直接上界面。 */
 export class LedgerDataError extends Error {

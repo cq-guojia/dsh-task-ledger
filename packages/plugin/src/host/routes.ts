@@ -8,6 +8,7 @@
  * 详情 / 历史 / 筛选项 / 趋势 / 写动作的端点与实现已删除（要接回按 skill 方法重写，不复用旧直读逻辑）。
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { codeOf, messageOf } from "./errors.js";
 import { invalidate } from "./repositories/cache.js";
 import { scriptPath } from "./repositories/runner.js";
 import {
@@ -47,6 +48,14 @@ const API_PREFIX = "/api/task-ledger";
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
 	res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
 	res.end(JSON.stringify(body));
+}
+
+/**
+ * 失败统一出口：500 + 人话 + **机器可读码**。
+ * 界面靠 `code` 分流（`LEDGER_IDENTITY_MISSING` ⇒ 整页切身份页），不去匹配中文。
+ */
+function sendFailure(res: ServerResponse, error: unknown): void {
+	sendJson(res, 500, { error: messageOf(error), code: codeOf(error) });
 }
 
 /** 请求体上限：身份写入只带一个名字 / 一个 uuid，8 KB 富余。 */
@@ -153,9 +162,7 @@ export function registerRoutes(
 				initCommand: initCommandOf((await workspacesOf(deps))[0]?.path ?? ""),
 			});
 		} catch (error) {
-			sendJson(res, 500, {
-				error: error instanceof Error ? error.message : String(error),
-			});
+			sendFailure(res, error);
 		}
 	});
 
@@ -164,9 +171,7 @@ export function registerRoutes(
 		try {
 			sendJson(res, 200, await getRoster(await workspacesOf(deps)));
 		} catch (error) {
-			sendJson(res, 500, {
-				error: error instanceof Error ? error.message : String(error),
-			});
+			sendFailure(res, error);
 		}
 	});
 
@@ -182,10 +187,12 @@ export function registerRoutes(
 			try {
 				sendJson(res, 200, await switchIdentity(await switchInputOf(req, deps)));
 			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
-				sendJson(res, message.startsWith("参数：") ? 400 : 500, {
-					error: message.replace(/^参数：/, ""),
-				});
+				const message = messageOf(error);
+				if (message.startsWith(BAD_REQUEST)) {
+					sendJson(res, 400, { error: message.slice(BAD_REQUEST.length) });
+					return;
+				}
+				sendFailure(res, error);
 			}
 		},
 	});
@@ -194,9 +201,7 @@ export function registerRoutes(
 		try {
 			sendJson(res, 200, { workspaces: await workspacesOf(deps) });
 		} catch (error) {
-			sendJson(res, 500, {
-				error: error instanceof Error ? error.message : String(error),
-			});
+			sendFailure(res, error);
 		}
 	});
 
@@ -205,9 +210,7 @@ export function registerRoutes(
 		try {
 			sendJson(res, 200, await getBoardHome(await workspacesOf(deps)));
 		} catch (error) {
-			sendJson(res, 500, {
-				error: error instanceof Error ? error.message : String(error),
-			});
+			sendFailure(res, error);
 		}
 	});
 
@@ -221,9 +224,7 @@ export function registerRoutes(
 				raw === "week" || raw === "month" ? raw : ("day" as const);
 			sendJson(res, 200, await getHistoryTrend(await workspacesOf(deps), gran));
 		} catch (error) {
-			sendJson(res, 500, {
-				error: error instanceof Error ? error.message : String(error),
-			});
+			sendFailure(res, error);
 		}
 	});
 
@@ -248,9 +249,7 @@ export function registerRoutes(
 				}),
 			);
 		} catch (error) {
-			sendJson(res, 500, {
-				error: error instanceof Error ? error.message : String(error),
-			});
+			sendFailure(res, error);
 		}
 	});
 }

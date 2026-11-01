@@ -22,22 +22,48 @@ export const API_PREFIX = "api/task-ledger";
 
 const DEFAULT_TIMEOUT_MS = 8_000;
 
+/** host 侧「这台机器还没有身份」的机器可读码（从 skill 退出码 4 翻译过来）。 */
+export const IDENTITY_MISSING_CODE = "LEDGER_IDENTITY_MISSING";
+
+/** 这次失败是不是「没有身份」——是的话整个面板要切成身份页，而不是显示错误。 */
+export function isIdentityMissing(error: unknown): boolean {
+	return (
+		error !== null &&
+		typeof error === "object" &&
+		"code" in error &&
+		(error as { code?: unknown }).code === IDENTITY_MISSING_CODE
+	);
+}
+
+/** host 返回的失败响应（带人话 + 机器可读码）。 */
+export class HttpError extends Error {
+	readonly code: string | null;
+	constructor(message: string, code: string | null) {
+		super(message);
+		this.name = "HttpError";
+		this.code = code;
+	}
+}
+
 /**
- * 错误响应榨人话：host 路由（routes.ts）发的是 `{ error: "..." }`，那里的话是**能直接上界面的**
+ * 错误响应榨人话：host 路由（routes.ts）发的是 `{ error, code }`，`error` 是**能直接上界面的**
  * （带工作区名、台账程序起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
  */
-export function httpErrorMessage(status: number, body: string): string {
+function errorOf(status: number, body: string): HttpError {
+	let message = "";
+	let code: string | null = null;
 	try {
-		const parsed = JSON.parse(body) as { error?: unknown };
-		if (typeof parsed.error === "string" && parsed.error !== "")
-			return `HTTP ${status}：${parsed.error}`;
+		const parsed = JSON.parse(body) as { error?: unknown; code?: unknown };
+		if (typeof parsed.error === "string") message = parsed.error;
+		if (typeof parsed.code === "string") code = parsed.code;
 	} catch {
 		/* 不是 JSON：走原文 */
 	}
-	const text = body.trim().slice(0, 200);
-	return text === ""
-		? `HTTP ${String(status)}`
-		: `HTTP ${status}：${text}`;
+	if (message === "") message = body.trim().slice(0, 200);
+	return new HttpError(
+		message === "" ? `HTTP ${String(status)}` : `HTTP ${status}：${message}`,
+		code,
+	);
 }
 
 /** 带超时的 JSON 取数（相对路径，同源）。 */
@@ -58,10 +84,7 @@ export async function fetchJson<T>(
 			signal: controller.signal,
 			cache: "no-store",
 		});
-		if (!res.ok)
-			throw new Error(
-				httpErrorMessage(res.status, await res.text().catch(() => "")),
-			);
+		if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
 		return (await res.json()) as T;
 	} finally {
 		clearTimeout(timer);

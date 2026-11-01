@@ -10,7 +10,7 @@
  */
 import { LedgerDataError } from "../errors.js";
 import { cached, cacheKey } from "./cache.js";
-import { runLedgerScript } from "./runner.js";
+import { failureOf, runLedgerScript } from "./runner.js";
 function isPlainObject(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -29,7 +29,7 @@ export async function readStats(workspace) {
             "--json",
         ]);
         if (!result.ok)
-            throw new Error(`${workspace.title}: ${result.error}`);
+            throw failureOf(result, `${workspace.title}: `, workspace.id);
         return parseStats(result.data, workspace.title);
     });
 }

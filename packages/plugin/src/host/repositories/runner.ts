@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { IdentityMissingError } from "../errors.js";
 
 /**
  * 内嵌 skill 入口的默认路径：dist/host/repositories/runner.js → 包根 skill/scripts/progress
@@ -21,9 +22,32 @@ export function scriptPath(): string {
 	return DEFAULT_SCRIPT_PATH;
 }
 
+/**
+ * 脚本失败的统一出口：**没身份单独成类**（→ `LEDGER_IDENTITY_MISSING`），其余照旧是普通 Error。
+ * 各处别自己 `new Error(result.error)` —— 那样「没身份」就淹进「台账坏了」里，界面分不出来。
+ */
+export function failureOf(
+	result: { readonly error: string; readonly identityMissing?: boolean },
+	prefix = "",
+	workspaceId: string | null = null,
+): Error {
+	const message = `${prefix}${result.error}`;
+	return result.identityMissing === true
+		? new IdentityMissingError(message, workspaceId)
+		: new Error(message);
+}
+
 export type LedgerScriptResult<T> =
 	| { ok: true; data: T }
-	| { ok: false; error: string };
+	| {
+			ok: false;
+			error: string;
+			/** 脚本退出码 4 = 这台机器还没有身份（`env.Current` 的专用码，文案不变）。 */
+			identityMissing?: boolean;
+	  };
+
+/** skill 侧 `ExitIdentityMissing`（`packages/skill/src/internal/shell/runner.go`）。 */
+const IDENTITY_MISSING_EXIT = 100;
 
 export interface RunOptions {
 	/** 测试用：覆盖脚本路径。 */
@@ -34,7 +58,7 @@ export interface RunOptions {
 
 type ExecResult =
 	| { ok: true; stdout: string; stderr: string }
-	| { ok: false; error: string };
+	| { ok: false; error: string; exitCode?: number };
 
 /**
  * 起一次台账程序、收 stdout / stderr。出错一律归一成人话（起不了程序 / 超时 / 非零退出）。
@@ -84,6 +108,7 @@ function exec(
 				settle({
 					ok: false,
 					error: stderr.trim() || `台账程序退出码 ${String(code)}`,
+					exitCode: code ?? undefined,
 				});
 				return;
 			}
@@ -107,7 +132,12 @@ export async function runLedgerScript<T = unknown>(
 	opts?: RunOptions,
 ): Promise<LedgerScriptResult<T>> {
 	const result = await exec(sub, args, opts);
-	if (!result.ok) return result;
+	if (!result.ok)
+		return {
+			ok: false,
+			error: result.error,
+			identityMissing: result.exitCode === IDENTITY_MISSING_EXIT,
+		};
 	try {
 		return { ok: true, data: JSON.parse(result.stdout) as T };
 	} catch {

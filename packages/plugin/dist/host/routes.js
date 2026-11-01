@@ -1,3 +1,4 @@
+import { codeOf, messageOf } from "./errors.js";
 import { invalidate } from "./repositories/cache.js";
 import { scriptPath } from "./repositories/runner.js";
 import { getIdentity, getRoster, switchIdentity, } from "./services/identity.service.js";
@@ -9,6 +10,13 @@ const API_PREFIX = "/api/task-ledger";
 function sendJson(res, status, body) {
     res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(body));
+}
+/**
+ * 失败统一出口：500 + 人话 + **机器可读码**。
+ * 界面靠 `code` 分流（`LEDGER_IDENTITY_MISSING` ⇒ 整页切身份页），不去匹配中文。
+ */
+function sendFailure(res, error) {
+    sendJson(res, 500, { error: messageOf(error), code: codeOf(error) });
 }
 /** 请求体上限：身份写入只带一个名字 / 一个 uuid，8 KB 富余。 */
 const MAX_BODY_BYTES = 8 * 1024;
@@ -94,9 +102,7 @@ export function registerRoutes(webServer, deps) {
             });
         }
         catch (error) {
-            sendJson(res, 500, {
-                error: error instanceof Error ? error.message : String(error),
-            });
+            sendFailure(res, error);
         }
     });
     // 可以认领的人：各工作区名册（没身份也能读；读挂的工作区直接跳过）。
@@ -105,9 +111,7 @@ export function registerRoutes(webServer, deps) {
             sendJson(res, 200, await getRoster(await workspacesOf(deps)));
         }
         catch (error) {
-            sendJson(res, 500, {
-                error: error instanceof Error ? error.message : String(error),
-            });
+            sendFailure(res, error);
         }
     });
     // 换身份（建新的 / 认领名册里的）。宿主路由不区分 method ⇒ 自己判；写操作必须 POST。
@@ -123,10 +127,12 @@ export function registerRoutes(webServer, deps) {
                 sendJson(res, 200, await switchIdentity(await switchInputOf(req, deps)));
             }
             catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-                sendJson(res, message.startsWith("参数：") ? 400 : 500, {
-                    error: message.replace(/^参数：/, ""),
-                });
+                const message = messageOf(error);
+                if (message.startsWith(BAD_REQUEST)) {
+                    sendJson(res, 400, { error: message.slice(BAD_REQUEST.length) });
+                    return;
+                }
+                sendFailure(res, error);
             }
         },
     });
@@ -135,9 +141,7 @@ export function registerRoutes(webServer, deps) {
             sendJson(res, 200, { workspaces: await workspacesOf(deps) });
         }
         catch (error) {
-            sendJson(res, 500, {
-                error: error instanceof Error ? error.message : String(error),
-            });
+            sendFailure(res, error);
         }
     });
     // 首屏一次拿全：8 卡（skill `stats`；本周/上周完成取趋势最后两个桶）+ 在办列表（`list --json`）+ 趋势。
@@ -146,9 +150,7 @@ export function registerRoutes(webServer, deps) {
             sendJson(res, 200, await getBoardHome(await workspacesOf(deps)));
         }
         catch (error) {
-            sendJson(res, 500, {
-                error: error instanceof Error ? error.message : String(error),
-            });
+            sendFailure(res, error);
         }
     });
     // 历史页顶部趋势（粒度 day/week/month，桶全在 skill）：切粒度 = 重新请求，host 有读缓存。
@@ -159,9 +161,7 @@ export function registerRoutes(webServer, deps) {
             sendJson(res, 200, await getHistoryTrend(await workspacesOf(deps), gran));
         }
         catch (error) {
-            sendJson(res, 500, {
-                error: error instanceof Error ? error.message : String(error),
-            });
+            sendFailure(res, error);
         }
     });
     // 历史页列表：**只取选中的那个月**（工作区 / 执行人 / 年月筛都在 host）。
@@ -181,9 +181,7 @@ export function registerRoutes(webServer, deps) {
             }));
         }
         catch (error) {
-            sendJson(res, 500, {
-                error: error instanceof Error ? error.message : String(error),
-            });
+            sendFailure(res, error);
         }
     });
 }

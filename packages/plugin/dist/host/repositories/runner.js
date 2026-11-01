@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { IdentityMissingError } from "../errors.js";
 /**
  * 内嵌 skill 入口的默认路径：dist/host/repositories/runner.js → 包根 skill/scripts/progress
  * （比原 host/script.js 深一层 ⇒ 相对路径多一级 `../`）。
@@ -15,6 +16,18 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 export function scriptPath() {
     return DEFAULT_SCRIPT_PATH;
 }
+/**
+ * 脚本失败的统一出口：**没身份单独成类**（→ `LEDGER_IDENTITY_MISSING`），其余照旧是普通 Error。
+ * 各处别自己 `new Error(result.error)` —— 那样「没身份」就淹进「台账坏了」里，界面分不出来。
+ */
+export function failureOf(result, prefix = "", workspaceId = null) {
+    const message = `${prefix}${result.error}`;
+    return result.identityMissing === true
+        ? new IdentityMissingError(message, workspaceId)
+        : new Error(message);
+}
+/** skill 侧 `ExitIdentityMissing`（`packages/skill/src/internal/shell/runner.go`）。 */
+const IDENTITY_MISSING_EXIT = 100;
 /**
  * 起一次台账程序、收 stdout / stderr。出错一律归一成人话（起不了程序 / 超时 / 非零退出）。
  * 解析留给调用方：读命令要 JSON，写命令要原文。
@@ -60,6 +73,7 @@ function exec(sub, args, opts) {
                 settle({
                     ok: false,
                     error: stderr.trim() || `台账程序退出码 ${String(code)}`,
+                    exitCode: code ?? undefined,
                 });
                 return;
             }
@@ -79,7 +93,11 @@ function exec(sub, args, opts) {
 export async function runLedgerScript(sub, args, opts) {
     const result = await exec(sub, args, opts);
     if (!result.ok)
-        return result;
+        return {
+            ok: false,
+            error: result.error,
+            identityMissing: result.exitCode === IDENTITY_MISSING_EXIT,
+        };
     try {
         return { ok: true, data: JSON.parse(result.stdout) };
     }

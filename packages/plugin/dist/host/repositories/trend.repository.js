@@ -10,7 +10,7 @@
  */
 import { LedgerDataError } from "../errors.js";
 import { cached, cacheKey } from "./cache.js";
-import { runLedgerScript } from "./runner.js";
+import { failureOf, runLedgerScript } from "./runner.js";
 /**
  * 趋势图的窗口（周数）：近半年。
  * 2026-10-30 由 8 周放宽 —— 卡片按宽度能放几周就放几周（宽屏 12~14 周），
@@ -71,7 +71,7 @@ export async function readBoardTrend(workspace, gran) {
         // 半年窗口最坏要读 7 个历史文件（skill 有月度缓存），比单月读重：给到 20s 再判超时
         { timeoutMs: 20_000 });
         if (!result.ok)
-            throw new Error(`${workspace.title}: ${result.error}`);
+            throw failureOf(result, `${workspace.title}: `, workspace.id);
         return parseTrend(result.data, workspace.title);
     });
 }
@@ -86,7 +86,7 @@ export async function readTrendGran(workspace, gran, since, until) {
         // 与周趋势同档：整年窗口最坏要读十几个历史文件
         { timeoutMs: 20_000 });
         if (!result.ok)
-            throw new Error(`${workspace.title}: ${result.error}`);
+            throw failureOf(result, `${workspace.title}: `, workspace.id);
         return parseTrend(result.data, workspace.title);
     });
 }

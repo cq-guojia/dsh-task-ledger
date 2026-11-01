@@ -1,6 +1,6 @@
 import { cached, cacheKey } from "./cache.js";
 import { parseTaskList } from "./records.js";
-import { runLedgerScript } from "./runner.js";
+import { failureOf, runLedgerScript } from "./runner.js";
 /**
  * LedgerFilter → skill 脚本参数（只拼调用方给了的；undefined 一律不拼，
  * 让脚本走自己的默认——插件不替脚本决定默认值）。
@@ -56,7 +56,7 @@ export async function readTasks(workspace, filter = {}) {
             ...filterArgs(filter),
         ]);
         if (!result.ok)
-            throw new Error(`${workspace.title}: ${result.error}`);
+            throw failureOf(result, `${workspace.title}: `, workspace.id);
         return parseTaskList(result.data, workspace);
     });
 }
@@ -68,7 +68,7 @@ export async function readOwners(workspace) {
     return await cached(cacheKey(workspace.id, "owners", ""), async () => {
         const result = await runLedgerScript("owners", ["--repo", workspace.path, "--json"]);
         if (!result.ok)
-            throw new Error(`${workspace.title}: ${result.error}`);
+            throw failureOf(result, `${workspace.title}: `, workspace.id);
         const owners = Object.entries(result.data.owners ?? {}).map(([uuid, value]) => ({
             uuid,
             name: typeof value.name === "string" && value.name.trim() !== ""

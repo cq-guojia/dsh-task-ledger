@@ -23,11 +23,12 @@ import (
 
 // 退出码：与 SKILL.md 的约定一致。
 const (
-	ExitOK          = 0
-	ExitBusiness    = 1 // 业务错：任务不存在、不是你的、参数不合法
-	ExitUsage       = 2 // 用法错
-	ExitUnexpected  = 3 // 未预期异常
-	ExitInterrupted = 130
+	ExitOK              = 0
+	ExitBusiness        = 1   // 业务错：任务不存在、不是你的、参数不合法
+	ExitUsage           = 2   // 用法错
+	ExitUnexpected      = 3   // 未预期异常
+	ExitIdentityMissing = 100 // 这台机器还没有身份（文案不变，仅多一个机器可读的退出码；刻意远离 1/2/3）
+	ExitInterrupted     = 130
 )
 
 // Run 跑一条命令，返回退出码。
@@ -47,6 +48,10 @@ func Run(command string, args *Args) int {
 	var fail *core.Fail
 	if !errors.As(err, &fail) {
 		title, status = "未预期错误", ExitUnexpected
+	}
+	// 没身份单独一档退出码：文案与提示照旧，只是让调用方（插件 host）不用去匹配中文
+	if fail != nil && fail.Code == core.FailIdentityMissing {
+		status = ExitIdentityMissing
 	}
 	if !log.CommitStarted {
 		// 提交阶段才失败时数据已落盘，回滚 = 吃掉刚写的台账（2026-10-24 修）

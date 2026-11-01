@@ -1,11 +1,21 @@
 /** 脚本绝对路径（界面上要写给用户复制的命令用；别在别处再拼一份）。 */
 export declare function scriptPath(): string;
+/**
+ * 脚本失败的统一出口：**没身份单独成类**（→ `LEDGER_IDENTITY_MISSING`），其余照旧是普通 Error。
+ * 各处别自己 `new Error(result.error)` —— 那样「没身份」就淹进「台账坏了」里，界面分不出来。
+ */
+export declare function failureOf(result: {
+    readonly error: string;
+    readonly identityMissing?: boolean;
+}, prefix?: string, workspaceId?: string | null): Error;
 export type LedgerScriptResult<T> = {
     ok: true;
     data: T;
 } | {
     ok: false;
     error: string;
+    /** 脚本退出码 4 = 这台机器还没有身份（`env.Current` 的专用码，文案不变）。 */
+    identityMissing?: boolean;
 };
 export interface RunOptions {
     /** 测试用：覆盖脚本路径。 */
