@@ -24,6 +24,7 @@ import {
 	Loader as CoreLoader,
 	Segmented as CoreSegmented,
 	showLoading as CoreShowLoading,
+	Surface as CoreSurface,
 	type LoadingHandle,
 } from "dsh-plugin-core/ui";
 import { type CSSProperties, createElement as h, type ReactNode } from "react";
@@ -31,13 +32,22 @@ import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
 
 /** 基础层样式（tokens + 业务容器类；幂等注入）。 */
 const UI_BASE_CSS = `
-/* 统计卡：8 块（2×4）+ 右图表卡位
+/* 统计卡 = 核心 Surface 外框（底 / 1px 边 / 圆角 12）+ 本文件只补排版与固定卡高。
+   外壳 .dtl-stat-shell（button / div）只承担点击与语义，**不画任何皮肤**。
    ⚠️ 卡高 = --dtl-stat-h 定死，**不跟内容走**（用户 2026-10-29）：小字缺行、小字换行
    都不许改卡高，否则两个页面的卡一错位就被一眼看出来。文字一律贴顶（不用居中：
    缺小字时居中的卡会显得空）。 */
-.dtl-stat{display:flex;flex-direction:column;justify-content:flex-start;gap:var(--dtl-space-1);
-  height:var(--dtl-stat-h);box-sizing:border-box;overflow:hidden;
-  padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;}
+.dtl-stat-shell{display:block;width:100%;margin:0;padding:0;border:0;background:none;
+  font:inherit;color:inherit;text-align:left;}
+.dtl-stat-shell--clickable{cursor:pointer;}
+.dtl-stat-shell--clickable:hover .dshpc-surface.dtl-stat{--surface-bg:var(--dtl-card-hover);}
+.dtl-stat-shell[data-active='true'] .dshpc-surface.dtl-stat{--surface-border:var(--dtl-business);}
+.dtl-stat-shell:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
+/* 复合选择器（0,2,0）压过核心基类（0,1,0）⇒ 谁先注入都不影响胜负 */
+.dshpc-surface.dtl-stat{display:flex;flex-direction:column;justify-content:flex-start;gap:var(--dtl-space-1);
+  height:var(--dtl-stat-h);overflow:hidden;
+  padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;
+  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
 /* 三行文字各自的行高必须显式写死，--dtl-stat-h 的算式才对得上（别让行高继承宿主） */
 .dtl-stat__label{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
@@ -75,7 +85,8 @@ const UI_BASE_CSS = `
    翻页按钮**飘**在图区右上角（绝对定位，不单独占一行）——压在柱子上也无妨（用户 2026-10-29）。 */
 /* 浮卡层级：核心 Segmented 的段本身是 z-index:1，和原来的 z-index:1 打平 ⇒ 后出现的滑块
    把悬停浮卡盖住了（用户 2026-10-31：浮卡被「一月/二月…」压住）。这里抬到 3 稳压它。 */
-.dtl-hist{position:relative;z-index:3;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
+/* 图表卡 = 核心 Surface（外框归它）+ 本文件的布局与内距。复合选择器保证内距压过 Surface 基类的 0。 */
+.dshpc-surface.dtl-hist{position:relative;z-index:3;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--dtl-space-2);
   /* 单列（≤960）时 height:100% 解析成 auto，光靠 flex 撑不出高度 ⇒ 用右侧两行卡的总高兜底，
      两栏并排时这个值恰好等于 stretch 给的高度，等于没改 */
   min-height:calc(var(--dtl-stat-h) * 2 + var(--dtl-space-3));
@@ -127,9 +138,11 @@ const UI_BASE_CSS = `
    top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。
    底色取 --dtl-tip-bg（掺一档前景色的浅灰）：纯卡底色在浅色主题下跟白底糊住、边界看不清
    （用户 2026-10-30 试过官方 Tooltip 又退回自绘，就是为了这个底色）。 */
-.dtl-hist__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
-  padding:var(--dtl-space-2);border:1px solid var(--dtl-tip-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-tip-bg);white-space:nowrap;font-size:var(--dtl-font-xs);line-height:1.5;
+/* 浮卡 = 核心 Surface（底 / 边 / 圆角 / 内距四轴归它），这里只补定位与显隐；
+   深灰底 / 边色改的是 Surface 自己的变量（--surface-*），不覆盖它的皮肤。 */
+.dshpc-surface.dtl-hist__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
+  --surface-bg:var(--dtl-tip-bg);--surface-border:var(--dtl-tip-border);
+  white-space:nowrap;font-size:var(--dtl-font-xs);line-height:1.5;
   color:var(--dtl-tip-fg);opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-hist__col:hover .dtl-hist__tip{opacity:1;}
 .dtl-hist__tip-date{color:var(--dtl-tip-fg-dim);font-variant-numeric:tabular-nums;}
@@ -168,7 +181,7 @@ const UI_BASE_CSS = `
 /* position:relative 既给右上角那对「飘」着的翻页箭头当定位上下文，也配合 z-index:1 —— 浮卡是
    卡里的绝对定位子元素，不把整张卡抬成一层压过页面下方那排 input / select，就会被它们挡住
    （用户 2026-10-30 连报两次，别删这个 z-index）。 */
-.dtl-trend{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;
+.dshpc-surface.dtl-trend{position:relative;z-index:1;height:100%;box-sizing:border-box;display:flex;
   flex-direction:column;gap:var(--dtl-space-3);
   padding:10px var(--dtl-space-4) var(--dtl-space-4);}
 /* padding-right 是给右上角那排控件（翻页箭头 + 粒度切换）让位：它绝对定位飘在卡片右上角，
@@ -249,9 +262,9 @@ const UI_BASE_CSS = `
 .dtl-trend__line polyline{fill:none;stroke:var(--dtl-chart-line);stroke-width:1.5;
   vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
 /* hover 浮卡：恒在柱子**下方**（上方会被卡片顶边挤出屏幕）；深灰底 + 浅字同历史页 */
-.dtl-trend__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
-  padding:var(--dtl-space-2);border:1px solid var(--dtl-tip-border);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-tip-bg);white-space:nowrap;
+.dshpc-surface.dtl-trend__tip{position:absolute;left:50%;top:calc(100% + 18px);z-index:3;transform:translateX(-50%);
+  --surface-bg:var(--dtl-tip-bg);--surface-border:var(--dtl-tip-border);
+  white-space:nowrap;
   font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-tip-fg);
   opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
@@ -270,10 +283,9 @@ const UI_BASE_CSS = `
 .dtl-group__count{margin-left:var(--dtl-space-2);font-size:var(--dtl-font-xs);font-weight:400;
   color:var(--dtl-fg-3);white-space:nowrap;}
 
-/* 任务行 = 一张卡（样式照抄 dispatch-table TaskCard：surface-1 底 + 1px 边框 + 左缘状态条；
-   hover 只亮主行；右侧 时间⇄按钮排 互换） */
-.dtl-taskrow{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);
-  border-radius:var(--dtl-radius-sm);margin-bottom:10px;}
+/* 任务行 = 一张卡：外框（底 / 1px 边框 / 圆角 8）交核心 Surface（radius='sm'），
+   本文件只留行间距与左缘状态条；hover 只亮主行，右侧 时间⇄按钮排 互换 */
+.dtl-taskrow{margin-bottom:10px;}
 .dtl-taskrow__row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:inherit;
   cursor:pointer;transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
@@ -320,9 +332,10 @@ const UI_BASE_CSS = `
 
 /* 空态：真空 = 虚线引导卡（用户 2026-10-18：**加高到 180px + 内容居中**；
    它贴在滚动条最底下，太窄用户根本看不见） */
-.dtl-empty-guide{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:var(--dtl-space-2);min-height:270px;padding:var(--dtl-space-4);text-align:center;
-  border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-md);background:transparent;}
+/* 空态引导卡 = 核心 Surface 的 dashed 档（1px 虚线 + 圆角 12）：底透出页面、线色取 strong */
+.dshpc-surface.dtl-empty-guide{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--dtl-space-2);min-height:270px;text-align:center;
+  --surface-bg:transparent;--surface-border:var(--dtl-border-strong);}
 
 /* 历史页列表（2026-10-31）：筛选行 + 核心 Table。
    ⚠️ 类名前缀是 dtl-histlist，**不能叫 .dtl-hist** —— 那个已被历史图表卡占用
@@ -337,12 +350,14 @@ const UI_BASE_CSS = `
 
 .dtl-histlist__error{color:var(--dtl-danger);font-size:var(--dtl-font-md);padding:var(--dtl-space-2) 0;}
 /* ── 表格（2026-11-01 起自己画，只渲染窗口内的行）────────────────────────
-   外观逐条照抄核心 Table 的 plain 皮肤：四边外框、灰底表头 + 下边线、行间极淡底线、
-   行悬浮极淡灰、选中行淡蓝底 + 左侧 3px 蓝竖条。唯一的结构差别是「一天一张表」
-   合成「一张表 + 每天一行日期头」—— 原来相邻两张表的边框本来就合并成一条线。 */
+   **外框归核心 Surface**（.dtl-histlist__frame，四边 1px + 圆角 12，见 history-list.ts），
+   表格自己只画内部：灰底表头 + 下边线、行间极淡底线、行悬浮极淡灰、
+   选中行淡蓝底 + 左侧 3px 蓝竖条。自绘的原因是核心 Table 支撑不了窗口化渲染。 */
 .dtl-histlist__table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;
-  box-sizing:border-box;border:1px solid var(--dtl-border);
+  box-sizing:border-box;
   color:var(--dtl-fg);font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);}
+/* 表头底色 / 选中行竖条在圆角处由外框裁掉，不冒到圆角外面 */
+.dshpc-surface.dtl-histlist__frame{overflow:hidden;}
 .dtl-histlist__cell,.dtl-histlist__headcell{box-sizing:border-box;text-align:left;vertical-align:middle;
   font-weight:400;}
 /* 数据格内距比核心默认放大一档（用户 2026-10-31） */
@@ -586,6 +601,11 @@ export { Input } from "dsh-plugin-core/ui";
  *  卡片：核心 `Card`（白底 + 1px 边框 + 圆角 + 左缘行内短色条）—— 跟其它页面同一套外观。 */
 export { Card, Checkbox, Modal } from "dsh-plugin-core/ui";
 
+/** 纯框容器：核心 `Surface`（底 / 边 / 圆角 / 内距四根轴，圆角 12 的唯一真源）。
+ *  本插件所有「一块面」都用它 —— 统计卡 / 图表卡 / 任务行 / 空态 / 流程节点 / 图表浮卡，
+ *  **不再自己写 border + border-radius**（用户 2026-11-01：外框统一走核心库）。 */
+export { CoreSurface as Surface };
+
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 
 /** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
@@ -673,20 +693,25 @@ export function StatCard(props: {
 		props.interactive !== false && props.onClick !== undefined;
 	const zero = props.value === 0 || props.value === "0";
 	const shown = zero && props.showZero !== true ? "—" : props.value;
+	// 外壳（button / div）只承担语义与点击；**外框（底 / 边框 / 圆角 / 内距）交核心 Surface**
 	return h(
 		interactive ? "button" : "div",
 		{
 			type: interactive ? "button" : undefined,
-			className: `dtl-card dtl-stat${interactive ? " dtl-card--clickable" : ""}`,
+			className: `dtl-stat-shell${interactive ? " dtl-stat-shell--clickable" : ""}`,
 			"data-active": props.active === true,
 			title: props.title,
 			onClick: interactive ? props.onClick : undefined,
 		},
-		h("span", { className: "dtl-stat__label" }, props.label),
-		h("span", { className: "dtl-stat__value" }, shown),
-		props.hint === undefined || props.hint === null || props.hint === ""
-			? null
-			: h("span", { className: "dtl-stat__hint" }, props.hint),
+		h(
+			CoreSurface,
+			{ className: "dtl-stat", padding: null },
+			h("span", { className: "dtl-stat__label" }, props.label),
+			h("span", { className: "dtl-stat__value" }, shown),
+			props.hint === undefined || props.hint === null || props.hint === ""
+				? null
+				: h("span", { className: "dtl-stat__hint" }, props.hint),
+		),
 	);
 }
 
@@ -755,9 +780,10 @@ export function EmptyState(props: {
 	hint?: string;
 }): ReactNode {
 	ensureUiBase();
+	// 虚线占位框：核心 Surface 的 `dashed` 档（不再自己写 1px dashed + 圆角）
 	return h(
-		"div",
-		{ className: "dtl-empty-guide" },
+		CoreSurface,
+		{ className: "dtl-empty-guide", border: "dashed", padding: "lg" },
 		h(
 			"div",
 			{

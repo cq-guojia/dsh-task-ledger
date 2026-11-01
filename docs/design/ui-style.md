@@ -1,6 +1,6 @@
 # 样式规范
 
-> **状态**：🔵 落码（2026-10-16 初建；2026-10-17 首页落码后补全 token 层 / i18n / 元件分工；**2026-10-28 控件层统一交回 `dsh-plugin-core`，自绘皮肤整套删除**，见 §四）
+> **状态**：🔵 落码（2026-10-16 初建；2026-10-17 首页落码后补全 token 层 / i18n / 元件分工；**2026-10-28 控件层统一交回 `dsh-plugin-core`，自绘皮肤整套删除**；**2026-11-01 容器外框也交回核心 `Surface`，自绘 `.dtl-card` 删除**，两处都见 §四）
 > **来源**：姊妹仓 `dsh-task-dispatch-table` 已核实事实（0.2.0-rc.2，`ui/tokens.ts` + `ui/controls-css.ts` 逐条对照）+ 本仓 [`external/client-ui-layout.md`](external/client-ui-layout.md)
 > **配套**：外部事实详见 [`external/client-ui-layout.md`](external/client-ui-layout.md)；代码落点见 [`code-conventions.md`](code-conventions.md)
 
@@ -15,7 +15,7 @@
 
 **列表行是本插件唯一的自绘件**：一行 = 左缘状态色条 / 圆点（`.dtl-rail` / `.dtl-dot`）+ 标题 + 工作区 + `#标签` + 右侧灰字，见 [`features/board-home.md`](features/board-home.md) §二。它自绘是因为宿主没有表格件，**不是因为宿主控件不好**——行内的按钮、标签、输入仍是核心控件。
 
-**历史页表格也是自绘件**（2026-11-01）：`.dtl-histlist__table` / `__cell` / `__headcell` / `__row` / `__dayrow` / `__spacer`，写在 `ui.ts`。自绘的原因是**核心 `Table` 支撑不了窗口化渲染**（整表逐行渲染、没有插入占位行的口子），不是外观另起一套：四边外框、灰底表头 + 下边线、行间极淡底线、行悬浮、选中淡蓝底 + 左竖条逐条对齐核心 plain 皮肤；表头底与行悬浮底在 `tokens.ts` 里 alias 核心 token（`--dtl-table-head-bg` / `--dtl-table-row-hover` / `--dtl-border-faint`），不另写色值。**以后核心 `Table` 支持窗口化时，这套应当收回去**。
+**历史页表格也是自绘件**（2026-11-01）：`.dtl-histlist__table` / `__cell` / `__headcell` / `__row` / `__dayrow` / `__spacer`，写在 `ui.ts`。自绘的原因是**核心 `Table` 支撑不了窗口化渲染**（整表逐行渲染、没有插入占位行的口子），不是外观另起一套：灰底表头 + 下边线、行间极淡底线、行悬浮、选中淡蓝底 + 左竖条逐条对齐核心 plain 皮肤；表头底与行悬浮底在 `tokens.ts` 里 alias 核心 token（`--dtl-table-head-bg` / `--dtl-table-row-hover` / `--dtl-border-faint`），不另写色值。**四边外框（1px + 圆角 12）已不归表格自己**——2026-11-01 起外套核心 `Surface`（`.dtl-histlist__frame`，`overflow:hidden` 裁掉表头底色与选中行竖条）。**以后核心 `Table` 支持窗口化时，这套应当收回去**。
 
 （注：右上 `shell.overlay` 浮标截至本版未落码，见 `features/board-home.md` §一；宿主事实如下，若实现需注意）浮层默认 `pointer-events:none`、子元素自动恢复 ⇒ 自绘条目不挡下方应用；定位用宿主变量 `--dsh-frame-overlay-top`（标题栏净空 + 20px），不要写死 top 值。
 
@@ -46,9 +46,20 @@
 | 条带卡 | `StripCard` | ❌ 无（直接 re-export 去掉后不再包一层） |
 | 提示气泡 | 官方 `Tooltip`（`dsh-client-ui-primitives`） | ❌ 无 |
 | 图标 | `Icon*`（约 370 个，色随 currentColor） | ❌ 无 |
-| 卡片容器 / 列表行 / 统计卡 / 空态 | **本插件业务壳**（`.dtl-card` / `.dtl-orow` / `.dtl-stat` / `.dtl-empty-guide`） | ✅ 仅这些 |
+| 容器外框（底 / 1px 边 / 圆角 / 内距） | `Surface`（`tone` / `border` / `radius` / `padding` 四轴） | ❌ 无（2026-11-01 起，见下条） |
+| 统计卡 / 图表卡 / 任务行 / 空态 / 图表浮卡 / 流程节点 | 上面这层外框用 `Surface`，本插件只补**排版**（`.dtl-stat` / `.dtl-hist` / `.dtl-trend` / `.dtl-taskrow` / `.dtl-empty-guide` / `*__tip` / `.dtl-flow__box`） | ✅ 仅排版与尺寸 |
+| 表格 | 核心 `Table` 支撑不了窗口化 ⇒ 自绘 `.dtl-histlist__*`，外框仍用 `Surface` | ✅ 仅表格内部线 |
 
-**判据**：核心库有的控件，一律用核心库，本地只允许薄包裹（转 props、拼 className 做布局），**不得重写高度 / 内距 / 边框 / 圆角 / 配色**。核心没有的（表格行、统计卡），才允许自绘，且颜色圆角字号只吃 `var(--dtl-*)`。
+**判据**：核心库有的控件，一律用核心库，本地只允许薄包裹（转 props、拼 className 做布局），**不得重写高度 / 内距 / 边框 / 圆角 / 配色**。核心没有的（表格、行内排版、图表画法），才允许自绘，且颜色圆角字号只吃 `var(--dtl-*)`。
+
+**2026-11-01 外框统一走 `Surface`**（用户原话：「很多外边框不都是自己画的吗？那种带圆角的外框，现在核心库里已经有了，名字叫 surface……统一风格」）：
+
+- 删掉的自绘外框：`.dtl-card` / `.dtl-card--clickable` / `.dtl-card--pad`（连同它们的 `background + border + border-radius` 三条声明）。
+- 改成 `Surface` 的位置（**圆角一律吃默认 12，不传 `radius`**）：统计卡（`StatCard`，外壳只剩 `button` / `div` 语义壳 `.dtl-stat-shell`）、图表卡（`.dtl-hist` / `.dtl-trend`，`padding:null` 吃自己那套内距）、任务行、空态（`border:'dashed'`）、图表浮卡（`padding:'sm'`）、设置页流程节点（`padding:'sm'`）、历史页表格外框（`.dtl-histlist__frame`，`padding:null` + `overflow:hidden`）。
+- **两条写法约束**（不守就会「样式时有时无」）：
+  1. 本插件要覆盖 `Surface` 基类的属性（内距 / 定位 / 背景 / 边色）时，一律写**复合选择器 `.dshpc-surface.dtl-xxx`**。`Surface` 的四根轴全用变量表达，修饰类只改变量，胜负不依赖两份 CSS 的注入顺序；只写 `.dtl-xxx` 与基类同为 (0,1,0)，谁先注入谁说了算。
+  2. 只改底色 / 边色时改 Surface 自己的变量（`--surface-bg` / `--surface-border`），不要重写 `background` / `border-color`（深灰浮卡的底与边就是这么换的）。
+- **调用 `Surface` 一律不传 `radius`**：容器圆角只有一档 12（`--dshpc-radius-md`，与框内 `Button` / `Input` 同档）。2026-11-01 第一版曾给任务行 / 浮卡 / 流程节点传 `sm`(8)，结果是「卡 8 < 按钮 12」的倒挂，用户一眼看出圆角不对 —— 已全部改回默认。本插件不再自己写任何 `border-radius` 建面（小色块、柱子、头像除外）。
 
 已删除的旧皮肤（2026-10-28）：`.dtl-btn*` / `.dtl-iconbtn*` / `.dtl-input` / `.dtl-select*` / `.dtl-seg*` / `.dtl-check` / `.dtl-badge` / `.dtl-row*` / `.dtl-group` / `.dtl-tag--*` / `.dtl-gchart*` / `.dtl-worklog`，以及随之无引用的 39 个 token（控件高度三档、图表三色、旧阴影 / 圆角大档等）。趋势图与原生 `select` 组件同样已删。
 

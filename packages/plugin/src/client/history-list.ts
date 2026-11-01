@@ -32,7 +32,7 @@ import type { Translate } from "./locales";
 import { displayName } from "./rows";
 import { markIdentityMissing } from "./store";
 import type { HistoryRecord } from "./types";
-import { Select, Button, SectionHead, Segmented, SplitGroup, Tag, Loader } from "./ui";
+import { Select, Button, SectionHead, Segmented, SplitGroup, Surface, Tag, Loader } from "./ui";
 
 const WEEKDAY_KEYS = [
 	"weekdaySun",
@@ -636,7 +636,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		error === null
 			? null
 			: h("div", { className: "dtl-histlist__error" }, `${t("loadFailed")}：${error}`),
-		body,
+		// 表格外框（四边 1px + 圆角 12）交核心 Surface，表格自己只画内部分隔线
+		h(Surface, { className: "dtl-histlist__frame", padding: null }, body),
 	);
 
 	/** 筛选行（工作区 / 执行人 + 年月）。 */

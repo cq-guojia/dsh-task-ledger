@@ -23,6 +23,7 @@ import {
 	Loader,
 	Segmented,
 	StatCard,
+	Surface,
 	Tip,
 } from "./ui";
 
@@ -321,8 +322,8 @@ export function HistoryChart(props: {
 	if (data === null) {
 		// 没读完 = 图区正中间一个最大号的三块加载（核心 `Loader` blocks 档）：无卡面、无遮罩、无文案
 		return h(
-			"div",
-			{ className: "dtl-card dtl-hist" },
+			Surface,
+			{ className: "dtl-hist", padding: null },
 			nav,
 			h(
 				"div",
@@ -342,8 +343,8 @@ export function HistoryChart(props: {
 
 	if (data.buckets.length === 0) {
 		return h(
-			"div",
-			{ className: "dtl-card dtl-hist" },
+			Surface,
+			{ className: "dtl-hist", padding: null },
 			nav,
 			h(EmptyState, { title: t("historyEmpty") }),
 		);
@@ -480,8 +481,8 @@ export function HistoryChart(props: {
 		// 结构（用户 2026-10-30）：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细。
 		// 「新建」是曲线口径、不分工作区，与曲线同色；两行总计 0 就不列（0 不充数）。
 		return h(
-			"div",
-			{ className: "dtl-hist__tip" },
+			Surface,
+			{ className: "dtl-hist__tip", padding: "sm" },
 			h("div", { className: "dtl-hist__tip-date" }, titleOf(bucket)),
 			bucket.added > 0
 				? h(
@@ -625,8 +626,8 @@ export function HistoryChart(props: {
 	};
 
 	return h(
-		"div",
-		{ className: "dtl-card dtl-hist" },
+		Surface,
+		{ className: "dtl-hist", padding: null },
 		nav,
 		// 图体：左 y 轴 + 柱区（弹性填充高度）
 		h(

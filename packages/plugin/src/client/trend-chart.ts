@@ -28,7 +28,7 @@ import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { addDays, formatCount, mondayOf, ymdOf } from "./format";
 import type { LocaleKey, Translate } from "./locales";
 import type { TrendBucketView, TrendGran, TrendOwnerCounts, TrendView } from "./types";
-import { IconButton, Loader, Segmented, Tip } from "./ui";
+import { IconButton, Loader, Segmented, Surface, Tip } from "./ui";
 
 /** 柱宽：原 7.5px 的 1.5 倍（用户 2026-10-30）。 */
 const BAR_W = 11.25;
@@ -160,8 +160,8 @@ export function TrendChart(props: {
 	// 加载时图里本来就是空的）
 	if (trend === null) {
 		return h(
-			"div",
-			{ className: "dtl-card dtl-trend" },
+			Surface,
+			{ className: "dtl-trend", padding: null },
 			nav,
 			h(
 				"div",
@@ -182,8 +182,8 @@ export function TrendChart(props: {
 	const buckets = trend.buckets;
 	if (buckets.length === 0) {
 		return h(
-			"div",
-			{ className: "dtl-card dtl-trend" },
+			Surface,
+			{ className: "dtl-trend", padding: null },
 			nav,
 			h("div", { className: "dtl-trend__foot" }, t("chartEmpty")),
 		);
@@ -312,8 +312,8 @@ export function TrendChart(props: {
 		const split = breakdown(bucket);
 		const total = closed(cell);
 		return h(
-			"div",
-			{ className: "dtl-trend__tip" },
+			Surface,
+			{ className: "dtl-trend__tip", padding: "sm" },
 			h("div", { className: "dtl-trend__tip-row" }, periodOf(bucket)),
 			// 圆点在深灰浮卡上：曲线那支灰是随主题变的，浅色主题下会糊进底色 ⇒ 用浮卡自己的浅灰
 			row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"),
@@ -455,8 +455,8 @@ export function TrendChart(props: {
 			: null;
 
 	return h(
-		"div",
-		{ className: "dtl-card dtl-trend" },
+		Surface,
+		{ className: "dtl-trend", padding: null },
 		h(
 			"div",
 			{ className: "dtl-trend__legend" },

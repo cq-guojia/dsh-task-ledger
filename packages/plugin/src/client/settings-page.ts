@@ -12,7 +12,7 @@ import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, Checkbox, Input, Loader, Modal } from "./ui";
+import { Button, Card, Checkbox, Input, Loader, Modal, Surface } from "./ui";
 
 /** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 const notYet = (): void => {};
@@ -186,8 +186,8 @@ export function SettingsPage(props: {
 			"div",
 			{ className: "dtl-flow__stage" },
 			h(
-				"div",
-				{ className: `dtl-flow__box dtl-flow__box--${tone}` },
+				Surface,
+				{ className: `dtl-flow__box dtl-flow__box--${tone}`, padding: "sm" },
 				h("span", { className: "dtl-flow__num" }, num),
 				h("span", { className: "dtl-flow__name" }, name),
 			),
@@ -208,8 +208,8 @@ export function SettingsPage(props: {
 				"div",
 				{ className: "dtl-flow__stage" },
 				h(
-					"div",
-					{ className: "dtl-flow__box dtl-flow__box--business" },
+					Surface,
+					{ className: "dtl-flow__box dtl-flow__box--business", padding: "sm" },
 					h("span", { className: "dtl-flow__num" }, "2"),
 					h("span", { className: "dtl-flow__name" }, t("settingsFlow2")),
 				),
@@ -463,11 +463,11 @@ export function SettingsPage(props: {
 				// 预览期只摆「有身份」这一张看整体效果；没身份那张（红条）临时收起
 				h(Card, { accent: "success" }, profileOf(PREVIEW.name, PREVIEW.uuid)),
 			),
-			h("div", { className: "dtl-hero__flow" }, h("div", { className: "dtl-card dtl-card--pad" }, flow)),
+			h("div", { className: "dtl-hero__flow" }, h(Surface, { padding: "lg" }, flow)),
 		),
 		h(
-			"div",
-			{ className: "dtl-card dtl-card--pad" },
+			Surface,
+			{ padding: "lg" },
 			h(
 				"div",
 				{ className: "dtl-set__head" },

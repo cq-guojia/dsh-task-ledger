@@ -28,7 +28,7 @@ import { formatDateTime, formatRelative } from "./format";
 import type { Translate } from "./locales";
 import { displayName, type Row, resolveActions } from "./rows";
 import { focusOwner, setQuery } from "./store";
-import { Button, IconButton, notify, Tag, Tip } from "./ui";
+import { Button, IconButton, notify, Surface, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
 
@@ -289,9 +289,12 @@ export function TaskRowView(props: {
 		if (target !== null && target.closest("button") !== null) return;
 		props.onView?.(row);
 	};
+	// 卡片外框（底 / 1px 边 / 圆角 12）交核心 Surface，本文件只摆行内内容。
+	// ⚠️ 不传 radius：容器圆角只有一档（核心 Surface 默认 md=12），与框内 Button / Input 同档；
+	// 传 sm 会变成「卡 8 < 按钮 12」的倒挂（用户 2026-11-01 一眼看出圆角不对）。
 	return h(
-		"div",
-		{ className: "dtl-taskrow" },
+		Surface,
+		{ className: "dtl-taskrow", padding: null },
 		h(
 			"div",
 			{ className: "dtl-taskrow__row", onClick: handleRowClick },

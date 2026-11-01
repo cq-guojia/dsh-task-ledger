@@ -143,14 +143,8 @@ body[data-ds-dark-theme]{
  * 容器类。颜色 / 圆角 / 字号一律只消费 `var(--dtl-*)`。
  */
 export const UI_CONTROLS_CSS = `
-.dtl-card{background:var(--dtl-surface-1);border:1px solid var(--dtl-border);border-radius:var(--dtl-radius-md);
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-card--clickable{cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;}
-.dtl-card--clickable:hover{background:var(--dtl-card-hover);}
-.dtl-card--clickable[data-active='true']{border-color:var(--dtl-business);}
-.dtl-card--clickable:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
-/* 纯容器卡：只有边框 + 圆角 + 白底，**没有色条**（用户 2026-11-01：只有身份块要那条绿/红的线） */
-.dtl-card--pad{padding:var(--dtl-space-4);box-sizing:border-box;}
+/* 容器外框（底 / 边框 / 圆角 / 内距）**一律交核心 Surface**（2026-11-01）：
+   旧的 .dtl-card / .dtl-card--pad 已删除，页面里不再有任何自绘外框。 */
 .dtl-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* ── 设置页（2026-11-01 改版：上半左「人」右「流程小图」，下半台账表格）──
@@ -206,14 +200,13 @@ export const UI_CONTROLS_CSS = `
   margin-top:var(--dtl-space-3);flex-wrap:wrap;}
 .dtl-flow__stage{display:flex;flex-direction:column;align-items:center;gap:var(--dtl-space-1);
   flex:1 1 0;min-width:0;text-align:center;}
-/* 节点方框：白底 + 细描边，扁平（无阴影）；颜色只表达语义，不装饰 */
-.dtl-flow__box{display:flex;align-items:center;justify-content:center;gap:var(--dtl-space-1);
-  width:100%;padding:var(--dtl-space-2);box-sizing:border-box;
-  border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
-  background:var(--dtl-surface-1);}
-.dtl-flow__box--neutral{border-color:var(--dtl-border-strong);color:var(--dtl-fg-2);}
-.dtl-flow__box--business{border-color:var(--dtl-business);color:var(--dtl-business);}
-.dtl-flow__box--success{border-color:var(--dtl-success);color:var(--dtl-success);}
+/* 节点方框 = 核心 Surface（白底 / 1px 边 / 圆角 8 / 内距 8）：语义色只改它的边色变量，
+   扁平（无阴影），颜色只表达语义、不装饰 */
+.dshpc-surface.dtl-flow__box{display:flex;align-items:center;justify-content:center;gap:var(--dtl-space-1);
+  width:100%;--surface-border:var(--dtl-border-strong);}
+.dshpc-surface.dtl-flow__box--neutral{--surface-border:var(--dtl-border-strong);color:var(--dtl-fg-2);}
+.dshpc-surface.dtl-flow__box--business{--surface-border:var(--dtl-business);color:var(--dtl-business);}
+.dshpc-surface.dtl-flow__box--success{--surface-border:var(--dtl-success);color:var(--dtl-success);}
 .dtl-flow__num{flex:none;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
   font-weight:600;color:inherit;}
 .dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;
@@ -264,6 +257,6 @@ export const UI_CONTROLS_CSS = `
 .dtl-form__grow{flex:1 1 auto;min-width:0;}
 
 @media (prefers-reduced-motion: reduce){
-  .dtl-card{transition:none;}
+  .dshpc-surface.dtl-stat{transition:none;}
 }
 `;
