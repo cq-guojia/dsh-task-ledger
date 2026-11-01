@@ -1,5 +1,5 @@
 /**
- * 身份与设置页（2026-11-01 用户拍板：进面板先问身份，没身份就把整个面板换成这一页）。
+ * 身份与设置（用户 2026-11-01：它是滑轨上的第三段，跟「待办 / 历史」平级同大小）。
  *
  * 本页第一版只做「能用起来所需的最小集」：
  *  - 没身份：新建一个 / 认领某本台账里已有的人 / 复制终端命令自己跑；
@@ -13,32 +13,10 @@ import { fetchRoster, postSwitchIdentity } from "./api";
 import type { IdentityView, RosterPayload } from "./types";
 import { Button, Input, Loader } from "./ui";
 
-const pageStyle: Record<string, string | number> = {
-	height: "100%",
+const boxStyle: Record<string, string | number> = {
 	width: "100%",
-	flex: "1 1 auto",
 	minWidth: 0,
 	boxSizing: "border-box",
-	overflow: "auto",
-	padding: "24px 22px 0",
-	color: "var(--dtl-fg)",
-};
-const innerStyle: Record<string, string | number> = {
-	width: "100%",
-	maxWidth: "720px",
-	margin: "0 auto",
-	boxSizing: "border-box",
-};
-const headerStyle: Record<string, string | number> = {
-	display: "flex",
-	alignItems: "center",
-	gap: "var(--dtl-space-3)",
-	flexWrap: "wrap",
-	marginBottom: "var(--dtl-space-4)",
-};
-const titleStyle: Record<string, string | number> = {
-	fontSize: "var(--dtl-font-xl)",
-	fontWeight: 600,
 };
 const cardStyle: Record<string, string | number> = {
 	padding: "var(--dtl-space-4)",
@@ -97,11 +75,10 @@ type Pending = string | null;
 export function SettingsPage(props: {
 	t: Translate;
 	identity: IdentityView;
-	onBack: () => void;
 	/** 换完身份：让看板整轮重读（uuid 变了，统计与「我的」全变）。 */
 	onSwitched: () => void;
 }): ReactNode {
-	const { t, identity, onBack, onSwitched } = props;
+	const { t, identity, onSwitched } = props;
 	const [name, setName] = useState("");
 	const [roster, setRoster] = useState<RosterPayload | null>(null);
 	const [pending, setPending] = useState<Pending>(null);
@@ -164,7 +141,11 @@ export function SettingsPage(props: {
 					"div",
 					null,
 					`@${identity.name ?? ""}`,
-					h("span", { style: { ...hintStyle, marginLeft: "var(--dtl-space-2)" } }, identity.uuid ?? ""),
+					h(
+						"span",
+						{ style: { ...hintStyle, marginLeft: "var(--dtl-space-2)" } },
+						identity.uuid ?? "",
+					),
 				),
 			)
 		: [
@@ -176,19 +157,23 @@ export function SettingsPage(props: {
 					h(
 						"div",
 						{ style: rowStyle },
-						h("div", { style: { flex: "1 1 auto", minWidth: 0 } }, h(Input, {
-							value: name,
-							onChange: setName,
-							placeholder: t("settingsNamePlaceholder"),
-							size: "lg",
-							"aria-label": t("settingsNamePlaceholder"),
-							disabled: pending !== null,
-							onKeyDown: (event) => {
-								if (event.key !== "Enter") return;
-								event.preventDefault();
-								create();
-							},
-						})),
+						h(
+							"div",
+							{ style: { flex: "1 1 auto", minWidth: 0 } },
+							h(Input, {
+								value: name,
+								onChange: setName,
+								placeholder: t("settingsNamePlaceholder"),
+								size: "lg",
+								"aria-label": t("settingsNamePlaceholder"),
+								disabled: pending !== null,
+								onKeyDown: (event) => {
+									if (event.key !== "Enter") return;
+									event.preventDefault();
+									create();
+								},
+							}),
+						),
 						h(
 							Button,
 							{
@@ -201,7 +186,9 @@ export function SettingsPage(props: {
 							t("settingsCreate"),
 						),
 					),
-					error === null ? null : h("div", { style: errorStyle }, t("settingsFailed", { message: error })),
+					error === null
+						? null
+						: h("div", { style: errorStyle }, t("settingsFailed", { message: error })),
 				),
 				h(
 					"div",
@@ -245,23 +232,7 @@ export function SettingsPage(props: {
 				),
 			];
 
-	return h(
-		"div",
-		{ style: pageStyle },
-		h(
-			"div",
-			{ style: innerStyle },
-			h(
-				"div",
-				{ style: headerStyle },
-				known
-					? h(Button, { variant: "outline", size: "md", onClick: onBack }, `← ${t("settingsBack")}`)
-					: null,
-				h("div", { style: titleStyle }, t("settingsTitle")),
-			),
-			body,
-		),
-	);
+	return h("div", { style: boxStyle }, body);
 }
 
 /** 设置页要用到的键（供上面的类型检查留痕：改文案时漏键会在这里报错）。 */

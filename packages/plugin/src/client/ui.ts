@@ -415,8 +415,12 @@ export function ensureUiBase(): void {
 export interface SegmentedItem<Value extends string = string> {
 	readonly value: Value;
 	readonly label: string;
+	/** 段内图标（放在文字前；`label` 传空串 = 只显示图标）。核心没有 icon 轴 ⇒ 适配层塞进 label。 */
+	readonly icon?: ReactNode;
 	/** 段内角标数字（或已缩写字符串如「1.2K」）；`undefined` / 空串 / "0" 不显示。 */
 	readonly badge?: number | string;
+	/** 置灰不可点。 */
+	readonly disabled?: boolean;
 }
 
 /** 分段控件（单选）：改由核心 `Segmented` 承担（size/滑块动画全在 core，外观只有一套、无需指定变体，
@@ -438,8 +442,24 @@ export function Segmented<Value extends string>(props: {
 	return h(CoreSegmented<Value>, {
 		items: props.items.map((item) => ({
 			value: item.value,
-			label: item.label,
+			// 核心 `label` 只收 string 没有 icon 轴 ⇒ 段图标在适配层拼成一行塞进 label（不改核心）
+			label:
+				item.icon === undefined
+					? item.label
+					: (h(
+							"span",
+							{
+								style: {
+									display: "inline-flex",
+									alignItems: "center",
+									gap: item.label === "" ? undefined : "var(--dtl-space-2)",
+								},
+							},
+							item.icon,
+							item.label === "" ? null : item.label,
+						) as unknown as string),
 			count: item.badge,
+			disabled: item.disabled,
 		})),
 		value: props.value,
 		onChange: props.onChange,

@@ -54626,8 +54626,13 @@ body[data-ds-dark-theme]{
 			return (0, react$1.createElement)(Segmented$1, {
 				items: props.items.map((item) => ({
 					value: item.value,
-					label: item.label,
-					count: item.badge
+					label: item.icon === void 0 ? item.label : (0, react$1.createElement)("span", { style: {
+						display: "inline-flex",
+						alignItems: "center",
+						gap: item.label === "" ? void 0 : "var(--dtl-space-2)"
+					} }, item.icon, item.label === "" ? null : item.label),
+					count: item.badge,
+					disabled: item.disabled
 				})),
 				value: props.value,
 				onChange: props.onChange,
@@ -56324,7 +56329,7 @@ body[data-ds-dark-theme]{
 		//#endregion
 		//#region src/client/settings-page.ts
 		/**
-		* 身份与设置页（2026-11-01 用户拍板：进面板先问身份，没身份就把整个面板换成这一页）。
+		* 身份与设置（用户 2026-11-01：它是滑轨上的第三段，跟「待办 / 历史」平级同大小）。
 		*
 		* 本页第一版只做「能用起来所需的最小集」：
 		*  - 没身份：新建一个 / 认领某本台账里已有的人 / 复制终端命令自己跑；
@@ -56332,32 +56337,10 @@ body[data-ds-dark-theme]{
 		*
 		* 换身份之后由 `onSwitched` 让看板整轮重读（uuid 变了，mine / 统计全变）。
 		*/
-		const pageStyle$1 = {
-			height: "100%",
+		const boxStyle = {
 			width: "100%",
-			flex: "1 1 auto",
 			minWidth: 0,
-			boxSizing: "border-box",
-			overflow: "auto",
-			padding: "24px 22px 0",
-			color: "var(--dtl-fg)"
-		};
-		const innerStyle = {
-			width: "100%",
-			maxWidth: "720px",
-			margin: "0 auto",
 			boxSizing: "border-box"
-		};
-		const headerStyle$1 = {
-			display: "flex",
-			alignItems: "center",
-			gap: "var(--dtl-space-3)",
-			flexWrap: "wrap",
-			marginBottom: "var(--dtl-space-4)"
-		};
-		const titleStyle$1 = {
-			fontSize: "var(--dtl-font-xl)",
-			fontWeight: 600
 		};
 		const cardStyle = {
 			padding: "var(--dtl-space-4)",
@@ -56408,7 +56391,7 @@ body[data-ds-dark-theme]{
 			userSelect: "all"
 		};
 		function SettingsPage(props) {
-			const { t, identity, onBack, onSwitched } = props;
+			const { t, identity, onSwitched } = props;
 			const [name, setName] = (0, react$1.useState)("");
 			const [roster, setRoster] = (0, react$1.useState)(null);
 			const [pending, setPending] = (0, react$1.useState)(null);
@@ -56508,11 +56491,7 @@ body[data-ds-dark-theme]{
 					style: cardStyle
 				}, (0, react$1.createElement)("div", { style: hintStyle }, t("settingsTerminalHint")), (0, react$1.createElement)("code", { style: codeStyle }, identity.initCommand ?? "progress init"))
 			];
-			return (0, react$1.createElement)("div", { style: pageStyle$1 }, (0, react$1.createElement)("div", { style: innerStyle }, (0, react$1.createElement)("div", { style: headerStyle$1 }, known ? (0, react$1.createElement)(Button, {
-				variant: "outline",
-				size: "md",
-				onClick: onBack
-			}, `← ${t("settingsBack")}`) : null, (0, react$1.createElement)("div", { style: titleStyle$1 }, t("settingsTitle"))), body));
+			return (0, react$1.createElement)("div", { style: boxStyle }, body);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -56586,8 +56565,6 @@ body[data-ds-dark-theme]{
 			flexWrap: "wrap",
 			margin: "calc(var(--dtl-space-4) * 2) 0 calc(var(--dtl-space-2) * 2)"
 		};
-		/** 工作区 / 执行人下拉宽度：核心 Picker 现已支持 min/max（超长省略号）。
-		*  下限略大于旧 131 口径，上限兜底长名不被撑开压住后一个下拉。 */
 		const SELECT_MIN_WIDTH = 140;
 		const SELECT_MAX_WIDTH = 240;
 		/** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
@@ -56688,7 +56665,6 @@ body[data-ds-dark-theme]{
 			const toolbarAnchor = (0, react$1.useCallback)(() => contentRef.current, []);
 			const toolbarScroll = (0, react$1.useCallback)(() => scrollRef.current, []);
 			const [viewMode, setViewMode] = (0, react$1.useState)("active");
-			const [showSettings, setShowSettings] = (0, react$1.useState)(false);
 			const [trendGran, setTrendGran] = (0, react$1.useState)("day");
 			const [gran, setGran] = (0, react$1.useState)("day");
 			const [histYm, setHistYm] = (0, react$1.useState)(() => {
@@ -56961,17 +56937,8 @@ body[data-ds-dark-theme]{
 				}
 			})));
 			const identity = state.identity;
-			if (identity !== null && (identity.uuid === null || showSettings)) return (0, react$1.createElement)(SettingsPage, {
-				t,
-				identity,
-				onBack: () => {
-					setShowSettings(false);
-				},
-				onSwitched: () => {
-					setShowSettings(false);
-					refresh();
-				}
-			});
+			const unknownIdentity = identity !== null && identity.uuid === null;
+			const shownView = unknownIdentity ? "settings" : viewMode;
 			return (0, react$1.createElement)("div", {
 				ref: mountRef,
 				style: mountStyle
@@ -57001,31 +56968,42 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-173208-705`
-			}, `v0.0.126 261101-173208-705`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261101-173647-867`
+			}, `v0.0.126 261101-173647-867`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
 			} }, (0, react$1.createElement)(Segmented, {
 				id: "dtl-view-mode",
-				value: viewMode,
+				value: shownView,
 				label: t("viewModeLabel"),
 				size: "lg",
 				tone: "business",
-				items: [{
-					value: "active",
-					label: t("viewActive")
-				}, {
-					value: "history",
-					label: t("viewHistory")
-				}],
+				items: [
+					{
+						value: "active",
+						label: t("viewActive"),
+						disabled: unknownIdentity
+					},
+					{
+						value: "history",
+						label: t("viewHistory"),
+						disabled: unknownIdentity
+					},
+					{
+						value: "settings",
+						label: "",
+						icon: (0, react$1.createElement)("span", {
+							"aria-label": t("settingsEntry"),
+							title: t("settingsEntry"),
+							style: {
+								display: "inline-flex",
+								alignItems: "center"
+							}
+						}, (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSettingsOutlineRegular, { size: 16 }))
+					}
+				],
 				onChange: (next) => setViewMode(next)
-			}), (0, react$1.createElement)(IconButton, {
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSettingsOutlineRegular, { size: 16 }),
-				label: t("settingsEntry"),
-				title: t("settingsEntry"),
-				size: "lg",
-				onClick: () => setShowSettings(true)
 			}), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
@@ -57038,7 +57016,7 @@ body[data-ds-dark-theme]{
 					lastTrendRef.current = null;
 					setHistoryError(null);
 				}
-			}, state.refreshing ? t("refreshing") : t("refresh")))), viewMode === "history" ? historyError !== null ? (0, react$1.createElement)("div", { style: {
+			}, state.refreshing ? t("refreshing") : t("refresh")))), shownView === "settings" ? null : shownView === "history" ? historyError !== null ? (0, react$1.createElement)("div", { style: {
 				color: "var(--dtl-danger)",
 				fontSize: "var(--dtl-font-md)",
 				paddingTop: "var(--dtl-space-3)"
@@ -57074,7 +57052,13 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					refresh();
 				}
-			}, t("retry"))) : null, viewMode === "history" ? null : statsGrid(board), viewMode === "history" ? null : regionHead, viewMode === "history" ? (0, react$1.createElement)(HistoryList, {
+			}, t("retry"))) : null, shownView === "active" ? statsGrid(board) : null, shownView === "active" ? regionHead : null, shownView === "settings" ? identity === null ? null : (0, react$1.createElement)(SettingsPage, {
+				t,
+				identity,
+				onSwitched: () => {
+					refresh();
+				}
+			}) : shownView === "history" ? (0, react$1.createElement)(HistoryList, {
 				t,
 				workspaceOptions,
 				ownerGroups: ownerOptionGroups,

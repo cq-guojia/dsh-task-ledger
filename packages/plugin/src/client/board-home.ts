@@ -64,7 +64,6 @@ import {
 	Button,
 	EmptyState,
 	ensureUiBase,
-	IconButton,
 	Loader,
 	notify,
 	QuickToolbar,
@@ -141,6 +140,9 @@ const regionHeadRowStyle: Record<string, string | number> = {
 };
 /** 工作区 / 执行人下拉宽度：核心 Picker 现已支持 min/max（超长省略号）。
  *  下限略大于旧 131 口径，上限兜底长名不被撑开压住后一个下拉。 */
+/** 滑轨三段：在办看板 / 历史查询 / 身份与设置（最右，只显示齿轮）。 */
+type ViewMode = "active" | "history" | "settings";
+
 const SELECT_MIN_WIDTH = 140;
 const SELECT_MAX_WIDTH = 240;
 /** 搜索框宽度（用户 2026-10-17：两区同款，96×2 = 192）。 */
@@ -212,10 +214,8 @@ export function BoardHome(props: {
 	/** 两个 ref 的取值回调：引用要稳（核心按引用做 effect 依赖，每次新建会反复重算位置）。 */
 	const toolbarAnchor = useCallback((): HTMLElement | null => contentRef.current, []);
 	const toolbarScroll = useCallback((): HTMLElement | null => scrollRef.current, []);
-	// 视图模式：在办看板 ↔ 历史查询（入口切换；历史页布局待定稿，先占位）。
-	const [viewMode, setViewMode] = useState<"active" | "history">("active");
-	// 身份与设置页（用户 2026-11-01）：右上角齿轮进；没身份时它不是「进」而是整页顶掉看板。
-	const [showSettings, setShowSettings] = useState(false);
+	// 视图模式：在办看板 / 历史查询 / 身份与设置（用户 2026-11-01：三段同一条滑轨，最右是齿轮）。
+	const [viewMode, setViewMode] = useState<ViewMode>("active");
 	// 首页趋势图的粒度（日 / 周），默认日（用户 2026-10-31 起要；收尾时把默认从周翻到日）。两档桶都随快照下来 ⇒ 切换零请求。
 	const [trendGran, setTrendGran] = useState<TrendGran>("day");
 	// 历史页顶部数据：切到历史才拉（拉过一次就复用，切回在办不清）。
@@ -653,22 +653,11 @@ export function BoardHome(props: {
 		),
 	);
 
-	// 没身份 ⇒ 整个面板就是身份页（登录闸，用户 2026-11-01 拍板：不做提示条、不做「先看看」）；
-	// 有身份 ⇒ 齿轮进来的是同一页，带「返回看板」。身份还没取到时按原骨架继续画（不闪一屏别的）。
+	// 没身份 ⇒ 滑轨钉在「设置」那一段（登录闸，用户 2026-11-01 拍板：不做提示条、不做「先看看」），
+	// 另两段置灰不可点；有身份 ⇒ 三段平级，各自正常大小。
 	const identity = state.identity;
-	if (identity !== null && (identity.uuid === null || showSettings)) {
-		return h(SettingsPage, {
-			t,
-			identity,
-			onBack: () => {
-				setShowSettings(false);
-			},
-			onSwitched: () => {
-				setShowSettings(false);
-				void refresh();
-			},
-		});
-	}
+	const unknownIdentity = identity !== null && identity.uuid === null;
+	const shownView: ViewMode = unknownIdentity ? "settings" : viewMode;
 
 	return h(
 		"div",
@@ -729,25 +718,39 @@ export function BoardHome(props: {
 									gap: "var(--dtl-space-3)",
 								},
 							},
-							h(Segmented<"active" | "history">, {
+							h(Segmented<ViewMode>, {
 								id: "dtl-view-mode",
-								value: viewMode,
+								value: shownView,
 								label: t("viewModeLabel"),
 								size: "lg",
 								tone: "business",
 								items: [
-									{ value: "active", label: t("viewActive") },
-									{ value: "history", label: t("viewHistory") },
+									{
+										value: "active",
+										label: t("viewActive"),
+										disabled: unknownIdentity,
+									},
+									{
+										value: "history",
+										label: t("viewHistory"),
+										disabled: unknownIdentity,
+									},
+									// 最右一段只有齿轮（用户 2026-11-01）；没文字 ⇒ aria-label 给读屏
+									{
+										value: "settings",
+										label: "",
+										icon: h(
+											"span",
+											{
+												"aria-label": t("settingsEntry"),
+												title: t("settingsEntry"),
+												style: { display: "inline-flex", alignItems: "center" },
+											},
+											h(IconSettingsOutlineRegular, { size: 16 }),
+										),
+									},
 								],
 								onChange: (next) => setViewMode(next),
-							}),
-							// 身份与设置（用户 2026-11-01：放在刷新左边，齿轮图标）。
-							h(IconButton, {
-								icon: h(IconSettingsOutlineRegular, { size: 16 }),
-								label: t("settingsEntry"),
-								title: t("settingsEntry"),
-								size: "lg",
-								onClick: () => setShowSettings(true),
 							}),
 							h(
 								Button,
@@ -774,7 +777,7 @@ export function BoardHome(props: {
 				// 历史模式：顶部 4 数显 + 按周期柱状图（独立于下方时间筛选）；在办模式：错误行。
 				// 渲染条件用「上次成功的数据」兜底：切粒度 / 首读都**不卸载这一块** ——
 				// 首读显示骨架（加载卡 + 横杠），切粒度显示旧图，等新桶到了再整体换（不闪）。
-				viewMode === "history"
+				shownView === "settings" ? null : shownView === "history"
 					? (historyError !== null
 							? h(
 									"div",
@@ -843,11 +846,21 @@ export function BoardHome(props: {
 								)
 							: null),
 				// 数据没到也照常画这一行（8 块骨架 + 图表骨架），数据一到就地换掉
-				viewMode === "history" ? null : statsGrid(board),
-				viewMode === "history" ? null : regionHead,
+				shownView === "active" ? statsGrid(board) : null,
+				shownView === "active" ? regionHead : null,
 				// 首屏没数据（board === null）≠ 空结果：列表位只放局部加载，别拿「没有任务」骗人；
 				// 读挂了由上面那行错误 + 重试承担，列表位不再空转。
-				viewMode === "history"
+				shownView === "settings"
+					? identity === null
+						? null
+						: h(SettingsPage, {
+								t,
+								identity,
+								onSwitched: () => {
+									void refresh();
+								},
+							})
+					: shownView === "history"
 					? h(HistoryList, {
 							t,
 							workspaceOptions,
