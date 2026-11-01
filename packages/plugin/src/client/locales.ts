@@ -23,16 +23,48 @@ export type LocaleKey =
 	| "settingsEntry"
 	| "settingsTitle"
 	| "settingsBack"
+	| "settingsSwitchUser"
+	| "settingsNewUser"
+	| "settingsGoCreate"
+	| "settingsUserModalTitle"
 	| "settingsNoIdentityTitle"
 	| "settingsNoIdentityHint"
 	| "settingsNamePlaceholder"
 	| "settingsCreate"
 	| "settingsUseExisting"
 	| "settingsRosterEmpty"
-	| "settingsTerminalHint"
-	| "settingsCurrent"
 	| "settingsFailed"
 	| "settingsUseThis"
+	// 设置页 · 台账目录块
+	| "settingsDirsTitle"
+	| "settingsDirsHint"
+	| "settingsDirsEmpty"
+	| "settingsDirsAdd"
+	| "settingsDirVisible"
+	| "settingsDirRename"
+	| "settingsDirRemove"
+	| "settingsRenamePlaceholder"
+	| "settingsSave"
+	| "settingsCancel"
+	| "settingsPathCopyTip"
+	| "settingsPathCopied"
+	| "settingsAddTitle"
+	| "settingsAddHint"
+	| "settingsAddPlaceholder"
+	| "settingsAddConfirm"
+	// 设置页 · 流程小图与表格表头
+	| "settingsFlowTitle"
+	| "settingsFlow1"
+	| "settingsFlow1Desc"
+	| "settingsFlow2"
+	| "settingsFlow2Create"
+	| "settingsFlow2Claim"
+	| "settingsFlow2Close"
+	| "settingsFlow3"
+	| "settingsFlow3Desc"
+	| "settingsColDir"
+	| "settingsColPath"
+	| "settingsColActions"
 	// 统计卡
 	| "statMyActive"
 	| "statOpen"
@@ -192,16 +224,49 @@ export const zh: Record<LocaleKey, string> = {
 	settingsEntry: "身份与设置",
 	settingsTitle: "身份与设置",
 	settingsBack: "返回看板",
-	settingsNoIdentityTitle: "这台机器还没有身份",
-	settingsNoIdentityHint: "看板靠身份记账：谁领的、谁做的。建一个就能开始。",
-	settingsNamePlaceholder: "你的名字",
+	settingsSwitchUser: "切换身份",
+	settingsNewUser: "新建身份",
+	settingsGoCreate: "创建身份",
+	settingsUserModalTitle: "身份管理",
+	settingsNoIdentityTitle: "未创建身份",
+	settingsNoIdentityHint: "创建后，任务的认领、执行与结案均记入该身份。",
+	settingsNamePlaceholder: "身份名称",
 	settingsCreate: "创建身份",
-	settingsUseExisting: "或者用已有的身份",
-	settingsRosterEmpty: "这些项目里还没有任何人建过身份。",
-	settingsTerminalHint: "也可以在终端里自己跑：",
-	settingsCurrent: "当前身份",
-	settingsFailed: "没成功：{message}",
-	settingsUseThis: "用这个",
+	settingsUseExisting: "使用已有身份",
+	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
+	settingsFailed: "操作未成功：{message}",
+	settingsUseThis: "使用",
+
+	settingsDirsTitle: "台账目录",
+	settingsDirsHint:
+		"看板仅汇总下列目录中的台账。取消勾选「显示」后，该目录不再出现在任何页面，统计与筛选中亦不计入；台账数据本身不受影响。",
+	settingsDirsEmpty: "尚未登记任何台账目录。",
+	settingsDirsAdd: "添加目录",
+	settingsDirVisible: "显示",
+	settingsDirRename: "重命名",
+	settingsDirRemove: "移除",
+	settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
+	settingsSave: "保存",
+	settingsCancel: "取消",
+	settingsPathCopyTip: "复制路径",
+	settingsPathCopied: "已复制",
+	settingsAddTitle: "添加台账目录",
+	settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
+	settingsAddPlaceholder: "台账根目录的绝对路径",
+	settingsAddConfirm: "添加",
+
+	settingsFlowTitle: "台账工作流",
+	settingsFlow1: "安装 skill",
+	settingsFlow1Desc: "DSH 内已内置",
+	settingsFlow2: "工作区里",
+	settingsFlow2Create: "建任务",
+	settingsFlow2Claim: "领任务",
+	settingsFlow2Close: "结案",
+	settingsFlow3: "面板查看",
+	settingsFlow3Desc: "统计 · 历史",
+	settingsColDir: "目录",
+	settingsColPath: "路径",
+	settingsColActions: "操作",
 
 	statMyActive: "我的待办",
 	statMyOverdueHint: "逾期 {n}",
@@ -357,17 +422,51 @@ export const en: Record<LocaleKey, string> = {
 	settingsEntry: "Identity & settings",
 	settingsTitle: "Identity & settings",
 	settingsBack: "Back to board",
-	settingsNoIdentityTitle: "This machine has no identity yet",
+	settingsSwitchUser: "Switch identity",
+	settingsNewUser: "New identity",
+	settingsGoCreate: "Create identity",
+	settingsUserModalTitle: "Identity management",
+	settingsNoIdentityTitle: "No identity created",
 	settingsNoIdentityHint:
-		"The board is keyed by identity: who claimed it, who did it. Create one to start.",
-	settingsNamePlaceholder: "Your name",
+		"Once created, claiming, executing and closing a task are recorded under this identity.",
+	settingsNamePlaceholder: "Identity name",
 	settingsCreate: "Create identity",
-	settingsUseExisting: "Or use an existing identity",
-	settingsRosterEmpty: "No one has an identity in these projects yet.",
-	settingsTerminalHint: "Or run it yourself in a terminal:",
-	settingsCurrent: "Current identity",
-	settingsFailed: "Failed: {message}",
-	settingsUseThis: "Use this",
+	settingsUseExisting: "Use an existing identity",
+	settingsRosterEmpty: "No identity has been created in the listed ledgers.",
+	settingsFailed: "Operation failed: {message}",
+	settingsUseThis: "Use",
+
+	settingsDirsTitle: "Ledger folders",
+	settingsDirsHint:
+		"Only ledgers in the following folders are summarized. Clearing \"Show\" removes a folder from every view, statistics and filters; its data is unaffected.",
+	settingsDirsEmpty: "No ledger folder has been registered.",
+	settingsDirsAdd: "Add folder",
+	settingsDirVisible: "Show",
+	settingsDirRename: "Rename",
+	settingsDirRemove: "Remove",
+	settingsRenamePlaceholder: "New name (empty keeps the folder name)",
+	settingsSave: "Save",
+	settingsCancel: "Cancel",
+	settingsPathCopyTip: "Copy path",
+	settingsPathCopied: "Copied",
+	settingsAddTitle: "Add ledger folder",
+	settingsAddHint:
+		"Enter the absolute path of a ledger root folder. It must contain a ledger/ subdirectory.",
+	settingsAddPlaceholder: "Absolute path of the ledger root",
+	settingsAddConfirm: "Add",
+
+	settingsFlowTitle: "Ledger workflow",
+	settingsFlow1: "Install the skill",
+	settingsFlow1Desc: "Bundled in DSH",
+	settingsFlow2: "In the workspace",
+	settingsFlow2Create: "Create",
+	settingsFlow2Claim: "Claim",
+	settingsFlow2Close: "Close",
+	settingsFlow3: "Review in the panel",
+	settingsFlow3Desc: "Summary · history",
+	settingsColDir: "Folder",
+	settingsColPath: "Path",
+	settingsColActions: "Actions",
 
 	statMyActive: "My todos",
 	statMyOverdueHint: "overdue {n}",

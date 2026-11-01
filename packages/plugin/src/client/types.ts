@@ -242,6 +242,18 @@ export interface IdentityView {
 	readonly initCommand?: string;
 }
 
+/** 一条台账目录（`/dirs`）：`hidden` = 界面上不显示（统计、列表、执行人下拉都不算它）。 */
+export interface LedgerDirView {
+	readonly path: string;
+	readonly name: string;
+	readonly hidden: boolean;
+}
+
+/** `/dirs` 响应：机器级台账目录清单，**含隐藏项**（关了显示还得能开回来）。 */
+export interface DirsPayload {
+	readonly dirs: readonly LedgerDirView[];
+}
+
 /** `/identity/roster`：可以认领的人，按工作区分组（读不到名册的工作区不在列表里）。 */
 export interface RosterPayload {
 	readonly workspaces: readonly {

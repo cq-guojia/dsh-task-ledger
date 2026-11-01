@@ -56,6 +56,8 @@ body{
      由 --dtl-fg 现算 ⇒ 暗色下自动变成 13% 白，不用另开明暗分支 */
   --dtl-chip-strong:color-mix(in srgb,var(--dtl-fg) 13%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
+  /* 绿浅底：头像圆的底（白卡上必须有底色，否则圆看不见） */
+  --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 16%,transparent);
 
   /* ── 图表色（2026-10-30 用户改版）───────────────────────────────
      首页趋势图：完成 = **蓝**（business，用户 2026-10-30「绿色那个柱子不好看，用 business 蓝」）、
@@ -131,6 +133,7 @@ body[data-ds-dark-theme]{
   /* 语义色浅底在深色下压到 12% / 5%（8% 在深底上偏重） */
   --dtl-business-soft:color-mix(in srgb,var(--dtl-business) 12%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 5%,transparent);
+  --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 14%,transparent);
 }
 `;
 
@@ -146,7 +149,119 @@ export const UI_CONTROLS_CSS = `
 .dtl-card--clickable:hover{background:var(--dtl-card-hover);}
 .dtl-card--clickable[data-active='true']{border-color:var(--dtl-business);}
 .dtl-card--clickable:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
+/* 纯容器卡：只有边框 + 圆角 + 白底，**没有色条**（用户 2026-11-01：只有身份块要那条绿/红的线） */
+.dtl-card--pad{padding:var(--dtl-space-4);box-sizing:border-box;}
 .dtl-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── 设置页（2026-11-01 改版：上半左「人」右「流程小图」，下半台账表格）──
+   上半是一张 2 列 hero 卡；窄面板（<760px）自动落成一列，不做横向滚动。 */
+.dtl-set{display:flex;flex-direction:column;gap:var(--dtl-space-3);min-width:0;}
+.dtl-set__title{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;}
+.dtl-set__hint{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
+  margin-top:var(--dtl-space-1);}
+.dtl-set__error{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-danger);
+  margin-top:var(--dtl-space-2);}
+.dtl-set__body{margin-top:var(--dtl-space-3);}
+.dtl-set__head{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:var(--dtl-space-3);flex-wrap:wrap;}
+
+/* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
+   高度拉平（align-items:stretch）——两侧卡片顶部和底部对齐，不留参差。 */
+.dtl-hero{display:grid;grid-template-columns:320px minmax(0,1fr);
+  gap:var(--dtl-space-3);align-items:stretch;}
+.dtl-hero__col{display:flex;flex-direction:column;gap:var(--dtl-space-3);min-width:0;}
+.dtl-hero__flow{display:flex;min-width:0;}
+.dtl-hero__flow > *{flex:1 1 auto;}
+@media (max-width:760px){
+  .dtl-hero{grid-template-columns:minmax(0,1fr);}
+}
+
+/* 身份块：**立式**（用户 2026-11-01）—— 头像在上，下面依次是名字 / ID / 按钮，整体居中 */
+.dtl-profile{display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:var(--dtl-space-2);min-width:0;padding:var(--dtl-space-2) 0;}
+/* 头像圆：**要有底色**（白卡上再填白就看不见圆了，用户 2026-11-01）；
+   底色与字色跟状态走：有身份 = 绿，没身份 = 红。
+   字号取 26 档（token 里的最大档）：中文首字 / 单个字母在圆里都压得住。 */
+.dtl-avatar{flex:none;width:64px;height:64px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:var(--dtl-font-stat);font-weight:600;
+  line-height:1;color:var(--dtl-success);background:var(--dtl-success-soft);text-transform:uppercase;}
+.dtl-avatar--empty{color:var(--dtl-danger);background:var(--dtl-danger-soft);}
+.dtl-profile__main{display:flex;flex-direction:column;align-items:center;gap:var(--dtl-space-1);
+  min-width:0;width:100%;}
+.dtl-profile__name{font-size:var(--dtl-font-xl);line-height:var(--dtl-line-md);font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dtl-profile__uuid{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  word-break:break-all;}
+.dtl-profile__hint{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
+.dtl-acts{display:flex;align-items:center;gap:var(--dtl-space-2);flex:0 0 auto;flex-wrap:wrap;}
+.dtl-profile__main .dtl-acts{margin-top:var(--dtl-space-1);justify-content:center;}
+
+/* 流程小图：三列 —— 左「装 skill」/ 中「工作区里（建→领→结）」/ 右「面板查看」。
+   风格参照 archify 的设计系统：**扁平无阴影、颜色只承担语义、圆角 control 档、
+   中间那列用纵向 chip 串起三步**。 */
+.dtl-flow{min-width:0;display:flex;flex-direction:column;}
+.dtl-flow__title{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
+.dtl-flow__rail{display:flex;align-items:center;gap:var(--dtl-space-2);
+  margin-top:var(--dtl-space-3);flex-wrap:wrap;}
+.dtl-flow__stage{display:flex;flex-direction:column;align-items:center;gap:var(--dtl-space-1);
+  flex:1 1 0;min-width:0;text-align:center;}
+/* 节点方框：白底 + 细描边，扁平（无阴影）；颜色只表达语义，不装饰 */
+.dtl-flow__box{display:flex;align-items:center;justify-content:center;gap:var(--dtl-space-1);
+  width:100%;padding:var(--dtl-space-2);box-sizing:border-box;
+  border:1px solid var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);
+  background:var(--dtl-surface-1);}
+.dtl-flow__box--neutral{border-color:var(--dtl-border-strong);color:var(--dtl-fg-2);}
+.dtl-flow__box--business{border-color:var(--dtl-business);color:var(--dtl-business);}
+.dtl-flow__box--success{border-color:var(--dtl-success);color:var(--dtl-success);}
+.dtl-flow__num{flex:none;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  font-weight:600;color:inherit;}
+.dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;
+  color:inherit;}
+.dtl-flow__desc{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);color:var(--dtl-fg-3);}
+/* 中间那列的纵向三步：淡底 chip + ↓ */
+.dtl-flow__stack{display:flex;flex-direction:column;align-items:center;gap:var(--dtl-space-1);
+  width:100%;margin-top:var(--dtl-space-1);}
+.dtl-flow__chip{display:block;width:100%;box-sizing:border-box;
+  padding:var(--dtl-space-1) var(--dtl-space-2);border-radius:var(--dtl-radius-xs);
+  background:var(--dtl-business-soft);font-size:var(--dtl-font-sm);
+  line-height:var(--dtl-line-sm);color:var(--dtl-fg);}
+.dtl-flow__down{color:var(--dtl-fg-dim);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-xs);}
+.dtl-flow__arrow{flex:none;color:var(--dtl-fg-dim);font-size:var(--dtl-font-md);
+  line-height:var(--dtl-line-md);}
+@media (max-width:760px){
+  .dtl-flow__rail{flex-direction:column;align-items:stretch;}
+  .dtl-flow__arrow{align-self:center;transform:rotate(90deg);}
+}
+
+/* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */
+.dtl-tbl{display:flex;flex-direction:column;min-width:0;}
+.dtl-tbl__head,.dtl-tbl__row{display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) 92px 132px;
+  gap:var(--dtl-space-3);align-items:center;padding:var(--dtl-space-2) var(--dtl-space-2);}
+.dtl-tbl__head{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
+  background:var(--dtl-table-head-bg);border-radius:var(--dtl-radius-xs);}
+.dtl-tbl__row{border-top:1px solid var(--dtl-border-faint);}
+.dtl-tbl__row:hover{background:var(--dtl-table-row-hover);}
+.dtl-tbl__cell{min-width:0;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* 路径本身就是复制钮（排障第一个问题：这是哪个目录） */
+.dtl-tbl__path{min-width:0;padding:0;border:0;background:none;cursor:pointer;text-align:left;
+  font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dtl-tbl__path:hover{color:var(--dtl-business);text-decoration:underline;}
+.dtl-tbl__edit{display:flex;align-items:center;gap:var(--dtl-space-2);
+  padding:var(--dtl-space-2);border-top:1px solid var(--dtl-border-faint);}
+
+/* 弹窗内部：名册 / 表单行 */
+.dtl-roster__group{margin-top:var(--dtl-space-4);}
+.dtl-roster__group-title{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);margin-bottom:var(--dtl-space-1);}
+.dtl-roster__item{display:flex;align-items:center;justify-content:space-between;
+  gap:var(--dtl-space-2);padding:var(--dtl-space-1) 0;}
+.dtl-form{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:var(--dtl-space-2);}
+.dtl-form__grow{flex:1 1 auto;min-width:0;}
 
 @media (prefers-reduced-motion: reduce){
   .dtl-card{transition:none;}

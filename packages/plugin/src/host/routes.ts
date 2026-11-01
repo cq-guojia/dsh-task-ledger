@@ -18,6 +18,7 @@ import {
 	type SwitchInput,
 } from "./services/identity.service.js";
 import { getBoardHome } from "./services/stats.service.js";
+import { listDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 import type { RegistryWorkspace } from "./types.js";
@@ -201,6 +202,15 @@ export function registerRoutes(
 	registerRead("/workspaces", async (_req, res) => {
 		try {
 			sendJson(res, 200, { workspaces: await workspacesOf(deps) });
+		} catch (error) {
+			sendFailure(res, error);
+		}
+	});
+
+	// 台账目录清单（设置页「台账目录」块）：本轮只读，写动作（加 / 改名 / 显隐 / 移除）下一轮接。
+	registerRead("/dirs", async (_req, res) => {
+		try {
+			sendJson(res, 200, await listDirs());
 		} catch (error) {
 			sendFailure(res, error);
 		}

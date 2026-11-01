@@ -10,6 +10,7 @@
  */
 import type {
 	BoardPayload,
+	DirsPayload,
 	HistoryGran,
 	HistoryListPayload,
 	HistoryTrendPayload,
@@ -99,6 +100,11 @@ export function fetchIdentity(): Promise<IdentityView> {
 /** 可以认领的人：各工作区名册（没身份也能读）。 */
 export function fetchRoster(): Promise<RosterPayload> {
 	return fetchJson<RosterPayload>("/identity/roster");
+}
+
+/** 台账目录清单（机器级；带隐藏项——设置页要能把它打开回来）。 */
+export function fetchDirs(): Promise<DirsPayload> {
+	return fetchJson<DirsPayload>("/dirs");
 }
 
 /** 换身份：建全新的，或认领某个工作区名册里已有的人。返回换完之后的身份。 */

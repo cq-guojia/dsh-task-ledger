@@ -581,6 +581,11 @@ export { QuickToolbar } from "dsh-plugin-core/ui";
 /** 文本输入（核心唯一实现：size sm/md/lg、error 描红、hint 问号一气呵成）。 */
 export { Input } from "dsh-plugin-core/ui";
 
+/** 弹窗：核心 `Modal`（自绘遮罩、不走 portal；设置页的用户管理与添加台账都用它）。
+ *  勾选框：核心 `Checkbox`（台账行的「显示」开关；核心没有 Switch 档，勾选框就是开关）。
+ *  卡片：核心 `Card`（白底 + 1px 边框 + 圆角 + 左缘行内短色条）—— 跟其它页面同一套外观。 */
+export { Card, Checkbox, Modal } from "dsh-plugin-core/ui";
+
 /* ── 输入 / 下拉 / 搜索 ───────────────────────────────────────────── */
 
 /** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
