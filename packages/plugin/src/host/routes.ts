@@ -19,7 +19,8 @@ import {
 } from "./services/identity.service.js";
 import { getBoardHome } from "./services/stats.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
-import { type RegistryWorkspace, resolveWorkspaces } from "./workspace.js";
+import { resolveWorkspaces } from "./services/workspaces.service.js";
+import type { RegistryWorkspace } from "./types.js";
 
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 external/host-webserver.md）。 */
 export interface WebServerLike {

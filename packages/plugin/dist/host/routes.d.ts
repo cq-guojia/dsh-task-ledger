@@ -8,7 +8,7 @@
  * 详情 / 历史 / 筛选项 / 趋势 / 写动作的端点与实现已删除（要接回按 skill 方法重写，不复用旧直读逻辑）。
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { type RegistryWorkspace } from "./workspace.js";
+import type { RegistryWorkspace } from "./types.js";
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 external/host-webserver.md）。 */
 export interface WebServerLike {
     register(route: {

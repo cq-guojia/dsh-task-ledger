@@ -5,14 +5,29 @@
  * 比绑死官方类型更稳）。
  */
 import type { DegradedInfo } from "./errors.js";
-/** 一个活跃台账工作区：宿主 registry 条目 + 本地探测（含 `ledger/`）。 */
+/** 一个可看的台账：机器级清单里的一条（已去掉隐藏）。 */
 export interface LedgerWorkspace {
-    /** 宿主工作区 id。 */
+    /** 台账目录绝对路径（清单条目没有别的唯一标识，路径本身就唯一；历史筛选 / 缓存键都用它）。 */
     readonly id: string;
-    /** 宿主 title（允许重名）。 */
+    /** 显示名：清单里的 name，没写就是目录名（默认名由 skill 算好，插件不重算）。 */
     readonly title: string;
-    /** canonical 绝对路径（宿主已 realpath 归一；skill 脚本 --repo 直传它）。 */
+    /** 台账目录绝对路径（skill 脚本 --repo 直传它）。 */
     readonly path: string;
+}
+/**
+ * 宿主 `workspaceRegistry.list()` 条目的最小面（结构声明；事实与坐标见
+ * external/dsh-workspace-registry.md）。它现在只承担「替台账清单补登记」一件事。
+ */
+export interface RegistryWorkspace {
+    readonly id: string;
+    readonly title: string;
+    readonly path: string;
+    /**
+     * 把会话登记进本工作区的 `sessionIds`（会话归组的唯一途径）。
+     * ⚠️ 只设 `meta.cwd` **不会**自动归组（reference: dsh-task-dispatch-table 决策 22 真机结论）；
+     * 宿主旧版本可能没有该面 ⇒ optional，调用方按缺失降级并如实回报。
+     */
+    readonly attachSession?: (sessionId: string) => Promise<void>;
 }
 /** 任务对象的原始字段（skill 脚本 list --json 的值形状；缺字段按可选处理）。 */
 export interface TaskRecord {

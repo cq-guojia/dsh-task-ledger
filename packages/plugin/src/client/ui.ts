@@ -411,12 +411,14 @@ export function ensureUiBase(): void {
 
 /* ── 分段控件 ─────────────────────────────────────────────────────── */
 
-/** 一段（一个可选值）。 */
+/** 一段（一个可选值）。字段与核心 0.16 对齐（`label` 可省 ⇒ 只剩图标）。 */
 export interface SegmentedItem<Value extends string = string> {
 	readonly value: Value;
-	readonly label: string;
-	/** 段内图标（放在文字前；`label` 传空串 = 只显示图标）。核心没有 icon 轴 ⇒ 适配层塞进 label。 */
+	readonly label?: ReactNode;
+	/** 前置图标（官方图标组件 / 自绘节点均可）。 */
 	readonly icon?: ReactNode;
+	/** 读屏名：只有图标没有文字时给。 */
+	readonly ariaLabel?: string;
 	/** 段内角标数字（或已缩写字符串如「1.2K」）；`undefined` / 空串 / "0" 不显示。 */
 	readonly badge?: number | string;
 	/** 置灰不可点。 */
@@ -442,22 +444,9 @@ export function Segmented<Value extends string>(props: {
 	return h(CoreSegmented<Value>, {
 		items: props.items.map((item) => ({
 			value: item.value,
-			// 核心 `label` 只收 string 没有 icon 轴 ⇒ 段图标在适配层拼成一行塞进 label（不改核心）
-			label:
-				item.icon === undefined
-					? item.label
-					: (h(
-							"span",
-							{
-								style: {
-									display: "inline-flex",
-									alignItems: "center",
-									gap: item.label === "" ? undefined : "var(--dtl-space-2)",
-								},
-							},
-							item.icon,
-							item.label === "" ? null : item.label,
-						) as unknown as string),
+			label: item.label,
+			icon: item.icon,
+			ariaLabel: item.ariaLabel,
 			count: item.badge,
 			disabled: item.disabled,
 		})),

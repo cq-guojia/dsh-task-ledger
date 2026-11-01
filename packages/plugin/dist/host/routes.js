@@ -4,7 +4,7 @@ import { scriptPath } from "./repositories/runner.js";
 import { getIdentity, getRoster, switchIdentity, } from "./services/identity.service.js";
 import { getBoardHome } from "./services/stats.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
-import { resolveWorkspaces } from "./workspace.js";
+import { resolveWorkspaces } from "./services/workspaces.service.js";
 /** API 前缀（唯一真源就在这一处）。 */
 const API_PREFIX = "/api/task-ledger";
 function sendJson(res, status, body) {

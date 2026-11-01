@@ -735,19 +735,11 @@ export function BoardHome(props: {
 										label: t("viewHistory"),
 										disabled: unknownIdentity,
 									},
-									// 最右一段只有齿轮（用户 2026-11-01）；没文字 ⇒ aria-label 给读屏
+									// 最右一段只有齿轮（用户 2026-11-01）：核心 0.16 支持 icon-only，无需文字
 									{
 										value: "settings",
-										label: "",
-										icon: h(
-											"span",
-											{
-												"aria-label": t("settingsEntry"),
-												title: t("settingsEntry"),
-												style: { display: "inline-flex", alignItems: "center" },
-											},
-											h(IconSettingsOutlineRegular, { size: 16 }),
-										),
+										icon: h(IconSettingsOutlineRegular, { size: 16 }),
+										ariaLabel: t("settingsEntry"),
 									},
 								],
 								onChange: (next) => setViewMode(next),

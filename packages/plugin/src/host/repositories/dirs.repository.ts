@@ -43,7 +43,8 @@ function parseDirs(data: DirsPayload): LedgerDir[] {
  * 损坏的清单按空处理，不让「看台账」这件事失败。
  */
 export async function readDirs(): Promise<LedgerDir[]> {
-	const result = await runLedgerScript<DirsPayload>("dirs", ["--json"]);
+	// --all：必须拿到隐藏项，否则「这些路径已登记过」判不出来，每轮都会把它们当新目录反复补登记
+	const result = await runLedgerScript<DirsPayload>("dirs", ["--all", "--json"]);
 	if (!result.ok) throw failureOf(result, "读台账目录清单失败：");
 	return parseDirs(result.data);
 }
