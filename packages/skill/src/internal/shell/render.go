@@ -4,7 +4,6 @@ package shell
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -327,12 +326,8 @@ func RenderDirs(res *actions.DirsResult, asJSON bool) {
 			if dir.Hidden {
 				mark = "隐藏"
 			}
-			name := dir.Name
-			if name == "" {
-				name = filepath.Base(dir.Path)
-			}
 			// 名字超过 20 字时 padRight 不截断，必须自带一个分隔空格，否则和路径黏在一起
-			out("  " + mark + "  " + padRight(name, 20) + " " + dir.Path)
+			out("  " + mark + "  " + padRight(dir.Name, 20) + " " + dir.Path)
 		}
 	}
 	if res.Removed > 0 {

@@ -75,7 +75,7 @@ func TestListDirsRemovesVanished(t *testing.T) {
 	if err := os.RemoveAll(gone); err != nil {
 		t.Fatal(err)
 	}
-	res, err := ListDirs()
+	res, err := ListDirs(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestListDirsRemovesVanished(t *testing.T) {
 		t.Fatalf("只该剩 %s，实际 %+v", keep, res.Dirs)
 	}
 	// 清理要落盘：再读一次不该又冒出来
-	again, err := ListDirs()
+	again, err := ListDirs(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestSetHiddenTogglesAndPersists(t *testing.T) {
 	if _, err := SetHidden(root, true); err != nil {
 		t.Fatal(err)
 	}
-	res, err := ListDirs()
+	res, err := ListDirs(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestSetHiddenTogglesAndPersists(t *testing.T) {
 	if _, err := SetHidden(root, false); err != nil {
 		t.Fatal(err)
 	}
-	res, err = ListDirs()
+	res, err = ListDirs(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +165,7 @@ func TestBrokenFileIsKeptAsideNotOverwritten(t *testing.T) {
 	if err := os.WriteFile(file, []byte("{ 这不是 JSON"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	res, err := ListDirs()
+	res, err := ListDirs(true)
 	if err != nil {
 		t.Fatalf("坏清单不该让列出失败：%v", err)
 	}
@@ -178,5 +178,92 @@ func TestBrokenFileIsKeptAsideNotOverwritten(t *testing.T) {
 	}
 	if _, err := os.Stat(file + ".broken"); err != nil {
 		t.Errorf("坏文件应被改名成 .broken 保留：%v", err)
+	}
+}
+
+// 平时处理的是可见的那些：默认列出不能带隐藏项，否则每次还得自己过滤一遍。
+func TestListDirsHidesHiddenByDefault(t *testing.T) {
+	withTempHome(t)
+	visible := ledgerRoot(t)
+	hidden := ledgerRoot(t)
+	if _, err := AddDir(visible, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := AddDir(hidden, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := SetHidden(hidden, true); err != nil {
+		t.Fatal(err)
+	}
+	shown, err := ListDirs(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(shown.Dirs) != 1 || shown.Dirs[0].Path != visible {
+		t.Fatalf("默认只该列可见的那条，实际 %+v", shown.Dirs)
+	}
+	all, err := ListDirs(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all.Dirs) != 2 {
+		t.Fatalf("--all 应连隐藏的一起列，实际 %+v", all.Dirs)
+	}
+}
+
+func TestRenameDir(t *testing.T) {
+	withTempHome(t)
+	root := ledgerRoot(t)
+	if _, err := AddDir(root, "旧名字"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RenameDir(root, "新名字"); err != nil {
+		t.Fatal(err)
+	}
+	res, err := ListDirs(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Dirs[0].Name != "新名字" {
+		t.Fatalf("改名没生效，实际 %q", res.Dirs[0].Name)
+	}
+	// 空名字 = 清掉自定义名，回落目录名
+	if _, err := RenameDir(root, ""); err != nil {
+		t.Fatal(err)
+	}
+	res, err = ListDirs(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Base(root); res.Dirs[0].Name != want {
+		t.Errorf("空名字应回落目录名 %q，实际 %q", want, res.Dirs[0].Name)
+	}
+	if _, err := RenameDir(filepath.Join(t.TempDir(), "没登记过"), "x"); err == nil {
+		t.Error("改不在清单里的目录应该报错")
+	}
+}
+
+func TestRemoveDirDropsEntryOnly(t *testing.T) {
+	withTempHome(t)
+	root := ledgerRoot(t)
+	if _, err := AddDir(root, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RemoveDir(root); err != nil {
+		t.Fatal(err)
+	}
+	res, err := ListDirs(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Dirs) != 0 {
+		t.Fatalf("移除后清单该是空的，实际 %+v", res.Dirs)
+	}
+	// 只删记录，不动磁盘目录
+	if !core.IsDir(root) || !core.HasLedger(root) {
+		t.Error("移除只该删清单记录，不该动目录")
+	}
+	if _, err := RemoveDir(root); err == nil {
+		t.Error("再移除一次（已不在清单里）应该报错")
 	}
 }

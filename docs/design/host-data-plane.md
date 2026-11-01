@@ -14,12 +14,13 @@
 | 台账读取 | `repositories/ledger.repository.ts` | 判台账存在（`hasLedger`）、读在办（pool.json + 分片）、读花名册 | ✅ |
 | 聚合层 | `services/stats.service.ts`（+ `dates.ts`、`uuid` 已删） | 8 卡跨工作区求和 + 降级归集，纯计算 | ✅ |
 | 路由薄壳 | `routes.ts` | 只做协议 | ✅ |
-| 工作区发现 | `workspace.ts` | `hasLedger()` 判有台账（走 skill `root --json`，判据是目录直接含 `ledger/`；插件不拼台账文件路径） | ✅ |
+| 台账发现 | `services/workspaces.service.ts` | 按机器级清单（`~/.taskledger/ledgers.json`）决定读哪些台账；宿主 registry 只用来补登记，隐藏项在此过滤（2026-11-01 改） | ✅ |
+| 清单读写 | `repositories/dirs.repository.ts` | 读 `dirs --all --json` / 登记 `dirs --add`；**只有 skill 写这个文件**，插件只读 | ✅ |
 | skill 注册 | `skill/registration.ts` | 注册内嵌 `task-ledger` SKILL.md | ✅ |
 
 ### 1.2 IO 散点（2026-10-24 复核；行号随重构已变，以下只列文件）
 
-台账相关的 `spawn` 唯一落在 `repositories/runner.ts`（起内嵌 `skill/scripts/progress`，静态二进制）；台账/分片/worklog 读取集中在 `repositories/ledger.repository.ts`；工作区判活经 `workspace.ts` → `hasLedger()` 走 skill `root --json`（插件内无 `node:fs` 读台账，唯一 `node:fs` 是 `skill/registration.ts` 读 SKILL.md）；SKILL.md 读取在 `skill/registration.ts`。原 §1.2 的 `script.ts`/`ledger-read.ts`/`skill-registration.ts` 等旧文件名与行号对应重构前结构，已失效（现状以 `packages/plugin/src/host/` 为准）。
+台账相关的 `spawn` 唯一落在 `repositories/runner.ts`（起内嵌 `skill/scripts/progress`，静态二进制）；台账/分片/worklog 读取集中在 `repositories/ledger.repository.ts`；台账目录清单的读写集中在 `repositories/dirs.repository.ts`（判「哪些目录有台账」由 skill 的 `dirs` 负责，插件不再自己探）（插件内无 `node:fs` 读台账，唯一 `node:fs` 是 `skill/registration.ts` 读 SKILL.md）；SKILL.md 读取在 `skill/registration.ts`。原 §1.2 的 `script.ts`/`ledger-read.ts`/`skill-registration.ts` 等旧文件名与行号对应重构前结构，已失效（现状以 `packages/plugin/src/host/` 为准）。
 
 ### 1.3 三个健壮性缺口
 
@@ -59,7 +60,8 @@ fixture：`/tmp/perf3` = 空在办 + `history/202610.md` 50002 行 / 6.6MB（5 �
 routes.ts            传输层：参数解析 / 发 JSON / 错误→状态码
 services/            用例层：聚合与计算（纯函数；现只有 stats.service 与 dates.ts）
 repositories/        数据访问层：**唯一知道「台账怎么读」的地方**
-  ledger.repository    readTasks / readOwners / hasLedger
+  ledger.repository    readTasks / readOwners
+  dirs.repository      台账目录清单：读（dirs --all --json）/ 登记（dirs --add）
   stats.repository     readStats（stats --json）
   identity.repository  读本机 identity.json 的 uuid（机器级；与工作区 / git 无关）
   records.ts           入口校验：list --json → 领域对象，坏数据抛 LedgerDataError

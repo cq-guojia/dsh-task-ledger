@@ -37,13 +37,18 @@
 ## 三、命令面（skill `dirs`）
 
 ```bash
-progress dirs                                    # 列出；顺手清掉失效条目
+progress dirs                                    # 只列**可见**的；顺手清掉失效条目
+progress dirs --all                              # 连隐藏的一起列（管理时才用）
 progress dirs --dir <目录> --add [--name <名字>]  # 登记（幂等；已在清单里就不动，不覆盖已有名字）
+progress dirs --dir <目录> --rename <新名字>      # 改名；空串 = 清掉自定义名、回落目录名
 progress dirs --dir <目录> --hide                # 隐藏
 progress dirs --dir <目录> --unhide              # 恢复
+progress dirs --dir <目录> --remove              # 从清单删掉（不动磁盘目录）
 progress dirs --json                             # {dirs, removed, added, reason, warnings}
 ```
 
+- **默认只给可见的**：长期处理的就是可见那些，列出来还要自己过滤一遍是设计错误。隐藏项只在 `--all` 下出现（带 `hidden` 字段）。写命令的回执例外 —— 给全量，调用方要靠它判断「哪些已登记」，少给隐藏的会每轮重复补登记。
+- **`--remove` 只删清单那一行**，不动磁盘目录。目录还在宿主工作区里的话，下次开看板会被自动登记回来（预期行为）；想长期不看用 `--hide`。外部台账（不在任何工作区里）删了就是删了 —— 这条才是 `--remove` 的正当用途。
 - **不进 SKILL.md**（与 `switch` 同理）：agent 记账不需要它，看板与用户才需要。
 - 它跑在**定位仓库之前**，不认 `--repo`、不看身份、不碰 git（与 `root` / `whoami` 同类）。
 
@@ -52,7 +57,8 @@ progress dirs --json                             # {dirs, removed, added, reason
 | 规则 | 说明 |
 |---|---|
 | 隐藏 = 全局不看 | 统计卡、趋势、在办列表、历史列表、**执行人下拉**都不算它。功能与写入不受影响 |
-| 只隐藏不删除 | 界面不提供删除；手动删掉记录也正常，下次扫到会自己回来 |
+| 只隐藏不删除 | 界面不提供删除；手动删掉记录也正常，下次扫到会自己回来（命令行的 `--remove` 见上节用途） |
+| 显示名 | 清单 `name`；没写就是目录名。**默认名只在 skill 里算一次**（`actions.dirs.rowsOf`），插件与外壳都不重算 |
 | 读时自愈 | 每次读清单逐条校验：目录没了 / 已经不是台账根 ⇒ 直接删掉（清单本来就是程序生成的） |
 | 幂等 | 重复登记不产生重复条目，也不覆盖已有名字（否则每次开看板都会冲掉用户取的名） |
 | 并发 | 单一写者 = skill；写盘走文件锁（`store.ProgressLock`）+ 原子替换 |
@@ -62,11 +68,13 @@ progress dirs --json                             # {dirs, removed, added, reason
 ## 五、读路径（插件）
 
 ```
-面板请求 → resolveWorkspaces()
-  ① 读清单（skill `dirs --json`，顺带清理）
+面板请求 → services/workspaces.service.ts: resolveWorkspaces()
+  ① 读清单（repositories/dirs.repository.ts → skill `dirs --all --json`，顺带清理）
   ② 宿主 registry 里清单还没有的工作区 → 逐个 `dirs --add`（不是台账根的由 skill 拒掉，不算错误）
   ③ 去掉 hidden → LedgerWorkspace{id: 路径, title: 显示名, path}
 ```
+
+三层归属：编排在 `services/`（用例层），清单读写只在 `repositories/dirs.repository.ts`（数据访问层），`routes.ts` 只做协议。
 
 `id` 用路径：清单条目没有别的唯一标识，而路径本来唯一（历史筛选、缓存键都靠它）。
 

@@ -59,13 +59,16 @@ type Args struct {
 	StaleDays   *int
 	OverdueDays *int
 	BacklogDays *int
-	Trend       string // stats --trend <粒度>：走趋势统计，不走在办计数
-	Last        string // stats --trend 的 --last <N><d|w|m|y>
-	ByOwner     bool   // stats --trend 的 --by-owner
-	Dir         string // root / dirs：要检测或操作的目录（root 不给 = 当前目录）
-	DirAdd      bool   // dirs --add：登记（已在清单里就更新名字）
-	DirHide     bool   // dirs --hide：看板不显示
-	DirUnhide   bool   // dirs --unhide：恢复显示
+	Trend       string  // stats --trend <粒度>：走趋势统计，不走在办计数
+	Last        string  // stats --trend 的 --last <N><d|w|m|y>
+	ByOwner     bool    // stats --trend 的 --by-owner
+	Dir         string  // root / dirs：要检测或操作的目录（root 不给 = 当前目录）
+	DirAdd      bool    // dirs --add：登记（幂等）
+	DirHide     bool    // dirs --hide：看板不显示
+	DirUnhide   bool    // dirs --unhide：恢复显示
+	DirAll      bool    // dirs --all：连隐藏一起列（默认只列可见的）
+	DirRemove   bool    // dirs --remove：从清单删掉（不动目录）
+	DirRename   *string // dirs --rename <新名>：改名；空串 = 回落目录名
 	Deep        bool
 	Note        string
 	Summary     string
@@ -97,7 +100,7 @@ var commandFlags = map[string]map[string]bool{
 	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--keyword", "--since", "--until", "--limit", "--months", "--json", "--repo"),
 	"validate": setOf("--deep", "--json", "--repo"),
 	"root":     setOf("--dir", "--json"),
-	"dirs":     setOf("--dir", "--name", "--add", "--hide", "--unhide", "--json"),
+	"dirs":     setOf("--dir", "--name", "--add", "--rename", "--hide", "--unhide", "--remove", "--all", "--json"),
 	"whoami":   setOf("--json", "--repo"),
 	"init":     setOf("--claim", "--new", "--name", "--yes", "--repo"),
 	// switch 只给界面用（不进 SKILL.md）：换成本机身份或建一个全新的，允许覆盖已有身份。
@@ -118,7 +121,7 @@ func takesValue(name string) bool {
 		"--note", "--summary", "--finished", "--owner", "--owner-name",
 		"--status", "--tag", "--keyword", "--since", "--until", "--limit", "--months",
 		"--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--dir",
-		"--claim", "--name":
+		"--claim", "--name", "--rename":
 		return true
 	}
 	return false
@@ -324,6 +327,13 @@ func applyFlag(a *Args, name, value string) error {
 		a.DirHide = true
 	case "--unhide":
 		a.DirUnhide = true
+	case "--remove":
+		a.DirRemove = true
+	case "--all":
+		a.DirAll = true
+	case "--rename":
+		// 空串有意义（清掉自定义名、回落目录名）⇒ 存值不存指针判空
+		a.DirRename = &value
 	case "--json":
 		a.JSON = true
 	case "--deep":
@@ -367,19 +377,19 @@ func requireFlags(a *Args) error {
 	switch a.Command {
 	case "dirs":
 		picked := 0
-		for _, given := range []bool{a.DirAdd, a.DirHide, a.DirUnhide} {
+		for _, given := range []bool{a.DirAdd, a.DirHide, a.DirUnhide, a.DirRemove, a.DirRename != nil} {
 			if given {
 				picked++
 			}
 		}
 		if picked > 1 {
-			return usageErr("dirs 的 --add / --hide / --unhide 只能给一个")
+			return usageErr("dirs 的动作只能给一个：--add / --rename / --hide / --unhide / --remove")
 		}
 		if a.Dir == "" && picked > 0 {
 			return usageErr("dirs 缺少 --dir（要操作哪个台账目录）")
 		}
 		if a.Dir != "" && picked == 0 {
-			return usageErr("dirs 给了 --dir 就要指明动作：--add / --hide / --unhide（三个都不给 = 列出清单）")
+			return usageErr("dirs 给了 --dir 就要指明动作：--add / --rename / --hide / --unhide / --remove（都不给 = 列出清单）")
 		}
 	case "log":
 		if a.Note == "" {
@@ -711,12 +721,16 @@ func runDirs(a *Args) int {
 	switch {
 	case a.DirAdd:
 		res, err = actions.AddDir(a.Dir, a.Name)
+	case a.DirRename != nil:
+		res, err = actions.RenameDir(a.Dir, *a.DirRename)
+	case a.DirRemove:
+		res, err = actions.RemoveDir(a.Dir)
 	case a.DirHide:
 		res, err = actions.SetHidden(a.Dir, true)
 	case a.DirUnhide:
 		res, err = actions.SetHidden(a.Dir, false)
 	default:
-		res, err = actions.ListDirs()
+		res, err = actions.ListDirs(a.DirAll)
 	}
 	if err != nil {
 		FailMessage("错误", err.Error())
