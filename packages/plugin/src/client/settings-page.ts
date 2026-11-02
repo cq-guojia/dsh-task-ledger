@@ -10,6 +10,7 @@
 import {
 	IconChecklistOutlineRegular,
 	IconCheckOutlineRegular,
+	IconCloseOutlineRegular,
 	IconDownloadOutlineRegular,
 	IconFlatListOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
@@ -17,7 +18,7 @@ import { createElement as h, type ReactNode, useEffect, useRef, useState } from 
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, Checkbox, IconButton, Input, Loader, MarqueeText, Modal, Surface, notify } from "./ui";
+import { Button, Card, Checkbox, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, Surface, Table, Tag, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 const GithubMark = (): ReactNode =>
@@ -42,6 +43,45 @@ const NpmMark = (): ReactNode =>
 
 /** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 const notYet = (): void => {};
+
+/** 表格一行：一个身份（`workspaceId` = 认领请求要的工作区；`workspace` = 那一列显示什么）。 */
+interface RosterRow {
+	readonly uuid: string;
+	readonly name: string;
+	readonly workspaceId: string;
+	readonly workspace: string;
+	/** 分组键：连续同组的行只有一个标签（公用身份共用一个键）。 */
+	readonly group: string;
+}
+
+/** 名册 → 表格行（用户 2026-11-02）：多个工作区都有的身份合并成一行、工作区列写「通用用户」，
+ *  只在一个工作区出现的按各自工作区名；通用的排前面。 */
+function rosterRows(roster: RosterPayload, sharedTitle: string): readonly RosterRow[] {
+	const seen = new Map<string, string[]>();
+	const names = new Map<string, string>();
+	for (const workspace of roster.workspaces)
+		for (const owner of workspace.owners) {
+			const ids = seen.get(owner.uuid);
+			if (ids === undefined) {
+				seen.set(owner.uuid, [workspace.id]);
+				names.set(owner.uuid, owner.name);
+			} else ids.push(workspace.id);
+		}
+	const shared: RosterRow[] = [];
+	const own: RosterRow[] = [];
+	for (const [uuid, ids] of seen) {
+		const name = names.get(uuid) ?? "";
+		const workspaceId = ids[0] ?? "";
+		if (ids.length > 1)
+			shared.push({ uuid, name, workspaceId, workspace: sharedTitle, group: "#shared" });
+		else {
+			const title =
+				roster.workspaces.find((item) => item.id === workspaceId)?.title ?? "";
+			own.push({ uuid, name, workspaceId, workspace: title, group: workspaceId });
+		}
+	}
+	return [...shared, ...own];
+}
 
 export function SettingsPage(props: {
 	t: Translate;
@@ -152,9 +192,7 @@ export function SettingsPage(props: {
 		);
 	};
 
-	const candidates = (roster?.workspaces ?? []).filter(
-		(group) => group.owners.length > 0,
-	);
+	const rows = roster === null ? [] : rosterRows(roster, t("settingsSharedUsers"));
 
 	const openUserModal = (): void => {
 		setUserOpen(true);
@@ -536,81 +574,98 @@ export function SettingsPage(props: {
 				Modal,
 				{
 					title: t("settingsUserModalTitle"),
-					size: "md",
+					// 固定尺寸（用户 2026-11-02）：宽 = 原 md 的 4/5；高度钉死，内容多少都不变，
+					// 超出的部分由核心 body 自己滚（核心约定：body 是唯一滚动容器）
+					width: "576px",
+					height: "400px",
 					onClose: () => {
 						if (pending === null) setUserOpen(false);
 					},
-				},
-				h("div", { className: "dtl-set__title" }, t("settingsCreate")),
-				h(
-					"div",
-					{ className: "dtl-form" },
-					h(
+					footer: h(
 						"div",
-						{ className: "dtl-form__grow" },
-						h(Input, {
+						{ className: "dtl-modal__foot" },
+						h(InputGroup, {
+							label: t("settingsCreateUser"),
 							value: name,
 							onChange: setName,
 							placeholder: t("settingsNamePlaceholder"),
-							"aria-label": t("settingsNamePlaceholder"),
+							size: "lg",
 							disabled: pending !== null,
-							onKeyDown: (event) => {
-								if (event.key !== "Enter") return;
-								event.preventDefault();
-								create();
-							},
+							onSubmit: create,
+							actions: [
+								{
+									label: t("settingsUserModalConfirm"),
+									variant: "info",
+									icon: h(IconCheckOutlineRegular, { size: 14 }),
+									disabled: pending !== null || name.trim() === "",
+									onClick: create,
+								},
+							],
 						}),
 					),
-					h(
-						Button,
-						{
-							variant: "primary",
-							loading: pending === "new",
-							disabled: pending !== null || name.trim() === "",
-							onClick: create,
-						},
-						t("settingsCreate"),
-					),
-				),
+				},
 				error === null
 					? null
 					: h("div", { className: "dtl-set__error" }, t("settingsFailed", { message: error })),
-				h(
-					"div",
-					{ className: "dtl-roster__group" },
-					h("div", { className: "dtl-set__title" }, t("settingsUseExisting")),
-					roster === null
-						? h("div", { className: "dtl-loading" }, h(Loader, { variant: "blocks", size: "md" }))
-						: candidates.length === 0
-							? h("div", { className: "dtl-set__hint" }, t("settingsRosterEmpty"))
-							: candidates.map((group) =>
-									h(
-										"div",
-										{ key: group.id, className: "dtl-roster__group" },
-										h("div", { className: "dtl-roster__group-title" }, group.title),
-										...group.owners.map((owner) =>
+				roster === null
+					? h("div", { className: "dtl-loading" }, h(Loader, { variant: "blocks", size: "md" }))
+					: h(
+							"div",
+							{ className: "dtl-users__wrap" },
+							h(Table, {
+								ariaLabel: t("settingsUserModalTitle"),
+								emptyText: t("settingsRosterEmpty"),
+								// 表头整条不要（用户 2026-11-02）：列定义还得给，只是 CSS 把 thead 藏掉
+								className: "dtl-users-table",
+								// 上下两条外框线也去掉（用户 2026-11-02）
+								borders: "none",
+								columns: [
+									{ key: "workspace", title: t("settingsColWorkspace"), width: 200 },
+									{ key: "name", title: t("settingsColName") },
+									{ key: "action", title: t("settingsColAction"), width: 120, align: "right" },
+								],
+								rows: rows.map((row, index) => ({
+									key: row.uuid,
+									cells: {
+										// 同一工作区连续几行只留第一个标签：一个标签引领下面的用户
+										workspace:
+											rows[index - 1]?.group === row.group
+												? null
+												: h(Tag, {
+														text: row.workspace,
+														tone: "workspace",
+														maxWidth: 180,
+													}),
+										name: h("span", { className: "dtl-roster__name" }, `@${row.name}`),
+										action: h(
+											"div",
+											{ className: "dtl-users__acts" },
 											h(
-												"div",
-												{ key: owner.uuid, className: "dtl-roster__item" },
-												h("span", null, `@${owner.name}`),
-												h(
-													Button,
-													{
-														variant: "outline",
-														size: "sm",
-														loading: pending === `claim:${owner.uuid}`,
-														disabled: pending !== null,
-														onClick: () => {
-															claim(owner.uuid, group.id);
-														},
+												Button,
+												{
+													// 实心蓝（用户 2026-11-02：要带底色，且指定 info 档）
+													variant: "info",
+													size: "sm",
+													loading: pending === `claim:${row.uuid}`,
+													disabled: pending !== null,
+													onClick: () => {
+														claim(row.uuid, row.workspaceId);
 													},
-													t("settingsUseThis"),
-												),
+												},
+												t("settingsUseThis"),
 											),
+											// 删除只上样式、先不接逻辑；底色等核心给「纯图标 + 底色」的档（用户 2026-11-02）
+											h(IconButton, {
+												icon: h(IconCloseOutlineRegular, { size: 14 }),
+												label: t("settingsDeleteUser"),
+												size: "sm",
+												variant: "danger",
+											}),
 										),
-									),
-								),
-				),
+									},
+								})),
+							}),
+						),
 			)
 		: null;
 

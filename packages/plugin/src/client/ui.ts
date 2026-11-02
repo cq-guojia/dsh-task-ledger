@@ -525,7 +525,7 @@ export function IconButton(props: {
 	icon: ReactNode;
 	label: string;
 	onClick?: () => void;
-	variant?: "plain" | "outline";
+	variant?: "plain" | "outline" | "danger";
 	size?: "sm" | "md" | "lg";
 	disabled?: boolean;
 	title?: string;
@@ -602,6 +602,12 @@ export { MarqueeText } from "dsh-plugin-core/ui";
 
 /** 文本输入（核心唯一实现：size sm/md/lg、error 描红、hint 问号一气呵成）。 */
 export { Input } from "dsh-plugin-core/ui";
+
+/** 组合输入框（核心唯一实现：前置标题 + 输入 + 后置按钮焊成一体）—— 创建身份那条用它。 */
+export { InputGroup } from "dsh-plugin-core/ui";
+
+/** 表格（核心唯一实现：列定义 + 行；身份管理弹窗的「工作区 / 名字 / 使用」三列）。 */
+export { Table } from "dsh-plugin-core/ui";
 
 /** 弹窗：核心 `Modal`（自绘遮罩、不走 portal；设置页的用户管理与添加台账都用它）。
  *  勾选框：核心 `Checkbox`（台账行的「显示」开关；核心没有 Switch 档，勾选框就是开关）。

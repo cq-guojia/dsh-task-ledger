@@ -311,12 +311,29 @@ export const UI_CONTROLS_CSS = `
 .dtl-tbl__edit{display:flex;align-items:center;gap:var(--dtl-space-2);
   padding:var(--dtl-space-2);border-top:1px solid var(--dtl-border-faint);}
 
-/* 弹窗内部：名册 / 表单行 */
-.dtl-roster__group{margin-top:var(--dtl-space-4);}
-.dtl-roster__group-title{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
-  color:var(--dtl-fg-3);margin-bottom:var(--dtl-space-1);}
-.dtl-roster__item{display:flex;align-items:center;justify-content:space-between;
-  gap:var(--dtl-space-2);padding:var(--dtl-space-1) 0;}
+/* 身份表：名字列单行，超长省略（表格是定宽列，换行会把行高撑歪） */
+.dtl-roster__name{display:block;min-width:0;font-size:var(--dtl-font-md);
+  line-height:var(--dtl-line-md);color:var(--dtl-fg);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* 身份表不要表头（用户 2026-11-02）：核心 Table 没有「隐藏表头」的档，只能把 thead 藏掉 */
+.dtl-users-table thead{display:none;}
+/* 身份表顶满弹窗正文（用户 2026-11-02）：四周不留白 ⇒ 用负 margin 抵消核心 body 的
+   padding（17px 18px，核心没开变量，只能写死；核心改内距这里要跟着改）。 */
+.dtl-users__wrap{margin:-17px -18px;}
+/* 「使用」+ 删除：右对齐两个并排按钮 */
+.dtl-users__acts{display:flex;align-items:center;justify-content:flex-end;
+  gap:var(--dtl-space-1);}
+/* 行与行之间的间隔线改虚线（用户 2026-11-02）：只换线型，颜色 / 宽度沿用核心。
+   核心那条是 4 个类（.dshpc-table--plain .row + .row .cell）⇒ 这里必须也到 5 个类才压得住
+   （同权重拼不过注入顺序：核心样式在组件首渲染时注入，晚于本文件）。 */
+.dtl-users__wrap .dshpc-table--plain .dshpc-table__row + .dshpc-table__row .dshpc-table__cell{
+  border-top-style:dashed;}
+/* 弹窗页脚：通栏分隔线（核心 foot 只给内距，线在这里画），里面是「创建新用户」组合框。
+   核心 .dshpc-igroup 是 inline-flex（按内容宽）⇒ 这里用 flex-end 让它靠右、不再贴左。 */
+.dtl-modal__foot{display:flex;justify-content:flex-end;width:100%;
+  margin:-12px -18px 0;padding:12px 18px 0;
+  border-top:1px solid var(--dtl-border-faint);}
+.dtl-modal__foot .dshpc-igroup{width:360px;max-width:100%;}
 .dtl-form{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:var(--dtl-space-2);}
 .dtl-form__grow{flex:1 1 auto;min-width:0;}
 

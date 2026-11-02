@@ -33,7 +33,13 @@ export type LocaleKey =
 	| "settingsNoIdentityHint"
 	| "settingsNamePlaceholder"
 	| "settingsCreate"
-	| "settingsUseExisting"
+	| "settingsCreateUser"
+	| "settingsSharedUsers"
+	| "settingsUserModalConfirm"
+	| "settingsColWorkspace"
+	| "settingsColName"
+	| "settingsColAction"
+	| "settingsDeleteUser"
 	| "settingsRosterEmpty"
 	| "settingsFailed"
 	| "settingsUseThis"
@@ -229,12 +235,18 @@ export const zh: Record<LocaleKey, string> = {
 	settingsRenamePartial: "部分台账没改通",
 	settingsRenameFailedTitle: "改昵称失败",
 	settingsGoCreate: "创建身份",
-	settingsUserModalTitle: "身份管理",
+	settingsUserModalTitle: "台账用户管理",
 	settingsNoIdentityTitle: "未创建身份",
 	settingsNoIdentityHint: "创建后，任务的认领、执行与结案均记入该身份。",
 	settingsNamePlaceholder: "昵称",
 	settingsCreate: "创建身份",
-	settingsUseExisting: "使用已有身份",
+	settingsCreateUser: "创建新用户",
+	settingsSharedUsers: "通用用户",
+	settingsUserModalConfirm: "确定",
+	settingsColWorkspace: "工作区",
+	settingsColName: "名字",
+	settingsColAction: "使用",
+	settingsDeleteUser: "删除",
 	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
 	settingsFailed: "操作未成功：{message}",
 	settingsUseThis: "使用",
@@ -429,13 +441,19 @@ export const en: Record<LocaleKey, string> = {
 	settingsRenamePartial: "Some ledgers were not updated",
 	settingsRenameFailedTitle: "Failed to change nickname",
 	settingsGoCreate: "Create identity",
-	settingsUserModalTitle: "Identity management",
+	settingsUserModalTitle: "Ledger users",
 	settingsNoIdentityTitle: "No identity created",
 	settingsNoIdentityHint:
 		"Once created, claiming, executing and closing a task are recorded under this identity.",
 	settingsNamePlaceholder: "Nickname",
 	settingsCreate: "Create identity",
-	settingsUseExisting: "Use an existing identity",
+	settingsCreateUser: "New user",
+	settingsSharedUsers: "Shared users",
+	settingsUserModalConfirm: "OK",
+	settingsColWorkspace: "Workspace",
+	settingsColName: "Name",
+	settingsColAction: "Use",
+	settingsDeleteUser: "Remove",
 	settingsRosterEmpty: "No identity has been created in the listed ledgers.",
 	settingsFailed: "Operation failed: {message}",
 	settingsUseThis: "Use",
