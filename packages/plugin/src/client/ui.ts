@@ -527,6 +527,10 @@ export function IconButton(props: {
 	onClick?: () => void;
 	variant?: "plain" | "outline" | "danger";
 	size?: "sm" | "md" | "lg";
+	/** 图标色（任意 CSS 色值，hover 按它混浅底）—— 核心 0.20 起。 */
+	color?: string;
+	/** 底色（任意 CSS 色值，不传 = 无底色）—— 核心 0.20 起。 */
+	background?: string;
 	disabled?: boolean;
 	title?: string;
 	className?: string;
@@ -537,6 +541,8 @@ export function IconButton(props: {
 		onClick: props.onClick,
 		variant: props.variant ?? "plain",
 		size: props.size ?? "md",
+		color: props.color,
+		background: props.background,
 		disabled: props.disabled,
 		title: props.title,
 		className: props.className,

@@ -581,28 +581,26 @@ export function SettingsPage(props: {
 					onClose: () => {
 						if (pending === null) setUserOpen(false);
 					},
-					footer: h(
-						"div",
-						{ className: "dtl-modal__foot" },
-						h(InputGroup, {
-							label: t("settingsCreateUser"),
-							value: name,
-							onChange: setName,
-							placeholder: t("settingsNamePlaceholder"),
-							size: "lg",
-							disabled: pending !== null,
-							onSubmit: create,
-							actions: [
-								{
-									label: t("settingsUserModalConfirm"),
-									variant: "info",
-									icon: h(IconCheckOutlineRegular, { size: 14 }),
-									disabled: pending !== null || name.trim() === "",
-									onClick: create,
-								},
-							],
-						}),
-					),
+					// 分隔线归核心 foot（0.20.0 起默认带），这里只放内容、控制宽度
+					footer: h(InputGroup, {
+						label: t("settingsCreateUser"),
+						value: name,
+						onChange: setName,
+						placeholder: t("settingsNamePlaceholder"),
+						size: "lg",
+						disabled: pending !== null,
+						onSubmit: create,
+						style: { width: "360px" },
+						actions: [
+							{
+								label: t("settingsUserModalConfirm"),
+								variant: "info",
+								icon: h(IconCheckOutlineRegular, { size: 14 }),
+								disabled: pending !== null || name.trim() === "",
+								onClick: create,
+							},
+						],
+					}),
 				},
 				error === null
 					? null
@@ -654,12 +652,14 @@ export function SettingsPage(props: {
 												},
 												t("settingsUseThis"),
 											),
-											// 删除只上样式、先不接逻辑；底色等核心给「纯图标 + 底色」的档（用户 2026-11-02）
+											// 删除只上样式、先不接逻辑；底色走核心 0.20 的 color/background 轴
 											h(IconButton, {
 												icon: h(IconCloseOutlineRegular, { size: 14 }),
 												label: t("settingsDeleteUser"),
 												size: "sm",
 												variant: "danger",
+												color: "var(--dtl-danger)",
+												background: "var(--dtl-danger-soft)",
 											}),
 										),
 									},

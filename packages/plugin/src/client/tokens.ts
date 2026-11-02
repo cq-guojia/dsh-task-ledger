@@ -328,12 +328,6 @@ export const UI_CONTROLS_CSS = `
    （同权重拼不过注入顺序：核心样式在组件首渲染时注入，晚于本文件）。 */
 .dtl-users__wrap .dshpc-table--plain .dshpc-table__row + .dshpc-table__row .dshpc-table__cell{
   border-top-style:dashed;}
-/* 弹窗页脚：通栏分隔线（核心 foot 只给内距，线在这里画），里面是「创建新用户」组合框。
-   核心 .dshpc-igroup 是 inline-flex（按内容宽）⇒ 这里用 flex-end 让它靠右、不再贴左。 */
-.dtl-modal__foot{display:flex;justify-content:flex-end;width:100%;
-  margin:-12px -18px 0;padding:12px 18px 0;
-  border-top:1px solid var(--dtl-border-faint);}
-.dtl-modal__foot .dshpc-igroup{width:360px;max-width:100%;}
 .dtl-form{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:var(--dtl-space-2);}
 .dtl-form__grow{flex:1 1 auto;min-width:0;}
 
