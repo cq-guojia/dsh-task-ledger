@@ -3742,6 +3742,105 @@ window.__ModuleLoader__.load({
 			window.addEventListener("pointerup", onUp);
 		}
 		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_8d4c5a07049c5eecd8608d1db0a85d4f/node_modules/dsh-plugin-core/dist/ui/ConfirmModal.js
+		/**
+		* 确认框（语义层，基于 Modal）：双按钮（取消 outline + 确认语义档）、无 ✕；无标题时整条头部消失。
+		* 样式封闭：按钮只暴露语义档（tone → variant），不透传任意 className/style。
+		*/
+		function ConfirmModal(props) {
+			const tt = props.translate ?? t$2;
+			const tone = props.tone ?? "primary";
+			const confirmVariant = tone === "danger" ? "danger" : tone === "warning" ? "warning" : "primary";
+			return (0, react$1.createElement)(Modal, {
+				title: props.title,
+				size: props.size ?? "sm",
+				hideHeader: props.title === void 0,
+				closable: false,
+				closeOnMask: props.closeOnMask,
+				onClose: props.onCancel,
+				footer: (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					gap: "8px",
+					justifyContent: "flex-end"
+				} }, (0, react$1.createElement)(Button$1, {
+					variant: "outline",
+					onClick: () => props.onCancel?.()
+				}, props.cancelText ?? tt("cancel")), (0, react$1.createElement)(Button$1, {
+					variant: confirmVariant,
+					onClick: () => props.onConfirm?.()
+				}, props.confirmText ?? tt("confirm")))
+			}, props.message ?? null);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_8d4c5a07049c5eecd8608d1db0a85d4f/node_modules/dsh-plugin-core/dist/ui/modal-host.js
+		let hostRoot = null;
+		let hostContainer = null;
+		let entries = [];
+		let idSeq = 0;
+		/** 取（懒建）常驻挂载根；非浏览器环境返回 null。 */
+		function getHostRoot() {
+			if (typeof document === "undefined") return null;
+			if (hostRoot === null) {
+				hostContainer = document.createElement("div");
+				hostContainer.setAttribute("data-dshpc-modal-host", "");
+				document.body.appendChild(hostContainer);
+				hostRoot = (0, react_dom_client.createRoot)(hostContainer);
+			}
+			return hostRoot;
+		}
+		/** 重渲染当前堆叠；空了就卸载回收，不残留空根。 */
+		function flush() {
+			const root = getHostRoot();
+			if (root === null) return;
+			ensureControls(getStyleKit());
+			if (entries.length === 0) {
+				root.unmount();
+				hostContainer?.remove();
+				hostRoot = null;
+				hostContainer = null;
+				return;
+			}
+			root.render((0, react$1.createElement)(react$1.Fragment, null, entries.map((e) => e.node)));
+		}
+		function dismiss(id) {
+			entries = entries.filter((e) => e.id !== id);
+			flush();
+		}
+		let hostHandlers = null;
+		function registerHostDialog(handlers) {
+			hostHandlers = handlers;
+		}
+		/** 命令式确认框：Promise 形式，`true`=确定 / `false`=取消（或点遮罩 / Esc）。`skin:"host"` 走宿主原生 Modal。 */
+		function confirmModal(opts) {
+			if (opts.skin === "host") {
+				if (hostHandlers !== null) return hostHandlers.confirm({
+					title: opts.title == null ? void 0 : String(opts.title),
+					description: opts.message == null ? void 0 : String(opts.message),
+					confirmText: opts.confirmText,
+					cancelText: opts.cancelText,
+					danger: opts.tone === "danger"
+				});
+				console.warn("[dsh-plugin-core] confirmModal skin:\"host\" 需先引入官方适配层 official.js，已回落到 core 皮肤");
+			}
+			const { skin: _skin, ...core } = opts;
+			return new Promise((resolve) => {
+				const id = ++idSeq;
+				const close = (result) => {
+					dismiss(id);
+					resolve(result);
+				};
+				entries.push({
+					id,
+					node: (0, react$1.createElement)(ConfirmModal, {
+						...core,
+						onConfirm: () => close(true),
+						onCancel: () => close(false)
+					})
+				});
+				flush();
+			});
+		}
+		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_8d4c5a07049c5eecd8608d1db0a85d4f/node_modules/dsh-plugin-core/dist/ui/card-css.generated.js
 		const CARD_CSS = "\n/* ── Card / StripCard：Surface 外框 + 头部契约 + 色条 ─────────────────────\n   外框（底 / 边框 / 圆角 / 内距）全部来自 .dshpc-surface（src/ui/surface.css）：\n   本文件**不再写 border / border-radius**，圆角契约因此只有一个定义点（容器档 = 12）。\n   这里只管两件 Surface 不该知道的事：色条几何、头部布局。\n\n   色条几何默认值都可被 props 覆盖（Card.ts 写对应的 CSS 变量）：\n     --card-bar-size   条子粗细\n     --card-bar-inset  条子距卡片边缘的距离（= 贴边那一侧的内距）\n     --card-bar-gap    条子距内容的距离（= body 的 gap）\n     --card-bar-length 上下方位时的条长（100% = 跟内容同宽）\n   这些变量只在本文件消费（3 份文件一起引时，跨文件引用别处的变量会静默失效），\n   所以默认值必须写在这里，而不是令牌或别的皮肤里。 */\n.dshpc-card{\n  --card-accent:var(--dshpc-business);\n  --card-accent-soft:var(--dshpc-business-soft);\n  --card-bar-size:6px;\n  --card-bar-inset:12px;\n  --card-bar-gap:12px;\n  --card-bar-length:100%;\n}\n/* 档位 → token（照 records-timeline 的 tone 模式：一个变量切档，不写 5 套规则；浅底与色条同源）。 */\n.dshpc-card--success{--card-accent:var(--dshpc-success);--card-accent-soft:var(--dshpc-success-soft)}\n.dshpc-card--warning{--card-accent:var(--dshpc-warning);--card-accent-soft:var(--dshpc-warning-soft)}\n.dshpc-card--danger{--card-accent:var(--dshpc-danger);--card-accent-soft:var(--dshpc-danger-soft)}\n/* neutral 浅底借 chip 底（兄弟项目 mute 档同款：明暗都成立）。 */\n.dshpc-card--neutral{--card-accent:var(--dshpc-fg-4);--card-accent-soft:var(--dshpc-chip-bg)}\n/* 扩展八色（2026-10-29）：色条 + 浅底同源，软底走各自 -soft。 */\n.dshpc-card--purple{--card-accent:var(--dshpc-purple);--card-accent-soft:var(--dshpc-purple-soft)}\n.dshpc-card--pink{--card-accent:var(--dshpc-pink);--card-accent-soft:var(--dshpc-pink-soft)}\n.dshpc-card--cyan{--card-accent:var(--dshpc-cyan);--card-accent-soft:var(--dshpc-cyan-soft)}\n.dshpc-card--teal{--card-accent:var(--dshpc-teal);--card-accent-soft:var(--dshpc-teal-soft)}\n.dshpc-card--orange{--card-accent:var(--dshpc-orange);--card-accent-soft:var(--dshpc-orange-soft)}\n.dshpc-card--indigo{--card-accent:var(--dshpc-indigo);--card-accent-soft:var(--dshpc-indigo-soft)}\n.dshpc-card--rose{--card-accent:var(--dshpc-rose);--card-accent-soft:var(--dshpc-rose-soft)}\n.dshpc-card--slate{--card-accent:var(--dshpc-slate);--card-accent-soft:var(--dshpc-slate-soft)}\n\n/* body = 色条 + 头部。方向跟着条子贴的边切 ⇒ 四个方位只是「换一个方向的 flex 项」，\n   不用为每个方位各写一套定位。 */\n.dshpc-card__body{display:flex;gap:var(--card-bar-gap);min-width:0}\n.dshpc-card--bar-top .dshpc-card__body,\n.dshpc-card--bar-bottom .dshpc-card__body{flex-direction:column}\n\n/* 头部一行 = 主内容 + 右侧槽，**整体垂直居中**：调用方在 action 里裸放一个元素\n   （按钮 / 文字 / 图标）不用自己套容器居中；一行两行、右边怎么放由调用方在框内自定。 */\n.dshpc-card__head{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-card--bar-left .dshpc-card__head,\n.dshpc-card--bar-right .dshpc-card__head{flex:1 1 auto}\n.dshpc-card__main{flex:1;min-width:0}\n.dshpc-card__side{display:flex;align-items:center;gap:6px;flex:none}\n\n/* 色条：左/右 = 竖向条（高度跟内容，最小一行）；上/下 = 横向条（长度默认跟内容同宽）。\n   右/下方位靠 order 排到头部之后，DOM 顺序始终不变。 */\n.dshpc-card__bar{flex:none;background:var(--card-accent);border-radius:var(--dshpc-radius-xs)}\n.dshpc-card--bar-left .dshpc-card__bar,\n.dshpc-card--bar-right .dshpc-card__bar{width:var(--card-bar-size);align-self:stretch;min-height:var(--dshpc-line-md)}\n.dshpc-card--bar-top .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{width:var(--card-bar-length);height:var(--card-bar-size);align-self:flex-start}\n.dshpc-card--bar-right .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{order:1}\n\n/* ── 外观一 · StripCard：同色系浅底 + 1px 不可见占位边框 + 方角 + 4px 通高方角色条贴左缘 ──\n   底色 / 方角 / 占位边框由 Surface 的三条修饰类提供（Card.ts 按 kind 传），此处只管内距与条子。 */\n.dshpc-card.dshpc-card--strip{\n  --card-bar-size:4px;--card-bar-inset:0;\n  padding:12px 12px 12px 20px;\n  background:var(--card-accent-soft,transparent);\n}\n/* 左内边距 20px = 16 留白 + 4 条宽 ⇒ 内容从色条右缘起算；色条绝对定位通高，跟着内容高度自适应。\n   特异性 0,3,0：压过上面 .dshpc-card--bar-left .dshpc-card__bar 的宽度规则，与注入顺序无关。 */\n.dshpc-card.dshpc-card--strip .dshpc-card__bar{position:absolute;left:0;top:0;bottom:0;width:4px;align-self:auto}\n\n/* ── 外观二 · Card：Surface 外框（底 + 1px 实色边框 + 圆角 12）+ 色条贴边那一侧的内距 ──\n   内距用 0,2,0 / 0,3,0 的长写法：高过 .dshpc-surface 的 padding 简写，与两份 CSS 的注入顺序无关。 */\n.dshpc-card.dshpc-card--bordered{padding:14px}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-left{padding-left:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-right{padding-right:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-top{padding-top:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-bottom{padding-bottom:var(--card-bar-inset)}\n\n.dshpc-card__toggle{\n  display:inline-flex;align-items:center;justify-content:center;\n  width:24px;height:24px;padding:0;background:none;border:none;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-3);cursor:pointer;\n}\n.dshpc-card__toggle:hover{background:var(--dshpc-surface-sunken);color:var(--dshpc-fg)}\n/* 箭头是 svg（Chevron），不是字形 ⇒ 不要 font-size；inline-flex 免掉 svg 的基线留白。 */\n.dshpc-card__caret{display:inline-flex;transition:transform .15s ease}\n.dshpc-card__caret.is-open{transform:rotate(180deg)}\n.dshpc-card__panel{margin-top:8px;padding-top:8px;border-top:1px solid var(--dshpc-border-faint)}\n";
 		//#endregion
@@ -6854,6 +6953,72 @@ window.__ModuleLoader__.load({
 			}
 			return value;
 		}
+		function mountHostModal(render) {
+			if (typeof document === "undefined") return;
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = (0, react_dom_client.createRoot)(container);
+			const close = () => {
+				root.unmount();
+				container.remove();
+			};
+			root.render(render(close));
+		}
+		const hostConfirm = (opts) => new Promise((resolve) => {
+			mountHostModal((close) => (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Modal, {
+				open: true,
+				onClose: () => {
+					close();
+					resolve(false);
+				},
+				title: opts.title ?? "",
+				closeLabel: t$2("modalClose"),
+				description: opts.description,
+				footer: (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					justifyContent: "flex-end",
+					gap: "8px"
+				} }, (0, react$1.createElement)(Button$1, {
+					variant: "outline",
+					onClick: () => {
+						close();
+						resolve(false);
+					}
+				}, opts.cancelText ?? t$2("cancel")), (0, react$1.createElement)(Button$1, {
+					variant: opts.danger === true ? "danger" : "primary",
+					onClick: () => {
+						close();
+						resolve(true);
+					}
+				}, opts.confirmText ?? t$2("confirm")))
+			}));
+		});
+		const hostAlert = (opts) => new Promise((resolve) => {
+			mountHostModal((close) => (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Modal, {
+				open: true,
+				onClose: () => {
+					close();
+					resolve();
+				},
+				title: opts.title ?? "",
+				closeLabel: t$2("modalClose"),
+				description: opts.description,
+				footer: (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					justifyContent: "flex-end"
+				} }, (0, react$1.createElement)(Button$1, {
+					variant: "primary",
+					onClick: () => {
+						close();
+						resolve();
+					}
+				}, opts.confirmText ?? t$2("dialogOk")))
+			}));
+		});
+		registerHostDialog({
+			confirm: hostConfirm,
+			alert: hostAlert
+		});
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_8d4c5a07049c5eecd8608d1db0a85d4f/node_modules/dsh-plugin-core/dist/utils/path.js
 		/**
@@ -57681,6 +57846,16 @@ body[data-ds-dark-theme]{
 					workspace
 				}));
 			};
+			/** 点「使用」先确认：切换身份会影响此后所有台账记录的归属，不能一下点上。 */
+			const useUser = async (row) => {
+				if (pending !== null) return;
+				if (await confirmModal({
+					title: t("settingsUseConfirmTitle"),
+					message: t("settingsUseConfirmBody", { name: row.name }),
+					confirmText: t("settingsUseConfirmOk"),
+					cancelText: t("settingsCancel")
+				})) claim(row.uuid, row.workspaceId);
+			};
 			const copyPath = (path) => {
 				const clip = navigator.clipboard;
 				if (clip === void 0) return;
@@ -57951,13 +58126,13 @@ body[data-ds-dark-theme]{
 							maxWidth: 180
 						}),
 						name: (0, react$1.createElement)("span", { className: "dtl-roster__name" }, `@${row.name}`),
-						action: (0, react$1.createElement)("div", { className: "dtl-users__acts" }, (0, react$1.createElement)(Button, {
+						action: (0, react$1.createElement)("div", { className: "dtl-users__acts" }, row.uuid === props.identity.uuid ? null : (0, react$1.createElement)(Button, {
 							variant: "info",
 							size: "sm",
 							loading: pending === `claim:${row.uuid}`,
 							disabled: pending !== null,
 							onClick: () => {
-								claim(row.uuid, row.workspaceId);
+								useUser(row);
 							}
 						}, t("settingsUseThis")), (0, react$1.createElement)(IconButton, {
 							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }),
@@ -58481,8 +58656,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-180044-948`
-			}, `v0.0.126 261102-180044-948`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-180208-875`
+			}, `v0.0.126 261102-180208-875`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -58637,6 +58812,9 @@ body[data-ds-dark-theme]{
 			settingsColName: "名字",
 			settingsColAction: "使用",
 			settingsDeleteUser: "删除",
+			settingsUseConfirmTitle: "切换台账用户",
+			settingsUseConfirmBody: "确定使用 @{name} 作为你的台账用户吗？切换后，任务的认领、推进与结案都将记录在该用户名下。",
+			settingsUseConfirmOk: "确定使用",
 			settingsRosterEmpty: "所列台账中暂无已创建的身份。",
 			settingsFailed: "操作未成功：{message}",
 			settingsUseThis: "使用",
@@ -58829,6 +59007,9 @@ body[data-ds-dark-theme]{
 			settingsColName: "Name",
 			settingsColAction: "Use",
 			settingsDeleteUser: "Remove",
+			settingsUseConfirmTitle: "Switch ledger user",
+			settingsUseConfirmBody: "Use @{name} as your ledger user? Claiming, progressing and closing tasks will be recorded under this user.",
+			settingsUseConfirmOk: "Use this user",
 			settingsRosterEmpty: "No identity has been created in the listed ledgers.",
 			settingsFailed: "Operation failed: {message}",
 			settingsUseThis: "Use",

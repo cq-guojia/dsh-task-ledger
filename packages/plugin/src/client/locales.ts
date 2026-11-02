@@ -40,6 +40,9 @@ export type LocaleKey =
 	| "settingsColName"
 	| "settingsColAction"
 	| "settingsDeleteUser"
+	| "settingsUseConfirmTitle"
+	| "settingsUseConfirmBody"
+	| "settingsUseConfirmOk"
 	| "settingsRosterEmpty"
 	| "settingsFailed"
 	| "settingsUseThis"
@@ -247,6 +250,10 @@ export const zh: Record<LocaleKey, string> = {
 	settingsColName: "名字",
 	settingsColAction: "使用",
 	settingsDeleteUser: "删除",
+	settingsUseConfirmTitle: "切换台账用户",
+	settingsUseConfirmBody:
+		"确定使用 @{name} 作为你的台账用户吗？切换后，任务的认领、推进与结案都将记录在该用户名下。",
+	settingsUseConfirmOk: "确定使用",
 	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
 	settingsFailed: "操作未成功：{message}",
 	settingsUseThis: "使用",
@@ -454,6 +461,10 @@ export const en: Record<LocaleKey, string> = {
 	settingsColName: "Name",
 	settingsColAction: "Use",
 	settingsDeleteUser: "Remove",
+	settingsUseConfirmTitle: "Switch ledger user",
+	settingsUseConfirmBody:
+		"Use @{name} as your ledger user? Claiming, progressing and closing tasks will be recorded under this user.",
+	settingsUseConfirmOk: "Use this user",
 	settingsRosterEmpty: "No identity has been created in the listed ledgers.",
 	settingsFailed: "Operation failed: {message}",
 	settingsUseThis: "Use",

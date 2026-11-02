@@ -18,7 +18,7 @@ import { createElement as h, type ReactNode, useEffect, useRef, useState } from 
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, Checkbox, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, Surface, Table, Tag, notify } from "./ui";
+import { Button, Card, Checkbox, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, Surface, Table, Tag, confirmModal, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 const GithubMark = (): ReactNode =>
@@ -176,6 +176,18 @@ export function SettingsPage(props: {
 		void run(`claim:${uuid}`, () =>
 			postSwitchIdentity({ action: "claim", uuid, workspace }),
 		);
+	};
+
+	/** 点「使用」先确认：切换身份会影响此后所有台账记录的归属，不能一下点上。 */
+	const useUser = async (row: RosterRow): Promise<void> => {
+		if (pending !== null) return;
+		const ok = await confirmModal({
+			title: t("settingsUseConfirmTitle"),
+			message: t("settingsUseConfirmBody", { name: row.name }),
+			confirmText: t("settingsUseConfirmOk"),
+			cancelText: t("settingsCancel"),
+		});
+		if (ok) claim(row.uuid, row.workspaceId);
 	};
 
 	const copyPath = (path: string): void => {
@@ -638,20 +650,23 @@ export function SettingsPage(props: {
 										action: h(
 											"div",
 											{ className: "dtl-users__acts" },
-											h(
-												Button,
-												{
-													// 实心蓝（用户 2026-11-02：要带底色，且指定 info 档）
-													variant: "info",
-													size: "sm",
-													loading: pending === `claim:${row.uuid}`,
-													disabled: pending !== null,
-													onClick: () => {
-														claim(row.uuid, row.workspaceId);
-													},
-												},
-												t("settingsUseThis"),
-											),
+											// 已经是自己 ⇒ 不给「使用」（用户 2026-11-02）
+											row.uuid === props.identity.uuid
+												? null
+												: h(
+														Button,
+														{
+															// 实心蓝（用户 2026-11-02：要带底色，且指定 info 档）
+															variant: "info",
+															size: "sm",
+															loading: pending === `claim:${row.uuid}`,
+															disabled: pending !== null,
+															onClick: () => {
+																void useUser(row);
+															},
+														},
+														t("settingsUseThis"),
+													),
 											// 删除只上样式、先不接逻辑；底色走核心 0.20 的 color/background 轴
 											h(IconButton, {
 												icon: h(IconCloseOutlineRegular, { size: 14 }),
