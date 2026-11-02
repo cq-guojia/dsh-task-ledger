@@ -9,9 +9,9 @@
  */
 import {
 	IconChecklistOutlineRegular,
-	IconChevronRightOutlineRegular,
 	IconDownloadOutlineRegular,
 	IconFlatListOutlineRegular,
+	IconPlayOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
@@ -286,7 +286,7 @@ export function SettingsPage(props: {
 					{ className: "dtl-flow__ring", width: 32, height: 32, viewBox: "0 0 32 32", "aria-hidden": true },
 					h("circle", { cx: 16, cy: 16, r: 14.5 }),
 				),
-				h(IconChevronRightOutlineRegular, { size: 18, className: "dtl-flow__arrow" }),
+				h(IconPlayOutlineRegular, { size: 16, className: "dtl-flow__arrow" }),
 			),
 		);
 

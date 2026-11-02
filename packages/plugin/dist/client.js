@@ -56960,8 +56960,8 @@ body[data-ds-dark-theme]{
 				cx: 16,
 				cy: 16,
 				r: 14.5
-			})), (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, {
-				size: 18,
+			})), (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconPlayOutlineRegular, {
+				size: 16,
 				className: "dtl-flow__arrow"
 			})));
 			const flow = (0, react$1.createElement)(Surface, {
@@ -57575,8 +57575,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-144133-656`
-			}, `v0.0.126 261102-144133-656`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-144757-926`
+			}, `v0.0.126 261102-144757-926`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
