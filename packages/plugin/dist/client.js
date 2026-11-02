@@ -55541,14 +55541,15 @@ body[data-ds-dark-theme]{
 /* 身份表：名字列单行，超长省略（表格是定宽列，换行会把行高撑歪） */
 /* 昵称后面跟 [uuid]（用户 2026-11-02）：同名的人靠 uuid 才分得清。
    两者一行，名字先让位；identity 是定长 36 字符，宽了就先截它。 */
-.dtl-roster__who{display:flex;align-items:baseline;gap:var(--dtl-space-2);min-width:0;flex-wrap:wrap;}
+.dtl-roster__who{display:flex;align-items:baseline;gap:var(--dtl-space-2);min-width:0;}
 .dtl-roster__name{flex:0 1 auto;display:block;min-width:0;font-size:var(--dtl-font-md);
   line-height:var(--dtl-line-md);color:var(--dtl-fg);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-/* uuid 一位都不许省（用户 2026-11-02：靠它分重名的人）——一行放不下就折到第二行 */
-.dtl-roster__uuid{flex:0 1 auto;min-width:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+/* 只显示 uuid 尾 8 位（用户 2026-11-02：36 位硬塞会把整行挤爆，尾段足够分重名的人；
+   完整值挂在 title 上，鼠标停一下就看得到） */
+.dtl-roster__uuid{flex:none;font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);
   color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  word-break:break-all;}
+  white-space:nowrap;}
 /* 弹窗页脚：左边放进行中的骨架（删除要逐本台账走网络，慢），右边是「创建新用户」组合框。
    组合框靠 style 里的 margin-left:auto 贴右 —— 这里不用 space-between，否则只有一个子元素时会跑到左边。 */
 .dtl-modal__foot{display:flex;align-items:center;gap:var(--dtl-space-3);width:100%;}
@@ -58185,12 +58186,12 @@ body[data-ds-dark-theme]{
 					{
 						key: "workspace",
 						title: t("settingsColWorkspace"),
-						width: 200
+						width: 160
 					},
 					{
 						key: "action",
 						title: t("settingsColAction"),
-						width: 120,
+						width: 110,
 						align: "right"
 					}
 				],
@@ -58200,9 +58201,12 @@ body[data-ds-dark-theme]{
 						workspace: row.group === "#shared" || rows[index - 1]?.group === row.group ? null : (0, react$1.createElement)(Tag, {
 							text: row.workspace,
 							tone: "workspace",
-							maxWidth: 180
+							maxWidth: 160
 						}),
-						name: (0, react$1.createElement)("span", { className: "dtl-roster__who" }, (0, react$1.createElement)("span", { className: "dtl-roster__name" }, `@${row.name}`), (0, react$1.createElement)("span", { className: "dtl-roster__uuid" }, `[${row.uuid}]`)),
+						name: (0, react$1.createElement)("span", { className: "dtl-roster__who" }, (0, react$1.createElement)("span", { className: "dtl-roster__name" }, `@${row.name}`), (0, react$1.createElement)("span", {
+							className: "dtl-roster__uuid",
+							title: row.uuid
+						}, row.uuid.slice(-8))),
 						action: (0, react$1.createElement)("div", { className: "dtl-users__acts" }, row.uuid === props.identity.uuid ? null : (0, react$1.createElement)(Button, {
 							variant: "info",
 							size: "sm",
@@ -58737,8 +58741,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-221217-941`
-			}, `v0.0.126 261102-221217-941`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-221641-039`
+			}, `v0.0.126 261102-221641-039`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

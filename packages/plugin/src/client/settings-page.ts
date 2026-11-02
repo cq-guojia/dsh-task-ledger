@@ -709,10 +709,11 @@ export function SettingsPage(props: {
 								borders: "none",
 								// 用户名在前、台账在后（用户 2026-11-02）：台账标签是分组的，
 								// 排第一列时只有一个人也空着一大片，看着像少了东西。
+								// 后两列压窄，把宽度让给第一列（昵称 + 完整 uuid 必须一行装下）
 								columns: [
 									{ key: "name", title: t("settingsColName") },
-									{ key: "workspace", title: t("settingsColWorkspace"), width: 200 },
-									{ key: "action", title: t("settingsColAction"), width: 120, align: "right" },
+									{ key: "workspace", title: t("settingsColWorkspace"), width: 160 },
+									{ key: "action", title: t("settingsColAction"), width: 110, align: "right" },
 								],
 								rows: rows.map((row, index) => ({
 									key: row.uuid,
@@ -725,14 +726,19 @@ export function SettingsPage(props: {
 												: h(Tag, {
 														text: row.workspace,
 														tone: "workspace",
-														maxWidth: 180,
+														maxWidth: 160,
 													}),
 										// 昵称后面挂 uuid（用户 2026-11-02）：两个人重名时靠它才分得清
 										name: h(
 											"span",
 											{ className: "dtl-roster__who" },
 											h("span", { className: "dtl-roster__name" }, `@${row.name}`),
-											h("span", { className: "dtl-roster__uuid" }, `[${row.uuid}]`),
+											// 只露尾 8 位（挤不下 36 位），完整值放 title
+											h(
+												"span",
+												{ className: "dtl-roster__uuid", title: row.uuid },
+												row.uuid.slice(-8),
+											),
 										),
 										action: h(
 											"div",
