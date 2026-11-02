@@ -52,7 +52,7 @@ func NewTask(repo string, me core.Identity, p NewTaskParams) (*Result, error) {
 		return nil, err
 	}
 
-	mineStore := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	mineStore := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 	pool := store.NewTaskStore(repo, core.PoolRel, nil)
 	target := pool
 	if p.Mine {

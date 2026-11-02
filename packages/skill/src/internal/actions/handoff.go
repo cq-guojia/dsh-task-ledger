@@ -18,7 +18,7 @@ func Handoff(repo string, me core.Identity, tid, to string) (*Result, error) {
 		return nil, core.Failf("%s 还没在索引里登记过 ⇒ 不能交接给他（写出一份对别人不存在的分片，他自己也看不到）。", to)
 	}
 
-	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	mine := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 	task, ok, err := mine.Get(tid)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func Handoff(repo string, me core.Identity, tid, to string) (*Result, error) {
 	}
 	whoStamp := core.Identity{UUID: toKey, Name: toName}.Stamp()
 
-	toStore := store.NewTaskStore(repo, core.ShardRel(toKey), nil)
+	toStore := store.NewTaskStore(repo, ShardRelOf(repo, toKey), nil)
 	moved := map[string]any{}
 	for k, v := range task {
 		moved[k] = v

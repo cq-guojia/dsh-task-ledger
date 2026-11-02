@@ -10,7 +10,7 @@ import (
 // Release 写序：写回池（已有同号就不覆盖）→ 删我分片那行 → 过程文档记一笔。
 func Release(repo string, me core.Identity, tid string) (*Result, error) {
 	pool := store.NewTaskStore(repo, core.PoolRel, nil)
-	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	mine := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 	task, ok, err := mine.Get(tid)
 	if err != nil {
 		return nil, err

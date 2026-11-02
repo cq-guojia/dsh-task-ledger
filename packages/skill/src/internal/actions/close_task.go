@@ -43,7 +43,7 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 	histPath := history.PathFor(p.Finished)
 
 	pool := store.NewTaskStore(repo, core.PoolRel, nil)
-	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	mine := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 
 	task, where, err := LoadTask(repo, tid)
 	if err != nil {

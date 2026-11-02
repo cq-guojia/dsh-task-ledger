@@ -31,7 +31,8 @@ func ForgetOwner(repo string, me core.Identity, uuid string) (*Result, error) {
 		return nil, core.Failf("这本台账的名册里没有该身份：%s\n  处理：名册（owners.json）里没有就是没登记过，不用删。", key)
 	}
 	name, _ := record["name"].(string)
-	rel := core.ShardRel(key)
+	// 分片路径以名册里的 file 为准，不拿 uuid 重算（否则删的是个不存在的路径）
+	rel := ShardRelOf(repo, key)
 	tasks, err := store.NewTaskStore(repo, rel, nil).All()
 	if err != nil {
 		return nil, err

@@ -23,7 +23,7 @@ func Relabel(repo string, me core.Identity, tid string, tags []string) (*Result,
 		return nil, core.Failf("标签是空的，没有可写的值。")
 	}
 
-	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	mine := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 	task, ok, err := mine.Get(tid)
 	if err != nil {
 		return nil, err

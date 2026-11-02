@@ -70,6 +70,30 @@ func otherShards(repo string, me core.Identity) []string {
 	return out
 }
 
+// ShardRelOf 那个人**眼下**的分片路径（相对 ledger/）。
+// 只有「还没登记的人」才按 sha256(uuid)[:12] 现算；一旦登记过，索引里的 file 字段就是真源 ——
+// 文件可以手动改名（file 跟着改），也可能来自早期别的命名规则。凡是「用」分片的地方
+// （读写、加锁、提交集、交接目标、建任务查重）一律走这里；只有**建**新分片才是 core.ShardRel。
+// 拿 ShardRel 重算会指向一个不存在的路径：os.Remove 的 ENOENT 会被当成「本来就没有」放过，
+// 删人的表现就是 owners.json 少了人、分片还躺在 owners/ 里。
+func ShardRelOf(repo, who string) string {
+	key := core.Normalize(who)
+	fallback := core.ShardRel(key)
+	all, err := store.NewOwnersIndex(repo).All()
+	if err != nil {
+		return fallback
+	}
+	record, ok := all[key]
+	if !ok {
+		return fallback
+	}
+	name, _ := record["file"].(string)
+	if name == "" {
+		return fallback
+	}
+	return core.OwnersDir + "/" + name
+}
+
 // worklogOf 这条任务的过程文档：查得到给文件，查不到退回整个 worklog/ 目录（宁宽）。
 func worklogOf(repo, tid string) ([]string, []string) {
 	if tid == "" {
@@ -116,7 +140,7 @@ func LockScope(repo string, me core.Identity, action string, params map[string]a
 	if !known {
 		return Scope{}, core.Failf("未知的 lock_scope action：%q", action)
 	}
-	mine := core.ShardRel(me.UUID)
+	mine := ShardRelOf(repo, me.UUID)
 	pool := core.PoolRel
 	index := core.OwnersRel
 	others := otherShards(repo, me)
@@ -154,8 +178,9 @@ func LockScope(repo string, me core.Identity, action string, params map[string]a
 		return Scope{Files: mergeRel([]string{mine}, wfiles), Dirs: wdirs}, nil
 
 	case "forget":
-		// tid 装的是目标 uuid：锁索引 + 目标分片（被删的那个文件也要在范围内，删除才进提交集）
-		return Scope{Files: []string{index, core.ShardRel(tid)}}, nil
+		// tid 装的是目标 uuid：锁索引 + 目标分片（被删的那个文件也要在范围内，删除才进提交集）。
+		// 分片路径按名册里的 file 取，不能用 ShardRel 重算（见 shardRelOf）。
+		return Scope{Files: []string{index, ShardRelOf(repo, tid)}}, nil
 
 	case "close":
 		wfiles, wdirs := worklogOf(repo, tid)

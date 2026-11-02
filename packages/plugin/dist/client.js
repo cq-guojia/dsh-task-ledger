@@ -57894,7 +57894,6 @@ body[data-ds-dark-theme]{
 						description: report.failed.map((item) => `${item.workspace}：${item.error}`).join("\n")
 					});
 					setRoster(null);
-					setUserOpen(false);
 					onSwitched();
 				} catch (failure) {
 					setError(failure instanceof Error ? failure.message : String(failure));
@@ -58724,8 +58723,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-215638-464`
-			}, `v0.0.126 261102-215638-464`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-220538-197`
+			}, `v0.0.126 261102-220538-197`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

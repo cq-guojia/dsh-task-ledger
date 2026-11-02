@@ -16,7 +16,7 @@ func LogProgress(repo string, me core.Identity, tid, note string) (*Result, erro
 	if text == "" {
 		return nil, core.Failf("--note 不能为空。")
 	}
-	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	mine := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 	task, ok, err := mine.Get(tid)
 	if err != nil {
 		return nil, err

@@ -29,7 +29,7 @@ func Bootstrap(repo string, me core.Identity) (core.Identity, error) {
 	if _, err := pool.EnsureFile(); err != nil {
 		return me, err
 	}
-	mine := store.NewTaskStore(root, core.ShardRel(me.UUID), &me)
+	mine := store.NewTaskStore(root, ShardRelOf(root, me.UUID), &me)
 	if _, err := mine.EnsureFile(); err != nil {
 		return me, err
 	}

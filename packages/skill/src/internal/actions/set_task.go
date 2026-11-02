@@ -49,7 +49,7 @@ func SetTask(repo string, me core.Identity, tid string, p SetParams) (*Result, e
 	if !core.IsMe(me, target) {
 		return Handoff(repo, me, tid, target)
 	}
-	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	mine := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 	if task, ok, err := mine.Get(tid); err != nil {
 		return nil, err
 	} else if ok && task != nil {

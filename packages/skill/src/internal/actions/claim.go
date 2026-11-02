@@ -12,7 +12,7 @@ import (
 // Claim 写序：我的分片 → 删池里那行 → 过程文档记一笔。
 func Claim(repo string, me core.Identity, tid string) (*Result, error) {
 	pool := store.NewTaskStore(repo, core.PoolRel, nil)
-	mine := store.NewTaskStore(repo, core.ShardRel(me.UUID), &me)
+	mine := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 	meKey := core.Normalize(me.UUID)
 	logs := store.NewWorklogStore(repo)
 

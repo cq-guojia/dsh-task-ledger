@@ -382,7 +382,8 @@ func paramsOf(command string, a *Args, repo string, me core.Identity) (actions.P
 // taskSnapshot 建任务查重要用的在办任务快照（**锁外**只读，只用于生成不撞的号）。
 func taskSnapshot(repo string, me core.Identity) (map[string]struct{}, error) {
 	tasks := map[string]struct{}{}
-	for _, rel := range []string{core.PoolRel, core.ShardRel(me.UUID)} {
+	// 我的分片按名册登记的 file 找（可能不叫 sha256(uuid) 那个名字）
+	for _, rel := range []string{core.PoolRel, actions.ShardRelOf(repo, me.UUID)} {
 		all, err := store.NewTaskStore(repo, rel, nil).All()
 		if err != nil {
 			return nil, err

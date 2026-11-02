@@ -216,10 +216,9 @@ export function SettingsPage(props: {
 						.join("\n"),
 				});
 			}
-			// 名册已经变了（至少这本台账的名册行没了）：丢掉缓存，下次打开弹窗重取，
-			// 否则删完再开还是旧名单，被删的人照样挂在上面。
+			// 删完**不关**弹窗（用户 2026-11-02）：可能想接着清好几个人。
+			// 名册已经变了：丢掉缓存让它在弹窗里就地重取，被删的人立刻从列表上消失。
 			setRoster(null);
-			setUserOpen(false);
 			onSwitched();
 		} catch (failure) {
 			setError(failure instanceof Error ? failure.message : String(failure));
