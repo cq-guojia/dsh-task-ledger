@@ -69,7 +69,13 @@ async function switchInputOf(req, deps) {
             throw new Error(`${BAD_REQUEST}找不到这个工作区，读不了名册`);
         return { action: "claim", uuid, repo: workspace.path };
     }
-    throw new Error(`${BAD_REQUEST}action 只能是 new / claim`);
+    if (body.action === "rename") {
+        const name = typeof body.name === "string" ? body.name.trim() : "";
+        if (name === "")
+            throw new Error(`${BAD_REQUEST}改昵称必须填新昵称`);
+        return { action: "rename", name };
+    }
+    throw new Error(`${BAD_REQUEST}action 只能是 new / claim / rename`);
 }
 /** 每请求重新解析工作区（registry 可能刚变；`root` 探测是本地结构判定，微秒级）。 */
 function workspacesOf(deps) {

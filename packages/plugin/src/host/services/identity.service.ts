@@ -11,17 +11,20 @@ import {
 	readIdentity,
 	switchIdentity as runSwitch,
 	type IdentityView,
+	type RenameView,
 	type SwitchInput,
 } from "../repositories/identity.repository.js";
 import { readOwners } from "../repositories/ledger.repository.js";
 
-export type { IdentityView, SwitchInput };
+export type { IdentityView, RenameView, SwitchInput };
 
 export async function getIdentity(): Promise<IdentityView> {
 	return await readIdentity();
 }
 
-export async function switchIdentity(input: SwitchInput): Promise<IdentityView> {
+export async function switchIdentity(
+	input: SwitchInput,
+): Promise<IdentityView | RenameView> {
 	return await runSwitch(input);
 }
 

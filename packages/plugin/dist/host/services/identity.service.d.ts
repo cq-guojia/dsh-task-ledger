@@ -7,10 +7,10 @@
  *  - `owners --json` → 名册（2026-11-01 起放开，没身份也能读）。
  */
 import type { LedgerWorkspace } from "../types.js";
-import { type IdentityView, type SwitchInput } from "../repositories/identity.repository.js";
-export type { IdentityView, SwitchInput };
+import { type IdentityView, type RenameView, type SwitchInput } from "../repositories/identity.repository.js";
+export type { IdentityView, RenameView, SwitchInput };
 export declare function getIdentity(): Promise<IdentityView>;
-export declare function switchIdentity(input: SwitchInput): Promise<IdentityView>;
+export declare function switchIdentity(input: SwitchInput): Promise<IdentityView | RenameView>;
 /** 一个工作区里可以被认领的人（名册原样，去掉 uuid 为空的行）。 */
 export interface RosterWorkspace {
     readonly id: string;

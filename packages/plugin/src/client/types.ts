@@ -242,6 +242,22 @@ export interface IdentityView {
 	readonly initCommand?: string;
 }
 
+/** 改昵称时某一本台账的结果（跨仓库做不到全成或全败，所以逐本回执）。 */
+export interface RenameDirResult {
+	readonly dir: string;
+	/** changed = 改了且推送成功；commit-only = 改了但只在本地；skipped = 没改；failed = 出错。 */
+	readonly status: "changed" | "commit-only" | "skipped" | "failed";
+	readonly reason: string;
+}
+
+/** 改昵称的回执。 */
+export interface RenameView {
+	readonly uuid: string;
+	readonly name: string;
+	readonly previous: string;
+	readonly dirs: readonly RenameDirResult[];
+}
+
 /** 一条台账目录（`/dirs`）：`hidden` = 界面上不显示（统计、列表、执行人下拉都不算它）。 */
 export interface LedgerDirView {
 	readonly path: string;

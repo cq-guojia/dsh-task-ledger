@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/actions"
@@ -103,8 +104,9 @@ var commandFlags = map[string]map[string]bool{
 	"dirs":     setOf("--dir", "--name", "--add", "--rename", "--hide", "--unhide", "--remove", "--all", "--json"),
 	"whoami":   setOf("--json", "--repo"),
 	"init":     setOf("--claim", "--new", "--name", "--yes", "--repo"),
-	// switch 只给界面用（不进 SKILL.md）：换成本机身份或建一个全新的，允许覆盖已有身份。
-	"switch": setOf("--claim", "--new", "--name", "--json", "--repo"),
+	// switch 只给界面用（不进 SKILL.md）：换成本机身份或建一个全新的，允许覆盖已有身份；
+	// --rename 改昵称（本机身份 + 每本已登记台账的名册）。
+	"switch": setOf("--claim", "--new", "--name", "--rename", "--json", "--repo"),
 }
 
 func setOf(items ...string) map[string]bool {
@@ -400,8 +402,11 @@ func requireFlags(a *Args) error {
 			return usageErr("close 缺少 --summary（取消可用 --cancel 省略）")
 		}
 	case "switch":
-		if a.Claim == nil && !a.NewID {
-			return usageErr("switch 要么 --new --name=<名字>，要么 --claim=<uuid>")
+		if a.DirRename != nil && (a.Claim != nil || a.NewID || a.Name != "") {
+			return usageErr("switch 的 --rename 不能与 --new / --name / --claim 同时给")
+		}
+		if a.DirRename == nil && a.Claim == nil && !a.NewID {
+			return usageErr("switch 要么 --rename <新昵称>，要么 --new --name=<名字>，要么 --claim=<uuid>")
 		}
 	}
 	return nil
@@ -857,6 +862,9 @@ func runInit(a *Args) int {
 // 但**不受 tty 限制、允许覆盖已有身份** —— 这正是 init 做不到的两件事。
 // 不进 SKILL.md：agent 拿不到这条命令，也就不会去替用户换身份。
 func runSwitch(a *Args) int {
+	if a.DirRename != nil {
+		return runRenameSelf(a)
+	}
 	repo := ""
 	if a.Repo != "" {
 		if root, err := core.AsRoot(a.Repo, "--repo"); err == nil {
@@ -878,6 +886,168 @@ func runSwitch(a *Args) int {
 	}
 	out("已切换身份：@" + name + "   " + uuid)
 	return ExitOK
+}
+
+// runRenameSelf 改昵称：本机身份 + 每本已登记台账的 ledger/owners.json。
+//
+// 一个目录一个目录来：**有 git 就 取最新 → 改 → 提交 → 推送**，没有 git 就只改文件。
+// 单个目录失败不拖垮别的 —— 跨仓库做不到「全成或全败」，硬做只会更难用；
+// 结果按目录逐条回给界面，让人看清哪本没成、为什么。
+//
+// **任务 / 历史里已经写下的 owner_name 一律不动**（用户 2026-11-02 反复强调）：
+// 那是「当时他叫什么」的快照，改了就是篡改历史。
+func runRenameSelf(a *Args) int {
+	newName := strings.TrimSpace(*a.DirRename)
+	oldName, uuid, err := actions.RenameSelf(newName)
+	if err != nil {
+		FailMessage("错误", err.Error())
+		return ExitBusiness
+	}
+
+	file, err := env.DirsFile()
+	if err != nil {
+		FailMessage("错误", err.Error())
+		return ExitBusiness
+	}
+	entries, _, err := store.ReadDirs(file)
+	if err != nil {
+		FailMessage("错误", err.Error())
+		return ExitBusiness
+	}
+
+	// 各本台账是互相独立的 git 仓库 ⇒ **并行**跑。每本都要一次网络往返（实测 3.5s），
+	// 串行五本就是十几秒；并发上限 4，再多对一次改名没收益，还可能被远端限流。
+	rows := make([]map[string]any, len(entries))
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, 4)
+	for i := range entries {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			slots <- struct{}{}
+			defer func() { <-slots }()
+			rows[i] = renameOneDir(entries[i].Path, uuid, newName)
+		}(i)
+	}
+	wg.Wait()
+
+	if a.JSON {
+		jsonOut(map[string]any{
+			"uuid":     uuid,
+			"name":     newName,
+			"previous": oldName,
+			"dirs":     rows,
+		})
+		return ExitOK
+	}
+	if oldName == newName {
+		out("昵称没变：@" + newName)
+		return ExitOK
+	}
+	out("已改昵称：@" + oldName + " → @" + newName)
+	out(fmt.Sprintf("台账目录 %d 个：", len(rows)))
+	for _, row := range rows {
+		dir, _ := row["dir"].(string)
+		status, _ := row["status"].(string)
+		reason, _ := row["reason"].(string)
+		line := "  " + dir + "：" + renameStatusText(status)
+		if reason != "" {
+			line += "（" + reason + "）"
+		}
+		out(line)
+	}
+	return ExitOK
+}
+
+// renameOneDir 改一本台账。status：changed（改了且完成）/ commit-only（改了但推送没成功）
+// / skipped（没改：不是台账、名册里没这个人、昵称已经是这个、目录没了）/ failed（出错）。
+//
+// **先不碰网络粗筛**：名册里没这个人、或昵称已经是这个，直接跳过。
+// 逐本台账都去远端取一次，光等网络就得一分钟（用户 2026-11-02 嫌慢）。
+// 只有真要改的那几本才走 取最新 → 重读 → 改 → 提交 → 推送。
+func renameOneDir(dir, uuid, name string) map[string]any {
+	row := map[string]any{"dir": dir, "status": "skipped", "reason": ""}
+	fail := func(reason string) map[string]any {
+		row["status"] = "failed"
+		row["reason"] = reason
+		return row
+	}
+	if info, err := os.Stat(dir); err != nil || !info.IsDir() {
+		row["reason"] = "目录不存在"
+		return row
+	}
+	owners := filepath.Join(dir, core.ToRepoRel(core.OwnersRel))
+	if _, err := os.Stat(owners); err != nil {
+		row["reason"] = "不是台账（没有 ledger/owners.json）"
+		return row
+	}
+
+	// ① 粗筛：读本地名册就能定「改不改」，不用联网
+	current, present, err := actions.OwnerNameIn(dir, uuid)
+	if err != nil {
+		return fail(err.Error())
+	}
+	if !present {
+		row["reason"] = "名册里没有这个身份"
+		return row
+	}
+	if current == name {
+		row["reason"] = "昵称已经是这个"
+		return row
+	}
+
+	// ② 真要改才碰 git。**不先取**：本机到远端一次往返就 3.5 秒（2026-11-02 实测），
+	//    为改一行名字先 fetch 一次不值 —— 推被拒时 `Push` 自己会 fetch + rebase 再推。
+	g := &GitRepo{Repo: dir}
+	isGit := g.IsGitRepo()
+	scope := actions.Scope{Files: []string{core.OwnersRel}}
+	if isGit {
+		// 只看本地：rebase / merge 中间态不能写（这一条不联网）
+		if err := g.CheckRepoState(); err != nil {
+			return fail(err.Error())
+		}
+	}
+
+	changed, _, err := actions.RenameInOwners(dir, uuid, name)
+	if err != nil {
+		return fail(err.Error())
+	}
+	if !changed {
+		row["reason"] = "名册里没有这个身份"
+		return row
+	}
+	row["status"] = "changed"
+	if !isGit {
+		row["reason"] = "没有 git，只写了本地文件"
+		return row
+	}
+	if err := g.Commit([]string{owners}, "chore(ledger): 改昵称 → "+name); err != nil {
+		return fail(err.Error())
+	}
+	// 纯本地仓库（没有远端）：改了 + 提交了就算完成，**不是失败**（用户 2026-11-02）。
+	if g.Upstream() == "" {
+		return row
+	}
+	g.Push(3, pushDeadline())
+	if still := g.unpushed(g.rels(scope)); len(still) > 0 {
+		row["status"] = "commit-only"
+		row["reason"] = "已提交在本地，推送没成功（按上方提示手动处理）"
+	}
+	return row
+}
+
+// renameStatusText 结果状态的人话（人话输出用）。
+func renameStatusText(status string) string {
+	switch status {
+	case "changed":
+		return "已改"
+	case "commit-only":
+		return "已改，仅提交在本地"
+	case "failed":
+		return "失败"
+	default:
+		return "跳过"
+	}
 }
 
 // optionsOf 把 init 的候选列表摊成有序数组。

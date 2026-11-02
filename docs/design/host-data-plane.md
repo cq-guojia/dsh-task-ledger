@@ -118,7 +118,7 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 
 ## 五点五、版本错配兜底（拆端点的必配项）
 
-> **已不适用（2026-10-28）**：`/board` 全量端点、`/board/trend`、`/history`、`/filters`、`/task` 与写端点均已删除。现行 client 请求：`/workspaces`、`/board/snapshot`、`/history/trend`、`/history/list`，外加 2026-11-01 的身份三件 —— `GET /identity`（`whoami --json`，未初始化双 null）、`GET /identity/roster`（各工作区 `owners --json`，**没身份也能读**）、`POST /identity/switch`（隐藏命令 `switch`，见 §六 第 3 条）。只剩一种组合需要注意：
+> **已不适用（2026-10-28）**：`/board` 全量端点、`/board/trend`、`/history`、`/filters`、`/task` 与写端点均已删除。现行 client 请求：`/workspaces`、`/board/snapshot`、`/history/trend`、`/history/list`，外加 2026-11-01 的身份三件 —— `GET /identity`（`whoami --json`，未初始化双 null）、`GET /identity/roster`（各工作区 `owners --json`，**没身份也能读**）、`POST /identity/switch`（隐藏命令 `switch`，`action` = `new` / `claim` / `rename`，见 §六 第 3 条）。只剩一种组合需要注意：
 
 | 组合 | 行为 |
 |---|---|
@@ -133,7 +133,7 @@ fixture：10 个工作区，每个 `pool.json`（+ 分片）+ 按月 history 文
 |---|---|---|
 | 1 | 目录重组 + IO 收敛 + 错误模型/降级 + 入口校验 | 完全等价，验收通过才算完 |
 | 2 | 拆端点（A）+ 缓存（B）+ 前端降级标红 —— ✅ 已完成（4a / 4b / 步骤 5） | 新增行为 |
-| 3 | 写路径 + invalidate | ⏸ **台账**写路径曾实现（`/claim`、`/release` 走 `ledger-write.service.ts`，`/close` 走会话交接），2026-10-28 随界面收敛**已整链路删除**；接回时按 skill 方法重写。⚠️ 2026-11-01 起 host **已有第一条写端点**：`POST /identity/switch` 写机器身份文件（不写台账、不碰 git、无需 invalidate —— 前端换完身份整轮重读并带 `fresh=1`） |
+| 3 | 写路径 + invalidate | ⏸ **台账**写路径曾实现（`/claim`、`/release` 走 `ledger-write.service.ts`，`/close` 走会话交接），2026-10-28 随界面收敛**已整链路删除**；接回时按 skill 方法重写。⚠️ 2026-11-01 起 host **已有第一条写端点**：`POST /identity/switch` 的 `new` / `claim` 只写机器身份文件（不写台账、不碰 git、无需 invalidate —— 前端换完身份整轮重读并带 `fresh=1`）。2026-11-02 起多一档 `rename`：**会写各台账的 `ledger/owners.json` 并逐本走 git 取/提交/推送**（任务与历史里的 `owner_name` 不动），所以该请求单独放宽到 180s，不能吃默认 10s |
 
 ## 七、影响面（重构必读）
 

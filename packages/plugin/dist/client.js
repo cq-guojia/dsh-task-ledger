@@ -54132,13 +54132,22 @@ window.__ModuleLoader__.load({
 		function fetchDirs() {
 			return fetchJson("/dirs");
 		}
-		/** 换身份：建全新的，或认领某个工作区名册里已有的人。返回换完之后的身份。 */
+		/**
+		* 改昵称的超时：要逐本台账走「取最新 → 改 → 提交 → 推送」，
+		* 一本几秒、十本一分钟很正常 —— 吃默认 8s 只会「界面报超时、脚本还在改」。
+		*/
+		const RENAME_TIMEOUT_MS = 18e4;
+		/**
+		* 换身份 / 改昵称：
+		*  - `new` 建全新身份、`claim` 认领某工作区名册里已有的人 → 返回换完之后的身份；
+		*  - `rename` 改自己昵称 → 返回新昵称 + 每本台账各自的结果（`dirs`）。
+		*/
 		function postSwitchIdentity(body) {
 			return fetchJson("/identity/switch", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify(body)
-			});
+			}, body.action === "rename" ? RENAME_TIMEOUT_MS : void 0);
 		}
 		/**
 		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
@@ -56830,6 +56839,7 @@ body[data-ds-dark-theme]{
 			const [name, setName] = (0, react$1.useState)("");
 			const [renamingName, setRenamingName] = (0, react$1.useState)(false);
 			const [nameDraft, setNameDraft] = (0, react$1.useState)("");
+			const [savingName, setSavingName] = (0, react$1.useState)(false);
 			const nameInputRef = (0, react$1.useRef)(null);
 			(0, react$1.useEffect)(() => {
 				if (renamingName) nameInputRef.current?.focus();
@@ -56919,7 +56929,7 @@ body[data-ds-dark-theme]{
 					onClick: openUserModal
 				}, t("settingsGoCreate")))));
 				const initial = who.trim().slice(0, 1);
-				/** 「修改昵称」：名字就地变成输入框（写动作还没接，保存仍是空函数）。 */
+				/** 「修改昵称」：名字就地变成输入框。 */
 				const startRename = () => {
 					setNameDraft(who);
 					setRenamingName(true);
@@ -56927,6 +56937,38 @@ body[data-ds-dark-theme]{
 				const stopRename = () => {
 					setRenamingName(false);
 				};
+				/** 保存：写本机身份 + 每本已登记台账的名册（有 git 就取/提交/推送），逐本回执。
+				*  结果一律走核心 Toast（用户 2026-11-02：报错别塞进卡片里把版面顶烂）。 */
+				const saveName = async () => {
+					const trimmed = nameDraft.trim();
+					if (trimmed === "" || trimmed === who || savingName) return;
+					setSavingName(true);
+					try {
+						const result = await postSwitchIdentity({
+							action: "rename",
+							name: trimmed
+						});
+						setRenamingName(false);
+						if ("dirs" in result) {
+							const problems = result.dirs.filter((row) => row.status === "failed" || row.status === "commit-only");
+							if (problems.length > 0) notify(t("settingsRenamePartial"), {
+								variant: "warning",
+								durationMs: 1e4,
+								description: problems.map((row) => `${row.dir}：${row.reason}`).join("\n")
+							});
+						}
+						onSwitched();
+					} catch (failure) {
+						notify(t("settingsRenameFailedTitle"), {
+							variant: "error",
+							durationMs: 8e3,
+							description: failure instanceof Error ? failure.message : String(failure)
+						});
+					} finally {
+						setSavingName(false);
+					}
+				};
+				const canSaveName = nameDraft.trim() !== "" && nameDraft.trim() !== who;
 				return (0, react$1.createElement)("div", { className: "dtl-profile" }, (0, react$1.createElement)("div", { className: "dtl-avatar" }, initial === "" ? "?" : initial), (0, react$1.createElement)("div", { className: "dtl-profile__main" }, renamingName ? (0, react$1.createElement)("div", { className: "dtl-profile__editor" }, (0, react$1.createElement)(Input, {
 					value: nameDraft,
 					onChange: setNameDraft,
@@ -56937,6 +56979,7 @@ body[data-ds-dark-theme]{
 					onKeyDown: (event) => {
 						if (event.key === "Enter") {
 							event.preventDefault();
+							saveName();
 							return;
 						}
 						if (event.key === "Escape") {
@@ -56948,10 +56991,15 @@ body[data-ds-dark-theme]{
 					variant: "info",
 					size: "sm",
 					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }),
-					onClick: notYet
+					loading: savingName,
+					disabled: savingName || !canSaveName,
+					onClick: () => {
+						saveName();
+					}
 				}, t("settingsSave")), (0, react$1.createElement)(Button, {
 					variant: "secondary",
 					size: "sm",
+					disabled: savingName,
 					onClick: stopRename
 				}, t("settingsCancel"))) : (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
 					variant: "outline",
@@ -56970,37 +57018,29 @@ body[data-ds-dark-theme]{
 			const FlowList = (lines) => (0, react$1.createElement)("ul", { className: "dtl-flow__list" }, lines.filter((l) => l.trim() !== "").map((line, i) => (0, react$1.createElement)("li", {
 				className: "dtl-flow__item",
 				key: i
-			}, (0, react$1.createElement)(MarqueeText, {
-				text: line,
-				title: line
-			}))));
-			/** npm 包名 + GitHub / npm 两个图标按钮（悬停提示统一走 `Tip`，不再自造）。 */
+			}, (0, react$1.createElement)(MarqueeText, { text: line }))));
+			/** npm 包名 + GitHub / npm 两个图标按钮。
+			*  **不挂任何悬停提示**（用户 2026-11-02：没让加的东西别加）。 */
 			const NpmLink = ({ pkg }) => (0, react$1.createElement)(Surface, {
 				tone: "sunken",
 				border: "faint",
 				radius: "md",
 				padding: "sm",
 				className: "dtl-flow__code"
-			}, (0, react$1.createElement)("code", { className: "dtl-flow__cmd" }, pkg), (0, react$1.createElement)(Tip, {
+			}, (0, react$1.createElement)("code", { className: "dtl-flow__cmd" }, pkg), (0, react$1.createElement)(IconButton, {
+				icon: (0, react$1.createElement)(GithubMark, null),
 				label: "GitHub",
-				children: (0, react$1.createElement)(IconButton, {
-					icon: (0, react$1.createElement)(GithubMark, null),
-					label: "GitHub",
-					title: "",
-					onClick: () => {
-						window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
-					}
-				})
-			}), (0, react$1.createElement)(Tip, {
+				title: "",
+				onClick: () => {
+					window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
+				}
+			}), (0, react$1.createElement)(IconButton, {
+				icon: (0, react$1.createElement)(NpmMark, null),
 				label: "npm",
-				children: (0, react$1.createElement)(IconButton, {
-					icon: (0, react$1.createElement)(NpmMark, null),
-					label: "npm",
-					title: "",
-					onClick: () => {
-						window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
-					}
-				})
+				title: "",
+				onClick: () => {
+					window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
+				}
 			}));
 			/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
 			*  圆 + 箭头都画在同一个 SVG 里：一条 `<path>`（横杆 + `>` 箭头，描边不填充，
@@ -57055,7 +57095,6 @@ body[data-ds-dark-theme]{
 			}, (0, react$1.createElement)("div", { className: "dtl-tbl__cell" }, dir.name), (0, react$1.createElement)("button", {
 				type: "button",
 				className: "dtl-tbl__path",
-				title: t("settingsPathCopyTip"),
 				onClick: () => {
 					copyPath(dir.path);
 				}
@@ -57630,8 +57669,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-155209-307`
-			}, `v0.0.126 261102-155209-307`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-163409-552`
+			}, `v0.0.126 261102-163409-552`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -57771,6 +57810,8 @@ body[data-ds-dark-theme]{
 			settingsBack: "返回看板",
 			settingsSwitchUser: "切换身份",
 			settingsRenameUser: "修改昵称",
+			settingsRenamePartial: "部分台账没改通",
+			settingsRenameFailedTitle: "改昵称失败",
 			settingsGoCreate: "创建身份",
 			settingsUserModalTitle: "身份管理",
 			settingsNoIdentityTitle: "未创建身份",
@@ -57791,7 +57832,6 @@ body[data-ds-dark-theme]{
 			settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
 			settingsSave: "保存",
 			settingsCancel: "取消",
-			settingsPathCopyTip: "复制路径",
 			settingsPathCopied: "已复制",
 			settingsAddTitle: "添加台账目录",
 			settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
@@ -57956,6 +57996,8 @@ body[data-ds-dark-theme]{
 			settingsBack: "Back to board",
 			settingsSwitchUser: "Switch identity",
 			settingsRenameUser: "Change nickname",
+			settingsRenamePartial: "Some ledgers were not updated",
+			settingsRenameFailedTitle: "Failed to change nickname",
 			settingsGoCreate: "Create identity",
 			settingsUserModalTitle: "Identity management",
 			settingsNoIdentityTitle: "No identity created",
@@ -57976,7 +58018,6 @@ body[data-ds-dark-theme]{
 			settingsRenamePlaceholder: "New name (empty keeps the folder name)",
 			settingsSave: "Save",
 			settingsCancel: "Cancel",
-			settingsPathCopyTip: "Copy path",
 			settingsPathCopied: "Copied",
 			settingsAddTitle: "Add ledger folder",
 			settingsAddHint: "Enter the absolute path of a ledger root folder. It must contain a ledger/ subdirectory.",

@@ -25,6 +25,8 @@ export type LocaleKey =
 	| "settingsBack"
 	| "settingsSwitchUser"
 	| "settingsRenameUser"
+	| "settingsRenamePartial"
+	| "settingsRenameFailedTitle"
 	| "settingsGoCreate"
 	| "settingsUserModalTitle"
 	| "settingsNoIdentityTitle"
@@ -46,7 +48,6 @@ export type LocaleKey =
 	| "settingsRenamePlaceholder"
 	| "settingsSave"
 	| "settingsCancel"
-	| "settingsPathCopyTip"
 	| "settingsPathCopied"
 	| "settingsAddTitle"
 	| "settingsAddHint"
@@ -225,6 +226,8 @@ export const zh: Record<LocaleKey, string> = {
 	settingsBack: "返回看板",
 	settingsSwitchUser: "切换身份",
 	settingsRenameUser: "修改昵称",
+	settingsRenamePartial: "部分台账没改通",
+	settingsRenameFailedTitle: "改昵称失败",
 	settingsGoCreate: "创建身份",
 	settingsUserModalTitle: "身份管理",
 	settingsNoIdentityTitle: "未创建身份",
@@ -247,7 +250,6 @@ export const zh: Record<LocaleKey, string> = {
 	settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
 	settingsSave: "保存",
 	settingsCancel: "取消",
-	settingsPathCopyTip: "复制路径",
 	settingsPathCopied: "已复制",
 	settingsAddTitle: "添加台账目录",
 	settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
@@ -424,6 +426,8 @@ export const en: Record<LocaleKey, string> = {
 	settingsBack: "Back to board",
 	settingsSwitchUser: "Switch identity",
 	settingsRenameUser: "Change nickname",
+	settingsRenamePartial: "Some ledgers were not updated",
+	settingsRenameFailedTitle: "Failed to change nickname",
 	settingsGoCreate: "Create identity",
 	settingsUserModalTitle: "Identity management",
 	settingsNoIdentityTitle: "No identity created",
@@ -447,7 +451,6 @@ export const en: Record<LocaleKey, string> = {
 	settingsRenamePlaceholder: "New name (empty keeps the folder name)",
 	settingsSave: "Save",
 	settingsCancel: "Cancel",
-	settingsPathCopyTip: "Copy path",
 	settingsPathCopied: "Copied",
 	settingsAddTitle: "Add ledger folder",
 	settingsAddHint:

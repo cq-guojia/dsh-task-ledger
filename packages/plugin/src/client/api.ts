@@ -15,6 +15,7 @@ import type {
 	HistoryListPayload,
 	HistoryTrendPayload,
 	IdentityView,
+	RenameView,
 	RosterPayload,
 } from "./types";
 
@@ -107,17 +108,32 @@ export function fetchDirs(): Promise<DirsPayload> {
 	return fetchJson<DirsPayload>("/dirs");
 }
 
-/** 换身份：建全新的，或认领某个工作区名册里已有的人。返回换完之后的身份。 */
+/**
+ * 改昵称的超时：要逐本台账走「取最新 → 改 → 提交 → 推送」，
+ * 一本几秒、十本一分钟很正常 —— 吃默认 8s 只会「界面报超时、脚本还在改」。
+ */
+export const RENAME_TIMEOUT_MS = 180_000;
+
+/**
+ * 换身份 / 改昵称：
+ *  - `new` 建全新身份、`claim` 认领某工作区名册里已有的人 → 返回换完之后的身份；
+ *  - `rename` 改自己昵称 → 返回新昵称 + 每本台账各自的结果（`dirs`）。
+ */
 export function postSwitchIdentity(
 	body:
 		| { readonly action: "new"; readonly name: string }
-		| { readonly action: "claim"; readonly uuid: string; readonly workspace: string },
-): Promise<IdentityView> {
-	return fetchJson<IdentityView>("/identity/switch", {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify(body),
-	});
+		| { readonly action: "claim"; readonly uuid: string; readonly workspace: string }
+		| { readonly action: "rename"; readonly name: string },
+): Promise<IdentityView | RenameView> {
+	return fetchJson<IdentityView | RenameView>(
+		"/identity/switch",
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(body),
+		},
+		body.action === "rename" ? RENAME_TIMEOUT_MS : undefined,
+	);
 }
 
 /**

@@ -17,7 +17,7 @@ import { createElement as h, type ReactNode, useEffect, useRef, useState } from 
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, Checkbox, IconButton, Input, Loader, MarqueeText, Modal, Surface, Tip } from "./ui";
+import { Button, Card, Checkbox, IconButton, Input, Loader, MarqueeText, Modal, Surface, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 const GithubMark = (): ReactNode =>
@@ -55,9 +55,10 @@ export function SettingsPage(props: {
 	const [userOpen, setUserOpen] = useState(false);
 	const [name, setName] = useState("");
 
-	// 名字内联改名（名字后面那支铅笔）：**只做界面**，保存仍是空函数（用户 2026-11-02：先定 UI 再谈逻辑）
+	// 名字内联改名：点「修改昵称」进来，保存走 `switch --rename`（本机身份 + 每本台账名册）。
 	const [renamingName, setRenamingName] = useState(false);
 	const [nameDraft, setNameDraft] = useState("");
+	const [savingName, setSavingName] = useState(false);
 	const nameInputRef = useRef<HTMLInputElement | null>(null);
 
 	// 点了铅笔就直接能打字（核心 Input 没有 autoFocus，走它给的 inputRef）
@@ -188,7 +189,7 @@ export function SettingsPage(props: {
 			);
 		const initial = who.trim().slice(0, 1);
 
-		/** 「修改昵称」：名字就地变成输入框（写动作还没接，保存仍是空函数）。 */
+		/** 「修改昵称」：名字就地变成输入框。 */
 		const startRename = (): void => {
 			setNameDraft(who);
 			setRenamingName(true);
@@ -196,6 +197,45 @@ export function SettingsPage(props: {
 		const stopRename = (): void => {
 			setRenamingName(false);
 		};
+
+		/** 保存：写本机身份 + 每本已登记台账的名册（有 git 就取/提交/推送），逐本回执。
+		 *  结果一律走核心 Toast（用户 2026-11-02：报错别塞进卡片里把版面顶烂）。 */
+		const saveName = async (): Promise<void> => {
+			const trimmed = nameDraft.trim();
+			if (trimmed === "" || trimmed === who || savingName) return;
+			setSavingName(true);
+			try {
+				const result = await postSwitchIdentity({
+					action: "rename",
+					name: trimmed,
+				});
+				setRenamingName(false);
+				if ("dirs" in result) {
+					const problems = result.dirs.filter(
+						(row) => row.status === "failed" || row.status === "commit-only",
+					);
+					if (problems.length > 0)
+						notify(t("settingsRenamePartial"), {
+							variant: "warning",
+							// 台账路径长，得留够时间读完
+							durationMs: 10_000,
+							description: problems
+								.map((row) => `${row.dir}：${row.reason}`)
+								.join("\n"),
+						});
+				}
+				onSwitched();
+			} catch (failure) {
+				notify(t("settingsRenameFailedTitle"), {
+					variant: "error",
+					durationMs: 8_000,
+					description: failure instanceof Error ? failure.message : String(failure),
+				});
+			} finally {
+				setSavingName(false);
+			}
+		};
+		const canSaveName = nameDraft.trim() !== "" && nameDraft.trim() !== who;
 
 		return h(
 			"div",
@@ -218,7 +258,7 @@ export function SettingsPage(props: {
 								onKeyDown: (event) => {
 									if (event.key === "Enter") {
 										event.preventDefault();
-										notYet();
+										void saveName();
 										return;
 									}
 									if (event.key === "Escape") {
@@ -244,13 +284,17 @@ export function SettingsPage(props: {
 									variant: "info",
 									size: "sm",
 									icon: h(IconCheckOutlineRegular, { size: 14 }),
-									onClick: notYet,
+									loading: savingName,
+									disabled: savingName || !canSaveName,
+									onClick: () => {
+										void saveName();
+									},
 								},
 								t("settingsSave"),
 							),
 							h(
 								Button,
-								{ variant: "secondary", size: "sm", onClick: stopRename },
+								{ variant: "secondary", size: "sm", disabled: savingName, onClick: stopRename },
 								t("settingsCancel"),
 							),
 						)
@@ -305,37 +349,32 @@ export function SettingsPage(props: {
 			lines
 				.filter((l) => l.trim() !== "")
 				.map((line, i) =>
-					h("li", { className: "dtl-flow__item", key: i }, h(MarqueeText, { text: line, title: line })),
+					h("li", { className: "dtl-flow__item", key: i }, h(MarqueeText, { text: line })),
 				),
 		);
 
-	/** npm 包名 + GitHub / npm 两个图标按钮（悬停提示统一走 `Tip`，不再自造）。 */
+	/** npm 包名 + GitHub / npm 两个图标按钮。
+	 *  **不挂任何悬停提示**（用户 2026-11-02：没让加的东西别加）。 */
 	const NpmLink = ({ pkg }: { pkg: string }): ReactNode =>
 		h(
 			Surface,
 			{ tone: "sunken", border: "faint", radius: "md", padding: "sm", className: "dtl-flow__code" },
 			h("code", { className: "dtl-flow__cmd" }, pkg),
-			h(Tip, {
+			h(IconButton, {
+				icon: h(GithubMark, null),
 				label: "GitHub",
-				children: h(IconButton, {
-					icon: h(GithubMark, null),
-					label: "GitHub",
-					title: "",
-					onClick: () => {
-						window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
-					},
-				}),
+				title: "",
+				onClick: () => {
+					window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
+				},
 			}),
-			h(Tip, {
+			h(IconButton, {
+				icon: h(NpmMark, null),
 				label: "npm",
-				children: h(IconButton, {
-					icon: h(NpmMark, null),
-					label: "npm",
-					title: "",
-					onClick: () => {
-						window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
-					},
-				}),
+				title: "",
+				onClick: () => {
+					window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
+				},
 			}),
 		);
 
@@ -435,7 +474,6 @@ export function SettingsPage(props: {
 						{
 							type: "button",
 							className: "dtl-tbl__path",
-							title: t("settingsPathCopyTip"),
 							onClick: () => {
 								copyPath(dir.path);
 							},
@@ -682,6 +720,8 @@ export type SettingsLocaleKey = Extract<
 	| "loadFailed"
 	| "settingsSwitchUser"
 	| "settingsRenameUser"
+	| "settingsRenamePartial"
+	| "settingsRenameFailedTitle"
 	| "settingsGoCreate"
 	| "settingsUserModalTitle"
 	| "settingsNoIdentityTitle"
@@ -702,7 +742,6 @@ export type SettingsLocaleKey = Extract<
 	| "settingsRenamePlaceholder"
 	| "settingsSave"
 	| "settingsCancel"
-	| "settingsPathCopyTip"
 	| "settingsPathCopied"
 	| "settingsAddTitle"
 	| "settingsAddHint"

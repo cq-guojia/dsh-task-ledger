@@ -197,12 +197,13 @@ var commandHelp = map[string]helpDoc{
 	},
 	// 给界面（看板的身份页）用：允许覆盖已有身份、不受真终端限制。agent 那边不列这条。
 	"switch": {
-		usage: "progress switch [--new --name <名字> | --claim <uuid>] [--json]",
+		usage: "progress switch [--new --name <名字> | --claim <uuid> | --rename <新昵称>] [--json]",
 		options: []helpOption{
 			{"--new", "换成一个全新身份（配 --name）"},
 			{"--name <名字>", "新身份的显示名字"},
 			{"--claim <uuid>", "换成名册里已有的某个人"},
-			{"--json", "{uuid, name}：换完的身份"},
+			{"--rename <新昵称>", "改本机身份的昵称：本机身份文件 + 每本已登记台账的名册（有 git 就顺带取/提交/推送）；任务与历史里已写下的名字不动"},
+			{"--json", "{uuid, name} 或（--rename）{uuid, name, previous, dirs[]}：换完 / 改完的身份"},
 			{"--repo <工作区根>", "同上"},
 		},
 	},
