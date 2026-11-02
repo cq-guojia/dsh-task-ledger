@@ -49,6 +49,9 @@ export type LocaleKey =
 	| "settingsForgetKeptTitle"
 	| "settingsForgetKeptRow"
 	| "settingsForgetFailedTitle"
+	| "settingsForgetDone"
+	| "settingsCreateDone"
+	| "settingsSwitchDone"
 	| "settingsRosterEmpty"
 	| "settingsFailed"
 	| "settingsUseThis"
@@ -267,6 +270,9 @@ export const zh: Record<LocaleKey, string> = {
 	settingsForgetKeptTitle: "部分台账未删除",
 	settingsForgetKeptRow: "{workspace}：他名下还有 {tasks} 个任务",
 	settingsForgetFailedTitle: "部分台账删除失败",
+	settingsForgetDone: "已从台账移除 @{name}",
+	settingsCreateDone: "已创建身份 @{name}",
+	settingsSwitchDone: "已切换到 @{name}",
 	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
 	settingsFailed: "操作未成功：{message}",
 	settingsUseThis: "使用",
@@ -485,6 +491,9 @@ export const en: Record<LocaleKey, string> = {
 	settingsForgetKeptTitle: "Some ledgers kept the user",
 	settingsForgetKeptRow: "{workspace}: still owns {tasks} task(s)",
 	settingsForgetFailedTitle: "Some ledgers failed",
+	settingsForgetDone: "Removed @{name} from ledgers",
+	settingsCreateDone: "Created identity @{name}",
+	settingsSwitchDone: "Switched to @{name}",
 	settingsRosterEmpty: "No identity has been created in the listed ledgers.",
 	settingsFailed: "Operation failed: {message}",
 	settingsUseThis: "Use",

@@ -55539,9 +55539,16 @@ body[data-ds-dark-theme]{
   padding:var(--dtl-space-2);border-top:1px solid var(--dtl-border-faint);}
 
 /* 身份表：名字列单行，超长省略（表格是定宽列，换行会把行高撑歪） */
-.dtl-roster__name{display:block;min-width:0;font-size:var(--dtl-font-md);
+/* 昵称后面跟 [uuid]（用户 2026-11-02）：同名的人靠 uuid 才分得清。
+   两者一行，名字先让位；identity 是定长 36 字符，宽了就先截它。 */
+.dtl-roster__who{display:flex;align-items:baseline;gap:var(--dtl-space-2);min-width:0;flex-wrap:wrap;}
+.dtl-roster__name{flex:0 1 auto;display:block;min-width:0;font-size:var(--dtl-font-md);
   line-height:var(--dtl-line-md);color:var(--dtl-fg);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* uuid 一位都不许省（用户 2026-11-02：靠它分重名的人）——一行放不下就折到第二行 */
+.dtl-roster__uuid{flex:0 1 auto;min-width:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  word-break:break-all;}
 /* 弹窗页脚：左边放进行中的骨架（删除要逐本台账走网络，慢），右边是「创建新用户」组合框。
    组合框靠 style 里的 margin-left:auto 贴右 —— 这里不用 space-between，否则只有一个子元素时会跑到左边。 */
 .dtl-modal__foot{display:flex;align-items:center;gap:var(--dtl-space-3);width:100%;}
@@ -57854,17 +57861,23 @@ body[data-ds-dark-theme]{
 			const create = () => {
 				const trimmed = name.trim();
 				if (trimmed === "") return;
-				run("new", () => postSwitchIdentity({
-					action: "new",
-					name: trimmed
-				}));
+				run("new", async () => {
+					const created = await postSwitchIdentity({
+						action: "new",
+						name: trimmed
+					});
+					notify(t("settingsCreateDone", { name: created.name ?? trimmed }), { variant: "success" });
+				});
 			};
-			const claim = (uuid, workspace) => {
-				run(`claim:${uuid}`, () => postSwitchIdentity({
-					action: "claim",
-					uuid,
-					workspace
-				}));
+			const claim = (uuid, workspace, shown) => {
+				run(`claim:${uuid}`, async () => {
+					const picked = await postSwitchIdentity({
+						action: "claim",
+						uuid,
+						workspace
+					});
+					notify(t("settingsSwitchDone", { name: picked.name ?? shown }), { variant: "success" });
+				});
 			};
 			/** 小叉：从所有登记过他的台账里摘掉；哪本里还有任务，那本不删并由 host 回报。 */
 			const forgetUser = async (row) => {
@@ -57893,6 +57906,7 @@ body[data-ds-dark-theme]{
 						durationMs: 1e4,
 						description: report.failed.map((item) => `${item.workspace}：${item.error}`).join("\n")
 					});
+					if (report.removed.length > 0) notify(t("settingsForgetDone", { name: row.name }), { variant: "success" });
 					setRoster(null);
 					onSwitched();
 				} catch (failure) {
@@ -57909,7 +57923,7 @@ body[data-ds-dark-theme]{
 					message: t("settingsUseConfirmBody", { name: row.name }),
 					confirmText: t("settingsUseConfirmOk"),
 					cancelText: t("settingsCancel")
-				})) claim(row.uuid, row.workspaceId);
+				})) claim(row.uuid, row.workspaceId, row.name);
 			};
 			const copyPath = (path) => {
 				const clip = navigator.clipboard;
@@ -58165,13 +58179,13 @@ body[data-ds-dark-theme]{
 				borders: "none",
 				columns: [
 					{
+						key: "name",
+						title: t("settingsColName")
+					},
+					{
 						key: "workspace",
 						title: t("settingsColWorkspace"),
 						width: 200
-					},
-					{
-						key: "name",
-						title: t("settingsColName")
 					},
 					{
 						key: "action",
@@ -58188,7 +58202,7 @@ body[data-ds-dark-theme]{
 							tone: "workspace",
 							maxWidth: 180
 						}),
-						name: (0, react$1.createElement)("span", { className: "dtl-roster__name" }, `@${row.name}`),
+						name: (0, react$1.createElement)("span", { className: "dtl-roster__who" }, (0, react$1.createElement)("span", { className: "dtl-roster__name" }, `@${row.name}`), (0, react$1.createElement)("span", { className: "dtl-roster__uuid" }, `[${row.uuid}]`)),
 						action: (0, react$1.createElement)("div", { className: "dtl-users__acts" }, row.uuid === props.identity.uuid ? null : (0, react$1.createElement)(Button, {
 							variant: "info",
 							size: "sm",
@@ -58723,8 +58737,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-220538-197`
-			}, `v0.0.126 261102-220538-197`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-221217-941`
+			}, `v0.0.126 261102-221217-941`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -58888,6 +58902,9 @@ body[data-ds-dark-theme]{
 			settingsForgetKeptTitle: "部分台账未删除",
 			settingsForgetKeptRow: "{workspace}：他名下还有 {tasks} 个任务",
 			settingsForgetFailedTitle: "部分台账删除失败",
+			settingsForgetDone: "已从台账移除 @{name}",
+			settingsCreateDone: "已创建身份 @{name}",
+			settingsSwitchDone: "已切换到 @{name}",
 			settingsRosterEmpty: "所列台账中暂无已创建的身份。",
 			settingsFailed: "操作未成功：{message}",
 			settingsUseThis: "使用",
@@ -59089,6 +59106,9 @@ body[data-ds-dark-theme]{
 			settingsForgetKeptTitle: "Some ledgers kept the user",
 			settingsForgetKeptRow: "{workspace}: still owns {tasks} task(s)",
 			settingsForgetFailedTitle: "Some ledgers failed",
+			settingsForgetDone: "Removed @{name} from ledgers",
+			settingsCreateDone: "Created identity @{name}",
+			settingsSwitchDone: "Switched to @{name}",
 			settingsRosterEmpty: "No identity has been created in the listed ledgers.",
 			settingsFailed: "Operation failed: {message}",
 			settingsUseThis: "Use",

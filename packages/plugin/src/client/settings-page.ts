@@ -166,16 +166,26 @@ export function SettingsPage(props: {
 		}
 	};
 
+	// 建 / 切成功后各回一条**成功**提示（用户 2026-11-02）：弹窗一关就什么都没了，
+	// 用户不知道到底成了没有。落款用接口回来的名字，不用输入框里的草稿。
 	const create = (): void => {
 		const trimmed = name.trim();
 		if (trimmed === "") return;
-		void run("new", () => postSwitchIdentity({ action: "new", name: trimmed }));
+		void run("new", async () => {
+			const created = await postSwitchIdentity({ action: "new", name: trimmed });
+			notify(t("settingsCreateDone", { name: created.name ?? trimmed }), {
+				variant: "success",
+			});
+		});
 	};
 
-	const claim = (uuid: string, workspace: string): void => {
-		void run(`claim:${uuid}`, () =>
-			postSwitchIdentity({ action: "claim", uuid, workspace }),
-		);
+	const claim = (uuid: string, workspace: string, shown: string): void => {
+		void run(`claim:${uuid}`, async () => {
+			const picked = await postSwitchIdentity({ action: "claim", uuid, workspace });
+			notify(t("settingsSwitchDone", { name: picked.name ?? shown }), {
+				variant: "success",
+			});
+		});
 	};
 
 	/** 小叉：从所有登记过他的台账里摘掉；哪本里还有任务，那本不删并由 host 回报。 */
@@ -216,6 +226,10 @@ export function SettingsPage(props: {
 						.join("\n"),
 				});
 			}
+			// 真删掉了才有成功回执（删干净的那几本）；一本都没删成时不刷这条，免得和上面两条打架
+			if (report.removed.length > 0) {
+				notify(t("settingsForgetDone", { name: row.name }), { variant: "success" });
+			}
 			// 删完**不关**弹窗（用户 2026-11-02）：可能想接着清好几个人。
 			// 名册已经变了：丢掉缓存让它在弹窗里就地重取，被删的人立刻从列表上消失。
 			setRoster(null);
@@ -236,7 +250,7 @@ export function SettingsPage(props: {
 			confirmText: t("settingsUseConfirmOk"),
 			cancelText: t("settingsCancel"),
 		});
-		if (ok) claim(row.uuid, row.workspaceId);
+		if (ok) claim(row.uuid, row.workspaceId, row.name);
 	};
 
 	const copyPath = (path: string): void => {
@@ -693,9 +707,11 @@ export function SettingsPage(props: {
 								className: "dtl-users-table",
 								// 上下两条外框线也去掉（用户 2026-11-02）
 								borders: "none",
+								// 用户名在前、台账在后（用户 2026-11-02）：台账标签是分组的，
+								// 排第一列时只有一个人也空着一大片，看着像少了东西。
 								columns: [
-									{ key: "workspace", title: t("settingsColWorkspace"), width: 200 },
 									{ key: "name", title: t("settingsColName") },
+									{ key: "workspace", title: t("settingsColWorkspace"), width: 200 },
 									{ key: "action", title: t("settingsColAction"), width: 120, align: "right" },
 								],
 								rows: rows.map((row, index) => ({
@@ -711,7 +727,13 @@ export function SettingsPage(props: {
 														tone: "workspace",
 														maxWidth: 180,
 													}),
-										name: h("span", { className: "dtl-roster__name" }, `@${row.name}`),
+										// 昵称后面挂 uuid（用户 2026-11-02）：两个人重名时靠它才分得清
+										name: h(
+											"span",
+											{ className: "dtl-roster__who" },
+											h("span", { className: "dtl-roster__name" }, `@${row.name}`),
+											h("span", { className: "dtl-roster__uuid" }, `[${row.uuid}]`),
+										),
 										action: h(
 											"div",
 											{ className: "dtl-users__acts" },
