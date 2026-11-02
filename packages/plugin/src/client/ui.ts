@@ -484,14 +484,14 @@ export function Segmented<Value extends string>(props: {
 
 /* ── 按钮 / 图标钮 ────────────────────────────────────────────────── */
 
-/** 按钮：改由核心 `Button` 承担（18 档 variant 里本地用 primary/secondary/outline/ghost/link）。
+/** 按钮：改由核心 `Button` 承担（18 档 variant 里本地用 primary/secondary/outline/ghost/link/info）。
  *  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。
  *  宽度三件（width/minWidth/maxWidth）核心已支持：给 maxWidth + 纯文字 ⇒ 核心自动省略号 +
  *  hover 跑马灯，本层原样透传，别再自己写截断。 */
 export function Button(props: {
 	children?: ReactNode;
 	onClick?: () => void;
-	variant?: "primary" | "secondary" | "outline" | "ghost" | "link";
+	variant?: "primary" | "secondary" | "outline" | "ghost" | "link" | "info";
 	size?: "sm" | "md" | "lg";
 	icon?: ReactNode;
 	loading?: boolean;

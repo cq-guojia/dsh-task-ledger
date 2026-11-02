@@ -54433,6 +54433,11 @@ body{
      也就是三行都满时的自然高度 ⇒ 视觉与旧版一致，但不再被文字挤动。 */
   --dtl-stat-h:calc(var(--dtl-space-3) * 2 + var(--dtl-line-sm) + var(--dtl-line-xs) + 1.15 * var(--dtl-font-stat) + var(--dtl-space-1) * 2);
 
+  /* ── 身份卡「名字」那一行的高度（用户 2026-11-02）──────────────────
+     名字文字与改名输入框**必须同高**：点开不许把下面的 ID / 按钮顶下去。
+     取核心控件 md 档（28px），正好等于核心 Input 的 md 档。 */
+  --dtl-name-h:var(--dshpc-control-h-md,28px);
+
   /* ── 动效 ────────────────────────────────────────────────────── */
   --dtl-dur-fast:var(--ds-transition-duration-fast,.12s);
   --dtl-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));
@@ -54504,6 +54509,15 @@ body[data-ds-dark-theme]{
   min-width:0;width:100%;}
 .dtl-profile__name{font-size:var(--dtl-font-xl);line-height:var(--dtl-line-md);font-weight:600;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* 名字行与改名输入框**同高**（用户 2026-11-02：点开时那一行不许位移，别的东西也不许被顶动）。
+   两态共用 --dtl-name-h，谁出现都不改变行高；Input 走 md 档正好填满。 */
+.dtl-profile__nameline,.dtl-profile__editor{display:flex;align-items:center;justify-content:center;
+  height:var(--dtl-name-h);max-width:100%;min-width:0;}
+.dtl-profile__nameline{font-size:var(--dtl-font-xl);line-height:var(--dtl-line-md);font-weight:600;}
+.dtl-profile__nametext{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* 编辑态：输入框吃掉整行宽度 */
+.dtl-profile__editor{width:100%;}
+.dtl-profile__editor > *{flex:1 1 auto;min-width:0;}
 .dtl-profile__uuid{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
   color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   word-break:break-all;}
@@ -55053,7 +55067,7 @@ body[data-ds-dark-theme]{
 				style: props.style
 			});
 		}
-		/** 按钮：改由核心 `Button` 承担（18 档 variant 里本地用 primary/secondary/outline/ghost/link）。
+		/** 按钮：改由核心 `Button` 承担（18 档 variant 里本地用 primary/secondary/outline/ghost/link/info）。
 		*  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。
 		*  宽度三件（width/minWidth/maxWidth）核心已支持：给 maxWidth + 纯文字 ⇒ 核心自动省略号 +
 		*  hover 跑马灯，本层原样透传，别再自己写截断。 */
@@ -56814,6 +56828,12 @@ body[data-ds-dark-theme]{
 			const { t, onSwitched } = props;
 			const [userOpen, setUserOpen] = (0, react$1.useState)(false);
 			const [name, setName] = (0, react$1.useState)("");
+			const [renamingName, setRenamingName] = (0, react$1.useState)(false);
+			const [nameDraft, setNameDraft] = (0, react$1.useState)("");
+			const nameInputRef = (0, react$1.useRef)(null);
+			(0, react$1.useEffect)(() => {
+				if (renamingName) nameInputRef.current?.focus();
+			}, [renamingName]);
 			const [roster, setRoster] = (0, react$1.useState)(null);
 			const [pending, setPending] = (0, react$1.useState)(null);
 			const [error, setError] = (0, react$1.useState)(null);
@@ -56899,15 +56919,49 @@ body[data-ds-dark-theme]{
 					onClick: openUserModal
 				}, t("settingsGoCreate")))));
 				const initial = who.trim().slice(0, 1);
-				return (0, react$1.createElement)("div", { className: "dtl-profile" }, (0, react$1.createElement)("div", { className: "dtl-avatar" }, initial === "" ? "?" : initial), (0, react$1.createElement)("div", { className: "dtl-profile__main" }, (0, react$1.createElement)("div", { className: "dtl-profile__name" }, `@${who}`), (0, react$1.createElement)("div", { className: "dtl-profile__uuid" }, uuid), (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
+				/** 「修改昵称」：名字就地变成输入框（写动作还没接，保存仍是空函数）。 */
+				const startRename = () => {
+					setNameDraft(who);
+					setRenamingName(true);
+				};
+				const stopRename = () => {
+					setRenamingName(false);
+				};
+				return (0, react$1.createElement)("div", { className: "dtl-profile" }, (0, react$1.createElement)("div", { className: "dtl-avatar" }, initial === "" ? "?" : initial), (0, react$1.createElement)("div", { className: "dtl-profile__main" }, renamingName ? (0, react$1.createElement)("div", { className: "dtl-profile__editor" }, (0, react$1.createElement)(Input, {
+					value: nameDraft,
+					onChange: setNameDraft,
+					size: "md",
+					placeholder: t("settingsNamePlaceholder"),
+					"aria-label": t("settingsNamePlaceholder"),
+					inputRef: nameInputRef,
+					onKeyDown: (event) => {
+						if (event.key === "Enter") {
+							event.preventDefault();
+							return;
+						}
+						if (event.key === "Escape") {
+							event.preventDefault();
+							stopRename();
+						}
+					}
+				})) : (0, react$1.createElement)("div", { className: "dtl-profile__nameline" }, (0, react$1.createElement)("span", { className: "dtl-profile__nametext" }, `@${who}`)), (0, react$1.createElement)("div", { className: "dtl-profile__uuid" }, uuid), renamingName ? (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
+					variant: "info",
+					size: "sm",
+					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }),
+					onClick: notYet
+				}, t("settingsSave")), (0, react$1.createElement)(Button, {
+					variant: "secondary",
+					size: "sm",
+					onClick: stopRename
+				}, t("settingsCancel"))) : (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
+					variant: "outline",
+					size: "sm",
+					onClick: startRename
+				}, t("settingsRenameUser")), (0, react$1.createElement)(Button, {
 					variant: "outline",
 					size: "sm",
 					onClick: openUserModal
-				}, t("settingsSwitchUser")), (0, react$1.createElement)(Button, {
-					variant: "primary",
-					size: "sm",
-					onClick: openUserModal
-				}, t("settingsNewUser")))));
+				}, t("settingsSwitchUser")))));
 			};
 			/** 一块：图标徽标（左）+ 圈数字（右）→ 小标题 → 自定义内容块。 */
 			const stepCell = (no, tone, icon, title, body) => (0, react$1.createElement)("div", { className: "dtl-flow__cell" }, (0, react$1.createElement)("div", { className: "dtl-flow__top" }, (0, react$1.createElement)("span", { className: `dtl-flow__icon dtl-flow__icon--${tone}` }, icon), (0, react$1.createElement)("span", { className: "dtl-flow__num" }, String(no))), (0, react$1.createElement)("div", { className: "dtl-flow__name" }, title), body);
@@ -57576,8 +57630,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-152454-525`
-			}, `v0.0.126 261102-152454-525`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-155209-307`
+			}, `v0.0.126 261102-155209-307`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -57716,12 +57770,12 @@ body[data-ds-dark-theme]{
 			settingsTitle: "身份与设置",
 			settingsBack: "返回看板",
 			settingsSwitchUser: "切换身份",
-			settingsNewUser: "新建身份",
+			settingsRenameUser: "修改昵称",
 			settingsGoCreate: "创建身份",
 			settingsUserModalTitle: "身份管理",
 			settingsNoIdentityTitle: "未创建身份",
 			settingsNoIdentityHint: "创建后，任务的认领、执行与结案均记入该身份。",
-			settingsNamePlaceholder: "身份名称",
+			settingsNamePlaceholder: "昵称",
 			settingsCreate: "创建身份",
 			settingsUseExisting: "使用已有身份",
 			settingsRosterEmpty: "所列台账中暂无已创建的身份。",
@@ -57744,7 +57798,7 @@ body[data-ds-dark-theme]{
 			settingsAddPlaceholder: "台账根目录的绝对路径",
 			settingsAddConfirm: "添加",
 			settingsFlow1: "安装 Skill",
-			settingsFlow1Lead: "DeepSeek-harness 不用安装，插件已自带。",
+			settingsFlow1Lead: "DeepSeek-harness 无需安装，插件已自带。",
 			settingsFlow1Sub: "在其他 Agent 上安装",
 			settingsFlow2: "工作区操作",
 			settingsFlow2Create: "新建：说「建一个新任务：xxx」。",
@@ -57901,12 +57955,12 @@ body[data-ds-dark-theme]{
 			settingsTitle: "Identity & settings",
 			settingsBack: "Back to board",
 			settingsSwitchUser: "Switch identity",
-			settingsNewUser: "New identity",
+			settingsRenameUser: "Change nickname",
 			settingsGoCreate: "Create identity",
 			settingsUserModalTitle: "Identity management",
 			settingsNoIdentityTitle: "No identity created",
 			settingsNoIdentityHint: "Once created, claiming, executing and closing a task are recorded under this identity.",
-			settingsNamePlaceholder: "Identity name",
+			settingsNamePlaceholder: "Nickname",
 			settingsCreate: "Create identity",
 			settingsUseExisting: "Use an existing identity",
 			settingsRosterEmpty: "No identity has been created in the listed ledgers.",

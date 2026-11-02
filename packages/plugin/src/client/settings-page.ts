@@ -9,10 +9,11 @@
  */
 import {
 	IconChecklistOutlineRegular,
+	IconCheckOutlineRegular,
 	IconDownloadOutlineRegular,
 	IconFlatListOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
-import { createElement as h, type ReactNode, useEffect, useState } from "react";
+import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
@@ -53,6 +54,16 @@ export function SettingsPage(props: {
 	// 用户弹窗：一律不自动弹（用户 2026-11-01：先看页面本身的 UI，别一进来就盖住）
 	const [userOpen, setUserOpen] = useState(false);
 	const [name, setName] = useState("");
+
+	// 名字内联改名（名字后面那支铅笔）：**只做界面**，保存仍是空函数（用户 2026-11-02：先定 UI 再谈逻辑）
+	const [renamingName, setRenamingName] = useState(false);
+	const [nameDraft, setNameDraft] = useState("");
+	const nameInputRef = useRef<HTMLInputElement | null>(null);
+
+	// 点了铅笔就直接能打字（核心 Input 没有 autoFocus，走它给的 inputRef）
+	useEffect(() => {
+		if (renamingName) nameInputRef.current?.focus();
+	}, [renamingName]);
 	const [roster, setRoster] = useState<RosterPayload | null>(null);
 	const [pending, setPending] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -176,6 +187,16 @@ export function SettingsPage(props: {
 				),
 			);
 		const initial = who.trim().slice(0, 1);
+
+		/** 「修改昵称」：名字就地变成输入框（写动作还没接，保存仍是空函数）。 */
+		const startRename = (): void => {
+			setNameDraft(who);
+			setRenamingName(true);
+		};
+		const stopRename = (): void => {
+			setRenamingName(false);
+		};
+
 		return h(
 			"div",
 			{ className: "dtl-profile" },
@@ -183,22 +204,70 @@ export function SettingsPage(props: {
 			h(
 				"div",
 				{ className: "dtl-profile__main" },
-				h("div", { className: "dtl-profile__name" }, `@${who}`),
+				renamingName
+					? h(
+							"div",
+							{ className: "dtl-profile__editor" },
+							h(Input, {
+								value: nameDraft,
+								onChange: setNameDraft,
+								size: "md",
+								placeholder: t("settingsNamePlaceholder"),
+								"aria-label": t("settingsNamePlaceholder"),
+								inputRef: nameInputRef,
+								onKeyDown: (event) => {
+									if (event.key === "Enter") {
+										event.preventDefault();
+										notYet();
+										return;
+									}
+									if (event.key === "Escape") {
+										event.preventDefault();
+										stopRename();
+									}
+								},
+							}),
+						)
+					: h(
+							"div",
+							{ className: "dtl-profile__nameline" },
+							h("span", { className: "dtl-profile__nametext" }, `@${who}`),
+						),
 				h("div", { className: "dtl-profile__uuid" }, uuid),
-				h(
-					"div",
-					{ className: "dtl-acts" },
-					h(
-						Button,
-						{ variant: "outline", size: "sm", onClick: openUserModal },
-						t("settingsSwitchUser"),
-					),
-					h(
-						Button,
-						{ variant: "primary", size: "sm", onClick: openUserModal },
-						t("settingsNewUser"),
-					),
-				),
+				renamingName
+					? h(
+							"div",
+							{ className: "dtl-acts" },
+							h(
+								Button,
+								{
+									variant: "info",
+									size: "sm",
+									icon: h(IconCheckOutlineRegular, { size: 14 }),
+									onClick: notYet,
+								},
+								t("settingsSave"),
+							),
+							h(
+								Button,
+								{ variant: "secondary", size: "sm", onClick: stopRename },
+								t("settingsCancel"),
+							),
+						)
+					: h(
+							"div",
+							{ className: "dtl-acts" },
+							h(
+								Button,
+								{ variant: "outline", size: "sm", onClick: startRename },
+								t("settingsRenameUser"),
+							),
+							h(
+								Button,
+								{ variant: "outline", size: "sm", onClick: openUserModal },
+								t("settingsSwitchUser"),
+							),
+						),
 			),
 		);
 	};
@@ -612,7 +681,7 @@ export type SettingsLocaleKey = Extract<
 	LocaleKey,
 	| "loadFailed"
 	| "settingsSwitchUser"
-	| "settingsNewUser"
+	| "settingsRenameUser"
 	| "settingsGoCreate"
 	| "settingsUserModalTitle"
 	| "settingsNoIdentityTitle"

@@ -24,7 +24,7 @@ export type LocaleKey =
 	| "settingsTitle"
 	| "settingsBack"
 	| "settingsSwitchUser"
-	| "settingsNewUser"
+	| "settingsRenameUser"
 	| "settingsGoCreate"
 	| "settingsUserModalTitle"
 	| "settingsNoIdentityTitle"
@@ -224,12 +224,12 @@ export const zh: Record<LocaleKey, string> = {
 	settingsTitle: "身份与设置",
 	settingsBack: "返回看板",
 	settingsSwitchUser: "切换身份",
-	settingsNewUser: "新建身份",
+	settingsRenameUser: "修改昵称",
 	settingsGoCreate: "创建身份",
 	settingsUserModalTitle: "身份管理",
 	settingsNoIdentityTitle: "未创建身份",
 	settingsNoIdentityHint: "创建后，任务的认领、执行与结案均记入该身份。",
-	settingsNamePlaceholder: "身份名称",
+	settingsNamePlaceholder: "昵称",
 	settingsCreate: "创建身份",
 	settingsUseExisting: "使用已有身份",
 	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
@@ -255,7 +255,7 @@ export const zh: Record<LocaleKey, string> = {
 	settingsAddConfirm: "添加",
 
 	settingsFlow1: "安装 Skill",
-	settingsFlow1Lead: "DeepSeek-harness 不用安装，插件已自带。",
+	settingsFlow1Lead: "DeepSeek-harness 无需安装，插件已自带。",
 	settingsFlow1Sub: "在其他 Agent 上安装",
 	settingsFlow2: "工作区操作",
 	settingsFlow2Create: "新建：说「建一个新任务：xxx」。",
@@ -423,13 +423,13 @@ export const en: Record<LocaleKey, string> = {
 	settingsTitle: "Identity & settings",
 	settingsBack: "Back to board",
 	settingsSwitchUser: "Switch identity",
-	settingsNewUser: "New identity",
+	settingsRenameUser: "Change nickname",
 	settingsGoCreate: "Create identity",
 	settingsUserModalTitle: "Identity management",
 	settingsNoIdentityTitle: "No identity created",
 	settingsNoIdentityHint:
 		"Once created, claiming, executing and closing a task are recorded under this identity.",
-	settingsNamePlaceholder: "Identity name",
+	settingsNamePlaceholder: "Nickname",
 	settingsCreate: "Create identity",
 	settingsUseExisting: "Use an existing identity",
 	settingsRosterEmpty: "No identity has been created in the listed ledgers.",

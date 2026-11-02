@@ -120,6 +120,11 @@ body{
      也就是三行都满时的自然高度 ⇒ 视觉与旧版一致，但不再被文字挤动。 */
   --dtl-stat-h:calc(var(--dtl-space-3) * 2 + var(--dtl-line-sm) + var(--dtl-line-xs) + 1.15 * var(--dtl-font-stat) + var(--dtl-space-1) * 2);
 
+  /* ── 身份卡「名字」那一行的高度（用户 2026-11-02）──────────────────
+     名字文字与改名输入框**必须同高**：点开不许把下面的 ID / 按钮顶下去。
+     取核心控件 md 档（28px），正好等于核心 Input 的 md 档。 */
+  --dtl-name-h:var(--dshpc-control-h-md,28px);
+
   /* ── 动效 ────────────────────────────────────────────────────── */
   --dtl-dur-fast:var(--ds-transition-duration-fast,.12s);
   --dtl-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));
@@ -192,6 +197,15 @@ export const UI_CONTROLS_CSS = `
   min-width:0;width:100%;}
 .dtl-profile__name{font-size:var(--dtl-font-xl);line-height:var(--dtl-line-md);font-weight:600;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* 名字行与改名输入框**同高**（用户 2026-11-02：点开时那一行不许位移，别的东西也不许被顶动）。
+   两态共用 --dtl-name-h，谁出现都不改变行高；Input 走 md 档正好填满。 */
+.dtl-profile__nameline,.dtl-profile__editor{display:flex;align-items:center;justify-content:center;
+  height:var(--dtl-name-h);max-width:100%;min-width:0;}
+.dtl-profile__nameline{font-size:var(--dtl-font-xl);line-height:var(--dtl-line-md);font-weight:600;}
+.dtl-profile__nametext{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* 编辑态：输入框吃掉整行宽度 */
+.dtl-profile__editor{width:100%;}
+.dtl-profile__editor > *{flex:1 1 auto;min-width:0;}
 .dtl-profile__uuid{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
   color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   word-break:break-all;}
