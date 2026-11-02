@@ -221,7 +221,11 @@ export const UI_CONTROLS_CSS = `
 .dtl-flow__sep .dtl-flow__node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
 .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{position:absolute;inset:0;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{fill:var(--dtl-chip-strong);stroke:none;}
+/* 底色必须是**不透明**的：--dtl-chip-strong 带透明，骑在虚线上会透出线来。
+   这里把「13% fg 叠在面板底上」的结果直接算成实色（color-mix 出不透明结果），
+   与 1/2/3 徽标同观感，又能压过虚线。 */
+.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{
+  fill:color-mix(in srgb,var(--dtl-fg) 13%,var(--dtl-surface-1));stroke:none;}
 .dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg);
   transform:translateX(1.5px);}
 /* 顶行：图标徽标在左、圈数字在右 */
@@ -261,9 +265,8 @@ export const UI_CONTROLS_CSS = `
   width:100%;box-sizing:border-box;}
 .dtl-flow__cmd{flex:1 1 auto;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* 复制按钮固定宽：点下去只换图标（复制 → 勾），按钮不跟着文字变宽（用户 2026-11-02）。
-   44px ≈ 原 64 的 2/3，两个字放得下还留一点手感（用户 2026-11-02 二次：缩 1/3）。 */
-.dtl-flow__code > button{flex:none;width:44px;padding-left:0;padding-right:0;justify-content:center;}
+/* 右侧两个图标按钮（GitHub / npm）：不参与拉伸，各自保持图标钮的方形尺寸 */
+.dtl-flow__code > button{flex:none;}
 /* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}

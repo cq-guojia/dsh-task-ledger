@@ -17,7 +17,28 @@ import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, Checkbox, Input, Loader, MarqueeText, Modal, Surface } from "./ui";
+import { Button, Card, Checkbox, IconButton, Input, Loader, MarqueeText, Modal, Surface, Tip } from "./ui";
+
+/** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
+const GithubMark = (): ReactNode =>
+	h(
+		"svg",
+		{ width: 16, height: 16, viewBox: "0 0 16 16", "aria-hidden": true, fill: "currentColor" },
+		h("path", {
+			d: "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z",
+		}),
+	);
+
+/** npm 官方 mark（24×24 simple-icons 路径，evenodd 让「npm」字母镂空）。 */
+const NpmMark = (): ReactNode =>
+	h(
+		"svg",
+		{ width: 16, height: 16, viewBox: "0 0 24 24", "aria-hidden": true, fill: "currentColor" },
+		h("path", {
+			fillRule: "evenodd",
+			d: "M0 0v24h24V0H0zm19.2 19.2h-2.4v-9.6h-2.4v9.6H4.8V4.8h14.4v14.4z",
+		}),
+	);
 
 /** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 const notYet = (): void => {};
@@ -220,32 +241,35 @@ export function SettingsPage(props: {
 				),
 		);
 
-	/** 安装命令 + 复制按钮（外框交核心 Surface，`.dshpc-surface.dtl-flow__code` 才吃得到框样式）。 */
-	const CopyCmd = ({ cmd }: { cmd: string }): ReactNode => {
-		const [copied, setCopied] = useState(false);
-		return h(
+	/** npm 包名 + GitHub / npm 两个图标按钮（悬停提示统一走 `Tip`，不再自造）。 */
+	const NpmLink = ({ pkg }: { pkg: string }): ReactNode =>
+		h(
 			Surface,
 			{ tone: "sunken", border: "faint", radius: "md", padding: "sm", className: "dtl-flow__code" },
-			h("code", { className: "dtl-flow__cmd" }, cmd),
-			h(
-				Button,
-				{
-					size: "sm",
-					variant: "secondary",
+			h("code", { className: "dtl-flow__cmd" }, pkg),
+			h(Tip, {
+				label: "GitHub",
+				children: h(IconButton, {
+					icon: h(GithubMark, null),
+					label: "GitHub",
+					title: "",
 					onClick: () => {
-						navigator.clipboard
-							?.writeText(cmd)
-							.then(() => {
-								setCopied(true);
-								setTimeout(() => setCopied(false), 1500);
-							})
-							.catch(() => {});
+						window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
 					},
-				},
-				copied ? t("settingsCopied") : t("settingsCopy"),
-			),
+				}),
+			}),
+			h(Tip, {
+				label: "npm",
+				children: h(IconButton, {
+					icon: h(NpmMark, null),
+					label: "npm",
+					title: "",
+					onClick: () => {
+						window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
+					},
+				}),
+			}),
 		);
-	};
 
 	/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
 	 *  圆用 SVG `<circle>`（CSS 圆在用户那边反复画不圆，SVG 是数学圆）；箭头用官方 chevron 图标，
@@ -282,7 +306,7 @@ export function SettingsPage(props: {
 					{ className: "dtl-flow__body" },
 					h("div", { className: "dtl-flow__lead" }, t("settingsFlow1Lead")),
 					h("div", { className: "dtl-flow__sub" }, t("settingsFlow1Sub")),
-					h(CopyCmd, { cmd: "npm install task-ledger" }),
+					h(NpmLink, { pkg: "task-ledger" }),
 				),
 			),
 			sep(),

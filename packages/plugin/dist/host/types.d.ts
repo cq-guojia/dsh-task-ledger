@@ -237,8 +237,8 @@ export interface HistoryRecord {
     /** 过程文档绝对路径；空串 = 这行没有 worklog，不可点开。 */
     readonly filePath: string;
 }
-/** `/history/list` 响应：近一年窗口内的结案记录（按结案时间倒序）。
- *  分页不在这里做 —— 前端按「整天凑够 20 条」切片展示。 */
+/** `/history/list` 响应：选中那个月的结案记录（按结案时间正序）。
+ *  分页不在这里做 —— 整月一次下发，前端按行号做虚拟滚动。 */
 export interface HistoryListPayload {
     readonly records: readonly HistoryRecord[];
     /** 窗口内记录超过读取上限（一年 5000 条）：此时列表底部不再追加。 */

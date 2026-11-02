@@ -8,7 +8,7 @@ export interface HistoryListQuery {
     readonly owner?: string;
 }
 /**
- * 历史明细跨工作区合并：按结案时间倒序、按 `key` 去重，整月一次下发。
+ * 历史明细跨工作区合并：按结案时间正序、按 `key` 去重，整月一次下发。
  * 分页不在这里做 —— 整月都在前端内存里，滚动由前端按行号开窗（不再按天切片翻页）。
  */
 export declare function getHistoryList(workspaces: readonly LedgerWorkspace[], query: HistoryListQuery): Promise<HistoryListPayload>;

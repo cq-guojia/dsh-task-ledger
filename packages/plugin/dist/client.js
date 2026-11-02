@@ -54533,7 +54533,11 @@ body[data-ds-dark-theme]{
 .dtl-flow__sep .dtl-flow__node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
 .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{position:absolute;inset:0;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{fill:var(--dtl-chip-strong);stroke:none;}
+/* 底色必须是**不透明**的：--dtl-chip-strong 带透明，骑在虚线上会透出线来。
+   这里把「13% fg 叠在面板底上」的结果直接算成实色（color-mix 出不透明结果），
+   与 1/2/3 徽标同观感，又能压过虚线。 */
+.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{
+  fill:color-mix(in srgb,var(--dtl-fg) 13%,var(--dtl-surface-1));stroke:none;}
 .dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg);
   transform:translateX(1.5px);}
 /* 顶行：图标徽标在左、圈数字在右 */
@@ -54573,9 +54577,8 @@ body[data-ds-dark-theme]{
   width:100%;box-sizing:border-box;}
 .dtl-flow__cmd{flex:1 1 auto;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* 复制按钮固定宽：点下去只换图标（复制 → 勾），按钮不跟着文字变宽（用户 2026-11-02）。
-   44px ≈ 原 64 的 2/3，两个字放得下还留一点手感（用户 2026-11-02 二次：缩 1/3）。 */
-.dtl-flow__code > button{flex:none;width:44px;padding-left:0;padding-right:0;justify-content:center;}
+/* 右侧两个图标按钮（GitHub / npm）：不参与拉伸，各自保持图标钮的方形尺寸 */
+.dtl-flow__code > button{flex:none;}
 /* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
@@ -55449,21 +55452,12 @@ body[data-ds-dark-theme]{
 			const byKey = new Map(data.buckets.map((bucket) => [bucket.key, bucket]));
 			const endKey = shiftKey(gran, (pin !== null && pin.ym === props.anchorYm && pin.gran === gran ? pin.end : null) ?? endCentering(anchorKey), -shift * step);
 			/** 点一根柱子 = 快捷选择（用户 2026-10-31 定稿）：**图表自己不动**，
-			*  只把「选了哪个月 / 哪一天」告诉页面；滚动到列表里的位置由页面负责。
-			*  月 → 只切月份；周 → 切月 + 滚到该周最后一天；日 → 切月 + 滚到那一天。
+			*  只把「选了哪个周期」告诉页面；滚动到列表里的位置由页面负责。
+			*  一律取周期第一天（日=当天、周=周一、月=1 号），月份跟着第一天走
+			*  （跨月周会切到上月，用户 2026-11-02）。
 			*  空桶也有锚点（每格都渲染），所以不找"最近有数据"、不轮询。 */
 			const pickBar = (bucket) => {
-				if (gran === "month") {
-					const ym = bucket.key.slice(0, 7);
-					setPin({
-						end: endKey,
-						ym,
-						gran
-					});
-					props.onPickMonth(ym);
-					return;
-				}
-				const date = gran === "day" ? bucket.key : bucket.to;
+				const date = bucket.key;
 				setPin({
 					end: endKey,
 					ym: date.slice(0, 7),
@@ -55997,7 +55991,14 @@ body[data-ds-dark-theme]{
 					lastScrollToken.current = target.token;
 					props.onScrolled();
 				};
-				const index = items.findIndex((item) => item.kind === "day" && item.day <= target.date);
+				let index = items.findIndex((item) => item.kind === "day" && item.day >= target.date);
+				if (index < 0) for (let i = items.length - 1; i >= 0; i -= 1) {
+					const found = items[i];
+					if (found !== void 0 && found.kind === "day") {
+						index = i;
+						break;
+					}
+				}
 				const table = tableRef.current;
 				const container = props.scrollContainer();
 				if (index < 0 || table === null || container === null) {
@@ -56787,6 +56788,25 @@ body[data-ds-dark-theme]{
 		* 版式：上半左栏两张（有身份 / 没身份）、右栏「台账怎么跑」四格小图（纯 CSS）；
 		* 下半台账目录表格。写动作（显示 / 改名 / 移除 / 添加）仍空着，下一轮接。
 		*/
+		/** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
+		const GithubMark = () => (0, react$1.createElement)("svg", {
+			width: 16,
+			height: 16,
+			viewBox: "0 0 16 16",
+			"aria-hidden": true,
+			fill: "currentColor"
+		}, (0, react$1.createElement)("path", { d: "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" }));
+		/** npm 官方 mark（24×24 simple-icons 路径，evenodd 让「npm」字母镂空）。 */
+		const NpmMark = () => (0, react$1.createElement)("svg", {
+			width: 16,
+			height: 16,
+			viewBox: "0 0 24 24",
+			"aria-hidden": true,
+			fill: "currentColor"
+		}, (0, react$1.createElement)("path", {
+			fillRule: "evenodd",
+			d: "M0 0v24h24V0H0zm19.2 19.2h-2.4v-9.6h-2.4v9.6H4.8V4.8h14.4v14.4z"
+		}));
 		/** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 		const notYet = () => {};
 		function SettingsPage(props) {
@@ -56899,26 +56919,34 @@ body[data-ds-dark-theme]{
 				text: line,
 				title: line
 			}))));
-			/** 安装命令 + 复制按钮（外框交核心 Surface，`.dshpc-surface.dtl-flow__code` 才吃得到框样式）。 */
-			const CopyCmd = ({ cmd }) => {
-				const [copied, setCopied] = (0, react$1.useState)(false);
-				return (0, react$1.createElement)(Surface, {
-					tone: "sunken",
-					border: "faint",
-					radius: "md",
-					padding: "sm",
-					className: "dtl-flow__code"
-				}, (0, react$1.createElement)("code", { className: "dtl-flow__cmd" }, cmd), (0, react$1.createElement)(Button, {
-					size: "sm",
-					variant: "secondary",
+			/** npm 包名 + GitHub / npm 两个图标按钮（悬停提示统一走 `Tip`，不再自造）。 */
+			const NpmLink = ({ pkg }) => (0, react$1.createElement)(Surface, {
+				tone: "sunken",
+				border: "faint",
+				radius: "md",
+				padding: "sm",
+				className: "dtl-flow__code"
+			}, (0, react$1.createElement)("code", { className: "dtl-flow__cmd" }, pkg), (0, react$1.createElement)(Tip, {
+				label: "GitHub",
+				children: (0, react$1.createElement)(IconButton, {
+					icon: (0, react$1.createElement)(GithubMark, null),
+					label: "GitHub",
+					title: "",
 					onClick: () => {
-						navigator.clipboard?.writeText(cmd).then(() => {
-							setCopied(true);
-							setTimeout(() => setCopied(false), 1500);
-						}).catch(() => {});
+						window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
 					}
-				}, copied ? t("settingsCopied") : t("settingsCopy")));
-			};
+				})
+			}), (0, react$1.createElement)(Tip, {
+				label: "npm",
+				children: (0, react$1.createElement)(IconButton, {
+					icon: (0, react$1.createElement)(NpmMark, null),
+					label: "npm",
+					title: "",
+					onClick: () => {
+						window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
+					}
+				})
+			}));
 			/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
 			*  圆用 SVG `<circle>`（CSS 圆在用户那边反复画不圆，SVG 是数学圆）；箭头用官方 chevron 图标，
 			*  不再自己画线（用户 2026-11-02：手画的箭头太丑）。 */
@@ -56939,7 +56967,7 @@ body[data-ds-dark-theme]{
 			const flow = (0, react$1.createElement)(Surface, {
 				className: "dtl-flow__frame",
 				padding: null
-			}, (0, react$1.createElement)("div", { className: "dtl-flow__grid" }, stepCell(1, "business", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 18 }), t("settingsFlow1"), (0, react$1.createElement)("div", { className: "dtl-flow__body" }, (0, react$1.createElement)("div", { className: "dtl-flow__lead" }, t("settingsFlow1Lead")), (0, react$1.createElement)("div", { className: "dtl-flow__sub" }, t("settingsFlow1Sub")), (0, react$1.createElement)(CopyCmd, { cmd: "npm install task-ledger" }))), sep(), stepCell(2, "warning", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 18 }), t("settingsFlow2"), FlowList([
+			}, (0, react$1.createElement)("div", { className: "dtl-flow__grid" }, stepCell(1, "business", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 18 }), t("settingsFlow1"), (0, react$1.createElement)("div", { className: "dtl-flow__body" }, (0, react$1.createElement)("div", { className: "dtl-flow__lead" }, t("settingsFlow1Lead")), (0, react$1.createElement)("div", { className: "dtl-flow__sub" }, t("settingsFlow1Sub")), (0, react$1.createElement)(NpmLink, { pkg: "task-ledger" }))), sep(), stepCell(2, "warning", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 18 }), t("settingsFlow2"), FlowList([
 				t("settingsFlow2Create"),
 				t("settingsFlow2Exec"),
 				t("settingsFlow2Close")
@@ -57262,7 +57290,8 @@ body[data-ds-dark-theme]{
 				setHistScroll(null);
 			}, []);
 			/** 点历史页右侧 4 格 = 图表与列表一起跳过去（用户 2026-11-01）：
-			*  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，列表跟着滚到今天；
+			*  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，
+			*  列表滚到**该周期第一天**、月份跟着第一天走（跨月周会切到上一个月的周一，用户 2026-11-02）；
 			*  本季度 ⇒ 没有「季」这档粒度，图切「月」并选季度最后一个月，
 			*  没到的月份夹回本月（11 月点 ⇒ 选 11 月，8 月点 ⇒ 选 8 月）。 */
 			const pickHistoryPeriod = (0, react$1.useCallback)((period) => {
@@ -57277,8 +57306,9 @@ body[data-ds-dark-theme]{
 					return;
 				}
 				setGran(period === "today" ? "day" : period);
-				setHistYm(ym);
-				requestHistScroll(today);
+				const first = period === "today" ? today : period === "week" ? mondayOf(today) : `${ym}-01`;
+				setHistYm(first.slice(0, 7));
+				requestHistScroll(first);
 			}, [requestHistScroll]);
 			const [historyByGran, setHistoryByGran] = (0, react$1.useState)({});
 			const historyTrend = historyByGran[gran] ?? null;
@@ -57409,7 +57439,8 @@ body[data-ds-dark-theme]{
 			*  （术语 2026-10-29 用户拍板：结案是上位词，完成只指正常结案）。
 			*  点一下 = 跳历史页 + 选到该周所在月 + 滚到那周的锚点（用户 2026-10-31）；
 			*  hover 仍给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。
-			*  锚点取区间末日（本周 = 今天、上周 = 上周日）：列表按天倒序，从这天往下正好覆盖整周。 */
+			*  锚点取区间首日（本周 = 本周一、上周 = 上周一）：正序列表从这天往下正好覆盖整周；
+			*  跨月周按首日所在月切（如 11/1 周日选的上周会落到 10 月）。 */
 			const weekCard = (label, total, cancelled, from, to) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
 				value: formatCount(total ?? 0),
@@ -57423,8 +57454,8 @@ body[data-ds-dark-theme]{
 				}),
 				onClick: () => {
 					setViewMode("history");
-					setHistYm(to.slice(0, 7));
-					requestHistScroll(to);
+					setHistYm(from.slice(0, 7));
+					requestHistScroll(from);
 				}
 			});
 			/** 左 8 块（2×4）+ 右趋势图。
@@ -57544,8 +57575,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-142645-008`
-			}, `v0.0.126 261102-142645-008`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-144133-656`
+			}, `v0.0.126 261102-144133-656`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -57597,7 +57628,6 @@ body[data-ds-dark-theme]{
 				t,
 				gran,
 				anchorYm: histYm,
-				onPickMonth: setHistYm,
 				onPickDate: (date) => {
 					setHistYm(date.slice(0, 7));
 					requestHistScroll(date);
@@ -57715,8 +57745,6 @@ body[data-ds-dark-theme]{
 			settingsFlow1: "安装 Skill",
 			settingsFlow1Lead: "本机 DeepSeek 不用安装，插件已自带。",
 			settingsFlow1Sub: "在其他 Agent 上安装",
-			settingsCopy: "复制",
-			settingsCopied: "已复制",
 			settingsFlow2: "工作区操作",
 			settingsFlow2Create: "新建：说「建一个新任务：xxx」。",
 			settingsFlow2Exec: "执行：Agent 进度自动写进台账。",
@@ -57902,8 +57930,6 @@ body[data-ds-dark-theme]{
 			settingsFlow1: "Install Skill",
 			settingsFlow1Lead: "Local DeepSeek needs no install — it ships with the plugin.",
 			settingsFlow1Sub: "Install on other agents",
-			settingsCopy: "Copy",
-			settingsCopied: "Copied",
 			settingsFlow2: "Workspace Operations",
 			settingsFlow2Create: "New: say \"create a new task: xxx\".",
 			settingsFlow2Exec: "Run: the agent writes progress to the ledger itself.",

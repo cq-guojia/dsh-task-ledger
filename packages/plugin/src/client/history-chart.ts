@@ -193,9 +193,7 @@ export function HistoryChart(props: {
 	gran: HistoryGran;
 	/** 列表选中的月份（`YYYY-MM`）：图表窗口按它定位（用户 2026-10-31）。 */
 	anchorYm: string;
-	/** 点柱子选月份：回写到页面，下面列表跟着换月（用户 2026-10-31）。 */
-	onPickMonth: (ym: string) => void;
-	/** 点日 / 周：回写具体哪一天，页面负责把列表滚到那一天（用户 2026-10-31）。 */
+	/** 点日 / 周 / 月：回写该周期的第一天，页面负责把列表滚到那一天并同步月份（用户 2026-11-02）。 */
 	onPickDate: (date: string) => void;
 	onGranChange: (next: HistoryGran) => void;
 	/** 点右侧 4 格时页面自增的令牌：每次变 ⇒ 翻页归零、解除点柱锁定，
@@ -357,17 +355,12 @@ export function HistoryChart(props: {
 	const endKey = shiftKey(gran, pinnedEnd ?? endCentering(anchorKey), -shift * step);
 
 	/** 点一根柱子 = 快捷选择（用户 2026-10-31 定稿）：**图表自己不动**，
-	 *  只把「选了哪个月 / 哪一天」告诉页面；滚动到列表里的位置由页面负责。
-	 *  月 → 只切月份；周 → 切月 + 滚到该周最后一天；日 → 切月 + 滚到那一天。
+	 *  只把「选了哪个周期」告诉页面；滚动到列表里的位置由页面负责。
+	 *  一律取周期第一天（日=当天、周=周一、月=1 号），月份跟着第一天走
+	 *  （跨月周会切到上月，用户 2026-11-02）。
 	 *  空桶也有锚点（每格都渲染），所以不找"最近有数据"、不轮询。 */
 	const pickBar = (bucket: HistoryBucket): void => {
-		if (gran === "month") {
-			const ym = bucket.key.slice(0, 7);
-			setPin({ end: endKey, ym, gran }); // 锁住窗口：换月不让图表跳
-			props.onPickMonth(ym);
-			return;
-		}
-		const date = gran === "day" ? bucket.key : bucket.to;
+		const date = bucket.key;
 		setPin({ end: endKey, ym: date.slice(0, 7), gran });
 		props.onPickDate(date);
 	};

@@ -64,8 +64,6 @@ export type LocaleKey =
 	| "settingsFlow3Todo"
 	| "settingsFlow3History"
 	| "settingsFlow3Stats"
-	| "settingsCopy"
-	| "settingsCopied"
 	| "settingsColDir"
 	| "settingsColPath"
 	| "settingsColActions"
@@ -259,8 +257,6 @@ export const zh: Record<LocaleKey, string> = {
 	settingsFlow1: "安装 Skill",
 	settingsFlow1Lead: "本机 DeepSeek 不用安装，插件已自带。",
 	settingsFlow1Sub: "在其他 Agent 上安装",
-	settingsCopy: "复制",
-	settingsCopied: "已复制",
 	settingsFlow2: "工作区操作",
 	settingsFlow2Create: "新建：说「建一个新任务：xxx」。",
 	settingsFlow2Exec: "执行：Agent 进度自动写进台账。",
@@ -462,8 +458,6 @@ export const en: Record<LocaleKey, string> = {
 	settingsFlow1: "Install Skill",
 	settingsFlow1Lead: "Local DeepSeek needs no install — it ships with the plugin.",
 	settingsFlow1Sub: "Install on other agents",
-	settingsCopy: "Copy",
-	settingsCopied: "Copied",
 	settingsFlow2: "Workspace Operations",
 	settingsFlow2Create: "New: say \"create a new task: xxx\".",
 	settingsFlow2Exec: "Run: the agent writes progress to the ledger itself.",
