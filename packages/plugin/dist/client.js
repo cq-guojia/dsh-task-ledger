@@ -54538,8 +54538,9 @@ body[data-ds-dark-theme]{
    与 1/2/3 徽标同观感，又能压过虚线。 */
 .dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{
   fill:color-mix(in srgb,var(--dtl-fg) 13%,var(--dtl-surface-1));stroke:none;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg);
-  transform:translateX(1.5px);}
+/* 箭头 = 一根横杆 + 一个右向尖头（单个 path 描边，不填充）；坐标已几何居中 */
+.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{fill:none;stroke:var(--dtl-fg);
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 /* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
@@ -54584,8 +54585,8 @@ body[data-ds-dark-theme]{
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
   .dtl-flow__sep{width:auto;height:0;margin:0 var(--dtl-flow-pad);
     border-left:0;border-top:1px dashed var(--dtl-border);}
-  /* 落成一列时箭头朝下（与基础规则同特异性，才能覆盖 translateX） */
-  .dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{transform:rotate(90deg) translateX(1.5px);}
+  /* 落成一列时箭头朝下：整枚 ring 转 90°（圆对称，箭头与右移量一起转朝下） */
+  .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{transform:rotate(90deg);}
 }
 
 /* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */
@@ -56948,8 +56949,8 @@ body[data-ds-dark-theme]{
 				})
 			}));
 			/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
-			*  圆用 SVG `<circle>`（CSS 圆在用户那边反复画不圆，SVG 是数学圆）；箭头用官方 chevron 图标，
-			*  不再自己画线（用户 2026-11-02：手画的箭头太丑）。 */
+			*  圆 + 箭头都画在同一个 SVG 里：一条 `<path>`（横杆 + `>` 箭头，描边不填充，
+			*  像 Lucide 的 arrow-right；坐标按包围盒中心对齐圆心，绝对居中）。 */
 			const sep = () => (0, react$1.createElement)("span", { className: "dtl-flow__sep" }, (0, react$1.createElement)("span", { className: "dtl-flow__node" }, (0, react$1.createElement)("svg", {
 				className: "dtl-flow__ring",
 				width: 32,
@@ -56960,10 +56961,10 @@ body[data-ds-dark-theme]{
 				cx: 16,
 				cy: 16,
 				r: 14.5
-			})), (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconPlayOutlineRegular, {
-				size: 16,
-				className: "dtl-flow__arrow"
-			})));
+			}), (0, react$1.createElement)("path", {
+				className: "dtl-flow__arrow",
+				d: "M10.25 16 H21.75 M16.25 10.5 L21.75 16 L16.25 21.5"
+			}))));
 			const flow = (0, react$1.createElement)(Surface, {
 				className: "dtl-flow__frame",
 				padding: null
@@ -57575,8 +57576,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-144757-926`
-			}, `v0.0.126 261102-144757-926`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-145745-203`
+			}, `v0.0.126 261102-145745-203`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

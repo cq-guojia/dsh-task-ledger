@@ -11,7 +11,6 @@ import {
 	IconChecklistOutlineRegular,
 	IconDownloadOutlineRegular,
 	IconFlatListOutlineRegular,
-	IconPlayOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
@@ -272,8 +271,8 @@ export function SettingsPage(props: {
 		);
 
 	/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
-	 *  圆用 SVG `<circle>`（CSS 圆在用户那边反复画不圆，SVG 是数学圆）；箭头用官方 chevron 图标，
-	 *  不再自己画线（用户 2026-11-02：手画的箭头太丑）。 */
+	 *  圆 + 箭头都画在同一个 SVG 里：一条 `<path>`（横杆 + `>` 箭头，描边不填充，
+	 *  像 Lucide 的 arrow-right；坐标按包围盒中心对齐圆心，绝对居中）。 */
 	const sep = (): ReactNode =>
 		h(
 			"span",
@@ -285,8 +284,8 @@ export function SettingsPage(props: {
 					"svg",
 					{ className: "dtl-flow__ring", width: 32, height: 32, viewBox: "0 0 32 32", "aria-hidden": true },
 					h("circle", { cx: 16, cy: 16, r: 14.5 }),
+					h("path", { className: "dtl-flow__arrow", d: "M10.25 16 H21.75 M16.25 10.5 L21.75 16 L16.25 21.5" }),
 				),
-				h(IconPlayOutlineRegular, { size: 16, className: "dtl-flow__arrow" }),
 			),
 		);
 

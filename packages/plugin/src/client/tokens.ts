@@ -226,8 +226,9 @@ export const UI_CONTROLS_CSS = `
    与 1/2/3 徽标同观感，又能压过虚线。 */
 .dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{
   fill:color-mix(in srgb,var(--dtl-fg) 13%,var(--dtl-surface-1));stroke:none;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg);
-  transform:translateX(1.5px);}
+/* 箭头 = 一根横杆 + 一个右向尖头（单个 path 描边，不填充）；坐标已几何居中 */
+.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{fill:none;stroke:var(--dtl-fg);
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 /* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
@@ -272,8 +273,8 @@ export const UI_CONTROLS_CSS = `
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
   .dtl-flow__sep{width:auto;height:0;margin:0 var(--dtl-flow-pad);
     border-left:0;border-top:1px dashed var(--dtl-border);}
-  /* 落成一列时箭头朝下（与基础规则同特异性，才能覆盖 translateX） */
-  .dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{transform:rotate(90deg) translateX(1.5px);}
+  /* 落成一列时箭头朝下：整枚 ring 转 90°（圆对称，箭头与右移量一起转朝下） */
+  .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{transform:rotate(90deg);}
 }
 
 /* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */
