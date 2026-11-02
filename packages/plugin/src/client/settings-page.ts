@@ -230,11 +230,20 @@ export function SettingsPage(props: {
 						}),
 					);
 				}
-				notify(t("settingsForgetPartialTitle", { name: row.name }), {
-					variant: report.failed.length > 0 ? "error" : "warning",
-					durationMs: 12_000,
-					description: lines.join("\n"),
-				});
+				// 标题分两档：有失败说「移除失败」，只是还有未结任务说「移除未完成」
+				notify(
+					t(
+						report.failed.length > 0
+							? "settingsForgetFailedTitle"
+							: "settingsForgetPartialTitle",
+						{ name: row.name },
+					),
+					{
+						variant: report.failed.length > 0 ? "error" : "warning",
+						durationMs: 12_000,
+						description: lines.join("\n"),
+					},
+				);
 			}
 			// 删完**不关**弹窗（用户 2026-11-02）：可能想接着清好几个人。
 			// 名册已经变了：丢掉缓存让它在弹窗里就地重取，被删的人立刻从列表上消失。
@@ -455,7 +464,20 @@ export function SettingsPage(props: {
 			h(
 				"div",
 				{ className: "dtl-flow__top" },
-				h("span", { className: `dtl-flow__icon dtl-flow__icon--${tone}` }, icon),
+				// 图标徽标用核心 IconButton（plain、lg=32 方）：圆角与控件同档，我们只定颜色。
+				// 纯装饰 ⇒ 不进 tab 序列、读屏跳过、不弹 title、不响应 hover（用户 2026-11-02）。
+				h(IconButton, {
+					icon,
+					label: title,
+					title: "",
+					variant: "plain",
+					size: "lg",
+					background: `var(--dtl-${tone}-soft)`,
+					color: `var(--dtl-${tone})`,
+					tabIndex: -1,
+					ariaHidden: true,
+					className: "dtl-flow__icon",
+				}),
 				h("span", { className: "dtl-flow__num" }, String(no)),
 			),
 			h("div", { className: "dtl-flow__name" }, title),

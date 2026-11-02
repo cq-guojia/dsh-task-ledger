@@ -534,6 +534,10 @@ export function IconButton(props: {
 	disabled?: boolean;
 	title?: string;
 	className?: string;
+	/** 纯装饰时用：不参与 tab 序列（原生属性透传）。 */
+	tabIndex?: number;
+	/** 纯装饰时用：读屏跳过（原生 `aria-hidden`）。 */
+	ariaHidden?: boolean;
 }): ReactNode {
 	return h(CoreIconButton, {
 		icon: props.icon,
@@ -546,6 +550,8 @@ export function IconButton(props: {
 		disabled: props.disabled,
 		title: props.title,
 		className: props.className,
+		tabIndex: props.tabIndex,
+		"aria-hidden": props.ariaHidden === true ? true : undefined,
 	});
 }
 

@@ -51,6 +51,7 @@ export type LocaleKey =
 	| "settingsForgetDone"
 	| "settingsForgetDoneCount"
 	| "settingsForgetPartialTitle"
+	| "settingsForgetFailedTitle"
 	| "settingsCreateDone"
 	| "settingsSwitchDone"
 	| "settingsRosterEmpty"
@@ -268,11 +269,12 @@ export const zh: Record<LocaleKey, string> = {
 	settingsDeleteConfirmBody:
 		"确定移除 @{name} 吗？该用户在各台账名册中的登记会一并删除；若某个台账里他名下仍有任务，那本台账不会删。已结案的历史记录不受影响。",
 	settingsDeleteConfirmOk: "移除",
-	settingsForgetKeptRow: "{workspace}：他名下还有 {tasks} 个任务",
+	settingsForgetKeptRow: "{workspace}：名下尚有 {tasks} 个未结任务，已保留",
 	settingsForgetFailedRow: "{workspace}：{error}",
-	settingsForgetDone: "已从台账移除 @{name}",
-	settingsForgetDoneCount: "已移除 {count} 本",
-	settingsForgetPartialTitle: "@{name}：部分台账没能移除",
+	settingsForgetDone: "@{name} 已从全部台账移除",
+	settingsForgetDoneCount: "已移除 {count} 本台账",
+	settingsForgetPartialTitle: "@{name} 移除未完成",
+	settingsForgetFailedTitle: "@{name} 移除失败",
 	settingsCreateDone: "已创建身份 @{name}",
 	settingsSwitchDone: "已切换到 @{name}",
 	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
@@ -490,11 +492,12 @@ export const en: Record<LocaleKey, string> = {
 	settingsDeleteConfirmBody:
 		"Remove @{name}? The user is dropped from every ledger roster; a ledger where this user still owns tasks is kept. Closed history is untouched.",
 	settingsDeleteConfirmOk: "Remove",
-	settingsForgetKeptRow: "{workspace}: still owns {tasks} task(s)",
+	settingsForgetKeptRow: "{workspace}: {tasks} open task(s) — entry kept",
 	settingsForgetFailedRow: "{workspace}: {error}",
-	settingsForgetDone: "Removed @{name} from ledgers",
-	settingsForgetDoneCount: "{count} ledger(s) removed",
-	settingsForgetPartialTitle: "@{name}: some ledgers kept the user",
+	settingsForgetDone: "Identity @{name} removed from all ledgers",
+	settingsForgetDoneCount: "Removed from {count} ledger(s)",
+	settingsForgetPartialTitle: "Identity @{name} partially removed",
+	settingsForgetFailedTitle: "Failed to remove identity @{name}",
 	settingsCreateDone: "Created identity @{name}",
 	settingsSwitchDone: "Switched to @{name}",
 	settingsRosterEmpty: "No identity has been created in the listed ledgers.",

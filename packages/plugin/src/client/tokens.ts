@@ -246,11 +246,9 @@ export const UI_CONTROLS_CSS = `
 /* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
-.dtl-flow__icon{flex:none;display:inline-flex;align-items:center;justify-content:center;
-  width:32px;height:32px;border-radius:var(--dtl-radius-sm);}
-.dtl-flow__icon--business{background:var(--dtl-business-soft);color:var(--dtl-business);}
-.dtl-flow__icon--warning{background:var(--dtl-warning-soft);color:var(--dtl-warning);}
-.dtl-flow__icon--success{background:var(--dtl-success-soft);color:var(--dtl-success);}
+/* 图标徽标本身是核心 IconButton（plain + lg=32 方）：尺寸与圆角走核心控件契约，
+   这里只留布局。pointer-events 关掉 —— 它是装饰，不该有 hover 变色。 */
+.dtl-flow__icon{flex:none;pointer-events:none;}
 .dtl-flow__num{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:26px;height:26px;box-sizing:border-box;border-radius:9999px;
   background:var(--dtl-chip-strong);font-size:var(--dtl-font-sm);font-weight:600;
