@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261102-0846-76a1-历史页身份切换弹窗": {"category": "功能建设", "created": "2026-11-02 08:46:14", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-02 09:47:23", "status": "doing", "tags": ["历史页", "身份切换", "弹窗"], "title": "历史页身份切换弹窗", "updated": "2026-11-02 09:47:23", "worklog": "worklog/202611/02-0846-76a1-历史页身份切换弹窗.md"}
+    "20261102-0846-76a1-历史页身份切换弹窗": {"category": "功能建设", "created": "2026-11-02 08:46:14", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-02 09:47:23", "status": "doing", "tags": ["历史页", "身份切换", "弹窗"], "title": "历史页身份切换弹窗", "updated": "2026-11-02 09:47:50", "worklog": "worklog/202611/02-0846-76a1-历史页身份切换弹窗.md"}
   },
   "version": "20261022000000"
 }
