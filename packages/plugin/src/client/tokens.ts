@@ -157,14 +157,13 @@ export const UI_CONTROLS_CSS = `
 /* ── 设置页（2026-11-01 改版：上半左「人」右「流程小图」，下半台账表格）──
    上半是一张 2 列 hero 卡；窄面板（<760px）自动落成一列，不做横向滚动。 */
 .dtl-set{display:flex;flex-direction:column;gap:var(--dtl-space-3);min-width:0;}
-.dtl-set__title{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;}
 .dtl-set__hint{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
   margin-top:var(--dtl-space-1);}
 .dtl-set__error{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-danger);
   margin-top:var(--dtl-space-2);}
 .dtl-set__body{margin-top:var(--dtl-space-3);}
-.dtl-set__head{display:flex;align-items:flex-start;justify-content:space-between;
-  gap:var(--dtl-space-3);flex-wrap:wrap;}
+/* 标题行右槽（核心 SectionHead 的 right）：三档筛选 + 添加目录，窄了就换行 */
+.dtl-set__tools{display:flex;align-items:center;gap:var(--dtl-space-2);flex-wrap:wrap;}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
    两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：
@@ -249,6 +248,8 @@ export const UI_CONTROLS_CSS = `
 /* 图标徽标本身是核心 IconButton（plain + lg=32 方）：尺寸与圆角走核心控件契约，
    这里只留布局。pointer-events 关掉 —— 它是装饰，不该有 hover 变色。 */
 .dtl-flow__icon{flex:none;pointer-events:none;}
+/* 图标本体放大一档（用户 2026-11-02）：只放大里面的 svg，32 方的框不动 */
+.dtl-flow__icon svg{width:22px;height:22px;}
 .dtl-flow__num{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:26px;height:26px;box-sizing:border-box;border-radius:9999px;
   background:var(--dtl-chip-strong);font-size:var(--dtl-font-sm);font-weight:600;
@@ -289,25 +290,20 @@ export const UI_CONTROLS_CSS = `
   .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{transform:rotate(90deg);}
 }
 
-/* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */
-.dtl-tbl{display:flex;flex-direction:column;min-width:0;}
-.dtl-tbl__head,.dtl-tbl__row{display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) 92px 132px;
-  gap:var(--dtl-space-3);align-items:center;padding:var(--dtl-space-2) var(--dtl-space-2);}
-.dtl-tbl__head{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
-  background:var(--dtl-table-head-bg);border-radius:var(--dtl-radius-xs);}
-.dtl-tbl__row{border-top:1px solid var(--dtl-border-faint);}
-.dtl-tbl__row:hover{background:var(--dtl-table-row-hover);}
-.dtl-tbl__cell{min-width:0;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);
+/* 台账目录表（核心 Table）：只要列内的排版，表头 / 行线 / 悬浮底都归核心。
+   路径格：文字不可点，复制钮悬停这一列才浮出（用户 2026-11-02）。 */
+.dtl-dir__name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dtl-dir__path{display:flex;align-items:center;gap:var(--dtl-space-1);min-width:0;}
+.dtl-dir__pathtext{min-width:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-/* 路径本身就是复制钮（排障第一个问题：这是哪个目录） */
-.dtl-tbl__path{min-width:0;padding:0;border:0;background:none;cursor:pointer;text-align:left;
-  font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.dtl-tbl__path:hover{color:var(--dtl-business);text-decoration:underline;}
-.dtl-tbl__edit{display:flex;align-items:center;gap:var(--dtl-space-2);
-  padding:var(--dtl-space-2);border-top:1px solid var(--dtl-border-faint);}
+/* 复制钮：鼠标移到这一列才浮出（用户 2026-11-02 要求）；键盘聚焦也显形 */
+.dtl-dir__copy{flex:none;opacity:0;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dshpc-table__cell:hover .dtl-dir__copy,.dtl-dir__copy:focus-visible{opacity:1;}
+.dtl-dir__acts{display:flex;align-items:center;justify-content:flex-end;gap:var(--dtl-space-1);}
+/* 表头「显示」+ 问号同一行 */
+.dtl-dir__colhead{display:inline-flex;align-items:center;gap:var(--dtl-space-1);}
+.dtl-dir__edit{display:flex;align-items:center;gap:var(--dtl-space-2);}
 
 /* 身份表：名字列单行，超长省略（表格是定宽列，换行会把行高撑歪） */
 /* 昵称后面跟 [uuid]（用户 2026-11-02）：同名的人靠 uuid 才分得清。

@@ -11,14 +11,16 @@ import {
 	IconChecklistOutlineRegular,
 	IconCheckOutlineRegular,
 	IconCloseOutlineRegular,
+	IconCopyOutlineRegular,
 	IconDownloadOutlineRegular,
 	IconFlatListOutlineRegular,
+	Switch,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
 import { fetchDirs, fetchRoster, postForgetIdentity, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, Checkbox, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, Surface, Table, Tag, confirmModal, notify } from "./ui";
+import { Button, Card, FieldHint, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 const GithubMark = (): ReactNode =>
@@ -111,8 +113,15 @@ export function SettingsPage(props: {
 
 	const [dirs, setDirs] = useState<readonly LedgerDirView[] | null>(null);
 	const [dirsError, setDirsError] = useState<string | null>(null);
+	/** 台账目录表的筛选档（用户 2026-11-02：所有 / 只显示中的 / 只隐藏的）。 */
+	const [dirFilter, setDirFilter] = useState<"all" | "shown" | "hidden">("all");
 	const [renaming, setRenaming] = useState<string | null>(null);
 	const [draft, setDraft] = useState("");
+	// 点了「重命名」输入框直接能打字（核心 Input 没有 autoFocus，走它给的 inputRef）
+	const renameInputRef = useRef<HTMLInputElement | null>(null);
+	useEffect(() => {
+		if (renaming !== null) renameInputRef.current?.focus();
+	}, [renaming]);
 	const [copied, setCopied] = useState<string | null>(null);
 	const [addOpen, setAddOpen] = useState(false);
 	const [addPath, setAddPath] = useState("");
@@ -273,7 +282,9 @@ export function SettingsPage(props: {
 		if (clip === undefined) return;
 		clip.writeText(path).then(
 			() => {
+				// 复制成功：按钮换小勾（1.5s 后复原）+ 一条 Toast，路径文字本身不动（用户 2026-11-02）
 				setCopied(path);
+				notify(t("settingsPathCopied"), { variant: "success" });
 				window.setTimeout(() => {
 					setCopied((current) => (current === path ? null : current));
 				}, 1500);
@@ -579,67 +590,106 @@ export function SettingsPage(props: {
 		),
 	);
 
-	/* ── 下半：台账目录表格 ───────────────────────────────────────── */
+	/* ── 下半：台账目录表格（框架全走核心：标题 = SectionHead、表 = Table）────── */
 
-	const dirRow = (dir: LedgerDirView): ReactNode =>
-		renaming === dir.path
-			? h(
-					"div",
-					{ key: dir.path, className: "dtl-tbl__edit" },
-					h(
+	/** 表格行：按顶部三档筛过，重命名时整行让给输入框（跨四列）。 */
+	const dirRows = (dirs ?? [])
+		.filter((dir) =>
+			dirFilter === "all" ? true : dirFilter === "shown" ? !dir.hidden : dir.hidden,
+		)
+		.map((dir) => {
+			if (renaming === dir.path)
+				return {
+					key: dir.path,
+					cells: {
+						name: {
+							colSpan: 4,
+							content: h(
+								"div",
+								{ className: "dtl-dir__edit" },
+								h(
+									"div",
+									{ className: "dtl-form__grow" },
+									h(Input, {
+										// type=search 才带核心的清除小叉（有焦点且有内容时出现）
+										type: "search",
+										value: draft,
+										onChange: setDraft,
+										placeholder: t("settingsRenamePlaceholder"),
+										"aria-label": t("settingsRenamePlaceholder"),
+										inputRef: renameInputRef,
+									}),
+								),
+								// 与这一行的输入框同档（Input 默认 lg = 32px 高）
+								h(
+									Button,
+									{
+										variant: "info",
+										size: "lg",
+										icon: h(IconCheckOutlineRegular, { size: 14 }),
+										onClick: notYet,
+									},
+									t("settingsSave"),
+								),
+								h(
+									Button,
+									{
+										// 灰底、不描边（用户 2026-11-02：取消不要做成纯文字）
+										variant: "secondary",
+										size: "lg",
+										onClick: () => {
+											setRenaming(null);
+										},
+									},
+									t("settingsCancel"),
+								),
+							),
+						},
+					},
+				};
+			return {
+				key: dir.path,
+				cells: {
+					name: h("span", { className: "dtl-dir__name", title: dir.name }, dir.name),
+					// 路径**本身不可点**（用户 2026-11-02）：复制钮常显，悬停提示走核心 Tip（不是原生 title）
+					path: h(
 						"div",
-						{ className: "dtl-form__grow" },
-						h(Input, {
-							value: draft,
-							onChange: setDraft,
-							placeholder: t("settingsRenamePlaceholder"),
-							"aria-label": t("settingsRenamePlaceholder"),
+						{ className: "dtl-dir__path" },
+						h(Tip, {
+							label: dir.path,
+							maxWidth: 420,
+							children: h("span", { className: "dtl-dir__pathtext" }, dir.path),
+						}),
+						h(Tip, {
+							label: t("settingsPathCopy"),
+							children: h(IconButton, {
+								icon:
+									copied === dir.path
+										? h(IconCheckOutlineRegular, { size: 14 })
+										: h(IconCopyOutlineRegular, { size: 14 }),
+								label: t("settingsPathCopy"),
+								size: "sm",
+								className: "dtl-dir__copy",
+								onClick: () => {
+									copyPath(dir.path);
+								},
+							}),
 						}),
 					),
-					h(Button, { variant: "primary", size: "sm", onClick: notYet }, t("settingsSave")),
-					h(
-						Button,
-						{
-							variant: "ghost",
-							size: "sm",
-							onClick: () => {
-								setRenaming(null);
-							},
-						},
-						t("settingsCancel"),
-					),
-				)
-			: h(
-					"div",
-					{ key: dir.path, className: "dtl-tbl__row" },
-					h("div", { className: "dtl-tbl__cell" }, dir.name),
-					h(
-						"button",
-						{
-							type: "button",
-							className: "dtl-tbl__path",
-							onClick: () => {
-								copyPath(dir.path);
-							},
-						},
-						copied === dir.path ? t("settingsPathCopied") : dir.path,
-					),
-					h(
+					// 开关不带文字：表头已写明这一列是「显示」（用户 2026-11-02）
+					visible: h(Switch, {
+						checked: !dir.hidden,
+						onChange: notYet,
+						label: t("settingsDirVisible"),
+					}),
+					actions: h(
 						"div",
-						{ className: "dtl-tbl__cell" },
-						h(Checkbox, {
-							checked: !dir.hidden,
-							onChange: notYet,
-							label: t("settingsDirVisible"),
-						}),
-					),
-					h(
-						"div",
-						{ className: "dtl-acts" },
+						{ className: "dtl-dir__acts" },
+						// 默认动作：有底色、不描边（用户 2026-11-02）
 						h(
 							Button,
 							{
-								variant: "outline",
+								variant: "secondary",
 								size: "sm",
 								onClick: () => {
 									setRenaming(dir.path);
@@ -648,30 +698,53 @@ export function SettingsPage(props: {
 							},
 							t("settingsDirRename"),
 						),
-						h(Button, { variant: "ghost", size: "sm", onClick: notYet }, t("settingsDirRemove")),
+						// 移除：只留一个小叉（危险动作，与身份表的删除同色）
+						h(IconButton, {
+							icon: h(IconCloseOutlineRegular, { size: 14 }),
+							label: t("settingsDirRemove"),
+							size: "sm",
+							variant: "danger",
+							color: "var(--dtl-danger)",
+							background: "var(--dtl-danger-soft)",
+							onClick: notYet,
+						}),
 					),
-				);
+				},
+			};
+		});
 
 	const dirsBody =
 		dirsError !== null
 			? h("div", { className: "dtl-set__error" }, `${t("loadFailed")}：${dirsError}`)
 			: dirs === null
 				? h("div", { className: "dtl-loading" }, h(Loader, { variant: "blocks", size: "md" }))
-				: dirs.length === 0
-					? h("div", { className: "dtl-set__hint" }, t("settingsDirsEmpty"))
-					: h(
-							"div",
-							{ className: "dtl-tbl" },
-							h(
-								"div",
-								{ className: "dtl-tbl__head" },
-								h("div", null, t("settingsColDir")),
-								h("div", null, t("settingsColPath")),
-								h("div", null, ""),
-								h("div", null, t("settingsColActions")),
-							),
-							...dirs.map(dirRow),
-						);
+				: h(Table, {
+						ariaLabel: t("settingsDirsTitle"),
+						emptyText:
+							dirFilter === "all" || (dirs !== null && dirs.length === 0)
+								? t("settingsDirsEmpty")
+								: t("settingsDirsFilterEmpty"),
+						borders: "none",
+						columns: [
+							{ key: "name", title: t("settingsColDir") },
+							{ key: "path", title: t("settingsColPath") },
+							// 说明文字挂「显示」表头后面（用户 2026-11-02）：问号走核心 FieldHint，气泡向下弹
+							{
+								key: "visible",
+								title: h(
+									"span",
+									{ className: "dtl-dir__colhead" },
+									t("settingsDirVisible"),
+									h(FieldHint, { text: t("settingsDirsHint"), side: "bottom", maxWidth: 380 }),
+								),
+								width: 92,
+								align: "center",
+							},
+							// 操作列：不写表头文案（改名 / 删除两个钮自明）+ 定宽 + 靠右（用户 2026-11-02）
+							{ key: "actions", title: "", width: 132, align: "right" },
+						],
+						rows: dirRows,
+					});
 
 	/* ── 弹窗 ──────────────────────────────────────────────────────── */
 
@@ -881,27 +954,38 @@ export function SettingsPage(props: {
 		h(
 			Surface,
 			{ padding: "lg" },
-			h(
-				"div",
-				{ className: "dtl-set__head" },
-				h(
+			// 标题行 = 核心 SectionHead（icon + 标题 + 右槽）：右槽放三档筛选与「添加目录」
+			h(SectionHead, {
+				icon: h(IconFlatListOutlineRegular, { size: 16 }),
+				title: t("settingsDirsTitle"),
+				right: h(
 					"div",
-					null,
-					h("div", { className: "dtl-set__title" }, t("settingsDirsTitle")),
-					h("div", { className: "dtl-set__hint" }, t("settingsDirsHint")),
-				),
-				h(
-					Button,
-					{
-						variant: "outline",
-						size: "sm",
-						onClick: () => {
-							setAddOpen(true);
+					{ className: "dtl-set__tools" },
+					h(Segmented<"all" | "shown" | "hidden">, {
+						items: [
+							{ value: "all", label: t("settingsDirsFilterAll") },
+							{ value: "shown", label: t("settingsDirsFilterShown") },
+							{ value: "hidden", label: t("settingsDirsFilterHidden") },
+						],
+						value: dirFilter,
+						onChange: setDirFilter,
+						size: "md",
+						tone: "business",
+						label: t("settingsDirsTitle"),
+					}),
+					h(
+						Button,
+						{
+							variant: "outline",
+							size: "md",
+							onClick: () => {
+								setAddOpen(true);
+							},
 						},
-					},
-					t("settingsDirsAdd"),
+						t("settingsDirsAdd"),
+					),
 				),
-			),
+			}),
 			h("div", { className: "dtl-set__body" }, dirsBody),
 		),
 		userModal,
@@ -931,6 +1015,10 @@ export type SettingsLocaleKey = Extract<
 	| "settingsDirsHint"
 	| "settingsDirsEmpty"
 	| "settingsDirsAdd"
+	| "settingsDirsFilterAll"
+	| "settingsDirsFilterShown"
+	| "settingsDirsFilterHidden"
+	| "settingsDirsFilterEmpty"
 	| "settingsDirVisible"
 	| "settingsDirRename"
 	| "settingsDirRemove"
@@ -938,6 +1026,7 @@ export type SettingsLocaleKey = Extract<
 	| "settingsSave"
 	| "settingsCancel"
 	| "settingsPathCopied"
+	| "settingsPathCopy"
 	| "settingsAddTitle"
 	| "settingsAddHint"
 	| "settingsAddPlaceholder"
@@ -950,5 +1039,4 @@ export type SettingsLocaleKey = Extract<
 	| "settingsFlow3Desc"
 	| "settingsColDir"
 	| "settingsColPath"
-	| "settingsColActions"
 >;

@@ -2998,6 +2998,17 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.3_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_00341bd727635eb6dac16ccc6cdd2910/node_modules/dsh-plugin-core/dist/ui/tooltip.js
+		let renderer;
+		/** 注入官方 Tooltip（插件启动时调一次；传 undefined 撤销，回到自绘降级）。 */
+		function setTooltipRenderer(fn) {
+			renderer = fn;
+		}
+		/** 当前注入的 renderer；未注入返回 undefined（FieldHint 据此走降级路径）。 */
+		function getTooltipRenderer() {
+			return renderer;
+		}
+		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.3_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_00341bd727635eb6dac16ccc6cdd2910/node_modules/dsh-plugin-core/dist/ui/controls/segmented-css.generated.js
 		const SEGMENTED_CSS = "\n/* ── 分段控件 P2 ─────────────────────────────────────────────────────\n   结构照兄弟项目 dsh-task-dispatch-table 的 Segmented 皮肤（item 无边框、hover 只提亮文字），\n   前缀 / 变量名换成本仓口径。用户额外要的两处（兄弟没有）：weekday 方块间隔（现为 2px）；段内中性计数 __count。\n   ⚠️ 2026-10-19 两次误判均已澄清：① 「宿主只认单行 CSS」——假，多行一直正常；\n   ② 「宿主吃掉 token 块之后第一条规则」——也假，真因是 tokens 模板字符串结尾多了一个反斜杠，\n   注入文本里留下字面反引号，把紧随其后的那条规则的选择器污染掉了（见 dsh-host.md §9）。\n   样式照常多行书写，不必压行；也不需要任何「牺牲规则」。 */\n/* 外观只有一套（2026-10-26）：原 variant 的 default / inset 两档在 CSS 里只差 1px 内距，\n   且 default 比文档承诺矮 2px，却让下游以为「有得选」而反复对图 ⇒ 整轴删除。\n   padding 3px 是尺寸契约的一部分：item 高度 = 控制高 − 6px，加起来正好 24 / 28 / 32。 */\n/* 选中片配色收在两条局部变量里（--seg-thumb 底 / --seg-on 字）：默认走主题亮片，\n   tone 档与自定义 {bg, fg} 都只改这两条（后者由组件内联写根节点，内联恒胜）。 */\n.dshpc-seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--dshpc-radius-md);--seg-thumb:var(--dshpc-surface-raised);--seg-on:var(--dshpc-fg);background:var(--dshpc-seg-track);}\n.dshpc-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:calc(var(--dshpc-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);font-family:inherit;font-size:var(--dshpc-font-xs);font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:color var(--dshpc-dur-fast) var(--dshpc-ease),background-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-seg--md .dshpc-seg__item{height:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item{height:calc(var(--dshpc-control-h-lg) - 6px);}\n/* 段内图标（前置）：与 Button 同口径 —— inline-flex 吃掉行高基线，svg 按块级。 */\n.dshpc-seg__icon{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-seg__icon svg{display:block;margin:0;}\n/* 只有图标（无文字 / 计数 / 角标）：段必须是正方形 ⇒ 宽 = 段高、左右内距归零、内容居中；\n   否则基础规则的 0 12px 会把它拉成长方形。放在三档之后：同名特异性下后写者胜。 */\n.dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-sm) - 6px);padding:0;justify-content:center;}\n.dshpc-seg--md .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-lg) - 6px);}\n.dshpc-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dshpc-fg);}\n.dshpc-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);color:var(--seg-on);font-weight:600;}\n.dshpc-seg__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n.dshpc-seg__item:disabled{cursor:default;opacity:.4;}\n/* 段内角标（如「异常」的数量）：语义色实面 + 反白字，0 由组件侧不渲染。必须是正圆（用户 2026-10-03）。 */\n.dshpc-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;background:var(--dshpc-danger);color:var(--dshpc-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}\n/* 段内中性计数（如筛选条「全部 11」）：纯文字、无底无边（对齐 task-ledger .dtl-seg__num 拍板口径）；0 由组件侧不渲染。 */\n.dshpc-seg__count{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;background:none;color:var(--dshpc-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}\n/* 选中段（彩色实面）里的计数：必须跟着 --seg-on 走再压暗一档（72% 白 ≈ 「比正文稍灰」）。\n   不许用 --dshpc-fg-3：它跟主题走，暗色下是深灰 ⇒ 蓝底上几乎看不见（2026-10-29 用户截图「My todos 4」）。 */\n.dshpc-seg__item[aria-pressed='true'] .dshpc-seg__count{color:color-mix(in srgb,var(--seg-on) 72%,transparent);}\n/* block：撑满父宽（表单行用），各段等分 */\n.dshpc-seg--block{display:flex;width:100%;}\n.dshpc-seg--block .dshpc-seg__item{flex:1 1 auto;justify-content:center;}\n/* weekday：星期多选方块。基础插件的特殊化定制（用户 2026-10-01：原 WeekdayPicker 即「蓝底 + 近似方形」）：\n   每格正方形（宽 = 段高）、选中品牌蓝反白字、**无外描边**（2026-10-18 重申）、\n   方块之间间距 gap:2px（2026-10-20 用户定稿：方块改小后 6px 显得太宽。10-18 曾从 2px 放宽到 6px，\n   两次都是用户拍板 —— 别自作主张改回去）。 */\n.dshpc-seg--weekday{--seg-track:var(--dshpc-seg-track);gap:2px;border:0;padding:3px;background:var(--seg-track);}\n.dshpc-seg--weekday .dshpc-seg__item{width:calc(var(--dshpc-control-h-lg) - 8px);padding:0;justify-content:center;}\n/* 蓝底反白：字色必须是常量白（--dshpc-on-signal）。2026-10-29 用户实测：暗色主题下这里曾用\n   --dshpc-fg-inverse，而它跟随宿主 label-primary-foreground，暗色下是近黑 ⇒ 蓝底黑字看不清。 */\n.dshpc-seg--weekday{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n\n/* ── tone（2026-10-29 用户）：选中片传内置基础色名，底 / 字由核心给，深浅两主题各自成立。\n   放在 weekday 之后：同名变量后写者胜，tone 与 className=\"dshpc-seg--weekday\" 同给时以 tone 为准。\n   黄底按 Chip / Button 同源口径用 on-warning（中高明度，白字看不清）。 */\n.dshpc-seg--tone-business{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-success{--seg-thumb:var(--dshpc-success);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-warning{--seg-thumb:var(--dshpc-warning);--seg-on:var(--dshpc-on-warning);}\n.dshpc-seg--tone-danger{--seg-thumb:var(--dshpc-danger);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-purple{--seg-thumb:var(--dshpc-purple);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-pink{--seg-thumb:var(--dshpc-pink);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-cyan{--seg-thumb:var(--dshpc-cyan);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-teal{--seg-thumb:var(--dshpc-teal);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-orange{--seg-thumb:var(--dshpc-orange);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-indigo{--seg-thumb:var(--dshpc-indigo);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-rose{--seg-thumb:var(--dshpc-rose);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-slate{--seg-thumb:var(--dshpc-slate);--seg-on:var(--dshpc-on-signal);}\n\n/* ── 单选滑动块（2026-10-26 用户：点选后选中底应「滑过去」，不是旧段消失、新段直接亮）。\n   结构 = 一块绝对定位的共用底 + 各段透明；位置/尺寸由组件量出后内联，这里只管外观与过渡。\n   --slide 只在单选挂上：多选（如星期）每段各自着色，没有唯一滑块可滑，保持原样。 */\n.dshpc-seg--slide{position:relative;}\n.dshpc-seg--slide .dshpc-seg__item{position:relative;z-index:1;}\n.dshpc-seg--slide .dshpc-seg__item[aria-pressed='true']{background:transparent;box-shadow:none;}\n.dshpc-seg__thumb{position:absolute;z-index:0;border-radius:var(--dshpc-radius-sm);background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);pointer-events:none;transition:left var(--dshpc-dur) var(--dshpc-ease),top var(--dshpc-dur) var(--dshpc-ease),width var(--dshpc-dur) var(--dshpc-ease),height var(--dshpc-dur) var(--dshpc-ease);}\n\n/* ── bordered 外框（2026-10-20 用户要的第二种模式）：**只在最外面套一圈 1px 描边**，\n   里面一概不动 —— 选中片的填充色 / 阴影 / 文字色全部保持原样（weekday 的蓝面照旧），\n   这里不写任何针对 __item 的规则。\n   总高必须与无框版逐像素一致：border 1px×2 由 padding 各让 1px 抵消（3 → 2）；\n   weekday 自己声明的 3px 在文件更后面，靠双类选择器压回 2px。 */\n.dshpc-seg--bordered{border:1px solid var(--dshpc-border);padding:2px;}\n.dshpc-seg--bordered.dshpc-seg--weekday{padding:2px;}\n\n@media (prefers-reduced-motion: reduce){.dshpc-seg__item{transition:none;}.dshpc-seg__thumb{transition:none;}}\n";
 		//#endregion
@@ -3050,13 +3061,22 @@ window.__ModuleLoader__.load({
 		function FieldHint(props) {
 			ensureComponentStyles("hint", HINT_CSS);
 			const { text, side, align, maxWidth, className, style } = props;
-			return (0, react$1.createElement)("span", {
+			const anchor = (0, react$1.createElement)("span", {
 				className: `dshpc-hint${className !== void 0 && className !== "" ? ` ${className}` : ""}`,
 				style,
 				tabIndex: 0,
 				role: "note",
 				"aria-label": text
 			}, "?");
+			const renderer = getTooltipRenderer();
+			if (renderer === void 0) return anchor;
+			return renderer({
+				label: text,
+				side: side ?? "top",
+				...align !== void 0 ? { align } : {},
+				...maxWidth !== void 0 ? { maxWidth } : {},
+				children: anchor
+			});
 		}
 		//#endregion
 		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.3_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_00341bd727635eb6dac16ccc6cdd2910/node_modules/dsh-plugin-core/dist/ui/marquee-css.generated.js
@@ -5816,6 +5836,7 @@ window.__ModuleLoader__.load({
 				props.bordered,
 				props.block
 			]);
+			const renderer = getTooltipRenderer();
 			const tone = props.tone;
 			const toneClass = typeof tone === "string" ? ` dshpc-seg--tone-${tone}` : "";
 			const toneStyle = tone !== void 0 && typeof tone !== "string" ? {
@@ -5867,7 +5888,11 @@ window.__ModuleLoader__.load({
 					disabled,
 					onClick: handle
 				}, hasIcon ? (0, react$1.createElement)("span", { className: "dshpc-seg__icon" }, item.icon) : null, hasLabel ? item.label : null, count === null ? null : (0, react$1.createElement)("span", { className: "dshpc-seg__count" }, count), badge === null ? null : (0, react$1.createElement)("span", { className: "dshpc-seg__badge" }, badge));
-				if (item.tooltip !== void 0 && false);
+				if (item.tooltip !== void 0 && renderer !== void 0) return renderer({
+					label: item.tooltip,
+					side: "top",
+					children: itemButton
+				});
 				return itemButton;
 			})]);
 		}
@@ -6086,44 +6111,6 @@ window.__ModuleLoader__.load({
 					...props.style
 				}
 			}, nodes), props.hint);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.3_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_00341bd727635eb6dac16ccc6cdd2910/node_modules/dsh-plugin-core/dist/ui/Checkbox.js
-		/**
-		* 勾选框（P3 输入类家族唯一实现；U20 #6，2026-10-05）。
-		*
-		* 以前确认弹窗里是裸 `<input type="checkbox">` + 业务内联样式，现上提为基础层件。
-		* 标记色默认随业务色；高危确认可传 `accentColor`（如 `var(--dshpc-warning)`）染橙。
-		*/
-		/** 勾选框（label + input 一体，整行可点）。 */
-		function Checkbox(props) {
-			const { checked, onChange, label, accentColor, disabled, className } = props;
-			return (0, react$1.createElement)("label", {
-				className: `dshpc-checkbox${className !== void 0 && className !== "" ? ` ${className}` : ""}`,
-				style: {
-					display: "flex",
-					alignItems: "flex-start",
-					gap: "8px",
-					fontSize: "var(--dshpc-font-md)",
-					lineHeight: "var(--dshpc-line-md)",
-					cursor: disabled === true ? "default" : "pointer"
-				}
-			}, (0, react$1.createElement)("input", {
-				type: "checkbox",
-				checked,
-				disabled,
-				style: {
-					flex: "none",
-					margin: "2px 0 0",
-					accentColor: accentColor ?? "var(--dshpc-business)",
-					width: "14px",
-					height: "14px",
-					cursor: disabled === true ? "default" : "pointer"
-				},
-				onChange: (event) => {
-					onChange(event.target.checked);
-				}
-			}), label !== void 0 ? (0, react$1.createElement)("span", null, label) : null);
 		}
 		/**
 		* 算出工具栏左缘的 x 坐标。
@@ -55385,14 +55372,13 @@ body[data-ds-dark-theme]{
 /* ── 设置页（2026-11-01 改版：上半左「人」右「流程小图」，下半台账表格）──
    上半是一张 2 列 hero 卡；窄面板（<760px）自动落成一列，不做横向滚动。 */
 .dtl-set{display:flex;flex-direction:column;gap:var(--dtl-space-3);min-width:0;}
-.dtl-set__title{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;}
 .dtl-set__hint{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
   margin-top:var(--dtl-space-1);}
 .dtl-set__error{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-danger);
   margin-top:var(--dtl-space-2);}
 .dtl-set__body{margin-top:var(--dtl-space-3);}
-.dtl-set__head{display:flex;align-items:flex-start;justify-content:space-between;
-  gap:var(--dtl-space-3);flex-wrap:wrap;}
+/* 标题行右槽（核心 SectionHead 的 right）：三档筛选 + 添加目录，窄了就换行 */
+.dtl-set__tools{display:flex;align-items:center;gap:var(--dtl-space-2);flex-wrap:wrap;}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
    两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：
@@ -55477,6 +55463,8 @@ body[data-ds-dark-theme]{
 /* 图标徽标本身是核心 IconButton（plain + lg=32 方）：尺寸与圆角走核心控件契约，
    这里只留布局。pointer-events 关掉 —— 它是装饰，不该有 hover 变色。 */
 .dtl-flow__icon{flex:none;pointer-events:none;}
+/* 图标本体放大一档（用户 2026-11-02）：只放大里面的 svg，32 方的框不动 */
+.dtl-flow__icon svg{width:22px;height:22px;}
 .dtl-flow__num{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:26px;height:26px;box-sizing:border-box;border-radius:9999px;
   background:var(--dtl-chip-strong);font-size:var(--dtl-font-sm);font-weight:600;
@@ -55517,25 +55505,20 @@ body[data-ds-dark-theme]{
   .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{transform:rotate(90deg);}
 }
 
-/* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */
-.dtl-tbl{display:flex;flex-direction:column;min-width:0;}
-.dtl-tbl__head,.dtl-tbl__row{display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) 92px 132px;
-  gap:var(--dtl-space-3);align-items:center;padding:var(--dtl-space-2) var(--dtl-space-2);}
-.dtl-tbl__head{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
-  background:var(--dtl-table-head-bg);border-radius:var(--dtl-radius-xs);}
-.dtl-tbl__row{border-top:1px solid var(--dtl-border-faint);}
-.dtl-tbl__row:hover{background:var(--dtl-table-row-hover);}
-.dtl-tbl__cell{min-width:0;font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);
+/* 台账目录表（核心 Table）：只要列内的排版，表头 / 行线 / 悬浮底都归核心。
+   路径格：文字不可点，复制钮悬停这一列才浮出（用户 2026-11-02）。 */
+.dtl-dir__name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dtl-dir__path{display:flex;align-items:center;gap:var(--dtl-space-1);min-width:0;}
+.dtl-dir__pathtext{min-width:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-/* 路径本身就是复制钮（排障第一个问题：这是哪个目录） */
-.dtl-tbl__path{min-width:0;padding:0;border:0;background:none;cursor:pointer;text-align:left;
-  font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.dtl-tbl__path:hover{color:var(--dtl-business);text-decoration:underline;}
-.dtl-tbl__edit{display:flex;align-items:center;gap:var(--dtl-space-2);
-  padding:var(--dtl-space-2);border-top:1px solid var(--dtl-border-faint);}
+/* 复制钮：鼠标移到这一列才浮出（用户 2026-11-02 要求）；键盘聚焦也显形 */
+.dtl-dir__copy{flex:none;opacity:0;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dshpc-table__cell:hover .dtl-dir__copy,.dtl-dir__copy:focus-visible{opacity:1;}
+.dtl-dir__acts{display:flex;align-items:center;justify-content:flex-end;gap:var(--dtl-space-1);}
+/* 表头「显示」+ 问号同一行 */
+.dtl-dir__colhead{display:inline-flex;align-items:center;gap:var(--dtl-space-1);}
+.dtl-dir__edit{display:flex;align-items:center;gap:var(--dtl-space-2);}
 
 /* 身份表：名字列单行，超长省略（表格是定宽列，换行会把行高撑歪） */
 /* 昵称后面跟 [uuid]（用户 2026-11-02）：同名的人靠 uuid 才分得清。
@@ -56040,6 +56023,12 @@ body[data-ds-dark-theme]{
 				"aria-hidden": props.ariaHidden === true ? true : void 0
 			});
 		}
+		/** 把官方 Tooltip 交给核心当气泡渲染器：核心 `FieldHint`（问号）与本地 `Tip` 从此用同一个气泡
+		*  （核心不许静态依赖官方包，注入位是它给的；本项目本来就静态引官方，注入一次即可）。 */
+		setTooltipRenderer((props) => (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+			...props,
+			portal: true
+		}));
 		/** 悬停提示（本插件**唯一**挂 Tooltip 的入口）。
 		*
 		*  ⚠️ 官方 `Tooltip` 给子元素挂 `ref` 来当锚点（`children.ref` → `cloneElement`），
@@ -57818,8 +57807,14 @@ body[data-ds-dark-theme]{
 			const [error, setError] = (0, react$1.useState)(null);
 			const [dirs, setDirs] = (0, react$1.useState)(null);
 			const [dirsError, setDirsError] = (0, react$1.useState)(null);
+			/** 台账目录表的筛选档（用户 2026-11-02：所有 / 只显示中的 / 只隐藏的）。 */
+			const [dirFilter, setDirFilter] = (0, react$1.useState)("all");
 			const [renaming, setRenaming] = (0, react$1.useState)(null);
 			const [draft, setDraft] = (0, react$1.useState)("");
+			const renameInputRef = (0, react$1.useRef)(null);
+			(0, react$1.useEffect)(() => {
+				if (renaming !== null) renameInputRef.current?.focus();
+			}, [renaming]);
 			const [copied, setCopied] = (0, react$1.useState)(null);
 			const [addOpen, setAddOpen] = (0, react$1.useState)(false);
 			const [addPath, setAddPath] = (0, react$1.useState)("");
@@ -57936,6 +57931,7 @@ body[data-ds-dark-theme]{
 				if (clip === void 0) return;
 				clip.writeText(path).then(() => {
 					setCopied(path);
+					notify(t("settingsPathCopied"), { variant: "success" });
 					window.setTimeout(() => {
 						setCopied((current) => current === path ? null : current);
 					}, 1500);
@@ -58109,53 +58105,115 @@ body[data-ds-dark-theme]{
 				t("settingsFlow3History"),
 				t("settingsFlow3Stats")
 			]))));
-			const dirRow = (dir) => renaming === dir.path ? (0, react$1.createElement)("div", {
-				key: dir.path,
-				className: "dtl-tbl__edit"
-			}, (0, react$1.createElement)("div", { className: "dtl-form__grow" }, (0, react$1.createElement)(Input, {
-				value: draft,
-				onChange: setDraft,
-				placeholder: t("settingsRenamePlaceholder"),
-				"aria-label": t("settingsRenamePlaceholder")
-			})), (0, react$1.createElement)(Button, {
-				variant: "primary",
-				size: "sm",
-				onClick: notYet
-			}, t("settingsSave")), (0, react$1.createElement)(Button, {
-				variant: "ghost",
-				size: "sm",
-				onClick: () => {
-					setRenaming(null);
-				}
-			}, t("settingsCancel"))) : (0, react$1.createElement)("div", {
-				key: dir.path,
-				className: "dtl-tbl__row"
-			}, (0, react$1.createElement)("div", { className: "dtl-tbl__cell" }, dir.name), (0, react$1.createElement)("button", {
-				type: "button",
-				className: "dtl-tbl__path",
-				onClick: () => {
-					copyPath(dir.path);
-				}
-			}, copied === dir.path ? t("settingsPathCopied") : dir.path), (0, react$1.createElement)("div", { className: "dtl-tbl__cell" }, (0, react$1.createElement)(Checkbox, {
-				checked: !dir.hidden,
-				onChange: notYet,
-				label: t("settingsDirVisible")
-			})), (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
-				variant: "outline",
-				size: "sm",
-				onClick: () => {
-					setRenaming(dir.path);
-					setDraft(dir.name);
-				}
-			}, t("settingsDirRename")), (0, react$1.createElement)(Button, {
-				variant: "ghost",
-				size: "sm",
-				onClick: notYet
-			}, t("settingsDirRemove"))));
+			/** 表格行：按顶部三档筛过，重命名时整行让给输入框（跨四列）。 */
+			const dirRows = (dirs ?? []).filter((dir) => dirFilter === "all" ? true : dirFilter === "shown" ? !dir.hidden : dir.hidden).map((dir) => {
+				if (renaming === dir.path) return {
+					key: dir.path,
+					cells: { name: {
+						colSpan: 4,
+						content: (0, react$1.createElement)("div", { className: "dtl-dir__edit" }, (0, react$1.createElement)("div", { className: "dtl-form__grow" }, (0, react$1.createElement)(Input, {
+							type: "search",
+							value: draft,
+							onChange: setDraft,
+							placeholder: t("settingsRenamePlaceholder"),
+							"aria-label": t("settingsRenamePlaceholder"),
+							inputRef: renameInputRef
+						})), (0, react$1.createElement)(Button, {
+							variant: "info",
+							size: "lg",
+							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }),
+							onClick: notYet
+						}, t("settingsSave")), (0, react$1.createElement)(Button, {
+							variant: "secondary",
+							size: "lg",
+							onClick: () => {
+								setRenaming(null);
+							}
+						}, t("settingsCancel")))
+					} }
+				};
+				return {
+					key: dir.path,
+					cells: {
+						name: (0, react$1.createElement)("span", {
+							className: "dtl-dir__name",
+							title: dir.name
+						}, dir.name),
+						path: (0, react$1.createElement)("div", { className: "dtl-dir__path" }, (0, react$1.createElement)(Tip, {
+							label: dir.path,
+							maxWidth: 420,
+							children: (0, react$1.createElement)("span", { className: "dtl-dir__pathtext" }, dir.path)
+						}), (0, react$1.createElement)(Tip, {
+							label: t("settingsPathCopy"),
+							children: (0, react$1.createElement)(IconButton, {
+								icon: copied === dir.path ? (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }) : (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutlineRegular, { size: 14 }),
+								label: t("settingsPathCopy"),
+								size: "sm",
+								className: "dtl-dir__copy",
+								onClick: () => {
+									copyPath(dir.path);
+								}
+							})
+						})),
+						visible: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
+							checked: !dir.hidden,
+							onChange: notYet,
+							label: t("settingsDirVisible")
+						}),
+						actions: (0, react$1.createElement)("div", { className: "dtl-dir__acts" }, (0, react$1.createElement)(Button, {
+							variant: "secondary",
+							size: "sm",
+							onClick: () => {
+								setRenaming(dir.path);
+								setDraft(dir.name);
+							}
+						}, t("settingsDirRename")), (0, react$1.createElement)(IconButton, {
+							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }),
+							label: t("settingsDirRemove"),
+							size: "sm",
+							variant: "danger",
+							color: "var(--dtl-danger)",
+							background: "var(--dtl-danger-soft)",
+							onClick: notYet
+						}))
+					}
+				};
+			});
 			const dirsBody = dirsError !== null ? (0, react$1.createElement)("div", { className: "dtl-set__error" }, `${t("loadFailed")}：${dirsError}`) : dirs === null ? (0, react$1.createElement)("div", { className: "dtl-loading" }, (0, react$1.createElement)(Loader, {
 				variant: "blocks",
 				size: "md"
-			})) : dirs.length === 0 ? (0, react$1.createElement)("div", { className: "dtl-set__hint" }, t("settingsDirsEmpty")) : (0, react$1.createElement)("div", { className: "dtl-tbl" }, (0, react$1.createElement)("div", { className: "dtl-tbl__head" }, (0, react$1.createElement)("div", null, t("settingsColDir")), (0, react$1.createElement)("div", null, t("settingsColPath")), (0, react$1.createElement)("div", null, ""), (0, react$1.createElement)("div", null, t("settingsColActions"))), ...dirs.map(dirRow));
+			})) : (0, react$1.createElement)(Table$1, {
+				ariaLabel: t("settingsDirsTitle"),
+				emptyText: dirFilter === "all" || dirs !== null && dirs.length === 0 ? t("settingsDirsEmpty") : t("settingsDirsFilterEmpty"),
+				borders: "none",
+				columns: [
+					{
+						key: "name",
+						title: t("settingsColDir")
+					},
+					{
+						key: "path",
+						title: t("settingsColPath")
+					},
+					{
+						key: "visible",
+						title: (0, react$1.createElement)("span", { className: "dtl-dir__colhead" }, t("settingsDirVisible"), (0, react$1.createElement)(FieldHint, {
+							text: t("settingsDirsHint"),
+							side: "bottom",
+							maxWidth: 380
+						})),
+						width: 92,
+						align: "center"
+					},
+					{
+						key: "actions",
+						title: "",
+						width: 132,
+						align: "right"
+					}
+				],
+				rows: dirRows
+			});
 			const userModal = userOpen ? (0, react$1.createElement)(Modal, {
 				title: t("settingsUserModalTitle"),
 				width: "576px",
@@ -58271,13 +58329,37 @@ body[data-ds-dark-theme]{
 			return (0, react$1.createElement)("div", { className: "dtl-set" }, (0, react$1.createElement)("div", { className: "dtl-hero" }, (0, react$1.createElement)("div", { className: "dtl-hero__col" }, (0, react$1.createElement)(Card, {
 				accent: hasIdentity ? "success" : "danger",
 				bar: { side: "left" }
-			}, hasIdentity ? profileOf(props.identity.name, props.identity.uuid) : profileOf(null, null))), (0, react$1.createElement)("div", { className: "dtl-hero__flow" }, flow)), (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)("div", { className: "dtl-set__head" }, (0, react$1.createElement)("div", null, (0, react$1.createElement)("div", { className: "dtl-set__title" }, t("settingsDirsTitle")), (0, react$1.createElement)("div", { className: "dtl-set__hint" }, t("settingsDirsHint"))), (0, react$1.createElement)(Button, {
-				variant: "outline",
-				size: "sm",
-				onClick: () => {
-					setAddOpen(true);
-				}
-			}, t("settingsDirsAdd"))), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), userModal, addModal);
+			}, hasIdentity ? profileOf(props.identity.name, props.identity.uuid) : profileOf(null, null))), (0, react$1.createElement)("div", { className: "dtl-hero__flow" }, flow)), (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)(SectionHead, {
+				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 16 }),
+				title: t("settingsDirsTitle"),
+				right: (0, react$1.createElement)("div", { className: "dtl-set__tools" }, (0, react$1.createElement)(Segmented, {
+					items: [
+						{
+							value: "all",
+							label: t("settingsDirsFilterAll")
+						},
+						{
+							value: "shown",
+							label: t("settingsDirsFilterShown")
+						},
+						{
+							value: "hidden",
+							label: t("settingsDirsFilterHidden")
+						}
+					],
+					value: dirFilter,
+					onChange: setDirFilter,
+					size: "md",
+					tone: "business",
+					label: t("settingsDirsTitle")
+				}), (0, react$1.createElement)(Button, {
+					variant: "outline",
+					size: "md",
+					onClick: () => {
+						setAddOpen(true);
+					}
+				}, t("settingsDirsAdd")))
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), userModal, addModal);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -58757,8 +58839,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-230142-476`
-			}, `v0.0.126 261102-230142-476`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-235248-320`
+			}, `v0.0.126 261102-235248-320`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -58931,16 +59013,21 @@ body[data-ds-dark-theme]{
 			settingsFailed: "操作未成功：{message}",
 			settingsUseThis: "使用",
 			settingsDirsTitle: "台账目录",
-			settingsDirsHint: "看板仅汇总下列目录中的台账。取消勾选「显示」后，该目录不再出现在任何页面，统计与筛选中亦不计入；台账数据本身不受影响。",
+			settingsDirsHint: "看板仅汇总下列目录中的台账。关闭「显示」后，该目录的数据不再出现在看板的统计与筛选中；台账数据本身不受影响。",
 			settingsDirsEmpty: "尚未登记任何台账目录。",
 			settingsDirsAdd: "添加目录",
+			settingsDirsFilterAll: "所有",
+			settingsDirsFilterShown: "显示",
+			settingsDirsFilterHidden: "隐藏",
+			settingsDirsFilterEmpty: "该筛选下没有台账目录。",
 			settingsDirVisible: "显示",
 			settingsDirRename: "重命名",
 			settingsDirRemove: "移除",
 			settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
 			settingsSave: "保存",
 			settingsCancel: "取消",
-			settingsPathCopied: "已复制",
+			settingsPathCopied: "复制完成",
+			settingsPathCopy: "复制路径",
 			settingsAddTitle: "添加台账目录",
 			settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
 			settingsAddPlaceholder: "台账根目录的绝对路径",
@@ -58956,7 +59043,7 @@ body[data-ds-dark-theme]{
 			settingsFlow3Todo: "在办：执行中的任务与待认领项",
 			settingsFlow3History: "历史：本项目已结案的任务数量",
 			settingsFlow3Stats: "设置：多 Agent 安装、台账目录管理",
-			settingsColDir: "目录",
+			settingsColDir: "台账名",
 			settingsColPath: "路径",
 			settingsColActions: "操作",
 			statMyActive: "我的待办",
@@ -59137,9 +59224,13 @@ body[data-ds-dark-theme]{
 			settingsFailed: "Operation failed: {message}",
 			settingsUseThis: "Use",
 			settingsDirsTitle: "Ledger folders",
-			settingsDirsHint: "Only ledgers in the following folders are summarized. Clearing \"Show\" removes a folder from every view, statistics and filters; its data is unaffected.",
+			settingsDirsHint: "Only ledgers in the following folders are summarized. Turning \"Show\" off hides that folder's data from every statistic and filter on the board; the ledger data itself is unaffected.",
 			settingsDirsEmpty: "No ledger folder has been registered.",
 			settingsDirsAdd: "Add folder",
+			settingsDirsFilterAll: "All",
+			settingsDirsFilterShown: "Shown",
+			settingsDirsFilterHidden: "Hidden",
+			settingsDirsFilterEmpty: "No ledger folder matches this filter.",
 			settingsDirVisible: "Show",
 			settingsDirRename: "Rename",
 			settingsDirRemove: "Remove",
@@ -59147,6 +59238,7 @@ body[data-ds-dark-theme]{
 			settingsSave: "Save",
 			settingsCancel: "Cancel",
 			settingsPathCopied: "Copied",
+			settingsPathCopy: "Copy path",
 			settingsAddTitle: "Add ledger folder",
 			settingsAddHint: "Enter the absolute path of a ledger root folder. It must contain a ledger/ subdirectory.",
 			settingsAddPlaceholder: "Absolute path of the ledger root",
@@ -59162,7 +59254,7 @@ body[data-ds-dark-theme]{
 			settingsFlow3Todo: "In flight: running tasks and unclaimed items",
 			settingsFlow3History: "History: closed task count for this project",
 			settingsFlow3Stats: "Settings: multi-agent install, ledger folder management",
-			settingsColDir: "Folder",
+			settingsColDir: "Ledger name",
 			settingsColPath: "Path",
 			settingsColActions: "Actions",
 			statMyActive: "My todos",

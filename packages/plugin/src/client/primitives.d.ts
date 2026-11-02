@@ -63,6 +63,17 @@ declare module "@deepseek-ai/dsh-client-ui-primitives" {
 		className?: string;
 	}): ReactNode;
 
+	/** 官方开关（受控，渲染成 `button[role=switch]`，不带可见文字 ⇒ `label` 是必填的无障碍名）。
+	 *  `lib/types/Switch.d.ts` 亲验（2026-11-02）：核心 dsh-plugin-core 没有这一档。 */
+	export function Switch(props: {
+		checked: boolean;
+		onChange: (next: boolean) => void;
+		label: string;
+		disabled?: boolean;
+		title?: string;
+		className?: string;
+	}): ReactNode;
+
 	/** markdown 代码块的本地化文案。 */
 	export interface MarkdownCodeLabels {
 		copyLabel: string;

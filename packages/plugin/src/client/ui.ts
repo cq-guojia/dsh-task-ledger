@@ -23,6 +23,7 @@ import {
 	type PickerGroup,
 	Loader as CoreLoader,
 	Segmented as CoreSegmented,
+	setTooltipRenderer,
 	showLoading as CoreShowLoading,
 	Surface as CoreSurface,
 	type LoadingHandle,
@@ -557,6 +558,10 @@ export function IconButton(props: {
 
 /* ── 提示 ─────────────────────────────────────────────────────────── */
 
+/** 把官方 Tooltip 交给核心当气泡渲染器：核心 `FieldHint`（问号）与本地 `Tip` 从此用同一个气泡
+ *  （核心不许静态依赖官方包，注入位是它给的；本项目本来就静态引官方，注入一次即可）。 */
+setTooltipRenderer((props) => h(Tooltip, { ...props, portal: true }));
+
 /** 悬停提示（本插件**唯一**挂 Tooltip 的入口）。
  *
  *  ⚠️ 官方 `Tooltip` 给子元素挂 `ref` 来当锚点（`children.ref` → `cloneElement`），
@@ -604,6 +609,10 @@ export { confirmModal } from "dsh-plugin-core/ui";
 /** 分区标题（icon + 标题 + 右槽）：列表按工作区分组的组头，核心原样，不再包一层。 */
 export { SectionHead } from "dsh-plugin-core/ui";
 
+/** 问号提示（核心唯一实现：14px 问号 + 官方 Tooltip 气泡，气泡走上面注入的 renderer）——
+ *  标题 / 表头后面挂说明文字用它，别再写原生 title 或自绘气泡。 */
+export { FieldHint } from "dsh-plugin-core/ui";
+
 /** 拼接外壳：左下拉 + 右滑块焊成一体（外框 / 分隔 / 聚焦圈归核心）。
  *  注意：`Segmented` 本文件已有同名适配层，不要再从核心重复导出。 */
 export { SplitGroup } from "dsh-plugin-core/ui";
@@ -625,9 +634,9 @@ export { InputGroup } from "dsh-plugin-core/ui";
 export { Table } from "dsh-plugin-core/ui";
 
 /** 弹窗：核心 `Modal`（自绘遮罩、不走 portal；设置页的用户管理与添加台账都用它）。
- *  勾选框：核心 `Checkbox`（台账行的「显示」开关；核心没有 Switch 档，勾选框就是开关）。
- *  卡片：核心 `Card`（白底 + 1px 边框 + 圆角 + 左缘行内短色条）—— 跟其它页面同一套外观。 */
-export { Card, Checkbox, Modal } from "dsh-plugin-core/ui";
+ *  卡片：核心 `Card`（白底 + 1px 边框 + 圆角 + 左缘行内短色条）—— 跟其它页面同一套外观。
+ *  开关：核心没有这一档，台账目录的「显示」直接用官方 `Switch`（见 settings-page.ts）。 */
+export { Card, Modal } from "dsh-plugin-core/ui";
 
 /** 纯框容器：核心 `Surface`（底 / 边 / 圆角 / 内距四根轴，圆角 12 的唯一真源）。
  *  本插件所有「一块面」都用它 —— 统计卡 / 图表卡 / 任务行 / 空态 / 流程节点 / 图表浮卡，

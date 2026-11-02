@@ -62,6 +62,10 @@ export type LocaleKey =
 	| "settingsDirsHint"
 	| "settingsDirsEmpty"
 	| "settingsDirsAdd"
+	| "settingsDirsFilterAll"
+	| "settingsDirsFilterShown"
+	| "settingsDirsFilterHidden"
+	| "settingsDirsFilterEmpty"
 	| "settingsDirVisible"
 	| "settingsDirRename"
 	| "settingsDirRemove"
@@ -69,6 +73,7 @@ export type LocaleKey =
 	| "settingsSave"
 	| "settingsCancel"
 	| "settingsPathCopied"
+	| "settingsPathCopy"
 	| "settingsAddTitle"
 	| "settingsAddHint"
 	| "settingsAddPlaceholder"
@@ -283,16 +288,21 @@ export const zh: Record<LocaleKey, string> = {
 
 	settingsDirsTitle: "台账目录",
 	settingsDirsHint:
-		"看板仅汇总下列目录中的台账。取消勾选「显示」后，该目录不再出现在任何页面，统计与筛选中亦不计入；台账数据本身不受影响。",
+		"看板仅汇总下列目录中的台账。关闭「显示」后，该目录的数据不再出现在看板的统计与筛选中；台账数据本身不受影响。",
 	settingsDirsEmpty: "尚未登记任何台账目录。",
 	settingsDirsAdd: "添加目录",
+	settingsDirsFilterAll: "所有",
+	settingsDirsFilterShown: "显示",
+	settingsDirsFilterHidden: "隐藏",
+	settingsDirsFilterEmpty: "该筛选下没有台账目录。",
 	settingsDirVisible: "显示",
 	settingsDirRename: "重命名",
 	settingsDirRemove: "移除",
 	settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
 	settingsSave: "保存",
 	settingsCancel: "取消",
-	settingsPathCopied: "已复制",
+	settingsPathCopied: "复制完成",
+	settingsPathCopy: "复制路径",
 	settingsAddTitle: "添加台账目录",
 	settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
 	settingsAddPlaceholder: "台账根目录的绝对路径",
@@ -309,7 +319,7 @@ export const zh: Record<LocaleKey, string> = {
 	settingsFlow3Todo: "在办：执行中的任务与待认领项",
 	settingsFlow3History: "历史：本项目已结案的任务数量",
 	settingsFlow3Stats: "设置：多 Agent 安装、台账目录管理",
-	settingsColDir: "目录",
+	settingsColDir: "台账名",
 	settingsColPath: "路径",
 	settingsColActions: "操作",
 
@@ -506,9 +516,13 @@ export const en: Record<LocaleKey, string> = {
 
 	settingsDirsTitle: "Ledger folders",
 	settingsDirsHint:
-		"Only ledgers in the following folders are summarized. Clearing \"Show\" removes a folder from every view, statistics and filters; its data is unaffected.",
+		"Only ledgers in the following folders are summarized. Turning \"Show\" off hides that folder's data from every statistic and filter on the board; the ledger data itself is unaffected.",
 	settingsDirsEmpty: "No ledger folder has been registered.",
 	settingsDirsAdd: "Add folder",
+	settingsDirsFilterAll: "All",
+	settingsDirsFilterShown: "Shown",
+	settingsDirsFilterHidden: "Hidden",
+	settingsDirsFilterEmpty: "No ledger folder matches this filter.",
 	settingsDirVisible: "Show",
 	settingsDirRename: "Rename",
 	settingsDirRemove: "Remove",
@@ -516,6 +530,7 @@ export const en: Record<LocaleKey, string> = {
 	settingsSave: "Save",
 	settingsCancel: "Cancel",
 	settingsPathCopied: "Copied",
+	settingsPathCopy: "Copy path",
 	settingsAddTitle: "Add ledger folder",
 	settingsAddHint:
 		"Enter the absolute path of a ledger root folder. It must contain a ledger/ subdirectory.",
@@ -533,7 +548,7 @@ export const en: Record<LocaleKey, string> = {
 	settingsFlow3Todo: "In flight: running tasks and unclaimed items",
 	settingsFlow3History: "History: closed task count for this project",
 	settingsFlow3Stats: "Settings: multi-agent install, ledger folder management",
-	settingsColDir: "Folder",
+	settingsColDir: "Ledger name",
 	settingsColPath: "Path",
 	settingsColActions: "Actions",
 
