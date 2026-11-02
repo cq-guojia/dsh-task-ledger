@@ -19,7 +19,7 @@ import {
 	type SwitchInput,
 } from "./services/identity.service.js";
 import { getBoardHome } from "./services/stats.service.js";
-import { listDirs } from "./services/dirs.service.js";
+import { listDirs, writeDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 import type { RegistryWorkspace } from "./types.js";
@@ -244,13 +244,53 @@ export function registerRoutes(
 		}
 	});
 
-	// 台账目录清单（设置页「台账目录」块）：本轮只读，写动作（加 / 改名 / 显隐 / 移除）下一轮接。
+	// 台账目录清单（设置页「台账目录」块）：读全量（含隐藏项）。
 	registerRead("/dirs", async (_req, res) => {
 		try {
 			sendJson(res, 200, await listDirs());
 		} catch (error) {
 			sendFailure(res, error);
 		}
+	});
+
+	// 台账目录的写动作：显示 / 不显示 / 改名 / 从看板移除。全部转给 skill，插件不写那个文件。
+	webServer.register({
+		kind: "exact",
+		path: `${API_PREFIX}/dirs`,
+		handler: async (req, res) => {
+			if (req.method !== "POST") {
+				sendJson(res, 405, { error: "台账目录写入只接受 POST" });
+				return;
+			}
+			try {
+				let raw: unknown;
+				try {
+					raw = JSON.parse(await readBody(req));
+				} catch {
+					throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
+				}
+				const body = (raw ?? {}) as Record<string, unknown>;
+				const path = typeof body.path === "string" ? body.path.trim() : "";
+				if (path === "") throw new Error(`${BAD_REQUEST}必须给台账目录路径`);
+				if (body.action === "hide" || body.action === "unhide" || body.action === "remove") {
+					sendJson(res, 200, await writeDirs({ action: body.action, path }));
+					return;
+				}
+				if (body.action === "rename") {
+					const name = typeof body.name === "string" ? body.name.trim() : "";
+					sendJson(res, 200, await writeDirs({ action: "rename", path, name }));
+					return;
+				}
+				throw new Error(`${BAD_REQUEST}action 只能是 hide / unhide / rename / remove`);
+			} catch (error) {
+				const message = messageOf(error);
+				if (message.startsWith(BAD_REQUEST)) {
+					sendJson(res, 400, { error: message.slice(BAD_REQUEST.length) });
+					return;
+				}
+				sendFailure(res, error);
+			}
+		},
 	});
 
 	// 首屏一次拿全：8 卡（skill `stats`；本周/上周完成取趋势最后两个桶）+ 在办列表（`list --json`）+ 趋势。

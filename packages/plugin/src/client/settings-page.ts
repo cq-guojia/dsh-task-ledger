@@ -17,7 +17,7 @@ import {
 	Switch,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
-import { fetchDirs, fetchRoster, postForgetIdentity, postSwitchIdentity } from "./api";
+import { fetchDirs, fetchRoster, postDirs, postForgetIdentity, postSwitchIdentity, type DirsWriteBody } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
 import { Button, Card, FieldHint, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
@@ -125,6 +125,8 @@ export function SettingsPage(props: {
 	const [copied, setCopied] = useState<string | null>(null);
 	const [addOpen, setAddOpen] = useState(false);
 	const [addPath, setAddPath] = useState("");
+	/** 目录写动作的进行中标记（`动作:路径`）：同一个记录不让连点。 */
+	const [dirBusy, setDirBusy] = useState<string | null>(null);
 
 	useEffect(() => {
 		let alive = true;
@@ -592,6 +594,57 @@ export function SettingsPage(props: {
 
 	/* ── 下半：台账目录表格（框架全走核心：标题 = SectionHead、表 = Table）────── */
 
+	/** 目录写动作的统一出口（用户 2026-11-02）：**成功静默**（就地换清单 + 让看板重读），
+	 *  失败一条红 Toast，正文用 host / skill 给的原文。 */
+	const writeDir = async (
+		key: string,
+		body: DirsWriteBody,
+		onDone?: () => void,
+	): Promise<void> => {
+		if (dirBusy !== null) return;
+		setDirBusy(key);
+		try {
+			const payload = await postDirs(body);
+			setDirs(payload.dirs);
+			onDone?.();
+			// 显示 / 移除会改变「哪些台账参与汇总」⇒ 让看板整轮重读
+			onSwitched();
+		} catch (failure) {
+			notify(t("settingsDirOpFailed"), {
+				variant: "error",
+				// 台账路径与脚本原因都可能很长，留够时间读完
+				durationMs: 10_000,
+				description: failure instanceof Error ? failure.message : String(failure),
+			});
+		} finally {
+			setDirBusy(null);
+		}
+	};
+
+	/** 保存改名：空名 = 回落目录名（skill 口径，与占位提示一致）。 */
+	const saveRename = (dir: LedgerDirView): void => {
+		void writeDir(
+			`rename:${dir.path}`,
+			{ action: "rename", path: dir.path, name: draft.trim() },
+			() => {
+				setRenaming(null);
+			},
+		);
+	};
+
+	/** 从看板移除：先确认（书面口径：只摘出看板，不动任何文件与台账数据）。 */
+	const removeDirOf = async (dir: LedgerDirView): Promise<void> => {
+		if (dirBusy !== null) return;
+		const ok = await confirmModal({
+			title: t("settingsDirRemoveConfirmTitle", { name: dir.name }),
+			message: t("settingsDirRemoveConfirmBody"),
+			confirmText: t("settingsDirRemoveConfirmOk"),
+			cancelText: t("settingsCancel"),
+			tone: "danger",
+		});
+		if (ok) await writeDir(`remove:${dir.path}`, { action: "remove", path: dir.path });
+	};
+
 	/** 表格行：按顶部三档筛过，重命名时整行让给输入框（跨四列）。 */
 	const dirRows = (dirs ?? [])
 		.filter((dir) =>
@@ -627,7 +680,10 @@ export function SettingsPage(props: {
 										variant: "info",
 										size: "lg",
 										icon: h(IconCheckOutlineRegular, { size: 14 }),
-										onClick: notYet,
+										disabled: dirBusy !== null,
+										onClick: () => {
+											saveRename(dir);
+										},
 									},
 									t("settingsSave"),
 								),
@@ -679,8 +735,14 @@ export function SettingsPage(props: {
 					// 开关不带文字：表头已写明这一列是「显示」（用户 2026-11-02）
 					visible: h(Switch, {
 						checked: !dir.hidden,
-						onChange: notYet,
+						onChange: (next: boolean) => {
+							void writeDir(`visible:${dir.path}`, {
+								action: next ? "unhide" : "hide",
+								path: dir.path,
+							});
+						},
 						label: t("settingsDirVisible"),
+						disabled: dirBusy !== null,
 					}),
 					actions: h(
 						"div",
@@ -706,7 +768,10 @@ export function SettingsPage(props: {
 							variant: "danger",
 							color: "var(--dtl-danger)",
 							background: "var(--dtl-danger-soft)",
-							onClick: notYet,
+							disabled: dirBusy !== null,
+							onClick: () => {
+								void removeDirOf(dir);
+							},
 						}),
 					),
 				},
@@ -1022,6 +1087,10 @@ export type SettingsLocaleKey = Extract<
 	| "settingsDirVisible"
 	| "settingsDirRename"
 	| "settingsDirRemove"
+	| "settingsDirRemoveConfirmTitle"
+	| "settingsDirRemoveConfirmBody"
+	| "settingsDirRemoveConfirmOk"
+	| "settingsDirOpFailed"
 	| "settingsRenamePlaceholder"
 	| "settingsSave"
 	| "settingsCancel"

@@ -50,6 +50,31 @@ export async function readDirs(): Promise<LedgerDir[]> {
 }
 
 /**
+ * 写动作的公共出口：skill 的写命令**恒回全量清单**（含隐藏项，`actions/dirs.go:201`），
+ * 调用方拿它就地换掉表格，不必再读一次。
+ */
+async function writeDirs(args: string[]): Promise<LedgerDir[]> {
+	const result = await runLedgerScript<DirsPayload>("dirs", [...args, "--json"]);
+	if (!result.ok) throw failureOf(result, "改台账目录清单失败：");
+	return parseDirs(result.data);
+}
+
+/** 看板上显示 / 不显示这一个台账（只动清单，目录与台账文件一个都不碰）。 */
+export function setDirHidden(path: string, hidden: boolean): Promise<LedgerDir[]> {
+	return writeDirs(["--dir", path, hidden ? "--hide" : "--unhide"]);
+}
+
+/** 改台账名；空名 = 回落目录名（skill 口径）。 */
+export function renameDir(path: string, name: string): Promise<LedgerDir[]> {
+	return writeDirs(["--dir", path, "--rename", name]);
+}
+
+/** 从清单移除（不是删目录：台账数据与文件全部原样保留）。 */
+export function removeDir(path: string): Promise<LedgerDir[]> {
+	return writeDirs(["--dir", path, "--remove"]);
+}
+
+/**
  * 登记一个目录（幂等）。不是台账根时 skill 返回 `added:false` + 原因，不算错误。
  * 返回登记后的整份清单，调用方不必再读一次。
  */

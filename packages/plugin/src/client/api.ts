@@ -108,6 +108,20 @@ export function fetchDirs(): Promise<DirsPayload> {
 	return fetchJson<DirsPayload>("/dirs");
 }
 
+/** 台账目录的写动作：显示 / 不显示 / 改名 / 从看板移除。 */
+export type DirsWriteBody =
+	| { readonly action: "hide" | "unhide" | "remove"; readonly path: string }
+	| { readonly action: "rename"; readonly path: string; readonly name: string };
+
+/** 返回改完之后的完整清单（含隐藏项），调用方就地换掉表格。 */
+export function postDirs(body: DirsWriteBody): Promise<DirsPayload> {
+	return fetchJson<DirsPayload>("/dirs", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(body),
+	});
+}
+
 /**
  * 改昵称的超时：要逐本台账走「取最新 → 改 → 提交 → 推送」，
  * 一本几秒、十本一分钟很正常 —— 吃默认 8s 只会「界面报超时、脚本还在改」。

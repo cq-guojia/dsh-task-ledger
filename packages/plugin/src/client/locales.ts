@@ -69,6 +69,10 @@ export type LocaleKey =
 	| "settingsDirVisible"
 	| "settingsDirRename"
 	| "settingsDirRemove"
+	| "settingsDirRemoveConfirmTitle"
+	| "settingsDirRemoveConfirmBody"
+	| "settingsDirRemoveConfirmOk"
+	| "settingsDirOpFailed"
 	| "settingsRenamePlaceholder"
 	| "settingsSave"
 	| "settingsCancel"
@@ -298,6 +302,11 @@ export const zh: Record<LocaleKey, string> = {
 	settingsDirVisible: "显示",
 	settingsDirRename: "重命名",
 	settingsDirRemove: "移除",
+	settingsDirRemoveConfirmTitle: "从看板移除「{name}」？",
+	settingsDirRemoveConfirmBody:
+		"本次操作仅将该台账从看板的管理与查看列表中移除，不会删除或改动该目录下的任何文件与台账数据；如需重新纳入看板，可通过「添加目录」再次登记。",
+	settingsDirRemoveConfirmOk: "确认移除",
+	settingsDirOpFailed: "台账目录未更新",
 	settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
 	settingsSave: "保存",
 	settingsCancel: "取消",
@@ -526,6 +535,11 @@ export const en: Record<LocaleKey, string> = {
 	settingsDirVisible: "Show",
 	settingsDirRename: "Rename",
 	settingsDirRemove: "Remove",
+	settingsDirRemoveConfirmTitle: "Remove \"{name}\" from the board?",
+	settingsDirRemoveConfirmBody:
+		"This only takes the ledger out of the board's management and viewing list. No file or ledger data in that folder is deleted or changed; register it again with \"Add folder\" to put it back on the board.",
+	settingsDirRemoveConfirmOk: "Remove",
+	settingsDirOpFailed: "Ledger folders were not updated",
 	settingsRenamePlaceholder: "New name (empty keeps the folder name)",
 	settingsSave: "Save",
 	settingsCancel: "Cancel",
