@@ -57576,8 +57576,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-145745-203`
-			}, `v0.0.126 261102-145745-203`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-152454-525`
+			}, `v0.0.126 261102-152454-525`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -57744,7 +57744,7 @@ body[data-ds-dark-theme]{
 			settingsAddPlaceholder: "台账根目录的绝对路径",
 			settingsAddConfirm: "添加",
 			settingsFlow1: "安装 Skill",
-			settingsFlow1Lead: "本机 DeepSeek 不用安装，插件已自带。",
+			settingsFlow1Lead: "DeepSeek-harness 不用安装，插件已自带。",
 			settingsFlow1Sub: "在其他 Agent 上安装",
 			settingsFlow2: "工作区操作",
 			settingsFlow2Create: "新建：说「建一个新任务：xxx」。",
@@ -57753,7 +57753,7 @@ body[data-ds-dark-theme]{
 			settingsFlow3: "面板查询",
 			settingsFlow3Todo: "在办：执行中的任务与待认领项",
 			settingsFlow3History: "历史：本项目已结案的任务数量",
-			settingsFlow3Stats: "统计：趋势与耗时",
+			settingsFlow3Stats: "设置：多 Agent 安装、台账目录管理",
 			settingsColDir: "目录",
 			settingsColPath: "路径",
 			settingsColActions: "操作",
@@ -57929,7 +57929,7 @@ body[data-ds-dark-theme]{
 			settingsAddPlaceholder: "Absolute path of the ledger root",
 			settingsAddConfirm: "Add",
 			settingsFlow1: "Install Skill",
-			settingsFlow1Lead: "Local DeepSeek needs no install — it ships with the plugin.",
+			settingsFlow1Lead: "DeepSeek-harness needs no install — it ships with the plugin.",
 			settingsFlow1Sub: "Install on other agents",
 			settingsFlow2: "Workspace Operations",
 			settingsFlow2Create: "New: say \"create a new task: xxx\".",
@@ -57938,7 +57938,7 @@ body[data-ds-dark-theme]{
 			settingsFlow3: "Panel Query",
 			settingsFlow3Todo: "In flight: running tasks and unclaimed items",
 			settingsFlow3History: "History: closed task count for this project",
-			settingsFlow3Stats: "Stats: trend and time spent",
+			settingsFlow3Stats: "Settings: multi-agent install, ledger folder management",
 			settingsColDir: "Folder",
 			settingsColPath: "Path",
 			settingsColActions: "Actions",
