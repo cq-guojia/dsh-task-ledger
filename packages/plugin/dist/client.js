@@ -55605,6 +55605,10 @@ body[data-ds-dark-theme]{
 /* 局部加载：核心 Loader（三块脉动）居中，只占没数据的那一块，不盖整页 */
 .dtl-loading{display:flex;align-items:center;justify-content:center;padding:var(--dtl-space-4) 0;}
 
+/* 右上角刷新钮：刷新中**只留转圈**，文案用 visibility 藏住（仍占宽 ⇒ 按钮不左右跳，用户 2026-11-03） */
+.dtl-refresh{display:inline-flex;}
+.dtl-refresh[data-busy='true'] .dtl-refresh__label{visibility:hidden;}
+
 /* 统计区整体：左 8 块（2 行 × 4 列）+ 右图表卡，参考图同款分栏。
    ⚠️ 列数写死 4 → 2，绝不给 3：3 列会排出 3+1 的非对称（用户 2026-10-17）。
    行高也定死成 --dtl-stat-h（不是 1fr）⇒ 行不随内容涨，卡与卡之间永远等高。
@@ -58901,8 +58905,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261103-000043-059`
-			}, `v0.0.126 261103-000043-059`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261103-000730-271`
+			}, `v0.0.126 261103-000730-271`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -58930,7 +58934,10 @@ body[data-ds-dark-theme]{
 					}
 				],
 				onChange: (next) => setViewMode(next)
-			}), (0, react$1.createElement)(Button, {
+			}), (0, react$1.createElement)("span", {
+				className: "dtl-refresh",
+				"data-busy": state.refreshing
+			}, (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -58942,7 +58949,7 @@ body[data-ds-dark-theme]{
 					lastTrendRef.current = null;
 					setHistoryError(null);
 				}
-			}, state.refreshing ? t("refreshing") : t("refresh")))), shownView === "settings" ? null : shownView === "history" ? historyError !== null ? (0, react$1.createElement)("div", { style: {
+			}, (0, react$1.createElement)("span", { className: "dtl-refresh__label" }, t("refresh")))))), shownView === "settings" ? null : shownView === "history" ? historyError !== null ? (0, react$1.createElement)("div", { style: {
 				color: "var(--dtl-danger)",
 				fontSize: "var(--dtl-font-md)",
 				paddingTop: "var(--dtl-space-3)"

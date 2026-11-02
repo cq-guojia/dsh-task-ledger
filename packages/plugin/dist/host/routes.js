@@ -184,22 +184,23 @@ export function registerRoutes(webServer, deps) {
             sendFailure(res, error);
         }
     });
-    // 台账目录清单（设置页「台账目录」块）：读全量（含隐藏项）。
-    registerRead("/dirs", async (_req, res) => {
-        try {
-            sendJson(res, 200, await listDirs());
-        }
-        catch (error) {
-            sendFailure(res, error);
-        }
-    });
-    // 台账目录的写动作：显示 / 不显示 / 改名 / 从看板移除。全部转给 skill，插件不写那个文件。
+    // 台账目录清单（设置页「台账目录」块）：GET 读全量（含隐藏项），POST 是写动作（显示 / 不显示 /
+    // 改名 / 从看板移除，全部转给 skill，插件不写那个文件）。
+    // ⚠️ 同一个 path 只能注册一次（宿主对重复 path 直接拒绝）⇒ 读写合成这一条，按 method 分流。
     webServer.register({
         kind: "exact",
         path: `${API_PREFIX}/dirs`,
         handler: async (req, res) => {
             if (req.method !== "POST") {
-                sendJson(res, 405, { error: "台账目录写入只接受 POST" });
+                try {
+                    // 与 registerRead 同一口径：manual refresh 先清读缓存再算
+                    if (new URL(req.url ?? "/", "http://localhost").searchParams.get("fresh") === "1")
+                        invalidate();
+                    sendJson(res, 200, await listDirs());
+                }
+                catch (error) {
+                    sendFailure(res, error);
+                }
                 return;
             }
             try {

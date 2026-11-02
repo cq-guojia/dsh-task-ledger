@@ -748,25 +748,31 @@ export function BoardHome(props: {
 								],
 								onChange: (next) => setViewMode(next),
 							}),
+							// 文案恒为「刷新」，刷新中只留转圈、文字藏起来（用户 2026-11-03：不许两个字/三个字来回跳）
 							h(
-								Button,
-								{
-									variant: "outline",
-									size: "lg",
-									icon: h(IconRefreshOutlineRegular, { size: 16 }),
-									// 转圈 / 禁用都交核心 Button 的 loading 档，不自绘。
-									loading: state.refreshing,
-									title: t("refresh"),
-									onClick: () => {
-										void refresh();
-										// 手动刷新 = 全部重来：host 缓存由 fresh=1 全清，前端历史缓存一并清掉，
-										// 切回哪个粒度都重新读（用户 2026-10-30：点到每一个再重新读）
-										setHistoryByGran({});
-										lastTrendRef.current = null;
-										setHistoryError(null);
+								"span",
+								{ className: "dtl-refresh", "data-busy": state.refreshing },
+								h(
+									Button,
+									{
+										variant: "outline",
+										size: "lg",
+										icon: h(IconRefreshOutlineRegular, { size: 16 }),
+										// 转圈 / 禁用都交核心 Button 的 loading 档，不自绘。
+										loading: state.refreshing,
+										title: t("refresh"),
+										onClick: () => {
+											void refresh();
+											// 手动刷新 = 全部重来：host 缓存由 fresh=1 全清，前端历史缓存一并清掉，
+											// 切回哪个粒度都重新读（用户 2026-10-30：点到每一个再重新读）
+											setHistoryByGran({});
+											lastTrendRef.current = null;
+											setHistoryError(null);
+										},
 									},
-								},
-								state.refreshing ? t("refreshing") : t("refresh"),
+									// 核心 Button 只有给 maxWidth 时才把文案包成带类的 span ⇒ 这里自己包一层好挂样式
+									h("span", { className: "dtl-refresh__label" }, t("refresh")),
+								),
 							),
 						),
 				),
