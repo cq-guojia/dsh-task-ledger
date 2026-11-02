@@ -20,9 +20,11 @@ type Params struct {
 	Finished string
 	Cancel   bool
 	Deep     bool
-	List     *ListQuery
-	History  *HistoryQuery
-	Trend    *TrendQuery
+	// KeepIdentity forget 专用：只摘名册与分片，不清本机身份文件
+	KeepIdentity bool
+	List         *ListQuery
+	History      *HistoryQuery
+	Trend        *TrendQuery
 }
 
 // ActionSpec 一条命令的定义。
@@ -116,9 +118,20 @@ var ACTIONS = map[string]ActionSpec{
 		// result_json：人跑给人话、--json 给机器读的 {removed, name, tasks}（界面要判有没有真删掉）
 		Render:     "result_json",
 		LockAction: "forget",
-		Params:     []string{"tid"},
+		Params:     []string{"tid", "keep"},
 		Run: func(repo string, me core.Identity, p Params) (any, error) {
-			return ForgetOwner(repo, me, p.Tid)
+			return ForgetOwner(repo, me, p.Tid, p.KeepIdentity)
+		},
+	},
+	"logout": {
+		// 清本机身份（界面「点自己的叉」的最后一步）：只动 ~/.taskledger/identity.json，
+		// 不碰任何台账 ⇒ 走只读路径（不进事务、不取最新、不提交）。
+		Render:           "result_json",
+		ReadOnly:         true,
+		OptionalIdentity: true,
+		Params:           []string{},
+		Run: func(repo string, me core.Identity, p Params) (any, error) {
+			return Logout(me)
 		},
 	},
 	"show": {

@@ -380,8 +380,12 @@ func (g *GitRepo) Commit(files []string, message string) error {
 		return nil
 	}
 	// 改哪个提交哪个：取最新会刷一整片文件，内容没变的不能跟着进本次提交。
+	// **--relative 不能少**：diff 默认按「相对仓库根」输出，而这里的 git 都在工作区目录里跑
+	// （pathspec 相对当前目录）。台账放在别人仓库的子目录下时（如 /workspace/Explore），
+	// 输出会是 Explore/ledger/owners.json，拿它当 pathspec 就变成 Explore/Explore/… ⇒
+	// commit 报 "did not match any file(s) known to git"。--relative 把它拉回当前目录口径。
 	changed := make([]string, 0, len(touched))
-	for _, line := range g.lines(append([]string{"diff", "--cached", "--name-only", "--"}, touched...)...) {
+	for _, line := range g.lines(append([]string{"diff", "--cached", "--relative", "--name-only", "--"}, touched...)...) {
 		changed = append(changed, unquoteGitPath(line))
 	}
 	if len(changed) == 0 {

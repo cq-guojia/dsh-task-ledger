@@ -337,9 +337,11 @@ func paramsOf(command string, a *Args, repo string, me core.Identity) (actions.P
 		Finished: a.Finished,
 		Cancel:   a.Cancel,
 		Deep:     a.Deep,
-		List:     a.Query,
-		History:  a.HistoryQuery,
-		Trend:    a.TrendQuery,
+		// forget 专用：界面逐本台账删自己时不清身份，留到最后 logout
+		KeepIdentity: a.KeepIdentity,
+		List:         a.Query,
+		History:      a.HistoryQuery,
+		Trend:        a.TrendQuery,
 	}
 	switch command {
 	case "new":

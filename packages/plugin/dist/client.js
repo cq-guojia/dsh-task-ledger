@@ -57894,20 +57894,24 @@ body[data-ds-dark-theme]{
 				setError(null);
 				try {
 					const report = await postForgetIdentity(row.uuid);
-					if (report.kept.length > 0) notify(t("settingsForgetKeptTitle"), {
-						variant: "warning",
-						durationMs: 1e4,
-						description: report.kept.map((item) => t("settingsForgetKeptRow", {
+					if (report.failed.length === 0 && report.kept.length === 0) notify(t("settingsForgetDone", { name: row.name }), { variant: "success" });
+					else {
+						const lines = [];
+						if (report.removed.length > 0) lines.push(t("settingsForgetDoneCount", { count: String(report.removed.length) }));
+						for (const item of report.kept) lines.push(t("settingsForgetKeptRow", {
 							workspace: item.workspace,
 							tasks: String(item.tasks)
-						})).join("\n")
-					});
-					if (report.failed.length > 0) notify(t("settingsForgetFailedTitle"), {
-						variant: "error",
-						durationMs: 1e4,
-						description: report.failed.map((item) => `${item.workspace}：${item.error}`).join("\n")
-					});
-					if (report.removed.length > 0) notify(t("settingsForgetDone", { name: row.name }), { variant: "success" });
+						}));
+						for (const item of report.failed) lines.push(t("settingsForgetFailedRow", {
+							workspace: item.workspace,
+							error: item.error
+						}));
+						notify(t("settingsForgetPartialTitle", { name: row.name }), {
+							variant: report.failed.length > 0 ? "error" : "warning",
+							durationMs: 12e3,
+							description: lines.join("\n")
+						});
+					}
 					setRoster(null);
 					onSwitched();
 				} catch (failure) {
@@ -58741,8 +58745,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-221641-039`
-			}, `v0.0.126 261102-221641-039`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-223803-347`
+			}, `v0.0.126 261102-223803-347`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -58903,10 +58907,11 @@ body[data-ds-dark-theme]{
 			settingsDeleteConfirmTitle: "从台账移除用户",
 			settingsDeleteConfirmBody: "确定移除 @{name} 吗？该用户在各台账名册中的登记会一并删除；若某个台账里他名下仍有任务，那本台账不会删。已结案的历史记录不受影响。",
 			settingsDeleteConfirmOk: "移除",
-			settingsForgetKeptTitle: "部分台账未删除",
 			settingsForgetKeptRow: "{workspace}：他名下还有 {tasks} 个任务",
-			settingsForgetFailedTitle: "部分台账删除失败",
+			settingsForgetFailedRow: "{workspace}：{error}",
 			settingsForgetDone: "已从台账移除 @{name}",
+			settingsForgetDoneCount: "已移除 {count} 本",
+			settingsForgetPartialTitle: "@{name}：部分台账没能移除",
 			settingsCreateDone: "已创建身份 @{name}",
 			settingsSwitchDone: "已切换到 @{name}",
 			settingsRosterEmpty: "所列台账中暂无已创建的身份。",
@@ -59107,10 +59112,11 @@ body[data-ds-dark-theme]{
 			settingsDeleteConfirmTitle: "Remove user from ledgers",
 			settingsDeleteConfirmBody: "Remove @{name}? The user is dropped from every ledger roster; a ledger where this user still owns tasks is kept. Closed history is untouched.",
 			settingsDeleteConfirmOk: "Remove",
-			settingsForgetKeptTitle: "Some ledgers kept the user",
 			settingsForgetKeptRow: "{workspace}: still owns {tasks} task(s)",
-			settingsForgetFailedTitle: "Some ledgers failed",
+			settingsForgetFailedRow: "{workspace}: {error}",
 			settingsForgetDone: "Removed @{name} from ledgers",
+			settingsForgetDoneCount: "{count} ledger(s) removed",
+			settingsForgetPartialTitle: "@{name}: some ledgers kept the user",
 			settingsCreateDone: "Created identity @{name}",
 			settingsSwitchDone: "Switched to @{name}",
 			settingsRosterEmpty: "No identity has been created in the listed ledgers.",

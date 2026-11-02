@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/core"
+	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/env"
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/store"
 )
 
@@ -31,7 +32,7 @@ func forgetFixture(t *testing.T) (string, core.Identity, core.Identity) {
 func TestForgetOwnerRemovesEmptyShard(t *testing.T) {
 	repo, me, other := forgetFixture(t)
 
-	res, err := ForgetOwner(repo, me, other.UUID)
+	res, err := ForgetOwner(repo, me, other.UUID, false)
 	if err != nil {
 		t.Fatalf("摘掉空分片的人应成功：%v", err)
 	}
@@ -81,7 +82,7 @@ func TestForgetOwnerFollowsIndexFileName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := ForgetOwner(repo, me, uuid)
+	res, err := ForgetOwner(repo, me, uuid, false)
 	if err != nil {
 		t.Fatalf("摘掉空分片的人应成功：%v", err)
 	}
@@ -90,6 +91,53 @@ func TestForgetOwnerFollowsIndexFileName(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(repo, core.ToRepoRel(rel))); !os.IsNotExist(err) {
 		t.Errorf("索引登记的分片应该被删掉：%s", rel)
+	}
+}
+
+// forget --keep-identity：删的是自己也不许动身份文件。
+// 界面删自己会逐本台账跑一遍，谁先跑完谁把 identity.json 删了，后面几本就会报
+// 「这台机器还没有初始化身份」（用户 2026-11-02 实测到的那串黄+红）。
+func TestForgetKeepIdentityLeavesIdentityFile(t *testing.T) {
+	withTempHome(t)
+	repo, me := tempLedger(t)
+	if _, err := writeIdentity(me); err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := ForgetOwner(repo, me, me.UUID, true)
+	if err != nil {
+		t.Fatalf("摘自己应该成功：%v", err)
+	}
+	if res.Payload["removed"] != true {
+		t.Fatalf("应报告 removed=true：%#v", res.Payload)
+	}
+	if _, ok, err := env.ReadIdentity(); err != nil || !ok {
+		t.Fatalf("--keep-identity 不该清掉本机身份（ok=%v err=%v）", ok, err)
+	}
+}
+
+// logout：只清本机身份文件，台账一个字节都不动；没身份时也幂等成功。
+func TestLogoutClearsIdentityOnly(t *testing.T) {
+	withTempHome(t)
+	repo, me := tempLedger(t)
+	if _, err := writeIdentity(me); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Logout(me); err != nil {
+		t.Fatalf("logout 不该失败：%v", err)
+	}
+	if _, ok, err := env.ReadIdentity(); err != nil || ok {
+		t.Fatalf("logout 后应该读不到身份（ok=%v err=%v）", ok, err)
+	}
+	if _, found, err := store.NewOwnersIndex(repo).Get(me.UUID); err != nil || !found {
+		t.Fatalf("logout 不许动台账名册（found=%v err=%v）", found, err)
+	}
+	if _, err := os.Stat(filepath.Join(repo, core.ToRepoRel(core.ShardRel(me.UUID)))); err != nil {
+		t.Fatalf("logout 不许动分片文件：%v", err)
+	}
+	if _, err := Logout(core.Identity{}); err != nil {
+		t.Fatalf("重复 logout 应该幂等成功：%v", err)
 	}
 }
 
@@ -105,7 +153,7 @@ func TestForgetOwnerKeepsShardWithTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := ForgetOwner(repo, me, other.UUID)
+	res, err := ForgetOwner(repo, me, other.UUID, false)
 	if err != nil {
 		t.Fatalf("有任务时不该报错（只是不删）：%v", err)
 	}

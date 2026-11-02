@@ -35,11 +35,17 @@ export interface ForgetReport {
         readonly workspace: string;
         readonly error: string;
     }[];
+    /** 删的是本机身份、并且**每一本都删成了** ⇒ 顺手退出了登录。 */
+    readonly signedOut: boolean;
 }
 /**
  * 把某个人从**所有登记过他的台账**里摘掉（用户 2026-11-02 定的口径）：
  * 每本台账各删各的，分片里还有任务的那本不删、如实回报；历史记录与其他台账一概不动。
  * 名册里没有他的台账直接跳过（不是失败）。
+ *
+ * **清本机身份必须是最后一步**：删的是自己时，每本台账都跑一次 forget，若让 forget 顺手
+ * 删 identity.json，先跑完的那本会让后面几本读不到身份（报「这台机器还没有初始化身份」）。
+ * 所以 forget 一律带 --keep-identity，全部跑完之后才按需要 logout。
  */
 export declare function forgetOwner(workspaces: readonly LedgerWorkspace[], uuid: string): Promise<ForgetReport>;
 export declare function getRoster(workspaces: readonly LedgerWorkspace[]): Promise<{

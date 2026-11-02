@@ -80,6 +80,8 @@ type Args struct {
 	NewID       bool
 	Name        string
 	Yes         bool
+	// KeepIdentity forget --keep-identity：只摘名册与分片，不清本机身份
+	KeepIdentity bool
 
 	Query        *actions.ListQuery
 	HistoryQuery *actions.HistoryQuery
@@ -97,7 +99,8 @@ var commandFlags = map[string]map[string]bool{
 	"list":     setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
 	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--by-owner", "--json", "--repo"),
 	"owners":   setOf("--json", "--repo"),
-	"forget":   setOf("--id", "--json", "--repo"),
+	"forget":   setOf("--id", "--keep-identity", "--json", "--repo"),
+	"logout":   setOf("--json", "--repo"),
 	"show":     setOf("--id", "--json", "--repo"),
 	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--keyword", "--since", "--until", "--limit", "--months", "--json", "--repo"),
 	"validate": setOf("--deep", "--json", "--repo"),
@@ -270,6 +273,8 @@ func applyFlag(a *Args, name, value string) error {
 		a.Tags = splitTags(value)
 	case "--self", "--mine":
 		a.Mine = true
+	case "--keep-identity":
+		a.KeepIdentity = true
 	case "--pool":
 		a.Pool = true
 	case "--owner":

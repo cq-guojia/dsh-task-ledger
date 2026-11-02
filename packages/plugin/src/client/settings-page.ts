@@ -203,32 +203,38 @@ export function SettingsPage(props: {
 		setError(null);
 		try {
 			const report = await postForgetIdentity(row.uuid);
-			if (report.kept.length > 0) {
-				notify(t("settingsForgetKeptTitle"), {
-					variant: "warning",
-					durationMs: 10_000,
-					description: report.kept
-						.map((item) =>
-							t("settingsForgetKeptRow", {
-								workspace: item.workspace,
-								tasks: String(item.tasks),
-							}),
-						)
-						.join("\n"),
-				});
-			}
-			if (report.failed.length > 0) {
-				notify(t("settingsForgetFailedTitle"), {
-					variant: "error",
-					durationMs: 10_000,
-					description: report.failed
-						.map((item) => `${item.workspace}：${item.error}`)
-						.join("\n"),
-				});
-			}
-			// 真删掉了才有成功回执（删干净的那几本）；一本都没删成时不刷这条，免得和上面两条打架
-			if (report.removed.length > 0) {
+			// 一次操作只给**一条**回执（用户 2026-11-02：又绿又红谁看得懂）。
+			// 全成 ⇒ 绿；有任何一本没删成/失败 ⇒ 一条黄或红，正文逐行写清是哪本、为什么。
+			if (report.failed.length === 0 && report.kept.length === 0) {
 				notify(t("settingsForgetDone", { name: row.name }), { variant: "success" });
+			} else {
+				const lines: string[] = [];
+				if (report.removed.length > 0) {
+					lines.push(
+						t("settingsForgetDoneCount", { count: String(report.removed.length) }),
+					);
+				}
+				for (const item of report.kept) {
+					lines.push(
+						t("settingsForgetKeptRow", {
+							workspace: item.workspace,
+							tasks: String(item.tasks),
+						}),
+					);
+				}
+				for (const item of report.failed) {
+					lines.push(
+						t("settingsForgetFailedRow", {
+							workspace: item.workspace,
+							error: item.error,
+						}),
+					);
+				}
+				notify(t("settingsForgetPartialTitle", { name: row.name }), {
+					variant: report.failed.length > 0 ? "error" : "warning",
+					durationMs: 12_000,
+					description: lines.join("\n"),
+				});
 			}
 			// 删完**不关**弹窗（用户 2026-11-02）：可能想接着清好几个人。
 			// 名册已经变了：丢掉缓存让它在弹窗里就地重取，被删的人立刻从列表上消失。

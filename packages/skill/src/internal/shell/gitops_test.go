@@ -30,6 +30,46 @@ func TestIsWorklogPath(t *testing.T) {
 	}
 }
 
+// 台账放在别人仓库的子目录里（/workspace/Explore 这种）：git 在子目录里跑，
+// `git diff --cached --name-only` 的输出却带子目录前缀（Explore/ledger/…），
+// 拿它当 commit 的 pathspec 会变成 Explore/Explore/… ⇒ "did not match any file(s) known to git"。
+func TestCommitInsideSubdirOfWorktree(t *testing.T) {
+	outer := t.TempDir()
+	sub := filepath.Join(outer, "Explore")
+	g := &GitRepo{Repo: outer}
+	if init := g.run("init", "-q"); init.Code != 0 {
+		t.Skip("本机没有 git，跳过")
+	}
+	g.run("config", "user.email", "test@example.com")
+	g.run("config", "user.name", "test")
+
+	keep := filepath.Join(sub, "ledger", "owners.json")
+	drop := filepath.Join(sub, "ledger", "owners", "abc123456789.json")
+	if err := os.MkdirAll(filepath.Dir(drop), 0o777); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{keep, drop} {
+		if err := os.WriteFile(path, []byte("{}\n"), 0o666); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := g.Commit([]string{keep, drop}, "chore: 初始"); err != nil {
+		t.Fatalf("首次提交失败：%v", err)
+	}
+	if err := os.Remove(drop); err != nil {
+		t.Fatal(err)
+	}
+
+	subRepo := &GitRepo{Repo: sub}
+	if err := subRepo.Commit([]string{keep, drop}, "chore: 删人"); err != nil {
+		t.Fatalf("子目录台账删文件应当提交成功：%v", err)
+	}
+	out := g.run("show", "--name-status", "--format=", "HEAD").Stdout
+	if !strings.Contains(out, "D\tExplore/ledger/owners/abc123456789.json") {
+		t.Errorf("提交里应记录删除：\n%s", out)
+	}
+}
+
 // 删人时那本分片是被删掉的文件：git add 对不存在的路径会报 pathspec 不匹配，
 // 而「从未跟踪 + 已不在磁盘上」的路径更是无事可做。两种都得能提交过去。
 func TestCommitRecordsDeletionAndSkipsUntrackedGone(t *testing.T) {

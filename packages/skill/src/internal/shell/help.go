@@ -124,11 +124,19 @@ var commandHelp = map[string]helpDoc{
 		},
 	},
 	"forget": {
-		usage: "progress forget --id <uuid> [--json]",
+		usage: "progress forget --id <uuid> [--keep-identity] [--json]",
 		options: []helpOption{
 			{"--id <uuid>", "把这个人从**这本台账**的名册里摘掉（分片还有任务就不删，返回 removed=false）"},
+			{"--keep-identity", "不动本机身份文件（界面逐本台账删自己时用：清身份留到最后一步 logout）"},
 			{"--json", "{removed, name, tasks, reason?}：removed=false 表示因为有任务而没删"},
 			{"--repo <工作区根>", "同上；别的台账、历史记录一概不动"},
+		},
+	},
+	"logout": {
+		usage: "progress logout [--json]",
+		options: []helpOption{
+			{"--json", "{cleared, uuid, name?}：只清本机身份文件，台账一个字节都不动"},
+			{"--repo <工作区根>", "同上（命令本身不用台账，只为统一解析）"},
 		},
 	},
 	"show": {

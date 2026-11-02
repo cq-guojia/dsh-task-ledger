@@ -53,3 +53,8 @@ export interface ForgetOutcome {
     readonly tasks: number;
 }
 export declare function forgetOwner(repo: string, uuid: string): Promise<ForgetOutcome>;
+/**
+ * 清掉本机身份（skill `logout`）：台账一个字节都不动。
+ * 只删 ~/.taskledger/identity.json —— 路径归 skill 管，插件不复制这份知识。
+ */
+export declare function logout(repo: string): Promise<void>;

@@ -61,7 +61,10 @@ export async function switchIdentity(input) {
 export async function forgetOwner(repo, uuid) {
     // 删人也走一遍「写前取最新 → 改 → 提交 → 推送」，一次网络往返就可能几秒，
     // 默认的 10s 会把它判超时（脚本被 kill 时连分片都还没删）。
-    const result = await runLedgerScript("forget", ["--id", uuid, "--repo", repo, "--json"], {
+    //
+    // **--keep-identity**：界面删自己会逐本台账各跑一次，谁先跑完谁把 identity.json 删了，
+    // 后面几本就会报「这台机器还没有初始化身份」（用户 2026-11-02 实测）。清身份留到最后一步。
+    const result = await runLedgerScript("forget", ["--id", uuid, "--keep-identity", "--repo", repo, "--json"], {
         timeoutMs: FORGET_TIMEOUT_MS,
     });
     if (!result.ok)
@@ -71,6 +74,15 @@ export async function forgetOwner(repo, uuid) {
         name: typeof result.data.name === "string" ? result.data.name : "",
         tasks: typeof result.data.tasks === "number" ? result.data.tasks : 0,
     };
+}
+/**
+ * 清掉本机身份（skill `logout`）：台账一个字节都不动。
+ * 只删 ~/.taskledger/identity.json —— 路径归 skill 管，插件不复制这份知识。
+ */
+export async function logout(repo) {
+    const result = await runLedgerScript("logout", ["--json", "--repo", repo], { timeoutMs: 30_000 });
+    if (!result.ok)
+        throw new Error(result.error);
 }
 /** `dirs[]` 原样搬过来（形状不对的行直接丢掉，不编造）。 */
 function dirsOf(raw) {

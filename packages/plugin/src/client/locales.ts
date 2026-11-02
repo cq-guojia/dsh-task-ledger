@@ -46,10 +46,11 @@ export type LocaleKey =
 	| "settingsDeleteConfirmTitle"
 	| "settingsDeleteConfirmBody"
 	| "settingsDeleteConfirmOk"
-	| "settingsForgetKeptTitle"
 	| "settingsForgetKeptRow"
-	| "settingsForgetFailedTitle"
+	| "settingsForgetFailedRow"
 	| "settingsForgetDone"
+	| "settingsForgetDoneCount"
+	| "settingsForgetPartialTitle"
 	| "settingsCreateDone"
 	| "settingsSwitchDone"
 	| "settingsRosterEmpty"
@@ -267,10 +268,11 @@ export const zh: Record<LocaleKey, string> = {
 	settingsDeleteConfirmBody:
 		"确定移除 @{name} 吗？该用户在各台账名册中的登记会一并删除；若某个台账里他名下仍有任务，那本台账不会删。已结案的历史记录不受影响。",
 	settingsDeleteConfirmOk: "移除",
-	settingsForgetKeptTitle: "部分台账未删除",
 	settingsForgetKeptRow: "{workspace}：他名下还有 {tasks} 个任务",
-	settingsForgetFailedTitle: "部分台账删除失败",
+	settingsForgetFailedRow: "{workspace}：{error}",
 	settingsForgetDone: "已从台账移除 @{name}",
+	settingsForgetDoneCount: "已移除 {count} 本",
+	settingsForgetPartialTitle: "@{name}：部分台账没能移除",
 	settingsCreateDone: "已创建身份 @{name}",
 	settingsSwitchDone: "已切换到 @{name}",
 	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
@@ -488,10 +490,11 @@ export const en: Record<LocaleKey, string> = {
 	settingsDeleteConfirmBody:
 		"Remove @{name}? The user is dropped from every ledger roster; a ledger where this user still owns tasks is kept. Closed history is untouched.",
 	settingsDeleteConfirmOk: "Remove",
-	settingsForgetKeptTitle: "Some ledgers kept the user",
 	settingsForgetKeptRow: "{workspace}: still owns {tasks} task(s)",
-	settingsForgetFailedTitle: "Some ledgers failed",
+	settingsForgetFailedRow: "{workspace}: {error}",
 	settingsForgetDone: "Removed @{name} from ledgers",
+	settingsForgetDoneCount: "{count} ledger(s) removed",
+	settingsForgetPartialTitle: "@{name}: some ledgers kept the user",
 	settingsCreateDone: "Created identity @{name}",
 	settingsSwitchDone: "Switched to @{name}",
 	settingsRosterEmpty: "No identity has been created in the listed ledgers.",

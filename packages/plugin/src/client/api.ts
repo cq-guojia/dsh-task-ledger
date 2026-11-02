@@ -141,6 +141,8 @@ export interface ForgetReport {
 	readonly removed: readonly string[];
 	readonly kept: readonly { readonly workspace: string; readonly tasks: number }[];
 	readonly failed: readonly { readonly workspace: string; readonly error: string }[];
+	/** 删的是本机身份、并且**每一本都删成了** ⇒ host 已经顺手退出登录。 */
+	readonly signedOut: boolean;
 }
 
 /** 从名册摘掉一个人：每本登记过他的台账各删各的（还有任务的那本由 host 回报为 kept）。 */
