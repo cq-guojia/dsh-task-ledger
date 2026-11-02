@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261101-0622-8698-首页未初始化身份引导与用户切换": {"category": "功能设计", "created": "2026-11-01 06:22:56", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-01 06:22:56", "status": "doing", "tags": ["身份", "引导", "首页"], "title": "首页未初始化身份引导与用户切换", "updated": "2026-11-02 07:43:31", "worklog": "worklog/202611/01-0622-8698-首页未初始化身份引导与用户切换.md"}
+    "20261101-0622-8698-首页未初始化身份引导与用户切换": {"category": "功能设计", "created": "2026-11-01 06:22:56", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-01 06:22:56", "status": "doing", "tags": ["身份", "引导", "首页"], "title": "首页未初始化身份引导与用户切换", "updated": "2026-11-02 08:17:49", "worklog": "worklog/202611/01-0622-8698-首页未初始化身份引导与用户切换.md"}
   },
   "version": "20261022000000"
 }
