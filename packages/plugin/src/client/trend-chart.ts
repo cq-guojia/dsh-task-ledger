@@ -311,10 +311,14 @@ export function TrendChart(props: {
 		const cell = counts(bucket);
 		const split = breakdown(bucket);
 		const total = closed(cell);
+		// 空桶（新增 / 结案 / 未结全 0）：浮卡只剩一行日期，虚线不画
+		const hasData = cell.added > 0 || total > 0 || cell.open > 0;
 		return h(
 			Surface,
 			{ className: "dtl-trend__tip", padding: "sm" },
-			h("div", { className: "dtl-trend__tip-row" }, periodOf(bucket)),
+			h("div", { className: "dtl-trend__tip-date" }, periodOf(bucket)),
+			// 日期与数据之间的虚线（同历史页：表头 / 内容分隔），仅在有数据时画
+			hasData ? h("div", { key: "sep", className: "dtl-trend__tip-sep" }) : null,
 			// 圆点在深灰浮卡上：曲线那支灰是随主题变的，浅色主题下会糊进底色 ⇒ 用浮卡自己的浅灰
 			row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"),
 			...totalRow(

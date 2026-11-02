@@ -54369,6 +54369,8 @@ body{
      由 --dtl-fg 现算 ⇒ 暗色下自动变成 13% 白，不用另开明暗分支 */
   --dtl-chip-strong:color-mix(in srgb,var(--dtl-fg) 13%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
+  /* 橙浅底：三步说明第 2 格的图标底（三格必须是三种不同颜色，用户 2026-11-02） */
+  --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 16%,transparent);
   /* 绿浅底：头像圆的底（白卡上必须有底色，否则圆看不见） */
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 16%,transparent);
 
@@ -54480,6 +54482,10 @@ body[data-ds-dark-theme]{
 .dtl-hero__col > *{flex:1 1 auto;}
 .dtl-hero__flow{display:flex;min-width:0;}
 .dtl-hero__flow > *{flex:1 1 auto;}
+/* 身份卡通高：Card 本体与它的 body 都要跟着长，左缘色条（align-self:stretch）才会 100% 高。
+   只给卡设 flex 不够 —— body 是块的，色条只会跟内容一样高（用户 2026-11-02 抓到的就是这条）。 */
+.dtl-hero__col .dshpc-card{display:flex;flex-direction:column;}
+.dtl-hero__col .dshpc-card__body{flex:1 1 auto;}
 @media (max-width:760px){
   .dtl-hero{grid-template-columns:minmax(0,1fr);}
 }
@@ -54507,35 +54513,54 @@ body[data-ds-dark-theme]{
    原间距 = 外层 flex gap 4 + 这里 4 = 8px，现在 4 + 12 = 16px（2 倍，间距只许用四拍档位）。 */
 .dtl-profile__main .dtl-acts{margin-top:var(--dtl-space-3);justify-content:center;}
 
-/* 三步说明（用户 2026-11-01 定稿）：一个**大框**（核心 Surface）里用**实线**隔成三块完整的格，
-   **没有大标题**。每块排版照常见「三步」卡（图标徽标在左上、步骤名在右上、粗体标题、短说明）：
-   顶部一行「图标 + 第 N 步」两端对齐 → 小标题 → 说明。
-   整块撑满右栏高度 ⇒ 与左边身份卡等高，竖线也跟着顶到框的上下边。 */
+/* 三步说明（用户 2026-11-02）：一个大框（核心 Surface）里三格并排，中间用**虚线 + 圆箭头节点**分隔。
+   每块：图标徽标（左，三格三种颜色）+ 圈数字（右）→ 小标题 → 一条条要点（行间极淡细线，不画小框）。
+   分隔线是**真实元素**（.dtl-flow__sep），不靠伪元素 —— 用户那边伪元素没出来过。
+   圆用 SVG <circle>，箭头用官方 chevron 图标（用户 2026-11-02：手画箭头太丑）。
+   整块撑满右栏高度 ⇒ 与左边身份卡等高。 */
+.dtl-flow__frame{--dtl-flow-pad:calc(var(--dtl-space-3) * 2.5);}
 .dshpc-surface.dtl-flow__frame{flex:1 1 auto;min-height:0;min-width:0;display:flex;}
-.dtl-flow__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+.dtl-flow__grid{display:grid;align-items:stretch;
+  grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr) 1px minmax(0,1fr);
   flex:1 1 auto;min-height:0;min-width:0;}
-.dtl-flow__cell{display:flex;flex-direction:column;align-items:flex-start;gap:var(--dtl-space-2);
-  padding:var(--dtl-space-4);box-sizing:border-box;min-width:0;}
-/* 分块：实线，顶到框的上下边（外缘由大框自己描） */
-.dtl-flow__cell + .dtl-flow__cell{border-left:1px solid var(--dtl-border);}
-/* 顶部一行：图标徽标在左、「第一步」在右，两端对齐 */
+/* 左右内距（用户 2026-11-02：至少 2~2.5 倍，比上一版的 12px 拉大） */
+.dtl-flow__cell{display:flex;flex-direction:column;align-items:flex-start;
+  gap:var(--dtl-space-3);padding:var(--dtl-space-4) var(--dtl-flow-pad);
+  box-sizing:border-box;min-width:0;}
+/* 分隔：1px 宽的列，线由自己的 border-left 画（上下各留 20px），圆箭头节点绝对定位骑在线上。 */
+.dtl-flow__sep{position:relative;align-self:stretch;justify-self:center;width:0;
+  margin:20px 0;border-left:1px dashed var(--dtl-border);}
+.dtl-flow__sep .dtl-flow__node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__ring{position:absolute;inset:0;}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{fill:var(--dtl-surface-1);
+  stroke:var(--dtl-border);stroke-width:1.5;}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg-3);}
+/* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
-/* 步骤名：写明白「第一步 / 第二步 / 第三步」，不用 ①②③ 这种符号 */
-.dtl-flow__step{flex:none;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
-  font-weight:600;color:var(--dtl-fg-3);letter-spacing:0.02em;}
-/* 图标徽标：32 见方 + 语义色浅底 */
 .dtl-flow__icon{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:32px;height:32px;border-radius:var(--dtl-radius-sm);}
-.dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;color:var(--dtl-fg);}
-.dtl-flow__icon--neutral{background:var(--dtl-chip-strong);color:var(--dtl-fg-2);}
 .dtl-flow__icon--business{background:var(--dtl-business-soft);color:var(--dtl-business);}
+.dtl-flow__icon--warning{background:var(--dtl-warning-soft);color:var(--dtl-warning);}
 .dtl-flow__icon--success{background:var(--dtl-success-soft);color:var(--dtl-success);}
-.dtl-flow__desc{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
-/* 窄面板：三块落成一列，实线跟着改横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
+.dtl-flow__num{flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;box-sizing:border-box;border-radius:9999px;
+  background:var(--dtl-chip-strong);font-size:var(--dtl-font-sm);font-weight:600;
+  line-height:1;color:var(--dtl-fg-2);}
+.dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;color:var(--dtl-fg);}
+/* 要点列表：一条一条，行间极淡细线，没有边框和底色 */
+.dtl-flow__list{width:100%;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;}
+.dtl-flow__item{padding:var(--dtl-space-2) 0;font-size:var(--dtl-font-sm);
+  line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
+.dtl-flow__item + .dtl-flow__item{border-top:1px solid var(--dtl-border-faint);}
+/* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
-  .dtl-flow__cell + .dtl-flow__cell{border-left:0;border-top:1px solid var(--dtl-border);}
+  .dtl-flow__sep{width:auto;height:0;margin:0 var(--dtl-flow-pad);
+    border-left:0;border-top:1px dashed var(--dtl-border);}
+  /* 落成一列时箭头朝下 */
+  .dtl-flow__sep .dtl-flow__arrow{transform:rotate(90deg);}
 }
 
 /* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */
@@ -54822,7 +54847,11 @@ body[data-ds-dark-theme]{
   font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-tip-fg);
   opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
+.dtl-trend__tip-date{color:var(--dtl-tip-fg-dim);font-variant-numeric:tabular-nums;}
 .dtl-trend__tip-row{font-variant-numeric:tabular-nums;}
+/* 日期与数据之间的分隔虚线（同历史页：表头 / 内容分隔） */
+.dtl-trend__tip-sep{border-top:1px dashed var(--dtl-tip-border);margin:var(--dtl-space-1) 0;
+  height:0;}
 /* 未结的拆分行：缩进 + 淡一档，读起来是「未结」的注脚 */
 .dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-tip-fg-dim);}
 .dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}
@@ -55514,10 +55543,14 @@ body[data-ds-dark-theme]{
 			const tipOf = (bucket) => {
 				const rows = rowsOf(bucket);
 				const closed = bucket.done + bucket.cancelled;
+				const hasData = bucket.added > 0 || closed > 0;
 				return (0, react$1.createElement)(Surface, {
 					className: "dtl-hist__tip",
 					padding: "sm"
-				}, (0, react$1.createElement)("div", { className: "dtl-hist__tip-date" }, titleOf(bucket)), bucket.added > 0 ? (0, react$1.createElement)("div", {
+				}, (0, react$1.createElement)("div", { className: "dtl-hist__tip-date" }, titleOf(bucket)), hasData ? (0, react$1.createElement)("div", {
+					key: "sep",
+					className: "dtl-hist__tip-sep"
+				}) : null, bucket.added > 0 ? (0, react$1.createElement)("div", {
 					key: "added",
 					className: "dtl-hist__tip-row"
 				}, (0, react$1.createElement)("span", {
@@ -55526,10 +55559,7 @@ body[data-ds-dark-theme]{
 				}), (0, react$1.createElement)("span", null, t("chartCreatedTasks")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(bucket.added))) : null, closed > 0 ? (0, react$1.createElement)("div", {
 					key: "closed",
 					className: "dtl-hist__tip-total"
-				}, legend, (0, react$1.createElement)("span", null, t("chartClosedTasks")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(closed))) : null, rows.length > 0 ? (0, react$1.createElement)("div", {
-					key: "sep",
-					className: "dtl-hist__tip-sep"
-				}) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
+				}, legend, (0, react$1.createElement)("span", null, t("chartClosedTasks")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(closed))) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
 					key: row.key,
 					className: "dtl-hist__tip-row"
 				}, (0, react$1.createElement)("span", {
@@ -56618,10 +56648,14 @@ body[data-ds-dark-theme]{
 				const cell = counts(bucket);
 				const split = breakdown(bucket);
 				const total = closed(cell);
+				const hasData = cell.added > 0 || total > 0 || cell.open > 0;
 				return (0, react$1.createElement)(Surface, {
 					className: "dtl-trend__tip",
 					padding: "sm"
-				}, (0, react$1.createElement)("div", { className: "dtl-trend__tip-row" }, periodOf(bucket)), row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), ...totalRow("closed", t("chartClosed"), total, [C_CANCELLED, C_DONE], `${t("chartFinished")} ${formatCount(cell.done)} · ${t("chartCancelled")} ${formatCount(cell.cancelled)}`), ...totalRow("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, mine ? [C_DOING] : [C_DOING, C_OPEN], mine ? "" : `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
+				}, (0, react$1.createElement)("div", { className: "dtl-trend__tip-date" }, periodOf(bucket)), hasData ? (0, react$1.createElement)("div", {
+					key: "sep",
+					className: "dtl-trend__tip-sep"
+				}) : null, row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), ...totalRow("closed", t("chartClosed"), total, [C_CANCELLED, C_DONE], `${t("chartFinished")} ${formatCount(cell.done)} · ${t("chartCancelled")} ${formatCount(cell.cancelled)}`), ...totalRow("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, mine ? [C_DOING] : [C_DOING, C_OPEN], mine ? "" : `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
 			};
 			const colStyle = { width: `${String(COL_W)}px` };
 			/** 一根柱 = 一个周期：左结案（底蓝完成 / 顶红取消）、右未结（底琥珀待认领 / 顶绿进行中）。 */
@@ -56829,12 +56863,32 @@ body[data-ds-dark-theme]{
 					onClick: openUserModal
 				}, t("settingsNewUser")))));
 			};
-			/** 一块（照常见「三步」卡）：左上图标徽标 + 右上「第一步」标签 → 粗体小标题 → 说明。 */
-			const stepCell = (step, tone, icon, title, desc) => (0, react$1.createElement)("div", { className: "dtl-flow__cell" }, (0, react$1.createElement)("div", { className: "dtl-flow__top" }, (0, react$1.createElement)("span", { className: `dtl-flow__icon dtl-flow__icon--${tone}` }, icon), (0, react$1.createElement)("span", { className: "dtl-flow__step" }, step)), (0, react$1.createElement)("div", { className: "dtl-flow__name" }, title), (0, react$1.createElement)("div", { className: "dtl-flow__desc" }, desc));
+			/** 一块：图标徽标（左）+ 圈数字（右）→ 小标题 → 一条条要点（行间极淡细线，不画框）。 */
+			const stepCell = (no, tone, icon, title, lines) => (0, react$1.createElement)("div", { className: "dtl-flow__cell" }, (0, react$1.createElement)("div", { className: "dtl-flow__top" }, (0, react$1.createElement)("span", { className: `dtl-flow__icon dtl-flow__icon--${tone}` }, icon), (0, react$1.createElement)("span", { className: "dtl-flow__num" }, String(no))), (0, react$1.createElement)("div", { className: "dtl-flow__name" }, title), (0, react$1.createElement)("ul", { className: "dtl-flow__list" }, lines.split("\n").filter((line) => line.trim() !== "").map((line, i) => (0, react$1.createElement)("li", {
+				className: "dtl-flow__item",
+				key: i
+			}, line))));
+			/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
+			*  圆用 SVG `<circle>`（CSS 圆在用户那边反复画不圆，SVG 是数学圆）；箭头用官方 chevron 图标，
+			*  不再自己画线（用户 2026-11-02：手画的箭头太丑）。 */
+			const sep = () => (0, react$1.createElement)("span", { className: "dtl-flow__sep" }, (0, react$1.createElement)("span", { className: "dtl-flow__node" }, (0, react$1.createElement)("svg", {
+				className: "dtl-flow__ring",
+				width: 32,
+				height: 32,
+				viewBox: "0 0 32 32",
+				"aria-hidden": true
+			}, (0, react$1.createElement)("circle", {
+				cx: 16,
+				cy: 16,
+				r: 14.5
+			})), (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, {
+				size: 18,
+				className: "dtl-flow__arrow"
+			})));
 			const flow = (0, react$1.createElement)(Surface, {
 				className: "dtl-flow__frame",
 				padding: null
-			}, (0, react$1.createElement)("div", { className: "dtl-flow__grid" }, stepCell(t("settingsFlowStep1"), "neutral", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 18 }), t("settingsFlow1"), t("settingsFlow1Desc")), stepCell(t("settingsFlowStep2"), "business", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 18 }), t("settingsFlow2"), t("settingsFlow2Desc")), stepCell(t("settingsFlowStep3"), "success", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 18 }), t("settingsFlow3"), t("settingsFlow3Desc"))));
+			}, (0, react$1.createElement)("div", { className: "dtl-flow__grid" }, stepCell(1, "business", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 18 }), t("settingsFlow1"), t("settingsFlow1Desc")), sep(), stepCell(2, "warning", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 18 }), t("settingsFlow2"), t("settingsFlow2Desc")), sep(), stepCell(3, "success", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 18 }), t("settingsFlow3"), t("settingsFlow3Desc"))));
 			const dirRow = (dir) => renaming === dir.path ? (0, react$1.createElement)("div", {
 				key: dir.path,
 				className: "dtl-tbl__edit"
@@ -57431,8 +57485,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261101-235756-345`
-			}, `v0.0.126 261101-235756-345`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-113629-706`
+			}, `v0.0.126 261102-113629-706`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -57599,15 +57653,12 @@ body[data-ds-dark-theme]{
 			settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
 			settingsAddPlaceholder: "台账根目录的绝对路径",
 			settingsAddConfirm: "添加",
-			settingsFlowStep1: "第一步",
-			settingsFlowStep2: "第二步",
-			settingsFlowStep3: "第三步",
 			settingsFlow1: "安装 skill",
-			settingsFlow1Desc: "DeepSeek 端装插件，其他 AI 端装同款 skill；装完即可在对话里直接调用。",
+			settingsFlow1Desc: "DeepSeek harness：插件已安装，直接可用\n其他 AI：安装同款 skill 即可",
 			settingsFlow2: "工作区内操作",
-			settingsFlow2Desc: "让 Agent 创建任务；它执行时更新进度，做完即结案留档。",
-			settingsFlow3: "面板内查看",
-			settingsFlow3Desc: "待办、历史与统计都在面板里，可查询筛选，只读不改。",
+			settingsFlow2Desc: "创建任务：告诉 Agent 要做什么\n执行过程：进度自动写进 ledger/\n关闭任务：让 Agent 执行 close",
+			settingsFlow3: "面板内查询",
+			settingsFlow3Desc: "待办：谁在做什么\n历史：这个项目做过什么\n统计：趋势与耗时",
 			settingsColDir: "目录",
 			settingsColPath: "路径",
 			settingsColActions: "操作",
@@ -57784,15 +57835,12 @@ body[data-ds-dark-theme]{
 			settingsAddHint: "Enter the absolute path of a ledger root folder. It must contain a ledger/ subdirectory.",
 			settingsAddPlaceholder: "Absolute path of the ledger root",
 			settingsAddConfirm: "Add",
-			settingsFlowStep1: "Step 1",
-			settingsFlowStep2: "Step 2",
-			settingsFlowStep3: "Step 3",
 			settingsFlow1: "Install the skill",
-			settingsFlow1Desc: "Install the plugin on DeepSeek, or the skill on other AI clients; it is then callable in chat.",
+			settingsFlow1Desc: "DeepSeek harness: the plugin is already installed\nOther AI clients: install the same skill",
 			settingsFlow2: "Work in a workspace",
-			settingsFlow2Desc: "Ask the agent to create a task; it reports progress while working and closes it when done.",
-			settingsFlow3: "Review in the panel",
-			settingsFlow3Desc: "Board, history and stats live in the panel — filterable, read-only.",
+			settingsFlow2Desc: "Create: tell the agent what to do\nWhile working: progress is written to ledger/\nClose: ask the agent to close the task",
+			settingsFlow3: "Query in the panel",
+			settingsFlow3Desc: "Board: who is doing what\nHistory: what this project has done\nStats: trend and time spent",
 			settingsColDir: "Folder",
 			settingsColPath: "Path",
 			settingsColActions: "Actions",

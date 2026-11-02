@@ -478,12 +478,16 @@ export function HistoryChart(props: {
 		const rows = rowsOf(bucket);
 		// 柱高 = 完成 + 取消 = 结案总量（术语见 locales：结案 = 完成 + 取消）
 		const closed = bucket.done + bucket.cancelled;
-		// 结构（用户 2026-10-30）：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细。
+		// 空桶（新增 / 结案全 0）：浮卡只剩一行日期，虚线不画
+		const hasData = bucket.added > 0 || closed > 0;
+		// 结构（与在办浮卡一致）：日期 → 虚线 → 新建任务 → 结案任务（总计）→ 明细。
 		// 「新建」是曲线口径、不分工作区，与曲线同色；两行总计 0 就不列（0 不充数）。
 		return h(
 			Surface,
 			{ className: "dtl-hist__tip", padding: "sm" },
 			h("div", { className: "dtl-hist__tip-date" }, titleOf(bucket)),
+			// 日期与数据之间的虚线（同历史页：表头 / 内容分隔），仅在有数据时画
+			hasData ? h("div", { key: "sep", className: "dtl-hist__tip-sep" }) : null,
 			bucket.added > 0
 				? h(
 						"div",
@@ -505,7 +509,6 @@ export function HistoryChart(props: {
 						h("span", { className: "dtl-hist__tip-count" }, String(closed)),
 					)
 				: null,
-			rows.length > 0 ? h("div", { key: "sep", className: "dtl-hist__tip-sep" }) : null,
 			...rows.map((row) =>
 				h(
 					"div",

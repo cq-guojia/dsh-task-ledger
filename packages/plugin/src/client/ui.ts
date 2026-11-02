@@ -268,7 +268,11 @@ const UI_BASE_CSS = `
   font-size:var(--dtl-font-xs);line-height:1.5;color:var(--dtl-tip-fg);
   opacity:0;pointer-events:none;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
 .dtl-trend__col:hover .dtl-trend__tip{opacity:1;}
+.dtl-trend__tip-date{color:var(--dtl-tip-fg-dim);font-variant-numeric:tabular-nums;}
 .dtl-trend__tip-row{font-variant-numeric:tabular-nums;}
+/* 日期与数据之间的分隔虚线（同历史页：表头 / 内容分隔） */
+.dtl-trend__tip-sep{border-top:1px dashed var(--dtl-tip-border);margin:var(--dtl-space-1) 0;
+  height:0;}
 /* 未结的拆分行：缩进 + 淡一档，读起来是「未结」的注脚 */
 .dtl-trend__tip-row--sub{padding-left:10px;color:var(--dtl-tip-fg-dim);}
 .dtl-trend__foot{font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);}

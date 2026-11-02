@@ -56,6 +56,8 @@ body{
      由 --dtl-fg 现算 ⇒ 暗色下自动变成 13% 白，不用另开明暗分支 */
   --dtl-chip-strong:color-mix(in srgb,var(--dtl-fg) 13%,transparent);
   --dtl-danger-soft:color-mix(in srgb,var(--dtl-danger) 8%,transparent);
+  /* 橙浅底：三步说明第 2 格的图标底（三格必须是三种不同颜色，用户 2026-11-02） */
+  --dtl-warning-soft:color-mix(in srgb,var(--dtl-warning) 16%,transparent);
   /* 绿浅底：头像圆的底（白卡上必须有底色，否则圆看不见） */
   --dtl-success-soft:color-mix(in srgb,var(--dtl-success) 16%,transparent);
 
@@ -168,6 +170,10 @@ export const UI_CONTROLS_CSS = `
 .dtl-hero__col > *{flex:1 1 auto;}
 .dtl-hero__flow{display:flex;min-width:0;}
 .dtl-hero__flow > *{flex:1 1 auto;}
+/* 身份卡通高：Card 本体与它的 body 都要跟着长，左缘色条（align-self:stretch）才会 100% 高。
+   只给卡设 flex 不够 —— body 是块的，色条只会跟内容一样高（用户 2026-11-02 抓到的就是这条）。 */
+.dtl-hero__col .dshpc-card{display:flex;flex-direction:column;}
+.dtl-hero__col .dshpc-card__body{flex:1 1 auto;}
 @media (max-width:760px){
   .dtl-hero{grid-template-columns:minmax(0,1fr);}
 }
@@ -195,35 +201,54 @@ export const UI_CONTROLS_CSS = `
    原间距 = 外层 flex gap 4 + 这里 4 = 8px，现在 4 + 12 = 16px（2 倍，间距只许用四拍档位）。 */
 .dtl-profile__main .dtl-acts{margin-top:var(--dtl-space-3);justify-content:center;}
 
-/* 三步说明（用户 2026-11-01 定稿）：一个**大框**（核心 Surface）里用**实线**隔成三块完整的格，
-   **没有大标题**。每块排版照常见「三步」卡（图标徽标在左上、步骤名在右上、粗体标题、短说明）：
-   顶部一行「图标 + 第 N 步」两端对齐 → 小标题 → 说明。
-   整块撑满右栏高度 ⇒ 与左边身份卡等高，竖线也跟着顶到框的上下边。 */
+/* 三步说明（用户 2026-11-02）：一个大框（核心 Surface）里三格并排，中间用**虚线 + 圆箭头节点**分隔。
+   每块：图标徽标（左，三格三种颜色）+ 圈数字（右）→ 小标题 → 一条条要点（行间极淡细线，不画小框）。
+   分隔线是**真实元素**（.dtl-flow__sep），不靠伪元素 —— 用户那边伪元素没出来过。
+   圆用 SVG <circle>，箭头用官方 chevron 图标（用户 2026-11-02：手画箭头太丑）。
+   整块撑满右栏高度 ⇒ 与左边身份卡等高。 */
+.dtl-flow__frame{--dtl-flow-pad:calc(var(--dtl-space-3) * 2.5);}
 .dshpc-surface.dtl-flow__frame{flex:1 1 auto;min-height:0;min-width:0;display:flex;}
-.dtl-flow__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+.dtl-flow__grid{display:grid;align-items:stretch;
+  grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr) 1px minmax(0,1fr);
   flex:1 1 auto;min-height:0;min-width:0;}
-.dtl-flow__cell{display:flex;flex-direction:column;align-items:flex-start;gap:var(--dtl-space-2);
-  padding:var(--dtl-space-4);box-sizing:border-box;min-width:0;}
-/* 分块：实线，顶到框的上下边（外缘由大框自己描） */
-.dtl-flow__cell + .dtl-flow__cell{border-left:1px solid var(--dtl-border);}
-/* 顶部一行：图标徽标在左、「第一步」在右，两端对齐 */
+/* 左右内距（用户 2026-11-02：至少 2~2.5 倍，比上一版的 12px 拉大） */
+.dtl-flow__cell{display:flex;flex-direction:column;align-items:flex-start;
+  gap:var(--dtl-space-3);padding:var(--dtl-space-4) var(--dtl-flow-pad);
+  box-sizing:border-box;min-width:0;}
+/* 分隔：1px 宽的列，线由自己的 border-left 画（上下各留 20px），圆箭头节点绝对定位骑在线上。 */
+.dtl-flow__sep{position:relative;align-self:stretch;justify-self:center;width:0;
+  margin:20px 0;border-left:1px dashed var(--dtl-border);}
+.dtl-flow__sep .dtl-flow__node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__ring{position:absolute;inset:0;}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{fill:var(--dtl-surface-1);
+  stroke:var(--dtl-border);stroke-width:1.5;}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg-3);}
+/* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
-/* 步骤名：写明白「第一步 / 第二步 / 第三步」，不用 ①②③ 这种符号 */
-.dtl-flow__step{flex:none;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
-  font-weight:600;color:var(--dtl-fg-3);letter-spacing:0.02em;}
-/* 图标徽标：32 见方 + 语义色浅底 */
 .dtl-flow__icon{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:32px;height:32px;border-radius:var(--dtl-radius-sm);}
-.dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;color:var(--dtl-fg);}
-.dtl-flow__icon--neutral{background:var(--dtl-chip-strong);color:var(--dtl-fg-2);}
 .dtl-flow__icon--business{background:var(--dtl-business-soft);color:var(--dtl-business);}
+.dtl-flow__icon--warning{background:var(--dtl-warning-soft);color:var(--dtl-warning);}
 .dtl-flow__icon--success{background:var(--dtl-success-soft);color:var(--dtl-success);}
-.dtl-flow__desc{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
-/* 窄面板：三块落成一列，实线跟着改横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
+.dtl-flow__num{flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;box-sizing:border-box;border-radius:9999px;
+  background:var(--dtl-chip-strong);font-size:var(--dtl-font-sm);font-weight:600;
+  line-height:1;color:var(--dtl-fg-2);}
+.dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;color:var(--dtl-fg);}
+/* 要点列表：一条一条，行间极淡细线，没有边框和底色 */
+.dtl-flow__list{width:100%;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;}
+.dtl-flow__item{padding:var(--dtl-space-2) 0;font-size:var(--dtl-font-sm);
+  line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
+.dtl-flow__item + .dtl-flow__item{border-top:1px solid var(--dtl-border-faint);}
+/* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
-  .dtl-flow__cell + .dtl-flow__cell{border-left:0;border-top:1px solid var(--dtl-border);}
+  .dtl-flow__sep{width:auto;height:0;margin:0 var(--dtl-flow-pad);
+    border-left:0;border-top:1px dashed var(--dtl-border);}
+  /* 落成一列时箭头朝下 */
+  .dtl-flow__sep .dtl-flow__arrow{transform:rotate(90deg);}
 }
 
 /* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */

@@ -9,6 +9,7 @@
  */
 import {
 	IconChecklistOutlineRegular,
+	IconChevronRightOutlineRegular,
 	IconDownloadOutlineRegular,
 	IconFlatListOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
@@ -185,13 +186,13 @@ export function SettingsPage(props: {
 	/* ── 上半 · 右：三步说明（**没有大标题**，三块用实线隔成完整的宽格，用户 2026-11-01 定）────
 	   每块自上而下：序号 + 小标题 → 图标 → 说明。 */
 
-	/** 一块（照常见「三步」卡）：左上图标徽标 + 右上「第一步」标签 → 粗体小标题 → 说明。 */
+	/** 一块：图标徽标（左）+ 圈数字（右）→ 小标题 → 一条条要点（行间极淡细线，不画框）。 */
 	const stepCell = (
-		step: string,
-		tone: "neutral" | "business" | "success",
+		no: number,
+		tone: "business" | "warning" | "success",
 		icon: ReactNode,
 		title: string,
-		desc: string,
+		lines: string,
 	): ReactNode =>
 		h(
 			"div",
@@ -200,10 +201,36 @@ export function SettingsPage(props: {
 				"div",
 				{ className: "dtl-flow__top" },
 				h("span", { className: `dtl-flow__icon dtl-flow__icon--${tone}` }, icon),
-				h("span", { className: "dtl-flow__step" }, step),
+				h("span", { className: "dtl-flow__num" }, String(no)),
 			),
 			h("div", { className: "dtl-flow__name" }, title),
-			h("div", { className: "dtl-flow__desc" }, desc),
+			h(
+				"ul",
+				{ className: "dtl-flow__list" },
+				lines
+					.split("\n")
+					.filter((line) => line.trim() !== "")
+					.map((line, i) => h("li", { className: "dtl-flow__item", key: i }, line)),
+			),
+		);
+
+	/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
+	 *  圆用 SVG `<circle>`（CSS 圆在用户那边反复画不圆，SVG 是数学圆）；箭头用官方 chevron 图标，
+	 *  不再自己画线（用户 2026-11-02：手画的箭头太丑）。 */
+	const sep = (): ReactNode =>
+		h(
+			"span",
+			{ className: "dtl-flow__sep" },
+			h(
+				"span",
+				{ className: "dtl-flow__node" },
+				h(
+					"svg",
+					{ className: "dtl-flow__ring", width: 32, height: 32, viewBox: "0 0 32 32", "aria-hidden": true },
+					h("circle", { cx: 16, cy: 16, r: 14.5 }),
+				),
+				h(IconChevronRightOutlineRegular, { size: 18, className: "dtl-flow__arrow" }),
+			),
 		);
 
 	const flow = h(
@@ -213,21 +240,23 @@ export function SettingsPage(props: {
 			"div",
 			{ className: "dtl-flow__grid" },
 			stepCell(
-				t("settingsFlowStep1"),
-				"neutral",
+				1,
+				"business",
 				h(IconDownloadOutlineRegular, { size: 18 }),
 				t("settingsFlow1"),
 				t("settingsFlow1Desc"),
 			),
+			sep(),
 			stepCell(
-				t("settingsFlowStep2"),
-				"business",
+				2,
+				"warning",
 				h(IconChecklistOutlineRegular, { size: 18 }),
 				t("settingsFlow2"),
 				t("settingsFlow2Desc"),
 			),
+			sep(),
 			stepCell(
-				t("settingsFlowStep3"),
+				3,
 				"success",
 				h(IconFlatListOutlineRegular, { size: 18 }),
 				t("settingsFlow3"),
@@ -554,9 +583,6 @@ export type SettingsLocaleKey = Extract<
 	| "settingsFlow2Desc"
 	| "settingsFlow3"
 	| "settingsFlow3Desc"
-	| "settingsFlowStep1"
-	| "settingsFlowStep2"
-	| "settingsFlowStep3"
 	| "settingsColDir"
 	| "settingsColPath"
 	| "settingsColActions"

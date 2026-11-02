@@ -59,9 +59,6 @@ export type LocaleKey =
 	| "settingsFlow2Desc"
 	| "settingsFlow3"
 	| "settingsFlow3Desc"
-	| "settingsFlowStep1"
-	| "settingsFlowStep2"
-	| "settingsFlowStep3"
 	| "settingsColDir"
 	| "settingsColPath"
 	| "settingsColActions"
@@ -255,15 +252,12 @@ export const zh: Record<LocaleKey, string> = {
 	settingsAddPlaceholder: "台账根目录的绝对路径",
 	settingsAddConfirm: "添加",
 
-	settingsFlowStep1: "第一步",
-	settingsFlowStep2: "第二步",
-	settingsFlowStep3: "第三步",
 	settingsFlow1: "安装 skill",
-	settingsFlow1Desc: "DeepSeek 端装插件，其他 AI 端装同款 skill；装完即可在对话里直接调用。",
+	settingsFlow1Desc: "DeepSeek harness：插件已安装，直接可用\n其他 AI：安装同款 skill 即可",
 	settingsFlow2: "工作区内操作",
-	settingsFlow2Desc: "让 Agent 创建任务；它执行时更新进度，做完即结案留档。",
-	settingsFlow3: "面板内查看",
-	settingsFlow3Desc: "待办、历史与统计都在面板里，可查询筛选，只读不改。",
+	settingsFlow2Desc: "创建任务：告诉 Agent 要做什么\n执行过程：进度自动写进 ledger/\n关闭任务：让 Agent 执行 close",
+	settingsFlow3: "面板内查询",
+	settingsFlow3Desc: "待办：谁在做什么\n历史：这个项目做过什么\n统计：趋势与耗时",
 	settingsColDir: "目录",
 	settingsColPath: "路径",
 	settingsColActions: "操作",
@@ -455,15 +449,12 @@ export const en: Record<LocaleKey, string> = {
 	settingsAddPlaceholder: "Absolute path of the ledger root",
 	settingsAddConfirm: "Add",
 
-	settingsFlowStep1: "Step 1",
-	settingsFlowStep2: "Step 2",
-	settingsFlowStep3: "Step 3",
 	settingsFlow1: "Install the skill",
-	settingsFlow1Desc: "Install the plugin on DeepSeek, or the skill on other AI clients; it is then callable in chat.",
+	settingsFlow1Desc: "DeepSeek harness: the plugin is already installed\nOther AI clients: install the same skill",
 	settingsFlow2: "Work in a workspace",
-	settingsFlow2Desc: "Ask the agent to create a task; it reports progress while working and closes it when done.",
-	settingsFlow3: "Review in the panel",
-	settingsFlow3Desc: "Board, history and stats live in the panel — filterable, read-only.",
+	settingsFlow2Desc: "Create: tell the agent what to do\nWhile working: progress is written to ledger/\nClose: ask the agent to close the task",
+	settingsFlow3: "Query in the panel",
+	settingsFlow3Desc: "Board: who is doing what\nHistory: what this project has done\nStats: trend and time spent",
 	settingsColDir: "Folder",
 	settingsColPath: "Path",
 	settingsColActions: "Actions",
