@@ -14,6 +14,7 @@ import { scriptPath } from "./repositories/runner.js";
 import {
 	getIdentity,
 	getRoster,
+	forgetOwner,
 	switchIdentity,
 	type SwitchInput,
 } from "./services/identity.service.js";
@@ -193,6 +194,37 @@ export function registerRoutes(
 			}
 			try {
 				sendJson(res, 200, await switchIdentity(await switchInputOf(req, deps)));
+			} catch (error) {
+				const message = messageOf(error);
+				if (message.startsWith(BAD_REQUEST)) {
+					sendJson(res, 400, { error: message.slice(BAD_REQUEST.length) });
+					return;
+				}
+				sendFailure(res, error);
+			}
+		},
+	});
+
+	// 从名册摘人（设置页每行的小叉）：逐本台账各删各的，分片还有任务的那本不删。
+	webServer.register({
+		kind: "exact",
+		path: `${API_PREFIX}/identity/forget`,
+		handler: async (req, res) => {
+			if (req.method !== "POST") {
+				sendJson(res, 405, { error: "身份写入只接受 POST" });
+				return;
+			}
+			try {
+				let raw: unknown;
+				try {
+					raw = JSON.parse(await readBody(req));
+				} catch {
+					throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
+				}
+				const body = (raw ?? {}) as Record<string, unknown>;
+				const uuid = typeof body.uuid === "string" ? body.uuid.trim() : "";
+				if (uuid === "") throw new Error(`${BAD_REQUEST}摘人必须给 uuid`);
+				sendJson(res, 200, await forgetOwner(await workspacesOf(deps), uuid));
 			} catch (error) {
 				const message = messageOf(error);
 				if (message.startsWith(BAD_REQUEST)) {

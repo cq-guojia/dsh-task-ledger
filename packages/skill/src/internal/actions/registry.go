@@ -112,6 +112,15 @@ var ACTIONS = map[string]ActionSpec{
 			return ListOwners(repo, me)
 		},
 	},
+	"forget": {
+		// result_json：人跑给人话、--json 给机器读的 {removed, name, tasks}（界面要判有没有真删掉）
+		Render:     "result_json",
+		LockAction: "forget",
+		Params:     []string{"tid"},
+		Run: func(repo string, me core.Identity, p Params) (any, error) {
+			return ForgetOwner(repo, me, p.Tid)
+		},
+	},
 	"show": {
 		Render:   "show_view",
 		ReadOnly: true,

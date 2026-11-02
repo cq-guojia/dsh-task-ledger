@@ -97,6 +97,7 @@ var commandFlags = map[string]map[string]bool{
 	"list":     setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
 	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--by-owner", "--json", "--repo"),
 	"owners":   setOf("--json", "--repo"),
+	"forget":   setOf("--id", "--json", "--repo"),
 	"show":     setOf("--id", "--json", "--repo"),
 	"history":  setOf("--owner", "--owner-name", "--mine", "--category", "--tag", "--keyword", "--since", "--until", "--limit", "--months", "--json", "--repo"),
 	"validate": setOf("--deep", "--json", "--repo"),
@@ -371,7 +372,7 @@ func requireFlags(a *Args) error {
 		if a.Title == "" {
 			return usageErr("new 缺少 --title")
 		}
-	case "claim", "set", "log", "close", "show":
+	case "claim", "set", "log", "close", "show", "forget":
 		if a.TID == "" {
 			return usageErr("%s 缺少 --id", a.Command)
 		}
@@ -996,8 +997,9 @@ func renameOneDir(dir, uuid, name string) map[string]any {
 		return row
 	}
 
-	// ② 真要改才碰 git。**不先取**：本机到远端一次往返就 3.5 秒（2026-11-02 实测），
-	//    为改一行名字先 fetch 一次不值 —— 推被拒时 `Push` 自己会 fetch + rebase 再推。
+	// ② 真要改才碰 git。**改名前先取最新**（2026-11-02 用户拍板）：
+	//    不取就改，撞上「别人刚删了同一个人 / 刚改过这本名册」会卡在 push 里的 rebase 冲突，
+	//    得手工解；每本多一次网络往返，只对真要改的那几本付（粗筛已经挡掉大部分）。
 	g := &GitRepo{Repo: dir}
 	isGit := g.IsGitRepo()
 	scope := actions.Scope{Files: []string{core.OwnersRel}}
@@ -1005,6 +1007,22 @@ func renameOneDir(dir, uuid, name string) map[string]any {
 		// 只看本地：rebase / merge 中间态不能写（这一条不联网）
 		if err := g.CheckRepoState(); err != nil {
 			return fail(err.Error())
+		}
+		if _, err := g.SyncDown(scope); err != nil {
+			return fail(err.Error())
+		}
+		// 取完重读：远端可能已经把这个人删了，或已经改成了同一个昵称
+		latest, stillPresent, err := actions.OwnerNameIn(dir, uuid)
+		if err != nil {
+			return fail(err.Error())
+		}
+		if !stillPresent {
+			row["reason"] = "名册里没有这个身份（远端已删除）"
+			return row
+		}
+		if latest == name {
+			row["reason"] = "昵称已经是这个"
+			return row
 		}
 	}
 

@@ -345,15 +345,49 @@ func (g *GitRepo) Commit(files []string, message string) error {
 	if len(rels) == 0 {
 		return nil
 	}
-	if add := g.run(append([]string{"add", "--"}, rels...)...); add.Code != 0 {
-		return core.Failf("git add 失败：%s\n  处理：文件还在磁盘上（本次改动没丢），按提示处理后重跑。", add.detail())
+	// 被删掉的文件不能进 add 的 pathspec（git 会报 "did not match any files"）；
+	// 从未被跟踪又已经不在磁盘上的，更是无事可做。按「索引里有没有」分成三拨：
+	//   stage   = 还在磁盘上（新文件或改动）→ git add
+	//   removed = 索引里有、磁盘上没了 → git rm --cached 记下删除
+	//   skip    = 索引里没有、磁盘上也没有 → 跳过（无改动可提交）
+	indexed := map[string]bool{}
+	for _, line := range g.lines(append([]string{"ls-files", "--"}, rels...)...) {
+		indexed[unquoteGitPath(line)] = true
 	}
-	// 一个字节都没变（重跑幂等：写下去的与 HEAD 相同）⇒ 没有可提交的内容，这不是错误。
-	// 不跳的话 git commit 会以 "nothing added to commit" 失败，把一条本该成功的重跑判红。
-	if staged := g.run(append([]string{"diff", "--cached", "--quiet", "--"}, rels...)...); staged.Code == 0 {
+	stage := make([]string, 0, len(rels))
+	removed := make([]string, 0, len(rels))
+	for _, rel := range rels {
+		_, statErr := os.Stat(filepath.Join(g.Repo, rel))
+		switch {
+		case statErr == nil:
+			stage = append(stage, rel)
+		case indexed[rel]:
+			removed = append(removed, rel)
+		}
+	}
+	if len(stage) > 0 {
+		if add := g.run(append([]string{"add", "--"}, stage...)...); add.Code != 0 {
+			return core.Failf("git add 失败：%s\n  处理：文件还在磁盘上（本次改动没丢），按提示处理后重跑。", add.detail())
+		}
+	}
+	if len(removed) > 0 {
+		if rm := g.run(append([]string{"rm", "--cached", "--quiet", "--ignore-unmatch", "--"}, removed...)...); rm.Code != 0 {
+			return core.Failf("git rm 失败：%s\n  处理：改动还在磁盘上（本次改动没丢），按提示处理后重跑。", rm.detail())
+		}
+	}
+	touched := append(append([]string{}, stage...), removed...)
+	if len(touched) == 0 {
 		return nil
 	}
-	commit := g.run(append([]string{"commit", "--no-verify", "-m", message, "--"}, rels...)...)
+	// 改哪个提交哪个：取最新会刷一整片文件，内容没变的不能跟着进本次提交。
+	changed := make([]string, 0, len(touched))
+	for _, line := range g.lines(append([]string{"diff", "--cached", "--name-only", "--"}, touched...)...) {
+		changed = append(changed, unquoteGitPath(line))
+	}
+	if len(changed) == 0 {
+		return nil
+	}
+	commit := g.run(append([]string{"commit", "--no-verify", "-m", message, "--"}, changed...)...)
 	if commit.Code != 0 {
 		return core.Failf("git commit 失败：%s\n  处理：文件已暂存、本次改动没丢；按提示处理（常见：commit 检查钩子拒了消息）后重跑。", commit.detail())
 	}

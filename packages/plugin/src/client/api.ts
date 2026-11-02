@@ -136,6 +136,26 @@ export function postSwitchIdentity(
 	);
 }
 
+/** 摘人结果（host 逐本台账删过之后汇总）。 */
+export interface ForgetReport {
+	readonly removed: readonly string[];
+	readonly kept: readonly { readonly workspace: string; readonly tasks: number }[];
+	readonly failed: readonly { readonly workspace: string; readonly error: string }[];
+}
+
+/** 从名册摘掉一个人：每本登记过他的台账各删各的（还有任务的那本由 host 回报为 kept）。 */
+export function postForgetIdentity(uuid: string): Promise<ForgetReport> {
+	return fetchJson<ForgetReport>(
+		"/identity/forget",
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ uuid }),
+		},
+		RENAME_TIMEOUT_MS,
+	);
+}
+
 /**
  * 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
  * `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。

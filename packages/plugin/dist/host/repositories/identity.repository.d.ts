@@ -45,3 +45,11 @@ export declare function getCurrentIdentity(_workspace?: LedgerWorkspace): Promis
  * 正是 `init` 做不到的两件事。失败把人话抛给路由（→ 500 → 界面原地显示）。
  */
 export declare function switchIdentity(input: SwitchInput): Promise<IdentityView | RenameView>;
+/** 从一本台账的名册里摘掉一个人（skill `forget --json`）。 */
+export interface ForgetOutcome {
+    /** false = 分片里还有任务，这本台账没删。 */
+    readonly removed: boolean;
+    readonly name: string;
+    readonly tasks: number;
+}
+export declare function forgetOwner(repo: string, uuid: string): Promise<ForgetOutcome>;

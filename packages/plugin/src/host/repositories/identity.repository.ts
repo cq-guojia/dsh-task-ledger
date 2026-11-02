@@ -43,6 +43,9 @@ export interface RenameView {
  */
 const RENAME_TIMEOUT_MS = 180_000;
 
+/** 删人同样逐本台账走 git（取最新 → 改 → 提交 → 推送），10s 默认值不够。 */
+const FORGET_TIMEOUT_MS = 120_000;
+
 const UNKNOWN_IDENTITY: IdentityView = { uuid: null, name: null };
 
 function viewOf(data: { uuid?: unknown; name?: unknown }): IdentityView {
@@ -107,6 +110,35 @@ export async function switchIdentity(
 		};
 	}
 	return viewOf(result.data);
+}
+
+/** 从一本台账的名册里摘掉一个人（skill `forget --json`）。 */
+export interface ForgetOutcome {
+	/** false = 分片里还有任务，这本台账没删。 */
+	readonly removed: boolean;
+	readonly name: string;
+	readonly tasks: number;
+}
+
+export async function forgetOwner(
+	repo: string,
+	uuid: string,
+): Promise<ForgetOutcome> {
+	// 删人也走一遍「写前取最新 → 改 → 提交 → 推送」，一次网络往返就可能几秒，
+	// 默认的 10s 会把它判超时（脚本被 kill 时连分片都还没删）。
+	const result = await runLedgerScript<{
+		removed?: unknown;
+		name?: unknown;
+		tasks?: unknown;
+	}>("forget", ["--id", uuid, "--repo", repo, "--json"], {
+		timeoutMs: FORGET_TIMEOUT_MS,
+	});
+	if (!result.ok) throw new Error(result.error);
+	return {
+		removed: result.data.removed === true,
+		name: typeof result.data.name === "string" ? result.data.name : "",
+		tasks: typeof result.data.tasks === "number" ? result.data.tasks : 0,
+	};
 }
 
 /** `dirs[]` 原样搬过来（形状不对的行直接丢掉，不编造）。 */

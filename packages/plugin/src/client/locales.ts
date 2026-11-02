@@ -43,6 +43,12 @@ export type LocaleKey =
 	| "settingsUseConfirmTitle"
 	| "settingsUseConfirmBody"
 	| "settingsUseConfirmOk"
+	| "settingsDeleteConfirmTitle"
+	| "settingsDeleteConfirmBody"
+	| "settingsDeleteConfirmOk"
+	| "settingsForgetKeptTitle"
+	| "settingsForgetKeptRow"
+	| "settingsForgetFailedTitle"
 	| "settingsRosterEmpty"
 	| "settingsFailed"
 	| "settingsUseThis"
@@ -254,6 +260,13 @@ export const zh: Record<LocaleKey, string> = {
 	settingsUseConfirmBody:
 		"确定使用 @{name} 作为你的台账用户吗？切换后，任务的认领、推进与结案都将记录在该用户名下。",
 	settingsUseConfirmOk: "确定使用",
+	settingsDeleteConfirmTitle: "从台账移除用户",
+	settingsDeleteConfirmBody:
+		"确定移除 @{name} 吗？该用户在各台账名册中的登记会一并删除；若某个台账里他名下仍有任务，那本台账不会删。已结案的历史记录不受影响。",
+	settingsDeleteConfirmOk: "移除",
+	settingsForgetKeptTitle: "部分台账未删除",
+	settingsForgetKeptRow: "{workspace}：他名下还有 {tasks} 个任务",
+	settingsForgetFailedTitle: "部分台账删除失败",
 	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
 	settingsFailed: "操作未成功：{message}",
 	settingsUseThis: "使用",
@@ -465,6 +478,13 @@ export const en: Record<LocaleKey, string> = {
 	settingsUseConfirmBody:
 		"Use @{name} as your ledger user? Claiming, progressing and closing tasks will be recorded under this user.",
 	settingsUseConfirmOk: "Use this user",
+	settingsDeleteConfirmTitle: "Remove user from ledgers",
+	settingsDeleteConfirmBody:
+		"Remove @{name}? The user is dropped from every ledger roster; a ledger where this user still owns tasks is kept. Closed history is untouched.",
+	settingsDeleteConfirmOk: "Remove",
+	settingsForgetKeptTitle: "Some ledgers kept the user",
+	settingsForgetKeptRow: "{workspace}: still owns {tasks} task(s)",
+	settingsForgetFailedTitle: "Some ledgers failed",
 	settingsRosterEmpty: "No identity has been created in the listed ledgers.",
 	settingsFailed: "Operation failed: {message}",
 	settingsUseThis: "Use",

@@ -24,6 +24,24 @@ export interface RosterWorkspace {
  * 各工作区花名册。**读挂了的工作区直接跳过**——名册索引缺失（`owners.json` 还没被任何写命令建出来）
  * 与新仓库本来就没人是同一件事：引导页要把它当「这里没人，只能新建」，不能当成故障。
  */
+/** 摘人结果：删掉的、因为还有任务没删的、出错的，各按工作区列出来。 */
+export interface ForgetReport {
+    readonly removed: readonly string[];
+    readonly kept: readonly {
+        readonly workspace: string;
+        readonly tasks: number;
+    }[];
+    readonly failed: readonly {
+        readonly workspace: string;
+        readonly error: string;
+    }[];
+}
+/**
+ * 把某个人从**所有登记过他的台账**里摘掉（用户 2026-11-02 定的口径）：
+ * 每本台账各删各的，分片里还有任务的那本不删、如实回报；历史记录与其他台账一概不动。
+ * 名册里没有他的台账直接跳过（不是失败）。
+ */
+export declare function forgetOwner(workspaces: readonly LedgerWorkspace[], uuid: string): Promise<ForgetReport>;
 export declare function getRoster(workspaces: readonly LedgerWorkspace[]): Promise<{
     readonly workspaces: readonly RosterWorkspace[];
 }>;

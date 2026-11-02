@@ -73,6 +73,24 @@ func (o *OwnersIndex) Ensure(me core.Identity) (bool, map[string]any, error) {
 	return true, copied, nil
 }
 
+// Remove 从索引里摘掉一个人（只动索引行，分片文件由调用方决定删不删）。
+func (o *OwnersIndex) Remove(who string) error {
+	key := core.Normalize(who)
+	data, err := o.Store.Data()
+	if err != nil {
+		return err
+	}
+	workers, ok := data["workers"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	if _, present := workers[key]; !present {
+		return nil
+	}
+	delete(workers, key)
+	return o.Store.Flush(data)
+}
+
 // KeysOfName 显示名模糊匹配（不分大小写的子串）⇒ uuid 集合。只给查询筛选用。
 func (o *OwnersIndex) KeysOfName(fragment string) (map[string]bool, error) {
 	needle := core.Normalize(fragment)

@@ -19,7 +19,7 @@ import (
 func envCurrent(repo string) (core.Identity, error) { return env.Current(repo) }
 
 // LockActions LockScope 认的动作名。
-var LockActions = []string{"bootstrap", "new", "claim", "set", "log", "close", "tags"}
+var LockActions = []string{"bootstrap", "new", "claim", "set", "log", "close", "tags", "forget"}
 
 // Scope 这次要碰哪些文件。Files 加锁（也逐个刷），Dirs 只刷盘（展开成已存在的文件）。
 // 路径一律**相对 ledger/**，落盘时再拼 repo。
@@ -152,6 +152,10 @@ func LockScope(repo string, me core.Identity, action string, params map[string]a
 	case "log":
 		wfiles, wdirs := worklogOf(repo, tid)
 		return Scope{Files: mergeRel([]string{mine}, wfiles), Dirs: wdirs}, nil
+
+	case "forget":
+		// tid 装的是目标 uuid：锁索引 + 目标分片（被删的那个文件也要在范围内，删除才进提交集）
+		return Scope{Files: []string{index, core.ShardRel(tid)}}, nil
 
 	case "close":
 		wfiles, wdirs := worklogOf(repo, tid)

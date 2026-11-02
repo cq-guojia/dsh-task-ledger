@@ -15,7 +15,7 @@ import {
 	IconFlatListOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
-import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
+import { fetchDirs, fetchRoster, postForgetIdentity, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
 import { Button, Card, Checkbox, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, Surface, Table, Tag, confirmModal, notify } from "./ui";
@@ -178,6 +178,56 @@ export function SettingsPage(props: {
 		);
 	};
 
+	/** 小叉：从所有登记过他的台账里摘掉；哪本里还有任务，那本不删并由 host 回报。 */
+	const forgetUser = async (row: RosterRow): Promise<void> => {
+		if (pending !== null) return;
+		const ok = await confirmModal({
+			title: t("settingsDeleteConfirmTitle"),
+			message: t("settingsDeleteConfirmBody", { name: row.name }),
+			confirmText: t("settingsDeleteConfirmOk"),
+			cancelText: t("settingsCancel"),
+			tone: "danger",
+		});
+		if (!ok) return;
+		setPending(`forget:${row.uuid}`);
+		setError(null);
+		try {
+			const report = await postForgetIdentity(row.uuid);
+			if (report.kept.length > 0) {
+				notify(t("settingsForgetKeptTitle"), {
+					variant: "warning",
+					durationMs: 10_000,
+					description: report.kept
+						.map((item) =>
+							t("settingsForgetKeptRow", {
+								workspace: item.workspace,
+								tasks: String(item.tasks),
+							}),
+						)
+						.join("\n"),
+				});
+			}
+			if (report.failed.length > 0) {
+				notify(t("settingsForgetFailedTitle"), {
+					variant: "error",
+					durationMs: 10_000,
+					description: report.failed
+						.map((item) => `${item.workspace}：${item.error}`)
+						.join("\n"),
+				});
+			}
+			// 名册已经变了（至少这本台账的名册行没了）：丢掉缓存，下次打开弹窗重取，
+			// 否则删完再开还是旧名单，被删的人照样挂在上面。
+			setRoster(null);
+			setUserOpen(false);
+			onSwitched();
+		} catch (failure) {
+			setError(failure instanceof Error ? failure.message : String(failure));
+		} finally {
+			setPending(null);
+		}
+	};
+
 	/** 点「使用」先确认：切换身份会影响此后所有台账记录的归属，不能一下点上。 */
 	const useUser = async (row: RosterRow): Promise<void> => {
 		if (pending !== null) return;
@@ -207,6 +257,9 @@ export function SettingsPage(props: {
 	const rows = roster === null ? [] : rosterRows(roster, t("settingsSharedUsers"));
 
 	const openUserModal = (): void => {
+		// 每次打开都清空昵称：上次建成功之后不该还留着一份旧输入
+		setName("");
+		setError(null);
 		setUserOpen(true);
 	};
 
@@ -593,8 +646,18 @@ export function SettingsPage(props: {
 					onClose: () => {
 						if (pending === null) setUserOpen(false);
 					},
-					// 分隔线归核心 foot（0.20.0 起默认带），这里只放内容、控制宽度
-					footer: h(InputGroup, {
+					// 分隔线归核心 foot（0.20.0 起默认带）。左边留给正在跑的动作（删除要逐本台账走
+					// 一次 git 往返，慢），右边是「创建新用户」组合框。
+					footer: h(
+						"div",
+						{ className: "dtl-modal__foot" },
+						// 左下角：有动作在跑就晃三个块（删除要逐本台账走网络，慢）
+						h(
+							"div",
+							{ className: "dtl-modal__busy" },
+							pending === null ? null : h(Loader, { variant: "blocks", size: "lg" }),
+						),
+						h(InputGroup, {
 						label: t("settingsCreateUser"),
 						value: name,
 						onChange: setName,
@@ -602,7 +665,8 @@ export function SettingsPage(props: {
 						size: "lg",
 						disabled: pending !== null,
 						onSubmit: create,
-						style: { width: "360px" },
+						// marginLeft:auto 让它始终贴右，左边留白只给 loading
+						style: { width: "360px", marginLeft: "auto" },
 						actions: [
 							{
 								label: t("settingsUserModalConfirm"),
@@ -612,11 +676,12 @@ export function SettingsPage(props: {
 								onClick: create,
 							},
 						],
-					}),
-				},
-				error === null
-					? null
-					: h("div", { className: "dtl-set__error" }, t("settingsFailed", { message: error })),
+						}),
+						),
+						},
+						error === null
+						? null
+						: h("div", { className: "dtl-set__error" }, t("settingsFailed", { message: error })),
 				roster === null
 					? h("div", { className: "dtl-loading" }, h(Loader, { variant: "blocks", size: "md" }))
 					: h(
@@ -637,9 +702,10 @@ export function SettingsPage(props: {
 								rows: rows.map((row, index) => ({
 									key: row.uuid,
 									cells: {
-										// 同一工作区连续几行只留第一个标签：一个标签引领下面的用户
+										// 公用身份不挂标签（用户 2026-11-02：不显示「通用用户」）；
+										// 同一工作区连续几行只留第一个标签，一个标签引领下面的用户
 										workspace:
-											rows[index - 1]?.group === row.group
+											row.group === "#shared" || rows[index - 1]?.group === row.group
 												? null
 												: h(Tag, {
 														text: row.workspace,
@@ -667,7 +733,7 @@ export function SettingsPage(props: {
 														},
 														t("settingsUseThis"),
 													),
-											// 删除只上样式、先不接逻辑；底色走核心 0.20 的 color/background 轴
+											// 删除：底色走核心 0.20 的 color/background 轴；点了先确认再逐本台账摘
 											h(IconButton, {
 												icon: h(IconCloseOutlineRegular, { size: 14 }),
 												label: t("settingsDeleteUser"),
@@ -675,6 +741,10 @@ export function SettingsPage(props: {
 												variant: "danger",
 												color: "var(--dtl-danger)",
 												background: "var(--dtl-danger-soft)",
+												disabled: pending !== null,
+												onClick: () => {
+													void forgetUser(row);
+												},
 											}),
 										),
 									},

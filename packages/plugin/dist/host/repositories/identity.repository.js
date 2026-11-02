@@ -4,6 +4,8 @@ import { runLedgerScript } from "./runner.js";
  * 一本就可能几秒，十个目录轻松过一分钟 —— 绝不能吃默认的 10s。
  */
 const RENAME_TIMEOUT_MS = 180_000;
+/** 删人同样逐本台账走 git（取最新 → 改 → 提交 → 推送），10s 默认值不够。 */
+const FORGET_TIMEOUT_MS = 120_000;
 const UNKNOWN_IDENTITY = { uuid: null, name: null };
 function viewOf(data) {
     const uuid = typeof data.uuid === "string" ? data.uuid.trim() : "";
@@ -55,6 +57,20 @@ export async function switchIdentity(input) {
         };
     }
     return viewOf(result.data);
+}
+export async function forgetOwner(repo, uuid) {
+    // 删人也走一遍「写前取最新 → 改 → 提交 → 推送」，一次网络往返就可能几秒，
+    // 默认的 10s 会把它判超时（脚本被 kill 时连分片都还没删）。
+    const result = await runLedgerScript("forget", ["--id", uuid, "--repo", repo, "--json"], {
+        timeoutMs: FORGET_TIMEOUT_MS,
+    });
+    if (!result.ok)
+        throw new Error(result.error);
+    return {
+        removed: result.data.removed === true,
+        name: typeof result.data.name === "string" ? result.data.name : "",
+        tasks: typeof result.data.tasks === "number" ? result.data.tasks : 0,
+    };
 }
 /** `dirs[]` 原样搬过来（形状不对的行直接丢掉，不编造）。 */
 function dirsOf(raw) {

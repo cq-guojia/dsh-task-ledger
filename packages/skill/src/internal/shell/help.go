@@ -123,6 +123,14 @@ var commandHelp = map[string]helpDoc{
 			{"--repo <工作区根>", "同上"},
 		},
 	},
+	"forget": {
+		usage: "progress forget --id <uuid> [--json]",
+		options: []helpOption{
+			{"--id <uuid>", "把这个人从**这本台账**的名册里摘掉（分片还有任务就不删，返回 removed=false）"},
+			{"--json", "{removed, name, tasks, reason?}：removed=false 表示因为有任务而没删"},
+			{"--repo <工作区根>", "同上；别的台账、历史记录一概不动"},
+		},
+	},
 	"show": {
 		usage: "progress show --id <任务号> [--json]",
 		options: []helpOption{
