@@ -199,7 +199,7 @@ function monthRange(ym: string): { since: string; until: string } {
 }
 
 /**
- * 历史明细跨工作区合并：按结案时间倒序、按 `key` 去重，整月一次下发。
+ * 历史明细跨工作区合并：按结案时间正序、按 `key` 去重，整月一次下发。
  * 分页不在这里做 —— 整月都在前端内存里，滚动由前端按行号开窗（不再按天切片翻页）。
  */
 export async function getHistoryList(
@@ -237,7 +237,7 @@ export async function getHistoryList(
 			merged.push(record);
 		}
 	}
-	merged.sort((a, b) => (a.finished < b.finished ? 1 : a.finished > b.finished ? -1 : 0));
+	merged.sort((a, b) => (a.finished < b.finished ? -1 : a.finished > b.finished ? 1 : 0));
 	return {
 		records: merged,
 		// 整月不再设条数上限（2026-11-01）⇒ 恒为 false；字段留着是为了不动下发形状

@@ -221,9 +221,9 @@ export const UI_CONTROLS_CSS = `
 .dtl-flow__sep .dtl-flow__node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
 .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{position:absolute;inset:0;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{fill:var(--dtl-surface-1);
-  stroke:var(--dtl-border);stroke-width:1.5;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg-3);}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{fill:var(--dtl-chip-strong);stroke:none;}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg);
+  transform:translateX(1.5px);}
 /* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
@@ -239,16 +239,38 @@ export const UI_CONTROLS_CSS = `
 .dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;color:var(--dtl-fg);}
 /* 要点列表：一条一条，行间极淡细线，没有边框和底色 */
 .dtl-flow__list{width:100%;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;}
-.dtl-flow__item{padding:var(--dtl-space-2) 0;font-size:var(--dtl-font-sm);
+/* min-width:0 是跑马灯省略号的必要条件：flex/grid 子项默认按内容撑宽，不压就截不掉。 */
+.dtl-flow__item{padding:var(--dtl-space-2) 0;font-size:var(--dtl-font-sm);min-width:0;
   line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-flow__item + .dtl-flow__item{border-top:1px solid var(--dtl-border-faint);}
+/* 三格等高（用户 2026-11-02）：内容块吃掉格子剩余高度、内部两端分布 ⇒ 三格底部对齐。
+   内容块宽度 100% 覆盖 cell 的 align-items:flex-start。 */
+.dtl-flow__cell > :last-child{flex:1 1 auto;min-height:0;}
+.dtl-flow__body,.dtl-flow__list{justify-content:space-between;}
+/* 内容块（lead / 列表 / 代码框）竖向堆叠 */
+.dtl-flow__body{display:flex;flex-direction:column;gap:var(--dtl-space-2);width:100%;min-width:0;}
+/* 说明文字一律单行：放不下就三个点（用户 2026-11-02：所有文字不折行，三格高度才守得住）。 */
+.dtl-flow__lead{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+/* 说明小字（安装格：其他 Agent 的安装 Skill） */
+.dtl-flow__sub{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+/* 安装命令 + 复制按钮：外框是核心 Surface（圆角契约唯一真源，别手搓 border + radius），
+   这里只管横向排布。 */
+.dshpc-surface.dtl-flow__code{display:flex;align-items:center;gap:var(--dtl-space-2);
+  width:100%;box-sizing:border-box;}
+.dtl-flow__cmd{flex:1 1 auto;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* 复制按钮固定宽：点下去只换图标（复制 → 勾），按钮不跟着文字变宽（用户 2026-11-02）。
+   44px ≈ 原 64 的 2/3，两个字放得下还留一点手感（用户 2026-11-02 二次：缩 1/3）。 */
+.dtl-flow__code > button{flex:none;width:44px;padding-left:0;padding-right:0;justify-content:center;}
 /* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
   .dtl-flow__sep{width:auto;height:0;margin:0 var(--dtl-flow-pad);
     border-left:0;border-top:1px dashed var(--dtl-border);}
-  /* 落成一列时箭头朝下 */
-  .dtl-flow__sep .dtl-flow__arrow{transform:rotate(90deg);}
+  /* 落成一列时箭头朝下（与基础规则同特异性，才能覆盖 translateX） */
+  .dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{transform:rotate(90deg) translateX(1.5px);}
 }
 
 /* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */

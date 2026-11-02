@@ -480,7 +480,7 @@ export function HistoryChart(props: {
 		const closed = bucket.done + bucket.cancelled;
 		// 空桶（新增 / 结案全 0）：浮卡只剩一行日期，虚线不画
 		const hasData = bucket.added > 0 || closed > 0;
-		// 结构（与在办浮卡一致）：日期 → 虚线 → 新建任务 → 结案任务（总计）→ 明细。
+		// 结构（与在办浮卡一致）：日期 → 虚线 → 新建任务 → 已结任务（总计）→ 明细。
 		// 「新建」是曲线口径、不分工作区，与曲线同色；两行总计 0 就不列（0 不充数）。
 		return h(
 			Surface,
@@ -505,9 +505,14 @@ export function HistoryChart(props: {
 						"div",
 						{ key: "closed", className: "dtl-hist__tip-total" },
 						legend,
-						h("span", null, t("chartClosedTasks")),
+						h("span", null, t("chartClosed")),
 						h("span", { className: "dtl-hist__tip-count" }, String(closed)),
 					)
+				: null,
+			// 总计块与工作区明细之间的虚线（样式见 ui.ts `.dtl-hist__tip-sep`）：
+			// 上面是「新建 / 已结」两个总数，下面是「这个数由哪些工作区凑出来」，得切开
+			hasData && rows.length > 0
+				? h("div", { key: "sep-rows", className: "dtl-hist__tip-sep" })
 				: null,
 			...rows.map((row) =>
 				h(

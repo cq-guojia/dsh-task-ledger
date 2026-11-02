@@ -413,8 +413,9 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		};
 	}, [offsets, props.scrollContainer, recompute]);
 
-	// 点图表里的日 / 周 / 「本周结案」卡 ⇒ 滚到列表里那一天（用户 2026-10-31）。
-	// 整天都在内存里 ⇒ 直接按行号算位置；目标天没有记录时落到「目标日或更早的最近一天」。
+	// 点图表里的日 / 周 / 月 / 「本周结案」卡 ⇒ 滚到该周期的第一天（用户 2026-11-02）。
+	// 正序列表：取「目标日或其后」的第一个日期头（目标日当天没记录就落到该周期内第一天）；
+	// 目标日晚于本月所有记录时，退回最后一个日期头。
 	useEffect(() => {
 		const target = props.scrollTo;
 		if (target === null || target.token === lastScrollToken.current) return;
@@ -426,11 +427,20 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			lastScrollToken.current = target.token;
 			props.onScrolled();
 		};
-		const index = items.findIndex((item) => item.kind === "day" && item.day <= target.date);
+		let index = items.findIndex((item) => item.kind === "day" && item.day >= target.date);
+		if (index < 0) {
+			for (let i = items.length - 1; i >= 0; i -= 1) {
+				const found = items[i];
+				if (found !== undefined && found.kind === "day") {
+					index = i;
+					break;
+				}
+			}
+		}
 		const table = tableRef.current;
 		const container = props.scrollContainer();
 		if (index < 0 || table === null || container === null) {
-			// 本月没有目标日或更早的天：没有可滚的位置，直接记为已处理
+			// 本月没有任何日期头：没有可滚的位置，直接记为已处理
 			finish();
 			return;
 		}

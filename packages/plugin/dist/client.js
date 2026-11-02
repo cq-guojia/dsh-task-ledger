@@ -54533,9 +54533,9 @@ body[data-ds-dark-theme]{
 .dtl-flow__sep .dtl-flow__node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
 .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{position:absolute;inset:0;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{fill:var(--dtl-surface-1);
-  stroke:var(--dtl-border);stroke-width:1.5;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg-3);}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{fill:var(--dtl-chip-strong);stroke:none;}
+.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{position:relative;z-index:1;color:var(--dtl-fg);
+  transform:translateX(1.5px);}
 /* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
@@ -54551,16 +54551,38 @@ body[data-ds-dark-theme]{
 .dtl-flow__name{font-size:var(--dtl-font-md);line-height:var(--dtl-line-md);font-weight:600;color:var(--dtl-fg);}
 /* 要点列表：一条一条，行间极淡细线，没有边框和底色 */
 .dtl-flow__list{width:100%;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;}
-.dtl-flow__item{padding:var(--dtl-space-2) 0;font-size:var(--dtl-font-sm);
+/* min-width:0 是跑马灯省略号的必要条件：flex/grid 子项默认按内容撑宽，不压就截不掉。 */
+.dtl-flow__item{padding:var(--dtl-space-2) 0;font-size:var(--dtl-font-sm);min-width:0;
   line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-flow__item + .dtl-flow__item{border-top:1px solid var(--dtl-border-faint);}
+/* 三格等高（用户 2026-11-02）：内容块吃掉格子剩余高度、内部两端分布 ⇒ 三格底部对齐。
+   内容块宽度 100% 覆盖 cell 的 align-items:flex-start。 */
+.dtl-flow__cell > :last-child{flex:1 1 auto;min-height:0;}
+.dtl-flow__body,.dtl-flow__list{justify-content:space-between;}
+/* 内容块（lead / 列表 / 代码框）竖向堆叠 */
+.dtl-flow__body{display:flex;flex-direction:column;gap:var(--dtl-space-2);width:100%;min-width:0;}
+/* 说明文字一律单行：放不下就三个点（用户 2026-11-02：所有文字不折行，三格高度才守得住）。 */
+.dtl-flow__lead{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+/* 说明小字（安装格：其他 Agent 的安装 Skill） */
+.dtl-flow__sub{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+/* 安装命令 + 复制按钮：外框是核心 Surface（圆角契约唯一真源，别手搓 border + radius），
+   这里只管横向排布。 */
+.dshpc-surface.dtl-flow__code{display:flex;align-items:center;gap:var(--dtl-space-2);
+  width:100%;box-sizing:border-box;}
+.dtl-flow__cmd{flex:1 1 auto;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* 复制按钮固定宽：点下去只换图标（复制 → 勾），按钮不跟着文字变宽（用户 2026-11-02）。
+   44px ≈ 原 64 的 2/3，两个字放得下还留一点手感（用户 2026-11-02 二次：缩 1/3）。 */
+.dtl-flow__code > button{flex:none;width:44px;padding-left:0;padding-right:0;justify-content:center;}
 /* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
   .dtl-flow__sep{width:auto;height:0;margin:0 var(--dtl-flow-pad);
     border-left:0;border-top:1px dashed var(--dtl-border);}
-  /* 落成一列时箭头朝下 */
-  .dtl-flow__sep .dtl-flow__arrow{transform:rotate(90deg);}
+  /* 落成一列时箭头朝下（与基础规则同特异性，才能覆盖 translateX） */
+  .dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{transform:rotate(90deg) translateX(1.5px);}
 }
 
 /* 台账目录：表格式（有表头行），比「一行塞四样」清楚 */
@@ -54712,7 +54734,7 @@ body[data-ds-dark-theme]{
   animation-delay:var(--lc-d,0ms);}
 @keyframes dtl-bar-in{from{transform:scaleY(0);}to{transform:scaleY(1);}}
 @media (prefers-reduced-motion: reduce){.dtl-hist__bar{animation:none;}}
-/* 浮卡：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
+/* 浮卡：日期 → 新建任务 → 已结任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
    恒在柱子**下方**：上方会被图表顶边挤出屏幕、hover 判定又带来闪跳（用户 2026-10-29 都放下面）；
    top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。
    底色取 --dtl-tip-bg（掺一档前景色的浅灰）：纯卡底色在浅色主题下跟白底糊住、边界看不清
@@ -54727,7 +54749,7 @@ body[data-ds-dark-theme]{
 .dtl-hist__tip-date{color:var(--dtl-tip-fg-dim);font-variant-numeric:tabular-nums;}
 .dtl-hist__tip-row{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-variant-numeric:tabular-nums;}
-/* 总计行（结案任务）：加粗，它是明细之和，不属于任何一个工作区颜色 */
+/* 总计行（已结任务）：加粗，它是明细之和，不属于任何一个工作区颜色 */
 .dtl-hist__tip-total{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-weight:600;font-variant-numeric:tabular-nums;}
 /* 总计与明细之间的分隔虚线（用户 2026-10-30） */
@@ -54771,7 +54793,7 @@ body[data-ds-dark-theme]{
 .dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
 /* 上下两半的色块（用户 2026-10-30）：上半 = 柱子里叠在上面那一段 ——
-   已结案（取消红在上 / 完成蓝在下）、未结（进行中绿在上 / 待认领琥珀在下）。 */
+   已结任务（取消红在上 / 完成蓝在下）、未结任务（进行中绿在上 / 待认领琥珀在下）。 */
 .dtl-trend__dot--split{display:inline-flex;flex-direction:column;overflow:hidden;}
 .dtl-trend__dot--split > span{flex:1 1 0;min-height:0;}
 /* 「只看我的」：跟在图例后面（右侧那角留给翻页箭头，用户 2026-10-30） */
@@ -55559,7 +55581,10 @@ body[data-ds-dark-theme]{
 				}), (0, react$1.createElement)("span", null, t("chartCreatedTasks")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(bucket.added))) : null, closed > 0 ? (0, react$1.createElement)("div", {
 					key: "closed",
 					className: "dtl-hist__tip-total"
-				}, legend, (0, react$1.createElement)("span", null, t("chartClosedTasks")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(closed))) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
+				}, legend, (0, react$1.createElement)("span", null, t("chartClosed")), (0, react$1.createElement)("span", { className: "dtl-hist__tip-count" }, String(closed))) : null, hasData && rows.length > 0 ? (0, react$1.createElement)("div", {
+					key: "sep-rows",
+					className: "dtl-hist__tip-sep"
+				}) : null, ...rows.map((row) => (0, react$1.createElement)("div", {
 					key: row.key,
 					className: "dtl-hist__tip-row"
 				}, (0, react$1.createElement)("span", {
@@ -56604,8 +56629,8 @@ body[data-ds-dark-theme]{
 				className: "dtl-trend__dot",
 				style: { background: colors[0] ?? "transparent" }
 			});
-			/** 图例：两枚上下两段的方块（已结案 = 取消在上 / 完成在下、未结 = 进行中在上 / 待认领在下）
-			*  + 新增曲线。只看我的时未结整根都是进行中，那枚不拆（用户 2026-10-30）。 */
+			/** 图例：两枚上下两段的方块（已结任务 = 取消在上 / 完成在下、未结任务 = 进行中在上 / 待认领在下）
+			*  + 新建任务曲线。只看我的时未结整根都是进行中，那枚不拆（用户 2026-10-30）。 */
 			const legend = [
 				{
 					key: "closed",
@@ -56614,12 +56639,12 @@ body[data-ds-dark-theme]{
 				},
 				{
 					key: "open",
-					label: t(mine ? "chartDoing" : "chartOpen"),
+					label: t("chartOpen"),
 					colors: mine ? [C_DOING] : [C_DOING, C_OPEN]
 				},
 				{
 					key: "added",
-					label: t("chartAdded"),
+					label: t("chartCreatedTasks"),
 					colors: [C_LINE]
 				}
 			];
@@ -56643,7 +56668,7 @@ body[data-ds-dark-theme]{
 				from: bucket.from,
 				to: bucket.to
 			});
-			/** 浮卡：周期 → 新建 → 已结案（下跟完成 / 取消）→ 未结（下跟进行中 / 待认领）；0 值不列。 */
+			/** 浮卡：周期 → 新建任务 → 已结任务（下跟完成 / 取消）→ 未结任务（下跟进行中 / 待认领）；0 值不列。 */
 			const tipOf = (bucket) => {
 				const cell = counts(bucket);
 				const split = breakdown(bucket);
@@ -56655,7 +56680,7 @@ body[data-ds-dark-theme]{
 				}, (0, react$1.createElement)("div", { className: "dtl-trend__tip-date" }, periodOf(bucket)), hasData ? (0, react$1.createElement)("div", {
 					key: "sep",
 					className: "dtl-trend__tip-sep"
-				}) : null, row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), ...totalRow("closed", t("chartClosed"), total, [C_CANCELLED, C_DONE], `${t("chartFinished")} ${formatCount(cell.done)} · ${t("chartCancelled")} ${formatCount(cell.cancelled)}`), ...totalRow("open", t(mine ? "chartDoing" : "chartOpen"), cell.open, mine ? [C_DOING] : [C_DOING, C_OPEN], mine ? "" : `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
+				}) : null, row("added", t("chartCreatedTasks"), cell.added, "var(--dtl-tip-fg-dim)"), ...totalRow("closed", t("chartClosed"), total, [C_CANCELLED, C_DONE], `${t("chartFinished")} ${formatCount(cell.done)} · ${t("chartCancelled")} ${formatCount(cell.cancelled)}`), ...totalRow("open", t("chartOpen"), cell.open, mine ? [C_DOING] : [C_DOING, C_OPEN], mine ? "" : `${t("chartDoing")} ${formatCount(split.doing)} · ${t("chartWaiting")} ${formatCount(split.waiting)}`));
 			};
 			const colStyle = { width: `${String(COL_W)}px` };
 			/** 一根柱 = 一个周期：左结案（底蓝完成 / 顶红取消）、右未结（底琥珀待认领 / 顶绿进行中）。 */
@@ -56863,11 +56888,37 @@ body[data-ds-dark-theme]{
 					onClick: openUserModal
 				}, t("settingsNewUser")))));
 			};
-			/** 一块：图标徽标（左）+ 圈数字（右）→ 小标题 → 一条条要点（行间极淡细线，不画框）。 */
-			const stepCell = (no, tone, icon, title, lines) => (0, react$1.createElement)("div", { className: "dtl-flow__cell" }, (0, react$1.createElement)("div", { className: "dtl-flow__top" }, (0, react$1.createElement)("span", { className: `dtl-flow__icon dtl-flow__icon--${tone}` }, icon), (0, react$1.createElement)("span", { className: "dtl-flow__num" }, String(no))), (0, react$1.createElement)("div", { className: "dtl-flow__name" }, title), (0, react$1.createElement)("ul", { className: "dtl-flow__list" }, lines.split("\n").filter((line) => line.trim() !== "").map((line, i) => (0, react$1.createElement)("li", {
+			/** 一块：图标徽标（左）+ 圈数字（右）→ 小标题 → 自定义内容块。 */
+			const stepCell = (no, tone, icon, title, body) => (0, react$1.createElement)("div", { className: "dtl-flow__cell" }, (0, react$1.createElement)("div", { className: "dtl-flow__top" }, (0, react$1.createElement)("span", { className: `dtl-flow__icon dtl-flow__icon--${tone}` }, icon), (0, react$1.createElement)("span", { className: "dtl-flow__num" }, String(no))), (0, react$1.createElement)("div", { className: "dtl-flow__name" }, title), body);
+			/** 一条条要点（行间极淡细线，不画框）。
+			*  文字一律**单行不折行**、放不下三个点、hover 滚一遍看全（核心 MarqueeText，用户 2026-11-02）。 */
+			const FlowList = (lines) => (0, react$1.createElement)("ul", { className: "dtl-flow__list" }, lines.filter((l) => l.trim() !== "").map((line, i) => (0, react$1.createElement)("li", {
 				className: "dtl-flow__item",
 				key: i
-			}, line))));
+			}, (0, react$1.createElement)(MarqueeText, {
+				text: line,
+				title: line
+			}))));
+			/** 安装命令 + 复制按钮（外框交核心 Surface，`.dshpc-surface.dtl-flow__code` 才吃得到框样式）。 */
+			const CopyCmd = ({ cmd }) => {
+				const [copied, setCopied] = (0, react$1.useState)(false);
+				return (0, react$1.createElement)(Surface, {
+					tone: "sunken",
+					border: "faint",
+					radius: "md",
+					padding: "sm",
+					className: "dtl-flow__code"
+				}, (0, react$1.createElement)("code", { className: "dtl-flow__cmd" }, cmd), (0, react$1.createElement)(Button, {
+					size: "sm",
+					variant: "secondary",
+					onClick: () => {
+						navigator.clipboard?.writeText(cmd).then(() => {
+							setCopied(true);
+							setTimeout(() => setCopied(false), 1500);
+						}).catch(() => {});
+					}
+				}, copied ? t("settingsCopied") : t("settingsCopy")));
+			};
 			/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
 			*  圆用 SVG `<circle>`（CSS 圆在用户那边反复画不圆，SVG 是数学圆）；箭头用官方 chevron 图标，
 			*  不再自己画线（用户 2026-11-02：手画的箭头太丑）。 */
@@ -56888,7 +56939,15 @@ body[data-ds-dark-theme]{
 			const flow = (0, react$1.createElement)(Surface, {
 				className: "dtl-flow__frame",
 				padding: null
-			}, (0, react$1.createElement)("div", { className: "dtl-flow__grid" }, stepCell(1, "business", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 18 }), t("settingsFlow1"), t("settingsFlow1Desc")), sep(), stepCell(2, "warning", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 18 }), t("settingsFlow2"), t("settingsFlow2Desc")), sep(), stepCell(3, "success", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 18 }), t("settingsFlow3"), t("settingsFlow3Desc"))));
+			}, (0, react$1.createElement)("div", { className: "dtl-flow__grid" }, stepCell(1, "business", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 18 }), t("settingsFlow1"), (0, react$1.createElement)("div", { className: "dtl-flow__body" }, (0, react$1.createElement)("div", { className: "dtl-flow__lead" }, t("settingsFlow1Lead")), (0, react$1.createElement)("div", { className: "dtl-flow__sub" }, t("settingsFlow1Sub")), (0, react$1.createElement)(CopyCmd, { cmd: "npm install task-ledger" }))), sep(), stepCell(2, "warning", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 18 }), t("settingsFlow2"), FlowList([
+				t("settingsFlow2Create"),
+				t("settingsFlow2Exec"),
+				t("settingsFlow2Close")
+			])), sep(), stepCell(3, "success", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 18 }), t("settingsFlow3"), FlowList([
+				t("settingsFlow3Todo"),
+				t("settingsFlow3History"),
+				t("settingsFlow3Stats")
+			]))));
 			const dirRow = (dir) => renaming === dir.path ? (0, react$1.createElement)("div", {
 				key: dir.path,
 				className: "dtl-tbl__edit"
@@ -57485,8 +57544,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261102-113629-706`
-			}, `v0.0.126 261102-113629-706`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261102-142645-008`
+			}, `v0.0.126 261102-142645-008`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -57653,12 +57712,19 @@ body[data-ds-dark-theme]{
 			settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
 			settingsAddPlaceholder: "台账根目录的绝对路径",
 			settingsAddConfirm: "添加",
-			settingsFlow1: "安装 skill",
-			settingsFlow1Desc: "DeepSeek harness：插件已安装，直接可用\n其他 AI：安装同款 skill 即可",
-			settingsFlow2: "工作区内操作",
-			settingsFlow2Desc: "创建任务：告诉 Agent 要做什么\n执行过程：进度自动写进 ledger/\n关闭任务：让 Agent 执行 close",
-			settingsFlow3: "面板内查询",
-			settingsFlow3Desc: "待办：谁在做什么\n历史：这个项目做过什么\n统计：趋势与耗时",
+			settingsFlow1: "安装 Skill",
+			settingsFlow1Lead: "本机 DeepSeek 不用安装，插件已自带。",
+			settingsFlow1Sub: "在其他 Agent 上安装",
+			settingsCopy: "复制",
+			settingsCopied: "已复制",
+			settingsFlow2: "工作区操作",
+			settingsFlow2Create: "新建：说「建一个新任务：xxx」。",
+			settingsFlow2Exec: "执行：Agent 进度自动写进台账。",
+			settingsFlow2Close: "结束：说「这个任务结束」，Agent 收尾结案。",
+			settingsFlow3: "面板查询",
+			settingsFlow3Todo: "在办：执行中的任务与待认领项",
+			settingsFlow3History: "历史：本项目已结案的任务数量",
+			settingsFlow3Stats: "统计：趋势与耗时",
 			settingsColDir: "目录",
 			settingsColPath: "路径",
 			settingsColActions: "操作",
@@ -57685,13 +57751,11 @@ body[data-ds-dark-theme]{
 			daysNone: "—",
 			daysValue: "{n} 天",
 			chartDone: "结案",
-			chartClosed: "已结案",
+			chartClosed: "已结任务",
 			chartFinished: "完成",
 			chartCancelled: "取消",
-			chartOpen: "未结",
-			chartAdded: "新增",
+			chartOpen: "未结任务",
 			chartCreatedTasks: "新建任务",
-			chartClosedTasks: "结案任务",
 			chartEmpty: "还没有可统计的记录",
 			chartPartial: "{from} 起才有台账数据",
 			chartMine: "只看我的",
@@ -57835,12 +57899,19 @@ body[data-ds-dark-theme]{
 			settingsAddHint: "Enter the absolute path of a ledger root folder. It must contain a ledger/ subdirectory.",
 			settingsAddPlaceholder: "Absolute path of the ledger root",
 			settingsAddConfirm: "Add",
-			settingsFlow1: "Install the skill",
-			settingsFlow1Desc: "DeepSeek harness: the plugin is already installed\nOther AI clients: install the same skill",
-			settingsFlow2: "Work in a workspace",
-			settingsFlow2Desc: "Create: tell the agent what to do\nWhile working: progress is written to ledger/\nClose: ask the agent to close the task",
-			settingsFlow3: "Query in the panel",
-			settingsFlow3Desc: "Board: who is doing what\nHistory: what this project has done\nStats: trend and time spent",
+			settingsFlow1: "Install Skill",
+			settingsFlow1Lead: "Local DeepSeek needs no install — it ships with the plugin.",
+			settingsFlow1Sub: "Install on other agents",
+			settingsCopy: "Copy",
+			settingsCopied: "Copied",
+			settingsFlow2: "Workspace Operations",
+			settingsFlow2Create: "New: say \"create a new task: xxx\".",
+			settingsFlow2Exec: "Run: the agent writes progress to the ledger itself.",
+			settingsFlow2Close: "Finish: say \"this task is done\" and the agent closes it out.",
+			settingsFlow3: "Panel Query",
+			settingsFlow3Todo: "In flight: running tasks and unclaimed items",
+			settingsFlow3History: "History: closed task count for this project",
+			settingsFlow3Stats: "Stats: trend and time spent",
 			settingsColDir: "Folder",
 			settingsColPath: "Path",
 			settingsColActions: "Actions",
@@ -57867,13 +57938,11 @@ body[data-ds-dark-theme]{
 			daysNone: "—",
 			daysValue: "{n}d",
 			chartDone: "Closed",
-			chartClosed: "Closed",
+			chartClosed: "Closed tasks",
 			chartFinished: "Done",
 			chartCancelled: "Cancelled",
-			chartOpen: "Open",
-			chartAdded: "Added",
-			chartCreatedTasks: "Created",
-			chartClosedTasks: "Closed",
+			chartOpen: "Open tasks",
+			chartCreatedTasks: "Created tasks",
 			chartEmpty: "No records to chart yet",
 			chartPartial: "Ledger data starts {from}",
 			chartMine: "Only mine",

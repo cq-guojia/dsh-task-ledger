@@ -133,7 +133,7 @@ const UI_BASE_CSS = `
   animation-delay:var(--lc-d,0ms);}
 @keyframes dtl-bar-in{from{transform:scaleY(0);}to{transform:scaleY(1);}}
 @media (prefers-reduced-motion: reduce){.dtl-hist__bar{animation:none;}}
-/* 浮卡：日期 → 新建任务 → 结案任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
+/* 浮卡：日期 → 新建任务 → 已结任务（总计）→ 虚线 → 明细（一工作区一行），0 值不列。
    恒在柱子**下方**：上方会被图表顶边挤出屏幕、hover 判定又带来闪跳（用户 2026-10-29 都放下面）；
    top 让出 6px 间隙 + 12px 的 x 轴日期行，不压刻度。
    底色取 --dtl-tip-bg（掺一档前景色的浅灰）：纯卡底色在浅色主题下跟白底糊住、边界看不清
@@ -148,7 +148,7 @@ const UI_BASE_CSS = `
 .dtl-hist__tip-date{color:var(--dtl-tip-fg-dim);font-variant-numeric:tabular-nums;}
 .dtl-hist__tip-row{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-variant-numeric:tabular-nums;}
-/* 总计行（结案任务）：加粗，它是明细之和，不属于任何一个工作区颜色 */
+/* 总计行（已结任务）：加粗，它是明细之和，不属于任何一个工作区颜色 */
 .dtl-hist__tip-total{display:flex;align-items:center;gap:var(--dtl-space-1);
   font-weight:600;font-variant-numeric:tabular-nums;}
 /* 总计与明细之间的分隔虚线（用户 2026-10-30） */
@@ -192,7 +192,7 @@ const UI_BASE_CSS = `
 .dtl-trend__dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:0;
   vertical-align:middle;}
 /* 上下两半的色块（用户 2026-10-30）：上半 = 柱子里叠在上面那一段 ——
-   已结案（取消红在上 / 完成蓝在下）、未结（进行中绿在上 / 待认领琥珀在下）。 */
+   已结任务（取消红在上 / 完成蓝在下）、未结任务（进行中绿在上 / 待认领琥珀在下）。 */
 .dtl-trend__dot--split{display:inline-flex;flex-direction:column;overflow:hidden;}
 .dtl-trend__dot--split > span{flex:1 1 0;min-height:0;}
 /* 「只看我的」：跟在图例后面（右侧那角留给翻页箭头，用户 2026-10-30） */
@@ -596,6 +596,9 @@ export { SplitGroup } from "dsh-plugin-core/ui";
 /** 快捷工具栏（核心 0.15.0 起，内置「回到顶部」）：右侧一列圆钮。
  *  `anchor` 给核心内容区容器 ⇒ 横向贴它的右缘外侧；不给才挂整个窗口右下角（本项目不要那种）。 */
 export { QuickToolbar } from "dsh-plugin-core/ui";
+
+/** 跑马灯文本（核心唯一实现：单行不折行、放不下就三个点，hover 滚一遍看全）。 */
+export { MarqueeText } from "dsh-plugin-core/ui";
 
 /** 文本输入（核心唯一实现：size sm/md/lg、error 描红、hint 问号一气呵成）。 */
 export { Input } from "dsh-plugin-core/ui";

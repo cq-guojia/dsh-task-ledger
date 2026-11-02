@@ -29,7 +29,7 @@ import {
 	useSyncExternalStore,
 } from "react";
 import type { LocaleKey, Translate } from "./locales";
-import { formatCount, pad2, ymdOf } from "./format";
+import { formatCount, mondayOf, pad2, ymdOf } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
 import {
 	groupRows,
@@ -241,7 +241,8 @@ export function BoardHome(props: {
 		setHistScroll(null);
 	}, []);
 	/** 点历史页右侧 4 格 = 图表与列表一起跳过去（用户 2026-11-01）：
-	 *  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，列表跟着滚到今天；
+	 *  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，
+	 *  列表滚到**该周期第一天**、月份跟着第一天走（跨月周会切到上一个月的周一，用户 2026-11-02）；
 	 *  本季度 ⇒ 没有「季」这档粒度，图切「月」并选季度最后一个月，
 	 *  没到的月份夹回本月（11 月点 ⇒ 选 11 月，8 月点 ⇒ 选 8 月）。 */
 	const pickHistoryPeriod = useCallback(
@@ -257,8 +258,10 @@ export function BoardHome(props: {
 				return;
 			}
 			setGran(period === "today" ? "day" : period);
-			setHistYm(ym);
-			requestHistScroll(today);
+			const first =
+				period === "today" ? today : period === "week" ? mondayOf(today) : `${ym}-01`;
+			setHistYm(first.slice(0, 7));
+			requestHistScroll(first);
 		},
 		[requestHistScroll],
 	);
@@ -431,7 +434,8 @@ export function BoardHome(props: {
 	 *  （术语 2026-10-29 用户拍板：结案是上位词，完成只指正常结案）。
 	 *  点一下 = 跳历史页 + 选到该周所在月 + 滚到那周的锚点（用户 2026-10-31）；
 	 *  hover 仍给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。
-	 *  锚点取区间末日（本周 = 今天、上周 = 上周日）：列表按天倒序，从这天往下正好覆盖整周。 */
+	 *  锚点取区间首日（本周 = 本周一、上周 = 上周一）：正序列表从这天往下正好覆盖整周；
+	 *  跨月周按首日所在月切（如 11/1 周日选的上周会落到 10 月）。 */
 	const weekCard = (
 		label: LocaleKey,
 		total: number | null,
@@ -449,8 +453,8 @@ export function BoardHome(props: {
 			title: t("periodRange", { from, to }),
 			onClick: () => {
 				setViewMode("history");
-				setHistYm(to.slice(0, 7));
-				requestHistScroll(to);
+				setHistYm(from.slice(0, 7));
+				requestHistScroll(from);
 			},
 		});
 
@@ -790,7 +794,6 @@ export function BoardHome(props: {
 											t,
 											gran,
 											anchorYm: histYm,
-											onPickMonth: setHistYm,
 											onPickDate: (date) => {
 												setHistYm(date.slice(0, 7));
 												requestHistScroll(date);

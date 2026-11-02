@@ -17,7 +17,7 @@ import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { fetchDirs, fetchRoster, postSwitchIdentity } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, Checkbox, Input, Loader, Modal, Surface } from "./ui";
+import { Button, Card, Checkbox, Input, Loader, MarqueeText, Modal, Surface } from "./ui";
 
 /** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 const notYet = (): void => {};
@@ -186,13 +186,13 @@ export function SettingsPage(props: {
 	/* ── 上半 · 右：三步说明（**没有大标题**，三块用实线隔成完整的宽格，用户 2026-11-01 定）────
 	   每块自上而下：序号 + 小标题 → 图标 → 说明。 */
 
-	/** 一块：图标徽标（左）+ 圈数字（右）→ 小标题 → 一条条要点（行间极淡细线，不画框）。 */
+	/** 一块：图标徽标（左）+ 圈数字（右）→ 小标题 → 自定义内容块。 */
 	const stepCell = (
 		no: number,
 		tone: "business" | "warning" | "success",
 		icon: ReactNode,
 		title: string,
-		lines: string,
+		body: ReactNode,
 	): ReactNode =>
 		h(
 			"div",
@@ -204,15 +204,48 @@ export function SettingsPage(props: {
 				h("span", { className: "dtl-flow__num" }, String(no)),
 			),
 			h("div", { className: "dtl-flow__name" }, title),
+			body,
+		);
+
+	/** 一条条要点（行间极淡细线，不画框）。
+	 *  文字一律**单行不折行**、放不下三个点、hover 滚一遍看全（核心 MarqueeText，用户 2026-11-02）。 */
+	const FlowList = (lines: string[]): ReactNode =>
+		h(
+			"ul",
+			{ className: "dtl-flow__list" },
+			lines
+				.filter((l) => l.trim() !== "")
+				.map((line, i) =>
+					h("li", { className: "dtl-flow__item", key: i }, h(MarqueeText, { text: line, title: line })),
+				),
+		);
+
+	/** 安装命令 + 复制按钮（外框交核心 Surface，`.dshpc-surface.dtl-flow__code` 才吃得到框样式）。 */
+	const CopyCmd = ({ cmd }: { cmd: string }): ReactNode => {
+		const [copied, setCopied] = useState(false);
+		return h(
+			Surface,
+			{ tone: "sunken", border: "faint", radius: "md", padding: "sm", className: "dtl-flow__code" },
+			h("code", { className: "dtl-flow__cmd" }, cmd),
 			h(
-				"ul",
-				{ className: "dtl-flow__list" },
-				lines
-					.split("\n")
-					.filter((line) => line.trim() !== "")
-					.map((line, i) => h("li", { className: "dtl-flow__item", key: i }, line)),
+				Button,
+				{
+					size: "sm",
+					variant: "secondary",
+					onClick: () => {
+						navigator.clipboard
+							?.writeText(cmd)
+							.then(() => {
+								setCopied(true);
+								setTimeout(() => setCopied(false), 1500);
+							})
+							.catch(() => {});
+					},
+				},
+				copied ? t("settingsCopied") : t("settingsCopy"),
 			),
 		);
+	};
 
 	/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
 	 *  圆用 SVG `<circle>`（CSS 圆在用户那边反复画不圆，SVG 是数学圆）；箭头用官方 chevron 图标，
@@ -244,7 +277,13 @@ export function SettingsPage(props: {
 				"business",
 				h(IconDownloadOutlineRegular, { size: 18 }),
 				t("settingsFlow1"),
-				t("settingsFlow1Desc"),
+				h(
+					"div",
+					{ className: "dtl-flow__body" },
+					h("div", { className: "dtl-flow__lead" }, t("settingsFlow1Lead")),
+					h("div", { className: "dtl-flow__sub" }, t("settingsFlow1Sub")),
+					h(CopyCmd, { cmd: "npm install task-ledger" }),
+				),
 			),
 			sep(),
 			stepCell(
@@ -252,7 +291,7 @@ export function SettingsPage(props: {
 				"warning",
 				h(IconChecklistOutlineRegular, { size: 18 }),
 				t("settingsFlow2"),
-				t("settingsFlow2Desc"),
+				FlowList([t("settingsFlow2Create"), t("settingsFlow2Exec"), t("settingsFlow2Close")]),
 			),
 			sep(),
 			stepCell(
@@ -260,7 +299,7 @@ export function SettingsPage(props: {
 				"success",
 				h(IconFlatListOutlineRegular, { size: 18 }),
 				t("settingsFlow3"),
-				t("settingsFlow3Desc"),
+				FlowList([t("settingsFlow3Todo"), t("settingsFlow3History"), t("settingsFlow3Stats")]),
 			),
 		),
 	);

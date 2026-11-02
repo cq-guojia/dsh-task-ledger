@@ -250,18 +250,18 @@ export function TrendChart(props: {
 				)
 			: h("span", { className: "dtl-trend__dot", style: { background: colors[0] ?? "transparent" } });
 
-	/** 图例：两枚上下两段的方块（已结案 = 取消在上 / 完成在下、未结 = 进行中在上 / 待认领在下）
-	 *  + 新增曲线。只看我的时未结整根都是进行中，那枚不拆（用户 2026-10-30）。 */
+	/** 图例：两枚上下两段的方块（已结任务 = 取消在上 / 完成在下、未结任务 = 进行中在上 / 待认领在下）
+	 *  + 新建任务曲线。只看我的时未结整根都是进行中，那枚不拆（用户 2026-10-30）。 */
 	const legend: readonly { key: string; label: string; colors: readonly string[] }[] = [
 		{ key: "closed", label: t("chartClosed"), colors: [C_CANCELLED, C_DONE] },
 		{
 			key: "open",
-			// 只看我的时「未结」叫「进行中」（我的任务必然有人接）
-			label: t(mine ? "chartDoing" : "chartOpen"),
+			// 未结那根柱里「进行中 / 待认领」的拆分写在浮卡里，图例一律叫「未结任务」
+			label: t("chartOpen"),
 			colors: mine ? [C_DOING] : [C_DOING, C_OPEN],
 		},
 		// 曲线用中性灰：柱子已经占了 business 蓝，曲线再用蓝就分不清了（用户 2026-10-30）
-		{ key: "added", label: t("chartAdded"), colors: [C_LINE] },
+		{ key: "added", label: t("chartCreatedTasks"), colors: [C_LINE] },
 	];
 
 	const row = (key: string, label: string, count: number, color: string): ReactNode =>
@@ -306,7 +306,7 @@ export function TrendChart(props: {
 			? bucket.from
 			: t("periodRange", { from: bucket.from, to: bucket.to });
 
-	/** 浮卡：周期 → 新建 → 已结案（下跟完成 / 取消）→ 未结（下跟进行中 / 待认领）；0 值不列。 */
+	/** 浮卡：周期 → 新建任务 → 已结任务（下跟完成 / 取消）→ 未结任务（下跟进行中 / 待认领）；0 值不列。 */
 	const tipOf = (bucket: TrendBucketView): ReactNode => {
 		const cell = counts(bucket);
 		const split = breakdown(bucket);
@@ -330,7 +330,7 @@ export function TrendChart(props: {
 			),
 			...totalRow(
 				"open",
-				t(mine ? "chartDoing" : "chartOpen"),
+				t("chartOpen"),
 				cell.open,
 				mine ? [C_DOING] : [C_DOING, C_OPEN],
 				// 只看我的时全是进行中，拆分行没有信息量

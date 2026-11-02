@@ -54,11 +54,18 @@ export type LocaleKey =
 	| "settingsAddConfirm"
 	// 设置页 · 流程小图与表格表头
 	| "settingsFlow1"
-	| "settingsFlow1Desc"
+	| "settingsFlow1Lead"
+	| "settingsFlow1Sub"
 	| "settingsFlow2"
-	| "settingsFlow2Desc"
+	| "settingsFlow2Create"
+	| "settingsFlow2Exec"
+	| "settingsFlow2Close"
 	| "settingsFlow3"
-	| "settingsFlow3Desc"
+	| "settingsFlow3Todo"
+	| "settingsFlow3History"
+	| "settingsFlow3Stats"
+	| "settingsCopy"
+	| "settingsCopied"
 	| "settingsColDir"
 	| "settingsColPath"
 	| "settingsColActions"
@@ -85,16 +92,13 @@ export type LocaleKey =
 	| "statWeekSplit"
 	| "daysNone"
 	| "daysValue"
-	// 趋势图
+	// 趋势图 / 历史图：三个口径的正式名 —— 浮卡与图例共用一套（用户 2026-11-02 统一）
 	| "chartDone"
 	| "chartClosed"
 	| "chartFinished"
 	| "chartCancelled"
 	| "chartOpen"
-	| "chartAdded"
-	// 日柱浮卡的两行小计（比「新增 / 结案」更完整的说法，表头用，用户 2026-10-30）
 	| "chartCreatedTasks"
-	| "chartClosedTasks"
 	| "chartEmpty"
 	| "chartPartial"
 	| "chartMine"
@@ -252,12 +256,19 @@ export const zh: Record<LocaleKey, string> = {
 	settingsAddPlaceholder: "台账根目录的绝对路径",
 	settingsAddConfirm: "添加",
 
-	settingsFlow1: "安装 skill",
-	settingsFlow1Desc: "DeepSeek harness：插件已安装，直接可用\n其他 AI：安装同款 skill 即可",
-	settingsFlow2: "工作区内操作",
-	settingsFlow2Desc: "创建任务：告诉 Agent 要做什么\n执行过程：进度自动写进 ledger/\n关闭任务：让 Agent 执行 close",
-	settingsFlow3: "面板内查询",
-	settingsFlow3Desc: "待办：谁在做什么\n历史：这个项目做过什么\n统计：趋势与耗时",
+	settingsFlow1: "安装 Skill",
+	settingsFlow1Lead: "本机 DeepSeek 不用安装，插件已自带。",
+	settingsFlow1Sub: "在其他 Agent 上安装",
+	settingsCopy: "复制",
+	settingsCopied: "已复制",
+	settingsFlow2: "工作区操作",
+	settingsFlow2Create: "新建：说「建一个新任务：xxx」。",
+	settingsFlow2Exec: "执行：Agent 进度自动写进台账。",
+	settingsFlow2Close: "结束：说「这个任务结束」，Agent 收尾结案。",
+	settingsFlow3: "面板查询",
+	settingsFlow3Todo: "在办：执行中的任务与待认领项",
+	settingsFlow3History: "历史：本项目已结案的任务数量",
+	settingsFlow3Stats: "统计：趋势与耗时",
 	settingsColDir: "目录",
 	settingsColPath: "路径",
 	settingsColActions: "操作",
@@ -287,13 +298,12 @@ export const zh: Record<LocaleKey, string> = {
 
 	// 术语（2026-10-29 用户拍板）：结案 = 完成 + 取消（上位词），完成 = 正常结案，取消 = 作废
 	chartDone: "结案",
-	chartClosed: "已结案",
+	// 已结 / 未结的正式名：两张图的浮卡与图例都用这两个（用户 2026-11-02 统一口径）
+	chartClosed: "已结任务",
 	chartFinished: "完成",
 	chartCancelled: "取消",
-	chartOpen: "未结",
-	chartAdded: "新增",
+	chartOpen: "未结任务",
 	chartCreatedTasks: "新建任务",
-	chartClosedTasks: "结案任务",
 	chartEmpty: "还没有可统计的记录",
 	chartPartial: "{from} 起才有台账数据",
 	chartMine: "只看我的",
@@ -449,12 +459,19 @@ export const en: Record<LocaleKey, string> = {
 	settingsAddPlaceholder: "Absolute path of the ledger root",
 	settingsAddConfirm: "Add",
 
-	settingsFlow1: "Install the skill",
-	settingsFlow1Desc: "DeepSeek harness: the plugin is already installed\nOther AI clients: install the same skill",
-	settingsFlow2: "Work in a workspace",
-	settingsFlow2Desc: "Create: tell the agent what to do\nWhile working: progress is written to ledger/\nClose: ask the agent to close the task",
-	settingsFlow3: "Query in the panel",
-	settingsFlow3Desc: "Board: who is doing what\nHistory: what this project has done\nStats: trend and time spent",
+	settingsFlow1: "Install Skill",
+	settingsFlow1Lead: "Local DeepSeek needs no install — it ships with the plugin.",
+	settingsFlow1Sub: "Install on other agents",
+	settingsCopy: "Copy",
+	settingsCopied: "Copied",
+	settingsFlow2: "Workspace Operations",
+	settingsFlow2Create: "New: say \"create a new task: xxx\".",
+	settingsFlow2Exec: "Run: the agent writes progress to the ledger itself.",
+	settingsFlow2Close: "Finish: say \"this task is done\" and the agent closes it out.",
+	settingsFlow3: "Panel Query",
+	settingsFlow3Todo: "In flight: running tasks and unclaimed items",
+	settingsFlow3History: "History: closed task count for this project",
+	settingsFlow3Stats: "Stats: trend and time spent",
 	settingsColDir: "Folder",
 	settingsColPath: "Path",
 	settingsColActions: "Actions",
@@ -483,13 +500,11 @@ export const en: Record<LocaleKey, string> = {
 	daysValue: "{n}d",
 
 	chartDone: "Closed",
-	chartClosed: "Closed",
+	chartClosed: "Closed tasks",
 	chartFinished: "Done",
 	chartCancelled: "Cancelled",
-	chartOpen: "Open",
-	chartAdded: "Added",
-	chartCreatedTasks: "Created",
-	chartClosedTasks: "Closed",
+	chartOpen: "Open tasks",
+	chartCreatedTasks: "Created tasks",
 	chartEmpty: "No records to chart yet",
 	chartPartial: "Ledger data starts {from}",
 	chartMine: "Only mine",
