@@ -832,11 +832,8 @@ export function SettingsPage(props: {
 							},
 							t("settingsDirRename"),
 						),
-						// 移除：只留一个小叉（危险动作，与身份表的删除同色）。
-						// 宿主工作区不给这个钮：进了看板就会同步补登记，移除等于当场撤销 ⇒ 只能「隐藏」。
-						dir.inRegistry === true
-							? null
-							: h(IconButton, {
+						// 移除：只留一个小叉（危险动作，与身份表的删除同色）
+						h(IconButton, {
 							icon: h(IconCloseOutlineRegular, { size: 14 }),
 							label: t("settingsDirRemove"),
 							size: "sm",

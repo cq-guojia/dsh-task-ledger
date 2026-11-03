@@ -58577,7 +58577,7 @@ body[data-ds-dark-theme]{
 								setRenaming(dir.path);
 								setDraft(dir.name);
 							}
-						}, t("settingsDirRename")), dir.inRegistry === true ? null : (0, react$1.createElement)(IconButton, {
+						}, t("settingsDirRename")), (0, react$1.createElement)(IconButton, {
 							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }),
 							label: t("settingsDirRemove"),
 							size: "sm",
@@ -59231,8 +59231,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261103-151959-305`
-			}, `v0.0.126 261103-151959-305`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261103-152535-727`
+			}, `v0.0.126 261103-152535-727`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

@@ -201,7 +201,7 @@ export function registerRoutes(webServer, deps) {
                     // 与 registerRead 同一口径：manual refresh 先清读缓存再算
                     if (new URL(req.url ?? "/", "http://localhost").searchParams.get("fresh") === "1")
                         invalidate();
-                    sendJson(res, 200, await listDirs(deps.registry.list().map((workspace) => workspace.path)));
+                    sendJson(res, 200, await listDirs());
                 }
                 catch (error) {
                     sendFailure(res, error);

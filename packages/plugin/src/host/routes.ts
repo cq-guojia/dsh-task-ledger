@@ -266,11 +266,7 @@ export function registerRoutes(
 						) === "1"
 					)
 						invalidate();
-					sendJson(
-						res,
-						200,
-						await listDirs(deps.registry.list().map((workspace) => workspace.path)),
-					);
+					sendJson(res, 200, await listDirs());
 				} catch (error) {
 					sendFailure(res, error);
 				}

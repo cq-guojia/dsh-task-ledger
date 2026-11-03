@@ -5,10 +5,8 @@
  */
 import { addDir, ledgerChildrenOf, readDirs, removeDir, renameDir, setDirHidden, } from "../repositories/dirs.repository.js";
 /** 设置页「台账目录」块要的清单：**含隐藏项**（关了显示还得能开回来）。 */
-export async function listDirs(registryPaths) {
-    const inRegistry = new Set(registryPaths);
-    const dirs = await readDirs();
-    return { dirs: dirs.map((dir) => ({ ...dir, inRegistry: inRegistry.has(dir.path) })) };
+export async function listDirs() {
+    return { dirs: await readDirs() };
 }
 /**
  * 登记：选中的目录**自己**是台账根就登记它；不是的话，把它**一级子目录**里的台账根逐个登记

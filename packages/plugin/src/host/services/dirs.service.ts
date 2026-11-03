@@ -13,18 +13,9 @@ import {
 	type LedgerDir,
 } from "../repositories/dirs.repository.js";
 
-/** 清单条目 + 「是不是宿主工作区」。工作区目录只能隐藏不能移除（移除会被下次进看板的同步补回来）。 */
-export interface DirListView extends LedgerDir {
-	readonly inRegistry: boolean;
-}
-
 /** 设置页「台账目录」块要的清单：**含隐藏项**（关了显示还得能开回来）。 */
-export async function listDirs(
-	registryPaths: readonly string[],
-): Promise<{ readonly dirs: readonly DirListView[] }> {
-	const inRegistry = new Set(registryPaths);
-	const dirs = await readDirs();
-	return { dirs: dirs.map((dir) => ({ ...dir, inRegistry: inRegistry.has(dir.path) })) };
+export async function listDirs(): Promise<{ readonly dirs: readonly LedgerDir[] }> {
+	return { dirs: await readDirs() };
 }
 
 /** 一次目录写动作（登记 / 显示 / 改名 / 移除），返回改完之后的完整清单。 */

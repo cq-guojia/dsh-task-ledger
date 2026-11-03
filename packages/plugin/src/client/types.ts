@@ -263,8 +263,6 @@ export interface LedgerDirView {
 	readonly path: string;
 	readonly name: string;
 	readonly hidden: boolean;
-	/** 是不是宿主工作区：是的话只能隐藏（移除会被下次进看板的同步补回来）。 */
-	readonly inRegistry?: boolean;
 }
 
 /** `/dirs` 响应：机器级台账目录清单，**含隐藏项**（关了显示还得能开回来）。 */
