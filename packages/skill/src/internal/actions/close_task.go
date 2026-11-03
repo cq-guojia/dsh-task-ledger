@@ -91,7 +91,11 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 		return nil, core.Failf("任务 %s 不在公共池、也不在我的分片里（别人的分片不能动）。", tid)
 	}
 
+	// 执行记录的 note 除了动作名，还带上结案留言 —— 历史行丢了，过程文档里也能查到写了什么。
 	res, execKind, execNote := core.ResultDone, "close", "sealed"
+	if textSummary != "" {
+		execNote = "sealed: " + textSummary
+	}
 	if p.Cancel {
 		res, execKind, execNote = core.ResultCancelled, "cancel", "cancelled"
 		if textSummary != "" {

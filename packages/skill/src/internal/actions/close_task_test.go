@@ -91,6 +91,38 @@ func TestCloseDropsDuplicatePoolAndShard(t *testing.T) {
 	}
 }
 
+// 结案留言要留两处：历史行的 summary，和过程文档执行记录里的 `sealed: <留言>`。
+// 历史是月度归档，丢了就没了；过程文档里查不到留言等于白写。
+func TestCloseSummaryGoesIntoWorklogExecLog(t *testing.T) {
+	const tid = "20261029-1000-留言留痕-eeee"
+	const summary = "改完结案留言顺手补断言"
+	repo, me := tempLedger(t, map[string]any{
+		"tid": tid, "status": "doing", "owner": testUUID,
+		"owner_name": "GuoJia-Agent", "title": "留言留痕", "created": "2026-10-29 09:00:00",
+	})
+	logs := store.NewWorklogStore(repo)
+	doc, err := logs.Create(tid, "留言留痕", "2026-10-29 09:00:00", me.UUID, nil, nil, "")
+	if err != nil {
+		t.Fatalf("建过程文档应成功：%v", err)
+	}
+	if _, err := CloseTask(repo, me, tid, CloseTaskParams{Summary: summary, Finished: cancelFinished}); err != nil {
+		t.Fatalf("结案应成功：%v", err)
+	}
+	text, err := logs.Read(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !core.HasFrozenLine(text) {
+		t.Errorf("过程文档头部应有封卷行：\n%s", text)
+	}
+	if st := core.ReadStatus(text); st == nil || st.Status != "done" {
+		t.Errorf("过程文档状态行应刷成 done：\n%s", text)
+	}
+	if !strings.Contains(text, "sealed: "+summary) {
+		t.Errorf("执行记录应带上结案留言：\n%s", text)
+	}
+}
+
 func TestCloseCancelMyTaskKeepsSummary(t *testing.T) {
 	repo, me := tempLedger(t, map[string]any{
 		"tid": cancelTidMine, "status": "doing", "owner": testUUID,
