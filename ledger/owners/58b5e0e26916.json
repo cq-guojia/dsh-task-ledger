@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261102-1610-07ee-添加台账目录的功能": {"category": "功能开发", "created": "2026-11-02 16:10:17", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-02 16:10:17", "status": "doing", "tags": [], "title": "添加台账目录的功能", "updated": "2026-11-03 07:09:41", "worklog": "worklog/202611/02-1610-07ee-添加台账目录的功能.md"}
+    "20261102-1610-07ee-添加台账目录的功能": {"category": "功能开发", "created": "2026-11-02 16:10:17", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-02 16:10:17", "status": "doing", "tags": [], "title": "添加台账目录的功能", "updated": "2026-11-03 07:20:11", "worklog": "worklog/202611/02-1610-07ee-添加台账目录的功能.md"}
   },
   "version": "20261022000000"
 }
