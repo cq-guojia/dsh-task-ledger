@@ -1,7 +1,8 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261103-0737-fb39-任务行操作按钮接入台账命令": {"category": "建设", "created": "2026-11-03 07:37:13", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-03 07:37:13", "status": "doing", "tags": ["看板", "任务操作", "任务行"], "title": "任务行操作按钮接入台账命令", "updated": "2026-11-03 15:39:24", "worklog": "worklog/202611/03-0737-fb39-任务行操作按钮接入台账命令.md"}
+    "20261103-0737-fb39-任务行操作按钮接入台账命令": {"category": "建设", "created": "2026-11-03 07:37:13", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-03 07:37:13", "status": "doing", "tags": ["看板", "任务操作", "任务行"], "title": "任务行操作按钮接入台账命令", "updated": "2026-11-03 15:39:24", "worklog": "worklog/202611/03-0737-fb39-任务行操作按钮接入台账命令.md"},
+    "20261103-1545-c713-测试任务": {"category": "测试", "created": "2026-11-03 15:45:09", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-03 15:45:36", "status": "doing", "tags": [], "title": "测试任务", "updated": "2026-11-03 15:45:36", "worklog": "worklog/202611/03-1545-c713-测试任务.md"}
   },
   "version": "20261022000000"
 }
