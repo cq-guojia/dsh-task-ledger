@@ -56446,7 +56446,7 @@ body[data-ds-dark-theme]{
 				loading: props.loading,
 				loadingText: props.loadingText,
 				disabled: props.disabled,
-				title: props.title,
+				title: props.title ?? "",
 				width: props.width,
 				minWidth: props.minWidth,
 				maxWidth: props.maxWidth,
@@ -56466,7 +56466,7 @@ body[data-ds-dark-theme]{
 				background: props.background,
 				disabled: props.disabled,
 				loading: props.loading,
-				title: props.title,
+				title: props.title ?? "",
 				className: props.className,
 				tabIndex: props.tabIndex,
 				"aria-hidden": props.ariaHidden === true ? true : void 0
@@ -56544,7 +56544,6 @@ body[data-ds-dark-theme]{
 				type: interactive ? "button" : void 0,
 				className: `dtl-stat-shell${interactive ? " dtl-stat-shell--clickable" : ""}`,
 				"data-active": props.active === true,
-				title: props.title,
 				onClick: interactive ? props.onClick : void 0
 			}, (0, react$1.createElement)(Surface, {
 				className: "dtl-stat",
@@ -57146,10 +57145,7 @@ body[data-ds-dark-theme]{
 			const finished = record.finished.slice(0, 16);
 			const cancelled = record.result === "cancelled";
 			return {
-				task: (0, react$1.createElement)("div", { className: "dtl-histlist__task" }, (0, react$1.createElement)("div", { className: "dtl-histlist__head" }, (0, react$1.createElement)("span", {
-					className: "dtl-histlist__title",
-					title: record.summary
-				}, record.title)), !cancelled && record.tags.length === 0 ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__tags" }, cancelled ? (0, react$1.createElement)(Tag, {
+				task: (0, react$1.createElement)("div", { className: "dtl-histlist__task" }, (0, react$1.createElement)("div", { className: "dtl-histlist__head" }, (0, react$1.createElement)("span", { className: "dtl-histlist__title" }, record.title)), !cancelled && record.tags.length === 0 ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__tags" }, cancelled ? (0, react$1.createElement)(Tag, {
 					key: "__cancelled",
 					text: opts.t("historyCancelled"),
 					tone: "danger",
@@ -57915,10 +57911,7 @@ body[data-ds-dark-theme]{
 					}
 				})
 			});
-			const titleLine = (0, react$1.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react$1.createElement)("span", {
-				className: "dtl-taskrow__title dtl-ellipsis",
-				title: titleOf(row)
-			}, titleOf(row)), creatorAge === null || creatorName === "" ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, solo ? `[${t("fieldCreatorStamp", { age: creatorAge })}]` : `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`));
+			const titleLine = (0, react$1.createElement)("div", { className: "dtl-taskrow__l1" }, (0, react$1.createElement)("span", { className: "dtl-taskrow__title dtl-ellipsis" }, titleOf(row)), creatorAge === null || creatorName === "" ? null : (0, react$1.createElement)("span", { className: "dtl-taskrow__stamp" }, solo ? `[${t("fieldCreatorStamp", { age: creatorAge })}]` : `[@${creatorName} ${t("fieldCreatorStamp", { age: creatorAge })}]`));
 			const whenRaw = row.task.updated ?? row.task.started ?? row.task.created;
 			const metaText = `${t("whenSubmitted", { time: whenRaw === null || whenRaw === void 0 || Number.isNaN(Date.parse(whenRaw)) ? t("timeUnknown") : formatDateTime(whenRaw).slice(5) })} 丨 ${whenRaw === null || whenRaw === void 0 ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
 			const ownerName = displayName(row.task.owner_name, row.task.owner);
@@ -58821,10 +58814,7 @@ body[data-ds-dark-theme]{
 				return {
 					key: dir.path,
 					cells: {
-						name: (0, react$1.createElement)("span", {
-							className: "dtl-dir__name",
-							title: dir.name
-						}, dir.name),
+						name: (0, react$1.createElement)("span", { className: "dtl-dir__name" }, dir.name),
 						path: (0, react$1.createElement)("div", { className: "dtl-dir__path" }, (0, react$1.createElement)(Tip, {
 							label: dir.path,
 							maxWidth: 420,
@@ -58973,10 +58963,7 @@ body[data-ds-dark-theme]{
 							tone: "workspace",
 							maxWidth: 160
 						}),
-						name: (0, react$1.createElement)("span", { className: "dtl-roster__who" }, (0, react$1.createElement)("span", { className: "dtl-roster__name" }, `@${row.name}`), (0, react$1.createElement)("span", {
-							className: "dtl-roster__uuid",
-							title: row.uuid
-						}, row.uuid.slice(-8))),
+						name: (0, react$1.createElement)("span", { className: "dtl-roster__who" }, (0, react$1.createElement)("span", { className: "dtl-roster__name" }, `@${row.name}`), (0, react$1.createElement)("span", { className: "dtl-roster__uuid" }, row.uuid.slice(-8))),
 						action: (0, react$1.createElement)("div", { className: "dtl-users__acts" }, row.uuid === props.identity.uuid ? null : (0, react$1.createElement)(Button, {
 							variant: "info",
 							size: "sm",
@@ -59367,11 +59354,10 @@ body[data-ds-dark-theme]{
 			*  （搜索 / 工作区 / 执行人…，用户 2026-10-28：以后新增的筛选也一样要清）。
 			*  高亮条件更严：只有 tab 对得上 **且** 其余筛选都还是默认值时才亮，
 			*  任何一项被改动 ⇒ 立刻熄灭（对不上就不算选中）。 */
-			const card = (label, value, hint, title, tab) => (0, react$1.createElement)(StatCard, {
+			const card = (label, value, hint, tab) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
 				value: formatCount(value),
 				hint,
-				title,
 				active: tab !== void 0 && state.query.tab === tab && isDefaultQuery(state.query),
 				interactive: tab !== void 0,
 				onClick: tab === void 0 ? void 0 : () => selectTab(tab)
@@ -59384,17 +59370,13 @@ body[data-ds-dark-theme]{
 			*  hover 仍给具体日期区间；数字 null（历史读不到）留 '—'，不拿 0 充数。
 			*  锚点取区间首日（本周 = 本周一、上周 = 上周一）：正序列表从这天往下正好覆盖整周；
 			*  跨月周按首日所在月切（如 11/1 周日选的上周会落到 10 月）。 */
-			const weekCard = (label, total, cancelled, from, to) => (0, react$1.createElement)(StatCard, {
+			const weekCard = (label, total, cancelled, from) => (0, react$1.createElement)(StatCard, {
 				label: t(label),
 				value: formatCount(total ?? 0),
 				hint: cancelled !== null && cancelled > 0 ? t("statWeekSplit", {
 					done: (total ?? 0) - cancelled,
 					cancelled
 				}) : "",
-				title: t("periodRange", {
-					from,
-					to
-				}),
 				onClick: () => {
 					setViewMode("history");
 					setHistYm(from.slice(0, 7));
@@ -59423,7 +59405,7 @@ body[data-ds-dark-theme]{
 				return (0, react$1.createElement)("div", {
 					className: "dtl-stats",
 					style: statsRowStyle
-				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), void 0, "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), void 0, "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), void 0, "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), t("statBacklogTitle", { n: view.backlogDays }), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), t("statOverdueTitle", { n: view.overdueDays }), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), t("statStaleTitle", { n: view.staleDays }), "stale"), weekCard("statWeekDone", view.weekDone, view.weekCancelled, view.weekFrom, view.weekTo), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekCancelled, view.lastWeekFrom, view.lastWeekTo)), (0, react$1.createElement)(TrendChart, {
+				}, (0, react$1.createElement)("div", { className: "dtl-stats__cards" }, card("statMyActive", view.myActive, [view.myOverdue > 0 ? t("statMyOverdueHint", { n: view.myOverdue }) : null, view.myStale > 0 ? t("statMyStaleHint", { n: view.myStale }) : null].filter((part) => part !== null).join(" ｜ "), "mine"), card("statDoing", view.doing, view.doing - view.myActive > 0 ? t("statDoingHint", { n: view.doing - view.myActive }) : t("statDoingAllMine"), "doing"), card("statOpen", view.open, view.oldestOpenDays === null ? "" : t("statOpenHint", { n: view.oldestOpenDays }), "open"), card("statBacklog", view.backlog, share(view.backlog, view.open, "statBacklogHint"), "backlog"), card("statOverdue", view.overdue, share(view.overdue, view.doing, "statOverdueHint"), "overdue"), card("statStale", view.stale, share(view.stale, view.doing, "statStaleHint"), "stale"), weekCard("statWeekDone", view.weekDone, view.weekCancelled, view.weekFrom), weekCard("statLastWeekDone", view.lastWeekDone, view.lastWeekCancelled, view.lastWeekFrom)), (0, react$1.createElement)(TrendChart, {
 					trend: trendGran === "day" ? payload.trendDay : payload.trend,
 					me: solo ? null : Object.values(payload.identities).find((uuid) => uuid !== null) ?? null,
 					t,
@@ -59516,10 +59498,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
-				style: buildTagStyle,
-				title: `v0.0.126 · 261103-214837-418`
-			}, `v0.0.126 261103-214837-418`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.126 261103-222110-006`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -59552,7 +59531,6 @@ body[data-ds-dark-theme]{
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
 				loading: state.refreshing,
-				title: t("refresh"),
 				onClick: () => {
 					refresh(true);
 					setHistoryByGran({});

@@ -514,7 +514,8 @@ export function Button(props: {
 			loading: props.loading,
 			loadingText: props.loadingText,
 			disabled: props.disabled,
-			title: props.title,
+			// 同样压掉原生 title（延迟提示一律不要，用户 2026-11-03）；要提示用核心 `Tip`
+			title: props.title ?? "",
 			width: props.width,
 			minWidth: props.minWidth,
 			maxWidth: props.maxWidth,
@@ -556,7 +557,9 @@ export function IconButton(props: {
 		background: props.background,
 		disabled: props.disabled,
 		loading: props.loading,
-		title: props.title,
+		// 默认压掉原生 title：核心 IconButton 会用 label 兜底成 title，浏览器那套延迟提示
+		// 又慢又土（用户 2026-11-03：全删）。要提示就用核心 `Tip`，无障碍名仍是 label。
+		title: props.title ?? "",
 		className: props.className,
 		tabIndex: props.tabIndex,
 		"aria-hidden": props.ariaHidden === true ? true : undefined,
@@ -729,7 +732,6 @@ export function StatCard(props: {
 	interactive?: boolean;
 	/** 0 照实显示成 `0`（默认把 0 显示成「—」，历史页的计数需要真 0）。 */
 	showZero?: boolean;
-	title?: string;
 	onClick?: () => void;
 }): ReactNode {
 	ensureUiBase();
@@ -744,7 +746,6 @@ export function StatCard(props: {
 			type: interactive ? "button" : undefined,
 			className: `dtl-stat-shell${interactive ? " dtl-stat-shell--clickable" : ""}`,
 			"data-active": props.active === true,
-			title: props.title,
 			onClick: interactive ? props.onClick : undefined,
 		},
 		h(

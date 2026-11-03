@@ -156,7 +156,7 @@ function cellsOf(
 				{ className: "dtl-histlist__head" },
 				h(
 					"span",
-					{ className: "dtl-histlist__title", title: record.summary },
+					{ className: "dtl-histlist__title" },
 					record.title,
 				),
 			),

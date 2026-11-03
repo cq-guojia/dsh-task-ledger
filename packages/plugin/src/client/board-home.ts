@@ -408,14 +408,12 @@ export function BoardHome(props: {
 		label: LocaleKey,
 		value: number,
 		hint: string,
-		title?: string,
 		tab?: TabFilter,
 	): ReactNode =>
 		h(StatCard, {
 			label: t(label),
 			value: formatCount(value),
 			hint,
-			title,
 			active:
 				tab !== undefined &&
 				state.query.tab === tab &&
@@ -441,7 +439,6 @@ export function BoardHome(props: {
 		total: number | null,
 		cancelled: number | null,
 		from: string,
-		to: string,
 	): ReactNode =>
 		h(StatCard, {
 			label: t(label),
@@ -450,7 +447,6 @@ export function BoardHome(props: {
 				cancelled !== null && cancelled > 0
 					? t("statWeekSplit", { done: (total ?? 0) - cancelled, cancelled })
 					: "",
-			title: t("periodRange", { from, to }),
 			onClick: () => {
 				setViewMode("history");
 				setHistYm(from.slice(0, 7));
@@ -505,7 +501,6 @@ export function BoardHome(props: {
 					]
 						.filter((part) => part !== null)
 						.join(" ｜ "),
-					undefined,
 					"mine",
 				),
 				card(
@@ -514,7 +509,6 @@ export function BoardHome(props: {
 					view.doing - view.myActive > 0
 						? t("statDoingHint", { n: view.doing - view.myActive })
 						: t("statDoingAllMine"),
-					undefined,
 					"doing",
 				),
 				card(
@@ -523,37 +517,32 @@ export function BoardHome(props: {
 					view.oldestOpenDays === null
 						? ""
 						: t("statOpenHint", { n: view.oldestOpenDays }),
-					undefined,
 					"open",
 				),
 				card(
 					"statBacklog",
 					view.backlog,
 					share(view.backlog, view.open, "statBacklogHint"),
-					t("statBacklogTitle", { n: view.backlogDays }),
 					"backlog",
 				),
 				card(
 					"statOverdue",
 					view.overdue,
 					share(view.overdue, view.doing, "statOverdueHint"),
-					t("statOverdueTitle", { n: view.overdueDays }),
 					"overdue",
 				),
 				card(
 					"statStale",
 					view.stale,
 					share(view.stale, view.doing, "statStaleHint"),
-					t("statStaleTitle", { n: view.staleDays }),
 					"stale",
 				),
-				weekCard("statWeekDone", view.weekDone, view.weekCancelled, view.weekFrom, view.weekTo),
+				weekCard("statWeekDone", view.weekDone, view.weekCancelled, view.weekFrom),
 				weekCard(
 					"statLastWeekDone",
 					view.lastWeekDone,
 					view.lastWeekCancelled,
 					view.lastWeekFrom,
-					view.lastWeekTo,
 				),
 			),
 			// 趋势图：每周两根柱（结案 / 未结）+ 新增曲线，一屏几周按卡宽算、箭头翻 4 周
@@ -704,10 +693,7 @@ export function BoardHome(props: {
 							t("panelTitle"),
 							h(
 								"span",
-								{
-									style: buildTagStyle,
-									title: `v${__PLUGIN_VERSION__} · ${__BUILD_STAMP__}`,
-								},
+								{ style: buildTagStyle },
 								`v${__PLUGIN_VERSION__} ${__BUILD_STAMP__}`,
 							),
 						),
@@ -757,7 +743,6 @@ export function BoardHome(props: {
 									size: "lg",
 									icon: h(IconRefreshOutlineRegular, { size: 16 }),
 									loading: state.refreshing,
-									title: t("refresh"),
 									onClick: () => {
 										// 手动刷新顺带同步一次宿主工作区（用户 2026-11-03：只有这里和进看板才同步）
 										void refresh(true);

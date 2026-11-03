@@ -329,7 +329,7 @@ export function TaskRowView(props: {
 		{ className: "dtl-taskrow__l1" },
 		h(
 			"span",
-			{ className: "dtl-taskrow__title dtl-ellipsis", title: titleOf(row) },
+			{ className: "dtl-taskrow__title dtl-ellipsis" },
 			titleOf(row),
 		),
 		creatorAge === null || creatorName === ""

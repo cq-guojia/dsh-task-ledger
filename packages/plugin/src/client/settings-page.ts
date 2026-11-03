@@ -787,7 +787,7 @@ export function SettingsPage(props: {
 			return {
 				key: dir.path,
 				cells: {
-					name: h("span", { className: "dtl-dir__name", title: dir.name }, dir.name),
+					name: h("span", { className: "dtl-dir__name" }, dir.name),
 					// 路径**本身不可点**（用户 2026-11-02）：复制钮常显，悬停提示走核心 Tip（不是原生 title）
 					path: h(
 						"div",
@@ -985,7 +985,7 @@ export function SettingsPage(props: {
 											// 只露尾 8 位（挤不下 36 位），完整值放 title
 											h(
 												"span",
-												{ className: "dtl-roster__uuid", title: row.uuid },
+												{ className: "dtl-roster__uuid" },
 												row.uuid.slice(-8),
 											),
 										),
