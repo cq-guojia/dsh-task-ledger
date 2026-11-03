@@ -8,6 +8,8 @@ import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 /** API 前缀（唯一真源就在这一处）。 */
 const API_PREFIX = "/api/task-ledger";
+/** 核心 explorer 的只读文件路由（`serveFsRoute` 挂这里，client 的 `connectFs` 用同一个值）。 */
+export const FS_ROUTE = `${API_PREFIX}/fs`;
 function sendJson(res, status, body) {
     res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(body));
@@ -77,9 +79,12 @@ async function switchInputOf(req, deps) {
     }
     throw new Error(`${BAD_REQUEST}action 只能是 new / claim / rename`);
 }
-/** 每请求重新解析工作区（registry 可能刚变；`root` 探测是本地结构判定，微秒级）。 */
-function workspacesOf(deps) {
-    return resolveWorkspaces(deps.registry.list());
+/**
+ * 解析工作区。`sync` 只在「进看板 / 手动刷新」时为 true —— 只有这一次才去宿主工作区补登记，
+ * 其余请求（名册、趋势、名册写动作…）一律只读清单，不起进程、不写盘。
+ */
+function workspacesOf(deps, sync = false) {
+    return resolveWorkspaces(deps.registry.list(), sync);
 }
 export function registerRoutes(webServer, deps) {
     /**
@@ -196,7 +201,7 @@ export function registerRoutes(webServer, deps) {
                     // 与 registerRead 同一口径：manual refresh 先清读缓存再算
                     if (new URL(req.url ?? "/", "http://localhost").searchParams.get("fresh") === "1")
                         invalidate();
-                    sendJson(res, 200, await listDirs());
+                    sendJson(res, 200, await listDirs(deps.registry.list().map((workspace) => workspace.path)));
                 }
                 catch (error) {
                     sendFailure(res, error);
@@ -215,6 +220,10 @@ export function registerRoutes(webServer, deps) {
                 const path = typeof body.path === "string" ? body.path.trim() : "";
                 if (path === "")
                     throw new Error(`${BAD_REQUEST}必须给台账目录路径`);
+                if (body.action === "add") {
+                    sendJson(res, 200, await writeDirs({ action: "add", path }));
+                    return;
+                }
                 if (body.action === "hide" || body.action === "unhide" || body.action === "remove") {
                     sendJson(res, 200, await writeDirs({ action: body.action, path }));
                     return;
@@ -224,7 +233,7 @@ export function registerRoutes(webServer, deps) {
                     sendJson(res, 200, await writeDirs({ action: "rename", path, name }));
                     return;
                 }
-                throw new Error(`${BAD_REQUEST}action 只能是 hide / unhide / rename / remove`);
+                throw new Error(`${BAD_REQUEST}action 只能是 add / hide / unhide / rename / remove`);
             }
             catch (error) {
                 const message = messageOf(error);
@@ -237,9 +246,11 @@ export function registerRoutes(webServer, deps) {
         },
     });
     // 首屏一次拿全：8 卡（skill `stats`；本周/上周完成取趋势最后两个桶）+ 在办列表（`list --json`）+ 趋势。
-    registerRead("/board/snapshot", async (_req, res) => {
+    // `?sync=1` 才去宿主工作区补登记（用户 2026-11-03：只在进看板与手动刷新时同步，别的时候一次都不跑）。
+    registerRead("/board/snapshot", async (req, res) => {
         try {
-            sendJson(res, 200, await getBoardHome(await workspacesOf(deps)));
+            const sync = new URL(req.url ?? "/", "http://localhost").searchParams.get("sync") === "1";
+            sendJson(res, 200, await getBoardHome(await workspacesOf(deps, sync)));
         }
         catch (error) {
             sendFailure(res, error);

@@ -5,7 +5,8 @@
  * 没身份 = 红条 + 去建的引导；色条方位走核心 `Card` 的 `bar.side`（当前在**上边**，仍在挑）。
  *
  * 版式：上半左栏两张（有身份 / 没身份）、右栏「台账怎么跑」四格小图（纯 CSS）；
- * 下半台账目录表格。写动作（显示 / 改名 / 移除 / 添加）仍空着，下一轮接。
+ * 下半台账目录表格。写动作（登记 / 显示 / 改名 / 移除）全部接通：登记走核心选目录弹窗
+ * （`pickWorkspaceFile({ filter: { dirs: true } })`，只能选目录、不限工作区）。
  */
 import {
 	IconChecklistOutlineRegular,
@@ -16,10 +17,11 @@ import {
 	IconFlatListOutlineRegular,
 	Switch,
 } from "@deepseek-ai/dsh-client-ui-primitives";
+import { pickWorkspaceFile } from "dsh-plugin-core/explorer";
 import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
 import { fetchDirs, fetchRoster, postDirs, postForgetIdentity, postSwitchIdentity, type DirsWriteBody } from "./api";
 import type { LocaleKey, Translate } from "./locales";
-import type { IdentityView, LedgerDirView, RosterPayload } from "./types";
+import type { DirsPayload, IdentityView, LedgerDirView, RosterPayload } from "./types";
 import { Button, Card, FieldHint, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
@@ -123,8 +125,6 @@ export function SettingsPage(props: {
 		if (renaming !== null) renameInputRef.current?.focus();
 	}, [renaming]);
 	const [copied, setCopied] = useState<string | null>(null);
-	const [addOpen, setAddOpen] = useState(false);
-	const [addPath, setAddPath] = useState("");
 	/** 目录写动作的进行中标记（`动作:路径`）：同一个记录不让连点。 */
 	const [dirBusy, setDirBusy] = useState<string | null>(null);
 
@@ -511,27 +511,35 @@ export function SettingsPage(props: {
 		);
 
 	/** npm 包名 + GitHub / npm 两个图标按钮。
-	 *  **不挂任何悬停提示**（用户 2026-11-02：没让加的东西别加）。 */
+	 *  悬停提示走本地 `Tip`（官方 Tooltip + 真 DOM 锚点；用户 2026-11-03 点名要加，文案就
+	 *  「GitHub」「NPM」两个词）。IconButton 是函数组件挂不上 ref，Tip 的垫片 span 正好当锚点；
+	 *  `title: ""` 仍压原生提示，避免系统 title 与官方气泡双出（口径同 task-row 的动作钮）。 */
 	const NpmLink = ({ pkg }: { pkg: string }): ReactNode =>
 		h(
 			Surface,
 			{ tone: "sunken", border: "faint", radius: "md", padding: "sm", className: "dtl-flow__code" },
 			h("code", { className: "dtl-flow__cmd" }, pkg),
-			h(IconButton, {
-				icon: h(GithubMark, null),
+			h(Tip, {
 				label: "GitHub",
-				title: "",
-				onClick: () => {
-					window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
-				},
+				children: h(IconButton, {
+					icon: h(GithubMark, null),
+					label: "GitHub",
+					title: "",
+					onClick: () => {
+						window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
+					},
+				}),
 			}),
-			h(IconButton, {
-				icon: h(NpmMark, null),
-				label: "npm",
-				title: "",
-				onClick: () => {
-					window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
-				},
+			h(Tip, {
+				label: "NPM",
+				children: h(IconButton, {
+					icon: h(NpmMark, null),
+					label: "npm",
+					title: "",
+					onClick: () => {
+						window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
+					},
+				}),
 			}),
 		);
 
@@ -594,21 +602,18 @@ export function SettingsPage(props: {
 
 	/* ── 下半：台账目录表格（框架全走核心：标题 = SectionHead、表 = Table）────── */
 
-	/** 目录写动作的统一出口（用户 2026-11-02）：**成功静默**（就地换清单 + 让看板重读），
+	/** 目录写动作的统一出口（用户 2026-11-02）：**成功静默**（就地换清单），
 	 *  失败一条红 Toast，正文用 host / skill 给的原文。 */
-	const writeDir = async (
+	const postDirBody = async (
 		key: string,
 		body: DirsWriteBody,
-		onDone?: () => void,
-	): Promise<void> => {
-		if (dirBusy !== null) return;
+	): Promise<DirsPayload | null> => {
+		if (dirBusy !== null) return null;
 		setDirBusy(key);
 		try {
 			const payload = await postDirs(body);
 			setDirs(payload.dirs);
-			onDone?.();
-			// 显示 / 移除会改变「哪些台账参与汇总」⇒ 让看板整轮重读
-			onSwitched();
+			return payload;
 		} catch (failure) {
 			notify(t("settingsDirOpFailed"), {
 				variant: "error",
@@ -616,9 +621,76 @@ export function SettingsPage(props: {
 				durationMs: 10_000,
 				description: failure instanceof Error ? failure.message : String(failure),
 			});
+			return null;
 		} finally {
 			setDirBusy(null);
 		}
+	};
+
+	const writeDir = async (
+		key: string,
+		body: DirsWriteBody,
+		onDone?: () => void,
+	): Promise<void> => {
+		const payload = await postDirBody(key, body);
+		if (payload === null) return;
+		onDone?.();
+		// 显示 / 移除会改变「哪些台账参与汇总」⇒ 让看板整轮重读
+		onSwitched();
+	};
+
+	/**
+	 * 添加目录：弹核心的选目录面板（只能选目录、不限工作区），选中后交给 host 判「自己或一级子目录
+	 * 里有没有台账」。`anchor` = 触发按钮本身（弹窗贴着它弹，不给就落到左上角）。
+	 *
+	 * 三种结果各自一句：没台账 / 本来就在清单里 / 新增（1 个或多个）。
+	 */
+	const addDirFromPicker = async (anchor: HTMLElement | null): Promise<void> => {
+		if (dirBusy !== null) return;
+		// 用户 2026-11-03 定：按钮下方、往左展开（面板右缘对齐按钮右缘）。`bottom-start` 与旧的
+		// `auto` 在下方有空间时完全一样，所以看不到变化 —— 这档才真的把面板挪到按钮左边。
+		const picked = await pickWorkspaceFile({
+			anchor,
+			placement: "bottom-end",
+			filter: { dirs: true },
+		});
+		if (picked === null) return;
+		const payload = await postDirBody(`add:${picked.path}`, {
+			action: "add",
+			path: picked.path,
+		});
+		if (payload === null) return;
+		if (payload.added === false) {
+			// 技术原因（路径 + skill 原文）只进控制台，界面给人话
+			console.warn("[task-ledger] 添加台账目录失败：", payload.reason);
+			notify(t("settingsAddInvalid"), {
+				variant: "error",
+				description: t("settingsAddInvalidBody"),
+			});
+			return;
+		}
+		if (payload.existed === true) {
+			notify(t("settingsAddExisted"), {
+				description: t("settingsAddExistedBody"),
+			});
+			return;
+		}
+		const names = (payload.paths ?? []).map(
+			(path) => payload.dirs.find((dir) => dir.path === path)?.name ?? path,
+		);
+		notify(
+			names.length > 1 ? t("settingsAddDoneMany") : t("settingsAddDone"),
+			{
+				description:
+					names.length > 1
+						? t("settingsAddDoneManyBody", {
+								count: names.length,
+								names: names.join(t("settingsListSep")),
+							})
+						: t("settingsAddDoneBody", { name: names[0] ?? "" }),
+			},
+		);
+		onSwitched();
 	};
 
 	/** 保存改名：空名 = 回落目录名（skill 口径，与占位提示一致）。 */
@@ -760,8 +832,11 @@ export function SettingsPage(props: {
 							},
 							t("settingsDirRename"),
 						),
-						// 移除：只留一个小叉（危险动作，与身份表的删除同色）
-						h(IconButton, {
+						// 移除：只留一个小叉（危险动作，与身份表的删除同色）。
+						// 宿主工作区不给这个钮：进了看板就会同步补登记，移除等于当场撤销 ⇒ 只能「隐藏」。
+						dir.inRegistry === true
+							? null
+							: h(IconButton, {
 							icon: h(IconCloseOutlineRegular, { size: 14 }),
 							label: t("settingsDirRemove"),
 							size: "sm",
@@ -947,49 +1022,6 @@ export function SettingsPage(props: {
 			)
 		: null;
 
-	const addModal = addOpen
-		? h(
-				Modal,
-				{
-					title: t("settingsAddTitle"),
-					size: "md",
-					onClose: () => {
-						setAddOpen(false);
-					},
-					footer: h(
-						"div",
-						{ className: "dtl-acts" },
-						h(
-							Button,
-							{
-								variant: "ghost",
-								onClick: () => {
-									setAddOpen(false);
-								},
-							},
-							t("settingsCancel"),
-						),
-						h(
-							Button,
-							{ variant: "primary", disabled: addPath.trim() === "", onClick: notYet },
-							t("settingsAddConfirm"),
-						),
-					),
-				},
-				h("div", { className: "dtl-set__hint" }, t("settingsAddHint")),
-				h(
-					"div",
-					{ className: "dtl-form" },
-					h(Input, {
-						value: addPath,
-						onChange: setAddPath,
-						placeholder: t("settingsAddPlaceholder"),
-						"aria-label": t("settingsAddPlaceholder"),
-					}),
-				),
-			)
-		: null;
-
 	return h(
 		"div",
 		{ className: "dtl-set" },
@@ -1043,8 +1075,9 @@ export function SettingsPage(props: {
 						{
 							variant: "outline",
 							size: "md",
-							onClick: () => {
-								setAddOpen(true);
+							disabled: dirBusy !== null,
+							onClick: (event) => {
+								void addDirFromPicker(event.currentTarget);
 							},
 						},
 						t("settingsDirsAdd"),
@@ -1054,7 +1087,6 @@ export function SettingsPage(props: {
 			h("div", { className: "dtl-set__body" }, dirsBody),
 		),
 		userModal,
-		addModal,
 	);
 }
 
@@ -1096,10 +1128,15 @@ export type SettingsLocaleKey = Extract<
 	| "settingsCancel"
 	| "settingsPathCopied"
 	| "settingsPathCopy"
-	| "settingsAddTitle"
-	| "settingsAddHint"
-	| "settingsAddPlaceholder"
-	| "settingsAddConfirm"
+	| "settingsAddInvalid"
+	| "settingsAddInvalidBody"
+	| "settingsAddExisted"
+	| "settingsAddExistedBody"
+	| "settingsAddDone"
+	| "settingsAddDoneBody"
+	| "settingsAddDoneMany"
+	| "settingsAddDoneManyBody"
+	| "settingsListSep"
 	| "settingsFlow1"
 	| "settingsFlow1Desc"
 	| "settingsFlow2"

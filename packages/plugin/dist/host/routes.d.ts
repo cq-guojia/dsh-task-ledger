@@ -24,4 +24,6 @@ export interface WorkspaceRegistryLike {
 export interface RouteDeps {
     readonly registry: WorkspaceRegistryLike;
 }
+/** 核心 explorer 的只读文件路由（`serveFsRoute` 挂这里，client 的 `connectFs` 用同一个值）。 */
+export declare const FS_ROUTE = "/api/task-ledger/fs";
 export declare function registerRoutes(webServer: WebServerLike, deps: RouteDeps): void;

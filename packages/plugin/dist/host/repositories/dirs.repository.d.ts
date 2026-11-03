@@ -29,3 +29,9 @@ export declare function addDir(path: string, name: string): Promise<{
     readonly added: boolean;
     readonly reason: string;
 }>;
+/**
+ * 一级子目录里的台账根。用户 2026-11-03：只知道「这个项目有台账」的人会选它的**直属父目录**，
+ * 这种选择也算有效 —— 父目录本身不进清单（清单只存台账根），登记它下面这些。
+ * 目录读不了 / 没有台账 ⇒ 空数组，由调用方出提示。
+ */
+export declare function ledgerChildrenOf(path: string): Promise<string[]>;

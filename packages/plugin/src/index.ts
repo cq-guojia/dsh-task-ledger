@@ -9,11 +9,8 @@
  * 满足不了的依赖会令 entry 一直 pending、卡死整个 dsh 启动）；两条注入线
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
-import {
-	registerRoutes,
-	type WebServerLike,
-	type WorkspaceRegistryLike,
-} from "./host/routes.js";
+import { serveFsRoute } from "dsh-plugin-core/host";
+import { FS_ROUTE, registerRoutes, type WebServerLike, type WorkspaceRegistryLike } from "./host/routes.js";
 import {
 	buildSkillRegistration,
 	type SkillsRegistry,
@@ -49,6 +46,10 @@ export function apply(ctx: PluginContext): void {
 			"[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot）",
 		);
 	});
+
+	// ── 只读文件路由（核心 explorer 的数据面：选目录弹窗 + 文件预览都吃它） ──
+	// 官方 workspaceFiles 只能在各自工作区内列目录，选台账目录要能走全盘 ⇒ 用核心这条。
+	serveFsRoute(ctx, { path: FS_ROUTE });
 
 	// ── skill 全局注册（任务 2） ──
 	// unscoped 注册落全局层，模型可 load；disposer 随插件 dispose 自动注销。

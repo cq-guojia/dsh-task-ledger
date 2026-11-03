@@ -10,8 +10,10 @@
  * `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
  */
 import { createStyleKit } from "dsh-plugin-core/design";
+import { connectFs } from "dsh-plugin-core/explorer";
 import { connectHost, setStyleKit } from "dsh-plugin-core/ui";
 import { createElement as h } from "react";
+import { FS_PATH } from "./api";
 import { BoardHome } from "./board-home";
 import {
 	en,
@@ -64,6 +66,8 @@ const t: Translate = interpolateTranslate(
 export function apply(ctx: ClientContext): void {
 	// ⓪ 接线一次：核心接管文件服务 + 会话解析 + dock 补 flex；查看钮只需给容器和路径。
 	connectHost(ctx);
+	// 文件面（只读 FS 路由，宿主 apply 里 serveFsRoute 挂的）：选目录弹窗与文件预览都吃它。
+	connectFs({ path: FS_PATH });
 
 	// ① 字典注册（宿主语言切换 ⇒ 渲染器换 t 引用 ⇒ 整页重渲染）
 	ctx.inject(["locale"], (localeCtx) => {

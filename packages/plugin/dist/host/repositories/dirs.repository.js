@@ -1,3 +1,5 @@
+import { readdir, stat } from "node:fs/promises";
+import { join } from "node:path";
 import { failureOf, runLedgerScript } from "./runner.js";
 function parseDirs(data) {
     const rows = Array.isArray(data.dirs) ? data.dirs : [];
@@ -62,4 +64,34 @@ export async function addDir(path, name) {
         added: result.data.added === true,
         reason: typeof result.data.reason === "string" ? result.data.reason : "",
     };
+}
+/** 目录下**直接**含 `ledger/` ⇒ 台账根（与 skill `root` 同一判据：`core/roots.go:35`）。 */
+async function hasLedger(dir) {
+    try {
+        return (await stat(join(dir, "ledger"))).isDirectory();
+    }
+    catch {
+        return false;
+    }
+}
+/**
+ * 一级子目录里的台账根。用户 2026-11-03：只知道「这个项目有台账」的人会选它的**直属父目录**，
+ * 这种选择也算有效 —— 父目录本身不进清单（清单只存台账根），登记它下面这些。
+ * 目录读不了 / 没有台账 ⇒ 空数组，由调用方出提示。
+ */
+export async function ledgerChildrenOf(path) {
+    let names;
+    try {
+        names = await readdir(path);
+    }
+    catch {
+        return [];
+    }
+    const found = [];
+    for (const name of names.sort()) {
+        const child = join(path, name);
+        if (await hasLedger(child))
+            found.push(child);
+    }
+    return found;
 }

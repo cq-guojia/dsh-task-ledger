@@ -263,11 +263,20 @@ export interface LedgerDirView {
 	readonly path: string;
 	readonly name: string;
 	readonly hidden: boolean;
+	/** 是不是宿主工作区：是的话只能隐藏（移除会被下次进看板的同步补回来）。 */
+	readonly inRegistry?: boolean;
 }
 
 /** `/dirs` 响应：机器级台账目录清单，**含隐藏项**（关了显示还得能开回来）。 */
 export interface DirsPayload {
 	readonly dirs: readonly LedgerDirView[];
+	/** 只有「登记」会带：`false` = 没进清单（`reason` 是原因，如「不是台账目录」）。 */
+	readonly added?: boolean;
+	/** 这些目录本来就在清单里（「无需重复添加」）。 */
+	readonly existed?: boolean;
+	/** 本次涉及的台账根（新增的；全部已存在时是已存在的那些）。 */
+	readonly paths?: readonly string[];
+	readonly reason?: string;
 }
 
 /** `/identity/roster`：可以认领的人，按工作区分组（读不到名册的工作区不在列表里）。 */

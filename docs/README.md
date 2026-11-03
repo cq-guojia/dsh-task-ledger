@@ -14,7 +14,7 @@
 | 运行逻辑 | `docs/design/architecture.md` |
 | 功能总索引 | `docs/design/features.md` |
 | 各功能 | `docs/design/features/`（一功能一文件，清单见功能总索引） |
-| 外部事实 | `docs/design/external/`：`dsh-skill-registration.md`、`host-webserver.md`、`client-ui-layout.md`、`dsh-session-handoff.md`、`dsh-workspace-registry.md`、`publish-oidc.md` |
+| 外部事实 | `docs/design/external/`：`dsh-skill-registration.md`、`host-webserver.md`、`client-ui-layout.md`、`dsh-session-handoff.md`、`dsh-workspace-registry.md`、`dsh-plugin-core-explorer.md`、`publish-oidc.md` |
 | 数据库说明 | `docs/design/ledger-data.md`（本项目的「数据」= 各工作区台账文件，插件只读、不自建数据库） |
 | 样式规范 | `docs/design/ui-style.md` |
 | 方法规范 | `docs/design/code-conventions.md`（client 半分层 + 脚本侧两层（L1 / L2 / 外壳）、铁律与防塌线；宿主接口核实方法写在各 `external/` **宿主接口**文档的「复核方式」节，`publish-oidc.md` 是发布链路、无此节） |

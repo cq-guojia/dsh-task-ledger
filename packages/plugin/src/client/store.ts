@@ -100,7 +100,8 @@ export function boardSubscribe(listener: () => void): () => void {
 	listeners.add(listener);
 	if (!booted) {
 		booted = true;
-		void refresh();
+		// 进看板 = 同步一次（用户 2026-11-03 的口径）
+		void refresh(true);
 	}
 	return () => {
 		listeners.delete(listener);
@@ -111,8 +112,11 @@ export function boardSubscribe(listener: () => void): () => void {
  * 重读首屏。**先问身份，再拉快照**（2026-11-01 拍板：没身份就把整个面板换成设置页）：
  * skill 侧所有读命令都过身份闸门，没身份时快照必然 500 —— 所以那种情况连请求都不发，
  * 并发报错、错误去重这些事就不存在了。带 `fresh=1`：本函数只由首读与手动刷新触发。
+ *
+ * `sync` = 顺带用宿主工作区补登记清单。**只有「进看板」与「手动刷新」传 true**
+ * （用户 2026-11-03）：设置页写动作后的重读、错误重试都不传 —— 那些时候同步纯浪费。
  */
-export async function refresh(): Promise<void> {
+export async function refresh(sync = false): Promise<void> {
 	const token = ++runToken;
 	set({ refreshing: true });
 	try {
@@ -125,7 +129,7 @@ export async function refresh(): Promise<void> {
 			set({ status: "ready", board: null, error: null });
 			return;
 		}
-		const board = await fetchBoardSnapshot({ fresh: true });
+		const board = await fetchBoardSnapshot({ fresh: true, sync });
 		if (token !== runToken) return;
 		set({ status: "ready", board, error: null });
 	} catch (error) {

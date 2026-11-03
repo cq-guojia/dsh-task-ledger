@@ -40,16 +40,16 @@ window.__ModuleLoader__.load({
 		let react = require("react");
 		let react$1 = __toESM(react, 1);
 		react = __toESM(react);
+		let _deepseek_ai_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
+		_deepseek_ai_dsh_client_ui_primitives = __toESM(_deepseek_ai_dsh_client_ui_primitives, 1);
+		let react_dom_client = require("react-dom/client");
 		let react_jsx_runtime = require("react/jsx-runtime");
 		let react_dom = require("react-dom");
 		react_dom = __toESM(react_dom, 1);
-		let react_dom_client = require("react-dom/client");
-		let _deepseek_ai_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
-		_deepseek_ai_dsh_client_ui_primitives = __toESM(_deepseek_ai_dsh_client_ui_primitives, 1);
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/design/tokens-css.generated.js
-		const TOKENS_CSS_TEMPLATE = "\n/* ── 文字（宿主 label 四档 + 反色面用字）────────────────────────────── */\nbody{\n  --dshpc-fg:var(--dsw-alias-label-primary,#1f2328);\n  --dshpc-fg-2:var(--dsw-alias-label-secondary,#5c6370);\n  --dshpc-fg-3:var(--dsw-alias-label-tertiary,#767d87);\n  --dshpc-fg-4:var(--dsw-alias-label-caption,#9aa1ab);\n  --dshpc-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);\n  /* 反色面上的字（实心钮 / 角标）：暗色下是 bluish-1000，故用 -foreground 而非 -inverted */\n  --dshpc-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);\n\n  /* ── 面（宿主 bg-layer 三档 + 下沉轨道底）──────────────────────────── */\n  --dshpc-surface-1:var(--dsw-alias-bg-layer-1,#fff);\n  --dshpc-surface-2:var(--dsw-alias-bg-layer-2,#fff);\n  --dshpc-surface-3:var(--dsw-alias-bg-layer-3,#fff);\n  /* 「选中亮片」的底盘色（配 --dshpc-shadow-raised 用） */\n  --dshpc-surface-raised:var(--dsw-alias-bg-layer-1,#fff);\n  /* 轨道 / 下沉底（官方分段控件轨道用的就是这条） */\n  --dshpc-surface-sunken:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));\n  /* 整页 / 编辑器底（bg-base） */\n  --dshpc-surface-base:var(--dsw-alias-bg-base,#fff);\n  /* 自绘浮层 / 菜单卡的不透明底（= base；不要用半透明的 specific-menu） */\n  --dshpc-surface-menu:var(--dshpc-surface-base);\n  /* markdown 代码块面 / 字体（会话镜像里用到） */\n  --dshpc-code-surface:var(--dsw-alias-markdown-code-block,rgba(128,128,128,.10));\n  --dshpc-code-font:var(--dsw-font-markdown-code-block-small,12px/18px var(--ds-font-family-code,monospace));\n  /* 警告文字色（宿主 state-warn-label） */\n  --dshpc-warning-label:var(--dsw-alias-state-warn-label,#f5a623);\n  /* 固定中性实面（自绘浮层、深色主题下必须自己变的那几个）——只有它需要暗色覆盖 */\n  --dshpc-solid:var(--dsw-static-neutral-00,#fff);\n  --dshpc-on-solid:var(--dsw-alias-label-primary,#1f2328);\n  /* 交付文件卡那种「浅底盘 + hover 加深」两拍 */\n  --dshpc-plate:var(--dsw-static-neutral-50,#fafafa);\n  --dshpc-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);\n  /* ⚠️ 这些**固定中性面一律用 rgba 字面量**（2026-10-19 真机教训）：不要写成\n     「rgba 回退行 + 嵌 --dsw-static-* 的 color-mix 行」两条同名声明——自定义属性**后者恒胜**，\n     哪怕它的值在宿主里算不出来（static 变量 invalid）⇒ 整条 token 作废、rgba 兜底一起被废，\n     0.2.6 里 Segmented 轨道全透明就是这么来的。要跟宿主主题联动的面用 alias token（那些实测有效）。 */\n  --dshpc-icon-plate:rgba(255,255,255,.5);\n  /* 表头底：浅色主题**偏深**，且必须**比斑马纹（--dshpc-plate）再深一档**——\n     两者不能撞色（用户 2026-10-02：表头跟斑马纹一模一样）。 */\n  --dshpc-head-bg:var(--dsw-static-neutral-100,#f5f5f5);\n  /* 表格底 / 行 hover（2026-10-30 用户二次定案：表头与通栏**互换**底色）：\n     表头默认底 = 通栏原来那层灰（--dshpc-surface-sunken，跟着宿主交互面走）；\n     通栏默认底 = 表头原来那色（亮 #f6f8fa / 暗 #151b23，参考图实测，与深色段同源）；\n     行 hover 是「一层极淡的黑」≈1.5%（用户：再浅一半，要特别淡）。 */\n  --dshpc-table-head-bg:var(--dshpc-surface-sunken);\n  --dshpc-table-banner-bg:#f6f8fa;\n  --dshpc-table-row-hover:rgba(15,15,15,.015);\n  /* 图标小底板（产出物）：浅色下要**看得见**（原先取 plate ⇒ 在白底上等于没有）；hover 加倍。 */\n  --dshpc-chip-bg:rgba(15,15,15,.07);\n  --dshpc-chip-bg-hover:rgba(15,15,15,.14);\n  /* 展开行：**带透明度的蓝**——不是灰、也不是纯色，透出卡片底色，一眼看出「这是展开的」\n     （用户 2026-10-02：灰色跟斑马纹分不出来）。内容区再淡一档，形成「行深 / 内容浅」的区隔。 */\n  --dshpc-open-bg:rgba(37,99,235,.10);\n  --dshpc-open-bg-soft:rgba(37,99,235,.05);\n  --dshpc-card-hover:rgba(37,99,235,.07);\n\n  /* ── 描边四档（宿主真值：l1 4% / l2 10% / l3 12% / l4 16%）────────── */\n  --dshpc-border-faint:var(--dsw-alias-border-l1,#0000000a);\n  --dshpc-border:var(--dsw-alias-border-l2,#0000001a);\n  --dshpc-border-strong:var(--dsw-alias-border-l3,#0000001f);\n  --dshpc-border-heavy:var(--dsw-alias-border-l4,#00000029);\n\n  /* ── 品牌 / 语义色 ────────────────────────────────────────────────── */\n  /* 品牌「面」色：明色近黑、暗色近白（官方 Switch 选中态即此），**不是蓝色** */\n  --dshpc-accent:var(--dsw-alias-brand-primary,#0f1115);\n  /* 蓝色：强调 / 选中 / 焦点，一律走这条 */\n  --dshpc-business:var(--dsw-alias-state-business-primary,#3b5bdb);\n  --dshpc-success:var(--dsw-alias-state-success-primary,#22c55e);\n  /* ⚠️ 是 state-warn（不是 state-warning，后者宿主无此定义） */\n  --dshpc-warning:var(--dsw-alias-state-warn-primary,#f59e0b);\n  --dshpc-danger:var(--dsw-alias-state-error-primary,#ec1313);\n  --dshpc-link:var(--dsw-alias-link,#3b5bdb);\n  /* 语义色**实面**上的字（角标 / 实心提示）：宿主红绿黄三色都是中调 ⇒ 白字两个主题都可读，\n     故这是一条与主题无关的常量；不要拿 --dshpc-fg-inverse 顶——它在暗色下是近黑，压在红底上看不清。 */\n  --dshpc-on-signal:#fff;\n  /* 黄底上的字：黄色是中高明度，白字看不清 ⇒ 固定深色（与主题无关）。 */\n  --dshpc-on-warning:#1f2328;\n\n  /* ── 实心按钮的 hover / active 派生态（2026-10-19 用户点名）─────────────────\n     原实现是 :hover 直接压 opacity .9：黑底压 10% 几乎看不出来，用户原话「完全感觉不到颜色变了」。\n     ⇒ 改成对底色做**明确的混色**（压 22% / 34%），不用 opacity：\n       · 亮色主题：黑底（--dshpc-accent）掺白提亮；红 / 绿 / 黄 / 蓝底掺黑压深；\n       · 暗色主题：反过来（暗底掺白、亮底掺黑）。\n     混色对象是**固定中性色字面量**（#fff / #000），不依赖宿主 static-neutral 是否存在；\n     旧内核不认 color-mix 时整条声明作废 ⇒ 回落各档原色（可接受：仍可点，只是没有 hover 反馈）。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 78%,#ffffff);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 64%,#ffffff);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#000000);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#000000);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#000000);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#000000);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#000000);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#000000);\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 78%,#000000);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 64%,#000000);\n  /* 语义色**浅底**：状态色系的「一块底色」——执行记录页每条流水账的块底就是它\n     （用户 2026-10-04：正常态给同色系很浅的透明底、失败用红底透出来）。\n     用 「color-mix」 现算而不写死 rgba：状态色本身跟随宿主 alias，主题一换自动成立。\n     ⚠️ **深色下要更淡**：用户 2026-10-04「深色风格的绿色和红色好像都有点深」⇒ dark 段\n     把这四条压到 5%（更贴近面板底、存在感更弱）；浅色段维持 8%。两端各自给值，不共用一条曲线。\n     命名收在 tokens.ts 单点（本仓硬规矩：业务文件不许自造 --dshpc-*）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 8%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 8%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 8%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 8%,transparent);\n\n  /* ── 扩展语义色（2026-10-29 用户拍板：分类 / 图表常用色八支）──────────────\n     宿主无对应 alias ⇒ 写死 hex（不跟随宿主换肤）；实心面字色统一走 --dshpc-on-signal（白），\n     因八支明度都低于黄 / 青柠，白字两主题均 ≥4.5:1 可读。每条自带 hover/active/soft 派生；\n     暗色段只覆盖派生（base 写死、两主题同值）。 */\n  --dshpc-purple:#9333ea;\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 78%,#000000);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 64%,#000000);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 8%,transparent);\n  --dshpc-pink:#db2777;\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 78%,#000000);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 64%,#000000);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 8%,transparent);\n  --dshpc-cyan:#0e7490;\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 78%,#000000);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 64%,#000000);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 8%,transparent);\n  --dshpc-teal:#0f766e;\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 78%,#000000);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 64%,#000000);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 8%,transparent);\n  --dshpc-orange:#c2410c;\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 78%,#000000);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 64%,#000000);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 8%,transparent);\n  --dshpc-indigo:#4f46e5;\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 78%,#000000);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 64%,#000000);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 8%,transparent);\n  --dshpc-rose:#e11d48;\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 78%,#000000);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 64%,#000000);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 8%,transparent);\n  --dshpc-slate:#475569;\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 78%,#000000);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 64%,#000000);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 8%,transparent);\n\n  /* ⚠️ 2026-10-18 用户拍板：宿主 alias 的 hover（暗色白 8% / 亮色 6%）**太弱**，\n     「移上去要仔细看才看得出来」⇒ 不再委托宿主 hover 别名，改为自掺中性色并加重：\n     亮色掺黑 10%、暗色掺白 14%（active 再加一档）。按钮 / 分段轨道 / 各类 hover 底同时受益。\n     ⚠️ 必须保留 rgba 兜底行在前（本文件惯例，见 icon-plate 注释）：掺的是**固定中性色**\n     （neutral-900=#0f0f0f / neutral-00=#fff），预计算无损；旧内核不认 color-mix 时走兜底，\n     否则整条 background:var(--seg-track) 作废 ⇒ 分段轨道透明（真踩过：预览站轨道消失）。 */\n  --dshpc-hover:rgba(15,15,15,.10);\n  --dshpc-active:rgba(15,15,15,.18);\n  /* 分段控件轨道底：专用 token（rgba 字面量、不借 --dshpc-hover 中转）——\n     2026-10-19 教训：变量链中间任何一环 invalid ⇒ background 整条作废、轨道全透明。\n     亮色：黑 7%（比 hover 的 10% 淡一档，选中白片才跳得出）。 */\n  --dshpc-seg-track:rgba(15,15,15,.07);\n  --dshpc-mask:var(--dsw-alias-bg-mask-1,#0000003d);\n  /* 「选中面」（2026-10-06，任务日程页首创）= 当前底色**朝更深掺 12% 文字色**：\n     浅色主题下文字色是黑 ⇒ 选中面比常态底色**深一档**。深色分支见 body[data-ds-dark-theme]（朝背景色掺）。\n     语义：标记「正在看的东西」，比常态明显、又不许盖住内容（不许用半透明叠状态色）。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 88%,var(--dshpc-fg));\n  /* 任务日程页本月格默认底（2026-10-06 → 续2）：浅色下给**淡蓝**（business 8% 透白底）——\n     参照用户参考稿里未选中日程块 / Tuesday 列的那种蓝、再浅一点点；\n     相邻月补位格仍走 --dshpc-surface-2（更灰），不受影响。\n     深色段维持 #23262e（用户：深色 UI 已差不多，不动）。 */\n  --dshpc-cal-cell-bg:color-mix(in srgb,var(--dshpc-business) 8%,var(--dshpc-surface-1));\n  /* 任务日程页「点开某天」展开的面板底（2026-10-06 续）：浅色下**无限接近白、只带一丁点灰**\n     （neutral-50 = #fafafa）——面板里装半透明执行记录列表，底再深整片就发糊发灰；\n     深色段沿用原 selected-bg 暗值，保持不动。 */\n  --dshpc-cal-panel-bg:var(--dsw-static-neutral-50,#fafafa);\n  /* 任务日程页本月格 hover 底（浅色段，2026-10-06 续3）：不再走灰色通用交互底——\n     鼠标移上去应是「更亮一点点的蓝」（与深色段同语义：hover = 提亮的蓝，不是灰下去）。\n     浓度**介于**表头蓝（14%）与未选中格蓝（8%）之间、略偏表头一侧：business 12% 透白底\n     （比表头浅一点、比未选中格深一点）。 */\n  --dshpc-cal-cell-hover:color-mix(in srgb,var(--dshpc-business) 12%,var(--dshpc-surface-1));\n\n  /* ── 投影 / 焦点 ──────────────────────────────────────────────────── */\n  --dshpc-shadow-1:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  /* 亮片自带的浮起感（选中态用；与 --dshpc-surface-raised 配对） */\n  --dshpc-shadow-raised:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  --dshpc-shadow-2:var(--dsw-shadow-lv3,0 12px 32px 0 #00000014);\n  /* 键盘焦点环。⚠️ 不用宿主 --dsw-focus-ring-color：它默认值是 transparent（兜底不生效、会隐身） */\n  --dshpc-focus:var(--dsw-alias-state-business-primary,#3b5bdb);\n\n  /* ── 圆角（宿主真值 4 / 8 / 12 / 16 / 20 / 28）─────────────────────── */\n  --dshpc-radius-xs:var(--dsw-radius-xs,4px);\n  --dshpc-radius-sm:var(--dsw-radius-sm,8px);\n  --dshpc-radius-md:var(--dsw-radius-md,12px);\n  --dshpc-radius-lg:var(--dsw-radius-lg,16px);\n  --dshpc-radius-xl:var(--dsw-radius-xl,20px);\n  --dshpc-radius-panel:var(--dsw-radius-panel,28px);\n  /* 全圆（胶囊标签）：宿主的 radius 档最大只有 28px，撑不满 24px 高的 chip */\n  --dshpc-radius-pill:999px;\n\n  /* ── 间距四拍（只许用这四档，不许出现 5 / 7 / 9px）────────────────── */\n  --dshpc-space-1:4px;\n  --dshpc-space-2:8px;\n  --dshpc-space-3:12px;\n  --dshpc-space-4:16px;\n\n  /* ── 控件高度：离散三档（控件用 size=\"sm|md|lg\" 选；调用点不许自定义高度，\n       真不够用才允许在调用点本地覆盖 --dshpc-control-h-*，属例外而非常态）── */\n  --dshpc-control-h-sm:24px;\n  --dshpc-control-h-md:28px;\n  --dshpc-control-h-lg:32px;\n\n  /* ── 字号 / 行高：直绑宿主字号族（宿主真值 11 / 12 / 13 / 14 / 16）───── */\n  --dshpc-font-xs:var(--dsw-font-xxxs-11-font-size,11px);\n  --dshpc-font-sm:var(--dsw-font-xxs-12-font-size,12px);\n  --dshpc-font-md:var(--dsw-font-xs-13-font-size,13px);\n  --dshpc-font-lg:var(--dsw-font-s-14-font-size,14px);\n  --dshpc-font-xl:var(--dsw-font-base-16-font-size,16px);\n  --dshpc-line-xs:var(--dsw-font-xxxs-11-line-height,14px);\n  --dshpc-line-sm:var(--dsw-font-xxs-12-line-height,18px);\n  --dshpc-line-md:var(--dsw-font-xs-13-line-height,20px);\n  --dshpc-line-lg:var(--dsw-font-s-14-line-height,22px);\n  --dshpc-line-xl:var(--dsw-font-base-16-line-height,24px);\n  --dshpc-font-mono:var(--ds-font-family-code,monospace);\n\n  /* ── 层级阶梯（业务文件不许再写裸 z-index）───────────────────────── */\n  /* 页面级预览分栏 → 抽屉（新建/编辑）→ 弹窗/确认框 → 浮层菜单 → 浮层提示 */\n  /* 内容层吸顶（天标签 / 表头这类「跟着滚但压住同层内容」的元素）：只压同层兄弟，\n     必须低于下面所有浮层档 —— 所以它不是「开新浮层档」，而是内容层内部的排序位。 */\n  --dshpc-z-sticky:10;\n  --dshpc-z-dock:1030;\n  --dshpc-z-drawer:1040;\n  --dshpc-z-modal:1070;\n  --dshpc-z-menu:1100;\n  --dshpc-z-tip:1200;\n\n  /* ── 动效 ─────────────────────────────────────────────────────────── */\n  --dshpc-dur:var(--ds-transition-duration,.2s);\n  --dshpc-dur-fast:var(--ds-transition-duration-fast,.12s);\n  --dshpc-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));\n  /* 运行中状态的脉动时长（2026-10-06 统一前后两端：任务配置里的绿呼吸 → 蓝、放慢；\n     执行记录里的蓝闪 → 放慢一点。两者用同一个值，动画形状本就一致）。 */\n  --dshpc-dur-run:500ms;\n}\n\n/* ── 明暗差异的**唯一**落点 ──────────────────────────────────────────────\n   判据 = body[data-ds-dark-theme]（宿主 0.2.0-rc.2 源码核实：启动脚本 toggleAttribute 写入，\n   唯一明暗判据；插件禁止用 prefers-color-scheme —— 它跟的是系统、不是用户在宿主里的选择）。\n   下面只放 alias 表达不了的「固定中性面」；颜色若能靠 alias 自动跟随，一律不要写在这里。 */\nbody[data-ds-dark-theme]{\n  /* 深色段的蓝**刻意不跟随宿主 alias**（唯一例外）：宿主暗色 alias 给的是 #60a5fa 一档的高亮蓝，\n     实心面（Chip / Button info / 日期选中格）压白字会发糊 —— 用户 2026-10-29 实测反馈。\n     ⇒ 深色下改定向浅色状态的蓝（#3b5bdb）靠，只在明度上抬一点点，保证它在暗底上仍看得见：\n     #4c6bd8 对白字 ≈4.8:1（原亮蓝只有 ~2.3:1），对日历格底 ≈3.2:1 仍过 UI 件的 3:1 线。\n     代价：宿主换品牌色时深色不再自动跟着变，需要这里手动同步。 */\n  --dshpc-business:#4c6bd8;\n  --dshpc-solid:var(--dsw-static-neutral-900,#0f0f0f);\n  --dshpc-on-solid:var(--dsw-static-neutral-00,#fff);\n  /* 实心按钮 hover / active（暗色版）：黑底（浅色主题的近黑 → 暗色下的近白）掺黑压深；\n     红 / 绿 / 黄 / 蓝掺白提亮。与亮色段方向相反，保证两种主题下「一眼看出变了」。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 80%,#000000);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 66%,#000000);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#ffffff);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#ffffff);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#ffffff);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#ffffff);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#ffffff);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#ffffff);\n  /* 同上：掺白比例从 22% / 36% 收到 12% / 22% —— 底色已变深，照旧比例提亮会在 hover 瞬间\n     把白字对比打回 ~3:1（正是用户嫌糊的那一档）；收窄后 hover 仍可感知、字仍清晰。 */\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 88%,#ffffff);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 78%,#ffffff);\n  /* 暗色 hover 掺白 14% / active 24%（对齐上面 2026-10-18 的加重拍板）。rgba 兜底行同上。 */\n  --dshpc-hover:rgba(255,255,255,.14);\n  --dshpc-active:rgba(255,255,255,.24);\n  /* 分段轨道（暗色版）：白 10%——比 hover 淡一档，选中亮片才跳得出。 */\n  --dshpc-seg-track:rgba(255,255,255,.10);\n  --dshpc-plate:var(--dsw-static-neutral-850,#212123);\n  --dshpc-plate-hover:var(--dsw-static-neutral-800,#292929);\n  --dshpc-icon-plate:rgba(255,255,255,.05);\n  /* 暗色主题**反过来**：表头要比卡片面**亮**、比斑马纹再**浅一档**（用户：纯黑背景没法看）。 */\n  --dshpc-head-bg:var(--dshpc-surface-2);\n  /* 表格（2026-10-30 用户二次定案：与通栏互换底色）：通栏底取表头原来那色 #151b23\n     （亮色段对应 #f6f8fa）；表头默认底沿用亮色段定义的 --dshpc-surface-sunken，不在暗色段重写；\n     行 hover 是「一层极淡的白」≈3% —— 暗底上用黑会越悬越暗，看不出「浅灰」反馈。 */\n  --dshpc-table-banner-bg:#151b23;\n  --dshpc-table-row-hover:rgba(255,255,255,.03);\n  /* 暗色底板**微亮**；hover **更亮**（原先 hover 取 plate-hover 反而更淡 ⇒ 鼠标移上去就没了）。 */\n  --dshpc-chip-bg:rgba(255,255,255,.08);\n  --dshpc-chip-bg-hover:rgba(255,255,255,.16);\n  /* 暗色下蓝色要更亮、透明度略高才压得住深底。 */\n  --dshpc-open-bg:rgba(96,165,250,.18);\n  --dshpc-open-bg-soft:rgba(96,165,250,.08);\n  --dshpc-card-hover:rgba(96,165,250,.13);\n  /* 语义色**浅底**（深色版）：用户嫌深色的绿 / 红「有点深」⇒ 压到 **5%**（浅色段是 8%），\n     更贴近面板底色、存在感更弱；块底与状态色竖条仍同源（竖条是实色，不受这条影响）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 5%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 5%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 5%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 5%,transparent);\n  /* 扩展色深色派生：底色写死、hover 掺白 12%/22%（同 business，防白字发糊），soft 5%。 */\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 88%,#ffffff);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 78%,#ffffff);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 5%,transparent);\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 88%,#ffffff);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 78%,#ffffff);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 5%,transparent);\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 88%,#ffffff);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 78%,#ffffff);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 5%,transparent);\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 88%,#ffffff);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 78%,#ffffff);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 5%,transparent);\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 88%,#ffffff);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 78%,#ffffff);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 5%,transparent);\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 88%,#ffffff);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 78%,#ffffff);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 5%,transparent);\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 88%,#ffffff);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 78%,#ffffff);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 5%,transparent);\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 88%,#ffffff);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 78%,#ffffff);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 5%,transparent);\n  /* 「选中面」（深色版，2026-10-06）：掺 **~40% 背景色**（--dshpc-surface-base）⇒ 无限接近页面背景的黑、\n     只比背景略深一点点（用户：深色下展开区压着任务透明绿会发灰，底色要尽量贴近背景才不显灰）。\n     ⚠️ 深色下不能掺文字色 —— 那是白，会变亮，选中反而比本月日期浅。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n  /* 任务日程页本月格的默认底（深色版，2026-10-06）：深的、带点灰蓝的暗色（用户给的参考图 ≈ #23262e），\n     比原来的卡片面更沉、更偏蓝灰；选中格仍走 --dshpc-selected-bg（更暗一档），层级不变。 */\n  --dshpc-cal-cell-bg:#23262e;\n  /* 任务日程页本月格 hover 底（深色段，2026-10-06）：原先走 --dshpc-hover（宿主浅色叠加）在深底上显得\n     「灰发亮」，不好看 ⇒ 换成更贴底的蓝调微亮（与 open-bg-soft 同族），hover 时不刺眼、又有反馈。 */\n  --dshpc-cal-cell-hover:rgba(96,165,250,.12);\n  /* 任务日程页展开面板底（深色段，2026-10-06 续）：与原 selected-bg 暗值一致，深色 UI 不动 */\n  --dshpc-cal-panel-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n}\n";
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/design/tokens-css.generated.js
+		const TOKENS_CSS_TEMPLATE = "\n/* ── 文字（宿主 label 四档 + 反色面用字）────────────────────────────── */\nbody{\n  --dshpc-fg:var(--dsw-alias-label-primary,#1f2328);\n  --dshpc-fg-2:var(--dsw-alias-label-secondary,#5c6370);\n  --dshpc-fg-3:var(--dsw-alias-label-tertiary,#767d87);\n  --dshpc-fg-4:var(--dsw-alias-label-caption,#9aa1ab);\n  --dshpc-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);\n  /* 反色面上的字（实心钮 / 角标）：暗色下是 bluish-1000，故用 -foreground 而非 -inverted */\n  --dshpc-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);\n\n  /* ── 面（宿主 bg-layer 三档 + 下沉轨道底）──────────────────────────── */\n  --dshpc-surface-1:var(--dsw-alias-bg-layer-1,#fff);\n  --dshpc-surface-2:var(--dsw-alias-bg-layer-2,#fff);\n  --dshpc-surface-3:var(--dsw-alias-bg-layer-3,#fff);\n  /* 「选中亮片」的底盘色（配 --dshpc-shadow-raised 用） */\n  --dshpc-surface-raised:var(--dsw-alias-bg-layer-1,#fff);\n  /* 轨道 / 下沉底（官方分段控件轨道用的就是这条） */\n  --dshpc-surface-sunken:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));\n  /* 整页 / 编辑器底（bg-base） */\n  --dshpc-surface-base:var(--dsw-alias-bg-base,#fff);\n  /* 自绘浮层 / 菜单卡的不透明底（= base；不要用半透明的 specific-menu） */\n  --dshpc-surface-menu:var(--dshpc-surface-base);\n  /* markdown 代码块面 / 字体（会话镜像里用到） */\n  --dshpc-code-surface:var(--dsw-alias-markdown-code-block,rgba(128,128,128,.10));\n  --dshpc-code-font:var(--dsw-font-markdown-code-block-small,12px/18px var(--ds-font-family-code,monospace));\n  /* 警告文字色（宿主 state-warn-label） */\n  --dshpc-warning-label:var(--dsw-alias-state-warn-label,#f5a623);\n  /* 固定中性实面（自绘浮层、深色主题下必须自己变的那几个）——只有它需要暗色覆盖 */\n  --dshpc-solid:var(--dsw-static-neutral-00,#fff);\n  --dshpc-on-solid:var(--dsw-alias-label-primary,#1f2328);\n  /* 交付文件卡那种「浅底盘 + hover 加深」两拍 */\n  --dshpc-plate:var(--dsw-static-neutral-50,#fafafa);\n  --dshpc-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);\n  /* ⚠️ 这些**固定中性面一律用 rgba 字面量**（2026-10-19 真机教训）：不要写成\n     「rgba 回退行 + 嵌 --dsw-static-* 的 color-mix 行」两条同名声明——自定义属性**后者恒胜**，\n     哪怕它的值在宿主里算不出来（static 变量 invalid）⇒ 整条 token 作废、rgba 兜底一起被废，\n     0.2.6 里 Segmented 轨道全透明就是这么来的。要跟宿主主题联动的面用 alias token（那些实测有效）。 */\n  --dshpc-icon-plate:rgba(255,255,255,.5);\n  /* 表头底：浅色主题**偏深**，且必须**比斑马纹（--dshpc-plate）再深一档**——\n     两者不能撞色（用户 2026-10-02：表头跟斑马纹一模一样）。 */\n  --dshpc-head-bg:var(--dsw-static-neutral-100,#f5f5f5);\n  /* 表格底 / 行 hover（2026-10-30 用户二次定案：表头与通栏**互换**底色）：\n     表头默认底 = 通栏原来那层灰（--dshpc-surface-sunken，跟着宿主交互面走）；\n     通栏默认底 = 表头原来那色（亮 #f6f8fa / 暗 #151b23，参考图实测，与深色段同源）；\n     行 hover 是「一层极淡的黑」≈1.5%（用户：再浅一半，要特别淡）。 */\n  --dshpc-table-head-bg:var(--dshpc-surface-sunken);\n  --dshpc-table-banner-bg:#f6f8fa;\n  --dshpc-table-row-hover:rgba(15,15,15,.015);\n  /* 图标小底板（产出物）：浅色下要**看得见**（原先取 plate ⇒ 在白底上等于没有）；hover 加倍。 */\n  --dshpc-chip-bg:rgba(15,15,15,.07);\n  --dshpc-chip-bg-hover:rgba(15,15,15,.14);\n  /* 展开行：**带透明度的蓝**——不是灰、也不是纯色，透出卡片底色，一眼看出「这是展开的」\n     （用户 2026-10-02：灰色跟斑马纹分不出来）。内容区再淡一档，形成「行深 / 内容浅」的区隔。 */\n  --dshpc-open-bg:rgba(37,99,235,.10);\n  --dshpc-open-bg-soft:rgba(37,99,235,.05);\n  --dshpc-card-hover:rgba(37,99,235,.07);\n\n  /* ── 描边四档（宿主真值：l1 4% / l2 10% / l3 12% / l4 16%）────────── */\n  --dshpc-border-faint:var(--dsw-alias-border-l1,#0000000a);\n  --dshpc-border:var(--dsw-alias-border-l2,#0000001a);\n  --dshpc-border-strong:var(--dsw-alias-border-l3,#0000001f);\n  --dshpc-border-heavy:var(--dsw-alias-border-l4,#00000029);\n\n  /* ── 品牌 / 语义色 ────────────────────────────────────────────────── */\n  /* 品牌「面」色：明色近黑、暗色近白（官方 Switch 选中态即此），**不是蓝色** */\n  --dshpc-accent:var(--dsw-alias-brand-primary,#0f1115);\n  /* 蓝色：强调 / 选中 / 焦点，一律走这条 */\n  --dshpc-business:var(--dsw-alias-state-business-primary,#3b5bdb);\n  --dshpc-success:var(--dsw-alias-state-success-primary,#22c55e);\n  /* ⚠️ 是 state-warn（不是 state-warning，后者宿主无此定义） */\n  --dshpc-warning:var(--dsw-alias-state-warn-primary,#f59e0b);\n  --dshpc-danger:var(--dsw-alias-state-error-primary,#ec1313);\n  --dshpc-link:var(--dsw-alias-link,#3b5bdb);\n  /* 语义色**实面**上的字（角标 / 实心提示）：宿主红绿黄三色都是中调 ⇒ 白字两个主题都可读，\n     故这是一条与主题无关的常量；不要拿 --dshpc-fg-inverse 顶——它在暗色下是近黑，压在红底上看不清。 */\n  --dshpc-on-signal:#fff;\n  /* 黄底上的字：黄色是中高明度，白字看不清 ⇒ 固定深色（与主题无关）。 */\n  --dshpc-on-warning:#1f2328;\n  /* 告警严重度的圆点底色（2026-11-03 从 feedback.css 收到这里）。\n     与主题无关的一组常量：这几个色要在任意底色上都认得出来，所以**不跟宿主 state 色走**\n     （宿主 state-warn-primary 偏亮，压白 ✕ 看不清）。语义色改动请只改这里。 */\n  --dshpc-sev-info:#2563eb;\n  --dshpc-sev-success:#16a34a;\n  --dshpc-sev-warning:#d97706;\n  --dshpc-sev-error:#dc2626;\n\n  /* ── 实心按钮的 hover / active 派生态（2026-10-19 用户点名）─────────────────\n     原实现是 :hover 直接压 opacity .9：黑底压 10% 几乎看不出来，用户原话「完全感觉不到颜色变了」。\n     ⇒ 改成对底色做**明确的混色**（压 22% / 34%），不用 opacity：\n       · 亮色主题：黑底（--dshpc-accent）掺白提亮；红 / 绿 / 黄 / 蓝底掺黑压深；\n       · 暗色主题：反过来（暗底掺白、亮底掺黑）。\n     混色对象是**固定中性色字面量**（#fff / #000），不依赖宿主 static-neutral 是否存在；\n     旧内核不认 color-mix 时整条声明作废 ⇒ 回落各档原色（可接受：仍可点，只是没有 hover 反馈）。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 78%,#ffffff);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 64%,#ffffff);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#000000);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#000000);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#000000);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#000000);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#000000);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#000000);\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 78%,#000000);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 64%,#000000);\n  /* 语义色**浅底**：状态色系的「一块底色」——执行记录页每条流水账的块底就是它\n     （用户 2026-10-04：正常态给同色系很浅的透明底、失败用红底透出来）。\n     用 「color-mix」 现算而不写死 rgba：状态色本身跟随宿主 alias，主题一换自动成立。\n     ⚠️ **深色下要更淡**：用户 2026-10-04「深色风格的绿色和红色好像都有点深」⇒ dark 段\n     把这四条压到 5%（更贴近面板底、存在感更弱）；浅色段维持 8%。两端各自给值，不共用一条曲线。\n     命名收在 tokens.ts 单点（本仓硬规矩：业务文件不许自造 --dshpc-*）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 8%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 8%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 8%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 8%,transparent);\n\n  /* ── 扩展语义色（2026-10-29 用户拍板：分类 / 图表常用色八支）──────────────\n     宿主无对应 alias ⇒ 写死 hex（不跟随宿主换肤）；实心面字色统一走 --dshpc-on-signal（白），\n     因八支明度都低于黄 / 青柠，白字两主题均 ≥4.5:1 可读。每条自带 hover/active/soft 派生；\n     暗色段只覆盖派生（base 写死、两主题同值）。 */\n  --dshpc-purple:#9333ea;\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 78%,#000000);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 64%,#000000);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 8%,transparent);\n  --dshpc-pink:#db2777;\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 78%,#000000);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 64%,#000000);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 8%,transparent);\n  --dshpc-cyan:#0e7490;\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 78%,#000000);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 64%,#000000);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 8%,transparent);\n  --dshpc-teal:#0f766e;\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 78%,#000000);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 64%,#000000);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 8%,transparent);\n  --dshpc-orange:#c2410c;\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 78%,#000000);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 64%,#000000);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 8%,transparent);\n  --dshpc-indigo:#4f46e5;\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 78%,#000000);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 64%,#000000);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 8%,transparent);\n  --dshpc-rose:#e11d48;\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 78%,#000000);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 64%,#000000);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 8%,transparent);\n  --dshpc-slate:#475569;\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 78%,#000000);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 64%,#000000);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 8%,transparent);\n\n  /* ⚠️ 2026-10-18 用户拍板：宿主 alias 的 hover（暗色白 8% / 亮色 6%）**太弱**，\n     「移上去要仔细看才看得出来」⇒ 不再委托宿主 hover 别名，改为自掺中性色并加重：\n     亮色掺黑 10%、暗色掺白 14%（active 再加一档）。按钮 / 分段轨道 / 各类 hover 底同时受益。\n     ⚠️ 必须保留 rgba 兜底行在前（本文件惯例，见 icon-plate 注释）：掺的是**固定中性色**\n     （neutral-900=#0f0f0f / neutral-00=#fff），预计算无损；旧内核不认 color-mix 时走兜底，\n     否则整条 background:var(--seg-track) 作废 ⇒ 分段轨道透明（真踩过：预览站轨道消失）。 */\n  --dshpc-hover:rgba(15,15,15,.10);\n  --dshpc-active:rgba(15,15,15,.18);\n  /* 分段控件轨道底：专用 token（rgba 字面量、不借 --dshpc-hover 中转）——\n     2026-10-19 教训：变量链中间任何一环 invalid ⇒ background 整条作废、轨道全透明。\n     亮色：黑 7%（比 hover 的 10% 淡一档，选中白片才跳得出）。 */\n  --dshpc-seg-track:rgba(15,15,15,.07);\n  --dshpc-mask:var(--dsw-alias-bg-mask-1,#0000003d);\n  /* 「选中面」（2026-10-06，任务日程页首创）= 当前底色**朝更深掺 12% 文字色**：\n     浅色主题下文字色是黑 ⇒ 选中面比常态底色**深一档**。深色分支见 body[data-ds-dark-theme]（朝背景色掺）。\n     语义：标记「正在看的东西」，比常态明显、又不许盖住内容（不许用半透明叠状态色）。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 88%,var(--dshpc-fg));\n  /* 任务日程页本月格默认底（2026-10-06 → 续2）：浅色下给**淡蓝**（business 8% 透白底）——\n     参照用户参考稿里未选中日程块 / Tuesday 列的那种蓝、再浅一点点；\n     相邻月补位格仍走 --dshpc-surface-2（更灰），不受影响。\n     深色段维持 #23262e（用户：深色 UI 已差不多，不动）。 */\n  --dshpc-cal-cell-bg:color-mix(in srgb,var(--dshpc-business) 8%,var(--dshpc-surface-1));\n  /* 任务日程页「点开某天」展开的面板底（2026-10-06 续）：浅色下**无限接近白、只带一丁点灰**\n     （neutral-50 = #fafafa）——面板里装半透明执行记录列表，底再深整片就发糊发灰；\n     深色段沿用原 selected-bg 暗值，保持不动。 */\n  --dshpc-cal-panel-bg:var(--dsw-static-neutral-50,#fafafa);\n  /* 任务日程页本月格 hover 底（浅色段，2026-10-06 续3）：不再走灰色通用交互底——\n     鼠标移上去应是「更亮一点点的蓝」（与深色段同语义：hover = 提亮的蓝，不是灰下去）。\n     浓度**介于**表头蓝（14%）与未选中格蓝（8%）之间、略偏表头一侧：business 12% 透白底\n     （比表头浅一点、比未选中格深一点）。 */\n  --dshpc-cal-cell-hover:color-mix(in srgb,var(--dshpc-business) 12%,var(--dshpc-surface-1));\n\n  /* ── 投影 / 焦点 ──────────────────────────────────────────────────── */\n  --dshpc-shadow-1:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  /* 亮片自带的浮起感（选中态用；与 --dshpc-surface-raised 配对） */\n  --dshpc-shadow-raised:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  --dshpc-shadow-2:var(--dsw-shadow-lv3,0 12px 32px 0 #00000014);\n  /* 键盘焦点环。⚠️ 不用宿主 --dsw-focus-ring-color：它默认值是 transparent（兜底不生效、会隐身） */\n  --dshpc-focus:var(--dsw-alias-state-business-primary,#3b5bdb);\n\n  /* ── 圆角（宿主真值 4 / 8 / 12 / 16 / 20 / 28）─────────────────────── */\n  --dshpc-radius-xs:var(--dsw-radius-xs,4px);\n  --dshpc-radius-sm:var(--dsw-radius-sm,8px);\n  --dshpc-radius-md:var(--dsw-radius-md,12px);\n  --dshpc-radius-lg:var(--dsw-radius-lg,16px);\n  --dshpc-radius-xl:var(--dsw-radius-xl,20px);\n  --dshpc-radius-panel:var(--dsw-radius-panel,28px);\n  /* 全圆（胶囊标签）：宿主的 radius 档最大只有 28px，撑不满 24px 高的 chip */\n  --dshpc-radius-pill:999px;\n\n  /* ── 间距四拍（只许用这四档，不许出现 5 / 7 / 9px）────────────────── */\n  --dshpc-space-1:4px;\n  --dshpc-space-2:8px;\n  --dshpc-space-3:12px;\n  --dshpc-space-4:16px;\n\n  /* ── 控件高度：离散三档（控件用 size=\"sm|md|lg\" 选；调用点不许自定义高度，\n       真不够用才允许在调用点本地覆盖 --dshpc-control-h-*，属例外而非常态）── */\n  --dshpc-control-h-sm:24px;\n  --dshpc-control-h-md:28px;\n  --dshpc-control-h-lg:32px;\n\n  /* ── 字号 / 行高：直绑宿主字号族（宿主真值 11 / 12 / 13 / 14 / 16）───── */\n  --dshpc-font-xs:var(--dsw-font-xxxs-11-font-size,11px);\n  --dshpc-font-sm:var(--dsw-font-xxs-12-font-size,12px);\n  --dshpc-font-md:var(--dsw-font-xs-13-font-size,13px);\n  --dshpc-font-lg:var(--dsw-font-s-14-font-size,14px);\n  --dshpc-font-xl:var(--dsw-font-base-16-font-size,16px);\n  --dshpc-line-xs:var(--dsw-font-xxxs-11-line-height,14px);\n  --dshpc-line-sm:var(--dsw-font-xxs-12-line-height,18px);\n  --dshpc-line-md:var(--dsw-font-xs-13-line-height,20px);\n  --dshpc-line-lg:var(--dsw-font-s-14-line-height,22px);\n  --dshpc-line-xl:var(--dsw-font-base-16-line-height,24px);\n  --dshpc-font-mono:var(--ds-font-family-code,monospace);\n\n  /* ── 层级阶梯（业务文件不许再写裸 z-index）───────────────────────── */\n  /* 页面级预览分栏 → 抽屉（新建/编辑）→ 弹窗/确认框 → 浮层菜单 → 浮层提示 */\n  /* 内容层吸顶（天标签 / 表头这类「跟着滚但压住同层内容」的元素）：只压同层兄弟，\n     必须低于下面所有浮层档 —— 所以它不是「开新浮层档」，而是内容层内部的排序位。 */\n  --dshpc-z-sticky:10;\n  --dshpc-z-dock:1030;\n  --dshpc-z-drawer:1040;\n  --dshpc-z-modal:1070;\n  --dshpc-z-menu:1100;\n  --dshpc-z-tip:1200;\n  /* 语义别名（2026-11-03 面板皮肤统一）：业务文件只许用这两个说「我要一层浮层」，\n     不再各自写 1099/1100/1200/1201 这类字面量。\n       panel   = 浮层面板本体（picker 弹窗、锚定面板）；\n       popmenu = 叠在面板之上的菜单（▾ 选层、Picker 下拉）与其透明遮罩。 */\n  --dshpc-z-panel:var(--dshpc-z-menu);\n  --dshpc-z-popmenu:var(--dshpc-z-tip);\n\n  /* ── 动效 ─────────────────────────────────────────────────────────── */\n  --dshpc-dur:var(--ds-transition-duration,.2s);\n  --dshpc-dur-fast:var(--ds-transition-duration-fast,.12s);\n  --dshpc-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));\n  /* 运行中状态的脉动时长（2026-10-06 统一前后两端：任务配置里的绿呼吸 → 蓝、放慢；\n     执行记录里的蓝闪 → 放慢一点。两者用同一个值，动画形状本就一致）。 */\n  --dshpc-dur-run:500ms;\n}\n\n/* ── 明暗差异的**唯一**落点 ──────────────────────────────────────────────\n   判据 = body[data-ds-dark-theme]（宿主 0.2.0-rc.2 源码核实：启动脚本 toggleAttribute 写入，\n   唯一明暗判据；插件禁止用 prefers-color-scheme —— 它跟的是系统、不是用户在宿主里的选择）。\n   下面只放 alias 表达不了的「固定中性面」；颜色若能靠 alias 自动跟随，一律不要写在这里。 */\nbody[data-ds-dark-theme]{\n  /* 深色段的蓝**刻意不跟随宿主 alias**（唯一例外）：宿主暗色 alias 给的是 #60a5fa 一档的高亮蓝，\n     实心面（Chip / Button info / 日期选中格）压白字会发糊 —— 用户 2026-10-29 实测反馈。\n     ⇒ 深色下改定向浅色状态的蓝（#3b5bdb）靠，只在明度上抬一点点，保证它在暗底上仍看得见：\n     #4c6bd8 对白字 ≈4.8:1（原亮蓝只有 ~2.3:1），对日历格底 ≈3.2:1 仍过 UI 件的 3:1 线。\n     代价：宿主换品牌色时深色不再自动跟着变，需要这里手动同步。 */\n  --dshpc-business:#4c6bd8;\n  --dshpc-solid:var(--dsw-static-neutral-900,#0f0f0f);\n  --dshpc-on-solid:var(--dsw-static-neutral-00,#fff);\n  /* 实心按钮 hover / active（暗色版）：黑底（浅色主题的近黑 → 暗色下的近白）掺黑压深；\n     红 / 绿 / 黄 / 蓝掺白提亮。与亮色段方向相反，保证两种主题下「一眼看出变了」。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 80%,#000000);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 66%,#000000);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#ffffff);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#ffffff);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#ffffff);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#ffffff);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#ffffff);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#ffffff);\n  /* 同上：掺白比例从 22% / 36% 收到 12% / 22% —— 底色已变深，照旧比例提亮会在 hover 瞬间\n     把白字对比打回 ~3:1（正是用户嫌糊的那一档）；收窄后 hover 仍可感知、字仍清晰。 */\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 88%,#ffffff);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 78%,#ffffff);\n  /* 暗色 hover 掺白 14% / active 24%（对齐上面 2026-10-18 的加重拍板）。rgba 兜底行同上。 */\n  --dshpc-hover:rgba(255,255,255,.14);\n  --dshpc-active:rgba(255,255,255,.24);\n  /* 分段轨道（暗色版）：白 10%——比 hover 淡一档，选中亮片才跳得出。 */\n  --dshpc-seg-track:rgba(255,255,255,.10);\n  --dshpc-plate:var(--dsw-static-neutral-850,#212123);\n  --dshpc-plate-hover:var(--dsw-static-neutral-800,#292929);\n  --dshpc-icon-plate:rgba(255,255,255,.05);\n  /* 暗色主题**反过来**：表头要比卡片面**亮**、比斑马纹再**浅一档**（用户：纯黑背景没法看）。 */\n  --dshpc-head-bg:var(--dshpc-surface-2);\n  /* 表格（2026-10-30 用户二次定案：与通栏互换底色）：通栏底取表头原来那色 #151b23\n     （亮色段对应 #f6f8fa）；表头默认底沿用亮色段定义的 --dshpc-surface-sunken，不在暗色段重写；\n     行 hover 是「一层极淡的白」≈3% —— 暗底上用黑会越悬越暗，看不出「浅灰」反馈。 */\n  --dshpc-table-banner-bg:#151b23;\n  --dshpc-table-row-hover:rgba(255,255,255,.03);\n  /* 暗色底板**微亮**；hover **更亮**（原先 hover 取 plate-hover 反而更淡 ⇒ 鼠标移上去就没了）。 */\n  --dshpc-chip-bg:rgba(255,255,255,.08);\n  --dshpc-chip-bg-hover:rgba(255,255,255,.16);\n  /* 暗色下蓝色要更亮、透明度略高才压得住深底。 */\n  --dshpc-open-bg:rgba(96,165,250,.18);\n  --dshpc-open-bg-soft:rgba(96,165,250,.08);\n  --dshpc-card-hover:rgba(96,165,250,.13);\n  /* 语义色**浅底**（深色版）：用户嫌深色的绿 / 红「有点深」⇒ 压到 **5%**（浅色段是 8%），\n     更贴近面板底色、存在感更弱；块底与状态色竖条仍同源（竖条是实色，不受这条影响）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 5%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 5%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 5%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 5%,transparent);\n  /* 扩展色深色派生：底色写死、hover 掺白 12%/22%（同 business，防白字发糊），soft 5%。 */\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 88%,#ffffff);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 78%,#ffffff);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 5%,transparent);\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 88%,#ffffff);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 78%,#ffffff);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 5%,transparent);\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 88%,#ffffff);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 78%,#ffffff);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 5%,transparent);\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 88%,#ffffff);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 78%,#ffffff);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 5%,transparent);\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 88%,#ffffff);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 78%,#ffffff);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 5%,transparent);\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 88%,#ffffff);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 78%,#ffffff);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 5%,transparent);\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 88%,#ffffff);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 78%,#ffffff);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 5%,transparent);\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 88%,#ffffff);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 78%,#ffffff);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 5%,transparent);\n  /* 「选中面」（深色版，2026-10-06）：掺 **~40% 背景色**（--dshpc-surface-base）⇒ 无限接近页面背景的黑、\n     只比背景略深一点点（用户：深色下展开区压着任务透明绿会发灰，底色要尽量贴近背景才不显灰）。\n     ⚠️ 深色下不能掺文字色 —— 那是白，会变亮，选中反而比本月日期浅。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n  /* 任务日程页本月格的默认底（深色版，2026-10-06）：深的、带点灰蓝的暗色（用户给的参考图 ≈ #23262e），\n     比原来的卡片面更沉、更偏蓝灰；选中格仍走 --dshpc-selected-bg（更暗一档），层级不变。 */\n  --dshpc-cal-cell-bg:#23262e;\n  /* 任务日程页本月格 hover 底（深色段，2026-10-06）：原先走 --dshpc-hover（宿主浅色叠加）在深底上显得\n     「灰发亮」，不好看 ⇒ 换成更贴底的蓝调微亮（与 open-bg-soft 同族），hover 时不刺眼、又有反馈。 */\n  --dshpc-cal-cell-hover:rgba(96,165,250,.12);\n  /* 任务日程页展开面板底（深色段，2026-10-06 续）：与原 selected-bg 暗值一致，深色 UI 不动 */\n  --dshpc-cal-panel-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/design/style-kit.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/design/style-kit.js
 		/** 全生态统一的 CSS 变量前缀。 */
 		const CSS_PREFIX = "dshpc";
 		/** token 域固定名：变量定义必须先于消费它的规则出现。 */
@@ -120,7 +120,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/css.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/css.js
 		/**
 		* 当前插件的样式设施。
 		*
@@ -128,12 +128,12 @@ window.__ModuleLoader__.load({
 		* 模块级变量天然按插件隔离（不像共享运行时那样会互相踩）。
 		* 插件启动时 `setStyleKit(createStyleKit({ id }))` 一次即可；不设就走默认 kit。
 		*/
-		let current$1 = createStyleKit({ id: "dsh-plugin-core-ui" });
+		let current$2 = createStyleKit({ id: "dsh-plugin-core-ui" });
 		function setStyleKit(kit) {
-			current$1 = kit;
+			current$2 = kit;
 		}
 		function getStyleKit() {
-			return current$1;
+			return current$2;
 		}
 		/**
 		* 只登记 token 变量（幂等；不挂载 `<style>`）。
@@ -142,7 +142,7 @@ window.__ModuleLoader__.load({
 		* 也会自行登记 token（见 {@link ensureComponentStyles}）。token 域始终排在所有控件域之前
 		* （`style-kit.ts` 的 composeCss 强制），所以颜色 / 变量引用链不受拆分影响。
 		*/
-		function ensureControls(kit = current$1) {
+		function ensureControls(kit = current$2) {
 			kit.registerStyle("tokens", kit.tokensCss);
 		}
 		/**
@@ -156,2284 +156,312 @@ window.__ModuleLoader__.load({
 		* @param css 该控件自己的 CSS 文本。
 		* @param kit 样式设施（默认取当前插件的 kit）。
 		*/
-		function ensureComponentStyles(domain, css, kit = current$1) {
+		function ensureComponentStyles(domain, css, kit = current$2) {
 			kit.registerStyle("tokens", kit.tokensCss);
 			kit.applyStyle(domain, css);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/picker-logic.js
-		/** 两种输入归一成 groups：给了 `options` 就当成一个无标题的组。 */
-		function toGroups(groups, options) {
-			if (groups !== void 0 && groups.length > 0) return groups;
-			const flat = options ?? [];
-			return flat.length === 0 ? [] : [{
-				value: "",
-				label: "",
-				options: flat
-			}];
-		}
-		function flattenOptions(groups) {
-			const out = [];
-			for (const g of groups) out.push(...g.options);
-			return out;
-		}
-		/** 按关键词过滤（大小写不敏感，匹配 label；整组无命中则整组去掉）。 */
-		function filterGroups(groups, query) {
-			const q = query.trim().toLowerCase();
-			if (q === "") return groups;
-			const out = [];
-			for (const g of groups) {
-				const hit = g.options.filter((o) => o.label.toLowerCase().includes(q));
-				if (hit.length > 0) out.push({
-					...g,
-					options: hit
-				});
-			}
-			return out;
-		}
-		/** 多选切换；`max` 达到上限时不再添加（返回原数组，不静默截断）。 */
-		function toggleValue(current, value, max) {
-			if (current.indexOf(value) >= 0) return current.filter((v) => v !== value);
-			if (max !== void 0 && current.length >= max) return [...current];
-			return [...current, value];
-		}
-		function labelsOf(groups, values) {
-			const all = flattenOptions(groups);
-			const out = [];
-			for (const v of values) {
-				const hit = all.find((o) => o.value === v);
-				if (hit !== void 0) out.push(hit.label);
-			}
-			return out;
-		}
-		/** 触发器宽度解析：把 width / minWidth / maxWidth 译成内联样式。
-		* 定宽（width）忽略 min/max 并锁定三值；否则各自生效，缺省沿用 CSS 默认（min 120px、max 100%）。
-		* 数值按 px 处理，字符串原样透传。 */
-		function resolveTriggerSizing(opts) {
-			const px = (v) => typeof v === "number" ? `${v}px` : v;
-			if (opts.width !== void 0) {
-				const w = px(opts.width);
-				return {
-					width: w,
-					minWidth: w,
-					maxWidth: w
-				};
-			}
-			const style = {};
-			if (opts.minWidth !== void 0) style.minWidth = px(opts.minWidth);
-			if (opts.maxWidth !== void 0) style.maxWidth = px(opts.maxWidth);
-			return style;
-		}
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/marquee-css.generated.js
+		const MARQUEE_CSS = "/* 跑马灯（MarqueeText）：双层——外层只裁剪，内层才 transform 滚动；非 hover 内层自带省略号。\n   2026-10-20：本文件原是杂烩「select.css」（下拉 / 日历 / 时分的皮肤都装过），随着那些控件\n   一个个删完，最后只剩跑马灯，故按本包「一个 css 服务一个对象」的格局改名归档。\n   同批清掉的还有零引用的省略号类 .dshpc-ellipsis —— 本包三个用到截断的地方都没采纳它。 */\n.dshpc-mq{display:block;overflow:hidden;white-space:nowrap;}\n.dshpc-mq .dshpc-mq-in{display:inline-block;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top;}\n/* ⚠️ 跑法（用户 2026-10-03 拍板）：**跑一遍、停在尾字**（播放 1 次 + forwards），不来回弹、不无限跑。\n   滚距 = 精确溢出量 ⇒ 停下时最后一个字正好贴右缘，**不会跑进黑块**（黑块是旧手写版把\n   内层盒子裁了、按「半截文本」平移导致的）。鼠标移开 ⇒ :hover 失效 ⇒ 自动复位回省略号态。 */\n.dshpc-mq-run:hover .dshpc-mq-in{max-width:none;overflow:visible;animation:dshpc-mq-scroll var(--dshpc-mq-dur,6s) linear .4s 1 forwards;}\n@keyframes dshpc-mq-scroll{from{transform:translateX(0)}to{transform:translateX(var(--dshpc-mq-dist,-40px))}}\n/* 溢出渐影（用户 2026-10-24 拍板「左右稍微有点渐影」；官方口径 = dsh-client-ui-primitives@0.2.1-rc.2\n   PathLabel.module.css:13-15：mask-image 线性渐隐 + 28px 随官方）。⚠️ 只在 **hover 滚动态** 加：\n   静态态（三个点）不要渐影（用户 2026-10-24 二次拍板），hover 滚动时两端渐影——左缘柔化被裁的文字头。 */\n/* token-ok：遮罩模板色（纯黑 = 完全不透明），不是主题色；换主题也不该变。 */\n.dshpc-mq-run:hover{mask-image:linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/@floating-ui+utils@0.2.12/node_modules/@floating-ui/utils/dist/floating-ui.utils.dom.mjs
-		function hasWindow() {
-			return typeof window !== "undefined";
-		}
-		function getNodeName(node) {
-			if (isNode(node)) return (node.nodeName || "").toLowerCase();
-			return "#document";
-		}
-		function getWindow(node) {
-			var _node$ownerDocument;
-			return (node == null || (_node$ownerDocument = node.ownerDocument) == null ? void 0 : _node$ownerDocument.defaultView) || window;
-		}
-		function getDocumentElement(node) {
-			var _ref;
-			return (_ref = (isNode(node) ? node.ownerDocument : node.document) || window.document) == null ? void 0 : _ref.documentElement;
-		}
-		function isNode(value) {
-			if (!hasWindow()) return false;
-			return value instanceof Node || value instanceof getWindow(value).Node;
-		}
-		function isElement(value) {
-			if (!hasWindow()) return false;
-			return value instanceof Element || value instanceof getWindow(value).Element;
-		}
-		function isHTMLElement(value) {
-			if (!hasWindow()) return false;
-			return value instanceof HTMLElement || value instanceof getWindow(value).HTMLElement;
-		}
-		function isShadowRoot(value) {
-			if (!hasWindow() || typeof ShadowRoot === "undefined") return false;
-			return value instanceof ShadowRoot || value instanceof getWindow(value).ShadowRoot;
-		}
-		function isOverflowElement(element) {
-			const { overflow, overflowX, overflowY, display } = getComputedStyle$1(element);
-			return /auto|scroll|overlay|hidden|clip/.test(overflow + overflowY + overflowX) && display !== "inline" && display !== "contents";
-		}
-		function isTableElement(element) {
-			return /^(table|td|th)$/.test(getNodeName(element));
-		}
-		function isTopLayer(element) {
-			try {
-				if (element.matches(":popover-open")) return true;
-			} catch (_e) {}
-			try {
-				return element.matches(":modal");
-			} catch (_e) {
-				return false;
-			}
-		}
-		const willChangeRe = /transform|translate|scale|rotate|perspective|filter/;
-		const containRe = /paint|layout|strict|content/;
-		const isNotNone = (value) => !!value && value !== "none";
-		let isWebKitValue;
-		function isContainingBlock(elementOrCss) {
-			const css = isElement(elementOrCss) ? getComputedStyle$1(elementOrCss) : elementOrCss;
-			return isNotNone(css.transform) || isNotNone(css.translate) || isNotNone(css.scale) || isNotNone(css.rotate) || isNotNone(css.perspective) || !isWebKit() && (isNotNone(css.backdropFilter) || isNotNone(css.filter)) || willChangeRe.test(css.willChange || "") || containRe.test(css.contain || "");
-		}
-		function getContainingBlock(element) {
-			let currentNode = getParentNode(element);
-			while (isHTMLElement(currentNode) && !isLastTraversableNode(currentNode)) {
-				if (isContainingBlock(currentNode)) return currentNode;
-				else if (isTopLayer(currentNode)) return null;
-				currentNode = getParentNode(currentNode);
-			}
-			return null;
-		}
-		function isWebKit() {
-			if (isWebKitValue == null) isWebKitValue = typeof CSS !== "undefined" && CSS.supports && CSS.supports("-webkit-backdrop-filter", "none");
-			return isWebKitValue;
-		}
-		function isLastTraversableNode(node) {
-			return /^(html|body|#document)$/.test(getNodeName(node));
-		}
-		function getComputedStyle$1(element) {
-			return getWindow(element).getComputedStyle(element);
-		}
-		function getNodeScroll(element) {
-			if (isElement(element)) return {
-				scrollLeft: element.scrollLeft,
-				scrollTop: element.scrollTop
-			};
-			return {
-				scrollLeft: element.scrollX,
-				scrollTop: element.scrollY
-			};
-		}
-		function getParentNode(node) {
-			if (getNodeName(node) === "html") return node;
-			const result = node.assignedSlot || node.parentNode || isShadowRoot(node) && node.host || getDocumentElement(node);
-			return isShadowRoot(result) ? result.host : result;
-		}
-		function getNearestOverflowAncestor(node) {
-			const parentNode = getParentNode(node);
-			if (isLastTraversableNode(parentNode)) return (node.ownerDocument || node).body;
-			if (isHTMLElement(parentNode) && isOverflowElement(parentNode)) return parentNode;
-			return getNearestOverflowAncestor(parentNode);
-		}
-		function getOverflowAncestors(node, list, traverseIframes) {
-			var _node$ownerDocument2;
-			if (list === void 0) list = [];
-			if (traverseIframes === void 0) traverseIframes = true;
-			const scrollableAncestor = getNearestOverflowAncestor(node);
-			const isBody = scrollableAncestor === ((_node$ownerDocument2 = node.ownerDocument) == null ? void 0 : _node$ownerDocument2.body);
-			const win = getWindow(scrollableAncestor);
-			if (isBody) {
-				const frameElement = getFrameElement(win);
-				return list.concat(win, win.visualViewport || [], isOverflowElement(scrollableAncestor) ? scrollableAncestor : [], frameElement && traverseIframes ? getOverflowAncestors(frameElement) : []);
-			} else return list.concat(scrollableAncestor, getOverflowAncestors(scrollableAncestor, [], traverseIframes));
-		}
-		function getFrameElement(win) {
-			return win.parent && Object.getPrototypeOf(win.parent) ? win.frameElement : null;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/@floating-ui+utils@0.2.12/node_modules/@floating-ui/utils/dist/floating-ui.utils.mjs
-		const min = Math.min;
-		const max = Math.max;
-		const round = Math.round;
-		const floor = Math.floor;
-		const createCoords = (v) => ({
-			x: v,
-			y: v
-		});
-		const oppositeSideMap = {
-			left: "right",
-			right: "left",
-			bottom: "top",
-			top: "bottom"
-		};
-		function clamp(start, value, end) {
-			return max(start, min(value, end));
-		}
-		function evaluate(value, param) {
-			return typeof value === "function" ? value(param) : value;
-		}
-		function getSide(placement) {
-			return placement.split("-")[0];
-		}
-		function getAlignment(placement) {
-			return placement.split("-")[1];
-		}
-		function getOppositeAxis(axis) {
-			return axis === "x" ? "y" : "x";
-		}
-		function getAxisLength(axis) {
-			return axis === "y" ? "height" : "width";
-		}
-		function getSideAxis(placement) {
-			const firstChar = placement[0];
-			return firstChar === "t" || firstChar === "b" ? "y" : "x";
-		}
-		function getAlignmentAxis(placement) {
-			return getOppositeAxis(getSideAxis(placement));
-		}
-		function getAlignmentSides(placement, rects, rtl) {
-			if (rtl === void 0) rtl = false;
-			const alignment = getAlignment(placement);
-			const alignmentAxis = getAlignmentAxis(placement);
-			const length = getAxisLength(alignmentAxis);
-			let mainAlignmentSide = alignmentAxis === "x" ? alignment === (rtl ? "end" : "start") ? "right" : "left" : alignment === "start" ? "bottom" : "top";
-			if (rects.reference[length] > rects.floating[length]) mainAlignmentSide = getOppositePlacement(mainAlignmentSide);
-			return [mainAlignmentSide, getOppositePlacement(mainAlignmentSide)];
-		}
-		function getExpandedPlacements(placement) {
-			const oppositePlacement = getOppositePlacement(placement);
-			return [
-				getOppositeAlignmentPlacement(placement),
-				oppositePlacement,
-				getOppositeAlignmentPlacement(oppositePlacement)
-			];
-		}
-		function getOppositeAlignmentPlacement(placement) {
-			return placement.includes("start") ? placement.replace("start", "end") : placement.replace("end", "start");
-		}
-		const lrPlacement = ["left", "right"];
-		const rlPlacement = ["right", "left"];
-		const tbPlacement = ["top", "bottom"];
-		const btPlacement = ["bottom", "top"];
-		function getSideList(side, isStart, rtl) {
-			switch (side) {
-				case "top":
-				case "bottom":
-					if (rtl) return isStart ? rlPlacement : lrPlacement;
-					return isStart ? lrPlacement : rlPlacement;
-				case "left":
-				case "right": return isStart ? tbPlacement : btPlacement;
-				default: return [];
-			}
-		}
-		function getOppositeAxisPlacements(placement, flipAlignment, direction, rtl) {
-			const alignment = getAlignment(placement);
-			let list = getSideList(getSide(placement), direction === "start", rtl);
-			if (alignment) {
-				list = list.map((side) => side + "-" + alignment);
-				if (flipAlignment) list = list.concat(list.map(getOppositeAlignmentPlacement));
-			}
-			return list;
-		}
-		function getOppositePlacement(placement) {
-			const side = getSide(placement);
-			return oppositeSideMap[side] + placement.slice(side.length);
-		}
-		function expandPaddingObject(padding) {
-			var _padding$top, _padding$right, _padding$bottom, _padding$left;
-			return {
-				top: (_padding$top = padding.top) != null ? _padding$top : 0,
-				right: (_padding$right = padding.right) != null ? _padding$right : 0,
-				bottom: (_padding$bottom = padding.bottom) != null ? _padding$bottom : 0,
-				left: (_padding$left = padding.left) != null ? _padding$left : 0
-			};
-		}
-		function getPaddingObject(padding) {
-			return typeof padding !== "number" ? expandPaddingObject(padding) : {
-				top: padding,
-				right: padding,
-				bottom: padding,
-				left: padding
-			};
-		}
-		function rectToClientRect(rect) {
-			const { x, y, width, height } = rect;
-			return {
-				width,
-				height,
-				top: y,
-				left: x,
-				right: x + width,
-				bottom: y + height,
-				x,
-				y
-			};
-		}
-		/*!
-		* tabbable 6.5.1
-		* @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
-		*/
-		//#endregion
-		//#region ../../node_modules/.pnpm/@floating-ui+react@0.27.20_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/@floating-ui/react/dist/floating-ui.react.utils.mjs
-		var import_dist = (/* @__PURE__ */ __commonJSMin(((exports) => {
-			var candidateSelector = /* #__PURE__ */ [
-				"input:not([inert]):not([inert] *)",
-				"select:not([inert]):not([inert] *)",
-				"textarea:not([inert]):not([inert] *)",
-				"a[href]:not([inert]):not([inert] *)",
-				"area[href]:not([inert]):not([inert] *)",
-				"button:not([inert]):not([inert] *)",
-				"[tabindex]:not(slot):not([inert]):not([inert] *)",
-				"audio[controls]:not([inert]):not([inert] *)",
-				"video[controls]:not([inert]):not([inert] *)",
-				"[contenteditable]:not([contenteditable=\"false\"]):not([inert]):not([inert] *)",
-				"details>summary:first-of-type:not([inert]):not([inert] *)",
-				"details:not([inert]):not([inert] *)"
-			].join(",");
-			var NoElement = typeof Element === "undefined";
-			var matches = NoElement ? function() {} : Element.prototype.matches || Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-			var getRootNode = !NoElement && Element.prototype.getRootNode ? function(element) {
-				return element == null || element.getRootNode == null ? void 0 : element.getRootNode();
-			} : function(element) {
-				return element == null ? void 0 : element.ownerDocument;
-			};
-			/**
-			* Determines if a node is inert or in an inert ancestor.
-			* @param {Node} [node]
-			* @param {boolean} [lookUp] If true and `node` is not inert, looks up at ancestors to
-			*  see if any of them are inert. If false, only `node` itself is considered.
-			* @returns {boolean} True if inert itself or by way of being in an inert ancestor.
-			*  False if `node` is falsy.
-			*/
-			var _isInert = function isInert(node, lookUp) {
-				if (lookUp === void 0) lookUp = true;
-				var inertAtt = node == null || node.getAttribute == null ? void 0 : node.getAttribute("inert");
-				return inertAtt === "" || inertAtt === "true" || lookUp && node && (typeof node.closest === "function" ? node.closest("[inert]") : _isInert(node.parentNode));
-			};
-			/**
-			* Determines if a node's content is editable.
-			* @param {Element} [node]
-			* @returns True if it's content-editable; false if it's not or `node` is falsy.
-			*/
-			var isContentEditable = function isContentEditable(node) {
-				var _node$getAttribute;
-				var attValue = node == null || node.getAttribute == null || (_node$getAttribute = node.getAttribute("contenteditable")) == null ? void 0 : _node$getAttribute.toLowerCase();
-				return attValue === "" || attValue === "true" || attValue === "plaintext-only";
-			};
-			/**
-			* @param {Element} el container to check in
-			* @param {boolean} includeContainer add container to check
-			* @param {(node: Element) => boolean} filter filter candidates
-			* @returns {Element[]}
-			*/
-			var getCandidates = function getCandidates(el, includeContainer, filter) {
-				if (_isInert(el)) return [];
-				var candidates = Array.prototype.slice.apply(el.querySelectorAll(candidateSelector));
-				if (includeContainer && matches.call(el, candidateSelector)) candidates.unshift(el);
-				candidates = candidates.filter(filter);
-				return candidates;
-			};
-			/**
-			* @callback GetShadowRoot
-			* @param {Element} element to check for shadow root
-			* @returns {ShadowRoot|boolean} ShadowRoot if available or boolean indicating if a shadowRoot is attached but not available.
-			*/
-			/**
-			* @callback ShadowRootFilter
-			* @param {Element} shadowHostNode the element which contains shadow content
-			* @returns {boolean} true if a shadow root could potentially contain valid candidates.
-			*/
-			/**
-			* @typedef {Object} CandidateScope
-			* @property {Element} scopeParent contains inner candidates
-			* @property {Element[]} candidates list of candidates found in the scope parent
-			*/
-			/**
-			* @typedef {Object} IterativeOptions
-			* @property {GetShadowRoot|boolean} getShadowRoot true if shadow support is enabled; falsy if not;
-			*  if a function, implies shadow support is enabled and either returns the shadow root of an element
-			*  or a boolean stating if it has an undisclosed shadow root
-			* @property {(node: Element) => boolean} filter filter candidates
-			* @property {boolean} flatten if true then result will flatten any CandidateScope into the returned list
-			* @property {ShadowRootFilter} shadowRootFilter filter shadow roots;
-			*/
-			/**
-			* @param {Element[]} elements list of element containers to match candidates from
-			* @param {boolean} includeContainer add container list to check
-			* @param {IterativeOptions} options
-			* @returns {Array.<Element|CandidateScope>}
-			*/
-			var _getCandidatesIteratively = function getCandidatesIteratively(elements, includeContainer, options) {
-				var candidates = [];
-				var elementsToCheck = Array.from(elements);
-				while (elementsToCheck.length) {
-					var element = elementsToCheck.shift();
-					if (_isInert(element, false)) continue;
-					if (element.tagName === "SLOT") {
-						var assigned = element.assignedElements();
-						var nestedCandidates = _getCandidatesIteratively(assigned.length ? assigned : element.children, true, options);
-						if (options.flatten) candidates.push.apply(candidates, nestedCandidates);
-						else candidates.push({
-							scopeParent: element,
-							candidates: nestedCandidates
-						});
-					} else {
-						if (matches.call(element, candidateSelector) && options.filter(element) && (includeContainer || !elements.includes(element))) candidates.push(element);
-						var shadowRoot = element.shadowRoot || typeof options.getShadowRoot === "function" && options.getShadowRoot(element);
-						var validShadowRoot = !_isInert(shadowRoot, false) && (!options.shadowRootFilter || options.shadowRootFilter(element));
-						if (shadowRoot && validShadowRoot) {
-							var _nestedCandidates = _getCandidatesIteratively(shadowRoot === true ? element.children : shadowRoot.children, true, options);
-							if (options.flatten) candidates.push.apply(candidates, _nestedCandidates);
-							else candidates.push({
-								scopeParent: element,
-								candidates: _nestedCandidates
-							});
-						} else elementsToCheck.unshift.apply(elementsToCheck, element.children);
-					}
-				}
-				return candidates;
-			};
-			/**
-			* @private
-			* Determines if the node has an explicitly specified `tabindex` attribute.
-			* @param {HTMLElement} node
-			* @returns {boolean} True if so; false if not.
-			*/
-			var hasTabIndex = function hasTabIndex(node) {
-				return !isNaN(parseInt(node.getAttribute("tabindex"), 10));
-			};
-			/**
-			* Determine the tab index of a given node.
-			* @param {HTMLElement} node
-			* @returns {number} Tab order (negative, 0, or positive number).
-			* @throws {Error} If `node` is falsy.
-			*/
-			var getTabIndex = function getTabIndex(node) {
-				if (!node) throw new Error("No node provided");
-				if (node.tabIndex < 0) {
-					if ((/^(AUDIO|VIDEO|DETAILS)$/.test(node.tagName) || isContentEditable(node)) && !hasTabIndex(node)) return 0;
-				}
-				return node.tabIndex;
-			};
-			/**
-			* Determine the tab index of a given node __for sort order purposes__.
-			* @param {HTMLElement} node
-			* @param {boolean} [isScope] True for a custom element with shadow root or slot that, by default,
-			*  has tabIndex -1, but needs to be sorted by document order in order for its content to be
-			*  inserted into the correct sort position.
-			* @returns {number} Tab order (negative, 0, or positive number).
-			*/
-			var getSortOrderTabIndex = function getSortOrderTabIndex(node, isScope) {
-				var tabIndex = getTabIndex(node);
-				if (tabIndex < 0 && isScope && !hasTabIndex(node)) return 0;
-				return tabIndex;
-			};
-			var sortOrderedTabbables = function sortOrderedTabbables(a, b) {
-				return a.tabIndex === b.tabIndex ? a.documentOrder - b.documentOrder : a.tabIndex - b.tabIndex;
-			};
-			var isInput = function isInput(node) {
-				return node.tagName === "INPUT";
-			};
-			var isHiddenInput = function isHiddenInput(node) {
-				return isInput(node) && node.type === "hidden";
-			};
-			var isDetailsWithSummary = function isDetailsWithSummary(node) {
-				return node.tagName === "DETAILS" && Array.prototype.slice.apply(node.children).some(function(child) {
-					return child.tagName === "SUMMARY";
-				});
-			};
-			var getCheckedRadio = function getCheckedRadio(nodes, form) {
-				for (var i = 0; i < nodes.length; i++) if (nodes[i].checked && nodes[i].form === form) return nodes[i];
-			};
-			var isTabbableRadio = function isTabbableRadio(node) {
-				if (!node.name) return true;
-				var radioScope = node.form || getRootNode(node);
-				var queryRadios = function queryRadios(name) {
-					return radioScope.querySelectorAll("input[type=\"radio\"][name=\"" + name + "\"]");
-				};
-				var radioSet;
-				if (typeof window !== "undefined" && typeof window.CSS !== "undefined" && typeof window.CSS.escape === "function") radioSet = queryRadios(window.CSS.escape(node.name));
-				else try {
-					radioSet = queryRadios(node.name);
-				} catch (err) {
-					console.error("Looks like you have a radio button with a name attribute containing invalid CSS selector characters and need the CSS.escape polyfill: %s", err.message);
-					return false;
-				}
-				var checked = getCheckedRadio(radioSet, node.form);
-				return !checked || checked === node;
-			};
-			var isRadio = function isRadio(node) {
-				return isInput(node) && node.type === "radio";
-			};
-			var isNonTabbableRadio = function isNonTabbableRadio(node) {
-				return isRadio(node) && !isTabbableRadio(node);
-			};
-			var isNodeAttached = function isNodeAttached(node) {
-				var _nodeRoot;
-				var nodeRoot = node && getRootNode(node);
-				var nodeRootHost = (_nodeRoot = nodeRoot) == null ? void 0 : _nodeRoot.host;
-				var attached = false;
-				if (nodeRoot && nodeRoot !== node) {
-					var _nodeRootHost, _node$ownerDocument;
-					attached = !!((_nodeRootHost = nodeRootHost) != null && (_nodeRootHost = _nodeRootHost.ownerDocument) != null && _nodeRootHost.contains(nodeRootHost) || node != null && (_node$ownerDocument = node.ownerDocument) != null && _node$ownerDocument.contains(node));
-					while (!attached && nodeRootHost) {
-						var _nodeRoot2, _nodeRootHost2;
-						nodeRoot = getRootNode(nodeRootHost);
-						nodeRootHost = (_nodeRoot2 = nodeRoot) == null ? void 0 : _nodeRoot2.host;
-						attached = !!((_nodeRootHost2 = nodeRootHost) != null && (_nodeRootHost2 = _nodeRootHost2.ownerDocument) != null && _nodeRootHost2.contains(nodeRootHost));
-					}
-				}
-				return attached;
-			};
-			var isZeroArea = function isZeroArea(node) {
-				var _node$getBoundingClie = node.getBoundingClientRect(), width = _node$getBoundingClie.width, height = _node$getBoundingClie.height;
-				return width === 0 && height === 0;
-			};
-			var isHidden = function isHidden(node, _ref) {
-				var displayCheck = _ref.displayCheck, getShadowRoot = _ref.getShadowRoot;
-				if (displayCheck === "full-native") {
-					if ("checkVisibility" in node) return !node.checkVisibility({
-						checkOpacity: false,
-						opacityProperty: false,
-						contentVisibilityAuto: true,
-						visibilityProperty: true,
-						checkVisibilityCSS: true
-					});
-				}
-				var visibility = getComputedStyle(node).visibility;
-				if (visibility === "hidden" || visibility === "collapse") return true;
-				var nodeUnderDetails = matches.call(node, "details>summary:first-of-type") ? node.parentElement : node;
-				if (matches.call(nodeUnderDetails, "details:not([open]) *")) return true;
-				if (!displayCheck || displayCheck === "full" || displayCheck === "full-native" || displayCheck === "legacy-full") {
-					if (typeof getShadowRoot === "function") {
-						var originalNode = node;
-						while (node) {
-							var parentElement = node.parentElement;
-							var rootNode = getRootNode(node);
-							if (parentElement && !parentElement.shadowRoot && getShadowRoot(parentElement) === true) return isZeroArea(node);
-							else if (node.assignedSlot) node = node.assignedSlot;
-							else if (!parentElement && rootNode !== node.ownerDocument) node = rootNode.host;
-							else node = parentElement;
-						}
-						node = originalNode;
-					}
-					if (isNodeAttached(node)) return !node.getClientRects().length;
-					if (displayCheck !== "legacy-full") return true;
-				} else if (displayCheck === "non-zero-area") return isZeroArea(node);
-				return false;
-			};
-			var isDisabledFromFieldset = function isDisabledFromFieldset(node) {
-				if (/^(INPUT|BUTTON|SELECT|TEXTAREA)$/.test(node.tagName)) {
-					var parentNode = node.parentElement;
-					while (parentNode) {
-						if (parentNode.tagName === "FIELDSET" && parentNode.disabled) {
-							for (var i = 0; i < parentNode.children.length; i++) {
-								var child = parentNode.children.item(i);
-								if (child.tagName === "LEGEND") return matches.call(parentNode, "fieldset[disabled] *") ? true : !child.contains(node);
-							}
-							return true;
-						}
-						parentNode = parentNode.parentElement;
-					}
-				}
-				return false;
-			};
-			var isNodeMatchingSelectorFocusable = function isNodeMatchingSelectorFocusable(options, node) {
-				if (node.disabled || isHiddenInput(node) || isHidden(node, options) || isDetailsWithSummary(node) || isDisabledFromFieldset(node)) return false;
-				return true;
-			};
-			var isNodeMatchingSelectorTabbable = function isNodeMatchingSelectorTabbable(options, node) {
-				if (isNonTabbableRadio(node) || getTabIndex(node) < 0 || !isNodeMatchingSelectorFocusable(options, node)) return false;
-				return true;
-			};
-			var isShadowRootTabbable = function isShadowRootTabbable(shadowHostNode) {
-				var tabIndex = parseInt(shadowHostNode.getAttribute("tabindex"), 10);
-				if (isNaN(tabIndex) || tabIndex >= 0) return true;
-				return false;
-			};
-			/**
-			* @param {Array.<Element|CandidateScope>} candidates
-			* @returns Element[]
-			*/
-			var _sortByOrder = function sortByOrder(candidates) {
-				var regularTabbables = [];
-				var orderedTabbables = [];
-				candidates.forEach(function(item, i) {
-					var isScope = !!item.scopeParent;
-					var element = isScope ? item.scopeParent : item;
-					var candidateTabindex = getSortOrderTabIndex(element, isScope);
-					var elements = isScope ? _sortByOrder(item.candidates) : element;
-					if (candidateTabindex === 0) isScope ? regularTabbables.push.apply(regularTabbables, elements) : regularTabbables.push(element);
-					else orderedTabbables.push({
-						documentOrder: i,
-						tabIndex: candidateTabindex,
-						item,
-						isScope,
-						content: elements
-					});
-				});
-				return orderedTabbables.sort(sortOrderedTabbables).reduce(function(acc, sortable) {
-					sortable.isScope ? acc.push.apply(acc, sortable.content) : acc.push(sortable.content);
-					return acc;
-				}, []).concat(regularTabbables);
-			};
-			exports.tabbable = function tabbable(container, options) {
-				options = options || {};
-				var candidates;
-				if (options.getShadowRoot) candidates = _getCandidatesIteratively([container], options.includeContainer, {
-					filter: isNodeMatchingSelectorTabbable.bind(null, options),
-					flatten: false,
-					getShadowRoot: options.getShadowRoot,
-					shadowRootFilter: isShadowRootTabbable
-				});
-				else candidates = getCandidates(container, options.includeContainer, isNodeMatchingSelectorTabbable.bind(null, options));
-				return _sortByOrder(candidates);
-			};
-		})))();
-		function isSafari() {
-			return /apple/i.test(navigator.vendor);
-		}
-		function activeElement(doc) {
-			let activeElement = doc.activeElement;
-			while (((_activeElement = activeElement) == null || (_activeElement = _activeElement.shadowRoot) == null ? void 0 : _activeElement.activeElement) != null) {
-				var _activeElement;
-				activeElement = activeElement.shadowRoot.activeElement;
-			}
-			return activeElement;
-		}
-		function contains$2(parent, child) {
-			if (!parent || !child) return false;
-			const rootNode = child.getRootNode == null ? void 0 : child.getRootNode();
-			if (parent.contains(child)) return true;
-			if (rootNode && isShadowRoot(rootNode)) {
-				let next = child;
-				while (next) {
-					if (parent === next) return true;
-					next = next.parentNode || next.host;
-				}
-			}
-			return false;
-		}
-		function getDocument(node) {
-			return (node == null ? void 0 : node.ownerDocument) || document;
-		}
-		var index$1 = typeof document !== "undefined" ? react$1.useLayoutEffect : function noop() {};
-		const useSafeInsertionEffect = { ...react$1 }.useInsertionEffect || ((fn) => fn());
-		function useEffectEvent(callback) {
-			const ref = react$1.useRef(() => {});
-			useSafeInsertionEffect(() => {
-				ref.current = callback;
-			});
-			return react$1.useCallback(function() {
-				for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) args[_key] = arguments[_key];
-				return ref.current == null ? void 0 : ref.current(...args);
-			}, []);
-		}
-		const getTabbableOptions = () => ({
-			getShadowRoot: true,
-			displayCheck: typeof ResizeObserver === "function" && ResizeObserver.toString().includes("[native code]") ? "full" : "none"
-		});
-		function getTabbableIn(container, dir) {
-			const list = (0, import_dist.tabbable)(container, getTabbableOptions());
-			const len = list.length;
-			if (len === 0) return;
-			const active = activeElement(getDocument(container));
-			const index = list.indexOf(active);
-			return list[index === -1 ? dir === 1 ? 0 : len - 1 : index + dir];
-		}
-		function getNextTabbable(referenceElement) {
-			return getTabbableIn(getDocument(referenceElement).body, 1) || referenceElement;
-		}
-		function getPreviousTabbable(referenceElement) {
-			return getTabbableIn(getDocument(referenceElement).body, -1) || referenceElement;
-		}
-		function isOutsideEvent(event, container) {
-			const containerElement = container || event.currentTarget;
-			const relatedTarget = event.relatedTarget;
-			return !relatedTarget || !contains$2(containerElement, relatedTarget);
-		}
-		function disableFocusInside(container) {
-			(0, import_dist.tabbable)(container, getTabbableOptions()).forEach((element) => {
-				element.dataset.tabindex = element.getAttribute("tabindex") || "";
-				element.setAttribute("tabindex", "-1");
-			});
-		}
-		function enableFocusInside(container) {
-			container.querySelectorAll("[data-tabindex]").forEach((element) => {
-				const tabindex = element.dataset.tabindex;
-				delete element.dataset.tabindex;
-				if (tabindex) element.setAttribute("tabindex", tabindex);
-				else element.removeAttribute("tabindex");
-			});
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/@floating-ui+core@1.8.0/node_modules/@floating-ui/core/dist/floating-ui.core.mjs
-		function computeCoordsFromPlacement(_ref, placement, rtl) {
-			let { reference, floating } = _ref;
-			const sideAxis = getSideAxis(placement);
-			const alignmentAxis = getAlignmentAxis(placement);
-			const alignLength = getAxisLength(alignmentAxis);
-			const side = getSide(placement);
-			const isVertical = sideAxis === "y";
-			const commonX = reference.x + reference.width / 2 - floating.width / 2;
-			const commonY = reference.y + reference.height / 2 - floating.height / 2;
-			const commonAlign = reference[alignLength] / 2 - floating[alignLength] / 2;
-			let coords;
-			switch (side) {
-				case "top":
-					coords = {
-						x: commonX,
-						y: reference.y - floating.height
-					};
-					break;
-				case "bottom":
-					coords = {
-						x: commonX,
-						y: reference.y + reference.height
-					};
-					break;
-				case "right":
-					coords = {
-						x: reference.x + reference.width,
-						y: commonY
-					};
-					break;
-				case "left":
-					coords = {
-						x: reference.x - floating.width,
-						y: commonY
-					};
-					break;
-				default: coords = {
-					x: reference.x,
-					y: reference.y
-				};
-			}
-			const alignment = getAlignment(placement);
-			if (alignment) coords[alignmentAxis] += commonAlign * (alignment === "end" ? 1 : -1) * (rtl && isVertical ? -1 : 1);
-			return coords;
-		}
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/MarqueeText.js
 		/**
-		* Resolves with an object of overflow side offsets that determine how much the
-		* element is overflowing a given clipping boundary on each side.
-		* - positive = overflowing the boundary by that number of pixels
-		* - negative = how many pixels left before it will overflow
-		* - 0 = lies flush with the boundary
-		* @see https://floating-ui.com/docs/detectOverflow
-		*/
-		async function detectOverflow(state, options) {
-			var _await$platform$isEle;
-			if (options === void 0) options = {};
-			const { x, y, platform, rects, elements, strategy } = state;
-			const { boundary = "clippingAncestors", rootBoundary = "viewport", elementContext = "floating", altBoundary = false, padding = 0 } = evaluate(options, state);
-			const paddingObject = getPaddingObject(padding);
-			const element = elements[altBoundary ? elementContext === "floating" ? "reference" : "floating" : elementContext];
-			const clippingClientRect = rectToClientRect(await platform.getClippingRect({
-				element: ((_await$platform$isEle = await (platform.isElement == null ? void 0 : platform.isElement(element))) != null ? _await$platform$isEle : true) ? element : element.contextElement || await (platform.getDocumentElement == null ? void 0 : platform.getDocumentElement(elements.floating)),
-				boundary,
-				rootBoundary,
-				strategy
-			}));
-			const rect = elementContext === "floating" ? {
-				x,
-				y,
-				width: rects.floating.width,
-				height: rects.floating.height
-			} : rects.reference;
-			const offsetParent = await (platform.getOffsetParent == null ? void 0 : platform.getOffsetParent(elements.floating));
-			const offsetScale = await (platform.isElement == null ? void 0 : platform.isElement(offsetParent)) && await (platform.getScale == null ? void 0 : platform.getScale(offsetParent)) || {
-				x: 1,
-				y: 1
-			};
-			const elementClientRect = rectToClientRect(platform.convertOffsetParentRelativeRectToViewportRelativeRect ? await platform.convertOffsetParentRelativeRectToViewportRelativeRect({
-				elements,
-				rect,
-				offsetParent,
-				strategy
-			}) : rect);
-			return {
-				top: (clippingClientRect.top - elementClientRect.top + paddingObject.top) / offsetScale.y,
-				bottom: (elementClientRect.bottom - clippingClientRect.bottom + paddingObject.bottom) / offsetScale.y,
-				left: (clippingClientRect.left - elementClientRect.left + paddingObject.left) / offsetScale.x,
-				right: (elementClientRect.right - clippingClientRect.right + paddingObject.right) / offsetScale.x
-			};
-		}
-		const MAX_RESET_COUNT = 50;
-		/**
-		* Computes the `x` and `y` coordinates that will place the floating element
-		* next to a given reference element.
+		* 跑马灯文本 —— **全站唯一实现**（L2，P6 从 editor-fields 迁入 ui）
 		*
-		* This export does not have any `platform` interface logic. You will need to
-		* write one for the platform you are using Floating UI with.
-		*/
-		const computePosition$1 = async (reference, floating, config) => {
-			const { placement = "bottom", strategy = "absolute", middleware = [], platform } = config;
-			const platformWithDetectOverflow = platform.detectOverflow ? platform : {
-				...platform,
-				detectOverflow
-			};
-			const rtl = await (platform.isRTL == null ? void 0 : platform.isRTL(floating));
-			let rects = await platform.getElementRects({
-				reference,
-				floating,
-				strategy
-			});
-			let { x, y } = computeCoordsFromPlacement(rects, placement, rtl);
-			let statefulPlacement = placement;
-			let resetCount = 0;
-			const middlewareData = {};
-			for (let i = 0; i < middleware.length; i++) {
-				const currentMiddleware = middleware[i];
-				if (!currentMiddleware) continue;
-				const { name, fn } = currentMiddleware;
-				const { x: nextX, y: nextY, data, reset } = await fn({
-					x,
-					y,
-					initialPlacement: placement,
-					placement: statefulPlacement,
-					strategy,
-					middlewareData,
-					rects,
-					platform: platformWithDetectOverflow,
-					elements: {
-						reference,
-						floating
-					}
-				});
-				x = nextX != null ? nextX : x;
-				y = nextY != null ? nextY : y;
-				middlewareData[name] = {
-					...middlewareData[name],
-					...data
-				};
-				if (reset && resetCount < MAX_RESET_COUNT) {
-					resetCount++;
-					if (typeof reset === "object") {
-						if (reset.placement) statefulPlacement = reset.placement;
-						if (reset.rects) rects = reset.rects === true ? await platform.getElementRects({
-							reference,
-							floating,
-							strategy
-						}) : reset.rects;
-						({x, y} = computeCoordsFromPlacement(rects, statefulPlacement, rtl));
-					}
-					i = -1;
-				}
-			}
-			return {
-				x,
-				y,
-				placement: statefulPlacement,
-				strategy,
-				middlewareData
-			};
-		};
-		/**
-		* Optimizes the visibility of the floating element by flipping the `placement`
-		* in order to keep it in view when the preferred placement(s) will overflow the
-		* clipping boundary. Alternative to `autoPlacement`.
-		* @see https://floating-ui.com/docs/flip
-		*/
-		const flip$1 = function(options) {
-			if (options === void 0) options = {};
-			return {
-				name: "flip",
-				options,
-				async fn(state) {
-					var _middlewareData$arrow, _middlewareData$flip;
-					const { placement, middlewareData, rects, initialPlacement, platform, elements } = state;
-					const { mainAxis: checkMainAxis = true, crossAxis: checkCrossAxis = true, fallbackPlacements: specifiedFallbackPlacements, fallbackStrategy = "bestFit", fallbackAxisSideDirection = "none", flipAlignment = true, ...detectOverflowOptions } = evaluate(options, state);
-					if ((_middlewareData$arrow = middlewareData.arrow) != null && _middlewareData$arrow.alignmentOffset) return {};
-					const side = getSide(placement);
-					const initialSideAxis = getSideAxis(initialPlacement);
-					const isBasePlacement = getSide(initialPlacement) === initialPlacement;
-					const rtl = await (platform.isRTL == null ? void 0 : platform.isRTL(elements.floating));
-					const fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipAlignment ? [getOppositePlacement(initialPlacement)] : getExpandedPlacements(initialPlacement));
-					const hasFallbackAxisSideDirection = fallbackAxisSideDirection !== "none";
-					if (!specifiedFallbackPlacements && hasFallbackAxisSideDirection) fallbackPlacements.push(...getOppositeAxisPlacements(initialPlacement, flipAlignment, fallbackAxisSideDirection, rtl));
-					const placements = [initialPlacement, ...fallbackPlacements];
-					const overflow = await platform.detectOverflow(state, detectOverflowOptions);
-					const overflows = [];
-					let overflowsData = ((_middlewareData$flip = middlewareData.flip) == null ? void 0 : _middlewareData$flip.overflows) || [];
-					if (checkMainAxis) overflows.push(overflow[side]);
-					if (checkCrossAxis) {
-						const sides = getAlignmentSides(placement, rects, rtl);
-						overflows.push(overflow[sides[0]], overflow[sides[1]]);
-					}
-					overflowsData = [...overflowsData, {
-						placement,
-						overflows
-					}];
-					if (!overflows.every((side) => side <= 0)) {
-						var _middlewareData$flip2, _overflowsData$filter;
-						const nextIndex = (((_middlewareData$flip2 = middlewareData.flip) == null ? void 0 : _middlewareData$flip2.index) || 0) + 1;
-						const nextPlacement = placements[nextIndex];
-						if (nextPlacement) {
-							if (!(checkCrossAxis === "alignment" ? initialSideAxis !== getSideAxis(nextPlacement) : false) || overflowsData.every((d) => getSideAxis(d.placement) === initialSideAxis ? d.overflows[0] > 0 : true)) return {
-								data: {
-									index: nextIndex,
-									overflows: overflowsData
-								},
-								reset: { placement: nextPlacement }
-							};
-						}
-						let resetPlacement = (_overflowsData$filter = overflowsData.filter((d) => d.overflows[0] <= 0).sort((a, b) => a.overflows[1] - b.overflows[1])[0]) == null ? void 0 : _overflowsData$filter.placement;
-						if (!resetPlacement) switch (fallbackStrategy) {
-							case "bestFit": {
-								var _overflowsData$filter2;
-								const placement = (_overflowsData$filter2 = overflowsData.filter((d) => {
-									if (hasFallbackAxisSideDirection) {
-										const currentSideAxis = getSideAxis(d.placement);
-										return currentSideAxis === initialSideAxis || currentSideAxis === "y";
-									}
-									return true;
-								}).map((d) => [d.placement, d.overflows.filter((overflow) => overflow > 0).reduce((acc, overflow) => acc + overflow, 0)]).sort((a, b) => a[1] - b[1])[0]) == null ? void 0 : _overflowsData$filter2[0];
-								if (placement) resetPlacement = placement;
-								break;
-							}
-							case "initialPlacement": resetPlacement = initialPlacement;
-						}
-						if (placement !== resetPlacement) return { reset: { placement: resetPlacement } };
-					}
-					return {};
-				}
-			};
-		};
-		const originSides = /*#__PURE__*/ new Set(["left", "top"]);
-		async function convertValueToCoords(state, options) {
-			const { placement, platform, elements } = state;
-			const rtl = await (platform.isRTL == null ? void 0 : platform.isRTL(elements.floating));
-			const side = getSide(placement);
-			const alignment = getAlignment(placement);
-			const isVertical = getSideAxis(placement) === "y";
-			const mainAxisMulti = originSides.has(side) ? -1 : 1;
-			const crossAxisMulti = rtl && isVertical ? -1 : 1;
-			const rawValue = evaluate(options, state);
-			let { mainAxis, crossAxis, alignmentAxis } = typeof rawValue === "number" ? {
-				mainAxis: rawValue,
-				crossAxis: 0,
-				alignmentAxis: null
-			} : {
-				mainAxis: rawValue.mainAxis || 0,
-				crossAxis: rawValue.crossAxis || 0,
-				alignmentAxis: rawValue.alignmentAxis
-			};
-			if (alignment && typeof alignmentAxis === "number") crossAxis = alignment === "end" ? alignmentAxis * -1 : alignmentAxis;
-			return isVertical ? {
-				x: crossAxis * crossAxisMulti,
-				y: mainAxis * mainAxisMulti
-			} : {
-				x: mainAxis * mainAxisMulti,
-				y: crossAxis * crossAxisMulti
-			};
-		}
-		/**
-		* Modifies the placement by translating the floating element along the
-		* specified axes.
-		* A number (shorthand for `mainAxis` or distance), or an axes configuration
-		* object may be passed.
-		* @see https://floating-ui.com/docs/offset
-		*/
-		const offset$1 = function(options) {
-			if (options === void 0) options = 0;
-			return {
-				name: "offset",
-				options,
-				async fn(state) {
-					var _middlewareData$offse, _middlewareData$arrow;
-					const { x, y, placement, middlewareData } = state;
-					const diffCoords = await convertValueToCoords(state, options);
-					if (placement === ((_middlewareData$offse = middlewareData.offset) == null ? void 0 : _middlewareData$offse.placement) && (_middlewareData$arrow = middlewareData.arrow) != null && _middlewareData$arrow.alignmentOffset) return {};
-					return {
-						x: x + diffCoords.x,
-						y: y + diffCoords.y,
-						data: {
-							...diffCoords,
-							placement
-						}
-					};
-				}
-			};
-		};
-		/**
-		* Optimizes the visibility of the floating element by shifting it in order to
-		* keep it in view when it will overflow the clipping boundary.
-		* @see https://floating-ui.com/docs/shift
-		*/
-		const shift$1 = function(options) {
-			if (options === void 0) options = {};
-			return {
-				name: "shift",
-				options,
-				async fn(state) {
-					const { x, y, placement, platform } = state;
-					const { mainAxis: checkMainAxis = true, crossAxis: checkCrossAxis = false, limiter = { fn: (_ref) => {
-						let { x, y } = _ref;
-						return {
-							x,
-							y
-						};
-					} }, ...detectOverflowOptions } = evaluate(options, state);
-					const coords = {
-						x,
-						y
-					};
-					const overflow = await platform.detectOverflow(state, detectOverflowOptions);
-					const crossAxis = getSideAxis(placement);
-					const mainAxis = getOppositeAxis(crossAxis);
-					let mainAxisCoord = coords[mainAxis];
-					let crossAxisCoord = coords[crossAxis];
-					const clampCoord = (axis, coord) => clamp(coord + overflow[axis === "y" ? "top" : "left"], coord, coord - overflow[axis === "y" ? "bottom" : "right"]);
-					if (checkMainAxis) mainAxisCoord = clampCoord(mainAxis, mainAxisCoord);
-					if (checkCrossAxis) crossAxisCoord = clampCoord(crossAxis, crossAxisCoord);
-					const limitedCoords = limiter.fn({
-						...state,
-						[mainAxis]: mainAxisCoord,
-						[crossAxis]: crossAxisCoord
-					});
-					return {
-						...limitedCoords,
-						data: {
-							x: limitedCoords.x - x,
-							y: limitedCoords.y - y,
-							enabled: {
-								[mainAxis]: checkMainAxis,
-								[crossAxis]: checkCrossAxis
-							}
-						}
-					};
-				}
-			};
-		};
-		/**
-		* Provides data that allows you to change the size of the floating element —
-		* for instance, prevent it from overflowing the clipping boundary or match the
-		* width of the reference element.
-		* @see https://floating-ui.com/docs/size
-		*/
-		const size$1 = function(options) {
-			if (options === void 0) options = {};
-			return {
-				name: "size",
-				options,
-				async fn(state) {
-					const { placement, rects, platform, elements } = state;
-					const { apply = () => {}, ...detectOverflowOptions } = evaluate(options, state);
-					const overflow = await platform.detectOverflow(state, detectOverflowOptions);
-					const side = getSide(placement);
-					const alignment = getAlignment(placement);
-					const isYAxis = getSideAxis(placement) === "y";
-					const { width, height } = rects.floating;
-					let heightSide;
-					let widthSide;
-					if (side === "top" || side === "bottom") {
-						heightSide = side;
-						widthSide = alignment === (await (platform.isRTL == null ? void 0 : platform.isRTL(elements.floating)) ? "start" : "end") ? "left" : "right";
-					} else {
-						widthSide = side;
-						heightSide = alignment === "end" ? "top" : "bottom";
-					}
-					const maximumClippingHeight = height - overflow.top - overflow.bottom;
-					const maximumClippingWidth = width - overflow.left - overflow.right;
-					const overflowAvailableHeight = min(height - overflow[heightSide], maximumClippingHeight);
-					const overflowAvailableWidth = min(width - overflow[widthSide], maximumClippingWidth);
-					const shiftData = state.middlewareData.shift;
-					const noShift = !shiftData;
-					let availableHeight = overflowAvailableHeight;
-					let availableWidth = overflowAvailableWidth;
-					if (shiftData != null && shiftData.enabled.x) availableWidth = maximumClippingWidth;
-					if (shiftData != null && shiftData.enabled.y) availableHeight = maximumClippingHeight;
-					if (noShift && !alignment) {
-						if (isYAxis) availableWidth = width - 2 * max(overflow.left, overflow.right);
-						else availableHeight = height - 2 * max(overflow.top, overflow.bottom);
-					}
-					await apply({
-						...state,
-						availableWidth,
-						availableHeight
-					});
-					const nextDimensions = await platform.getDimensions(elements.floating);
-					if (width !== nextDimensions.width || height !== nextDimensions.height) return { reset: { rects: true } };
-					return {};
-				}
-			};
-		};
-		//#endregion
-		//#region ../../node_modules/.pnpm/@floating-ui+dom@1.8.0/node_modules/@floating-ui/dom/dist/floating-ui.dom.mjs
-		function getCssDimensions(element) {
-			const css = getComputedStyle$1(element);
-			let width = parseFloat(css.width) || 0;
-			let height = parseFloat(css.height) || 0;
-			const hasOffset = isHTMLElement(element);
-			const offsetWidth = hasOffset ? element.offsetWidth : width;
-			const offsetHeight = hasOffset ? element.offsetHeight : height;
-			const shouldFallback = round(width) !== offsetWidth || round(height) !== offsetHeight;
-			if (shouldFallback) {
-				width = offsetWidth;
-				height = offsetHeight;
-			}
-			return {
-				width,
-				height,
-				$: shouldFallback
-			};
-		}
-		function unwrapElement(element) {
-			return !isElement(element) ? element.contextElement : element;
-		}
-		function getScale$1(element) {
-			const domElement = unwrapElement(element);
-			if (!isHTMLElement(domElement)) return createCoords(1);
-			const rect = domElement.getBoundingClientRect();
-			const { width, height, $ } = getCssDimensions(domElement);
-			let x = ($ ? round(rect.width) : rect.width) / width;
-			let y = ($ ? round(rect.height) : rect.height) / height;
-			if (!x || !Number.isFinite(x)) x = 1;
-			if (!y || !Number.isFinite(y)) y = 1;
-			return {
-				x,
-				y
-			};
-		}
-		const noOffsets = /*#__PURE__*/ createCoords(0);
-		function getVisualOffsets(element) {
-			const win = getWindow(element);
-			if (!isWebKit() || !win.visualViewport) return noOffsets;
-			return {
-				x: win.visualViewport.offsetLeft,
-				y: win.visualViewport.offsetTop
-			};
-		}
-		function shouldAddVisualOffsets(element, isFixed, floatingOffsetParent) {
-			if (isFixed === void 0) isFixed = false;
-			return !!floatingOffsetParent && isFixed && floatingOffsetParent === getWindow(element);
-		}
-		function getBoundingClientRect(element, includeScale, isFixedStrategy, offsetParent) {
-			if (includeScale === void 0) includeScale = false;
-			if (isFixedStrategy === void 0) isFixedStrategy = false;
-			const clientRect = element.getBoundingClientRect();
-			const domElement = unwrapElement(element);
-			let scale = createCoords(1);
-			if (includeScale) {
-				if (offsetParent) {
-					if (isElement(offsetParent)) scale = getScale$1(offsetParent);
-				} else scale = getScale$1(element);
-			}
-			const visualOffsets = shouldAddVisualOffsets(domElement, isFixedStrategy, offsetParent) ? getVisualOffsets(domElement) : createCoords(0);
-			let x = (clientRect.left + visualOffsets.x) / scale.x;
-			let y = (clientRect.top + visualOffsets.y) / scale.y;
-			let width = clientRect.width / scale.x;
-			let height = clientRect.height / scale.y;
-			if (domElement && offsetParent) {
-				const win = getWindow(domElement);
-				const offsetWin = isElement(offsetParent) ? getWindow(offsetParent) : offsetParent;
-				let currentWin = win;
-				let currentIFrame = getFrameElement(currentWin);
-				while (currentIFrame && offsetWin !== currentWin) {
-					const iframeScale = getScale$1(currentIFrame);
-					const iframeRect = currentIFrame.getBoundingClientRect();
-					const css = getComputedStyle$1(currentIFrame);
-					const left = iframeRect.left + (currentIFrame.clientLeft + parseFloat(css.paddingLeft)) * iframeScale.x;
-					const top = iframeRect.top + (currentIFrame.clientTop + parseFloat(css.paddingTop)) * iframeScale.y;
-					x *= iframeScale.x;
-					y *= iframeScale.y;
-					width *= iframeScale.x;
-					height *= iframeScale.y;
-					x += left;
-					y += top;
-					currentWin = getWindow(currentIFrame);
-					currentIFrame = getFrameElement(currentWin);
-				}
-			}
-			return rectToClientRect({
-				width,
-				height,
-				x,
-				y
-			});
-		}
-		function getWindowScrollBarX(element, rect) {
-			const leftScroll = getNodeScroll(element).scrollLeft;
-			if (!rect) return getBoundingClientRect(getDocumentElement(element)).left + leftScroll;
-			return rect.left + leftScroll;
-		}
-		function getHTMLOffset(documentElement, scroll) {
-			const htmlRect = documentElement.getBoundingClientRect();
-			return {
-				x: htmlRect.left + scroll.scrollLeft - getWindowScrollBarX(documentElement, htmlRect),
-				y: htmlRect.top + scroll.scrollTop
-			};
-		}
-		function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
-			let { elements, rect, offsetParent, strategy } = _ref;
-			const isFixed = strategy === "fixed";
-			const documentElement = getDocumentElement(offsetParent);
-			const topLayer = elements ? isTopLayer(elements.floating) : false;
-			if (offsetParent === documentElement || topLayer && isFixed) return rect;
-			let scroll = {
-				scrollLeft: 0,
-				scrollTop: 0
-			};
-			let scale = createCoords(1);
-			const offsets = createCoords(0);
-			const isOffsetParentAnElement = isHTMLElement(offsetParent);
-			if (isOffsetParentAnElement || !isFixed) {
-				if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) scroll = getNodeScroll(offsetParent);
-				if (isOffsetParentAnElement) {
-					const offsetRect = getBoundingClientRect(offsetParent);
-					scale = getScale$1(offsetParent);
-					offsets.x = offsetRect.x + offsetParent.clientLeft;
-					offsets.y = offsetRect.y + offsetParent.clientTop;
-				}
-			}
-			const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
-			return {
-				width: rect.width * scale.x,
-				height: rect.height * scale.y,
-				x: rect.x * scale.x - scroll.scrollLeft * scale.x + offsets.x + htmlOffset.x,
-				y: rect.y * scale.y - scroll.scrollTop * scale.y + offsets.y + htmlOffset.y
-			};
-		}
-		function getClientRects(element) {
-			return element.getClientRects ? Array.from(element.getClientRects()) : [];
-		}
-		function getDocumentRect(html) {
-			const scroll = getNodeScroll(html);
-			const body = html.ownerDocument.body;
-			const width = max(html.scrollWidth, html.clientWidth, body.scrollWidth, body.clientWidth);
-			const height = max(html.scrollHeight, html.clientHeight, body.scrollHeight, body.clientHeight);
-			let x = -scroll.scrollLeft + getWindowScrollBarX(html);
-			const y = -scroll.scrollTop;
-			if (getComputedStyle$1(body).direction === "rtl") x += max(html.clientWidth, body.clientWidth) - width;
-			return {
-				width,
-				height,
-				x,
-				y
-			};
-		}
-		const SCROLLBAR_MAX = 25;
-		function getViewportRect(element, strategy, rootBoundary) {
-			if (rootBoundary === void 0) rootBoundary = "viewport";
-			const isLayoutViewport = rootBoundary === "layoutViewport";
-			const win = getWindow(element);
-			const html = getDocumentElement(element);
-			const visualViewport = win.visualViewport;
-			let width = html.clientWidth;
-			let height = html.clientHeight;
-			let x = 0;
-			let y = 0;
-			if (visualViewport) {
-				const layoutRelativeClientCoords = !isWebKit() || strategy === "fixed";
-				if (isLayoutViewport) {
-					if (!layoutRelativeClientCoords) {
-						x = -visualViewport.offsetLeft;
-						y = -visualViewport.offsetTop;
-					}
-				} else {
-					width = visualViewport.width;
-					height = visualViewport.height;
-					if (layoutRelativeClientCoords) {
-						x = visualViewport.offsetLeft;
-						y = visualViewport.offsetTop;
-					}
-				}
-			}
-			if (getWindowScrollBarX(html) <= 0) {
-				const doc = html.ownerDocument;
-				const body = doc.body;
-				const bodyStyles = getComputedStyle(body);
-				const bodyMarginInline = doc.compatMode === "CSS1Compat" ? parseFloat(bodyStyles.marginLeft) + parseFloat(bodyStyles.marginRight) || 0 : 0;
-				const reservedWidth = Math.abs(html.clientWidth - body.clientWidth - bodyMarginInline);
-				const gutter = getComputedStyle(html).scrollbarGutter === "stable both-edges" ? reservedWidth / 2 : reservedWidth;
-				if (gutter <= SCROLLBAR_MAX) width -= gutter;
-			}
-			return {
-				width,
-				height,
-				x,
-				y
-			};
-		}
-		function getInnerBoundingClientRect(element, strategy) {
-			const clientRect = getBoundingClientRect(element, true, strategy === "fixed");
-			const top = clientRect.top + element.clientTop;
-			const left = clientRect.left + element.clientLeft;
-			const scale = getScale$1(element);
-			return {
-				width: element.clientWidth * scale.x,
-				height: element.clientHeight * scale.y,
-				x: left * scale.x,
-				y: top * scale.y
-			};
-		}
-		function getClientRectFromClippingAncestor(element, clippingAncestor, strategy) {
-			let rect;
-			if (clippingAncestor === "viewport" || clippingAncestor === "layoutViewport") rect = getViewportRect(element, strategy, clippingAncestor);
-			else if (clippingAncestor === "document") rect = getDocumentRect(getDocumentElement(element));
-			else if (isElement(clippingAncestor)) rect = getInnerBoundingClientRect(clippingAncestor, strategy);
-			else {
-				const visualOffsets = getVisualOffsets(element);
-				rect = {
-					x: clippingAncestor.x - visualOffsets.x,
-					y: clippingAncestor.y - visualOffsets.y,
-					width: clippingAncestor.width,
-					height: clippingAncestor.height
-				};
-			}
-			return rectToClientRect(rect);
-		}
-		function getClippingElementAncestors(element, cache) {
-			const cachedResult = cache.get(element);
-			if (cachedResult) return cachedResult;
-			let result = getOverflowAncestors(element, [], false).filter((el) => isElement(el) && getNodeName(el) !== "body");
-			let lastKeptComputedStyle = null;
-			const elementIsFixed = getComputedStyle$1(element).position === "fixed";
-			let currentNode = elementIsFixed ? getParentNode(element) : element;
-			while (isElement(currentNode) && !isLastTraversableNode(currentNode)) {
-				const computedStyle = getComputedStyle$1(currentNode);
-				const currentNodeIsContaining = isContainingBlock(currentNode);
-				const lastPosition = lastKeptComputedStyle ? lastKeptComputedStyle.position : elementIsFixed ? "fixed" : "";
-				if (!currentNodeIsContaining && (lastPosition === "fixed" || lastPosition === "absolute" && computedStyle.position === "static")) result = result.filter((ancestor) => ancestor !== currentNode);
-				else lastKeptComputedStyle = computedStyle;
-				currentNode = getParentNode(currentNode);
-			}
-			cache.set(element, result);
-			return result;
-		}
-		function getClippingRect(_ref) {
-			let { element, boundary, rootBoundary, strategy } = _ref;
-			const clippingAncestors = [...boundary === "clippingAncestors" ? isTopLayer(element) ? [] : getClippingElementAncestors(element, this._c) : [].concat(boundary), rootBoundary];
-			const firstRect = getClientRectFromClippingAncestor(element, clippingAncestors[0], strategy);
-			let top = firstRect.top;
-			let right = firstRect.right;
-			let bottom = firstRect.bottom;
-			let left = firstRect.left;
-			for (let i = 1; i < clippingAncestors.length; i++) {
-				const rect = getClientRectFromClippingAncestor(element, clippingAncestors[i], strategy);
-				top = max(rect.top, top);
-				right = min(rect.right, right);
-				bottom = min(rect.bottom, bottom);
-				left = max(rect.left, left);
-			}
-			return {
-				width: right - left,
-				height: bottom - top,
-				x: left,
-				y: top
-			};
-		}
-		function getDimensions(element) {
-			const { width, height } = getCssDimensions(element);
-			return {
-				width,
-				height
-			};
-		}
-		function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
-			const isOffsetParentAnElement = isHTMLElement(offsetParent);
-			const documentElement = getDocumentElement(offsetParent);
-			const isFixed = strategy === "fixed";
-			const rect = getBoundingClientRect(element, true, isFixed, offsetParent);
-			let scroll = {
-				scrollLeft: 0,
-				scrollTop: 0
-			};
-			const offsets = createCoords(0);
-			if (isOffsetParentAnElement || !isFixed) {
-				if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) scroll = getNodeScroll(offsetParent);
-				if (isOffsetParentAnElement) {
-					const offsetRect = getBoundingClientRect(offsetParent, true, isFixed, offsetParent);
-					offsets.x = offsetRect.x + offsetParent.clientLeft;
-					offsets.y = offsetRect.y + offsetParent.clientTop;
-				}
-			}
-			if (!isOffsetParentAnElement && documentElement) offsets.x = getWindowScrollBarX(documentElement);
-			const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
-			return {
-				x: rect.left + scroll.scrollLeft - offsets.x - htmlOffset.x,
-				y: rect.top + scroll.scrollTop - offsets.y - htmlOffset.y,
-				width: rect.width,
-				height: rect.height
-			};
-		}
-		function isStaticPositioned(element) {
-			return getComputedStyle$1(element).position === "static";
-		}
-		function getTrueOffsetParent(element, polyfill) {
-			if (!isHTMLElement(element) || getComputedStyle$1(element).position === "fixed") return null;
-			if (polyfill) return polyfill(element);
-			let rawOffsetParent = element.offsetParent;
-			if (getDocumentElement(element) === rawOffsetParent) rawOffsetParent = rawOffsetParent.ownerDocument.body;
-			return rawOffsetParent;
-		}
-		function getOffsetParent(element, polyfill) {
-			const win = getWindow(element);
-			if (isTopLayer(element)) return win;
-			if (!isHTMLElement(element)) {
-				let svgOffsetParent = getParentNode(element);
-				while (svgOffsetParent && !isLastTraversableNode(svgOffsetParent)) {
-					if (isElement(svgOffsetParent) && !isStaticPositioned(svgOffsetParent)) return svgOffsetParent;
-					svgOffsetParent = getParentNode(svgOffsetParent);
-				}
-				return win;
-			}
-			let offsetParent = getTrueOffsetParent(element, polyfill);
-			while (offsetParent && isTableElement(offsetParent) && isStaticPositioned(offsetParent)) offsetParent = getTrueOffsetParent(offsetParent, polyfill);
-			if (offsetParent && isLastTraversableNode(offsetParent) && isStaticPositioned(offsetParent) && !isContainingBlock(offsetParent)) return win;
-			return offsetParent || getContainingBlock(element) || win;
-		}
-		const getElementRects = async function(data) {
-			const getOffsetParentFn = this.getOffsetParent || getOffsetParent;
-			const getDimensionsFn = this.getDimensions;
-			const floatingDimensions = await getDimensionsFn(data.floating);
-			return {
-				reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy),
-				floating: {
-					x: 0,
-					y: 0,
-					width: floatingDimensions.width,
-					height: floatingDimensions.height
-				}
-			};
-		};
-		function isRTL(element) {
-			return getComputedStyle$1(element).direction === "rtl";
-		}
-		const platform = {
-			convertOffsetParentRelativeRectToViewportRelativeRect,
-			getDocumentElement,
-			getClippingRect,
-			getOffsetParent,
-			getElementRects,
-			getClientRects,
-			getDimensions,
-			getScale: getScale$1,
-			isElement,
-			isRTL
-		};
-		function rectsAreEqual(a, b) {
-			return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
-		}
-		function observeMove(element, onMove, ancestorResize) {
-			let io = null;
-			let timeoutId;
-			const root = getDocumentElement(element);
-			function cleanup() {
-				var _io;
-				clearTimeout(timeoutId);
-				(_io = io) == null || _io.disconnect();
-				io = null;
-			}
-			function refresh(skip, threshold) {
-				if (skip === void 0) skip = false;
-				if (threshold === void 0) threshold = 1;
-				cleanup();
-				const elementRectForRootMargin = element.getBoundingClientRect();
-				const { left, top, width, height } = elementRectForRootMargin;
-				if (!skip) onMove();
-				if (!width || !height) return;
-				const insetTop = floor(top);
-				const insetRight = floor(root.clientWidth - (left + width));
-				const insetBottom = floor(root.clientHeight - (top + height));
-				const insetLeft = floor(left);
-				const options = {
-					rootMargin: -insetTop + "px " + -insetRight + "px " + -insetBottom + "px " + -insetLeft + "px",
-					threshold: max(0, min(1, threshold)) || 1
-				};
-				let isFirstUpdate = true;
-				function handleObserve(entries) {
-					const ratio = entries[0].intersectionRatio;
-					if (!rectsAreEqual(elementRectForRootMargin, element.getBoundingClientRect())) return refresh();
-					if (ratio !== threshold) {
-						if (!isFirstUpdate) return refresh();
-						if (!ratio) timeoutId = setTimeout(() => {
-							refresh(false, 1e-7);
-						}, 1e3);
-						else refresh(false, ratio);
-					}
-					isFirstUpdate = false;
-				}
-				try {
-					io = new IntersectionObserver(handleObserve, {
-						...options,
-						root: root.ownerDocument
-					});
-				} catch (_e) {
-					io = new IntersectionObserver(handleObserve, options);
-				}
-				io.observe(element);
-			}
-			const win = getWindow(element);
-			const handleResize = () => refresh(ancestorResize);
-			win.addEventListener("resize", handleResize);
-			refresh(true);
-			return () => {
-				win.removeEventListener("resize", handleResize);
-				cleanup();
-			};
-		}
-		/**
-		* Automatically updates the position of the floating element when necessary.
-		* Should only be called when the floating element is mounted on the DOM or
-		* visible on the screen.
-		* @returns cleanup function that should be invoked when the floating element is
-		* removed from the DOM or hidden from the screen.
-		* @see https://floating-ui.com/docs/autoUpdate
-		*/
-		function autoUpdate(reference, floating, update, options) {
-			if (options === void 0) options = {};
-			const { ancestorScroll = true, ancestorResize = true, elementResize = typeof ResizeObserver === "function", layoutShift = typeof IntersectionObserver === "function", animationFrame = false } = options;
-			const referenceEl = unwrapElement(reference);
-			const ancestors = ancestorScroll || ancestorResize ? [...referenceEl ? getOverflowAncestors(referenceEl) : [], ...floating ? getOverflowAncestors(floating) : []] : [];
-			ancestors.forEach((ancestor) => {
-				ancestorScroll && ancestor.addEventListener("scroll", update);
-				ancestorResize && ancestor.addEventListener("resize", update);
-			});
-			const cleanupIo = referenceEl && layoutShift ? observeMove(referenceEl, update, ancestorResize) : null;
-			let reobserveFrame = -1;
-			let resizeObserver = null;
-			if (elementResize) {
-				resizeObserver = new ResizeObserver((_ref) => {
-					let [firstEntry] = _ref;
-					if (firstEntry && firstEntry.target === referenceEl && resizeObserver && floating) {
-						resizeObserver.unobserve(floating);
-						cancelAnimationFrame(reobserveFrame);
-						reobserveFrame = requestAnimationFrame(() => {
-							var _resizeObserver;
-							(_resizeObserver = resizeObserver) == null || _resizeObserver.observe(floating);
-						});
-					}
-					update();
-				});
-				if (referenceEl && !animationFrame) resizeObserver.observe(referenceEl);
-				if (floating) resizeObserver.observe(floating);
-			}
-			let frameId;
-			let prevRefRect = animationFrame ? getBoundingClientRect(reference) : null;
-			if (animationFrame) frameLoop();
-			function frameLoop() {
-				const nextRefRect = getBoundingClientRect(reference);
-				if (prevRefRect && !rectsAreEqual(prevRefRect, nextRefRect)) update();
-				prevRefRect = nextRefRect;
-				frameId = requestAnimationFrame(frameLoop);
-			}
-			update();
-			return () => {
-				var _resizeObserver2;
-				ancestors.forEach((ancestor) => {
-					ancestorScroll && ancestor.removeEventListener("scroll", update);
-					ancestorResize && ancestor.removeEventListener("resize", update);
-				});
-				cleanupIo?.();
-				(_resizeObserver2 = resizeObserver) == null || _resizeObserver2.disconnect();
-				resizeObserver = null;
-				if (animationFrame) cancelAnimationFrame(frameId);
-			};
-		}
-		/**
-		* Modifies the placement by translating the floating element along the
-		* specified axes.
-		* A number (shorthand for `mainAxis` or distance), or an axes configuration
-		* object may be passed.
-		* @see https://floating-ui.com/docs/offset
-		*/
-		const offset$2 = offset$1;
-		/**
-		* Optimizes the visibility of the floating element by shifting it in order to
-		* keep it in view when it will overflow the clipping boundary.
-		* @see https://floating-ui.com/docs/shift
-		*/
-		const shift$3 = shift$1;
-		/**
-		* Optimizes the visibility of the floating element by flipping the `placement`
-		* in order to keep it in view when the preferred placement(s) will overflow the
-		* clipping boundary. Alternative to `autoPlacement`.
-		* @see https://floating-ui.com/docs/flip
-		*/
-		const flip$2 = flip$1;
-		/**
-		* Provides data that allows you to change the size of the floating element —
-		* for instance, prevent it from overflowing the clipping boundary or match the
-		* width of the reference element.
-		* @see https://floating-ui.com/docs/size
-		*/
-		const size$2 = size$1;
-		/**
-		* Computes the `x` and `y` coordinates that will place the floating element
-		* next to a given reference element.
-		*/
-		const computePosition = (reference, floating, options) => {
-			const cache = /* @__PURE__ */ new Map();
-			const mergedOptions = options != null ? options : {};
-			const platformWithCache = {
-				...platform,
-				...mergedOptions.platform,
-				_c: cache
-			};
-			return computePosition$1(reference, floating, {
-				...mergedOptions,
-				platform: platformWithCache
-			});
-		};
-		//#endregion
-		//#region ../../node_modules/.pnpm/@floating-ui+react-dom@2.1.9_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/@floating-ui/react-dom/dist/floating-ui.react-dom.mjs
-		var index = typeof document !== "undefined" ? react$1.useLayoutEffect : function noop() {};
-		function deepEqual(a, b) {
-			if (a === b) return true;
-			if (typeof a !== typeof b) return false;
-			if (typeof a === "function" && a.toString() === b.toString()) return true;
-			let length;
-			let i;
-			let keys;
-			if (a && b && typeof a === "object") {
-				if (Array.isArray(a)) {
-					length = a.length;
-					if (length !== b.length) return false;
-					for (i = length; i-- !== 0;) if (!deepEqual(a[i], b[i])) return false;
-					return true;
-				}
-				keys = Object.keys(a);
-				length = keys.length;
-				if (length !== Object.keys(b).length) return false;
-				for (i = length; i-- !== 0;) if (!{}.hasOwnProperty.call(b, keys[i])) return false;
-				for (i = length; i-- !== 0;) {
-					const key = keys[i];
-					if (key === "_owner" && a.$$typeof) continue;
-					if (!deepEqual(a[key], b[key])) return false;
-				}
-				return true;
-			}
-			return a !== a && b !== b;
-		}
-		function getDPR(element) {
-			if (typeof window === "undefined") return 1;
-			return (element.ownerDocument.defaultView || window).devicePixelRatio || 1;
-		}
-		function roundByDPR(element, value) {
-			const dpr = getDPR(element);
-			return Math.round(value * dpr) / dpr;
-		}
-		function useLatestRef(value) {
-			const ref = react$1.useRef(value);
-			index(() => {
-				ref.current = value;
-			});
-			return ref;
-		}
-		/**
-		* Provides data to position a floating element.
-		* @see https://floating-ui.com/docs/useFloating
-		*/
-		function useFloating$1(options) {
-			if (options === void 0) options = {};
-			const { placement = "bottom", strategy = "absolute", middleware = [], platform, elements: { reference: externalReference, floating: externalFloating } = {}, transform = true, whileElementsMounted, open } = options;
-			const [data, setData] = react$1.useState({
-				x: 0,
-				y: 0,
-				strategy,
-				placement,
-				middlewareData: {},
-				isPositioned: false
-			});
-			const [latestMiddleware, setLatestMiddleware] = react$1.useState(middleware);
-			if (!deepEqual(latestMiddleware, middleware)) setLatestMiddleware(middleware);
-			const [_reference, _setReference] = react$1.useState(null);
-			const [_floating, _setFloating] = react$1.useState(null);
-			const setReference = react$1.useCallback((node) => {
-				if (node !== referenceRef.current) {
-					referenceRef.current = node;
-					_setReference(node);
-				}
-			}, []);
-			const setFloating = react$1.useCallback((node) => {
-				if (node !== floatingRef.current) {
-					floatingRef.current = node;
-					_setFloating(node);
-				}
-			}, []);
-			const referenceEl = externalReference || _reference;
-			const floatingEl = externalFloating || _floating;
-			const referenceRef = react$1.useRef(null);
-			const floatingRef = react$1.useRef(null);
-			const dataRef = react$1.useRef(data);
-			const hasWhileElementsMounted = whileElementsMounted != null;
-			const whileElementsMountedRef = useLatestRef(whileElementsMounted);
-			const platformRef = useLatestRef(platform);
-			const openRef = useLatestRef(open);
-			const update = react$1.useCallback(() => {
-				if (!referenceRef.current || !floatingRef.current) return;
-				const config = {
-					placement,
-					strategy,
-					middleware: latestMiddleware
-				};
-				if (platformRef.current) config.platform = platformRef.current;
-				computePosition(referenceRef.current, floatingRef.current, config).then((data) => {
-					const fullData = {
-						...data,
-						isPositioned: openRef.current !== false
-					};
-					if (isMountedRef.current && !deepEqual(dataRef.current, fullData)) {
-						dataRef.current = fullData;
-						react_dom.flushSync(() => {
-							setData(fullData);
-						});
-					}
-				});
-			}, [
-				latestMiddleware,
-				placement,
-				strategy,
-				platformRef,
-				openRef
-			]);
-			index(() => {
-				if (open === false && dataRef.current.isPositioned) {
-					dataRef.current.isPositioned = false;
-					setData((data) => ({
-						...data,
-						isPositioned: false
-					}));
-				}
-			}, [open]);
-			const isMountedRef = react$1.useRef(false);
-			index(() => {
-				isMountedRef.current = true;
-				return () => {
-					isMountedRef.current = false;
-				};
-			}, []);
-			index(() => {
-				if (referenceEl) referenceRef.current = referenceEl;
-				if (floatingEl) floatingRef.current = floatingEl;
-				if (referenceEl && floatingEl) {
-					if (whileElementsMountedRef.current) return whileElementsMountedRef.current(referenceEl, floatingEl, update);
-					update();
-				}
-			}, [
-				referenceEl,
-				floatingEl,
-				update,
-				whileElementsMountedRef,
-				hasWhileElementsMounted
-			]);
-			const refs = react$1.useMemo(() => ({
-				reference: referenceRef,
-				floating: floatingRef,
-				setReference,
-				setFloating
-			}), [setReference, setFloating]);
-			const elements = react$1.useMemo(() => ({
-				reference: referenceEl,
-				floating: floatingEl
-			}), [referenceEl, floatingEl]);
-			const floatingStyles = react$1.useMemo(() => {
-				const initialStyles = {
-					position: strategy,
-					left: 0,
-					top: 0
-				};
-				if (!elements.floating) return initialStyles;
-				const x = roundByDPR(elements.floating, data.x);
-				const y = roundByDPR(elements.floating, data.y);
-				if (transform) return {
-					...initialStyles,
-					transform: "translate(" + x + "px, " + y + "px)",
-					...getDPR(elements.floating) >= 1.5 && { willChange: "transform" }
-				};
-				return {
-					position: strategy,
-					left: x,
-					top: y
-				};
-			}, [
-				strategy,
-				transform,
-				elements.floating,
-				data.x,
-				data.y
-			]);
-			return react$1.useMemo(() => ({
-				...data,
-				update,
-				refs,
-				elements,
-				floatingStyles
-			}), [
-				data,
-				update,
-				refs,
-				elements,
-				floatingStyles
-			]);
-		}
-		/**
-		* Modifies the placement by translating the floating element along the
-		* specified axes.
-		* A number (shorthand for `mainAxis` or distance), or an axes configuration
-		* object may be passed.
-		* @see https://floating-ui.com/docs/offset
-		*/
-		const offset = (options, deps) => {
-			const result = offset$2(options);
-			return {
-				name: result.name,
-				fn: result.fn,
-				options: [options, deps]
-			};
-		};
-		/**
-		* Optimizes the visibility of the floating element by shifting it in order to
-		* keep it in view when it will overflow the clipping boundary.
-		* @see https://floating-ui.com/docs/shift
-		*/
-		const shift$2 = (options, deps) => {
-			const result = shift$3(options);
-			return {
-				name: result.name,
-				fn: result.fn,
-				options: [options, deps]
-			};
-		};
-		/**
-		* Optimizes the visibility of the floating element by flipping the `placement`
-		* in order to keep it in view when the preferred placement(s) will overflow the
-		* clipping boundary. Alternative to `autoPlacement`.
-		* @see https://floating-ui.com/docs/flip
-		*/
-		const flip = (options, deps) => {
-			const result = flip$2(options);
-			return {
-				name: result.name,
-				fn: result.fn,
-				options: [options, deps]
-			};
-		};
-		/**
-		* Provides data that allows you to change the size of the floating element —
-		* for instance, prevent it from overflowing the clipping boundary or match the
-		* width of the reference element.
-		* @see https://floating-ui.com/docs/size
-		*/
-		const size = (options, deps) => {
-			const result = size$2(options);
-			return {
-				name: result.name,
-				fn: result.fn,
-				options: [options, deps]
-			};
-		};
-		//#endregion
-		//#region ../../node_modules/.pnpm/@floating-ui+react@0.27.20_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/@floating-ui/react/dist/floating-ui.react.mjs
-		const ARROW_LEFT = "ArrowLeft";
-		const ARROW_RIGHT = "ArrowRight";
-		const ARROW_UP = "ArrowUp";
-		const ARROW_DOWN = "ArrowDown";
-		const horizontalKeys = [ARROW_LEFT, ARROW_RIGHT];
-		const verticalKeys = [ARROW_UP, ARROW_DOWN];
-		[...horizontalKeys, ...verticalKeys];
-		const SafeReact = { ...react$1 };
-		let serverHandoffComplete = false;
-		let count$1 = 0;
-		const genId = () => "floating-ui-" + Math.random().toString(36).slice(2, 6) + count$1++;
-		function useFloatingId() {
-			const [id, setId] = react$1.useState(() => serverHandoffComplete ? genId() : void 0);
-			index$1(() => {
-				if (id == null) setId(genId());
-			}, []);
-			react$1.useEffect(() => {
-				serverHandoffComplete = true;
-			}, []);
-			return id;
-		}
-		/**
-		* Uses React 18's built-in `useId()` when available, or falls back to a
-		* slightly less performant (requiring a double render) implementation for
-		* earlier React versions.
-		* @see https://floating-ui.com/docs/react-utils#useid
-		*/
-		const useId = SafeReact.useId || useFloatingId;
-		function createEventEmitter() {
-			const map = /* @__PURE__ */ new Map();
-			return {
-				emit(event, data) {
-					var _map$get;
-					(_map$get = map.get(event)) == null || _map$get.forEach((listener) => listener(data));
-				},
-				on(event, listener) {
-					if (!map.has(event)) map.set(event, /* @__PURE__ */ new Set());
-					map.get(event).add(listener);
-				},
-				off(event, listener) {
-					var _map$get2;
-					(_map$get2 = map.get(event)) == null || _map$get2.delete(listener);
-				}
-			};
-		}
-		const FloatingNodeContext = /*#__PURE__*/ react$1.createContext(null);
-		const FloatingTreeContext = /*#__PURE__*/ react$1.createContext(null);
-		/**
-		* Returns the parent node id for nested floating elements, if available.
-		* Returns `null` for top-level floating elements.
-		*/
-		const useFloatingParentNodeId = () => {
-			var _React$useContext;
-			return ((_React$useContext = react$1.useContext(FloatingNodeContext)) == null ? void 0 : _React$useContext.id) || null;
-		};
-		/**
-		* Returns the nearest floating tree context, if available.
-		*/
-		const useFloatingTree = () => react$1.useContext(FloatingTreeContext);
-		function createAttribute(name) {
-			return "data-floating-ui-" + name;
-		}
-		const HIDDEN_STYLES = {
-			border: 0,
-			clip: "rect(0 0 0 0)",
-			height: "1px",
-			margin: "-1px",
-			overflow: "hidden",
-			padding: 0,
-			position: "fixed",
-			whiteSpace: "nowrap",
-			width: "1px",
-			top: 0,
-			left: 0
-		};
-		const FocusGuard = /*#__PURE__*/ react$1.forwardRef(function FocusGuard(props, ref) {
-			const [role, setRole] = react$1.useState();
-			index$1(() => {
-				if (isSafari()) setRole("button");
-			}, []);
-			const restProps = {
-				ref,
-				tabIndex: 0,
-				role,
-				"aria-hidden": role ? void 0 : true,
-				[createAttribute("focus-guard")]: "",
-				style: HIDDEN_STYLES
-			};
-			return /*#__PURE__*/ (0, react_jsx_runtime.jsx)("span", {
-				...props,
-				...restProps
-			});
-		});
-		const HIDDEN_OWNER_STYLES = {
-			clipPath: "inset(50%)",
-			position: "fixed",
-			top: 0,
-			left: 0
-		};
-		const PortalContext = /*#__PURE__*/ react$1.createContext(null);
-		const attr = /*#__PURE__*/ createAttribute("portal");
-		/**
-		* @see https://floating-ui.com/docs/FloatingPortal#usefloatingportalnode
-		*/
-		function useFloatingPortalNode(props) {
-			if (props === void 0) props = {};
-			const { id, root } = props;
-			const uniqueId = useId();
-			const portalContext = usePortalContext();
-			const [portalNode, setPortalNode] = react$1.useState(null);
-			const portalNodeRef = react$1.useRef(null);
-			index$1(() => {
-				return () => {
-					portalNode?.remove();
-					queueMicrotask(() => {
-						portalNodeRef.current = null;
-					});
-				};
-			}, [portalNode]);
-			index$1(() => {
-				if (!uniqueId) return;
-				if (portalNodeRef.current) return;
-				const existingIdRoot = id ? document.getElementById(id) : null;
-				if (!existingIdRoot) return;
-				const subRoot = document.createElement("div");
-				subRoot.id = uniqueId;
-				subRoot.setAttribute(attr, "");
-				existingIdRoot.appendChild(subRoot);
-				portalNodeRef.current = subRoot;
-				setPortalNode(subRoot);
-			}, [id, uniqueId]);
-			index$1(() => {
-				if (root === null) return;
-				if (!uniqueId) return;
-				if (portalNodeRef.current) return;
-				let container = root || (portalContext == null ? void 0 : portalContext.portalNode);
-				if (container && !isNode(container)) container = container.current;
-				container = container || document.body;
-				let idWrapper = null;
-				if (id) {
-					idWrapper = document.createElement("div");
-					idWrapper.id = id;
-					container.appendChild(idWrapper);
-				}
-				const subRoot = document.createElement("div");
-				subRoot.id = uniqueId;
-				subRoot.setAttribute(attr, "");
-				container = idWrapper || container;
-				container.appendChild(subRoot);
-				portalNodeRef.current = subRoot;
-				setPortalNode(subRoot);
-			}, [
-				id,
-				root,
-				uniqueId,
-				portalContext
-			]);
-			return portalNode;
-		}
-		/**
-		* Portals the floating element into a given container element — by default,
-		* outside of the app root and into the body.
-		* This is necessary to ensure the floating element can appear outside any
-		* potential parent containers that cause clipping (such as `overflow: hidden`),
-		* while retaining its location in the React tree.
-		* @see https://floating-ui.com/docs/FloatingPortal
-		*/
-		function FloatingPortal(props) {
-			const { children, id, root, preserveTabOrder = true } = props;
-			const portalNode = useFloatingPortalNode({
-				id,
-				root
-			});
-			const [focusManagerState, setFocusManagerState] = react$1.useState(null);
-			const beforeOutsideRef = react$1.useRef(null);
-			const afterOutsideRef = react$1.useRef(null);
-			const beforeInsideRef = react$1.useRef(null);
-			const afterInsideRef = react$1.useRef(null);
-			const modal = focusManagerState == null ? void 0 : focusManagerState.modal;
-			const open = focusManagerState == null ? void 0 : focusManagerState.open;
-			const shouldRenderGuards = !!focusManagerState && !focusManagerState.modal && focusManagerState.open && preserveTabOrder && !!(root || portalNode);
-			react$1.useEffect(() => {
-				if (!portalNode || !preserveTabOrder || modal) return;
-				function onFocus(event) {
-					if (portalNode && isOutsideEvent(event)) (event.type === "focusin" ? enableFocusInside : disableFocusInside)(portalNode);
-				}
-				portalNode.addEventListener("focusin", onFocus, true);
-				portalNode.addEventListener("focusout", onFocus, true);
-				return () => {
-					portalNode.removeEventListener("focusin", onFocus, true);
-					portalNode.removeEventListener("focusout", onFocus, true);
-				};
-			}, [
-				portalNode,
-				preserveTabOrder,
-				modal
-			]);
-			react$1.useEffect(() => {
-				if (!portalNode) return;
-				if (open) return;
-				enableFocusInside(portalNode);
-			}, [open, portalNode]);
-			return /*#__PURE__*/ (0, react_jsx_runtime.jsxs)(PortalContext.Provider, {
-				value: react$1.useMemo(() => ({
-					preserveTabOrder,
-					beforeOutsideRef,
-					afterOutsideRef,
-					beforeInsideRef,
-					afterInsideRef,
-					portalNode,
-					setFocusManagerState
-				}), [preserveTabOrder, portalNode]),
-				children: [
-					shouldRenderGuards && portalNode && /*#__PURE__*/ (0, react_jsx_runtime.jsx)(FocusGuard, {
-						"data-type": "outside",
-						ref: beforeOutsideRef,
-						onFocus: (event) => {
-							if (isOutsideEvent(event, portalNode)) {
-								var _beforeInsideRef$curr;
-								(_beforeInsideRef$curr = beforeInsideRef.current) == null || _beforeInsideRef$curr.focus();
-							} else getPreviousTabbable(focusManagerState ? focusManagerState.domReference : null)?.focus();
-						}
-					}),
-					shouldRenderGuards && portalNode && /*#__PURE__*/ (0, react_jsx_runtime.jsx)("span", {
-						"aria-owns": portalNode.id,
-						style: HIDDEN_OWNER_STYLES
-					}),
-					portalNode && /*#__PURE__*/ react_dom.createPortal(children, portalNode),
-					shouldRenderGuards && portalNode && /*#__PURE__*/ (0, react_jsx_runtime.jsx)(FocusGuard, {
-						"data-type": "outside",
-						ref: afterOutsideRef,
-						onFocus: (event) => {
-							if (isOutsideEvent(event, portalNode)) {
-								var _afterInsideRef$curre;
-								(_afterInsideRef$curre = afterInsideRef.current) == null || _afterInsideRef$curre.focus();
-							} else {
-								getNextTabbable(focusManagerState ? focusManagerState.domReference : null)?.focus();
-								focusManagerState != null && focusManagerState.closeOnFocusOut && focusManagerState?.onOpenChange(false, event.nativeEvent, "focus-out");
-							}
-						}
-					})
-				]
-			});
-		}
-		const usePortalContext = () => react$1.useContext(PortalContext);
-		function useFloatingRootContext(options) {
-			const { open = false, onOpenChange: onOpenChangeProp, elements: elementsProp } = options;
-			const floatingId = useId();
-			const dataRef = react$1.useRef({});
-			const [events] = react$1.useState(() => createEventEmitter());
-			const nested = useFloatingParentNodeId() != null;
-			const [positionReference, setPositionReference] = react$1.useState(elementsProp.reference);
-			const onOpenChange = useEffectEvent((open, event, reason) => {
-				dataRef.current.openEvent = open ? event : void 0;
-				events.emit("openchange", {
-					open,
-					event,
-					reason,
-					nested
-				});
-				onOpenChangeProp?.(open, event, reason);
-			});
-			const refs = react$1.useMemo(() => ({ setPositionReference }), []);
-			const elements = react$1.useMemo(() => ({
-				reference: positionReference || elementsProp.reference || null,
-				floating: elementsProp.floating || null,
-				domReference: elementsProp.reference
-			}), [
-				positionReference,
-				elementsProp.reference,
-				elementsProp.floating
-			]);
-			return react$1.useMemo(() => ({
-				dataRef,
-				open,
-				onOpenChange,
-				elements,
-				events,
-				floatingId,
-				refs
-			}), [
-				open,
-				onOpenChange,
-				elements,
-				events,
-				floatingId,
-				refs
-			]);
-		}
-		/**
-		* Provides data to position a floating element and context to add interactions.
-		* @see https://floating-ui.com/docs/useFloating
-		*/
-		function useFloating(_temp) {
-			var _elementsOption$refer, _elementsOption$float;
-			let { elements: elementsOption, ...options } = _temp === void 0 ? {} : _temp;
-			const { nodeId } = options;
-			const internalRootContext = useFloatingRootContext({
-				...options,
-				elements: {
-					reference: (_elementsOption$refer = elementsOption == null ? void 0 : elementsOption.reference) != null ? _elementsOption$refer : null,
-					floating: (_elementsOption$float = elementsOption == null ? void 0 : elementsOption.floating) != null ? _elementsOption$float : null
-				}
-			});
-			const rootContext = options.rootContext || internalRootContext;
-			const computedElements = rootContext.elements;
-			const [_domReference, setDomReference] = react$1.useState(null);
-			const [positionReference, _setPositionReference] = react$1.useState(null);
-			const domReference = (computedElements == null ? void 0 : computedElements.domReference) || _domReference;
-			const domReferenceRef = react$1.useRef(null);
-			const tree = useFloatingTree();
-			index$1(() => {
-				if (domReference) domReferenceRef.current = domReference;
-			}, [domReference]);
-			const position = useFloating$1({
-				...options,
-				elements: {
-					...computedElements,
-					...positionReference && { reference: positionReference }
-				}
-			});
-			const setPositionReference = react$1.useCallback((node) => {
-				const computedPositionReference = isElement(node) ? {
-					getBoundingClientRect: () => node.getBoundingClientRect(),
-					getClientRects: () => node.getClientRects(),
-					contextElement: node
-				} : node;
-				_setPositionReference(computedPositionReference);
-				position.refs.setReference(computedPositionReference);
-			}, [position.refs]);
-			const setReference = react$1.useCallback((node) => {
-				if (isElement(node) || node === null) {
-					domReferenceRef.current = node;
-					setDomReference(node);
-				}
-				if (isElement(position.refs.reference.current) || position.refs.reference.current === null || node !== null && !isElement(node)) position.refs.setReference(node);
-			}, [position.refs]);
-			const refs = react$1.useMemo(() => ({
-				...position.refs,
-				setReference,
-				setPositionReference,
-				domReference: domReferenceRef
-			}), [
-				position.refs,
-				setReference,
-				setPositionReference
-			]);
-			const elements = react$1.useMemo(() => ({
-				...position.elements,
-				domReference
-			}), [position.elements, domReference]);
-			const context = react$1.useMemo(() => ({
-				...position,
-				...rootContext,
-				refs,
-				elements,
-				nodeId
-			}), [
-				position,
-				refs,
-				elements,
-				nodeId,
-				rootContext
-			]);
-			index$1(() => {
-				rootContext.dataRef.current.floatingContext = context;
-				const node = tree == null ? void 0 : tree.nodesRef.current.find((node) => node.id === nodeId);
-				if (node) node.context = context;
-			});
-			return react$1.useMemo(() => ({
-				...position,
-				context,
-				refs,
-				elements
-			}), [
-				position,
-				refs,
-				elements,
-				context
-			]);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/chevron.js
-		/**
-		* 全站唯一的箭头：**自绘 chevron**（就是下拉框右侧那颗）。
+		* 默认超长省略号；hover 且确实放不下时，来回滚动展示全名。自实现原因：官方 primitives 无跑马灯组件。
+		* 测宽用 ResizeObserver + 文本变化重测；滚动距离 0 时不启用 hover 动画（`.dshpc-mq-run` 才有动画）。
 		*
-		* 为什么自绘：`ui` 层零官方依赖（官方图标只在宿主内可解析），官方件在这个包里 import 不到。
-		* 为什么不再写字形：'▾' / '↑' 这类字符在各系统字体下粗细、角度、基线都不一样，
-		* 同一套界面里会出现两种箭头 —— 2026-10-26 用户点名 ▾ 太丑 ⇒ 一律换成这颗 chevron。
-		*
-		* 用法：`h(Chevron, { dir: 'up', size: 18 })`；要动画就在外层套一个带 transform 的类
-		* （如卡片折叠的 `.dshpc-card__caret.is-open`），不要给每个方向另画一条路径。
+		* **双层结构**：外层 `.dshpc-mq` 只负责裁剪（overflow:hidden），内层 `.dshpc-mq-in` 才做
+		* transform 滚动——文字永远在自己那一块里跑，不会压到相邻文字。皮肤在 `controls-css.ts`。
 		*/
-		const ROTATE = {
-			down: 0,
-			up: 180,
-			left: 90,
-			right: 270
-		};
-		function Chevron(props) {
-			const size = props.size ?? 12;
-			const deg = ROTATE[props.dir ?? "down"];
-			const style = deg === 0 ? void 0 : { transform: `rotate(${String(deg)}deg)` };
-			return (0, react$1.createElement)("svg", {
-				className: props.className,
-				width: size,
-				height: size,
-				viewBox: "0 0 16 16",
+		/** 跑马灯文本。 */
+		function MarqueeText(props) {
+			ensureComponentStyles("marquee", MARQUEE_CSS);
+			const outerRef = (0, react$1.useRef)(null);
+			const innerRef = (0, react$1.useRef)(null);
+			const [dist, setDist] = (0, react$1.useState)(0);
+			const measure = (0, react$1.useCallback)(() => {
+				const outer = outerRef.current;
+				const inner = innerRef.current;
+				if (outer === null || inner === null) return;
+				setDist(Math.max(0, Math.ceil(inner.scrollWidth - outer.clientWidth)));
+			}, []);
+			(0, react$1.useLayoutEffect)(() => {
+				const outer = outerRef.current;
+				const inner = innerRef.current;
+				if (outer === null || inner === null) return;
+				measure();
+				const ro = new ResizeObserver(measure);
+				ro.observe(outer);
+				ro.observe(inner);
+				return () => {
+					ro.disconnect();
+				};
+			}, [measure]);
+			(0, react$1.useEffect)(() => {
+				measure();
+			}, [props.text, measure]);
+			const run = dist > 0;
+			return (0, react$1.createElement)("span", {
+				ref: outerRef,
+				className: (run ? "dshpc-mq dshpc-mq-run" : "dshpc-mq") + (props.className === void 0 ? "" : ` ${props.className}`),
+				title: props.title,
+				style: props.style
+			}, (0, react$1.createElement)("span", {
+				ref: innerRef,
+				className: "dshpc-mq-in",
+				style: { ...run ? {
+					"--dshpc-mq-dist": `${-dist}px`,
+					"--dshpc-mq-dur": `${Math.max(3, Math.round(dist / 30))}s`
+				} : null }
+			}, props.text));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/segmented-css.generated.js
+		const SEGMENTED_CSS = "\n/* ── 分段控件 P2 ─────────────────────────────────────────────────────\n   结构照兄弟项目 dsh-task-dispatch-table 的 Segmented 皮肤（item 无边框、hover 只提亮文字），\n   前缀 / 变量名换成本仓口径。用户额外要的两处（兄弟没有）：weekday 方块间隔（现为 2px）；段内中性计数 __count。\n   ⚠️ 2026-10-19 两次误判均已澄清：① 「宿主只认单行 CSS」——假，多行一直正常；\n   ② 「宿主吃掉 token 块之后第一条规则」——也假，真因是 tokens 模板字符串结尾多了一个反斜杠，\n   注入文本里留下字面反引号，把紧随其后的那条规则的选择器污染掉了（见 dsh-host.md §9）。\n   样式照常多行书写，不必压行；也不需要任何「牺牲规则」。 */\n/* 外观只有一套（2026-10-26）：原 variant 的 default / inset 两档在 CSS 里只差 1px 内距，\n   且 default 比文档承诺矮 2px，却让下游以为「有得选」而反复对图 ⇒ 整轴删除。\n   padding 3px 是尺寸契约的一部分：item 高度 = 控制高 − 6px，加起来正好 24 / 28 / 32。 */\n/* 选中片配色收在两条局部变量里（--seg-thumb 底 / --seg-on 字）：默认走主题亮片，\n   tone 档与自定义 {bg, fg} 都只改这两条（后者由组件内联写根节点，内联恒胜）。 */\n.dshpc-seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--dshpc-radius-md);--seg-thumb:var(--dshpc-surface-raised);--seg-on:var(--dshpc-fg);background:var(--dshpc-seg-track);}\n.dshpc-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:calc(var(--dshpc-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);font-family:inherit;font-size:var(--dshpc-font-xs);font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:color var(--dshpc-dur-fast) var(--dshpc-ease),background-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-seg--md .dshpc-seg__item{height:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item{height:calc(var(--dshpc-control-h-lg) - 6px);}\n/* 段内图标（前置）：与 Button 同口径 —— inline-flex 吃掉行高基线，svg 按块级。 */\n.dshpc-seg__icon{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-seg__icon svg{display:block;margin:0;}\n/* 只有图标（无文字 / 计数 / 角标）：段必须是正方形 ⇒ 宽 = 段高、左右内距归零、内容居中；\n   否则基础规则的 0 12px 会把它拉成长方形。放在三档之后：同名特异性下后写者胜。 */\n.dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-sm) - 6px);padding:0;justify-content:center;}\n.dshpc-seg--md .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-lg) - 6px);}\n.dshpc-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dshpc-fg);}\n.dshpc-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);color:var(--seg-on);font-weight:600;}\n.dshpc-seg__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n.dshpc-seg__item:disabled{cursor:default;opacity:.4;}\n/* 段内角标（如「异常」的数量）：语义色实面 + 反白字，0 由组件侧不渲染。必须是正圆（用户 2026-10-03）。 */\n.dshpc-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;background:var(--dshpc-danger);color:var(--dshpc-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}\n/* 段内中性计数（如筛选条「全部 11」）：纯文字、无底无边（对齐 task-ledger .dtl-seg__num 拍板口径）；0 由组件侧不渲染。 */\n.dshpc-seg__count{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;background:none;color:var(--dshpc-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}\n/* 选中段（彩色实面）里的计数：必须跟着 --seg-on 走再压暗一档（72% 白 ≈ 「比正文稍灰」）。\n   不许用 --dshpc-fg-3：它跟主题走，暗色下是深灰 ⇒ 蓝底上几乎看不见（2026-10-29 用户截图「My todos 4」）。 */\n.dshpc-seg__item[aria-pressed='true'] .dshpc-seg__count{color:color-mix(in srgb,var(--seg-on) 72%,transparent);}\n/* block：撑满父宽（表单行用），各段等分 */\n.dshpc-seg--block{display:flex;width:100%;}\n.dshpc-seg--block .dshpc-seg__item{flex:1 1 auto;justify-content:center;}\n/* weekday：星期多选方块。基础插件的特殊化定制（用户 2026-10-01：原 WeekdayPicker 即「蓝底 + 近似方形」）：\n   每格正方形（宽 = 段高）、选中品牌蓝反白字、**无外描边**（2026-10-18 重申）、\n   方块之间间距 gap:2px（2026-10-20 用户定稿：方块改小后 6px 显得太宽。10-18 曾从 2px 放宽到 6px，\n   两次都是用户拍板 —— 别自作主张改回去）。 */\n.dshpc-seg--weekday{--seg-track:var(--dshpc-seg-track);gap:2px;border:0;padding:3px;background:var(--seg-track);}\n.dshpc-seg--weekday .dshpc-seg__item{width:calc(var(--dshpc-control-h-lg) - 8px);padding:0;justify-content:center;}\n/* 蓝底反白：字色必须是常量白（--dshpc-on-signal）。2026-10-29 用户实测：暗色主题下这里曾用\n   --dshpc-fg-inverse，而它跟随宿主 label-primary-foreground，暗色下是近黑 ⇒ 蓝底黑字看不清。 */\n.dshpc-seg--weekday{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n\n/* ── tone（2026-10-29 用户）：选中片传内置基础色名，底 / 字由核心给，深浅两主题各自成立。\n   放在 weekday 之后：同名变量后写者胜，tone 与 className=\"dshpc-seg--weekday\" 同给时以 tone 为准。\n   黄底按 Chip / Button 同源口径用 on-warning（中高明度，白字看不清）。 */\n.dshpc-seg--tone-business{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-success{--seg-thumb:var(--dshpc-success);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-warning{--seg-thumb:var(--dshpc-warning);--seg-on:var(--dshpc-on-warning);}\n.dshpc-seg--tone-danger{--seg-thumb:var(--dshpc-danger);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-purple{--seg-thumb:var(--dshpc-purple);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-pink{--seg-thumb:var(--dshpc-pink);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-cyan{--seg-thumb:var(--dshpc-cyan);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-teal{--seg-thumb:var(--dshpc-teal);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-orange{--seg-thumb:var(--dshpc-orange);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-indigo{--seg-thumb:var(--dshpc-indigo);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-rose{--seg-thumb:var(--dshpc-rose);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-slate{--seg-thumb:var(--dshpc-slate);--seg-on:var(--dshpc-on-signal);}\n\n/* ── 单选滑动块（2026-10-26 用户：点选后选中底应「滑过去」，不是旧段消失、新段直接亮）。\n   结构 = 一块绝对定位的共用底 + 各段透明；位置/尺寸由组件量出后内联，这里只管外观与过渡。\n   --slide 只在单选挂上：多选（如星期）每段各自着色，没有唯一滑块可滑，保持原样。 */\n.dshpc-seg--slide{position:relative;}\n.dshpc-seg--slide .dshpc-seg__item{position:relative;z-index:1;}\n.dshpc-seg--slide .dshpc-seg__item[aria-pressed='true']{background:transparent;box-shadow:none;}\n.dshpc-seg__thumb{position:absolute;z-index:0;border-radius:var(--dshpc-radius-sm);background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);pointer-events:none;transition:left var(--dshpc-dur) var(--dshpc-ease),top var(--dshpc-dur) var(--dshpc-ease),width var(--dshpc-dur) var(--dshpc-ease),height var(--dshpc-dur) var(--dshpc-ease);}\n\n/* ── bordered 外框（2026-10-20 用户要的第二种模式）：**只在最外面套一圈 1px 描边**，\n   里面一概不动 —— 选中片的填充色 / 阴影 / 文字色全部保持原样（weekday 的蓝面照旧），\n   这里不写任何针对 __item 的规则。\n   总高必须与无框版逐像素一致：border 1px×2 由 padding 各让 1px 抵消（3 → 2）；\n   weekday 自己声明的 3px 在文件更后面，靠双类选择器压回 2px。 */\n.dshpc-seg--bordered{border:1px solid var(--dshpc-border);padding:2px;}\n.dshpc-seg--bordered.dshpc-seg--weekday{padding:2px;}\n\n@media (prefers-reduced-motion: reduce){.dshpc-seg__item{transition:none;}.dshpc-seg__thumb{transition:none;}}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/button-css.generated.js
+		const BUTTON_CSS = "\n/* ── 按钮 / 图标钮 P2 ───────────────────────────────────────────────────\n   与 Segmented 同一条高度纪律：--dshpc-control-h-sm(24) / -md(28) / -lg(32)，\n   有边框的 variant 用 1px 真边框 + 内部 padding 补回，**有边 / 无边同高**。\n\n   三条受控轴（2026-10-19 重写，对齐主流 UI 框架的分类口径）：\n     · variant —— 外观档 = 形态 + 语义色，共 10 档：\n         primary / secondary / outline / ghost / danger / success / warning / info /\n         danger-outline（红字描边）/ link（行内链接）\n     · size —— sm / md / lg\n     · block —— 撑满父宽\n   每一档**只填 5 个局部变量**（--btn-bg / -fg / -border / -bg-hover / -bg-active），\n   结构与交互只有上面这一份；任何档位都不许再写一遍 display/height/padding。\n   自定义颜色（Button 的 color 参数）同样只覆盖这 5 个变量（token 覆盖，不是新皮肤）。\n\n   ⚠️ hover 不再用 opacity 压一层（用户 2026-10-19：「黑色和红色的按钮移上去变化太小，\n   完全感觉不到颜色变了」）⇒ 走 --dshpc-*-hover / -active 的明确混色，见 tokens-css.ts。 */\n.dshpc-btn{--btn-bg:transparent;--btn-fg:var(--dshpc-fg);--btn-border:transparent;--btn-pad:12px;\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);--btn-fg-hover:var(--btn-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;\n  box-sizing:border-box;border:1px solid var(--btn-border);border-radius:var(--dshpc-radius-md);\n  background-color:var(--btn-bg);color:var(--btn-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease),transform var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-btn--sm{--btn-pad:10px;height:var(--dshpc-control-h-sm);padding:0 var(--btn-pad);font-size:var(--dshpc-font-sm);line-height:1;}\n.dshpc-btn--md{--btn-pad:12px;height:var(--dshpc-control-h-md);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n.dshpc-btn--lg{--btn-pad:14px;height:var(--dshpc-control-h-lg);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n/* block：撑满父宽（表单底栏 / 抽屉底部的主操作） */\n.dshpc-btn--block{display:flex;width:100%;}\n/* block + 前置图标 ⇒ 文字视觉居中（2026-10-19 用户点名）：\n   内容组 [图标 + 间距 + 文字] 整体在盒内居中时，**文字**的中心会被图标推右半格。\n   把右内边距补上「图标宽 + 间距」，可用盒随之左移同量 ⇒ 文字落回视觉中心，图标贴左侧。\n   图标宽按 1.2em 估（官方图标 14/16px vs 字号 12/13px），em 随字号档自动缩放。 */\n.dshpc-btn--block.dshpc-btn--icon-start{padding-right:calc(var(--btn-pad) + 1.2em + 6px);}\n/* 图标比同档文字小一号（用户 2026-11-02）：容器吃掉 0.875em，内联 SVG 一律跟随 1em，\n   不再由调用方的 size={16} 说了算 —— 全站按钮图标尺寸只由这一处决定。 */\n.dshpc-btn__icon,.dshpc-btn__icon-end{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;font-size:.875em;}\n.dshpc-btn__icon svg,.dshpc-btn__icon-end svg{display:block;margin:0;width:1em;height:1em;}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-btn .dshpc-btn__label{min-width:0;}\n/* loading：不换 DOM 结构，只在文案前插一枚 Loader（size=xs，12px）。\n   环的画法与动画统一在 controls/loader.css（本文件不再维护第二份 SVG 弧 / keyframes）。 */\n\n/* 交互态：颜色变化写在变量上 ⇒ 所有档位一次生效，且变化幅度由 token 决定（够明显） */\n.dshpc-btn:hover:not(:disabled){background-color:var(--btn-bg-hover);color:var(--btn-fg-hover);}\n.dshpc-btn:active:not(:disabled){background-color:var(--btn-bg-active);transform:translateY(1px);}\n.dshpc-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-btn:disabled{cursor:default;opacity:.5;}\n\n.dshpc-btn--primary{--btn-bg:var(--dshpc-accent);--btn-fg:var(--dshpc-fg-inverse);\n  --btn-bg-hover:var(--dshpc-accent-hover);--btn-bg-active:var(--dshpc-accent-active);}\n/* secondary：中性实心（灰面），用于「取消 / 次要」这类与主操作并排的按钮 */\n.dshpc-btn--secondary{--btn-bg:var(--dshpc-hover);--btn-fg:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-active);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--outline{--btn-bg:var(--dshpc-surface-1);--btn-border:var(--dshpc-border-strong);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--ghost{--btn-fg:var(--dshpc-fg-2);--btn-fg-hover:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--danger{--btn-bg:var(--dshpc-danger);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-danger-hover);--btn-bg-active:var(--dshpc-danger-active);}\n.dshpc-btn--success{--btn-bg:var(--dshpc-success);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-success-hover);--btn-bg-active:var(--dshpc-success-active);}\n.dshpc-btn--warning{--btn-bg:var(--dshpc-warning);--btn-fg:var(--dshpc-on-warning);\n  --btn-bg-hover:var(--dshpc-warning-hover);--btn-bg-active:var(--dshpc-warning-active);}\n.dshpc-btn--info{--btn-bg:var(--dshpc-business);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-business-hover);--btn-bg-active:var(--dshpc-business-active);}\n/* 扩展八色实心（2026-10-29）：白字两主题均 ≥4.5:1；hover/active 走各自 token 派生。 */\n.dshpc-btn--purple{--btn-bg:var(--dshpc-purple);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-purple-hover);--btn-bg-active:var(--dshpc-purple-active);}\n.dshpc-btn--pink{--btn-bg:var(--dshpc-pink);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-pink-hover);--btn-bg-active:var(--dshpc-pink-active);}\n.dshpc-btn--cyan{--btn-bg:var(--dshpc-cyan);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-cyan-hover);--btn-bg-active:var(--dshpc-cyan-active);}\n.dshpc-btn--teal{--btn-bg:var(--dshpc-teal);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-teal-hover);--btn-bg-active:var(--dshpc-teal-active);}\n.dshpc-btn--orange{--btn-bg:var(--dshpc-orange);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-orange-hover);--btn-bg-active:var(--dshpc-orange-active);}\n.dshpc-btn--indigo{--btn-bg:var(--dshpc-indigo);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-indigo-hover);--btn-bg-active:var(--dshpc-indigo-active);}\n.dshpc-btn--rose{--btn-bg:var(--dshpc-rose);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-rose-hover);--btn-bg-active:var(--dshpc-rose-active);}\n.dshpc-btn--slate{--btn-bg:var(--dshpc-slate);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-slate-hover);--btn-bg-active:var(--dshpc-slate-active);}\n/* danger-outline：红字描边（破坏性次要操作，如卡片上的「删除」）。\n   ⚠️ 旧修饰类 danger-ink 保留为别名（消费方可能还在挂），两者同一套皮肤。 */\n.dshpc-btn--danger-outline,.dshpc-btn--danger-ink{--btn-border:var(--dshpc-danger);--btn-fg:var(--dshpc-danger);\n  --btn-fg-hover:var(--dshpc-danger);--btn-bg-hover:var(--dshpc-danger-soft);--btn-bg-active:var(--dshpc-danger-soft);}\n/* link：行内文字链接型（会话 / 产出文件名），无底无边、品牌蓝、hover 下划线 */\n.dshpc-btn--link{--btn-fg:var(--dshpc-link);--btn-fg-hover:var(--dshpc-link);\n  --btn-bg-hover:transparent;--btn-bg-active:transparent;\n  height:auto;padding:0;border:0;background:none;font-weight:400;text-align:left;}\n.dshpc-btn--link:hover:not(:disabled){text-decoration:underline;}\n\n/* 图标钮：纯图标，方形；尺寸档的宽高与同档文字按钮等高、圆角统一吃 md（与 .dshpc-btn 同款，2026-10-28 拍板）\n   底色 / 图标色全走局部变量：默认**无底色**，消费方可传 color（图标色）/ background（底色）覆盖（用户 2026-11-02）。 */\n.dshpc-iconbtn{--icb-bg:transparent;--icb-bg-hover:var(--dshpc-hover);--icb-fg:var(--dshpc-fg-2);--icb-fg-hover:var(--dshpc-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;\n  border:1px solid var(--icb-border,transparent);border-radius:var(--dshpc-radius-md);\n  background:var(--icb-bg);color:var(--icb-fg);\n  font-family:inherit;cursor:pointer;flex:none;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),opacity var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-iconbtn--sm{width:var(--dshpc-control-h-sm);height:var(--dshpc-control-h-sm);font-size:var(--dshpc-font-sm);}\n.dshpc-iconbtn--md{width:var(--dshpc-control-h-md);height:var(--dshpc-control-h-md);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--lg{width:var(--dshpc-control-h-lg);height:var(--dshpc-control-h-lg);font-size:var(--dshpc-font-md);}\n/* 图标与文字按钮同口径：内联 SVG 一律跟随 1em（比 16px 档小一号） */\n.dshpc-iconbtn > svg{display:block;width:1em;height:1em;}\n.dshpc-iconbtn--outline{--icb-bg:var(--dshpc-surface-1);--icb-border:var(--dshpc-border);}\n.dshpc-iconbtn--danger{--icb-fg:var(--dshpc-danger);--icb-bg-hover:var(--dshpc-danger-soft);--icb-fg-hover:var(--dshpc-danger);}\n.dshpc-iconbtn:hover:not(:disabled){background:var(--icb-bg-hover);color:var(--icb-fg-hover);}\n.dshpc-iconbtn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-iconbtn:disabled{cursor:default;opacity:.4;}\n\n/* ── 行式文件按钮（图标 + 文件名）P2：**全站唯一实现**（2026-10-04 收编）──────────\n   用途：「产出物 / 附件」那种**一行一个文件**的清单项（基础信息右栏产出物清单、附件区、\n   执行记录页的展开区）。平时透明、**鼠标移上去才出浅底**（沿用用户 2026-10-03 定的观感）。\n   两个形态修饰类：\n     --block   撑满父宽（清单里一项一行）\n     --inline  内容宽（跟在文字后头，如附件行）\n   收编原因：这份皮肤此前只写在 task-list.tsx 的 TASK_LIST_CSS 里（旧名 .dshpc-info-out），\n   执行记录页展开区要用同一种观感 ⇒ 上提基础层，避免再出现「各写一份外观」（同名不同皮的坑刚踩过）。 */\n.dshpc-filechip{appearance:none;-webkit-appearance:none;border:0;border-radius:var(--dshpc-radius-xs);\n  background:transparent;color:var(--dshpc-fg);font:inherit;text-align:left;cursor:pointer;min-width:0;\n  transition:background-color var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-filechip:hover:not(:disabled){background:var(--dshpc-chip-bg);}\n.dshpc-filechip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n.dshpc-filechip:disabled{cursor:default;background:transparent;color:var(--dshpc-fg-3);}\n.dshpc-filechip--block{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;\n  padding:4px 6px;font-size:var(--dshpc-font-xs);}\n.dshpc-filechip--inline{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:var(--dshpc-font-sm);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-btn,.dshpc-iconbtn,.dshpc-filechip{transition:none;}}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/field-css.generated.js
+		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-dim);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;height:auto;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* height:auto 必须：iconbtn--md/lg 的固定 height 会让 absolute 的 bottom 被忽略\n   （top:1 + 固定高 ⇒ 整钮错位 1px，× 显得没居中，2026-10-28 用户截图抓的）。 */\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-dim);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/loader-css.generated.js
+		const LOADER_CSS = "/* ── Loader：统一的加载动画图标（无背景 / 无定位 / 颜色跟随 currentColor）────────\n   形态 × 尺寸两轴正交：形态管几何与动画；尺寸档只改 width / height，几何按\n   viewBox=\"0 0 24 24\" 等比缩放 —— 一套几何吃五档，12px 时描边即 1.5px、48px 时 6px，\n   视觉重量一致，不用逐个尺寸换算 calc。\n\n   边界：本控件**只管图标本身**。背景 / 圆角 / 内距 / 阴影 / 定位（fixed、居中、漂浮）\n   一律归调用方 —— 套 Chip、套 Card，或自己包一个 div。 */\n\n.dshpc-loader { display: inline-block; flex: none; vertical-align: middle; line-height: 0; color: inherit; }\n\n.dshpc-loader--xs { width: 12px; height: 12px; }\n.dshpc-loader--sm { width: 16px; height: 16px; }\n.dshpc-loader--md { width: 24px; height: 24px; }\n.dshpc-loader--lg { width: 32px; height: 32px; }\n.dshpc-loader--xl { width: 48px; height: 48px; }\n\n/* 形态一 ring：开口弧整体旋转。必须走 SVG 矢量弧 —— 次像素边框画圆在 12px 下会被\n   抗锯齿拉毛、看着像圆角方（2026-10-20 真机实测，曾被误判成 border-radius 被覆盖）。 */\n.dshpc-loader--ring { animation: dshpc-loader-rotate .8s linear infinite; }\n@keyframes dshpc-loader-rotate { to { transform: rotate(360deg) } }\n\n/* 形态二 blocks：三个方块依次脉动放大。\n   transform-box: fill-box 是 SVG 子元素做 CSS transform 的必要条件 —— 否则 origin\n   落在 viewBox 原点，节点会绕着左上角飞出去。 */\n.dshpc-loader__node { transform-box: fill-box; transform-origin: center; }\n.dshpc-loader--blocks .dshpc-loader__node { animation: dshpc-loader-blink 1.2s ease-in-out infinite; }\n.dshpc-loader__node:nth-child(2) { animation-delay: .15s; }\n.dshpc-loader__node:nth-child(3) { animation-delay: .3s; }\n@keyframes dshpc-loader-blink {\n  0%, 80%, 100% { opacity: .25; transform: scale(.8) }\n  40% { opacity: 1; transform: scale(1) }\n}\n\n/* 降低动效：停在「全部可见、实体大小」，而不是停在动画中途的半透明小点。 */\n@media (prefers-reduced-motion: reduce) {\n  .dshpc-loader--ring { animation: none; }\n  .dshpc-loader__node { animation: none; opacity: 1; transform: none; }\n}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/quick-toolbar-css.generated.js
+		const QUICK_TOOLBAR_CSS = "/* 快捷工具栏：右侧悬浮的一列独立圆钮。\n   横向 left / right 与 bottom、按钮直径、纵向间距由组件按 props 实时写入 style；\n   这里只放与位置无关的皮肤。 */\n.dshpc-quick-toolbar{\n  position:fixed;\n  z-index:var(--dshpc-z-dock);\n  display:flex;\n  flex-direction:column;\n  align-items:center;\n}\n/* 出现 / 消失：挂载即淡入，退场先播 fade-out（组件延迟卸载，见 QuickToolbar.ts）。 */\n@keyframes dshpc-quick-toolbar-in{\n  from{opacity:0;transform:translateY(6px) scale(.9);}\n  to{opacity:1;transform:none;}\n}\n@keyframes dshpc-quick-toolbar-out{\n  from{opacity:1;transform:none;}\n  to{opacity:0;transform:translateY(6px) scale(.9);}\n}\n.dshpc-quick-toolbar__item{\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  padding:0;\n  margin:0;\n  box-sizing:border-box;\n  border:1px solid var(--dshpc-border);\n  border-radius:50%;\n  /* 自定义底色 / 字色只写这两个变量（见 QuickToolbar.ts），hover/active 才能跟着混色。 */\n  background:var(--dshpc-quick-toolbar-bg, var(--dshpc-solid));\n  color:var(--dshpc-quick-toolbar-fg, var(--dshpc-on-solid));\n  box-shadow:var(--dshpc-shadow-2);\n  cursor:pointer;\n  animation:dshpc-quick-toolbar-in var(--dshpc-dur) var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),\n             color var(--dshpc-dur-fast) var(--dshpc-ease),\n             transform var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 退场期保留占位，避免同列其他按钮瞬时跳位。 */\n.dshpc-quick-toolbar__item.is-leaving{\n  animation:dshpc-quick-toolbar-out var(--dshpc-dur) var(--dshpc-ease) forwards;\n  pointer-events:none;\n}\n/* 变色与核心 Button 实心档同一套：按 --dshpc-fg 混出 hover / active 底色（自定义 color 也跟随）。 */\n.dshpc-quick-toolbar__item:hover{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 82%, var(--dshpc-fg));\n}\n.dshpc-quick-toolbar__item:active{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 70%, var(--dshpc-fg));\n  transform:scale(.94);\n}\n.dshpc-quick-toolbar__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n@media (prefers-reduced-motion: reduce){\n  .dshpc-quick-toolbar__item{transition:none;transform:none;animation:none;}\n  .dshpc-quick-toolbar__item.is-leaving{animation:none;opacity:0;}\n}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/hint-css.generated.js
+		const HINT_CSS = "\n/* ── 问号提示 P4（用户 2026-10-18：对齐真实插件 HelpButton——**带圈的问号图标**）──\n   本体 14px 细圈 + 圈内 ?，颜色 fg-3、hover 只提亮不加底（与 dshpc-ed-help 同规矩）。\n   气泡不在本文件：2026-10-19 用户拍板「问号必须用官方 Tooltip 那一个」⇒ 气泡由注入的\n   官方组件渲染（src/ui/tooltip.ts），这里只管问号图标本身。 */\n.dshpc-hint{display:inline-flex;align-items:center;justify-content:center;flex:none;\n  box-sizing:border-box;width:14px;height:14px;padding:0;border:1px solid currentColor;border-radius:50%;background:transparent;\n  color:var(--dshpc-fg-3);font-family:inherit;font-size:8px;font-weight:600;line-height:12px;cursor:help;vertical-align:middle;\n  transition:color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-hint:hover,.dshpc-hint:focus-visible{color:var(--dshpc-fg);background:0 0;}\n.dshpc-hint:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/split-group-css.generated.js
+		const SPLIT_GROUP_CSS = "\n/* ── 拼接外壳 SplitGroup ──────────────────────────────────────────────\n   职责只有一条：把两个控件在外观上焊成一体（外框 / 圆角 / 中间 1px 分隔 / 整体聚焦圈）。\n   它**不持状态、不出联动回调** —— 选中与联动全走内件自己的 value / onChange\n   （用户 2026-10-28 拍板：外壳不必知道右边那个下拉管什么）。\n\n   ⚠️ 与内件类名有意耦合：内件是 Picker / Segmented 时由下面几条规则把它们自己的\n   边框 / 底色 / 圆角交出来，由外壳统一画。内件改名或改结构要同步改这里，\n   否则会出现双边框、双底色。\n\n   高度不写死：内件自己按 size 档（sm 24 / md 28 / lg 32）撑开，外壳跟着长。\n   两格要等高，就给内件传**同一个 size**。万一两格 size 不一致，外壳内件用 align-items:center\n   居中（不会顶对齐露白，用户 2026-10-28 截图反馈「本月偏上」后的处理）；**别用 height:100%**，\n   它会覆盖三档高度（与 --lg/--sm 同特异性且注入更晚）。\n\n   左格统一灰底（用户 2026-10-28 拍板）：滑块保留自己的灰轨，左格下拉把底色换成\n   surface-sunken；右格保持原样。层次感 = 左格是「档位/范围」，右格是「值」。 */\n   .dshpc-split{display:inline-flex;align-items:stretch;max-width:100%;overflow:hidden;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n   /* 两格宽度都由内容给；容器再窄也让内件自己省略，不让外壳被撑破 */\n   .dshpc-split > *{min-width:0;max-width:100%;}\n   /* 分隔：相邻兄弟的左描边，不额外插 DOM，hover / focus 时也不会断 */\n   .dshpc-split > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n   /* 整体聚焦：只在**下拉展开**时画一整圈（判据是内件的 aria-expanded，不是 :focus-within）。\n      2026-11-02 用户定稿：滑块那格是「选中」不是「输入聚焦」，鼠标点它不该让整框常亮；\n      而且选取值后焦点会留在按钮上，用 :focus-within 会一直亮着。 */\n   .dshpc-split:has(.dshpc-picker__trigger[aria-expanded='true']){border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n   /* Picker：去掉自身外框与底色；display 改成 flex，消掉 inline-block 行盒带来的基线间隙。\n      注意**不能用 height:100%**：它会和 .dshpc-picker__trigger--lg / --sm 同特异性（都是两个类），\n      且 split-group.css 在 picker.css 之后注入，会把三档高度全吃掉（md/lg 看起来一样大）。\n      改用 align-items:center —— 同 size 时两格自然等高的同时文字垂直居中；万一两格 size 不一致，\n      较矮的格也只是居中、不会顶对齐露白。 */\n   .dshpc-split .dshpc-picker{display:flex;align-items:center;}\n   .dshpc-split .dshpc-picker__trigger{border:0;border-radius:0;background:transparent;}\n   .dshpc-split .dshpc-picker__trigger:focus-visible{outline:0;}\n   /* 左格下拉：灰底（滑块的灰轨是它自己的 --dshpc-seg-track，不在这里覆盖） */\n   .dshpc-split > :first-child .dshpc-picker__trigger{background:var(--dshpc-surface-sunken);}\n   /* Segmented：只去外圆角与描边，灰轨保留；padding 保持 3px 不动 —— 它是高度契约的一部分\n    （3 + item + 3 = control-h）。bordered 那档去掉描边、把让给描边的 1px 还回 padding，\n    否则会比右边矮 2px。 */\n   .dshpc-split .dshpc-seg{border-radius:0;border:0;}\n   .dshpc-split .dshpc-seg--bordered{padding:3px;}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/input-group-css.generated.js
+		const INPUT_GROUP_CSS = "\n/* ── 组合输入框 InputGroup ─────────────────────────────────────────────\n   输入框 + 后置按钮（一枚或多枚）+ 可选前置标题，焊成一体。\n   与 SplitGroup 同一套外观口径：外框 / 圆角 / 相邻 1px 分隔 / 整体聚焦圈都由外壳画，\n   内件（.dshpc-input / .dshpc-btn / .dshpc-iconbtn）把自己的边框、圆角、外圈交出来。\n\n   高度默认吃 --dshpc-control-h-*（sm 24 / md 28 / lg 32）；调用方要自定义就在根节点\n   内联 height，这里让内件 height:100% 跟上 —— 内件档位高度只有 0,1,0，被本文件的\n   0,2,0 压掉，不会出现「外壳变高了、里面的框还是 32」。\n   （⚠️ 别改成不写 height:100% 只靠 stretch：input 有确定高度时 flex 不会拉伸它。） */\n/* min-width：输入格是 flex:1，没有它时 inline-flex 按占位文字宽收得很窄（搜索框 + 按钮的典型用法会难看）。\n   要更宽 / 更窄由调用方在外面套壳或给 className，不许在这里写死 max-width。 */\n.dshpc-igroup{display:inline-flex;align-items:stretch;min-width:200px;max-width:100%;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n.dshpc-igroup--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-igroup--md{height:var(--dshpc-control-h-md);}\n.dshpc-igroup--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-igroup--error{border-color:var(--dshpc-danger);}\n/* 整体聚焦：内件自己的焦点圈交出来，由外壳画一整圈（各画各的会变成格内半圈） */\n.dshpc-igroup:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n\n/* 前置标题：与输入框同格，灰底区分（与 SplitGroup 左格同一口径） */\n.dshpc-igroup__label{display:inline-flex;align-items:center;flex:none;padding:0 8px;white-space:nowrap;\n  background:var(--dshpc-surface-sunken);color:var(--dshpc-fg-2);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-igroup--md .dshpc-igroup__label,.dshpc-igroup--lg .dshpc-igroup__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 输入格：交出边框 / 圆角 / 底色 / 焦点圈；宽度交给 flex（原生 width:100% 会和 flex-basis 打架） */\n.dshpc-igroup > .dshpc-input{flex:1 1 auto;width:auto;min-width:0;height:100%;border:0;border-radius:0;background:transparent;}\n.dshpc-igroup > .dshpc-input:focus{box-shadow:none;}\n\n/* 按钮格：交出边框与圆角；实心底色保留（右侧「确定」该有重量）。\n   纯图标钮本身是固定宽的方块，这里改成按高度撑出的正方形，自定义高度时才不会变成竖长条。 */\n.dshpc-igroup > .dshpc-btn,.dshpc-igroup > .dshpc-iconbtn{flex:none;height:100%;border-radius:0;}\n.dshpc-igroup > .dshpc-iconbtn{width:auto;aspect-ratio:1;}\n.dshpc-igroup > .dshpc-btn{border:0;}\n\n/* 分隔线：相邻兄弟的左描边，不额外插 DOM。后两条是给「清过边框」的格子补回来的，\n   必须写成 0,2,0 且写在上面的 border:0 之后 —— 否则被 border:0 压掉，格子之间没分隔。 */\n.dshpc-igroup > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-input{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-btn{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/table-css.generated.js
+		const TABLE_BASE_CSS = "/* ── 表格基础层（结构 + 交互 + 空态）─────────────────────────────────────\n   外观分档 = 分组件 + 分文件：本文件只放所有外观共用的部分；\n   表头底色、分隔线、悬浮 / 选中色由皮肤文件负责（table-plain.css 是第一档）。\n   皮肤选择器一律挂在 .dshpc-table--<skin> 下，与基础层不同名 —— 注入顺序不影响胜负\n   （test/css-contract.test.mjs 禁止跨常量同名选择器）。\n   圆角裁剪 / 横向滚动归调用方容器，本层不设 overflow；也不做表头吸顶：\n   分组表头是多行，统一 top:0 会在滚动时互相盖住（要吸顶请在外层容器处理）。 */\n\n.dshpc-table{--dshpc-table-pad-x:var(--dshpc-space-3);--dshpc-table-head-h:44px;--dshpc-table-row-h:48px;\n  width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;box-sizing:border-box;\n  color:var(--dshpc-fg);font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 密度三档：只改行高与水平内距，配色与分隔线归皮肤。compact / comfortable 各一行，\n   新增档位在此追加；列级 padding 走内联 style 覆盖（不在这里再开一套变量）。\n   默认水平内距 12px（space-3）—— 参考稿的色块间距，16px 偏松。 */\n.dshpc-table--density-compact{--dshpc-table-pad-x:var(--dshpc-space-2);--dshpc-table-head-h:36px;--dshpc-table-row-h:36px;}\n.dshpc-table--density-comfortable{--dshpc-table-pad-x:var(--dshpc-space-4);--dshpc-table-head-h:52px;--dshpc-table-row-h:60px;}\n\n.dshpc-table__head-cell,.dshpc-table__cell{box-sizing:border-box;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  text-align:left;vertical-align:middle;font-weight:400;}\n\n/* 表头 44 / 数据行 48 是 default 档（参考稿密度）；height 在 table-cell 上是最小高，\n   多行内容会自动把行撑高，不会被截断。 */\n.dshpc-table__head-cell{height:var(--dshpc-table-head-h);font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg-2);}\n.dshpc-table__head-cell--group{text-align:center;}\n.dshpc-table__cell{height:var(--dshpc-table-row-h);}\n\n.dshpc-table__head-cell--center,.dshpc-table__cell--center{text-align:center;}\n.dshpc-table__head-cell--right,.dshpc-table__cell--right{text-align:right;}\n\n.dshpc-table__row{transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n/* 只有传了 onRowClick 的行才是可点的（数据属性由组件按此打）。 */\n.dshpc-table__row[data-interactive='true']{cursor:pointer;}\n.dshpc-table__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n\n/* 斑马纹是通用能力（表级 striped 开关），放在基础层：底色取 token，各档皮肤不必各自实现。\n   选择器刻意只到 3 个类级别（表级 + 行 + :nth-child）；皮肤层的行态规则带 __body 上下文\n   + 属性选择器，必然是 4 级 ⇒ 与注入顺序无关地压过它。\n   2026-10-30 真机事故：这里曾写满 4 级（多了一个 __body），与选中的 4 级相同 ⇒ 基础层\n   比皮肤后注入，偶数行永远被斑马纹盖住（「单数行能选中、双数行点了没反应」）。 */\n.dshpc-table--striped .dshpc-table__row:nth-child(even){background:var(--dshpc-plate);}\n\n/* 分组通栏：一个表格里放多个板块（工作区 A / 工作区 B）时，每组先来一行横跨全部列的大标题，\n   然后才是这一组自己的表头与数据行。结构 + 底色归基础层（只用 token，各档皮肤共同成立）；\n   通栏底走 --dshpc-table-banner-bg（与表头互换的那一档，2026-10-30 用户定）；\n   通栏与组表头之间画一条线（用户 2026-10-30：那之间也要有 border）；\n   组与组之间用通栏顶线隔开，第一组顶部不画（外框已经在那儿，画了就成双线）。 */\n.dshpc-table__group-cell{height:var(--dshpc-table-head-h);padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;background:var(--dshpc-table-banner-bg);border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  text-align:left;vertical-align:middle;font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg);}\n.dshpc-table__group-body:first-of-type .dshpc-table__group-cell{border-top:0;}\n\n/* 通栏标题的固定标签（短竖线）与排版由 SectionHead 自带（4px 圆头），本层不再画。 */\n\n.dshpc-table__empty{height:80px;padding:0 var(--dshpc-space-4);text-align:center;\n  color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n\n/* 加载态行（加载更多 / 没有更多 / 整表加载）：单元格自身不画边框（底部状态行的顶线由皮肤补），内容居中；\n   整表加载默认占位 160px（可由 loadingHeight 覆盖），底部那行只占一行高。 */\n.dshpc-table__state-cell{padding:0;border:0;text-align:center;vertical-align:middle;}\n.dshpc-table__state{display:flex;align-items:center;justify-content:center;\n  gap:var(--dshpc-space-2);min-height:40px;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state--full{flex-direction:column;min-height:160px;gap:var(--dshpc-space-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state-text{line-height:1;}\n/* 底部哨兵：零高、无边框、无内容，只给 IntersectionObserver 一个落点。 */\n.dshpc-table__sentinel>td{height:0;padding:0;border:0;line-height:0;}\n\n/* 内建分页的外壳：表格在上、分页条在下，间距走 space-3（分页条自己管左右对齐）。 */\n.dshpc-table-frame{display:flex;flex-direction:column;gap:var(--dshpc-space-3);}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/table-plain-css.generated.js
+		const TABLE_PLAIN_CSS = "/* ── 外观一 · Plain（第一个样式：白卡片上的轻量表格）─────────────────────\n   特征：外框 + 灰底表头（含下边线，双行分组表头也清楚）、竖向分隔线、\n   数据行只保留极淡底线（不画重横线）、行悬浮淡蓝、选中行淡蓝底 + 左侧 3px 蓝竖条。\n   选择器全部挂在 .dshpc-table--plain 下，和基础层不同名（注入顺序无关）。\n   竖分隔线按列声明（格子上的 data-divider），不用相邻兄弟选择器 —— 后者会让每行首格\n   永远没有左线（用户 2026-10-30 真机看到的 Name 左侧缺线），且单元格跨列后会画错位置。\n   后续外观照此另建：table-grid.css / table-zebra.css，各自一个组件、各自 import 自己那份。 */\n\n/* 外框四态：all 四边 / x 只有左右 / y 只有上下 / none 全不要。\n   组件总会按 borders 属性和上对应 class，故这里不存在「无 class 的裸表」。\n   「不要左右两条边」就是 borders='y'。 */\n.dshpc-table--plain.dshpc-table--borders-all{border:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-x{border-left:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-y{border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-none{border:0;}\n\n/* 表头：中性灰底 + 下边线。底色走 --dshpc-table-head-bg（= --dshpc-surface-sunken，\n   与通栏那层灰同源；2026-10-30 用户二次定案：表头 / 通栏互换底色）；下边线兜住分组表头的第二层。 */\n.dshpc-table--plain .dshpc-table__head-cell{\n  background:var(--dshpc-table-head-bg);\n  border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-table--plain .dshpc-table__head-cell--group{color:var(--dshpc-fg-3);}\n\n/* 表头多色：列级 headerTone 打到 data-header-tone，浅底 + 同色文字。\n   色值全部来自 token（soft 底 / 实色字），暗色主题自动跟随，不写死任何 hex。\n   这组规则比上方灰底规则多一个属性选择器，必然覆盖默认灰底。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='business']{background:var(--dshpc-business-soft);color:var(--dshpc-business);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='success']{background:var(--dshpc-success-soft);color:var(--dshpc-success);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='warning']{background:var(--dshpc-warning-soft);color:var(--dshpc-warning);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='danger']{background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='purple']{background:var(--dshpc-purple-soft);color:var(--dshpc-purple);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='pink']{background:var(--dshpc-pink-soft);color:var(--dshpc-pink);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='cyan']{background:var(--dshpc-cyan-soft);color:var(--dshpc-cyan);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='teal']{background:var(--dshpc-teal-soft);color:var(--dshpc-teal);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='orange']{background:var(--dshpc-orange-soft);color:var(--dshpc-orange);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='indigo']{background:var(--dshpc-indigo-soft);color:var(--dshpc-indigo);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='rose']{background:var(--dshpc-rose-soft);color:var(--dshpc-rose);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='slate']{background:var(--dshpc-slate-soft);color:var(--dshpc-slate);}\n\n/* 竖分隔线：按列声明，**默认不画**。组件只给 divider: true 的列打 data-divider='left'，\n   首列恒不画（那是外框的位置）。默认表格 = 只有横线、没有一条竖线；\n   要「列间有线」就给对应列 divider:true。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-divider='left'],\n.dshpc-table--plain .dshpc-table__cell[data-divider='left']{border-left:1px solid var(--dshpc-border);}\n\n/* 数据行之间的极淡底线：只帮眼睛「分行」，不回到粗横线表格的老样子。 */\n.dshpc-table--plain .dshpc-table__row + .dshpc-table__row .dshpc-table__cell{\n  border-top:1px solid var(--dshpc-border-faint);\n}\n\n/* 底部状态行（加载更多 / 到底）：整行通栏，与上方数据行之间补一条实线。\n   只补顶线：左右两条不由这一格重复画 —— borders=all / x 时表级外框已经兜住；\n   borders=y / none 本来就没有左右边。整表加载占位行不加（表头已有下边线，再加就成双线）。 */\n.dshpc-table--plain .dshpc-table__state-row--footer .dshpc-table__state-cell{\n  border-top:1px solid var(--dshpc-border);\n}\n\n/* 没有左右外框时（borders=y）底部状态行下面那条表底线也去掉：\n   状态行只留上方一条实线，否则图标 / 文案下方还多一条孤线（2026-10-31 用户定）。\n   borders=none 本来就没有底边，无需在此重复。 */\n.dshpc-table--plain.dshpc-table--borders-y.dshpc-table--foot-no-bottom{border-bottom:0;}\n\n/* 行悬浮：只在可点行上给反馈，静态表格不误导用户以为能点。\n   底色是极淡中性灰（--dshpc-table-row-hover：亮色一层淡黑 ≈1.5%，暗色一层淡白 ≈3%）——\n   2026-10-30 用户：hover 要特别淡的灰、不要淡蓝（第二次又要求再浅一半）。带 __body 上下文是为了压过基础层的斑马纹（见 table.css）。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-interactive='true']:hover{background:var(--dshpc-table-row-hover);}\n\n/* 选中行：淡蓝底 + 左侧蓝竖条。用背景渐变画条，避免 tr 上伪元素 / 定位的兼容问题；\n   两条选择器同一份声明：悬浮态（多一个属性 + 伪类）不会盖掉选中态。\n   底色用 business-soft（比悬浮再明确一档但仍是浅色），条本身才是「选中」的信号。\n   特异性 4 级，高于基础层的斑马纹（3 级）⇒ 偶数行也能正常选中。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'],\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'][data-interactive='true']:hover{\n  background:linear-gradient(to right,var(--dshpc-business) 3px,var(--dshpc-business-soft) 3px);\n}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/pagination-css.generated.js
+		const PAGINATION_CSS = "/* ── 分页（‹ Previous 1 2 3 … 36 Next ›）────────────────────────────────────\n   当前页 = 蓝色圆角方块 + 白字（实心面的字必须走 --dshpc-on-signal，不许用主题反色）；\n   其余页码是纯文字按钮，悬浮只给极淡中性底。对齐由 --left / --center / --right 三个修饰决定，\n   组件默认 right。颜色全部走 token，明暗自动跟随宿主。 */\n\n.dshpc-pagination{display:flex;align-items:center;gap:var(--dshpc-space-2);flex-wrap:wrap;\n  font-size:var(--dshpc-font-sm);line-height:1;color:var(--dshpc-fg-2);}\n\n.dshpc-pagination--left{justify-content:flex-start;}\n.dshpc-pagination--center{justify-content:center;}\n.dshpc-pagination--right{justify-content:flex-end;}\n\n.dshpc-pagination__total{color:var(--dshpc-fg-3);margin-inline-end:var(--dshpc-space-1);}\n\n.dshpc-pagination__pages{display:flex;align-items:center;gap:2px;}\n\n/* 页码 / 上下页 = 核心 Button（当前页 info 实心蓝、其余 ghost），箭头 = 全站唯一 Chevron。\n   这里只补尺寸与间距，不重画按钮皮肤；两级选择器压过 .dshpc-btn--md 的内距。 */\n.dshpc-pagination .dshpc-pagination__page{padding:0 6px;min-width:28px;}\n.dshpc-pagination .dshpc-pagination__nav{padding:0 var(--dshpc-space-2);}\n\n.dshpc-pagination__ellipsis{display:inline-flex;align-items:center;justify-content:center;\n  min-width:28px;height:28px;color:var(--dshpc-fg-3);}\n\n.dshpc-pagination__simple{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;\n  color:var(--dshpc-fg);}\n\n/* 简洁模式只留箭头：文字标签隐藏，箭头仍然可见（无障碍名还在 aria-label 上）。 */\n.dshpc-pagination--simple .dshpc-pagination__text{display:none;}\n\n/* 每页条数下拉 = 核心 Picker（箭头是全站唯一的 Chevron）：只收窄不参与伸缩。 */\n.dshpc-pagination__size{flex:none;}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/controls/section-head-css.generated.js
+		const SECTION_HEAD_CSS = "/* 分区标题行：标签（可选，画出来的短竖线）/ icon + 标题 + 右侧控件。 */\n.dshpc-section-head{display:flex;align-items:center;gap:var(--dshpc-space-2);\n  margin-bottom:var(--dshpc-space-3);}\n.dshpc-section-head--flush{margin-bottom:0;}\n\n.dshpc-section-head__bar{flex:none;width:4px;height:1em;border-radius:999px;\n  font-size:var(--dshpc-font-lg);background:var(--dshpc-fg-2);}\n\n.dshpc-section-head__icon{display:inline-flex;align-items:center;flex:none;\n  line-height:var(--dshpc-line-lg);color:var(--dshpc-fg-3);}\n\n.dshpc-section-head__title{font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);\n  font-weight:600;color:var(--dshpc-fg);flex:none;}\n\n.dshpc-section-head__right{flex:1;display:flex;align-items:center;\n  justify-content:flex-end;gap:var(--dshpc-space-2);min-width:0;}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Loader.js
+		/**
+		* Loader —— 统一的加载动画图标（UI 基础层 · 反馈族）。
+		*
+		* 一句话边界：**只画图标本身**。没有背景、没有内距、没有圆角、没有定位。
+		* 要圆角底就外面套 `Chip` / `Card`，要浮在屏幕上就自己包一层 fixed 容器 ——
+		* 背景与位置属于调用方，不属于这个控件。
+		*
+		* 两轴正交（不是两个组件，也不是 N×M 份样式）：
+		* - `variant`：`ring` 开口弧旋转（默认）/ `blocks` 三块脉动
+		* - `size`：`xs` 12 / `sm` 16 / `md` 24（默认）/ `lg` 32 / `xl` 48
+		*
+		* 几何统一画在 `viewBox="0 0 24 24"` 里，尺寸档只改 `width` / `height` ⇒ 等比缩放，
+		* 描边与方块的视觉重量在各档一致（12px 下描边 1.5px，48px 下 6px）。
+		*
+		* 颜色：全程 `currentColor`，自动跟随所在按钮 / 标签的文字色，不给 color 轴
+		* （要换色在调用点给 `style={{ color }}` 即可，不必新增参数）。
+		*
+		* 无障碍：默认 `aria-hidden`（图标本身是装饰，语义由所在按钮的文字 / 卡片的
+		* `role="status"` 承担）；要让它自己承担语义时传 `label`，此时输出 `role="status"`。
+		*
+		* 扩展新形态：在 `LoaderVariant` 加一个值 + 本文件加一支几何 + `loader.css` 加一段规则，
+		* 不新增导出（形态由数据决定时直接传字符串即可，见 docs/help/ui.md）。
+		*/
+		/** 形态一：约 265° 的开口弧（周长 59.7，画 44 的空缺留 15.7）。 */
+		function ringNode() {
+			return (0, react$1.createElement)("circle", {
+				cx: 12,
+				cy: 12,
+				r: 9.5,
 				fill: "none",
-				"aria-hidden": true,
-				style
-			}, (0, react$1.createElement)("path", {
-				d: "M4 6l4 4 4-4",
 				stroke: "currentColor",
-				"stroke-width": 1.5,
-				"stroke-linecap": "round",
-				"stroke-linejoin": "round"
+				strokeWidth: 3,
+				strokeLinecap: "round",
+				strokeDasharray: "44 15.7"
+			});
+		}
+		/**
+		* 形态二：三个圆角短条，横向三等分。
+		* 每个 7.2×6.0 —— 正方形在 24px 档看着像「方点」，用户 2026-10-30 指出太丑。
+		* 间隔 0.6，左右各留 0.6；三块总宽 22.8，垂直居中于 24 高。
+		*/
+		function blockNodes() {
+			return [
+				0,
+				1,
+				2
+			].map((i) => (0, react$1.createElement)("rect", {
+				key: i,
+				className: "dshpc-loader__node",
+				x: .6 + i * 7.8,
+				y: 9,
+				width: 7.2,
+				height: 6,
+				rx: 1.5,
+				fill: "currentColor"
 			}));
 		}
+		/**
+		* 渲染一个加载动画图标。
+		*
+		* @param props 见 {@link LoaderProps}。
+		* @returns `<svg>` 元素（inline，不占额外行高）。
+		*/
+		function Loader$2(props) {
+			ensureComponentStyles("loader", LOADER_CSS);
+			const { variant = "ring", size = "md", label, className } = props;
+			const classes = [
+				"dshpc-loader",
+				`dshpc-loader--${variant}`,
+				`dshpc-loader--${size}`
+			];
+			if (className !== void 0 && className !== "") classes.push(className);
+			return (0, react$1.createElement)("svg", {
+				className: classes.join(" "),
+				viewBox: "0 0 24 24",
+				role: label === void 0 ? void 0 : "status",
+				"aria-label": label,
+				"aria-hidden": label === void 0 ? true : void 0,
+				focusable: "false"
+			}, variant === "ring" ? ringNode() : blockNodes());
+		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/utils/i18n.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Button.js
+		/**
+		* 按钮 / 图标钮 —— **全站唯一实现**（L2 组件皮肤，P2）
+		*
+		* 三轴模型：
+		*  - `variant`：外观档（形态 + 语义色），共 18 档
+		*      primary（黑实心）/ secondary（灰实心）/ outline（描边）/ ghost（无底无边）
+		*      danger（红实心）/ success（绿实心）/ warning（黄实心）/ info（蓝实心）
+		*      danger-outline（红字描边）/ link（行内链接）
+		*      purple / pink / cyan / teal / orange / indigo / rose / slate（扩展八色实心，2026-10-29）
+		*  - `size`：`sm`(24) / `md`(28) / `lg`(32) —— 高度一律吃 `--dshpc-control-h-*`，
+		*    **有边 / 无边同高**（边框在内部补回）
+		*  - `block`：撑满父宽
+		*
+		* 内容轴：`icon`（前置）/ `iconRight`（后置）/ `loading`（前置小圈并自动禁用）。
+		* 颜色轴：任一档都可以再用 `color` 传任意 CSS 色值 —— 只覆盖 `--btn-*` 几个变量，
+		* 不新增皮肤（皮肤仍只在 `controls-css.ts` 里）。
+		*
+		* `IconButton` 是纯图标钮：`plain`（默认无底无边，hover 起灰底）/ `outline`（描边）/ `danger`（红）。
+		* 兼容别名：`danger-ink` 仍是 `danger-outline` 的旧类名，可直接挂 className。
+		*
+		* ⚠️ 不许在任何使用点就地写按钮样式；要多一档外观 ⇒ 改基础层（一处改全站生效）。
+		*/
+		/** 实心档（color 参数按「底色」处理；其余档按「字色 + 描边色」处理）。 */
+		const SOLID_VARIANTS = [
+			"primary",
+			"secondary",
+			"danger",
+			"success",
+			"warning",
+			"info",
+			"purple",
+			"pink",
+			"cyan",
+			"teal",
+			"orange",
+			"indigo",
+			"rose",
+			"slate"
+		];
+		/** 把自定义颜色翻译成 5 个局部变量（只覆盖 token，不新增皮肤）。 */
+		function colorVars(variant, color) {
+			if (color === void 0 || color === "") return void 0;
+			if (SOLID_VARIANTS.includes(variant)) return {
+				"--btn-bg": color,
+				"--btn-bg-hover": `color-mix(in srgb, ${color} 82%, var(--dshpc-fg))`,
+				"--btn-bg-active": `color-mix(in srgb, ${color} 70%, var(--dshpc-fg))`
+			};
+			return {
+				"--btn-fg": color,
+				"--btn-fg-hover": color,
+				"--btn-border": color,
+				"--btn-bg-hover": `color-mix(in srgb, ${color} 12%, transparent)`,
+				"--btn-bg-active": `color-mix(in srgb, ${color} 18%, transparent)`
+			};
+		}
+		/** 组装按钮 class（结构一套 + 轴类）。 */
+		function buttonClass(variant, size, block, hasIcon, extra) {
+			return `dshpc-btn dshpc-btn--${variant} dshpc-btn--${size}${block ? " dshpc-btn--block" : ""}${hasIcon ? " dshpc-btn--icon-start" : ""}${extra !== void 0 && extra !== "" ? ` ${extra}` : ""}`;
+		}
+		/**
+		* 渲染一个「图标 + 文案」按钮。
+		*
+		* @param props 见 {@link ButtonProps}。
+		* @returns 按钮元素。
+		*/
+		function Button$1(props) {
+			ensureComponentStyles("button", BUTTON_CSS);
+			const { variant = "outline", size = "lg", icon, iconRight, color, loading = false, block = false, width, minWidth, maxWidth, className, style, children, ...rest } = props;
+			const widthStyle = {};
+			if (width !== void 0) widthStyle.width = width;
+			else {
+				if (minWidth !== void 0) widthStyle.minWidth = minWidth;
+				if (maxWidth !== void 0) widthStyle.maxWidth = maxWidth;
+			}
+			const marqueeLabel = maxWidth !== void 0 && width === void 0 && typeof children === "string";
+			const attrs = {
+				...rest,
+				type: rest.type ?? "button",
+				disabled: rest.disabled === true || loading,
+				className: buttonClass(variant, size, block, icon !== void 0 && icon !== null && !loading, className),
+				style: {
+					...colorVars(variant, color),
+					...widthStyle,
+					...style
+				}
+			};
+			return (0, react$1.createElement)("button", attrs, loading ? (0, react$1.createElement)(Loader$2, { size: "xs" }) : icon !== void 0 && icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon" }, icon) : null, marqueeLabel ? (0, react$1.createElement)(MarqueeText, {
+				text: children,
+				className: "dshpc-btn__label"
+			}) : children, iconRight !== void 0 && iconRight !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon-end" }, iconRight) : null);
+		}
+		/**
+		* 渲染一个纯图标按钮。
+		*
+		* @param props 见 {@link IconButtonProps}。
+		* @returns 图标按钮元素。
+		*/
+		function IconButton$1(props) {
+			ensureComponentStyles("button", BUTTON_CSS);
+			const { variant = "plain", size = "lg", icon, label, color, background, className, style, ...rest } = props;
+			const accent = {};
+			if (color !== void 0 && color !== "") {
+				accent["--icb-fg"] = color;
+				accent["--icb-fg-hover"] = color;
+				accent["--icb-bg-hover"] = `color-mix(in srgb, ${color} 14%, transparent)`;
+			}
+			if (background !== void 0 && background !== "") {
+				accent["--icb-bg"] = background;
+				accent["--icb-bg-hover"] = `color-mix(in srgb, ${background} 85%, var(--dshpc-fg))`;
+			}
+			const attrs = {
+				...rest,
+				type: rest.type ?? "button",
+				title: rest.title ?? label,
+				"aria-label": rest["aria-label"] ?? label,
+				className: `dshpc-iconbtn dshpc-iconbtn--${variant} dshpc-iconbtn--${size}${className !== void 0 && className !== "" ? ` ${className}` : ""}`,
+				style: {
+					...accent,
+					...style
+				}
+			};
+			return (0, react$1.createElement)("button", attrs, icon);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/utils/i18n.js
 		/**
 		* utils 自带的最小多语言。
 		*
@@ -2456,6 +484,7 @@ window.__ModuleLoader__.load({
 				explorerExpand: "展开",
 				explorerCollapse: "收起",
 				explorerEnter: "进入",
+				explorerRootDir: "根目录",
 				explorerRootName: "（工作区根目录）",
 				explorerCrumbsAria: "目录路径",
 				explorerPickFile: "选择此文件",
@@ -2471,13 +500,15 @@ window.__ModuleLoader__.load({
 				previewLoadMore: "加载更多",
 				previewTruncated: "内容过大，仅显示前 {n}",
 				previewOfficeUnavailable: "Office 预览不可用",
+				previewOfficeNoSession: "Office 预览不可用（还没有任何会话）",
 				previewRenderFailed: "预览渲染失败",
 				previewBadPayload: "返回数据不符合预期",
 				previewOutside: "路径在工作区之外",
 				previewNotFound: "文件不存在",
 				previewNotDirectory: "不是文件夹",
+				previewNotFile: "暂不支持此类型文件的预览",
 				previewTooLarge: "文件过大，无法预览",
-				previewNotText: "不是文本文件",
+				previewNotText: "暂不支持此类型文件的预览",
 				previewFailedCode: "加载失败（{code}）",
 				mdCopy: "复制",
 				mdCopied: "已复制",
@@ -2728,6 +759,7 @@ window.__ModuleLoader__.load({
 				explorerExpand: "Expand",
 				explorerCollapse: "Collapse",
 				explorerEnter: "Open",
+				explorerRootDir: "Root",
 				explorerRootName: "(workspace root)",
 				explorerCrumbsAria: "Breadcrumb",
 				explorerPickFile: "Pick this file",
@@ -2743,13 +775,15 @@ window.__ModuleLoader__.load({
 				previewLoadMore: "Load more",
 				previewTruncated: "Content too large, showing first {n}",
 				previewOfficeUnavailable: "Office preview unavailable",
+				previewOfficeNoSession: "Office preview unavailable (no session yet)",
 				previewRenderFailed: "Failed to render preview",
 				previewBadPayload: "Unexpected response payload",
 				previewOutside: "Path is outside the workspace",
 				previewNotFound: "File not found",
 				previewNotDirectory: "Not a folder",
+				previewNotFile: "Preview not supported for this file type",
 				previewTooLarge: "File too large to preview",
-				previewNotText: "Not a text file",
+				previewNotText: "Preview not supported for this file type",
 				previewFailedCode: "Failed to load ({code})",
 				mdCopy: "Copy",
 				mdCopied: "Copied",
@@ -2987,10 +1021,10 @@ window.__ModuleLoader__.load({
 				dtInvalidRange: "End is before start"
 			}
 		};
-		let current = "zh";
+		let current$1 = "zh";
 		/** 用内置字典翻译一个 key；未知 key 直接回退 key 本身（不抛、不空白）。 */
 		function t$2(key, vars) {
-			const template = DICT[current][key] ?? DICT.zh[key] ?? key;
+			const template = DICT[current$1][key] ?? DICT.zh[key] ?? key;
 			if (vars === void 0) return template;
 			return template.replace(/\{(\w+)\}/g, (whole, name) => {
 				const value = vars[name];
@@ -2998,636 +1032,51 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/tooltip.js
-		let renderer;
-		/** 注入官方 Tooltip（插件启动时调一次；传 undefined 撤销，回到自绘降级）。 */
-		function setTooltipRenderer(fn) {
-			renderer = fn;
-		}
-		/** 当前注入的 renderer；未注入返回 undefined（FieldHint 据此走降级路径）。 */
-		function getTooltipRenderer() {
-			return renderer;
-		}
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/feedback-css.generated.js
+		const FEEDBACK_CSS = "/* 遮罩与头部在 overlay.css，表面（底色/描边/圆角/阴影）在 panel.css 的 --modal 档，\n   这里只剩**家族布局与尺寸**。三者各管一段，别再把皮肤抄回来。 */\n.dshpc-modal{\n  display:flex;flex-direction:column;box-sizing:border-box;\n}\n/* body = 唯一滚动容器：内距与滚动都归它（滚动条贴面板右缘，不被内距挤进来）；\n   内容按流排，不设 height:100%、不自己开滚动条。\n   透明右边框 = 让滚动条与面板右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-modal__body{flex:1 1 auto;min-height:0;overflow:auto;padding:17px 18px;border-right:1px solid transparent}\n/* 底栏与头部同一口径（2026-11-02 用户）：上下内距相等、内容垂直居中、默认带一条分隔线。\n   线可由消费方关掉（Modal 的 footerDivider=false）—— 确认框家族本来就没有线（与头部一致）。 */\n.dshpc-modal .dshpc-modal__foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:18px;border-top:1px solid var(--dshpc-border)}\n.dshpc-modal .dshpc-modal__foot--bare{border-top:none}\n/* 自绘 toast 的样式在 2026-11-03 删除：Toast 早已改走宿主 toast()（Toast.ts 的 showNative），\n   .dshpc-toast* 这几个类没有任何消费者，留着只是死样式（还带着裸 z-index 与裸阴影）。 */\n.dshpc-error__retry{\n  margin-top:8px;color:var(--dshpc-link);cursor:pointer;background:none;border:none;padding:0;\n}\n/* 原生弹窗演示：经宿主 Modal 的 contentClassName 注入，证明宿主内容区尺寸可经类名自定义。 */\n.dshpc-native-demo-content{max-width:520px}\n/* 头部信号图标（AlertModal 按 severity 注入）：自含配色，色值在 tokens.css 的 --dshpc-sev-*。 */\n.dshpc-alert-sev{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:12px;color:var(--dshpc-on-signal);flex:none}\n.dshpc-alert-sev--info{background:var(--dshpc-sev-info)}\n.dshpc-alert-sev--success{background:var(--dshpc-sev-success)}\n.dshpc-alert-sev--warning{background:var(--dshpc-sev-warning)}\n.dshpc-alert-sev--error{background:var(--dshpc-sev-error)}\n/* 小确认框家族（sm）：严格抄兄弟项目 renderConfirm 的 dialogStyle（task-list.tsx:456）——\n   360px 宽 / 18px 内距 / 头部无分隔线 / 说明文字 fg-2 / 底部按钮右对齐。 */\n.dshpc-modal--sm{padding:18px}\n.dshpc-modal--sm .dshpc-overlay-head{padding:0 0 8px;border-bottom:none}\n.dshpc-modal--sm .dshpc-modal__body{padding:0 0 14px;overflow:visible;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);line-height:var(--dshpc-line-sm)}\n.dshpc-modal--sm .dshpc-modal__foot{padding:0;border-top:none}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/segmented-css.generated.js
-		const SEGMENTED_CSS = "\n/* ── 分段控件 P2 ─────────────────────────────────────────────────────\n   结构照兄弟项目 dsh-task-dispatch-table 的 Segmented 皮肤（item 无边框、hover 只提亮文字），\n   前缀 / 变量名换成本仓口径。用户额外要的两处（兄弟没有）：weekday 方块间隔（现为 2px）；段内中性计数 __count。\n   ⚠️ 2026-10-19 两次误判均已澄清：① 「宿主只认单行 CSS」——假，多行一直正常；\n   ② 「宿主吃掉 token 块之后第一条规则」——也假，真因是 tokens 模板字符串结尾多了一个反斜杠，\n   注入文本里留下字面反引号，把紧随其后的那条规则的选择器污染掉了（见 dsh-host.md §9）。\n   样式照常多行书写，不必压行；也不需要任何「牺牲规则」。 */\n/* 外观只有一套（2026-10-26）：原 variant 的 default / inset 两档在 CSS 里只差 1px 内距，\n   且 default 比文档承诺矮 2px，却让下游以为「有得选」而反复对图 ⇒ 整轴删除。\n   padding 3px 是尺寸契约的一部分：item 高度 = 控制高 − 6px，加起来正好 24 / 28 / 32。 */\n/* 选中片配色收在两条局部变量里（--seg-thumb 底 / --seg-on 字）：默认走主题亮片，\n   tone 档与自定义 {bg, fg} 都只改这两条（后者由组件内联写根节点，内联恒胜）。 */\n.dshpc-seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--dshpc-radius-md);--seg-thumb:var(--dshpc-surface-raised);--seg-on:var(--dshpc-fg);background:var(--dshpc-seg-track);}\n.dshpc-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:calc(var(--dshpc-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);font-family:inherit;font-size:var(--dshpc-font-xs);font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:color var(--dshpc-dur-fast) var(--dshpc-ease),background-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-seg--md .dshpc-seg__item{height:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item{height:calc(var(--dshpc-control-h-lg) - 6px);}\n/* 段内图标（前置）：与 Button 同口径 —— inline-flex 吃掉行高基线，svg 按块级。 */\n.dshpc-seg__icon{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-seg__icon svg{display:block;margin:0;}\n/* 只有图标（无文字 / 计数 / 角标）：段必须是正方形 ⇒ 宽 = 段高、左右内距归零、内容居中；\n   否则基础规则的 0 12px 会把它拉成长方形。放在三档之后：同名特异性下后写者胜。 */\n.dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-sm) - 6px);padding:0;justify-content:center;}\n.dshpc-seg--md .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-lg) - 6px);}\n.dshpc-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dshpc-fg);}\n.dshpc-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);color:var(--seg-on);font-weight:600;}\n.dshpc-seg__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n.dshpc-seg__item:disabled{cursor:default;opacity:.4;}\n/* 段内角标（如「异常」的数量）：语义色实面 + 反白字，0 由组件侧不渲染。必须是正圆（用户 2026-10-03）。 */\n.dshpc-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;background:var(--dshpc-danger);color:var(--dshpc-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}\n/* 段内中性计数（如筛选条「全部 11」）：纯文字、无底无边（对齐 task-ledger .dtl-seg__num 拍板口径）；0 由组件侧不渲染。 */\n.dshpc-seg__count{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;background:none;color:var(--dshpc-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}\n/* 选中段（彩色实面）里的计数：必须跟着 --seg-on 走再压暗一档（72% 白 ≈ 「比正文稍灰」）。\n   不许用 --dshpc-fg-3：它跟主题走，暗色下是深灰 ⇒ 蓝底上几乎看不见（2026-10-29 用户截图「My todos 4」）。 */\n.dshpc-seg__item[aria-pressed='true'] .dshpc-seg__count{color:color-mix(in srgb,var(--seg-on) 72%,transparent);}\n/* block：撑满父宽（表单行用），各段等分 */\n.dshpc-seg--block{display:flex;width:100%;}\n.dshpc-seg--block .dshpc-seg__item{flex:1 1 auto;justify-content:center;}\n/* weekday：星期多选方块。基础插件的特殊化定制（用户 2026-10-01：原 WeekdayPicker 即「蓝底 + 近似方形」）：\n   每格正方形（宽 = 段高）、选中品牌蓝反白字、**无外描边**（2026-10-18 重申）、\n   方块之间间距 gap:2px（2026-10-20 用户定稿：方块改小后 6px 显得太宽。10-18 曾从 2px 放宽到 6px，\n   两次都是用户拍板 —— 别自作主张改回去）。 */\n.dshpc-seg--weekday{--seg-track:var(--dshpc-seg-track);gap:2px;border:0;padding:3px;background:var(--seg-track);}\n.dshpc-seg--weekday .dshpc-seg__item{width:calc(var(--dshpc-control-h-lg) - 8px);padding:0;justify-content:center;}\n/* 蓝底反白：字色必须是常量白（--dshpc-on-signal）。2026-10-29 用户实测：暗色主题下这里曾用\n   --dshpc-fg-inverse，而它跟随宿主 label-primary-foreground，暗色下是近黑 ⇒ 蓝底黑字看不清。 */\n.dshpc-seg--weekday{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n\n/* ── tone（2026-10-29 用户）：选中片传内置基础色名，底 / 字由核心给，深浅两主题各自成立。\n   放在 weekday 之后：同名变量后写者胜，tone 与 className=\"dshpc-seg--weekday\" 同给时以 tone 为准。\n   黄底按 Chip / Button 同源口径用 on-warning（中高明度，白字看不清）。 */\n.dshpc-seg--tone-business{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-success{--seg-thumb:var(--dshpc-success);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-warning{--seg-thumb:var(--dshpc-warning);--seg-on:var(--dshpc-on-warning);}\n.dshpc-seg--tone-danger{--seg-thumb:var(--dshpc-danger);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-purple{--seg-thumb:var(--dshpc-purple);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-pink{--seg-thumb:var(--dshpc-pink);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-cyan{--seg-thumb:var(--dshpc-cyan);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-teal{--seg-thumb:var(--dshpc-teal);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-orange{--seg-thumb:var(--dshpc-orange);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-indigo{--seg-thumb:var(--dshpc-indigo);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-rose{--seg-thumb:var(--dshpc-rose);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-slate{--seg-thumb:var(--dshpc-slate);--seg-on:var(--dshpc-on-signal);}\n\n/* ── 单选滑动块（2026-10-26 用户：点选后选中底应「滑过去」，不是旧段消失、新段直接亮）。\n   结构 = 一块绝对定位的共用底 + 各段透明；位置/尺寸由组件量出后内联，这里只管外观与过渡。\n   --slide 只在单选挂上：多选（如星期）每段各自着色，没有唯一滑块可滑，保持原样。 */\n.dshpc-seg--slide{position:relative;}\n.dshpc-seg--slide .dshpc-seg__item{position:relative;z-index:1;}\n.dshpc-seg--slide .dshpc-seg__item[aria-pressed='true']{background:transparent;box-shadow:none;}\n.dshpc-seg__thumb{position:absolute;z-index:0;border-radius:var(--dshpc-radius-sm);background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);pointer-events:none;transition:left var(--dshpc-dur) var(--dshpc-ease),top var(--dshpc-dur) var(--dshpc-ease),width var(--dshpc-dur) var(--dshpc-ease),height var(--dshpc-dur) var(--dshpc-ease);}\n\n/* ── bordered 外框（2026-10-20 用户要的第二种模式）：**只在最外面套一圈 1px 描边**，\n   里面一概不动 —— 选中片的填充色 / 阴影 / 文字色全部保持原样（weekday 的蓝面照旧），\n   这里不写任何针对 __item 的规则。\n   总高必须与无框版逐像素一致：border 1px×2 由 padding 各让 1px 抵消（3 → 2）；\n   weekday 自己声明的 3px 在文件更后面，靠双类选择器压回 2px。 */\n.dshpc-seg--bordered{border:1px solid var(--dshpc-border);padding:2px;}\n.dshpc-seg--bordered.dshpc-seg--weekday{padding:2px;}\n\n@media (prefers-reduced-motion: reduce){.dshpc-seg__item{transition:none;}.dshpc-seg__thumb{transition:none;}}\n";
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/overlay-css.generated.js
+		const OVERLAY_CSS = "/* 浮层公共骨架：遮罩 + 头部。Modal（居中）/ SideSheet（侧边）/ 选文件弹窗（锚定）共用这一份，\n   各家各自 registerStyle 同一份（幂等），谁也不许再抄一份遮罩。\n   关闭钮的皮肤在 panel.css（.dshpc-panel__close，旧类名作别名），不在这里再写一份。 */\n\n/* 遮罩 = 宿主遮罩变量 --dsw-alias-bg-mask-1（与官方 Modal / 兄弟项目 --tdt-mask 同一条真值，用户 2026-10-20）。 */\n/* 右边界让位页面级分栏（PanelDock 发布的 --dshpc-page-inset-right，用户 2026-10-22）：\n   分栏不被压暗、照常可点；浮层在这块**剩下**的区域里排版，就像整页被推出去一样。 */\n.dshpc-overlay{\n  position:fixed;inset:0 var(--dshpc-page-inset-right,0px) 0 0;\n  background:var(--dshpc-mask);\n}\n/* 居中档（Modal）：z 走 modal 档。 */\n.dshpc-overlay--center{\n  display:flex;align-items:center;justify-content:center;\n  z-index:var(--dshpc-z-modal);\n}\n/* 侧边档（SideSheet）：面板 absolute 贴边，不需要 flex 居中；z 走 drawer 档（低于 modal）。 */\n.dshpc-overlay--side{z-index:var(--dshpc-z-drawer)}\n/* 锚定档（选文件弹窗）：遮罩照旧压暗 + 点外部关闭，面板自己 fixed 贴锚点，这里不做布局。 */\n.dshpc-overlay--plain{z-index:var(--dshpc-z-panel)}\n\n/* 头部四槽：左图标 / 标题组 / 弹性间隔 / 右侧动作区 + 关闭钮。\n   上下内距必须相等（18/12 会让标题离面板顶远、离分隔线近，用户 2026-11-02）。 */\n.dshpc-overlay-head{\n  display:flex;align-items:center;gap:8px;padding:18px;\n  border-bottom:1px solid var(--dshpc-border);flex-wrap:wrap;\n}\n.dshpc-overlay-head__heading{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 auto}\n.dshpc-overlay-head__lead{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1}\n/* 标题组：第一行 = 标题 + 右侧小块（徽标紧跟标题），第二行 = 副标题。 */\n.dshpc-overlay-head__titlegroup{display:flex;flex-direction:column;gap:2px;min-width:0;flex:0 1 auto}\n.dshpc-overlay-head__titlerow{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-overlay-head__title{font-size:var(--dshpc-font-lg);font-weight:600;line-height:1.4;min-width:0}\n/* 标题下副标题行（兄弟项目 .dsh-tdt-sv-sid：等宽字体、caption 色、可换行）。 */\n.dshpc-overlay-head__sid{font-family:var(--ds-font-family-code,monospace);font-size:var(--dshpc-font-xs);color:var(--dshpc-fg-3);word-break:break-all}\n.dshpc-overlay-head__extra{flex:none;display:inline-flex;align-items:center}\n.dshpc-overlay-head__spacer{flex:1 1 auto;min-width:8px}\n.dshpc-overlay-head__actions{flex:none;display:flex;align-items:center;gap:8px}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/button-css.generated.js
-		const BUTTON_CSS = "\n/* ── 按钮 / 图标钮 P2 ───────────────────────────────────────────────────\n   与 Segmented 同一条高度纪律：--dshpc-control-h-sm(24) / -md(28) / -lg(32)，\n   有边框的 variant 用 1px 真边框 + 内部 padding 补回，**有边 / 无边同高**。\n\n   三条受控轴（2026-10-19 重写，对齐主流 UI 框架的分类口径）：\n     · variant —— 外观档 = 形态 + 语义色，共 10 档：\n         primary / secondary / outline / ghost / danger / success / warning / info /\n         danger-outline（红字描边）/ link（行内链接）\n     · size —— sm / md / lg\n     · block —— 撑满父宽\n   每一档**只填 5 个局部变量**（--btn-bg / -fg / -border / -bg-hover / -bg-active），\n   结构与交互只有上面这一份；任何档位都不许再写一遍 display/height/padding。\n   自定义颜色（Button 的 color 参数）同样只覆盖这 5 个变量（token 覆盖，不是新皮肤）。\n\n   ⚠️ hover 不再用 opacity 压一层（用户 2026-10-19：「黑色和红色的按钮移上去变化太小，\n   完全感觉不到颜色变了」）⇒ 走 --dshpc-*-hover / -active 的明确混色，见 tokens-css.ts。 */\n.dshpc-btn{--btn-bg:transparent;--btn-fg:var(--dshpc-fg);--btn-border:transparent;--btn-pad:12px;\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);--btn-fg-hover:var(--btn-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;\n  box-sizing:border-box;border:1px solid var(--btn-border);border-radius:var(--dshpc-radius-md);\n  background-color:var(--btn-bg);color:var(--btn-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease),transform var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-btn--sm{--btn-pad:10px;height:var(--dshpc-control-h-sm);padding:0 var(--btn-pad);font-size:var(--dshpc-font-sm);line-height:1;}\n.dshpc-btn--md{--btn-pad:12px;height:var(--dshpc-control-h-md);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n.dshpc-btn--lg{--btn-pad:14px;height:var(--dshpc-control-h-lg);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n/* block：撑满父宽（表单底栏 / 抽屉底部的主操作） */\n.dshpc-btn--block{display:flex;width:100%;}\n/* block + 前置图标 ⇒ 文字视觉居中（2026-10-19 用户点名）：\n   内容组 [图标 + 间距 + 文字] 整体在盒内居中时，**文字**的中心会被图标推右半格。\n   把右内边距补上「图标宽 + 间距」，可用盒随之左移同量 ⇒ 文字落回视觉中心，图标贴左侧。\n   图标宽按 1.2em 估（官方图标 14/16px vs 字号 12/13px），em 随字号档自动缩放。 */\n.dshpc-btn--block.dshpc-btn--icon-start{padding-right:calc(var(--btn-pad) + 1.2em + 6px);}\n/* 图标比同档文字小一号（用户 2026-11-02）：容器吃掉 0.875em，内联 SVG 一律跟随 1em，\n   不再由调用方的 size={16} 说了算 —— 全站按钮图标尺寸只由这一处决定。 */\n.dshpc-btn__icon,.dshpc-btn__icon-end{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;font-size:.875em;}\n.dshpc-btn__icon svg,.dshpc-btn__icon-end svg{display:block;margin:0;width:1em;height:1em;}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-btn .dshpc-btn__label{min-width:0;}\n/* loading：不换 DOM 结构，只在文案前插一枚 Loader（size=xs，12px）。\n   环的画法与动画统一在 controls/loader.css（本文件不再维护第二份 SVG 弧 / keyframes）。 */\n\n/* 交互态：颜色变化写在变量上 ⇒ 所有档位一次生效，且变化幅度由 token 决定（够明显） */\n.dshpc-btn:hover:not(:disabled){background-color:var(--btn-bg-hover);color:var(--btn-fg-hover);}\n.dshpc-btn:active:not(:disabled){background-color:var(--btn-bg-active);transform:translateY(1px);}\n.dshpc-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-btn:disabled{cursor:default;opacity:.5;}\n\n.dshpc-btn--primary{--btn-bg:var(--dshpc-accent);--btn-fg:var(--dshpc-fg-inverse);\n  --btn-bg-hover:var(--dshpc-accent-hover);--btn-bg-active:var(--dshpc-accent-active);}\n/* secondary：中性实心（灰面），用于「取消 / 次要」这类与主操作并排的按钮 */\n.dshpc-btn--secondary{--btn-bg:var(--dshpc-hover);--btn-fg:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-active);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--outline{--btn-bg:var(--dshpc-surface-1);--btn-border:var(--dshpc-border-strong);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--ghost{--btn-fg:var(--dshpc-fg-2);--btn-fg-hover:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--danger{--btn-bg:var(--dshpc-danger);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-danger-hover);--btn-bg-active:var(--dshpc-danger-active);}\n.dshpc-btn--success{--btn-bg:var(--dshpc-success);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-success-hover);--btn-bg-active:var(--dshpc-success-active);}\n.dshpc-btn--warning{--btn-bg:var(--dshpc-warning);--btn-fg:var(--dshpc-on-warning);\n  --btn-bg-hover:var(--dshpc-warning-hover);--btn-bg-active:var(--dshpc-warning-active);}\n.dshpc-btn--info{--btn-bg:var(--dshpc-business);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-business-hover);--btn-bg-active:var(--dshpc-business-active);}\n/* 扩展八色实心（2026-10-29）：白字两主题均 ≥4.5:1；hover/active 走各自 token 派生。 */\n.dshpc-btn--purple{--btn-bg:var(--dshpc-purple);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-purple-hover);--btn-bg-active:var(--dshpc-purple-active);}\n.dshpc-btn--pink{--btn-bg:var(--dshpc-pink);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-pink-hover);--btn-bg-active:var(--dshpc-pink-active);}\n.dshpc-btn--cyan{--btn-bg:var(--dshpc-cyan);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-cyan-hover);--btn-bg-active:var(--dshpc-cyan-active);}\n.dshpc-btn--teal{--btn-bg:var(--dshpc-teal);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-teal-hover);--btn-bg-active:var(--dshpc-teal-active);}\n.dshpc-btn--orange{--btn-bg:var(--dshpc-orange);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-orange-hover);--btn-bg-active:var(--dshpc-orange-active);}\n.dshpc-btn--indigo{--btn-bg:var(--dshpc-indigo);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-indigo-hover);--btn-bg-active:var(--dshpc-indigo-active);}\n.dshpc-btn--rose{--btn-bg:var(--dshpc-rose);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-rose-hover);--btn-bg-active:var(--dshpc-rose-active);}\n.dshpc-btn--slate{--btn-bg:var(--dshpc-slate);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-slate-hover);--btn-bg-active:var(--dshpc-slate-active);}\n/* danger-outline：红字描边（破坏性次要操作，如卡片上的「删除」）。\n   ⚠️ 旧修饰类 danger-ink 保留为别名（消费方可能还在挂），两者同一套皮肤。 */\n.dshpc-btn--danger-outline,.dshpc-btn--danger-ink{--btn-border:var(--dshpc-danger);--btn-fg:var(--dshpc-danger);\n  --btn-fg-hover:var(--dshpc-danger);--btn-bg-hover:var(--dshpc-danger-soft);--btn-bg-active:var(--dshpc-danger-soft);}\n/* link：行内文字链接型（会话 / 产出文件名），无底无边、品牌蓝、hover 下划线 */\n.dshpc-btn--link{--btn-fg:var(--dshpc-link);--btn-fg-hover:var(--dshpc-link);\n  --btn-bg-hover:transparent;--btn-bg-active:transparent;\n  height:auto;padding:0;border:0;background:none;font-weight:400;text-align:left;}\n.dshpc-btn--link:hover:not(:disabled){text-decoration:underline;}\n\n/* 图标钮：纯图标，方形；尺寸档的宽高与同档文字按钮等高、圆角统一吃 md（与 .dshpc-btn 同款，2026-10-28 拍板）\n   底色 / 图标色全走局部变量：默认**无底色**，消费方可传 color（图标色）/ background（底色）覆盖（用户 2026-11-02）。 */\n.dshpc-iconbtn{--icb-bg:transparent;--icb-bg-hover:var(--dshpc-hover);--icb-fg:var(--dshpc-fg-2);--icb-fg-hover:var(--dshpc-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;\n  border:1px solid var(--icb-border,transparent);border-radius:var(--dshpc-radius-md);\n  background:var(--icb-bg);color:var(--icb-fg);\n  font-family:inherit;cursor:pointer;flex:none;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),opacity var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-iconbtn--sm{width:var(--dshpc-control-h-sm);height:var(--dshpc-control-h-sm);font-size:var(--dshpc-font-sm);}\n.dshpc-iconbtn--md{width:var(--dshpc-control-h-md);height:var(--dshpc-control-h-md);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--lg{width:var(--dshpc-control-h-lg);height:var(--dshpc-control-h-lg);font-size:var(--dshpc-font-md);}\n/* 图标与文字按钮同口径：内联 SVG 一律跟随 1em（比 16px 档小一号） */\n.dshpc-iconbtn > svg{display:block;width:1em;height:1em;}\n.dshpc-iconbtn--outline{--icb-bg:var(--dshpc-surface-1);--icb-border:var(--dshpc-border);}\n.dshpc-iconbtn--danger{--icb-fg:var(--dshpc-danger);--icb-bg-hover:var(--dshpc-danger-soft);--icb-fg-hover:var(--dshpc-danger);}\n.dshpc-iconbtn:hover:not(:disabled){background:var(--icb-bg-hover);color:var(--icb-fg-hover);}\n.dshpc-iconbtn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-iconbtn:disabled{cursor:default;opacity:.4;}\n\n/* ── 行式文件按钮（图标 + 文件名）P2：**全站唯一实现**（2026-10-04 收编）──────────\n   用途：「产出物 / 附件」那种**一行一个文件**的清单项（基础信息右栏产出物清单、附件区、\n   执行记录页的展开区）。平时透明、**鼠标移上去才出浅底**（沿用用户 2026-10-03 定的观感）。\n   两个形态修饰类：\n     --block   撑满父宽（清单里一项一行）\n     --inline  内容宽（跟在文字后头，如附件行）\n   收编原因：这份皮肤此前只写在 task-list.tsx 的 TASK_LIST_CSS 里（旧名 .dshpc-info-out），\n   执行记录页展开区要用同一种观感 ⇒ 上提基础层，避免再出现「各写一份外观」（同名不同皮的坑刚踩过）。 */\n.dshpc-filechip{appearance:none;-webkit-appearance:none;border:0;border-radius:var(--dshpc-radius-xs);\n  background:transparent;color:var(--dshpc-fg);font:inherit;text-align:left;cursor:pointer;min-width:0;\n  transition:background-color var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-filechip:hover:not(:disabled){background:var(--dshpc-chip-bg);}\n.dshpc-filechip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n.dshpc-filechip:disabled{cursor:default;background:transparent;color:var(--dshpc-fg-3);}\n.dshpc-filechip--block{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;\n  padding:4px 6px;font-size:var(--dshpc-font-xs);}\n.dshpc-filechip--inline{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:var(--dshpc-font-sm);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-btn,.dshpc-iconbtn,.dshpc-filechip{transition:none;}}\n";
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/panel-css.generated.js
+		const PANEL_CSS = "/* 浮层面板皮肤（2026-11-03 用户定：皮肤统一，只改样式不动交互）。\n *\n * 这份文件是**所有「浮起来的框」的皮肤真源**。定位（fixed / absolute、贴谁、怎么翻转、多大的\n * 层序）留在各自控件里，这里只管表面四件：底色 / 描边宽 / 圆角 / 阴影。\n * ⚠️ 组件 CSS 里不许再写这四个字面值 —— 想改外观就改这里，别在消费方另起一套。\n *\n * 三档（差异只在这三段定义，别处分叉）：\n *   --modal    居中模态（Modal / ConfirmModal / AlertModal 家族）\n *   --popover  贴锚点的浮层面板（pickWorkspaceFile 的选文件弹窗）\n *   --menu     下拉菜单（文件浏览器 ▾ 选层、Picker 下拉）\n *\n * 不并入三档的：PanelDock 与 SideSheet 是**贴边家族**（side-panel.css 的\n * .dshpc-side-surface，surface-base、无外描边）—— 2026-11-02 拍板「两者皮肤一模一样」，\n * 一个是布局成员、一个是贴边抽屉，都不是浮层。\n */\n.dshpc-panel{\n  background:var(--dshpc-panel-bg);color:var(--dshpc-fg);\n  border:var(--dshpc-panel-bw) solid var(--dshpc-border);\n  border-radius:var(--dshpc-panel-radius);box-shadow:var(--dshpc-panel-shadow);\n}\n.dshpc-panel--modal{\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:3px;\n  --dshpc-panel-radius:var(--dshpc-radius-xl);\n  --dshpc-panel-shadow:var(--dshpc-shadow-2);\n  overflow:hidden;\n}\n.dshpc-panel--popover{\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:1px;\n  --dshpc-panel-radius:var(--dshpc-radius-lg);\n  --dshpc-panel-shadow:var(--dshpc-shadow-2);\n  overflow:hidden;\n}\n.dshpc-panel--menu{\n  /* 菜单底与模态同一层（用户 2026-11-03：别用页面底色，暗色下看着全黑）。 */\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:1px;\n  --dshpc-panel-radius:var(--dshpc-radius-sm);\n  --dshpc-panel-shadow:var(--dshpc-shadow-1);\n}\n\n/* 浮层唯一的关闭钮（20×20 方角图标位）。\n   旧类名 .dshpc-overlay-head__close 保留为别名：消费方写在旧类名上的覆盖仍生效。 */\n.dshpc-panel__close,.dshpc-overlay-head__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-panel__close:hover,.dshpc-overlay-head__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-panel__close:focus-visible,.dshpc-overlay-head__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/field-css.generated.js
-		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-dim);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;height:auto;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* height:auto 必须：iconbtn--md/lg 的固定 height 会让 absolute 的 bottom 被忽略\n   （top:1 + 固定高 ⇒ 整钮错位 1px，× 显得没居中，2026-10-28 用户截图抓的）。 */\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-dim);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover,rgba(38,49,72,.06));}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/loader-css.generated.js
-		const LOADER_CSS = "/* ── Loader：统一的加载动画图标（无背景 / 无定位 / 颜色跟随 currentColor）────────\n   形态 × 尺寸两轴正交：形态管几何与动画；尺寸档只改 width / height，几何按\n   viewBox=\"0 0 24 24\" 等比缩放 —— 一套几何吃五档，12px 时描边即 1.5px、48px 时 6px，\n   视觉重量一致，不用逐个尺寸换算 calc。\n\n   边界：本控件**只管图标本身**。背景 / 圆角 / 内距 / 阴影 / 定位（fixed、居中、漂浮）\n   一律归调用方 —— 套 Chip、套 Card，或自己包一个 div。 */\n\n.dshpc-loader { display: inline-block; flex: none; vertical-align: middle; line-height: 0; color: inherit; }\n\n.dshpc-loader--xs { width: 12px; height: 12px; }\n.dshpc-loader--sm { width: 16px; height: 16px; }\n.dshpc-loader--md { width: 24px; height: 24px; }\n.dshpc-loader--lg { width: 32px; height: 32px; }\n.dshpc-loader--xl { width: 48px; height: 48px; }\n\n/* 形态一 ring：开口弧整体旋转。必须走 SVG 矢量弧 —— 次像素边框画圆在 12px 下会被\n   抗锯齿拉毛、看着像圆角方（2026-10-20 真机实测，曾被误判成 border-radius 被覆盖）。 */\n.dshpc-loader--ring { animation: dshpc-loader-rotate .8s linear infinite; }\n@keyframes dshpc-loader-rotate { to { transform: rotate(360deg) } }\n\n/* 形态二 blocks：三个方块依次脉动放大。\n   transform-box: fill-box 是 SVG 子元素做 CSS transform 的必要条件 —— 否则 origin\n   落在 viewBox 原点，节点会绕着左上角飞出去。 */\n.dshpc-loader__node { transform-box: fill-box; transform-origin: center; }\n.dshpc-loader--blocks .dshpc-loader__node { animation: dshpc-loader-blink 1.2s ease-in-out infinite; }\n.dshpc-loader__node:nth-child(2) { animation-delay: .15s; }\n.dshpc-loader__node:nth-child(3) { animation-delay: .3s; }\n@keyframes dshpc-loader-blink {\n  0%, 80%, 100% { opacity: .25; transform: scale(.8) }\n  40% { opacity: 1; transform: scale(1) }\n}\n\n/* 降低动效：停在「全部可见、实体大小」，而不是停在动画中途的半透明小点。 */\n@media (prefers-reduced-motion: reduce) {\n  .dshpc-loader--ring { animation: none; }\n  .dshpc-loader__node { animation: none; opacity: 1; transform: none; }\n}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/quick-toolbar-css.generated.js
-		const QUICK_TOOLBAR_CSS = "/* 快捷工具栏：右侧悬浮的一列独立圆钮。\n   横向 left / right 与 bottom、按钮直径、纵向间距由组件按 props 实时写入 style；\n   这里只放与位置无关的皮肤。 */\n.dshpc-quick-toolbar{\n  position:fixed;\n  z-index:var(--dshpc-z-dock);\n  display:flex;\n  flex-direction:column;\n  align-items:center;\n}\n/* 出现 / 消失：挂载即淡入，退场先播 fade-out（组件延迟卸载，见 QuickToolbar.ts）。 */\n@keyframes dshpc-quick-toolbar-in{\n  from{opacity:0;transform:translateY(6px) scale(.9);}\n  to{opacity:1;transform:none;}\n}\n@keyframes dshpc-quick-toolbar-out{\n  from{opacity:1;transform:none;}\n  to{opacity:0;transform:translateY(6px) scale(.9);}\n}\n.dshpc-quick-toolbar__item{\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  padding:0;\n  margin:0;\n  box-sizing:border-box;\n  border:1px solid var(--dshpc-border);\n  border-radius:50%;\n  /* 自定义底色 / 字色只写这两个变量（见 QuickToolbar.ts），hover/active 才能跟着混色。 */\n  background:var(--dshpc-quick-toolbar-bg, var(--dshpc-solid));\n  color:var(--dshpc-quick-toolbar-fg, var(--dshpc-on-solid));\n  box-shadow:var(--dshpc-shadow-2);\n  cursor:pointer;\n  animation:dshpc-quick-toolbar-in var(--dshpc-dur) var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),\n             color var(--dshpc-dur-fast) var(--dshpc-ease),\n             transform var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 退场期保留占位，避免同列其他按钮瞬时跳位。 */\n.dshpc-quick-toolbar__item.is-leaving{\n  animation:dshpc-quick-toolbar-out var(--dshpc-dur) var(--dshpc-ease) forwards;\n  pointer-events:none;\n}\n/* 变色与核心 Button 实心档同一套：按 --dshpc-fg 混出 hover / active 底色（自定义 color 也跟随）。 */\n.dshpc-quick-toolbar__item:hover{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 82%, var(--dshpc-fg));\n}\n.dshpc-quick-toolbar__item:active{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 70%, var(--dshpc-fg));\n  transform:scale(.94);\n}\n.dshpc-quick-toolbar__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n@media (prefers-reduced-motion: reduce){\n  .dshpc-quick-toolbar__item{transition:none;transform:none;animation:none;}\n  .dshpc-quick-toolbar__item.is-leaving{animation:none;opacity:0;}\n}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/hint-css.generated.js
-		const HINT_CSS = "\n/* ── 问号提示 P4（用户 2026-10-18：对齐真实插件 HelpButton——**带圈的问号图标**）──\n   本体 14px 细圈 + 圈内 ?，颜色 fg-3、hover 只提亮不加底（与 dshpc-ed-help 同规矩）。\n   气泡不在本文件：2026-10-19 用户拍板「问号必须用官方 Tooltip 那一个」⇒ 气泡由注入的\n   官方组件渲染（src/ui/tooltip.ts），这里只管问号图标本身。 */\n.dshpc-hint{display:inline-flex;align-items:center;justify-content:center;flex:none;\n  box-sizing:border-box;width:14px;height:14px;padding:0;border:1px solid currentColor;border-radius:50%;background:transparent;\n  color:var(--dshpc-fg-3);font-family:inherit;font-size:8px;font-weight:600;line-height:12px;cursor:help;vertical-align:middle;\n  transition:color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-hint:hover,.dshpc-hint:focus-visible{color:var(--dshpc-fg);background:0 0;}\n.dshpc-hint:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/split-group-css.generated.js
-		const SPLIT_GROUP_CSS = "\n/* ── 拼接外壳 SplitGroup ──────────────────────────────────────────────\n   职责只有一条：把两个控件在外观上焊成一体（外框 / 圆角 / 中间 1px 分隔 / 整体聚焦圈）。\n   它**不持状态、不出联动回调** —— 选中与联动全走内件自己的 value / onChange\n   （用户 2026-10-28 拍板：外壳不必知道右边那个下拉管什么）。\n\n   ⚠️ 与内件类名有意耦合：内件是 Picker / Segmented 时由下面几条规则把它们自己的\n   边框 / 底色 / 圆角交出来，由外壳统一画。内件改名或改结构要同步改这里，\n   否则会出现双边框、双底色。\n\n   高度不写死：内件自己按 size 档（sm 24 / md 28 / lg 32）撑开，外壳跟着长。\n   两格要等高，就给内件传**同一个 size**。万一两格 size 不一致，外壳内件用 align-items:center\n   居中（不会顶对齐露白，用户 2026-10-28 截图反馈「本月偏上」后的处理）；**别用 height:100%**，\n   它会覆盖三档高度（与 --lg/--sm 同特异性且注入更晚）。\n\n   左格统一灰底（用户 2026-10-28 拍板）：滑块保留自己的灰轨，左格下拉把底色换成\n   surface-sunken；右格保持原样。层次感 = 左格是「档位/范围」，右格是「值」。 */\n   .dshpc-split{display:inline-flex;align-items:stretch;max-width:100%;overflow:hidden;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n   /* 两格宽度都由内容给；容器再窄也让内件自己省略，不让外壳被撑破 */\n   .dshpc-split > *{min-width:0;max-width:100%;}\n   /* 分隔：相邻兄弟的左描边，不额外插 DOM，hover / focus 时也不会断 */\n   .dshpc-split > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n   /* 整体聚焦：只在**下拉展开**时画一整圈（判据是内件的 aria-expanded，不是 :focus-within）。\n      2026-11-02 用户定稿：滑块那格是「选中」不是「输入聚焦」，鼠标点它不该让整框常亮；\n      而且选取值后焦点会留在按钮上，用 :focus-within 会一直亮着。 */\n   .dshpc-split:has(.dshpc-picker__trigger[aria-expanded='true']){border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n   /* Picker：去掉自身外框与底色；display 改成 flex，消掉 inline-block 行盒带来的基线间隙。\n      注意**不能用 height:100%**：它会和 .dshpc-picker__trigger--lg / --sm 同特异性（都是两个类），\n      且 split-group.css 在 picker.css 之后注入，会把三档高度全吃掉（md/lg 看起来一样大）。\n      改用 align-items:center —— 同 size 时两格自然等高的同时文字垂直居中；万一两格 size 不一致，\n      较矮的格也只是居中、不会顶对齐露白。 */\n   .dshpc-split .dshpc-picker{display:flex;align-items:center;}\n   .dshpc-split .dshpc-picker__trigger{border:0;border-radius:0;background:transparent;}\n   .dshpc-split .dshpc-picker__trigger:focus-visible{outline:0;}\n   /* 左格下拉：灰底（滑块的灰轨是它自己的 --dshpc-seg-track，不在这里覆盖） */\n   .dshpc-split > :first-child .dshpc-picker__trigger{background:var(--dshpc-surface-sunken);}\n   /* Segmented：只去外圆角与描边，灰轨保留；padding 保持 3px 不动 —— 它是高度契约的一部分\n    （3 + item + 3 = control-h）。bordered 那档去掉描边、把让给描边的 1px 还回 padding，\n    否则会比右边矮 2px。 */\n   .dshpc-split .dshpc-seg{border-radius:0;border:0;}\n   .dshpc-split .dshpc-seg--bordered{padding:3px;}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/input-group-css.generated.js
-		const INPUT_GROUP_CSS = "\n/* ── 组合输入框 InputGroup ─────────────────────────────────────────────\n   输入框 + 后置按钮（一枚或多枚）+ 可选前置标题，焊成一体。\n   与 SplitGroup 同一套外观口径：外框 / 圆角 / 相邻 1px 分隔 / 整体聚焦圈都由外壳画，\n   内件（.dshpc-input / .dshpc-btn / .dshpc-iconbtn）把自己的边框、圆角、外圈交出来。\n\n   高度默认吃 --dshpc-control-h-*（sm 24 / md 28 / lg 32）；调用方要自定义就在根节点\n   内联 height，这里让内件 height:100% 跟上 —— 内件档位高度只有 0,1,0，被本文件的\n   0,2,0 压掉，不会出现「外壳变高了、里面的框还是 32」。\n   （⚠️ 别改成不写 height:100% 只靠 stretch：input 有确定高度时 flex 不会拉伸它。） */\n/* min-width：输入格是 flex:1，没有它时 inline-flex 按占位文字宽收得很窄（搜索框 + 按钮的典型用法会难看）。\n   要更宽 / 更窄由调用方在外面套壳或给 className，不许在这里写死 max-width。 */\n.dshpc-igroup{display:inline-flex;align-items:stretch;min-width:200px;max-width:100%;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n.dshpc-igroup--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-igroup--md{height:var(--dshpc-control-h-md);}\n.dshpc-igroup--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-igroup--error{border-color:var(--dshpc-danger);}\n/* 整体聚焦：内件自己的焦点圈交出来，由外壳画一整圈（各画各的会变成格内半圈） */\n.dshpc-igroup:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n\n/* 前置标题：与输入框同格，灰底区分（与 SplitGroup 左格同一口径） */\n.dshpc-igroup__label{display:inline-flex;align-items:center;flex:none;padding:0 8px;white-space:nowrap;\n  background:var(--dshpc-surface-sunken);color:var(--dshpc-fg-2);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-igroup--md .dshpc-igroup__label,.dshpc-igroup--lg .dshpc-igroup__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 输入格：交出边框 / 圆角 / 底色 / 焦点圈；宽度交给 flex（原生 width:100% 会和 flex-basis 打架） */\n.dshpc-igroup > .dshpc-input{flex:1 1 auto;width:auto;min-width:0;height:100%;border:0;border-radius:0;background:transparent;}\n.dshpc-igroup > .dshpc-input:focus{box-shadow:none;}\n\n/* 按钮格：交出边框与圆角；实心底色保留（右侧「确定」该有重量）。\n   纯图标钮本身是固定宽的方块，这里改成按高度撑出的正方形，自定义高度时才不会变成竖长条。 */\n.dshpc-igroup > .dshpc-btn,.dshpc-igroup > .dshpc-iconbtn{flex:none;height:100%;border-radius:0;}\n.dshpc-igroup > .dshpc-iconbtn{width:auto;aspect-ratio:1;}\n.dshpc-igroup > .dshpc-btn{border:0;}\n\n/* 分隔线：相邻兄弟的左描边，不额外插 DOM。后两条是给「清过边框」的格子补回来的，\n   必须写成 0,2,0 且写在上面的 border:0 之后 —— 否则被 border:0 压掉，格子之间没分隔。 */\n.dshpc-igroup > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-input{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-btn{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/table-css.generated.js
-		const TABLE_BASE_CSS = "/* ── 表格基础层（结构 + 交互 + 空态）─────────────────────────────────────\n   外观分档 = 分组件 + 分文件：本文件只放所有外观共用的部分；\n   表头底色、分隔线、悬浮 / 选中色由皮肤文件负责（table-plain.css 是第一档）。\n   皮肤选择器一律挂在 .dshpc-table--<skin> 下，与基础层不同名 —— 注入顺序不影响胜负\n   （test/css-contract.test.mjs 禁止跨常量同名选择器）。\n   圆角裁剪 / 横向滚动归调用方容器，本层不设 overflow；也不做表头吸顶：\n   分组表头是多行，统一 top:0 会在滚动时互相盖住（要吸顶请在外层容器处理）。 */\n\n.dshpc-table{--dshpc-table-pad-x:var(--dshpc-space-3);--dshpc-table-head-h:44px;--dshpc-table-row-h:48px;\n  width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;box-sizing:border-box;\n  color:var(--dshpc-fg);font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 密度三档：只改行高与水平内距，配色与分隔线归皮肤。compact / comfortable 各一行，\n   新增档位在此追加；列级 padding 走内联 style 覆盖（不在这里再开一套变量）。\n   默认水平内距 12px（space-3）—— 参考稿的色块间距，16px 偏松。 */\n.dshpc-table--density-compact{--dshpc-table-pad-x:var(--dshpc-space-2);--dshpc-table-head-h:36px;--dshpc-table-row-h:36px;}\n.dshpc-table--density-comfortable{--dshpc-table-pad-x:var(--dshpc-space-4);--dshpc-table-head-h:52px;--dshpc-table-row-h:60px;}\n\n.dshpc-table__head-cell,.dshpc-table__cell{box-sizing:border-box;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  text-align:left;vertical-align:middle;font-weight:400;}\n\n/* 表头 44 / 数据行 48 是 default 档（参考稿密度）；height 在 table-cell 上是最小高，\n   多行内容会自动把行撑高，不会被截断。 */\n.dshpc-table__head-cell{height:var(--dshpc-table-head-h);font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg-2);}\n.dshpc-table__head-cell--group{text-align:center;}\n.dshpc-table__cell{height:var(--dshpc-table-row-h);}\n\n.dshpc-table__head-cell--center,.dshpc-table__cell--center{text-align:center;}\n.dshpc-table__head-cell--right,.dshpc-table__cell--right{text-align:right;}\n\n.dshpc-table__row{transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n/* 只有传了 onRowClick 的行才是可点的（数据属性由组件按此打）。 */\n.dshpc-table__row[data-interactive='true']{cursor:pointer;}\n.dshpc-table__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n\n/* 斑马纹是通用能力（表级 striped 开关），放在基础层：底色取 token，各档皮肤不必各自实现。\n   选择器刻意只到 3 个类级别（表级 + 行 + :nth-child）；皮肤层的行态规则带 __body 上下文\n   + 属性选择器，必然是 4 级 ⇒ 与注入顺序无关地压过它。\n   2026-10-30 真机事故：这里曾写满 4 级（多了一个 __body），与选中的 4 级相同 ⇒ 基础层\n   比皮肤后注入，偶数行永远被斑马纹盖住（「单数行能选中、双数行点了没反应」）。 */\n.dshpc-table--striped .dshpc-table__row:nth-child(even){background:var(--dshpc-plate);}\n\n/* 分组通栏：一个表格里放多个板块（工作区 A / 工作区 B）时，每组先来一行横跨全部列的大标题，\n   然后才是这一组自己的表头与数据行。结构 + 底色归基础层（只用 token，各档皮肤共同成立）；\n   通栏底走 --dshpc-table-banner-bg（与表头互换的那一档，2026-10-30 用户定）；\n   通栏与组表头之间画一条线（用户 2026-10-30：那之间也要有 border）；\n   组与组之间用通栏顶线隔开，第一组顶部不画（外框已经在那儿，画了就成双线）。 */\n.dshpc-table__group-cell{height:var(--dshpc-table-head-h);padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;background:var(--dshpc-table-banner-bg);border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  text-align:left;vertical-align:middle;font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg);}\n.dshpc-table__group-body:first-of-type .dshpc-table__group-cell{border-top:0;}\n\n/* 通栏标题的固定标签（短竖线）与排版由 SectionHead 自带（4px 圆头），本层不再画。 */\n\n.dshpc-table__empty{height:80px;padding:0 var(--dshpc-space-4);text-align:center;\n  color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n\n/* 加载态行（加载更多 / 没有更多 / 整表加载）：单元格自身不画边框（底部状态行的顶线由皮肤补），内容居中；\n   整表加载默认占位 160px（可由 loadingHeight 覆盖），底部那行只占一行高。 */\n.dshpc-table__state-cell{padding:0;border:0;text-align:center;vertical-align:middle;}\n.dshpc-table__state{display:flex;align-items:center;justify-content:center;\n  gap:var(--dshpc-space-2);min-height:40px;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state--full{flex-direction:column;min-height:160px;gap:var(--dshpc-space-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state-text{line-height:1;}\n/* 底部哨兵：零高、无边框、无内容，只给 IntersectionObserver 一个落点。 */\n.dshpc-table__sentinel>td{height:0;padding:0;border:0;line-height:0;}\n\n/* 内建分页的外壳：表格在上、分页条在下，间距走 space-3（分页条自己管左右对齐）。 */\n.dshpc-table-frame{display:flex;flex-direction:column;gap:var(--dshpc-space-3);}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/table-plain-css.generated.js
-		const TABLE_PLAIN_CSS = "/* ── 外观一 · Plain（第一个样式：白卡片上的轻量表格）─────────────────────\n   特征：外框 + 灰底表头（含下边线，双行分组表头也清楚）、竖向分隔线、\n   数据行只保留极淡底线（不画重横线）、行悬浮淡蓝、选中行淡蓝底 + 左侧 3px 蓝竖条。\n   选择器全部挂在 .dshpc-table--plain 下，和基础层不同名（注入顺序无关）。\n   竖分隔线按列声明（格子上的 data-divider），不用相邻兄弟选择器 —— 后者会让每行首格\n   永远没有左线（用户 2026-10-30 真机看到的 Name 左侧缺线），且单元格跨列后会画错位置。\n   后续外观照此另建：table-grid.css / table-zebra.css，各自一个组件、各自 import 自己那份。 */\n\n/* 外框四态：all 四边 / x 只有左右 / y 只有上下 / none 全不要。\n   组件总会按 borders 属性和上对应 class，故这里不存在「无 class 的裸表」。\n   「不要左右两条边」就是 borders='y'。 */\n.dshpc-table--plain.dshpc-table--borders-all{border:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-x{border-left:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-y{border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-none{border:0;}\n\n/* 表头：中性灰底 + 下边线。底色走 --dshpc-table-head-bg（= --dshpc-surface-sunken，\n   与通栏那层灰同源；2026-10-30 用户二次定案：表头 / 通栏互换底色）；下边线兜住分组表头的第二层。 */\n.dshpc-table--plain .dshpc-table__head-cell{\n  background:var(--dshpc-table-head-bg);\n  border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-table--plain .dshpc-table__head-cell--group{color:var(--dshpc-fg-3);}\n\n/* 表头多色：列级 headerTone 打到 data-header-tone，浅底 + 同色文字。\n   色值全部来自 token（soft 底 / 实色字），暗色主题自动跟随，不写死任何 hex。\n   这组规则比上方灰底规则多一个属性选择器，必然覆盖默认灰底。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='business']{background:var(--dshpc-business-soft);color:var(--dshpc-business);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='success']{background:var(--dshpc-success-soft);color:var(--dshpc-success);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='warning']{background:var(--dshpc-warning-soft);color:var(--dshpc-warning);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='danger']{background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='purple']{background:var(--dshpc-purple-soft);color:var(--dshpc-purple);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='pink']{background:var(--dshpc-pink-soft);color:var(--dshpc-pink);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='cyan']{background:var(--dshpc-cyan-soft);color:var(--dshpc-cyan);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='teal']{background:var(--dshpc-teal-soft);color:var(--dshpc-teal);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='orange']{background:var(--dshpc-orange-soft);color:var(--dshpc-orange);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='indigo']{background:var(--dshpc-indigo-soft);color:var(--dshpc-indigo);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='rose']{background:var(--dshpc-rose-soft);color:var(--dshpc-rose);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='slate']{background:var(--dshpc-slate-soft);color:var(--dshpc-slate);}\n\n/* 竖分隔线：按列声明，**默认不画**。组件只给 divider: true 的列打 data-divider='left'，\n   首列恒不画（那是外框的位置）。默认表格 = 只有横线、没有一条竖线；\n   要「列间有线」就给对应列 divider:true。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-divider='left'],\n.dshpc-table--plain .dshpc-table__cell[data-divider='left']{border-left:1px solid var(--dshpc-border);}\n\n/* 数据行之间的极淡底线：只帮眼睛「分行」，不回到粗横线表格的老样子。 */\n.dshpc-table--plain .dshpc-table__row + .dshpc-table__row .dshpc-table__cell{\n  border-top:1px solid var(--dshpc-border-faint);\n}\n\n/* 底部状态行（加载更多 / 到底）：整行通栏，与上方数据行之间补一条实线。\n   只补顶线：左右两条不由这一格重复画 —— borders=all / x 时表级外框已经兜住；\n   borders=y / none 本来就没有左右边。整表加载占位行不加（表头已有下边线，再加就成双线）。 */\n.dshpc-table--plain .dshpc-table__state-row--footer .dshpc-table__state-cell{\n  border-top:1px solid var(--dshpc-border);\n}\n\n/* 没有左右外框时（borders=y）底部状态行下面那条表底线也去掉：\n   状态行只留上方一条实线，否则图标 / 文案下方还多一条孤线（2026-10-31 用户定）。\n   borders=none 本来就没有底边，无需在此重复。 */\n.dshpc-table--plain.dshpc-table--borders-y.dshpc-table--foot-no-bottom{border-bottom:0;}\n\n/* 行悬浮：只在可点行上给反馈，静态表格不误导用户以为能点。\n   底色是极淡中性灰（--dshpc-table-row-hover：亮色一层淡黑 ≈1.5%，暗色一层淡白 ≈3%）——\n   2026-10-30 用户：hover 要特别淡的灰、不要淡蓝（第二次又要求再浅一半）。带 __body 上下文是为了压过基础层的斑马纹（见 table.css）。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-interactive='true']:hover{background:var(--dshpc-table-row-hover);}\n\n/* 选中行：淡蓝底 + 左侧蓝竖条。用背景渐变画条，避免 tr 上伪元素 / 定位的兼容问题；\n   两条选择器同一份声明：悬浮态（多一个属性 + 伪类）不会盖掉选中态。\n   底色用 business-soft（比悬浮再明确一档但仍是浅色），条本身才是「选中」的信号。\n   特异性 4 级，高于基础层的斑马纹（3 级）⇒ 偶数行也能正常选中。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'],\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'][data-interactive='true']:hover{\n  background:linear-gradient(to right,var(--dshpc-business) 3px,var(--dshpc-business-soft) 3px);\n}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/pagination-css.generated.js
-		const PAGINATION_CSS = "/* ── 分页（‹ Previous 1 2 3 … 36 Next ›）────────────────────────────────────\n   当前页 = 蓝色圆角方块 + 白字（实心面的字必须走 --dshpc-on-signal，不许用主题反色）；\n   其余页码是纯文字按钮，悬浮只给极淡中性底。对齐由 --left / --center / --right 三个修饰决定，\n   组件默认 right。颜色全部走 token，明暗自动跟随宿主。 */\n\n.dshpc-pagination{display:flex;align-items:center;gap:var(--dshpc-space-2);flex-wrap:wrap;\n  font-size:var(--dshpc-font-sm);line-height:1;color:var(--dshpc-fg-2);}\n\n.dshpc-pagination--left{justify-content:flex-start;}\n.dshpc-pagination--center{justify-content:center;}\n.dshpc-pagination--right{justify-content:flex-end;}\n\n.dshpc-pagination__total{color:var(--dshpc-fg-3);margin-inline-end:var(--dshpc-space-1);}\n\n.dshpc-pagination__pages{display:flex;align-items:center;gap:2px;}\n\n/* 页码 / 上下页 = 核心 Button（当前页 info 实心蓝、其余 ghost），箭头 = 全站唯一 Chevron。\n   这里只补尺寸与间距，不重画按钮皮肤；两级选择器压过 .dshpc-btn--md 的内距。 */\n.dshpc-pagination .dshpc-pagination__page{padding:0 6px;min-width:28px;}\n.dshpc-pagination .dshpc-pagination__nav{padding:0 var(--dshpc-space-2);}\n\n.dshpc-pagination__ellipsis{display:inline-flex;align-items:center;justify-content:center;\n  min-width:28px;height:28px;color:var(--dshpc-fg-3);}\n\n.dshpc-pagination__simple{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;\n  color:var(--dshpc-fg);}\n\n/* 简洁模式只留箭头：文字标签隐藏，箭头仍然可见（无障碍名还在 aria-label 上）。 */\n.dshpc-pagination--simple .dshpc-pagination__text{display:none;}\n\n/* 每页条数下拉 = 核心 Picker（箭头是全站唯一的 Chevron）：只收窄不参与伸缩。 */\n.dshpc-pagination__size{flex:none;}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/controls/section-head-css.generated.js
-		const SECTION_HEAD_CSS = "/* 分区标题行：标签（可选，画出来的短竖线）/ icon + 标题 + 右侧控件。 */\n.dshpc-section-head{display:flex;align-items:center;gap:var(--dshpc-space-2);\n  margin-bottom:var(--dshpc-space-3);}\n.dshpc-section-head--flush{margin-bottom:0;}\n\n.dshpc-section-head__bar{flex:none;width:4px;height:1em;border-radius:999px;\n  font-size:var(--dshpc-font-lg);background:var(--dshpc-fg-2);}\n\n.dshpc-section-head__icon{display:inline-flex;align-items:center;flex:none;\n  line-height:var(--dshpc-line-lg);color:var(--dshpc-fg-3);}\n\n.dshpc-section-head__title{font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);\n  font-weight:600;color:var(--dshpc-fg);flex:none;}\n\n.dshpc-section-head__right{flex:1;display:flex;align-items:center;\n  justify-content:flex-end;gap:var(--dshpc-space-2);min-width:0;}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/FieldHint.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/panel.js
 		/**
-		* 问号提示 —— **全站唯一实现、独立组件**（L2，P4）
+		* 浮层面板公共件（2026-11-03）：`PanelSurface` = 皮肤载体，`PanelClose` = 唯一那枚关闭钮。
 		*
-		* ⚠️ 它**不属于 Input 家族**：任何地方都能挂——表单行尾、标题后面、卡片角落……
-		* 调用点自己把它排进自己的 flex / label 里即可（组件只是 14px 的内联图标 + 气泡）。
+		* 分工（用户 2026-11-03 定，目的就是「样式统一但各家用各家自己的逻辑」）：
+		*  - **定位**留在各自控件：Modal 居中、选文件弹窗贴锚点并翻转、菜单挂在触发器下方；
+		*  - **表面**全部来自 `panel.css` 的三档（modal / popover / menu），组件里不许再写
+		*    底色 / 描边 / 圆角 / 阴影。
 		*
-		* 气泡渲染 = **官方 Tooltip 本体**（2026-10-19 用户拍板「必须和悬停提示用同一个」）：
-		* 插件启动时 `setTooltipRenderer` 把官方 Tooltip 交给 core，本组件直接走它。
-		* ⚠️ **不做降级兜底**（用户同日明确：宿主内官方包恒在；官方改版 = 我们重新适配，不另造一套）。
-		* 未注入 renderer 的环境（node 自检）只出问号图标、没有气泡——那是非宿主环境，不是产品形态。
+		* 为什么不做成「一个万能 Panel 组件」：那会把定位也吞进来，等于要求所有浮层同一套交互。
+		* 这里只统一皮肤，不统一行为。
 		*/
-		/** 问号提示图标：hover / focus 浮出说明气泡（官方 Tooltip 渲染）。 */
-		function FieldHint(props) {
-			ensureComponentStyles("hint", HINT_CSS);
-			const { text, side, align, maxWidth, className, style } = props;
-			const anchor = (0, react$1.createElement)("span", {
-				className: `dshpc-hint${className !== void 0 && className !== "" ? ` ${className}` : ""}`,
-				style,
-				tabIndex: 0,
-				role: "note",
-				"aria-label": text
-			}, "?");
-			const renderer = getTooltipRenderer();
-			if (renderer === void 0) return anchor;
-			return renderer({
-				label: text,
-				side: side ?? "top",
-				...align !== void 0 ? { align } : {},
-				...maxWidth !== void 0 ? { maxWidth } : {},
-				children: anchor
-			});
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/marquee-css.generated.js
-		const MARQUEE_CSS = "/* 跑马灯（MarqueeText）：双层——外层只裁剪，内层才 transform 滚动；非 hover 内层自带省略号。\n   2026-10-20：本文件原是杂烩「select.css」（下拉 / 日历 / 时分的皮肤都装过），随着那些控件\n   一个个删完，最后只剩跑马灯，故按本包「一个 css 服务一个对象」的格局改名归档。\n   同批清掉的还有零引用的省略号类 .dshpc-ellipsis —— 本包三个用到截断的地方都没采纳它。 */\n.dshpc-mq{display:block;overflow:hidden;white-space:nowrap;}\n.dshpc-mq .dshpc-mq-in{display:inline-block;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top;}\n/* ⚠️ 跑法（用户 2026-10-03 拍板）：**跑一遍、停在尾字**（播放 1 次 + forwards），不来回弹、不无限跑。\n   滚距 = 精确溢出量 ⇒ 停下时最后一个字正好贴右缘，**不会跑进黑块**（黑块是旧手写版把\n   内层盒子裁了、按「半截文本」平移导致的）。鼠标移开 ⇒ :hover 失效 ⇒ 自动复位回省略号态。 */\n.dshpc-mq-run:hover .dshpc-mq-in{max-width:none;overflow:visible;animation:dshpc-mq-scroll var(--dshpc-mq-dur,6s) linear .4s 1 forwards;}\n@keyframes dshpc-mq-scroll{from{transform:translateX(0)}to{transform:translateX(var(--dshpc-mq-dist,-40px))}}\n/* 溢出渐影（用户 2026-10-24 拍板「左右稍微有点渐影」；官方口径 = dsh-client-ui-primitives@0.2.1-rc.2\n   PathLabel.module.css:13-15：mask-image 线性渐隐 + 28px 随官方）。⚠️ 只在 **hover 滚动态** 加：\n   静态态（三个点）不要渐影（用户 2026-10-24 二次拍板），hover 滚动时两端渐影——左缘柔化被裁的文字头。 */\n.dshpc-mq-run:hover{mask-image:linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/MarqueeText.js
-		/**
-		* 跑马灯文本 —— **全站唯一实现**（L2，P6 从 editor-fields 迁入 ui）
-		*
-		* 默认超长省略号；hover 且确实放不下时，来回滚动展示全名。自实现原因：官方 primitives 无跑马灯组件。
-		* 测宽用 ResizeObserver + 文本变化重测；滚动距离 0 时不启用 hover 动画（`.dshpc-mq-run` 才有动画）。
-		*
-		* **双层结构**：外层 `.dshpc-mq` 只负责裁剪（overflow:hidden），内层 `.dshpc-mq-in` 才做
-		* transform 滚动——文字永远在自己那一块里跑，不会压到相邻文字。皮肤在 `controls-css.ts`。
-		*/
-		/** 跑马灯文本。 */
-		function MarqueeText(props) {
-			ensureComponentStyles("marquee", MARQUEE_CSS);
-			const outerRef = (0, react$1.useRef)(null);
-			const innerRef = (0, react$1.useRef)(null);
-			const [dist, setDist] = (0, react$1.useState)(0);
-			const measure = (0, react$1.useCallback)(() => {
-				const outer = outerRef.current;
-				const inner = innerRef.current;
-				if (outer === null || inner === null) return;
-				setDist(Math.max(0, Math.ceil(inner.scrollWidth - outer.clientWidth)));
-			}, []);
-			(0, react$1.useLayoutEffect)(() => {
-				const outer = outerRef.current;
-				const inner = innerRef.current;
-				if (outer === null || inner === null) return;
-				measure();
-				const ro = new ResizeObserver(measure);
-				ro.observe(outer);
-				ro.observe(inner);
-				return () => {
-					ro.disconnect();
-				};
-			}, [measure]);
-			(0, react$1.useEffect)(() => {
-				measure();
-			}, [props.text, measure]);
-			const run = dist > 0;
-			return (0, react$1.createElement)("span", {
-				ref: outerRef,
-				className: (run ? "dshpc-mq dshpc-mq-run" : "dshpc-mq") + (props.className === void 0 ? "" : ` ${props.className}`),
-				title: props.title,
-				style: props.style
-			}, (0, react$1.createElement)("span", {
-				ref: innerRef,
-				className: "dshpc-mq-in",
-				style: { ...run ? {
-					"--dshpc-mq-dist": `${-dist}px`,
-					"--dshpc-mq-dur": `${Math.max(3, Math.round(dist / 30))}s`
-				} : null }
-			}, props.text));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/picker-css.generated.js
-		const PICKER_CSS = "\n.dshpc-picker{position:relative;display:inline-block;max-width:100%;font-size:13px;line-height:20px}\n.dshpc-picker__trigger{\n  display:inline-flex;align-items:center;justify-content:space-between;gap:6px;\n  min-width:120px;max-width:100%;height:28px;padding:0 8px;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-1);\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);cursor:pointer;\n}\n.dshpc-picker__trigger:disabled{color:var(--dshpc-fg-dim);cursor:not-allowed;opacity:.7}\n/* 聚焦（键盘或点击选中）时与全站一致的蓝色描边；菜单打开后焦点会进去，触发器自然失去焦点。 */\n.dshpc-picker__trigger:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 文字默认靠左（吃掉剩余宽度），不给 space-between 把短文案推到中间的机会；\n   确实要居中就显式传 align=\"center\"。 */\n.dshpc-picker__label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}\n.dshpc-picker__trigger--center .dshpc-picker__label{text-align:center}\n.dshpc-picker__caret{flex:none;color:var(--dshpc-fg-3)}\n.dshpc-picker__icon{display:inline-flex;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-picker__option-icon{display:inline-flex;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-picker__menu{\n  z-index:60;max-height:280px;overflow:auto;padding:4px;\n  /* 菜单经 FloatingPortal 挂到 body，脱离 .dshpc-picker，须显式字号，否则继承 body 的大字号 */\n  font-size:13px;line-height:20px;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border);\n  border-radius:var(--dshpc-radius-md);box-shadow:0 8px 24px rgba(15,23,42,.12);\n}\n/* 尺寸档（与 Field 的 sm/md/lg 对应）。 */\n.dshpc-picker__trigger--sm{height:24px;font-size:12px}\n.dshpc-picker__trigger--lg{height:32px}\n/* 键盘游标所在项（无 hover 也要看得见）。 */\n.dshpc-picker__option[data-active='true']{background:var(--dshpc-surface-sunken);outline:1px solid var(--dshpc-border)}\n.dshpc-picker__option--clear{color:var(--dshpc-fg-3)}\n.dshpc-picker__search{\n  width:100%;height:28px;margin-bottom:4px;padding:0 8px;box-sizing:border-box;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-sunken);\n  border:1px solid var(--dshpc-border-faint);border-radius:var(--dshpc-radius-md);outline:none;\n}\n.dshpc-picker__group-label{\n  padding:6px 8px 2px;color:var(--dshpc-fg-3);font-size:11px;\n}\n.dshpc-picker__option{\n  display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:var(--dshpc-radius-sm);cursor:pointer;\n  color:var(--dshpc-fg);white-space:nowrap;\n}\n.dshpc-picker__option:hover{background:var(--dshpc-surface-sunken)}\n.dshpc-picker__option--active{background:var(--dshpc-open-bg);color:var(--dshpc-business)}\n.dshpc-picker__option--disabled{color:var(--dshpc-fg-dim);cursor:not-allowed}\n/* 选项文字吃掉剩余宽度：超长省略号（配合 MarqueeText hover 跑马灯），不撑宽菜单。 */\n.dshpc-picker__option-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.dshpc-picker__tick{width:12px;color:var(--dshpc-business)}\n.dshpc-picker__empty{padding:8px;color:var(--dshpc-fg-3);text-align:center}\n.dshpc-picker__degraded{\n  padding:6px 8px;margin-bottom:4px;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-warning-label);background:color-mix(in srgb,var(--dshpc-warning) 12%,transparent);\n  font-size:11px;\n}\n.dshpc-picker__row{display:flex;align-items:center;gap:8px}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Picker.js
-		/**
-		* 通用选择器：单选 / 多选 / 上限 / 搜索 / 分组 / 空态 / 降级。
-		*
-		* **纯零件，不自己取数** —— 选项由调用方传入（工作区列表、模型列表这类数据要跨 host↔client
-		* 边界，通道是插件私有的，组件取不到，见需求文档 §6）。
-		*/
-		function Picker(props) {
-			ensureComponentStyles("picker", PICKER_CSS);
-			ensureComponentStyles("field", FIELD_CSS);
-			const tt = props.translate ?? t$2;
-			const mode = props.mode ?? "single";
-			const size$3 = props.size ?? "md";
-			const placement = props.placement ?? "down";
-			const clearable = props.clearable === true;
-			const showLabels = props.showLabels !== false;
-			const triggerStyle = resolveTriggerSizing(props);
-			const groups = (0, react$1.useMemo)(() => toGroups(props.groups, props.options), [props.groups, props.options]);
-			const controlled = props.value !== void 0;
-			const [inner, setInner] = (0, react$1.useState)(() => toArray(props.defaultValue));
-			const selected = controlled ? toArray(props.value) : inner;
-			const emit = (next) => {
-				if (!controlled) setInner(next);
-				props.onChange?.(mode === "single" ? next[0] ?? "" : next);
-			};
-			const [open, setOpen] = (0, react$1.useState)(false);
-			const [query, setQuery] = (0, react$1.useState)("");
-			const [active, setActive] = (0, react$1.useState)(-1);
-			const rootRef = (0, react$1.useRef)(null);
-			const searchRef = (0, react$1.useRef)(null);
-			const { refs, floatingStyles } = useFloating({
-				open,
-				onOpenChange: setOpen,
-				placement: placement === "up" ? "top-start" : "bottom-start",
-				middleware: [
-					offset(4),
-					flip(),
-					shift$2({ padding: 8 }),
-					size({ apply({ elements, rects, availableWidth, availableHeight }) {
-						Object.assign(elements.floating.style, {
-							minWidth: `${rects.reference.width}px`,
-							maxWidth: `${Math.min(480, availableWidth ?? 480)}px`,
-							maxHeight: `${Math.max(80, Math.min(280, (availableHeight ?? 320) - 8))}px`
-						});
-					} })
-				],
-				whileElementsMounted: autoUpdate,
-				strategy: "fixed"
-			});
-			const setSearchRef = (0, react$1.useCallback)((el) => {
-				searchRef.current = el;
-				if (el !== null && open) el.focus();
-			}, [open]);
-			(0, react$1.useEffect)(() => {
-				if (!open) return;
-				const onDown = (e) => {
-					const root = rootRef.current;
-					const floatingEl = refs.floating.current;
-					if (root !== null && root.contains(e.target)) return;
-					if (floatingEl !== null && floatingEl.contains(e.target)) return;
-					setOpen(false);
-				};
-				document.addEventListener("mousedown", onDown);
-				return () => document.removeEventListener("mousedown", onDown);
-			}, [open]);
-			(0, react$1.useEffect)(() => {
-				if (open) return;
-				setQuery("");
-				setActive(-1);
-			}, [open]);
-			const shown = filterGroups(groups, query);
-			const flat = flattenOptions(shown);
-			const atMax = mode === "multiple" && props.max !== void 0 && selected.length >= props.max;
-			const summary = selected.length === 0 ? props.placeholder ?? tt("pickerPlaceholder") : mode === "multiple" && !showLabels ? tt("pickerSelected", { n: selected.length }) : labelsOf(groups, selected).join("、") || (props.placeholder ?? tt("pickerPlaceholder"));
-			const pick = (value) => {
-				if (mode === "single") {
-					emit([value]);
-					setOpen(false);
-					return;
-				}
-				emit(toggleValue(selected, value, props.max));
-				if (props.closeOnSelect === true) setOpen(false);
-			};
-			const clear = () => {
-				emit([]);
-				setOpen(false);
-			};
-			const onKeyDown = (e) => {
-				if (!open) return;
-				if (e.key === "Escape") {
-					setOpen(false);
-					return;
-				}
-				if (flat.length === 0) return;
-				if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-					e.preventDefault();
-					const dir = e.key === "ArrowDown" ? 1 : -1;
-					setActive((cur) => (cur + dir + flat.length) % flat.length);
-					return;
-				}
-				if (e.key === "Enter" && active >= 0) {
-					e.preventDefault();
-					const hit = flat[active];
-					if (hit !== void 0) pick(hit.value);
-				}
-			};
-			const trigger = (0, react$1.createElement)("button", {
-				type: "button",
-				"aria-label": props.ariaLabel,
-				"aria-expanded": open,
-				ref: refs.setReference,
-				className: `dshpc-picker__trigger dshpc-picker__trigger--${size$3}${props.align === "center" ? " dshpc-picker__trigger--center" : ""}`,
-				style: triggerStyle,
-				disabled: props.disabled === true,
-				onClick: () => {
-					if (props.disabled !== true) setOpen(!open);
-				}
-			}, props.icon !== void 0 && props.icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-picker__icon" }, props.icon) : null, (0, react$1.createElement)(MarqueeText, {
-				text: summary,
-				className: "dshpc-picker__label"
-			}), (0, react$1.createElement)(Chevron, {
-				size: 12,
-				className: "dshpc-picker__caret"
-			}));
-			const triggerRow = props.hint === void 0 ? trigger : (0, react$1.createElement)("span", { className: "dshpc-fieldwrap dshpc-fieldwrap--inline" }, trigger, (0, react$1.createElement)(FieldHint, { text: props.hint }));
+		/** 皮肤载体：`dshpc-panel` + 档位类，别的地方不要手拼这两个类。 */
+		function PanelSurface(props) {
+			ensureComponentStyles("panel", PANEL_CSS);
+			const className = `dshpc-panel dshpc-panel--${props.tier}${props.className === void 0 || props.className === "" ? "" : ` ${props.className}`}`;
 			return (0, react$1.createElement)("div", {
-				className: `dshpc-picker${props.className === void 0 ? "" : ` ${props.className}`}`,
-				ref: rootRef,
-				onKeyDown
-			}, triggerRow, open ? (0, react$1.createElement)(FloatingPortal, null, (0, react$1.createElement)("div", {
-				className: "dshpc-picker__menu",
-				ref: refs.setFloating,
-				style: floatingStyles
-			}, props.degraded === true ? (0, react$1.createElement)("div", { className: "dshpc-picker__degraded" }, tt("pickerDegraded")) : null, atMax ? (0, react$1.createElement)("div", { className: "dshpc-picker__degraded" }, tt("pickerMaxReached", { n: props.max ?? 0 })) : null, props.searchable === true ? (0, react$1.createElement)("input", {
-				ref: setSearchRef,
-				className: "dshpc-picker__search",
-				placeholder: tt("pickerSearch"),
-				value: query,
-				onChange: (e) => setQuery(e.target.value)
-			}) : null, flat.length === 0 && groups.length === 0 ? (0, react$1.createElement)("div", { className: "dshpc-picker__empty" }, tt("pickerEmpty")) : flat.length === 0 ? (0, react$1.createElement)("div", { className: "dshpc-picker__empty" }, tt("pickerNoMatch")) : [clearable && mode === "single" && selected.length > 0 ? (0, react$1.createElement)("div", {
-				key: "__clear__",
-				className: "dshpc-picker__option dshpc-picker__option--clear",
-				onClick: clear
-			}, tt("pickerClear")) : null, ...shown.map((g) => (0, react$1.createElement)("div", { key: g.value || "_" }, g.label === "" ? null : (0, react$1.createElement)("div", { className: "dshpc-picker__group-label" }, g.label), g.options.map((o) => {
-				const blocked = o.disabled === true || atMax && !selected.includes(o.value);
-				const activeCls = [
-					"dshpc-picker__option",
-					selected.includes(o.value) ? "dshpc-picker__option--active" : "",
-					blocked ? "dshpc-picker__option--disabled" : ""
-				].filter((s) => s !== "").join(" ");
-				const idx = flat.indexOf(o);
-				return (0, react$1.createElement)("div", {
-					key: o.value,
-					className: activeCls,
-					"data-active": idx === active ? "true" : void 0,
-					onClick: () => {
-						if (!blocked) pick(o.value);
-					}
-				}, mode === "multiple" ? (0, react$1.createElement)("span", { className: "dshpc-picker__tick" }, selected.includes(o.value) ? "✓" : "") : null, o.icon !== void 0 && o.icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-picker__option-icon" }, o.icon) : null, (0, react$1.createElement)(MarqueeText, {
-					text: o.label,
-					className: "dshpc-picker__option-label"
-				}));
-			})))])) : null);
+				...props.attrs,
+				className,
+				style: props.style,
+				role: props.role,
+				onClick: props.stopPropagation === true ? (event) => event.stopPropagation() : void 0
+			}, props.children ?? null);
 		}
-		function toArray(v) {
-			if (v === void 0) return [];
-			return Array.isArray(v) ? [...v] : [v];
+		/** 浮层唯一那枚关闭钮（20×20 方角）；位置由各自的头部决定，这个件不管定位。 */
+		function PanelClose(props) {
+			ensureComponentStyles("panel", PANEL_CSS);
+			return (0, react$1.createElement)("button", {
+				type: "button",
+				className: `dshpc-panel__close${props.className === void 0 ? "" : ` ${props.className}`}`,
+				"aria-label": props.label,
+				onClick: () => props.onClick()
+			}, props.icon ?? "✕");
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Loader.js
-		/**
-		* Loader —— 统一的加载动画图标（UI 基础层 · 反馈族）。
-		*
-		* 一句话边界：**只画图标本身**。没有背景、没有内距、没有圆角、没有定位。
-		* 要圆角底就外面套 `Chip` / `Card`，要浮在屏幕上就自己包一层 fixed 容器 ——
-		* 背景与位置属于调用方，不属于这个控件。
-		*
-		* 两轴正交（不是两个组件，也不是 N×M 份样式）：
-		* - `variant`：`ring` 开口弧旋转（默认）/ `blocks` 三块脉动
-		* - `size`：`xs` 12 / `sm` 16 / `md` 24（默认）/ `lg` 32 / `xl` 48
-		*
-		* 几何统一画在 `viewBox="0 0 24 24"` 里，尺寸档只改 `width` / `height` ⇒ 等比缩放，
-		* 描边与方块的视觉重量在各档一致（12px 下描边 1.5px，48px 下 6px）。
-		*
-		* 颜色：全程 `currentColor`，自动跟随所在按钮 / 标签的文字色，不给 color 轴
-		* （要换色在调用点给 `style={{ color }}` 即可，不必新增参数）。
-		*
-		* 无障碍：默认 `aria-hidden`（图标本身是装饰，语义由所在按钮的文字 / 卡片的
-		* `role="status"` 承担）；要让它自己承担语义时传 `label`，此时输出 `role="status"`。
-		*
-		* 扩展新形态：在 `LoaderVariant` 加一个值 + 本文件加一支几何 + `loader.css` 加一段规则，
-		* 不新增导出（形态由数据决定时直接传字符串即可，见 docs/help/ui.md）。
-		*/
-		/** 形态一：约 265° 的开口弧（周长 59.7，画 44 的空缺留 15.7）。 */
-		function ringNode() {
-			return (0, react$1.createElement)("circle", {
-				cx: 12,
-				cy: 12,
-				r: 9.5,
-				fill: "none",
-				stroke: "currentColor",
-				strokeWidth: 3,
-				strokeLinecap: "round",
-				strokeDasharray: "44 15.7"
-			});
-		}
-		/**
-		* 形态二：三个圆角短条，横向三等分。
-		* 每个 7.2×6.0 —— 正方形在 24px 档看着像「方点」，用户 2026-10-30 指出太丑。
-		* 间隔 0.6，左右各留 0.6；三块总宽 22.8，垂直居中于 24 高。
-		*/
-		function blockNodes() {
-			return [
-				0,
-				1,
-				2
-			].map((i) => (0, react$1.createElement)("rect", {
-				key: i,
-				className: "dshpc-loader__node",
-				x: .6 + i * 7.8,
-				y: 9,
-				width: 7.2,
-				height: 6,
-				rx: 1.5,
-				fill: "currentColor"
-			}));
-		}
-		/**
-		* 渲染一个加载动画图标。
-		*
-		* @param props 见 {@link LoaderProps}。
-		* @returns `<svg>` 元素（inline，不占额外行高）。
-		*/
-		function Loader$2(props) {
-			ensureComponentStyles("loader", LOADER_CSS);
-			const { variant = "ring", size = "md", label, className } = props;
-			const classes = [
-				"dshpc-loader",
-				`dshpc-loader--${variant}`,
-				`dshpc-loader--${size}`
-			];
-			if (className !== void 0 && className !== "") classes.push(className);
-			return (0, react$1.createElement)("svg", {
-				className: classes.join(" "),
-				viewBox: "0 0 24 24",
-				role: label === void 0 ? void 0 : "status",
-				"aria-label": label,
-				"aria-hidden": label === void 0 ? true : void 0,
-				focusable: "false"
-			}, variant === "ring" ? ringNode() : blockNodes());
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Button.js
-		/**
-		* 按钮 / 图标钮 —— **全站唯一实现**（L2 组件皮肤，P2）
-		*
-		* 三轴模型：
-		*  - `variant`：外观档（形态 + 语义色），共 18 档
-		*      primary（黑实心）/ secondary（灰实心）/ outline（描边）/ ghost（无底无边）
-		*      danger（红实心）/ success（绿实心）/ warning（黄实心）/ info（蓝实心）
-		*      danger-outline（红字描边）/ link（行内链接）
-		*      purple / pink / cyan / teal / orange / indigo / rose / slate（扩展八色实心，2026-10-29）
-		*  - `size`：`sm`(24) / `md`(28) / `lg`(32) —— 高度一律吃 `--dshpc-control-h-*`，
-		*    **有边 / 无边同高**（边框在内部补回）
-		*  - `block`：撑满父宽
-		*
-		* 内容轴：`icon`（前置）/ `iconRight`（后置）/ `loading`（前置小圈并自动禁用）。
-		* 颜色轴：任一档都可以再用 `color` 传任意 CSS 色值 —— 只覆盖 `--btn-*` 几个变量，
-		* 不新增皮肤（皮肤仍只在 `controls-css.ts` 里）。
-		*
-		* `IconButton` 是纯图标钮：`plain`（默认无底无边，hover 起灰底）/ `outline`（描边）/ `danger`（红）。
-		* 兼容别名：`danger-ink` 仍是 `danger-outline` 的旧类名，可直接挂 className。
-		*
-		* ⚠️ 不许在任何使用点就地写按钮样式；要多一档外观 ⇒ 改基础层（一处改全站生效）。
-		*/
-		/** 实心档（color 参数按「底色」处理；其余档按「字色 + 描边色」处理）。 */
-		const SOLID_VARIANTS = [
-			"primary",
-			"secondary",
-			"danger",
-			"success",
-			"warning",
-			"info",
-			"purple",
-			"pink",
-			"cyan",
-			"teal",
-			"orange",
-			"indigo",
-			"rose",
-			"slate"
-		];
-		/** 把自定义颜色翻译成 5 个局部变量（只覆盖 token，不新增皮肤）。 */
-		function colorVars(variant, color) {
-			if (color === void 0 || color === "") return void 0;
-			if (SOLID_VARIANTS.includes(variant)) return {
-				"--btn-bg": color,
-				"--btn-bg-hover": `color-mix(in srgb, ${color} 82%, var(--dshpc-fg))`,
-				"--btn-bg-active": `color-mix(in srgb, ${color} 70%, var(--dshpc-fg))`
-			};
-			return {
-				"--btn-fg": color,
-				"--btn-fg-hover": color,
-				"--btn-border": color,
-				"--btn-bg-hover": `color-mix(in srgb, ${color} 12%, transparent)`,
-				"--btn-bg-active": `color-mix(in srgb, ${color} 18%, transparent)`
-			};
-		}
-		/** 组装按钮 class（结构一套 + 轴类）。 */
-		function buttonClass(variant, size, block, hasIcon, extra) {
-			return `dshpc-btn dshpc-btn--${variant} dshpc-btn--${size}${block ? " dshpc-btn--block" : ""}${hasIcon ? " dshpc-btn--icon-start" : ""}${extra !== void 0 && extra !== "" ? ` ${extra}` : ""}`;
-		}
-		/**
-		* 渲染一个「图标 + 文案」按钮。
-		*
-		* @param props 见 {@link ButtonProps}。
-		* @returns 按钮元素。
-		*/
-		function Button$1(props) {
-			ensureComponentStyles("button", BUTTON_CSS);
-			const { variant = "outline", size = "lg", icon, iconRight, color, loading = false, block = false, width, minWidth, maxWidth, className, style, children, ...rest } = props;
-			const widthStyle = {};
-			if (width !== void 0) widthStyle.width = width;
-			else {
-				if (minWidth !== void 0) widthStyle.minWidth = minWidth;
-				if (maxWidth !== void 0) widthStyle.maxWidth = maxWidth;
-			}
-			const marqueeLabel = maxWidth !== void 0 && width === void 0 && typeof children === "string";
-			const attrs = {
-				...rest,
-				type: rest.type ?? "button",
-				disabled: rest.disabled === true || loading,
-				className: buttonClass(variant, size, block, icon !== void 0 && icon !== null && !loading, className),
-				style: {
-					...colorVars(variant, color),
-					...widthStyle,
-					...style
-				}
-			};
-			return (0, react$1.createElement)("button", attrs, loading ? (0, react$1.createElement)(Loader$2, { size: "xs" }) : icon !== void 0 && icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon" }, icon) : null, marqueeLabel ? (0, react$1.createElement)(MarqueeText, {
-				text: children,
-				className: "dshpc-btn__label"
-			}) : children, iconRight !== void 0 && iconRight !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon-end" }, iconRight) : null);
-		}
-		/**
-		* 渲染一个纯图标按钮。
-		*
-		* @param props 见 {@link IconButtonProps}。
-		* @returns 图标按钮元素。
-		*/
-		function IconButton$1(props) {
-			ensureComponentStyles("button", BUTTON_CSS);
-			const { variant = "plain", size = "lg", icon, label, color, background, className, style, ...rest } = props;
-			const accent = {};
-			if (color !== void 0 && color !== "") {
-				accent["--icb-fg"] = color;
-				accent["--icb-fg-hover"] = color;
-				accent["--icb-bg-hover"] = `color-mix(in srgb, ${color} 14%, transparent)`;
-			}
-			if (background !== void 0 && background !== "") {
-				accent["--icb-bg"] = background;
-				accent["--icb-bg-hover"] = `color-mix(in srgb, ${background} 85%, var(--dshpc-fg))`;
-			}
-			const attrs = {
-				...rest,
-				type: rest.type ?? "button",
-				title: rest.title ?? label,
-				"aria-label": rest["aria-label"] ?? label,
-				className: `dshpc-iconbtn dshpc-iconbtn--${variant} dshpc-iconbtn--${size}${className !== void 0 && className !== "" ? ` ${className}` : ""}`,
-				style: {
-					...accent,
-					...style
-				}
-			};
-			return (0, react$1.createElement)("button", attrs, icon);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/host-data.js
-		/** 模型目录的 observable store（useSyncExternalStore 直接消费）。 */
-		var ModelCatalogStore = class {
-			constructor() {
-				this.snapshot = { status: "loading" };
-				this.listeners = /* @__PURE__ */ new Set();
-				this.getSnapshot = () => this.snapshot;
-				this.subscribe = (listener) => {
-					this.listeners.add(listener);
-					return () => {
-						this.listeners.delete(listener);
-					};
-				};
-			}
-			update(next) {
-				this.snapshot = next;
-				for (const listener of this.listeners) listener();
-			}
-			setRoutes(routes) {
-				this.update({
-					status: "ready",
-					routes
-				});
-			}
-			setUnavailable(reason) {
-				this.update({
-					status: "unavailable",
-					reason
-				});
-			}
-		};
-		/** 模型目录单例（ModelPicker 消费；connectHost 负责喂）。 */
-		const modelCatalog = new ModelCatalogStore();
-		/**
-		* 工作区列表的 observable store：直接镜像官方 WorkspaceSource 的 `items`
-		* （宿主权威快照，follow 流实时推 —— 源变我们就变，不自持第二份状态机）。
-		*/
-		var WorkspaceListStore = class {
-			constructor() {
-				this.items = [];
-				this.listeners = /* @__PURE__ */ new Set();
-				this.getSnapshot = () => this.items;
-				this.subscribe = (listener) => {
-					this.listeners.add(listener);
-					return () => {
-						this.listeners.delete(listener);
-					};
-				};
-			}
-			/** 换源（仅 connectHost 调；重复调用换到新源）。 */
-			setSource(source) {
-				this.unsubscribe?.();
-				const pull = () => {
-					this.items = source.getSnapshot().items;
-					for (const listener of this.listeners) listener();
-				};
-				pull();
-				this.unsubscribe = source.subscribe(pull);
-			}
-		};
-		/** 工作区列表单例（WorkspacePicker 消费；connectHost 负责喂）。 */
-		const workspaceList = new WorkspaceListStore();
-		/**
-		* 宿主 `remote.workspaceFiles`（explorer 的读文件通道）单例，由 `connectHost` 喂。
-		*
-		* 为什么核心要自己存一份：消费方写 `openFilePreview({ mount, path })` 就够了 —— 服务对象
-		* 只能从插件的 ctx 里 inject 出来（库拿不到 ctx），所以它必须由**一次接线**交进来，
-		* 而不是每次调用各传一遍（用户 2026-10-28 拍板：绑定能力归核心，调用方只管要什么）。
-		*/
-		let workspaceFiles;
-		/** 当前接到的文件服务；宿主没这能力 / 没调 connectHost ⇒ undefined。 */
-		function getWorkspaceFiles() {
-			return workspaceFiles;
-		}
-		function isWorkspaceSource(value) {
-			if (value === null || typeof value !== "object") return false;
-			const rec = value;
-			return typeof rec.getSnapshot === "function" && typeof rec.subscribe === "function";
-		}
-		/**
-		* 把宿主数据面接进核心（插件 client `apply` 里调**一次**）。
-		*
-		* 工作区走本地 client 服务注入；模型目录走宿主路由 fetch。哪条失败只影响那一块，
-		* 选择器照常渲染空态 / 降级提示 —— 绝不让数据面拖住插件启动。
-		*/
-		function connectHost(ctx, options = {}) {
-			ctx.inject(["workspaces"], (sub) => {
-				const source = sub?.workspaces?.list;
-				if (isWorkspaceSource(source)) workspaceList.setSource(source);
-			});
-			ctx.inject(["remote", "remote.workspaceFiles"], (sub) => {
-				const rec = sub;
-				const candidate = rec?.["remote.workspaceFiles"] ?? rec?.remote?.workspaceFiles;
-				if (typeof candidate?.list === "function") workspaceFiles = candidate;
-			});
-			const modelsPath = options.modelsPath;
-			if (modelsPath === void 0) return;
-			fetch(modelsPath).then((response) => response.ok ? response.json() : Promise.reject(/* @__PURE__ */ new Error(`HTTP ${response.status}`))).then((data) => {
-				const routes = data?.routes;
-				if (!Array.isArray(routes)) throw new Error("模型目录响应缺少 routes");
-				modelCatalog.setRoutes(routes);
-			}).catch((error) => {
-				modelCatalog.setUnavailable(String(error));
-			});
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/feedback-css.generated.js
-		const FEEDBACK_CSS = "/* 遮罩与头部已抽到 overlay.css（Modal / SideSheet 共用），这里只剩面板本体与家族尺寸。 */\n/* 大弹窗家族（md/lg）：抄兄弟项目 archive-session-css 的 .dsh-tdt-sv-panel（surface-base + border-l2 + radius 12 + shadow-2）。 */\n.dshpc-modal{\n  display:flex;flex-direction:column;box-sizing:border-box;\n  /* 面板底色 = 宿主浮层档 bg-layer-1（与官方弹窗同层），不是页面底 bg-base：\n     base 在暗色下是纯黑、亮色下是最白，弹窗用它才会「比原生更黑 / 更白」（用户 2026-11-02）。 */\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);\n  border:3px solid var(--dshpc-border);border-radius:var(--dshpc-radius-xl);\n  box-shadow:var(--dshpc-shadow-2);overflow:hidden;\n}\n/* body = 唯一滚动容器：内距与滚动都归它（滚动条贴面板右缘，不被内距挤进来）；\n   内容按流排，不设 height:100%、不自己开滚动条。\n   透明右边框 = 让滚动条与面板右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-modal__body{flex:1 1 auto;min-height:0;overflow:auto;padding:17px 18px;border-right:1px solid transparent}\n/* 底栏与头部同一口径（2026-11-02 用户）：上下内距相等、内容垂直居中、默认带一条分隔线。\n   线可由消费方关掉（Modal 的 footerDivider=false）—— 确认框家族本来就没有线（与头部一致）。 */\n.dshpc-modal .dshpc-modal__foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:18px;border-top:1px solid var(--dshpc-border)}\n.dshpc-modal .dshpc-modal__foot--bare{border-top:none}\n.dshpc-toast-host{\n  position:fixed;z-index:1090;left:50%;bottom:32px;transform:translateX(-50%);\n  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;\n}\n.dshpc-toast{\n  padding:8px 14px;border-radius:8px;font-size:13px;color:var(--dshpc-fg);\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border);\n  box-shadow:0 8px 24px rgba(15,23,42,.16);\n}\n.dshpc-toast--success{color:var(--dshpc-success);border-color:color-mix(in srgb,var(--dshpc-success) 40%,transparent)}\n.dshpc-toast--error{color:var(--dshpc-danger);border-color:color-mix(in srgb,var(--dshpc-danger) 40%,transparent)}\n.dshpc-error__retry{\n  margin-top:8px;color:var(--dshpc-link);cursor:pointer;background:none;border:none;padding:0;\n}\n/* 原生弹窗演示：经宿主 Modal 的 contentClassName 注入，证明宿主内容区尺寸可经类名自定义。 */\n.dshpc-native-demo-content{max-width:520px}\n/* 头部信号图标（AlertModal 按 severity 注入）：自含配色，不依赖宿主 token。 */\n.dshpc-alert-sev{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:12px;color:#fff;flex:none}\n.dshpc-alert-sev--info{background:#2563eb}\n.dshpc-alert-sev--success{background:#16a34a}\n.dshpc-alert-sev--warning{background:#d97706}\n.dshpc-alert-sev--error{background:#dc2626}\n/* 小确认框家族（sm）：严格抄兄弟项目 renderConfirm 的 dialogStyle（task-list.tsx:456）——\n   360px 宽 / 18px 内距 / 头部无分隔线 / 说明文字 fg-2 / 底部按钮右对齐。 */\n.dshpc-modal--sm{padding:18px}\n.dshpc-modal--sm .dshpc-overlay-head{padding:0 0 8px;border-bottom:none}\n.dshpc-modal--sm .dshpc-modal__body{padding:0 0 14px;overflow:visible;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);line-height:var(--dshpc-line-sm)}\n.dshpc-modal--sm .dshpc-modal__foot{padding:0;border-top:none}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/overlay-css.generated.js
-		const OVERLAY_CSS = "/* 浮层公共骨架：遮罩 + 头部。Modal（居中）/ SideSheet（侧边）共用这一份，\n   两边各自 registerStyle 同一份（幂等），谁也不许再抄一份遮罩。 */\n\n/* 遮罩 = 宿主遮罩变量 --dsw-alias-bg-mask-1（与官方 Modal / 兄弟项目 --tdt-mask 同一条真值，用户 2026-10-20）。 */\n/* 右边界让位页面级分栏（PanelDock 发布的 --dshpc-page-inset-right，用户 2026-10-22）：\n   分栏不被压暗、照常可点；浮层在这块**剩下**的区域里排版，就像整页被推出去一样。 */\n.dshpc-overlay{\n  position:fixed;inset:0 var(--dshpc-page-inset-right,0px) 0 0;\n  background:var(--dshpc-mask);\n}\n/* 居中档（Modal）：z 走 modal 档。 */\n.dshpc-overlay--center{\n  display:flex;align-items:center;justify-content:center;\n  z-index:var(--dshpc-z-modal);\n}\n/* 侧边档（SideSheet）：面板 absolute 贴边，不需要 flex 居中；z 走 drawer 档（低于 modal）。 */\n.dshpc-overlay--side{z-index:var(--dshpc-z-drawer)}\n\n/* 头部四槽：左图标 / 标题组 / 弹性间隔 / 右侧动作区 + 关闭钮。\n   上下内距必须相等（18/12 会让标题离面板顶远、离分隔线近，用户 2026-11-02）。 */\n.dshpc-overlay-head{\n  display:flex;align-items:center;gap:8px;padding:18px;\n  border-bottom:1px solid var(--dshpc-border);flex-wrap:wrap;\n}\n.dshpc-overlay-head__heading{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 auto}\n.dshpc-overlay-head__lead{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1}\n/* 标题组：第一行 = 标题 + 右侧小块（徽标紧跟标题），第二行 = 副标题。 */\n.dshpc-overlay-head__titlegroup{display:flex;flex-direction:column;gap:2px;min-width:0;flex:0 1 auto}\n.dshpc-overlay-head__titlerow{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-overlay-head__title{font-size:var(--dshpc-font-lg);font-weight:600;line-height:1.4;min-width:0}\n/* 标题下副标题行（兄弟项目 .dsh-tdt-sv-sid：等宽字体、caption 色、可换行）。 */\n.dshpc-overlay-head__sid{font-family:var(--ds-font-family-code,monospace);font-size:var(--dshpc-font-xs);color:var(--dshpc-fg-3);word-break:break-all}\n.dshpc-overlay-head__extra{flex:none;display:inline-flex;align-items:center}\n.dshpc-overlay-head__spacer{flex:1 1 auto;min-width:8px}\n.dshpc-overlay-head__actions{flex:none;display:flex;align-items:center;gap:8px}\n/* 关闭按钮：20×20 方角图标位，不借用 Picker 的触发器皮肤（那份带 min-width:120px）。 */\n.dshpc-overlay-head__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-overlay-head__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-overlay-head__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/overlay.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/overlay.js
 		/**
 		* 浮层公共件 —— Modal 与 SideSheet 共用，**别各写一份**。
 		*
@@ -3652,6 +1101,7 @@ window.__ModuleLoader__.load({
 		function OverlayMask(props) {
 			ensureComponentStyles("overlay", OVERLAY_CSS);
 			return (0, react$1.createElement)("div", {
+				...props.attrs,
 				className: `dshpc-overlay dshpc-overlay--${props.kind}`,
 				onClick: () => {
 					if (props.closeOnMask) props.onClose?.();
@@ -3661,15 +1111,15 @@ window.__ModuleLoader__.load({
 		/** 头部四槽：icon + 标题组 + 右侧动作 + 关闭钮。 */
 		function OverlayHead(props) {
 			ensureComponentStyles("overlay", OVERLAY_CSS);
-			return (0, react$1.createElement)("div", { className: "dshpc-overlay-head" }, (0, react$1.createElement)("div", { className: "dshpc-overlay-head__heading" }, props.icon === void 0 ? null : (0, react$1.createElement)("span", { className: "dshpc-overlay-head__lead" }, props.icon), (0, react$1.createElement)("div", { className: "dshpc-overlay-head__titlegroup" }, (0, react$1.createElement)("div", { className: "dshpc-overlay-head__titlerow" }, (0, react$1.createElement)("div", { className: "dshpc-overlay-head__title" }, props.title ?? ""), props.extra === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-overlay-head__extra" }, props.extra)), props.subtitle === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-overlay-head__sid" }, props.subtitle))), (0, react$1.createElement)("div", { className: "dshpc-overlay-head__spacer" }), props.actions === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-overlay-head__actions" }, props.actions), props.onClose === void 0 ? null : (0, react$1.createElement)("button", {
-				type: "button",
-				className: "dshpc-overlay-head__close",
-				"aria-label": props.closeLabel,
-				onClick: () => props.onClose?.()
-			}, "✕"));
+			ensureComponentStyles("panel", PANEL_CSS);
+			return (0, react$1.createElement)("div", { className: "dshpc-overlay-head" }, (0, react$1.createElement)("div", { className: "dshpc-overlay-head__heading" }, props.icon === void 0 ? null : (0, react$1.createElement)("span", { className: "dshpc-overlay-head__lead" }, props.icon), (0, react$1.createElement)("div", { className: "dshpc-overlay-head__titlegroup" }, (0, react$1.createElement)("div", { className: "dshpc-overlay-head__titlerow" }, (0, react$1.createElement)("div", { className: "dshpc-overlay-head__title" }, props.title ?? ""), props.extra === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-overlay-head__extra" }, props.extra)), props.subtitle === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-overlay-head__sid" }, props.subtitle))), (0, react$1.createElement)("div", { className: "dshpc-overlay-head__spacer" }), props.actions === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-overlay-head__actions" }, props.actions), props.onClose === void 0 ? null : (0, react$1.createElement)(PanelClose, {
+				label: props.closeLabel,
+				onClick: props.onClose,
+				className: "dshpc-overlay-head__close"
+			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Modal.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Modal.js
 		/**
 		* 模态弹窗（自绘 overlay，**不用 react-dom 的 portal**，避免多一个必需依赖）。
 		*
@@ -3700,7 +1150,8 @@ window.__ModuleLoader__.load({
 				kind: "center",
 				closeOnMask,
 				onClose: props.onClose
-			}, (0, react$1.createElement)("div", {
+			}, (0, react$1.createElement)(PanelSurface, {
+				tier: "modal",
 				className: `dshpc-modal${props.size ? ` dshpc-modal--${props.size}` : ""}${props.className !== void 0 && props.className !== "" ? ` ${props.className}` : ""}`,
 				style: {
 					width: props.width ?? s.width,
@@ -3708,7 +1159,7 @@ window.__ModuleLoader__.load({
 					maxHeight: props.maxHeight ?? s.maxHeight,
 					height: props.height ?? s.height
 				},
-				onClick: (e) => e.stopPropagation()
+				stopPropagation: true
 			}, showHeader ? (0, react$1.createElement)(OverlayHead, {
 				icon: props.icon,
 				title: props.title,
@@ -3720,49 +1171,7 @@ window.__ModuleLoader__.load({
 			}) : null, (0, react$1.createElement)("div", { className: "dshpc-modal__body" }, props.children ?? null), props.footer === void 0 ? null : (0, react$1.createElement)("div", { className: `dshpc-modal__foot${props.footerDivider === false ? " dshpc-modal__foot--bare" : ""}` }, props.footer)));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/side-panel-css.generated.js
-		const SIDE_PANEL_CSS = "/* 侧边面板的公共皮肤 —— PanelDock（占宽分栏）与 SideSheet（覆盖抽屉）共用这一份。\n *\n * 分界：**皮肤在这里，定位各自写**。两者唯一的形态差异就是「怎么占位」——\n * PanelDock 用 sticky 占宽挤窄主区（panel-dock.css），SideSheet 用 absolute 盖在页面上（side-sheet.css）。\n *\n * 类名沿用 dshpc-dock__* 前缀：那是既有公开面（文档与消费方都在用），\n * 这里只搬文件不改名；新增的中性类是 .dshpc-side-surface（外观基类）。 */\n\n/* 入场：宽度从 0 长出来（keyframes 只写 from，终点取内联 / 状态宽度）。两边共用。 */\n@keyframes dshpc-side-in{from{width:0;opacity:0;overflow:hidden}}\n\n/* 外观基类：背景 / 文字色 / 阴影 / 纵向 flex。**不含** position、高度、边框方向、动画触发。 */\n.dshpc-side-surface{\n  box-sizing:border-box;\n  display:flex;flex-direction:column;flex:0 0 auto;min-width:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n  box-shadow:var(--dshpc-shadow-2);\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease);\n  animation:dshpc-side-in .22s var(--dshpc-ease);\n}\n\n/* 头部：右侧 34px = 8(边距) + 20(关钮) + 6(呼吸)：给绝对定位的关钮留位，标题/extra 不从它底下钻。 */\n.dshpc-dock__head{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:10px 34px 10px 14px;\n  border-bottom:1px solid var(--dshpc-border-faint);\n}\n/* 图标位 / 标题右侧的内容位：消费方传 ReactNode，可塞多个；库只负责排布，不抢宽度。 */\n.dshpc-dock__lead{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-dock__extra{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto}\n/* 自定义头部：整行归调用方 —— 不加内边距/边框/背景，也不给关钮留内联空间（关钮是绝对定位的）。 */\n.dshpc-dock__head--custom{display:block;padding:0;border-bottom:none}\n.dshpc-dock__title{\n  flex:1 1 auto;min-width:0;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n  font-size:var(--dshpc-font-md);font-weight:600;\n}\n/* 关闭钮：20×20 方角图标位（与 Modal 的关闭钮同规格，不借 Picker 触发器皮肤）。 */\n.dshpc-dock__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-dock__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 头部关钮：绝对定位（top 10 / right 8），锚点是面板本身 —— 正文滚动它不跟滚。 */\n.dshpc-dock__close--abs{position:absolute;top:10px;right:8px;z-index:8}\n/* 浮动关钮：无头部面板用，略收一点边距。 */\n.dshpc-dock__close--floating{\n  position:absolute;top:6px;right:6px;z-index:8;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border-faint);\n}\n\n/* 内容区自己滚（面板高度锁死，内容不设内部滚动就会把页面撑高）。\n   透明右边框 = 滚动条与面板右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-dock__body{flex:1 1 auto;min-height:0;overflow:auto;border-right:1px solid transparent}\n\n/* 拖拽条：6px 命中区，**自己不画任何线**（贴在朝内那一侧，镜像由各自的定位文件做）。\n   hover / 拖动时把面板自己的边框染成蓝 —— 蓝线只准改原线，不准在旁边再加一条。\n   z-index 7 必须高于面板内容里的浮层（复制钮一类），否则命中区会被内容盖住。 */\n.dshpc-dock__resizer{\n  position:absolute;left:0;top:0;bottom:0;width:6px;\n  z-index:7;cursor:col-resize;background:transparent;\n}\n.dshpc-side-surface:has(> .dshpc-dock__resizer:hover),\n.dshpc-side-surface--resizing{\n  /* 原线保留「上下渐隐」工作区指示条质感：把面板自己的那条边框换成同款渐变。\n     面板四边里只有朝内一侧有宽度，所以渐变只落在那一侧。 */\n  border-image:linear-gradient(180deg,transparent,var(--dshpc-business) 30% 70%,transparent) 1;\n}\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove ——\n   让出指针事件；② contain 把重排隔离在面板内，否则每帧改宽都会牵动整页重排。 */\n.dshpc-side-surface--resizing{contain:layout paint;will-change:width}\n.dshpc-side-surface--resizing iframe{pointer-events:none}\n\n/* 动效礼貌：系统声明减少动效时退化为瞬时（功能不受影响）。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-side-surface{animation:none}\n}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/resizer.js
-		/** 开始一次拖拽调宽（监听 window 的 pointermove / pointerup，松手自动清理）。 */
-		function startResizeLayoutWidth(opts) {
-			opts.startEvent.preventDefault?.();
-			const body = document.body;
-			const prevUserSelect = body.style.userSelect;
-			body.style.userSelect = "none";
-			window.getSelection()?.removeAllRanges();
-			const rootEl = opts.root ?? document.getElementById("dshpc-root");
-			if (opts.rootClass !== void 0) rootEl?.classList.add(opts.rootClass);
-			let frame = 0;
-			let pendingX = 0;
-			const emit = (clientX) => {
-				const w = opts.compute(clientX);
-				opts.onMove(w);
-				return w;
-			};
-			const onMove = (event) => {
-				if (opts.rafThrottle === true) {
-					pendingX = event.clientX;
-					if (frame !== 0) return;
-					frame = requestAnimationFrame(() => {
-						frame = 0;
-						emit(pendingX);
-					});
-				} else emit(event.clientX);
-			};
-			const onUp = (event) => {
-				window.removeEventListener("pointermove", onMove);
-				window.removeEventListener("pointerup", onUp);
-				if (frame !== 0) cancelAnimationFrame(frame);
-				body.style.userSelect = prevUserSelect;
-				if (opts.rootClass !== void 0) rootEl?.classList.remove(opts.rootClass);
-				opts.onCommit(opts.compute(event.clientX));
-			};
-			window.addEventListener("pointermove", onMove);
-			window.addEventListener("pointerup", onUp);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/ConfirmModal.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/ConfirmModal.js
 		/**
 		* 确认框（语义层，基于 Modal）：双按钮（取消 outline + 确认语义档）、无 ✕；无标题时整条头部消失。
 		* 样式封闭：按钮只暴露语义档（tone → variant），不透传任意 className/style。
@@ -3792,7 +1201,7 @@ window.__ModuleLoader__.load({
 			}, props.message ?? null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/modal-host.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/modal-host.js
 		let hostRoot = null;
 		let hostContainer = null;
 		let entries = [];
@@ -3861,3047 +1270,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/card-css.generated.js
-		const CARD_CSS = "\n/* ── Card / StripCard：Surface 外框 + 头部契约 + 色条 ─────────────────────\n   外框（底 / 边框 / 圆角 / 内距）全部来自 .dshpc-surface（src/ui/surface.css）：\n   本文件**不再写 border / border-radius**，圆角契约因此只有一个定义点（容器档 = 12）。\n   这里只管两件 Surface 不该知道的事：色条几何、头部布局。\n\n   色条几何默认值都可被 props 覆盖（Card.ts 写对应的 CSS 变量）：\n     --card-bar-size   条子粗细\n     --card-bar-inset  条子距卡片边缘的距离（= 贴边那一侧的内距）\n     --card-bar-gap    条子距内容的距离（= body 的 gap）\n     --card-bar-length 上下方位时的条长（100% = 跟内容同宽）\n   这些变量只在本文件消费（3 份文件一起引时，跨文件引用别处的变量会静默失效），\n   所以默认值必须写在这里，而不是令牌或别的皮肤里。 */\n.dshpc-card{\n  --card-accent:var(--dshpc-business);\n  --card-accent-soft:var(--dshpc-business-soft);\n  --card-bar-size:6px;\n  --card-bar-inset:12px;\n  --card-bar-gap:12px;\n  --card-bar-length:100%;\n}\n/* 档位 → token（照 records-timeline 的 tone 模式：一个变量切档，不写 5 套规则；浅底与色条同源）。 */\n.dshpc-card--success{--card-accent:var(--dshpc-success);--card-accent-soft:var(--dshpc-success-soft)}\n.dshpc-card--warning{--card-accent:var(--dshpc-warning);--card-accent-soft:var(--dshpc-warning-soft)}\n.dshpc-card--danger{--card-accent:var(--dshpc-danger);--card-accent-soft:var(--dshpc-danger-soft)}\n/* neutral 浅底借 chip 底（兄弟项目 mute 档同款：明暗都成立）。 */\n.dshpc-card--neutral{--card-accent:var(--dshpc-fg-4);--card-accent-soft:var(--dshpc-chip-bg)}\n/* 扩展八色（2026-10-29）：色条 + 浅底同源，软底走各自 -soft。 */\n.dshpc-card--purple{--card-accent:var(--dshpc-purple);--card-accent-soft:var(--dshpc-purple-soft)}\n.dshpc-card--pink{--card-accent:var(--dshpc-pink);--card-accent-soft:var(--dshpc-pink-soft)}\n.dshpc-card--cyan{--card-accent:var(--dshpc-cyan);--card-accent-soft:var(--dshpc-cyan-soft)}\n.dshpc-card--teal{--card-accent:var(--dshpc-teal);--card-accent-soft:var(--dshpc-teal-soft)}\n.dshpc-card--orange{--card-accent:var(--dshpc-orange);--card-accent-soft:var(--dshpc-orange-soft)}\n.dshpc-card--indigo{--card-accent:var(--dshpc-indigo);--card-accent-soft:var(--dshpc-indigo-soft)}\n.dshpc-card--rose{--card-accent:var(--dshpc-rose);--card-accent-soft:var(--dshpc-rose-soft)}\n.dshpc-card--slate{--card-accent:var(--dshpc-slate);--card-accent-soft:var(--dshpc-slate-soft)}\n\n/* body = 色条 + 头部。方向跟着条子贴的边切 ⇒ 四个方位只是「换一个方向的 flex 项」，\n   不用为每个方位各写一套定位。 */\n.dshpc-card__body{display:flex;gap:var(--card-bar-gap);min-width:0}\n.dshpc-card--bar-top .dshpc-card__body,\n.dshpc-card--bar-bottom .dshpc-card__body{flex-direction:column}\n\n/* 头部一行 = 主内容 + 右侧槽，**整体垂直居中**：调用方在 action 里裸放一个元素\n   （按钮 / 文字 / 图标）不用自己套容器居中；一行两行、右边怎么放由调用方在框内自定。 */\n.dshpc-card__head{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-card--bar-left .dshpc-card__head,\n.dshpc-card--bar-right .dshpc-card__head{flex:1 1 auto}\n.dshpc-card__main{flex:1;min-width:0}\n.dshpc-card__side{display:flex;align-items:center;gap:6px;flex:none}\n\n/* 色条：左/右 = 竖向条（高度跟内容，最小一行）；上/下 = 横向条（长度默认跟内容同宽）。\n   右/下方位靠 order 排到头部之后，DOM 顺序始终不变。 */\n.dshpc-card__bar{flex:none;background:var(--card-accent);border-radius:var(--dshpc-radius-xs)}\n.dshpc-card--bar-left .dshpc-card__bar,\n.dshpc-card--bar-right .dshpc-card__bar{width:var(--card-bar-size);align-self:stretch;min-height:var(--dshpc-line-md)}\n.dshpc-card--bar-top .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{width:var(--card-bar-length);height:var(--card-bar-size);align-self:flex-start}\n.dshpc-card--bar-right .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{order:1}\n\n/* ── 外观一 · StripCard：同色系浅底 + 1px 不可见占位边框 + 方角 + 4px 通高方角色条贴左缘 ──\n   底色 / 方角 / 占位边框由 Surface 的三条修饰类提供（Card.ts 按 kind 传），此处只管内距与条子。 */\n.dshpc-card.dshpc-card--strip{\n  --card-bar-size:4px;--card-bar-inset:0;\n  padding:12px 12px 12px 20px;\n  background:var(--card-accent-soft,transparent);\n}\n/* 左内边距 20px = 16 留白 + 4 条宽 ⇒ 内容从色条右缘起算；色条绝对定位通高，跟着内容高度自适应。\n   特异性 0,3,0：压过上面 .dshpc-card--bar-left .dshpc-card__bar 的宽度规则，与注入顺序无关。 */\n.dshpc-card.dshpc-card--strip .dshpc-card__bar{position:absolute;left:0;top:0;bottom:0;width:4px;align-self:auto}\n\n/* ── 外观二 · Card：Surface 外框（底 + 1px 实色边框 + 圆角 12）+ 色条贴边那一侧的内距 ──\n   内距用 0,2,0 / 0,3,0 的长写法：高过 .dshpc-surface 的 padding 简写，与两份 CSS 的注入顺序无关。 */\n.dshpc-card.dshpc-card--bordered{padding:14px}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-left{padding-left:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-right{padding-right:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-top{padding-top:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-bottom{padding-bottom:var(--card-bar-inset)}\n\n.dshpc-card__toggle{\n  display:inline-flex;align-items:center;justify-content:center;\n  width:24px;height:24px;padding:0;background:none;border:none;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-3);cursor:pointer;\n}\n.dshpc-card__toggle:hover{background:var(--dshpc-surface-sunken);color:var(--dshpc-fg)}\n/* 箭头是 svg（Chevron），不是字形 ⇒ 不要 font-size；inline-flex 免掉 svg 的基线留白。 */\n.dshpc-card__caret{display:inline-flex;transition:transform .15s ease}\n.dshpc-card__caret.is-open{transform:rotate(180deg)}\n.dshpc-card__panel{margin-top:8px;padding-top:8px;border-top:1px solid var(--dshpc-border-faint)}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/surface-css.generated.js
-		const SURFACE_CSS = "\n/* ── Surface · 纯框容器 ───────────────────────────────────────────────────\n   只回答「一块面长什么样」：底 / 边 / 圆角 / 内距，四根轴，零业务语义。\n   它是**圆角契约的唯一真源**：容器档 = --dshpc-radius-md(12)，与 Button / Input 同档，\n   外框永远不小于里面的控件 —— 杜绝「卡片 8 < 按钮 12」这类倒挂（2026-11-01）。\n\n   所有轴都用**变量**表达，修饰类只改这些变量、不改属性：\n   消费方（Card、下游插件）自己写规则时，无论两份 CSS 谁先注入，胜负都不依赖顺序。\n\n     tone    plain(默认 surface-1) / raised / sunken / subtle\n     border  默认 1px 实线；faint 更淡；none 透明（保留 1px 占位，不跳高）；\n             dashed 虚线（占位框用，线色仍是 border token）\n     radius  默认 md；none / sm / lg\n     padding 默认由调用方选档；none / sm(8) / md(12) / lg(16)\n   基类不带内距：容器要自己算四边内距时（如 Card 的色条贴边），不传 pad 档即可，不需要覆盖。 */\n.dshpc-surface{\n  position:relative;box-sizing:border-box;color:var(--dshpc-fg);font:inherit;text-align:left;\n  --surface-bg:var(--dshpc-surface-1);\n  --surface-border:var(--dshpc-border);\n  --surface-border-style:solid;\n  --surface-radius:var(--dshpc-radius-md);\n  --surface-pad:0;\n  border:1px var(--surface-border-style) var(--surface-border);\n  border-radius:var(--surface-radius);\n  background:var(--surface-bg);\n  padding:var(--surface-pad);\n}\n.dshpc-surface--tone-raised{--surface-bg:var(--dshpc-surface-raised)}\n.dshpc-surface--tone-sunken{--surface-bg:var(--dshpc-surface-sunken)}\n.dshpc-surface--tone-subtle{--surface-bg:var(--dshpc-chip-bg)}\n.dshpc-surface--border-faint{--surface-border:var(--dshpc-border-faint)}\n.dshpc-surface--border-none{--surface-border:transparent}\n.dshpc-surface--border-dashed{--surface-border-style:dashed}\n.dshpc-surface--radius-none{--surface-radius:0}\n.dshpc-surface--radius-sm{--surface-radius:var(--dshpc-radius-sm)}\n.dshpc-surface--radius-lg{--surface-radius:var(--dshpc-radius-lg)}\n.dshpc-surface--pad-none{--surface-pad:0}\n.dshpc-surface--pad-sm{--surface-pad:var(--dshpc-space-2)}\n.dshpc-surface--pad-md{--surface-pad:var(--dshpc-space-3)}\n.dshpc-surface--pad-lg{--surface-pad:var(--dshpc-space-4)}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Surface.js
-		/**
-		* 拼 Surface 的类名。独立导出是给组合类容器（Card）用的：
-		* 容器要把 Surface 当外框、又不想吃它的内距时，传 `padding: null` 即可。
-		*/
-		function surfaceClass(options = {}) {
-			const tone = options.tone ?? "plain";
-			const border = options.border ?? true;
-			const radius = options.radius ?? "md";
-			const padding = options.padding === void 0 ? "md" : options.padding;
-			return [
-				"dshpc-surface",
-				tone === "plain" ? "" : `dshpc-surface--tone-${tone}`,
-				border === true ? "" : `dshpc-surface--border-${border}`,
-				radius === "md" ? "" : `dshpc-surface--radius-${radius}`,
-				padding === null ? "" : `dshpc-surface--pad-${padding}`
-			].filter((name) => name !== "").join(" ");
-		}
-		/**
-		* 纯框容器：底 / 边框 / 圆角 / 内距四根轴，零业务语义。
-		* 它是**圆角契约的唯一真源**（容器档 12，与控件同档），下游要用「一块一块的面」时用它，
-		* 不要再自己写 border + border-radius。
-		*
-		* ```tsx
-		* h(Surface, { tone: 'sunken', padding: 'md' }, h('div', null, '任意内容'))
-		* ```
-		*/
-		function Surface(props) {
-			ensureComponentStyles("surface", SURFACE_CSS);
-			return (0, react$1.createElement)("div", {
-				className: [surfaceClass(props), props.className ?? ""].filter((s) => s !== "").join(" "),
-				style: props.style
-			}, props.children ?? null);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Card.js
-		/** 色条档位（映射到 design 的 token，不新增 token；也接受任意 CSS 颜色值）。 */
-		const CARD_ACCENTS = [
-			"business",
-			"success",
-			"warning",
-			"danger",
-			"neutral",
-			"purple",
-			"pink",
-			"cyan",
-			"teal",
-			"orange",
-			"indigo",
-			"rose",
-			"slate"
-		];
-		/** 数字按 px 写进 CSS 变量，字符串原样透传。 */
-		function lengthOf(value) {
-			return typeof value === "number" ? `${value}px` : value;
-		}
-		/**
-		* 内部共享壳：两个公开组件（`Card` / `StripCard`）只是 `kind` 不同——
-		* 一个组件一种外观，import 即表明用的是哪种。
-		*
-		* 外框（底 / 边框 / 圆角）来自 `Surface`（圆角统一 12）；本壳只管色条几何与头部布局。
-		* 两种外观的头部都是**整体垂直居中**（`align-items:center`）：调用方在 `action` 里
-		* 裸放一个元素（按钮 / 文字 / 图标）即垂直居中，不用自己套容器；框内一行两行、
-		* 右侧放什么、悬停浮出的按钮，都由调用方在框内自定——外壳只提供框与居中。
-		*/
-		function CardShell(kind, props) {
-			ensureComponentStyles("surface", SURFACE_CSS);
-			ensureComponentStyles("card", CARD_CSS);
-			const tt = props.translate ?? t$2;
-			const accent = props.accent ?? "business";
-			const isPreset = CARD_ACCENTS.includes(accent);
-			const bar = props.bar ?? {};
-			const side = kind === "strip" ? "left" : bar.side ?? "left";
-			const classes = [
-				surfaceClass(kind === "strip" ? {
-					radius: "none",
-					border: "none",
-					padding: null
-				} : { padding: null }),
-				"dshpc-card",
-				kind === "strip" ? "dshpc-card--strip" : "dshpc-card--bordered",
-				`dshpc-card--bar-${side}`,
-				isPreset ? `dshpc-card--${accent}` : "",
-				props.className ?? ""
-			].filter((s) => s !== "").join(" ");
-			const vars = {};
-			if (!isPreset) vars["--card-accent"] = accent;
-			if (bar.size !== void 0) vars["--card-bar-size"] = lengthOf(bar.size);
-			if (bar.inset !== void 0) vars["--card-bar-inset"] = lengthOf(bar.inset);
-			if (bar.gap !== void 0) vars["--card-bar-gap"] = lengthOf(bar.gap);
-			if (bar.length !== void 0) vars["--card-bar-length"] = lengthOf(bar.length);
-			const style = {
-				...props.style,
-				...vars
-			};
-			return (0, react$1.createElement)("div", {
-				className: classes,
-				style
-			}, (0, react$1.createElement)("div", { className: "dshpc-card__body" }, (0, react$1.createElement)("span", {
-				className: "dshpc-card__bar",
-				"aria-hidden": true
-			}), (0, react$1.createElement)("div", { className: "dshpc-card__head" }, (0, react$1.createElement)("div", { className: "dshpc-card__main" }, props.children ?? null), props.action === void 0 && props.onToggle === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-card__side" }, props.action ?? null, props.onToggle === void 0 ? null : (0, react$1.createElement)("button", {
-				type: "button",
-				className: "dshpc-card__toggle",
-				"aria-label": tt("cardToggle"),
-				"aria-expanded": props.expanded === true,
-				onClick: props.onToggle
-			}, (0, react$1.createElement)("span", { className: props.expanded === true ? "dshpc-card__caret is-open" : "dshpc-card__caret" }, (0, react$1.createElement)(Chevron, { size: 12 })))))), props.panel === void 0 || props.expanded !== true ? null : (0, react$1.createElement)("div", { className: "dshpc-card__panel" }, props.panel));
-		}
-		/**
-		* 卡片（框式）：复用 `Surface` 外框（surface 底 + 1px 边框 + 圆角 12），
-		* 色条默认贴左缘、6px 粗、圆角短条（高度随内容）；`bar.side` 可换成右/上/下。
-		* 头部整体垂直居中；悬停浮出的按钮、一行两行由调用方在框内自定。
-		*
-		* ```tsx
-		* h(Card, {
-		*   accent: 'warning',
-		*   bar: { side: 'right', inset: 10, gap: 8 },
-		*   action: h(Button, { size: 'sm', variant: 'ghost' }, '跳过'),
-		* }, h('div', null, '标题 + 内容'))
-		* ```
-		*/
-		function Card(props) {
-			return CardShell("bordered", props);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/chip-css.generated.js
-		const CHIP_CSS = "\n/* 三条局部变量承载配色：neutral 走旧灰面；语义档换底字配对（2026-10-20 用户要多色多尺寸标签）。 */\n.dshpc-chip{--chip-bg:var(--dshpc-chip-bg);--chip-fg:var(--dshpc-fg);--chip-bg-hover:var(--dshpc-chip-bg-hover);\n  display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:1px 8px;\n  box-sizing:border-box;border-radius:var(--dshpc-radius-pill,999px);border:none;\n  background:var(--chip-bg);color:var(--chip-fg);\n  font-family:inherit;font-size:11px;line-height:18px;margin:0;\n  /* 2026-10-18：chip 是 flex 行里的常用项，禁止被压缩换行（预览站出现过文字竖排、互相叠压的挤压）。 */\n  white-space:nowrap;flex:none;\n  appearance:none;-webkit-appearance:none;\n}\n/* md 档：卡片元信息行等稍大场景；sm 即旧版默认，逐像素不动。 */\n.dshpc-chip--md{padding:2px 10px;font-size:12px;line-height:20px;}\n/* xs 档：标题后缀等极紧凑场景（2026-10-20 用户要更小标签）；16px 高、font 10。 */\n.dshpc-chip--xs{padding:0 6px;font-size:10px;line-height:16px;}\n/* 语义色实心档：底 / 字 / hover 配对与 Button 同源（黄底中高明度 ⇒ 字用 --dshpc-on-warning）。 */\n.dshpc-chip--business{--chip-bg:var(--dshpc-business);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-business-hover);}\n.dshpc-chip--success{--chip-bg:var(--dshpc-success);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-success-hover);}\n.dshpc-chip--warning{--chip-bg:var(--dshpc-warning);--chip-fg:var(--dshpc-on-warning);--chip-bg-hover:var(--dshpc-warning-hover);}\n.dshpc-chip--danger{--chip-bg:var(--dshpc-danger);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-danger-hover);}\n/* 扩展八色（2026-10-29）：实心面字色统一白（on-signal），明度均低于黄 / 青柠，白字两主题可读。 */\n.dshpc-chip--purple{--chip-bg:var(--dshpc-purple);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-purple-hover);}\n.dshpc-chip--pink{--chip-bg:var(--dshpc-pink);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-pink-hover);}\n.dshpc-chip--cyan{--chip-bg:var(--dshpc-cyan);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-cyan-hover);}\n.dshpc-chip--teal{--chip-bg:var(--dshpc-teal);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-teal-hover);}\n.dshpc-chip--orange{--chip-bg:var(--dshpc-orange);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-orange-hover);}\n.dshpc-chip--indigo{--chip-bg:var(--dshpc-indigo);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-indigo-hover);}\n.dshpc-chip--rose{--chip-bg:var(--dshpc-rose);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-rose-hover);}\n.dshpc-chip--slate{--chip-bg:var(--dshpc-slate);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-slate-hover);}\n/* 可点态：button 渲染（见 Chip.ts），光标 + hover 加深。 */\n.dshpc-chip--clickable{cursor:pointer;transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-chip--clickable:hover:not(:disabled){background:var(--chip-bg-hover)}\n.dshpc-chip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 禁用态字色从 --chip-fg 派生（45% ≈ 旧 fg-3 的弱化观感），不许直接用 --dshpc-fg-3：\n   它跟主题走，暗色下是深灰 ⇒ 语义色实心标签（蓝 / 红底）上几乎看不见（与 Segmented 计数 2026-10-29 同类）。 */\n.dshpc-chip:disabled{cursor:default;color:color-mix(in srgb,var(--chip-fg) 45%,transparent)}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-chip .dshpc-chip__label{min-width:0;}\n@media (prefers-reduced-motion: reduce){.dshpc-chip{transition:none}}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Chip.js
-		/** 小标签（neutral 用现成的 `--dshpc-chip-bg`；传 `onClick` 才是可点的）。 */
-		function Chip(props) {
-			ensureComponentStyles("chip", CHIP_CSS);
-			const { children, tone = "neutral", size = "sm", width, minWidth, maxWidth, onClick, className } = props;
-			const clickable = onClick !== void 0;
-			const widthStyle = {};
-			if (width !== void 0) widthStyle.width = width;
-			else {
-				if (minWidth !== void 0) widthStyle.minWidth = minWidth;
-				if (maxWidth !== void 0) widthStyle.maxWidth = maxWidth;
-			}
-			const marqueeLabel = maxWidth !== void 0 && width === void 0 && typeof children === "string";
-			return (0, react$1.createElement)(clickable ? "button" : "span", {
-				type: clickable ? "button" : void 0,
-				className: `dshpc-chip${tone !== "neutral" ? ` dshpc-chip--${tone}` : ""}${size !== "sm" ? ` dshpc-chip--${size}` : ""}${clickable ? " dshpc-chip--clickable" : ""}${className === void 0 ? "" : ` ${className}`}`,
-				style: widthStyle,
-				onClick
-			}, marqueeLabel ? (0, react$1.createElement)(MarqueeText, {
-				text: children,
-				className: "dshpc-chip__label"
-			}) : children ?? null);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/pagination-logic.js
-		/**
-		* 分页纯逻辑：总页数、页码夹取、省略号窗口、当前页可见区间。
-		*
-		* 零 React 运行时依赖（只 `import type`，编译后不留痕迹），可被 node 单测直接引。
-		*
-		* 口径照通行的分页约定（Ant Design / MUI / Element Plus 一致）：
-		* 调用方只给「当前页 / 每页条数 / 总条数」，总页数与省略窗口一律由这里算，
-		* **消费方永远不自己算页数、也不自己拼页码**。
-		*/
-		/** 总页数：`ceil(total / pageSize)`，至少 1 页（空数据也显示单页）。 */
-		function pageCountOf(total, pageSize) {
-			return Math.max(1, Math.ceil(Math.max(0, Math.floor(total)) / Math.max(1, Math.floor(pageSize))));
-		}
-		/** 把页码夹回 `[1, pageCount]`（越界 / NaN 一律落到第 1 页）。 */
-		function clampPage(page, pageCount) {
-			const count = Math.max(1, Math.floor(pageCount));
-			if (!Number.isFinite(page)) return 1;
-			return Math.min(Math.max(1, Math.floor(page)), count);
-		}
-		/**
-		* 当前页在数据里的区间（1 起的闭区间行号）。
-		* 空数据返回 `[0, 0]`（调用方据此显示「共 0 条」而不是「第 0-0 条」）。
-		*/
-		function pageRange(page, pageSize, total) {
-			const rows = Math.max(0, Math.floor(total));
-			if (rows === 0) return [0, 0];
-			const size = Math.max(1, Math.floor(pageSize));
-			const from = (clampPage(page, pageCountOf(rows, size)) - 1) * size + 1;
-			return [from, Math.min(rows, from + size - 1)];
-		}
-		function range(start, end) {
-			const out = [];
-			for (let n = start; n <= end; n += 1) out.push(n);
-			return out;
-		}
-		/**
-		* 页码条上的项序列（含省略号占位）。
-		*
-		* 窗口算法照 MUI 的实现：首尾各固定 `boundaryCount` 页，当前页两侧各留 `siblingCount` 页，
-		* 中间不足的部分收成 `'gap'`。默认 1 / 1 —— 最多 7 个位置（与 Element Plus `pager-count: 7` 等价）。
-		*
-		* 关键细节（各家一致，别改成「有缝就画省略号」）：间隔**正好 1 页**时直接显示那个页号，
-		* 不画省略号，否则会出现 `1 2 … 4` 这种丑态。
-		*/
-		function pageItems(page, pageCount, siblingCount = 1, boundaryCount = 1) {
-			const count = Math.max(1, Math.floor(pageCount));
-			const current = clampPage(page, count);
-			const boundary = Math.max(0, Math.floor(boundaryCount));
-			const siblings = Math.max(0, Math.floor(siblingCount));
-			const startPages = range(1, Math.min(boundary, count));
-			const endPages = range(Math.max(count - boundary + 1, boundary + 1), count);
-			const siblingsStart = Math.max(Math.min(current - siblings, count - boundary - siblings * 2 - 1), boundary + 2);
-			const siblingsEnd = Math.min(Math.max(current + siblings, boundary + siblings * 2 + 2), endPages.length > 0 ? endPages[0] - 2 : count - 1);
-			const items = [...startPages];
-			if (siblingsStart > boundary + 2) items.push("gap");
-			else if (boundary + 1 < count - boundary) items.push(boundary + 1);
-			items.push(...range(siblingsStart, siblingsEnd));
-			if (siblingsEnd < count - boundary - 1) items.push("gap");
-			else if (count - boundary > boundary) items.push(count - boundary);
-			items.push(...endPages);
-			return items;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Pagination.js
-		/**
-		* 分页（`‹ Previous  1 [2] 3 … 36  Next ›`）。
-		*
-		* 受控组件：页码由调用方持有，这里只发 `onChange(page, pageSize)`。
-		* 样式只 import 自己那份 CSS（`PAGINATION_CSS`），引它就只打包这一份。
-		*/
-		function Pagination(props) {
-			ensureComponentStyles("pagination", PAGINATION_CSS);
-			const tt = props.translate ?? t$2;
-			const pageSize = Math.max(1, Math.floor(props.pageSize ?? 10));
-			const total = Math.max(0, Math.floor(props.total));
-			const count = pageCountOf(total, pageSize);
-			const page = clampPage(props.page, count);
-			if (props.hideOnSinglePage === true && count <= 1) return null;
-			const disabled = props.disabled === true;
-			const [from, to] = pageRange(page, pageSize, total);
-			const go = (next) => {
-				if (disabled) return;
-				const target = clampPage(next, count);
-				if (target !== page) props.onChange(target, pageSize);
-			};
-			const navClass = [
-				"dshpc-pagination",
-				`dshpc-pagination--${props.align ?? "right"}`,
-				props.simple === true ? "dshpc-pagination--simple" : "",
-				props.className ?? ""
-			].filter((s) => s !== "").join(" ");
-			const totalNode = (() => {
-				const showTotal = props.showTotal;
-				if (showTotal === void 0 || showTotal === false) return null;
-				if (typeof showTotal === "function") return showTotal(total, from, to);
-				return total === 0 ? tt("paginationTotalZero") : tt("paginationTotal", {
-					from,
-					to,
-					total
-				});
-			})();
-			const pageButton = (n) => (0, react$1.createElement)(Button$1, {
-				key: n,
-				variant: n === page ? "info" : "ghost",
-				size: "md",
-				className: "dshpc-pagination__page",
-				"aria-current": n === page ? "page" : void 0,
-				"aria-label": tt("paginationPage", { n }),
-				disabled,
-				onClick: () => go(n)
-			}, n);
-			const navButton = (direction) => {
-				const isPrev = direction === "prev";
-				const label = isPrev ? tt("paginationPrev") : tt("paginationNext");
-				return (0, react$1.createElement)(Button$1, {
-					variant: "ghost",
-					size: "md",
-					className: "dshpc-pagination__nav",
-					icon: isPrev ? (0, react$1.createElement)(Chevron, {
-						dir: "left",
-						size: 14
-					}) : void 0,
-					iconRight: isPrev ? void 0 : (0, react$1.createElement)(Chevron, {
-						dir: "right",
-						size: 14
-					}),
-					"aria-label": label,
-					disabled: disabled || (isPrev ? page <= 1 : page >= count),
-					onClick: () => go(isPrev ? page - 1 : page + 1)
-				}, (0, react$1.createElement)("span", { className: "dshpc-pagination__text" }, label));
-			};
-			const middle = props.simple === true ? [(0, react$1.createElement)("span", {
-				key: "simple",
-				className: "dshpc-pagination__simple"
-			}, `${String(page)} / ${String(count)}`)] : pageItems(page, count, props.siblingCount, props.boundaryCount).map((item, index) => item === "gap" ? (0, react$1.createElement)("span", {
-				key: `gap-${String(index)}`,
-				className: "dshpc-pagination__ellipsis",
-				"aria-hidden": "true"
-			}, "…") : pageButton(item));
-			const options = props.pageSizeOptions ?? [];
-			const sizeNode = options.length === 0 ? null : (0, react$1.createElement)(Picker, {
-				className: "dshpc-pagination__size",
-				minWidth: "auto",
-				mode: "single",
-				options: options.map((size) => ({
-					value: String(size),
-					label: tt("paginationPageSizeOption", { n: size })
-				})),
-				value: String(pageSize),
-				disabled,
-				ariaLabel: tt("paginationPageSizeAria"),
-				onChange: (value) => {
-					const next = Number(value);
-					if (!Number.isFinite(next) || next < 1) return;
-					props.onChange(1, next);
-				}
-			});
-			return (0, react$1.createElement)("nav", {
-				className: navClass,
-				style: props.style,
-				"aria-label": props.ariaLabel ?? tt("paginationAria")
-			}, totalNode === null ? null : (0, react$1.createElement)("span", { className: "dshpc-pagination__total" }, totalNode), (0, react$1.createElement)("div", { className: "dshpc-pagination__pages" }, navButton("prev"), ...middle, navButton("next")), sizeNode);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/SectionHead.js
-		/**
-		* 模块标题行（UI 基础层）：**标签（可选，画出来的短竖线）/ icon（可选）+ 标题 + 右侧控件**。
-		*
-		* 2026-10-08 设置页重构时定型：每块 = 标题行 + 一块内容，标题行左侧 icon、右侧留给该块的控件
-		* （日志块的自动刷新 / 刷新钮，表查询块的表切换）。此前三个块各写一个 `h3`，形态不统一。
-		* 2026-10-30 增加 `accent`：标题前画一条固定样式的短竖线（4px 圆头），颜色可换、可关；
-		* 通栏表格标题也复用这一份标题样式（不再在 Table 里另画）。
-		*
-		* 排版规则：字号 / 行高 / 字色走 `--dshpc-*` token；`right` 用 `flex:1` + `justifyContent:flex-end`
-		* 靠右（比 `marginLeft:auto` 稳：内容再宽也始终贴右，不会塌成靠左）；标题 `flex:none` 不被压缩。
-		*/
-		/** 内置色名与 token 一一同名；其余值一律按 CSS 色值原样落地。 */
-		const ACCENT_TONES = [
-			"business",
-			"success",
-			"warning",
-			"danger",
-			"purple",
-			"pink",
-			"cyan",
-			"teal",
-			"orange",
-			"indigo",
-			"rose",
-			"slate"
-		];
-		function barStyleOf(accent) {
-			if (accent === "default") return void 0;
-			return { background: ACCENT_TONES.includes(accent) ? `var(--dshpc-${accent})` : accent };
-		}
-		function SectionHead(props) {
-			ensureComponentStyles("section-head", SECTION_HEAD_CSS);
-			const accent = props.accent;
-			const className = [
-				"dshpc-section-head",
-				props.flush === true ? "dshpc-section-head--flush" : "",
-				props.className ?? ""
-			].filter((s) => s !== "").join(" ");
-			return (0, react$1.createElement)("div", {
-				className,
-				style: props.style
-			}, accent === false || accent === void 0 ? null : (0, react$1.createElement)("span", {
-				className: "dshpc-section-head__bar",
-				"aria-hidden": "true",
-				style: accent === "default" ? void 0 : barStyleOf(accent)
-			}), props.icon === void 0 ? null : (0, react$1.createElement)("span", { className: "dshpc-section-head__icon" }, props.icon), (0, react$1.createElement)("span", { className: "dshpc-section-head__title" }, props.title), props.right === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-section-head__right" }, props.right));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/table-logic.js
-		/**
-		* 单元格值是不是「对象写法」（跨列 / 跨行 / 对齐）。
-		*
-		* 判别不引 React：React 元素一定有 `$$typeof`（内部标记），而单元格对象没有 ——
-		* 用它把「传进来一个 React 元素」和「传进来一个单元格配置」分开。
-		* 放在纯逻辑层，node 单测可直接覆盖。
-		*/
-		function isTableCellSpec(value) {
-			if (typeof value !== "object" || value === null) return false;
-			if ("$$typeof" in value) return false;
-			return "content" in value;
-		}
-		/** 按深度优先顺序取全部叶子列（表格的列顺序 = 数据格的列顺序）。 */
-		function leafColumns(columns) {
-			const out = [];
-			for (const column of columns) {
-				const children = column.children;
-				if (children === void 0 || children.length === 0) out.push(column);
-				else out.push(...leafColumns(children));
-			}
-			return out;
-		}
-		/** 列树深度 = 表头行数（全叶子列时为 1）。 */
-		function tableDepth(columns) {
-			let depth = 1;
-			for (const column of columns) {
-				const children = column.children;
-				if (children === void 0 || children.length === 0) continue;
-				depth = Math.max(depth, 1 + tableDepth(children));
-			}
-			return depth;
-		}
-		/**
-		* 列树 → 逐行表头。
-		*
-		* - 叶子列：`rowSpan = 深度 - 当前层`，一直竖跨到表头底部；
-		* - 分组列：`colSpan = 其下叶子数`，`rowSpan = 1`。
-		*
-		* 例：`[ID, Patient[Name, Age], Status]` ⇒ 第 0 行 `[ID(1×2), Patient(2×1), Status(1×2)]`，
-		* 第 1 行 `[Name(1×1), Age(1×1)]`。
-		*/
-		function headerRows(columns) {
-			const rows = [];
-			const depth = tableDepth(columns);
-			for (let level = 0; level < depth; level += 1) rows.push([]);
-			const visit = (column, level) => {
-				const children = column.children;
-				if (children === void 0 || children.length === 0) {
-					rows[level].push({
-						column,
-						colSpan: 1,
-						rowSpan: depth - level,
-						leafKeys: [column.key]
-					});
-					return [column.key];
-				}
-				const keys = [];
-				for (const child of children) keys.push(...visit(child, level + 1));
-				rows[level].push({
-					column,
-					colSpan: keys.length,
-					rowSpan: 1,
-					leafKeys: keys
-				});
-				return keys;
-			};
-			for (const column of columns) visit(column, 0);
-			return rows;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/table-shared.js
-		function widthOf(width) {
-			if (width === void 0) return void 0;
-			return typeof width === "number" ? `${width}px` : width;
-		}
-		/** 列级水平内距（覆盖 density 档）；不传交给 CSS。 */
-		function padStyle(column) {
-			return column.padding === void 0 ? void 0 : { paddingInline: `${column.padding}px` };
-		}
-		function alignClass(prefix, align) {
-			return align === void 0 || align === "left" ? "" : ` ${prefix}--${align}`;
-		}
-		/**
-		* 某列在叶子序列里的位置决定画不画左竖线：
-		* 首列恒不画（那是外框的位置）；其余列只在「想要线」时画。
-		* 分组列自己不写 `divider` 时，跟随它第一个叶子列 —— 组头的左缘和第一个子列的左缘
-		* 是同一条线，否则「组头无线、下面子列有线」会断成两截（2026-10-30 用户真机指出）。
-		*/
-		function dividerAttr(leafIndex, wanted) {
-			if (leafIndex === 0) return void 0;
-			return wanted === true ? "left" : void 0;
-		}
-		/**
-		* 表格共享渲染壳（**内部件，不进公开导出**）。
-		*
-		* 职责：基础层样式登记 + 语义化 `<table>` 结构 + 表头分组计算 + 行交互 + 列/单元格配置落地。
-		* 外观（表头底色 / 分隔线 / 悬浮 / 选中）由调用方的皮肤 CSS 负责：每个公开组件
-		* （`Table`、将来的 `TableGrid` / `TableZebra`）只 import 自己那份皮肤，并把自己的
-		* modifier class 传进来。这样消费方引哪个就只打包哪个 —— 绝不用 `variant` 汇总多份皮肤。
-		*/
-		function tableShell(skinClass, props, options = {}) {
-			ensureComponentStyles("table-core", TABLE_BASE_CSS);
-			const tt = props.translate ?? t$2;
-			const headRows = headerRows(props.columns);
-			const leaves = leafColumns(props.columns);
-			const leafIndexByKey = /* @__PURE__ */ new Map();
-			leaves.forEach((column, index) => {
-				leafIndexByKey.set(column.key, index);
-			});
-			const selected = new Set(props.selectedKeys ?? []);
-			const onRowClick = props.onRowClick;
-			const density = props.density ?? "default";
-			const borders = props.borders ?? "y";
-			/** 表头一行：分组表头按层级逐行渲染（每组重复渲染它，分组模式也要表头）。 */
-			const headRowOf = (cells, level) => (0, react$1.createElement)("tr", {
-				key: `head-${level}`,
-				className: "dshpc-table__head-row"
-			}, ...cells.map((cell) => {
-				const group = cell.colSpan > 1;
-				const firstLeafIndex = leafIndexByKey.get(cell.leafKeys[0] ?? "");
-				const firstLeaf = firstLeafIndex === void 0 ? void 0 : leaves[firstLeafIndex];
-				const className = `dshpc-table__head-cell${group ? " dshpc-table__head-cell--group" : ""}${alignClass("dshpc-table__head-cell", cell.column.align)}`;
-				const tone = cell.column.headerTone;
-				return (0, react$1.createElement)("th", {
-					key: cell.column.key,
-					scope: group ? "colgroup" : "col",
-					colSpan: cell.colSpan > 1 ? cell.colSpan : void 0,
-					rowSpan: cell.rowSpan > 1 ? cell.rowSpan : void 0,
-					className,
-					style: padStyle(cell.column),
-					"data-divider": firstLeafIndex === void 0 ? void 0 : dividerAttr(firstLeafIndex, cell.column.divider ?? firstLeaf?.divider),
-					"data-header-tone": tone === void 0 || tone === "default" ? void 0 : tone
-				}, cell.column.title);
-			}));
-			/**
-			* 跨行单元格（rowSpan）把上下几行连成一个视觉块：块里任意一行被选中，整块都算选中。
-			* 先按 rowSpan 求每行所属块的范围 [start, end]，再判断块内有没有选中行 ——
-			* 不依赖点击的是块里的哪一行，也不要求调用方自己展开。
-			*/
-			const selectedBlocksOf = (rows) => {
-				const blocks = rows.map((_, index) => ({
-					start: index,
-					end: index
-				}));
-				rows.forEach((row, index) => {
-					for (const cell of Object.values(row.cells)) {
-						if (!isTableCellSpec(cell) || cell.rowSpan === void 0 || cell.rowSpan <= 1) continue;
-						const end = Math.min(index + cell.rowSpan - 1, rows.length - 1);
-						for (let line = index; line <= end; line += 1) {
-							const block = blocks[line];
-							if (block === void 0) continue;
-							block.start = Math.min(block.start, index);
-							block.end = Math.max(block.end, end);
-						}
-					}
-				});
-				return blocks.map((block) => {
-					for (let line = block.start; line <= block.end; line += 1) {
-						const row = rows[line];
-						if (row !== void 0 && selected.has(row.key)) return true;
-					}
-					return false;
-				});
-			};
-			/** 一组数据行（选中 / 可点 / 单元格配置都在这里落地）。 */
-			const dataRowsOf = (rows, offset = 0) => {
-				const selectedBlocks = selectedBlocksOf(rows);
-				return rows.map((row, index) => (0, react$1.createElement)("tr", {
-					key: row.key,
-					className: "dshpc-table__row",
-					"data-selected": selectedBlocks[index] === true ? "true" : void 0,
-					"data-interactive": onRowClick === void 0 ? void 0 : "true",
-					tabIndex: onRowClick === void 0 ? void 0 : 0,
-					onClick: onRowClick === void 0 ? void 0 : () => onRowClick(row, offset + index),
-					onKeyDown: onRowClick === void 0 ? void 0 : (event) => {
-						if (event.key !== "Enter" && event.key !== " ") return;
-						event.preventDefault();
-						onRowClick(row, offset + index);
-					}
-				}, ...leaves.map((column, leafIndex) => {
-					const cell = row.cells[column.key];
-					if (cell === void 0) return null;
-					let spec;
-					let content;
-					if (isTableCellSpec(cell)) {
-						spec = cell;
-						content = cell.content;
-					} else content = cell;
-					const align = spec?.align ?? column.align;
-					return (0, react$1.createElement)("td", {
-						key: column.key,
-						className: `dshpc-table__cell${alignClass("dshpc-table__cell", align)}`,
-						style: padStyle(column),
-						colSpan: spec?.colSpan !== void 0 && spec.colSpan > 1 ? spec.colSpan : void 0,
-						rowSpan: spec?.rowSpan !== void 0 && spec.rowSpan > 1 ? spec.rowSpan : void 0,
-						"data-divider": dividerAttr(leafIndex, column.divider)
-					}, content ?? null);
-				})));
-			};
-			const colSpan = leaves.length > 0 ? leaves.length : void 0;
-			const emptyRow = (0, react$1.createElement)("tr", {
-				key: "empty",
-				className: "dshpc-table__row"
-			}, (0, react$1.createElement)("td", {
-				className: "dshpc-table__empty",
-				colSpan
-			}, props.emptyText ?? tt("tableEmpty")));
-			const loadingRow = (0, react$1.createElement)("tr", {
-				key: "loading",
-				className: "dshpc-table__state-row"
-			}, (0, react$1.createElement)("td", {
-				className: "dshpc-table__state-cell",
-				colSpan
-			}, (0, react$1.createElement)("div", {
-				className: "dshpc-table__state dshpc-table__state--full",
-				style: props.loadingHeight === void 0 ? void 0 : { height: `${props.loadingHeight}px` }
-			}, (0, react$1.createElement)(Loader$2, {
-				variant: "blocks",
-				size: "xl",
-				label: tt("tableLoading")
-			}))));
-			const infinite = props.onLoadMore !== void 0;
-			const loadingMore = infinite && props.loadingMore === true;
-			const showNoMore = infinite && !loadingMore && props.hasMore === false && props.noMoreText !== false;
-			const footerRows = [];
-			if (loadingMore) footerRows.push((0, react$1.createElement)("tr", {
-				key: "more",
-				className: "dshpc-table__state-row dshpc-table__state-row--footer"
-			}, (0, react$1.createElement)("td", {
-				className: "dshpc-table__state-cell",
-				colSpan
-			}, (0, react$1.createElement)("div", { className: "dshpc-table__state" }, (0, react$1.createElement)(Loader$2, {
-				variant: "blocks",
-				size: "md",
-				label: tt("tableLoadingMore")
-			})))));
-			else if (showNoMore) footerRows.push((0, react$1.createElement)("tr", {
-				key: "end",
-				className: "dshpc-table__state-row dshpc-table__state-row--footer"
-			}, (0, react$1.createElement)("td", {
-				className: "dshpc-table__state-cell",
-				colSpan
-			}, (0, react$1.createElement)("div", { className: "dshpc-table__state" }, (0, react$1.createElement)("span", { className: "dshpc-table__state-text" }, props.noMoreText === void 0 ? tt("tableNoMore") : props.noMoreText)))));
-			const sentinelRow = infinite && props.hasMore !== false && options.sentinelRef !== void 0 ? (0, react$1.createElement)("tr", {
-				key: "sentinel",
-				ref: options.sentinelRef,
-				className: "dshpc-table__sentinel",
-				"aria-hidden": "true"
-			}, (0, react$1.createElement)("td", { colSpan })) : null;
-			const flatFoot = footerRows.length > 0 && (borders === "y" || borders === "none");
-			const tableClass = [
-				"dshpc-table",
-				skinClass,
-				`dshpc-table--density-${density}`,
-				`dshpc-table--borders-${borders}`,
-				props.striped === true ? "dshpc-table--striped" : "",
-				flatFoot ? "dshpc-table--foot-no-bottom" : "",
-				props.className ?? ""
-			].filter((s) => s !== "").join(" ");
-			const groupFoot = footerRows.length > 0 || sentinelRow !== null ? (0, react$1.createElement)("tbody", {
-				key: "group-foot",
-				className: "dshpc-table__body"
-			}, ...footerRows, sentinelRow) : null;
-			const groups = props.groups ?? [];
-			const body = groups.length > 0 ? [...groups.map((group, groupIndex) => (0, react$1.createElement)("tbody", {
-				key: group.key,
-				className: "dshpc-table__body dshpc-table__group-body"
-			}, (0, react$1.createElement)("tr", { className: "dshpc-table__group-row" }, (0, react$1.createElement)("th", {
-				className: "dshpc-table__group-cell",
-				scope: "colgroup",
-				colSpan: leaves.length > 0 ? leaves.length : void 0
-			}, (0, react$1.createElement)(SectionHead, {
-				title: group.title,
-				accent: props.groupAccent ?? "default",
-				flush: true
-			}))), ...headRows.map((cells, level) => headRowOf(cells, `g${groupIndex}-${level}`)), ...dataRowsOf(group.rows, 0))), ...groupFoot === null ? [] : [groupFoot]] : [(0, react$1.createElement)("tbody", {
-				key: "body",
-				className: "dshpc-table__body"
-			}, props.loading === true && (props.rows?.length ?? 0) === 0 ? loadingRow : props.rows !== void 0 && props.rows.length > 0 ? dataRowsOf(props.rows) : emptyRow, ...footerRows, sentinelRow)];
-			return (0, react$1.createElement)("table", {
-				className: tableClass,
-				style: props.style,
-				"aria-label": props.ariaLabel
-			}, leaves.length === 0 ? null : (0, react$1.createElement)("colgroup", null, ...leaves.map((column) => (0, react$1.createElement)("col", {
-				key: column.key,
-				style: widthOf(column.width) === void 0 ? void 0 : { width: widthOf(column.width) }
-			}))), groups.length > 0 ? null : (0, react$1.createElement)("thead", { className: "dshpc-table__head" }, ...headRows.map((cells, level) => headRowOf(cells, level))), ...body);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Table.js
-		/**
-		* 底部哨兵的滚动监听：哨兵进入视口（提前 200px）就调一次 `onLoadMore`。
-		* `enabled` 由调用方决定（分页 / 分组模式下关掉）；正在加载或已到底时 `blockedRef` 挡住重复触发。
-		*/
-		function useLoadMoreSentinel(props, enabled) {
-			const nodeRef = (0, react$1.useRef)(null);
-			const onLoadMoreRef = (0, react$1.useRef)(props.onLoadMore);
-			const blockedRef = (0, react$1.useRef)(true);
-			(0, react$1.useEffect)(() => {
-				onLoadMoreRef.current = props.onLoadMore;
-				blockedRef.current = !enabled || props.onLoadMore === void 0 || props.loading === true || props.loadingMore === true || props.hasMore === false;
-			});
-			const refCallback = (0, react$1.useRef)((node) => {
-				nodeRef.current = node;
-			}).current;
-			(0, react$1.useEffect)(() => {
-				if (!enabled || typeof IntersectionObserver === "undefined") return;
-				const node = nodeRef.current;
-				if (node === null) return;
-				const observer = new IntersectionObserver((entries) => {
-					if (entries.some((entry) => entry.isIntersecting) && !blockedRef.current) onLoadMoreRef.current?.();
-				}, { rootMargin: "0px 0px 200px 0px" });
-				observer.observe(node);
-				return () => {
-					observer.disconnect();
-				};
-			}, [enabled]);
-			return refCallback;
-		}
-		/**
-		* 表格 · 第一档外观（Plain）：白卡片上的无线框表格。
-		*
-		* 特征：双行分组表头（columns 嵌套 `children` 自动算 colSpan / rowSpan）、竖向浅分隔线、
-		* **无横向行线**、行悬浮淡蓝、选中行淡蓝底 + 左侧蓝竖条。
-		*
-		* 只 import 自己这份皮肤 CSS（`TABLE_PLAIN_CSS`）：消费方引 `Table` 就只打包这一份。
-		* 将来的 `TableGrid` / `TableZebra` 是同族独立组件、各自一份 CSS —— **不做 variant**，
-		* 否则两份皮肤会同时进包。
-		*
-		* ```tsx
-		* h(Table, {
-		*   columns: [
-		*     { key: 'id', title: 'ID', width: 120 },
-		*     { key: 'study', title: 'Study', children: [
-		*       { key: 'date', title: 'Date', width: 130 },
-		*       { key: 'modality', title: 'Modality', width: 110 },
-		*     ]},
-		*   ],
-		*   rows: [{ key: 'S-1', cells: { id: 'S-1', date: '2026-10-24', modality: 'CT' } }],
-		*   onRowClick: (row) => select(row.key),
-		* })
-		* ```
-		*/
-		function Table$1(props) {
-			ensureComponentStyles("table-plain", TABLE_PLAIN_CSS);
-			const pager = props.pagination;
-			const grouped = (props.groups?.length ?? 0) > 0;
-			const infinite = pager === void 0;
-			const sentinelRef = useLoadMoreSentinel(props, infinite);
-			if (pager === void 0 || grouped) return tableShell("dshpc-table--plain", pager === void 0 ? props : {
-				...props,
-				onLoadMore: void 0,
-				loadingMore: void 0,
-				hasMore: void 0,
-				noMoreText: void 0
-			}, { sentinelRef: infinite ? sentinelRef : void 0 });
-			const pageSize = Math.max(1, Math.floor(pager.pageSize ?? 10));
-			const allRows = props.rows ?? [];
-			const local = pager.total === void 0;
-			const total = local ? allRows.length : Math.max(0, Math.floor(pager.total ?? 0));
-			const page = clampPage(pager.page, pageCountOf(total, pageSize));
-			const rows = local ? allRows.slice((page - 1) * pageSize, page * pageSize) : allRows;
-			return (0, react$1.createElement)("div", { className: "dshpc-table-frame" }, tableShell("dshpc-table--plain", {
-				...props,
-				rows,
-				onLoadMore: void 0,
-				loadingMore: void 0,
-				hasMore: void 0,
-				noMoreText: void 0
-			}, {}), (0, react$1.createElement)(Pagination, {
-				...pager,
-				page,
-				total,
-				align: pager.align ?? "right"
-			}));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/sonner@2.0.8_@types+react@18.3.31_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/sonner/dist/index.mjs
-		function __insertCSS(code) {
-			if (!code || typeof document == "undefined") return;
-			let head = document.head || document.getElementsByTagName("head")[0];
-			let style = document.createElement("style");
-			style.type = "text/css";
-			head.appendChild(style);
-			style.styleSheet ? style.styleSheet.cssText = code : style.appendChild(document.createTextNode(code));
-		}
-		const getAsset = (type) => {
-			switch (type) {
-				case "success": return SuccessIcon;
-				case "info": return InfoIcon;
-				case "warning": return WarningIcon;
-				case "error": return ErrorIcon;
-				default: return null;
-			}
-		};
-		const bars = Array(12).fill(0);
-		const Loader$1 = ({ visible, className }) => {
-			return /*#__PURE__*/ react$1.default.createElement("div", {
-				className: ["sonner-loading-wrapper", className].filter(Boolean).join(" "),
-				"data-visible": visible
-			}, /*#__PURE__*/ react$1.default.createElement("div", { className: "sonner-spinner" }, bars.map((_, i) => /*#__PURE__*/ react$1.default.createElement("div", {
-				className: "sonner-loading-bar",
-				key: `spinner-bar-${i}`
-			}))));
-		};
-		const SuccessIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			viewBox: "0 0 20 20",
-			fill: "currentColor",
-			height: "20",
-			width: "20",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("path", {
-			fillRule: "evenodd",
-			d: "M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z",
-			clipRule: "evenodd"
-		}));
-		const WarningIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			viewBox: "0 0 24 24",
-			fill: "currentColor",
-			height: "20",
-			width: "20",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("path", {
-			fillRule: "evenodd",
-			d: "M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z",
-			clipRule: "evenodd"
-		}));
-		const InfoIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			viewBox: "0 0 20 20",
-			fill: "currentColor",
-			height: "20",
-			width: "20",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("path", {
-			fillRule: "evenodd",
-			d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z",
-			clipRule: "evenodd"
-		}));
-		const ErrorIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			viewBox: "0 0 20 20",
-			fill: "currentColor",
-			height: "20",
-			width: "20",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("path", {
-			fillRule: "evenodd",
-			d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z",
-			clipRule: "evenodd"
-		}));
-		const CloseIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			width: "12",
-			height: "12",
-			viewBox: "0 0 24 24",
-			fill: "none",
-			stroke: "currentColor",
-			strokeWidth: "1.5",
-			strokeLinecap: "round",
-			strokeLinejoin: "round",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("line", {
-			x1: "18",
-			y1: "6",
-			x2: "6",
-			y2: "18"
-		}), /*#__PURE__*/ react$1.default.createElement("line", {
-			x1: "6",
-			y1: "6",
-			x2: "18",
-			y2: "18"
-		}));
-		const useIsDocumentHidden = () => {
-			const [isDocumentHidden, setIsDocumentHidden] = react$1.default.useState(document.hidden);
-			react$1.default.useEffect(() => {
-				const callback = () => {
-					setIsDocumentHidden(document.hidden);
-				};
-				document.addEventListener("visibilitychange", callback);
-				return () => document.removeEventListener("visibilitychange", callback);
-			}, []);
-			return isDocumentHidden;
-		};
-		let toastsCounter = 1;
-		const MAX_HISTORY_SIZE = 100;
-		const getToastId = (data) => {
-			var _data_id;
-			return typeof (data == null ? void 0 : data.id) === "number" || (data == null ? void 0 : (_data_id = data.id) == null ? void 0 : _data_id.length) > 0 ? data.id : toastsCounter++;
-		};
-		var Observer = class {
-			constructor() {
-				this.subscribe = (subscriber) => {
-					this.subscribers.push(subscriber);
-					this.getActiveToasts().forEach((toast) => subscriber(toast));
-					return () => {
-						const index = this.subscribers.indexOf(subscriber);
-						this.subscribers.splice(index, 1);
-					};
-				};
-				this.publish = (data) => {
-					this.subscribers.forEach((subscriber) => subscriber(data));
-				};
-				this.addToast = (data) => {
-					this.publish(data);
-					this.toasts = [...this.toasts, data];
-					this.trimHistory();
-				};
-				this.trimHistory = () => {
-					let toRemove = this.toasts.length - MAX_HISTORY_SIZE;
-					if (toRemove <= 0) return;
-					this.toasts = this.toasts.filter((toast) => {
-						if (toRemove > 0 && this.dismissedToasts.has(toast.id)) {
-							this.dismissedToasts.delete(toast.id);
-							toRemove--;
-							return false;
-						}
-						return true;
-					});
-				};
-				this.create = (data) => {
-					const { message, ...rest } = data;
-					const id = getToastId(data);
-					const pendingDismissal = this.pendingDismissals.get(id);
-					if (pendingDismissal !== void 0) {
-						cancelAnimationFrame(pendingDismissal);
-						this.pendingDismissals.delete(id);
-						this.dismissedToasts.delete(id);
-					}
-					const wasDismissed = this.dismissedToasts.has(id);
-					const dismissible = data.dismissible === void 0 ? true : data.dismissible;
-					if (wasDismissed) {
-						this.dismissedToasts.delete(id);
-						this.toasts = this.toasts.filter((toast) => toast.id !== id);
-					}
-					if (wasDismissed ? void 0 : this.toasts.find((toast) => {
-						return toast.id === id;
-					})) this.toasts = this.toasts.map((toast) => {
-						if (toast.id === id) {
-							this.publish({
-								...toast,
-								...data,
-								id,
-								title: message
-							});
-							return {
-								...toast,
-								...data,
-								id,
-								dismissible,
-								title: message
-							};
-						}
-						return toast;
-					});
-					else this.addToast({
-						title: message,
-						...rest,
-						dismissible,
-						id
-					});
-					return id;
-				};
-				this.dismiss = (id) => {
-					if (id === void 0 || id === null) {
-						this.getActiveToasts().forEach((toast) => {
-							this.dismissedToasts.add(toast.id);
-							this.subscribers.forEach((subscriber) => subscriber({
-								id: toast.id,
-								dismiss: true
-							}));
-						});
-						return id;
-					}
-					this.dismissedToasts.add(id);
-					const alreadyPending = this.pendingDismissals.get(id);
-					if (alreadyPending !== void 0) cancelAnimationFrame(alreadyPending);
-					this.pendingDismissals.set(id, requestAnimationFrame(() => {
-						this.pendingDismissals.delete(id);
-						this.subscribers.forEach((subscriber) => subscriber({
-							id,
-							dismiss: true
-						}));
-					}));
-					return id;
-				};
-				this.message = (message, data) => {
-					return this.create({
-						...data,
-						message,
-						type: void 0
-					});
-				};
-				this.error = (message, data) => {
-					return this.create({
-						...data,
-						message,
-						type: "error"
-					});
-				};
-				this.success = (message, data) => {
-					return this.create({
-						...data,
-						type: "success",
-						message
-					});
-				};
-				this.info = (message, data) => {
-					return this.create({
-						...data,
-						type: "info",
-						message
-					});
-				};
-				this.warning = (message, data) => {
-					return this.create({
-						...data,
-						type: "warning",
-						message
-					});
-				};
-				this.loading = (message, data) => {
-					return this.create({
-						...data,
-						type: "loading",
-						message
-					});
-				};
-				this.promise = (promise, data) => {
-					if (!data) return;
-					let id = void 0;
-					if (data.loading !== void 0) id = this.create({
-						...data,
-						promise,
-						type: "loading",
-						message: data.loading,
-						description: typeof data.description !== "function" ? data.description : void 0
-					});
-					const p = Promise.resolve(promise instanceof Function ? promise() : promise);
-					let shouldDismiss = id !== void 0;
-					let result;
-					const originalPromise = p.then(async (response) => {
-						result = ["resolve", response];
-						if (react$1.default.isValidElement(response)) {
-							shouldDismiss = false;
-							this.create({
-								id,
-								type: "default",
-								message: response
-							});
-						} else if (isHttpResponse(response) && !response.ok) {
-							shouldDismiss = false;
-							const promiseData = typeof data.error === "function" ? await data.error(`HTTP error! status: ${response.status}`) : data.error;
-							const description = typeof data.description === "function" ? await data.description(`HTTP error! status: ${response.status}`) : data.description;
-							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
-							this.create({
-								id,
-								type: "error",
-								description,
-								...toastSettings
-							});
-						} else if (response instanceof Error) {
-							shouldDismiss = false;
-							const promiseData = typeof data.error === "function" ? await data.error(response) : data.error;
-							const description = typeof data.description === "function" ? await data.description(response) : data.description;
-							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
-							this.create({
-								id,
-								type: "error",
-								description,
-								...toastSettings
-							});
-						} else if (data.success !== void 0) {
-							shouldDismiss = false;
-							const promiseData = typeof data.success === "function" ? await data.success(response) : data.success;
-							const description = typeof data.description === "function" ? await data.description(response) : data.description;
-							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
-							this.create({
-								id,
-								type: "success",
-								description,
-								...toastSettings
-							});
-						}
-					}).catch(async (error) => {
-						result = ["reject", error];
-						if (data.error !== void 0) {
-							shouldDismiss = false;
-							const promiseData = typeof data.error === "function" ? await data.error(error) : data.error;
-							const description = typeof data.description === "function" ? await data.description(error) : data.description;
-							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
-							this.create({
-								id,
-								type: "error",
-								description,
-								...toastSettings
-							});
-						}
-					}).finally(() => {
-						if (shouldDismiss) {
-							this.dismiss(id);
-							id = void 0;
-						}
-						data.finally == null || data.finally.call(data);
-					});
-					const unwrap = () => new Promise((resolve, reject) => originalPromise.then(() => result[0] === "reject" ? reject(result[1]) : resolve(result[1])).catch(reject));
-					if (typeof id !== "string" && typeof id !== "number") return { unwrap };
-					else return Object.assign(id, { unwrap });
-				};
-				this.custom = (jsx, data) => {
-					const id = getToastId(data);
-					this.create({
-						...data,
-						jsx: jsx(id),
-						id,
-						type: void 0
-					});
-					return id;
-				};
-				this.getActiveToasts = () => {
-					return this.toasts.filter((toast) => !this.dismissedToasts.has(toast.id));
-				};
-				this.subscribers = [];
-				this.toasts = [];
-				this.dismissedToasts = /* @__PURE__ */ new Set();
-				this.pendingDismissals = /* @__PURE__ */ new Map();
-			}
-		};
-		const ToastState = new Observer();
-		const toastFunction = (message, data) => {
-			return ToastState.message(message, data);
-		};
-		const isHttpResponse = (data) => {
-			return data && typeof data === "object" && "ok" in data && typeof data.ok === "boolean" && "status" in data && typeof data.status === "number";
-		};
-		const basicToast = toastFunction;
-		const getHistory = () => ToastState.toasts;
-		const getToasts = () => ToastState.getActiveToasts();
-		const toast = Object.assign(basicToast, {
-			success: ToastState.success,
-			info: ToastState.info,
-			warning: ToastState.warning,
-			error: ToastState.error,
-			custom: ToastState.custom,
-			message: ToastState.message,
-			promise: ToastState.promise,
-			dismiss: ToastState.dismiss,
-			loading: ToastState.loading
-		}, {
-			getHistory,
-			getToasts
-		});
-		__insertCSS("[data-sonner-toaster][dir=ltr],html[dir=ltr]{--toast-icon-margin-start:-3px;--toast-icon-margin-end:4px;--toast-svg-margin-start:-1px;--toast-svg-margin-end:0px;--toast-button-margin-start:auto;--toast-button-margin-end:0;--toast-close-button-start:0;--toast-close-button-end:unset;--toast-close-button-transform:translate(-35%, -35%)}[data-sonner-toaster][dir=rtl],html[dir=rtl]{--toast-icon-margin-start:4px;--toast-icon-margin-end:-3px;--toast-svg-margin-start:0px;--toast-svg-margin-end:-1px;--toast-button-margin-start:0;--toast-button-margin-end:auto;--toast-close-button-start:unset;--toast-close-button-end:0;--toast-close-button-transform:translate(35%, -35%)}[data-sonner-toaster]{position:fixed;width:var(--width);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;--gray1:hsl(0, 0%, 99%);--gray2:hsl(0, 0%, 97.3%);--gray3:hsl(0, 0%, 95.1%);--gray4:hsl(0, 0%, 93%);--gray5:hsl(0, 0%, 90.9%);--gray6:hsl(0, 0%, 88.7%);--gray7:hsl(0, 0%, 85.8%);--gray8:hsl(0, 0%, 78%);--gray9:hsl(0, 0%, 56.1%);--gray10:hsl(0, 0%, 52.3%);--gray11:hsl(0, 0%, 43.5%);--gray12:hsl(0, 0%, 9%);--border-radius:8px;box-sizing:border-box;padding:0;margin:0;list-style:none;outline:0;z-index:999999999;transition:transform .4s ease}@media (hover:none) and (pointer:coarse){[data-sonner-toaster][data-lifted=true]{transform:none}}[data-sonner-toaster][data-x-position=right]{right:var(--offset-right)}[data-sonner-toaster][data-x-position=left]{left:var(--offset-left)}[data-sonner-toaster][data-x-position=center]{left:50%;transform:translateX(-50%)}[data-sonner-toaster][data-y-position=top]{top:var(--offset-top)}[data-sonner-toaster][data-y-position=bottom]{bottom:var(--offset-bottom)}[data-sonner-toast]{--y:translateY(100%);--lift-amount:calc(var(--lift) * var(--gap));z-index:var(--z-index);position:absolute;opacity:0;transform:var(--y);touch-action:none;transition:transform .4s,opacity .4s,height .4s,box-shadow .2s;box-sizing:border-box;outline:0;overflow-wrap:anywhere}[data-sonner-toast][data-styled=true]{padding:16px;background:var(--normal-bg);border:1px solid var(--normal-border);color:var(--normal-text);border-radius:var(--border-radius);box-shadow:0 4px 12px rgba(0,0,0,.1);width:var(--width);font-size:13px;display:flex;align-items:center;gap:6px}[data-sonner-toast]:focus-visible{box-shadow:0 4px 12px rgba(0,0,0,.1),0 0 0 2px rgba(0,0,0,.2)}[data-sonner-toast][data-y-position=top]{top:0;--y:translateY(-100%);--lift:1;--lift-amount:calc(1 * var(--gap))}[data-sonner-toast][data-y-position=bottom]{bottom:0;--y:translateY(100%);--lift:-1;--lift-amount:calc(var(--lift) * var(--gap))}[data-sonner-toast][data-styled=true] [data-description]{font-weight:400;line-height:1.4;color:#3f3f3f}[data-rich-colors=true][data-sonner-toast][data-styled=true] [data-description]{color:inherit}[data-sonner-toaster][data-sonner-theme=dark] [data-description]{color:#e8e8e8}[data-sonner-toast][data-styled=true] [data-title]{font-weight:500;line-height:1.5;color:inherit}[data-sonner-toast][data-styled=true] [data-icon]{display:flex;height:16px;width:16px;position:relative;justify-content:flex-start;align-items:center;flex-shrink:0;margin-left:var(--toast-icon-margin-start);margin-right:var(--toast-icon-margin-end)}[data-sonner-toast][data-promise=true] [data-icon]>svg{opacity:0;transform:scale(.8);transform-origin:center;animation:sonner-fade-in .3s ease forwards}[data-sonner-toast][data-styled=true] [data-icon]>*{flex-shrink:0}[data-sonner-toast][data-styled=true] [data-icon] svg{margin-left:var(--toast-svg-margin-start);margin-right:var(--toast-svg-margin-end)}[data-sonner-toast][data-styled=true] [data-content]{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}[data-sonner-toast][data-styled=true] [data-button]{border-radius:4px;padding-left:8px;padding-right:8px;height:24px;font-size:12px;color:var(--normal-bg);background:var(--normal-text);margin-left:var(--toast-button-margin-start);margin-right:var(--toast-button-margin-end);border:none;font-weight:500;cursor:pointer;outline:0;display:flex;align-items:center;flex-shrink:0;transition:opacity .4s,box-shadow .2s}[data-sonner-toast][data-styled=true] [data-button]:focus-visible{box-shadow:0 0 0 2px rgba(0,0,0,.4)}[data-sonner-toast][data-styled=true] [data-button]:first-of-type{margin-left:var(--toast-button-margin-start);margin-right:var(--toast-button-margin-end)}[data-sonner-toast][data-styled=true] [data-cancel]{color:var(--normal-text);background:rgba(0,0,0,.08)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast][data-styled=true] [data-cancel]{background:rgba(255,255,255,.3)}[data-sonner-toast][data-styled=true] [data-close-button]{position:absolute;left:var(--toast-close-button-start);right:var(--toast-close-button-end);top:0;height:20px;width:20px;display:flex;justify-content:center;align-items:center;padding:0;color:var(--normal-text);background:var(--normal-bg);border:1px solid var(--normal-border);transform:var(--toast-close-button-transform);border-radius:50%;cursor:pointer;z-index:1;transition:opacity .1s,background .2s,border-color .2s}[data-sonner-toast][data-styled=true] [data-close-button]:focus-visible{box-shadow:0 4px 12px rgba(0,0,0,.1),0 0 0 2px rgba(0,0,0,.2)}[data-sonner-toast][data-styled=true] [data-disabled=true]{cursor:not-allowed}[data-sonner-toast][data-styled=true]:hover [data-close-button]:hover{background:var(--gray2);border-color:var(--gray5)}[data-sonner-toast][data-swiping=true]::before{content:'';position:absolute;left:-100%;right:-100%;height:100%;z-index:-1}[data-sonner-toast][data-y-position=top][data-swiping=true]::before{bottom:50%;transform:scaleY(3) translateY(50%)}[data-sonner-toast][data-y-position=bottom][data-swiping=true]::before{top:50%;transform:scaleY(3) translateY(-50%)}[data-sonner-toast][data-swiping=false][data-removed=true]::before{content:'';position:absolute;inset:0;transform:scaleY(2)}[data-sonner-toast][data-expanded=true]::after{content:'';position:absolute;left:0;height:calc(var(--gap) + 1px);bottom:100%;width:100%}[data-sonner-toast][data-mounted=true]{--y:translateY(0);opacity:1}[data-sonner-toast][data-expanded=false][data-front=false]{--scale:var(--toasts-before) * 0.05 + 1;--y:translateY(calc(var(--lift-amount) * var(--toasts-before))) scale(calc(-1 * var(--scale)));height:var(--front-toast-height)}[data-sonner-toast]>*{transition:opacity .4s}[data-sonner-toast][data-x-position=right]{right:0}[data-sonner-toast][data-x-position=left]{left:0}[data-sonner-toast][data-expanded=false][data-front=false][data-styled=true]>*{opacity:0}[data-sonner-toast][data-visible=false]{opacity:0;pointer-events:none}[data-sonner-toast][data-mounted=true][data-expanded=true]{--y:translateY(calc(var(--lift) * var(--offset)));height:var(--initial-height)}[data-sonner-toast][data-removed=true][data-front=true][data-swipe-out=false]{--y:translateY(calc(var(--lift) * -100%));opacity:0}[data-sonner-toast][data-removed=true][data-front=false][data-swipe-out=false][data-expanded=true]{--y:translateY(calc(var(--lift) * var(--offset) + var(--lift) * -100%));opacity:0}[data-sonner-toast][data-removed=true][data-front=false][data-swipe-out=false][data-expanded=false]{--y:translateY(40%);opacity:0;transition:transform .5s,opacity .2s}[data-sonner-toast][data-removed=true][data-front=false]::before{height:calc(var(--initial-height) + 20%)}[data-sonner-toast][data-swiping=true]{transform:var(--y) translateY(var(--swipe-amount-y,0)) translateX(var(--swipe-amount-x,0));transition:none}[data-sonner-toast][data-swiped=true]{-webkit-user-select:none;user-select:none}[data-sonner-toast][data-swipe-out=true][data-y-position=bottom],[data-sonner-toast][data-swipe-out=true][data-y-position=top]{animation-duration:.2s;animation-timing-function:ease-out;animation-fill-mode:forwards}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=left]{animation-name:swipe-out-left}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=right]{animation-name:swipe-out-right}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=up]{animation-name:swipe-out-up}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=down]{animation-name:swipe-out-down}@keyframes swipe-out-left{from{transform:var(--y) translateX(var(--swipe-amount-x));opacity:1}to{transform:var(--y) translateX(calc(var(--swipe-amount-x) - 100%));opacity:0}}@keyframes swipe-out-right{from{transform:var(--y) translateX(var(--swipe-amount-x));opacity:1}to{transform:var(--y) translateX(calc(var(--swipe-amount-x) + 100%));opacity:0}}@keyframes swipe-out-up{from{transform:var(--y) translateY(var(--swipe-amount-y));opacity:1}to{transform:var(--y) translateY(calc(var(--swipe-amount-y) - 100%));opacity:0}}@keyframes swipe-out-down{from{transform:var(--y) translateY(var(--swipe-amount-y));opacity:1}to{transform:var(--y) translateY(calc(var(--swipe-amount-y) + 100%));opacity:0}}@media (max-width:600px){[data-sonner-toaster]{position:fixed;right:var(--mobile-offset-right);left:var(--mobile-offset-left);width:100%}[data-sonner-toaster][dir=rtl]{left:calc(var(--mobile-offset-left) * -1)}[data-sonner-toaster] [data-sonner-toast]{left:0;right:0;width:calc(100% - var(--mobile-offset-left) * 2)}[data-sonner-toaster][data-x-position=left]{left:var(--mobile-offset-left)}[data-sonner-toaster][data-y-position=bottom]{bottom:var(--mobile-offset-bottom)}[data-sonner-toaster][data-y-position=top]{top:var(--mobile-offset-top)}[data-sonner-toaster][data-x-position=center]{left:var(--mobile-offset-left);right:var(--mobile-offset-right);transform:none}}[data-sonner-toaster][data-sonner-theme=light]{--normal-bg:#fff;--normal-border:var(--gray4);--normal-text:var(--gray12);--success-bg:hsl(143, 85%, 96%);--success-border:hsl(145, 92%, 87%);--success-text:hsl(140, 100%, 27%);--info-bg:hsl(208, 100%, 97%);--info-border:hsl(221, 91%, 93%);--info-text:hsl(210, 92%, 45%);--warning-bg:hsl(49, 100%, 97%);--warning-border:hsl(49, 91%, 84%);--warning-text:hsl(31, 92%, 45%);--error-bg:hsl(359, 100%, 97%);--error-border:hsl(359, 100%, 94%);--error-text:hsl(360, 100%, 45%)}[data-sonner-toaster][data-sonner-theme=light] [data-sonner-toast][data-invert=true]{--normal-bg:#000;--normal-border:hsl(0, 0%, 20%);--normal-text:var(--gray1)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast][data-invert=true]{--normal-bg:#fff;--normal-border:var(--gray3);--normal-text:var(--gray12)}[data-sonner-toaster][data-sonner-theme=dark]{--normal-bg:#000;--normal-bg-hover:hsl(0, 0%, 12%);--normal-border:hsl(0, 0%, 20%);--normal-border-hover:hsl(0, 0%, 25%);--normal-text:var(--gray1);--success-bg:hsl(150, 100%, 6%);--success-border:hsl(147, 100%, 12%);--success-text:hsl(150, 86%, 65%);--info-bg:hsl(215, 100%, 6%);--info-border:hsl(223, 43%, 17%);--info-text:hsl(216, 87%, 65%);--warning-bg:hsl(64, 100%, 6%);--warning-border:hsl(60, 100%, 9%);--warning-text:hsl(46, 87%, 65%);--error-bg:hsl(358, 76%, 10%);--error-border:hsl(357, 89%, 16%);--error-text:hsl(358, 100%, 81%)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast] [data-close-button]{background:var(--normal-bg);border-color:var(--normal-border);color:var(--normal-text)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast] [data-close-button]:hover{background:var(--normal-bg-hover);border-color:var(--normal-border-hover)}[data-rich-colors=true][data-sonner-toast][data-type=success]{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}[data-rich-colors=true][data-sonner-toast][data-type=success] [data-close-button]{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}[data-rich-colors=true][data-sonner-toast][data-type=info]{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text)}[data-rich-colors=true][data-sonner-toast][data-type=info] [data-close-button]{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text)}[data-rich-colors=true][data-sonner-toast][data-type=warning]{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-text)}[data-rich-colors=true][data-sonner-toast][data-type=warning] [data-close-button]{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-text)}[data-rich-colors=true][data-sonner-toast][data-type=error]{background:var(--error-bg);border-color:var(--error-border);color:var(--error-text)}[data-rich-colors=true][data-sonner-toast][data-type=error] [data-close-button]{background:var(--error-bg);border-color:var(--error-border);color:var(--error-text)}.sonner-loading-wrapper{--size:16px;height:var(--size);width:var(--size);position:absolute;inset:0;z-index:10}.sonner-loading-wrapper[data-visible=false]{transform-origin:center;animation:sonner-fade-out .2s ease forwards}.sonner-spinner{position:relative;top:50%;left:50%;height:var(--size);width:var(--size)}.sonner-loading-bar{animation:sonner-spin 1.2s linear infinite;background:var(--gray11);border-radius:6px;height:8%;left:-10%;position:absolute;top:-3.9%;width:24%}.sonner-loading-bar:first-child{animation-delay:-1.2s;transform:rotate(.0001deg) translate(146%)}.sonner-loading-bar:nth-child(2){animation-delay:-1.1s;transform:rotate(30deg) translate(146%)}.sonner-loading-bar:nth-child(3){animation-delay:-1s;transform:rotate(60deg) translate(146%)}.sonner-loading-bar:nth-child(4){animation-delay:-.9s;transform:rotate(90deg) translate(146%)}.sonner-loading-bar:nth-child(5){animation-delay:-.8s;transform:rotate(120deg) translate(146%)}.sonner-loading-bar:nth-child(6){animation-delay:-.7s;transform:rotate(150deg) translate(146%)}.sonner-loading-bar:nth-child(7){animation-delay:-.6s;transform:rotate(180deg) translate(146%)}.sonner-loading-bar:nth-child(8){animation-delay:-.5s;transform:rotate(210deg) translate(146%)}.sonner-loading-bar:nth-child(9){animation-delay:-.4s;transform:rotate(240deg) translate(146%)}.sonner-loading-bar:nth-child(10){animation-delay:-.3s;transform:rotate(270deg) translate(146%)}.sonner-loading-bar:nth-child(11){animation-delay:-.2s;transform:rotate(300deg) translate(146%)}.sonner-loading-bar:nth-child(12){animation-delay:-.1s;transform:rotate(330deg) translate(146%)}@keyframes sonner-fade-in{0%{opacity:0;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}@keyframes sonner-fade-out{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.8)}}@keyframes sonner-spin{0%{opacity:1}100%{opacity:.15}}@media (prefers-reduced-motion){.sonner-loading-bar,[data-sonner-toast],[data-sonner-toast]>*{transition:none!important;animation:none!important}}.sonner-loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transform-origin:center;transition:opacity .2s,transform .2s}.sonner-loader[data-visible=false]{opacity:0;transform:scale(.8) translate(-50%,-50%)}");
-		function isAction(action) {
-			return action.label !== void 0;
-		}
-		const VISIBLE_TOASTS_AMOUNT = 3;
-		const VIEWPORT_OFFSET = "24px";
-		const MOBILE_VIEWPORT_OFFSET = "16px";
-		const TOAST_LIFETIME = 4e3;
-		const TOAST_WIDTH = 356;
-		const GAP = 14;
-		const SWIPE_THRESHOLD = 45;
-		const TIME_BEFORE_UNMOUNT = 200;
-		function cn(...classes) {
-			return classes.filter(Boolean).join(" ");
-		}
-		function getDefaultSwipeDirections(position) {
-			const [y, x] = position.split("-");
-			const directions = [];
-			if (y) directions.push(y);
-			if (x) directions.push(x);
-			return directions;
-		}
-		const Toast = (props) => {
-			var _toast_classNames, _toast_classNames1, _toast_classNames2, _toast_classNames3, _toast_classNames4, _toast_classNames5, _toast_classNames6, _toast_classNames7, _toast_classNames8;
-			const { invert: ToasterInvert, toast, unstyled, interacting, setHeights, visibleToasts, heights, index, toasts, expanded, removeToast, defaultRichColors, closeButton: closeButtonFromToaster, style, cancelButtonStyle, actionButtonStyle, className = "", descriptionClassName = "", duration: durationFromToaster, position, gap, expandByDefault, classNames, icons, closeButtonAriaLabel = "Close toast" } = props;
-			const [swipeDirection, setSwipeDirection] = react$1.default.useState(null);
-			const [swipeOutDirection, setSwipeOutDirection] = react$1.default.useState(null);
-			const [mounted, setMounted] = react$1.default.useState(false);
-			const [removed, setRemoved] = react$1.default.useState(false);
-			const [swiping, setSwiping] = react$1.default.useState(false);
-			const [swipeOut, setSwipeOut] = react$1.default.useState(false);
-			const [isSwiped, setIsSwiped] = react$1.default.useState(false);
-			const [offsetBeforeRemove, setOffsetBeforeRemove] = react$1.default.useState(0);
-			const [initialHeight, setInitialHeight] = react$1.default.useState(0);
-			const remainingTime = react$1.default.useRef(toast.duration || durationFromToaster || TOAST_LIFETIME);
-			const dragStartTime = react$1.default.useRef(null);
-			const toastRef = react$1.default.useRef(null);
-			const isFront = index === 0;
-			const isVisible = index + 1 <= visibleToasts;
-			const toastType = toast.type;
-			const toastTypeKey = toastType != null ? toastType : "default";
-			const dismissible = toast.dismissible !== false;
-			const toastClassname = toast.className || "";
-			const toastDescriptionClassname = toast.descriptionClassName || "";
-			const heightIndex = react$1.default.useMemo(() => heights.findIndex((height) => height.toastId === toast.id) || 0, [heights, toast.id]);
-			const closeButton = react$1.default.useMemo(() => {
-				var _toast_closeButton;
-				return (_toast_closeButton = toast.closeButton) != null ? _toast_closeButton : closeButtonFromToaster;
-			}, [toast.closeButton, closeButtonFromToaster]);
-			const duration = react$1.default.useMemo(() => toast.duration || durationFromToaster || TOAST_LIFETIME, [toast.duration, durationFromToaster]);
-			const closeTimerStartTimeRef = react$1.default.useRef(0);
-			const offset = react$1.default.useRef(0);
-			const lastCloseTimerStartTimeRef = react$1.default.useRef(0);
-			const pointerStartRef = react$1.default.useRef(null);
-			const [y, x] = position.split("-");
-			const toastsHeightBefore = react$1.default.useMemo(() => {
-				return heights.reduce((prev, curr, reducerIndex) => {
-					if (reducerIndex >= heightIndex) return prev;
-					return prev + curr.height;
-				}, 0);
-			}, [heights, heightIndex]);
-			const isDocumentHidden = useIsDocumentHidden();
-			const swipeDirections = react$1.default.useMemo(() => {
-				var _props_swipeDirections;
-				return (_props_swipeDirections = props.swipeDirections) != null ? _props_swipeDirections : getDefaultSwipeDirections(position);
-			}, [props.swipeDirections, position]);
-			const invert = toast.invert || ToasterInvert;
-			const disabled = toastType === "loading";
-			offset.current = react$1.default.useMemo(() => heightIndex * gap + toastsHeightBefore, [heightIndex, toastsHeightBefore]);
-			react$1.default.useEffect(() => {
-				remainingTime.current = duration;
-			}, [duration]);
-			react$1.default.useEffect(() => {
-				setMounted(true);
-			}, []);
-			react$1.default.useEffect(() => {
-				const toastNode = toastRef.current;
-				if (toastNode) {
-					const height = toastNode.getBoundingClientRect().height;
-					setInitialHeight(height);
-					setHeights((h) => [{
-						toastId: toast.id,
-						height,
-						position: toast.position
-					}, ...h]);
-					return () => setHeights((h) => h.filter((height) => height.toastId !== toast.id));
-				}
-			}, [setHeights, toast.id]);
-			react$1.default.useLayoutEffect(() => {
-				if (!mounted) return;
-				const toastNode = toastRef.current;
-				const originalHeight = toastNode.style.height;
-				toastNode.style.height = "auto";
-				const newHeight = toastNode.getBoundingClientRect().height;
-				toastNode.style.height = originalHeight;
-				setInitialHeight(newHeight);
-				setHeights((heights) => {
-					if (!heights.find((height) => height.toastId === toast.id)) return [{
-						toastId: toast.id,
-						height: newHeight,
-						position: toast.position
-					}, ...heights];
-					else return heights.map((height) => height.toastId === toast.id ? {
-						...height,
-						height: newHeight
-					} : height);
-				});
-			}, [
-				mounted,
-				toast.title,
-				toast.description,
-				setHeights,
-				toast.id,
-				toast.jsx,
-				toast.action,
-				toast.cancel
-			]);
-			const deleteToast = react$1.default.useCallback(() => {
-				setRemoved(true);
-				setOffsetBeforeRemove(offset.current);
-				setHeights((h) => h.filter((height) => height.toastId !== toast.id));
-				setTimeout(() => {
-					removeToast(toast);
-				}, TIME_BEFORE_UNMOUNT);
-			}, [
-				toast,
-				removeToast,
-				setHeights,
-				offset
-			]);
-			react$1.default.useEffect(() => {
-				if (toast.promise && toastType === "loading" || toast.duration === Infinity || toast.type === "loading") return;
-				let timeoutId;
-				const pauseTimer = () => {
-					if (lastCloseTimerStartTimeRef.current < closeTimerStartTimeRef.current) {
-						const elapsedTime = (/* @__PURE__ */ new Date()).getTime() - closeTimerStartTimeRef.current;
-						remainingTime.current = remainingTime.current - elapsedTime;
-					}
-					lastCloseTimerStartTimeRef.current = (/* @__PURE__ */ new Date()).getTime();
-				};
-				const startTimer = () => {
-					if (remainingTime.current === Infinity) return;
-					closeTimerStartTimeRef.current = (/* @__PURE__ */ new Date()).getTime();
-					timeoutId = setTimeout(() => {
-						toast.onAutoClose == null || toast.onAutoClose.call(toast, toast);
-						deleteToast();
-					}, remainingTime.current);
-				};
-				if (expanded || interacting || isDocumentHidden) pauseTimer();
-				else startTimer();
-				return () => clearTimeout(timeoutId);
-			}, [
-				expanded,
-				interacting,
-				toast,
-				toastType,
-				isDocumentHidden,
-				deleteToast
-			]);
-			react$1.default.useEffect(() => {
-				if (toast.delete) {
-					deleteToast();
-					toast.onDismiss == null || toast.onDismiss.call(toast, toast);
-				}
-			}, [deleteToast, toast.delete]);
-			function getLoadingIcon() {
-				var _toast_classNames;
-				if (icons == null ? void 0 : icons.loading) {
-					var _toast_classNames1;
-					return /*#__PURE__*/ react$1.default.createElement("div", {
-						className: cn(classNames == null ? void 0 : classNames.loader, toast == null ? void 0 : (_toast_classNames1 = toast.classNames) == null ? void 0 : _toast_classNames1.loader, "sonner-loader"),
-						"data-visible": toastType === "loading"
-					}, icons.loading);
-				}
-				return /*#__PURE__*/ react$1.default.createElement(Loader$1, {
-					className: cn(classNames == null ? void 0 : classNames.loader, toast == null ? void 0 : (_toast_classNames = toast.classNames) == null ? void 0 : _toast_classNames.loader),
-					visible: toastType === "loading"
-				});
-			}
-			const icon = toast.icon || (icons == null ? void 0 : icons[toastType]) || getAsset(toastType);
-			var _toast_richColors, _icons_close;
-			return /*#__PURE__*/ react$1.default.createElement("li", {
-				tabIndex: 0,
-				ref: toastRef,
-				className: cn(className, toastClassname, classNames == null ? void 0 : classNames.toast, toast == null ? void 0 : (_toast_classNames = toast.classNames) == null ? void 0 : _toast_classNames.toast, classNames == null ? void 0 : classNames[toastTypeKey], toast == null ? void 0 : (_toast_classNames1 = toast.classNames) == null ? void 0 : _toast_classNames1[toastTypeKey]),
-				"data-sonner-toast": "",
-				"data-rich-colors": (_toast_richColors = toast.richColors) != null ? _toast_richColors : defaultRichColors,
-				"data-styled": !Boolean(toast.jsx || toast.unstyled || unstyled),
-				"data-mounted": mounted,
-				"data-promise": Boolean(toast.promise),
-				"data-swiped": isSwiped,
-				"data-removed": removed,
-				"data-visible": isVisible,
-				"data-y-position": y,
-				"data-x-position": x,
-				"data-index": index,
-				"data-front": isFront,
-				"data-swiping": swiping,
-				"data-dismissible": dismissible,
-				"data-type": toastType,
-				"data-invert": invert,
-				"data-swipe-out": swipeOut,
-				"data-swipe-direction": swipeOutDirection,
-				"data-expanded": Boolean(expanded || expandByDefault && mounted),
-				"data-testid": toast.testId,
-				style: {
-					"--index": index,
-					"--toasts-before": index,
-					"--z-index": toasts.length - index,
-					"--offset": `${removed ? offsetBeforeRemove : offset.current}px`,
-					"--initial-height": expandByDefault ? "auto" : `${initialHeight}px`,
-					...style,
-					...toast.style
-				},
-				onDragEnd: () => {
-					setSwiping(false);
-					setSwipeDirection(null);
-					pointerStartRef.current = null;
-				},
-				onPointerDown: (event) => {
-					if (event.button === 2) return;
-					if (disabled || !dismissible) return;
-					dragStartTime.current = /* @__PURE__ */ new Date();
-					setOffsetBeforeRemove(offset.current);
-					event.target.setPointerCapture(event.pointerId);
-					if (event.target.tagName === "BUTTON") return;
-					setSwiping(true);
-					pointerStartRef.current = {
-						x: event.clientX,
-						y: event.clientY
-					};
-				},
-				onPointerUp: () => {
-					var _toastRef_current, _toastRef_current1, _dragStartTime_current;
-					if (swipeOut || !dismissible) return;
-					pointerStartRef.current = null;
-					const swipeAmountX = Number(((_toastRef_current = toastRef.current) == null ? void 0 : _toastRef_current.style.getPropertyValue("--swipe-amount-x").replace("px", "")) || 0);
-					const swipeAmountY = Number(((_toastRef_current1 = toastRef.current) == null ? void 0 : _toastRef_current1.style.getPropertyValue("--swipe-amount-y").replace("px", "")) || 0);
-					const timeTaken = (/* @__PURE__ */ new Date()).getTime() - ((_dragStartTime_current = dragStartTime.current) == null ? void 0 : _dragStartTime_current.getTime());
-					const swipeAmount = swipeDirection === "x" ? swipeAmountX : swipeAmountY;
-					const velocity = Math.abs(swipeAmount) / timeTaken;
-					if ((swipeDirection === "x" ? swipeDirections.includes(swipeAmountX > 0 ? "right" : "left") : swipeDirections.includes(swipeAmountY > 0 ? "bottom" : "top")) && (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > .11)) {
-						setOffsetBeforeRemove(offset.current);
-						toast.onDismiss == null || toast.onDismiss.call(toast, toast);
-						if (swipeDirection === "x") setSwipeOutDirection(swipeAmountX > 0 ? "right" : "left");
-						else setSwipeOutDirection(swipeAmountY > 0 ? "down" : "up");
-						deleteToast();
-						setSwipeOut(true);
-						return;
-					} else {
-						var _toastRef_current2, _toastRef_current3;
-						(_toastRef_current2 = toastRef.current) == null || _toastRef_current2.style.setProperty("--swipe-amount-x", `0px`);
-						(_toastRef_current3 = toastRef.current) == null || _toastRef_current3.style.setProperty("--swipe-amount-y", `0px`);
-					}
-					setIsSwiped(false);
-					setSwiping(false);
-					setSwipeDirection(null);
-				},
-				onPointerMove: (event) => {
-					var _window_getSelection, _toastRef_current, _toastRef_current1;
-					if (!pointerStartRef.current || !dismissible) return;
-					if (((_window_getSelection = window.getSelection()) == null ? void 0 : _window_getSelection.toString().length) > 0) return;
-					const yDelta = event.clientY - pointerStartRef.current.y;
-					const xDelta = event.clientX - pointerStartRef.current.x;
-					if (!swipeDirection && (Math.abs(xDelta) > 1 || Math.abs(yDelta) > 1)) setSwipeDirection(Math.abs(xDelta) > Math.abs(yDelta) ? "x" : "y");
-					let swipeAmount = {
-						x: 0,
-						y: 0
-					};
-					const getDampening = (delta) => {
-						return 1 / (1.5 + Math.abs(delta) / 20);
-					};
-					if (swipeDirection === "y") {
-						if (swipeDirections.includes("top") || swipeDirections.includes("bottom")) {
-							if (swipeDirections.includes("top") && yDelta < 0 || swipeDirections.includes("bottom") && yDelta > 0) swipeAmount.y = yDelta;
-							else {
-								const dampenedDelta = yDelta * getDampening(yDelta);
-								swipeAmount.y = Math.abs(dampenedDelta) < Math.abs(yDelta) ? dampenedDelta : yDelta;
-							}
-						}
-					} else if (swipeDirection === "x") {
-						if (swipeDirections.includes("left") || swipeDirections.includes("right")) {
-							if (swipeDirections.includes("left") && xDelta < 0 || swipeDirections.includes("right") && xDelta > 0) swipeAmount.x = xDelta;
-							else {
-								const dampenedDelta = xDelta * getDampening(xDelta);
-								swipeAmount.x = Math.abs(dampenedDelta) < Math.abs(xDelta) ? dampenedDelta : xDelta;
-							}
-						}
-					}
-					if (Math.abs(swipeAmount.x) > 0 || Math.abs(swipeAmount.y) > 0) setIsSwiped(true);
-					(_toastRef_current = toastRef.current) == null || _toastRef_current.style.setProperty("--swipe-amount-x", `${swipeAmount.x}px`);
-					(_toastRef_current1 = toastRef.current) == null || _toastRef_current1.style.setProperty("--swipe-amount-y", `${swipeAmount.y}px`);
-				}
-			}, closeButton && !toast.jsx && toastType !== "loading" ? /*#__PURE__*/ react$1.default.createElement("button", {
-				"aria-label": closeButtonAriaLabel,
-				"data-disabled": disabled,
-				"data-close-button": true,
-				onClick: disabled || !dismissible ? () => {} : () => {
-					deleteToast();
-					toast.onDismiss == null || toast.onDismiss.call(toast, toast);
-				},
-				className: cn(classNames == null ? void 0 : classNames.closeButton, toast == null ? void 0 : (_toast_classNames2 = toast.classNames) == null ? void 0 : _toast_classNames2.closeButton)
-			}, (_icons_close = icons == null ? void 0 : icons.close) != null ? _icons_close : CloseIcon) : null, (toastType || toast.icon || toast.promise) && toast.icon !== null && ((icons == null ? void 0 : icons[toastType]) !== null || toast.icon) ? /*#__PURE__*/ react$1.default.createElement("div", {
-				"data-icon": "",
-				className: cn(classNames == null ? void 0 : classNames.icon, toast == null ? void 0 : (_toast_classNames3 = toast.classNames) == null ? void 0 : _toast_classNames3.icon)
-			}, toastType === "loading" ? toast.icon || getLoadingIcon() : toast.promise ? getLoadingIcon() : null, toastType !== "loading" ? icon : null) : null, /*#__PURE__*/ react$1.default.createElement("div", {
-				"data-content": "",
-				className: cn(classNames == null ? void 0 : classNames.content, toast == null ? void 0 : (_toast_classNames4 = toast.classNames) == null ? void 0 : _toast_classNames4.content)
-			}, /*#__PURE__*/ react$1.default.createElement("div", {
-				"data-title": "",
-				className: cn(classNames == null ? void 0 : classNames.title, toast == null ? void 0 : (_toast_classNames5 = toast.classNames) == null ? void 0 : _toast_classNames5.title)
-			}, toast.jsx ? toast.jsx : typeof toast.title === "function" ? toast.title() : toast.title), toast.description ? /*#__PURE__*/ react$1.default.createElement("div", {
-				"data-description": "",
-				className: cn(descriptionClassName, toastDescriptionClassname, classNames == null ? void 0 : classNames.description, toast == null ? void 0 : (_toast_classNames6 = toast.classNames) == null ? void 0 : _toast_classNames6.description)
-			}, typeof toast.description === "function" ? toast.description() : toast.description) : null), /*#__PURE__*/ react$1.default.isValidElement(toast.cancel) ? toast.cancel : toast.cancel && isAction(toast.cancel) ? /*#__PURE__*/ react$1.default.createElement("button", {
-				"data-button": true,
-				"data-cancel": true,
-				style: toast.cancelButtonStyle || cancelButtonStyle,
-				onClick: (event) => {
-					if (!isAction(toast.cancel)) return;
-					if (!dismissible) return;
-					toast.cancel.onClick == null || toast.cancel.onClick.call(toast.cancel, event);
-					deleteToast();
-				},
-				className: cn(classNames == null ? void 0 : classNames.cancelButton, toast == null ? void 0 : (_toast_classNames7 = toast.classNames) == null ? void 0 : _toast_classNames7.cancelButton)
-			}, toast.cancel.label) : null, /*#__PURE__*/ react$1.default.isValidElement(toast.action) ? toast.action : toast.action && isAction(toast.action) ? /*#__PURE__*/ react$1.default.createElement("button", {
-				"data-button": true,
-				"data-action": true,
-				style: toast.actionButtonStyle || actionButtonStyle,
-				onClick: (event) => {
-					if (!isAction(toast.action)) return;
-					toast.action.onClick == null || toast.action.onClick.call(toast.action, event);
-					if (event.defaultPrevented) return;
-					deleteToast();
-				},
-				className: cn(classNames == null ? void 0 : classNames.actionButton, toast == null ? void 0 : (_toast_classNames8 = toast.classNames) == null ? void 0 : _toast_classNames8.actionButton)
-			}, toast.action.label) : null);
-		};
-		function getDocumentDirection() {
-			if (typeof window === "undefined") return "ltr";
-			if (typeof document === "undefined") return "ltr";
-			const dirAttribute = document.documentElement.getAttribute("dir");
-			if (dirAttribute === "auto" || !dirAttribute) return window.getComputedStyle(document.documentElement).direction;
-			return dirAttribute;
-		}
-		function assignOffset(defaultOffset, mobileOffset) {
-			const styles = {};
-			[defaultOffset, mobileOffset].forEach((offset, index) => {
-				const isMobile = index === 1;
-				const prefix = isMobile ? "--mobile-offset" : "--offset";
-				const defaultValue = isMobile ? MOBILE_VIEWPORT_OFFSET : VIEWPORT_OFFSET;
-				function assignAll(offset) {
-					[
-						"top",
-						"right",
-						"bottom",
-						"left"
-					].forEach((key) => {
-						styles[`${prefix}-${key}`] = typeof offset === "number" ? `${offset}px` : offset;
-					});
-				}
-				if (typeof offset === "number" || typeof offset === "string") assignAll(offset);
-				else if (typeof offset === "object") [
-					"top",
-					"right",
-					"bottom",
-					"left"
-				].forEach((key) => {
-					if (offset[key] === void 0) styles[`${prefix}-${key}`] = defaultValue;
-					else styles[`${prefix}-${key}`] = typeof offset[key] === "number" ? `${offset[key]}px` : offset[key];
-				});
-				else assignAll(defaultValue);
-			});
-			return styles;
-		}
-		const Toaster = /*#__PURE__*/ react$1.default.forwardRef(function Toaster(props, ref) {
-			const { id, invert, position = "bottom-right", hotkey = ["altKey", "KeyT"], expand, closeButton, className, offset, mobileOffset, theme = "light", richColors, duration, style, visibleToasts = VISIBLE_TOASTS_AMOUNT, toastOptions, dir = getDocumentDirection(), gap = GAP, icons, customAriaLabel, containerAriaLabel = "Notifications" } = props;
-			const [toasts, setToasts] = react$1.default.useState([]);
-			const filteredToasts = react$1.default.useMemo(() => {
-				if (id) return toasts.filter((toast) => toast.toasterId === id);
-				return toasts.filter((toast) => !toast.toasterId);
-			}, [toasts, id]);
-			const possiblePositions = react$1.default.useMemo(() => {
-				return Array.from(new Set([position].concat(filteredToasts.filter((toast) => toast.position).map((toast) => toast.position))));
-			}, [filteredToasts, position]);
-			const [heights, setHeights] = react$1.default.useState([]);
-			const [expanded, setExpanded] = react$1.default.useState(false);
-			const [interacting, setInteracting] = react$1.default.useState(false);
-			const [actualTheme, setActualTheme] = react$1.default.useState(theme !== "system" ? theme : typeof window !== "undefined" ? window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" : "light");
-			const listRef = react$1.default.useRef(null);
-			const hotkeyLabel = hotkey.join("+").replace(/Key/g, "").replace(/Digit/g, "");
-			const lastFocusedElementRef = react$1.default.useRef(null);
-			const isFocusWithinRef = react$1.default.useRef(false);
-			const removeToast = react$1.default.useCallback((toastToRemove) => {
-				setToasts((toasts) => {
-					var _toasts_find;
-					if (!((_toasts_find = toasts.find((toast) => toast.id === toastToRemove.id)) == null ? void 0 : _toasts_find.delete)) ToastState.dismiss(toastToRemove.id);
-					return toasts.filter(({ id }) => id !== toastToRemove.id);
-				});
-			}, []);
-			react$1.default.useEffect(() => {
-				return ToastState.subscribe((toast) => {
-					if (toast.dismiss) {
-						requestAnimationFrame(() => {
-							setToasts((toasts) => toasts.map((t) => t.id === toast.id ? {
-								...t,
-								delete: true
-							} : t));
-						});
-						return;
-					}
-					setTimeout(() => {
-						react_dom.default.flushSync(() => {
-							setToasts((toasts) => {
-								const indexOfExistingToast = toasts.findIndex((t) => t.id === toast.id);
-								if (indexOfExistingToast !== -1) return [
-									...toasts.slice(0, indexOfExistingToast),
-									{
-										...toasts[indexOfExistingToast],
-										...toast
-									},
-									...toasts.slice(indexOfExistingToast + 1)
-								];
-								return [toast, ...toasts];
-							});
-						});
-					});
-				});
-			}, []);
-			react$1.default.useEffect(() => {
-				if (theme !== "system") {
-					setActualTheme(theme);
-					return;
-				}
-				if (theme === "system") {
-					if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) setActualTheme("dark");
-					else setActualTheme("light");
-				}
-				if (typeof window === "undefined") return;
-				const darkMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-				try {
-					darkMediaQuery.addEventListener("change", ({ matches }) => {
-						if (matches) setActualTheme("dark");
-						else setActualTheme("light");
-					});
-				} catch (error) {
-					darkMediaQuery.addListener(({ matches }) => {
-						try {
-							if (matches) setActualTheme("dark");
-							else setActualTheme("light");
-						} catch (e) {
-							console.error(e);
-						}
-					});
-				}
-			}, [theme]);
-			react$1.default.useEffect(() => {
-				if (toasts.length <= 1) setExpanded(false);
-			}, [toasts]);
-			react$1.default.useEffect(() => {
-				const handleKeyDown = (event) => {
-					var _listRef_current;
-					if (hotkey.length > 0 && hotkey.every((key) => event[key] || event.code === key)) {
-						var _listRef_current1;
-						setExpanded(true);
-						(_listRef_current1 = listRef.current) == null || _listRef_current1.focus();
-					}
-					if (event.code === "Escape" && (document.activeElement === listRef.current || ((_listRef_current = listRef.current) == null ? void 0 : _listRef_current.contains(document.activeElement)))) setExpanded(false);
-				};
-				document.addEventListener("keydown", handleKeyDown);
-				return () => document.removeEventListener("keydown", handleKeyDown);
-			}, [hotkey]);
-			react$1.default.useEffect(() => {
-				if (listRef.current) return () => {
-					if (lastFocusedElementRef.current) {
-						lastFocusedElementRef.current.focus({ preventScroll: true });
-						lastFocusedElementRef.current = null;
-						isFocusWithinRef.current = false;
-					}
-				};
-			}, [listRef.current]);
-			return /*#__PURE__*/ react$1.default.createElement("section", {
-				ref,
-				"aria-label": customAriaLabel != null ? customAriaLabel : `${containerAriaLabel} ${hotkeyLabel}`,
-				tabIndex: -1,
-				"aria-live": "polite",
-				"aria-relevant": "additions text",
-				"aria-atomic": "false",
-				suppressHydrationWarning: true,
-				"data-react-aria-top-layer": true
-			}, possiblePositions.map((position, index) => {
-				var _heights_;
-				const [y, x] = position.split("-");
-				if (!filteredToasts.length) return null;
-				return /*#__PURE__*/ react$1.default.createElement("ol", {
-					key: position,
-					dir: dir === "auto" ? getDocumentDirection() : dir,
-					tabIndex: -1,
-					ref: listRef,
-					className,
-					"data-sonner-toaster": true,
-					"data-sonner-theme": actualTheme,
-					"data-y-position": y,
-					"data-x-position": x,
-					style: {
-						"--front-toast-height": `${((_heights_ = heights[0]) == null ? void 0 : _heights_.height) || 0}px`,
-						"--width": `${TOAST_WIDTH}px`,
-						"--gap": `${gap}px`,
-						...style,
-						...assignOffset(offset, mobileOffset)
-					},
-					onBlur: (event) => {
-						if (isFocusWithinRef.current && !event.currentTarget.contains(event.relatedTarget)) {
-							isFocusWithinRef.current = false;
-							if (lastFocusedElementRef.current) {
-								lastFocusedElementRef.current.focus({ preventScroll: true });
-								lastFocusedElementRef.current = null;
-							}
-						}
-					},
-					onFocus: (event) => {
-						if (event.target instanceof HTMLElement && event.target.dataset.dismissible === "false") return;
-						if (!isFocusWithinRef.current) {
-							isFocusWithinRef.current = true;
-							lastFocusedElementRef.current = event.relatedTarget;
-						}
-					},
-					onMouseEnter: () => setExpanded(true),
-					onMouseMove: () => setExpanded(true),
-					onMouseLeave: () => {
-						if (!interacting) setExpanded(false);
-					},
-					onDragEnd: () => setExpanded(false),
-					onPointerDown: (event) => {
-						if (event.target instanceof HTMLElement && event.target.dataset.dismissible === "false") return;
-						setInteracting(true);
-					},
-					onPointerUp: () => setInteracting(false)
-				}, filteredToasts.filter((toast) => !toast.position && index === 0 || toast.position === position).map((toast, index) => {
-					var _toastOptions_duration, _toastOptions_closeButton;
-					return /*#__PURE__*/ react$1.default.createElement(Toast, {
-						key: toast.id,
-						icons,
-						index,
-						toast,
-						defaultRichColors: richColors,
-						duration: (_toastOptions_duration = toastOptions == null ? void 0 : toastOptions.duration) != null ? _toastOptions_duration : duration,
-						className: toastOptions == null ? void 0 : toastOptions.className,
-						descriptionClassName: toastOptions == null ? void 0 : toastOptions.descriptionClassName,
-						invert,
-						visibleToasts,
-						closeButton: (_toastOptions_closeButton = toastOptions == null ? void 0 : toastOptions.closeButton) != null ? _toastOptions_closeButton : closeButton,
-						interacting,
-						position,
-						style: toastOptions == null ? void 0 : toastOptions.style,
-						unstyled: toastOptions == null ? void 0 : toastOptions.unstyled,
-						classNames: toastOptions == null ? void 0 : toastOptions.classNames,
-						cancelButtonStyle: toastOptions == null ? void 0 : toastOptions.cancelButtonStyle,
-						actionButtonStyle: toastOptions == null ? void 0 : toastOptions.actionButtonStyle,
-						closeButtonAriaLabel: toastOptions == null ? void 0 : toastOptions.closeButtonAriaLabel,
-						removeToast,
-						toasts: filteredToasts.filter((t) => t.position == toast.position),
-						heights: heights.filter((h) => h.position == toast.position),
-						setHeights,
-						expandByDefault: expand,
-						gap,
-						expanded,
-						swipeDirections: props.swipeDirections
-					});
-				}));
-			}));
-		});
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/toast-host.js
-		/** 全局注册表键：Symbol.for 跨 bundle 副本天然共享同一个符号。 */
-		const TOAST_HOST_KEY = Symbol.for("dsh-plugin-core/toast-host");
-		/** 全局单例：已注册则直接返回（不触发 create），否则建一个并注册。 */
-		function claimToastHost(create) {
-			const g = globalThis;
-			const existing = g[TOAST_HOST_KEY];
-			if (existing !== void 0) return existing;
-			const created = create();
-			g[TOAST_HOST_KEY] = created;
-			return created;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Toast.js
-		const DEFAULT_MS = 2600;
-		const ROOT_ID = "dshpc-toast-root";
-		function currentTheme() {
-			return document.body.hasAttribute("data-ds-dark-theme") ? "dark" : "light";
-		}
-		let sharedHost = null;
-		function toasterHost() {
-			if (sharedHost !== null) return sharedHost;
-			if (typeof document === "undefined" || typeof MutationObserver === "undefined") return null;
-			sharedHost = claimToastHost(createToasterHost);
-			return sharedHost;
-		}
-		function createToasterHost() {
-			let root = null;
-			let themeObserver = null;
-			let position = "bottom-center";
-			function renderToaster() {
-				if (root === null) return;
-				root.render((0, react$1.createElement)(Toaster, {
-					theme: currentTheme(),
-					position,
-					richColors: true
-				}));
-			}
-			function ensureToaster() {
-				if (root !== null) return;
-				let container = document.getElementById(ROOT_ID);
-				if (container === null) {
-					container = document.createElement("div");
-					container.id = ROOT_ID;
-					document.body.appendChild(container);
-				}
-				root = (0, react_dom_client.createRoot)(container);
-				renderToaster();
-				themeObserver = new MutationObserver(() => renderToaster());
-				themeObserver.observe(document.body, {
-					attributes: true,
-					attributeFilter: ["data-ds-dark-theme"]
-				});
-			}
-			function showNative(payload) {
-				const duration = payload.durationMs;
-				const onDismiss = payload.onDismiss;
-				if (payload.color !== void 0) {
-					toast(payload.message, {
-						duration,
-						unstyled: true,
-						onDismiss,
-						className: "dshpc-toast-custom",
-						style: {
-							background: payload.color,
-							color: "#fff",
-							minWidth: "320px",
-							minHeight: "48px",
-							padding: "12px 16px",
-							borderRadius: "8px",
-							boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)",
-							fontSize: "14px",
-							lineHeight: "20px",
-							boxSizing: "border-box",
-							display: "flex",
-							alignItems: "center"
-						}
-					});
-					return;
-				}
-				const variant = payload.variant;
-				if (variant === "success") toast.success(payload.message, {
-					duration,
-					onDismiss
-				});
-				else if (variant === "error") toast.error(payload.message, {
-					duration,
-					onDismiss
-				});
-				else if (variant === "warning") toast.warning(payload.message, {
-					duration,
-					onDismiss
-				});
-				else toast(payload.message, {
-					duration,
-					onDismiss
-				});
-			}
-			function showCard(payload) {
-				const palette = notifyPalette(payload.variant, currentTheme());
-				const duration = payload.durationMs;
-				const actions = payload.actions;
-				const id = toast.custom(() => (0, react$1.createElement)("div", { style: {
-					display: "flex",
-					alignItems: "center",
-					gap: "12px",
-					minWidth: "320px",
-					minHeight: "48px",
-					padding: "12px 16px",
-					borderRadius: "10px",
-					boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)",
-					background: palette.bg,
-					color: palette.fg,
-					boxSizing: "border-box",
-					fontSize: "14px",
-					lineHeight: "20px"
-				} }, (0, react$1.createElement)("span", { style: {
-					flexShrink: 0,
-					width: "20px",
-					height: "20px",
-					borderRadius: "50%",
-					background: "rgba(255, 255, 255, 0.25)",
-					display: "inline-flex",
-					alignItems: "center",
-					justifyContent: "center",
-					fontSize: "13px",
-					fontWeight: 700
-				} }, palette.glyph), (0, react$1.createElement)("div", { style: {
-					flex: 1,
-					minWidth: 0
-				} }, (0, react$1.createElement)("div", { style: { fontWeight: 600 } }, payload.message), payload.description !== void 0 ? (0, react$1.createElement)("div", { style: {
-					opacity: .9,
-					fontSize: "13px",
-					marginTop: "2px",
-					whiteSpace: "pre-line"
-				} }, payload.description) : null), actions !== void 0 && actions.length > 0 ? (0, react$1.createElement)("div", { style: {
-					display: "flex",
-					gap: "8px",
-					flexShrink: 0
-				} }, ...actions.slice(0, 2).map((a) => (0, react$1.createElement)(Button$1, {
-					variant: a.variant ?? "outline",
-					size: "md",
-					onClick: () => {
-						a.onClick();
-						toast.dismiss(id);
-					}
-				}, a.text))) : null), {
-					duration,
-					unstyled: true
-				});
-			}
-			return {
-				show(payload) {
-					ensureToaster();
-					renderToaster();
-					if (payload.style === "card") showCard(payload);
-					else showNative(payload);
-				},
-				setPosition(next) {
-					position = next;
-					renderToaster();
-				}
-			};
-		}
-		function notifyPalette(variant, theme) {
-			switch (variant) {
-				case "success": return {
-					bg: "#16a34a",
-					fg: "#ffffff",
-					glyph: "✓"
-				};
-				case "error": return {
-					bg: "#c0392b",
-					fg: "#ffffff",
-					glyph: "✕"
-				};
-				case "warning": return {
-					bg: "#e0922f",
-					fg: "#1f2937",
-					glyph: "!"
-				};
-				default: return theme === "dark" ? {
-					bg: "#3f3f46",
-					fg: "#fafafa",
-					glyph: "i"
-				} : {
-					bg: "#f4f4f5",
-					fg: "#18181b",
-					glyph: "i"
-				};
-			}
-		}
-		/**
-		* 我们封装好的提示（**推荐项目内使用**）：统一卡片样式（灰/绿/红/黄，跟随明暗皮肤），
-		* 右侧可挂 1–2 个**我们自己的 Button** 动作按钮，点击后自动关闭并调用你的事件。
-		*
-		* 底层仍是 Sonner（动画 / 定位 / 堆叠），但视觉与交互是我们定制的。
-		* 无 `document` 时静默跳过。
-		*/
-		function notify(message, opts) {
-			if (typeof document === "undefined") return;
-			const host = toasterHost();
-			if (host === null) return;
-			if (opts?.position !== void 0) host.setPosition(opts.position);
-			host.show({
-				message,
-				variant: opts?.variant ?? "info",
-				style: "card",
-				description: opts?.description,
-				durationMs: opts?.durationMs ?? DEFAULT_MS,
-				actions: opts?.actions
-			});
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Segmented.js
-		/**
-		* 角标 / 计数要不要显示，返回要显示的文本。
-		* 数字 ≤0 是「没东西可数」的老口径；字符串（`'1K'` / `'99+'`）由调用方决定，原样显示，空串不显示。
-		*/
-		function countText(value) {
-			if (value === void 0) return null;
-			if (typeof value === "number") return value > 0 ? String(value) : null;
-			return value === "" ? null : value;
-		}
-		/**
-		* 渲染一个分段控件（单选 / 多选同体）。
-		*
-		* @param props 见 {@link SegmentedProps}。
-		* @returns 分段控件元素。
-		*/
-		function Segmented$1(props) {
-			ensureComponentStyles("segmented", SEGMENTED_CSS);
-			ensureComponentStyles("segmented", SEGMENTED_CSS);
-			const size = props.size ?? "lg";
-			const multiple = props.multiple === true;
-			const value = props.value;
-			const onChange = props.onChange;
-			const sliding = !multiple && props.items.length > 1;
-			const rootRef = (0, react$1.useRef)(null);
-			const [thumb, setThumb] = (0, react$1.useState)(null);
-			const measure = (0, react$1.useCallback)(() => {
-				const sel = rootRef.current?.querySelector(".dshpc-seg__item[aria-pressed=\"true\"]");
-				if (sel === void 0 || sel === null) {
-					setThumb(null);
-					return;
-				}
-				const next = {
-					left: sel.offsetLeft,
-					top: sel.offsetTop,
-					width: sel.offsetWidth,
-					height: sel.offsetHeight
-				};
-				setThumb((cur) => cur !== null && cur.left === next.left && cur.top === next.top && cur.width === next.width && cur.height === next.height ? cur : next);
-			}, []);
-			(0, react$1.useLayoutEffect)(() => {
-				if (!sliding) {
-					setThumb(null);
-					return;
-				}
-				measure();
-				const root = rootRef.current;
-				if (root === null || typeof ResizeObserver === "undefined") return;
-				const ro = new ResizeObserver(measure);
-				ro.observe(root);
-				return () => ro.disconnect();
-			}, [
-				sliding,
-				measure,
-				value,
-				size,
-				props.items,
-				props.bordered,
-				props.block
-			]);
-			const renderer = getTooltipRenderer();
-			const tone = props.tone;
-			const toneClass = typeof tone === "string" ? ` dshpc-seg--tone-${tone}` : "";
-			const toneStyle = tone !== void 0 && typeof tone !== "string" ? {
-				"--seg-thumb": tone.bg,
-				"--seg-on": tone.fg
-			} : void 0;
-			return (0, react$1.createElement)("div", {
-				role: "group",
-				"aria-label": props.label,
-				id: props.id,
-				ref: rootRef,
-				className: `dshpc-seg dshpc-seg--${size}${sliding ? " dshpc-seg--slide" : ""}${props.block === true ? " dshpc-seg--block" : ""}${props.bordered === true ? " dshpc-seg--bordered" : ""}${toneClass}${props.className !== void 0 ? ` ${props.className}` : ""}`,
-				style: toneStyle === void 0 ? props.style : {
-					...toneStyle,
-					...props.style
-				}
-			}, [sliding && thumb !== null ? (0, react$1.createElement)("span", {
-				key: "__thumb__",
-				className: "dshpc-seg__thumb",
-				"aria-hidden": true,
-				style: {
-					left: `${String(thumb.left)}px`,
-					top: `${String(thumb.top)}px`,
-					width: `${String(thumb.width)}px`,
-					height: `${String(thumb.height)}px`
-				}
-			}) : null, ...props.items.map((item) => {
-				const on = multiple ? value.includes(item.value) : value === item.value;
-				const disabled = item.disabled === true || props.disabled === true;
-				const handle = () => {
-					if (disabled) return;
-					if (multiple) {
-						const arr = value;
-						const next = arr.includes(item.value) ? arr.filter((v) => v !== item.value) : [...arr, item.value];
-						onChange(next);
-					} else onChange(item.value);
-				};
-				const count = countText(item.count);
-				const badge = countText(item.badge);
-				const hasLabel = item.label !== void 0 && item.label !== null && item.label !== "";
-				const hasIcon = item.icon !== void 0 && item.icon !== null;
-				const iconOnly = hasIcon && !hasLabel && count === null && badge === null;
-				const itemButton = (0, react$1.createElement)("button", {
-					key: item.value,
-					type: "button",
-					className: `dshpc-seg__item${iconOnly ? " dshpc-seg__item--icon-only" : ""}`,
-					"aria-pressed": on,
-					"aria-label": item.ariaLabel ?? (iconOnly ? item.tooltip : void 0),
-					disabled,
-					onClick: handle
-				}, hasIcon ? (0, react$1.createElement)("span", { className: "dshpc-seg__icon" }, item.icon) : null, hasLabel ? item.label : null, count === null ? null : (0, react$1.createElement)("span", { className: "dshpc-seg__count" }, count), badge === null ? null : (0, react$1.createElement)("span", { className: "dshpc-seg__badge" }, badge));
-				if (item.tooltip !== void 0 && renderer !== void 0) return renderer({
-					label: item.tooltip,
-					side: "top",
-					children: itemButton
-				});
-				return itemButton;
-			})]);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/SplitGroup.js
-		/**
-		* 拼接外壳 —— 两个控件在外观上焊成一体（L2 组件皮肤，P1）
-		*
-		* 只管样式：外框、圆角、两格之间那条 1px 分隔、整体聚焦圈。**不持状态、不出联动回调** ——
-		* 选中与联动全走内件自己的 `value` / `onChange`（2026-10-28 用户拍板：外壳不必知道
-		* 右边那个控件管什么，消费方自己拿两个控件去绑）。
-		*
-		* 固定两格：不做多格（用户 2026-10-28：「就是两个组合，我觉得就足够了」）。
-		*
-		* 用法：
-		*   h(SplitGroup, null,
-		*     h(Segmented, { size: 'md', items, value, onChange: v => { setA(v); setB(pickFor(v)) } }),
-		*     h(Picker, { size: 'md', options: optsOf(a), value: b, onChange: setB }))
-		*
-		* 两格要等高，就给内件传**同一个 `size`**（sm 24 / md 28 / lg 32 —— 外壳跟着内件长，不写死高度）。
-		*/
-		/**
-		* 渲染一个两格拼接外壳。
-		*
-		* @param props 见 {@link SplitGroupProps}。
-		* @returns 外壳元素。
-		*/
-		function SplitGroup(props) {
-			ensureComponentStyles("split-group", SPLIT_GROUP_CSS);
-			return (0, react$1.createElement)("div", {
-				role: "group",
-				"aria-label": props.label,
-				id: props.id,
-				className: `dshpc-split${props.className === void 0 ? "" : ` ${props.className}`}`,
-				style: props.style
-			}, props.children);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/Field.js
-		/**
-		* 输入类控件 —— **全站唯一实现**（L2 组件皮肤，P3）
-		*
-		* - `Input`：文本输入（size sm 24 / md 28 / lg 32，error 描红）；
-		* - `PrefixedInput`：前缀 + 文本输入（如路径 / 接口前缀）；
-		* - `NumberInput`：数字步进（显式 `− / +`，替换原生 `<input type="number">` 的浏览器 spinner，
-		*   支持 step / min / max、clamp、Enter 提交、失焦回弹）。
-		*
-		* 高度一律吃 `--dshpc-control-h-*`；有边 / 无边同高（边框在内部补回）。
-		*/
-		/**
-		* 字段 hint 的统一包法：控件 + 问号提示同一行（间距/对齐收进组件，调用方传个
-		* `hint` 字符串就行，不再手动拼排版 —— 用户 2026-10-20 拍板）。
-		*/
-		function withHint(control, hint) {
-			if (hint === void 0) return control;
-			return (0, react$1.createElement)("span", { className: "dshpc-fieldwrap" }, control, (0, react$1.createElement)(FieldHint, { text: hint }));
-		}
-		function sizeClass(size) {
-			return size === "lg" ? "--lg" : size === "md" ? "--md" : "--sm";
-		}
-		/** 文本输入。默认铺满容器（width:100%，与 Textarea 同口径）；要定宽由调用方在外面包壳（如 192px 搜索槽）。 */
-		function Input(props) {
-			ensureComponentStyles("field", FIELD_CSS);
-			const { value, onChange, placeholder, size = "lg", error, disabled, type, icon, className, style } = props;
-			const [focused, setFocused] = (0, react$1.useState)(false);
-			const search = type === "search";
-			const showClear = search && value !== "" && focused && disabled !== true;
-			const input = (0, react$1.createElement)("input", {
-				ref: props.inputRef,
-				type: type ?? "text",
-				value,
-				placeholder,
-				disabled,
-				"aria-label": props["aria-label"],
-				title: props.title,
-				className: `dshpc-input dshpc-input${sizeClass(size)}${error === true ? " dshpc-input--error" : ""}${className !== void 0 && className !== "" ? ` ${className}` : ""}`,
-				style,
-				onChange: (event) => {
-					onChange(event.target.value);
-				},
-				onKeyDown: props.onKeyDown,
-				onFocus: () => {
-					setFocused(true);
-				},
-				onBlur: () => {
-					setFocused(false);
-					if (props.onBlur !== void 0) props.onBlur();
-				}
-			});
-			const hasIcon = icon !== void 0 && icon !== null;
-			if (!hasIcon && !search) return withHint(input, props.hint);
-			return withHint((0, react$1.createElement)("span", { className: `dshpc-iwrap dshpc-iwrap${sizeClass(size)}${showClear ? " dshpc-iwrap--clear" : ""}` }, hasIcon ? (0, react$1.createElement)("span", { className: "dshpc-iwrap__icon" }, icon) : null, input, showClear ? (0, react$1.createElement)(IconButton$1, {
-				className: "dshpc-iwrap__clear",
-				variant: "plain",
-				size,
-				icon: "×",
-				label: "清空",
-				onMouseDown: (event) => {
-					event.preventDefault();
-				},
-				onClick: () => {
-					onChange("");
-				}
-			}) : null), props.hint);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/InputGroup.js
-		/**
-		* 组合输入框 —— 输入框 + 后置按钮组（+ 可选前置标题）焊成一体（L2 组件皮肤，P3）
-		*
-		* 外观与 {@link SplitGroup} 同一套口径：外框 / 圆角 / 相邻 1px 分隔 / 整体聚焦圈都由外壳画，
-		* 内件（Input、Button、IconButton）把自己的边框、圆角、外圈交出来。区别只有一条：
-		* **这里持状态** —— 输入值受控于调用方，提交点与撤销栈在控件内部。
-		*
-		* 用法：
-		*   h(InputGroup, {
-		*     label: '任务名', value, onChange: setValue, undoable: true,
-		*     actions: [
-		*       { label: '返回', variant: 'ghost', onClick: () => close() },
-		*       { label: '确定', variant: 'primary', onClick: save },
-		*     ],
-		*   })
-		*
-		* 撤销口径：Enter / 失焦 / 点任一动作 = 一次提交，把提交前的值压栈；点撤销弹回栈顶。
-		* 父级直接改 `value`（如外部清空）不算编辑，不进栈。
-		*/
-		/**
-		* 渲染一个「输入框 + 按钮组」组合控件。
-		*
-		* @param props 见 {@link InputGroupProps}。
-		* @returns 组合控件元素。
-		*/
-		function InputGroup(props) {
-			ensureComponentStyles("input-group", INPUT_GROUP_CSS);
-			ensureComponentStyles("field", FIELD_CSS);
-			ensureComponentStyles("button", BUTTON_CSS);
-			const { value, onChange, label, placeholder, size = "lg", height, error, disabled, actions = [], undoable = false, undoLabel = "撤销", onSubmit } = props;
-			const committed = (0, react$1.useRef)(value);
-			const [undoStack, setUndoStack] = (0, react$1.useState)([]);
-			const commit = () => {
-				if (value === committed.current) return;
-				const prev = committed.current;
-				committed.current = value;
-				setUndoStack((stack) => [...stack, prev]);
-			};
-			const undo = () => {
-				const prev = undoStack[undoStack.length - 1];
-				if (prev === void 0) return;
-				setUndoStack((stack) => stack.slice(0, -1));
-				committed.current = prev;
-				onChange(prev);
-			};
-			const nodes = [];
-			if (label !== void 0) nodes.push((0, react$1.createElement)("span", {
-				key: "label",
-				className: "dshpc-igroup__label"
-			}, label));
-			nodes.push((0, react$1.createElement)(Input, {
-				key: "input",
-				value,
-				onChange,
-				placeholder,
-				size,
-				disabled,
-				"aria-label": props["aria-label"],
-				onBlur: commit,
-				onKeyDown: (event) => {
-					if (event.key !== "Enter") return;
-					event.preventDefault();
-					commit();
-					if (onSubmit !== void 0) onSubmit(value);
-				}
-			}));
-			if (undoable) nodes.push((0, react$1.createElement)(IconButton$1, {
-				key: "undo",
-				variant: "plain",
-				size,
-				icon: "↶",
-				label: undoLabel,
-				disabled: disabled === true || undoStack.length === 0,
-				onClick: undo
-			}));
-			actions.forEach((action, i) => {
-				if (action.label === void 0 && (action.icon === void 0 || action.icon === null)) return;
-				const run = () => {
-					commit();
-					action.onClick();
-				};
-				const off = disabled === true || action.disabled === true;
-				const onlyIcon = action.label === void 0;
-				nodes.push(onlyIcon ? (0, react$1.createElement)(IconButton$1, {
-					key: `action-${String(i)}`,
-					variant: "plain",
-					size,
-					icon: action.icon,
-					label: action.ariaLabel ?? "操作",
-					disabled: off,
-					onClick: run
-				}) : (0, react$1.createElement)(Button$1, {
-					key: `action-${String(i)}`,
-					variant: action.variant ?? "info",
-					size,
-					icon: action.icon,
-					disabled: off,
-					onClick: run
-				}, action.label));
-			});
-			const className = `dshpc-igroup dshpc-igroup--${size}${error === true ? " dshpc-igroup--error" : ""}${props.className !== void 0 && props.className !== "" ? ` ${props.className}` : ""}`;
-			return withHint((0, react$1.createElement)("div", {
-				role: "group",
-				"aria-label": props["aria-label"] ?? label,
-				id: props.id,
-				className,
-				style: height === void 0 ? props.style : {
-					height,
-					...props.style
-				}
-			}, nodes), props.hint);
-		}
-		/**
-		* 算出工具栏左缘的 x 坐标。
-		*
-		* - 没有锚点（或锚点取不到）：贴视口右缘，留 `offset`。
-		* - 有锚点：贴锚点右缘外侧，留 `offset`；但右侧还必须再留 `offset`，
-		*   放不下（`锚点右缘 + offset + size + offset > 视口宽`）就退回贴视口右缘。
-		*/
-		function resolveToolbarLeft(geometry, anchorRight) {
-			const { viewportWidth, offset, size } = geometry;
-			const pinned = Math.max(0, viewportWidth - offset - size);
-			if (anchorRight === null || !Number.isFinite(anchorRight)) return pinned;
-			const anchored = anchorRight + offset;
-			return anchored + size + offset <= viewportWidth ? anchored : pinned;
-		}
-		/**
-		* 排序：先按 `order`，相同 order 时内置回顶部在前、自定义项按数组顺序。
-		* 不修改入参。
-		*/
-		function sortToolbarEntries(entries) {
-			return [...entries].sort((a, b) => {
-				if (a.order !== b.order) return a.order - b.order;
-				if (a.kind !== b.kind) return a.kind === "backtop" ? -1 : 1;
-				return a.index - b.index;
-			});
-		}
-		/** 某一项此刻是否该出现（显隐判定）。 */
-		function isToolbarEntryVisible(entry, scrollTop) {
-			if (entry.visible === false) return false;
-			if ((entry.when ?? "always") === "scroll") return scrollTop > (entry.threshold ?? 320);
-			return true;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/QuickToolbar.js
-		/**
-		* 快捷工具栏（UI 基础层）：**右侧悬浮的一列圆钮**，内置「回到顶部」，并可挂自定义按钮。
-		*
-		* 用法：
-		*   <QuickToolbar
-		*     anchorId="dshpc-main"
-		*     onAction={(id) => …}
-		*     items={[{ id: 'search', icon: <SearchIcon />, label: '搜索' }]}
-		*   />
-		*
-		* 行为（2026-10-31 用户拍板）：
-		* - **纵向恒定**贴屏幕底边，距离 `offset`（默认 16px）；按钮从下往上排。
-		* - **横向默认**贴屏幕右缘、留 `offset`；给了 `anchorId` / `anchor()` 就贴到那个控件的
-		*   **右缘外侧**，同样留 `offset`。右侧放不下（再留一个 `offset` 后越界）就退回贴屏幕右缘。
-		*   控件找不到按「跟随窗口」处理，不报错。
-		* - 内置「回到顶部」默认 `when: 'scroll'`、阈值 320：滚过才出现；可传 `backToTop: false` 关掉，
-		*   或用 `{ order, label, threshold }` 调整。
-		* - 自定义项：`icon` / `label` / `onClick`；`visible` / `when` / `order` / `threshold` / `color` /
-		*   `fgColor` 都可配。点击后先调 `onClick`，再统一回调 `onAction(id, item)`。
-		* - 滚动容器默认取工具栏最近的「可纵向滚动」祖先，也可以显式给 `scrollContainer`。
-		* - 显隐切换带 0.2s 动画：挂载淡入，消失先淡出、播完才卸载（`reduced-motion` 下关闭）。
-		*
-		* 样式只注入自己那一份（`controls/quick-toolbar.css`），横向位置 / 尺寸 / 间距由本组件在
-		* style 上实时写入，不写死 CSS。
-		*/
-		/** 默认贴边距离（px）。 */
-		const DEFAULT_OFFSET = 16;
-		/** 默认按钮直径（px）。 */
-		const DEFAULT_SIZE = 44;
-		/** 默认按钮间距（px）。 */
-		const DEFAULT_GAP = 12;
-		/** 退场动画的卸载延迟（ms，与 CSS 的 0.2s 对齐并留余量）。 */
-		const LEAVE_MS = 220;
-		/** 向上找最近的「可纵向滚动」祖先。 */
-		function findScrollParent(node) {
-			let el = node?.parentElement ?? null;
-			while (el !== null) {
-				const oy = getComputedStyle(el).overflowY;
-				if (oy === "auto" || oy === "scroll") return el;
-				el = el.parentElement;
-			}
-			return null;
-		}
-		/** 显式 scrollContainer 优先，其次最近的可滚动祖先，最后退回窗口。 */
-		function resolveScrollTarget(explicit, node) {
-			let target = null;
-			if (typeof explicit === "function") target = explicit();
-			else if (explicit !== void 0) target = explicit;
-			if (target === null) target = findScrollParent(node);
-			return target ?? window;
-		}
-		/** 读当前滚动距离。 */
-		function scrollTopOf(target) {
-			if (typeof HTMLElement !== "undefined" && target instanceof HTMLElement) return target.scrollTop;
-			if (typeof window === "undefined") return 0;
-			return window.scrollY || document.documentElement.scrollTop || 0;
-		}
-		/** 平滑回到顶部（reduced-motion 下瞬时）。 */
-		function scrollToTop(target) {
-			const behavior = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-			if (typeof HTMLElement !== "undefined" && target instanceof HTMLElement) target.scrollTo({
-				top: 0,
-				behavior
-			});
-			else if (typeof window !== "undefined") window.scrollTo({
-				top: 0,
-				behavior
-			});
-		}
-		/** 右侧浮动的快捷工具栏：内置回顶部 + 自定义按钮。 */
-		function QuickToolbar(props) {
-			ensureComponentStyles("quick-toolbar", QUICK_TOOLBAR_CSS);
-			const ref = (0, react$1.useRef)(null);
-			const [left, setLeft] = (0, react$1.useState)(null);
-			const [scrollTop, setScrollTop] = (0, react$1.useState)(0);
-			const [leaving, setLeaving] = (0, react$1.useState)([]);
-			const shownRef = (0, react$1.useRef)([]);
-			const leaveTimers = (0, react$1.useRef)(/* @__PURE__ */ new Map());
-			const offset = props.offset ?? DEFAULT_OFFSET;
-			const size = props.size ?? DEFAULT_SIZE;
-			const gap = props.gap ?? DEFAULT_GAP;
-			(0, react$1.useEffect)(() => {
-				if (ref.current === null) return;
-				const resolveAnchor = () => {
-					if (props.anchor !== void 0) return props.anchor();
-					const id = props.anchorId;
-					return id === void 0 ? null : document.getElementById(id);
-				};
-				let observed = null;
-				let lastRight = null;
-				let lastViewport = -1;
-				const ro = new ResizeObserver(update);
-				function update() {
-					const anchorEl = resolveAnchor();
-					if (anchorEl !== observed) {
-						if (observed !== null) ro.unobserve(observed);
-						if (anchorEl !== null) ro.observe(anchorEl);
-						observed = anchorEl;
-					}
-					const viewportWidth = document.documentElement.clientWidth;
-					const rect = anchorEl === null ? null : anchorEl.getBoundingClientRect();
-					const anchorRight = rect === null || rect.width === 0 && rect.height === 0 ? null : rect.right;
-					if (viewportWidth === lastViewport && anchorRight === lastRight) return;
-					lastViewport = viewportWidth;
-					lastRight = anchorRight;
-					setLeft(resolveToolbarLeft({
-						viewportWidth,
-						offset,
-						size
-					}, anchorRight));
-				}
-				update();
-				const poll = setInterval(update, 100);
-				window.addEventListener("resize", update);
-				return () => {
-					clearInterval(poll);
-					window.removeEventListener("resize", update);
-					ro.disconnect();
-				};
-			}, [
-				props.anchor,
-				props.anchorId,
-				offset,
-				size
-			]);
-			(0, react$1.useEffect)(() => {
-				const node = ref.current;
-				if (node === null) return;
-				const target = resolveScrollTarget(props.scrollContainer, node);
-				const onScroll = () => setScrollTop(scrollTopOf(target));
-				onScroll();
-				target.addEventListener("scroll", onScroll, { passive: true });
-				return () => target.removeEventListener("scroll", onScroll);
-			}, [props.scrollContainer]);
-			const backTop = props.backToTop === false ? null : typeof props.backToTop === "object" ? props.backToTop : {};
-			const entries = [];
-			if (backTop !== null) entries.push({
-				id: "__backtop",
-				kind: "backtop",
-				order: backTop.order ?? 0,
-				index: 0
-			});
-			for (const [index, item] of (props.items ?? []).entries()) entries.push({
-				id: item.id,
-				kind: "custom",
-				order: item.order ?? index + 1,
-				index,
-				item
-			});
-			const threshold = backTop?.threshold ?? 320;
-			const sorted = sortToolbarEntries(entries);
-			const visible = sorted.filter((entry) => {
-				if (entry.kind === "backtop") return isToolbarEntryVisible({
-					when: "scroll",
-					threshold
-				}, scrollTop);
-				return isToolbarEntryVisible(entry.item ?? {}, scrollTop);
-			});
-			const visibleKey = JSON.stringify(visible.map((entry) => entry.id));
-			(0, react$1.useEffect)(() => {
-				const next = JSON.parse(visibleKey);
-				const revived = next.filter((id) => leaveTimers.current.has(id));
-				for (const id of revived) {
-					const timer = leaveTimers.current.get(id);
-					if (timer !== void 0) clearTimeout(timer);
-					leaveTimers.current.delete(id);
-				}
-				if (revived.length > 0) setLeaving((prev) => prev.filter((id) => !revived.includes(id)));
-				const gone = shownRef.current.filter((id) => !next.includes(id));
-				if (gone.length > 0) {
-					setLeaving((prev) => [...prev, ...gone.filter((id) => !prev.includes(id))]);
-					for (const id of gone) {
-						const timer = leaveTimers.current.get(id);
-						if (timer !== void 0) clearTimeout(timer);
-						leaveTimers.current.set(id, setTimeout(() => {
-							leaveTimers.current.delete(id);
-							setLeaving((prev) => prev.filter((value) => value !== id));
-						}, LEAVE_MS));
-					}
-				}
-				shownRef.current = next;
-			}, [visibleKey]);
-			(0, react$1.useEffect)(() => () => {
-				for (const timer of leaveTimers.current.values()) clearTimeout(timer);
-				leaveTimers.current.clear();
-			}, []);
-			const style = {
-				bottom: `${offset}px`,
-				gap: `${gap}px`,
-				...left === null ? { right: `${offset}px` } : { left: `${left}px` }
-			};
-			const shownSet = new Set(visible.map((entry) => entry.id));
-			const leavingSet = new Set(leaving);
-			const rendered = sorted.filter((entry) => shownSet.has(entry.id) || leavingSet.has(entry.id));
-			const renderItem = (entry, isLeaving) => {
-				const leaveClass = isLeaving ? " is-leaving" : "";
-				if (entry.kind === "backtop") {
-					const label = backTop?.label ?? t$2("backToTop");
-					return (0, react$1.createElement)("button", {
-						key: entry.id,
-						type: "button",
-						className: `dshpc-quick-toolbar__item dshpc-quick-toolbar__backtop${leaveClass}`,
-						style: {
-							width: size,
-							height: size
-						},
-						"aria-label": label,
-						title: label,
-						onClick: () => scrollToTop(resolveScrollTarget(props.scrollContainer, ref.current))
-					}, (0, react$1.createElement)(Chevron, {
-						dir: "up",
-						size: 18
-					}));
-				}
-				const item = entry.item;
-				if (item === void 0) return null;
-				const buttonStyle = {
-					width: size,
-					height: size
-				};
-				if (item.color !== void 0) buttonStyle["--dshpc-quick-toolbar-bg"] = item.color;
-				if (item.fgColor !== void 0) buttonStyle["--dshpc-quick-toolbar-fg"] = item.fgColor;
-				const onClick = () => {
-					item.onClick?.();
-					props.onAction?.(item.id, item);
-				};
-				return (0, react$1.createElement)("button", {
-					key: entry.id,
-					type: "button",
-					className: `dshpc-quick-toolbar__item${leaveClass}`,
-					style: buttonStyle,
-					"aria-label": item.label,
-					title: item.label,
-					onClick
-				}, item.icon);
-			};
-			return (0, react$1.createElement)("div", {
-				ref,
-				className: `dshpc-quick-toolbar${props.className === void 0 ? "" : ` ${props.className}`}`,
-				style,
-				role: "toolbar",
-				"aria-label": props.ariaLabel ?? t$2("quickToolbarAria")
-			}, ...rendered.map((entry) => renderItem(entry, leavingSet.has(entry.id))));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/panel-dock-logic.js
-		/**
-		* 停靠面板的状态逻辑（纯函数，零 React / 零 DOM）。
-		*
-		* 只记三件事：**哪些面板开着**、**每栏多宽**、**哪些收起成了耳朵**。
-		* 内容与头部不在这里——那是调用方在页面里声明的东西（`<DockPanel id="…">…</DockPanel>`），
-		* 与 Ant Design `Tabs` 的 `activeKey` + `<TabPane>` 同一分工：
-		* **显隐归状态，结构归 children**。
-		*
-		* 口径（用户 2026-10-20 定案）：
-		*   · 组名 = 窗口，一对一：`open('A')` 再 `open('A')` 只是重复打开，不新增一栏；
-		*   · 未到上限 ⇒ 追加；到上限 ⇒ 返回 `{ ok: false, reason: 'limit' }`，不静默丢弃；
-		*   · 关一栏即腾位，之后可以开新组名；
-		*   · 没有多份同名、没有自动淘汰、没有 tab 切换。
-		*
-		* 收起（用户 2026-10-28 定案）= **面板退出布局、换成一只独立的固定耳朵**，不是把栏宽缩细：
-		*   · `collapsePanel` 把组名从 `ids` 移到 `collapsed`，**宽度留着**（展开要回到原宽）；
-		*   · 耳朵是另一块 fixed 浮层，不在这里表达布局——这里只记「谁收起了」。
-		*/
-		/** 默认窗口的保留名：`open()` 不传 id 时用它。 */
-		const DEFAULT_PANEL_ID = "default";
-		function emptyDock() {
-			return {
-				ids: [],
-				widths: {},
-				collapsed: []
-			};
-		}
-		/** 夹到 [min, max]；`max` 缺省表示不设上限。NaN / Infinity 一律落回 min。 */
-		function clampWidth(value, min, max) {
-			const wide = Number.isFinite(value) ? value : min;
-			return Math.max(min, Math.round(max === void 0 || !Number.isFinite(max) ? wide : Math.min(wide, max)));
-		}
-		function isOpen(state, id) {
-			return state.ids.includes(id);
-		}
-		function isCollapsed(state, id) {
-			return state.collapsed.includes(id);
-		}
-		/**
-		* 打开一栏。已开 ⇒ 原样返回（`created: false`，位置不变）；
-		* 未开且已满 ⇒ 返回失败结果，状态不动。打开即撤销同名耳朵。
-		*/
-		function openPanel(state, id, maxPanels) {
-			if (isOpen(state, id)) return {
-				state,
-				result: {
-					ok: true,
-					id,
-					created: false
-				}
-			};
-			if (state.ids.length >= maxPanels) return {
-				state,
-				result: {
-					ok: false,
-					id,
-					reason: "limit"
-				}
-			};
-			return {
-				state: {
-					ids: [...state.ids, id],
-					widths: state.widths,
-					collapsed: state.collapsed.filter((item) => item !== id)
-				},
-				result: {
-					ok: true,
-					id,
-					created: true
-				}
-			};
-		}
-		/**
-		* 关一栏；不存在即原样返回（幂等）。宽度记忆随栏一起丢弃。
-		* 对已收起的耳朵也生效 —— 「关闭」= 彻底不留，耳朵一起抹掉（用户 2026-10-28 口径）。
-		*/
-		function closePanel(state, id) {
-			const open = isOpen(state, id);
-			const ear = isCollapsed(state, id);
-			if (!open && !ear) return state;
-			const widths = { ...state.widths };
-			delete widths[id];
-			return {
-				ids: open ? state.ids.filter((item) => item !== id) : state.ids,
-				widths,
-				collapsed: ear ? state.collapsed.filter((item) => item !== id) : state.collapsed
-			};
-		}
-		/** 记某栏宽度（已夹过）；值没变时原样返回，避免无谓重渲染。 */
-		function setPanelWidth(state, id, width) {
-			if (!isOpen(state, id)) return state;
-			if (state.widths[id] === width) return state;
-			return {
-				ids: state.ids,
-				widths: {
-					...state.widths,
-					[id]: width
-				},
-				collapsed: state.collapsed
-			};
-		}
-		/**
-		* 收起一栏：退出布局（从 `ids` 移除，**立即不占宽**），转入耳朵列表。
-		* 宽度**不删**——耳朵展开时要回到原宽。只对开着的栏生效。
-		*/
-		function collapsePanel(state, id) {
-			if (!isOpen(state, id)) return state;
-			return {
-				ids: state.ids.filter((item) => item !== id),
-				widths: state.widths,
-				collapsed: state.collapsed.includes(id) ? state.collapsed : [...state.collapsed, id]
-			};
-		}
-		/** 展开耳朵：移出耳朵列表、回到打开列表末尾；宽度照旧（`collapsePanel` 没删）。 */
-		function expandPanel(state, id) {
-			if (!isCollapsed(state, id)) return state;
-			return {
-				ids: state.ids.includes(id) ? state.ids : [...state.ids, id],
-				widths: state.widths,
-				collapsed: state.collapsed.filter((item) => item !== id)
-			};
-		}
-		/** 其他栏宽度之和（算「这一栏最多能拖多宽」用）。 */
-		function othersWidth(state, id, fallbackOf) {
-			return state.ids.reduce((sum, item) => {
-				if (item === id) return sum;
-				return sum + (state.widths[item] ?? fallbackOf(item));
-			}, 0);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/panel-dock-css.generated.js
-		const PANEL_DOCK_CSS = "/* 停靠栏 = **布局成员**，不是浮层：它占宽度、把主区真正挤窄（兄弟项目 2026-09-28：\n   「分栏压过来，不是盖上去」）。所以调用方必须把它放进自己的 flex 根里。\n   皮肤（头部 / 拖拽条 / 关闭钮 / 背景阴影）在 side-panel.css，与 SideSheet 共用。 */\n.dshpc-dock{display:flex;flex:0 0 auto;align-self:stretch;min-width:0}\n/* dock 不再替主区让缝（原 --dshpc-dock-gap 的 1px margin 已删，用户 2026-11-02）：\n   滚动条与容器边缘的 1px 统一由滚动容器自己的透明边框提供（见 style.md §滚动条让位），\n   主区容器带了让位，滚动条与这条分隔线之间自然还是 1px。别再往这里加 margin。 */\n\n/* 自动加的宿主行（openFilePreview 加 / 关闭即摘）：消费方那行不必自己写 flex。\n   只让「第一个非预览子项」当主区伸展，其余直接子项不动（页脚条、工具条不误伤）；\n   display 不在这里写死 —— 本来就是 grid 等布局的元素保持原样，由 TS 侧按计算值补 flex。 */\n.dshpc-dock-host{min-width:0;min-height:0}\n.dshpc-dock-host>:not([data-dshpc-file-preview]){min-width:0}\n.dshpc-dock-host>:first-child:not([data-dshpc-file-preview]){flex:1 1 auto}\n\n/* 单栏**占位**：sticky + 视口高让它在页面滚动时保持可见，同时仍然占宽度。\n   ⚠️ **本条刻意不设 z-index**：布局成员一旦带正 z-index，就会无条件压过宿主 portal 到 body 的\n   弹窗（兄弟项目 2026-10-05 真机事故「侧边栏盖住宿主设置弹窗」）。层序交给 DOM 顺序裁决。\n   外观来自 .dshpc-side-surface（side-panel.css），这里只管怎么占位与朝哪边描边。 */\n.dshpc-dock__panel{\n  position:sticky;top:0;align-self:stretch;\n  /* 高度默认视口高（整页场景）；嵌在定高容器里时由调用方给 --dshpc-dock-h（如 420px / 100%）。 */\n  height:var(--dshpc-dock-h,100vh);max-height:var(--dshpc-dock-h,100vh);\n  border-left:1px solid var(--dshpc-border);\n}\n/* 收起的出场：宽度收到 0、透明淡出；落定后组件才真正摘掉这一栏（JS 延时 220ms 配合）。 */\n.dshpc-dock__panel--closing{\n  width:0!important;min-width:0!important;opacity:0;border-left-width:0;\n  transition:width .2s var(--dshpc-ease),opacity .2s var(--dshpc-ease),border-left-width .2s var(--dshpc-ease);\n}\n\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove，\n   向右拖进 iframe 就卡死 —— 整片让出指针事件；② contain 把重排隔离在栏内，\n   否则每帧改宽度都会牵动整页重排（兄弟项目 2026-10-04 真机「挪很久才动一下」）。 */\n.dshpc-dock.dshpc-dock--resizing iframe{pointer-events:none}\n.dshpc-dock.dshpc-dock--resizing .dshpc-dock__panel{contain:layout paint;will-change:width}\n\n/* 收起钮：**待在面板自己的框里**（用户 2026-10-28 三轮：占面板内部空间，不伸到外面去）。\n   left:0 从内侧贴着分隔线 —— 贴线的一边不描边（线是面板自己的 border-left），页签与线不重合。\n   20×44（用户 2026-10-28 四轮定尺寸）；实色底（--dshpc-plate，明暗各有实值），hover 亮一档。\n   padding-right:2px 是**视觉居中**：右侧是圆角，箭头往直线那边挪 1px（用户 2026-10-28 四轮）。 */\n.dshpc-dock__collapse{\n  position:absolute;left:0;top:50%;transform:translateY(-50%);\n  z-index:8;display:inline-flex;align-items:center;justify-content:center;\n  width:20px;height:44px;padding:0 2px 0 0;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);\n  border-left:none;\n  border-radius:0 var(--dshpc-radius-sm) var(--dshpc-radius-sm) 0;\n  background:var(--dshpc-plate);color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:16px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__collapse:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__collapse:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n\n/* 收起后的浮动耳朵：**fixed 贴右缘、垂直居中、独立于分栏**（用户 2026-10-28 定稿：\n   小页签挂中间、里面放面板图标、不显示文字，箭头与收起钮反向）。多个按收起顺序纵向堆叠。\n   z 走 dock 档（低于宿主弹窗），避免盖住宿主 portal 层。 */\n.dshpc-dock__ears{\n  position:fixed;top:50%;right:0;transform:translateY(-50%);\n  z-index:var(--dshpc-z-dock,1030);\n  display:flex;flex-direction:column;gap:8px;align-items:flex-end;\n  pointer-events:none;\n}\n.dshpc-dock__ear{\n  pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;\n  /* 与收起钮**同尺寸**（20×44，用户 2026-10-28 四轮）：上/下/左描边，贴右缘的一侧不描。\n     实色底（--dshpc-plate），不用透明色 —— 透明底下透出东西很难看。\n     padding-left:2px 是**视觉居中**：左侧是圆角，箭头往直线（右缘）那边挪 1px。 */\n  width:20px;height:44px;box-sizing:border-box;padding:0 0 0 2px;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-left:1px solid var(--dshpc-border);\n  border-right:none;\n  border-radius:var(--dshpc-radius-sm) 0 0 var(--dshpc-radius-sm);\n  background:var(--dshpc-plate);color:var(--dshpc-fg-2);\n  cursor:pointer;font-family:inherit;line-height:1;\n  animation:dshpc-ear-in .2s var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 入场：从右缘外滑进来，别「突然出现」（用户 2026-10-28）。 */\n@keyframes dshpc-ear-in{from{opacity:0;transform:translateX(14px)}}\n.dshpc-dock__ear:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__ear:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 与收起钮的箭头同一字号（16px）：收进去前后箭头一模一样大（用户 2026-10-28）。 */\n.dshpc-dock__ear-arrow{font-size:16px;color:var(--dshpc-fg-3)}\n.dshpc-dock__ear:hover .dshpc-dock__ear-arrow{color:var(--dshpc-fg)}\n/* 动效礼貌：系统声明减少动效时全部关掉，收起退化为瞬时、功能不受影响。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-dock__panel{animation:none}\n  .dshpc-dock__panel--closing{transition:none}\n  .dshpc-dock__ear{animation:none}\n}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/PanelDock.js
-		/**
-		* 停靠面板（PanelDock）—— 可停靠的右侧分栏容器。
-		*
-		* 形态：**布局成员，不是浮层**。占宽度、把主区挤窄，因此必须由调用方放进自己的
-		* flex 根容器里；不能像 Modal 那样自挂 `document.body`（自挂只能遮盖、挤不窄）。
-		*
-		* 分工照成熟组件库的通行做法（Ant Design `Tabs` / `Drawer` 同一套）：
-		*   · **结构写在调用点** —— `<PanelDock dock={dock}><DockPanel id="files">…</DockPanel></PanelDock>`；
-		*   · **显隐归状态** —— `dock.open('files')` / `dock.close('files')`，只传 id，不传内容；
-		*   · **头部可控** —— `title` / `icon` / `extra` 三件套；要更自由就 `header` 整块替换，`header={null}` 表示不要头部；
-		*   · **关闭钮可退让** —— `closable={false}` 不出；`closeButton="floating"` 浮在右上角，不占头部布局。
-		*/
-		const INSET_VAR = "--dshpc-page-inset-right";
-		const dockInsets = /* @__PURE__ */ new Map();
-		let dockSeq = 0;
-		function publishInset(key, width, el) {
-			for (const [stale, entry] of dockInsets) if (entry.el !== null && !entry.el.isConnected) dockInsets.delete(stale);
-			if (width > 0) dockInsets.set(key, {
-				width,
-				el
-			});
-			else dockInsets.delete(key);
-			if (typeof document === "undefined") return;
-			let total = 0;
-			for (const entry of dockInsets.values()) total += entry.width;
-			const style = document.documentElement.style;
-			if (total > 0) style.setProperty(INSET_VAR, `${Math.round(total)}px`);
-			else style.removeProperty(INSET_VAR);
-		}
-		/**
-		* 声明一个面板。**它自己不渲染任何东西**——由父级 `<PanelDock>` 读它的 props 后统一画。
-		* 因此必须作为 `<PanelDock>` 的**直接子元素**（可以条件渲染成 `null`）。
-		*/
-		function DockPanel(_props) {
-			return null;
-		}
-		function readStoredWidth(key) {
-			try {
-				if (typeof localStorage === "undefined") return null;
-				const raw = localStorage.getItem(key);
-				if (raw === null) return null;
-				const value = Number(raw);
-				return Number.isFinite(value) ? value : null;
-			} catch {
-				return null;
-			}
-		}
-		function writeStoredWidth(key, width) {
-			try {
-				if (typeof localStorage === "undefined") return;
-				localStorage.setItem(key, String(width));
-			} catch {}
-		}
-		/**
-		* 造一个面板控制器。状态在它身上，组件用 `useSyncExternalStore` 订阅。
-		*
-		* 为什么状态不放在组件里：开门/关门常常发生在按钮 onClick、事件回调里（命令式），
-		* 而**内容与头部仍在调用点声明**——这正是 Tabs 那种「状态 + children」的分工。
-		*/
-		function createPanelDock(options = {}) {
-			const maxPanels = options.maxPanels ?? 3;
-			const defaultWidth = options.defaultWidth ?? 460;
-			const minWidth = options.minWidth ?? 320;
-			const storageKey = options.storageKey ?? "dshpc-dock";
-			const widthKey = (id) => storageKey === false ? "" : `${storageKey}:width:${id}`;
-			let state = emptyDock();
-			const listeners = /* @__PURE__ */ new Set();
-			const emit = (next) => {
-				if (next === state) return;
-				state = next;
-				for (const listener of listeners) listener();
-			};
-			const controller = {
-				defaults: {
-					maxPanels,
-					defaultWidth,
-					minWidth
-				},
-				open(id = DEFAULT_PANEL_ID) {
-					const { state: next, result } = openPanel(state, id, maxPanels);
-					if (result.ok && result.created) {
-						const stored = storageKey === false ? null : readStoredWidth(widthKey(id));
-						emit(stored === null ? next : setPanelWidth(next, id, stored));
-						options.onOpen?.({
-							id,
-							created: true
-						});
-					} else if (result.ok) emit(next);
-					else options.onLimitReached?.({ id });
-					return result;
-				},
-				close(id = DEFAULT_PANEL_ID, reason = "api") {
-					if (!isOpen(state, id) && !isCollapsed(state, id)) return;
-					if (options.onBeforeClose?.({
-						id,
-						reason
-					}) === false) return;
-					emit(closePanel(state, id));
-					options.onClose?.({
-						id,
-						reason
-					});
-				},
-				toggle(id = DEFAULT_PANEL_ID) {
-					if (controller.isOpen(id)) {
-						controller.close(id, "api");
-						return {
-							ok: true,
-							id,
-							created: false
-						};
-					}
-					return controller.open(id);
-				},
-				collapse(id = DEFAULT_PANEL_ID) {
-					if (!isOpen(state, id)) return;
-					emit(collapsePanel(state, id));
-				},
-				expand(id = DEFAULT_PANEL_ID) {
-					if (!isCollapsed(state, id)) return;
-					if (state.ids.length >= maxPanels) {
-						options.onLimitReached?.({ id });
-						return;
-					}
-					emit(expandPanel(state, id));
-				},
-				isOpen(id = DEFAULT_PANEL_ID) {
-					return isOpen(state, id);
-				},
-				isCollapsed(id = DEFAULT_PANEL_ID) {
-					return isCollapsed(state, id);
-				},
-				ids() {
-					return state.ids;
-				},
-				setWidth(id, width) {
-					const next = setPanelWidth(state, id, width);
-					if (next === state) return;
-					emit(next);
-					if (storageKey !== false) writeStoredWidth(widthKey(id), width);
-					options.onResize?.({
-						id,
-						width
-					});
-				},
-				subscribe(listener) {
-					listeners.add(listener);
-					return () => {
-						listeners.delete(listener);
-					};
-				},
-				getSnapshot() {
-					return state;
-				}
-			};
-			return controller;
-		}
-		/** 收集直接子元素里的 `<DockPanel>`；顺序即渲染顺序（与打开顺序无关，稳定）。 */
-		function panesOf(children) {
-			const out = [];
-			react$1.Children.forEach(children, (child) => {
-				if ((0, react$1.isValidElement)(child) && child.type === DockPanel) out.push(child.props);
-			});
-			return out;
-		}
-		/** 停靠栏本体：只渲染「开着的」面板，结构取自对应的 `<DockPanel>`。 */
-		function PanelDock(props) {
-			ensureComponentStyles("side-panel", SIDE_PANEL_CSS);
-			ensureComponentStyles("panel-dock", PANEL_DOCK_CSS);
-			ensureComponentStyles("feedback", FEEDBACK_CSS);
-			const tt = props.translate ?? t$2;
-			const state = (0, react$1.useSyncExternalStore)(props.dock.subscribe, props.dock.getSnapshot, props.dock.getSnapshot);
-			const rootRef = (0, react$1.useRef)(null);
-			const panelRefs = (0, react$1.useRef)(/* @__PURE__ */ new Map());
-			const panes = panesOf(props.children);
-			const { defaultWidth, minWidth: fallbackMin } = props.dock.defaults;
-			const widthOf = (pane) => clampWidth(state.widths[pane.id] ?? pane.width ?? defaultWidth, pane.minWidth ?? fallbackMin, pane.maxWidth);
-			const earLabelOf = (id) => {
-				const pane = panes.find((item) => item.id === id);
-				if (pane === void 0) return id;
-				if (typeof pane.title === "string") return pane.title;
-				if (typeof pane.ariaLabel === "string") return pane.ariaLabel;
-				return id;
-			};
-			const [closing, setClosing] = (0, react$1.useState)([]);
-			const collapseWithAnim = (id) => {
-				setClosing((prev) => prev.includes(id) ? prev : [...prev, id]);
-				window.setTimeout(() => {
-					setClosing((prev) => prev.filter((item) => item !== id));
-					props.dock.collapse(id);
-				}, 220);
-			};
-			const prevIds = (0, react$1.useRef)(state.ids);
-			(0, react$1.useEffect)(() => {
-				const gone = prevIds.current.filter((id) => !state.ids.includes(id) && !state.collapsed.includes(id));
-				prevIds.current = state.ids;
-				if (gone.length === 0) return;
-				setClosing((prev) => [...prev, ...gone.filter((id) => !prev.includes(id))]);
-				window.setTimeout(() => setClosing((prev) => prev.filter((id) => !gone.includes(id))), 220);
-			}, [state.ids, state.collapsed]);
-			const insetKey = (0, react$1.useRef)("");
-			if (insetKey.current === "") insetKey.current = `dock-${++dockSeq}`;
-			const restWidth = (paneId) => othersWidth(state, paneId, (id) => {
-				const other = panes.find((item) => item.id === id);
-				return other === void 0 ? defaultWidth : widthOf(other);
-			});
-			const totalWidth = panes.filter((pane) => state.ids.includes(pane.id)).reduce((sum, pane) => sum + widthOf(pane), 0);
-			(0, react$1.useEffect)(() => {
-				publishInset(insetKey.current, state.ids.length > 0 ? totalWidth : 0, rootRef.current);
-			});
-			(0, react$1.useEffect)(() => () => {
-				publishInset(insetKey.current, 0, null);
-			}, []);
-			for (const id of state.ids) if (!panes.some((pane) => pane.id === id)) console.warn(`[dsh-plugin-core] PanelDock: 面板 "${id}" 已打开但没有对应的 <DockPanel id="${id}"> 声明`);
-			const beginResize = (pane, event) => {
-				const element = panelRefs.current.get(pane.id);
-				if (element === void 0 || typeof window === "undefined") return;
-				const startX = event.clientX;
-				const startWidth = widthOf(pane);
-				const min = pane.minWidth ?? fallbackMin;
-				const mainMin = props.mainMinWidth ?? 480;
-				element.classList.add("dshpc-dock__panel--resizing");
-				startResizeLayoutWidth({
-					startEvent: event,
-					root: rootRef.current,
-					rootClass: "dshpc-dock--resizing",
-					rafThrottle: true,
-					compute: (clientX) => {
-						const viewportMax = window.innerWidth - restWidth(pane.id) - mainMin;
-						const businessMax = pane.maxWidth ?? Number.POSITIVE_INFINITY;
-						const max = Math.min(viewportMax, businessMax);
-						return clampWidth(startWidth + (startX - clientX), min, Math.max(min, max));
-					},
-					onMove: (width) => {
-						element.style.width = `${width}px`;
-						publishInset(insetKey.current, restWidth(pane.id) + width, rootRef.current);
-					},
-					onCommit: (width) => {
-						element.classList.remove("dshpc-dock__panel--resizing");
-						props.dock.setWidth(pane.id, width);
-					}
-				});
-			};
-			const headerCloseOf = (pane) => {
-				const closable = pane.closable !== false;
-				const mode = pane.closeButton ?? "auto";
-				const hasHeader = pane.header !== null;
-				if (!closable || !(mode === "header" || mode === "auto" && hasHeader)) return null;
-				return (0, react$1.createElement)("button", {
-					type: "button",
-					className: "dshpc-dock__close dshpc-dock__close--abs",
-					"aria-label": tt("dockClose"),
-					onClick: () => props.dock.close(pane.id, "button")
-				}, pane.closeIcon ?? "✕");
-			};
-			const renderHeader = (pane) => {
-				if (pane.header === null) return null;
-				if (pane.header !== void 0) return (0, react$1.createElement)("div", { className: "dshpc-dock__head dshpc-dock__head--custom" }, pane.header);
-				return (0, react$1.createElement)("div", { className: "dshpc-dock__head" }, pane.icon === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-dock__lead" }, pane.icon), (0, react$1.createElement)("div", { className: "dshpc-dock__title" }, pane.title), pane.extra === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-dock__extra" }, pane.extra));
-			};
-			const floatingCloseOf = (pane) => {
-				if (pane.closable === false) return null;
-				const mode = pane.closeButton ?? "auto";
-				const hasHeader = pane.header !== null;
-				if (mode !== "floating" && !(mode === "auto" && !hasHeader)) return null;
-				return (0, react$1.createElement)("button", {
-					type: "button",
-					className: "dshpc-dock__close dshpc-dock__close--floating",
-					"aria-label": tt("dockClose"),
-					onClick: () => props.dock.close(pane.id, "button")
-				}, pane.closeIcon ?? "✕");
-			};
-			const rootClass = `dshpc-dock${state.ids.length > 0 ? " dshpc-dock--open" : ""}${props.className === void 0 ? "" : ` ${props.className}`}`;
-			return (0, react$1.createElement)("div", {
-				ref: rootRef,
-				className: rootClass
-			}, panes.filter((pane) => state.ids.includes(pane.id) || closing.includes(pane.id)).map((pane) => (0, react$1.createElement)("section", {
-				key: pane.id,
-				ref: (element) => {
-					if (element === null) panelRefs.current.delete(pane.id);
-					else panelRefs.current.set(pane.id, element);
-				},
-				className: `dshpc-side-surface dshpc-dock__panel${closing.includes(pane.id) ? " dshpc-dock__panel--closing" : ""}`,
-				style: { width: `${widthOf(pane)}px` },
-				"data-panel": pane.id,
-				"aria-label": pane.ariaLabel ?? (typeof pane.title === "string" ? pane.title : pane.id)
-			}, (0, react$1.createElement)("div", {
-				className: "dshpc-dock__resizer",
-				role: "separator",
-				"aria-orientation": "vertical",
-				"aria-label": tt("dockResize"),
-				onPointerDown: (event) => {
-					beginResize(pane, event);
-				}
-			}), (0, react$1.createElement)("button", {
-				type: "button",
-				className: "dshpc-dock__collapse",
-				"aria-label": tt("dockCollapse"),
-				onClick: () => collapseWithAnim(pane.id)
-			}, "›"), renderHeader(pane), headerCloseOf(pane), floatingCloseOf(pane), (0, react$1.createElement)("div", { className: "dshpc-dock__body" }, pane.children ?? null))), state.collapsed.length === 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-dock__ears" }, state.collapsed.map((id) => {
-				const label = earLabelOf(id);
-				return (0, react$1.createElement)("button", {
-					key: id,
-					type: "button",
-					className: "dshpc-dock__ear",
-					"aria-label": `${label} · ${tt("dockExpand")}`,
-					onClick: () => props.dock.expand(id)
-				}, (0, react$1.createElement)("span", {
-					className: "dshpc-dock__ear-arrow",
-					"aria-hidden": true
-				}, "‹"));
-			})));
-		}
-		//#endregion
-		//#region src/client/format.ts
-		function pad2(value) {
-			return String(value).padStart(2, "0");
-		}
-		/** `Date` → 本机时区的 `YYYY-MM-DD`（图表按天 / 周切桶用）。 */
-		function ymdOf(date) {
-			return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-		}
-		/** `YYYY-MM-DD` 前后挪几天（本机时区）。 */
-		function addDays(value, delta) {
-			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
-			date.setDate(date.getDate() + delta);
-			return ymdOf(date);
-		}
-		/** 本周一（周一为一周之始，与 skill 同口径）。 */
-		function mondayOf(value) {
-			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
-			date.setDate(date.getDate() - (date.getDay() + 6) % 7);
-			return ymdOf(date);
-		}
-		/**
-		* 相对时间（GitHub 口径，用户 2026-10-28）：<1 分钟「刚刚」、<1 小时「N 分钟前」、
-		* <24 小时「N 小时前」、<30 天「N 天前」、<12 个月「N 个月前」，再往上「N 年前」；
-		* 未来时间（时钟漂移 / 服务端超前）一律按「刚刚」，不出现「-3 分钟前」。
-		*/
-		function formatRelative(iso, t) {
-			const ms = Date.parse(iso);
-			if (Number.isNaN(ms)) return t("timeUnknown");
-			const mins = Math.floor((Date.now() - ms) / 6e4);
-			if (mins < 1) return t("relJustNow");
-			if (mins < 60) return t("relMinutes", { n: mins });
-			const hours = Math.floor(mins / 60);
-			if (hours < 24) return t("relHours", { n: hours });
-			const days = Math.floor(hours / 24);
-			if (days < 30) return t("relDays", { n: days });
-			const months = Math.floor(days / 30);
-			if (months < 12) return t("relMonths", { n: months });
-			return t("relYears", { n: Math.floor(months / 12) });
-		}
-		/** ISO → `YYYY-MM-DD HH:mm`（`seconds: true` 时补 `:ss`）；解析失败返回 `fallback`（缺省原串）。 */
-		function formatDateTime(iso, opts) {
-			const ms = Date.parse(iso);
-			if (Number.isNaN(ms)) return opts?.fallback ?? iso;
-			const d = new Date(ms);
-			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
-		}
-		/** 计数缩写（统一口径）：<1000 原样；≥1000 用 K，≥100 万用 M，保留 1 位小数并去掉 .0。
-		*  例：999→"999"、1000→"1K"、1200→"1.2K"、12345→"12.3K"、1000000→"1M"。 */
-		function formatCount(n) {
-			if (!Number.isFinite(n)) return String(n);
-			const sign = n < 0 ? "-" : "";
-			const abs = Math.abs(Math.trunc(n));
-			const step = (v, unit) => {
-				const s = v >= 100 ? v.toFixed(0) : v.toFixed(1);
-				return `${sign}${s.replace(/\.0$/, "")}${unit}`;
-			};
-			if (abs >= 1e6) return step(abs / 1e6, "M");
-			if (abs >= 1e3) return step(abs / 1e3, "K");
-			return String(n);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/official.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/official.js
 		/**
 		* L1 adapter —— 全仓**唯一** import 官方 primitives 平台模块的文件。
 		*
@@ -7012,7 +1381,100 @@ window.__ModuleLoader__.load({
 			alert: hostAlert
 		});
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/utils/path.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/host-data.js
+		/** 模型目录的 observable store（useSyncExternalStore 直接消费）。 */
+		var ModelCatalogStore = class {
+			constructor() {
+				this.snapshot = { status: "loading" };
+				this.listeners = /* @__PURE__ */ new Set();
+				this.getSnapshot = () => this.snapshot;
+				this.subscribe = (listener) => {
+					this.listeners.add(listener);
+					return () => {
+						this.listeners.delete(listener);
+					};
+				};
+			}
+			update(next) {
+				this.snapshot = next;
+				for (const listener of this.listeners) listener();
+			}
+			setRoutes(routes) {
+				this.update({
+					status: "ready",
+					routes
+				});
+			}
+			setUnavailable(reason) {
+				this.update({
+					status: "unavailable",
+					reason
+				});
+			}
+		};
+		/** 模型目录单例（ModelPicker 消费；connectHost 负责喂）。 */
+		const modelCatalog = new ModelCatalogStore();
+		/**
+		* 工作区列表的 observable store：直接镜像官方 WorkspaceSource 的 `items`
+		* （宿主权威快照，follow 流实时推 —— 源变我们就变，不自持第二份状态机）。
+		*/
+		var WorkspaceListStore = class {
+			constructor() {
+				this.items = [];
+				this.listeners = /* @__PURE__ */ new Set();
+				this.getSnapshot = () => this.items;
+				this.subscribe = (listener) => {
+					this.listeners.add(listener);
+					return () => {
+						this.listeners.delete(listener);
+					};
+				};
+			}
+			/** 换源（仅 connectHost 调；重复调用换到新源）。 */
+			setSource(source) {
+				this.unsubscribe?.();
+				const pull = () => {
+					this.items = source.getSnapshot().items;
+					for (const listener of this.listeners) listener();
+				};
+				pull();
+				this.unsubscribe = source.subscribe(pull);
+			}
+		};
+		/** 工作区列表单例（WorkspacePicker 消费；connectHost 负责喂）。 */
+		const workspaceList = new WorkspaceListStore();
+		function isWorkspaceSource(value) {
+			if (value === null || typeof value !== "object") return false;
+			const rec = value;
+			return typeof rec.getSnapshot === "function" && typeof rec.subscribe === "function";
+		}
+		/**
+		* 把宿主数据面接进核心（插件 client `apply` 里调**一次**）。
+		*
+		* 工作区走本地 client 服务注入；模型目录走宿主路由 fetch。哪条失败只影响那一块，
+		* 选择器照常渲染空态 / 降级提示 —— 绝不让数据面拖住插件启动。
+		*/
+		function connectHost(ctx, options = {}) {
+			ctx.inject(["workspaces"], (sub) => {
+				const source = sub?.workspaces?.list;
+				if (isWorkspaceSource(source)) workspaceList.setSource(source);
+			});
+			ctx.inject(["remote", "remote.workspaceFiles"], (sub) => {
+				const rec = sub;
+				if (typeof (rec?.["remote.workspaceFiles"] ?? rec?.remote?.workspaceFiles)?.list === "function");
+			});
+			const modelsPath = options.modelsPath;
+			if (modelsPath === void 0) return;
+			fetch(modelsPath).then((response) => response.ok ? response.json() : Promise.reject(/* @__PURE__ */ new Error(`HTTP ${response.status}`))).then((data) => {
+				const routes = data?.routes;
+				if (!Array.isArray(routes)) throw new Error("模型目录响应缺少 routes");
+				modelCatalog.setRoutes(routes);
+			}).catch((error) => {
+				modelCatalog.setUnavailable(String(error));
+			});
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/utils/path.js
 		/**
 		* 纯路径方法 —— 只做字符串切分 / 拼接，不碰宿主、不依赖 React / DOM。
 		*
@@ -7051,7 +1513,7 @@ window.__ModuleLoader__.load({
 			return dir === "" ? name : `${dir}/${name}`;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/types.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/types.js
 		/** HTML 静态预览的扩展名（与官方 htmlBodyDefinition 同款）。 */
 		const HTML_KINDS = ["html", "htm"];
 		/**
@@ -7174,15 +1636,6 @@ window.__ModuleLoader__.load({
 			console.warn("[dsh-plugin-core:explorer] readBytes 返回形状不符契约");
 			return null;
 		}
-		/** `stat` 结果防御解析：只取 absolutePath（信封剥壳同款；stat 仅认 regular file）。 */
-		function absolutePathOf(result) {
-			const envelope = unwrapEnvelope(result);
-			if (envelope.kind === "error") return null;
-			const raw = envelope.payload;
-			if (typeof raw !== "object" || raw === null) return null;
-			const abs = raw.absolutePath;
-			return typeof abs === "string" && abs !== "" ? abs : null;
-		}
 		/** 剥 wire 命名空间前缀（如 `workspace-file/not-found` ⇒ `not-found`）。 */
 		function bareCode(raw) {
 			if (typeof raw === "string") {
@@ -7202,7 +1655,7 @@ window.__ModuleLoader__.load({
 				case "outside-workspace": return { key: "previewOutside" };
 				case "not-found": return { key: "previewNotFound" };
 				case "not-directory": return { key: "previewNotDirectory" };
-				case "not-regular-file": return { key: "previewNotDirectory" };
+				case "not-regular-file": return { key: "previewNotFile" };
 				case "too-large": return { key: "previewTooLarge" };
 				case "not-text": return { key: "previewNotText" };
 				case "invocation-unavailable":
@@ -7223,13 +1676,6 @@ window.__ModuleLoader__.load({
 				if (ad !== bd) return ad - bd;
 				return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
 			});
-		}
-		/**
-		* 0.2.0-rc.1 起官方 list **拒绝空路径** ⇒ 空串（= 工作区根）一律以 `'.'` 上线
-		* （`'.'` 按 cwd = 工作区根归一解析为根本身；响应里根的 path 仍是 `''`）。
-		*/
-		function listPathOf(dir) {
-			return dir === "" ? "." : dir;
 		}
 		function createRequestGate() {
 			let active = null;
@@ -7257,102 +1703,9 @@ window.__ModuleLoader__.load({
 			if (signal?.aborted === true) return true;
 			return typeof error === "object" && error !== null && error.name === "AbortError";
 		}
-		function createRootCache() {
-			const map = /* @__PURE__ */ new Map();
-			return {
-				get: (sessionId) => map.get(sessionId),
-				set: (sessionId, root) => {
-					map.set(sessionId, root);
-				}
-			};
-		}
 		/** 宿主绝对路径形态（/ 开头或 Windows 盘符）。 */
 		function isAbsoluteish(p) {
 			return p.startsWith("/") || p.startsWith("\\") || /^[a-zA-Z]:[\\/]/.test(p);
-		}
-		/** 工作区相对拼接（根下直接 name，不补前导 /）。 */
-		function relJoin(dir, name) {
-			return dir.replace(/\/+$/, "") === "" ? name : `${dir.replace(/\/+$/, "")}/${name}`;
-		}
-		/** 由「相对路径 + 该文件宿主绝对路径」反推工作区根并写入缓存；学不出返回 null。 */
-		function learnRoot(cache, sessionId, relativePath, absolutePath) {
-			const rel = relativePath.replace(/^\/+/, "").replace(/\/+$/, "");
-			if (rel === "" || !absolutePath.endsWith(`/${rel}`)) return null;
-			const root = absolutePath.slice(0, absolutePath.length - rel.length - 1);
-			cache.set(sessionId, root);
-			return root;
-		}
-		/** 把宿主绝对路径剥回工作区相对（根未知或不在根下 ⇒ 原样返回，退化）。 */
-		function relativizeToRoot(cache, sessionId, dir) {
-			if (!isAbsoluteish(dir)) return dir;
-			const root = cache.get(sessionId);
-			if (root === void 0) return dir;
-			const norm = root.replace(/\/+$/, "");
-			if (dir === norm) return "";
-			if (dir.startsWith(`${norm}/`)) return dir.slice(norm.length + 1);
-			return dir;
-		}
-		/**
-		* 在相对目录树里找**任意一个文件**并 stat（广度优先、有界：每层最多 5 个目录、最多 3 层）。
-		* 用于目标目录本身没有文件子项（空目录 / 只有子目录）时反推工作区根。
-		*/
-		async function findAnyFileAbs(workspaceFiles, sessionId, startDir, signal) {
-			const stat = workspaceFiles.stat;
-			if (stat === void 0) return null;
-			let frontier = [startDir];
-			for (let depth = 0; depth < 3 && frontier.length > 0; depth++) {
-				if (signal?.aborted) return null;
-				const nextDirs = [];
-				for (const dir of frontier.slice(0, 5)) {
-					if (signal?.aborted) return null;
-					let entries;
-					try {
-						const parsed = listingOf(await workspaceFiles.list(sessionId, listPathOf(dir), signal));
-						if (parsed === null || isFailed(parsed)) continue;
-						entries = parsed.entries;
-					} catch {
-						continue;
-					}
-					const file = entries.find((entry) => entry.type === "file");
-					if (file !== void 0) {
-						const rel = relJoin(dir, file.name);
-						try {
-							const abs = absolutePathOf(await stat(sessionId, rel, signal));
-							if (abs !== null) return {
-								absolutePath: abs,
-								relativePath: rel
-							};
-						} catch {}
-					}
-					for (const entry of entries) if (entry.type === "directory" && nextDirs.length < 5) nextDirs.push(relJoin(dir, entry.name));
-				}
-				frontier = nextDirs;
-			}
-			return null;
-		}
-		/**
-		* 把「工作区相对名」的目录解析成宿主绝对路径（面包屑才能从工作区根往下列）。
-		* 优先级：① 根已缓存 ⇒ 根 + '/' + 规范相对路径（覆盖空目录 / 只有子目录）；
-		* ② 目录里有文件子项 ⇒ stat 它反推根；③ 有界 BFS 找任一文件反推根。
-		* 全部失败 ⇒ 退回入参，浏览不受影响。
-		*/
-		async function absolutizeDir(cache, workspaceFiles, sessionId, dir, canonical, entries, signal) {
-			if (isAbsoluteish(dir)) return dir;
-			const rel = canonical !== "" ? canonical : dir;
-			const cached = cache.get(sessionId);
-			if (cached !== void 0) return `${cached}/${rel}`;
-			const stat = workspaceFiles.stat;
-			if (stat === void 0) return dir;
-			const file = entries.find((entry) => entry.type === "file");
-			if (file !== void 0) try {
-				const sub = relJoin(rel, file.name);
-				const abs = absolutePathOf(await stat(sessionId, sub, signal));
-				if (abs?.endsWith(`/${file.name}`) === true && learnRoot(cache, sessionId, sub, abs) !== null) return abs.slice(0, abs.length - file.name.length - 1);
-			} catch {}
-			const found = await findAnyFileAbs(workspaceFiles, sessionId, rel, signal);
-			if (found === null) return dir;
-			const root = learnRoot(cache, sessionId, found.relativePath, found.absolutePath);
-			return root === null ? dir : `${root}/${rel}`;
 		}
 		function matchesFilter(path, isDir, filter) {
 			if (filter === void 0) return true;
@@ -7361,12 +1714,43 @@ window.__ModuleLoader__.load({
 			if (isDir) return true;
 			return filter.exts.includes(extOf$1(path));
 		}
-		/** 面包屑段：把目录路径拆成可点层级（绝对路径保留前导 /）。 */
+		/**
+		* 归一绝对路径：`\` → `/`、盘符大写、去尾斜杠。相对路径原样返回（由调用方决定 base）。
+		* FS 面的路径一律先过这里，避免 `D:\a` 与 `d:/a` 被当成两个目录。
+		*/
+		function normalizePath(path) {
+			const slashed = path.replace(/\\/g, "/");
+			const drive = /^([a-zA-Z]):/.exec(slashed);
+			const head = drive === null ? slashed : `${drive[1].toUpperCase()}:${slashed.slice(2)}`;
+			if (/^[a-zA-Z]:$/.test(head)) return `${head}/`;
+			return head.length > 1 ? head.replace(/\/+$/, "") : head;
+		}
+		/** 把绝对路径剥回某个根之下（不在根下 ⇒ 原样返回）。根为 null ⇒ 原样返回。 */
+		function relativizeToDir(path, root) {
+			if (root === null || root === "") return path;
+			const target = normalizePath(path);
+			const base = normalizePath(root);
+			if (target === base) return "";
+			return target.startsWith(`${base}/`) ? target.slice(base.length + 1) : path;
+		}
+		/**
+		* 面包屑段：把目录路径拆成可点层级（绝对路径保留前导 /；Windows 盘符单独成段）。
+		*/
 		function crumbsOfDir(dir) {
-			const isAbs = isAbsoluteish(dir);
-			const segs = dir.split("/").filter((s) => s.length > 0);
+			const normalized = normalizePath(dir);
+			const drive = /^([a-zA-Z]):(\/|$)/.exec(normalized);
+			const body = drive === null ? normalized : normalized.slice(2);
+			const isAbs = drive === null && isAbsoluteish(normalized);
+			const segs = body.split("/").filter((s) => s.length > 0);
 			const out = [];
 			let acc = "";
+			if (drive !== null) {
+				acc = `${drive[1].toUpperCase()}:`;
+				out.push({
+					label: acc,
+					path: `${acc}/`
+				});
+			}
 			for (const seg of segs) {
 				acc = acc === "" ? isAbs ? `/${seg}` : seg : `${acc}/${seg}`;
 				out.push({
@@ -7375,6 +1759,26 @@ window.__ModuleLoader__.load({
 				});
 			}
 			return out;
+		}
+		/**
+		* 目标路径落在哪个工作区（**最长前缀**，不需要会话）。嵌套工作区取最具体的那个。
+		* 与 `workspaceAnchorForPath` 的区别：这里不要求该工作区有会话 —— 浏览已经不吃会话了。
+		*/
+		function workspaceOfPath(path, items) {
+			if (!isAbsoluteish(path)) return null;
+			const target = normalizePath(path);
+			let best = null;
+			let bestLen = -1;
+			for (const item of items) {
+				if (typeof item.path !== "string" || item.path === "") continue;
+				const root = normalizePath(item.path);
+				if (root === "" || !(target === root || target.startsWith(`${root}/`))) continue;
+				if (root.length > bestLen) {
+					best = item;
+					bestLen = root.length;
+				}
+			}
+			return best;
 		}
 		/** 文件/目录的显示名（末段）。 */
 		function baseNameOfPath(p) {
@@ -7410,61 +1814,11 @@ window.__ModuleLoader__.load({
 			}
 			return best;
 		}
-		/**
-		* 按**工作区 title** 取浏览锚点会话（`workspaceAnchors` 里该 title 最近一个会话）。
-		*
-		* 与 `workspaceAnchorForPath`（按路径匹配）互补：调用方有 title 归属信息时用这个
-		* （兄弟项目 `GET /options` 的 `Record<title, 会话id>` 同口径，无歧义）；
-		* 只有裸绝对路径时才走路径匹配。没有该 title / 没有会话 ⇒ null。
-		*/
-		function anchorSessionForTitle(items, title) {
-			if (title === "") return null;
-			const item = items.find((it) => it.title === title);
-			const sessionId = item?.sessionIds?.[item.sessionIds.length - 1];
-			return typeof sessionId === "string" && sessionId !== "" ? sessionId : null;
-		}
-		/**
-		* 目标**绝对路径**落在哪个工作区 ⇒ 该工作区最近一个会话 id（list 的 sessionId）。
-		*
-		* 为什么需要：`workspaceFiles.list` 是会话作用域服务（按 sessionId 解析工作区根，目录 confinement
-		* 检查 `contains(root, target)`，官方 `lib/index.js:576-583`）。调用方只甩一个绝对路径进来时，
-		* 默认 sessionId 的工作区根未必含它 ⇒ 官方报 `outside-workspace` ⇒ 面板整条退化成只读。
-		* 这里把「路径 → 工作区 → 会话」的解析收敛到核心，调用方只需把宿主工作区清单（带 path）传进来。
-		*
-		* 口径：**最长前缀**赢（嵌套工作区取最具体的）；尾斜杠归一；字面大小写（宿主 path 与调用方
-		* 路径同源，不做大小写折叠——Windows 跨形态比较是调用方归一的责任）。
-		* shortcut: 只解一次（入口 path），不跟踪 dir 切换；跨工作区跳转由调用方经 onSelectWorkspace 处理。
-		*
-		* @returns 锚点；无 path 字段 / 都不匹配 / 命中工作区没有会话 ⇒ null（调用方回落默认 sessionId）。
-		*/
-		function workspaceAnchorForPath(path, items) {
-			if (!isAbsoluteish(path) || path === "") return null;
-			const norm = (p) => p.replace(/\/+$/, "");
-			const target = norm(path);
-			let best = null;
-			let bestLen = -1;
-			for (const item of items) {
-				if (typeof item.path !== "string" || item.path === "") continue;
-				const root = norm(item.path);
-				if (root === "" || !(target === root || target.startsWith(`${root}/`))) continue;
-				if (root.length > bestLen) {
-					best = item;
-					bestLen = root.length;
-				}
-			}
-			if (best === null) return null;
-			const sessionId = best.sessionIds?.[best.sessionIds.length - 1];
-			if (typeof sessionId !== "string" || sessionId === "") return null;
-			return {
-				title: best.title,
-				sessionId
-			};
-		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/explorer-css.generated.js
-		const EXPLORER_CSS = "/* 工作区文件浏览器（dshpc-fb-*）。\n *\n * 度量真源 = 兄弟项目 dsh-task-dispatch-table 的 src/client/archive-session-css.ts\n * （.dsh-tdt-sv-* 全族）。**逐条照抄，不许自己估**：padding / gap / 圆角 / 字号 / 行高 /\n * 边框色 / 悬停色 / 透明度动画 / 溢出策略，一一对应，改这里之前先去那边对原文。\n * 前缀与变量名换成本仓口径（--tdt-* → --dshpc-*），数值不换。\n *\n * 控件：能核心就核心（面包屑 = Button ghost、行尾 = Button outline、展开 / 图标 = IconButton、\n * 分段 = Segmented、文字 = MarqueeText）。核心控件自带的 padding / 高度 / 皮肤在本文件里\n * **按兄弟数值覆盖**（选择器带 .dshpc-fb 前缀提高特异性，确保盖得住控件默认值）。\n */\n.dshpc-fb{\n  position:relative;display:flex;flex-direction:column;height:100%;min-height:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n}\n\n/* 第一排：▾ 选层 + 面包屑 + 动作（兄弟 .dsh-tdt-sv-crumbbar）\n   ⚠️ 不能 overflow:hidden —— 下拉浮层挂在它下面，裁了就看不见。 */\n.dshpc-fb__bar{\n  position:relative;flex:none;display:flex;align-items:center;gap:2px;\n  padding:4px 10px;border-bottom:1px solid var(--dshpc-border);white-space:nowrap;\n}\n.dshpc-fb__menu-wrap{position:relative;flex:none;display:inline-flex}\n.dshpc-fb__crumbs{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:2px;overflow:hidden}\n.dshpc-fb__crumbs-measure{\n  position:absolute;top:0;left:0;display:inline-flex;align-items:center;gap:2px;\n  visibility:hidden;pointer-events:none;white-space:nowrap;\n}\n\n/* 面包屑：核心 ghost 钮，但皮肤与尺寸取兄弟 .dsh-tdt-sv-crumb（高由内容决定，不锁控制高）。 */\n.dshpc-fb .dshpc-fb__crumb{\n  appearance:none;background:0 0;border:none;height:auto;\n  padding:2px 4px;border-radius:var(--dshpc-radius-sm);\n  font:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis;\n}\n.dshpc-fb .dshpc-fb__crumb:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-fb .dshpc-fb__crumb:disabled{color:var(--dshpc-fg-2);cursor:default}\n.dshpc-fb .dshpc-fb__crumb--current{cursor:default;color:var(--dshpc-fg);font-weight:600;min-width:0}\n.dshpc-fb .dshpc-fb__crumb--current:hover{background:0 0}\n.dshpc-fb__crumb-mq{flex:1 1 auto;min-width:0}\n.dshpc-fb__crumb-sep{flex:none;color:var(--dshpc-fg-3)}\n\n/* 越界（outside-workspace）第一排：只读完整路径（兄弟 .dsh-tdt-sv-crumbbar-plain-inner）。 */\n.dshpc-fb__bar-plain{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-2);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;user-select:none;\n}\n.dshpc-fb__actions{flex:none;display:flex;align-items:center;gap:4px}\n\n/* ▾ 选层浮层（兄弟 .dsh-tdt-sv-crumbs-*）。\n   层序：兄弟是 30/31；本仓 picker 面板是 1100，遮罩必须高于它，否则菜单开着点面板不算「点外部」。 */\n.dshpc-fb__crumbs-backdrop{position:fixed;inset:0;z-index:1200;background:transparent}\n.dshpc-fb__crumbs-menu{\n  position:absolute;top:calc(100% + 4px);left:0;z-index:1201;min-width:160px;max-height:240px;overflow:auto;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-sm);\n  box-shadow:0 4px 16px rgba(0,0,0,.18);padding:4px;display:flex;flex-direction:column;\n}\n.dshpc-fb__menu-item{\n  appearance:none;background:0 0;border:none;text-align:left;font:inherit;\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);\n  padding:4px 8px;border-radius:var(--dshpc-radius-sm);color:var(--dshpc-fg);cursor:pointer;\n  max-width:280px;display:flex;align-items:center;gap:2px;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n.dshpc-fb__menu-item:hover{background:var(--dshpc-hover)}\n.dshpc-fb__menu-empty{\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);padding:4px 8px;color:var(--dshpc-fg-3);\n}\n.dshpc-fb__menu-icon{flex:none;display:inline-flex}\n.dshpc-fb__menu-chev{flex:none;color:var(--dshpc-fg-3);margin-right:1px}\n.dshpc-fb__menu-chev-slot{flex:none;width:11px;height:11px;margin-right:1px}\n.dshpc-fb__menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n\n/* 第二排（仅预览态）：文件名 + 工具（兄弟 .dsh-tdt-sv-titlebar / -preview-title-inner）。 */\n.dshpc-fb__title{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:8px 14px;border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-fb__title-inner{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;\n}\n\n/* 主体（兄弟 .dsh-tdt-sv-preview-body / -hint / -preview-err）\n   下面三个滚动容器都带透明右边框 = 滚动条与右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-fb__body{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;padding:12px 14px;border-right:1px solid transparent}\n.dshpc-fb__note{font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);text-align:center;padding:12px 0}\n.dshpc-fb__err{\n  display:flex;flex-direction:column;align-items:flex-start;gap:10px;\n  font-size:var(--dshpc-font-sm);line-height:1.6;color:var(--dshpc-fg-2);padding:8px 0;\n}\n\n/* 目录树（兄弟 .dsh-tdt-sv-tree*） */\n.dshpc-fb__tree{flex:1;min-height:0;overflow:auto;padding:6px 8px;border-right:1px solid transparent;border-bottom:1px solid transparent}\n.dshpc-fb__row{\n  display:flex;align-items:center;gap:8px;padding:6px 8px;\n  border-radius:var(--dshpc-radius-sm);cursor:pointer;user-select:none;\n}\n.dshpc-fb__row:hover{background:var(--dshpc-hover)}\n.dshpc-fb__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px}\n.dshpc-fb__row-icon{flex:none;display:inline-flex;color:var(--dshpc-fg-2)}\n.dshpc-fb__row-name{\n  flex:1;min-width:0;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);color:var(--dshpc-fg);\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n\n/* 展开开关：核心 IconButton，命中位 20×20 + 展开时转 90°（兄弟 .dsh-tdt-sv-tree-toggle{,-open}）。 */\n.dshpc-fb .dshpc-fb__row-toggle{\n  appearance:none;background:0 0;border:none;flex:none;\n  width:20px;height:20px;padding:0;margin:0;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;justify-content:center;\n  transition:transform var(--dshpc-dur-fast) var(--dshpc-ease),background var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb .dshpc-fb__row-toggle--open{transform:rotate(90deg)}\n\n/* 行尾「进入 / 选择」：核心 outline 钮，皮肤取兄弟 .dsh-tdt-sv-tree-act（高由内容决定）。\n   平时隐身但占位（opacity 而非 display）⇒ 出现时不顶动行内布局。 */\n.dshpc-fb .dshpc-fb__row-act{\n  flex:none;margin-left:auto;appearance:none;background:0 0;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-sm);\n  height:auto;padding:2px 8px;font-size:var(--dshpc-font-sm);line-height:1.4;\n  color:var(--dshpc-fg-2);cursor:pointer;\n  opacity:0;pointer-events:none;\n  transition:opacity var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb__row:hover .dshpc-fb__row-act,.dshpc-fb .dshpc-fb__row-act:focus-visible{opacity:1;pointer-events:auto}\n.dshpc-fb .dshpc-fb__row-act:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n\n.dshpc-fb__row-children{\n  margin-left:9px;padding-left:7px;border-left:1px solid var(--dshpc-border);\n  display:flex;flex-direction:column;\n}\n.dshpc-fb__row-note{flex:none;padding:8px 10px;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3)}\n.dshpc-fb__row-err{padding:4px 8px 4px 36px;font-size:var(--dshpc-font-sm);color:var(--dshpc-danger)}\n\n/* 预览体内部容器（仅本仓预览组件用；兄弟对应 preview-fill / preview-body-code 一类）。\n   必须 border-box：渲染态 inline 加了 padding:12px 14px，content-box 下 width:100%+padding\n   会溢出父层 28px（父 .dshpc-fb 无 overflow 裁切）→ 恒多一条横滚条；border-box 把 padding\n   算进 100%，从根消除该溢出。 */\n.dshpc-fb__text{flex:1;min-height:0;overflow:auto;width:100%;box-sizing:border-box;border-right:1px solid transparent;border-bottom:1px solid transparent}\n.dshpc-fb__banner{padding:6px 10px;background:var(--dshpc-open-bg);color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm)}\n.dshpc-fb__more{display:flex;justify-content:center;padding:10px}\n.dshpc-fb__image{max-width:100%;border-radius:var(--dshpc-radius-sm);border:1px solid var(--dshpc-border)}\n/* iframe 的外壳（兄弟 .dsh-tdt-sv-preview-fill）：iframe 必须包在这一层里才拿得到高度——\n   裸挂 iframe 时替换元素的自动最小尺寸会让高度算不出来（表现为预览区整片空白、像没反应）。 */\n.dshpc-fb__fill{flex:1;min-height:0;display:flex;overflow:hidden;padding:0}\n.dshpc-fb__frame{flex:1;min-height:0;width:100%;height:100%;border:none;background:var(--dshpc-surface-1)}\n";
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/explorer-css.generated.js
+		const EXPLORER_CSS = "/* 工作区文件浏览器（dshpc-fb-*）。\n *\n * 度量真源 = 兄弟项目 dsh-task-dispatch-table 的 src/client/archive-session-css.ts\n * （.dsh-tdt-sv-* 全族）。**逐条照抄，不许自己估**：padding / gap / 圆角 / 字号 / 行高 /\n * 边框色 / 悬停色 / 透明度动画 / 溢出策略，一一对应，改这里之前先去那边对原文。\n * 前缀与变量名换成本仓口径（--tdt-* → --dshpc-*），数值不换。\n * **例外**：容器级内距（__bar / __title / __tree / __body）2026-11-03 起改成四周一致\n * 的 token 档（space-2 / space-3）——用户反馈兄弟那套「左右比上下宽」在这两处窗口里不对称。\n * 行级内距（__row / __row-note / __banner）仍是兄弟数值，未动。\n *\n * 控件：能核心就核心（面包屑 = Button ghost、行尾 = Button outline、展开 / 图标 = IconButton、\n * 分段 = Segmented、文字 = MarqueeText）。核心控件自带的 padding / 高度 / 皮肤在本文件里\n * **按兄弟数值覆盖**（选择器带 .dshpc-fb 前缀提高特异性，确保盖得住控件默认值）。\n */\n/* 背景不在这里画：dock 由 .dshpc-side-surface、选文件弹窗由 .dshpc-panel 提供。\n   自己再刷一层 surface-base 会把面板档位（modal 同色的 surface-1）盖掉 —— 弹窗就显得发黑。 */\n.dshpc-fb{\n  position:relative;display:flex;flex-direction:column;height:100%;min-height:0;\n  background:transparent;color:var(--dshpc-fg);\n}\n\n/* 第一排：▾ 选层 + 面包屑 + 动作（兄弟 .dsh-tdt-sv-crumbbar）\n   ⚠️ 不能 overflow:hidden —— 下拉浮层挂在它下面，裁了就看不见。 */\n.dshpc-fb__bar{\n  position:relative;flex:none;display:flex;align-items:center;gap:2px;\n  /* 四周内距一致（用户 2026-11-03：原来 4/10，左右比上下宽，看着不对称）——下文 __title / __tree / __body 同口径。 */\n  padding:var(--dshpc-space-2);border-bottom:1px solid var(--dshpc-border);white-space:nowrap;\n}\n.dshpc-fb__menu-wrap{position:relative;flex:none;display:inline-flex}\n.dshpc-fb__crumbs{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:2px;overflow:hidden}\n.dshpc-fb__crumbs-measure{\n  position:absolute;top:0;left:0;display:inline-flex;align-items:center;gap:2px;\n  visibility:hidden;pointer-events:none;white-space:nowrap;\n}\n\n/* 面包屑：核心 ghost 钮，但皮肤与尺寸取兄弟 .dsh-tdt-sv-crumb（高由内容决定，不锁控制高）。 */\n.dshpc-fb .dshpc-fb__crumb{\n  appearance:none;background:0 0;border:none;height:auto;\n  padding:2px 4px;border-radius:var(--dshpc-radius-sm);\n  font:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis;\n}\n.dshpc-fb .dshpc-fb__crumb:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-fb .dshpc-fb__crumb:disabled{color:var(--dshpc-fg-2);cursor:default}\n.dshpc-fb .dshpc-fb__crumb--current{cursor:default;color:var(--dshpc-fg);font-weight:600;min-width:0}\n.dshpc-fb .dshpc-fb__crumb--current:hover{background:0 0}\n.dshpc-fb__crumb-mq{flex:1 1 auto;min-width:0}\n.dshpc-fb__crumb-sep{flex:none;color:var(--dshpc-fg-3)}\n\n/* 越界（outside-workspace）第一排：只读完整路径（兄弟 .dsh-tdt-sv-crumbbar-plain-inner）。 */\n.dshpc-fb__bar-plain{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-2);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;user-select:none;\n}\n.dshpc-fb__actions{flex:none;display:flex;align-items:center;gap:4px}\n/* 选择器头部「选当前文件 / 当前文件夹」钮：与 ✕ 并排，不被面包屑挤扁。\n   「选当前目录」= 核心 Button outline（sm 档）：尺寸与皮肤全归核心，这里只留布局。\n   ⚠️ 别再往这里写 height / padding 覆盖 —— 域按登记顺序拼接，核心 .dshpc-btn--sm 谁先谁后\n   取决于渲染次序，覆盖会时灵时不灵（2026-11-03 前就是这么写的）。 */\n.dshpc-fb__pick{flex:none}\n\n/* ▾ 选层浮层。\n   层序：遮罩必须高于 picker 面板（--dshpc-z-panel），否则菜单开着点面板不算「点外部」；\n   菜单再压在遮罩之上，所以是 popmenu 一档 +1。表皮来自 panel.css 的 menu 档。 */\n.dshpc-fb__crumbs-backdrop{position:fixed;inset:0;z-index:var(--dshpc-z-popmenu);background:transparent}\n.dshpc-fb__crumbs-menu{\n  position:absolute;top:calc(100% + 4px);left:0;z-index:calc(var(--dshpc-z-popmenu) + 1);\n  min-width:160px;max-height:240px;overflow:auto;padding:4px;display:flex;flex-direction:column;\n}\n.dshpc-fb__menu-item{\n  appearance:none;background:0 0;border:none;text-align:left;font:inherit;\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);\n  padding:4px 8px;border-radius:var(--dshpc-radius-sm);color:var(--dshpc-fg);cursor:pointer;\n  max-width:280px;display:flex;align-items:center;gap:2px;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n.dshpc-fb__menu-item:hover{background:var(--dshpc-hover)}\n.dshpc-fb__menu-empty{\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);padding:4px 8px;color:var(--dshpc-fg-3);\n}\n.dshpc-fb__menu-icon{flex:none;display:inline-flex}\n.dshpc-fb__menu-chev{flex:none;color:var(--dshpc-fg-3);margin-right:1px}\n.dshpc-fb__menu-chev-slot{flex:none;width:11px;height:11px;margin-right:1px}\n.dshpc-fb__menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n\n/* 第二排（仅预览态）：文件名 + 工具（兄弟 .dsh-tdt-sv-titlebar / -preview-title-inner）。 */\n.dshpc-fb__title{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:var(--dshpc-space-2);border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-fb__title-inner{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;\n}\n\n/* 主体（兄弟 .dsh-tdt-sv-preview-body / -hint / -preview-err）\n   下面三个滚动容器都带透明右边框 = 滚动条与右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-fb__body{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;padding:var(--dshpc-space-3);border-right:1px solid transparent}\n.dshpc-fb__note{font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);text-align:center;padding:12px 0}\n.dshpc-fb__err{\n  display:flex;flex-direction:column;align-items:flex-start;gap:10px;\n  font-size:var(--dshpc-font-sm);line-height:1.6;color:var(--dshpc-fg-2);padding:8px 0;\n}\n\n/* 目录树（兄弟 .dsh-tdt-sv-tree*） */\n.dshpc-fb__tree{flex:1;min-height:0;overflow:auto;padding:var(--dshpc-space-2);border-right:1px solid transparent;border-bottom:1px solid transparent}\n.dshpc-fb__row{\n  display:flex;align-items:center;gap:8px;padding:6px 8px;\n  border-radius:var(--dshpc-radius-sm);cursor:pointer;user-select:none;\n}\n.dshpc-fb__row:hover{background:var(--dshpc-hover)}\n.dshpc-fb__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px}\n.dshpc-fb__row-icon{flex:none;display:inline-flex;color:var(--dshpc-fg-2)}\n.dshpc-fb__row-name{\n  flex:1;min-width:0;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);color:var(--dshpc-fg);\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n\n/* 展开开关：核心 IconButton，命中位 20×20 + 展开时转 90°（兄弟 .dsh-tdt-sv-tree-toggle{,-open}）。 */\n.dshpc-fb .dshpc-fb__row-toggle{\n  appearance:none;background:0 0;border:none;flex:none;\n  width:20px;height:20px;padding:0;margin:0;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;justify-content:center;\n  transition:transform var(--dshpc-dur-fast) var(--dshpc-ease),background var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb .dshpc-fb__row-toggle--open{transform:rotate(90deg)}\n\n/* 行尾「进入 / 选择」：按钮**皮肤完全交给核心 Button**（2026-11-03：原来这里又写了一遍描边/内距/\n   字号，等于自己手搓了一颗，跟别处的按钮长得不一样）。本仓只保留布局与「悬停才现身」：\n   平时隐身但占位（opacity 而非 display）⇒ 出现时不顶动行内布局。 */\n.dshpc-fb .dshpc-fb__row-act{\n  flex:none;margin-left:auto;\n  opacity:0;pointer-events:none;\n  transition:opacity var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb__row:hover .dshpc-fb__row-act,.dshpc-fb .dshpc-fb__row-act:focus-visible{opacity:1;pointer-events:auto}\n\n.dshpc-fb__row-children{\n  margin-left:9px;padding-left:7px;border-left:1px solid var(--dshpc-border);\n  display:flex;flex-direction:column;\n}\n.dshpc-fb__row-note{flex:none;padding:8px 10px;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3)}\n.dshpc-fb__row-err{padding:4px 8px 4px 36px;font-size:var(--dshpc-font-sm);color:var(--dshpc-danger)}\n\n/* 预览体内部容器（仅本仓预览组件用；兄弟对应 preview-fill / preview-body-code 一类）。\n   必须 border-box：渲染态 inline 加了 padding:12px 14px，content-box 下 width:100%+padding\n   会溢出父层 28px（父 .dshpc-fb 无 overflow 裁切）→ 恒多一条横滚条；border-box 把 padding\n   算进 100%，从根消除该溢出。 */\n.dshpc-fb__text{flex:1;min-height:0;overflow:auto;width:100%;box-sizing:border-box;border-right:1px solid transparent;border-bottom:1px solid transparent}\n.dshpc-fb__banner{padding:6px 10px;background:var(--dshpc-open-bg);color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm)}\n.dshpc-fb__more{display:flex;justify-content:center;padding:10px}\n.dshpc-fb__image{max-width:100%;border-radius:var(--dshpc-radius-sm);border:1px solid var(--dshpc-border)}\n/* iframe 的外壳（兄弟 .dsh-tdt-sv-preview-fill）：iframe 必须包在这一层里才拿得到高度——\n   裸挂 iframe 时替换元素的自动最小尺寸会让高度算不出来（表现为预览区整片空白、像没反应）。 */\n.dshpc-fb__fill{flex:1;min-height:0;display:flex;overflow:hidden;padding:0}\n.dshpc-fb__frame{flex:1;min-height:0;width:100%;height:100%;border:none;background:var(--dshpc-surface-1)}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/preview/BytesPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/preview/BytesPreview.js
 		function BytesPreview(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const tt = props.translate ?? t$2;
@@ -7475,7 +1829,7 @@ window.__ModuleLoader__.load({
 				let objectUrl = null;
 				setUrl(null);
 				setFailed(null);
-				props.workspaceFiles.readBytes(props.sessionId, props.path, {}, controller.signal).then((res) => {
+				props.files.readBytes(props.path, {}, controller.signal).then((res) => {
 					if (controller.signal.aborted) return;
 					const data = bytesOf(res);
 					if (data === null) {
@@ -7499,8 +1853,7 @@ window.__ModuleLoader__.load({
 					if (objectUrl !== null) URL.revokeObjectURL(objectUrl);
 				};
 			}, [
-				props.workspaceFiles,
-				props.sessionId,
+				props.files,
 				props.path,
 				props.mime
 			]);
@@ -11183,7 +5536,7 @@ window.__ModuleLoader__.load({
 			221: "]",
 			222: "'"
 		};
-		var shift = {
+		var shift$3 = {
 			48: ")",
 			49: "!",
 			50: "@",
@@ -11215,11 +5568,11 @@ window.__ModuleLoader__.load({
 		for (var i = 1; i <= 24; i++) base$1[i + 111] = "F" + i;
 		for (var i = 65; i <= 90; i++) {
 			base$1[i] = String.fromCharCode(i + 32);
-			shift[i] = String.fromCharCode(i);
+			shift$3[i] = String.fromCharCode(i);
 		}
-		for (var code$1 in base$1) if (!shift.hasOwnProperty(code$1)) shift[code$1] = base$1[code$1];
+		for (var code$1 in base$1) if (!shift$3.hasOwnProperty(code$1)) shift$3[code$1] = base$1[code$1];
 		function keyName(event) {
-			var name = !(mac && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey || ie$1 && event.shiftKey && event.key && event.key.length == 1 || event.key == "Unidentified") && event.key || (event.shiftKey ? shift : base$1)[event.keyCode] || event.key || "Unidentified";
+			var name = !(mac && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey || ie$1 && event.shiftKey && event.key && event.key.length == 1 || event.key == "Unidentified") && event.key || (event.shiftKey ? shift$3 : base$1)[event.keyCode] || event.key || "Unidentified";
 			if (name == "Esc") name = "Escape";
 			if (name == "Del") name = "Delete";
 			if (name == "Left") name = "ArrowLeft";
@@ -11643,13 +5996,13 @@ window.__ModuleLoader__.load({
 			else target = root;
 			return target.getSelection();
 		}
-		function contains$1(dom, node) {
+		function contains$2(dom, node) {
 			return node ? dom == node || dom.contains(node.nodeType != 1 ? node.parentNode : node) : false;
 		}
 		function hasSelection(dom, selection) {
 			if (!selection.anchorNode) return false;
 			try {
-				return contains$1(dom, selection.anchorNode);
+				return contains$2(dom, selection.anchorNode);
 			} catch (_) {
 				return false;
 			}
@@ -11716,7 +6069,7 @@ window.__ModuleLoader__.load({
 				bottom: win.innerHeight
 			};
 		}
-		function getScale(elt, rect) {
+		function getScale$1(elt, rect) {
 			let scaleX = rect.width / elt.offsetWidth;
 			let scaleY = rect.height / elt.offsetHeight;
 			if (scaleX > .995 && scaleX < 1.005 || !isFinite(scaleX) || Math.abs(rect.width - elt.offsetWidth) < 1) scaleX = 1;
@@ -11742,7 +6095,7 @@ window.__ModuleLoader__.load({
 						continue;
 					}
 					let rect = cur.getBoundingClientRect();
-					({scaleX, scaleY} = getScale(cur, rect));
+					({scaleX, scaleY} = getScale$1(cur, rect));
 					bounding = {
 						left: rect.left,
 						right: rect.left + cur.clientWidth * scaleX,
@@ -14685,8 +9038,8 @@ window.__ModuleLoader__.load({
 					this.newSel = selectionFromPoints(selPoints, this.bounds.from);
 				} else {
 					let domSel = view.observer.selectionRange;
-					let head = iHead && iHead.node == domSel.focusNode && iHead.offset == domSel.focusOffset || !contains$1(view.contentDOM, domSel.focusNode) ? curSel.main.head : view.docView.posFromDOM(domSel.focusNode, domSel.focusOffset);
-					let anchor = iAnchor && iAnchor.node == domSel.anchorNode && iAnchor.offset == domSel.anchorOffset || !contains$1(view.contentDOM, domSel.anchorNode) ? curSel.main.anchor : view.docView.posFromDOM(domSel.anchorNode, domSel.anchorOffset);
+					let head = iHead && iHead.node == domSel.focusNode && iHead.offset == domSel.focusOffset || !contains$2(view.contentDOM, domSel.focusNode) ? curSel.main.head : view.docView.posFromDOM(domSel.focusNode, domSel.focusOffset);
+					let anchor = iAnchor && iAnchor.node == domSel.anchorNode && iAnchor.offset == domSel.anchorOffset || !contains$2(view.contentDOM, domSel.anchorNode) ? curSel.main.anchor : view.docView.posFromDOM(domSel.anchorNode, domSel.anchorOffset);
 					let vp = view.viewport;
 					if ((browser.ios || browser.chrome) && head != anchor && Math.min(head, anchor) <= curSel.main.from && Math.max(head, anchor) >= curSel.main.to && (vp.from > 0 || vp.to < view.state.doc.length)) {
 						let from = Math.min(head, anchor), to = Math.max(head, anchor);
@@ -16494,7 +10847,7 @@ window.__ModuleLoader__.load({
 				this.mustMeasureContent = false;
 				let result = 0, bias = 0;
 				if (domRect.width && domRect.height) {
-					let { scaleX, scaleY } = getScale(dom, domRect);
+					let { scaleX, scaleY } = getScale$1(dom, domRect);
 					if (scaleX > .005 && Math.abs(this.scaleX - scaleX) > .005 || scaleY > .005 && Math.abs(this.scaleY - scaleY) > .005) {
 						this.scaleX = scaleX;
 						this.scaleY = scaleY;
@@ -18967,7 +13320,7 @@ window.__ModuleLoader__.load({
 				if (runFor(scopeObj[prefix + modifiers(name, event, !isChar)])) handled = true;
 				else if (isChar && (event.altKey || event.metaKey || event.ctrlKey) && !(browser.windows && event.ctrlKey && event.altKey) && !(browser.mac && event.altKey && !(event.ctrlKey || event.metaKey)) && (baseName = base$1[event.keyCode]) && baseName != name) {
 					if (runFor(scopeObj[prefix + modifiers(baseName, event, true)])) handled = true;
-					else if (event.shiftKey && (shiftName = shift[event.keyCode]) != name && shiftName != baseName && runFor(scopeObj[prefix + modifiers(shiftName, event, false)])) handled = true;
+					else if (event.shiftKey && (shiftName = shift$3[event.keyCode]) != name && shiftName != baseName && runFor(scopeObj[prefix + modifiers(shiftName, event, false)])) handled = true;
 				} else if (isChar && event.shiftKey && runFor(scopeObj[prefix + modifiers(name, event, true)])) handled = true;
 				if (!handled && runFor(scopeObj._any)) handled = true;
 			}
@@ -33653,7 +28006,7 @@ window.__ModuleLoader__.load({
 		function identifierChar(ch, start) {
 			return ch >= 65 && ch <= 90 || ch >= 97 && ch <= 122 || ch == 95 || ch >= 192 || !start && ch >= 48 && ch <= 57;
 		}
-		const jsx = new ExternalTokenizer((input, stack) => {
+		const jsx$1 = new ExternalTokenizer((input, stack) => {
 			if (input.next != lt || !stack.dialectEnabled(Dialect_jsx)) return;
 			input.advance();
 			if (input.next == slash$1) return;
@@ -33996,7 +28349,7 @@ window.__ModuleLoader__.load({
 				noSemicolon,
 				noSemicolonType,
 				operatorToken,
-				jsx,
+				jsx$1,
 				2,
 				3,
 				4,
@@ -36274,7 +30627,7 @@ window.__ModuleLoader__.load({
 		| cell 1 | cell 2 |
 		```
 		*/
-		const Table = {
+		const Table$1 = {
 			defineNodes: [
 				{
 					name: "Table",
@@ -36344,7 +30697,7 @@ window.__ModuleLoader__.load({
 		const lastTwoDomainWords = /[\w-]+\.[\w-]+($|[/:])/;
 		const emailRE = /[\w.+-]+@[\w-]+(\.[\w.-]+)+/gy;
 		const xmppResourceRE = /\/[a-zA-Z\d@.]+/gy;
-		function count(str, from, to, ch) {
+		function count$1(str, from, to, ch) {
 			let result = 0;
 			for (let i = from; i < to; i++) if (str[i] == ch) result++;
 			return result;
@@ -36356,7 +30709,7 @@ window.__ModuleLoader__.load({
 			let end = from + m[0].length;
 			for (;;) {
 				let last = text[end - 1], m;
-				if (/[?!.,:*_~]/.test(last) || last == ")" && count(text, from, end, ")") > count(text, from, end, "(")) end--;
+				if (/[?!.,:*_~]/.test(last) || last == ")" && count$1(text, from, end, ")") > count$1(text, from, end, "(")) end--;
 				else if (last == ";" && (m = /&(?:#\d+|#x[a-f\d]+|\w+);$/.exec(text.slice(from, end)))) end = from + m.index;
 				else break;
 			}
@@ -36375,7 +30728,7 @@ window.__ModuleLoader__.load({
 		[`Autolink`](#Autolink).
 		*/
 		const GFM = [
-			Table,
+			Table$1,
 			TaskList,
 			Strikethrough,
 			{ parseInline: [{
@@ -41690,17 +36043,17 @@ window.__ModuleLoader__.load({
 				stream.eatWhile(isIdentifierChar);
 				if (namespaceSeparator) while (stream.match(namespaceSeparator)) stream.eatWhile(isIdentifierChar);
 				var cur = stream.current();
-				if (contains(keywords, cur)) {
-					if (contains(blockKeywords, cur)) curPunc = "newstatement";
-					if (contains(defKeywords, cur)) isDefKeyword = true;
+				if (contains$1(keywords, cur)) {
+					if (contains$1(blockKeywords, cur)) curPunc = "newstatement";
+					if (contains$1(defKeywords, cur)) isDefKeyword = true;
 					return "keyword";
 				}
-				if (contains(types, cur)) return "type";
-				if (contains(builtin, cur) || isReservedIdentifier && isReservedIdentifier(cur)) {
-					if (contains(blockKeywords, cur)) curPunc = "newstatement";
+				if (contains$1(types, cur)) return "type";
+				if (contains$1(builtin, cur) || isReservedIdentifier && isReservedIdentifier(cur)) {
+					if (contains$1(blockKeywords, cur)) curPunc = "newstatement";
 					return "builtin";
 				}
-				if (contains(atoms, cur)) return "atom";
+				if (contains$1(atoms, cur)) return "atom";
 				return "variable";
 			}
 			function tokenString(quote) {
@@ -41817,7 +36170,7 @@ window.__ModuleLoader__.load({
 			for (var i = 0; i < words.length; ++i) obj[words[i]] = true;
 			return obj;
 		}
-		function contains(words, word) {
+		function contains$1(words, word) {
 			if (typeof words === "function") return words(word);
 			else return words.propertyIsEnumerable(word);
 		}
@@ -41828,10 +36181,10 @@ window.__ModuleLoader__.load({
 		var basicCTypes = words$3("int long char short double float unsigned signed void bool");
 		var basicObjCTypes = words$3("SEL instancetype id Class Protocol BOOL");
 		function cTypes(identifier) {
-			return contains(basicCTypes, identifier) || /.+_t$/.test(identifier);
+			return contains$1(basicCTypes, identifier) || /.+_t$/.test(identifier);
 		}
 		function objCTypes(identifier) {
-			return cTypes(identifier) || contains(basicObjCTypes, identifier);
+			return cTypes(identifier) || contains$1(basicObjCTypes, identifier);
 		}
 		var cBlockKeywords = "case do else for if switch while struct enum union";
 		var cDefKeywords = "struct enum union";
@@ -49863,7 +44216,7 @@ window.__ModuleLoader__.load({
 				return "keyword";
 			}
 		}
-		function call(stream, state) {
+		function call$1(stream, state) {
 			if (stream.match(/^\+([-\w]+)/)) {
 				if (!stream.match(/^\( *[-\w]+ *=/, false)) {
 					state.javaScriptArguments = true;
@@ -50041,7 +44394,7 @@ window.__ModuleLoader__.load({
 			return state.copy();
 		}
 		function nextToken(stream, state) {
-			var tok = restOfLine(stream, state) || interpolationContinued(stream, state) || includeFilteredContinued(stream, state) || eachContinued(stream, state) || attrsContinued(stream, state) || javaScript(stream, state) || javaScriptArguments(stream, state) || callArguments(stream, state) || yieldStatement(stream) || doctype(stream) || interpolation(stream, state) || caseStatement(stream, state) || when(stream, state) || defaultStatement(stream) || extendsStatement(stream, state) || append(stream, state) || prepend(stream, state) || block(stream, state) || include(stream, state) || includeFiltered(stream, state) || mixin(stream, state) || call(stream, state) || conditional(stream, state) || each(stream, state) || whileStatement(stream, state) || tag(stream, state) || filter(stream, state) || code(stream, state) || id(stream) || className(stream) || attrs(stream, state) || attributesBlock(stream, state) || indent$1(stream) || text(stream, state) || comment(stream, state) || colon(stream) || dot(stream, state) || fail(stream);
+			var tok = restOfLine(stream, state) || interpolationContinued(stream, state) || includeFilteredContinued(stream, state) || eachContinued(stream, state) || attrsContinued(stream, state) || javaScript(stream, state) || javaScriptArguments(stream, state) || callArguments(stream, state) || yieldStatement(stream) || doctype(stream) || interpolation(stream, state) || caseStatement(stream, state) || when(stream, state) || defaultStatement(stream) || extendsStatement(stream, state) || append(stream, state) || prepend(stream, state) || block(stream, state) || include(stream, state) || includeFiltered(stream, state) || mixin(stream, state) || call$1(stream, state) || conditional(stream, state) || each(stream, state) || whileStatement(stream, state) || tag(stream, state) || filter(stream, state) || code(stream, state) || id(stream) || className(stream) || attrs(stream, state) || attributesBlock(stream, state) || indent$1(stream) || text(stream, state) || comment(stream, state) || colon(stream) || dot(stream, state) || fail(stream);
 			return tok === true ? null : tok;
 		}
 		const pug = {
@@ -52903,7 +47256,7 @@ window.__ModuleLoader__.load({
 		const stex = mkStex(false);
 		mkStex(true);
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/code-viewer-lang.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/code-viewer-lang.js
 		/**
 		* 源码态语法高亮：扩展名 → CodeMirror 语言映射。
 		*
@@ -53056,7 +47409,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/code-viewer-theme.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/code-viewer-theme.js
 		/**
 		* CodeMirror 6 主题（DSH 共享底座版）。
 		*
@@ -53460,10 +47813,10 @@ window.__ModuleLoader__.load({
 			];
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/code-viewer-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/code-viewer-css.generated.js
 		const CODE_VIEWER_CSS = "/* CodeViewer（只读 CodeMirror 查看器）样式。类名固定 dshpc-cv*；颜色吃 --dshpc-* token，\n   深色由 design 的 token 深色段自动生效（不写死颜色值）。 */\n.dshpc-cv{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;}\n/* 复制钮复用核心 IconButton（variant=outline / size=md）：盒型、描边、圆角（已统一 md）、底色、hover 全由核心提供；\n   这里只管「绝对定位 + 默认隐藏、hover/聚焦才显」（overlay 浮在编辑器右上角）。 */\n.dshpc-cv__copy{position:absolute;top:6px;right:6px;z-index:5;opacity:0;}\n.dshpc-cv:hover .dshpc-cv__copy,.dshpc-cv__copy:focus-visible{opacity:1;}\n.dshpc-cv__copy svg{width:16px;height:16px;}\n.dshpc-cv__editor{flex:1 1 auto;min-height:0;overflow:hidden;}\n.dshpc-cv__editor .cm-editor{height:100%;}\n/* 透明右边框 = 滚动条与右缘隔 1px（口径见 style.md §滚动条让位）。\n   只给右边：给底边会改 scroller 高度，CodeMirror 的测量循环会多算一条横滚条。 */\n.dshpc-cv__editor .cm-scroller{overflow:auto;border-right:1px solid transparent}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/ui/CodeViewer.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/CodeViewer.js
 		/**
 		* CodeViewer —— 只读源码查看器（替代官方 Shiki CodeBlock），DSH 共享底座版。
 		*
@@ -53556,7 +47909,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/utils/number.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/utils/number.js
 		/**
 		* 字节数 → 人话（`12 KB` / `3.4 MB`）。
 		* 0 与负数 ⇒ `—`（不显示「0 B」这种假精确）。
@@ -53579,7 +47932,7 @@ window.__ModuleLoader__.load({
 			return `${value >= 10 ? String(Math.round(value)) : value.toFixed(1)} ${units[unit]}`;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/preview/md-labels.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/preview/md-labels.js
 		function markdownLabels() {
 			return {
 				code: {
@@ -53595,7 +47948,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/preview/TextPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/preview/TextPreview.js
 		function TextPreview(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const tt = props.translate ?? t$2;
@@ -53612,7 +47965,7 @@ window.__ModuleLoader__.load({
 				abortRef.current = controller;
 				setLoading(true);
 				try {
-					const parsed = textPageOf(await props.workspaceFiles.read(props.sessionId, props.path, offset > 0 ? { offset } : {}, controller.signal));
+					const parsed = textPageOf(await props.files.read(props.path, offset > 0 ? { offset } : {}, controller.signal));
 					if (controller.signal.aborted) return;
 					if (parsed === null) {
 						console.warn("[dsh-plugin-core:explorer] read 返回体无法解析为文本页", props.path);
@@ -53643,8 +47996,7 @@ window.__ModuleLoader__.load({
 					if (!controller.signal.aborted) setLoading(false);
 				}
 			}, [
-				props.workspaceFiles,
-				props.sessionId,
+				props.files,
 				props.path,
 				props.maxBytes
 			]);
@@ -53667,7 +48019,7 @@ window.__ModuleLoader__.load({
 				style: {
 					display: "flex",
 					flexDirection: "column",
-					...rendered ? { padding: "12px 14px" } : {}
+					...rendered ? { padding: "var(--dshpc-space-3)" } : {}
 				}
 			}, truncated ? (0, react$1.createElement)("div", { className: "dshpc-fb__banner" }, tt("previewTruncated", { n: formatBytes(props.maxBytes ?? 0) })) : null, rendered ? (0, react$1.createElement)(official_exports.MarkdownText, {
 				text,
@@ -53688,7 +48040,7 @@ window.__ModuleLoader__.load({
 			}, tt("previewLoadMore"))) : null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/preview/HtmlPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/preview/HtmlPreview.js
 		/** 官方 CSP 原文（documentpreview lib/client.js 同款，不多开不少关）。 */
 		const HTML_CSP = "default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:";
 		/** 禁用标签（官方清单）。 */
@@ -53745,7 +48097,7 @@ window.__ModuleLoader__.load({
 				const controller = new AbortController();
 				setDoc(null);
 				setFailed(null);
-				props.workspaceFiles.readBytes(props.sessionId, props.path, {}, controller.signal).then((res) => {
+				props.files.readBytes(props.path, {}, controller.signal).then((res) => {
 					if (controller.signal.aborted) return;
 					const data = bytesOf(res);
 					if (data === null) {
@@ -53771,14 +48123,12 @@ window.__ModuleLoader__.load({
 					controller.abort();
 				};
 			}, [
-				props.workspaceFiles,
-				props.sessionId,
+				props.files,
 				props.path,
 				props.sourceView
 			]);
 			if (props.sourceView) return (0, react$1.createElement)(TextPreview, {
-				workspaceFiles: props.workspaceFiles,
-				sessionId: props.sessionId,
+				files: props.files,
 				path: props.path,
 				markdown: false,
 				sourceView: true,
@@ -53795,7 +48145,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/preview/OfficePreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/preview/OfficePreview.js
 		function OfficePreview(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const tt = props.translate ?? t$2;
@@ -53808,7 +48158,12 @@ window.__ModuleLoader__.load({
 				setFailed(null);
 				const face = props.officeToPdf;
 				if (face === null) return;
-				face.render(props.sessionId, props.path, "foreground", controller.signal).then((res) => {
+				const sessionId = props.sessionId ?? pickWorkspaceAnchor(workspaceList.getSnapshot())?.sessionId;
+				if (sessionId === void 0 || sessionId === "") {
+					setFailed({ key: "previewOfficeNoSession" });
+					return;
+				}
+				face.render(sessionId, props.path, "foreground", controller.signal).then((res) => {
 					if (controller.signal.aborted) return;
 					const data = bytesOf(res);
 					if (data === null || "failed" in data) {
@@ -53841,7 +48196,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/preview/index.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/preview/index.js
 		function FilePreview(props) {
 			ensureControls();
 			const tt = props.translate ?? t$2;
@@ -53850,8 +48205,7 @@ window.__ModuleLoader__.load({
 			switch (info.kind) {
 				case "image":
 				case "pdf": return (0, react$1.createElement)(BytesPreview, {
-					workspaceFiles: props.workspaceFiles,
-					sessionId: props.sessionId,
+					files: props.files,
 					path: props.path,
 					kind: info.kind,
 					mime: info.mime ?? "application/octet-stream",
@@ -53864,16 +48218,14 @@ window.__ModuleLoader__.load({
 					translate: tt
 				});
 				case "html": return (0, react$1.createElement)(HtmlPreview, {
-					workspaceFiles: props.workspaceFiles,
-					sessionId: props.sessionId,
+					files: props.files,
 					path: props.path,
 					sourceView,
 					translate: tt
 				});
 				case "md":
 				case "text": return (0, react$1.createElement)(TextPreview, {
-					workspaceFiles: props.workspaceFiles,
-					sessionId: props.sessionId,
+					files: props.files,
 					path: props.path,
 					markdown: info.kind === "md",
 					sourceView,
@@ -53883,22 +48235,46 @@ window.__ModuleLoader__.load({
 			return null;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/FileBrowser.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/crumbs-menu.js
 		/**
-		* ▾ 下拉条目构造（**picker 与 dock 共用同一段代码**，差别只在入参——源实现用户 2026-09-29
-		* 点名提炼，严禁两处各写一份）：
+		* ▾ 选层下拉的**条目构造**（picker 与 dock 共用同一段代码，差别只在入参 —— 源实现用户 2026-09-29
+		* 点名提炼，严禁两处各写一份）。
+		*
+		*  - 根层常驻最上面：POSIX 一条「根目录」，Windows 是一排盘符（用户 2026-11-03）；
 		*  - 当前工作区排第一（打开文件夹图标 + 加粗），**其下路径紧跟**（每层一个右箭头位缩进），
-		*   再列其他工作区（关合图标 + 灰）——「打开哪个就跟在哪个下面」；点当前工作区 = 回到其根目录。
+		*    再列其他工作区（关合图标 + 灰）—— 「打开哪个就跟在哪个下面」；点当前工作区 = 回到其根目录；
 		*  - 当前工作区未知（rootName 空或不在清单）时路径段置顶、全部工作区按「其他」罗列；
-		*  - workspaces 不传 = 不显示工作区段（根无箭头、其下逐层缩进）。
+		*  - workspaces 为空（宿主还没给工作区快照）= 只出路径段（根无箭头、其下逐层缩进）。
 		*
 		* 条目是**自写浮层**（核心没有「带缩进的选择层菜单」这类控件 ⇒ 按兄弟项目
-		* `dsh-task-dispatch-table` 的 `.dsh-tdt-sv-crumbs-menu*` 逐条照抄间距）：
-		* backdrop + 菜单本体 + `-item`（4px 8px / 最大宽 280 / 超出滚动 / 空态）。
+		* dsh-task-dispatch-table 的 .dsh-tdt-sv-crumbs-menu* 逐条照抄间距）：backdrop + 菜单本体 +
+		* `-item`（4px 8px / 最大宽 280 / 超出滚动 / 空态）。
+		*
+		* 2026-11-03 从 FileBrowser.ts 拆出来（原来单文件 1000+ 行、五个职责）：这里只有「菜单里放什么」，
+		* 浮层外壳与表皮在 FileBrowser（`panel.css` 的 menu 档），互不掺。
 		*/
+		/** 菜单条目（根层 → 当前工作区 + 其下路径 → 其他工作区）。 */
 		function crumbsMenuEntries(params) {
-			const { workspaces, rootName, rootFallbackLabel, crumbs, onPickWorkspace, onLoadDir } = params;
+			ensureComponentStyles("explorer", EXPLORER_CSS);
+			const { workspaces, roots, rootName, rootFallbackLabel, crumbs, onPickWorkspace, onLoadDir } = params;
 			const out = [];
+			for (const root of roots) out.push((0, react$1.createElement)("button", {
+				key: `root:${root.path}`,
+				type: "button",
+				role: "menuitem",
+				className: "dshpc-fb__menu-item",
+				style: {
+					paddingLeft: 8,
+					display: "flex",
+					alignItems: "center",
+					gap: "6px"
+				},
+				title: root.path,
+				onClick: () => onLoadDir?.(root.path)
+			}, (0, react$1.createElement)("span", {
+				className: "dshpc-fb__menu-icon",
+				style: { color: "var(--dshpc-fg-2)" }
+			}, (0, react$1.createElement)(official_exports.IconFolderCloseRegular, { size: 13 })), (0, react$1.createElement)("span", { className: "dshpc-fb__menu-label" }, root.label)));
 			const wsEntry = (ws, current) => (0, react$1.createElement)("button", {
 				key: `ws:${ws}`,
 				type: "button",
@@ -53937,14 +48313,15 @@ window.__ModuleLoader__.load({
 				className: "dshpc-fb__menu-chev-slot",
 				"aria-hidden": true
 			})), (0, react$1.createElement)("span", { className: "dshpc-fb__menu-chev" }, (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, { size: 11 }))) : null, (0, react$1.createElement)("span", { className: "dshpc-fb__menu-label" }, crumb.label));
-			if (workspaces === void 0) {
+			if (workspaces.length === 0) {
 				if (crumbs.length === 0) return [(0, react$1.createElement)("div", {
 					key: "empty",
 					className: "dshpc-fb__menu-empty"
 				}, rootFallbackLabel)];
 				return crumbs.map((crumb, index) => pathEntry(crumb, index === 0 ? 0 : index - 1, index !== 0));
 			}
-			const segments = rootName !== "" && crumbs.length > 0 && crumbs[0]?.path === "" ? crumbs.slice(1) : crumbs;
+			const head = crumbs[0];
+			const segments = head !== void 0 && (head.path === "" || roots.some((root) => root.path === head.path)) ? crumbs.slice(1) : crumbs;
 			if (rootName !== "" && workspaces.includes(rootName)) {
 				out.push(wsEntry(rootName, true));
 				segments.forEach((crumb, i) => {
@@ -53959,14 +48336,311 @@ window.__ModuleLoader__.load({
 			}
 			return out;
 		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/crumb-nav.js
+		/**
+		* 文件浏览器的第一排：▾ 选层 + 面包屑 + 右侧动作（选择 / ✕）。
+		*
+		* 2026-11-03 从 `FileBrowser.ts` 拆出（那里原来五个职责挤在 1000 行里）：
+		* 本模块只负责「怎么画」，状态、测量与导航全在调用方。
+		* 两个变体：
+		*  - {@link CrumbNav}：正常形态（有 ▾ + 可点面包屑）；
+		*  - {@link PlainNav}：越界形态（整条换成只读完整路径，不给会失败的入口）。
+		*/
+		/** 一段面包屑（核心 ghost 钮：无底无边；度量条与可见态必须逐字同构）。 */
+		function crumbButton(label, onClick, current = false) {
+			return (0, react$1.createElement)(Button$1, {
+				variant: "ghost",
+				size: "sm",
+				className: `dshpc-fb__crumb${current ? " dshpc-fb__crumb--current" : ""}`,
+				disabled: onClick === void 0,
+				tabIndex: onClick === void 0 ? -1 : 0,
+				onClick
+			}, (0, react$1.createElement)(MarqueeText, {
+				text: label,
+				className: "dshpc-fb__crumb-mq"
+			}));
+		}
+		function actions(pickNow, tt, onClose) {
+			return (0, react$1.createElement)("div", { className: "dshpc-fb__actions" }, pickNow, onClose === void 0 ? null : (0, react$1.createElement)(PanelClose, {
+				label: tt("previewClose"),
+				onClick: onClose
+			}));
+		}
+		function CrumbNav(props) {
+			ensureComponentStyles("explorer", EXPLORER_CSS);
+			const { translate: tt, landing, crumbs, overflow, menuItems, menuOpen, onToggleMenu, onCloseMenu, onLoadDir, pickNow, onClose, regionRef, measureRef } = props;
+			const visibleCrumbs = overflow ? crumbButton(crumbs.length > 0 ? crumbs[crumbs.length - 1]?.label ?? tt("explorerRootName") : tt("explorerRootName"), void 0, true) : crumbs.length === 0 ? crumbButton(tt("explorerRootName"), void 0, true) : crumbs.map((crumb, index) => (0, react$1.createElement)(react$1.Fragment, { key: crumb.path }, index > 0 ? (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, {
+				className: "dshpc-fb__crumb-sep",
+				size: 12
+			}) : null, crumbButton(crumb.label, () => onLoadDir(crumb.path))));
+			return (0, react$1.createElement)("nav", {
+				className: "dshpc-fb__bar",
+				"aria-label": tt("explorerCrumbsAria")
+			}, (0, react$1.createElement)("div", { className: "dshpc-fb__menu-wrap" }, (0, react$1.createElement)(IconButton$1, {
+				variant: "plain",
+				size: "md",
+				icon: (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, { size: 14 }),
+				label: tt("explorerLevels"),
+				"aria-expanded": menuOpen,
+				onClick: onToggleMenu
+			}), menuOpen ? (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("div", {
+				className: "dshpc-fb__crumbs-backdrop",
+				onClick: onCloseMenu
+			}), (0, react$1.createElement)("div", {
+				className: "dshpc-panel dshpc-panel--menu dshpc-fb__crumbs-menu",
+				role: "menu"
+			}, menuItems)) : null), landing ? (0, react$1.createElement)("div", { className: "dshpc-fb__crumbs" }) : (0, react$1.createElement)("div", {
+				ref: regionRef,
+				className: "dshpc-fb__crumbs"
+			}, (0, react$1.createElement)("span", {
+				ref: measureRef,
+				className: "dshpc-fb__crumbs-measure",
+				"aria-hidden": true
+			}, crumbs.length === 0 ? crumbButton(tt("explorerRootName")) : crumbs.map((crumb, index) => (0, react$1.createElement)(react$1.Fragment, { key: crumb.path }, index > 0 ? (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, {
+				className: "dshpc-fb__crumb-sep",
+				size: 12
+			}) : null, crumbButton(crumb.label)))), visibleCrumbs), actions(pickNow, tt, onClose));
+		}
+		/** 越界（工作区外）：第一排整条换成只读完整路径，不给任何会失败的入口。 */
+		function PlainNav(props) {
+			ensureComponentStyles("explorer", EXPLORER_CSS);
+			const { translate: tt, path, pickNow, onClose } = props;
+			return (0, react$1.createElement)("nav", {
+				className: "dshpc-fb__bar",
+				"aria-label": tt("explorerCrumbsAria")
+			}, (0, react$1.createElement)(MarqueeText, {
+				text: path,
+				title: path,
+				className: "dshpc-fb__bar-plain",
+				style: {
+					flex: "1 1 auto",
+					minWidth: 0
+				}
+			}), actions(pickNow, tt, onClose));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/landing.js
+		/**
+		* 落地页主体（picker 刚打开、还没进任何目录时的那张表）：上面一排根层（「根目录」或盘符），
+		* 下面全部工作区。行 = 进去，行尾钮 = 直接选这个目录。
+		*
+		* 2026-11-03 从 `FileBrowser.ts` 拆出：这里只有「怎么画」，状态与取数全在调用方。
+		*/
+		function LandingBody(props) {
+			ensureComponentStyles("explorer", EXPLORER_CSS);
+			const { translate: tt, roots, anchors, pickable, onOpen, onPickDir } = props;
+			const row = (key, label, target) => (0, react$1.createElement)("div", {
+				key,
+				className: "dshpc-fb__row",
+				role: "button",
+				tabIndex: 0,
+				onClick: () => onOpen(target),
+				onKeyDown: (event) => {
+					if (event.key === "Enter" || event.key === " ") onOpen(target);
+				}
+			}, (0, react$1.createElement)("span", { className: "dshpc-fb__row-icon" }, (0, react$1.createElement)(official_exports.IconFolderCloseRegular, { size: 18 })), (0, react$1.createElement)("span", { className: "dshpc-fb__row-name" }, label), pickable ? (0, react$1.createElement)(Button$1, {
+				variant: "outline",
+				size: "sm",
+				className: "dshpc-fb__row-act",
+				"aria-label": tt("explorerPickDirAria"),
+				onClick: (event) => {
+					event.stopPropagation();
+					onPickDir(target);
+				}
+			}, tt("explorerPickDir")) : null);
+			return (0, react$1.createElement)("div", { className: "dshpc-fb__tree" }, roots.map((root) => row(`root:${root.path}`, root.label, root.path)), anchors.filter((item) => item.path !== void 0 && item.path !== "").map((item) => row(`ws:${item.title}`, item.title, item.path)));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/tooltip.js
+		let renderer;
+		/** 注入官方 Tooltip（插件启动时调一次；传 undefined 撤销，回到自绘降级）。 */
+		function setTooltipRenderer(fn) {
+			renderer = fn;
+		}
+		/** 当前注入的 renderer；未注入返回 undefined（FieldHint 据此走降级路径）。 */
+		function getTooltipRenderer() {
+			return renderer;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Segmented.js
+		/**
+		* 角标 / 计数要不要显示，返回要显示的文本。
+		* 数字 ≤0 是「没东西可数」的老口径；字符串（`'1K'` / `'99+'`）由调用方决定，原样显示，空串不显示。
+		*/
+		function countText(value) {
+			if (value === void 0) return null;
+			if (typeof value === "number") return value > 0 ? String(value) : null;
+			return value === "" ? null : value;
+		}
+		/**
+		* 渲染一个分段控件（单选 / 多选同体）。
+		*
+		* @param props 见 {@link SegmentedProps}。
+		* @returns 分段控件元素。
+		*/
+		function Segmented$1(props) {
+			ensureComponentStyles("segmented", SEGMENTED_CSS);
+			ensureComponentStyles("segmented", SEGMENTED_CSS);
+			const size = props.size ?? "lg";
+			const multiple = props.multiple === true;
+			const value = props.value;
+			const onChange = props.onChange;
+			const sliding = !multiple && props.items.length > 1;
+			const rootRef = (0, react$1.useRef)(null);
+			const [thumb, setThumb] = (0, react$1.useState)(null);
+			const measure = (0, react$1.useCallback)(() => {
+				const sel = rootRef.current?.querySelector(".dshpc-seg__item[aria-pressed=\"true\"]");
+				if (sel === void 0 || sel === null) {
+					setThumb(null);
+					return;
+				}
+				const next = {
+					left: sel.offsetLeft,
+					top: sel.offsetTop,
+					width: sel.offsetWidth,
+					height: sel.offsetHeight
+				};
+				setThumb((cur) => cur !== null && cur.left === next.left && cur.top === next.top && cur.width === next.width && cur.height === next.height ? cur : next);
+			}, []);
+			(0, react$1.useLayoutEffect)(() => {
+				if (!sliding) {
+					setThumb(null);
+					return;
+				}
+				measure();
+				const root = rootRef.current;
+				if (root === null || typeof ResizeObserver === "undefined") return;
+				const ro = new ResizeObserver(measure);
+				ro.observe(root);
+				return () => ro.disconnect();
+			}, [
+				sliding,
+				measure,
+				value,
+				size,
+				props.items,
+				props.bordered,
+				props.block
+			]);
+			const renderer = getTooltipRenderer();
+			const tone = props.tone;
+			const toneClass = typeof tone === "string" ? ` dshpc-seg--tone-${tone}` : "";
+			const toneStyle = tone !== void 0 && typeof tone !== "string" ? {
+				"--seg-thumb": tone.bg,
+				"--seg-on": tone.fg
+			} : void 0;
+			return (0, react$1.createElement)("div", {
+				role: "group",
+				"aria-label": props.label,
+				id: props.id,
+				ref: rootRef,
+				className: `dshpc-seg dshpc-seg--${size}${sliding ? " dshpc-seg--slide" : ""}${props.block === true ? " dshpc-seg--block" : ""}${props.bordered === true ? " dshpc-seg--bordered" : ""}${toneClass}${props.className !== void 0 ? ` ${props.className}` : ""}`,
+				style: toneStyle === void 0 ? props.style : {
+					...toneStyle,
+					...props.style
+				}
+			}, [sliding && thumb !== null ? (0, react$1.createElement)("span", {
+				key: "__thumb__",
+				className: "dshpc-seg__thumb",
+				"aria-hidden": true,
+				style: {
+					left: `${String(thumb.left)}px`,
+					top: `${String(thumb.top)}px`,
+					width: `${String(thumb.width)}px`,
+					height: `${String(thumb.height)}px`
+				}
+			}) : null, ...props.items.map((item) => {
+				const on = multiple ? value.includes(item.value) : value === item.value;
+				const disabled = item.disabled === true || props.disabled === true;
+				const handle = () => {
+					if (disabled) return;
+					if (multiple) {
+						const arr = value;
+						const next = arr.includes(item.value) ? arr.filter((v) => v !== item.value) : [...arr, item.value];
+						onChange(next);
+					} else onChange(item.value);
+				};
+				const count = countText(item.count);
+				const badge = countText(item.badge);
+				const hasLabel = item.label !== void 0 && item.label !== null && item.label !== "";
+				const hasIcon = item.icon !== void 0 && item.icon !== null;
+				const iconOnly = hasIcon && !hasLabel && count === null && badge === null;
+				const itemButton = (0, react$1.createElement)("button", {
+					key: item.value,
+					type: "button",
+					className: `dshpc-seg__item${iconOnly ? " dshpc-seg__item--icon-only" : ""}`,
+					"aria-pressed": on,
+					"aria-label": item.ariaLabel ?? (iconOnly ? item.tooltip : void 0),
+					disabled,
+					onClick: handle
+				}, hasIcon ? (0, react$1.createElement)("span", { className: "dshpc-seg__icon" }, item.icon) : null, hasLabel ? item.label : null, count === null ? null : (0, react$1.createElement)("span", { className: "dshpc-seg__count" }, count), badge === null ? null : (0, react$1.createElement)("span", { className: "dshpc-seg__badge" }, badge));
+				if (item.tooltip !== void 0 && renderer !== void 0) return renderer({
+					label: item.tooltip,
+					side: "top",
+					children: itemButton
+				});
+				return itemButton;
+			})]);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/preview-title-bar.js
+		/**
+		* 预览态的第二排：文件名 + 渲染⇄源码切换 / 复制路径 / 刷新。
+		*
+		* 2026-11-03 从 `FileBrowser.ts` 拆出。档位照兄弟项目调用点：Segmented `sm` + 图标钮 `md`
+		* （核心 Segmented 高度由 CSS 定，不随档变）。
+		*/
+		function PreviewTitleBar(props) {
+			ensureComponentStyles("explorer", EXPLORER_CSS);
+			const { translate: tt, path, switchable, isMarkdown, sourceView, onSourceViewChange, copied, onCopyPath, onReload } = props;
+			return (0, react$1.createElement)("div", { className: "dshpc-fb__title" }, (0, react$1.createElement)(MarqueeText, {
+				text: baseNameOfPath(path),
+				title: path,
+				className: "dshpc-fb__title-inner",
+				style: {
+					flex: "1 1 auto",
+					minWidth: 0
+				}
+			}), (0, react$1.createElement)("div", { className: "dshpc-fb__actions" }, switchable ? (0, react$1.createElement)(Segmented$1, {
+				size: "sm",
+				label: isMarkdown ? tt("previewMdSwitchAria") : tt("previewHtmlSwitchAria"),
+				value: sourceView ? "source" : "render",
+				items: [{
+					value: "render",
+					label: tt("previewRender")
+				}, {
+					value: "source",
+					label: tt("previewSource")
+				}],
+				onChange: (next) => onSourceViewChange(next === "source")
+			}) : null, (0, react$1.createElement)(IconButton$1, {
+				variant: "plain",
+				size: "md",
+				icon: copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular, { size: 14 }) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular, { size: 14 }),
+				label: tt("previewCopyPath"),
+				onClick: onCopyPath
+			}), (0, react$1.createElement)(IconButton$1, {
+				variant: "plain",
+				size: "md",
+				icon: (0, react$1.createElement)(official_exports.IconRefreshOutlineRegular, { size: 14 }),
+				label: tt("previewRefresh"),
+				onClick: onReload
+			})));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/FileBrowser.js
+		/**
+		* 「根」在 POSIX 上的落点 `/`。Windows 没有这一个根 —— 根层是盘符清单，由宿主 `op:'roots'` 给出
+		* （见下面 `roots` 状态），本常量只在 POSIX / 探不到盘符时用。
+		*/
+		const FS_ROOT = "/";
 		/** 目录浏览器面板。详见 {@link FileBrowserProps}。 */
 		function FileBrowser(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
+			ensureComponentStyles("panel", PANEL_CSS);
 			const tt = props.translate ?? t$2;
 			const picker = props.picker === true;
-			const cacheRef = (0, react$1.useRef)(null);
-			if (cacheRef.current === null) cacheRef.current = props.rootCache ?? createRootCache();
-			const rootCache = props.rootCache ?? cacheRef.current;
 			const [mode, setMode] = (0, react$1.useState)("loading");
 			const [dir, setDir] = (0, react$1.useState)("");
 			const [listing, setListing] = (0, react$1.useState)(null);
@@ -53982,15 +48656,16 @@ window.__ModuleLoader__.load({
 			const [copied, setCopied] = (0, react$1.useState)(false);
 			const [openDirs, setOpenDirs] = (0, react$1.useState)(/* @__PURE__ */ new Set());
 			const [childCache, setChildCache] = (0, react$1.useState)({});
-			const [rootNonce, setRootNonce] = (0, react$1.useState)(0);
 			const [outside, setOutside] = (0, react$1.useState)(false);
+			const [landing, setLanding] = (0, react$1.useState)(props.picker === true && props.path === "" && props.sessionId === void 0);
+			const landingRef = (0, react$1.useRef)(landing);
+			(0, react$1.useLayoutEffect)(() => {
+				landingRef.current = landing;
+			}, [landing]);
 			const revision = props.revision ?? 0;
 			const listGateRef = (0, react$1.useRef)(null);
 			if (listGateRef.current === null) listGateRef.current = createRequestGate();
 			const listGate = listGateRef.current;
-			const rootGateRef = (0, react$1.useRef)(null);
-			if (rootGateRef.current === null) rootGateRef.current = createRequestGate();
-			const rootGate = rootGateRef.current;
 			const childAbortsRef = (0, react$1.useRef)(/* @__PURE__ */ new Map());
 			const abortChildren = (0, react$1.useCallback)(() => {
 				for (const controller of childAbortsRef.current.values()) controller.abort();
@@ -54004,8 +48679,43 @@ window.__ModuleLoader__.load({
 			}, [dir, listing]);
 			const hostWorkspaces = (0, react$1.useSyncExternalStore)(workspaceList.subscribe, workspaceList.getSnapshot);
 			const anchors = props.workspaceAnchors ?? hostWorkspaces;
-			const anchorMatch = (0, react$1.useMemo)(() => workspaceAnchorForPath(props.path, anchors), [props.path, anchors]);
-			const listSessionId = anchorMatch?.sessionId ?? props.sessionId;
+			const [roots, setRoots] = (0, react$1.useState)([FS_ROOT]);
+			(0, react$1.useEffect)(() => {
+				const ask = props.files.roots;
+				if (ask === void 0) return;
+				let alive = true;
+				Promise.resolve().then(() => ask.call(props.files)).then((list) => {
+					if (!alive || list.length === 0) return;
+					setRoots((prev) => prev.length === list.length && prev.every((item, index) => item === list[index]) ? prev : list);
+				}).catch(() => {});
+				return () => {
+					alive = false;
+				};
+			}, [props.files]);
+			const anchorMatch = (0, react$1.useMemo)(() => workspaceOfPath(props.path, anchors), [props.path, anchors]);
+			/** 相对路径的基准目录（工作区根）：匹配出的工作区 > 调用方给的 > 无（只认绝对路径）。 */
+			const sessionAnchor = props.sessionId === void 0 ? null : anchors.find((item) => item.sessionIds?.includes(props.sessionId) === true) ?? null;
+			const rootBase = anchorMatch?.path ?? props.rootPath ?? sessionAnchor?.path ?? anchors.find((item) => item.path !== void 0)?.path;
+			/** 任意入参 → 绝对路径（FS 面只认绝对路径）。 */
+			const absOf = (0, react$1.useCallback)((p) => {
+				if (isAbsoluteish(p)) return normalizePath(p);
+				if (rootBase === void 0 || rootBase === "") return p === "" ? FS_ROOT : p;
+				return p === "" ? normalizePath(rootBase) : normalizePath(`${rootBase}/${p.replace(/^\/+/, "")}`);
+			}, [rootBase]);
+			/** 面板回传（绝对路径 + 工作区归属）。 */
+			const toPicked = (0, react$1.useCallback)((p, isDir) => {
+				const abs = absOf(p);
+				const owner = workspaceOfPath(abs, anchors);
+				return owner === null ? {
+					path: abs,
+					isDir
+				} : {
+					path: abs,
+					isDir,
+					workspaceRel: relativizeToDir(abs, owner.path ?? null),
+					workspace: owner.title
+				};
+			}, [absOf, anchors]);
 			/** 记一次 list 结果的"是否越界"（outside-workspace / not-found 均视为不可浏览）。 */
 			const noteOutside = (0, react$1.useCallback)((parsed) => {
 				if (parsed === null || parsed === void 0) return;
@@ -54020,14 +48730,15 @@ window.__ModuleLoader__.load({
 			const fetchDir = (0, react$1.useCallback)((targetDir) => {
 				const token = listGate.begin();
 				abortChildren();
-				setDir(targetDir);
+				const absTarget = absOf(targetDir);
+				setDir(absTarget);
 				setViewing(null);
 				setListErr(null);
 				setMenuOpen(false);
 				setMode("loading");
 				setOpenDirs(/* @__PURE__ */ new Set());
 				setChildCache({});
-				props.workspaceFiles.list(listSessionId, listPathOf(targetDir), token.signal).then((result) => {
+				props.files.list(absTarget, token.signal).then((result) => {
 					if (!token.current()) return;
 					const parsed = listingOf(result);
 					noteOutside(parsed);
@@ -54051,25 +48762,23 @@ window.__ModuleLoader__.load({
 				});
 			}, [
 				abortChildren,
+				absOf,
 				listGate,
-				listSessionId,
 				noteOutside,
-				props.workspaceFiles
+				props.files
 			]);
 			/** 进入某目录；点到当前目录本身 = 重列本层（刷新）。 */
 			const loadDir = (0, react$1.useCallback)((targetDir) => {
-				if (targetDir === dir) {
-					fetchDir(targetDir);
-					return;
-				}
+				if (landingRef.current) setLanding(false);
 				fetchDir(targetDir);
-			}, [dir, fetchDir]);
+			}, [fetchDir]);
 			(0, react$1.useEffect)(() => {
+				if (landingRef.current) return;
 				const parent = dirnameOf(props.path);
 				const name = baseNameOfPath(props.path);
 				const knownFile = listingRef.current?.some((entry) => entry.name === name && entry.type === "file") === true;
 				if (props.path !== "" && dirRef.current !== "" && parent === dirRef.current && knownFile) {
-					setViewing(props.path);
+					setViewing(absOf(props.path));
 					setMode("file");
 					setSourceView(false);
 					setReloadNonce((n) => n + 1);
@@ -54078,7 +48787,6 @@ window.__ModuleLoader__.load({
 					return;
 				}
 				const token = listGate.begin();
-				const rootToken = rootGate.begin();
 				abortChildren();
 				setMode("loading");
 				setListErr(null);
@@ -54088,66 +48796,23 @@ window.__ModuleLoader__.load({
 				setMenuOpen(false);
 				setOpenDirs(/* @__PURE__ */ new Set());
 				setChildCache({});
-				/** 补学工作区根（面包屑根名显示 + picker 相对化要用）：列目录 → 有文件就 stat 反推，没有就走有界 BFS。 */
-				const ensureRootLearned = (currentDir) => {
-					if (rootCache.get(listSessionId) !== void 0) return;
-					(async () => {
-						try {
-							const parsed = listingOf(await props.workspaceFiles.list(listSessionId, listPathOf(currentDir), rootToken.signal));
-							if (!rootToken.current() || parsed === null || isFailed(parsed)) return;
-							const stat = props.workspaceFiles.stat;
-							if (stat === void 0) return;
-							const rel = parsed.path;
-							const file = parsed.entries.find((entry) => entry.type === "file");
-							if (file !== void 0) {
-								const sub = rel === "" ? file.name : `${rel}/${file.name}`;
-								const abs = await stat(listSessionId, sub, rootToken.signal).catch(() => null);
-								if (!rootToken.current()) return;
-								const absPath = typeof abs?.absolutePath === "string" ? abs.absolutePath : null;
-								if (absPath !== null && learnRoot(rootCache, listSessionId, sub, absPath) !== null) {
-									setRootNonce((n) => n + 1);
-									return;
-								}
-							}
-							const found = await findAnyFileAbs(props.workspaceFiles, listSessionId, rel, rootToken.signal);
-							if (!rootToken.current()) return;
-							if (found !== null && learnRoot(rootCache, listSessionId, found.relativePath, found.absolutePath) !== null) setRootNonce((n) => n + 1);
-						} catch {}
-					})();
-				};
-				props.workspaceFiles.list(listSessionId, listPathOf(props.path), token.signal).then(async (result) => {
+				const entry = absOf(props.path);
+				props.files.list(entry, token.signal).then((result) => {
 					if (!token.current()) return;
 					const parsed = listingOf(result);
 					if (!isFailed(parsed) && parsed !== null) {
 						setOutside(false);
-						const absDir = await absolutizeDir(rootCache, props.workspaceFiles, listSessionId, props.path, parsed.path, parsed.entries, token.signal);
-						if (!token.current()) return;
-						setDir(absDir);
+						setDir(entry);
 						setListing(parsed.entries);
 						setTruncated(parsed.truncated);
 						setMode("dir");
-						ensureRootLearned(absDir);
 						return;
 					}
-					let parentDir = dirnameOf(props.path);
-					if (!isAbsoluteish(props.path)) {
-						const stat = props.workspaceFiles.stat;
-						if (stat !== void 0) try {
-							const res = await stat(listSessionId, props.path, token.signal);
-							if (!token.current()) return;
-							const abs = typeof res.absolutePath === "string" ? res.absolutePath : null;
-							if (abs !== null) {
-								parentDir = dirnameOf(abs);
-								learnRoot(rootCache, listSessionId, props.path, abs);
-							}
-						} catch {}
-					}
-					if (!token.current()) return;
+					const parentDir = dirnameOf(entry);
 					setDir(parentDir);
-					setViewing(props.path);
+					setViewing(entry);
 					setMode("file");
-					ensureRootLearned(parentDir);
-					props.workspaceFiles.list(listSessionId, listPathOf(parentDir), token.signal).then((pres) => {
+					props.files.list(parentDir, token.signal).then((pres) => {
 						if (!token.current()) return;
 						const pl = listingOf(pres);
 						noteOutside(pl);
@@ -54158,28 +48823,36 @@ window.__ModuleLoader__.load({
 					}).catch(() => {});
 				}).catch((error) => {
 					if (!token.current() || isAborted(token.signal, error)) return;
-					const parentDir = dirnameOf(props.path);
-					setDir(parentDir);
-					setViewing(props.path);
+					setDir(dirnameOf(entry));
+					setViewing(entry);
 					setMode("file");
-					ensureRootLearned(parentDir);
 				});
 				return () => {
 					listGate.abort();
-					rootGate.abort();
 				};
 			}, [
 				abortChildren,
+				absOf,
 				listGate,
-				listSessionId,
 				noteOutside,
-				props.workspaceFiles,
+				props.files,
 				props.path,
-				revision,
-				rootCache,
-				rootGate
+				revision
 			]);
 			(0, react$1.useEffect)(() => () => abortChildren(), [abortChildren]);
+			/** ▾ 里点别的工作区：调用方没接管就直接列该工作区根（不需要会话）。 */
+			const switchWorkspace = (0, react$1.useCallback)((name) => {
+				if (props.onSelectWorkspace !== void 0) {
+					props.onSelectWorkspace(name);
+					return;
+				}
+				const target = anchors.find((item) => item.title === name);
+				if (target?.path !== void 0) loadDir(target.path);
+			}, [
+				anchors,
+				loadDir,
+				props.onSelectWorkspace
+			]);
 			(0, react$1.useLayoutEffect)(() => {
 				const region = regionRef.current;
 				const measure = measureRef.current;
@@ -54196,7 +48869,6 @@ window.__ModuleLoader__.load({
 				viewing,
 				mode,
 				listing,
-				rootNonce,
 				outside
 			]);
 			const reload = (0, react$1.useCallback)(() => {
@@ -54213,7 +48885,7 @@ window.__ModuleLoader__.load({
 			const copyPath = (0, react$1.useCallback)(() => {
 				const target = viewing ?? dir;
 				if (target === "") return;
-				const rel = relativizeToRoot(rootCache, listSessionId, target);
+				const rel = relativizeToDir(target, rootBase ?? null);
 				(0, official_exports.writeClipboard)(rel).then((ok) => {
 					if (ok) {
 						setCopied(true);
@@ -54223,8 +48895,7 @@ window.__ModuleLoader__.load({
 			}, [
 				viewing,
 				dir,
-				rootCache,
-				listSessionId
+				rootBase
 			]);
 			/** 内联展开/收起某目录（点 ▸）：只切展开态，不导航；首次展开才拉子项。 */
 			const toggleDir = (0, react$1.useCallback)((path) => {
@@ -54242,7 +48913,7 @@ window.__ModuleLoader__.load({
 						...prev,
 						[path]: { status: "loading" }
 					}));
-					props.workspaceFiles.list(listSessionId, listPathOf(path), controller.signal).then((result) => {
+					props.files.list(absOf(path), controller.signal).then((result) => {
 						if (controller.signal.aborted) return;
 						const parsed = listingOf(result);
 						setChildCache((prev) => ({
@@ -54270,9 +48941,9 @@ window.__ModuleLoader__.load({
 					});
 				}
 			}, [
+				absOf,
 				childCache,
-				props.workspaceFiles,
-				listSessionId
+				props.files
 			]);
 			const extsOnly = picker && props.filter !== void 0 && props.filter.dirs !== true && (props.filter.exts?.length ?? 0) > 0;
 			/** 选择器里目录是否可选：不限 或 明说 dirs:true 才可选；扩展名过滤下不可选。 */
@@ -54285,7 +48956,7 @@ window.__ModuleLoader__.load({
 				if (!isDir) {
 					const pick = () => {
 						if (picker && props.onPick !== void 0) {
-							props.onPick(relativizeToRoot(rootCache, listSessionId, childPath), false);
+							props.onPick(toPicked(childPath, false));
 							return;
 						}
 						const parent = dirnameOf(childPath);
@@ -54326,7 +48997,7 @@ window.__ModuleLoader__.load({
 				const actThisDir = (event) => {
 					event.stopPropagation();
 					if (picker) {
-						if (!extsOnly && props.onPick !== void 0) props.onPick(relativizeToRoot(rootCache, listSessionId, childPath), true);
+						if (!extsOnly && props.onPick !== void 0) props.onPick(toPicked(childPath, true));
 						return;
 					}
 					loadDir(childPath);
@@ -54372,139 +49043,91 @@ window.__ModuleLoader__.load({
 				extsOnly,
 				props.filter,
 				props.onPick,
-				listSessionId,
-				rootCache,
+				toPicked,
 				dir,
 				loadDir,
 				tt
 			]);
-			const rootAbs = rootCache.get(listSessionId);
-			const rootLabel = anchorMatch?.title ?? props.rootName ?? (rootAbs !== void 0 ? baseNameOfPath(rootAbs.replace(/\/+$/, "")) : "");
-			const relDir = relativizeToRoot(rootCache, listSessionId, dir);
-			const rootPending = rootAbs === void 0 && dir !== "" && isAbsoluteish(dir);
-			const crumbs = [...rootLabel !== "" ? [{
+			const drives = roots.filter((root) => root !== FS_ROOT);
+			const rootRows = drives.length > 0 ? drives.map((path) => ({
+				label: path.replace(/\/+$/, ""),
+				path
+			})) : [{
+				label: tt("explorerRootDir"),
+				path: FS_ROOT
+			}];
+			const owner = workspaceOfPath(dir, anchors);
+			const rootLabel = owner?.title ?? "";
+			const crumbs = owner === null ? /^[a-zA-Z]:/.test(normalizePath(dir)) ? crumbsOfDir(dir) : [{
+				label: rootRows[0]?.label ?? tt("explorerRootDir"),
+				path: FS_ROOT
+			}, ...crumbsOfDir(dir)] : [{
 				label: rootLabel,
 				path: ""
-			}] : [], ...rootPending ? [{
-				label: baseNameOfPath(dir),
-				path: dir
-			}] : crumbsOfDir(relDir)];
+			}, ...crumbsOfDir(relativizeToDir(dir, owner.path ?? null))];
 			const viewingIsMd = viewing !== null && /\.(md|markdown)$/i.test(viewing);
 			const viewingIsHtml = viewing !== null && /\.(html|htm)$/i.test(viewing);
 			const switchable = viewingIsMd || viewingIsHtml;
 			const menuItems = crumbsMenuEntries({
-				workspaces: props.workspaces,
+				workspaces: props.workspaces ?? anchors.map((item) => item.title),
+				roots: rootRows,
 				rootName: rootLabel,
 				rootFallbackLabel: tt("explorerRootName"),
 				crumbs,
-				onPickWorkspace: props.onSelectWorkspace,
+				onPickWorkspace: switchWorkspace,
 				onLoadDir: loadDir
 			});
-			/** 一段面包屑（核心 ghost 钮：无底无边；度量条与可见态必须逐字同构）。 */
-			const crumbButton = (label, onClick, current = false) => (0, react$1.createElement)(Button$1, {
-				variant: "ghost",
+			const pickNow = picker && props.onPick !== void 0 && !landing && dirPickable && dir !== "" ? (0, react$1.createElement)(Button$1, {
+				variant: "outline",
 				size: "sm",
-				className: `dshpc-fb__crumb${current ? " dshpc-fb__crumb--current" : ""}`,
-				disabled: onClick === void 0,
-				tabIndex: onClick === void 0 ? -1 : 0,
-				onClick
-			}, (0, react$1.createElement)(MarqueeText, {
-				text: label,
-				className: "dshpc-fb__crumb-mq"
-			}));
-			const crumbBar = (0, react$1.createElement)("nav", {
-				className: "dshpc-fb__bar",
-				"aria-label": tt("explorerCrumbsAria")
-			}, (0, react$1.createElement)("div", { className: "dshpc-fb__menu-wrap" }, (0, react$1.createElement)(IconButton$1, {
-				variant: "plain",
-				size: "md",
-				icon: (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, { size: 14 }),
-				label: tt("explorerLevels"),
-				"aria-expanded": menuOpen,
-				onClick: () => setMenuOpen((v) => !v)
-			}), menuOpen ? (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("div", {
-				className: "dshpc-fb__crumbs-backdrop",
-				onClick: () => setMenuOpen(false)
-			}), (0, react$1.createElement)("div", {
-				className: "dshpc-fb__crumbs-menu",
-				role: "menu"
-			}, menuItems)) : null), (0, react$1.createElement)("div", {
-				ref: regionRef,
-				className: "dshpc-fb__crumbs"
-			}, (0, react$1.createElement)("span", {
-				ref: measureRef,
-				className: "dshpc-fb__crumbs-measure",
-				"aria-hidden": true
-			}, crumbs.length === 0 ? crumbButton(tt("explorerRootName")) : crumbs.map((crumb, index) => (0, react$1.createElement)(react$1.Fragment, { key: crumb.path }, index > 0 ? (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, {
-				className: "dshpc-fb__crumb-sep",
-				size: 12
-			}) : null, crumbButton(crumb.label)))), crumbsOverflow ? crumbButton(crumbs.length > 0 ? crumbs[crumbs.length - 1]?.label ?? tt("explorerRootName") : tt("explorerRootName"), void 0, true) : crumbs.length === 0 ? crumbButton(tt("explorerRootName"), void 0, true) : crumbs.map((crumb, index) => (0, react$1.createElement)(react$1.Fragment, { key: crumb.path }, index > 0 ? (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, {
-				className: "dshpc-fb__crumb-sep",
-				size: 12
-			}) : null, crumbButton(crumb.label, () => loadDir(crumb.path))))), (0, react$1.createElement)("div", { className: "dshpc-fb__actions" }, props.onClose === void 0 ? null : (0, react$1.createElement)(IconButton$1, {
-				variant: "plain",
-				size: "md",
-				icon: (0, react$1.createElement)(official_exports.IconCloseOutlineRegular, { size: 14 }),
-				label: tt("previewClose"),
-				onClick: props.onClose
-			})));
-			const crumbBarPlain = (0, react$1.createElement)("nav", {
-				className: "dshpc-fb__bar",
-				"aria-label": tt("explorerCrumbsAria")
-			}, (0, react$1.createElement)(MarqueeText, {
-				text: dir,
-				title: dir,
-				className: "dshpc-fb__bar-plain",
-				style: {
-					flex: "1 1 auto",
-					minWidth: 0
-				}
-			}), (0, react$1.createElement)("div", { className: "dshpc-fb__actions" }, props.onClose === void 0 ? null : (0, react$1.createElement)(IconButton$1, {
-				variant: "plain",
-				size: "md",
-				icon: (0, react$1.createElement)(official_exports.IconCloseOutlineRegular, { size: 14 }),
-				label: tt("previewClose"),
-				onClick: props.onClose
-			})));
-			const titleBar = viewing === null ? null : (0, react$1.createElement)("div", { className: "dshpc-fb__title" }, (0, react$1.createElement)(MarqueeText, {
-				text: baseNameOfPath(viewing),
-				title: viewing,
-				className: "dshpc-fb__title-inner",
-				style: {
-					flex: "1 1 auto",
-					minWidth: 0
-				}
-			}), (0, react$1.createElement)("div", { className: "dshpc-fb__actions" }, switchable ? (0, react$1.createElement)(Segmented$1, {
-				size: "sm",
-				label: viewingIsMd ? tt("previewMdSwitchAria") : tt("previewHtmlSwitchAria"),
-				value: sourceView ? "source" : "render",
-				items: [{
-					value: "render",
-					label: tt("previewRender")
-				}, {
-					value: "source",
-					label: tt("previewSource")
-				}],
-				onChange: (next) => setSourceView(next === "source")
-			}) : null, (0, react$1.createElement)(IconButton$1, {
-				variant: "plain",
-				size: "md",
-				icon: copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular, { size: 14 }) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular, { size: 14 }),
-				label: tt("previewCopyPath"),
-				onClick: copyPath
-			}), (0, react$1.createElement)(IconButton$1, {
-				variant: "plain",
-				size: "md",
-				icon: (0, react$1.createElement)(official_exports.IconRefreshOutlineRegular, { size: 14 }),
-				label: tt("previewRefresh"),
-				onClick: reload
-			})));
+				className: "dshpc-fb__pick",
+				"aria-label": tt("explorerPickDirAria"),
+				onClick: () => props.onPick?.(toPicked(dir, true))
+			}, tt("explorerPickDir")) : null;
+			const nav = outside ? (0, react$1.createElement)(PlainNav, {
+				translate: tt,
+				path: dir,
+				pickNow,
+				onClose: props.onClose
+			}) : (0, react$1.createElement)(CrumbNav, {
+				translate: tt,
+				landing,
+				crumbs,
+				overflow: crumbsOverflow,
+				menuItems,
+				menuOpen,
+				onToggleMenu: () => setMenuOpen((v) => !v),
+				onCloseMenu: () => setMenuOpen(false),
+				onLoadDir: loadDir,
+				pickNow,
+				onClose: props.onClose,
+				regionRef,
+				measureRef
+			});
+			const titleBar = viewing === null ? null : (0, react$1.createElement)(PreviewTitleBar, {
+				translate: tt,
+				path: viewing,
+				switchable,
+				isMarkdown: viewingIsMd,
+				sourceView,
+				onSourceViewChange: setSourceView,
+				copied,
+				onCopyPath: copyPath,
+				onReload: reload
+			});
 			let body;
-			if (viewing !== null) body = (0, react$1.createElement)(FilePreview, {
+			if (landing) body = (0, react$1.createElement)(LandingBody, {
+				translate: tt,
+				roots: rootRows,
+				anchors,
+				pickable: picker && props.onPick !== void 0 && !extsOnly,
+				onOpen: loadDir,
+				onPickDir: (target) => props.onPick?.(toPicked(target, true))
+			});
+			else if (viewing !== null) body = (0, react$1.createElement)(FilePreview, {
 				key: `${viewing}:${reloadNonce}`,
-				workspaceFiles: props.workspaceFiles,
+				files: props.files,
 				officeToPdf: props.officeToPdf ?? null,
-				sessionId: listSessionId,
 				path: viewing,
 				sourceView,
 				translate: tt
@@ -54517,62 +49140,681 @@ window.__ModuleLoader__.load({
 			return (0, react$1.createElement)("div", {
 				className: "dshpc-fb",
 				style: props.style ?? void 0
-			}, outside ? crumbBarPlain : crumbBar, titleBar, body);
+			}, nav, titleBar, body);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.4_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_85a3ec85df9e4c0c74745dca00c8f375/node_modules/dsh-plugin-core/dist/explorer/open.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/resizer.js
+		/** 开始一次拖拽调宽（监听 window 的 pointermove / pointerup，松手自动清理）。 */
+		function startResizeLayoutWidth(opts) {
+			opts.startEvent.preventDefault?.();
+			const body = document.body;
+			const prevUserSelect = body.style.userSelect;
+			body.style.userSelect = "none";
+			window.getSelection()?.removeAllRanges();
+			const rootEl = opts.root ?? document.getElementById("dshpc-root");
+			if (opts.rootClass !== void 0) rootEl?.classList.add(opts.rootClass);
+			let frame = 0;
+			let pendingX = 0;
+			const emit = (clientX) => {
+				const w = opts.compute(clientX);
+				opts.onMove(w);
+				return w;
+			};
+			const onMove = (event) => {
+				if (opts.rafThrottle === true) {
+					pendingX = event.clientX;
+					if (frame !== 0) return;
+					frame = requestAnimationFrame(() => {
+						frame = 0;
+						emit(pendingX);
+					});
+				} else emit(event.clientX);
+			};
+			const onUp = (event) => {
+				window.removeEventListener("pointermove", onMove);
+				window.removeEventListener("pointerup", onUp);
+				if (frame !== 0) cancelAnimationFrame(frame);
+				body.style.userSelect = prevUserSelect;
+				if (opts.rootClass !== void 0) rootEl?.classList.remove(opts.rootClass);
+				opts.onCommit(opts.compute(event.clientX));
+			};
+			window.addEventListener("pointermove", onMove);
+			window.addEventListener("pointerup", onUp);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/panel-dock-logic.js
 		/**
-		* 预览体：`openFilePreview` 的 FileBrowser 包裹层。职责只有一个——**切工作区**：
-		* ▾ 下拉点工作区 ⇒ 换该工作区的锚点会话、key 重挂载、path 回根。
-		* 机制同兄弟项目 `dsh-task-dispatch-table/src/client/task-editor.tsx:2496-2508`：
-		* list 的根来自 sessionId ⇒ 必须换会话 + 重挂载，只换 rootName 等于没切。
-		* 没会话的工作区不进 ▾ 列表、点了也不切（宿主列不出文件，不给假入口）。
+		* 停靠面板的状态逻辑（纯函数，零 React / 零 DOM）。
 		*
-		* 工作区清单：调用方显式传的 `workspaceAnchors` 优先；否则用宿主 workspaces 快照
-		* （connectHost 注入的 workspaceList）——**调用方什么都不传也照常能切**。
+		* 只记三件事：**哪些面板开着**、**每栏多宽**、**哪些收起成了耳朵**。
+		* 内容与头部不在这里——那是调用方在页面里声明的东西（`<DockPanel id="…">…</DockPanel>`），
+		* 与 Ant Design `Tabs` 的 `activeKey` + `<TabPane>` 同一分工：
+		* **显隐归状态，结构归 children**。
 		*
-		* 「当前工作区」必须与面包屑根名同源（`workspaceAnchorForPath` 匹配优先，其次 rootName）：
-		* 曾经这里直接拿 `rootName` 当初始状态，而 ▾ 菜单把 anchorMatch.title 当当前区；两者不一致时
-		* 点 rootName 那个工作区 = setState 成同一个值 ⇒ React bail out ⇒ **点了完全没反应**（2026-10-23 真机）。
-		* 同理「切没切」不能用「名字变没变」判断：点回入口工作区会把 path 又还原成入口文件，
-		* 看起来就是「跳回第一个工作区」。现在改成「点过 = 进浏览态」，任何工作区（含入口那个）都回根。
+		* 口径（用户 2026-10-20 定案）：
+		*   · 组名 = 窗口，一对一：`open('A')` 再 `open('A')` 只是重复打开，不新增一栏；
+		*   · 未到上限 ⇒ 追加；到上限 ⇒ 返回 `{ ok: false, reason: 'limit' }`，不静默丢弃；
+		*   · 关一栏即腾位，之后可以开新组名；
+		*   · 没有多份同名、没有自动淘汰、没有 tab 切换。
+		*
+		* 收起（用户 2026-10-28 定案）= **面板退出布局、换成一只独立的固定耳朵**，不是把栏宽缩细：
+		*   · `collapsePanel` 把组名从 `ids` 移到 `collapsed`，**宽度留着**（展开要回到原宽）；
+		*   · 耳朵是另一块 fixed 浮层，不在这里表达布局——这里只记「谁收起了」。
 		*/
-		function PreviewBody(props) {
-			const options = props.options;
-			const hostWorkspaces = (0, react$1.useSyncExternalStore)(workspaceList.subscribe, workspaceList.getSnapshot);
-			const anchors = options.workspaceAnchors ?? hostWorkspaces;
-			const entryTitle = workspaceAnchorForPath(options.path ?? "", anchors)?.title ?? options.rootName ?? "";
-			const [picked, setPicked] = (0, react$1.useState)(null);
-			const [seenRevision, setSeenRevision] = (0, react$1.useState)(props.revision);
-			if (seenRevision !== props.revision) {
-				setSeenRevision(props.revision);
-				setPicked(null);
-			}
-			const wsTitle = picked ?? entryTitle;
-			const sessionId = anchorSessionForTitle(anchors, wsTitle) ?? options.sessionId ?? pickWorkspaceAnchor(anchors)?.sessionId ?? "";
-			const switchable = anchors.filter((a) => (a.sessionIds?.length ?? 0) > 0).map((a) => a.title);
-			return (0, react$1.createElement)(FileBrowser, {
-				key: `${wsTitle}:${sessionId}`,
-				workspaceFiles: options.workspaceFiles,
-				officeToPdf: options.officeToPdf ?? null,
-				sessionId,
-				path: picked === null ? options.path : "",
-				revision: props.revision,
-				rootName: wsTitle === "" ? options.rootName : wsTitle,
-				workspaces: switchable.length > 0 ? switchable : options.workspaces,
-				onSelectWorkspace: (name) => {
-					if (anchorSessionForTitle(anchors, name) === null) return;
-					setPicked(name);
-				},
-				workspaceAnchors: anchors.length > 0 ? anchors : void 0,
-				rootCache: options.rootCache,
-				translate: options.translate,
-				onClose: props.onClose,
-				style: {
-					height: "100%",
-					minHeight: 0
+		/** 默认窗口的保留名：`open()` 不传 id 时用它。 */
+		const DEFAULT_PANEL_ID = "default";
+		function emptyDock() {
+			return {
+				ids: [],
+				widths: {},
+				collapsed: []
+			};
+		}
+		/** 夹到 [min, max]；`max` 缺省表示不设上限。NaN / Infinity 一律落回 min。 */
+		function clampWidth(value, min, max) {
+			const wide = Number.isFinite(value) ? value : min;
+			return Math.max(min, Math.round(max === void 0 || !Number.isFinite(max) ? wide : Math.min(wide, max)));
+		}
+		function isOpen(state, id) {
+			return state.ids.includes(id);
+		}
+		function isCollapsed(state, id) {
+			return state.collapsed.includes(id);
+		}
+		/**
+		* 打开一栏。已开 ⇒ 原样返回（`created: false`，位置不变）；
+		* 未开且已满 ⇒ 返回失败结果，状态不动。打开即撤销同名耳朵。
+		*/
+		function openPanel(state, id, maxPanels) {
+			if (isOpen(state, id)) return {
+				state,
+				result: {
+					ok: true,
+					id,
+					created: false
 				}
+			};
+			if (state.ids.length >= maxPanels) return {
+				state,
+				result: {
+					ok: false,
+					id,
+					reason: "limit"
+				}
+			};
+			return {
+				state: {
+					ids: [...state.ids, id],
+					widths: state.widths,
+					collapsed: state.collapsed.filter((item) => item !== id)
+				},
+				result: {
+					ok: true,
+					id,
+					created: true
+				}
+			};
+		}
+		/**
+		* 关一栏；不存在即原样返回（幂等）。宽度记忆随栏一起丢弃。
+		* 对已收起的耳朵也生效 —— 「关闭」= 彻底不留，耳朵一起抹掉（用户 2026-10-28 口径）。
+		*/
+		function closePanel(state, id) {
+			const open = isOpen(state, id);
+			const ear = isCollapsed(state, id);
+			if (!open && !ear) return state;
+			const widths = { ...state.widths };
+			delete widths[id];
+			return {
+				ids: open ? state.ids.filter((item) => item !== id) : state.ids,
+				widths,
+				collapsed: ear ? state.collapsed.filter((item) => item !== id) : state.collapsed
+			};
+		}
+		/** 记某栏宽度（已夹过）；值没变时原样返回，避免无谓重渲染。 */
+		function setPanelWidth(state, id, width) {
+			if (!isOpen(state, id)) return state;
+			if (state.widths[id] === width) return state;
+			return {
+				ids: state.ids,
+				widths: {
+					...state.widths,
+					[id]: width
+				},
+				collapsed: state.collapsed
+			};
+		}
+		/**
+		* 收起一栏：退出布局（从 `ids` 移除，**立即不占宽**），转入耳朵列表。
+		* 宽度**不删**——耳朵展开时要回到原宽。只对开着的栏生效。
+		*/
+		function collapsePanel(state, id) {
+			if (!isOpen(state, id)) return state;
+			return {
+				ids: state.ids.filter((item) => item !== id),
+				widths: state.widths,
+				collapsed: state.collapsed.includes(id) ? state.collapsed : [...state.collapsed, id]
+			};
+		}
+		/** 展开耳朵：移出耳朵列表、回到打开列表末尾；宽度照旧（`collapsePanel` 没删）。 */
+		function expandPanel(state, id) {
+			if (!isCollapsed(state, id)) return state;
+			return {
+				ids: state.ids.includes(id) ? state.ids : [...state.ids, id],
+				widths: state.widths,
+				collapsed: state.collapsed.filter((item) => item !== id)
+			};
+		}
+		/** 其他栏宽度之和（算「这一栏最多能拖多宽」用）。 */
+		function othersWidth(state, id, fallbackOf) {
+			return state.ids.reduce((sum, item) => {
+				if (item === id) return sum;
+				return sum + (state.widths[item] ?? fallbackOf(item));
+			}, 0);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/panel-dock-css.generated.js
+		const PANEL_DOCK_CSS = "/* 停靠栏 = **布局成员**，不是浮层：它占宽度、把主区真正挤窄（兄弟项目 2026-09-28：\n   「分栏压过来，不是盖上去」）。所以调用方必须把它放进自己的 flex 根里。\n   皮肤（头部 / 拖拽条 / 关闭钮 / 背景阴影）在 side-panel.css，与 SideSheet 共用。 */\n.dshpc-dock{display:flex;flex:0 0 auto;align-self:stretch;min-width:0}\n/* dock 不再替主区让缝（原 --dshpc-dock-gap 的 1px margin 已删，用户 2026-11-02）：\n   滚动条与容器边缘的 1px 统一由滚动容器自己的透明边框提供（见 style.md §滚动条让位），\n   主区容器带了让位，滚动条与这条分隔线之间自然还是 1px。别再往这里加 margin。 */\n\n/* 自动加的宿主行（openFilePreview 加 / 关闭即摘）：消费方那行不必自己写 flex。\n   只让「第一个非预览子项」当主区伸展，其余直接子项不动（页脚条、工具条不误伤）；\n   display 不在这里写死 —— 本来就是 grid 等布局的元素保持原样，由 TS 侧按计算值补 flex。 */\n.dshpc-dock-host{min-width:0;min-height:0}\n.dshpc-dock-host>:not([data-dshpc-file-preview]){min-width:0}\n.dshpc-dock-host>:first-child:not([data-dshpc-file-preview]){flex:1 1 auto}\n\n/* 单栏**占位**：sticky + 视口高让它在页面滚动时保持可见，同时仍然占宽度。\n   ⚠️ **本条刻意不设 z-index**：布局成员一旦带正 z-index，就会无条件压过宿主 portal 到 body 的\n   弹窗（兄弟项目 2026-10-05 真机事故「侧边栏盖住宿主设置弹窗」）。层序交给 DOM 顺序裁决。\n   外观来自 .dshpc-side-surface（side-panel.css），这里只管怎么占位与朝哪边描边。 */\n.dshpc-dock__panel{\n  position:sticky;top:0;align-self:stretch;\n  /* 高度默认视口高（整页场景）；嵌在定高容器里时由调用方给 --dshpc-dock-h（如 420px / 100%）。 */\n  height:var(--dshpc-dock-h,100vh);max-height:var(--dshpc-dock-h,100vh);\n  border-left:1px solid var(--dshpc-border);\n}\n/* 收起的出场：宽度收到 0、透明淡出；落定后组件才真正摘掉这一栏（JS 延时 220ms 配合）。 */\n.dshpc-dock__panel--closing{\n  width:0!important;min-width:0!important;opacity:0;border-left-width:0;\n  transition:width .2s var(--dshpc-ease),opacity .2s var(--dshpc-ease),border-left-width .2s var(--dshpc-ease);\n}\n\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove，\n   向右拖进 iframe 就卡死 —— 整片让出指针事件；② contain 把重排隔离在栏内，\n   否则每帧改宽度都会牵动整页重排（兄弟项目 2026-10-04 真机「挪很久才动一下」）。 */\n.dshpc-dock.dshpc-dock--resizing iframe{pointer-events:none}\n.dshpc-dock.dshpc-dock--resizing .dshpc-dock__panel{contain:layout paint;will-change:width}\n\n/* 收起钮：**待在面板自己的框里**（用户 2026-10-28 三轮：占面板内部空间，不伸到外面去）。\n   left:0 从内侧贴着分隔线 —— 贴线的一边不描边（线是面板自己的 border-left），页签与线不重合。\n   20×44（用户 2026-10-28 四轮定尺寸）；实色底（--dshpc-plate，明暗各有实值），hover 亮一档。\n   padding-right:2px 是**视觉居中**：右侧是圆角，箭头往直线那边挪 1px（用户 2026-10-28 四轮）。 */\n.dshpc-dock__collapse{\n  position:absolute;left:0;top:50%;transform:translateY(-50%);\n  z-index:8;display:inline-flex;align-items:center;justify-content:center;\n  width:20px;height:44px;padding:0 2px 0 0;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);\n  border-left:none;\n  border-radius:0 var(--dshpc-radius-sm) var(--dshpc-radius-sm) 0;\n  background:var(--dshpc-plate);color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:16px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__collapse:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__collapse:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n\n/* 收起后的浮动耳朵：**fixed 贴右缘、垂直居中、独立于分栏**（用户 2026-10-28 定稿：\n   小页签挂中间、里面放面板图标、不显示文字，箭头与收起钮反向）。多个按收起顺序纵向堆叠。\n   z 走 dock 档（低于宿主弹窗），避免盖住宿主 portal 层。 */\n.dshpc-dock__ears{\n  position:fixed;top:50%;right:0;transform:translateY(-50%);\n  z-index:var(--dshpc-z-dock,1030);\n  display:flex;flex-direction:column;gap:8px;align-items:flex-end;\n  pointer-events:none;\n}\n.dshpc-dock__ear{\n  pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;\n  /* 与收起钮**同尺寸**（20×44，用户 2026-10-28 四轮）：上/下/左描边，贴右缘的一侧不描。\n     实色底（--dshpc-plate），不用透明色 —— 透明底下透出东西很难看。\n     padding-left:2px 是**视觉居中**：左侧是圆角，箭头往直线（右缘）那边挪 1px。 */\n  width:20px;height:44px;box-sizing:border-box;padding:0 0 0 2px;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-left:1px solid var(--dshpc-border);\n  border-right:none;\n  border-radius:var(--dshpc-radius-sm) 0 0 var(--dshpc-radius-sm);\n  background:var(--dshpc-plate);color:var(--dshpc-fg-2);\n  cursor:pointer;font-family:inherit;line-height:1;\n  animation:dshpc-ear-in .2s var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 入场：从右缘外滑进来，别「突然出现」（用户 2026-10-28）。 */\n@keyframes dshpc-ear-in{from{opacity:0;transform:translateX(14px)}}\n.dshpc-dock__ear:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__ear:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 与收起钮的箭头同一字号（16px）：收进去前后箭头一模一样大（用户 2026-10-28）。 */\n.dshpc-dock__ear-arrow{font-size:16px;color:var(--dshpc-fg-3)}\n.dshpc-dock__ear:hover .dshpc-dock__ear-arrow{color:var(--dshpc-fg)}\n/* 动效礼貌：系统声明减少动效时全部关掉，收起退化为瞬时、功能不受影响。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-dock__panel{animation:none}\n  .dshpc-dock__panel--closing{transition:none}\n  .dshpc-dock__ear{animation:none}\n}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/side-panel-css.generated.js
+		const SIDE_PANEL_CSS = "/* 侧边面板的公共皮肤 —— PanelDock（占宽分栏）与 SideSheet（覆盖抽屉）共用这一份。\n *\n * 分界：**皮肤在这里，定位各自写**。两者唯一的形态差异就是「怎么占位」——\n * PanelDock 用 sticky 占宽挤窄主区（panel-dock.css），SideSheet 用 absolute 盖在页面上（side-sheet.css）。\n *\n * 类名沿用 dshpc-dock__* 前缀：那是既有公开面（文档与消费方都在用），\n * 这里只搬文件不改名；新增的中性类是 .dshpc-side-surface（外观基类）。 */\n\n/* 入场：宽度从 0 长出来（keyframes 只写 from，终点取内联 / 状态宽度）。两边共用。 */\n@keyframes dshpc-side-in{from{width:0;opacity:0;overflow:hidden}}\n\n/* 外观基类：背景 / 文字色 / 阴影 / 纵向 flex。**不含** position、高度、边框方向、动画触发。 */\n.dshpc-side-surface{\n  box-sizing:border-box;\n  display:flex;flex-direction:column;flex:0 0 auto;min-width:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n  box-shadow:var(--dshpc-shadow-2);\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease);\n  animation:dshpc-side-in .22s var(--dshpc-ease);\n}\n\n/* 头部：右侧 34px = 8(边距) + 20(关钮) + 6(呼吸)：给绝对定位的关钮留位，标题/extra 不从它底下钻。 */\n.dshpc-dock__head{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:10px 34px 10px 14px;\n  border-bottom:1px solid var(--dshpc-border-faint);\n}\n/* 图标位 / 标题右侧的内容位：消费方传 ReactNode，可塞多个；库只负责排布，不抢宽度。 */\n.dshpc-dock__lead{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-dock__extra{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto}\n/* 自定义头部：整行归调用方 —— 不加内边距/边框/背景，也不给关钮留内联空间（关钮是绝对定位的）。 */\n.dshpc-dock__head--custom{display:block;padding:0;border-bottom:none}\n.dshpc-dock__title{\n  flex:1 1 auto;min-width:0;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n  font-size:var(--dshpc-font-md);font-weight:600;\n}\n/* 关闭钮：20×20 方角图标位（与 Modal 的关闭钮同规格，不借 Picker 触发器皮肤）。 */\n.dshpc-dock__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-dock__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 头部关钮：绝对定位（top 10 / right 8），锚点是面板本身 —— 正文滚动它不跟滚。 */\n.dshpc-dock__close--abs{position:absolute;top:10px;right:8px;z-index:8}\n/* 浮动关钮：无头部面板用，略收一点边距。 */\n.dshpc-dock__close--floating{\n  position:absolute;top:6px;right:6px;z-index:8;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border-faint);\n}\n\n/* 内容区自己滚（面板高度锁死，内容不设内部滚动就会把页面撑高）。\n   透明右边框 = 滚动条与面板右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-dock__body{flex:1 1 auto;min-height:0;overflow:auto;border-right:1px solid transparent}\n\n/* 拖拽条：6px 命中区，**自己不画任何线**（贴在朝内那一侧，镜像由各自的定位文件做）。\n   hover / 拖动时把面板自己的边框染成蓝 —— 蓝线只准改原线，不准在旁边再加一条。\n   z-index 7 必须高于面板内容里的浮层（复制钮一类），否则命中区会被内容盖住。 */\n.dshpc-dock__resizer{\n  position:absolute;left:0;top:0;bottom:0;width:6px;\n  z-index:7;cursor:col-resize;background:transparent;\n}\n.dshpc-side-surface:has(> .dshpc-dock__resizer:hover),\n.dshpc-side-surface--resizing{\n  /* 原线保留「上下渐隐」工作区指示条质感：把面板自己的那条边框换成同款渐变。\n     面板四边里只有朝内一侧有宽度，所以渐变只落在那一侧。 */\n  border-image:linear-gradient(180deg,transparent,var(--dshpc-business) 30% 70%,transparent) 1;\n}\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove ——\n   让出指针事件；② contain 把重排隔离在面板内，否则每帧改宽都会牵动整页重排。 */\n.dshpc-side-surface--resizing{contain:layout paint;will-change:width}\n.dshpc-side-surface--resizing iframe{pointer-events:none}\n\n/* 动效礼貌：系统声明减少动效时退化为瞬时（功能不受影响）。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-side-surface{animation:none}\n}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/PanelDock.js
+		/**
+		* 停靠面板（PanelDock）—— 可停靠的右侧分栏容器。
+		*
+		* 形态：**布局成员，不是浮层**。占宽度、把主区挤窄，因此必须由调用方放进自己的
+		* flex 根容器里；不能像 Modal 那样自挂 `document.body`（自挂只能遮盖、挤不窄）。
+		*
+		* 分工照成熟组件库的通行做法（Ant Design `Tabs` / `Drawer` 同一套）：
+		*   · **结构写在调用点** —— `<PanelDock dock={dock}><DockPanel id="files">…</DockPanel></PanelDock>`；
+		*   · **显隐归状态** —— `dock.open('files')` / `dock.close('files')`，只传 id，不传内容；
+		*   · **头部可控** —— `title` / `icon` / `extra` 三件套；要更自由就 `header` 整块替换，`header={null}` 表示不要头部；
+		*   · **关闭钮可退让** —— `closable={false}` 不出；`closeButton="floating"` 浮在右上角，不占头部布局。
+		*/
+		const INSET_VAR = "--dshpc-page-inset-right";
+		const dockInsets = /* @__PURE__ */ new Map();
+		let dockSeq = 0;
+		function publishInset(key, width, el) {
+			for (const [stale, entry] of dockInsets) if (entry.el !== null && !entry.el.isConnected) dockInsets.delete(stale);
+			if (width > 0) dockInsets.set(key, {
+				width,
+				el
 			});
+			else dockInsets.delete(key);
+			if (typeof document === "undefined") return;
+			let total = 0;
+			for (const entry of dockInsets.values()) total += entry.width;
+			const style = document.documentElement.style;
+			if (total > 0) style.setProperty(INSET_VAR, `${Math.round(total)}px`);
+			else style.removeProperty(INSET_VAR);
+		}
+		/**
+		* 声明一个面板。**它自己不渲染任何东西**——由父级 `<PanelDock>` 读它的 props 后统一画。
+		* 因此必须作为 `<PanelDock>` 的**直接子元素**（可以条件渲染成 `null`）。
+		*/
+		function DockPanel(_props) {
+			return null;
+		}
+		function readStoredWidth(key) {
+			try {
+				if (typeof localStorage === "undefined") return null;
+				const raw = localStorage.getItem(key);
+				if (raw === null) return null;
+				const value = Number(raw);
+				return Number.isFinite(value) ? value : null;
+			} catch {
+				return null;
+			}
+		}
+		function writeStoredWidth(key, width) {
+			try {
+				if (typeof localStorage === "undefined") return;
+				localStorage.setItem(key, String(width));
+			} catch {}
+		}
+		/**
+		* 造一个面板控制器。状态在它身上，组件用 `useSyncExternalStore` 订阅。
+		*
+		* 为什么状态不放在组件里：开门/关门常常发生在按钮 onClick、事件回调里（命令式），
+		* 而**内容与头部仍在调用点声明**——这正是 Tabs 那种「状态 + children」的分工。
+		*/
+		function createPanelDock(options = {}) {
+			const maxPanels = options.maxPanels ?? 3;
+			const defaultWidth = options.defaultWidth ?? 460;
+			const minWidth = options.minWidth ?? 320;
+			const storageKey = options.storageKey ?? "dshpc-dock";
+			const widthKey = (id) => storageKey === false ? "" : `${storageKey}:width:${id}`;
+			let state = emptyDock();
+			const listeners = /* @__PURE__ */ new Set();
+			const emit = (next) => {
+				if (next === state) return;
+				state = next;
+				for (const listener of listeners) listener();
+			};
+			const controller = {
+				defaults: {
+					maxPanels,
+					defaultWidth,
+					minWidth
+				},
+				open(id = DEFAULT_PANEL_ID) {
+					const { state: next, result } = openPanel(state, id, maxPanels);
+					if (result.ok && result.created) {
+						const stored = storageKey === false ? null : readStoredWidth(widthKey(id));
+						emit(stored === null ? next : setPanelWidth(next, id, stored));
+						options.onOpen?.({
+							id,
+							created: true
+						});
+					} else if (result.ok) emit(next);
+					else options.onLimitReached?.({ id });
+					return result;
+				},
+				close(id = DEFAULT_PANEL_ID, reason = "api") {
+					if (!isOpen(state, id) && !isCollapsed(state, id)) return;
+					if (options.onBeforeClose?.({
+						id,
+						reason
+					}) === false) return;
+					emit(closePanel(state, id));
+					options.onClose?.({
+						id,
+						reason
+					});
+				},
+				toggle(id = DEFAULT_PANEL_ID) {
+					if (controller.isOpen(id)) {
+						controller.close(id, "api");
+						return {
+							ok: true,
+							id,
+							created: false
+						};
+					}
+					return controller.open(id);
+				},
+				collapse(id = DEFAULT_PANEL_ID) {
+					if (!isOpen(state, id)) return;
+					emit(collapsePanel(state, id));
+				},
+				expand(id = DEFAULT_PANEL_ID) {
+					if (!isCollapsed(state, id)) return;
+					if (state.ids.length >= maxPanels) {
+						options.onLimitReached?.({ id });
+						return;
+					}
+					emit(expandPanel(state, id));
+				},
+				isOpen(id = DEFAULT_PANEL_ID) {
+					return isOpen(state, id);
+				},
+				isCollapsed(id = DEFAULT_PANEL_ID) {
+					return isCollapsed(state, id);
+				},
+				ids() {
+					return state.ids;
+				},
+				setWidth(id, width) {
+					const next = setPanelWidth(state, id, width);
+					if (next === state) return;
+					emit(next);
+					if (storageKey !== false) writeStoredWidth(widthKey(id), width);
+					options.onResize?.({
+						id,
+						width
+					});
+				},
+				subscribe(listener) {
+					listeners.add(listener);
+					return () => {
+						listeners.delete(listener);
+					};
+				},
+				getSnapshot() {
+					return state;
+				}
+			};
+			return controller;
+		}
+		/** 收集直接子元素里的 `<DockPanel>`；顺序即渲染顺序（与打开顺序无关，稳定）。 */
+		function panesOf(children) {
+			const out = [];
+			react$1.Children.forEach(children, (child) => {
+				if ((0, react$1.isValidElement)(child) && child.type === DockPanel) out.push(child.props);
+			});
+			return out;
+		}
+		/** 停靠栏本体：只渲染「开着的」面板，结构取自对应的 `<DockPanel>`。 */
+		function PanelDock(props) {
+			ensureComponentStyles("side-panel", SIDE_PANEL_CSS);
+			ensureComponentStyles("panel-dock", PANEL_DOCK_CSS);
+			ensureComponentStyles("feedback", FEEDBACK_CSS);
+			const tt = props.translate ?? t$2;
+			const state = (0, react$1.useSyncExternalStore)(props.dock.subscribe, props.dock.getSnapshot, props.dock.getSnapshot);
+			const rootRef = (0, react$1.useRef)(null);
+			const panelRefs = (0, react$1.useRef)(/* @__PURE__ */ new Map());
+			const panes = panesOf(props.children);
+			const { defaultWidth, minWidth: fallbackMin } = props.dock.defaults;
+			const widthOf = (pane) => clampWidth(state.widths[pane.id] ?? pane.width ?? defaultWidth, pane.minWidth ?? fallbackMin, pane.maxWidth);
+			const earLabelOf = (id) => {
+				const pane = panes.find((item) => item.id === id);
+				if (pane === void 0) return id;
+				if (typeof pane.title === "string") return pane.title;
+				if (typeof pane.ariaLabel === "string") return pane.ariaLabel;
+				return id;
+			};
+			const [closing, setClosing] = (0, react$1.useState)([]);
+			const collapseWithAnim = (id) => {
+				setClosing((prev) => prev.includes(id) ? prev : [...prev, id]);
+				window.setTimeout(() => {
+					setClosing((prev) => prev.filter((item) => item !== id));
+					props.dock.collapse(id);
+				}, 220);
+			};
+			const prevIds = (0, react$1.useRef)(state.ids);
+			(0, react$1.useEffect)(() => {
+				const gone = prevIds.current.filter((id) => !state.ids.includes(id) && !state.collapsed.includes(id));
+				prevIds.current = state.ids;
+				if (gone.length === 0) return;
+				setClosing((prev) => [...prev, ...gone.filter((id) => !prev.includes(id))]);
+				window.setTimeout(() => setClosing((prev) => prev.filter((id) => !gone.includes(id))), 220);
+			}, [state.ids, state.collapsed]);
+			const insetKey = (0, react$1.useRef)("");
+			if (insetKey.current === "") insetKey.current = `dock-${++dockSeq}`;
+			const restWidth = (paneId) => othersWidth(state, paneId, (id) => {
+				const other = panes.find((item) => item.id === id);
+				return other === void 0 ? defaultWidth : widthOf(other);
+			});
+			const totalWidth = panes.filter((pane) => state.ids.includes(pane.id)).reduce((sum, pane) => sum + widthOf(pane), 0);
+			(0, react$1.useEffect)(() => {
+				publishInset(insetKey.current, state.ids.length > 0 ? totalWidth : 0, rootRef.current);
+			});
+			(0, react$1.useEffect)(() => () => {
+				publishInset(insetKey.current, 0, null);
+			}, []);
+			for (const id of state.ids) if (!panes.some((pane) => pane.id === id)) console.warn(`[dsh-plugin-core] PanelDock: 面板 "${id}" 已打开但没有对应的 <DockPanel id="${id}"> 声明`);
+			const beginResize = (pane, event) => {
+				const element = panelRefs.current.get(pane.id);
+				if (element === void 0 || typeof window === "undefined") return;
+				const startX = event.clientX;
+				const startWidth = widthOf(pane);
+				const min = pane.minWidth ?? fallbackMin;
+				const mainMin = props.mainMinWidth ?? 480;
+				element.classList.add("dshpc-dock__panel--resizing");
+				startResizeLayoutWidth({
+					startEvent: event,
+					root: rootRef.current,
+					rootClass: "dshpc-dock--resizing",
+					rafThrottle: true,
+					compute: (clientX) => {
+						const viewportMax = window.innerWidth - restWidth(pane.id) - mainMin;
+						const businessMax = pane.maxWidth ?? Number.POSITIVE_INFINITY;
+						const max = Math.min(viewportMax, businessMax);
+						return clampWidth(startWidth + (startX - clientX), min, Math.max(min, max));
+					},
+					onMove: (width) => {
+						element.style.width = `${width}px`;
+						publishInset(insetKey.current, restWidth(pane.id) + width, rootRef.current);
+					},
+					onCommit: (width) => {
+						element.classList.remove("dshpc-dock__panel--resizing");
+						props.dock.setWidth(pane.id, width);
+					}
+				});
+			};
+			const headerCloseOf = (pane) => {
+				const closable = pane.closable !== false;
+				const mode = pane.closeButton ?? "auto";
+				const hasHeader = pane.header !== null;
+				if (!closable || !(mode === "header" || mode === "auto" && hasHeader)) return null;
+				return (0, react$1.createElement)("button", {
+					type: "button",
+					className: "dshpc-dock__close dshpc-dock__close--abs",
+					"aria-label": tt("dockClose"),
+					onClick: () => props.dock.close(pane.id, "button")
+				}, pane.closeIcon ?? "✕");
+			};
+			const renderHeader = (pane) => {
+				if (pane.header === null) return null;
+				if (pane.header !== void 0) return (0, react$1.createElement)("div", { className: "dshpc-dock__head dshpc-dock__head--custom" }, pane.header);
+				return (0, react$1.createElement)("div", { className: "dshpc-dock__head" }, pane.icon === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-dock__lead" }, pane.icon), (0, react$1.createElement)("div", { className: "dshpc-dock__title" }, pane.title), pane.extra === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-dock__extra" }, pane.extra));
+			};
+			const floatingCloseOf = (pane) => {
+				if (pane.closable === false) return null;
+				const mode = pane.closeButton ?? "auto";
+				const hasHeader = pane.header !== null;
+				if (mode !== "floating" && !(mode === "auto" && !hasHeader)) return null;
+				return (0, react$1.createElement)("button", {
+					type: "button",
+					className: "dshpc-dock__close dshpc-dock__close--floating",
+					"aria-label": tt("dockClose"),
+					onClick: () => props.dock.close(pane.id, "button")
+				}, pane.closeIcon ?? "✕");
+			};
+			const rootClass = `dshpc-dock${state.ids.length > 0 ? " dshpc-dock--open" : ""}${props.className === void 0 ? "" : ` ${props.className}`}`;
+			return (0, react$1.createElement)("div", {
+				ref: rootRef,
+				className: rootClass
+			}, panes.filter((pane) => state.ids.includes(pane.id) || closing.includes(pane.id)).map((pane) => (0, react$1.createElement)("section", {
+				key: pane.id,
+				ref: (element) => {
+					if (element === null) panelRefs.current.delete(pane.id);
+					else panelRefs.current.set(pane.id, element);
+				},
+				className: `dshpc-side-surface dshpc-dock__panel${closing.includes(pane.id) ? " dshpc-dock__panel--closing" : ""}`,
+				style: { width: `${widthOf(pane)}px` },
+				"data-panel": pane.id,
+				"aria-label": pane.ariaLabel ?? (typeof pane.title === "string" ? pane.title : pane.id)
+			}, (0, react$1.createElement)("div", {
+				className: "dshpc-dock__resizer",
+				role: "separator",
+				"aria-orientation": "vertical",
+				"aria-label": tt("dockResize"),
+				onPointerDown: (event) => {
+					beginResize(pane, event);
+				}
+			}), (0, react$1.createElement)("button", {
+				type: "button",
+				className: "dshpc-dock__collapse",
+				"aria-label": tt("dockCollapse"),
+				onClick: () => collapseWithAnim(pane.id)
+			}, "›"), renderHeader(pane), headerCloseOf(pane), floatingCloseOf(pane), (0, react$1.createElement)("div", { className: "dshpc-dock__body" }, pane.children ?? null))), state.collapsed.length === 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-dock__ears" }, state.collapsed.map((id) => {
+				const label = earLabelOf(id);
+				return (0, react$1.createElement)("button", {
+					key: id,
+					type: "button",
+					className: "dshpc-dock__ear",
+					"aria-label": `${label} · ${tt("dockExpand")}`,
+					onClick: () => props.dock.expand(id)
+				}, (0, react$1.createElement)("span", {
+					className: "dshpc-dock__ear-arrow",
+					"aria-hidden": true
+				}, "‹"));
+			})));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/fs-face.js
+		/**
+		* client 侧的**只读文件面**：fetch 宿主 `serveFsRoute` 挂的那条路由（`src/host/fs-route.ts`）。
+		*
+		* 返回体沿用官方 remote 的信封（成功是值本身，失败是 `{ ok:false, error }`），所以
+		* `listingOf` / `textPageOf` / `bytesOf`（`./types.js`）原样能解析，不用再写一套。
+		*
+		* 与 `WorkspaceFilesFace` 的差别只有一个：**不吃 sessionId，路径一律绝对**。
+		* 这也是「入口不传会话」成立的原因 —— 浏览完全不需要会话；只有 Office 预览还要。
+		*/
+		/** 路由没就位 / 网络失败时的统一回执。 */
+		function failure(message) {
+			return {
+				ok: false,
+				error: {
+					code: "service-unavailable",
+					message
+				}
+			};
+		}
+		async function call(basePath, params, signal) {
+			const query = new URLSearchParams();
+			for (const [key, value] of Object.entries(params)) if (value !== void 0) query.set(key, String(value));
+			let reply;
+			try {
+				reply = await (await fetch(`${basePath}?${query.toString()}`, { signal })).json();
+			} catch (error) {
+				if (signal?.aborted === true) return failure("aborted");
+				return failure(error instanceof Error ? error.message : "fs route unreachable");
+			}
+			if (reply === null || typeof reply !== "object") return failure("fs route returned a non-object");
+			if (reply.ok === false) return reply;
+			return reply.value ?? reply;
+		}
+		/** 造一个走 HTTP 的文件面。`basePath` 必须与宿主 `serveFsRoute({ path })` 同一个常量。 */
+		function createHttpFsFace(basePath) {
+			return {
+				list: (path, signal) => call(basePath, {
+					op: "list",
+					path
+				}, signal),
+				read: (path, range, signal) => call(basePath, {
+					op: "read",
+					path,
+					offset: range.offset,
+					limit: range.limit
+				}, signal),
+				readBytes: async (path, options, signal) => {
+					const value = await call(basePath, {
+						op: "readBytes",
+						path,
+						offset: options.range?.offset,
+						limit: options.range?.length
+					}, signal);
+					const data = value?.data;
+					if (typeof data !== "string") return value;
+					const raw = atob(data);
+					const bytes = new Uint8Array(raw.length);
+					for (let index = 0; index < raw.length; index++) bytes[index] = raw.charCodeAt(index);
+					return {
+						...value,
+						data: bytes
+					};
+				},
+				roots: async () => {
+					const list = (await call(basePath, { op: "roots" }))?.roots;
+					return Array.isArray(list) && list.every((item) => typeof item === "string") ? list : ["/"];
+				}
+			};
+		}
+		let current;
+		/** 接上宿主 `serveFsRoute` 挂的那条路由（插件 client `apply` 里调一次）。 */
+		function connectFs(options) {
+			current = createHttpFsFace(options.path);
+		}
+		/** 当前已接上的文件面；没接（宿主没这能力 / 没调 connectFs）⇒ undefined。 */
+		function getFsFace() {
+			return current;
+		}
+		function clamp$1(value, low, high) {
+			return Math.min(Math.max(value, low), Math.max(low, high));
+		}
+		/**
+		* 决定最终落在哪一侧：优先侧够用就守，够不上但对侧更宽敞就翻过去，两边都窄就守原侧交给夹紧。
+		*
+		* @param preferred 是否落在「正方向」（下方 / 右侧）。
+		* @param own 优先那侧的可用空间。
+		* @param other 对侧的可用空间。
+		* @param min 该侧「够用」的门槛（竖向是 `PICKER_MIN_H`，横向是 `PICKER_MIN_W`）。
+		* @returns 最终是否落在正方向。
+		*/
+		function flipSide(preferred, own, other, min) {
+			if (own >= min) return preferred;
+			return other > own ? !preferred : preferred;
+		}
+		/**
+		* 算面板盒子。
+		*
+		* @param anchor 锚点矩形（按钮的 `getBoundingClientRect()`）。
+		* @param viewport 视口尺寸。
+		* @param placement 展开方位，默认 `'auto'`（= 旧行为，不破坏既有调用）。
+		* @returns 四舍五入到整数像素的 `{ left, top, width, height }`。
+		*/
+		function placePicker(anchor, viewport, placement = "auto") {
+			const vw = viewport.width;
+			const vh = viewport.height;
+			const GAP = 12;
+			const EDGE = 12;
+			const fullWidth = Math.min(480, Math.max(vw - 24, 0));
+			if (placement === "auto") {
+				const availBelow = vh - EDGE - (anchor.bottom + GAP);
+				const availAbove = anchor.top - GAP - EDGE;
+				const below = flipSide(true, availBelow, availAbove, 240);
+				const height = Math.max(Math.min(480, below ? availBelow : availAbove), 160);
+				return round$1({
+					left: clamp$1(anchor.left, EDGE, vw - EDGE - fullWidth),
+					top: below ? clamp$1(Math.min(anchor.bottom + GAP, vh - EDGE - height), EDGE, vh - EDGE - height) : clamp$1(anchor.top - GAP - height, EDGE, vh - EDGE - height),
+					width: fullWidth,
+					height
+				});
+			}
+			if (placement.startsWith("bottom") || placement.startsWith("top")) {
+				const belowAvail = vh - EDGE - (anchor.bottom + GAP);
+				const aboveAvail = anchor.top - GAP - EDGE;
+				const startAligned = placement.endsWith("start");
+				const prefersBelow = placement.startsWith("bottom");
+				const below = flipSide(prefersBelow, prefersBelow ? belowAvail : aboveAvail, prefersBelow ? aboveAvail : belowAvail, 240);
+				const height = Math.max(Math.min(480, below ? belowAvail : aboveAvail), 160);
+				return round$1({
+					left: clamp$1(startAligned ? anchor.left : anchor.right - fullWidth, EDGE, vw - EDGE - fullWidth),
+					top: clamp$1(below ? anchor.bottom + GAP : anchor.top - GAP - height, EDGE, vh - EDGE - height),
+					width: fullWidth,
+					height
+				});
+			}
+			const startAligned = placement.endsWith("start");
+			const rightAvail = vw - EDGE - (anchor.right + GAP);
+			const leftAvail = anchor.left - GAP - EDGE;
+			const prefersRight = placement.startsWith("right");
+			const toRight = flipSide(prefersRight, prefersRight ? rightAvail : leftAvail, prefersRight ? leftAvail : rightAvail, 240);
+			const width = Math.max(Math.min(480, toRight ? rightAvail : leftAvail), Math.min(240, Math.max(vw - 24, 0)));
+			const height = Math.min(480, Math.max(vh - 24, 0));
+			return round$1({
+				left: clamp$1(toRight ? anchor.right + GAP : anchor.left - GAP - width, EDGE, vw - EDGE - width),
+				top: clamp$1(startAligned ? anchor.top : anchor.bottom - height, EDGE, vh - EDGE - height),
+				width,
+				height
+			});
+		}
+		function round$1(box) {
+			return {
+				left: Math.round(box.left),
+				top: Math.round(box.top),
+				width: Math.round(box.width),
+				height: Math.round(box.height)
+			};
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/explorer/open.js
+		/**
+		* 入参路径解析成**绝对路径**（`''` = 虚拟根）。用户 2026-11-03 定：绝对/相对都收。
+		*
+		* 相对路径必须有一个基准：显式 `sessionId` 所属工作区优先，其次「最近有会话的工作区」。
+		* 解析不出 ⇒ `null`（调用方提示 `explorerNoBase`，不猜）。
+		*/
+		function resolveStartPath(path, anchors, sessionId) {
+			if (path === "") return "";
+			if (isAbsoluteish(path)) return normalizePath(path);
+			const base = (sessionId === void 0 ? void 0 : anchors.find((item) => item.sessionIds?.includes(sessionId) === true && item.path !== void 0))?.path ?? anchors.find((item) => item.path !== void 0)?.path;
+			if (base === void 0) return null;
+			return normalizePath(`${normalizePath(base)}/${path.replace(/^\/+/, "")}`);
+		}
+		/**
+		* 给 `FileBrowser` 的 `rootPath`：路径所属工作区的真实根（dock 与 picker 共用这一份推导）。
+		* 顺序 = 当前路径命中 > 指定会话所属 > 第一个带 path 的工作区（2026-11-03 从两处重复代码合并）。
+		*/
+		function rootPathOf(path, anchors, sessionId) {
+			return workspaceOfPath(path, anchors)?.path ?? (sessionId === void 0 ? void 0 : anchors.find((item) => item.sessionIds?.includes(sessionId) === true)?.path) ?? anchors.find((item) => item.path !== void 0)?.path;
+		}
+		function warnNotWired(api, filesMissing) {
+			console.warn(`[dsh-plugin-core/explorer] ${api}: ` + (filesMissing ? "没有文件面（client apply 里没调 connectFs，或宿主没注册 serveFsRoute）" : "相对路径找不到工作区基准（宿主 workspaces 里没有带 path 的工作区）") + " ⇒ 放弃本次操作");
 		}
 		/** 预览侧边栏的挂载容器 id（全站唯一，重复打开先关旧的）。 */
 		const PREVIEW_HOST_ID = "dshpc-file-preview-host";
@@ -54588,28 +49830,31 @@ window.__ModuleLoader__.load({
 		* 打开工作区文件/文件夹的**停靠**预览（分栏：挤窄 `mount` 左边的兄弟，不是盖上去）。
 		* 重复打开会关掉上一个（同侧边栏位）。
 		*
-		* 消费方最少写法（`connectHost(ctx)` 已接线）：
-		* `openFilePreview({ mount, path })` —— 文件服务、会话 id 都由核心自己解。
+		* 消费方最少写法（`connectHost(ctx)` + `connectFs({ path })` 已接线）：
+		* `openFilePreview({ mount, path })` —— 路径解析、工作区匹配都由核心自己解。
 		*/
 		function openFilePreview(options) {
 			if (typeof document === "undefined") return null;
 			const custom = options.content !== void 0;
-			const files = options.workspaceFiles ?? getWorkspaceFiles();
+			const files = getFsFace();
 			const anchors = options.workspaceAnchors ?? workspaceList.getSnapshot();
-			const sessionId = options.sessionId ?? workspaceAnchorForPath(options.path ?? "", anchors)?.sessionId ?? pickWorkspaceAnchor(anchors)?.sessionId;
-			if (!custom && (files === void 0 || sessionId === void 0)) {
-				console.warn("[dsh-plugin-core/explorer] openFilePreview: " + (files === void 0 ? "没有工作区文件服务（client apply 里没调 connectHost，或宿主没提供 remote.workspaceFiles）" : "找不到可用的工作区会话（宿主 workspaces 里没有带会话的工作区）") + " ⇒ 不打开预览");
+			if (!custom && files === void 0) {
+				warnNotWired("openFilePreview", true);
+				return null;
+			}
+			const start = custom ? "" : resolveStartPath(options.path ?? "", anchors, options.sessionId);
+			if (!custom && start === null) {
+				warnNotWired("openFilePreview", false);
 				return null;
 			}
 			const opts = {
 				...options,
-				workspaceFiles: files,
-				sessionId
+				rootPath: options.rootPath ?? rootPathOf(start ?? "", anchors, options.sessionId)
 			};
 			if (activePreview !== null) {
 				activePreview.keepWidth();
 				activePreview.adopt(opts.mount);
-				activePreview.draw(opts);
+				activePreview.draw(opts, start ?? "");
 				return {
 					close: activePreview.close,
 					path: opts.path ?? ""
@@ -54678,9 +49923,8 @@ window.__ModuleLoader__.load({
 				dock.setWidth(PREVIEW_PANEL_ID, width);
 			};
 			let openSeq = 0;
-			const draw = (o) => {
+			const draw = (o, start) => {
 				if (dock.isCollapsed(PREVIEW_PANEL_ID)) dock.expand(PREVIEW_PANEL_ID);
-				const internalSwitch = o.onSelectWorkspace === void 0;
 				const revision = ++openSeq;
 				root.render((0, react$1.createElement)("div", { style: {
 					display: "contents",
@@ -54697,21 +49941,14 @@ window.__ModuleLoader__.load({
 					width: pinnedWidth ?? o.width ?? 460,
 					minWidth: o.minWidth ?? 320,
 					maxWidth: o.maxWidth
-				}, o.content !== void 0 ? (0, react$1.createElement)(react$1.Fragment, { key: `custom:${revision}` }, o.content()) : internalSwitch ? (0, react$1.createElement)(PreviewBody, {
-					options: o,
-					onClose: close,
-					revision
-				}) : (0, react$1.createElement)(FileBrowser, {
-					workspaceFiles: o.workspaceFiles,
+				}, o.content !== void 0 ? (0, react$1.createElement)(react$1.Fragment, { key: `custom:${revision}` }, o.content()) : (0, react$1.createElement)(FileBrowser, {
+					files: getFsFace(),
 					officeToPdf: o.officeToPdf ?? null,
-					sessionId: o.sessionId,
-					path: o.path,
+					path: start,
 					revision,
-					rootName: o.rootName,
 					workspaces: o.workspaces,
 					workspaceAnchors: o.workspaceAnchors,
 					onSelectWorkspace: o.onSelectWorkspace,
-					rootCache: o.rootCache,
 					translate: o.translate,
 					onClose: close,
 					style: {
@@ -54720,7 +49957,7 @@ window.__ModuleLoader__.load({
 					}
 				})))));
 			};
-			draw(opts);
+			draw(opts, start ?? "");
 			activePreview = {
 				adopt,
 				keepWidth,
@@ -54731,6 +49968,5176 @@ window.__ModuleLoader__.load({
 				close,
 				path: opts.path ?? ""
 			};
+		}
+		/**
+		* 弹出「选择文件」模态弹窗，Promise 返回选中结果；取消（Esc / 点外部 / ✕）resolve `null`。
+		*
+		* **面板内容与 `openFilePreview` 完完全全是同一个 `FileBrowser`**（不是复制一套）：
+		* 差别只有 ① 承载（这里挂在锚点旁的弹窗面板里，那边挂在核心 PanelDock 分栏里）、
+		* ② `picker` 形态参数（点文件即回传、行尾按钮变「选择」）。
+		*/
+		function pickWorkspaceFile(options) {
+			return new Promise((resolve) => {
+				if (typeof document === "undefined") {
+					resolve(null);
+					return;
+				}
+				const files = getFsFace();
+				const anchors = workspaceList.getSnapshot();
+				if (files === void 0) {
+					warnNotWired("pickWorkspaceFile", true);
+					resolve(null);
+					return;
+				}
+				const start = resolveStartPath(options.path ?? "", anchors, options.sessionId);
+				if (start === null) {
+					warnNotWired("pickWorkspaceFile", false);
+					resolve(null);
+					return;
+				}
+				let settled = false;
+				const panelStyle = {
+					position: "fixed",
+					display: "flex",
+					flexDirection: "column"
+				};
+				const anchor = options.anchor ?? null;
+				if (anchor !== null) {
+					const box = placePicker(anchor.getBoundingClientRect(), {
+						width: window.innerWidth,
+						height: window.innerHeight
+					}, options.placement ?? "auto");
+					panelStyle.left = box.left;
+					panelStyle.top = box.top;
+					panelStyle.width = box.width;
+					panelStyle.height = box.height;
+				} else {
+					panelStyle.width = `min(480px,calc(100vw - 24px))`;
+					panelStyle.height = 480;
+				}
+				const finish = (result) => {
+					if (settled) return;
+					settled = true;
+					window.removeEventListener("keydown", onKeyDown);
+					root.unmount();
+					mount.remove();
+					if (result === null) options.onCancel?.();
+					resolve(result);
+				};
+				const onKeyDown = (event) => {
+					if (event.key === "Escape") finish(null);
+				};
+				window.addEventListener("keydown", onKeyDown);
+				const mount = document.createElement("div");
+				document.body.appendChild(mount);
+				ensureComponentStyles("panel-dock", PANEL_DOCK_CSS, getStyleKit());
+				ensureComponentStyles("feedback", FEEDBACK_CSS, getStyleKit());
+				const root = (0, react_dom_client.createRoot)(mount);
+				root.render((0, react$1.createElement)(OverlayMask, {
+					kind: "plain",
+					closeOnMask: true,
+					onClose: () => finish(null),
+					attrs: { "data-dshpc-picker-backdrop": "" }
+				}, (0, react$1.createElement)(PanelSurface, {
+					tier: "popover",
+					role: "dialog",
+					attrs: {
+						"data-dshpc-picker-panel": "",
+						"aria-modal": "true"
+					},
+					style: panelStyle,
+					stopPropagation: true
+				}, (0, react$1.createElement)(FileBrowser, {
+					files,
+					officeToPdf: options.officeToPdf ?? null,
+					path: start,
+					rootName: options.rootName,
+					sessionId: options.sessionId,
+					rootPath: rootPathOf(start, anchors, options.sessionId),
+					workspaces: options.workspaces,
+					onSelectWorkspace: options.onSelectWorkspace,
+					picker: true,
+					filter: options.filter,
+					translate: options.translate,
+					onPick: (picked) => finish(picked),
+					onClose: () => finish(null),
+					style: {
+						flex: "1 1 auto",
+						width: "100%",
+						minWidth: 0,
+						minHeight: 0
+					}
+				}))));
+			});
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/picker-logic.js
+		/** 两种输入归一成 groups：给了 `options` 就当成一个无标题的组。 */
+		function toGroups(groups, options) {
+			if (groups !== void 0 && groups.length > 0) return groups;
+			const flat = options ?? [];
+			return flat.length === 0 ? [] : [{
+				value: "",
+				label: "",
+				options: flat
+			}];
+		}
+		function flattenOptions(groups) {
+			const out = [];
+			for (const g of groups) out.push(...g.options);
+			return out;
+		}
+		/** 按关键词过滤（大小写不敏感，匹配 label；整组无命中则整组去掉）。 */
+		function filterGroups(groups, query) {
+			const q = query.trim().toLowerCase();
+			if (q === "") return groups;
+			const out = [];
+			for (const g of groups) {
+				const hit = g.options.filter((o) => o.label.toLowerCase().includes(q));
+				if (hit.length > 0) out.push({
+					...g,
+					options: hit
+				});
+			}
+			return out;
+		}
+		/** 多选切换；`max` 达到上限时不再添加（返回原数组，不静默截断）。 */
+		function toggleValue(current, value, max) {
+			if (current.indexOf(value) >= 0) return current.filter((v) => v !== value);
+			if (max !== void 0 && current.length >= max) return [...current];
+			return [...current, value];
+		}
+		function labelsOf(groups, values) {
+			const all = flattenOptions(groups);
+			const out = [];
+			for (const v of values) {
+				const hit = all.find((o) => o.value === v);
+				if (hit !== void 0) out.push(hit.label);
+			}
+			return out;
+		}
+		/** 触发器宽度解析：把 width / minWidth / maxWidth 译成内联样式。
+		* 定宽（width）忽略 min/max 并锁定三值；否则各自生效，缺省沿用 CSS 默认（min 120px、max 100%）。
+		* 数值按 px 处理，字符串原样透传。 */
+		function resolveTriggerSizing(opts) {
+			const px = (v) => typeof v === "number" ? `${v}px` : v;
+			if (opts.width !== void 0) {
+				const w = px(opts.width);
+				return {
+					width: w,
+					minWidth: w,
+					maxWidth: w
+				};
+			}
+			const style = {};
+			if (opts.minWidth !== void 0) style.minWidth = px(opts.minWidth);
+			if (opts.maxWidth !== void 0) style.maxWidth = px(opts.maxWidth);
+			return style;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/@floating-ui+utils@0.2.12/node_modules/@floating-ui/utils/dist/floating-ui.utils.dom.mjs
+		function hasWindow() {
+			return typeof window !== "undefined";
+		}
+		function getNodeName(node) {
+			if (isNode(node)) return (node.nodeName || "").toLowerCase();
+			return "#document";
+		}
+		function getWindow(node) {
+			var _node$ownerDocument;
+			return (node == null || (_node$ownerDocument = node.ownerDocument) == null ? void 0 : _node$ownerDocument.defaultView) || window;
+		}
+		function getDocumentElement(node) {
+			var _ref;
+			return (_ref = (isNode(node) ? node.ownerDocument : node.document) || window.document) == null ? void 0 : _ref.documentElement;
+		}
+		function isNode(value) {
+			if (!hasWindow()) return false;
+			return value instanceof Node || value instanceof getWindow(value).Node;
+		}
+		function isElement(value) {
+			if (!hasWindow()) return false;
+			return value instanceof Element || value instanceof getWindow(value).Element;
+		}
+		function isHTMLElement(value) {
+			if (!hasWindow()) return false;
+			return value instanceof HTMLElement || value instanceof getWindow(value).HTMLElement;
+		}
+		function isShadowRoot(value) {
+			if (!hasWindow() || typeof ShadowRoot === "undefined") return false;
+			return value instanceof ShadowRoot || value instanceof getWindow(value).ShadowRoot;
+		}
+		function isOverflowElement(element) {
+			const { overflow, overflowX, overflowY, display } = getComputedStyle$1(element);
+			return /auto|scroll|overlay|hidden|clip/.test(overflow + overflowY + overflowX) && display !== "inline" && display !== "contents";
+		}
+		function isTableElement(element) {
+			return /^(table|td|th)$/.test(getNodeName(element));
+		}
+		function isTopLayer(element) {
+			try {
+				if (element.matches(":popover-open")) return true;
+			} catch (_e) {}
+			try {
+				return element.matches(":modal");
+			} catch (_e) {
+				return false;
+			}
+		}
+		const willChangeRe = /transform|translate|scale|rotate|perspective|filter/;
+		const containRe = /paint|layout|strict|content/;
+		const isNotNone = (value) => !!value && value !== "none";
+		let isWebKitValue;
+		function isContainingBlock(elementOrCss) {
+			const css = isElement(elementOrCss) ? getComputedStyle$1(elementOrCss) : elementOrCss;
+			return isNotNone(css.transform) || isNotNone(css.translate) || isNotNone(css.scale) || isNotNone(css.rotate) || isNotNone(css.perspective) || !isWebKit() && (isNotNone(css.backdropFilter) || isNotNone(css.filter)) || willChangeRe.test(css.willChange || "") || containRe.test(css.contain || "");
+		}
+		function getContainingBlock(element) {
+			let currentNode = getParentNode(element);
+			while (isHTMLElement(currentNode) && !isLastTraversableNode(currentNode)) {
+				if (isContainingBlock(currentNode)) return currentNode;
+				else if (isTopLayer(currentNode)) return null;
+				currentNode = getParentNode(currentNode);
+			}
+			return null;
+		}
+		function isWebKit() {
+			if (isWebKitValue == null) isWebKitValue = typeof CSS !== "undefined" && CSS.supports && CSS.supports("-webkit-backdrop-filter", "none");
+			return isWebKitValue;
+		}
+		function isLastTraversableNode(node) {
+			return /^(html|body|#document)$/.test(getNodeName(node));
+		}
+		function getComputedStyle$1(element) {
+			return getWindow(element).getComputedStyle(element);
+		}
+		function getNodeScroll(element) {
+			if (isElement(element)) return {
+				scrollLeft: element.scrollLeft,
+				scrollTop: element.scrollTop
+			};
+			return {
+				scrollLeft: element.scrollX,
+				scrollTop: element.scrollY
+			};
+		}
+		function getParentNode(node) {
+			if (getNodeName(node) === "html") return node;
+			const result = node.assignedSlot || node.parentNode || isShadowRoot(node) && node.host || getDocumentElement(node);
+			return isShadowRoot(result) ? result.host : result;
+		}
+		function getNearestOverflowAncestor(node) {
+			const parentNode = getParentNode(node);
+			if (isLastTraversableNode(parentNode)) return (node.ownerDocument || node).body;
+			if (isHTMLElement(parentNode) && isOverflowElement(parentNode)) return parentNode;
+			return getNearestOverflowAncestor(parentNode);
+		}
+		function getOverflowAncestors(node, list, traverseIframes) {
+			var _node$ownerDocument2;
+			if (list === void 0) list = [];
+			if (traverseIframes === void 0) traverseIframes = true;
+			const scrollableAncestor = getNearestOverflowAncestor(node);
+			const isBody = scrollableAncestor === ((_node$ownerDocument2 = node.ownerDocument) == null ? void 0 : _node$ownerDocument2.body);
+			const win = getWindow(scrollableAncestor);
+			if (isBody) {
+				const frameElement = getFrameElement(win);
+				return list.concat(win, win.visualViewport || [], isOverflowElement(scrollableAncestor) ? scrollableAncestor : [], frameElement && traverseIframes ? getOverflowAncestors(frameElement) : []);
+			} else return list.concat(scrollableAncestor, getOverflowAncestors(scrollableAncestor, [], traverseIframes));
+		}
+		function getFrameElement(win) {
+			return win.parent && Object.getPrototypeOf(win.parent) ? win.frameElement : null;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/@floating-ui+utils@0.2.12/node_modules/@floating-ui/utils/dist/floating-ui.utils.mjs
+		const min = Math.min;
+		const max = Math.max;
+		const round = Math.round;
+		const floor = Math.floor;
+		const createCoords = (v) => ({
+			x: v,
+			y: v
+		});
+		const oppositeSideMap = {
+			left: "right",
+			right: "left",
+			bottom: "top",
+			top: "bottom"
+		};
+		function clamp(start, value, end) {
+			return max(start, min(value, end));
+		}
+		function evaluate(value, param) {
+			return typeof value === "function" ? value(param) : value;
+		}
+		function getSide(placement) {
+			return placement.split("-")[0];
+		}
+		function getAlignment(placement) {
+			return placement.split("-")[1];
+		}
+		function getOppositeAxis(axis) {
+			return axis === "x" ? "y" : "x";
+		}
+		function getAxisLength(axis) {
+			return axis === "y" ? "height" : "width";
+		}
+		function getSideAxis(placement) {
+			const firstChar = placement[0];
+			return firstChar === "t" || firstChar === "b" ? "y" : "x";
+		}
+		function getAlignmentAxis(placement) {
+			return getOppositeAxis(getSideAxis(placement));
+		}
+		function getAlignmentSides(placement, rects, rtl) {
+			if (rtl === void 0) rtl = false;
+			const alignment = getAlignment(placement);
+			const alignmentAxis = getAlignmentAxis(placement);
+			const length = getAxisLength(alignmentAxis);
+			let mainAlignmentSide = alignmentAxis === "x" ? alignment === (rtl ? "end" : "start") ? "right" : "left" : alignment === "start" ? "bottom" : "top";
+			if (rects.reference[length] > rects.floating[length]) mainAlignmentSide = getOppositePlacement(mainAlignmentSide);
+			return [mainAlignmentSide, getOppositePlacement(mainAlignmentSide)];
+		}
+		function getExpandedPlacements(placement) {
+			const oppositePlacement = getOppositePlacement(placement);
+			return [
+				getOppositeAlignmentPlacement(placement),
+				oppositePlacement,
+				getOppositeAlignmentPlacement(oppositePlacement)
+			];
+		}
+		function getOppositeAlignmentPlacement(placement) {
+			return placement.includes("start") ? placement.replace("start", "end") : placement.replace("end", "start");
+		}
+		const lrPlacement = ["left", "right"];
+		const rlPlacement = ["right", "left"];
+		const tbPlacement = ["top", "bottom"];
+		const btPlacement = ["bottom", "top"];
+		function getSideList(side, isStart, rtl) {
+			switch (side) {
+				case "top":
+				case "bottom":
+					if (rtl) return isStart ? rlPlacement : lrPlacement;
+					return isStart ? lrPlacement : rlPlacement;
+				case "left":
+				case "right": return isStart ? tbPlacement : btPlacement;
+				default: return [];
+			}
+		}
+		function getOppositeAxisPlacements(placement, flipAlignment, direction, rtl) {
+			const alignment = getAlignment(placement);
+			let list = getSideList(getSide(placement), direction === "start", rtl);
+			if (alignment) {
+				list = list.map((side) => side + "-" + alignment);
+				if (flipAlignment) list = list.concat(list.map(getOppositeAlignmentPlacement));
+			}
+			return list;
+		}
+		function getOppositePlacement(placement) {
+			const side = getSide(placement);
+			return oppositeSideMap[side] + placement.slice(side.length);
+		}
+		function expandPaddingObject(padding) {
+			var _padding$top, _padding$right, _padding$bottom, _padding$left;
+			return {
+				top: (_padding$top = padding.top) != null ? _padding$top : 0,
+				right: (_padding$right = padding.right) != null ? _padding$right : 0,
+				bottom: (_padding$bottom = padding.bottom) != null ? _padding$bottom : 0,
+				left: (_padding$left = padding.left) != null ? _padding$left : 0
+			};
+		}
+		function getPaddingObject(padding) {
+			return typeof padding !== "number" ? expandPaddingObject(padding) : {
+				top: padding,
+				right: padding,
+				bottom: padding,
+				left: padding
+			};
+		}
+		function rectToClientRect(rect) {
+			const { x, y, width, height } = rect;
+			return {
+				width,
+				height,
+				top: y,
+				left: x,
+				right: x + width,
+				bottom: y + height,
+				x,
+				y
+			};
+		}
+		/*!
+		* tabbable 6.5.1
+		* @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
+		*/
+		//#endregion
+		//#region ../../node_modules/.pnpm/@floating-ui+react@0.27.20_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/@floating-ui/react/dist/floating-ui.react.utils.mjs
+		var import_dist = (/* @__PURE__ */ __commonJSMin(((exports) => {
+			var candidateSelector = /* #__PURE__ */ [
+				"input:not([inert]):not([inert] *)",
+				"select:not([inert]):not([inert] *)",
+				"textarea:not([inert]):not([inert] *)",
+				"a[href]:not([inert]):not([inert] *)",
+				"area[href]:not([inert]):not([inert] *)",
+				"button:not([inert]):not([inert] *)",
+				"[tabindex]:not(slot):not([inert]):not([inert] *)",
+				"audio[controls]:not([inert]):not([inert] *)",
+				"video[controls]:not([inert]):not([inert] *)",
+				"[contenteditable]:not([contenteditable=\"false\"]):not([inert]):not([inert] *)",
+				"details>summary:first-of-type:not([inert]):not([inert] *)",
+				"details:not([inert]):not([inert] *)"
+			].join(",");
+			var NoElement = typeof Element === "undefined";
+			var matches = NoElement ? function() {} : Element.prototype.matches || Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+			var getRootNode = !NoElement && Element.prototype.getRootNode ? function(element) {
+				return element == null || element.getRootNode == null ? void 0 : element.getRootNode();
+			} : function(element) {
+				return element == null ? void 0 : element.ownerDocument;
+			};
+			/**
+			* Determines if a node is inert or in an inert ancestor.
+			* @param {Node} [node]
+			* @param {boolean} [lookUp] If true and `node` is not inert, looks up at ancestors to
+			*  see if any of them are inert. If false, only `node` itself is considered.
+			* @returns {boolean} True if inert itself or by way of being in an inert ancestor.
+			*  False if `node` is falsy.
+			*/
+			var _isInert = function isInert(node, lookUp) {
+				if (lookUp === void 0) lookUp = true;
+				var inertAtt = node == null || node.getAttribute == null ? void 0 : node.getAttribute("inert");
+				return inertAtt === "" || inertAtt === "true" || lookUp && node && (typeof node.closest === "function" ? node.closest("[inert]") : _isInert(node.parentNode));
+			};
+			/**
+			* Determines if a node's content is editable.
+			* @param {Element} [node]
+			* @returns True if it's content-editable; false if it's not or `node` is falsy.
+			*/
+			var isContentEditable = function isContentEditable(node) {
+				var _node$getAttribute;
+				var attValue = node == null || node.getAttribute == null || (_node$getAttribute = node.getAttribute("contenteditable")) == null ? void 0 : _node$getAttribute.toLowerCase();
+				return attValue === "" || attValue === "true" || attValue === "plaintext-only";
+			};
+			/**
+			* @param {Element} el container to check in
+			* @param {boolean} includeContainer add container to check
+			* @param {(node: Element) => boolean} filter filter candidates
+			* @returns {Element[]}
+			*/
+			var getCandidates = function getCandidates(el, includeContainer, filter) {
+				if (_isInert(el)) return [];
+				var candidates = Array.prototype.slice.apply(el.querySelectorAll(candidateSelector));
+				if (includeContainer && matches.call(el, candidateSelector)) candidates.unshift(el);
+				candidates = candidates.filter(filter);
+				return candidates;
+			};
+			/**
+			* @callback GetShadowRoot
+			* @param {Element} element to check for shadow root
+			* @returns {ShadowRoot|boolean} ShadowRoot if available or boolean indicating if a shadowRoot is attached but not available.
+			*/
+			/**
+			* @callback ShadowRootFilter
+			* @param {Element} shadowHostNode the element which contains shadow content
+			* @returns {boolean} true if a shadow root could potentially contain valid candidates.
+			*/
+			/**
+			* @typedef {Object} CandidateScope
+			* @property {Element} scopeParent contains inner candidates
+			* @property {Element[]} candidates list of candidates found in the scope parent
+			*/
+			/**
+			* @typedef {Object} IterativeOptions
+			* @property {GetShadowRoot|boolean} getShadowRoot true if shadow support is enabled; falsy if not;
+			*  if a function, implies shadow support is enabled and either returns the shadow root of an element
+			*  or a boolean stating if it has an undisclosed shadow root
+			* @property {(node: Element) => boolean} filter filter candidates
+			* @property {boolean} flatten if true then result will flatten any CandidateScope into the returned list
+			* @property {ShadowRootFilter} shadowRootFilter filter shadow roots;
+			*/
+			/**
+			* @param {Element[]} elements list of element containers to match candidates from
+			* @param {boolean} includeContainer add container list to check
+			* @param {IterativeOptions} options
+			* @returns {Array.<Element|CandidateScope>}
+			*/
+			var _getCandidatesIteratively = function getCandidatesIteratively(elements, includeContainer, options) {
+				var candidates = [];
+				var elementsToCheck = Array.from(elements);
+				while (elementsToCheck.length) {
+					var element = elementsToCheck.shift();
+					if (_isInert(element, false)) continue;
+					if (element.tagName === "SLOT") {
+						var assigned = element.assignedElements();
+						var nestedCandidates = _getCandidatesIteratively(assigned.length ? assigned : element.children, true, options);
+						if (options.flatten) candidates.push.apply(candidates, nestedCandidates);
+						else candidates.push({
+							scopeParent: element,
+							candidates: nestedCandidates
+						});
+					} else {
+						if (matches.call(element, candidateSelector) && options.filter(element) && (includeContainer || !elements.includes(element))) candidates.push(element);
+						var shadowRoot = element.shadowRoot || typeof options.getShadowRoot === "function" && options.getShadowRoot(element);
+						var validShadowRoot = !_isInert(shadowRoot, false) && (!options.shadowRootFilter || options.shadowRootFilter(element));
+						if (shadowRoot && validShadowRoot) {
+							var _nestedCandidates = _getCandidatesIteratively(shadowRoot === true ? element.children : shadowRoot.children, true, options);
+							if (options.flatten) candidates.push.apply(candidates, _nestedCandidates);
+							else candidates.push({
+								scopeParent: element,
+								candidates: _nestedCandidates
+							});
+						} else elementsToCheck.unshift.apply(elementsToCheck, element.children);
+					}
+				}
+				return candidates;
+			};
+			/**
+			* @private
+			* Determines if the node has an explicitly specified `tabindex` attribute.
+			* @param {HTMLElement} node
+			* @returns {boolean} True if so; false if not.
+			*/
+			var hasTabIndex = function hasTabIndex(node) {
+				return !isNaN(parseInt(node.getAttribute("tabindex"), 10));
+			};
+			/**
+			* Determine the tab index of a given node.
+			* @param {HTMLElement} node
+			* @returns {number} Tab order (negative, 0, or positive number).
+			* @throws {Error} If `node` is falsy.
+			*/
+			var getTabIndex = function getTabIndex(node) {
+				if (!node) throw new Error("No node provided");
+				if (node.tabIndex < 0) {
+					if ((/^(AUDIO|VIDEO|DETAILS)$/.test(node.tagName) || isContentEditable(node)) && !hasTabIndex(node)) return 0;
+				}
+				return node.tabIndex;
+			};
+			/**
+			* Determine the tab index of a given node __for sort order purposes__.
+			* @param {HTMLElement} node
+			* @param {boolean} [isScope] True for a custom element with shadow root or slot that, by default,
+			*  has tabIndex -1, but needs to be sorted by document order in order for its content to be
+			*  inserted into the correct sort position.
+			* @returns {number} Tab order (negative, 0, or positive number).
+			*/
+			var getSortOrderTabIndex = function getSortOrderTabIndex(node, isScope) {
+				var tabIndex = getTabIndex(node);
+				if (tabIndex < 0 && isScope && !hasTabIndex(node)) return 0;
+				return tabIndex;
+			};
+			var sortOrderedTabbables = function sortOrderedTabbables(a, b) {
+				return a.tabIndex === b.tabIndex ? a.documentOrder - b.documentOrder : a.tabIndex - b.tabIndex;
+			};
+			var isInput = function isInput(node) {
+				return node.tagName === "INPUT";
+			};
+			var isHiddenInput = function isHiddenInput(node) {
+				return isInput(node) && node.type === "hidden";
+			};
+			var isDetailsWithSummary = function isDetailsWithSummary(node) {
+				return node.tagName === "DETAILS" && Array.prototype.slice.apply(node.children).some(function(child) {
+					return child.tagName === "SUMMARY";
+				});
+			};
+			var getCheckedRadio = function getCheckedRadio(nodes, form) {
+				for (var i = 0; i < nodes.length; i++) if (nodes[i].checked && nodes[i].form === form) return nodes[i];
+			};
+			var isTabbableRadio = function isTabbableRadio(node) {
+				if (!node.name) return true;
+				var radioScope = node.form || getRootNode(node);
+				var queryRadios = function queryRadios(name) {
+					return radioScope.querySelectorAll("input[type=\"radio\"][name=\"" + name + "\"]");
+				};
+				var radioSet;
+				if (typeof window !== "undefined" && typeof window.CSS !== "undefined" && typeof window.CSS.escape === "function") radioSet = queryRadios(window.CSS.escape(node.name));
+				else try {
+					radioSet = queryRadios(node.name);
+				} catch (err) {
+					console.error("Looks like you have a radio button with a name attribute containing invalid CSS selector characters and need the CSS.escape polyfill: %s", err.message);
+					return false;
+				}
+				var checked = getCheckedRadio(radioSet, node.form);
+				return !checked || checked === node;
+			};
+			var isRadio = function isRadio(node) {
+				return isInput(node) && node.type === "radio";
+			};
+			var isNonTabbableRadio = function isNonTabbableRadio(node) {
+				return isRadio(node) && !isTabbableRadio(node);
+			};
+			var isNodeAttached = function isNodeAttached(node) {
+				var _nodeRoot;
+				var nodeRoot = node && getRootNode(node);
+				var nodeRootHost = (_nodeRoot = nodeRoot) == null ? void 0 : _nodeRoot.host;
+				var attached = false;
+				if (nodeRoot && nodeRoot !== node) {
+					var _nodeRootHost, _node$ownerDocument;
+					attached = !!((_nodeRootHost = nodeRootHost) != null && (_nodeRootHost = _nodeRootHost.ownerDocument) != null && _nodeRootHost.contains(nodeRootHost) || node != null && (_node$ownerDocument = node.ownerDocument) != null && _node$ownerDocument.contains(node));
+					while (!attached && nodeRootHost) {
+						var _nodeRoot2, _nodeRootHost2;
+						nodeRoot = getRootNode(nodeRootHost);
+						nodeRootHost = (_nodeRoot2 = nodeRoot) == null ? void 0 : _nodeRoot2.host;
+						attached = !!((_nodeRootHost2 = nodeRootHost) != null && (_nodeRootHost2 = _nodeRootHost2.ownerDocument) != null && _nodeRootHost2.contains(nodeRootHost));
+					}
+				}
+				return attached;
+			};
+			var isZeroArea = function isZeroArea(node) {
+				var _node$getBoundingClie = node.getBoundingClientRect(), width = _node$getBoundingClie.width, height = _node$getBoundingClie.height;
+				return width === 0 && height === 0;
+			};
+			var isHidden = function isHidden(node, _ref) {
+				var displayCheck = _ref.displayCheck, getShadowRoot = _ref.getShadowRoot;
+				if (displayCheck === "full-native") {
+					if ("checkVisibility" in node) return !node.checkVisibility({
+						checkOpacity: false,
+						opacityProperty: false,
+						contentVisibilityAuto: true,
+						visibilityProperty: true,
+						checkVisibilityCSS: true
+					});
+				}
+				var visibility = getComputedStyle(node).visibility;
+				if (visibility === "hidden" || visibility === "collapse") return true;
+				var nodeUnderDetails = matches.call(node, "details>summary:first-of-type") ? node.parentElement : node;
+				if (matches.call(nodeUnderDetails, "details:not([open]) *")) return true;
+				if (!displayCheck || displayCheck === "full" || displayCheck === "full-native" || displayCheck === "legacy-full") {
+					if (typeof getShadowRoot === "function") {
+						var originalNode = node;
+						while (node) {
+							var parentElement = node.parentElement;
+							var rootNode = getRootNode(node);
+							if (parentElement && !parentElement.shadowRoot && getShadowRoot(parentElement) === true) return isZeroArea(node);
+							else if (node.assignedSlot) node = node.assignedSlot;
+							else if (!parentElement && rootNode !== node.ownerDocument) node = rootNode.host;
+							else node = parentElement;
+						}
+						node = originalNode;
+					}
+					if (isNodeAttached(node)) return !node.getClientRects().length;
+					if (displayCheck !== "legacy-full") return true;
+				} else if (displayCheck === "non-zero-area") return isZeroArea(node);
+				return false;
+			};
+			var isDisabledFromFieldset = function isDisabledFromFieldset(node) {
+				if (/^(INPUT|BUTTON|SELECT|TEXTAREA)$/.test(node.tagName)) {
+					var parentNode = node.parentElement;
+					while (parentNode) {
+						if (parentNode.tagName === "FIELDSET" && parentNode.disabled) {
+							for (var i = 0; i < parentNode.children.length; i++) {
+								var child = parentNode.children.item(i);
+								if (child.tagName === "LEGEND") return matches.call(parentNode, "fieldset[disabled] *") ? true : !child.contains(node);
+							}
+							return true;
+						}
+						parentNode = parentNode.parentElement;
+					}
+				}
+				return false;
+			};
+			var isNodeMatchingSelectorFocusable = function isNodeMatchingSelectorFocusable(options, node) {
+				if (node.disabled || isHiddenInput(node) || isHidden(node, options) || isDetailsWithSummary(node) || isDisabledFromFieldset(node)) return false;
+				return true;
+			};
+			var isNodeMatchingSelectorTabbable = function isNodeMatchingSelectorTabbable(options, node) {
+				if (isNonTabbableRadio(node) || getTabIndex(node) < 0 || !isNodeMatchingSelectorFocusable(options, node)) return false;
+				return true;
+			};
+			var isShadowRootTabbable = function isShadowRootTabbable(shadowHostNode) {
+				var tabIndex = parseInt(shadowHostNode.getAttribute("tabindex"), 10);
+				if (isNaN(tabIndex) || tabIndex >= 0) return true;
+				return false;
+			};
+			/**
+			* @param {Array.<Element|CandidateScope>} candidates
+			* @returns Element[]
+			*/
+			var _sortByOrder = function sortByOrder(candidates) {
+				var regularTabbables = [];
+				var orderedTabbables = [];
+				candidates.forEach(function(item, i) {
+					var isScope = !!item.scopeParent;
+					var element = isScope ? item.scopeParent : item;
+					var candidateTabindex = getSortOrderTabIndex(element, isScope);
+					var elements = isScope ? _sortByOrder(item.candidates) : element;
+					if (candidateTabindex === 0) isScope ? regularTabbables.push.apply(regularTabbables, elements) : regularTabbables.push(element);
+					else orderedTabbables.push({
+						documentOrder: i,
+						tabIndex: candidateTabindex,
+						item,
+						isScope,
+						content: elements
+					});
+				});
+				return orderedTabbables.sort(sortOrderedTabbables).reduce(function(acc, sortable) {
+					sortable.isScope ? acc.push.apply(acc, sortable.content) : acc.push(sortable.content);
+					return acc;
+				}, []).concat(regularTabbables);
+			};
+			exports.tabbable = function tabbable(container, options) {
+				options = options || {};
+				var candidates;
+				if (options.getShadowRoot) candidates = _getCandidatesIteratively([container], options.includeContainer, {
+					filter: isNodeMatchingSelectorTabbable.bind(null, options),
+					flatten: false,
+					getShadowRoot: options.getShadowRoot,
+					shadowRootFilter: isShadowRootTabbable
+				});
+				else candidates = getCandidates(container, options.includeContainer, isNodeMatchingSelectorTabbable.bind(null, options));
+				return _sortByOrder(candidates);
+			};
+		})))();
+		function isSafari() {
+			return /apple/i.test(navigator.vendor);
+		}
+		function activeElement(doc) {
+			let activeElement = doc.activeElement;
+			while (((_activeElement = activeElement) == null || (_activeElement = _activeElement.shadowRoot) == null ? void 0 : _activeElement.activeElement) != null) {
+				var _activeElement;
+				activeElement = activeElement.shadowRoot.activeElement;
+			}
+			return activeElement;
+		}
+		function contains(parent, child) {
+			if (!parent || !child) return false;
+			const rootNode = child.getRootNode == null ? void 0 : child.getRootNode();
+			if (parent.contains(child)) return true;
+			if (rootNode && isShadowRoot(rootNode)) {
+				let next = child;
+				while (next) {
+					if (parent === next) return true;
+					next = next.parentNode || next.host;
+				}
+			}
+			return false;
+		}
+		function getDocument(node) {
+			return (node == null ? void 0 : node.ownerDocument) || document;
+		}
+		var index$1 = typeof document !== "undefined" ? react$1.useLayoutEffect : function noop() {};
+		const useSafeInsertionEffect = { ...react$1 }.useInsertionEffect || ((fn) => fn());
+		function useEffectEvent(callback) {
+			const ref = react$1.useRef(() => {});
+			useSafeInsertionEffect(() => {
+				ref.current = callback;
+			});
+			return react$1.useCallback(function() {
+				for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) args[_key] = arguments[_key];
+				return ref.current == null ? void 0 : ref.current(...args);
+			}, []);
+		}
+		const getTabbableOptions = () => ({
+			getShadowRoot: true,
+			displayCheck: typeof ResizeObserver === "function" && ResizeObserver.toString().includes("[native code]") ? "full" : "none"
+		});
+		function getTabbableIn(container, dir) {
+			const list = (0, import_dist.tabbable)(container, getTabbableOptions());
+			const len = list.length;
+			if (len === 0) return;
+			const active = activeElement(getDocument(container));
+			const index = list.indexOf(active);
+			return list[index === -1 ? dir === 1 ? 0 : len - 1 : index + dir];
+		}
+		function getNextTabbable(referenceElement) {
+			return getTabbableIn(getDocument(referenceElement).body, 1) || referenceElement;
+		}
+		function getPreviousTabbable(referenceElement) {
+			return getTabbableIn(getDocument(referenceElement).body, -1) || referenceElement;
+		}
+		function isOutsideEvent(event, container) {
+			const containerElement = container || event.currentTarget;
+			const relatedTarget = event.relatedTarget;
+			return !relatedTarget || !contains(containerElement, relatedTarget);
+		}
+		function disableFocusInside(container) {
+			(0, import_dist.tabbable)(container, getTabbableOptions()).forEach((element) => {
+				element.dataset.tabindex = element.getAttribute("tabindex") || "";
+				element.setAttribute("tabindex", "-1");
+			});
+		}
+		function enableFocusInside(container) {
+			container.querySelectorAll("[data-tabindex]").forEach((element) => {
+				const tabindex = element.dataset.tabindex;
+				delete element.dataset.tabindex;
+				if (tabindex) element.setAttribute("tabindex", tabindex);
+				else element.removeAttribute("tabindex");
+			});
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/@floating-ui+core@1.8.0/node_modules/@floating-ui/core/dist/floating-ui.core.mjs
+		function computeCoordsFromPlacement(_ref, placement, rtl) {
+			let { reference, floating } = _ref;
+			const sideAxis = getSideAxis(placement);
+			const alignmentAxis = getAlignmentAxis(placement);
+			const alignLength = getAxisLength(alignmentAxis);
+			const side = getSide(placement);
+			const isVertical = sideAxis === "y";
+			const commonX = reference.x + reference.width / 2 - floating.width / 2;
+			const commonY = reference.y + reference.height / 2 - floating.height / 2;
+			const commonAlign = reference[alignLength] / 2 - floating[alignLength] / 2;
+			let coords;
+			switch (side) {
+				case "top":
+					coords = {
+						x: commonX,
+						y: reference.y - floating.height
+					};
+					break;
+				case "bottom":
+					coords = {
+						x: commonX,
+						y: reference.y + reference.height
+					};
+					break;
+				case "right":
+					coords = {
+						x: reference.x + reference.width,
+						y: commonY
+					};
+					break;
+				case "left":
+					coords = {
+						x: reference.x - floating.width,
+						y: commonY
+					};
+					break;
+				default: coords = {
+					x: reference.x,
+					y: reference.y
+				};
+			}
+			const alignment = getAlignment(placement);
+			if (alignment) coords[alignmentAxis] += commonAlign * (alignment === "end" ? 1 : -1) * (rtl && isVertical ? -1 : 1);
+			return coords;
+		}
+		/**
+		* Resolves with an object of overflow side offsets that determine how much the
+		* element is overflowing a given clipping boundary on each side.
+		* - positive = overflowing the boundary by that number of pixels
+		* - negative = how many pixels left before it will overflow
+		* - 0 = lies flush with the boundary
+		* @see https://floating-ui.com/docs/detectOverflow
+		*/
+		async function detectOverflow(state, options) {
+			var _await$platform$isEle;
+			if (options === void 0) options = {};
+			const { x, y, platform, rects, elements, strategy } = state;
+			const { boundary = "clippingAncestors", rootBoundary = "viewport", elementContext = "floating", altBoundary = false, padding = 0 } = evaluate(options, state);
+			const paddingObject = getPaddingObject(padding);
+			const element = elements[altBoundary ? elementContext === "floating" ? "reference" : "floating" : elementContext];
+			const clippingClientRect = rectToClientRect(await platform.getClippingRect({
+				element: ((_await$platform$isEle = await (platform.isElement == null ? void 0 : platform.isElement(element))) != null ? _await$platform$isEle : true) ? element : element.contextElement || await (platform.getDocumentElement == null ? void 0 : platform.getDocumentElement(elements.floating)),
+				boundary,
+				rootBoundary,
+				strategy
+			}));
+			const rect = elementContext === "floating" ? {
+				x,
+				y,
+				width: rects.floating.width,
+				height: rects.floating.height
+			} : rects.reference;
+			const offsetParent = await (platform.getOffsetParent == null ? void 0 : platform.getOffsetParent(elements.floating));
+			const offsetScale = await (platform.isElement == null ? void 0 : platform.isElement(offsetParent)) && await (platform.getScale == null ? void 0 : platform.getScale(offsetParent)) || {
+				x: 1,
+				y: 1
+			};
+			const elementClientRect = rectToClientRect(platform.convertOffsetParentRelativeRectToViewportRelativeRect ? await platform.convertOffsetParentRelativeRectToViewportRelativeRect({
+				elements,
+				rect,
+				offsetParent,
+				strategy
+			}) : rect);
+			return {
+				top: (clippingClientRect.top - elementClientRect.top + paddingObject.top) / offsetScale.y,
+				bottom: (elementClientRect.bottom - clippingClientRect.bottom + paddingObject.bottom) / offsetScale.y,
+				left: (clippingClientRect.left - elementClientRect.left + paddingObject.left) / offsetScale.x,
+				right: (elementClientRect.right - clippingClientRect.right + paddingObject.right) / offsetScale.x
+			};
+		}
+		const MAX_RESET_COUNT = 50;
+		/**
+		* Computes the `x` and `y` coordinates that will place the floating element
+		* next to a given reference element.
+		*
+		* This export does not have any `platform` interface logic. You will need to
+		* write one for the platform you are using Floating UI with.
+		*/
+		const computePosition$1 = async (reference, floating, config) => {
+			const { placement = "bottom", strategy = "absolute", middleware = [], platform } = config;
+			const platformWithDetectOverflow = platform.detectOverflow ? platform : {
+				...platform,
+				detectOverflow
+			};
+			const rtl = await (platform.isRTL == null ? void 0 : platform.isRTL(floating));
+			let rects = await platform.getElementRects({
+				reference,
+				floating,
+				strategy
+			});
+			let { x, y } = computeCoordsFromPlacement(rects, placement, rtl);
+			let statefulPlacement = placement;
+			let resetCount = 0;
+			const middlewareData = {};
+			for (let i = 0; i < middleware.length; i++) {
+				const currentMiddleware = middleware[i];
+				if (!currentMiddleware) continue;
+				const { name, fn } = currentMiddleware;
+				const { x: nextX, y: nextY, data, reset } = await fn({
+					x,
+					y,
+					initialPlacement: placement,
+					placement: statefulPlacement,
+					strategy,
+					middlewareData,
+					rects,
+					platform: platformWithDetectOverflow,
+					elements: {
+						reference,
+						floating
+					}
+				});
+				x = nextX != null ? nextX : x;
+				y = nextY != null ? nextY : y;
+				middlewareData[name] = {
+					...middlewareData[name],
+					...data
+				};
+				if (reset && resetCount < MAX_RESET_COUNT) {
+					resetCount++;
+					if (typeof reset === "object") {
+						if (reset.placement) statefulPlacement = reset.placement;
+						if (reset.rects) rects = reset.rects === true ? await platform.getElementRects({
+							reference,
+							floating,
+							strategy
+						}) : reset.rects;
+						({x, y} = computeCoordsFromPlacement(rects, statefulPlacement, rtl));
+					}
+					i = -1;
+				}
+			}
+			return {
+				x,
+				y,
+				placement: statefulPlacement,
+				strategy,
+				middlewareData
+			};
+		};
+		/**
+		* Optimizes the visibility of the floating element by flipping the `placement`
+		* in order to keep it in view when the preferred placement(s) will overflow the
+		* clipping boundary. Alternative to `autoPlacement`.
+		* @see https://floating-ui.com/docs/flip
+		*/
+		const flip$1 = function(options) {
+			if (options === void 0) options = {};
+			return {
+				name: "flip",
+				options,
+				async fn(state) {
+					var _middlewareData$arrow, _middlewareData$flip;
+					const { placement, middlewareData, rects, initialPlacement, platform, elements } = state;
+					const { mainAxis: checkMainAxis = true, crossAxis: checkCrossAxis = true, fallbackPlacements: specifiedFallbackPlacements, fallbackStrategy = "bestFit", fallbackAxisSideDirection = "none", flipAlignment = true, ...detectOverflowOptions } = evaluate(options, state);
+					if ((_middlewareData$arrow = middlewareData.arrow) != null && _middlewareData$arrow.alignmentOffset) return {};
+					const side = getSide(placement);
+					const initialSideAxis = getSideAxis(initialPlacement);
+					const isBasePlacement = getSide(initialPlacement) === initialPlacement;
+					const rtl = await (platform.isRTL == null ? void 0 : platform.isRTL(elements.floating));
+					const fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipAlignment ? [getOppositePlacement(initialPlacement)] : getExpandedPlacements(initialPlacement));
+					const hasFallbackAxisSideDirection = fallbackAxisSideDirection !== "none";
+					if (!specifiedFallbackPlacements && hasFallbackAxisSideDirection) fallbackPlacements.push(...getOppositeAxisPlacements(initialPlacement, flipAlignment, fallbackAxisSideDirection, rtl));
+					const placements = [initialPlacement, ...fallbackPlacements];
+					const overflow = await platform.detectOverflow(state, detectOverflowOptions);
+					const overflows = [];
+					let overflowsData = ((_middlewareData$flip = middlewareData.flip) == null ? void 0 : _middlewareData$flip.overflows) || [];
+					if (checkMainAxis) overflows.push(overflow[side]);
+					if (checkCrossAxis) {
+						const sides = getAlignmentSides(placement, rects, rtl);
+						overflows.push(overflow[sides[0]], overflow[sides[1]]);
+					}
+					overflowsData = [...overflowsData, {
+						placement,
+						overflows
+					}];
+					if (!overflows.every((side) => side <= 0)) {
+						var _middlewareData$flip2, _overflowsData$filter;
+						const nextIndex = (((_middlewareData$flip2 = middlewareData.flip) == null ? void 0 : _middlewareData$flip2.index) || 0) + 1;
+						const nextPlacement = placements[nextIndex];
+						if (nextPlacement) {
+							if (!(checkCrossAxis === "alignment" ? initialSideAxis !== getSideAxis(nextPlacement) : false) || overflowsData.every((d) => getSideAxis(d.placement) === initialSideAxis ? d.overflows[0] > 0 : true)) return {
+								data: {
+									index: nextIndex,
+									overflows: overflowsData
+								},
+								reset: { placement: nextPlacement }
+							};
+						}
+						let resetPlacement = (_overflowsData$filter = overflowsData.filter((d) => d.overflows[0] <= 0).sort((a, b) => a.overflows[1] - b.overflows[1])[0]) == null ? void 0 : _overflowsData$filter.placement;
+						if (!resetPlacement) switch (fallbackStrategy) {
+							case "bestFit": {
+								var _overflowsData$filter2;
+								const placement = (_overflowsData$filter2 = overflowsData.filter((d) => {
+									if (hasFallbackAxisSideDirection) {
+										const currentSideAxis = getSideAxis(d.placement);
+										return currentSideAxis === initialSideAxis || currentSideAxis === "y";
+									}
+									return true;
+								}).map((d) => [d.placement, d.overflows.filter((overflow) => overflow > 0).reduce((acc, overflow) => acc + overflow, 0)]).sort((a, b) => a[1] - b[1])[0]) == null ? void 0 : _overflowsData$filter2[0];
+								if (placement) resetPlacement = placement;
+								break;
+							}
+							case "initialPlacement": resetPlacement = initialPlacement;
+						}
+						if (placement !== resetPlacement) return { reset: { placement: resetPlacement } };
+					}
+					return {};
+				}
+			};
+		};
+		const originSides = /*#__PURE__*/ new Set(["left", "top"]);
+		async function convertValueToCoords(state, options) {
+			const { placement, platform, elements } = state;
+			const rtl = await (platform.isRTL == null ? void 0 : platform.isRTL(elements.floating));
+			const side = getSide(placement);
+			const alignment = getAlignment(placement);
+			const isVertical = getSideAxis(placement) === "y";
+			const mainAxisMulti = originSides.has(side) ? -1 : 1;
+			const crossAxisMulti = rtl && isVertical ? -1 : 1;
+			const rawValue = evaluate(options, state);
+			let { mainAxis, crossAxis, alignmentAxis } = typeof rawValue === "number" ? {
+				mainAxis: rawValue,
+				crossAxis: 0,
+				alignmentAxis: null
+			} : {
+				mainAxis: rawValue.mainAxis || 0,
+				crossAxis: rawValue.crossAxis || 0,
+				alignmentAxis: rawValue.alignmentAxis
+			};
+			if (alignment && typeof alignmentAxis === "number") crossAxis = alignment === "end" ? alignmentAxis * -1 : alignmentAxis;
+			return isVertical ? {
+				x: crossAxis * crossAxisMulti,
+				y: mainAxis * mainAxisMulti
+			} : {
+				x: mainAxis * mainAxisMulti,
+				y: crossAxis * crossAxisMulti
+			};
+		}
+		/**
+		* Modifies the placement by translating the floating element along the
+		* specified axes.
+		* A number (shorthand for `mainAxis` or distance), or an axes configuration
+		* object may be passed.
+		* @see https://floating-ui.com/docs/offset
+		*/
+		const offset$1 = function(options) {
+			if (options === void 0) options = 0;
+			return {
+				name: "offset",
+				options,
+				async fn(state) {
+					var _middlewareData$offse, _middlewareData$arrow;
+					const { x, y, placement, middlewareData } = state;
+					const diffCoords = await convertValueToCoords(state, options);
+					if (placement === ((_middlewareData$offse = middlewareData.offset) == null ? void 0 : _middlewareData$offse.placement) && (_middlewareData$arrow = middlewareData.arrow) != null && _middlewareData$arrow.alignmentOffset) return {};
+					return {
+						x: x + diffCoords.x,
+						y: y + diffCoords.y,
+						data: {
+							...diffCoords,
+							placement
+						}
+					};
+				}
+			};
+		};
+		/**
+		* Optimizes the visibility of the floating element by shifting it in order to
+		* keep it in view when it will overflow the clipping boundary.
+		* @see https://floating-ui.com/docs/shift
+		*/
+		const shift$1 = function(options) {
+			if (options === void 0) options = {};
+			return {
+				name: "shift",
+				options,
+				async fn(state) {
+					const { x, y, placement, platform } = state;
+					const { mainAxis: checkMainAxis = true, crossAxis: checkCrossAxis = false, limiter = { fn: (_ref) => {
+						let { x, y } = _ref;
+						return {
+							x,
+							y
+						};
+					} }, ...detectOverflowOptions } = evaluate(options, state);
+					const coords = {
+						x,
+						y
+					};
+					const overflow = await platform.detectOverflow(state, detectOverflowOptions);
+					const crossAxis = getSideAxis(placement);
+					const mainAxis = getOppositeAxis(crossAxis);
+					let mainAxisCoord = coords[mainAxis];
+					let crossAxisCoord = coords[crossAxis];
+					const clampCoord = (axis, coord) => clamp(coord + overflow[axis === "y" ? "top" : "left"], coord, coord - overflow[axis === "y" ? "bottom" : "right"]);
+					if (checkMainAxis) mainAxisCoord = clampCoord(mainAxis, mainAxisCoord);
+					if (checkCrossAxis) crossAxisCoord = clampCoord(crossAxis, crossAxisCoord);
+					const limitedCoords = limiter.fn({
+						...state,
+						[mainAxis]: mainAxisCoord,
+						[crossAxis]: crossAxisCoord
+					});
+					return {
+						...limitedCoords,
+						data: {
+							x: limitedCoords.x - x,
+							y: limitedCoords.y - y,
+							enabled: {
+								[mainAxis]: checkMainAxis,
+								[crossAxis]: checkCrossAxis
+							}
+						}
+					};
+				}
+			};
+		};
+		/**
+		* Provides data that allows you to change the size of the floating element —
+		* for instance, prevent it from overflowing the clipping boundary or match the
+		* width of the reference element.
+		* @see https://floating-ui.com/docs/size
+		*/
+		const size$1 = function(options) {
+			if (options === void 0) options = {};
+			return {
+				name: "size",
+				options,
+				async fn(state) {
+					const { placement, rects, platform, elements } = state;
+					const { apply = () => {}, ...detectOverflowOptions } = evaluate(options, state);
+					const overflow = await platform.detectOverflow(state, detectOverflowOptions);
+					const side = getSide(placement);
+					const alignment = getAlignment(placement);
+					const isYAxis = getSideAxis(placement) === "y";
+					const { width, height } = rects.floating;
+					let heightSide;
+					let widthSide;
+					if (side === "top" || side === "bottom") {
+						heightSide = side;
+						widthSide = alignment === (await (platform.isRTL == null ? void 0 : platform.isRTL(elements.floating)) ? "start" : "end") ? "left" : "right";
+					} else {
+						widthSide = side;
+						heightSide = alignment === "end" ? "top" : "bottom";
+					}
+					const maximumClippingHeight = height - overflow.top - overflow.bottom;
+					const maximumClippingWidth = width - overflow.left - overflow.right;
+					const overflowAvailableHeight = min(height - overflow[heightSide], maximumClippingHeight);
+					const overflowAvailableWidth = min(width - overflow[widthSide], maximumClippingWidth);
+					const shiftData = state.middlewareData.shift;
+					const noShift = !shiftData;
+					let availableHeight = overflowAvailableHeight;
+					let availableWidth = overflowAvailableWidth;
+					if (shiftData != null && shiftData.enabled.x) availableWidth = maximumClippingWidth;
+					if (shiftData != null && shiftData.enabled.y) availableHeight = maximumClippingHeight;
+					if (noShift && !alignment) {
+						if (isYAxis) availableWidth = width - 2 * max(overflow.left, overflow.right);
+						else availableHeight = height - 2 * max(overflow.top, overflow.bottom);
+					}
+					await apply({
+						...state,
+						availableWidth,
+						availableHeight
+					});
+					const nextDimensions = await platform.getDimensions(elements.floating);
+					if (width !== nextDimensions.width || height !== nextDimensions.height) return { reset: { rects: true } };
+					return {};
+				}
+			};
+		};
+		//#endregion
+		//#region ../../node_modules/.pnpm/@floating-ui+dom@1.8.0/node_modules/@floating-ui/dom/dist/floating-ui.dom.mjs
+		function getCssDimensions(element) {
+			const css = getComputedStyle$1(element);
+			let width = parseFloat(css.width) || 0;
+			let height = parseFloat(css.height) || 0;
+			const hasOffset = isHTMLElement(element);
+			const offsetWidth = hasOffset ? element.offsetWidth : width;
+			const offsetHeight = hasOffset ? element.offsetHeight : height;
+			const shouldFallback = round(width) !== offsetWidth || round(height) !== offsetHeight;
+			if (shouldFallback) {
+				width = offsetWidth;
+				height = offsetHeight;
+			}
+			return {
+				width,
+				height,
+				$: shouldFallback
+			};
+		}
+		function unwrapElement(element) {
+			return !isElement(element) ? element.contextElement : element;
+		}
+		function getScale(element) {
+			const domElement = unwrapElement(element);
+			if (!isHTMLElement(domElement)) return createCoords(1);
+			const rect = domElement.getBoundingClientRect();
+			const { width, height, $ } = getCssDimensions(domElement);
+			let x = ($ ? round(rect.width) : rect.width) / width;
+			let y = ($ ? round(rect.height) : rect.height) / height;
+			if (!x || !Number.isFinite(x)) x = 1;
+			if (!y || !Number.isFinite(y)) y = 1;
+			return {
+				x,
+				y
+			};
+		}
+		const noOffsets = /*#__PURE__*/ createCoords(0);
+		function getVisualOffsets(element) {
+			const win = getWindow(element);
+			if (!isWebKit() || !win.visualViewport) return noOffsets;
+			return {
+				x: win.visualViewport.offsetLeft,
+				y: win.visualViewport.offsetTop
+			};
+		}
+		function shouldAddVisualOffsets(element, isFixed, floatingOffsetParent) {
+			if (isFixed === void 0) isFixed = false;
+			return !!floatingOffsetParent && isFixed && floatingOffsetParent === getWindow(element);
+		}
+		function getBoundingClientRect(element, includeScale, isFixedStrategy, offsetParent) {
+			if (includeScale === void 0) includeScale = false;
+			if (isFixedStrategy === void 0) isFixedStrategy = false;
+			const clientRect = element.getBoundingClientRect();
+			const domElement = unwrapElement(element);
+			let scale = createCoords(1);
+			if (includeScale) {
+				if (offsetParent) {
+					if (isElement(offsetParent)) scale = getScale(offsetParent);
+				} else scale = getScale(element);
+			}
+			const visualOffsets = shouldAddVisualOffsets(domElement, isFixedStrategy, offsetParent) ? getVisualOffsets(domElement) : createCoords(0);
+			let x = (clientRect.left + visualOffsets.x) / scale.x;
+			let y = (clientRect.top + visualOffsets.y) / scale.y;
+			let width = clientRect.width / scale.x;
+			let height = clientRect.height / scale.y;
+			if (domElement && offsetParent) {
+				const win = getWindow(domElement);
+				const offsetWin = isElement(offsetParent) ? getWindow(offsetParent) : offsetParent;
+				let currentWin = win;
+				let currentIFrame = getFrameElement(currentWin);
+				while (currentIFrame && offsetWin !== currentWin) {
+					const iframeScale = getScale(currentIFrame);
+					const iframeRect = currentIFrame.getBoundingClientRect();
+					const css = getComputedStyle$1(currentIFrame);
+					const left = iframeRect.left + (currentIFrame.clientLeft + parseFloat(css.paddingLeft)) * iframeScale.x;
+					const top = iframeRect.top + (currentIFrame.clientTop + parseFloat(css.paddingTop)) * iframeScale.y;
+					x *= iframeScale.x;
+					y *= iframeScale.y;
+					width *= iframeScale.x;
+					height *= iframeScale.y;
+					x += left;
+					y += top;
+					currentWin = getWindow(currentIFrame);
+					currentIFrame = getFrameElement(currentWin);
+				}
+			}
+			return rectToClientRect({
+				width,
+				height,
+				x,
+				y
+			});
+		}
+		function getWindowScrollBarX(element, rect) {
+			const leftScroll = getNodeScroll(element).scrollLeft;
+			if (!rect) return getBoundingClientRect(getDocumentElement(element)).left + leftScroll;
+			return rect.left + leftScroll;
+		}
+		function getHTMLOffset(documentElement, scroll) {
+			const htmlRect = documentElement.getBoundingClientRect();
+			return {
+				x: htmlRect.left + scroll.scrollLeft - getWindowScrollBarX(documentElement, htmlRect),
+				y: htmlRect.top + scroll.scrollTop
+			};
+		}
+		function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
+			let { elements, rect, offsetParent, strategy } = _ref;
+			const isFixed = strategy === "fixed";
+			const documentElement = getDocumentElement(offsetParent);
+			const topLayer = elements ? isTopLayer(elements.floating) : false;
+			if (offsetParent === documentElement || topLayer && isFixed) return rect;
+			let scroll = {
+				scrollLeft: 0,
+				scrollTop: 0
+			};
+			let scale = createCoords(1);
+			const offsets = createCoords(0);
+			const isOffsetParentAnElement = isHTMLElement(offsetParent);
+			if (isOffsetParentAnElement || !isFixed) {
+				if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) scroll = getNodeScroll(offsetParent);
+				if (isOffsetParentAnElement) {
+					const offsetRect = getBoundingClientRect(offsetParent);
+					scale = getScale(offsetParent);
+					offsets.x = offsetRect.x + offsetParent.clientLeft;
+					offsets.y = offsetRect.y + offsetParent.clientTop;
+				}
+			}
+			const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
+			return {
+				width: rect.width * scale.x,
+				height: rect.height * scale.y,
+				x: rect.x * scale.x - scroll.scrollLeft * scale.x + offsets.x + htmlOffset.x,
+				y: rect.y * scale.y - scroll.scrollTop * scale.y + offsets.y + htmlOffset.y
+			};
+		}
+		function getClientRects(element) {
+			return element.getClientRects ? Array.from(element.getClientRects()) : [];
+		}
+		function getDocumentRect(html) {
+			const scroll = getNodeScroll(html);
+			const body = html.ownerDocument.body;
+			const width = max(html.scrollWidth, html.clientWidth, body.scrollWidth, body.clientWidth);
+			const height = max(html.scrollHeight, html.clientHeight, body.scrollHeight, body.clientHeight);
+			let x = -scroll.scrollLeft + getWindowScrollBarX(html);
+			const y = -scroll.scrollTop;
+			if (getComputedStyle$1(body).direction === "rtl") x += max(html.clientWidth, body.clientWidth) - width;
+			return {
+				width,
+				height,
+				x,
+				y
+			};
+		}
+		const SCROLLBAR_MAX = 25;
+		function getViewportRect(element, strategy, rootBoundary) {
+			if (rootBoundary === void 0) rootBoundary = "viewport";
+			const isLayoutViewport = rootBoundary === "layoutViewport";
+			const win = getWindow(element);
+			const html = getDocumentElement(element);
+			const visualViewport = win.visualViewport;
+			let width = html.clientWidth;
+			let height = html.clientHeight;
+			let x = 0;
+			let y = 0;
+			if (visualViewport) {
+				const layoutRelativeClientCoords = !isWebKit() || strategy === "fixed";
+				if (isLayoutViewport) {
+					if (!layoutRelativeClientCoords) {
+						x = -visualViewport.offsetLeft;
+						y = -visualViewport.offsetTop;
+					}
+				} else {
+					width = visualViewport.width;
+					height = visualViewport.height;
+					if (layoutRelativeClientCoords) {
+						x = visualViewport.offsetLeft;
+						y = visualViewport.offsetTop;
+					}
+				}
+			}
+			if (getWindowScrollBarX(html) <= 0) {
+				const doc = html.ownerDocument;
+				const body = doc.body;
+				const bodyStyles = getComputedStyle(body);
+				const bodyMarginInline = doc.compatMode === "CSS1Compat" ? parseFloat(bodyStyles.marginLeft) + parseFloat(bodyStyles.marginRight) || 0 : 0;
+				const reservedWidth = Math.abs(html.clientWidth - body.clientWidth - bodyMarginInline);
+				const gutter = getComputedStyle(html).scrollbarGutter === "stable both-edges" ? reservedWidth / 2 : reservedWidth;
+				if (gutter <= SCROLLBAR_MAX) width -= gutter;
+			}
+			return {
+				width,
+				height,
+				x,
+				y
+			};
+		}
+		function getInnerBoundingClientRect(element, strategy) {
+			const clientRect = getBoundingClientRect(element, true, strategy === "fixed");
+			const top = clientRect.top + element.clientTop;
+			const left = clientRect.left + element.clientLeft;
+			const scale = getScale(element);
+			return {
+				width: element.clientWidth * scale.x,
+				height: element.clientHeight * scale.y,
+				x: left * scale.x,
+				y: top * scale.y
+			};
+		}
+		function getClientRectFromClippingAncestor(element, clippingAncestor, strategy) {
+			let rect;
+			if (clippingAncestor === "viewport" || clippingAncestor === "layoutViewport") rect = getViewportRect(element, strategy, clippingAncestor);
+			else if (clippingAncestor === "document") rect = getDocumentRect(getDocumentElement(element));
+			else if (isElement(clippingAncestor)) rect = getInnerBoundingClientRect(clippingAncestor, strategy);
+			else {
+				const visualOffsets = getVisualOffsets(element);
+				rect = {
+					x: clippingAncestor.x - visualOffsets.x,
+					y: clippingAncestor.y - visualOffsets.y,
+					width: clippingAncestor.width,
+					height: clippingAncestor.height
+				};
+			}
+			return rectToClientRect(rect);
+		}
+		function getClippingElementAncestors(element, cache) {
+			const cachedResult = cache.get(element);
+			if (cachedResult) return cachedResult;
+			let result = getOverflowAncestors(element, [], false).filter((el) => isElement(el) && getNodeName(el) !== "body");
+			let lastKeptComputedStyle = null;
+			const elementIsFixed = getComputedStyle$1(element).position === "fixed";
+			let currentNode = elementIsFixed ? getParentNode(element) : element;
+			while (isElement(currentNode) && !isLastTraversableNode(currentNode)) {
+				const computedStyle = getComputedStyle$1(currentNode);
+				const currentNodeIsContaining = isContainingBlock(currentNode);
+				const lastPosition = lastKeptComputedStyle ? lastKeptComputedStyle.position : elementIsFixed ? "fixed" : "";
+				if (!currentNodeIsContaining && (lastPosition === "fixed" || lastPosition === "absolute" && computedStyle.position === "static")) result = result.filter((ancestor) => ancestor !== currentNode);
+				else lastKeptComputedStyle = computedStyle;
+				currentNode = getParentNode(currentNode);
+			}
+			cache.set(element, result);
+			return result;
+		}
+		function getClippingRect(_ref) {
+			let { element, boundary, rootBoundary, strategy } = _ref;
+			const clippingAncestors = [...boundary === "clippingAncestors" ? isTopLayer(element) ? [] : getClippingElementAncestors(element, this._c) : [].concat(boundary), rootBoundary];
+			const firstRect = getClientRectFromClippingAncestor(element, clippingAncestors[0], strategy);
+			let top = firstRect.top;
+			let right = firstRect.right;
+			let bottom = firstRect.bottom;
+			let left = firstRect.left;
+			for (let i = 1; i < clippingAncestors.length; i++) {
+				const rect = getClientRectFromClippingAncestor(element, clippingAncestors[i], strategy);
+				top = max(rect.top, top);
+				right = min(rect.right, right);
+				bottom = min(rect.bottom, bottom);
+				left = max(rect.left, left);
+			}
+			return {
+				width: right - left,
+				height: bottom - top,
+				x: left,
+				y: top
+			};
+		}
+		function getDimensions(element) {
+			const { width, height } = getCssDimensions(element);
+			return {
+				width,
+				height
+			};
+		}
+		function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
+			const isOffsetParentAnElement = isHTMLElement(offsetParent);
+			const documentElement = getDocumentElement(offsetParent);
+			const isFixed = strategy === "fixed";
+			const rect = getBoundingClientRect(element, true, isFixed, offsetParent);
+			let scroll = {
+				scrollLeft: 0,
+				scrollTop: 0
+			};
+			const offsets = createCoords(0);
+			if (isOffsetParentAnElement || !isFixed) {
+				if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) scroll = getNodeScroll(offsetParent);
+				if (isOffsetParentAnElement) {
+					const offsetRect = getBoundingClientRect(offsetParent, true, isFixed, offsetParent);
+					offsets.x = offsetRect.x + offsetParent.clientLeft;
+					offsets.y = offsetRect.y + offsetParent.clientTop;
+				}
+			}
+			if (!isOffsetParentAnElement && documentElement) offsets.x = getWindowScrollBarX(documentElement);
+			const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
+			return {
+				x: rect.left + scroll.scrollLeft - offsets.x - htmlOffset.x,
+				y: rect.top + scroll.scrollTop - offsets.y - htmlOffset.y,
+				width: rect.width,
+				height: rect.height
+			};
+		}
+		function isStaticPositioned(element) {
+			return getComputedStyle$1(element).position === "static";
+		}
+		function getTrueOffsetParent(element, polyfill) {
+			if (!isHTMLElement(element) || getComputedStyle$1(element).position === "fixed") return null;
+			if (polyfill) return polyfill(element);
+			let rawOffsetParent = element.offsetParent;
+			if (getDocumentElement(element) === rawOffsetParent) rawOffsetParent = rawOffsetParent.ownerDocument.body;
+			return rawOffsetParent;
+		}
+		function getOffsetParent(element, polyfill) {
+			const win = getWindow(element);
+			if (isTopLayer(element)) return win;
+			if (!isHTMLElement(element)) {
+				let svgOffsetParent = getParentNode(element);
+				while (svgOffsetParent && !isLastTraversableNode(svgOffsetParent)) {
+					if (isElement(svgOffsetParent) && !isStaticPositioned(svgOffsetParent)) return svgOffsetParent;
+					svgOffsetParent = getParentNode(svgOffsetParent);
+				}
+				return win;
+			}
+			let offsetParent = getTrueOffsetParent(element, polyfill);
+			while (offsetParent && isTableElement(offsetParent) && isStaticPositioned(offsetParent)) offsetParent = getTrueOffsetParent(offsetParent, polyfill);
+			if (offsetParent && isLastTraversableNode(offsetParent) && isStaticPositioned(offsetParent) && !isContainingBlock(offsetParent)) return win;
+			return offsetParent || getContainingBlock(element) || win;
+		}
+		const getElementRects = async function(data) {
+			const getOffsetParentFn = this.getOffsetParent || getOffsetParent;
+			const getDimensionsFn = this.getDimensions;
+			const floatingDimensions = await getDimensionsFn(data.floating);
+			return {
+				reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy),
+				floating: {
+					x: 0,
+					y: 0,
+					width: floatingDimensions.width,
+					height: floatingDimensions.height
+				}
+			};
+		};
+		function isRTL(element) {
+			return getComputedStyle$1(element).direction === "rtl";
+		}
+		const platform = {
+			convertOffsetParentRelativeRectToViewportRelativeRect,
+			getDocumentElement,
+			getClippingRect,
+			getOffsetParent,
+			getElementRects,
+			getClientRects,
+			getDimensions,
+			getScale,
+			isElement,
+			isRTL
+		};
+		function rectsAreEqual(a, b) {
+			return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+		}
+		function observeMove(element, onMove, ancestorResize) {
+			let io = null;
+			let timeoutId;
+			const root = getDocumentElement(element);
+			function cleanup() {
+				var _io;
+				clearTimeout(timeoutId);
+				(_io = io) == null || _io.disconnect();
+				io = null;
+			}
+			function refresh(skip, threshold) {
+				if (skip === void 0) skip = false;
+				if (threshold === void 0) threshold = 1;
+				cleanup();
+				const elementRectForRootMargin = element.getBoundingClientRect();
+				const { left, top, width, height } = elementRectForRootMargin;
+				if (!skip) onMove();
+				if (!width || !height) return;
+				const insetTop = floor(top);
+				const insetRight = floor(root.clientWidth - (left + width));
+				const insetBottom = floor(root.clientHeight - (top + height));
+				const insetLeft = floor(left);
+				const options = {
+					rootMargin: -insetTop + "px " + -insetRight + "px " + -insetBottom + "px " + -insetLeft + "px",
+					threshold: max(0, min(1, threshold)) || 1
+				};
+				let isFirstUpdate = true;
+				function handleObserve(entries) {
+					const ratio = entries[0].intersectionRatio;
+					if (!rectsAreEqual(elementRectForRootMargin, element.getBoundingClientRect())) return refresh();
+					if (ratio !== threshold) {
+						if (!isFirstUpdate) return refresh();
+						if (!ratio) timeoutId = setTimeout(() => {
+							refresh(false, 1e-7);
+						}, 1e3);
+						else refresh(false, ratio);
+					}
+					isFirstUpdate = false;
+				}
+				try {
+					io = new IntersectionObserver(handleObserve, {
+						...options,
+						root: root.ownerDocument
+					});
+				} catch (_e) {
+					io = new IntersectionObserver(handleObserve, options);
+				}
+				io.observe(element);
+			}
+			const win = getWindow(element);
+			const handleResize = () => refresh(ancestorResize);
+			win.addEventListener("resize", handleResize);
+			refresh(true);
+			return () => {
+				win.removeEventListener("resize", handleResize);
+				cleanup();
+			};
+		}
+		/**
+		* Automatically updates the position of the floating element when necessary.
+		* Should only be called when the floating element is mounted on the DOM or
+		* visible on the screen.
+		* @returns cleanup function that should be invoked when the floating element is
+		* removed from the DOM or hidden from the screen.
+		* @see https://floating-ui.com/docs/autoUpdate
+		*/
+		function autoUpdate(reference, floating, update, options) {
+			if (options === void 0) options = {};
+			const { ancestorScroll = true, ancestorResize = true, elementResize = typeof ResizeObserver === "function", layoutShift = typeof IntersectionObserver === "function", animationFrame = false } = options;
+			const referenceEl = unwrapElement(reference);
+			const ancestors = ancestorScroll || ancestorResize ? [...referenceEl ? getOverflowAncestors(referenceEl) : [], ...floating ? getOverflowAncestors(floating) : []] : [];
+			ancestors.forEach((ancestor) => {
+				ancestorScroll && ancestor.addEventListener("scroll", update);
+				ancestorResize && ancestor.addEventListener("resize", update);
+			});
+			const cleanupIo = referenceEl && layoutShift ? observeMove(referenceEl, update, ancestorResize) : null;
+			let reobserveFrame = -1;
+			let resizeObserver = null;
+			if (elementResize) {
+				resizeObserver = new ResizeObserver((_ref) => {
+					let [firstEntry] = _ref;
+					if (firstEntry && firstEntry.target === referenceEl && resizeObserver && floating) {
+						resizeObserver.unobserve(floating);
+						cancelAnimationFrame(reobserveFrame);
+						reobserveFrame = requestAnimationFrame(() => {
+							var _resizeObserver;
+							(_resizeObserver = resizeObserver) == null || _resizeObserver.observe(floating);
+						});
+					}
+					update();
+				});
+				if (referenceEl && !animationFrame) resizeObserver.observe(referenceEl);
+				if (floating) resizeObserver.observe(floating);
+			}
+			let frameId;
+			let prevRefRect = animationFrame ? getBoundingClientRect(reference) : null;
+			if (animationFrame) frameLoop();
+			function frameLoop() {
+				const nextRefRect = getBoundingClientRect(reference);
+				if (prevRefRect && !rectsAreEqual(prevRefRect, nextRefRect)) update();
+				prevRefRect = nextRefRect;
+				frameId = requestAnimationFrame(frameLoop);
+			}
+			update();
+			return () => {
+				var _resizeObserver2;
+				ancestors.forEach((ancestor) => {
+					ancestorScroll && ancestor.removeEventListener("scroll", update);
+					ancestorResize && ancestor.removeEventListener("resize", update);
+				});
+				cleanupIo?.();
+				(_resizeObserver2 = resizeObserver) == null || _resizeObserver2.disconnect();
+				resizeObserver = null;
+				if (animationFrame) cancelAnimationFrame(frameId);
+			};
+		}
+		/**
+		* Modifies the placement by translating the floating element along the
+		* specified axes.
+		* A number (shorthand for `mainAxis` or distance), or an axes configuration
+		* object may be passed.
+		* @see https://floating-ui.com/docs/offset
+		*/
+		const offset$2 = offset$1;
+		/**
+		* Optimizes the visibility of the floating element by shifting it in order to
+		* keep it in view when it will overflow the clipping boundary.
+		* @see https://floating-ui.com/docs/shift
+		*/
+		const shift$2 = shift$1;
+		/**
+		* Optimizes the visibility of the floating element by flipping the `placement`
+		* in order to keep it in view when the preferred placement(s) will overflow the
+		* clipping boundary. Alternative to `autoPlacement`.
+		* @see https://floating-ui.com/docs/flip
+		*/
+		const flip$2 = flip$1;
+		/**
+		* Provides data that allows you to change the size of the floating element —
+		* for instance, prevent it from overflowing the clipping boundary or match the
+		* width of the reference element.
+		* @see https://floating-ui.com/docs/size
+		*/
+		const size$2 = size$1;
+		/**
+		* Computes the `x` and `y` coordinates that will place the floating element
+		* next to a given reference element.
+		*/
+		const computePosition = (reference, floating, options) => {
+			const cache = /* @__PURE__ */ new Map();
+			const mergedOptions = options != null ? options : {};
+			const platformWithCache = {
+				...platform,
+				...mergedOptions.platform,
+				_c: cache
+			};
+			return computePosition$1(reference, floating, {
+				...mergedOptions,
+				platform: platformWithCache
+			});
+		};
+		//#endregion
+		//#region ../../node_modules/.pnpm/@floating-ui+react-dom@2.1.9_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/@floating-ui/react-dom/dist/floating-ui.react-dom.mjs
+		var index = typeof document !== "undefined" ? react$1.useLayoutEffect : function noop() {};
+		function deepEqual(a, b) {
+			if (a === b) return true;
+			if (typeof a !== typeof b) return false;
+			if (typeof a === "function" && a.toString() === b.toString()) return true;
+			let length;
+			let i;
+			let keys;
+			if (a && b && typeof a === "object") {
+				if (Array.isArray(a)) {
+					length = a.length;
+					if (length !== b.length) return false;
+					for (i = length; i-- !== 0;) if (!deepEqual(a[i], b[i])) return false;
+					return true;
+				}
+				keys = Object.keys(a);
+				length = keys.length;
+				if (length !== Object.keys(b).length) return false;
+				for (i = length; i-- !== 0;) if (!{}.hasOwnProperty.call(b, keys[i])) return false;
+				for (i = length; i-- !== 0;) {
+					const key = keys[i];
+					if (key === "_owner" && a.$$typeof) continue;
+					if (!deepEqual(a[key], b[key])) return false;
+				}
+				return true;
+			}
+			return a !== a && b !== b;
+		}
+		function getDPR(element) {
+			if (typeof window === "undefined") return 1;
+			return (element.ownerDocument.defaultView || window).devicePixelRatio || 1;
+		}
+		function roundByDPR(element, value) {
+			const dpr = getDPR(element);
+			return Math.round(value * dpr) / dpr;
+		}
+		function useLatestRef(value) {
+			const ref = react$1.useRef(value);
+			index(() => {
+				ref.current = value;
+			});
+			return ref;
+		}
+		/**
+		* Provides data to position a floating element.
+		* @see https://floating-ui.com/docs/useFloating
+		*/
+		function useFloating$1(options) {
+			if (options === void 0) options = {};
+			const { placement = "bottom", strategy = "absolute", middleware = [], platform, elements: { reference: externalReference, floating: externalFloating } = {}, transform = true, whileElementsMounted, open } = options;
+			const [data, setData] = react$1.useState({
+				x: 0,
+				y: 0,
+				strategy,
+				placement,
+				middlewareData: {},
+				isPositioned: false
+			});
+			const [latestMiddleware, setLatestMiddleware] = react$1.useState(middleware);
+			if (!deepEqual(latestMiddleware, middleware)) setLatestMiddleware(middleware);
+			const [_reference, _setReference] = react$1.useState(null);
+			const [_floating, _setFloating] = react$1.useState(null);
+			const setReference = react$1.useCallback((node) => {
+				if (node !== referenceRef.current) {
+					referenceRef.current = node;
+					_setReference(node);
+				}
+			}, []);
+			const setFloating = react$1.useCallback((node) => {
+				if (node !== floatingRef.current) {
+					floatingRef.current = node;
+					_setFloating(node);
+				}
+			}, []);
+			const referenceEl = externalReference || _reference;
+			const floatingEl = externalFloating || _floating;
+			const referenceRef = react$1.useRef(null);
+			const floatingRef = react$1.useRef(null);
+			const dataRef = react$1.useRef(data);
+			const hasWhileElementsMounted = whileElementsMounted != null;
+			const whileElementsMountedRef = useLatestRef(whileElementsMounted);
+			const platformRef = useLatestRef(platform);
+			const openRef = useLatestRef(open);
+			const update = react$1.useCallback(() => {
+				if (!referenceRef.current || !floatingRef.current) return;
+				const config = {
+					placement,
+					strategy,
+					middleware: latestMiddleware
+				};
+				if (platformRef.current) config.platform = platformRef.current;
+				computePosition(referenceRef.current, floatingRef.current, config).then((data) => {
+					const fullData = {
+						...data,
+						isPositioned: openRef.current !== false
+					};
+					if (isMountedRef.current && !deepEqual(dataRef.current, fullData)) {
+						dataRef.current = fullData;
+						react_dom.flushSync(() => {
+							setData(fullData);
+						});
+					}
+				});
+			}, [
+				latestMiddleware,
+				placement,
+				strategy,
+				platformRef,
+				openRef
+			]);
+			index(() => {
+				if (open === false && dataRef.current.isPositioned) {
+					dataRef.current.isPositioned = false;
+					setData((data) => ({
+						...data,
+						isPositioned: false
+					}));
+				}
+			}, [open]);
+			const isMountedRef = react$1.useRef(false);
+			index(() => {
+				isMountedRef.current = true;
+				return () => {
+					isMountedRef.current = false;
+				};
+			}, []);
+			index(() => {
+				if (referenceEl) referenceRef.current = referenceEl;
+				if (floatingEl) floatingRef.current = floatingEl;
+				if (referenceEl && floatingEl) {
+					if (whileElementsMountedRef.current) return whileElementsMountedRef.current(referenceEl, floatingEl, update);
+					update();
+				}
+			}, [
+				referenceEl,
+				floatingEl,
+				update,
+				whileElementsMountedRef,
+				hasWhileElementsMounted
+			]);
+			const refs = react$1.useMemo(() => ({
+				reference: referenceRef,
+				floating: floatingRef,
+				setReference,
+				setFloating
+			}), [setReference, setFloating]);
+			const elements = react$1.useMemo(() => ({
+				reference: referenceEl,
+				floating: floatingEl
+			}), [referenceEl, floatingEl]);
+			const floatingStyles = react$1.useMemo(() => {
+				const initialStyles = {
+					position: strategy,
+					left: 0,
+					top: 0
+				};
+				if (!elements.floating) return initialStyles;
+				const x = roundByDPR(elements.floating, data.x);
+				const y = roundByDPR(elements.floating, data.y);
+				if (transform) return {
+					...initialStyles,
+					transform: "translate(" + x + "px, " + y + "px)",
+					...getDPR(elements.floating) >= 1.5 && { willChange: "transform" }
+				};
+				return {
+					position: strategy,
+					left: x,
+					top: y
+				};
+			}, [
+				strategy,
+				transform,
+				elements.floating,
+				data.x,
+				data.y
+			]);
+			return react$1.useMemo(() => ({
+				...data,
+				update,
+				refs,
+				elements,
+				floatingStyles
+			}), [
+				data,
+				update,
+				refs,
+				elements,
+				floatingStyles
+			]);
+		}
+		/**
+		* Modifies the placement by translating the floating element along the
+		* specified axes.
+		* A number (shorthand for `mainAxis` or distance), or an axes configuration
+		* object may be passed.
+		* @see https://floating-ui.com/docs/offset
+		*/
+		const offset = (options, deps) => {
+			const result = offset$2(options);
+			return {
+				name: result.name,
+				fn: result.fn,
+				options: [options, deps]
+			};
+		};
+		/**
+		* Optimizes the visibility of the floating element by shifting it in order to
+		* keep it in view when it will overflow the clipping boundary.
+		* @see https://floating-ui.com/docs/shift
+		*/
+		const shift = (options, deps) => {
+			const result = shift$2(options);
+			return {
+				name: result.name,
+				fn: result.fn,
+				options: [options, deps]
+			};
+		};
+		/**
+		* Optimizes the visibility of the floating element by flipping the `placement`
+		* in order to keep it in view when the preferred placement(s) will overflow the
+		* clipping boundary. Alternative to `autoPlacement`.
+		* @see https://floating-ui.com/docs/flip
+		*/
+		const flip = (options, deps) => {
+			const result = flip$2(options);
+			return {
+				name: result.name,
+				fn: result.fn,
+				options: [options, deps]
+			};
+		};
+		/**
+		* Provides data that allows you to change the size of the floating element —
+		* for instance, prevent it from overflowing the clipping boundary or match the
+		* width of the reference element.
+		* @see https://floating-ui.com/docs/size
+		*/
+		const size = (options, deps) => {
+			const result = size$2(options);
+			return {
+				name: result.name,
+				fn: result.fn,
+				options: [options, deps]
+			};
+		};
+		//#endregion
+		//#region ../../node_modules/.pnpm/@floating-ui+react@0.27.20_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/@floating-ui/react/dist/floating-ui.react.mjs
+		const ARROW_LEFT = "ArrowLeft";
+		const ARROW_RIGHT = "ArrowRight";
+		const ARROW_UP = "ArrowUp";
+		const ARROW_DOWN = "ArrowDown";
+		const horizontalKeys = [ARROW_LEFT, ARROW_RIGHT];
+		const verticalKeys = [ARROW_UP, ARROW_DOWN];
+		[...horizontalKeys, ...verticalKeys];
+		const SafeReact = { ...react$1 };
+		let serverHandoffComplete = false;
+		let count = 0;
+		const genId = () => "floating-ui-" + Math.random().toString(36).slice(2, 6) + count++;
+		function useFloatingId() {
+			const [id, setId] = react$1.useState(() => serverHandoffComplete ? genId() : void 0);
+			index$1(() => {
+				if (id == null) setId(genId());
+			}, []);
+			react$1.useEffect(() => {
+				serverHandoffComplete = true;
+			}, []);
+			return id;
+		}
+		/**
+		* Uses React 18's built-in `useId()` when available, or falls back to a
+		* slightly less performant (requiring a double render) implementation for
+		* earlier React versions.
+		* @see https://floating-ui.com/docs/react-utils#useid
+		*/
+		const useId = SafeReact.useId || useFloatingId;
+		function createEventEmitter() {
+			const map = /* @__PURE__ */ new Map();
+			return {
+				emit(event, data) {
+					var _map$get;
+					(_map$get = map.get(event)) == null || _map$get.forEach((listener) => listener(data));
+				},
+				on(event, listener) {
+					if (!map.has(event)) map.set(event, /* @__PURE__ */ new Set());
+					map.get(event).add(listener);
+				},
+				off(event, listener) {
+					var _map$get2;
+					(_map$get2 = map.get(event)) == null || _map$get2.delete(listener);
+				}
+			};
+		}
+		const FloatingNodeContext = /*#__PURE__*/ react$1.createContext(null);
+		const FloatingTreeContext = /*#__PURE__*/ react$1.createContext(null);
+		/**
+		* Returns the parent node id for nested floating elements, if available.
+		* Returns `null` for top-level floating elements.
+		*/
+		const useFloatingParentNodeId = () => {
+			var _React$useContext;
+			return ((_React$useContext = react$1.useContext(FloatingNodeContext)) == null ? void 0 : _React$useContext.id) || null;
+		};
+		/**
+		* Returns the nearest floating tree context, if available.
+		*/
+		const useFloatingTree = () => react$1.useContext(FloatingTreeContext);
+		function createAttribute(name) {
+			return "data-floating-ui-" + name;
+		}
+		const HIDDEN_STYLES = {
+			border: 0,
+			clip: "rect(0 0 0 0)",
+			height: "1px",
+			margin: "-1px",
+			overflow: "hidden",
+			padding: 0,
+			position: "fixed",
+			whiteSpace: "nowrap",
+			width: "1px",
+			top: 0,
+			left: 0
+		};
+		const FocusGuard = /*#__PURE__*/ react$1.forwardRef(function FocusGuard(props, ref) {
+			const [role, setRole] = react$1.useState();
+			index$1(() => {
+				if (isSafari()) setRole("button");
+			}, []);
+			const restProps = {
+				ref,
+				tabIndex: 0,
+				role,
+				"aria-hidden": role ? void 0 : true,
+				[createAttribute("focus-guard")]: "",
+				style: HIDDEN_STYLES
+			};
+			return /*#__PURE__*/ (0, react_jsx_runtime.jsx)("span", {
+				...props,
+				...restProps
+			});
+		});
+		const HIDDEN_OWNER_STYLES = {
+			clipPath: "inset(50%)",
+			position: "fixed",
+			top: 0,
+			left: 0
+		};
+		const PortalContext = /*#__PURE__*/ react$1.createContext(null);
+		const attr = /*#__PURE__*/ createAttribute("portal");
+		/**
+		* @see https://floating-ui.com/docs/FloatingPortal#usefloatingportalnode
+		*/
+		function useFloatingPortalNode(props) {
+			if (props === void 0) props = {};
+			const { id, root } = props;
+			const uniqueId = useId();
+			const portalContext = usePortalContext();
+			const [portalNode, setPortalNode] = react$1.useState(null);
+			const portalNodeRef = react$1.useRef(null);
+			index$1(() => {
+				return () => {
+					portalNode?.remove();
+					queueMicrotask(() => {
+						portalNodeRef.current = null;
+					});
+				};
+			}, [portalNode]);
+			index$1(() => {
+				if (!uniqueId) return;
+				if (portalNodeRef.current) return;
+				const existingIdRoot = id ? document.getElementById(id) : null;
+				if (!existingIdRoot) return;
+				const subRoot = document.createElement("div");
+				subRoot.id = uniqueId;
+				subRoot.setAttribute(attr, "");
+				existingIdRoot.appendChild(subRoot);
+				portalNodeRef.current = subRoot;
+				setPortalNode(subRoot);
+			}, [id, uniqueId]);
+			index$1(() => {
+				if (root === null) return;
+				if (!uniqueId) return;
+				if (portalNodeRef.current) return;
+				let container = root || (portalContext == null ? void 0 : portalContext.portalNode);
+				if (container && !isNode(container)) container = container.current;
+				container = container || document.body;
+				let idWrapper = null;
+				if (id) {
+					idWrapper = document.createElement("div");
+					idWrapper.id = id;
+					container.appendChild(idWrapper);
+				}
+				const subRoot = document.createElement("div");
+				subRoot.id = uniqueId;
+				subRoot.setAttribute(attr, "");
+				container = idWrapper || container;
+				container.appendChild(subRoot);
+				portalNodeRef.current = subRoot;
+				setPortalNode(subRoot);
+			}, [
+				id,
+				root,
+				uniqueId,
+				portalContext
+			]);
+			return portalNode;
+		}
+		/**
+		* Portals the floating element into a given container element — by default,
+		* outside of the app root and into the body.
+		* This is necessary to ensure the floating element can appear outside any
+		* potential parent containers that cause clipping (such as `overflow: hidden`),
+		* while retaining its location in the React tree.
+		* @see https://floating-ui.com/docs/FloatingPortal
+		*/
+		function FloatingPortal(props) {
+			const { children, id, root, preserveTabOrder = true } = props;
+			const portalNode = useFloatingPortalNode({
+				id,
+				root
+			});
+			const [focusManagerState, setFocusManagerState] = react$1.useState(null);
+			const beforeOutsideRef = react$1.useRef(null);
+			const afterOutsideRef = react$1.useRef(null);
+			const beforeInsideRef = react$1.useRef(null);
+			const afterInsideRef = react$1.useRef(null);
+			const modal = focusManagerState == null ? void 0 : focusManagerState.modal;
+			const open = focusManagerState == null ? void 0 : focusManagerState.open;
+			const shouldRenderGuards = !!focusManagerState && !focusManagerState.modal && focusManagerState.open && preserveTabOrder && !!(root || portalNode);
+			react$1.useEffect(() => {
+				if (!portalNode || !preserveTabOrder || modal) return;
+				function onFocus(event) {
+					if (portalNode && isOutsideEvent(event)) (event.type === "focusin" ? enableFocusInside : disableFocusInside)(portalNode);
+				}
+				portalNode.addEventListener("focusin", onFocus, true);
+				portalNode.addEventListener("focusout", onFocus, true);
+				return () => {
+					portalNode.removeEventListener("focusin", onFocus, true);
+					portalNode.removeEventListener("focusout", onFocus, true);
+				};
+			}, [
+				portalNode,
+				preserveTabOrder,
+				modal
+			]);
+			react$1.useEffect(() => {
+				if (!portalNode) return;
+				if (open) return;
+				enableFocusInside(portalNode);
+			}, [open, portalNode]);
+			return /*#__PURE__*/ (0, react_jsx_runtime.jsxs)(PortalContext.Provider, {
+				value: react$1.useMemo(() => ({
+					preserveTabOrder,
+					beforeOutsideRef,
+					afterOutsideRef,
+					beforeInsideRef,
+					afterInsideRef,
+					portalNode,
+					setFocusManagerState
+				}), [preserveTabOrder, portalNode]),
+				children: [
+					shouldRenderGuards && portalNode && /*#__PURE__*/ (0, react_jsx_runtime.jsx)(FocusGuard, {
+						"data-type": "outside",
+						ref: beforeOutsideRef,
+						onFocus: (event) => {
+							if (isOutsideEvent(event, portalNode)) {
+								var _beforeInsideRef$curr;
+								(_beforeInsideRef$curr = beforeInsideRef.current) == null || _beforeInsideRef$curr.focus();
+							} else getPreviousTabbable(focusManagerState ? focusManagerState.domReference : null)?.focus();
+						}
+					}),
+					shouldRenderGuards && portalNode && /*#__PURE__*/ (0, react_jsx_runtime.jsx)("span", {
+						"aria-owns": portalNode.id,
+						style: HIDDEN_OWNER_STYLES
+					}),
+					portalNode && /*#__PURE__*/ react_dom.createPortal(children, portalNode),
+					shouldRenderGuards && portalNode && /*#__PURE__*/ (0, react_jsx_runtime.jsx)(FocusGuard, {
+						"data-type": "outside",
+						ref: afterOutsideRef,
+						onFocus: (event) => {
+							if (isOutsideEvent(event, portalNode)) {
+								var _afterInsideRef$curre;
+								(_afterInsideRef$curre = afterInsideRef.current) == null || _afterInsideRef$curre.focus();
+							} else {
+								getNextTabbable(focusManagerState ? focusManagerState.domReference : null)?.focus();
+								focusManagerState != null && focusManagerState.closeOnFocusOut && focusManagerState?.onOpenChange(false, event.nativeEvent, "focus-out");
+							}
+						}
+					})
+				]
+			});
+		}
+		const usePortalContext = () => react$1.useContext(PortalContext);
+		function useFloatingRootContext(options) {
+			const { open = false, onOpenChange: onOpenChangeProp, elements: elementsProp } = options;
+			const floatingId = useId();
+			const dataRef = react$1.useRef({});
+			const [events] = react$1.useState(() => createEventEmitter());
+			const nested = useFloatingParentNodeId() != null;
+			const [positionReference, setPositionReference] = react$1.useState(elementsProp.reference);
+			const onOpenChange = useEffectEvent((open, event, reason) => {
+				dataRef.current.openEvent = open ? event : void 0;
+				events.emit("openchange", {
+					open,
+					event,
+					reason,
+					nested
+				});
+				onOpenChangeProp?.(open, event, reason);
+			});
+			const refs = react$1.useMemo(() => ({ setPositionReference }), []);
+			const elements = react$1.useMemo(() => ({
+				reference: positionReference || elementsProp.reference || null,
+				floating: elementsProp.floating || null,
+				domReference: elementsProp.reference
+			}), [
+				positionReference,
+				elementsProp.reference,
+				elementsProp.floating
+			]);
+			return react$1.useMemo(() => ({
+				dataRef,
+				open,
+				onOpenChange,
+				elements,
+				events,
+				floatingId,
+				refs
+			}), [
+				open,
+				onOpenChange,
+				elements,
+				events,
+				floatingId,
+				refs
+			]);
+		}
+		/**
+		* Provides data to position a floating element and context to add interactions.
+		* @see https://floating-ui.com/docs/useFloating
+		*/
+		function useFloating(_temp) {
+			var _elementsOption$refer, _elementsOption$float;
+			let { elements: elementsOption, ...options } = _temp === void 0 ? {} : _temp;
+			const { nodeId } = options;
+			const internalRootContext = useFloatingRootContext({
+				...options,
+				elements: {
+					reference: (_elementsOption$refer = elementsOption == null ? void 0 : elementsOption.reference) != null ? _elementsOption$refer : null,
+					floating: (_elementsOption$float = elementsOption == null ? void 0 : elementsOption.floating) != null ? _elementsOption$float : null
+				}
+			});
+			const rootContext = options.rootContext || internalRootContext;
+			const computedElements = rootContext.elements;
+			const [_domReference, setDomReference] = react$1.useState(null);
+			const [positionReference, _setPositionReference] = react$1.useState(null);
+			const domReference = (computedElements == null ? void 0 : computedElements.domReference) || _domReference;
+			const domReferenceRef = react$1.useRef(null);
+			const tree = useFloatingTree();
+			index$1(() => {
+				if (domReference) domReferenceRef.current = domReference;
+			}, [domReference]);
+			const position = useFloating$1({
+				...options,
+				elements: {
+					...computedElements,
+					...positionReference && { reference: positionReference }
+				}
+			});
+			const setPositionReference = react$1.useCallback((node) => {
+				const computedPositionReference = isElement(node) ? {
+					getBoundingClientRect: () => node.getBoundingClientRect(),
+					getClientRects: () => node.getClientRects(),
+					contextElement: node
+				} : node;
+				_setPositionReference(computedPositionReference);
+				position.refs.setReference(computedPositionReference);
+			}, [position.refs]);
+			const setReference = react$1.useCallback((node) => {
+				if (isElement(node) || node === null) {
+					domReferenceRef.current = node;
+					setDomReference(node);
+				}
+				if (isElement(position.refs.reference.current) || position.refs.reference.current === null || node !== null && !isElement(node)) position.refs.setReference(node);
+			}, [position.refs]);
+			const refs = react$1.useMemo(() => ({
+				...position.refs,
+				setReference,
+				setPositionReference,
+				domReference: domReferenceRef
+			}), [
+				position.refs,
+				setReference,
+				setPositionReference
+			]);
+			const elements = react$1.useMemo(() => ({
+				...position.elements,
+				domReference
+			}), [position.elements, domReference]);
+			const context = react$1.useMemo(() => ({
+				...position,
+				...rootContext,
+				refs,
+				elements,
+				nodeId
+			}), [
+				position,
+				refs,
+				elements,
+				nodeId,
+				rootContext
+			]);
+			index$1(() => {
+				rootContext.dataRef.current.floatingContext = context;
+				const node = tree == null ? void 0 : tree.nodesRef.current.find((node) => node.id === nodeId);
+				if (node) node.context = context;
+			});
+			return react$1.useMemo(() => ({
+				...position,
+				context,
+				refs,
+				elements
+			}), [
+				position,
+				refs,
+				elements,
+				context
+			]);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/chevron.js
+		/**
+		* 全站唯一的箭头：**自绘 chevron**（就是下拉框右侧那颗）。
+		*
+		* 为什么自绘：`ui` 层零官方依赖（官方图标只在宿主内可解析），官方件在这个包里 import 不到。
+		* 为什么不再写字形：'▾' / '↑' 这类字符在各系统字体下粗细、角度、基线都不一样，
+		* 同一套界面里会出现两种箭头 —— 2026-10-26 用户点名 ▾ 太丑 ⇒ 一律换成这颗 chevron。
+		*
+		* 用法：`h(Chevron, { dir: 'up', size: 18 })`；要动画就在外层套一个带 transform 的类
+		* （如卡片折叠的 `.dshpc-card__caret.is-open`），不要给每个方向另画一条路径。
+		*/
+		const ROTATE = {
+			down: 0,
+			up: 180,
+			left: 90,
+			right: 270
+		};
+		function Chevron(props) {
+			const size = props.size ?? 12;
+			const deg = ROTATE[props.dir ?? "down"];
+			const style = deg === 0 ? void 0 : { transform: `rotate(${String(deg)}deg)` };
+			return (0, react$1.createElement)("svg", {
+				className: props.className,
+				width: size,
+				height: size,
+				viewBox: "0 0 16 16",
+				fill: "none",
+				"aria-hidden": true,
+				style
+			}, (0, react$1.createElement)("path", {
+				d: "M4 6l4 4 4-4",
+				stroke: "currentColor",
+				"stroke-width": 1.5,
+				"stroke-linecap": "round",
+				"stroke-linejoin": "round"
+			}));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/FieldHint.js
+		/**
+		* 问号提示 —— **全站唯一实现、独立组件**（L2，P4）
+		*
+		* ⚠️ 它**不属于 Input 家族**：任何地方都能挂——表单行尾、标题后面、卡片角落……
+		* 调用点自己把它排进自己的 flex / label 里即可（组件只是 14px 的内联图标 + 气泡）。
+		*
+		* 气泡渲染 = **官方 Tooltip 本体**（2026-10-19 用户拍板「必须和悬停提示用同一个」）：
+		* 插件启动时 `setTooltipRenderer` 把官方 Tooltip 交给 core，本组件直接走它。
+		* ⚠️ **不做降级兜底**（用户同日明确：宿主内官方包恒在；官方改版 = 我们重新适配，不另造一套）。
+		* 未注入 renderer 的环境（node 自检）只出问号图标、没有气泡——那是非宿主环境，不是产品形态。
+		*/
+		/** 问号提示图标：hover / focus 浮出说明气泡（官方 Tooltip 渲染）。 */
+		function FieldHint(props) {
+			ensureComponentStyles("hint", HINT_CSS);
+			const { text, side, align, maxWidth, className, style } = props;
+			const anchor = (0, react$1.createElement)("span", {
+				className: `dshpc-hint${className !== void 0 && className !== "" ? ` ${className}` : ""}`,
+				style,
+				tabIndex: 0,
+				role: "note",
+				"aria-label": text
+			}, "?");
+			const renderer = getTooltipRenderer();
+			if (renderer === void 0) return anchor;
+			return renderer({
+				label: text,
+				side: side ?? "top",
+				...align !== void 0 ? { align } : {},
+				...maxWidth !== void 0 ? { maxWidth } : {},
+				children: anchor
+			});
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/picker-css.generated.js
+		const PICKER_CSS = "\n.dshpc-picker{position:relative;display:inline-block;max-width:100%;font-size:13px;line-height:20px}\n.dshpc-picker__trigger{\n  display:inline-flex;align-items:center;justify-content:space-between;gap:6px;\n  min-width:120px;max-width:100%;height:28px;padding:0 8px;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-1);\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);cursor:pointer;\n}\n.dshpc-picker__trigger:disabled{color:var(--dshpc-fg-dim);cursor:not-allowed;opacity:.7}\n/* 聚焦（键盘或点击选中）时与全站一致的蓝色描边；菜单打开后焦点会进去，触发器自然失去焦点。 */\n.dshpc-picker__trigger:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 文字默认靠左（吃掉剩余宽度），不给 space-between 把短文案推到中间的机会；\n   确实要居中就显式传 align=\"center\"。 */\n.dshpc-picker__label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}\n.dshpc-picker__trigger--center .dshpc-picker__label{text-align:center}\n.dshpc-picker__caret{flex:none;color:var(--dshpc-fg-3)}\n.dshpc-picker__icon{display:inline-flex;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-picker__option-icon{display:inline-flex;flex:none;color:var(--dshpc-fg-2)}\n/* 下拉面板只留定位 / 滚动 / 字号：底色·描边·圆角·阴影来自 panel.css 的 menu 档。 */\n.dshpc-picker__menu{\n  z-index:var(--dshpc-z-popmenu);max-height:280px;overflow:auto;padding:4px;\n  /* 菜单经 FloatingPortal 挂到 body，脱离 .dshpc-picker，须显式字号，否则继承 body 的大字号 */\n  font-size:13px;line-height:20px;\n}\n/* 尺寸档（与 Field 的 sm/md/lg 对应）。 */\n.dshpc-picker__trigger--sm{height:24px;font-size:12px}\n.dshpc-picker__trigger--lg{height:32px}\n/* 键盘游标所在项（无 hover 也要看得见）。 */\n.dshpc-picker__option[data-active='true']{background:var(--dshpc-surface-sunken);outline:1px solid var(--dshpc-border)}\n.dshpc-picker__option--clear{color:var(--dshpc-fg-3)}\n.dshpc-picker__search{\n  width:100%;height:28px;margin-bottom:4px;padding:0 8px;box-sizing:border-box;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-sunken);\n  border:1px solid var(--dshpc-border-faint);border-radius:var(--dshpc-radius-md);outline:none;\n}\n.dshpc-picker__group-label{\n  padding:6px 8px 2px;color:var(--dshpc-fg-3);font-size:11px;\n}\n.dshpc-picker__option{\n  display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:var(--dshpc-radius-sm);cursor:pointer;\n  color:var(--dshpc-fg);white-space:nowrap;\n}\n.dshpc-picker__option:hover{background:var(--dshpc-surface-sunken)}\n.dshpc-picker__option--active{background:var(--dshpc-open-bg);color:var(--dshpc-business)}\n.dshpc-picker__option--disabled{color:var(--dshpc-fg-dim);cursor:not-allowed}\n/* 选项文字吃掉剩余宽度：超长省略号（配合 MarqueeText hover 跑马灯），不撑宽菜单。 */\n.dshpc-picker__option-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.dshpc-picker__tick{width:12px;color:var(--dshpc-business)}\n.dshpc-picker__empty{padding:8px;color:var(--dshpc-fg-3);text-align:center}\n.dshpc-picker__degraded{\n  padding:6px 8px;margin-bottom:4px;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-warning-label);background:color-mix(in srgb,var(--dshpc-warning) 12%,transparent);\n  font-size:11px;\n}\n.dshpc-picker__row{display:flex;align-items:center;gap:8px}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Picker.js
+		/**
+		* 通用选择器：单选 / 多选 / 上限 / 搜索 / 分组 / 空态 / 降级。
+		*
+		* **纯零件，不自己取数** —— 选项由调用方传入（工作区列表、模型列表这类数据要跨 host↔client
+		* 边界，通道是插件私有的，组件取不到，见需求文档 §6）。
+		*/
+		function Picker(props) {
+			ensureComponentStyles("picker", PICKER_CSS);
+			ensureComponentStyles("panel", PANEL_CSS);
+			ensureComponentStyles("field", FIELD_CSS);
+			const tt = props.translate ?? t$2;
+			const mode = props.mode ?? "single";
+			const size$3 = props.size ?? "md";
+			const placement = props.placement ?? "down";
+			const clearable = props.clearable === true;
+			const showLabels = props.showLabels !== false;
+			const triggerStyle = resolveTriggerSizing(props);
+			const groups = (0, react$1.useMemo)(() => toGroups(props.groups, props.options), [props.groups, props.options]);
+			const controlled = props.value !== void 0;
+			const [inner, setInner] = (0, react$1.useState)(() => toArray(props.defaultValue));
+			const selected = controlled ? toArray(props.value) : inner;
+			const emit = (next) => {
+				if (!controlled) setInner(next);
+				props.onChange?.(mode === "single" ? next[0] ?? "" : next);
+			};
+			const [open, setOpen] = (0, react$1.useState)(false);
+			const [query, setQuery] = (0, react$1.useState)("");
+			const [active, setActive] = (0, react$1.useState)(-1);
+			const rootRef = (0, react$1.useRef)(null);
+			const searchRef = (0, react$1.useRef)(null);
+			const { refs, floatingStyles } = useFloating({
+				open,
+				onOpenChange: setOpen,
+				placement: placement === "up" ? "top-start" : "bottom-start",
+				middleware: [
+					offset(4),
+					flip(),
+					shift({ padding: 8 }),
+					size({ apply({ elements, rects, availableWidth, availableHeight }) {
+						Object.assign(elements.floating.style, {
+							minWidth: `${rects.reference.width}px`,
+							maxWidth: `${Math.min(480, availableWidth ?? 480)}px`,
+							maxHeight: `${Math.max(80, Math.min(280, (availableHeight ?? 320) - 8))}px`
+						});
+					} })
+				],
+				whileElementsMounted: autoUpdate,
+				strategy: "fixed"
+			});
+			const setSearchRef = (0, react$1.useCallback)((el) => {
+				searchRef.current = el;
+				if (el !== null && open) el.focus();
+			}, [open]);
+			(0, react$1.useEffect)(() => {
+				if (!open) return;
+				const onDown = (e) => {
+					const root = rootRef.current;
+					const floatingEl = refs.floating.current;
+					if (root?.contains(e.target) === true) return;
+					if (floatingEl?.contains(e.target) === true) return;
+					setOpen(false);
+				};
+				document.addEventListener("mousedown", onDown);
+				return () => document.removeEventListener("mousedown", onDown);
+			}, [open]);
+			(0, react$1.useEffect)(() => {
+				if (open) return;
+				setQuery("");
+				setActive(-1);
+			}, [open]);
+			const shown = filterGroups(groups, query);
+			const flat = flattenOptions(shown);
+			const atMax = mode === "multiple" && props.max !== void 0 && selected.length >= props.max;
+			const summary = selected.length === 0 ? props.placeholder ?? tt("pickerPlaceholder") : mode === "multiple" && !showLabels ? tt("pickerSelected", { n: selected.length }) : labelsOf(groups, selected).join("、") || (props.placeholder ?? tt("pickerPlaceholder"));
+			const pick = (value) => {
+				if (mode === "single") {
+					emit([value]);
+					setOpen(false);
+					return;
+				}
+				emit(toggleValue(selected, value, props.max));
+				if (props.closeOnSelect === true) setOpen(false);
+			};
+			const clear = () => {
+				emit([]);
+				setOpen(false);
+			};
+			const onKeyDown = (e) => {
+				if (!open) return;
+				if (e.key === "Escape") {
+					setOpen(false);
+					return;
+				}
+				if (flat.length === 0) return;
+				if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+					e.preventDefault();
+					const dir = e.key === "ArrowDown" ? 1 : -1;
+					setActive((cur) => (cur + dir + flat.length) % flat.length);
+					return;
+				}
+				if (e.key === "Enter" && active >= 0) {
+					e.preventDefault();
+					const hit = flat[active];
+					if (hit !== void 0) pick(hit.value);
+				}
+			};
+			const trigger = (0, react$1.createElement)("button", {
+				type: "button",
+				"aria-label": props.ariaLabel,
+				"aria-expanded": open,
+				ref: refs.setReference,
+				className: `dshpc-picker__trigger dshpc-picker__trigger--${size$3}${props.align === "center" ? " dshpc-picker__trigger--center" : ""}`,
+				style: triggerStyle,
+				disabled: props.disabled === true,
+				onClick: () => {
+					if (props.disabled !== true) setOpen(!open);
+				}
+			}, props.icon !== void 0 && props.icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-picker__icon" }, props.icon) : null, (0, react$1.createElement)(MarqueeText, {
+				text: summary,
+				className: "dshpc-picker__label"
+			}), (0, react$1.createElement)(Chevron, {
+				size: 12,
+				className: "dshpc-picker__caret"
+			}));
+			const triggerRow = props.hint === void 0 ? trigger : (0, react$1.createElement)("span", { className: "dshpc-fieldwrap dshpc-fieldwrap--inline" }, trigger, (0, react$1.createElement)(FieldHint, { text: props.hint }));
+			return (0, react$1.createElement)("div", {
+				className: `dshpc-picker${props.className === void 0 ? "" : ` ${props.className}`}`,
+				ref: rootRef,
+				onKeyDown
+			}, triggerRow, open ? (0, react$1.createElement)(FloatingPortal, null, (0, react$1.createElement)("div", {
+				className: "dshpc-panel dshpc-panel--menu dshpc-picker__menu",
+				ref: refs.setFloating,
+				style: floatingStyles
+			}, props.degraded === true ? (0, react$1.createElement)("div", { className: "dshpc-picker__degraded" }, tt("pickerDegraded")) : null, atMax ? (0, react$1.createElement)("div", { className: "dshpc-picker__degraded" }, tt("pickerMaxReached", { n: props.max ?? 0 })) : null, props.searchable === true ? (0, react$1.createElement)("input", {
+				ref: setSearchRef,
+				className: "dshpc-picker__search",
+				placeholder: tt("pickerSearch"),
+				value: query,
+				onChange: (e) => setQuery(e.target.value)
+			}) : null, flat.length === 0 && groups.length === 0 ? (0, react$1.createElement)("div", { className: "dshpc-picker__empty" }, tt("pickerEmpty")) : flat.length === 0 ? (0, react$1.createElement)("div", { className: "dshpc-picker__empty" }, tt("pickerNoMatch")) : [clearable && mode === "single" && selected.length > 0 ? (0, react$1.createElement)("div", {
+				key: "__clear__",
+				className: "dshpc-picker__option dshpc-picker__option--clear",
+				onClick: clear
+			}, tt("pickerClear")) : null, ...shown.map((g) => (0, react$1.createElement)("div", { key: g.value || "_" }, g.label === "" ? null : (0, react$1.createElement)("div", { className: "dshpc-picker__group-label" }, g.label), g.options.map((o) => {
+				const blocked = o.disabled === true || atMax && !selected.includes(o.value);
+				const activeCls = [
+					"dshpc-picker__option",
+					selected.includes(o.value) ? "dshpc-picker__option--active" : "",
+					blocked ? "dshpc-picker__option--disabled" : ""
+				].filter((s) => s !== "").join(" ");
+				const idx = flat.indexOf(o);
+				return (0, react$1.createElement)("div", {
+					key: o.value,
+					className: activeCls,
+					"data-active": idx === active ? "true" : void 0,
+					onClick: () => {
+						if (!blocked) pick(o.value);
+					}
+				}, mode === "multiple" ? (0, react$1.createElement)("span", { className: "dshpc-picker__tick" }, selected.includes(o.value) ? "✓" : "") : null, o.icon !== void 0 && o.icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-picker__option-icon" }, o.icon) : null, (0, react$1.createElement)(MarqueeText, {
+					text: o.label,
+					className: "dshpc-picker__option-label"
+				}));
+			})))])) : null);
+		}
+		function toArray(v) {
+			if (v === void 0) return [];
+			return Array.isArray(v) ? [...v] : [v];
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/card-css.generated.js
+		const CARD_CSS = "\n/* ── Card / StripCard：Surface 外框 + 头部契约 + 色条 ─────────────────────\n   外框（底 / 边框 / 圆角 / 内距）全部来自 .dshpc-surface（src/ui/surface.css）：\n   本文件**不再写 border / border-radius**，圆角契约因此只有一个定义点（容器档 = 12）。\n   这里只管两件 Surface 不该知道的事：色条几何、头部布局。\n\n   色条几何默认值都可被 props 覆盖（Card.ts 写对应的 CSS 变量）：\n     --card-bar-size   条子粗细\n     --card-bar-inset  条子距卡片边缘的距离（= 贴边那一侧的内距）\n     --card-bar-gap    条子距内容的距离（= body 的 gap）\n     --card-bar-length 上下方位时的条长（100% = 跟内容同宽）\n   这些变量只在本文件消费（3 份文件一起引时，跨文件引用别处的变量会静默失效），\n   所以默认值必须写在这里，而不是令牌或别的皮肤里。 */\n.dshpc-card{\n  --card-accent:var(--dshpc-business);\n  --card-accent-soft:var(--dshpc-business-soft);\n  --card-bar-size:6px;\n  --card-bar-inset:12px;\n  --card-bar-gap:12px;\n  --card-bar-length:100%;\n}\n/* 档位 → token（照 records-timeline 的 tone 模式：一个变量切档，不写 5 套规则；浅底与色条同源）。 */\n.dshpc-card--success{--card-accent:var(--dshpc-success);--card-accent-soft:var(--dshpc-success-soft)}\n.dshpc-card--warning{--card-accent:var(--dshpc-warning);--card-accent-soft:var(--dshpc-warning-soft)}\n.dshpc-card--danger{--card-accent:var(--dshpc-danger);--card-accent-soft:var(--dshpc-danger-soft)}\n/* neutral 浅底借 chip 底（兄弟项目 mute 档同款：明暗都成立）。 */\n.dshpc-card--neutral{--card-accent:var(--dshpc-fg-4);--card-accent-soft:var(--dshpc-chip-bg)}\n/* 扩展八色（2026-10-29）：色条 + 浅底同源，软底走各自 -soft。 */\n.dshpc-card--purple{--card-accent:var(--dshpc-purple);--card-accent-soft:var(--dshpc-purple-soft)}\n.dshpc-card--pink{--card-accent:var(--dshpc-pink);--card-accent-soft:var(--dshpc-pink-soft)}\n.dshpc-card--cyan{--card-accent:var(--dshpc-cyan);--card-accent-soft:var(--dshpc-cyan-soft)}\n.dshpc-card--teal{--card-accent:var(--dshpc-teal);--card-accent-soft:var(--dshpc-teal-soft)}\n.dshpc-card--orange{--card-accent:var(--dshpc-orange);--card-accent-soft:var(--dshpc-orange-soft)}\n.dshpc-card--indigo{--card-accent:var(--dshpc-indigo);--card-accent-soft:var(--dshpc-indigo-soft)}\n.dshpc-card--rose{--card-accent:var(--dshpc-rose);--card-accent-soft:var(--dshpc-rose-soft)}\n.dshpc-card--slate{--card-accent:var(--dshpc-slate);--card-accent-soft:var(--dshpc-slate-soft)}\n\n/* body = 色条 + 头部。方向跟着条子贴的边切 ⇒ 四个方位只是「换一个方向的 flex 项」，\n   不用为每个方位各写一套定位。 */\n.dshpc-card__body{display:flex;gap:var(--card-bar-gap);min-width:0}\n.dshpc-card--bar-top .dshpc-card__body,\n.dshpc-card--bar-bottom .dshpc-card__body{flex-direction:column}\n\n/* 头部一行 = 主内容 + 右侧槽，**整体垂直居中**：调用方在 action 里裸放一个元素\n   （按钮 / 文字 / 图标）不用自己套容器居中；一行两行、右边怎么放由调用方在框内自定。 */\n.dshpc-card__head{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-card--bar-left .dshpc-card__head,\n.dshpc-card--bar-right .dshpc-card__head{flex:1 1 auto}\n.dshpc-card__main{flex:1;min-width:0}\n.dshpc-card__side{display:flex;align-items:center;gap:6px;flex:none}\n\n/* 色条：左/右 = 竖向条（高度跟内容，最小一行）；上/下 = 横向条（长度默认跟内容同宽）。\n   右/下方位靠 order 排到头部之后，DOM 顺序始终不变。 */\n.dshpc-card__bar{flex:none;background:var(--card-accent);border-radius:var(--dshpc-radius-xs)}\n.dshpc-card--bar-left .dshpc-card__bar,\n.dshpc-card--bar-right .dshpc-card__bar{width:var(--card-bar-size);align-self:stretch;min-height:var(--dshpc-line-md)}\n.dshpc-card--bar-top .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{width:var(--card-bar-length);height:var(--card-bar-size);align-self:flex-start}\n.dshpc-card--bar-right .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{order:1}\n\n/* ── 外观一 · StripCard：同色系浅底 + 1px 不可见占位边框 + 方角 + 4px 通高方角色条贴左缘 ──\n   底色 / 方角 / 占位边框由 Surface 的三条修饰类提供（Card.ts 按 kind 传），此处只管内距与条子。 */\n.dshpc-card.dshpc-card--strip{\n  --card-bar-size:4px;--card-bar-inset:0;\n  padding:12px 12px 12px 20px;\n  background:var(--card-accent-soft,transparent);\n}\n/* 左内边距 20px = 16 留白 + 4 条宽 ⇒ 内容从色条右缘起算；色条绝对定位通高，跟着内容高度自适应。\n   特异性 0,3,0：压过上面 .dshpc-card--bar-left .dshpc-card__bar 的宽度规则，与注入顺序无关。 */\n.dshpc-card.dshpc-card--strip .dshpc-card__bar{position:absolute;left:0;top:0;bottom:0;width:4px;align-self:auto}\n\n/* ── 外观二 · Card：Surface 外框（底 + 1px 实色边框 + 圆角 12）+ 色条贴边那一侧的内距 ──\n   内距用 0,2,0 / 0,3,0 的长写法：高过 .dshpc-surface 的 padding 简写，与两份 CSS 的注入顺序无关。 */\n.dshpc-card.dshpc-card--bordered{padding:14px}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-left{padding-left:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-right{padding-right:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-top{padding-top:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-bottom{padding-bottom:var(--card-bar-inset)}\n\n.dshpc-card__toggle{\n  display:inline-flex;align-items:center;justify-content:center;\n  width:24px;height:24px;padding:0;background:none;border:none;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-3);cursor:pointer;\n}\n.dshpc-card__toggle:hover{background:var(--dshpc-surface-sunken);color:var(--dshpc-fg)}\n/* 箭头是 svg（Chevron），不是字形 ⇒ 不要 font-size；inline-flex 免掉 svg 的基线留白。 */\n.dshpc-card__caret{display:inline-flex;transition:transform .15s ease}\n.dshpc-card__caret.is-open{transform:rotate(180deg)}\n.dshpc-card__panel{margin-top:8px;padding-top:8px;border-top:1px solid var(--dshpc-border-faint)}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/surface-css.generated.js
+		const SURFACE_CSS = "\n/* ── Surface · 纯框容器 ───────────────────────────────────────────────────\n   只回答「一块面长什么样」：底 / 边 / 圆角 / 内距，四根轴，零业务语义。\n   它是**圆角契约的唯一真源**：容器档 = --dshpc-radius-md(12)，与 Button / Input 同档，\n   外框永远不小于里面的控件 —— 杜绝「卡片 8 < 按钮 12」这类倒挂（2026-11-01）。\n\n   所有轴都用**变量**表达，修饰类只改这些变量、不改属性：\n   消费方（Card、下游插件）自己写规则时，无论两份 CSS 谁先注入，胜负都不依赖顺序。\n\n     tone    plain(默认 surface-1) / raised / sunken / subtle\n     border  默认 1px 实线；faint 更淡；none 透明（保留 1px 占位，不跳高）；\n             dashed 虚线（占位框用，线色仍是 border token）\n     radius  默认 md；none / sm / lg\n     padding 默认由调用方选档；none / sm(8) / md(12) / lg(16)\n   基类不带内距：容器要自己算四边内距时（如 Card 的色条贴边），不传 pad 档即可，不需要覆盖。 */\n.dshpc-surface{\n  position:relative;box-sizing:border-box;color:var(--dshpc-fg);font:inherit;text-align:left;\n  --surface-bg:var(--dshpc-surface-1);\n  --surface-border:var(--dshpc-border);\n  --surface-border-style:solid;\n  --surface-radius:var(--dshpc-radius-md);\n  --surface-pad:0;\n  border:1px var(--surface-border-style) var(--surface-border);\n  border-radius:var(--surface-radius);\n  background:var(--surface-bg);\n  padding:var(--surface-pad);\n}\n.dshpc-surface--tone-raised{--surface-bg:var(--dshpc-surface-raised)}\n.dshpc-surface--tone-sunken{--surface-bg:var(--dshpc-surface-sunken)}\n.dshpc-surface--tone-subtle{--surface-bg:var(--dshpc-chip-bg)}\n.dshpc-surface--border-faint{--surface-border:var(--dshpc-border-faint)}\n.dshpc-surface--border-none{--surface-border:transparent}\n.dshpc-surface--border-dashed{--surface-border-style:dashed}\n.dshpc-surface--radius-none{--surface-radius:0}\n.dshpc-surface--radius-sm{--surface-radius:var(--dshpc-radius-sm)}\n.dshpc-surface--radius-lg{--surface-radius:var(--dshpc-radius-lg)}\n.dshpc-surface--pad-none{--surface-pad:0}\n.dshpc-surface--pad-sm{--surface-pad:var(--dshpc-space-2)}\n.dshpc-surface--pad-md{--surface-pad:var(--dshpc-space-3)}\n.dshpc-surface--pad-lg{--surface-pad:var(--dshpc-space-4)}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Surface.js
+		/**
+		* 拼 Surface 的类名。独立导出是给组合类容器（Card）用的：
+		* 容器要把 Surface 当外框、又不想吃它的内距时，传 `padding: null` 即可。
+		*/
+		function surfaceClass(options = {}) {
+			const tone = options.tone ?? "plain";
+			const border = options.border ?? true;
+			const radius = options.radius ?? "md";
+			const padding = options.padding === void 0 ? "md" : options.padding;
+			return [
+				"dshpc-surface",
+				tone === "plain" ? "" : `dshpc-surface--tone-${tone}`,
+				border === true ? "" : `dshpc-surface--border-${border}`,
+				radius === "md" ? "" : `dshpc-surface--radius-${radius}`,
+				padding === null ? "" : `dshpc-surface--pad-${padding}`
+			].filter((name) => name !== "").join(" ");
+		}
+		/**
+		* 纯框容器：底 / 边框 / 圆角 / 内距四根轴，零业务语义。
+		* 它是**圆角契约的唯一真源**（容器档 12，与控件同档），下游要用「一块一块的面」时用它，
+		* 不要再自己写 border + border-radius。
+		*
+		* ```tsx
+		* h(Surface, { tone: 'sunken', padding: 'md' }, h('div', null, '任意内容'))
+		* ```
+		*/
+		function Surface(props) {
+			ensureComponentStyles("surface", SURFACE_CSS);
+			return (0, react$1.createElement)("div", {
+				className: [surfaceClass(props), props.className ?? ""].filter((s) => s !== "").join(" "),
+				style: props.style
+			}, props.children ?? null);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Card.js
+		/** 色条档位（映射到 design 的 token，不新增 token；也接受任意 CSS 颜色值）。 */
+		const CARD_ACCENTS = [
+			"business",
+			"success",
+			"warning",
+			"danger",
+			"neutral",
+			"purple",
+			"pink",
+			"cyan",
+			"teal",
+			"orange",
+			"indigo",
+			"rose",
+			"slate"
+		];
+		/** 数字按 px 写进 CSS 变量，字符串原样透传。 */
+		function lengthOf(value) {
+			return typeof value === "number" ? `${value}px` : value;
+		}
+		/**
+		* 内部共享壳：两个公开组件（`Card` / `StripCard`）只是 `kind` 不同——
+		* 一个组件一种外观，import 即表明用的是哪种。
+		*
+		* 外框（底 / 边框 / 圆角）来自 `Surface`（圆角统一 12）；本壳只管色条几何与头部布局。
+		* 两种外观的头部都是**整体垂直居中**（`align-items:center`）：调用方在 `action` 里
+		* 裸放一个元素（按钮 / 文字 / 图标）即垂直居中，不用自己套容器；框内一行两行、
+		* 右侧放什么、悬停浮出的按钮，都由调用方在框内自定——外壳只提供框与居中。
+		*/
+		function CardShell(kind, props) {
+			ensureComponentStyles("surface", SURFACE_CSS);
+			ensureComponentStyles("card", CARD_CSS);
+			const tt = props.translate ?? t$2;
+			const accent = props.accent ?? "business";
+			const isPreset = CARD_ACCENTS.includes(accent);
+			const bar = props.bar ?? {};
+			const side = kind === "strip" ? "left" : bar.side ?? "left";
+			const classes = [
+				surfaceClass(kind === "strip" ? {
+					radius: "none",
+					border: "none",
+					padding: null
+				} : { padding: null }),
+				"dshpc-card",
+				kind === "strip" ? "dshpc-card--strip" : "dshpc-card--bordered",
+				`dshpc-card--bar-${side}`,
+				isPreset ? `dshpc-card--${accent}` : "",
+				props.className ?? ""
+			].filter((s) => s !== "").join(" ");
+			const vars = {};
+			if (!isPreset) vars["--card-accent"] = accent;
+			if (bar.size !== void 0) vars["--card-bar-size"] = lengthOf(bar.size);
+			if (bar.inset !== void 0) vars["--card-bar-inset"] = lengthOf(bar.inset);
+			if (bar.gap !== void 0) vars["--card-bar-gap"] = lengthOf(bar.gap);
+			if (bar.length !== void 0) vars["--card-bar-length"] = lengthOf(bar.length);
+			const style = {
+				...props.style,
+				...vars
+			};
+			return (0, react$1.createElement)("div", {
+				className: classes,
+				style
+			}, (0, react$1.createElement)("div", { className: "dshpc-card__body" }, (0, react$1.createElement)("span", {
+				className: "dshpc-card__bar",
+				"aria-hidden": true
+			}), (0, react$1.createElement)("div", { className: "dshpc-card__head" }, (0, react$1.createElement)("div", { className: "dshpc-card__main" }, props.children ?? null), props.action === void 0 && props.onToggle === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-card__side" }, props.action ?? null, props.onToggle === void 0 ? null : (0, react$1.createElement)("button", {
+				type: "button",
+				className: "dshpc-card__toggle",
+				"aria-label": tt("cardToggle"),
+				"aria-expanded": props.expanded === true,
+				onClick: props.onToggle
+			}, (0, react$1.createElement)("span", { className: props.expanded === true ? "dshpc-card__caret is-open" : "dshpc-card__caret" }, (0, react$1.createElement)(Chevron, { size: 12 })))))), props.panel === void 0 || props.expanded !== true ? null : (0, react$1.createElement)("div", { className: "dshpc-card__panel" }, props.panel));
+		}
+		/**
+		* 卡片（框式）：复用 `Surface` 外框（surface 底 + 1px 边框 + 圆角 12），
+		* 色条默认贴左缘、6px 粗、圆角短条（高度随内容）；`bar.side` 可换成右/上/下。
+		* 头部整体垂直居中；悬停浮出的按钮、一行两行由调用方在框内自定。
+		*
+		* ```tsx
+		* h(Card, {
+		*   accent: 'warning',
+		*   bar: { side: 'right', inset: 10, gap: 8 },
+		*   action: h(Button, { size: 'sm', variant: 'ghost' }, '跳过'),
+		* }, h('div', null, '标题 + 内容'))
+		* ```
+		*/
+		function Card(props) {
+			return CardShell("bordered", props);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/chip-css.generated.js
+		const CHIP_CSS = "\n/* 三条局部变量承载配色：neutral 走旧灰面；语义档换底字配对（2026-10-20 用户要多色多尺寸标签）。 */\n.dshpc-chip{--chip-bg:var(--dshpc-chip-bg);--chip-fg:var(--dshpc-fg);--chip-bg-hover:var(--dshpc-chip-bg-hover);\n  display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:1px 8px;\n  box-sizing:border-box;border-radius:var(--dshpc-radius-pill,999px);border:none;\n  background:var(--chip-bg);color:var(--chip-fg);\n  font-family:inherit;font-size:11px;line-height:18px;margin:0;\n  /* 2026-10-18：chip 是 flex 行里的常用项，禁止被压缩换行（预览站出现过文字竖排、互相叠压的挤压）。 */\n  white-space:nowrap;flex:none;\n  appearance:none;-webkit-appearance:none;\n}\n/* md 档：卡片元信息行等稍大场景；sm 即旧版默认，逐像素不动。 */\n.dshpc-chip--md{padding:2px 10px;font-size:12px;line-height:20px;}\n/* xs 档：标题后缀等极紧凑场景（2026-10-20 用户要更小标签）；16px 高、font 10。 */\n.dshpc-chip--xs{padding:0 6px;font-size:10px;line-height:16px;}\n/* 语义色实心档：底 / 字 / hover 配对与 Button 同源（黄底中高明度 ⇒ 字用 --dshpc-on-warning）。 */\n.dshpc-chip--business{--chip-bg:var(--dshpc-business);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-business-hover);}\n.dshpc-chip--success{--chip-bg:var(--dshpc-success);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-success-hover);}\n.dshpc-chip--warning{--chip-bg:var(--dshpc-warning);--chip-fg:var(--dshpc-on-warning);--chip-bg-hover:var(--dshpc-warning-hover);}\n.dshpc-chip--danger{--chip-bg:var(--dshpc-danger);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-danger-hover);}\n/* 扩展八色（2026-10-29）：实心面字色统一白（on-signal），明度均低于黄 / 青柠，白字两主题可读。 */\n.dshpc-chip--purple{--chip-bg:var(--dshpc-purple);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-purple-hover);}\n.dshpc-chip--pink{--chip-bg:var(--dshpc-pink);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-pink-hover);}\n.dshpc-chip--cyan{--chip-bg:var(--dshpc-cyan);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-cyan-hover);}\n.dshpc-chip--teal{--chip-bg:var(--dshpc-teal);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-teal-hover);}\n.dshpc-chip--orange{--chip-bg:var(--dshpc-orange);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-orange-hover);}\n.dshpc-chip--indigo{--chip-bg:var(--dshpc-indigo);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-indigo-hover);}\n.dshpc-chip--rose{--chip-bg:var(--dshpc-rose);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-rose-hover);}\n.dshpc-chip--slate{--chip-bg:var(--dshpc-slate);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-slate-hover);}\n/* 可点态：button 渲染（见 Chip.ts），光标 + hover 加深。 */\n.dshpc-chip--clickable{cursor:pointer;transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-chip--clickable:hover:not(:disabled){background:var(--chip-bg-hover)}\n.dshpc-chip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 禁用态字色从 --chip-fg 派生（45% ≈ 旧 fg-3 的弱化观感），不许直接用 --dshpc-fg-3：\n   它跟主题走，暗色下是深灰 ⇒ 语义色实心标签（蓝 / 红底）上几乎看不见（与 Segmented 计数 2026-10-29 同类）。 */\n.dshpc-chip:disabled{cursor:default;color:color-mix(in srgb,var(--chip-fg) 45%,transparent)}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-chip .dshpc-chip__label{min-width:0;}\n@media (prefers-reduced-motion: reduce){.dshpc-chip{transition:none}}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Chip.js
+		/** 小标签（neutral 用现成的 `--dshpc-chip-bg`；传 `onClick` 才是可点的）。 */
+		function Chip(props) {
+			ensureComponentStyles("chip", CHIP_CSS);
+			const { children, tone = "neutral", size = "sm", width, minWidth, maxWidth, onClick, className } = props;
+			const clickable = onClick !== void 0;
+			const widthStyle = {};
+			if (width !== void 0) widthStyle.width = width;
+			else {
+				if (minWidth !== void 0) widthStyle.minWidth = minWidth;
+				if (maxWidth !== void 0) widthStyle.maxWidth = maxWidth;
+			}
+			const marqueeLabel = maxWidth !== void 0 && width === void 0 && typeof children === "string";
+			return (0, react$1.createElement)(clickable ? "button" : "span", {
+				type: clickable ? "button" : void 0,
+				className: `dshpc-chip${tone !== "neutral" ? ` dshpc-chip--${tone}` : ""}${size !== "sm" ? ` dshpc-chip--${size}` : ""}${clickable ? " dshpc-chip--clickable" : ""}${className === void 0 ? "" : ` ${className}`}`,
+				style: widthStyle,
+				onClick
+			}, marqueeLabel ? (0, react$1.createElement)(MarqueeText, {
+				text: children,
+				className: "dshpc-chip__label"
+			}) : children ?? null);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/pagination-logic.js
+		/**
+		* 分页纯逻辑：总页数、页码夹取、省略号窗口、当前页可见区间。
+		*
+		* 零 React 运行时依赖（只 `import type`，编译后不留痕迹），可被 node 单测直接引。
+		*
+		* 口径照通行的分页约定（Ant Design / MUI / Element Plus 一致）：
+		* 调用方只给「当前页 / 每页条数 / 总条数」，总页数与省略窗口一律由这里算，
+		* **消费方永远不自己算页数、也不自己拼页码**。
+		*/
+		/** 总页数：`ceil(total / pageSize)`，至少 1 页（空数据也显示单页）。 */
+		function pageCountOf(total, pageSize) {
+			return Math.max(1, Math.ceil(Math.max(0, Math.floor(total)) / Math.max(1, Math.floor(pageSize))));
+		}
+		/** 把页码夹回 `[1, pageCount]`（越界 / NaN 一律落到第 1 页）。 */
+		function clampPage(page, pageCount) {
+			const count = Math.max(1, Math.floor(pageCount));
+			if (!Number.isFinite(page)) return 1;
+			return Math.min(Math.max(1, Math.floor(page)), count);
+		}
+		/**
+		* 当前页在数据里的区间（1 起的闭区间行号）。
+		* 空数据返回 `[0, 0]`（调用方据此显示「共 0 条」而不是「第 0-0 条」）。
+		*/
+		function pageRange(page, pageSize, total) {
+			const rows = Math.max(0, Math.floor(total));
+			if (rows === 0) return [0, 0];
+			const size = Math.max(1, Math.floor(pageSize));
+			const from = (clampPage(page, pageCountOf(rows, size)) - 1) * size + 1;
+			return [from, Math.min(rows, from + size - 1)];
+		}
+		function range(start, end) {
+			const out = [];
+			for (let n = start; n <= end; n += 1) out.push(n);
+			return out;
+		}
+		/**
+		* 页码条上的项序列（含省略号占位）。
+		*
+		* 窗口算法照 MUI 的实现：首尾各固定 `boundaryCount` 页，当前页两侧各留 `siblingCount` 页，
+		* 中间不足的部分收成 `'gap'`。默认 1 / 1 —— 最多 7 个位置（与 Element Plus `pager-count: 7` 等价）。
+		*
+		* 关键细节（各家一致，别改成「有缝就画省略号」）：间隔**正好 1 页**时直接显示那个页号，
+		* 不画省略号，否则会出现 `1 2 … 4` 这种丑态。
+		*/
+		function pageItems(page, pageCount, siblingCount = 1, boundaryCount = 1) {
+			const count = Math.max(1, Math.floor(pageCount));
+			const current = clampPage(page, count);
+			const boundary = Math.max(0, Math.floor(boundaryCount));
+			const siblings = Math.max(0, Math.floor(siblingCount));
+			const startPages = range(1, Math.min(boundary, count));
+			const endPages = range(Math.max(count - boundary + 1, boundary + 1), count);
+			const siblingsStart = Math.max(Math.min(current - siblings, count - boundary - siblings * 2 - 1), boundary + 2);
+			const siblingsEnd = Math.min(Math.max(current + siblings, boundary + siblings * 2 + 2), endPages.length > 0 ? endPages[0] - 2 : count - 1);
+			const items = [...startPages];
+			if (siblingsStart > boundary + 2) items.push("gap");
+			else if (boundary + 1 < count - boundary) items.push(boundary + 1);
+			items.push(...range(siblingsStart, siblingsEnd));
+			if (siblingsEnd < count - boundary - 1) items.push("gap");
+			else if (count - boundary > boundary) items.push(count - boundary);
+			items.push(...endPages);
+			return items;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Pagination.js
+		/**
+		* 分页（`‹ Previous  1 [2] 3 … 36  Next ›`）。
+		*
+		* 受控组件：页码由调用方持有，这里只发 `onChange(page, pageSize)`。
+		* 样式只 import 自己那份 CSS（`PAGINATION_CSS`），引它就只打包这一份。
+		*/
+		function Pagination(props) {
+			ensureComponentStyles("pagination", PAGINATION_CSS);
+			const tt = props.translate ?? t$2;
+			const pageSize = Math.max(1, Math.floor(props.pageSize ?? 10));
+			const total = Math.max(0, Math.floor(props.total));
+			const count = pageCountOf(total, pageSize);
+			const page = clampPage(props.page, count);
+			if (props.hideOnSinglePage === true && count <= 1) return null;
+			const disabled = props.disabled === true;
+			const [from, to] = pageRange(page, pageSize, total);
+			const go = (next) => {
+				if (disabled) return;
+				const target = clampPage(next, count);
+				if (target !== page) props.onChange(target, pageSize);
+			};
+			const navClass = [
+				"dshpc-pagination",
+				`dshpc-pagination--${props.align ?? "right"}`,
+				props.simple === true ? "dshpc-pagination--simple" : "",
+				props.className ?? ""
+			].filter((s) => s !== "").join(" ");
+			const totalNode = (() => {
+				const showTotal = props.showTotal;
+				if (showTotal === void 0 || showTotal === false) return null;
+				if (typeof showTotal === "function") return showTotal(total, from, to);
+				return total === 0 ? tt("paginationTotalZero") : tt("paginationTotal", {
+					from,
+					to,
+					total
+				});
+			})();
+			const pageButton = (n) => (0, react$1.createElement)(Button$1, {
+				key: n,
+				variant: n === page ? "info" : "ghost",
+				size: "md",
+				className: "dshpc-pagination__page",
+				"aria-current": n === page ? "page" : void 0,
+				"aria-label": tt("paginationPage", { n }),
+				disabled,
+				onClick: () => go(n)
+			}, n);
+			const navButton = (direction) => {
+				const isPrev = direction === "prev";
+				const label = isPrev ? tt("paginationPrev") : tt("paginationNext");
+				return (0, react$1.createElement)(Button$1, {
+					variant: "ghost",
+					size: "md",
+					className: "dshpc-pagination__nav",
+					icon: isPrev ? (0, react$1.createElement)(Chevron, {
+						dir: "left",
+						size: 14
+					}) : void 0,
+					iconRight: isPrev ? void 0 : (0, react$1.createElement)(Chevron, {
+						dir: "right",
+						size: 14
+					}),
+					"aria-label": label,
+					disabled: disabled || (isPrev ? page <= 1 : page >= count),
+					onClick: () => go(isPrev ? page - 1 : page + 1)
+				}, (0, react$1.createElement)("span", { className: "dshpc-pagination__text" }, label));
+			};
+			const middle = props.simple === true ? [(0, react$1.createElement)("span", {
+				key: "simple",
+				className: "dshpc-pagination__simple"
+			}, `${String(page)} / ${String(count)}`)] : pageItems(page, count, props.siblingCount, props.boundaryCount).map((item, index) => item === "gap" ? (0, react$1.createElement)("span", {
+				key: `gap-${String(index)}`,
+				className: "dshpc-pagination__ellipsis",
+				"aria-hidden": "true"
+			}, "…") : pageButton(item));
+			const options = props.pageSizeOptions ?? [];
+			const sizeNode = options.length === 0 ? null : (0, react$1.createElement)(Picker, {
+				className: "dshpc-pagination__size",
+				minWidth: "auto",
+				mode: "single",
+				options: options.map((size) => ({
+					value: String(size),
+					label: tt("paginationPageSizeOption", { n: size })
+				})),
+				value: String(pageSize),
+				disabled,
+				ariaLabel: tt("paginationPageSizeAria"),
+				onChange: (value) => {
+					const next = Number(value);
+					if (!Number.isFinite(next) || next < 1) return;
+					props.onChange(1, next);
+				}
+			});
+			return (0, react$1.createElement)("nav", {
+				className: navClass,
+				style: props.style,
+				"aria-label": props.ariaLabel ?? tt("paginationAria")
+			}, totalNode === null ? null : (0, react$1.createElement)("span", { className: "dshpc-pagination__total" }, totalNode), (0, react$1.createElement)("div", { className: "dshpc-pagination__pages" }, navButton("prev"), ...middle, navButton("next")), sizeNode);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/SectionHead.js
+		/**
+		* 模块标题行（UI 基础层）：**标签（可选，画出来的短竖线）/ icon（可选）+ 标题 + 右侧控件**。
+		*
+		* 2026-10-08 设置页重构时定型：每块 = 标题行 + 一块内容，标题行左侧 icon、右侧留给该块的控件
+		* （日志块的自动刷新 / 刷新钮，表查询块的表切换）。此前三个块各写一个 `h3`，形态不统一。
+		* 2026-10-30 增加 `accent`：标题前画一条固定样式的短竖线（4px 圆头），颜色可换、可关；
+		* 通栏表格标题也复用这一份标题样式（不再在 Table 里另画）。
+		*
+		* 排版规则：字号 / 行高 / 字色走 `--dshpc-*` token；`right` 用 `flex:1` + `justifyContent:flex-end`
+		* 靠右（比 `marginLeft:auto` 稳：内容再宽也始终贴右，不会塌成靠左）；标题 `flex:none` 不被压缩。
+		*/
+		/** 内置色名与 token 一一同名；其余值一律按 CSS 色值原样落地。 */
+		const ACCENT_TONES = [
+			"business",
+			"success",
+			"warning",
+			"danger",
+			"purple",
+			"pink",
+			"cyan",
+			"teal",
+			"orange",
+			"indigo",
+			"rose",
+			"slate"
+		];
+		function barStyleOf(accent) {
+			if (accent === "default") return void 0;
+			return { background: ACCENT_TONES.includes(accent) ? `var(--dshpc-${accent})` : accent };
+		}
+		function SectionHead(props) {
+			ensureComponentStyles("section-head", SECTION_HEAD_CSS);
+			const accent = props.accent;
+			const className = [
+				"dshpc-section-head",
+				props.flush === true ? "dshpc-section-head--flush" : "",
+				props.className ?? ""
+			].filter((s) => s !== "").join(" ");
+			return (0, react$1.createElement)("div", {
+				className,
+				style: props.style
+			}, accent === false || accent === void 0 ? null : (0, react$1.createElement)("span", {
+				className: "dshpc-section-head__bar",
+				"aria-hidden": "true",
+				style: accent === "default" ? void 0 : barStyleOf(accent)
+			}), props.icon === void 0 ? null : (0, react$1.createElement)("span", { className: "dshpc-section-head__icon" }, props.icon), (0, react$1.createElement)("span", { className: "dshpc-section-head__title" }, props.title), props.right === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-section-head__right" }, props.right));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/table-logic.js
+		/**
+		* 单元格值是不是「对象写法」（跨列 / 跨行 / 对齐）。
+		*
+		* 判别不引 React：React 元素一定有 `$$typeof`（内部标记），而单元格对象没有 ——
+		* 用它把「传进来一个 React 元素」和「传进来一个单元格配置」分开。
+		* 放在纯逻辑层，node 单测可直接覆盖。
+		*/
+		function isTableCellSpec(value) {
+			if (typeof value !== "object" || value === null) return false;
+			if ("$$typeof" in value) return false;
+			return "content" in value;
+		}
+		/** 按深度优先顺序取全部叶子列（表格的列顺序 = 数据格的列顺序）。 */
+		function leafColumns(columns) {
+			const out = [];
+			for (const column of columns) {
+				const children = column.children;
+				if (children === void 0 || children.length === 0) out.push(column);
+				else out.push(...leafColumns(children));
+			}
+			return out;
+		}
+		/** 列树深度 = 表头行数（全叶子列时为 1）。 */
+		function tableDepth(columns) {
+			let depth = 1;
+			for (const column of columns) {
+				const children = column.children;
+				if (children === void 0 || children.length === 0) continue;
+				depth = Math.max(depth, 1 + tableDepth(children));
+			}
+			return depth;
+		}
+		/**
+		* 列树 → 逐行表头。
+		*
+		* - 叶子列：`rowSpan = 深度 - 当前层`，一直竖跨到表头底部；
+		* - 分组列：`colSpan = 其下叶子数`，`rowSpan = 1`。
+		*
+		* 例：`[ID, Patient[Name, Age], Status]` ⇒ 第 0 行 `[ID(1×2), Patient(2×1), Status(1×2)]`，
+		* 第 1 行 `[Name(1×1), Age(1×1)]`。
+		*/
+		function headerRows(columns) {
+			const rows = [];
+			const depth = tableDepth(columns);
+			for (let level = 0; level < depth; level += 1) rows.push([]);
+			const visit = (column, level) => {
+				const children = column.children;
+				if (children === void 0 || children.length === 0) {
+					rows[level].push({
+						column,
+						colSpan: 1,
+						rowSpan: depth - level,
+						leafKeys: [column.key]
+					});
+					return [column.key];
+				}
+				const keys = [];
+				for (const child of children) keys.push(...visit(child, level + 1));
+				rows[level].push({
+					column,
+					colSpan: keys.length,
+					rowSpan: 1,
+					leafKeys: keys
+				});
+				return keys;
+			};
+			for (const column of columns) visit(column, 0);
+			return rows;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/table-shared.js
+		function widthOf(width) {
+			if (width === void 0) return void 0;
+			return typeof width === "number" ? `${width}px` : width;
+		}
+		/** 列级水平内距（覆盖 density 档）；不传交给 CSS。 */
+		function padStyle(column) {
+			return column.padding === void 0 ? void 0 : { paddingInline: `${column.padding}px` };
+		}
+		function alignClass(prefix, align) {
+			return align === void 0 || align === "left" ? "" : ` ${prefix}--${align}`;
+		}
+		/**
+		* 某列在叶子序列里的位置决定画不画左竖线：
+		* 首列恒不画（那是外框的位置）；其余列只在「想要线」时画。
+		* 分组列自己不写 `divider` 时，跟随它第一个叶子列 —— 组头的左缘和第一个子列的左缘
+		* 是同一条线，否则「组头无线、下面子列有线」会断成两截（2026-10-30 用户真机指出）。
+		*/
+		function dividerAttr(leafIndex, wanted) {
+			if (leafIndex === 0) return void 0;
+			return wanted === true ? "left" : void 0;
+		}
+		/**
+		* 表格共享渲染壳（**内部件，不进公开导出**）。
+		*
+		* 职责：基础层样式登记 + 语义化 `<table>` 结构 + 表头分组计算 + 行交互 + 列/单元格配置落地。
+		* 外观（表头底色 / 分隔线 / 悬浮 / 选中）由调用方的皮肤 CSS 负责：每个公开组件
+		* （`Table`、将来的 `TableGrid` / `TableZebra`）只 import 自己那份皮肤，并把自己的
+		* modifier class 传进来。这样消费方引哪个就只打包哪个 —— 绝不用 `variant` 汇总多份皮肤。
+		*/
+		function tableShell(skinClass, props, options = {}) {
+			ensureComponentStyles("table-core", TABLE_BASE_CSS);
+			const tt = props.translate ?? t$2;
+			const headRows = headerRows(props.columns);
+			const leaves = leafColumns(props.columns);
+			const leafIndexByKey = /* @__PURE__ */ new Map();
+			leaves.forEach((column, index) => {
+				leafIndexByKey.set(column.key, index);
+			});
+			const selected = new Set(props.selectedKeys ?? []);
+			const onRowClick = props.onRowClick;
+			const density = props.density ?? "default";
+			const borders = props.borders ?? "y";
+			/** 表头一行：分组表头按层级逐行渲染（每组重复渲染它，分组模式也要表头）。 */
+			const headRowOf = (cells, level) => (0, react$1.createElement)("tr", {
+				key: `head-${level}`,
+				className: "dshpc-table__head-row"
+			}, ...cells.map((cell) => {
+				const group = cell.colSpan > 1;
+				const firstLeafIndex = leafIndexByKey.get(cell.leafKeys[0] ?? "");
+				const firstLeaf = firstLeafIndex === void 0 ? void 0 : leaves[firstLeafIndex];
+				const className = `dshpc-table__head-cell${group ? " dshpc-table__head-cell--group" : ""}${alignClass("dshpc-table__head-cell", cell.column.align)}`;
+				const tone = cell.column.headerTone;
+				return (0, react$1.createElement)("th", {
+					key: cell.column.key,
+					scope: group ? "colgroup" : "col",
+					colSpan: cell.colSpan > 1 ? cell.colSpan : void 0,
+					rowSpan: cell.rowSpan > 1 ? cell.rowSpan : void 0,
+					className,
+					style: padStyle(cell.column),
+					"data-divider": firstLeafIndex === void 0 ? void 0 : dividerAttr(firstLeafIndex, cell.column.divider ?? firstLeaf?.divider),
+					"data-header-tone": tone === void 0 || tone === "default" ? void 0 : tone
+				}, cell.column.title);
+			}));
+			/**
+			* 跨行单元格（rowSpan）把上下几行连成一个视觉块：块里任意一行被选中，整块都算选中。
+			* 先按 rowSpan 求每行所属块的范围 [start, end]，再判断块内有没有选中行 ——
+			* 不依赖点击的是块里的哪一行，也不要求调用方自己展开。
+			*/
+			const selectedBlocksOf = (rows) => {
+				const blocks = rows.map((_, index) => ({
+					start: index,
+					end: index
+				}));
+				rows.forEach((row, index) => {
+					for (const cell of Object.values(row.cells)) {
+						if (!isTableCellSpec(cell) || cell.rowSpan === void 0 || cell.rowSpan <= 1) continue;
+						const end = Math.min(index + cell.rowSpan - 1, rows.length - 1);
+						for (let line = index; line <= end; line += 1) {
+							const block = blocks[line];
+							if (block === void 0) continue;
+							block.start = Math.min(block.start, index);
+							block.end = Math.max(block.end, end);
+						}
+					}
+				});
+				return blocks.map((block) => {
+					for (let line = block.start; line <= block.end; line += 1) {
+						const row = rows[line];
+						if (row !== void 0 && selected.has(row.key)) return true;
+					}
+					return false;
+				});
+			};
+			/** 一组数据行（选中 / 可点 / 单元格配置都在这里落地）。 */
+			const dataRowsOf = (rows, offset = 0) => {
+				const selectedBlocks = selectedBlocksOf(rows);
+				return rows.map((row, index) => (0, react$1.createElement)("tr", {
+					key: row.key,
+					className: "dshpc-table__row",
+					"data-selected": selectedBlocks[index] === true ? "true" : void 0,
+					"data-interactive": onRowClick === void 0 ? void 0 : "true",
+					tabIndex: onRowClick === void 0 ? void 0 : 0,
+					onClick: onRowClick === void 0 ? void 0 : () => onRowClick(row, offset + index),
+					onKeyDown: onRowClick === void 0 ? void 0 : (event) => {
+						if (event.key !== "Enter" && event.key !== " ") return;
+						event.preventDefault();
+						onRowClick(row, offset + index);
+					}
+				}, ...leaves.map((column, leafIndex) => {
+					const cell = row.cells[column.key];
+					if (cell === void 0) return null;
+					let spec;
+					let content;
+					if (isTableCellSpec(cell)) {
+						spec = cell;
+						content = cell.content;
+					} else content = cell;
+					const align = spec?.align ?? column.align;
+					return (0, react$1.createElement)("td", {
+						key: column.key,
+						className: `dshpc-table__cell${alignClass("dshpc-table__cell", align)}`,
+						style: padStyle(column),
+						colSpan: spec?.colSpan !== void 0 && spec.colSpan > 1 ? spec.colSpan : void 0,
+						rowSpan: spec?.rowSpan !== void 0 && spec.rowSpan > 1 ? spec.rowSpan : void 0,
+						"data-divider": dividerAttr(leafIndex, column.divider)
+					}, content ?? null);
+				})));
+			};
+			const colSpan = leaves.length > 0 ? leaves.length : void 0;
+			const emptyRow = (0, react$1.createElement)("tr", {
+				key: "empty",
+				className: "dshpc-table__row"
+			}, (0, react$1.createElement)("td", {
+				className: "dshpc-table__empty",
+				colSpan
+			}, props.emptyText ?? tt("tableEmpty")));
+			const loadingRow = (0, react$1.createElement)("tr", {
+				key: "loading",
+				className: "dshpc-table__state-row"
+			}, (0, react$1.createElement)("td", {
+				className: "dshpc-table__state-cell",
+				colSpan
+			}, (0, react$1.createElement)("div", {
+				className: "dshpc-table__state dshpc-table__state--full",
+				style: props.loadingHeight === void 0 ? void 0 : { height: `${props.loadingHeight}px` }
+			}, (0, react$1.createElement)(Loader$2, {
+				variant: "blocks",
+				size: "xl",
+				label: tt("tableLoading")
+			}))));
+			const infinite = props.onLoadMore !== void 0;
+			const loadingMore = infinite && props.loadingMore === true;
+			const showNoMore = infinite && !loadingMore && props.hasMore === false && props.noMoreText !== false;
+			const footerRows = [];
+			if (loadingMore) footerRows.push((0, react$1.createElement)("tr", {
+				key: "more",
+				className: "dshpc-table__state-row dshpc-table__state-row--footer"
+			}, (0, react$1.createElement)("td", {
+				className: "dshpc-table__state-cell",
+				colSpan
+			}, (0, react$1.createElement)("div", { className: "dshpc-table__state" }, (0, react$1.createElement)(Loader$2, {
+				variant: "blocks",
+				size: "md",
+				label: tt("tableLoadingMore")
+			})))));
+			else if (showNoMore) footerRows.push((0, react$1.createElement)("tr", {
+				key: "end",
+				className: "dshpc-table__state-row dshpc-table__state-row--footer"
+			}, (0, react$1.createElement)("td", {
+				className: "dshpc-table__state-cell",
+				colSpan
+			}, (0, react$1.createElement)("div", { className: "dshpc-table__state" }, (0, react$1.createElement)("span", { className: "dshpc-table__state-text" }, props.noMoreText === void 0 ? tt("tableNoMore") : props.noMoreText)))));
+			const sentinelRow = infinite && props.hasMore !== false && options.sentinelRef !== void 0 ? (0, react$1.createElement)("tr", {
+				key: "sentinel",
+				ref: options.sentinelRef,
+				className: "dshpc-table__sentinel",
+				"aria-hidden": "true"
+			}, (0, react$1.createElement)("td", { colSpan })) : null;
+			const flatFoot = footerRows.length > 0 && (borders === "y" || borders === "none");
+			const tableClass = [
+				"dshpc-table",
+				skinClass,
+				`dshpc-table--density-${density}`,
+				`dshpc-table--borders-${borders}`,
+				props.striped === true ? "dshpc-table--striped" : "",
+				flatFoot ? "dshpc-table--foot-no-bottom" : "",
+				props.className ?? ""
+			].filter((s) => s !== "").join(" ");
+			const groupFoot = footerRows.length > 0 || sentinelRow !== null ? (0, react$1.createElement)("tbody", {
+				key: "group-foot",
+				className: "dshpc-table__body"
+			}, ...footerRows, sentinelRow) : null;
+			const groups = props.groups ?? [];
+			const body = groups.length > 0 ? [...groups.map((group, groupIndex) => (0, react$1.createElement)("tbody", {
+				key: group.key,
+				className: "dshpc-table__body dshpc-table__group-body"
+			}, (0, react$1.createElement)("tr", { className: "dshpc-table__group-row" }, (0, react$1.createElement)("th", {
+				className: "dshpc-table__group-cell",
+				scope: "colgroup",
+				colSpan: leaves.length > 0 ? leaves.length : void 0
+			}, (0, react$1.createElement)(SectionHead, {
+				title: group.title,
+				accent: props.groupAccent ?? "default",
+				flush: true
+			}))), ...headRows.map((cells, level) => headRowOf(cells, `g${groupIndex}-${level}`)), ...dataRowsOf(group.rows, 0))), ...groupFoot === null ? [] : [groupFoot]] : [(0, react$1.createElement)("tbody", {
+				key: "body",
+				className: "dshpc-table__body"
+			}, props.loading === true && (props.rows?.length ?? 0) === 0 ? loadingRow : props.rows !== void 0 && props.rows.length > 0 ? dataRowsOf(props.rows) : emptyRow, ...footerRows, sentinelRow)];
+			return (0, react$1.createElement)("table", {
+				className: tableClass,
+				style: props.style,
+				"aria-label": props.ariaLabel
+			}, leaves.length === 0 ? null : (0, react$1.createElement)("colgroup", null, ...leaves.map((column) => (0, react$1.createElement)("col", {
+				key: column.key,
+				style: widthOf(column.width) === void 0 ? void 0 : { width: widthOf(column.width) }
+			}))), groups.length > 0 ? null : (0, react$1.createElement)("thead", { className: "dshpc-table__head" }, ...headRows.map((cells, level) => headRowOf(cells, level))), ...body);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Table.js
+		/**
+		* 底部哨兵的滚动监听：哨兵进入视口（提前 200px）就调一次 `onLoadMore`。
+		* `enabled` 由调用方决定（分页 / 分组模式下关掉）；正在加载或已到底时 `blockedRef` 挡住重复触发。
+		*/
+		function useLoadMoreSentinel(props, enabled) {
+			const nodeRef = (0, react$1.useRef)(null);
+			const onLoadMoreRef = (0, react$1.useRef)(props.onLoadMore);
+			const blockedRef = (0, react$1.useRef)(true);
+			(0, react$1.useEffect)(() => {
+				onLoadMoreRef.current = props.onLoadMore;
+				blockedRef.current = !enabled || props.onLoadMore === void 0 || props.loading === true || props.loadingMore === true || props.hasMore === false;
+			});
+			const refCallback = (0, react$1.useRef)((node) => {
+				nodeRef.current = node;
+			}).current;
+			(0, react$1.useEffect)(() => {
+				if (!enabled || typeof IntersectionObserver === "undefined") return;
+				const node = nodeRef.current;
+				if (node === null) return;
+				const observer = new IntersectionObserver((entries) => {
+					if (entries.some((entry) => entry.isIntersecting) && !blockedRef.current) onLoadMoreRef.current?.();
+				}, { rootMargin: "0px 0px 200px 0px" });
+				observer.observe(node);
+				return () => {
+					observer.disconnect();
+				};
+			}, [enabled]);
+			return refCallback;
+		}
+		/**
+		* 表格 · 第一档外观（Plain）：白卡片上的无线框表格。
+		*
+		* 特征：双行分组表头（columns 嵌套 `children` 自动算 colSpan / rowSpan）、竖向浅分隔线、
+		* **无横向行线**、行悬浮淡蓝、选中行淡蓝底 + 左侧蓝竖条。
+		*
+		* 只 import 自己这份皮肤 CSS（`TABLE_PLAIN_CSS`）：消费方引 `Table` 就只打包这一份。
+		* 将来的 `TableGrid` / `TableZebra` 是同族独立组件、各自一份 CSS —— **不做 variant**，
+		* 否则两份皮肤会同时进包。
+		*
+		* ```tsx
+		* h(Table, {
+		*   columns: [
+		*     { key: 'id', title: 'ID', width: 120 },
+		*     { key: 'study', title: 'Study', children: [
+		*       { key: 'date', title: 'Date', width: 130 },
+		*       { key: 'modality', title: 'Modality', width: 110 },
+		*     ]},
+		*   ],
+		*   rows: [{ key: 'S-1', cells: { id: 'S-1', date: '2026-10-24', modality: 'CT' } }],
+		*   onRowClick: (row) => select(row.key),
+		* })
+		* ```
+		*/
+		function Table(props) {
+			ensureComponentStyles("table-plain", TABLE_PLAIN_CSS);
+			const pager = props.pagination;
+			const grouped = (props.groups?.length ?? 0) > 0;
+			const infinite = pager === void 0;
+			const sentinelRef = useLoadMoreSentinel(props, infinite);
+			if (pager === void 0 || grouped) return tableShell("dshpc-table--plain", pager === void 0 ? props : {
+				...props,
+				onLoadMore: void 0,
+				loadingMore: void 0,
+				hasMore: void 0,
+				noMoreText: void 0
+			}, { sentinelRef: infinite ? sentinelRef : void 0 });
+			const pageSize = Math.max(1, Math.floor(pager.pageSize ?? 10));
+			const allRows = props.rows ?? [];
+			const local = pager.total === void 0;
+			const total = local ? allRows.length : Math.max(0, Math.floor(pager.total ?? 0));
+			const page = clampPage(pager.page, pageCountOf(total, pageSize));
+			const rows = local ? allRows.slice((page - 1) * pageSize, page * pageSize) : allRows;
+			return (0, react$1.createElement)("div", { className: "dshpc-table-frame" }, tableShell("dshpc-table--plain", {
+				...props,
+				rows,
+				onLoadMore: void 0,
+				loadingMore: void 0,
+				hasMore: void 0,
+				noMoreText: void 0
+			}, {}), (0, react$1.createElement)(Pagination, {
+				...pager,
+				page,
+				total,
+				align: pager.align ?? "right"
+			}));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/sonner@2.0.8_@types+react@18.3.31_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/sonner/dist/index.mjs
+		function __insertCSS(code) {
+			if (!code || typeof document == "undefined") return;
+			let head = document.head || document.getElementsByTagName("head")[0];
+			let style = document.createElement("style");
+			style.type = "text/css";
+			head.appendChild(style);
+			style.styleSheet ? style.styleSheet.cssText = code : style.appendChild(document.createTextNode(code));
+		}
+		const getAsset = (type) => {
+			switch (type) {
+				case "success": return SuccessIcon;
+				case "info": return InfoIcon;
+				case "warning": return WarningIcon;
+				case "error": return ErrorIcon;
+				default: return null;
+			}
+		};
+		const bars = Array(12).fill(0);
+		const Loader$1 = ({ visible, className }) => {
+			return /*#__PURE__*/ react$1.default.createElement("div", {
+				className: ["sonner-loading-wrapper", className].filter(Boolean).join(" "),
+				"data-visible": visible
+			}, /*#__PURE__*/ react$1.default.createElement("div", { className: "sonner-spinner" }, bars.map((_, i) => /*#__PURE__*/ react$1.default.createElement("div", {
+				className: "sonner-loading-bar",
+				key: `spinner-bar-${i}`
+			}))));
+		};
+		const SuccessIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
+			xmlns: "http://www.w3.org/2000/svg",
+			viewBox: "0 0 20 20",
+			fill: "currentColor",
+			height: "20",
+			width: "20",
+			"aria-hidden": "true"
+		}, /*#__PURE__*/ react$1.default.createElement("path", {
+			fillRule: "evenodd",
+			d: "M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z",
+			clipRule: "evenodd"
+		}));
+		const WarningIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
+			xmlns: "http://www.w3.org/2000/svg",
+			viewBox: "0 0 24 24",
+			fill: "currentColor",
+			height: "20",
+			width: "20",
+			"aria-hidden": "true"
+		}, /*#__PURE__*/ react$1.default.createElement("path", {
+			fillRule: "evenodd",
+			d: "M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z",
+			clipRule: "evenodd"
+		}));
+		const InfoIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
+			xmlns: "http://www.w3.org/2000/svg",
+			viewBox: "0 0 20 20",
+			fill: "currentColor",
+			height: "20",
+			width: "20",
+			"aria-hidden": "true"
+		}, /*#__PURE__*/ react$1.default.createElement("path", {
+			fillRule: "evenodd",
+			d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z",
+			clipRule: "evenodd"
+		}));
+		const ErrorIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
+			xmlns: "http://www.w3.org/2000/svg",
+			viewBox: "0 0 20 20",
+			fill: "currentColor",
+			height: "20",
+			width: "20",
+			"aria-hidden": "true"
+		}, /*#__PURE__*/ react$1.default.createElement("path", {
+			fillRule: "evenodd",
+			d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z",
+			clipRule: "evenodd"
+		}));
+		const CloseIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
+			xmlns: "http://www.w3.org/2000/svg",
+			width: "12",
+			height: "12",
+			viewBox: "0 0 24 24",
+			fill: "none",
+			stroke: "currentColor",
+			strokeWidth: "1.5",
+			strokeLinecap: "round",
+			strokeLinejoin: "round",
+			"aria-hidden": "true"
+		}, /*#__PURE__*/ react$1.default.createElement("line", {
+			x1: "18",
+			y1: "6",
+			x2: "6",
+			y2: "18"
+		}), /*#__PURE__*/ react$1.default.createElement("line", {
+			x1: "6",
+			y1: "6",
+			x2: "18",
+			y2: "18"
+		}));
+		const useIsDocumentHidden = () => {
+			const [isDocumentHidden, setIsDocumentHidden] = react$1.default.useState(document.hidden);
+			react$1.default.useEffect(() => {
+				const callback = () => {
+					setIsDocumentHidden(document.hidden);
+				};
+				document.addEventListener("visibilitychange", callback);
+				return () => document.removeEventListener("visibilitychange", callback);
+			}, []);
+			return isDocumentHidden;
+		};
+		let toastsCounter = 1;
+		const MAX_HISTORY_SIZE = 100;
+		const getToastId = (data) => {
+			var _data_id;
+			return typeof (data == null ? void 0 : data.id) === "number" || (data == null ? void 0 : (_data_id = data.id) == null ? void 0 : _data_id.length) > 0 ? data.id : toastsCounter++;
+		};
+		var Observer = class {
+			constructor() {
+				this.subscribe = (subscriber) => {
+					this.subscribers.push(subscriber);
+					this.getActiveToasts().forEach((toast) => subscriber(toast));
+					return () => {
+						const index = this.subscribers.indexOf(subscriber);
+						this.subscribers.splice(index, 1);
+					};
+				};
+				this.publish = (data) => {
+					this.subscribers.forEach((subscriber) => subscriber(data));
+				};
+				this.addToast = (data) => {
+					this.publish(data);
+					this.toasts = [...this.toasts, data];
+					this.trimHistory();
+				};
+				this.trimHistory = () => {
+					let toRemove = this.toasts.length - MAX_HISTORY_SIZE;
+					if (toRemove <= 0) return;
+					this.toasts = this.toasts.filter((toast) => {
+						if (toRemove > 0 && this.dismissedToasts.has(toast.id)) {
+							this.dismissedToasts.delete(toast.id);
+							toRemove--;
+							return false;
+						}
+						return true;
+					});
+				};
+				this.create = (data) => {
+					const { message, ...rest } = data;
+					const id = getToastId(data);
+					const pendingDismissal = this.pendingDismissals.get(id);
+					if (pendingDismissal !== void 0) {
+						cancelAnimationFrame(pendingDismissal);
+						this.pendingDismissals.delete(id);
+						this.dismissedToasts.delete(id);
+					}
+					const wasDismissed = this.dismissedToasts.has(id);
+					const dismissible = data.dismissible === void 0 ? true : data.dismissible;
+					if (wasDismissed) {
+						this.dismissedToasts.delete(id);
+						this.toasts = this.toasts.filter((toast) => toast.id !== id);
+					}
+					if (wasDismissed ? void 0 : this.toasts.find((toast) => {
+						return toast.id === id;
+					})) this.toasts = this.toasts.map((toast) => {
+						if (toast.id === id) {
+							this.publish({
+								...toast,
+								...data,
+								id,
+								title: message
+							});
+							return {
+								...toast,
+								...data,
+								id,
+								dismissible,
+								title: message
+							};
+						}
+						return toast;
+					});
+					else this.addToast({
+						title: message,
+						...rest,
+						dismissible,
+						id
+					});
+					return id;
+				};
+				this.dismiss = (id) => {
+					if (id === void 0 || id === null) {
+						this.getActiveToasts().forEach((toast) => {
+							this.dismissedToasts.add(toast.id);
+							this.subscribers.forEach((subscriber) => subscriber({
+								id: toast.id,
+								dismiss: true
+							}));
+						});
+						return id;
+					}
+					this.dismissedToasts.add(id);
+					const alreadyPending = this.pendingDismissals.get(id);
+					if (alreadyPending !== void 0) cancelAnimationFrame(alreadyPending);
+					this.pendingDismissals.set(id, requestAnimationFrame(() => {
+						this.pendingDismissals.delete(id);
+						this.subscribers.forEach((subscriber) => subscriber({
+							id,
+							dismiss: true
+						}));
+					}));
+					return id;
+				};
+				this.message = (message, data) => {
+					return this.create({
+						...data,
+						message,
+						type: void 0
+					});
+				};
+				this.error = (message, data) => {
+					return this.create({
+						...data,
+						message,
+						type: "error"
+					});
+				};
+				this.success = (message, data) => {
+					return this.create({
+						...data,
+						type: "success",
+						message
+					});
+				};
+				this.info = (message, data) => {
+					return this.create({
+						...data,
+						type: "info",
+						message
+					});
+				};
+				this.warning = (message, data) => {
+					return this.create({
+						...data,
+						type: "warning",
+						message
+					});
+				};
+				this.loading = (message, data) => {
+					return this.create({
+						...data,
+						type: "loading",
+						message
+					});
+				};
+				this.promise = (promise, data) => {
+					if (!data) return;
+					let id = void 0;
+					if (data.loading !== void 0) id = this.create({
+						...data,
+						promise,
+						type: "loading",
+						message: data.loading,
+						description: typeof data.description !== "function" ? data.description : void 0
+					});
+					const p = Promise.resolve(promise instanceof Function ? promise() : promise);
+					let shouldDismiss = id !== void 0;
+					let result;
+					const originalPromise = p.then(async (response) => {
+						result = ["resolve", response];
+						if (react$1.default.isValidElement(response)) {
+							shouldDismiss = false;
+							this.create({
+								id,
+								type: "default",
+								message: response
+							});
+						} else if (isHttpResponse(response) && !response.ok) {
+							shouldDismiss = false;
+							const promiseData = typeof data.error === "function" ? await data.error(`HTTP error! status: ${response.status}`) : data.error;
+							const description = typeof data.description === "function" ? await data.description(`HTTP error! status: ${response.status}`) : data.description;
+							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
+							this.create({
+								id,
+								type: "error",
+								description,
+								...toastSettings
+							});
+						} else if (response instanceof Error) {
+							shouldDismiss = false;
+							const promiseData = typeof data.error === "function" ? await data.error(response) : data.error;
+							const description = typeof data.description === "function" ? await data.description(response) : data.description;
+							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
+							this.create({
+								id,
+								type: "error",
+								description,
+								...toastSettings
+							});
+						} else if (data.success !== void 0) {
+							shouldDismiss = false;
+							const promiseData = typeof data.success === "function" ? await data.success(response) : data.success;
+							const description = typeof data.description === "function" ? await data.description(response) : data.description;
+							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
+							this.create({
+								id,
+								type: "success",
+								description,
+								...toastSettings
+							});
+						}
+					}).catch(async (error) => {
+						result = ["reject", error];
+						if (data.error !== void 0) {
+							shouldDismiss = false;
+							const promiseData = typeof data.error === "function" ? await data.error(error) : data.error;
+							const description = typeof data.description === "function" ? await data.description(error) : data.description;
+							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
+							this.create({
+								id,
+								type: "error",
+								description,
+								...toastSettings
+							});
+						}
+					}).finally(() => {
+						if (shouldDismiss) {
+							this.dismiss(id);
+							id = void 0;
+						}
+						data.finally == null || data.finally.call(data);
+					});
+					const unwrap = () => new Promise((resolve, reject) => originalPromise.then(() => result[0] === "reject" ? reject(result[1]) : resolve(result[1])).catch(reject));
+					if (typeof id !== "string" && typeof id !== "number") return { unwrap };
+					else return Object.assign(id, { unwrap });
+				};
+				this.custom = (jsx, data) => {
+					const id = getToastId(data);
+					this.create({
+						...data,
+						jsx: jsx(id),
+						id,
+						type: void 0
+					});
+					return id;
+				};
+				this.getActiveToasts = () => {
+					return this.toasts.filter((toast) => !this.dismissedToasts.has(toast.id));
+				};
+				this.subscribers = [];
+				this.toasts = [];
+				this.dismissedToasts = /* @__PURE__ */ new Set();
+				this.pendingDismissals = /* @__PURE__ */ new Map();
+			}
+		};
+		const ToastState = new Observer();
+		const toastFunction = (message, data) => {
+			return ToastState.message(message, data);
+		};
+		const isHttpResponse = (data) => {
+			return data && typeof data === "object" && "ok" in data && typeof data.ok === "boolean" && "status" in data && typeof data.status === "number";
+		};
+		const basicToast = toastFunction;
+		const getHistory = () => ToastState.toasts;
+		const getToasts = () => ToastState.getActiveToasts();
+		const toast = Object.assign(basicToast, {
+			success: ToastState.success,
+			info: ToastState.info,
+			warning: ToastState.warning,
+			error: ToastState.error,
+			custom: ToastState.custom,
+			message: ToastState.message,
+			promise: ToastState.promise,
+			dismiss: ToastState.dismiss,
+			loading: ToastState.loading
+		}, {
+			getHistory,
+			getToasts
+		});
+		__insertCSS("[data-sonner-toaster][dir=ltr],html[dir=ltr]{--toast-icon-margin-start:-3px;--toast-icon-margin-end:4px;--toast-svg-margin-start:-1px;--toast-svg-margin-end:0px;--toast-button-margin-start:auto;--toast-button-margin-end:0;--toast-close-button-start:0;--toast-close-button-end:unset;--toast-close-button-transform:translate(-35%, -35%)}[data-sonner-toaster][dir=rtl],html[dir=rtl]{--toast-icon-margin-start:4px;--toast-icon-margin-end:-3px;--toast-svg-margin-start:0px;--toast-svg-margin-end:-1px;--toast-button-margin-start:0;--toast-button-margin-end:auto;--toast-close-button-start:unset;--toast-close-button-end:0;--toast-close-button-transform:translate(35%, -35%)}[data-sonner-toaster]{position:fixed;width:var(--width);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;--gray1:hsl(0, 0%, 99%);--gray2:hsl(0, 0%, 97.3%);--gray3:hsl(0, 0%, 95.1%);--gray4:hsl(0, 0%, 93%);--gray5:hsl(0, 0%, 90.9%);--gray6:hsl(0, 0%, 88.7%);--gray7:hsl(0, 0%, 85.8%);--gray8:hsl(0, 0%, 78%);--gray9:hsl(0, 0%, 56.1%);--gray10:hsl(0, 0%, 52.3%);--gray11:hsl(0, 0%, 43.5%);--gray12:hsl(0, 0%, 9%);--border-radius:8px;box-sizing:border-box;padding:0;margin:0;list-style:none;outline:0;z-index:999999999;transition:transform .4s ease}@media (hover:none) and (pointer:coarse){[data-sonner-toaster][data-lifted=true]{transform:none}}[data-sonner-toaster][data-x-position=right]{right:var(--offset-right)}[data-sonner-toaster][data-x-position=left]{left:var(--offset-left)}[data-sonner-toaster][data-x-position=center]{left:50%;transform:translateX(-50%)}[data-sonner-toaster][data-y-position=top]{top:var(--offset-top)}[data-sonner-toaster][data-y-position=bottom]{bottom:var(--offset-bottom)}[data-sonner-toast]{--y:translateY(100%);--lift-amount:calc(var(--lift) * var(--gap));z-index:var(--z-index);position:absolute;opacity:0;transform:var(--y);touch-action:none;transition:transform .4s,opacity .4s,height .4s,box-shadow .2s;box-sizing:border-box;outline:0;overflow-wrap:anywhere}[data-sonner-toast][data-styled=true]{padding:16px;background:var(--normal-bg);border:1px solid var(--normal-border);color:var(--normal-text);border-radius:var(--border-radius);box-shadow:0 4px 12px rgba(0,0,0,.1);width:var(--width);font-size:13px;display:flex;align-items:center;gap:6px}[data-sonner-toast]:focus-visible{box-shadow:0 4px 12px rgba(0,0,0,.1),0 0 0 2px rgba(0,0,0,.2)}[data-sonner-toast][data-y-position=top]{top:0;--y:translateY(-100%);--lift:1;--lift-amount:calc(1 * var(--gap))}[data-sonner-toast][data-y-position=bottom]{bottom:0;--y:translateY(100%);--lift:-1;--lift-amount:calc(var(--lift) * var(--gap))}[data-sonner-toast][data-styled=true] [data-description]{font-weight:400;line-height:1.4;color:#3f3f3f}[data-rich-colors=true][data-sonner-toast][data-styled=true] [data-description]{color:inherit}[data-sonner-toaster][data-sonner-theme=dark] [data-description]{color:#e8e8e8}[data-sonner-toast][data-styled=true] [data-title]{font-weight:500;line-height:1.5;color:inherit}[data-sonner-toast][data-styled=true] [data-icon]{display:flex;height:16px;width:16px;position:relative;justify-content:flex-start;align-items:center;flex-shrink:0;margin-left:var(--toast-icon-margin-start);margin-right:var(--toast-icon-margin-end)}[data-sonner-toast][data-promise=true] [data-icon]>svg{opacity:0;transform:scale(.8);transform-origin:center;animation:sonner-fade-in .3s ease forwards}[data-sonner-toast][data-styled=true] [data-icon]>*{flex-shrink:0}[data-sonner-toast][data-styled=true] [data-icon] svg{margin-left:var(--toast-svg-margin-start);margin-right:var(--toast-svg-margin-end)}[data-sonner-toast][data-styled=true] [data-content]{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}[data-sonner-toast][data-styled=true] [data-button]{border-radius:4px;padding-left:8px;padding-right:8px;height:24px;font-size:12px;color:var(--normal-bg);background:var(--normal-text);margin-left:var(--toast-button-margin-start);margin-right:var(--toast-button-margin-end);border:none;font-weight:500;cursor:pointer;outline:0;display:flex;align-items:center;flex-shrink:0;transition:opacity .4s,box-shadow .2s}[data-sonner-toast][data-styled=true] [data-button]:focus-visible{box-shadow:0 0 0 2px rgba(0,0,0,.4)}[data-sonner-toast][data-styled=true] [data-button]:first-of-type{margin-left:var(--toast-button-margin-start);margin-right:var(--toast-button-margin-end)}[data-sonner-toast][data-styled=true] [data-cancel]{color:var(--normal-text);background:rgba(0,0,0,.08)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast][data-styled=true] [data-cancel]{background:rgba(255,255,255,.3)}[data-sonner-toast][data-styled=true] [data-close-button]{position:absolute;left:var(--toast-close-button-start);right:var(--toast-close-button-end);top:0;height:20px;width:20px;display:flex;justify-content:center;align-items:center;padding:0;color:var(--normal-text);background:var(--normal-bg);border:1px solid var(--normal-border);transform:var(--toast-close-button-transform);border-radius:50%;cursor:pointer;z-index:1;transition:opacity .1s,background .2s,border-color .2s}[data-sonner-toast][data-styled=true] [data-close-button]:focus-visible{box-shadow:0 4px 12px rgba(0,0,0,.1),0 0 0 2px rgba(0,0,0,.2)}[data-sonner-toast][data-styled=true] [data-disabled=true]{cursor:not-allowed}[data-sonner-toast][data-styled=true]:hover [data-close-button]:hover{background:var(--gray2);border-color:var(--gray5)}[data-sonner-toast][data-swiping=true]::before{content:'';position:absolute;left:-100%;right:-100%;height:100%;z-index:-1}[data-sonner-toast][data-y-position=top][data-swiping=true]::before{bottom:50%;transform:scaleY(3) translateY(50%)}[data-sonner-toast][data-y-position=bottom][data-swiping=true]::before{top:50%;transform:scaleY(3) translateY(-50%)}[data-sonner-toast][data-swiping=false][data-removed=true]::before{content:'';position:absolute;inset:0;transform:scaleY(2)}[data-sonner-toast][data-expanded=true]::after{content:'';position:absolute;left:0;height:calc(var(--gap) + 1px);bottom:100%;width:100%}[data-sonner-toast][data-mounted=true]{--y:translateY(0);opacity:1}[data-sonner-toast][data-expanded=false][data-front=false]{--scale:var(--toasts-before) * 0.05 + 1;--y:translateY(calc(var(--lift-amount) * var(--toasts-before))) scale(calc(-1 * var(--scale)));height:var(--front-toast-height)}[data-sonner-toast]>*{transition:opacity .4s}[data-sonner-toast][data-x-position=right]{right:0}[data-sonner-toast][data-x-position=left]{left:0}[data-sonner-toast][data-expanded=false][data-front=false][data-styled=true]>*{opacity:0}[data-sonner-toast][data-visible=false]{opacity:0;pointer-events:none}[data-sonner-toast][data-mounted=true][data-expanded=true]{--y:translateY(calc(var(--lift) * var(--offset)));height:var(--initial-height)}[data-sonner-toast][data-removed=true][data-front=true][data-swipe-out=false]{--y:translateY(calc(var(--lift) * -100%));opacity:0}[data-sonner-toast][data-removed=true][data-front=false][data-swipe-out=false][data-expanded=true]{--y:translateY(calc(var(--lift) * var(--offset) + var(--lift) * -100%));opacity:0}[data-sonner-toast][data-removed=true][data-front=false][data-swipe-out=false][data-expanded=false]{--y:translateY(40%);opacity:0;transition:transform .5s,opacity .2s}[data-sonner-toast][data-removed=true][data-front=false]::before{height:calc(var(--initial-height) + 20%)}[data-sonner-toast][data-swiping=true]{transform:var(--y) translateY(var(--swipe-amount-y,0)) translateX(var(--swipe-amount-x,0));transition:none}[data-sonner-toast][data-swiped=true]{-webkit-user-select:none;user-select:none}[data-sonner-toast][data-swipe-out=true][data-y-position=bottom],[data-sonner-toast][data-swipe-out=true][data-y-position=top]{animation-duration:.2s;animation-timing-function:ease-out;animation-fill-mode:forwards}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=left]{animation-name:swipe-out-left}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=right]{animation-name:swipe-out-right}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=up]{animation-name:swipe-out-up}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=down]{animation-name:swipe-out-down}@keyframes swipe-out-left{from{transform:var(--y) translateX(var(--swipe-amount-x));opacity:1}to{transform:var(--y) translateX(calc(var(--swipe-amount-x) - 100%));opacity:0}}@keyframes swipe-out-right{from{transform:var(--y) translateX(var(--swipe-amount-x));opacity:1}to{transform:var(--y) translateX(calc(var(--swipe-amount-x) + 100%));opacity:0}}@keyframes swipe-out-up{from{transform:var(--y) translateY(var(--swipe-amount-y));opacity:1}to{transform:var(--y) translateY(calc(var(--swipe-amount-y) - 100%));opacity:0}}@keyframes swipe-out-down{from{transform:var(--y) translateY(var(--swipe-amount-y));opacity:1}to{transform:var(--y) translateY(calc(var(--swipe-amount-y) + 100%));opacity:0}}@media (max-width:600px){[data-sonner-toaster]{position:fixed;right:var(--mobile-offset-right);left:var(--mobile-offset-left);width:100%}[data-sonner-toaster][dir=rtl]{left:calc(var(--mobile-offset-left) * -1)}[data-sonner-toaster] [data-sonner-toast]{left:0;right:0;width:calc(100% - var(--mobile-offset-left) * 2)}[data-sonner-toaster][data-x-position=left]{left:var(--mobile-offset-left)}[data-sonner-toaster][data-y-position=bottom]{bottom:var(--mobile-offset-bottom)}[data-sonner-toaster][data-y-position=top]{top:var(--mobile-offset-top)}[data-sonner-toaster][data-x-position=center]{left:var(--mobile-offset-left);right:var(--mobile-offset-right);transform:none}}[data-sonner-toaster][data-sonner-theme=light]{--normal-bg:#fff;--normal-border:var(--gray4);--normal-text:var(--gray12);--success-bg:hsl(143, 85%, 96%);--success-border:hsl(145, 92%, 87%);--success-text:hsl(140, 100%, 27%);--info-bg:hsl(208, 100%, 97%);--info-border:hsl(221, 91%, 93%);--info-text:hsl(210, 92%, 45%);--warning-bg:hsl(49, 100%, 97%);--warning-border:hsl(49, 91%, 84%);--warning-text:hsl(31, 92%, 45%);--error-bg:hsl(359, 100%, 97%);--error-border:hsl(359, 100%, 94%);--error-text:hsl(360, 100%, 45%)}[data-sonner-toaster][data-sonner-theme=light] [data-sonner-toast][data-invert=true]{--normal-bg:#000;--normal-border:hsl(0, 0%, 20%);--normal-text:var(--gray1)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast][data-invert=true]{--normal-bg:#fff;--normal-border:var(--gray3);--normal-text:var(--gray12)}[data-sonner-toaster][data-sonner-theme=dark]{--normal-bg:#000;--normal-bg-hover:hsl(0, 0%, 12%);--normal-border:hsl(0, 0%, 20%);--normal-border-hover:hsl(0, 0%, 25%);--normal-text:var(--gray1);--success-bg:hsl(150, 100%, 6%);--success-border:hsl(147, 100%, 12%);--success-text:hsl(150, 86%, 65%);--info-bg:hsl(215, 100%, 6%);--info-border:hsl(223, 43%, 17%);--info-text:hsl(216, 87%, 65%);--warning-bg:hsl(64, 100%, 6%);--warning-border:hsl(60, 100%, 9%);--warning-text:hsl(46, 87%, 65%);--error-bg:hsl(358, 76%, 10%);--error-border:hsl(357, 89%, 16%);--error-text:hsl(358, 100%, 81%)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast] [data-close-button]{background:var(--normal-bg);border-color:var(--normal-border);color:var(--normal-text)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast] [data-close-button]:hover{background:var(--normal-bg-hover);border-color:var(--normal-border-hover)}[data-rich-colors=true][data-sonner-toast][data-type=success]{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}[data-rich-colors=true][data-sonner-toast][data-type=success] [data-close-button]{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}[data-rich-colors=true][data-sonner-toast][data-type=info]{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text)}[data-rich-colors=true][data-sonner-toast][data-type=info] [data-close-button]{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text)}[data-rich-colors=true][data-sonner-toast][data-type=warning]{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-text)}[data-rich-colors=true][data-sonner-toast][data-type=warning] [data-close-button]{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-text)}[data-rich-colors=true][data-sonner-toast][data-type=error]{background:var(--error-bg);border-color:var(--error-border);color:var(--error-text)}[data-rich-colors=true][data-sonner-toast][data-type=error] [data-close-button]{background:var(--error-bg);border-color:var(--error-border);color:var(--error-text)}.sonner-loading-wrapper{--size:16px;height:var(--size);width:var(--size);position:absolute;inset:0;z-index:10}.sonner-loading-wrapper[data-visible=false]{transform-origin:center;animation:sonner-fade-out .2s ease forwards}.sonner-spinner{position:relative;top:50%;left:50%;height:var(--size);width:var(--size)}.sonner-loading-bar{animation:sonner-spin 1.2s linear infinite;background:var(--gray11);border-radius:6px;height:8%;left:-10%;position:absolute;top:-3.9%;width:24%}.sonner-loading-bar:first-child{animation-delay:-1.2s;transform:rotate(.0001deg) translate(146%)}.sonner-loading-bar:nth-child(2){animation-delay:-1.1s;transform:rotate(30deg) translate(146%)}.sonner-loading-bar:nth-child(3){animation-delay:-1s;transform:rotate(60deg) translate(146%)}.sonner-loading-bar:nth-child(4){animation-delay:-.9s;transform:rotate(90deg) translate(146%)}.sonner-loading-bar:nth-child(5){animation-delay:-.8s;transform:rotate(120deg) translate(146%)}.sonner-loading-bar:nth-child(6){animation-delay:-.7s;transform:rotate(150deg) translate(146%)}.sonner-loading-bar:nth-child(7){animation-delay:-.6s;transform:rotate(180deg) translate(146%)}.sonner-loading-bar:nth-child(8){animation-delay:-.5s;transform:rotate(210deg) translate(146%)}.sonner-loading-bar:nth-child(9){animation-delay:-.4s;transform:rotate(240deg) translate(146%)}.sonner-loading-bar:nth-child(10){animation-delay:-.3s;transform:rotate(270deg) translate(146%)}.sonner-loading-bar:nth-child(11){animation-delay:-.2s;transform:rotate(300deg) translate(146%)}.sonner-loading-bar:nth-child(12){animation-delay:-.1s;transform:rotate(330deg) translate(146%)}@keyframes sonner-fade-in{0%{opacity:0;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}@keyframes sonner-fade-out{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.8)}}@keyframes sonner-spin{0%{opacity:1}100%{opacity:.15}}@media (prefers-reduced-motion){.sonner-loading-bar,[data-sonner-toast],[data-sonner-toast]>*{transition:none!important;animation:none!important}}.sonner-loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transform-origin:center;transition:opacity .2s,transform .2s}.sonner-loader[data-visible=false]{opacity:0;transform:scale(.8) translate(-50%,-50%)}");
+		function isAction(action) {
+			return action.label !== void 0;
+		}
+		const VISIBLE_TOASTS_AMOUNT = 3;
+		const VIEWPORT_OFFSET = "24px";
+		const MOBILE_VIEWPORT_OFFSET = "16px";
+		const TOAST_LIFETIME = 4e3;
+		const TOAST_WIDTH = 356;
+		const GAP = 14;
+		const SWIPE_THRESHOLD = 45;
+		const TIME_BEFORE_UNMOUNT = 200;
+		function cn(...classes) {
+			return classes.filter(Boolean).join(" ");
+		}
+		function getDefaultSwipeDirections(position) {
+			const [y, x] = position.split("-");
+			const directions = [];
+			if (y) directions.push(y);
+			if (x) directions.push(x);
+			return directions;
+		}
+		const Toast = (props) => {
+			var _toast_classNames, _toast_classNames1, _toast_classNames2, _toast_classNames3, _toast_classNames4, _toast_classNames5, _toast_classNames6, _toast_classNames7, _toast_classNames8;
+			const { invert: ToasterInvert, toast, unstyled, interacting, setHeights, visibleToasts, heights, index, toasts, expanded, removeToast, defaultRichColors, closeButton: closeButtonFromToaster, style, cancelButtonStyle, actionButtonStyle, className = "", descriptionClassName = "", duration: durationFromToaster, position, gap, expandByDefault, classNames, icons, closeButtonAriaLabel = "Close toast" } = props;
+			const [swipeDirection, setSwipeDirection] = react$1.default.useState(null);
+			const [swipeOutDirection, setSwipeOutDirection] = react$1.default.useState(null);
+			const [mounted, setMounted] = react$1.default.useState(false);
+			const [removed, setRemoved] = react$1.default.useState(false);
+			const [swiping, setSwiping] = react$1.default.useState(false);
+			const [swipeOut, setSwipeOut] = react$1.default.useState(false);
+			const [isSwiped, setIsSwiped] = react$1.default.useState(false);
+			const [offsetBeforeRemove, setOffsetBeforeRemove] = react$1.default.useState(0);
+			const [initialHeight, setInitialHeight] = react$1.default.useState(0);
+			const remainingTime = react$1.default.useRef(toast.duration || durationFromToaster || TOAST_LIFETIME);
+			const dragStartTime = react$1.default.useRef(null);
+			const toastRef = react$1.default.useRef(null);
+			const isFront = index === 0;
+			const isVisible = index + 1 <= visibleToasts;
+			const toastType = toast.type;
+			const toastTypeKey = toastType != null ? toastType : "default";
+			const dismissible = toast.dismissible !== false;
+			const toastClassname = toast.className || "";
+			const toastDescriptionClassname = toast.descriptionClassName || "";
+			const heightIndex = react$1.default.useMemo(() => heights.findIndex((height) => height.toastId === toast.id) || 0, [heights, toast.id]);
+			const closeButton = react$1.default.useMemo(() => {
+				var _toast_closeButton;
+				return (_toast_closeButton = toast.closeButton) != null ? _toast_closeButton : closeButtonFromToaster;
+			}, [toast.closeButton, closeButtonFromToaster]);
+			const duration = react$1.default.useMemo(() => toast.duration || durationFromToaster || TOAST_LIFETIME, [toast.duration, durationFromToaster]);
+			const closeTimerStartTimeRef = react$1.default.useRef(0);
+			const offset = react$1.default.useRef(0);
+			const lastCloseTimerStartTimeRef = react$1.default.useRef(0);
+			const pointerStartRef = react$1.default.useRef(null);
+			const [y, x] = position.split("-");
+			const toastsHeightBefore = react$1.default.useMemo(() => {
+				return heights.reduce((prev, curr, reducerIndex) => {
+					if (reducerIndex >= heightIndex) return prev;
+					return prev + curr.height;
+				}, 0);
+			}, [heights, heightIndex]);
+			const isDocumentHidden = useIsDocumentHidden();
+			const swipeDirections = react$1.default.useMemo(() => {
+				var _props_swipeDirections;
+				return (_props_swipeDirections = props.swipeDirections) != null ? _props_swipeDirections : getDefaultSwipeDirections(position);
+			}, [props.swipeDirections, position]);
+			const invert = toast.invert || ToasterInvert;
+			const disabled = toastType === "loading";
+			offset.current = react$1.default.useMemo(() => heightIndex * gap + toastsHeightBefore, [heightIndex, toastsHeightBefore]);
+			react$1.default.useEffect(() => {
+				remainingTime.current = duration;
+			}, [duration]);
+			react$1.default.useEffect(() => {
+				setMounted(true);
+			}, []);
+			react$1.default.useEffect(() => {
+				const toastNode = toastRef.current;
+				if (toastNode) {
+					const height = toastNode.getBoundingClientRect().height;
+					setInitialHeight(height);
+					setHeights((h) => [{
+						toastId: toast.id,
+						height,
+						position: toast.position
+					}, ...h]);
+					return () => setHeights((h) => h.filter((height) => height.toastId !== toast.id));
+				}
+			}, [setHeights, toast.id]);
+			react$1.default.useLayoutEffect(() => {
+				if (!mounted) return;
+				const toastNode = toastRef.current;
+				const originalHeight = toastNode.style.height;
+				toastNode.style.height = "auto";
+				const newHeight = toastNode.getBoundingClientRect().height;
+				toastNode.style.height = originalHeight;
+				setInitialHeight(newHeight);
+				setHeights((heights) => {
+					if (!heights.find((height) => height.toastId === toast.id)) return [{
+						toastId: toast.id,
+						height: newHeight,
+						position: toast.position
+					}, ...heights];
+					else return heights.map((height) => height.toastId === toast.id ? {
+						...height,
+						height: newHeight
+					} : height);
+				});
+			}, [
+				mounted,
+				toast.title,
+				toast.description,
+				setHeights,
+				toast.id,
+				toast.jsx,
+				toast.action,
+				toast.cancel
+			]);
+			const deleteToast = react$1.default.useCallback(() => {
+				setRemoved(true);
+				setOffsetBeforeRemove(offset.current);
+				setHeights((h) => h.filter((height) => height.toastId !== toast.id));
+				setTimeout(() => {
+					removeToast(toast);
+				}, TIME_BEFORE_UNMOUNT);
+			}, [
+				toast,
+				removeToast,
+				setHeights,
+				offset
+			]);
+			react$1.default.useEffect(() => {
+				if (toast.promise && toastType === "loading" || toast.duration === Infinity || toast.type === "loading") return;
+				let timeoutId;
+				const pauseTimer = () => {
+					if (lastCloseTimerStartTimeRef.current < closeTimerStartTimeRef.current) {
+						const elapsedTime = (/* @__PURE__ */ new Date()).getTime() - closeTimerStartTimeRef.current;
+						remainingTime.current = remainingTime.current - elapsedTime;
+					}
+					lastCloseTimerStartTimeRef.current = (/* @__PURE__ */ new Date()).getTime();
+				};
+				const startTimer = () => {
+					if (remainingTime.current === Infinity) return;
+					closeTimerStartTimeRef.current = (/* @__PURE__ */ new Date()).getTime();
+					timeoutId = setTimeout(() => {
+						toast.onAutoClose == null || toast.onAutoClose.call(toast, toast);
+						deleteToast();
+					}, remainingTime.current);
+				};
+				if (expanded || interacting || isDocumentHidden) pauseTimer();
+				else startTimer();
+				return () => clearTimeout(timeoutId);
+			}, [
+				expanded,
+				interacting,
+				toast,
+				toastType,
+				isDocumentHidden,
+				deleteToast
+			]);
+			react$1.default.useEffect(() => {
+				if (toast.delete) {
+					deleteToast();
+					toast.onDismiss == null || toast.onDismiss.call(toast, toast);
+				}
+			}, [deleteToast, toast.delete]);
+			function getLoadingIcon() {
+				var _toast_classNames;
+				if (icons == null ? void 0 : icons.loading) {
+					var _toast_classNames1;
+					return /*#__PURE__*/ react$1.default.createElement("div", {
+						className: cn(classNames == null ? void 0 : classNames.loader, toast == null ? void 0 : (_toast_classNames1 = toast.classNames) == null ? void 0 : _toast_classNames1.loader, "sonner-loader"),
+						"data-visible": toastType === "loading"
+					}, icons.loading);
+				}
+				return /*#__PURE__*/ react$1.default.createElement(Loader$1, {
+					className: cn(classNames == null ? void 0 : classNames.loader, toast == null ? void 0 : (_toast_classNames = toast.classNames) == null ? void 0 : _toast_classNames.loader),
+					visible: toastType === "loading"
+				});
+			}
+			const icon = toast.icon || (icons == null ? void 0 : icons[toastType]) || getAsset(toastType);
+			var _toast_richColors, _icons_close;
+			return /*#__PURE__*/ react$1.default.createElement("li", {
+				tabIndex: 0,
+				ref: toastRef,
+				className: cn(className, toastClassname, classNames == null ? void 0 : classNames.toast, toast == null ? void 0 : (_toast_classNames = toast.classNames) == null ? void 0 : _toast_classNames.toast, classNames == null ? void 0 : classNames[toastTypeKey], toast == null ? void 0 : (_toast_classNames1 = toast.classNames) == null ? void 0 : _toast_classNames1[toastTypeKey]),
+				"data-sonner-toast": "",
+				"data-rich-colors": (_toast_richColors = toast.richColors) != null ? _toast_richColors : defaultRichColors,
+				"data-styled": !Boolean(toast.jsx || toast.unstyled || unstyled),
+				"data-mounted": mounted,
+				"data-promise": Boolean(toast.promise),
+				"data-swiped": isSwiped,
+				"data-removed": removed,
+				"data-visible": isVisible,
+				"data-y-position": y,
+				"data-x-position": x,
+				"data-index": index,
+				"data-front": isFront,
+				"data-swiping": swiping,
+				"data-dismissible": dismissible,
+				"data-type": toastType,
+				"data-invert": invert,
+				"data-swipe-out": swipeOut,
+				"data-swipe-direction": swipeOutDirection,
+				"data-expanded": Boolean(expanded || expandByDefault && mounted),
+				"data-testid": toast.testId,
+				style: {
+					"--index": index,
+					"--toasts-before": index,
+					"--z-index": toasts.length - index,
+					"--offset": `${removed ? offsetBeforeRemove : offset.current}px`,
+					"--initial-height": expandByDefault ? "auto" : `${initialHeight}px`,
+					...style,
+					...toast.style
+				},
+				onDragEnd: () => {
+					setSwiping(false);
+					setSwipeDirection(null);
+					pointerStartRef.current = null;
+				},
+				onPointerDown: (event) => {
+					if (event.button === 2) return;
+					if (disabled || !dismissible) return;
+					dragStartTime.current = /* @__PURE__ */ new Date();
+					setOffsetBeforeRemove(offset.current);
+					event.target.setPointerCapture(event.pointerId);
+					if (event.target.tagName === "BUTTON") return;
+					setSwiping(true);
+					pointerStartRef.current = {
+						x: event.clientX,
+						y: event.clientY
+					};
+				},
+				onPointerUp: () => {
+					var _toastRef_current, _toastRef_current1, _dragStartTime_current;
+					if (swipeOut || !dismissible) return;
+					pointerStartRef.current = null;
+					const swipeAmountX = Number(((_toastRef_current = toastRef.current) == null ? void 0 : _toastRef_current.style.getPropertyValue("--swipe-amount-x").replace("px", "")) || 0);
+					const swipeAmountY = Number(((_toastRef_current1 = toastRef.current) == null ? void 0 : _toastRef_current1.style.getPropertyValue("--swipe-amount-y").replace("px", "")) || 0);
+					const timeTaken = (/* @__PURE__ */ new Date()).getTime() - ((_dragStartTime_current = dragStartTime.current) == null ? void 0 : _dragStartTime_current.getTime());
+					const swipeAmount = swipeDirection === "x" ? swipeAmountX : swipeAmountY;
+					const velocity = Math.abs(swipeAmount) / timeTaken;
+					if ((swipeDirection === "x" ? swipeDirections.includes(swipeAmountX > 0 ? "right" : "left") : swipeDirections.includes(swipeAmountY > 0 ? "bottom" : "top")) && (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > .11)) {
+						setOffsetBeforeRemove(offset.current);
+						toast.onDismiss == null || toast.onDismiss.call(toast, toast);
+						if (swipeDirection === "x") setSwipeOutDirection(swipeAmountX > 0 ? "right" : "left");
+						else setSwipeOutDirection(swipeAmountY > 0 ? "down" : "up");
+						deleteToast();
+						setSwipeOut(true);
+						return;
+					} else {
+						var _toastRef_current2, _toastRef_current3;
+						(_toastRef_current2 = toastRef.current) == null || _toastRef_current2.style.setProperty("--swipe-amount-x", `0px`);
+						(_toastRef_current3 = toastRef.current) == null || _toastRef_current3.style.setProperty("--swipe-amount-y", `0px`);
+					}
+					setIsSwiped(false);
+					setSwiping(false);
+					setSwipeDirection(null);
+				},
+				onPointerMove: (event) => {
+					var _window_getSelection, _toastRef_current, _toastRef_current1;
+					if (!pointerStartRef.current || !dismissible) return;
+					if (((_window_getSelection = window.getSelection()) == null ? void 0 : _window_getSelection.toString().length) > 0) return;
+					const yDelta = event.clientY - pointerStartRef.current.y;
+					const xDelta = event.clientX - pointerStartRef.current.x;
+					if (!swipeDirection && (Math.abs(xDelta) > 1 || Math.abs(yDelta) > 1)) setSwipeDirection(Math.abs(xDelta) > Math.abs(yDelta) ? "x" : "y");
+					let swipeAmount = {
+						x: 0,
+						y: 0
+					};
+					const getDampening = (delta) => {
+						return 1 / (1.5 + Math.abs(delta) / 20);
+					};
+					if (swipeDirection === "y") {
+						if (swipeDirections.includes("top") || swipeDirections.includes("bottom")) {
+							if (swipeDirections.includes("top") && yDelta < 0 || swipeDirections.includes("bottom") && yDelta > 0) swipeAmount.y = yDelta;
+							else {
+								const dampenedDelta = yDelta * getDampening(yDelta);
+								swipeAmount.y = Math.abs(dampenedDelta) < Math.abs(yDelta) ? dampenedDelta : yDelta;
+							}
+						}
+					} else if (swipeDirection === "x") {
+						if (swipeDirections.includes("left") || swipeDirections.includes("right")) {
+							if (swipeDirections.includes("left") && xDelta < 0 || swipeDirections.includes("right") && xDelta > 0) swipeAmount.x = xDelta;
+							else {
+								const dampenedDelta = xDelta * getDampening(xDelta);
+								swipeAmount.x = Math.abs(dampenedDelta) < Math.abs(xDelta) ? dampenedDelta : xDelta;
+							}
+						}
+					}
+					if (Math.abs(swipeAmount.x) > 0 || Math.abs(swipeAmount.y) > 0) setIsSwiped(true);
+					(_toastRef_current = toastRef.current) == null || _toastRef_current.style.setProperty("--swipe-amount-x", `${swipeAmount.x}px`);
+					(_toastRef_current1 = toastRef.current) == null || _toastRef_current1.style.setProperty("--swipe-amount-y", `${swipeAmount.y}px`);
+				}
+			}, closeButton && !toast.jsx && toastType !== "loading" ? /*#__PURE__*/ react$1.default.createElement("button", {
+				"aria-label": closeButtonAriaLabel,
+				"data-disabled": disabled,
+				"data-close-button": true,
+				onClick: disabled || !dismissible ? () => {} : () => {
+					deleteToast();
+					toast.onDismiss == null || toast.onDismiss.call(toast, toast);
+				},
+				className: cn(classNames == null ? void 0 : classNames.closeButton, toast == null ? void 0 : (_toast_classNames2 = toast.classNames) == null ? void 0 : _toast_classNames2.closeButton)
+			}, (_icons_close = icons == null ? void 0 : icons.close) != null ? _icons_close : CloseIcon) : null, (toastType || toast.icon || toast.promise) && toast.icon !== null && ((icons == null ? void 0 : icons[toastType]) !== null || toast.icon) ? /*#__PURE__*/ react$1.default.createElement("div", {
+				"data-icon": "",
+				className: cn(classNames == null ? void 0 : classNames.icon, toast == null ? void 0 : (_toast_classNames3 = toast.classNames) == null ? void 0 : _toast_classNames3.icon)
+			}, toastType === "loading" ? toast.icon || getLoadingIcon() : toast.promise ? getLoadingIcon() : null, toastType !== "loading" ? icon : null) : null, /*#__PURE__*/ react$1.default.createElement("div", {
+				"data-content": "",
+				className: cn(classNames == null ? void 0 : classNames.content, toast == null ? void 0 : (_toast_classNames4 = toast.classNames) == null ? void 0 : _toast_classNames4.content)
+			}, /*#__PURE__*/ react$1.default.createElement("div", {
+				"data-title": "",
+				className: cn(classNames == null ? void 0 : classNames.title, toast == null ? void 0 : (_toast_classNames5 = toast.classNames) == null ? void 0 : _toast_classNames5.title)
+			}, toast.jsx ? toast.jsx : typeof toast.title === "function" ? toast.title() : toast.title), toast.description ? /*#__PURE__*/ react$1.default.createElement("div", {
+				"data-description": "",
+				className: cn(descriptionClassName, toastDescriptionClassname, classNames == null ? void 0 : classNames.description, toast == null ? void 0 : (_toast_classNames6 = toast.classNames) == null ? void 0 : _toast_classNames6.description)
+			}, typeof toast.description === "function" ? toast.description() : toast.description) : null), /*#__PURE__*/ react$1.default.isValidElement(toast.cancel) ? toast.cancel : toast.cancel && isAction(toast.cancel) ? /*#__PURE__*/ react$1.default.createElement("button", {
+				"data-button": true,
+				"data-cancel": true,
+				style: toast.cancelButtonStyle || cancelButtonStyle,
+				onClick: (event) => {
+					if (!isAction(toast.cancel)) return;
+					if (!dismissible) return;
+					toast.cancel.onClick == null || toast.cancel.onClick.call(toast.cancel, event);
+					deleteToast();
+				},
+				className: cn(classNames == null ? void 0 : classNames.cancelButton, toast == null ? void 0 : (_toast_classNames7 = toast.classNames) == null ? void 0 : _toast_classNames7.cancelButton)
+			}, toast.cancel.label) : null, /*#__PURE__*/ react$1.default.isValidElement(toast.action) ? toast.action : toast.action && isAction(toast.action) ? /*#__PURE__*/ react$1.default.createElement("button", {
+				"data-button": true,
+				"data-action": true,
+				style: toast.actionButtonStyle || actionButtonStyle,
+				onClick: (event) => {
+					if (!isAction(toast.action)) return;
+					toast.action.onClick == null || toast.action.onClick.call(toast.action, event);
+					if (event.defaultPrevented) return;
+					deleteToast();
+				},
+				className: cn(classNames == null ? void 0 : classNames.actionButton, toast == null ? void 0 : (_toast_classNames8 = toast.classNames) == null ? void 0 : _toast_classNames8.actionButton)
+			}, toast.action.label) : null);
+		};
+		function getDocumentDirection() {
+			if (typeof window === "undefined") return "ltr";
+			if (typeof document === "undefined") return "ltr";
+			const dirAttribute = document.documentElement.getAttribute("dir");
+			if (dirAttribute === "auto" || !dirAttribute) return window.getComputedStyle(document.documentElement).direction;
+			return dirAttribute;
+		}
+		function assignOffset(defaultOffset, mobileOffset) {
+			const styles = {};
+			[defaultOffset, mobileOffset].forEach((offset, index) => {
+				const isMobile = index === 1;
+				const prefix = isMobile ? "--mobile-offset" : "--offset";
+				const defaultValue = isMobile ? MOBILE_VIEWPORT_OFFSET : VIEWPORT_OFFSET;
+				function assignAll(offset) {
+					[
+						"top",
+						"right",
+						"bottom",
+						"left"
+					].forEach((key) => {
+						styles[`${prefix}-${key}`] = typeof offset === "number" ? `${offset}px` : offset;
+					});
+				}
+				if (typeof offset === "number" || typeof offset === "string") assignAll(offset);
+				else if (typeof offset === "object") [
+					"top",
+					"right",
+					"bottom",
+					"left"
+				].forEach((key) => {
+					if (offset[key] === void 0) styles[`${prefix}-${key}`] = defaultValue;
+					else styles[`${prefix}-${key}`] = typeof offset[key] === "number" ? `${offset[key]}px` : offset[key];
+				});
+				else assignAll(defaultValue);
+			});
+			return styles;
+		}
+		const Toaster = /*#__PURE__*/ react$1.default.forwardRef(function Toaster(props, ref) {
+			const { id, invert, position = "bottom-right", hotkey = ["altKey", "KeyT"], expand, closeButton, className, offset, mobileOffset, theme = "light", richColors, duration, style, visibleToasts = VISIBLE_TOASTS_AMOUNT, toastOptions, dir = getDocumentDirection(), gap = GAP, icons, customAriaLabel, containerAriaLabel = "Notifications" } = props;
+			const [toasts, setToasts] = react$1.default.useState([]);
+			const filteredToasts = react$1.default.useMemo(() => {
+				if (id) return toasts.filter((toast) => toast.toasterId === id);
+				return toasts.filter((toast) => !toast.toasterId);
+			}, [toasts, id]);
+			const possiblePositions = react$1.default.useMemo(() => {
+				return Array.from(new Set([position].concat(filteredToasts.filter((toast) => toast.position).map((toast) => toast.position))));
+			}, [filteredToasts, position]);
+			const [heights, setHeights] = react$1.default.useState([]);
+			const [expanded, setExpanded] = react$1.default.useState(false);
+			const [interacting, setInteracting] = react$1.default.useState(false);
+			const [actualTheme, setActualTheme] = react$1.default.useState(theme !== "system" ? theme : typeof window !== "undefined" ? window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" : "light");
+			const listRef = react$1.default.useRef(null);
+			const hotkeyLabel = hotkey.join("+").replace(/Key/g, "").replace(/Digit/g, "");
+			const lastFocusedElementRef = react$1.default.useRef(null);
+			const isFocusWithinRef = react$1.default.useRef(false);
+			const removeToast = react$1.default.useCallback((toastToRemove) => {
+				setToasts((toasts) => {
+					var _toasts_find;
+					if (!((_toasts_find = toasts.find((toast) => toast.id === toastToRemove.id)) == null ? void 0 : _toasts_find.delete)) ToastState.dismiss(toastToRemove.id);
+					return toasts.filter(({ id }) => id !== toastToRemove.id);
+				});
+			}, []);
+			react$1.default.useEffect(() => {
+				return ToastState.subscribe((toast) => {
+					if (toast.dismiss) {
+						requestAnimationFrame(() => {
+							setToasts((toasts) => toasts.map((t) => t.id === toast.id ? {
+								...t,
+								delete: true
+							} : t));
+						});
+						return;
+					}
+					setTimeout(() => {
+						react_dom.default.flushSync(() => {
+							setToasts((toasts) => {
+								const indexOfExistingToast = toasts.findIndex((t) => t.id === toast.id);
+								if (indexOfExistingToast !== -1) return [
+									...toasts.slice(0, indexOfExistingToast),
+									{
+										...toasts[indexOfExistingToast],
+										...toast
+									},
+									...toasts.slice(indexOfExistingToast + 1)
+								];
+								return [toast, ...toasts];
+							});
+						});
+					});
+				});
+			}, []);
+			react$1.default.useEffect(() => {
+				if (theme !== "system") {
+					setActualTheme(theme);
+					return;
+				}
+				if (theme === "system") {
+					if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) setActualTheme("dark");
+					else setActualTheme("light");
+				}
+				if (typeof window === "undefined") return;
+				const darkMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+				try {
+					darkMediaQuery.addEventListener("change", ({ matches }) => {
+						if (matches) setActualTheme("dark");
+						else setActualTheme("light");
+					});
+				} catch (error) {
+					darkMediaQuery.addListener(({ matches }) => {
+						try {
+							if (matches) setActualTheme("dark");
+							else setActualTheme("light");
+						} catch (e) {
+							console.error(e);
+						}
+					});
+				}
+			}, [theme]);
+			react$1.default.useEffect(() => {
+				if (toasts.length <= 1) setExpanded(false);
+			}, [toasts]);
+			react$1.default.useEffect(() => {
+				const handleKeyDown = (event) => {
+					var _listRef_current;
+					if (hotkey.length > 0 && hotkey.every((key) => event[key] || event.code === key)) {
+						var _listRef_current1;
+						setExpanded(true);
+						(_listRef_current1 = listRef.current) == null || _listRef_current1.focus();
+					}
+					if (event.code === "Escape" && (document.activeElement === listRef.current || ((_listRef_current = listRef.current) == null ? void 0 : _listRef_current.contains(document.activeElement)))) setExpanded(false);
+				};
+				document.addEventListener("keydown", handleKeyDown);
+				return () => document.removeEventListener("keydown", handleKeyDown);
+			}, [hotkey]);
+			react$1.default.useEffect(() => {
+				if (listRef.current) return () => {
+					if (lastFocusedElementRef.current) {
+						lastFocusedElementRef.current.focus({ preventScroll: true });
+						lastFocusedElementRef.current = null;
+						isFocusWithinRef.current = false;
+					}
+				};
+			}, [listRef.current]);
+			return /*#__PURE__*/ react$1.default.createElement("section", {
+				ref,
+				"aria-label": customAriaLabel != null ? customAriaLabel : `${containerAriaLabel} ${hotkeyLabel}`,
+				tabIndex: -1,
+				"aria-live": "polite",
+				"aria-relevant": "additions text",
+				"aria-atomic": "false",
+				suppressHydrationWarning: true,
+				"data-react-aria-top-layer": true
+			}, possiblePositions.map((position, index) => {
+				var _heights_;
+				const [y, x] = position.split("-");
+				if (!filteredToasts.length) return null;
+				return /*#__PURE__*/ react$1.default.createElement("ol", {
+					key: position,
+					dir: dir === "auto" ? getDocumentDirection() : dir,
+					tabIndex: -1,
+					ref: listRef,
+					className,
+					"data-sonner-toaster": true,
+					"data-sonner-theme": actualTheme,
+					"data-y-position": y,
+					"data-x-position": x,
+					style: {
+						"--front-toast-height": `${((_heights_ = heights[0]) == null ? void 0 : _heights_.height) || 0}px`,
+						"--width": `${TOAST_WIDTH}px`,
+						"--gap": `${gap}px`,
+						...style,
+						...assignOffset(offset, mobileOffset)
+					},
+					onBlur: (event) => {
+						if (isFocusWithinRef.current && !event.currentTarget.contains(event.relatedTarget)) {
+							isFocusWithinRef.current = false;
+							if (lastFocusedElementRef.current) {
+								lastFocusedElementRef.current.focus({ preventScroll: true });
+								lastFocusedElementRef.current = null;
+							}
+						}
+					},
+					onFocus: (event) => {
+						if (event.target instanceof HTMLElement && event.target.dataset.dismissible === "false") return;
+						if (!isFocusWithinRef.current) {
+							isFocusWithinRef.current = true;
+							lastFocusedElementRef.current = event.relatedTarget;
+						}
+					},
+					onMouseEnter: () => setExpanded(true),
+					onMouseMove: () => setExpanded(true),
+					onMouseLeave: () => {
+						if (!interacting) setExpanded(false);
+					},
+					onDragEnd: () => setExpanded(false),
+					onPointerDown: (event) => {
+						if (event.target instanceof HTMLElement && event.target.dataset.dismissible === "false") return;
+						setInteracting(true);
+					},
+					onPointerUp: () => setInteracting(false)
+				}, filteredToasts.filter((toast) => !toast.position && index === 0 || toast.position === position).map((toast, index) => {
+					var _toastOptions_duration, _toastOptions_closeButton;
+					return /*#__PURE__*/ react$1.default.createElement(Toast, {
+						key: toast.id,
+						icons,
+						index,
+						toast,
+						defaultRichColors: richColors,
+						duration: (_toastOptions_duration = toastOptions == null ? void 0 : toastOptions.duration) != null ? _toastOptions_duration : duration,
+						className: toastOptions == null ? void 0 : toastOptions.className,
+						descriptionClassName: toastOptions == null ? void 0 : toastOptions.descriptionClassName,
+						invert,
+						visibleToasts,
+						closeButton: (_toastOptions_closeButton = toastOptions == null ? void 0 : toastOptions.closeButton) != null ? _toastOptions_closeButton : closeButton,
+						interacting,
+						position,
+						style: toastOptions == null ? void 0 : toastOptions.style,
+						unstyled: toastOptions == null ? void 0 : toastOptions.unstyled,
+						classNames: toastOptions == null ? void 0 : toastOptions.classNames,
+						cancelButtonStyle: toastOptions == null ? void 0 : toastOptions.cancelButtonStyle,
+						actionButtonStyle: toastOptions == null ? void 0 : toastOptions.actionButtonStyle,
+						closeButtonAriaLabel: toastOptions == null ? void 0 : toastOptions.closeButtonAriaLabel,
+						removeToast,
+						toasts: filteredToasts.filter((t) => t.position == toast.position),
+						heights: heights.filter((h) => h.position == toast.position),
+						setHeights,
+						expandByDefault: expand,
+						gap,
+						expanded,
+						swipeDirections: props.swipeDirections
+					});
+				}));
+			}));
+		});
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/toast-host.js
+		/** 全局注册表键：Symbol.for 跨 bundle 副本天然共享同一个符号。 */
+		const TOAST_HOST_KEY = Symbol.for("dsh-plugin-core/toast-host");
+		/** 全局单例：已注册则直接返回（不触发 create），否则建一个并注册。 */
+		function claimToastHost(create) {
+			const g = globalThis;
+			const existing = g[TOAST_HOST_KEY];
+			if (existing !== void 0) return existing;
+			const created = create();
+			g[TOAST_HOST_KEY] = created;
+			return created;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Toast.js
+		const DEFAULT_MS = 2600;
+		const ROOT_ID = "dshpc-toast-root";
+		function currentTheme() {
+			return document.body.hasAttribute("data-ds-dark-theme") ? "dark" : "light";
+		}
+		let sharedHost = null;
+		function toasterHost() {
+			if (sharedHost !== null) return sharedHost;
+			if (typeof document === "undefined" || typeof MutationObserver === "undefined") return null;
+			sharedHost = claimToastHost(createToasterHost);
+			return sharedHost;
+		}
+		function createToasterHost() {
+			let root = null;
+			let themeObserver = null;
+			let position = "bottom-center";
+			function renderToaster() {
+				if (root === null) return;
+				root.render((0, react$1.createElement)(Toaster, {
+					theme: currentTheme(),
+					position,
+					richColors: true
+				}));
+			}
+			function ensureToaster() {
+				if (root !== null) return;
+				let container = document.getElementById(ROOT_ID);
+				if (container === null) {
+					container = document.createElement("div");
+					container.id = ROOT_ID;
+					document.body.appendChild(container);
+				}
+				root = (0, react_dom_client.createRoot)(container);
+				renderToaster();
+				themeObserver = new MutationObserver(() => renderToaster());
+				themeObserver.observe(document.body, {
+					attributes: true,
+					attributeFilter: ["data-ds-dark-theme"]
+				});
+			}
+			function showNative(payload) {
+				const duration = payload.durationMs;
+				const onDismiss = payload.onDismiss;
+				if (payload.color !== void 0) {
+					toast(payload.message, {
+						duration,
+						unstyled: true,
+						onDismiss,
+						className: "dshpc-toast-custom",
+						style: {
+							background: payload.color,
+							color: "#fff",
+							minWidth: "320px",
+							minHeight: "48px",
+							padding: "12px 16px",
+							borderRadius: "8px",
+							boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)",
+							fontSize: "14px",
+							lineHeight: "20px",
+							boxSizing: "border-box",
+							display: "flex",
+							alignItems: "center"
+						}
+					});
+					return;
+				}
+				const variant = payload.variant;
+				if (variant === "success") toast.success(payload.message, {
+					duration,
+					onDismiss
+				});
+				else if (variant === "error") toast.error(payload.message, {
+					duration,
+					onDismiss
+				});
+				else if (variant === "warning") toast.warning(payload.message, {
+					duration,
+					onDismiss
+				});
+				else toast(payload.message, {
+					duration,
+					onDismiss
+				});
+			}
+			function showCard(payload) {
+				const palette = notifyPalette(payload.variant, currentTheme());
+				const duration = payload.durationMs;
+				const actions = payload.actions;
+				const id = toast.custom(() => (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					alignItems: "center",
+					gap: "12px",
+					minWidth: "320px",
+					minHeight: "48px",
+					padding: "12px 16px",
+					borderRadius: "10px",
+					boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)",
+					background: palette.bg,
+					color: palette.fg,
+					boxSizing: "border-box",
+					fontSize: "14px",
+					lineHeight: "20px"
+				} }, (0, react$1.createElement)("span", { style: {
+					flexShrink: 0,
+					width: "20px",
+					height: "20px",
+					borderRadius: "50%",
+					background: "rgba(255, 255, 255, 0.25)",
+					display: "inline-flex",
+					alignItems: "center",
+					justifyContent: "center",
+					fontSize: "13px",
+					fontWeight: 700
+				} }, palette.glyph), (0, react$1.createElement)("div", { style: {
+					flex: 1,
+					minWidth: 0
+				} }, (0, react$1.createElement)("div", { style: { fontWeight: 600 } }, payload.message), payload.description !== void 0 ? (0, react$1.createElement)("div", { style: {
+					opacity: .9,
+					fontSize: "13px",
+					marginTop: "2px",
+					whiteSpace: "pre-line"
+				} }, payload.description) : null), actions !== void 0 && actions.length > 0 ? (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					gap: "8px",
+					flexShrink: 0
+				} }, ...actions.slice(0, 2).map((a) => (0, react$1.createElement)(Button$1, {
+					variant: a.variant ?? "outline",
+					size: "md",
+					onClick: () => {
+						a.onClick();
+						toast.dismiss(id);
+					}
+				}, a.text))) : null), {
+					duration,
+					unstyled: true
+				});
+			}
+			return {
+				show(payload) {
+					ensureToaster();
+					renderToaster();
+					if (payload.style === "card") showCard(payload);
+					else showNative(payload);
+				},
+				setPosition(next) {
+					position = next;
+					renderToaster();
+				}
+			};
+		}
+		function notifyPalette(variant, theme) {
+			switch (variant) {
+				case "success": return {
+					bg: "#16a34a",
+					fg: "#ffffff",
+					glyph: "✓"
+				};
+				case "error": return {
+					bg: "#c0392b",
+					fg: "#ffffff",
+					glyph: "✕"
+				};
+				case "warning": return {
+					bg: "#e0922f",
+					fg: "#1f2937",
+					glyph: "!"
+				};
+				default: return theme === "dark" ? {
+					bg: "#3f3f46",
+					fg: "#fafafa",
+					glyph: "i"
+				} : {
+					bg: "#f4f4f5",
+					fg: "#18181b",
+					glyph: "i"
+				};
+			}
+		}
+		/**
+		* 我们封装好的提示（**推荐项目内使用**）：统一卡片样式（灰/绿/红/黄，跟随明暗皮肤），
+		* 右侧可挂 1–2 个**我们自己的 Button** 动作按钮，点击后自动关闭并调用你的事件。
+		*
+		* 底层仍是 Sonner（动画 / 定位 / 堆叠），但视觉与交互是我们定制的。
+		* 无 `document` 时静默跳过。
+		*/
+		function notify(message, opts) {
+			if (typeof document === "undefined") return;
+			const host = toasterHost();
+			if (host === null) return;
+			if (opts?.position !== void 0) host.setPosition(opts.position);
+			host.show({
+				message,
+				variant: opts?.variant ?? "info",
+				style: "card",
+				description: opts?.description,
+				durationMs: opts?.durationMs ?? DEFAULT_MS,
+				actions: opts?.actions
+			});
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/SplitGroup.js
+		/**
+		* 拼接外壳 —— 两个控件在外观上焊成一体（L2 组件皮肤，P1）
+		*
+		* 只管样式：外框、圆角、两格之间那条 1px 分隔、整体聚焦圈。**不持状态、不出联动回调** ——
+		* 选中与联动全走内件自己的 `value` / `onChange`（2026-10-28 用户拍板：外壳不必知道
+		* 右边那个控件管什么，消费方自己拿两个控件去绑）。
+		*
+		* 固定两格：不做多格（用户 2026-10-28：「就是两个组合，我觉得就足够了」）。
+		*
+		* 用法：
+		*   h(SplitGroup, null,
+		*     h(Segmented, { size: 'md', items, value, onChange: v => { setA(v); setB(pickFor(v)) } }),
+		*     h(Picker, { size: 'md', options: optsOf(a), value: b, onChange: setB }))
+		*
+		* 两格要等高，就给内件传**同一个 `size`**（sm 24 / md 28 / lg 32 —— 外壳跟着内件长，不写死高度）。
+		*/
+		/**
+		* 渲染一个两格拼接外壳。
+		*
+		* @param props 见 {@link SplitGroupProps}。
+		* @returns 外壳元素。
+		*/
+		function SplitGroup(props) {
+			ensureComponentStyles("split-group", SPLIT_GROUP_CSS);
+			return (0, react$1.createElement)("div", {
+				role: "group",
+				"aria-label": props.label,
+				id: props.id,
+				className: `dshpc-split${props.className === void 0 ? "" : ` ${props.className}`}`,
+				style: props.style
+			}, props.children);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/Field.js
+		/**
+		* 输入类控件 —— **全站唯一实现**（L2 组件皮肤，P3）
+		*
+		* - `Input`：文本输入（size sm 24 / md 28 / lg 32，error 描红）；
+		* - `PrefixedInput`：前缀 + 文本输入（如路径 / 接口前缀）；
+		* - `NumberInput`：数字步进（显式 `− / +`，替换原生 `<input type="number">` 的浏览器 spinner，
+		*   支持 step / min / max、clamp、Enter 提交、失焦回弹）。
+		*
+		* 高度一律吃 `--dshpc-control-h-*`；有边 / 无边同高（边框在内部补回）。
+		*/
+		/**
+		* 字段 hint 的统一包法：控件 + 问号提示同一行（间距/对齐收进组件，调用方传个
+		* `hint` 字符串就行，不再手动拼排版 —— 用户 2026-10-20 拍板）。
+		*/
+		function withHint(control, hint) {
+			if (hint === void 0) return control;
+			return (0, react$1.createElement)("span", { className: "dshpc-fieldwrap" }, control, (0, react$1.createElement)(FieldHint, { text: hint }));
+		}
+		function sizeClass(size) {
+			return size === "lg" ? "--lg" : size === "md" ? "--md" : "--sm";
+		}
+		/** 文本输入。默认铺满容器（width:100%，与 Textarea 同口径）；要定宽由调用方在外面包壳（如 192px 搜索槽）。 */
+		function Input(props) {
+			ensureComponentStyles("field", FIELD_CSS);
+			const { value, onChange, placeholder, size = "lg", error, disabled, type, icon, className, style } = props;
+			const [focused, setFocused] = (0, react$1.useState)(false);
+			const search = type === "search";
+			const showClear = search && value !== "" && focused && disabled !== true;
+			const input = (0, react$1.createElement)("input", {
+				ref: props.inputRef,
+				type: type ?? "text",
+				value,
+				placeholder,
+				disabled,
+				"aria-label": props["aria-label"],
+				title: props.title,
+				className: `dshpc-input dshpc-input${sizeClass(size)}${error === true ? " dshpc-input--error" : ""}${className !== void 0 && className !== "" ? ` ${className}` : ""}`,
+				style,
+				onChange: (event) => {
+					onChange(event.target.value);
+				},
+				onKeyDown: props.onKeyDown,
+				onFocus: () => {
+					setFocused(true);
+				},
+				onBlur: () => {
+					setFocused(false);
+					if (props.onBlur !== void 0) props.onBlur();
+				}
+			});
+			const hasIcon = icon !== void 0 && icon !== null;
+			if (!hasIcon && !search) return withHint(input, props.hint);
+			return withHint((0, react$1.createElement)("span", { className: `dshpc-iwrap dshpc-iwrap${sizeClass(size)}${showClear ? " dshpc-iwrap--clear" : ""}` }, hasIcon ? (0, react$1.createElement)("span", { className: "dshpc-iwrap__icon" }, icon) : null, input, showClear ? (0, react$1.createElement)(IconButton$1, {
+				className: "dshpc-iwrap__clear",
+				variant: "plain",
+				size,
+				icon: "×",
+				label: "清空",
+				onMouseDown: (event) => {
+					event.preventDefault();
+				},
+				onClick: () => {
+					onChange("");
+				}
+			}) : null), props.hint);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/InputGroup.js
+		/**
+		* 组合输入框 —— 输入框 + 后置按钮组（+ 可选前置标题）焊成一体（L2 组件皮肤，P3）
+		*
+		* 外观与 {@link SplitGroup} 同一套口径：外框 / 圆角 / 相邻 1px 分隔 / 整体聚焦圈都由外壳画，
+		* 内件（Input、Button、IconButton）把自己的边框、圆角、外圈交出来。区别只有一条：
+		* **这里持状态** —— 输入值受控于调用方，提交点与撤销栈在控件内部。
+		*
+		* 用法：
+		*   h(InputGroup, {
+		*     label: '任务名', value, onChange: setValue, undoable: true,
+		*     actions: [
+		*       { label: '返回', variant: 'ghost', onClick: () => close() },
+		*       { label: '确定', variant: 'primary', onClick: save },
+		*     ],
+		*   })
+		*
+		* 撤销口径：Enter / 失焦 / 点任一动作 = 一次提交，把提交前的值压栈；点撤销弹回栈顶。
+		* 父级直接改 `value`（如外部清空）不算编辑，不进栈。
+		*/
+		/**
+		* 渲染一个「输入框 + 按钮组」组合控件。
+		*
+		* @param props 见 {@link InputGroupProps}。
+		* @returns 组合控件元素。
+		*/
+		function InputGroup(props) {
+			ensureComponentStyles("input-group", INPUT_GROUP_CSS);
+			ensureComponentStyles("field", FIELD_CSS);
+			ensureComponentStyles("button", BUTTON_CSS);
+			const { value, onChange, label, placeholder, size = "lg", height, error, disabled, actions = [], undoable = false, undoLabel = "撤销", onSubmit } = props;
+			const committed = (0, react$1.useRef)(value);
+			const [undoStack, setUndoStack] = (0, react$1.useState)([]);
+			const commit = () => {
+				if (value === committed.current) return;
+				const prev = committed.current;
+				committed.current = value;
+				setUndoStack((stack) => [...stack, prev]);
+			};
+			const undo = () => {
+				const prev = undoStack[undoStack.length - 1];
+				if (prev === void 0) return;
+				setUndoStack((stack) => stack.slice(0, -1));
+				committed.current = prev;
+				onChange(prev);
+			};
+			const nodes = [];
+			if (label !== void 0) nodes.push((0, react$1.createElement)("span", {
+				key: "label",
+				className: "dshpc-igroup__label"
+			}, label));
+			nodes.push((0, react$1.createElement)(Input, {
+				key: "input",
+				value,
+				onChange,
+				placeholder,
+				size,
+				disabled,
+				"aria-label": props["aria-label"],
+				onBlur: commit,
+				onKeyDown: (event) => {
+					if (event.key !== "Enter") return;
+					event.preventDefault();
+					commit();
+					if (onSubmit !== void 0) onSubmit(value);
+				}
+			}));
+			if (undoable) nodes.push((0, react$1.createElement)(IconButton$1, {
+				key: "undo",
+				variant: "plain",
+				size,
+				icon: "↶",
+				label: undoLabel,
+				disabled: disabled === true || undoStack.length === 0,
+				onClick: undo
+			}));
+			actions.forEach((action, i) => {
+				if (action.label === void 0 && (action.icon === void 0 || action.icon === null)) return;
+				const run = () => {
+					commit();
+					action.onClick();
+				};
+				const off = disabled === true || action.disabled === true;
+				const onlyIcon = action.label === void 0;
+				nodes.push(onlyIcon ? (0, react$1.createElement)(IconButton$1, {
+					key: `action-${String(i)}`,
+					variant: "plain",
+					size,
+					icon: action.icon,
+					label: action.ariaLabel ?? "操作",
+					disabled: off,
+					onClick: run
+				}) : (0, react$1.createElement)(Button$1, {
+					key: `action-${String(i)}`,
+					variant: action.variant ?? "info",
+					size,
+					icon: action.icon,
+					disabled: off,
+					onClick: run
+				}, action.label));
+			});
+			const className = `dshpc-igroup dshpc-igroup--${size}${error === true ? " dshpc-igroup--error" : ""}${props.className !== void 0 && props.className !== "" ? ` ${props.className}` : ""}`;
+			return withHint((0, react$1.createElement)("div", {
+				role: "group",
+				"aria-label": props["aria-label"] ?? label,
+				id: props.id,
+				className,
+				style: height === void 0 ? props.style : {
+					height,
+					...props.style
+				}
+			}, nodes), props.hint);
+		}
+		/**
+		* 算出工具栏左缘的 x 坐标。
+		*
+		* - 没有锚点（或锚点取不到）：贴视口右缘，留 `offset`。
+		* - 有锚点：贴锚点右缘外侧，留 `offset`；但右侧还必须再留 `offset`，
+		*   放不下（`锚点右缘 + offset + size + offset > 视口宽`）就退回贴视口右缘。
+		*/
+		function resolveToolbarLeft(geometry, anchorRight) {
+			const { viewportWidth, offset, size } = geometry;
+			const pinned = Math.max(0, viewportWidth - offset - size);
+			if (anchorRight === null || !Number.isFinite(anchorRight)) return pinned;
+			const anchored = anchorRight + offset;
+			return anchored + size + offset <= viewportWidth ? anchored : pinned;
+		}
+		/**
+		* 排序：先按 `order`，相同 order 时内置回顶部在前、自定义项按数组顺序。
+		* 不修改入参。
+		*/
+		function sortToolbarEntries(entries) {
+			return [...entries].sort((a, b) => {
+				if (a.order !== b.order) return a.order - b.order;
+				if (a.kind !== b.kind) return a.kind === "backtop" ? -1 : 1;
+				return a.index - b.index;
+			});
+		}
+		/** 某一项此刻是否该出现（显隐判定）。 */
+		function isToolbarEntryVisible(entry, scrollTop) {
+			if (entry.visible === false) return false;
+			if ((entry.when ?? "always") === "scroll") return scrollTop > (entry.threshold ?? 320);
+			return true;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.20.9_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_574b7ee99d5fb0253d7977b2716842df/node_modules/dsh-plugin-core/dist/ui/QuickToolbar.js
+		/**
+		* 快捷工具栏（UI 基础层）：**右侧悬浮的一列圆钮**，内置「回到顶部」，并可挂自定义按钮。
+		*
+		* 用法：
+		*   <QuickToolbar
+		*     anchorId="dshpc-main"
+		*     onAction={(id) => …}
+		*     items={[{ id: 'search', icon: <SearchIcon />, label: '搜索' }]}
+		*   />
+		*
+		* 行为（2026-10-31 用户拍板）：
+		* - **纵向恒定**贴屏幕底边，距离 `offset`（默认 16px）；按钮从下往上排。
+		* - **横向默认**贴屏幕右缘、留 `offset`；给了 `anchorId` / `anchor()` 就贴到那个控件的
+		*   **右缘外侧**，同样留 `offset`。右侧放不下（再留一个 `offset` 后越界）就退回贴屏幕右缘。
+		*   控件找不到按「跟随窗口」处理，不报错。
+		* - 内置「回到顶部」默认 `when: 'scroll'`、阈值 320：滚过才出现；可传 `backToTop: false` 关掉，
+		*   或用 `{ order, label, threshold }` 调整。
+		* - 自定义项：`icon` / `label` / `onClick`；`visible` / `when` / `order` / `threshold` / `color` /
+		*   `fgColor` 都可配。点击后先调 `onClick`，再统一回调 `onAction(id, item)`。
+		* - 滚动容器默认取工具栏最近的「可纵向滚动」祖先，也可以显式给 `scrollContainer`。
+		* - 显隐切换带 0.2s 动画：挂载淡入，消失先淡出、播完才卸载（`reduced-motion` 下关闭）。
+		*
+		* 样式只注入自己那一份（`controls/quick-toolbar.css`），横向位置 / 尺寸 / 间距由本组件在
+		* style 上实时写入，不写死 CSS。
+		*/
+		/** 默认贴边距离（px）。 */
+		const DEFAULT_OFFSET = 16;
+		/** 默认按钮直径（px）。 */
+		const DEFAULT_SIZE = 44;
+		/** 默认按钮间距（px）。 */
+		const DEFAULT_GAP = 12;
+		/** 退场动画的卸载延迟（ms，与 CSS 的 0.2s 对齐并留余量）。 */
+		const LEAVE_MS = 220;
+		/** 向上找最近的「可纵向滚动」祖先。 */
+		function findScrollParent(node) {
+			let el = node?.parentElement ?? null;
+			while (el !== null) {
+				const oy = getComputedStyle(el).overflowY;
+				if (oy === "auto" || oy === "scroll") return el;
+				el = el.parentElement;
+			}
+			return null;
+		}
+		/** 显式 scrollContainer 优先，其次最近的可滚动祖先，最后退回窗口。 */
+		function resolveScrollTarget(explicit, node) {
+			let target = null;
+			if (typeof explicit === "function") target = explicit();
+			else if (explicit !== void 0) target = explicit;
+			if (target === null) target = findScrollParent(node);
+			return target ?? window;
+		}
+		/** 读当前滚动距离。 */
+		function scrollTopOf(target) {
+			if (typeof HTMLElement !== "undefined" && target instanceof HTMLElement) return target.scrollTop;
+			if (typeof window === "undefined") return 0;
+			return window.scrollY || document.documentElement.scrollTop || 0;
+		}
+		/** 平滑回到顶部（reduced-motion 下瞬时）。 */
+		function scrollToTop(target) {
+			const behavior = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+			if (typeof HTMLElement !== "undefined" && target instanceof HTMLElement) target.scrollTo({
+				top: 0,
+				behavior
+			});
+			else if (typeof window !== "undefined") window.scrollTo({
+				top: 0,
+				behavior
+			});
+		}
+		/** 右侧浮动的快捷工具栏：内置回顶部 + 自定义按钮。 */
+		function QuickToolbar(props) {
+			ensureComponentStyles("quick-toolbar", QUICK_TOOLBAR_CSS);
+			const ref = (0, react$1.useRef)(null);
+			const [left, setLeft] = (0, react$1.useState)(null);
+			const [scrollTop, setScrollTop] = (0, react$1.useState)(0);
+			const [leaving, setLeaving] = (0, react$1.useState)([]);
+			const shownRef = (0, react$1.useRef)([]);
+			const leaveTimers = (0, react$1.useRef)(/* @__PURE__ */ new Map());
+			const offset = props.offset ?? DEFAULT_OFFSET;
+			const size = props.size ?? DEFAULT_SIZE;
+			const gap = props.gap ?? DEFAULT_GAP;
+			(0, react$1.useEffect)(() => {
+				if (ref.current === null) return;
+				const resolveAnchor = () => {
+					if (props.anchor !== void 0) return props.anchor();
+					const id = props.anchorId;
+					return id === void 0 ? null : document.getElementById(id);
+				};
+				let observed = null;
+				let lastRight = null;
+				let lastViewport = -1;
+				const ro = new ResizeObserver(update);
+				function update() {
+					const anchorEl = resolveAnchor();
+					if (anchorEl !== observed) {
+						if (observed !== null) ro.unobserve(observed);
+						if (anchorEl !== null) ro.observe(anchorEl);
+						observed = anchorEl;
+					}
+					const viewportWidth = document.documentElement.clientWidth;
+					const rect = anchorEl === null ? null : anchorEl.getBoundingClientRect();
+					const anchorRight = rect === null || rect.width === 0 && rect.height === 0 ? null : rect.right;
+					if (viewportWidth === lastViewport && anchorRight === lastRight) return;
+					lastViewport = viewportWidth;
+					lastRight = anchorRight;
+					setLeft(resolveToolbarLeft({
+						viewportWidth,
+						offset,
+						size
+					}, anchorRight));
+				}
+				update();
+				const poll = setInterval(update, 100);
+				window.addEventListener("resize", update);
+				return () => {
+					clearInterval(poll);
+					window.removeEventListener("resize", update);
+					ro.disconnect();
+				};
+			}, [
+				props.anchor,
+				props.anchorId,
+				offset,
+				size
+			]);
+			(0, react$1.useEffect)(() => {
+				const node = ref.current;
+				if (node === null) return;
+				const target = resolveScrollTarget(props.scrollContainer, node);
+				const onScroll = () => setScrollTop(scrollTopOf(target));
+				onScroll();
+				target.addEventListener("scroll", onScroll, { passive: true });
+				return () => target.removeEventListener("scroll", onScroll);
+			}, [props.scrollContainer]);
+			const backTop = props.backToTop === false ? null : typeof props.backToTop === "object" ? props.backToTop : {};
+			const entries = [];
+			if (backTop !== null) entries.push({
+				id: "__backtop",
+				kind: "backtop",
+				order: backTop.order ?? 0,
+				index: 0
+			});
+			for (const [index, item] of (props.items ?? []).entries()) entries.push({
+				id: item.id,
+				kind: "custom",
+				order: item.order ?? index + 1,
+				index,
+				item
+			});
+			const threshold = backTop?.threshold ?? 320;
+			const sorted = sortToolbarEntries(entries);
+			const visible = sorted.filter((entry) => {
+				if (entry.kind === "backtop") return isToolbarEntryVisible({
+					when: "scroll",
+					threshold
+				}, scrollTop);
+				return isToolbarEntryVisible(entry.item ?? {}, scrollTop);
+			});
+			const visibleKey = JSON.stringify(visible.map((entry) => entry.id));
+			(0, react$1.useEffect)(() => {
+				const next = JSON.parse(visibleKey);
+				const revived = next.filter((id) => leaveTimers.current.has(id));
+				for (const id of revived) {
+					const timer = leaveTimers.current.get(id);
+					if (timer !== void 0) clearTimeout(timer);
+					leaveTimers.current.delete(id);
+				}
+				if (revived.length > 0) setLeaving((prev) => prev.filter((id) => !revived.includes(id)));
+				const gone = shownRef.current.filter((id) => !next.includes(id));
+				if (gone.length > 0) {
+					setLeaving((prev) => [...prev, ...gone.filter((id) => !prev.includes(id))]);
+					for (const id of gone) {
+						const timer = leaveTimers.current.get(id);
+						if (timer !== void 0) clearTimeout(timer);
+						leaveTimers.current.set(id, setTimeout(() => {
+							leaveTimers.current.delete(id);
+							setLeaving((prev) => prev.filter((value) => value !== id));
+						}, LEAVE_MS));
+					}
+				}
+				shownRef.current = next;
+			}, [visibleKey]);
+			(0, react$1.useEffect)(() => () => {
+				for (const timer of leaveTimers.current.values()) clearTimeout(timer);
+				leaveTimers.current.clear();
+			}, []);
+			const style = {
+				bottom: `${offset}px`,
+				gap: `${gap}px`,
+				...left === null ? { right: `${offset}px` } : { left: `${left}px` }
+			};
+			const shownSet = new Set(visible.map((entry) => entry.id));
+			const leavingSet = new Set(leaving);
+			const rendered = sorted.filter((entry) => shownSet.has(entry.id) || leavingSet.has(entry.id));
+			const renderItem = (entry, isLeaving) => {
+				const leaveClass = isLeaving ? " is-leaving" : "";
+				if (entry.kind === "backtop") {
+					const label = backTop?.label ?? t$2("backToTop");
+					return (0, react$1.createElement)("button", {
+						key: entry.id,
+						type: "button",
+						className: `dshpc-quick-toolbar__item dshpc-quick-toolbar__backtop${leaveClass}`,
+						style: {
+							width: size,
+							height: size
+						},
+						"aria-label": label,
+						title: label,
+						onClick: () => scrollToTop(resolveScrollTarget(props.scrollContainer, ref.current))
+					}, (0, react$1.createElement)(Chevron, {
+						dir: "up",
+						size: 18
+					}));
+				}
+				const item = entry.item;
+				if (item === void 0) return null;
+				const buttonStyle = {
+					width: size,
+					height: size
+				};
+				if (item.color !== void 0) buttonStyle["--dshpc-quick-toolbar-bg"] = item.color;
+				if (item.fgColor !== void 0) buttonStyle["--dshpc-quick-toolbar-fg"] = item.fgColor;
+				const onClick = () => {
+					item.onClick?.();
+					props.onAction?.(item.id, item);
+				};
+				return (0, react$1.createElement)("button", {
+					key: entry.id,
+					type: "button",
+					className: `dshpc-quick-toolbar__item${leaveClass}`,
+					style: buttonStyle,
+					"aria-label": item.label,
+					title: item.label,
+					onClick
+				}, item.icon);
+			};
+			return (0, react$1.createElement)("div", {
+				ref,
+				className: `dshpc-quick-toolbar${props.className === void 0 ? "" : ` ${props.className}`}`,
+				style,
+				role: "toolbar",
+				"aria-label": props.ariaLabel ?? t$2("quickToolbarAria")
+			}, ...rendered.map((entry) => renderItem(entry, leavingSet.has(entry.id))));
+		}
+		//#endregion
+		//#region src/client/api.ts
+		/** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
+		const API_PREFIX = "api/task-ledger";
+		/** 核心 explorer 的只读文件路由（`connectFs` 接它；与 host 的 `FS_ROUTE` 是同一个地址）。 */
+		const FS_PATH = `${API_PREFIX}/fs`;
+		const DEFAULT_TIMEOUT_MS = 8e3;
+		/** 这次失败是不是「没有身份」——是的话整个面板要切成身份页，而不是显示错误。 */
+		function isIdentityMissing(error) {
+			return error !== null && typeof error === "object" && "code" in error && error.code === "LEDGER_IDENTITY_MISSING";
+		}
+		/** host 返回的失败响应（带人话 + 机器可读码）。 */
+		var HttpError = class extends Error {
+			code;
+			constructor(message, code) {
+				super(message);
+				this.name = "HttpError";
+				this.code = code;
+			}
+		};
+		/**
+		* 错误响应榨人话：host 路由（routes.ts）发的是 `{ error, code }`，`error` 是**能直接上界面的**
+		* （带工作区名、台账程序起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
+		*/
+		function errorOf(status, body) {
+			let message = "";
+			let code = null;
+			try {
+				const parsed = JSON.parse(body);
+				if (typeof parsed.error === "string") message = parsed.error;
+				if (typeof parsed.code === "string") code = parsed.code;
+			} catch {}
+			if (message === "") message = body.trim().slice(0, 200);
+			return new HttpError(message === "" ? `HTTP ${String(status)}` : `HTTP ${status}：${message}`, code);
+		}
+		/** 带超时的 JSON 取数（相对路径，同源）。 */
+		async function fetchJson(path, init = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+			const controller = new AbortController();
+			const timer = setTimeout(() => {
+				controller.abort(new DOMException(`请求超时（${timeoutMs}ms 未响应）`, "TimeoutError"));
+			}, timeoutMs);
+			try {
+				const res = await fetch(`${API_PREFIX}${path}`, {
+					...init,
+					signal: controller.signal,
+					cache: "no-store"
+				});
+				if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
+				return await res.json();
+			} finally {
+				clearTimeout(timer);
+			}
+		}
+		/** 本机身份：进面板的**第一个**请求（没身份时快照会 500，所以必须先问它）。 */
+		function fetchIdentity() {
+			return fetchJson("/identity");
+		}
+		/** 可以认领的人：各工作区名册（没身份也能读）。 */
+		function fetchRoster() {
+			return fetchJson("/identity/roster");
+		}
+		/** 台账目录清单（机器级；带隐藏项——设置页要能把它打开回来）。 */
+		function fetchDirs() {
+			return fetchJson("/dirs");
+		}
+		/** 返回改完之后的完整清单（含隐藏项），调用方就地换掉表格。 */
+		function postDirs(body) {
+			return fetchJson("/dirs", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(body)
+			});
+		}
+		/**
+		* 改昵称的超时：要逐本台账走「取最新 → 改 → 提交 → 推送」，
+		* 一本几秒、十本一分钟很正常 —— 吃默认 8s 只会「界面报超时、脚本还在改」。
+		*/
+		const RENAME_TIMEOUT_MS = 18e4;
+		/**
+		* 换身份 / 改昵称：
+		*  - `new` 建全新身份、`claim` 认领某工作区名册里已有的人 → 返回换完之后的身份；
+		*  - `rename` 改自己昵称 → 返回新昵称 + 每本台账各自的结果（`dirs`）。
+		*/
+		function postSwitchIdentity(body) {
+			return fetchJson("/identity/switch", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(body)
+			}, body.action === "rename" ? RENAME_TIMEOUT_MS : void 0);
+		}
+		/** 从名册摘掉一个人：每本登记过他的台账各删各的（还有任务的那本由 host 回报为 kept）。 */
+		function postForgetIdentity(uuid) {
+			return fetchJson("/identity/forget", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ uuid })
+			}, RENAME_TIMEOUT_MS);
+		}
+		/**
+		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
+		* `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
+		* `sync` = 顺带拿宿主工作区补登记清单（**只有进看板与手动刷新**传，其余请求一律不传）。
+		*/
+		function fetchBoardSnapshot(opts = {}) {
+			const query = [opts.fresh === true ? "fresh=1" : "", opts.sync === true ? "sync=1" : ""].filter((part) => part !== "").join("&");
+			return fetchJson(`/board/snapshot${query === "" ? "" : `?${query}`}`);
+		}
+		/** 历史页顶部趋势（gran = 柱图粒度；切粒度 = 重新请求，host 有读缓存）。 */
+		function fetchHistoryTrend(gran = "day") {
+			return fetchJson(`/history/trend?gran=${gran}`);
+		}
+		/** 历史页列表：**一次只取一个自然月**（`ym` = `YYYY-MM`），整月全量回本地，滚动由前端开窗。 */
+		function fetchHistoryList(query) {
+			const params = new URLSearchParams();
+			params.set("ym", query.ym);
+			if (query.workspace !== void 0 && query.workspace !== "") params.set("workspace", query.workspace);
+			if (query.owner !== void 0 && query.owner !== "") params.set("owner", query.owner);
+			const suffix = params.toString();
+			return fetchJson(`/history/list${suffix === "" ? "" : `?${suffix}`}`);
+		}
+		//#endregion
+		//#region src/client/format.ts
+		function pad2(value) {
+			return String(value).padStart(2, "0");
+		}
+		/** `Date` → 本机时区的 `YYYY-MM-DD`（图表按天 / 周切桶用）。 */
+		function ymdOf(date) {
+			return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+		}
+		/** `YYYY-MM-DD` 前后挪几天（本机时区）。 */
+		function addDays(value, delta) {
+			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
+			date.setDate(date.getDate() + delta);
+			return ymdOf(date);
+		}
+		/** 本周一（周一为一周之始，与 skill 同口径）。 */
+		function mondayOf(value) {
+			const date = /* @__PURE__ */ new Date(`${value}T00:00:00`);
+			date.setDate(date.getDate() - (date.getDay() + 6) % 7);
+			return ymdOf(date);
+		}
+		/**
+		* 相对时间（GitHub 口径，用户 2026-10-28）：<1 分钟「刚刚」、<1 小时「N 分钟前」、
+		* <24 小时「N 小时前」、<30 天「N 天前」、<12 个月「N 个月前」，再往上「N 年前」；
+		* 未来时间（时钟漂移 / 服务端超前）一律按「刚刚」，不出现「-3 分钟前」。
+		*/
+		function formatRelative(iso, t) {
+			const ms = Date.parse(iso);
+			if (Number.isNaN(ms)) return t("timeUnknown");
+			const mins = Math.floor((Date.now() - ms) / 6e4);
+			if (mins < 1) return t("relJustNow");
+			if (mins < 60) return t("relMinutes", { n: mins });
+			const hours = Math.floor(mins / 60);
+			if (hours < 24) return t("relHours", { n: hours });
+			const days = Math.floor(hours / 24);
+			if (days < 30) return t("relDays", { n: days });
+			const months = Math.floor(days / 30);
+			if (months < 12) return t("relMonths", { n: months });
+			return t("relYears", { n: Math.floor(months / 12) });
+		}
+		/** ISO → `YYYY-MM-DD HH:mm`（`seconds: true` 时补 `:ss`）；解析失败返回 `fallback`（缺省原串）。 */
+		function formatDateTime(iso, opts) {
+			const ms = Date.parse(iso);
+			if (Number.isNaN(ms)) return opts?.fallback ?? iso;
+			const d = new Date(ms);
+			const base = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+			return opts?.seconds === true ? `${base}:${pad2(d.getSeconds())}` : base;
+		}
+		/** 计数缩写（统一口径）：<1000 原样；≥1000 用 K，≥100 万用 M，保留 1 位小数并去掉 .0。
+		*  例：999→"999"、1000→"1K"、1200→"1.2K"、12345→"12.3K"、1000000→"1M"。 */
+		function formatCount(n) {
+			if (!Number.isFinite(n)) return String(n);
+			const sign = n < 0 ? "-" : "";
+			const abs = Math.abs(Math.trunc(n));
+			const step = (v, unit) => {
+				const s = v >= 100 ? v.toFixed(0) : v.toFixed(1);
+				return `${sign}${s.replace(/\.0$/, "")}${unit}`;
+			};
+			if (abs >= 1e6) return step(abs / 1e6, "M");
+			if (abs >= 1e3) return step(abs / 1e3, "K");
+			return String(n);
 		}
 		//#endregion
 		//#region src/client/rows.ts
@@ -54952,122 +55359,6 @@ window.__ModuleLoader__.load({
 			return groups;
 		}
 		//#endregion
-		//#region src/client/api.ts
-		/** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
-		const API_PREFIX = "api/task-ledger";
-		const DEFAULT_TIMEOUT_MS = 8e3;
-		/** 这次失败是不是「没有身份」——是的话整个面板要切成身份页，而不是显示错误。 */
-		function isIdentityMissing(error) {
-			return error !== null && typeof error === "object" && "code" in error && error.code === "LEDGER_IDENTITY_MISSING";
-		}
-		/** host 返回的失败响应（带人话 + 机器可读码）。 */
-		var HttpError = class extends Error {
-			code;
-			constructor(message, code) {
-				super(message);
-				this.name = "HttpError";
-				this.code = code;
-			}
-		};
-		/**
-		* 错误响应榨人话：host 路由（routes.ts）发的是 `{ error, code }`，`error` 是**能直接上界面的**
-		* （带工作区名、台账程序起不来之类的原文）。不带它界面上只剩「HTTP 500」，等于没报错。
-		*/
-		function errorOf(status, body) {
-			let message = "";
-			let code = null;
-			try {
-				const parsed = JSON.parse(body);
-				if (typeof parsed.error === "string") message = parsed.error;
-				if (typeof parsed.code === "string") code = parsed.code;
-			} catch {}
-			if (message === "") message = body.trim().slice(0, 200);
-			return new HttpError(message === "" ? `HTTP ${String(status)}` : `HTTP ${status}：${message}`, code);
-		}
-		/** 带超时的 JSON 取数（相对路径，同源）。 */
-		async function fetchJson(path, init = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
-			const controller = new AbortController();
-			const timer = setTimeout(() => {
-				controller.abort(new DOMException(`请求超时（${timeoutMs}ms 未响应）`, "TimeoutError"));
-			}, timeoutMs);
-			try {
-				const res = await fetch(`${API_PREFIX}${path}`, {
-					...init,
-					signal: controller.signal,
-					cache: "no-store"
-				});
-				if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
-				return await res.json();
-			} finally {
-				clearTimeout(timer);
-			}
-		}
-		/** 本机身份：进面板的**第一个**请求（没身份时快照会 500，所以必须先问它）。 */
-		function fetchIdentity() {
-			return fetchJson("/identity");
-		}
-		/** 可以认领的人：各工作区名册（没身份也能读）。 */
-		function fetchRoster() {
-			return fetchJson("/identity/roster");
-		}
-		/** 台账目录清单（机器级；带隐藏项——设置页要能把它打开回来）。 */
-		function fetchDirs() {
-			return fetchJson("/dirs");
-		}
-		/** 返回改完之后的完整清单（含隐藏项），调用方就地换掉表格。 */
-		function postDirs(body) {
-			return fetchJson("/dirs", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify(body)
-			});
-		}
-		/**
-		* 改昵称的超时：要逐本台账走「取最新 → 改 → 提交 → 推送」，
-		* 一本几秒、十本一分钟很正常 —— 吃默认 8s 只会「界面报超时、脚本还在改」。
-		*/
-		const RENAME_TIMEOUT_MS = 18e4;
-		/**
-		* 换身份 / 改昵称：
-		*  - `new` 建全新身份、`claim` 认领某工作区名册里已有的人 → 返回换完之后的身份；
-		*  - `rename` 改自己昵称 → 返回新昵称 + 每本台账各自的结果（`dirs`）。
-		*/
-		function postSwitchIdentity(body) {
-			return fetchJson("/identity/switch", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify(body)
-			}, body.action === "rename" ? RENAME_TIMEOUT_MS : void 0);
-		}
-		/** 从名册摘掉一个人：每本登记过他的台账各删各的（还有任务的那本由 host 回报为 kept）。 */
-		function postForgetIdentity(uuid) {
-			return fetchJson("/identity/forget", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ uuid })
-			}, RENAME_TIMEOUT_MS);
-		}
-		/**
-		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
-		* `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
-		*/
-		function fetchBoardSnapshot(opts = {}) {
-			return fetchJson(`/board/snapshot${opts.fresh === true ? "?fresh=1" : ""}`);
-		}
-		/** 历史页顶部趋势（gran = 柱图粒度；切粒度 = 重新请求，host 有读缓存）。 */
-		function fetchHistoryTrend(gran = "day") {
-			return fetchJson(`/history/trend?gran=${gran}`);
-		}
-		/** 历史页列表：**一次只取一个自然月**（`ym` = `YYYY-MM`），整月全量回本地，滚动由前端开窗。 */
-		function fetchHistoryList(query) {
-			const params = new URLSearchParams();
-			params.set("ym", query.ym);
-			if (query.workspace !== void 0 && query.workspace !== "") params.set("workspace", query.workspace);
-			if (query.owner !== void 0 && query.owner !== "") params.set("owner", query.owner);
-			const suffix = params.toString();
-			return fetchJson(`/history/list${suffix === "" ? "" : `?${suffix}`}`);
-		}
-		//#endregion
 		//#region src/client/store.ts
 		/**
 		* 看板数据仓（client 侧**唯一**取数入口）：首屏一次拉 `/board/snapshot`（8 卡 + 在办列表），
@@ -55120,7 +55411,7 @@ window.__ModuleLoader__.load({
 			listeners.add(listener);
 			if (!booted) {
 				booted = true;
-				refresh();
+				refresh(true);
 			}
 			return () => {
 				listeners.delete(listener);
@@ -55130,8 +55421,11 @@ window.__ModuleLoader__.load({
 		* 重读首屏。**先问身份，再拉快照**（2026-11-01 拍板：没身份就把整个面板换成设置页）：
 		* skill 侧所有读命令都过身份闸门，没身份时快照必然 500 —— 所以那种情况连请求都不发，
 		* 并发报错、错误去重这些事就不存在了。带 `fresh=1`：本函数只由首读与手动刷新触发。
+		*
+		* `sync` = 顺带用宿主工作区补登记清单。**只有「进看板」与「手动刷新」传 true**
+		* （用户 2026-11-03）：设置页写动作后的重读、错误重试都不传 —— 那些时候同步纯浪费。
 		*/
-		async function refresh() {
+		async function refresh(sync = false) {
 			const token = ++runToken;
 			set({ refreshing: true });
 			try {
@@ -55146,7 +55440,10 @@ window.__ModuleLoader__.load({
 					});
 					return;
 				}
-				const board = await fetchBoardSnapshot({ fresh: true });
+				const board = await fetchBoardSnapshot({
+					fresh: true,
+					sync
+				});
 				if (token !== runToken) return;
 				set({
 					status: "ready",
@@ -57739,7 +58036,8 @@ body[data-ds-dark-theme]{
 		* 没身份 = 红条 + 去建的引导；色条方位走核心 `Card` 的 `bar.side`（当前在**上边**，仍在挑）。
 		*
 		* 版式：上半左栏两张（有身份 / 没身份）、右栏「台账怎么跑」四格小图（纯 CSS）；
-		* 下半台账目录表格。写动作（显示 / 改名 / 移除 / 添加）仍空着，下一轮接。
+		* 下半台账目录表格。写动作（登记 / 显示 / 改名 / 移除）全部接通：登记走核心选目录弹窗
+		* （`pickWorkspaceFile({ filter: { dirs: true } })`，只能选目录、不限工作区）。
 		*/
 		/** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 		const GithubMark = () => (0, react$1.createElement)("svg", {
@@ -57824,8 +58122,6 @@ body[data-ds-dark-theme]{
 				if (renaming !== null) renameInputRef.current?.focus();
 			}, [renaming]);
 			const [copied, setCopied] = (0, react$1.useState)(null);
-			const [addOpen, setAddOpen] = (0, react$1.useState)(false);
-			const [addPath, setAddPath] = (0, react$1.useState)("");
 			/** 目录写动作的进行中标记（`动作:路径`）：同一个记录不让连点。 */
 			const [dirBusy, setDirBusy] = (0, react$1.useState)(null);
 			(0, react$1.useEffect)(() => {
@@ -58064,27 +58360,35 @@ body[data-ds-dark-theme]{
 				key: i
 			}, (0, react$1.createElement)(MarqueeText, { text: line }))));
 			/** npm 包名 + GitHub / npm 两个图标按钮。
-			*  **不挂任何悬停提示**（用户 2026-11-02：没让加的东西别加）。 */
+			*  悬停提示走本地 `Tip`（官方 Tooltip + 真 DOM 锚点；用户 2026-11-03 点名要加，文案就
+			*  「GitHub」「NPM」两个词）。IconButton 是函数组件挂不上 ref，Tip 的垫片 span 正好当锚点；
+			*  `title: ""` 仍压原生提示，避免系统 title 与官方气泡双出（口径同 task-row 的动作钮）。 */
 			const NpmLink = ({ pkg }) => (0, react$1.createElement)(Surface, {
 				tone: "sunken",
 				border: "faint",
 				radius: "md",
 				padding: "sm",
 				className: "dtl-flow__code"
-			}, (0, react$1.createElement)("code", { className: "dtl-flow__cmd" }, pkg), (0, react$1.createElement)(IconButton, {
-				icon: (0, react$1.createElement)(GithubMark, null),
+			}, (0, react$1.createElement)("code", { className: "dtl-flow__cmd" }, pkg), (0, react$1.createElement)(Tip, {
 				label: "GitHub",
-				title: "",
-				onClick: () => {
-					window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
-				}
-			}), (0, react$1.createElement)(IconButton, {
-				icon: (0, react$1.createElement)(NpmMark, null),
-				label: "npm",
-				title: "",
-				onClick: () => {
-					window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
-				}
+				children: (0, react$1.createElement)(IconButton, {
+					icon: (0, react$1.createElement)(GithubMark, null),
+					label: "GitHub",
+					title: "",
+					onClick: () => {
+						window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
+					}
+				})
+			}), (0, react$1.createElement)(Tip, {
+				label: "NPM",
+				children: (0, react$1.createElement)(IconButton, {
+					icon: (0, react$1.createElement)(NpmMark, null),
+					label: "npm",
+					title: "",
+					onClick: () => {
+						window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
+					}
+				})
 			}));
 			/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
 			*  圆 + 箭头都画在同一个 SVG 里：一条 `<path>`（横杆 + `>` 箭头，描边不填充，
@@ -58115,25 +58419,68 @@ body[data-ds-dark-theme]{
 				t("settingsFlow3History"),
 				t("settingsFlow3Stats")
 			]))));
-			/** 目录写动作的统一出口（用户 2026-11-02）：**成功静默**（就地换清单 + 让看板重读），
+			/** 目录写动作的统一出口（用户 2026-11-02）：**成功静默**（就地换清单），
 			*  失败一条红 Toast，正文用 host / skill 给的原文。 */
-			const writeDir = async (key, body, onDone) => {
-				if (dirBusy !== null) return;
+			const postDirBody = async (key, body) => {
+				if (dirBusy !== null) return null;
 				setDirBusy(key);
 				try {
 					const payload = await postDirs(body);
 					setDirs(payload.dirs);
-					onDone?.();
-					onSwitched();
+					return payload;
 				} catch (failure) {
 					notify(t("settingsDirOpFailed"), {
 						variant: "error",
 						durationMs: 1e4,
 						description: failure instanceof Error ? failure.message : String(failure)
 					});
+					return null;
 				} finally {
 					setDirBusy(null);
 				}
+			};
+			const writeDir = async (key, body, onDone) => {
+				if (await postDirBody(key, body) === null) return;
+				onDone?.();
+				onSwitched();
+			};
+			/**
+			* 添加目录：弹核心的选目录面板（只能选目录、不限工作区），选中后交给 host 判「自己或一级子目录
+			* 里有没有台账」。`anchor` = 触发按钮本身（弹窗贴着它弹，不给就落到左上角）。
+			*
+			* 三种结果各自一句：没台账 / 本来就在清单里 / 新增（1 个或多个）。
+			*/
+			const addDirFromPicker = async (anchor) => {
+				if (dirBusy !== null) return;
+				const picked = await pickWorkspaceFile({
+					anchor,
+					placement: "bottom-end",
+					filter: { dirs: true }
+				});
+				if (picked === null) return;
+				const payload = await postDirBody(`add:${picked.path}`, {
+					action: "add",
+					path: picked.path
+				});
+				if (payload === null) return;
+				if (payload.added === false) {
+					console.warn("[task-ledger] 添加台账目录失败：", payload.reason);
+					notify(t("settingsAddInvalid"), {
+						variant: "error",
+						description: t("settingsAddInvalidBody")
+					});
+					return;
+				}
+				if (payload.existed === true) {
+					notify(t("settingsAddExisted"), { description: t("settingsAddExistedBody") });
+					return;
+				}
+				const names = (payload.paths ?? []).map((path) => payload.dirs.find((dir) => dir.path === path)?.name ?? path);
+				notify(names.length > 1 ? t("settingsAddDoneMany") : t("settingsAddDone"), { description: names.length > 1 ? t("settingsAddDoneManyBody", {
+					count: names.length,
+					names: names.join(t("settingsListSep"))
+				}) : t("settingsAddDoneBody", { name: names[0] ?? "" }) });
+				onSwitched();
 			};
 			/** 保存改名：空名 = 回落目录名（skill 口径，与占位提示一致）。 */
 			const saveRename = (dir) => {
@@ -58230,7 +58577,7 @@ body[data-ds-dark-theme]{
 								setRenaming(dir.path);
 								setDraft(dir.name);
 							}
-						}, t("settingsDirRename")), (0, react$1.createElement)(IconButton, {
+						}, t("settingsDirRename")), dir.inRegistry === true ? null : (0, react$1.createElement)(IconButton, {
 							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }),
 							label: t("settingsDirRemove"),
 							size: "sm",
@@ -58248,7 +58595,7 @@ body[data-ds-dark-theme]{
 			const dirsBody = dirsError !== null ? (0, react$1.createElement)("div", { className: "dtl-set__error" }, `${t("loadFailed")}：${dirsError}`) : dirs === null ? (0, react$1.createElement)("div", { className: "dtl-loading" }, (0, react$1.createElement)(Loader, {
 				variant: "blocks",
 				size: "md"
-			})) : (0, react$1.createElement)(Table$1, {
+			})) : (0, react$1.createElement)(Table, {
 				ariaLabel: t("settingsDirsTitle"),
 				emptyText: dirFilter === "all" || dirs !== null && dirs.length === 0 ? t("settingsDirsEmpty") : t("settingsDirsFilterEmpty"),
 				borders: "none",
@@ -58313,7 +58660,7 @@ body[data-ds-dark-theme]{
 			}, error === null ? null : (0, react$1.createElement)("div", { className: "dtl-set__error" }, t("settingsFailed", { message: error })), roster === null ? (0, react$1.createElement)("div", { className: "dtl-loading" }, (0, react$1.createElement)(Loader, {
 				variant: "blocks",
 				size: "md"
-			})) : (0, react$1.createElement)("div", { className: "dtl-users__wrap" }, (0, react$1.createElement)(Table$1, {
+			})) : (0, react$1.createElement)("div", { className: "dtl-users__wrap" }, (0, react$1.createElement)(Table, {
 				ariaLabel: t("settingsUserModalTitle"),
 				emptyText: t("settingsRosterEmpty"),
 				className: "dtl-users-table",
@@ -58370,28 +58717,6 @@ body[data-ds-dark-theme]{
 					}
 				}))
 			}))) : null;
-			const addModal = addOpen ? (0, react$1.createElement)(Modal, {
-				title: t("settingsAddTitle"),
-				size: "md",
-				onClose: () => {
-					setAddOpen(false);
-				},
-				footer: (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
-					variant: "ghost",
-					onClick: () => {
-						setAddOpen(false);
-					}
-				}, t("settingsCancel")), (0, react$1.createElement)(Button, {
-					variant: "primary",
-					disabled: addPath.trim() === "",
-					onClick: notYet
-				}, t("settingsAddConfirm")))
-			}, (0, react$1.createElement)("div", { className: "dtl-set__hint" }, t("settingsAddHint")), (0, react$1.createElement)("div", { className: "dtl-form" }, (0, react$1.createElement)(Input, {
-				value: addPath,
-				onChange: setAddPath,
-				placeholder: t("settingsAddPlaceholder"),
-				"aria-label": t("settingsAddPlaceholder")
-			}))) : null;
 			return (0, react$1.createElement)("div", { className: "dtl-set" }, (0, react$1.createElement)("div", { className: "dtl-hero" }, (0, react$1.createElement)("div", { className: "dtl-hero__col" }, (0, react$1.createElement)(Card, {
 				accent: hasIdentity ? "success" : "danger",
 				bar: { side: "left" }
@@ -58421,11 +58746,12 @@ body[data-ds-dark-theme]{
 				}), (0, react$1.createElement)(Button, {
 					variant: "outline",
 					size: "md",
-					onClick: () => {
-						setAddOpen(true);
+					disabled: dirBusy !== null,
+					onClick: (event) => {
+						addDirFromPicker(event.currentTarget);
 					}
 				}, t("settingsDirsAdd")))
-			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), userModal, addModal);
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), userModal);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -58672,7 +58998,7 @@ body[data-ds-dark-theme]{
 				});
 			};
 			(0, react$1.useEffect)(() => {
-				refresh();
+				refresh(true);
 			}, []);
 			const board = state.board;
 			const view = (0, react$1.useMemo)(() => selectView(state), [state]);
@@ -58905,8 +59231,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261103-000730-271`
-			}, `v0.0.126 261103-000730-271`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261103-151959-305`
+			}, `v0.0.126 261103-151959-305`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -58944,7 +59270,7 @@ body[data-ds-dark-theme]{
 				loading: state.refreshing,
 				title: t("refresh"),
 				onClick: () => {
-					refresh();
+					refresh(true);
 					setHistoryByGran({});
 					lastTrendRef.current = null;
 					setHistoryError(null);
@@ -59101,10 +59427,15 @@ body[data-ds-dark-theme]{
 			settingsCancel: "取消",
 			settingsPathCopied: "复制完成",
 			settingsPathCopy: "复制路径",
-			settingsAddTitle: "添加台账目录",
-			settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
-			settingsAddPlaceholder: "台账根目录的绝对路径",
-			settingsAddConfirm: "添加",
+			settingsAddInvalid: "所选目录不含台账",
+			settingsAddInvalidBody: "该目录不是台账根目录，其直接下级目录中也未发现台账根。请选择台账根目录，或包含台账的上级目录。",
+			settingsAddExisted: "该目录已在监控清单中",
+			settingsAddExistedBody: "无需重复添加，台账监控范围未发生变化。",
+			settingsAddDone: "已添加台账目录",
+			settingsAddDoneBody: "「{name}」已纳入台账监控。",
+			settingsAddDoneMany: "添加成功",
+			settingsAddDoneManyBody: "已添加 {count} 个台账目录：{names}",
+			settingsListSep: "、",
 			settingsFlow1: "安装 Skill",
 			settingsFlow1Lead: "DeepSeek-harness 无需安装，插件已自带。",
 			settingsFlow1Sub: "在其他 Agent 上安装",
@@ -59316,10 +59647,15 @@ body[data-ds-dark-theme]{
 			settingsCancel: "Cancel",
 			settingsPathCopied: "Copied",
 			settingsPathCopy: "Copy path",
-			settingsAddTitle: "Add ledger folder",
-			settingsAddHint: "Enter the absolute path of a ledger root folder. It must contain a ledger/ subdirectory.",
-			settingsAddPlaceholder: "Absolute path of the ledger root",
-			settingsAddConfirm: "Add",
+			settingsAddInvalid: "No ledger in this folder",
+			settingsAddInvalidBody: "This folder is not a ledger root, and none of its direct subfolders is one. Choose a ledger root folder, or the folder that contains it.",
+			settingsAddExisted: "Folder already monitored",
+			settingsAddExistedBody: "No need to add it again; the monitored range is unchanged.",
+			settingsAddDone: "Ledger folder added",
+			settingsAddDoneBody: "“{name}” is now monitored.",
+			settingsAddDoneMany: "Ledger folders added",
+			settingsAddDoneManyBody: "{count} ledger folders were added: {names}",
+			settingsListSep: ", ",
 			settingsFlow1: "Install Skill",
 			settingsFlow1Lead: "DeepSeek-harness needs no install — it ships with the plugin.",
 			settingsFlow1Sub: "Install on other agents",
@@ -59499,6 +59835,7 @@ body[data-ds-dark-theme]{
 		const t = interpolateTranslate((key, params) => fallbackTranslate(key, params));
 		function apply(ctx) {
 			connectHost(ctx);
+			connectFs({ path: FS_PATH });
 			ctx.inject(["locale"], (localeCtx) => {
 				ctx.effect(() => localeCtx.locale?.register(NS, {
 					zh,

@@ -78,10 +78,15 @@ export type LocaleKey =
 	| "settingsCancel"
 	| "settingsPathCopied"
 	| "settingsPathCopy"
-	| "settingsAddTitle"
-	| "settingsAddHint"
-	| "settingsAddPlaceholder"
-	| "settingsAddConfirm"
+	| "settingsAddInvalid"
+	| "settingsAddInvalidBody"
+	| "settingsAddExisted"
+	| "settingsAddExistedBody"
+	| "settingsAddDone"
+	| "settingsAddDoneBody"
+	| "settingsAddDoneMany"
+	| "settingsAddDoneManyBody"
+	| "settingsListSep"
 	// 设置页 · 流程小图与表格表头
 	| "settingsFlow1"
 	| "settingsFlow1Lead"
@@ -312,10 +317,16 @@ export const zh: Record<LocaleKey, string> = {
 	settingsCancel: "取消",
 	settingsPathCopied: "复制完成",
 	settingsPathCopy: "复制路径",
-	settingsAddTitle: "添加台账目录",
-	settingsAddHint: "请输入台账根目录的绝对路径，该目录下须包含 ledger/ 子目录。",
-	settingsAddPlaceholder: "台账根目录的绝对路径",
-	settingsAddConfirm: "添加",
+	settingsAddInvalid: "所选目录不含台账",
+	settingsAddInvalidBody:
+		"该目录不是台账根目录，其直接下级目录中也未发现台账根。请选择台账根目录，或包含台账的上级目录。",
+	settingsAddExisted: "该目录已在监控清单中",
+	settingsAddExistedBody: "无需重复添加，台账监控范围未发生变化。",
+	settingsAddDone: "已添加台账目录",
+	settingsAddDoneBody: "「{name}」已纳入台账监控。",
+	settingsAddDoneMany: "添加成功",
+	settingsAddDoneManyBody: "已添加 {count} 个台账目录：{names}",
+	settingsListSep: "、",
 
 	settingsFlow1: "安装 Skill",
 	settingsFlow1Lead: "DeepSeek-harness 无需安装，插件已自带。",
@@ -545,11 +556,17 @@ export const en: Record<LocaleKey, string> = {
 	settingsCancel: "Cancel",
 	settingsPathCopied: "Copied",
 	settingsPathCopy: "Copy path",
-	settingsAddTitle: "Add ledger folder",
-	settingsAddHint:
-		"Enter the absolute path of a ledger root folder. It must contain a ledger/ subdirectory.",
-	settingsAddPlaceholder: "Absolute path of the ledger root",
-	settingsAddConfirm: "Add",
+	settingsAddInvalid: "No ledger in this folder",
+	settingsAddInvalidBody:
+		"This folder is not a ledger root, and none of its direct subfolders is one. Choose a ledger root folder, or the folder that contains it.",
+	settingsAddExisted: "Folder already monitored",
+	settingsAddExistedBody:
+		"No need to add it again; the monitored range is unchanged.",
+	settingsAddDone: "Ledger folder added",
+	settingsAddDoneBody: "“{name}” is now monitored.",
+	settingsAddDoneMany: "Ledger folders added",
+	settingsAddDoneManyBody: "{count} ledger folders were added: {names}",
+	settingsListSep: ", ",
 
 	settingsFlow1: "Install Skill",
 	settingsFlow1Lead: "DeepSeek-harness needs no install — it ships with the plugin.",

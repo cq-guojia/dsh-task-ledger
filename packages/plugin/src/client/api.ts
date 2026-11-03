@@ -22,6 +22,9 @@ import type {
 /** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
 export const API_PREFIX = "api/task-ledger";
 
+/** 核心 explorer 的只读文件路由（`connectFs` 接它；与 host 的 `FS_ROUTE` 是同一个地址）。 */
+export const FS_PATH = `${API_PREFIX}/fs`;
+
 const DEFAULT_TIMEOUT_MS = 8_000;
 
 /** host 侧「这台机器还没有身份」的机器可读码（从 skill 退出码 4 翻译过来）。 */
@@ -108,10 +111,11 @@ export function fetchDirs(): Promise<DirsPayload> {
 	return fetchJson<DirsPayload>("/dirs");
 }
 
-/** 台账目录的写动作：显示 / 不显示 / 改名 / 从看板移除。 */
+/** 台账目录的写动作：登记 / 显示 / 不显示 / 改名 / 从看板移除。 */
 export type DirsWriteBody =
 	| { readonly action: "hide" | "unhide" | "remove"; readonly path: string }
-	| { readonly action: "rename"; readonly path: string; readonly name: string };
+	| { readonly action: "rename"; readonly path: string; readonly name: string }
+	| { readonly action: "add"; readonly path: string };
 
 /** 返回改完之后的完整清单（含隐藏项），调用方就地换掉表格。 */
 export function postDirs(body: DirsWriteBody): Promise<DirsPayload> {
@@ -175,12 +179,16 @@ export function postForgetIdentity(uuid: string): Promise<ForgetReport> {
 /**
  * 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
  * `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
+ * `sync` = 顺带拿宿主工作区补登记清单（**只有进看板与手动刷新**传，其余请求一律不传）。
  */
 export function fetchBoardSnapshot(
-	opts: { fresh?: boolean } = {},
+	opts: { fresh?: boolean; sync?: boolean } = {},
 ): Promise<BoardPayload> {
+	const query = [opts.fresh === true ? "fresh=1" : "", opts.sync === true ? "sync=1" : ""]
+		.filter((part) => part !== "")
+		.join("&");
 	return fetchJson<BoardPayload>(
-		`/board/snapshot${opts.fresh === true ? "?fresh=1" : ""}`,
+		`/board/snapshot${query === "" ? "" : `?${query}`}`,
 	);
 }
 

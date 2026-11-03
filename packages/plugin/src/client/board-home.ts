@@ -304,9 +304,9 @@ export function BoardHome(props: {
 		openFilePreview({ mount, path });
 	};
 
-	// 打开面板首读（后端纯按需，无推送无轮询）。
+	// 打开面板首读（后端纯按需，无推送无轮询）。进看板这一下才同步宿主工作区。
 	useEffect(() => {
-		void refresh();
+		void refresh(true);
 	}, []);
 
 	// 首读不再开全局加载提示（用户 2026-10-30）：骨架 + 各块局部的三点加载自己表达「在加载」，
@@ -762,7 +762,8 @@ export function BoardHome(props: {
 										loading: state.refreshing,
 										title: t("refresh"),
 										onClick: () => {
-											void refresh();
+											// 手动刷新顺带同步一次宿主工作区（用户 2026-11-03：只有这里和进看板才同步）
+											void refresh(true);
 											// 手动刷新 = 全部重来：host 缓存由 fresh=1 全清，前端历史缓存一并清掉，
 											// 切回哪个粒度都重新读（用户 2026-10-30：点到每一个再重新读）
 											setHistoryByGran({});

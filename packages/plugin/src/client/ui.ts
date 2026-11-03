@@ -495,7 +495,8 @@ export function Segmented<Value extends string>(props: {
  *  hover 跑马灯，本层原样透传，别再自己写截断。 */
 export function Button(props: {
 	children?: ReactNode;
-	onClick?: () => void;
+	/** 原生 onClick：拿得到事件（弹窗定位需要 `event.currentTarget` 当锚点）。 */
+	onClick?: (event: { currentTarget: HTMLButtonElement }) => void;
 	variant?: "primary" | "secondary" | "outline" | "ghost" | "link" | "info";
 	size?: "sm" | "md" | "lg";
 	icon?: ReactNode;
