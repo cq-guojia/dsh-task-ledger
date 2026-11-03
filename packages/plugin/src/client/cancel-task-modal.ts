@@ -57,7 +57,14 @@ export function CancelTaskModal(props: {
 				),
 				h(
 					Button,
-					{ variant: "primary", size: "md", loading: props.busy, onClick: submit },
+					{
+						variant: "primary",
+						size: "md",
+						loading: props.busy,
+						// 无 icon ⇒ loading 时清掉文案、只留居中的圈（核心自己锁宽，中英文都不跳）
+						loadingText: false,
+						onClick: submit,
+					},
 					t("cancelModalOk"),
 				),
 			),

@@ -179,10 +179,11 @@ export function SettingsPage(props: {
 
 	// 建 / 切成功后各回一条**成功**提示（用户 2026-11-02）：弹窗一关就什么都没了，
 	// 用户不知道到底成了没有。落款用接口回来的名字，不用输入框里的草稿。
-	const create = (): void => {
+	// 返回 Promise ⇒ InputGroup 的按钮自己转圈（核心 0.22.1 起 run 会把 onClick 的返回值交回去）。
+	const create = (): Promise<void> => {
 		const trimmed = name.trim();
-		if (trimmed === "") return;
-		void run("new", async () => {
+		if (trimmed === "") return Promise.resolve();
+		return run("new", async () => {
 			const created = await postSwitchIdentity({ action: "new", name: trimmed });
 			notify(t("settingsCreateDone", { name: created.name ?? trimmed }), {
 				variant: "success",
@@ -655,10 +656,17 @@ export function SettingsPage(props: {
 			filter: { dirs: true },
 		});
 		if (picked === null) return;
-		const payload = await postDirBody(`add:${picked.path}`, {
-			action: "add",
-			path: picked.path,
-		});
+		// 选中之后才进「忙」态：选目录面板阶段不该转圈（用户 2026-11-03）
+		setDirBusy("add");
+		let payload: Awaited<ReturnType<typeof postDirBody>> = null;
+		try {
+			payload = await postDirBody(`add:${picked.path}`, {
+				action: "add",
+				path: picked.path,
+			});
+		} finally {
+			setDirBusy(null);
+		}
 		if (payload === null) return;
 		if (payload.added === false) {
 			// 技术原因（路径 + skill 原文）只进控制台，界面给人话
@@ -752,6 +760,7 @@ export function SettingsPage(props: {
 										variant: "info",
 										size: "lg",
 										icon: h(IconCheckOutlineRegular, { size: 14 }),
+										loading: dirBusy === `rename:${dir.path}`,
 										disabled: dirBusy !== null,
 										onClick: () => {
 											saveRename(dir);
@@ -840,6 +849,8 @@ export function SettingsPage(props: {
 							variant: "danger",
 							color: "var(--dtl-danger)",
 							background: "var(--dtl-danger-soft)",
+							// 图标钮本身定宽定高，loading 换圈不跳
+							loading: dirBusy === `remove:${dir.path}`,
 							disabled: dirBusy !== null,
 							onClick: () => {
 								void removeDirOf(dir);
@@ -992,6 +1003,8 @@ export function SettingsPage(props: {
 															size: "sm",
 															loading: pending === `claim:${row.uuid}`,
 															disabled: pending !== null,
+															// 无 icon ⇒ loading 时清掉文案、只留居中的圈（核心自己锁宽）
+															loadingText: false,
 															onClick: () => {
 																void useUser(row);
 															},
@@ -1006,6 +1019,8 @@ export function SettingsPage(props: {
 												variant: "danger",
 												color: "var(--dtl-danger)",
 												background: "var(--dtl-danger-soft)",
+												// 图标钮定宽定高，loading 换圈不跳
+												loading: pending === `forget:${row.uuid}`,
 												disabled: pending !== null,
 												onClick: () => {
 													void forgetUser(row);
@@ -1072,7 +1087,10 @@ export function SettingsPage(props: {
 						{
 							variant: "outline",
 							size: "md",
+							loading: dirBusy === "add",
 							disabled: dirBusy !== null,
+							// 无 icon ⇒ loading 时清掉文案、只留居中的圈（核心自己锁宽）
+							loadingText: false,
 							onClick: (event) => {
 								void addDirFromPicker(event.currentTarget);
 							},

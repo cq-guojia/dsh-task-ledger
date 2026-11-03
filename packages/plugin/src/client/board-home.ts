@@ -748,32 +748,27 @@ export function BoardHome(props: {
 								],
 								onChange: (next) => setViewMode(next),
 							}),
-							// 文案恒为「刷新」，刷新中只留转圈、文字藏起来（用户 2026-11-03：不许两个字/三个字来回跳）
+							// 文案恒为「刷新」；转圈 / 禁用 / 定宽都交核心 Button（用户 2026-11-03：
+							// loading 时图标位换小圈会改宽，必须定宽，不然按钮左右跳）
 							h(
-								"span",
-								{ className: "dtl-refresh", "data-busy": state.refreshing },
-								h(
-									Button,
-									{
-										variant: "outline",
-										size: "lg",
-										icon: h(IconRefreshOutlineRegular, { size: 16 }),
-										// 转圈 / 禁用都交核心 Button 的 loading 档，不自绘。
-										loading: state.refreshing,
-										title: t("refresh"),
-										onClick: () => {
-											// 手动刷新顺带同步一次宿主工作区（用户 2026-11-03：只有这里和进看板才同步）
-											void refresh(true);
-											// 手动刷新 = 全部重来：host 缓存由 fresh=1 全清，前端历史缓存一并清掉，
-											// 切回哪个粒度都重新读（用户 2026-10-30：点到每一个再重新读）
-											setHistoryByGran({});
-											lastTrendRef.current = null;
-											setHistoryError(null);
-										},
+								Button,
+								{
+									variant: "outline",
+									size: "lg",
+									icon: h(IconRefreshOutlineRegular, { size: 16 }),
+									loading: state.refreshing,
+									title: t("refresh"),
+									onClick: () => {
+										// 手动刷新顺带同步一次宿主工作区（用户 2026-11-03：只有这里和进看板才同步）
+										void refresh(true);
+										// 手动刷新 = 全部重来：host 缓存由 fresh=1 全清，前端历史缓存一并清掉，
+										// 切回哪个粒度都重新读（用户 2026-10-30：点到每一个再重新读）
+										setHistoryByGran({});
+										lastTrendRef.current = null;
+										setHistoryError(null);
 									},
-									// 核心 Button 只有给 maxWidth 时才把文案包成带类的 span ⇒ 这里自己包一层好挂样式
-									h("span", { className: "dtl-refresh__label" }, t("refresh")),
-								),
+								},
+								t("refresh"),
 							),
 						),
 				),
@@ -839,6 +834,8 @@ export function BoardHome(props: {
 										{
 											variant: "outline",
 											size: "sm",
+											loading: state.refreshing,
+											loadingText: false,
 											onClick: () => {
 												void refresh();
 											},

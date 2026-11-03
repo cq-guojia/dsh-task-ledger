@@ -82,38 +82,48 @@ export function TaskRowView(props: {
 	const tone = toneOf(row);
 	const tags = row.task.tags ?? [];
 
-	// 行内动作（认领 / 释放）：跑着就锁住整排动作钮 —— 连点会重复发写命令（skill 抢锁白等）。
+	// 行内动作（认领 / 释放）：确认框不关、确定键转圈（用户 2026-11-03：写命令要跑一次 git 往返，
+	// 慢网三四秒，确认即关会让人干等）。核心 0.22 起 `onConfirm` 返回 Promise 就自动 loading + 锁框。
+	// 失败：toast 后 rethrow ⇒ 核心保持弹窗可重试；成功：核心关窗。
 	const [busy, setBusy] = useState(false);
 	const runAction = async (action: "claim" | "release"): Promise<void> => {
 		if (busy) return;
 		const title = titleOf(row);
-		// 两个动作都会改归属（认领 = 归我 / 释放 = 退回池子），一律先问一句（用户 2026-11-03）。
 		const claim = action === "claim";
-		const ok = await confirmModal({
+		await confirmModal({
 			title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
 			message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
 			confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
 			cancelText: t("settingsCancel"),
+			// 确定键无 icon ⇒ loading 时清文字、只留圈（核心自己锁宽，中英文都不跳）
+			loadingText: false,
+			onConfirm: async () => {
+				setBusy(true);
+				try {
+					await postTaskAction({
+						action,
+						workspace: row.task.workspace.id,
+						id: row.task.id,
+					});
+					notify(t(claim ? "actionClaimDone" : "actionReleaseDone", { title }), {
+						variant: "success",
+					});
+					// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
+					await refresh();
+				} catch (failure) {
+					notify(
+						t("actionFailed", {
+							error: failure instanceof Error ? failure.message : String(failure),
+						}),
+						{ variant: "error" },
+					);
+					// 核心据此不关窗：框留着、确定键恢复可点，能原地重试
+					throw failure;
+				} finally {
+					setBusy(false);
+				}
+			},
 		});
-		if (!ok) return;
-		setBusy(true);
-		try {
-			await postTaskAction({ action, workspace: row.task.workspace.id, id: row.task.id });
-			notify(t(action === "claim" ? "actionClaimDone" : "actionReleaseDone", { title }), {
-				variant: "success",
-			});
-			// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
-			await refresh();
-		} catch (error) {
-			notify(
-				t("actionFailed", {
-					error: error instanceof Error ? error.message : String(error),
-				}),
-				{ variant: "error" },
-			);
-		} finally {
-			setBusy(false);
-		}
 	};
 
 	// 取消（归档）：走带理由输入框的弹窗（用户 2026-11-03：理由作为备注记进历史）。
