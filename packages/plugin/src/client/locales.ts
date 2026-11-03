@@ -179,6 +179,15 @@ export type LocaleKey =
 	| "actionFinish"
 	| "actionRelease"
 	| "actionCancel"
+	| "claimConfirmTitle"
+	| "claimConfirmBody"
+	| "claimConfirmOk"
+	| "releaseConfirmTitle"
+	| "releaseConfirmBody"
+	| "releaseConfirmOk"
+	| "actionClaimDone"
+	| "actionReleaseDone"
+	| "actionFailed"
 	| "tipClaim"
 	| "tipResume"
 	| "tipFinish"
@@ -421,6 +430,15 @@ export const zh: Record<LocaleKey, string> = {
 	actionFinish: "完成",
 	actionRelease: "释放",
 	actionCancel: "取消",
+	claimConfirmTitle: "认领任务",
+	claimConfirmBody: "确定认领「{title}」吗？认领后任务归到你名下，状态改为进行中。",
+	claimConfirmOk: "确定认领",
+	releaseConfirmTitle: "释放任务",
+	releaseConfirmBody: "确定释放「{title}」吗？任务会退回公共池，状态回到待认领。",
+	releaseConfirmOk: "确定释放",
+	actionClaimDone: "已认领：{title}",
+	actionReleaseDone: "已释放：{title}",
+	actionFailed: "操作失败：{error}",
 	tipClaim: "将该任务归入本人名下，状态置为进行中",
 	tipResume: "恢复对该任务的推进",
 	tipFinish: "将该任务标记为完成，并归档入历史",
@@ -661,6 +679,17 @@ export const en: Record<LocaleKey, string> = {
 	actionFinish: "Finish",
 	actionRelease: "Release",
 	actionCancel: "Cancel",
+	claimConfirmTitle: "Claim task",
+	claimConfirmBody:
+		"Claim “{title}”? It moves the task under your name and sets it to in progress.",
+	claimConfirmOk: "Claim it",
+	releaseConfirmTitle: "Release task",
+	releaseConfirmBody:
+		"Release “{title}”? It goes back to the public pool and returns to unclaimed.",
+	releaseConfirmOk: "Release it",
+	actionClaimDone: "Claimed: {title}",
+	actionReleaseDone: "Released: {title}",
+	actionFailed: "Action failed: {error}",
 	tipClaim: "assign this task to me and set it to in progress",
 	tipResume: "resume work on this task",
 	tipFinish: "mark this task as done and archive it",

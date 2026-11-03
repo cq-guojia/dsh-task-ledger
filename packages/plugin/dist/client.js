@@ -55056,6 +55056,19 @@ window.__ModuleLoader__.load({
 			}, RENAME_TIMEOUT_MS);
 		}
 		/**
+		* 任务写动作（认领 / 释放）的超时：host 要跑一次「取最新 → 改 → 提交 → 推送」，
+		* 默认 8s 会在脚本还在改的时候报超时 ⇒ 与 host 侧 120s 对齐。
+		*/
+		const TASK_WRITE_TIMEOUT_MS = 12e4;
+		/** 任务动作：认领（skill `claim`）/ 释放（`set --release`）。成功后由调用方重读快照。 */
+		function postTaskAction(body) {
+			return fetchJson("/task/action", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(body)
+			}, TASK_WRITE_TIMEOUT_MS);
+		}
+		/**
 		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
 		* `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
 		* `sync` = 顺带拿宿主工作区补登记清单（**只有进看板与手动刷新**传，其余请求一律不传）。
@@ -57543,6 +57556,32 @@ body[data-ds-dark-theme]{
 			const solo = props.solo === true;
 			const tone = toneOf(row);
 			const tags = row.task.tags ?? [];
+			const [busy, setBusy] = (0, react$1.useState)(false);
+			const runAction = async (action) => {
+				if (busy) return;
+				const title = titleOf(row);
+				const claim = action === "claim";
+				if (!await confirmModal({
+					title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
+					message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
+					confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
+					cancelText: t("settingsCancel")
+				})) return;
+				setBusy(true);
+				try {
+					await postTaskAction({
+						action,
+						workspace: row.task.workspace.id,
+						id: row.task.id
+					});
+					notify(t(action === "claim" ? "actionClaimDone" : "actionReleaseDone", { title }), { variant: "success" });
+					await refresh();
+				} catch (error) {
+					notify(t("actionFailed", { error: error instanceof Error ? error.message : String(error) }), { variant: "error" });
+				} finally {
+					setBusy(false);
+				}
+			};
 			const created = row.task.created ?? null;
 			const creatorName = displayName(row.task.creator_name, row.task.creator);
 			const creatorAge = created === null || created === void 0 ? null : formatRelative(created, t);
@@ -57594,18 +57633,20 @@ body[data-ds-dark-theme]{
 					onClick: () => props.onView?.(row)
 				})
 			});
-			const tipBtn = (icon, actionKey, tipKey) => (0, react$1.createElement)(Tip, {
+			const tipBtn = (icon, actionKey, tipKey, onPress) => (0, react$1.createElement)(Tip, {
 				label: t(tipKey),
 				children: (0, react$1.createElement)(Button, {
 					variant: "secondary",
 					size: "md",
-					icon: icon ?? void 0
+					icon: icon ?? void 0,
+					onClick: onPress,
+					disabled: busy
 				}, t(actionKey))
 			});
-			const claimButton = tipBtn(null, "actionClaim", "tipClaim");
+			const claimButton = tipBtn(null, "actionClaim", "tipClaim", () => void runAction("claim"));
 			const resumeButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), "actionResume", "tipResume");
 			const finishButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), "actionFinish", "tipFinish");
-			const releaseButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular, { size: 14 }), "actionRelease", "tipRelease");
+			const releaseButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular, { size: 14 }), "actionRelease", "tipRelease", () => void runAction("release"));
 			const cancelButton = (0, react$1.createElement)(Tip, {
 				label: t("tipCancel"),
 				children: (0, react$1.createElement)(IconButton, {
@@ -59231,8 +59272,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261103-152535-727`
-			}, `v0.0.126 261103-152535-727`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261103-155341-287`
+			}, `v0.0.126 261103-155341-287`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -59522,6 +59563,15 @@ body[data-ds-dark-theme]{
 			actionFinish: "完成",
 			actionRelease: "释放",
 			actionCancel: "取消",
+			claimConfirmTitle: "认领任务",
+			claimConfirmBody: "确定认领「{title}」吗？认领后任务归到你名下，状态改为进行中。",
+			claimConfirmOk: "确定认领",
+			releaseConfirmTitle: "释放任务",
+			releaseConfirmBody: "确定释放「{title}」吗？任务会退回公共池，状态回到待认领。",
+			releaseConfirmOk: "确定释放",
+			actionClaimDone: "已认领：{title}",
+			actionReleaseDone: "已释放：{title}",
+			actionFailed: "操作失败：{error}",
 			tipClaim: "将该任务归入本人名下，状态置为进行中",
 			tipResume: "恢复对该任务的推进",
 			tipFinish: "将该任务标记为完成，并归档入历史",
@@ -59742,6 +59792,15 @@ body[data-ds-dark-theme]{
 			actionFinish: "Finish",
 			actionRelease: "Release",
 			actionCancel: "Cancel",
+			claimConfirmTitle: "Claim task",
+			claimConfirmBody: "Claim “{title}”? It moves the task under your name and sets it to in progress.",
+			claimConfirmOk: "Claim it",
+			releaseConfirmTitle: "Release task",
+			releaseConfirmBody: "Release “{title}”? It goes back to the public pool and returns to unclaimed.",
+			releaseConfirmOk: "Release it",
+			actionClaimDone: "Claimed: {title}",
+			actionReleaseDone: "Released: {title}",
+			actionFailed: "Action failed: {error}",
 			tipClaim: "assign this task to me and set it to in progress",
 			tipResume: "resume work on this task",
 			tipFinish: "mark this task as done and archive it",

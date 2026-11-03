@@ -5,6 +5,7 @@ import { getIdentity, getRoster, forgetOwner, switchIdentity, } from "./services
 import { getBoardHome } from "./services/stats.service.js";
 import { listDirs, writeDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
+import { actOnTask } from "./services/task.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 /** API 前缀（唯一真源就在这一处）。 */
 const API_PREFIX = "/api/task-ledger";
@@ -40,6 +41,15 @@ function readBody(req) {
 }
 /** 400 与 500 靠这个前缀区分：参数类错误一律在文案前加「参数：」。 */
 const BAD_REQUEST = "参数：";
+/** 写端点的失败出口：参数类错误 400（去掉前缀），其余照 500 + 机器可读码。 */
+function sendWriteFailure(res, error) {
+    const message = messageOf(error);
+    if (message.startsWith(BAD_REQUEST)) {
+        sendJson(res, 400, { error: message.slice(BAD_REQUEST.length) });
+        return;
+    }
+    sendFailure(res, error);
+}
 /** 界面上给用户复制到终端的 init 命令（有工作区就带上 --repo，否则脚本找不到台账）。 */
 function initCommandOf(repoPath) {
     const head = `sh "${scriptPath()}" init`;
@@ -139,12 +149,7 @@ export function registerRoutes(webServer, deps) {
                 sendJson(res, 200, await switchIdentity(await switchInputOf(req, deps)));
             }
             catch (error) {
-                const message = messageOf(error);
-                if (message.startsWith(BAD_REQUEST)) {
-                    sendJson(res, 400, { error: message.slice(BAD_REQUEST.length) });
-                    return;
-                }
-                sendFailure(res, error);
+                sendWriteFailure(res, error);
             }
         },
     });
@@ -172,12 +177,7 @@ export function registerRoutes(webServer, deps) {
                 sendJson(res, 200, await forgetOwner(await workspacesOf(deps), uuid));
             }
             catch (error) {
-                const message = messageOf(error);
-                if (message.startsWith(BAD_REQUEST)) {
-                    sendJson(res, 400, { error: message.slice(BAD_REQUEST.length) });
-                    return;
-                }
-                sendFailure(res, error);
+                sendWriteFailure(res, error);
             }
         },
     });
@@ -236,12 +236,44 @@ export function registerRoutes(webServer, deps) {
                 throw new Error(`${BAD_REQUEST}action 只能是 add / hide / unhide / rename / remove`);
             }
             catch (error) {
-                const message = messageOf(error);
-                if (message.startsWith(BAD_REQUEST)) {
-                    sendJson(res, 400, { error: message.slice(BAD_REQUEST.length) });
-                    return;
+                sendWriteFailure(res, error);
+            }
+        },
+    });
+    // 任务动作（在办行内的按钮）：认领 / 释放。前端只给工作区 id + 任务号，
+    // 台账根由 host 解析，改台账一律交给 skill（claim / set --release），插件不碰文件。
+    webServer.register({
+        kind: "exact",
+        path: `${API_PREFIX}/task/action`,
+        handler: async (req, res) => {
+            if (req.method !== "POST") {
+                sendJson(res, 405, { error: "任务动作只接受 POST" });
+                return;
+            }
+            try {
+                let raw;
+                try {
+                    raw = JSON.parse(await readBody(req));
                 }
-                sendFailure(res, error);
+                catch {
+                    throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
+                }
+                const body = (raw ?? {});
+                const action = body.action;
+                if (action !== "claim" && action !== "release")
+                    throw new Error(`${BAD_REQUEST}action 只能是 claim / release`);
+                const id = typeof body.id === "string" ? body.id.trim() : "";
+                if (id === "")
+                    throw new Error(`${BAD_REQUEST}必须给任务号`);
+                const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
+                const workspace = (await workspacesOf(deps)).find((item) => item.id === workspaceId);
+                if (workspace === undefined)
+                    throw new Error(`${BAD_REQUEST}找不到这个工作区，改不了任务`);
+                await actOnTask({ action, repo: workspace.path, id });
+                sendJson(res, 200, { ok: true });
+            }
+            catch (error) {
+                sendWriteFailure(res, error);
             }
         },
     });

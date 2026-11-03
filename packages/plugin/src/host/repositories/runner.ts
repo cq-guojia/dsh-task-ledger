@@ -131,7 +131,31 @@ export async function runLedgerScript<T = unknown>(
 	args: readonly string[],
 	opts?: RunOptions,
 ): Promise<LedgerScriptResult<T>> {
+	return parseScriptResult<T>(await exec(sub, args, opts));
+}
+
+/** 写命令结果：写动作只回人话（`shell/render.go` 的 RenderResult），**不认 --json** ⇒ 不解析 stdout。 */
+export type LedgerCommandResult =
+	| { readonly ok: true; readonly output: string }
+	| { readonly ok: false; readonly error: string; readonly identityMissing?: boolean };
+
+/** 写命令：认领 / 释放 / 结案这类改台账的动作走它（读命令走 `runLedgerScript`）。 */
+export async function runLedgerCommand(
+	sub: string,
+	args: readonly string[],
+	opts?: RunOptions,
+): Promise<LedgerCommandResult> {
 	const result = await exec(sub, args, opts);
+	if (!result.ok)
+		return {
+			ok: false,
+			error: result.error,
+			identityMissing: result.exitCode === IDENTITY_MISSING_EXIT,
+		};
+	return { ok: true, output: result.stdout.trim() };
+}
+
+function parseScriptResult<T>(result: ExecResult): LedgerScriptResult<T> {
 	if (!result.ok)
 		return {
 			ok: false,

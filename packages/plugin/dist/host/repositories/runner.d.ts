@@ -33,3 +33,14 @@ export interface RunOptions {
  * @param opts.timeoutMs - 覆盖超时
  */
 export declare function runLedgerScript<T = unknown>(sub: string, args: readonly string[], opts?: RunOptions): Promise<LedgerScriptResult<T>>;
+/** 写命令结果：写动作只回人话（`shell/render.go` 的 RenderResult），**不认 --json** ⇒ 不解析 stdout。 */
+export type LedgerCommandResult = {
+    readonly ok: true;
+    readonly output: string;
+} | {
+    readonly ok: false;
+    readonly error: string;
+    readonly identityMissing?: boolean;
+};
+/** 写命令：认领 / 释放 / 结案这类改台账的动作走它（读命令走 `runLedgerScript`）。 */
+export declare function runLedgerCommand(sub: string, args: readonly string[], opts?: RunOptions): Promise<LedgerCommandResult>;

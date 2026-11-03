@@ -23,12 +23,18 @@ import {
 	IconCopyOutlineRegular,
 	IconSearchOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
-import { createElement as h, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import {
+	createElement as h,
+	type MouseEvent as ReactMouseEvent,
+	type ReactNode,
+	useState,
+} from "react";
+import { postTaskAction } from "./api";
 import { formatDateTime, formatRelative } from "./format";
 import type { Translate } from "./locales";
 import { displayName, type Row, resolveActions } from "./rows";
-import { focusOwner, setQuery } from "./store";
-import { Button, IconButton, notify, Surface, Tag, Tip } from "./ui";
+import { focusOwner, refresh, setQuery } from "./store";
+import { Button, confirmModal, IconButton, notify, Surface, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
 
@@ -72,6 +78,40 @@ export function TaskRowView(props: {
 	const solo = props.solo === true;
 	const tone = toneOf(row);
 	const tags = row.task.tags ?? [];
+
+	// 行内动作（认领 / 释放）：跑着就锁住整排动作钮 —— 连点会重复发写命令（skill 抢锁白等）。
+	const [busy, setBusy] = useState(false);
+	const runAction = async (action: "claim" | "release"): Promise<void> => {
+		if (busy) return;
+		const title = titleOf(row);
+		// 两个动作都会改归属（认领 = 归我 / 释放 = 退回池子），一律先问一句（用户 2026-11-03）。
+		const claim = action === "claim";
+		const ok = await confirmModal({
+			title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
+			message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
+			confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
+			cancelText: t("settingsCancel"),
+		});
+		if (!ok) return;
+		setBusy(true);
+		try {
+			await postTaskAction({ action, workspace: row.task.workspace.id, id: row.task.id });
+			notify(t(action === "claim" ? "actionClaimDone" : "actionReleaseDone", { title }), {
+				variant: "success",
+			});
+			// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
+			await refresh();
+		} catch (error) {
+			notify(
+				t("actionFailed", {
+					error: error instanceof Error ? error.message : String(error),
+				}),
+				{ variant: "error" },
+			);
+		} finally {
+			setBusy(false);
+		}
+	};
 
 	// 第一行灰徽（用户 2026-10-28）：`[@谁 创建于 2 天前]`，只读、不可点，颜色不变。
 	const created = row.task.created ?? null;
@@ -138,21 +178,29 @@ export function TaskRowView(props: {
 		}),
 	});
 	// 文字动作钮：**灰底、不带边**（核心 `secondary` 档，用户 2026-10-30：原来那圈描边不要）。
+	// `onPress` 还没给 = 功能未接（继续 / 完成 / 取消），先只画样子。
 	const tipBtn = (
 		icon: ReactNode,
 		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease",
 		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease",
+		onPress?: () => void,
 	): ReactNode =>
 		h(Tip, {
 			label: t(tipKey),
 			children: h(
 				Button,
-				{ variant: "secondary", size: "md", icon: icon ?? undefined },
+				{
+					variant: "secondary",
+					size: "md",
+					icon: icon ?? undefined,
+					onClick: onPress,
+					disabled: busy,
+				},
 				t(actionKey),
 			),
 		});
-	// 认领：只有待认领行才有（权限见 resolveActions.claim）。功能待接，先摆按钮（用户 2026-10-28）。
-	const claimButton = tipBtn(null, "actionClaim", "tipClaim");
+	// 认领：只有待认领行才有（权限见 resolveActions.claim）。点了先确认再调 claim。
+	const claimButton = tipBtn(null, "actionClaim", "tipClaim", () => void runAction("claim"));
 	const resumeButton = tipBtn(
 		h(IconChevronRightOutlineRegular, { size: 14 }),
 		"actionResume",
@@ -168,6 +216,7 @@ export function TaskRowView(props: {
 		h(IconChevronLeftOutlineRegular, { size: 14 }),
 		"actionRelease",
 		"tipRelease",
+		() => void runAction("release"),
 	);
 	// 取消（用户 2026-10-29，2026-10-30 改图标）：一枚小叉，与复制 / 查看同款次级图标钮（灰字无边）；
 	// 出不出来由 resolveActions.cancel 判（池任务 + 我名下的才有，别人名下的不给）

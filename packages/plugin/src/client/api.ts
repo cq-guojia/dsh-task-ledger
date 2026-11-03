@@ -177,6 +177,30 @@ export function postForgetIdentity(uuid: string): Promise<ForgetReport> {
 }
 
 /**
+ * 任务写动作（认领 / 释放）的超时：host 要跑一次「取最新 → 改 → 提交 → 推送」，
+ * 默认 8s 会在脚本还在改的时候报超时 ⇒ 与 host 侧 120s 对齐。
+ */
+const TASK_WRITE_TIMEOUT_MS = 120_000;
+
+/** 任务动作：认领（skill `claim`）/ 释放（`set --release`）。成功后由调用方重读快照。 */
+export function postTaskAction(body: {
+	readonly action: "claim" | "release";
+	/** 工作区 id（host 据此找台账根）。 */
+	readonly workspace: string;
+	readonly id: string;
+}): Promise<{ readonly ok: boolean }> {
+	return fetchJson<{ ok: boolean }>(
+		"/task/action",
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(body),
+		},
+		TASK_WRITE_TIMEOUT_MS,
+	);
+}
+
+/**
  * 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
  * `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
  * `sync` = 顺带拿宿主工作区补登记清单（**只有进看板与手动刷新**传，其余请求一律不传）。

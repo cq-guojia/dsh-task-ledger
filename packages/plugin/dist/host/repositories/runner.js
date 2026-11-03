@@ -91,7 +91,20 @@ function exec(sub, args, opts) {
  * @param opts.timeoutMs - 覆盖超时
  */
 export async function runLedgerScript(sub, args, opts) {
+    return parseScriptResult(await exec(sub, args, opts));
+}
+/** 写命令：认领 / 释放 / 结案这类改台账的动作走它（读命令走 `runLedgerScript`）。 */
+export async function runLedgerCommand(sub, args, opts) {
     const result = await exec(sub, args, opts);
+    if (!result.ok)
+        return {
+            ok: false,
+            error: result.error,
+            identityMissing: result.exitCode === IDENTITY_MISSING_EXIT,
+        };
+    return { ok: true, output: result.stdout.trim() };
+}
+function parseScriptResult(result) {
     if (!result.ok)
         return {
             ok: false,
