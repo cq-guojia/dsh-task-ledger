@@ -13,6 +13,23 @@ import { serveFsRoute } from "dsh-plugin-core/host";
 import { FS_ROUTE, registerRoutes } from "./host/routes.js";
 import { buildSkillRegistration, } from "./host/skill/registration.js";
 export const name = "dsh-task-ledger";
+/**
+ * 「继续」用的宿主服务读取器：**现取、不预先注入**。
+ *
+ * 为什么不写进 `ctx.inject([...])` 的依赖表：cordis 里任一依赖缺席，整个回调永远 pending，
+ * 数据面会跟着一起消失（参考插件真机教训）。这些服务缺席只该让「继续」这一个动作报人话。
+ * 另外 ctx 的命名空间属性是 getter，未 inject 时读取直接 throw ⇒ 这里归一成 undefined。
+ */
+function serviceOf(ctx, name) {
+    return () => {
+        try {
+            return ctx.get(name);
+        }
+        catch {
+            return undefined;
+        }
+    };
+}
 export function apply(ctx) {
     // ── 数据面（任务 3） ──
     ctx.inject(["workspaceRegistry", "webServer"], (services) => {
@@ -22,8 +39,14 @@ export function apply(ctx) {
             console.warn("[task-ledger] workspaceRegistry / webServer 未就位，数据面路由不注册");
             return;
         }
-        registerRoutes(webServer, { registry });
-        console.info("[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot）");
+        registerRoutes(webServer, {
+            registry,
+            // 「继续」要起会话：agents / agentPresets / agentDefaultModel 三者按需现取
+            agents: serviceOf(ctx, "agents"),
+            presets: serviceOf(ctx, "agentPresets"),
+            defaultModel: serviceOf(ctx, "agentDefaultModel"),
+        });
+        console.info("[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot；写 /task/action、/task/continue）");
     });
     // ── 只读文件路由（核心 explorer 的数据面：选目录弹窗 + 文件预览都吃它） ──
     // 官方 workspaceFiles 只能在各自工作区内列目录，选台账目录要能走全盘 ⇒ 用核心这条。

@@ -22,6 +22,12 @@ import { getBoardHome } from "./services/stats.service.js";
 import { listDirs, writeDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { actOnTask } from "./services/task.service.js";
+import {
+	continueTask,
+	type AgentDefaultModelLike,
+	type AgentPresetsLike,
+	type AgentsLike,
+} from "./services/continue.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 import type { RegistryWorkspace } from "./types.js";
 
@@ -44,6 +50,14 @@ export interface WorkspaceRegistryLike {
 
 export interface RouteDeps {
 	readonly registry: WorkspaceRegistryLike;
+	/**
+	 * 「继续」要用的宿主面：**按需现取**（服务可能晚于路由就位）。
+	 * 取不到就返回 undefined，由 service 报人话 —— 不写进上面那个 inject 依赖表，
+	 * 否则任一服务缺席都会让整块数据面永远 pending（入口注释里的那条老坑）。
+	 */
+	readonly agents?: () => AgentsLike | undefined;
+	readonly presets?: () => AgentPresetsLike | undefined;
+	readonly defaultModel?: () => AgentDefaultModelLike | undefined;
 }
 
 /** API 前缀（唯一真源就在这一处）。 */
@@ -337,6 +351,47 @@ export function registerRoutes(
 					throw new Error(`${BAD_REQUEST}找不到这个工作区，改不了任务`);
 				await actOnTask({ action, repo: workspace.path, id, summary });
 				sendJson(res, 200, { ok: true });
+			} catch (error) {
+				sendWriteFailure(res, error);
+			}
+		},
+	});
+
+	// 「继续」：在该台账所属的 DSH 工作区里起会话 + 注入只读提示词（2026-11-03）。
+	// 非 DSH 工作区**不是错误** ⇒ 200 + `kind: "not-dsh"`，界面据此先复制任务号再弹警告。
+	webServer.register({
+		kind: "exact",
+		path: `${API_PREFIX}/task/continue`,
+		handler: async (req, res) => {
+			if (req.method !== "POST") {
+				sendJson(res, 405, { error: "继续任务只接受 POST" });
+				return;
+			}
+			try {
+				let raw: unknown;
+				try {
+					raw = JSON.parse(await readBody(req));
+				} catch {
+					throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
+				}
+				const body = (raw ?? {}) as Record<string, unknown>;
+				const id = typeof body.id === "string" ? body.id.trim() : "";
+				if (id === "") throw new Error(`${BAD_REQUEST}必须给任务号`);
+				const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
+				if (workspaceId === "") throw new Error(`${BAD_REQUEST}必须给工作区`);
+				sendJson(
+					res,
+					200,
+					await continueTask(
+						{
+							registry: deps.registry,
+							agents: deps.agents?.(),
+							presets: deps.presets?.(),
+							defaultModel: deps.defaultModel?.(),
+						},
+						{ workspaceId, id },
+					),
+				);
 			} catch (error) {
 				sendWriteFailure(res, error);
 			}

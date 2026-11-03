@@ -23,6 +23,7 @@ import {
 	type Translate,
 	zh,
 } from "./locales";
+import { setSessionOpener } from "./nav";
 import { LedgerIcon } from "./ui";
 
 // 核心控件样式设施：id 插件内唯一（多插件同页互不覆盖）；控件首次渲染时 ensureControls() 挂载。
@@ -50,6 +51,10 @@ interface ClientContext {
 	};
 	layout?: {
 		selectPanel(panelId: string | null): void;
+	};
+	/** 会话导航（「继续」建完会话跳过去）：`openSession` 自己 retain mainView，插件不得自己 retain。 */
+	uiWorkspace?: {
+		openSession(sessionId: string): void;
 	};
 	slots: {
 		inject(slot: string, factory: () => () => void): () => void;
@@ -90,7 +95,16 @@ export function apply(ctx: ClientContext): void {
 			};
 	});
 
-	// ③ 槽位注册（只依赖 slots，自成一块：locale / layout 缺席也不该让入口消失）
+	// ③ 会话跳转（「继续」在 host 建完会话后跳过去）：服务缺席 = 只是不跳，会话已在侧栏
+	ctx.inject(["uiWorkspace"], (sub) => {
+		const uiWorkspace = sub.uiWorkspace;
+		if (uiWorkspace !== undefined)
+			setSessionOpener((sessionId) => {
+				uiWorkspace.openSession(sessionId);
+			});
+	});
+
+	// ④ 槽位注册（只依赖 slots，自成一块：locale / layout 缺席也不该让入口消失）
 	ctx.inject(["slots"], (sub) => {
 		// 左侧入口：侧栏面板条目（list 槽）。**行按钮、点击、激活态全由侧栏 / 布局服务托管**，
 		// 组件只画图标；id 必须与 main 槽的 key 一致（同一 MainPanelId）。

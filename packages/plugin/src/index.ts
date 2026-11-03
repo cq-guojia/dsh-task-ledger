@@ -11,6 +11,11 @@
  */
 import { serveFsRoute } from "dsh-plugin-core/host";
 import { FS_ROUTE, registerRoutes, type WebServerLike, type WorkspaceRegistryLike } from "./host/routes.js";
+import type {
+	AgentDefaultModelLike,
+	AgentPresetsLike,
+	AgentsLike,
+} from "./host/services/continue.service.js";
 import {
 	buildSkillRegistration,
 	type SkillsRegistry,
@@ -26,6 +31,25 @@ interface PluginContext {
 	): void;
 	/** 组合内副作用：进入时 setup、离开时执行返回的清理函数（cordis 核心面）。 */
 	effect(setup: () => (() => void) | undefined): void;
+	/** 按名取服务（取不到给 undefined）。**读属性**在未 inject 的模块上会直接 throw ⇒ 见 serviceOf。 */
+	get(name: string): unknown;
+}
+
+/**
+ * 「继续」用的宿主服务读取器：**现取、不预先注入**。
+ *
+ * 为什么不写进 `ctx.inject([...])` 的依赖表：cordis 里任一依赖缺席，整个回调永远 pending，
+ * 数据面会跟着一起消失（参考插件真机教训）。这些服务缺席只该让「继续」这一个动作报人话。
+ * 另外 ctx 的命名空间属性是 getter，未 inject 时读取直接 throw ⇒ 这里归一成 undefined。
+ */
+function serviceOf<T>(ctx: PluginContext, name: string): () => T | undefined {
+	return () => {
+		try {
+			return ctx.get(name) as T | undefined;
+		} catch {
+			return undefined;
+		}
+	};
 }
 
 export function apply(ctx: PluginContext): void {
@@ -41,9 +65,15 @@ export function apply(ctx: PluginContext): void {
 			);
 			return;
 		}
-		registerRoutes(webServer, { registry });
+		registerRoutes(webServer, {
+			registry,
+			// 「继续」要起会话：agents / agentPresets / agentDefaultModel 三者按需现取
+			agents: serviceOf<AgentsLike>(ctx, "agents"),
+			presets: serviceOf<AgentPresetsLike>(ctx, "agentPresets"),
+			defaultModel: serviceOf<AgentDefaultModelLike>(ctx, "agentDefaultModel"),
+		});
 		console.info(
-			"[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot）",
+			"[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot；写 /task/action、/task/continue）",
 		);
 	});
 

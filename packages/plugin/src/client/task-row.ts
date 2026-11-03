@@ -13,7 +13,8 @@
  * 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
  *
  * 点击行为：查看已在用；认领 / 释放（各弹一次确认）与取消（带理由输入框的弹窗）已接台账命令
- * （2026-11-03，统一走 `/task/action`）；继续 / 完成仍未接，先只摆按钮。
+ * （2026-11-03，统一走 `/task/action`）；继续走 `/task/continue` 起会话（2026-11-03 晚）；
+ * **完成仍未接**，先只摆按钮。
  */
 
 import {
@@ -31,9 +32,10 @@ import {
 	type ReactNode,
 	useState,
 } from "react";
-import { postTaskAction } from "./api";
+import { postTaskAction, postTaskContinue } from "./api";
 import { CancelTaskModal } from "./cancel-task-modal";
 import { formatDateTime, formatRelative } from "./format";
+import { openSession } from "./nav";
 import type { Translate } from "./locales";
 import { displayName, type Row, resolveActions } from "./rows";
 import { focusOwner, refresh, setQuery } from "./store";
@@ -44,6 +46,18 @@ type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
 /** 行标题：任务名（缺则任务号）。 */
 function titleOf(row: Row): string {
 	return row.task.title || row.task.id;
+}
+
+/** 复制到剪贴板：没有 clipboard API / 写入被拒都算失败，由调用方决定说什么。 */
+async function copyText(text: string): Promise<boolean> {
+	const clipboard = navigator.clipboard;
+	if (clipboard === undefined) return false;
+	try {
+		await clipboard.writeText(text);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 /** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 skill 按时间算出来的，不是状态）。
@@ -150,6 +164,45 @@ export function TaskRowView(props: {
 		}
 	};
 
+	// 继续（用户 2026-11-03 定口径）：台账属于 DSH 工作区 ⇒ host 起会话注入「只读读进度 → 汇报 → 停下」
+	// 的提示词，界面跳过去；不属于 ⇒ **先**复制完整任务号，**再**弹警告让人去对应的 Agent 继续。
+	// 警告文案里那句「任务 ID 已复制」必须为真 ⇒ 复制失败换另一条文案，不许照原样说已复制。
+	const resumeTask = async (): Promise<void> => {
+		if (busy) return;
+		setBusy(true);
+		const title = titleOf(row);
+		try {
+			const result = await postTaskContinue({
+				workspace: row.task.workspace.id,
+				id: row.task.id,
+			});
+			if (result.kind === "not-dsh") {
+				const copied = await copyText(row.task.id);
+				notify(
+					t(copied ? "continueNotDsh" : "continueNotDshCopyFailed", {
+						title,
+						id: row.task.id,
+					}),
+					// 两句话说清「为什么不行 + 你去哪继续」，默认 2.6s 读不完 ⇒ 给足时间
+					{ variant: "warning", durationMs: 8000 },
+				);
+				return;
+			}
+			notify(t("continueStarted", { title }), { variant: "success" });
+			// 跳不过去也不报错：会话已经建好并归进工作区，用户在侧栏能找到
+			openSession(result.sessionId);
+		} catch (failure) {
+			notify(
+				t("actionFailed", {
+					error: failure instanceof Error ? failure.message : String(failure),
+				}),
+				{ variant: "error" },
+			);
+		} finally {
+			setBusy(false);
+		}
+	};
+
 	// 第一行灰徽（用户 2026-10-28）：`[@谁 创建于 2 天前]`，只读、不可点，颜色不变。
 	const created = row.task.created ?? null;
 	const creatorName = displayName(row.task.creator_name, row.task.creator);
@@ -215,7 +268,7 @@ export function TaskRowView(props: {
 		}),
 	});
 	// 文字动作钮：**灰底、不带边**（核心 `secondary` 档，用户 2026-10-30：原来那圈描边不要）。
-	// `onPress` 还没给 = 功能未接（继续 / 完成 / 取消），先只画样子。
+	// `onPress` 没给 = 功能未接（目前只剩「完成」），先只画样子。
 	const tipBtn = (
 		icon: ReactNode,
 		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease",
@@ -242,6 +295,7 @@ export function TaskRowView(props: {
 		h(IconChevronRightOutlineRegular, { size: 14 }),
 		"actionResume",
 		"tipResume",
+		() => void resumeTask(),
 	);
 	const finishButton = tipBtn(
 		h(IconCheckOutlineRegular, { size: 14 }),
@@ -310,15 +364,9 @@ export function TaskRowView(props: {
 			className: "dtl-iconbtn--muted",
 			icon: h(IconCopyOutlineRegular, { size: 14 }),
 			onClick: () => {
-				const clipboard = navigator.clipboard;
-				if (clipboard === undefined) {
-					notify(t("copyFailed"));
-					return;
-				}
-				void clipboard.writeText(row.task.id).then(
-					() => notify(t("copiedTaskId")),
-					() => notify(t("copyFailed")),
-				);
+				void copyText(row.task.id).then((copied) => {
+					notify(t(copied ? "copiedTaskId" : "copyFailed"));
+				});
 			},
 		}),
 	});

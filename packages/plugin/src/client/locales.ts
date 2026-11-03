@@ -193,6 +193,10 @@ export type LocaleKey =
 	| "actionClaimDone"
 	| "actionReleaseDone"
 	| "actionFailed"
+	// 「继续」：非 DSH 工作区的警告（已复制 / 复制失败两版）+ 建好会话的提示
+	| "continueNotDsh"
+	| "continueNotDshCopyFailed"
+	| "continueStarted"
 	| "tipClaim"
 	| "tipResume"
 	| "tipFinish"
@@ -450,6 +454,11 @@ export const zh: Record<LocaleKey, string> = {
 	actionClaimDone: "已认领：{title}",
 	actionReleaseDone: "已释放：{title}",
 	actionFailed: "操作失败：{error}",
+	continueNotDsh:
+		"此台账不属于 DeepSeek Harness 工作区，无法在当前环境内直接继续。「{title}」（任务号 {id}）的任务 ID 已复制到剪贴板，请到对应的 Agent 中继续该任务。",
+	continueNotDshCopyFailed:
+		"此台账不属于 DeepSeek Harness 工作区，无法在当前环境内直接继续。任务 ID 复制失败，请手动复制「{id}」，再到对应的 Agent 中继续该任务。",
+	continueStarted: "已新建会话：{title}",
 	tipClaim: "将该任务归入本人名下，状态置为进行中",
 	tipResume: "恢复对该任务的推进",
 	tipFinish: "将该任务标记为完成，并归档入历史",
@@ -708,6 +717,11 @@ export const en: Record<LocaleKey, string> = {
 	actionClaimDone: "Claimed: {title}",
 	actionReleaseDone: "Released: {title}",
 	actionFailed: "Action failed: {error}",
+	continueNotDsh:
+		'This ledger does not belong to a DeepSeek Harness workspace, so the task cannot be resumed here. The task ID for "{title}" ({id}) has been copied — open it in its own agent to continue.',
+	continueNotDshCopyFailed:
+		'This ledger does not belong to a DeepSeek Harness workspace, so the task cannot be resumed here. Copying the task ID failed — copy "{id}" manually, then continue it in its own agent.',
+	continueStarted: "Session started: {title}",
 	tipClaim: "assign this task to me and set it to in progress",
 	tipResume: "resume work on this task",
 	tipFinish: "mark this task as done and archive it",

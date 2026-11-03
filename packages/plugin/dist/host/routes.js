@@ -6,6 +6,7 @@ import { getBoardHome } from "./services/stats.service.js";
 import { listDirs, writeDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { actOnTask } from "./services/task.service.js";
+import { continueTask, } from "./services/continue.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 /** API 前缀（唯一真源就在这一处）。 */
 const API_PREFIX = "/api/task-ledger";
@@ -273,6 +274,43 @@ export function registerRoutes(webServer, deps) {
                     throw new Error(`${BAD_REQUEST}找不到这个工作区，改不了任务`);
                 await actOnTask({ action, repo: workspace.path, id, summary });
                 sendJson(res, 200, { ok: true });
+            }
+            catch (error) {
+                sendWriteFailure(res, error);
+            }
+        },
+    });
+    // 「继续」：在该台账所属的 DSH 工作区里起会话 + 注入只读提示词（2026-11-03）。
+    // 非 DSH 工作区**不是错误** ⇒ 200 + `kind: "not-dsh"`，界面据此先复制任务号再弹警告。
+    webServer.register({
+        kind: "exact",
+        path: `${API_PREFIX}/task/continue`,
+        handler: async (req, res) => {
+            if (req.method !== "POST") {
+                sendJson(res, 405, { error: "继续任务只接受 POST" });
+                return;
+            }
+            try {
+                let raw;
+                try {
+                    raw = JSON.parse(await readBody(req));
+                }
+                catch {
+                    throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
+                }
+                const body = (raw ?? {});
+                const id = typeof body.id === "string" ? body.id.trim() : "";
+                if (id === "")
+                    throw new Error(`${BAD_REQUEST}必须给任务号`);
+                const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
+                if (workspaceId === "")
+                    throw new Error(`${BAD_REQUEST}必须给工作区`);
+                sendJson(res, 200, await continueTask({
+                    registry: deps.registry,
+                    agents: deps.agents?.(),
+                    presets: deps.presets?.(),
+                    defaultModel: deps.defaultModel?.(),
+                }, { workspaceId, id }));
             }
             catch (error) {
                 sendWriteFailure(res, error);

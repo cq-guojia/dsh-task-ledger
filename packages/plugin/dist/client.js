@@ -55202,6 +55202,19 @@ window.__ModuleLoader__.load({
 			}, TASK_WRITE_TIMEOUT_MS);
 		}
 		/**
+		* 「继续」建会话的超时：不跑 git，但 host 侧要建 agent、挂 preset、归组工作区，
+		* 冷启动几秒很正常 ⇒ 单独给 60s，别让界面先报超时（会话其实建成了）。
+		*/
+		const CONTINUE_TIMEOUT_MS = 6e4;
+		/** 在该台账所属的 DSH 工作区里起会话，并注入「只读读进度、汇报、停下」的提示词。 */
+		function postTaskContinue(body) {
+			return fetchJson("/task/continue", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(body)
+			}, CONTINUE_TIMEOUT_MS);
+		}
+		/**
 		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
 		* `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
 		* `sync` = 顺带拿宿主工作区补登记清单（**只有进看板与手动刷新**传，其余请求一律不传）。
@@ -57697,6 +57710,29 @@ body[data-ds-dark-theme]{
 			} }, props.error)));
 		}
 		//#endregion
+		//#region src/client/nav.ts
+		/**
+		* 会话跳转的**唯一出口**。
+		*
+		* 「继续」在 host 侧建完会话后要跳到那个会话：官方导航是 `uiWorkspace.openSession(id)`
+		* （它自己 `retain('mainView')` + 切选择，插件**不得**自己 retain，事实见
+		* `docs/design/external/dsh-session-handoff.md:19`）。
+		*
+		* 服务由入口（index.ts）在就位时注册进来；取不到就退化成空操作 —— 会话本身已经建好、
+		* 也归进了工作区，用户照样能在侧栏找到，不该因为跳不过去而报错。
+		*/
+		let opener = null;
+		/** 由入口在 `uiWorkspace` 就位时调用（只注册一次）。 */
+		function setSessionOpener(next) {
+			opener = next;
+		}
+		/** @returns 是否真的跳了（false = 宿主没这个服务，调用方只是少一步跳转，不算失败）。 */
+		function openSession(sessionId) {
+			if (opener === null) return false;
+			opener(sessionId);
+			return true;
+		}
+		//#endregion
 		//#region src/client/task-row.ts
 		/**
 		* 任务行（宿主**无表格件** ⇒ 自绘）：整行一张卡，样式照抄 dispatch-table 任务配置卡：
@@ -57713,11 +57749,23 @@ body[data-ds-dark-theme]{
 		* 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
 		*
 		* 点击行为：查看已在用；认领 / 释放（各弹一次确认）与取消（带理由输入框的弹窗）已接台账命令
-		* （2026-11-03，统一走 `/task/action`）；继续 / 完成仍未接，先只摆按钮。
+		* （2026-11-03，统一走 `/task/action`）；继续走 `/task/continue` 起会话（2026-11-03 晚）；
+		* **完成仍未接**，先只摆按钮。
 		*/
 		/** 行标题：任务名（缺则任务号）。 */
 		function titleOf(row) {
 			return row.task.title || row.task.id;
+		}
+		/** 复制到剪贴板：没有 clipboard API / 写入被拒都算失败，由调用方决定说什么。 */
+		async function copyText(text) {
+			const clipboard = navigator.clipboard;
+			if (clipboard === void 0) return false;
+			try {
+				await clipboard.writeText(text);
+				return true;
+			} catch {
+				return false;
+			}
 		}
 		/** 状态语义（异常优先：停滞 > 逾期 > 积压；三者都是 skill 按时间算出来的，不是状态）。
 		*  只决定圆点 / 左缘色条这类**单色位**——标签可以多枚，见 MARKS。 */
@@ -57799,6 +57847,34 @@ body[data-ds-dark-theme]{
 					setBusy(false);
 				}
 			};
+			const resumeTask = async () => {
+				if (busy) return;
+				setBusy(true);
+				const title = titleOf(row);
+				try {
+					const result = await postTaskContinue({
+						workspace: row.task.workspace.id,
+						id: row.task.id
+					});
+					if (result.kind === "not-dsh") {
+						const copied = await copyText(row.task.id);
+						notify(t(copied ? "continueNotDsh" : "continueNotDshCopyFailed", {
+							title,
+							id: row.task.id
+						}), {
+							variant: "warning",
+							durationMs: 8e3
+						});
+						return;
+					}
+					notify(t("continueStarted", { title }), { variant: "success" });
+					openSession(result.sessionId);
+				} catch (failure) {
+					notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
+				} finally {
+					setBusy(false);
+				}
+			};
 			const created = row.task.created ?? null;
 			const creatorName = displayName(row.task.creator_name, row.task.creator);
 			const creatorAge = created === null || created === void 0 ? null : formatRelative(created, t);
@@ -57861,7 +57937,7 @@ body[data-ds-dark-theme]{
 				}, t(actionKey))
 			});
 			const claimButton = tipBtn(null, "actionClaim", "tipClaim", () => void runAction("claim"));
-			const resumeButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), "actionResume", "tipResume");
+			const resumeButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), "actionResume", "tipResume", () => void resumeTask());
 			const finishButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), "actionFinish", "tipFinish");
 			const releaseButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular, { size: 14 }), "actionRelease", "tipRelease", () => void runAction("release"));
 			const cancelButton = (0, react$1.createElement)(Tip, {
@@ -57902,12 +57978,9 @@ body[data-ds-dark-theme]{
 					className: "dtl-iconbtn--muted",
 					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutlineRegular, { size: 14 }),
 					onClick: () => {
-						const clipboard = navigator.clipboard;
-						if (clipboard === void 0) {
-							notify(t("copyFailed"));
-							return;
-						}
-						clipboard.writeText(row.task.id).then(() => notify(t("copiedTaskId")), () => notify(t("copyFailed")));
+						copyText(row.task.id).then((copied) => {
+							notify(t(copied ? "copiedTaskId" : "copyFailed"));
+						});
 					}
 				})
 			});
@@ -59498,7 +59571,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.126 261103-222110-006`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.126 261103-224355-599`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -59800,6 +59873,9 @@ body[data-ds-dark-theme]{
 			actionClaimDone: "已认领：{title}",
 			actionReleaseDone: "已释放：{title}",
 			actionFailed: "操作失败：{error}",
+			continueNotDsh: "此台账不属于 DeepSeek Harness 工作区，无法在当前环境内直接继续。「{title}」（任务号 {id}）的任务 ID 已复制到剪贴板，请到对应的 Agent 中继续该任务。",
+			continueNotDshCopyFailed: "此台账不属于 DeepSeek Harness 工作区，无法在当前环境内直接继续。任务 ID 复制失败，请手动复制「{id}」，再到对应的 Agent 中继续该任务。",
+			continueStarted: "已新建会话：{title}",
 			tipClaim: "将该任务归入本人名下，状态置为进行中",
 			tipResume: "恢复对该任务的推进",
 			tipFinish: "将该任务标记为完成，并归档入历史",
@@ -60035,6 +60111,9 @@ body[data-ds-dark-theme]{
 			actionClaimDone: "Claimed: {title}",
 			actionReleaseDone: "Released: {title}",
 			actionFailed: "Action failed: {error}",
+			continueNotDsh: "This ledger does not belong to a DeepSeek Harness workspace, so the task cannot be resumed here. The task ID for \"{title}\" ({id}) has been copied — open it in its own agent to continue.",
+			continueNotDshCopyFailed: "This ledger does not belong to a DeepSeek Harness workspace, so the task cannot be resumed here. Copying the task ID failed — copy \"{id}\" manually, then continue it in its own agent.",
+			continueStarted: "Session started: {title}",
 			tipClaim: "assign this task to me and set it to in progress",
 			tipResume: "resume work on this task",
 			tipFinish: "mark this task as done and archive it",
@@ -60145,6 +60224,12 @@ body[data-ds-dark-theme]{
 				if (layout !== void 0) selectPanel = (id) => {
 					layout.selectPanel(id);
 				};
+			});
+			ctx.inject(["uiWorkspace"], (sub) => {
+				const uiWorkspace = sub.uiWorkspace;
+				if (uiWorkspace !== void 0) setSessionOpener((sessionId) => {
+					uiWorkspace.openSession(sessionId);
+				});
 			});
 			ctx.inject(["slots"], (sub) => {
 				sub.slots.inject("sidebar.panellist", () => sub.slots.register({

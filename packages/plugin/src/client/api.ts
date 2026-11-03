@@ -206,6 +206,39 @@ export function postTaskAction(body: {
 }
 
 /**
+ * 「继续」建会话的超时：不跑 git，但 host 侧要建 agent、挂 preset、归组工作区，
+ * 冷启动几秒很正常 ⇒ 单独给 60s，别让界面先报超时（会话其实建成了）。
+ */
+const CONTINUE_TIMEOUT_MS = 60_000;
+
+/**
+ * 「继续」的结果：
+ *  - `started`：会话已建，拿 `sessionId` 跳过去；
+ *  - `not-dsh`：该台账目录不是宿主登记过的工作区 —— **预期分支不是错误**，
+ *    界面据此先复制任务号、再弹警告让人去对应的 Agent 继续。
+ */
+export type ContinueResult =
+	| { readonly kind: "started"; readonly sessionId: string }
+	| { readonly kind: "not-dsh" };
+
+/** 在该台账所属的 DSH 工作区里起会话，并注入「只读读进度、汇报、停下」的提示词。 */
+export function postTaskContinue(body: {
+	/** 工作区 id（= 台账目录绝对路径）。 */
+	readonly workspace: string;
+	readonly id: string;
+}): Promise<ContinueResult> {
+	return fetchJson<ContinueResult>(
+		"/task/continue",
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(body),
+		},
+		CONTINUE_TIMEOUT_MS,
+	);
+}
+
+/**
  * 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
  * `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
  * `sync` = 顺带拿宿主工作区补登记清单（**只有进看板与手动刷新**传，其余请求一律不传）。

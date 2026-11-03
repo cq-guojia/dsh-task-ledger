@@ -4,6 +4,8 @@ interface PluginContext {
     inject(deps: readonly string[], callback: (ctx: Record<string, unknown>) => void): void;
     /** 组合内副作用：进入时 setup、离开时执行返回的清理函数（cordis 核心面）。 */
     effect(setup: () => (() => void) | undefined): void;
+    /** 按名取服务（取不到给 undefined）。**读属性**在未 inject 的模块上会直接 throw ⇒ 见 serviceOf。 */
+    get(name: string): unknown;
 }
 export declare function apply(ctx: PluginContext): void;
 export {};
