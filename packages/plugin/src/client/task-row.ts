@@ -12,7 +12,8 @@
  *
  * 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
  *
- * 按钮点击行为（含查看）归「任务按钮与会话交接」任务，本文件只做样子与提示。
+ * 点击行为：查看已在用；认领 / 释放（各弹一次确认）与取消（带理由输入框的弹窗）已接台账命令
+ * （2026-11-03，统一走 `/task/action`）；继续 / 完成仍未接，先只摆按钮。
  */
 
 import {
@@ -25,11 +26,13 @@ import {
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import {
 	createElement as h,
+	Fragment,
 	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
 	useState,
 } from "react";
 import { postTaskAction } from "./api";
+import { CancelTaskModal } from "./cancel-task-modal";
 import { formatDateTime, formatRelative } from "./format";
 import type { Translate } from "./locales";
 import { displayName, type Row, resolveActions } from "./rows";
@@ -108,6 +111,30 @@ export function TaskRowView(props: {
 				}),
 				{ variant: "error" },
 			);
+		} finally {
+			setBusy(false);
+		}
+	};
+
+	// 取消（归档）：走带理由输入框的弹窗（用户 2026-11-03：理由作为备注记进历史）。
+	// 失败留在弹窗里改理由重试（不弹 Toast 也不关窗），成功后关窗 + 绿 Toast + 重读。
+	const [cancelOpen, setCancelOpen] = useState(false);
+	const [cancelError, setCancelError] = useState<string | null>(null);
+	const cancelTask = async (reason: string): Promise<void> => {
+		setBusy(true);
+		setCancelError(null);
+		try {
+			await postTaskAction({
+				action: "cancel",
+				workspace: row.task.workspace.id,
+				id: row.task.id,
+				...(reason === "" ? {} : { summary: reason }),
+			});
+			setCancelOpen(false);
+			notify(t("actionCancelDone", { title: titleOf(row) }), { variant: "success" });
+			await refresh();
+		} catch (error) {
+			setCancelError(error instanceof Error ? error.message : String(error));
 		} finally {
 			setBusy(false);
 		}
@@ -219,7 +246,8 @@ export function TaskRowView(props: {
 		() => void runAction("release"),
 	);
 	// 取消（用户 2026-10-29，2026-10-30 改图标）：一枚小叉，与复制 / 查看同款次级图标钮（灰字无边）；
-	// 出不出来由 resolveActions.cancel 判（池任务 + 我名下的才有，别人名下的不给）
+	// 出不出来由 resolveActions.cancel 判（池任务 + 我名下的才有，别人名下的不给）。
+	// 点击弹带理由输入框的弹窗（2026-11-03），不是普通确认框。
 	const cancelButton = h(Tip, {
 		label: t("tipCancel"),
 		children: h(IconButton, {
@@ -229,6 +257,11 @@ export function TaskRowView(props: {
 			title: "",
 			className: "dtl-iconbtn--muted",
 			icon: h(IconCloseOutlineRegular, { size: 14 }),
+			disabled: busy,
+			onClick: () => {
+				setCancelError(null);
+				setCancelOpen(true);
+			},
 		}),
 	});
 
@@ -341,7 +374,7 @@ export function TaskRowView(props: {
 	// 卡片外框（底 / 1px 边 / 圆角 12）交核心 Surface，本文件只摆行内内容。
 	// ⚠️ 不传 radius：容器圆角只有一档（核心 Surface 默认 md=12），与框内 Button / Input 同档；
 	// 传 sm 会变成「卡 8 < 按钮 12」的倒挂（用户 2026-11-01 一眼看出圆角不对）。
-	return h(
+	const card = h(
 		Surface,
 		{ className: "dtl-taskrow", padding: null },
 		h(
@@ -387,5 +420,21 @@ export function TaskRowView(props: {
 				actions.view ? viewButton : null,
 			),
 		),
+	);
+	// 取消弹窗与卡片并列（弹窗自带遮罩，挂在哪一层都不影响定位）。
+	return h(
+		Fragment,
+		null,
+		card,
+		cancelOpen
+			? h(CancelTaskModal, {
+					t,
+					taskTitle: titleOf(row),
+					busy,
+					error: cancelError,
+					onClose: () => setCancelOpen(false),
+					onSubmit: (reason) => void cancelTask(reason),
+				})
+			: null,
 	);
 }

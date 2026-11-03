@@ -13,9 +13,11 @@ export interface TaskActionInput {
 	/** 任务所在工作区根（skill 定位台账用）。 */
 	readonly repo: string;
 	readonly id: string;
+	/** 取消时的一句话理由（可选；进历史摘要与执行记录）。 */
+	readonly summary?: string;
 }
 
 export async function actOnTask(input: TaskActionInput): Promise<void> {
-	await runTaskAction(input.repo, input.id, input.action);
+	await runTaskAction(input.repo, input.id, input.action, input.summary ?? "");
 	invalidate();
 }

@@ -185,6 +185,11 @@ export type LocaleKey =
 	| "releaseConfirmTitle"
 	| "releaseConfirmBody"
 	| "releaseConfirmOk"
+	| "cancelModalTitle"
+	| "cancelModalBody"
+	| "cancelModalPlaceholder"
+	| "cancelModalOk"
+	| "actionCancelDone"
 	| "actionClaimDone"
 	| "actionReleaseDone"
 	| "actionFailed"
@@ -220,6 +225,7 @@ export type LocaleKey =
 	| "historyPrev"
 	| "historyNext"
 	// 历史列表（表格）
+	| "historyCancelled"
 	| "histColTask"
 	| "histColDate"
 	| "histColCreator"
@@ -436,6 +442,11 @@ export const zh: Record<LocaleKey, string> = {
 	releaseConfirmTitle: "释放任务",
 	releaseConfirmBody: "确定释放「{title}」吗？任务会退回公共池，状态回到待认领。",
 	releaseConfirmOk: "确定释放",
+	cancelModalTitle: "取消任务",
+	cancelModalBody: "确定取消「{title}」并归档吗？取消的任务不计入完成，会进历史记录。",
+	cancelModalPlaceholder: "写一句取消的理由（可留空）",
+	cancelModalOk: "确定取消",
+	actionCancelDone: "已取消归档：{title}",
 	actionClaimDone: "已认领：{title}",
 	actionReleaseDone: "已释放：{title}",
 	actionFailed: "操作失败：{error}",
@@ -466,6 +477,7 @@ export const zh: Record<LocaleKey, string> = {
 	historyGranMonth: "月",
 	historyPrev: "前 {n} {unit}",
 	historyNext: "后 {n} {unit}",
+	historyCancelled: "取消",
 	histColTask: "任务",
 	histColDate: "日期",
 	histColCreator: "创建人",
@@ -687,6 +699,12 @@ export const en: Record<LocaleKey, string> = {
 	releaseConfirmBody:
 		"Release “{title}”? It goes back to the public pool and returns to unclaimed.",
 	releaseConfirmOk: "Release it",
+	cancelModalTitle: "Cancel task",
+	cancelModalBody:
+		"Cancel “{title}” and archive it? Cancelled tasks don't count as done; they go to history.",
+	cancelModalPlaceholder: "One line on why (optional)",
+	cancelModalOk: "Cancel it",
+	actionCancelDone: "Cancelled: {title}",
 	actionClaimDone: "Claimed: {title}",
 	actionReleaseDone: "Released: {title}",
 	actionFailed: "Action failed: {error}",
@@ -717,6 +735,7 @@ export const en: Record<LocaleKey, string> = {
 	historyGranMonth: "Month",
 	historyPrev: "Previous {n} {unit}s",
 	historyNext: "Next {n} {unit}s",
+	historyCancelled: "Cancelled",
 	histColTask: "Task",
 	histColDate: "Date",
 	histColCreator: "Creator",

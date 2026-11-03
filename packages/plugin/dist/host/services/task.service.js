@@ -6,6 +6,6 @@
 import { invalidate } from "../repositories/cache.js";
 import { runTaskAction } from "../repositories/task.repository.js";
 export async function actOnTask(input) {
-    await runTaskAction(input.repo, input.id, input.action);
+    await runTaskAction(input.repo, input.id, input.action, input.summary ?? "");
     invalidate();
 }

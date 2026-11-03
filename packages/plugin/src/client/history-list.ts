@@ -71,8 +71,6 @@ const SELECT_MIN_WIDTH = 140;
 const SELECT_MAX_WIDTH = 240;
 /** 窗口上下各多画的像素：快速拖动时不留白。 */
 const OVERSCAN_PX = 600;
-/** 一行最多摆几个标签，其余收成 `+N`（行高必须定死，标签不能换行）。 */
-const MAX_TAGS = 3;
 /** 首帧量行高时先画多少行（够带上日期头 / 工作区段头 / 记录三种行就行）。 */
 const MEASURE_ROWS = 40;
 
@@ -121,6 +119,7 @@ function cellsOf(
 	opts: {
 		readonly solo: boolean;
 		readonly onOwner: (uuid: string) => void;
+		readonly t: Translate;
 	},
 ): Record<string, ReactNode> {
 	// 行内点击会被行点击接走（打开文档）。人名就地拦 = 点人名是「切执行人筛选」。
@@ -145,9 +144,9 @@ function cellsOf(
 	const creatorName = displayName(record.creatorName, record.creator);
 	const created = record.created.slice(0, 16);
 	const finished = record.finished.slice(0, 16);
-	// 标签只摆一行：超出的收成 `+N`（行高必须定死，换行会把虚拟窗口算歪）
-	const shown = record.tags.slice(0, MAX_TAGS);
-	const rest = record.tags.length - shown.length;
+	// 标签只摆一行：放不下的由容器 `overflow:hidden` 直接裁掉（行高必须定死，
+	// 换行会把虚拟窗口算歪）。取消的任务在最前面多一枚「取消」标识（用户 2026-11-03）。
+	const cancelled = record.result === "cancelled";
 	return {
 		task: h(
 			"div",
@@ -161,19 +160,20 @@ function cellsOf(
 					record.title,
 				),
 			),
-			record.tags.length === 0
+			!cancelled && record.tags.length === 0
 				? null
 				: h(
 						"div",
 						{ className: "dtl-histlist__tags" },
-						...shown.map((tag) => h(Tag, { key: tag, text: `#${tag}`, maxWidth: 160 })),
-						rest > 0
-							? h(
-									"span",
-									{ key: "+n", className: "dtl-histlist__tags-rest" },
-									`+${String(rest)}`,
-								)
+						cancelled
+							? h(Tag, {
+									key: "__cancelled",
+									text: opts.t("historyCancelled"),
+									tone: "danger",
+									maxWidth: 60,
+								})
 							: null,
+						...record.tags.map((tag) => h(Tag, { key: tag, text: `#${tag}`, maxWidth: 160 })),
 					),
 		),
 		creator: h(
@@ -541,7 +541,11 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		);
 
 	const recRow = (record: HistoryRecord): ReactNode => {
-		const cells = cellsOf(record, { solo: props.solo, onOwner: setOwner });
+		const cells = cellsOf(record, {
+			solo: props.solo,
+			onOwner: setOwner,
+			t: props.t,
+		});
 		const keys = props.solo ? (["task", "creator", "time"] as const) : (["task", "creator", "owner", "time"] as const);
 		return h(
 			"tr",

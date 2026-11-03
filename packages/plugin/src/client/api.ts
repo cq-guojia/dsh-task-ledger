@@ -182,12 +182,17 @@ export function postForgetIdentity(uuid: string): Promise<ForgetReport> {
  */
 const TASK_WRITE_TIMEOUT_MS = 120_000;
 
-/** 任务动作：认领（skill `claim`）/ 释放（`set --release`）。成功后由调用方重读快照。 */
+/**
+ * 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）。
+ * 取消可带一句理由（`summary`），进历史摘要与执行记录。成功后由调用方重读快照。
+ */
 export function postTaskAction(body: {
-	readonly action: "claim" | "release";
+	readonly action: "claim" | "release" | "cancel";
 	/** 工作区 id（host 据此找台账根）。 */
 	readonly workspace: string;
 	readonly id: string;
+	/** 仅取消用：一句话理由，可留空。 */
+	readonly summary?: string;
 }): Promise<{ readonly ok: boolean }> {
 	return fetchJson<{ ok: boolean }>(
 		"/task/action",

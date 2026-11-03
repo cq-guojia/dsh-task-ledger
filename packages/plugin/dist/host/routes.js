@@ -260,8 +260,10 @@ export function registerRoutes(webServer, deps) {
                 }
                 const body = (raw ?? {});
                 const action = body.action;
-                if (action !== "claim" && action !== "release")
-                    throw new Error(`${BAD_REQUEST}action 只能是 claim / release`);
+                if (action !== "claim" && action !== "release" && action !== "cancel")
+                    throw new Error(`${BAD_REQUEST}action 只能是 claim / release / cancel`);
+                // 取消理由：一句话就够，超长的截掉（历史摘要不该被一段小作文撑开）
+                const summary = typeof body.summary === "string" ? body.summary.trim().slice(0, 200) : "";
                 const id = typeof body.id === "string" ? body.id.trim() : "";
                 if (id === "")
                     throw new Error(`${BAD_REQUEST}必须给任务号`);
@@ -269,7 +271,7 @@ export function registerRoutes(webServer, deps) {
                 const workspace = (await workspacesOf(deps)).find((item) => item.id === workspaceId);
                 if (workspace === undefined)
                     throw new Error(`${BAD_REQUEST}找不到这个工作区，改不了任务`);
-                await actOnTask({ action, repo: workspace.path, id });
+                await actOnTask({ action, repo: workspace.path, id, summary });
                 sendJson(res, 200, { ok: true });
             }
             catch (error) {

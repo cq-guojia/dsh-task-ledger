@@ -316,9 +316,11 @@ const UI_BASE_CSS = `
 .dtl-taskrow__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);min-width:0;flex:0 1 auto;}
 .dtl-taskrow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-/* 第二行小字：状态标签 · 异常标签 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
+/* 第二行小字：状态标签 · 异常标签 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着）。
+   只摆一行，框太窄时放不下的标签直接裁掉（用户 2026-11-03）。 */
 .dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
-  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;
+  flex-wrap:nowrap;overflow:hidden;}
 /* 右侧（用户 2026-10-28）：执行人名（常驻）/ 时间（hover 让位）/ 动作钮。
    hover 只收时间那一截，人名不动 —— 按钮出现时两者保持同一个 gap。
    人名走核心 Button 的 link 档（品牌蓝），这里不再有它的样式。 */
@@ -407,11 +409,9 @@ const UI_BASE_CSS = `
 .dtl-histlist__time-mark{flex:none;width:12px;font-size:var(--dtl-font-xs);font-weight:600;
   color:var(--dtl-fg-3);text-align:left;}
 /* 第二行标签：与待办行同间距（space-2、上留 6px）；**只摆一行**（行高定死，换行会把
-   虚拟窗口算歪），超出的收成「+N」（组件里给） */
+   虚拟窗口算歪），放不下的裁掉不显示 */
 .dtl-histlist__tags{display:flex;flex-wrap:nowrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;
   overflow:hidden;}
-.dtl-histlist__tags-rest{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);
-  line-height:var(--dtl-line-sm);}
 `;
 
 const STYLE_ID = "dtl-ui-base";
@@ -763,7 +763,15 @@ export function StatCard(props: {
  *  太重、纯 neutral 又跟 #标签 一个样，用户 2026-11-01）。
  *  工作区用 `cyan`（用户 2026-11-01）。 */
 const CHIP_TONE: Record<
-	"neutral" | "open" | "backlog" | "doing" | "overdue" | "stale" | "person" | "workspace",
+	| "neutral"
+	| "open"
+	| "backlog"
+	| "doing"
+	| "overdue"
+	| "stale"
+	| "person"
+	| "workspace"
+	| "danger",
 	"neutral" | "slate" | "business" | "success" | "warning" | "danger" | "cyan"
 > = {
 	neutral: "neutral",
@@ -774,6 +782,7 @@ const CHIP_TONE: Record<
 	stale: "danger",
 	person: "business",
 	workspace: "cyan",
+	danger: "danger",
 };
 
 /**
@@ -790,7 +799,8 @@ export function Tag(props: {
 		| "overdue"
 		| "stale"
 		| "person"
-		| "workspace";
+		| "workspace"
+		| "danger";
 	/** 悬停说明（**始终**显示，状态标记的解释走它）。走官方 Tooltip。 */
 	tip?: string;
 	/** 给了就是可点的标签（核心 Chip 自动渲染成 button + hover 加深），如工作区 / #标签。 */

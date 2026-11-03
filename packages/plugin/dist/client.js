@@ -55060,7 +55060,10 @@ window.__ModuleLoader__.load({
 		* 默认 8s 会在脚本还在改的时候报超时 ⇒ 与 host 侧 120s 对齐。
 		*/
 		const TASK_WRITE_TIMEOUT_MS = 12e4;
-		/** 任务动作：认领（skill `claim`）/ 释放（`set --release`）。成功后由调用方重读快照。 */
+		/**
+		* 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）。
+		* 取消可带一句理由（`summary`），进历史摘要与执行记录。成功后由调用方重读快照。
+		*/
 		function postTaskAction(body) {
 			return fetchJson("/task/action", {
 				method: "POST",
@@ -56168,9 +56171,11 @@ body[data-ds-dark-theme]{
 .dtl-taskrow__title{font-size:var(--dtl-font-lg);font-weight:600;line-height:var(--dtl-line-md);min-width:0;flex:0 1 auto;}
 .dtl-taskrow__stamp{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-/* 第二行小字：状态标签 · 异常标签 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着） */
+/* 第二行小字：状态标签 · 异常标签 · #标签（行距拉开，用户 2026-10-17：第一二行别贴着）。
+   只摆一行，框太窄时放不下的标签直接裁掉（用户 2026-11-03）。 */
 .dtl-taskrow__l2{display:flex;align-items:center;gap:var(--dtl-space-2);margin-top:6px;
-  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;}
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg-2);min-width:0;
+  flex-wrap:nowrap;overflow:hidden;}
 /* 右侧（用户 2026-10-28）：执行人名（常驻）/ 时间（hover 让位）/ 动作钮。
    hover 只收时间那一截，人名不动 —— 按钮出现时两者保持同一个 gap。
    人名走核心 Button 的 link 档（品牌蓝），这里不再有它的样式。 */
@@ -56259,11 +56264,9 @@ body[data-ds-dark-theme]{
 .dtl-histlist__time-mark{flex:none;width:12px;font-size:var(--dtl-font-xs);font-weight:600;
   color:var(--dtl-fg-3);text-align:left;}
 /* 第二行标签：与待办行同间距（space-2、上留 6px）；**只摆一行**（行高定死，换行会把
-   虚拟窗口算歪），超出的收成「+N」（组件里给） */
+   虚拟窗口算歪），放不下的裁掉不显示 */
 .dtl-histlist__tags{display:flex;flex-wrap:nowrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;
   overflow:hidden;}
-.dtl-histlist__tags-rest{flex:none;font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);
-  line-height:var(--dtl-line-sm);}
 `;
 		const STYLE_ID = "dtl-ui-base";
 		/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。
@@ -56433,7 +56436,8 @@ body[data-ds-dark-theme]{
 			overdue: "danger",
 			stale: "danger",
 			person: "business",
-			workspace: "cyan"
+			workspace: "cyan",
+			danger: "danger"
 		};
 		/**
 		* 标签：状态 / 工作区 / #标签 都走它，只换 tone（核心 `Chip` 承担）。
@@ -56998,8 +57002,6 @@ body[data-ds-dark-theme]{
 		const SELECT_MAX_WIDTH$1 = 240;
 		/** 窗口上下各多画的像素：快速拖动时不留白。 */
 		const OVERSCAN_PX = 600;
-		/** 一行最多摆几个标签，其余收成 `+N`（行高必须定死，标签不能换行）。 */
-		const MAX_TAGS = 3;
 		/** 首帧量行高时先画多少行（够带上日期头 / 工作区段头 / 记录三种行就行）。 */
 		const MEASURE_ROWS = 40;
 		/** 记录 → 各列内容。第一列：标题 + 标签（创建徽已挪到「创建人」列，2026-10-31 用户定）。 */
@@ -57014,20 +57016,21 @@ body[data-ds-dark-theme]{
 			const creatorName = displayName(record.creatorName, record.creator);
 			const created = record.created.slice(0, 16);
 			const finished = record.finished.slice(0, 16);
-			const shown = record.tags.slice(0, MAX_TAGS);
-			const rest = record.tags.length - shown.length;
+			const cancelled = record.result === "cancelled";
 			return {
 				task: (0, react$1.createElement)("div", { className: "dtl-histlist__task" }, (0, react$1.createElement)("div", { className: "dtl-histlist__head" }, (0, react$1.createElement)("span", {
 					className: "dtl-histlist__title",
 					title: record.summary
-				}, record.title)), record.tags.length === 0 ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__tags" }, ...shown.map((tag) => (0, react$1.createElement)(Tag, {
+				}, record.title)), !cancelled && record.tags.length === 0 ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__tags" }, cancelled ? (0, react$1.createElement)(Tag, {
+					key: "__cancelled",
+					text: opts.t("historyCancelled"),
+					tone: "danger",
+					maxWidth: 60
+				}) : null, ...record.tags.map((tag) => (0, react$1.createElement)(Tag, {
 					key: tag,
 					text: `#${tag}`,
 					maxWidth: 160
-				})), rest > 0 ? (0, react$1.createElement)("span", {
-					key: "+n",
-					className: "dtl-histlist__tags-rest"
-				}, `+${String(rest)}`) : null)),
+				})))),
 				creator: (0, react$1.createElement)("div", { className: "dtl-histlist__creator" }, (0, react$1.createElement)("span", { className: "dtl-histlist__creator-name" }, creatorName === "" ? "" : `@${creatorName}`), (0, react$1.createElement)("span", { className: "dtl-histlist__creator-time" }, created)),
 				owner: who,
 				time: (0, react$1.createElement)("div", { className: "dtl-histlist__time" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-row" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-mark" }, "S"), created), (0, react$1.createElement)("span", { className: "dtl-histlist__time-row" }, (0, react$1.createElement)("span", { className: "dtl-histlist__time-mark" }, "E"), finished))
@@ -57364,7 +57367,8 @@ body[data-ds-dark-theme]{
 			const recRow = (record) => {
 				const cells = cellsOf(record, {
 					solo: props.solo,
-					onOwner: setOwner
+					onOwner: setOwner,
+					t: props.t
 				});
 				const keys = props.solo ? [
 					"task",
@@ -57506,6 +57510,68 @@ body[data-ds-dark-theme]{
 			}
 		}
 		//#endregion
+		//#region src/client/cancel-task-modal.ts
+		/**
+		* 取消（归档）任务的弹窗：正文点名任务，中间一个理由输入框（可留空），
+		* 理由随 `close --cancel --summary` 落进历史行摘要与执行记录（`cancelled: <理由>`）。
+		*
+		* 弹窗 / 输入框都用核心件（Modal + Input），不另画遮罩。提交中锁住所有关闭路径（遮罩 / Esc / ✕），
+		* 免得请求还在跑就被关掉、错误无处显示；失败时弹窗不关，改完理由可以直接重试。
+		*/
+		function CancelTaskModal(props) {
+			const { t } = props;
+			const [reason, setReason] = (0, react$1.useState)("");
+			const submit = () => {
+				if (!props.busy) props.onSubmit(reason.trim());
+			};
+			return (0, react$1.createElement)(Modal, {
+				size: "sm",
+				width: "420px",
+				title: t("cancelModalTitle"),
+				onClose: props.busy ? void 0 : props.onClose,
+				closeOnMask: !props.busy,
+				escClose: !props.busy,
+				footer: (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					justifyContent: "flex-end",
+					gap: "var(--dtl-space-2)",
+					width: "100%"
+				} }, (0, react$1.createElement)(Button, {
+					variant: "secondary",
+					size: "md",
+					disabled: props.busy,
+					onClick: props.onClose
+				}, t("settingsCancel")), (0, react$1.createElement)(Button, {
+					variant: "primary",
+					size: "md",
+					loading: props.busy,
+					onClick: submit
+				}, t("cancelModalOk")))
+			}, (0, react$1.createElement)("div", { style: {
+				display: "flex",
+				flexDirection: "column",
+				gap: "var(--dtl-space-3)"
+			} }, (0, react$1.createElement)("div", { style: {
+				fontSize: "var(--dtl-font-md)",
+				lineHeight: "var(--dtl-line-md)",
+				color: "var(--dtl-fg-2)"
+			} }, t("cancelModalBody", { title: props.taskTitle })), (0, react$1.createElement)(Input, {
+				value: reason,
+				onChange: setReason,
+				placeholder: t("cancelModalPlaceholder"),
+				size: "md",
+				"aria-label": t("cancelModalPlaceholder"),
+				disabled: props.busy,
+				error: props.error !== null,
+				onKeyDown: (event) => {
+					if (event.key === "Enter") submit();
+				}
+			}), props.error === null ? null : (0, react$1.createElement)("div", { style: {
+				color: "var(--dtl-danger)",
+				fontSize: "var(--dtl-font-sm)"
+			} }, props.error)));
+		}
+		//#endregion
 		//#region src/client/task-row.ts
 		/**
 		* 任务行（宿主**无表格件** ⇒ 自绘）：整行一张卡，样式照抄 dispatch-table 任务配置卡：
@@ -57521,7 +57587,8 @@ body[data-ds-dark-theme]{
 		*
 		* 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
 		*
-		* 按钮点击行为（含查看）归「任务按钮与会话交接」任务，本文件只做样子与提示。
+		* 点击行为：查看已在用；认领 / 释放（各弹一次确认）与取消（带理由输入框的弹窗）已接台账命令
+		* （2026-11-03，统一走 `/task/action`）；继续 / 完成仍未接，先只摆按钮。
 		*/
 		/** 行标题：任务名（缺则任务号）。 */
 		function titleOf(row) {
@@ -57578,6 +57645,27 @@ body[data-ds-dark-theme]{
 					await refresh();
 				} catch (error) {
 					notify(t("actionFailed", { error: error instanceof Error ? error.message : String(error) }), { variant: "error" });
+				} finally {
+					setBusy(false);
+				}
+			};
+			const [cancelOpen, setCancelOpen] = (0, react$1.useState)(false);
+			const [cancelError, setCancelError] = (0, react$1.useState)(null);
+			const cancelTask = async (reason) => {
+				setBusy(true);
+				setCancelError(null);
+				try {
+					await postTaskAction({
+						action: "cancel",
+						workspace: row.task.workspace.id,
+						id: row.task.id,
+						...reason === "" ? {} : { summary: reason }
+					});
+					setCancelOpen(false);
+					notify(t("actionCancelDone", { title: titleOf(row) }), { variant: "success" });
+					await refresh();
+				} catch (error) {
+					setCancelError(error instanceof Error ? error.message : String(error));
 				} finally {
 					setBusy(false);
 				}
@@ -57655,7 +57743,12 @@ body[data-ds-dark-theme]{
 					label: t("actionCancel"),
 					title: "",
 					className: "dtl-iconbtn--muted",
-					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 })
+					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }),
+					disabled: busy,
+					onClick: () => {
+						setCancelError(null);
+						setCancelOpen(true);
+					}
 				})
 			});
 			const tagOf = (which, tip) => {
@@ -57708,7 +57801,7 @@ body[data-ds-dark-theme]{
 				if (target !== null && target.closest("button") !== null) return;
 				props.onView?.(row);
 			};
-			return (0, react$1.createElement)(Surface, {
+			const card = (0, react$1.createElement)(Surface, {
 				className: "dtl-taskrow",
 				padding: null
 			}, (0, react$1.createElement)("div", {
@@ -57723,6 +57816,14 @@ body[data-ds-dark-theme]{
 				maxWidth: 160,
 				onClick: () => setQuery({ keyword: tag })
 			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, copyButton, actions.view ? viewButton : null)));
+			return (0, react$1.createElement)(react$1.Fragment, null, card, cancelOpen ? (0, react$1.createElement)(CancelTaskModal, {
+				t,
+				taskTitle: titleOf(row),
+				busy,
+				error: cancelError,
+				onClose: () => setCancelOpen(false),
+				onSubmit: (reason) => void cancelTask(reason)
+			}) : null);
 		}
 		//#endregion
 		//#region src/client/trend-chart.ts
@@ -59272,8 +59373,8 @@ body[data-ds-dark-theme]{
 				onClick: onBack
 			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", {
 				style: buildTagStyle,
-				title: `v0.0.126 · 261103-155341-287`
-			}, `v0.0.126 261103-155341-287`))), (0, react$1.createElement)("div", { style: {
+				title: `v0.0.126 · 261103-165048-342`
+			}, `v0.0.126 261103-165048-342`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -59569,6 +59670,11 @@ body[data-ds-dark-theme]{
 			releaseConfirmTitle: "释放任务",
 			releaseConfirmBody: "确定释放「{title}」吗？任务会退回公共池，状态回到待认领。",
 			releaseConfirmOk: "确定释放",
+			cancelModalTitle: "取消任务",
+			cancelModalBody: "确定取消「{title}」并归档吗？取消的任务不计入完成，会进历史记录。",
+			cancelModalPlaceholder: "写一句取消的理由（可留空）",
+			cancelModalOk: "确定取消",
+			actionCancelDone: "已取消归档：{title}",
 			actionClaimDone: "已认领：{title}",
 			actionReleaseDone: "已释放：{title}",
 			actionFailed: "操作失败：{error}",
@@ -59599,6 +59705,7 @@ body[data-ds-dark-theme]{
 			historyGranMonth: "月",
 			historyPrev: "前 {n} {unit}",
 			historyNext: "后 {n} {unit}",
+			historyCancelled: "取消",
 			histColTask: "任务",
 			histColDate: "日期",
 			histColCreator: "创建人",
@@ -59798,6 +59905,11 @@ body[data-ds-dark-theme]{
 			releaseConfirmTitle: "Release task",
 			releaseConfirmBody: "Release “{title}”? It goes back to the public pool and returns to unclaimed.",
 			releaseConfirmOk: "Release it",
+			cancelModalTitle: "Cancel task",
+			cancelModalBody: "Cancel “{title}” and archive it? Cancelled tasks don't count as done; they go to history.",
+			cancelModalPlaceholder: "One line on why (optional)",
+			cancelModalOk: "Cancel it",
+			actionCancelDone: "Cancelled: {title}",
 			actionClaimDone: "Claimed: {title}",
 			actionReleaseDone: "Released: {title}",
 			actionFailed: "Action failed: {error}",
@@ -59828,6 +59940,7 @@ body[data-ds-dark-theme]{
 			historyGranMonth: "Month",
 			historyPrev: "Previous {n} {unit}s",
 			historyNext: "Next {n} {unit}s",
+			historyCancelled: "Cancelled",
 			histColTask: "Task",
 			histColDate: "Date",
 			histColCreator: "Creator",
