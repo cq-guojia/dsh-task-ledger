@@ -205,6 +205,7 @@ export function CloseTaskModal(props: {
 						],
 				value: useAgent ? "agent" : "manual",
 				onChange: setMode,
+				disabled: props.busy || locked,
 				size: "md",
 				bordered: true,
 				tone: "business",

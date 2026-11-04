@@ -63057,6 +63057,7 @@ body[data-ds-dark-theme]{
 				size: props.size,
 				bordered: props.bordered === true,
 				tone: props.tone,
+				disabled: props.disabled,
 				label: props.label,
 				id: props.id,
 				style: props.style
@@ -64441,6 +64442,7 @@ body[data-ds-dark-theme]{
 				}],
 				value: useAgent ? "agent" : "manual",
 				onChange: setMode,
+				disabled: props.busy || locked,
 				size: "md",
 				bordered: true,
 				tone: "business",
@@ -67259,7 +67261,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.128 261104-171947-698`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.128 261104-173816-910`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

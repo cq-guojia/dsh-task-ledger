@@ -457,6 +457,8 @@ export function Segmented<Value extends string>(props: {
 	bordered?: boolean;
 	/** 选中片配色（透传核心 `tone`；内置色名走核心两主题配色，business = 业务主色）。 */
 	tone?: "business" | "success" | "warning" | "danger" | { bg: string; fg: string };
+	/** 整组禁用（透传核心 `disabled`；表单只读态用，优先级与段级 `disabled` 相同）。 */
+	disabled?: boolean;
 	label: string;
 	id?: string;
 	style?: CSSProperties;
@@ -477,6 +479,7 @@ export function Segmented<Value extends string>(props: {
 		size: props.size,
 		bordered: props.bordered === true,
 		tone: props.tone,
+		disabled: props.disabled,
 		label: props.label,
 		id: props.id,
 		style: props.style,
