@@ -29,7 +29,7 @@ const NoSyncEnv = "TASK_LEDGER_NO_SYNC"
 
 const usageText = `用法：progress <命令> [选项]
 
-命令：new / claim / set / log / close / list / stats / owners / show / history / validate / root / dirs / whoami / init / switch
+命令：new / claim / set / log / close / delete / list / stats / owners / show / history / validate / root / dirs / whoami / init / switch
 公共选项：
   --repo <工作区根>   --no-sync   -h, --help`
 
@@ -75,6 +75,8 @@ type Args struct {
 	Summary     string
 	Finished    string
 	Cancel      bool
+	Src         string // delete --src：历史文件相对 ledger/ 的路径
+	Line        int    // delete --line：历史文件原文行号（1 起）
 	Release     bool
 	Claim       *string
 	NewID       bool
@@ -96,6 +98,7 @@ var commandFlags = map[string]map[string]bool{
 	"set":      setOf("--id", "--owner", "--release", "--tags", "--repo"),
 	"log":      setOf("--id", "--note", "--repo"),
 	"close":    setOf("--id", "--summary", "--finished", "--tags", "--cancel", "--repo"),
+	"delete":   setOf("--id", "--src", "--line", "--summary", "--repo"),
 	"list":     setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
 	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--by-owner", "--json", "--repo"),
 	"owners":   setOf("--json", "--repo"),
@@ -127,7 +130,7 @@ func takesValue(name string) bool {
 		"--note", "--summary", "--finished", "--owner", "--owner-name",
 		"--status", "--tag", "--keyword", "--since", "--until", "--limit", "--months",
 		"--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--dir",
-		"--claim", "--name", "--rename":
+		"--claim", "--name", "--rename", "--src", "--line":
 		return true
 	}
 	return false
@@ -348,6 +351,14 @@ func applyFlag(a *Args, name, value string) error {
 		a.Deep = true
 	case "--note":
 		a.Note = value
+	case "--src":
+		a.Src = value
+	case "--line":
+		n, err := strconv.Atoi(value)
+		if err != nil {
+			return usageErr("--line 需要整数：%s", value)
+		}
+		a.Line = n
 	case "--summary":
 		a.Summary = value
 	case "--finished":
@@ -406,6 +417,19 @@ func requireFlags(a *Args) error {
 	case "close":
 		if a.Summary == "" && !a.Cancel {
 			return usageErr("close 缺少 --summary（取消可用 --cancel 省略）")
+		}
+	case "delete":
+		if a.TID == "" && a.Src == "" {
+			return usageErr("delete 要给出 --id（在办任务）或 --src + --line（历史行）")
+		}
+		if a.TID != "" && a.Src != "" {
+			return usageErr("delete 的 --id 与 --src 只能给一个")
+		}
+		if a.Src != "" && a.Line <= 0 {
+			return usageErr("delete --src 要配 --line <行号>")
+		}
+		if a.Line > 0 && a.Src == "" {
+			return usageErr("delete --line 要配 --src <历史文件>")
 		}
 	case "switch":
 		if a.DirRename != nil && (a.Claim != nil || a.NewID || a.Name != "") {

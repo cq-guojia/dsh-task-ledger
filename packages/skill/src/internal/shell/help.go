@@ -75,6 +75,16 @@ var commandHelp = map[string]helpDoc{
 			{"--repo <工作区根>", "同上"},
 		},
 	},
+	"delete": {
+		usage: "progress delete (--id <任务号> | --src <历史文件> --line <行号>) [--summary <留言>]",
+		options: []helpOption{
+			{"--id <任务号>", "删除在办任务（公共池 / 自己名下分片）：移进历史、删除三列落值"},
+			{"--src <路径>", "删历史表格里那一行；收相对 ledger/ 的路径（如 history/202610.md）。只有用户明确说「删除」才用"},
+			{"--line <行号>", "配套 --src：原文行号（1 起，见 history --json 的 line）"},
+			{"--summary <留言>", "删除留言（可省，只进过程文档执行记录，不写历史摘要）"},
+			{"--repo <工作区根>", "同上"},
+		},
+	},
 	"list": {
 		usage: "progress list [选项]",
 		options: []helpOption{

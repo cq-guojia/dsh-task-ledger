@@ -19,6 +19,8 @@ type Params struct {
 	Summary  string
 	Finished string
 	Cancel   bool
+	Src      string // delete --src：历史文件相对 ledger/ 的路径
+	Line     int    // delete --line：历史文件原文行号（1 起）
 	Deep     bool
 	// KeepIdentity forget 专用：只摘名册与分片，不清本机身份文件
 	KeepIdentity bool
@@ -73,6 +75,16 @@ var ACTIONS = map[string]ActionSpec{
 		Params: []string{"tid", "summary", "finished", "tags", "cancel"},
 		Run: func(repo string, me core.Identity, p Params) (any, error) {
 			return CloseTask(repo, me, p.Tid, CloseTaskParams{Summary: p.Summary, Finished: p.Finished, Tags: p.Tags, Cancel: p.Cancel})
+		},
+	},
+	"delete": {
+		Render: "result",
+		Params: []string{"tid", "src", "line", "summary", "finished"},
+		Run: func(repo string, me core.Identity, p Params) (any, error) {
+			if p.Src != "" {
+				return DeleteHistoryRow(repo, me, DeleteHistoryParams{Src: p.Src, Line: p.Line, Note: p.Summary, When: p.Finished})
+			}
+			return DeleteTask(repo, me, p.Tid, DeleteTaskParams{Summary: p.Summary, Finished: p.Finished})
 		},
 	},
 	"list": {

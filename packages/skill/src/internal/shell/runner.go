@@ -341,6 +341,8 @@ func paramsOf(command string, a *Args, repo string, me core.Identity) (actions.P
 		Summary:  a.Summary,
 		Finished: a.Finished,
 		Cancel:   a.Cancel,
+		Src:      a.Src,
+		Line:     a.Line,
 		Deep:     a.Deep,
 		// forget 专用：界面逐本台账删自己时不清身份，留到最后 logout
 		KeepIdentity: a.KeepIdentity,
@@ -382,6 +384,9 @@ func paramsOf(command string, a *Args, repo string, me core.Identity) (actions.P
 		}
 		p.Finished = finished
 		p.Tags = nonNil(p.Tags)
+	case "delete":
+		// 删除时刻 = 执行时刻，不提供补录：删了就删了，不做历史时间伪造
+		p.Finished = core.Now()
 	}
 	return p, nil
 }
@@ -409,6 +414,7 @@ func lockParams(p actions.Params) map[string]any {
 		"created":  p.Created,
 		"mine":     p.Mine,
 		"finished": p.Finished,
+		"src":      p.Src,
 	}
 }
 

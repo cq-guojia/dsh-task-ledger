@@ -17,6 +17,7 @@ type CloseTaskParams struct {
 	Finished string
 	Tags     []string
 	Cancel   bool // true ⇒ 取消：结果列 cancelled、状态行 cancelled、执行记录 cancel
+	Delete   bool // true ⇒ 删除：结果列留空、删除三列落值、状态行 deleted、执行记录 delete
 }
 
 // CloseTask 写序四步：改标签行 → 历史加一行 → 封卷 → 删来源那行（永远是最后一步）。
@@ -26,7 +27,7 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 		return nil, core.Failf("结案必须由外壳先算好时间（内部错误：finished 为空）。")
 	}
 	textSummary := strings.Join(strings.Fields(p.Summary), " ")
-	if textSummary == "" && !p.Cancel {
+	if textSummary == "" && !p.Cancel && !p.Delete {
 		return nil, core.Failf("结案要写一句「完成了什么」（--summary 不能为空）。")
 	}
 	var newTags []string
@@ -66,8 +67,8 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 	// 归属：池任务只能取消；我名下的结案/取消都行；别人的拒绝。
 	switch owner := ownerOf(task); {
 	case owner == "":
-		if !p.Cancel {
-			return nil, core.Failf("任务 %s 还没有人认领（在公共池里），先 claim 再结案；要直接关掉它用 close --cancel。", tid)
+		if !p.Cancel && !p.Delete {
+			return nil, core.Failf("任务 %s 还没有人认领（在公共池里），先 claim 再结案；要直接关掉它用 close --cancel 或 delete。", tid)
 		}
 	case core.IsMe(me, owner):
 	default:
@@ -92,14 +93,21 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 	}
 
 	// 执行记录的 note 除了动作名，还带上结案留言 —— 历史行丢了，过程文档里也能查到写了什么。
-	res, execKind, execNote := core.ResultDone, "close", "sealed"
+	res, worklogStatus, execKind, execNote := core.ResultDone, core.ResultDone, "close", "sealed"
 	if textSummary != "" {
 		execNote = "sealed: " + textSummary
 	}
 	if p.Cancel {
-		res, execKind, execNote = core.ResultCancelled, "cancel", "cancelled"
+		res, worklogStatus, execKind, execNote = core.ResultCancelled, core.ResultCancelled, "cancel", "cancelled"
 		if textSummary != "" {
 			execNote = "cancelled: " + textSummary
+		}
+	}
+	if p.Delete {
+		// 结果列留空 = 从未完成，与「做完再删」的 done 分开；状态行单写 deleted 记这次处置
+		res, worklogStatus, execKind, execNote = "", "deleted", "delete", "deleted"
+		if textSummary != "" {
+			execNote = "deleted: " + textSummary
 		}
 	}
 
@@ -151,7 +159,7 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 			if err == nil && !core.HasFrozenLine(text) {
 				frozen := core.StampFrozen(text, p.Finished, me.Stamp())
 				frozen = core.AppendExecLog(frozen, core.ExecLine(p.Finished, me.Stamp(), execKind, execNote))
-				frozen = core.RewriteStatusLine(frozen, core.StatusLine{Status: res, Name: me.Name, UUID: me.UUID, When: p.Finished})
+				frozen = core.RewriteStatusLine(frozen, core.StatusLine{Status: worklogStatus, Name: me.Name, UUID: me.UUID, When: p.Finished})
 				_ = logs.Write(docPath, frozen)
 				notes = append(notes, "补齐上次未完成的封卷。")
 			}
@@ -201,6 +209,11 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 		"result":       res,
 		"worklog":      nil,
 	}
+	if p.Delete {
+		row["deleted"] = core.DeletedYes
+		row["deleted_by"] = me.UUID
+		row["deleted_at"] = p.Finished
+	}
 	if docPath != "" {
 		row["worklog"] = task["worklog"]
 	}
@@ -224,7 +237,7 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 		if !core.HasFrozenLine(text) {
 			frozen := core.StampFrozen(text, p.Finished, me.Stamp())
 			frozen = core.AppendExecLog(frozen, core.ExecLine(p.Finished, me.Stamp(), execKind, execNote))
-			frozen = core.RewriteStatusLine(frozen, core.StatusLine{Status: res, Name: me.Name, UUID: me.UUID, When: p.Finished})
+			frozen = core.RewriteStatusLine(frozen, core.StatusLine{Status: worklogStatus, Name: me.Name, UUID: me.UUID, When: p.Finished})
 			if err := logs.Write(docPath, frozen); err != nil {
 				restoreAll()
 				return nil, err
@@ -255,6 +268,9 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 	verb, changed := "结案 ", []string{"status", "finished"}
 	if p.Cancel {
 		verb, changed = "取消 ", []string{"status", "finished", "result"}
+	}
+	if p.Delete {
+		verb, changed = "删除 ", []string{"status", "finished", "deleted"}
 	}
 	return &Result{
 		Changed: changed,

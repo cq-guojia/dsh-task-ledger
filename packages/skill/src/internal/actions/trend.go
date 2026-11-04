@@ -465,6 +465,9 @@ func (s *trendSeries) loadSources(repo, fromMonth, toMonth string, wanted map[st
 			warnings = append(warnings, Rel(repo, path)+"："+w)
 		}
 		for _, row := range rows {
+			if row.Deleted == core.DeletedYes {
+				continue
+			}
 			if day := trendLocalDay(row.Finished); wanted[day] {
 				s.finish(day, core.Normalize(row.Owner), row.Result)
 			}

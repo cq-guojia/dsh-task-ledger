@@ -19,6 +19,9 @@ func (r Row) ToMap() map[string]any {
 		"summary":      r.Summary,
 		"result":       r.Result,
 		"worklog":      r.Worklog,
+		"deleted":      r.Deleted,
+		"deleted_by":   r.DeletedBy,
+		"deleted_at":   r.DeletedAt,
 		"line":         r.Line,
 	}
 }

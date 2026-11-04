@@ -3,14 +3,13 @@ package store
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/core"
 )
 
-// 旧格式（11 列 / 中文表头）不再兼容：追加要明确报错，不能把 12 列行混进 11 列表里。
-func TestAppendRowRejectsOldFormat(t *testing.T) {
+// 不做老格式兼容：旧文件照样追加 15 列行、不报错不提示；读回时列数不符的行静默跳过、不告警。
+func TestAppendRowIgnoresOldFormat(t *testing.T) {
 	repo := t.TempDir()
 	path := filepath.Join(repo, "history", "202610.md")
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -24,23 +23,28 @@ func TestAppendRowRejectsOldFormat(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := NewHistoryStore(repo).AppendRow(path, map[string]any{
+	out, err := NewHistoryStore(repo).AppendRow(path, map[string]any{
 		"finished": "2026-10-02 10:00",
 		"created":  "2026-10-01 09:00",
 		"title":    "新任务",
 	})
-	if err == nil {
-		t.Fatal("旧格式文件应当报错拒绝写入")
+	if err != nil {
+		t.Fatalf("不兼容老格式 ⇒ 不该报错，实际：%v", err)
 	}
-	if !strings.Contains(err.Error(), "旧格式") {
-		t.Fatalf("错误信息要说明是旧格式，实际：%v", err)
+	text, _ := out["text"].(string)
+	records, warnings := core.ParseHistory(text)
+	if len(warnings) != 0 {
+		t.Fatalf("不该产生任何告警：%v", warnings)
 	}
-	if after, _ := os.ReadFile(path); string(after) != old {
-		t.Fatal("报错时不该写盘")
+	if len(records) != 1 {
+		t.Fatalf("旧行静默跳过，只应读回新增的 15 列行，实际 %d 行：\n%s", len(records), text)
+	}
+	if records[0].Title != "新任务" {
+		t.Fatalf("读回的应当是新增行，实际 %q", records[0].Title)
 	}
 }
 
-// 新格式（12 列）文件照常追加。
+// 新格式（15 列）文件照常追加。
 func TestAppendRowAcceptsNewFormat(t *testing.T) {
 	repo := t.TempDir()
 	path := filepath.Join(repo, "history", "202610.md")
@@ -49,7 +53,7 @@ func TestAppendRowAcceptsNewFormat(t *testing.T) {
 	}
 	head := core.HistoryTitle + "\n\n" + core.HistoryHeader + "\n" + core.HistorySep + "\n"
 	head += core.HistoryLine("2026-10-01 10:00", "2026-10-01 09:00", "老任务", "u1", "做完了",
-		core.ResultDone, "", "建设", []string{"甲"}, "u1", "@甲", "@甲")
+		core.ResultDone, "", "建设", []string{"甲"}, "u1", "@甲", "@甲", "", "", "")
 	if err := os.WriteFile(path, []byte(head), 0o644); err != nil {
 		t.Fatal(err)
 	}

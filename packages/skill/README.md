@@ -8,7 +8,7 @@
 
 - **谁在做、做到哪**：状态只在台账 JSON —— `ledger/pool.json`（公共池）+ 每人一份 `ledger/owners/<hash>.json` 分片，索引 `ledger/owners.json`。
 - **过程正文**：全在 `ledger/worklog/<年月>/<月日>-<时分>-<说明>-<码>.md`（六节），agent 直接编辑前五节，末节「执行记录」只由脚本写。
-- **已结案**：一行一条在 `ledger/history/<年月>.md`（12 列），只由脚本写。
+- **已结案**：一行一条在 `ledger/history/<年月>.md`（15 列），只由脚本写。
 
 状态改动与正文重写分开、全部经脚本改 —— 不另建副本、不手改状态表和历史。覆盖动作：建任务、认领、释放、结案、查在办、查历史、标签归并、体检。
 
@@ -20,7 +20,7 @@
 | `ledger/owners.json` | 索引：身份 uuid → 分片文件（`name` 只做显示 / 模糊筛） |
 | `ledger/owners/<hash>.json` | 每人一份分片：自己认领的任务 |
 | `ledger/worklog/<年月>/*.md` | 任务正文（六节） |
-| `ledger/history/<年月>.md` | 已结案（一行一条，12 列） |
+| `ledger/history/<年月>.md` | 已结案（一行一条，15 列） |
 
 ## 为什么这么设计
 
@@ -38,7 +38,7 @@
 
 **不需要安装任何东西**：直接执行上面那个路径就行。它是个 `sh` 脚本——若某个安装环节丢了可执行位（报 `Permission denied`），前面加 `sh ` 照样能跑：`sh <SKILL.md 所在目录>/scripts/progress <子命令> --repo <工作区根>`。
 
-子命令：`new` `claim` `set` `log` `close` `list` `history` `show` `whoami` `validate`。命令参考（参数 / 一句话 / 举例）、任务生命周期、纪律（数据完整性 / 人类授权 / 故障处置）全在 `SKILL.md`；参数细节看 `<子命令> --help`（不要凭记忆编）。
+子命令：`new` `claim` `set` `log` `close` `delete` `list` `history` `show` `whoami` `validate`。命令参考（参数 / 一句话 / 举例）、任务生命周期、纪律（数据完整性 / 人类授权 / 故障处置）全在 `SKILL.md`；参数细节看 `<子命令> --help`（不要凭记忆编）。
 
 ## 深入参考（references/，按需读）
 

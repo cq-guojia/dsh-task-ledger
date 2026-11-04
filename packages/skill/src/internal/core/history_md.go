@@ -11,18 +11,22 @@ import (
 // HistoryTitle 历史文件的一级标题。
 const HistoryTitle = "# History (closed)"
 
-// HistoryHeader 十二列表头。
+// HistoryHeader 十五列表头。
 const HistoryHeader = "| Finished | Created | Title | Category | Tags " +
-	"| Owner | Owner Name | Creator | Creator Name | Summary | Result | Worklog |"
+	"| Owner | Owner Name | Creator | Creator Name | Summary | Result | Worklog " +
+	"| Deleted | Deleted By | Deleted At |"
 
 // HistorySep 表头分隔行。
-const HistorySep = "|---|---|---|---|---|---|---|---|---|---|---|---|"
+const HistorySep = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
 
 // 结果列取值：正常结案 / 取消。
 const (
 	ResultDone      = "done"
 	ResultCancelled = "cancelled"
 )
+
+// DeletedYes 删除标记列的唯一有效值；空 = 未删除。
+const DeletedYes = "yes"
 
 var (
 	linkRe     = regexp.MustCompile(`^\[[^\]]*\]\(([^)]*)\)$`)
@@ -44,6 +48,9 @@ type Row struct {
 	Summary     string
 	Result      string
 	Worklog     string
+	Deleted     string
+	DeletedBy   string
+	DeletedAt   string
 	Line        int
 }
 
@@ -115,8 +122,8 @@ func looksLikeHeader(cells []string) bool {
 	return len(cells) > 0 && cells[0] == "Finished"
 }
 
-// HistoryLine 十二列的一行。worklog 收**相对 ledger/** 的路径。
-func HistoryLine(finished string, created, title, owner, summary, result, worklog string, category string, tags []string, creator, ownerName, creatorName string) string {
+// HistoryLine 十五列的一行。worklog 收**相对 ledger/** 的路径；末尾三格是删除标记 / 删除人 / 删除时间。
+func HistoryLine(finished string, created, title, owner, summary, result, worklog string, category string, tags []string, creator, ownerName, creatorName, deleted, deletedBy, deletedAt string) string {
 	logRel := ""
 	if worklog != "" {
 		logRel = ToHistoryRel(worklog)
@@ -132,14 +139,13 @@ func HistoryLine(finished string, created, title, owner, summary, result, worklo
 	fmt.Fprintf(&b, " | %s | %s", EscCell(category), tagCell)
 	fmt.Fprintf(&b, " | %s | %s", EscCell(OwnerCell(owner)), EscCell(NameCell(ownerName)))
 	fmt.Fprintf(&b, " | %s | %s", EscCell(CreatorCell(creator)), EscCell(NameCell(creatorName)))
-	fmt.Fprintf(&b, " | %s | %s | %s |\n", EscCell(summary), result, link)
+	fmt.Fprintf(&b, " | %s | %s | %s | %s | %s | %s |\n", EscCell(summary), result, link, EscCell(deleted), EscCell(deletedBy), EscCell(deletedAt))
 	return b.String()
 }
 
-// ParseHistory 解析历史表 → (records, warnings)。只认十二列；列数不符的行告警跳过。
+// ParseHistory 解析历史表 → (records, warnings)。只认十五列；列数不符 / 时间不合法的行静默跳过。
 func ParseHistory(text string) ([]Row, []string) {
 	var records []Row
-	var warnings []string
 	for i, raw := range splitLines(text) {
 		if !strings.HasPrefix(strings.TrimSpace(raw), "|") {
 			continue
@@ -149,13 +155,11 @@ func ParseHistory(text string) ([]Row, []string) {
 		if len(cells) == 0 || IsSepRow(cells) || looksLikeHeader(cells) {
 			continue
 		}
-		if len(cells) != 12 {
-			warnings = append(warnings, "第 "+itoa(lineno)+" 行不是 12 列（历史表当前只认十二列），已跳过")
+		if len(cells) != 15 {
 			continue
 		}
 		finished := cells[0]
 		if !timeRe.MatchString(finished) {
-			warnings = append(warnings, "第 "+itoa(lineno)+" 行时间列 "+quote(finished)+" 不合法，已跳过")
 			continue
 		}
 		var tags []string
@@ -182,22 +186,13 @@ func ParseHistory(text string) ([]Row, []string) {
 			Summary:     cells[9],
 			Result:      result,
 			Worklog:     worklog,
+			Deleted:     strings.TrimSpace(cells[12]),
+			DeletedBy:   strings.TrimSpace(cells[13]),
+			DeletedAt:   strings.TrimSpace(cells[14]),
 			Line:        lineno,
 		})
 	}
-	return records, warnings
+	return records, nil
 }
 
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	var b []byte
-	for n > 0 {
-		b = append([]byte{byte('0' + n%10)}, b...)
-		n /= 10
-	}
-	return string(b)
-}
 
-func quote(s string) string { return "'" + s + "'" }

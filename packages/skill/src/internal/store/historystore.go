@@ -133,24 +133,10 @@ func (h *HistoryStore) AppendRow(path string, row map[string]any) (map[string]an
 	text := original
 	if strings.TrimSpace(text) == "" {
 		text = freshTable()
-	} else {
-		// 旧格式（11 列 / 中文表头）不再兼容：拒绝写入，免得把 12 列行混进 11 列表里
-		for _, line := range strings.Split(text, "\n") {
-			if !strings.HasPrefix(strings.TrimSpace(line), "|") {
-				continue
-			}
-			cells := core.SplitRow(line)
-			if core.IsSepRow(cells) {
-				continue
-			}
-			if len(cells) != 12 {
-				return nil, core.Failf("历史文件 %s 是旧格式（%d 列），当前只认 12 列；先迁移这个文件再结案。", path, len(cells))
-			}
-			break
-		}
 	}
 	result := strOf(row["result"])
-	if result == "" {
+	// 删除行的结果列刻意留空（= 从未完成），不能被缺省补成 done
+	if result == "" && strOf(row["deleted"]) != core.DeletedYes {
 		result = core.ResultDone
 	}
 	line := core.HistoryLine(
@@ -166,6 +152,9 @@ func (h *HistoryStore) AppendRow(path string, row map[string]any) (map[string]an
 		strOf(row["creator"]),
 		strOf(row["owner_name"]),
 		strOf(row["creator_name"]),
+		strOf(row["deleted"]),
+		strOf(row["deleted_by"]),
+		strOf(row["deleted_at"]),
 	)
 	return map[string]any{"text": appendHistoryLine(text, line), "duplicate": state == Hit}, nil
 }

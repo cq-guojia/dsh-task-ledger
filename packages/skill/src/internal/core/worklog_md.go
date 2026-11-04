@@ -42,7 +42,7 @@ var (
 )
 
 // StatusValues 状态取值。
-var StatusValues = []string{"open", "doing", "done", "cancelled"}
+var StatusValues = []string{"open", "doing", "done", "cancelled", "deleted"}
 
 // WorklogSections 过程文档应有的六节，顺序即模板顺序（真源是 assets/worklog.md）。
 var WorklogSections = []string{"Background", "To Do", "Next", "Process", "Conclusion", "Execution Log"}

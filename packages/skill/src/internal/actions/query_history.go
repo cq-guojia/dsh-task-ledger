@@ -262,6 +262,9 @@ func historyWindow(keys []string, q HistoryQuery) (string, string, error) {
 // rowMatches 一条历史行是否命中查询条件。`count` 与列表行数必须是同一套判据算出来的：
 // 各写一份迟早对不上数。
 func rowMatches(row core.Row, q HistoryQuery, me core.Identity, effSince, effUntil string) bool {
+	if row.Deleted == core.DeletedYes {
+		return false
+	}
 	owner := core.Normalize(row.Owner)
 	if q.Mine {
 		if owner != core.Normalize(me.UUID) {
