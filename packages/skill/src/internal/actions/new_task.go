@@ -51,6 +51,10 @@ func NewTask(repo string, me core.Identity, p NewTaskParams) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
+	// 标签建任务时必填：事后没人补，结案又常被自动结案跳过，缺了就永远缺。
+	if len(tagList) == 0 {
+		return nil, core.Failf("建任务必须给标签：--tags 至少 1 个（顿号 / 逗号分隔，最多 5 个），想清这活涉及什么再建。")
+	}
 
 	mineStore := store.NewTaskStore(repo, ShardRelOf(repo, me.UUID), &me)
 	pool := store.NewTaskStore(repo, core.PoolRel, nil)

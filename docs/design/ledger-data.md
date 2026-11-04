@@ -40,7 +40,7 @@
 | `creator` / `owner` | `0c1e…-…`（uuid） | **身份 uuid**（小写，与 `~/.taskledger/identity.json` 同一个值）；池里的行 `owner` 为 null |
 | `created` / `started` / `updated` / `finished` | `2026-10-16 17:42:22` | **存盘一律 UTC、不带偏移量**（2026-10-22 前写的是写入者本地时间且无标记，两类无法区分）；**脚本输出时转本机时区**，`--json` 与人话同一个值。`finished` 结案前为 null；`updated` = 最后一次推进，老数据可能缺失（看板回退到 `started` / `created`） |
 | `category` | 建设 | 单值分类 |
-| `tags` | `["文档架构","初始化"]` | 0~5 个 |
+| `tags` | `["文档架构","初始化"]` | 1~5 个；`new` 必填（2026-11-05 起，空则报错），老任务可能为空 |
 | `worklog` | `worklog/202610/16-1742-…-5563.md` | 相对 `ledger/` 的过程文档路径 |
 
 版本字段 `version` 的处理：与当前格式不符**只告警不拦**（退出时汇总一条）；只有 `tasks` 不是对象才直接报错；要写回的文件缺 `version` 时补当前值。
@@ -92,7 +92,7 @@
 - **Sealed**: 2026-10-27 09:20:10 · @某人 · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 ```
 
-- **Tags** 行只在给了 `--tags` 时写（**分类不进过程文档**，只进分片字段与历史行；标签可涵盖分类）；**Sealed** 行只在结案时写；状态行与创建行必有。
+- **Tags** 行 `new` 建篇时必写（`--tags` 必填；早于 2026-11-05 的老文档可能没有），之后 `set --tags` / `close --tags` 改写（**分类不进过程文档**，只进分片字段与历史行；标签可涵盖分类）；**Sealed** 行只在结案时写；状态行与创建行必有。
 
 - 旧中文头部（`- **标签**：…` 等）与 `> **状态**：…` 引用块格式都不再兼容，将统一迁移。
 - 正文（前五节）由人 / agent 写；脚本只有「建篇」（`WorklogStore.Create` → `core.RenderWorklog`）+ **四处锚点编辑**：往「执行记录」节追加一行（`core.AppendExecLog`）、封卷时加「封卷」行（`core.StampFrozen`）、改写「标签」行（`core.RewriteLabelLine`；`new` 建篇时写、`set --tags` 随时改、`close` 写终值）、改写「状态」行（`core.RewriteStatusLine`，与追加记录同一次写盘）。整篇写回只走 `WorklogStore.Write`，且传入的必须是锚点编辑后的新全文 —— 没有「整篇替换既有正文」这种能力，也不要给它加。

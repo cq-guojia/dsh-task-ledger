@@ -61,13 +61,28 @@ func TestMainWriteCommandStillCreatesFirstLedger(t *testing.T) {
 	code := 0
 	_ = captureStdout(t, func() {
 		// seedLedger 已设 TASK_LEDGER_NO_SYNC=1，不用再传 --no-sync
-		code = Main([]string{"new", "--title", "首次建台账", "--repo", fresh})
+		code = Main([]string{"new", "--title", "首次建台账", "--tags", "台账", "--repo", fresh})
 	})
 	if code != ExitOK {
 		t.Fatalf("全新目录首次建台账应成功，实际 %d", code)
 	}
 	if _, err := os.Stat(filepath.Join(fresh, core.LedgerDir)); err != nil {
 		t.Fatalf("应建出 ledger/：%v", err)
+	}
+}
+
+func TestMainNewRequiresTags(t *testing.T) {
+	seedLedger(t)
+	fresh := t.TempDir()
+	var code int
+	text := captureStderr(t, func() {
+		code = Main([]string{"new", "--title", "没标签", "--repo", fresh})
+	})
+	if code != ExitBusiness {
+		t.Fatalf("new 不带 --tags 应退业务错，实际 %d", code)
+	}
+	if !strings.Contains(text, "标签") {
+		t.Errorf("报错要说清缺标签，实际：%s", text)
 	}
 }
 

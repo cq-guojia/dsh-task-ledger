@@ -237,7 +237,7 @@ func IsReadOnly(command string) bool
 | 动作 | 签名 | 写序（崩在中间的收敛判据见 [`ledger-data.md`](ledger-data.md) §六） |
 |---|---|---|
 | 自举 `Bootstrap` | `(repo, me) (core.Identity, error)` | 目录与池（缺则建）→ 我的分片 → 索引；幂等，零写也要能重跑 |
-| 建任务 `NewTask` | `(repo, me, NewTaskParams) (*Result, error)` | 建当月文档目录 → 过程文档（含首条记录）→ 台账（池或分片）。任务号由外壳算好传进来（`core.MakeID` 防撞），业务层不许现算 |
+| 建任务 `NewTask` | `(repo, me, NewTaskParams) (*Result, error)` | 建当月文档目录 → 过程文档（含首条记录）→ 台账（池或分片）。任务号由外壳算好传进来（`core.MakeID` 防撞），业务层不许现算；**标签必填**（`ParseTags` 后为空即 Fail，2026-11-05 起） |
 | 认领 `Claim` | `(repo, me, tid) (*Result, error)` | 我的分片 → 删池里那行 → 过程文档记一笔（先加后删，崩在中间只是重复登记） |
 | 释放 `Release` | `(repo, me, tid) (*Result, error)` | 写回池（已有同号就不覆盖）→ 删我分片那行 → 过程文档记一笔（方向与认领相反，死锁靠排序锁避免） |
 | 交接 `Handoff` | `(repo, me, tid, to) (*Result, error)` | 对方分片 → 删我分片那行 → 过程文档记一笔；只收 uuid，`to` 必须已在索引里登记 |
@@ -354,7 +354,7 @@ func (t *termState) readKey() key
 
 | 命令 | 参数 | 落到哪 |
 |---|---|---|
-| `new` | `--title`（必填）、`--id`、`--created`、`--category`、`--tags`、`--self` | `NewTaskParams`；`--self` ⇒ `Mine=true`，否则进公共池 |
+| `new` | `--title`（必填）、`--tags`（必填，至少 1 个）、`--id`、`--created`、`--category`、`--self` | `NewTaskParams`；`--self` ⇒ `Mine=true`，否则进公共池 |
 | `claim` | `--id`（必填） | `Claim(repo, me, tid)` |
 | `set` | `--id`（必填）+ `--release` / `--owner` / `--tags` 三选一 | `Release` / `Handoff` / `Relabel`（`set_task.go` 只做路由） |
 | `log` | `--id`、`--note`（都必填） | `LogProgress` |
