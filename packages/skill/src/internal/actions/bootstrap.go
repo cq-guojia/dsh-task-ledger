@@ -15,7 +15,7 @@ import (
 
 // Bootstrap 写序：owners/ 目录 → 池 → 我的分片 → 索引（登记自己）。已登记 ⇒ 零写。
 func Bootstrap(repo string, me core.Identity) (core.Identity, error) {
-	root, err := core.AsRoot(repo, "工作区根")
+	root, err := core.AsRootChecked(repo, "工作区根", false)
 	if err != nil {
 		return me, err
 	}

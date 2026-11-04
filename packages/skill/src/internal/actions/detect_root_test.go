@@ -3,6 +3,7 @@ package actions
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/core"
@@ -86,6 +87,25 @@ func TestDetectRootWithNoLedgerAnywhere(t *testing.T) {
 	}
 	if res.Reason == "" {
 		t.Error("不是根时必须给一句人话理由（界面直接显示它）")
+	}
+}
+
+func TestDetectRootParentOfLedgersIsNotARoot(t *testing.T) {
+	parent := t.TempDir()
+	for _, name := range []string{"alpha", "beta"} {
+		if err := os.MkdirAll(filepath.Join(parent, name, core.LedgerDir), 0o777); err != nil {
+			t.Fatal(err)
+		}
+	}
+	res, err := DetectRoot(parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Root {
+		t.Error("下面已有子台账的父目录不是根")
+	}
+	if !strings.Contains(res.Reason, "子目录") {
+		t.Errorf("理由要点出「子目录已有台账」，实际：%s", res.Reason)
 	}
 }
 

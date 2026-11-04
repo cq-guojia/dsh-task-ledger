@@ -567,13 +567,40 @@ func utcOf(value *string, field, dateOnlyRef string) (*string, error) {
 	return &stamp, nil
 }
 
+// repoMode 显式 --repo 的校验档位（2026-11-04）。
+type repoMode int
+
+const (
+	// modeStrict 读任务数据的命令：必须是台账根，绝不静默读空台账。
+	modeStrict repoMode = iota
+	// modePlain 豁免的只读命令：沿用 AsRoot 原口径，既不建台账也不拒父目录。
+	// owners 在无台账目录故意回空名册，validate 是排查「指错目录」的工具，
+	// logout 完全不碰 repo（插件传的 anchor 可能恰好已没有 ledger/）。
+	modePlain
+	// modeCreate 写命令：允许首次创建，但拒绝「下面已有子台账的父目录」和 home 及其上层。
+	modeCreate
+)
+
+func repoModeOf(command string) repoMode {
+	switch command {
+	case "list", "stats", "show", "history":
+		return modeStrict
+	case "owners", "validate", "logout":
+		return modePlain
+	}
+	return modeCreate
+}
+
 // ResolveRepo --repo 给了就校验后用；没给就从当前目录往上找。
 //
 // 找不到 ⇒ 业务错误：绝不在当前目录自作主张建台账（2026-10-22 设计定稿）。
 // 建台账是第一条写命令的事，不需要、也没有 init 子命令。
-func ResolveRepo(arg string) (string, error) {
+func ResolveRepo(arg string, mode repoMode) (string, error) {
 	if arg != "" {
-		return core.AsRoot(arg, "--repo")
+		if mode == modePlain {
+			return core.AsRoot(arg, "--repo")
+		}
+		return core.AsRootChecked(arg, "--repo", mode == modeStrict)
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -662,7 +689,7 @@ func Main(argv []string) int {
 		return runDirs(a)
 	}
 	// 定位只做一次：解析好的工作区根挂回 Args，runner 与整命令锁都拿它
-	repo, err := ResolveRepo(a.Repo)
+	repo, err := ResolveRepo(a.Repo, repoModeOf(a.Command))
 	if err != nil {
 		FailMessage("错误", err.Error())
 		return ExitBusiness

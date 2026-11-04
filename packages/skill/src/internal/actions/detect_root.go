@@ -46,7 +46,14 @@ func DetectRoot(dir string) (*RootResult, error) {
 		res.Reason = "不是工作区根：这个目录没有 " + core.LedgerDir + "/，往上找到的根是 " + root + "。"
 		return res, nil
 	}
-	res.Reason = "不是工作区根：这个目录和它的上层都没有 " + core.LedgerDir + "/ —— " +
-		"第一条写命令会在这里把台账建出来（不用先初始化）。"
+	res.Reason = "不是工作区根：这个目录和它的上层都没有 " + core.LedgerDir + "/。"
+	if children := core.CandidateRoots(p, 5); len(children) > 0 {
+		res.Reason += " 注意：它的一级子目录里已经有台账（如 " + children[0] +
+			"），不能在这里再建一份，只读命令也不会把它当空台账读。"
+	} else if core.IsHomeOrAbove(p) {
+		res.Reason += " 这是家目录或它的上层，不允许在这里就地建台账。"
+	} else {
+		res.Reason += " 这是全新工作区：第一条写命令会在这里把台账建出来（不用先初始化）。"
+	}
 	return res, nil
 }

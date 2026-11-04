@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,6 +76,85 @@ func AsRoot(repo, source string) (string, error) {
 		return "", Failf("%s %s\n  %s\n  处理：把 %s 指到 %s\n      例：progress list --repo %s", source, what, why, source, root, root)
 	}
 	return resolvePath(p), nil
+}
+
+// CandidateRoots 只扫一层子目录，列出「直接含 ledger/ 的」候选根。
+// 不递归：权限与耗时都不可控，而且父目录误指要找的就是最近一层。读不出来就返回空。
+func CandidateRoots(dir string, limit int) []string {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		child := filepath.Join(dir, entry.Name())
+		if HasLedger(child) {
+			out = append(out, child)
+			if len(out) >= limit {
+				break
+			}
+		}
+	}
+	return out
+}
+
+// IsHomeOrAbove path 是不是 $HOME 或它的祖先（含文件系统根）。
+// 防止 `--repo ~` 在家目录就地建出 ~/ledger 这类幻影台账。
+func IsHomeOrAbove(path string) bool {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+	p := resolvePath(path)
+	for dir := resolvePath(home); ; dir = filepath.Dir(dir) {
+		if dir == p {
+			return true
+		}
+		if parent := filepath.Dir(dir); parent == dir {
+			break
+		}
+	}
+	return false
+}
+
+// AsRootChecked 显式 --repo 的收口判据（2026-11-04）：AsRoot 之外再加一道防线。
+//
+//	strict=true  读任务数据的命令：必须已经是台账根，绝不静默读空台账；
+//	strict=false 写命令：允许首次创建，但拒绝「下面已有子台账的父目录」和 home 及其上层。
+//
+// 只影响显式给了 --repo 的路径；没给 --repo 时由 RootOf 上溯，命中即真根。
+func AsRootChecked(repo, source string, strict bool) (string, error) {
+	root, err := AsRoot(repo, source)
+	if err != nil {
+		return "", err
+	}
+	if HasLedger(root) {
+		return root, nil
+	}
+	candidates := CandidateRoots(root, 5)
+	if !strict && len(candidates) == 0 && !IsHomeOrAbove(root) {
+		return root, nil // 全新工作区：第一条写命令在这里建台账
+	}
+	reason := "只读命令不能在不是台账根的目录上跑（不会读出一本空台账）。"
+	if !strict {
+		reason = "不能在这里建台账：下面已经有别的台账，或这是家目录 / 它的上层。"
+	}
+	lines := []string{
+		fmt.Sprintf("%s %s 不是台账根：这个目录里没有 %s/ —— %s", source, root, LedgerDir, reason),
+	}
+	if len(candidates) > 0 {
+		lines = append(lines, "  它下面有台账的是：")
+		for _, candidate := range candidates {
+			lines = append(lines, "    "+candidate)
+		}
+		lines = append(lines, fmt.Sprintf("  处理：把 %s 指到上面其中一个工作区根。", source))
+	} else {
+		lines = append(lines, fmt.Sprintf("  处理：把 %s 指到工作区根（直接含 %s/ 的那个目录）。", source, LedgerDir))
+	}
+	return "", Failf("%s", strings.Join(lines, "\n"))
 }
 
 // RootOf 从 start 往上定位工作区根；找不到返回空串。

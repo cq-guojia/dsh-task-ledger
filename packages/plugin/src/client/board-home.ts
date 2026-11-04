@@ -987,9 +987,14 @@ export function BoardHome(props: {
 						openHostSession: (id: string) => openSession(id),
 						// 会话里的文件 / 变更卡点开就走我们右侧那个 dock（同一个预览面，不另起一套）；
 						// 第二个参数是文件所属会话 id —— 相对路径靠它定位到正确工作区
-						onOpenFile: (path: string, sessionId: string) => {
+						onOpenFile: (
+							path: string,
+							sessionId: string,
+							options?: { line?: number },
+						) => {
 							const mount = mountRef.current;
-							if (mount !== null) openFilePreview({ mount, path, sessionId });
+							if (mount !== null)
+								openFilePreview({ mount, path, sessionId, line: options?.line });
 						},
 						// 变更卡走核心的 review 入口：面板、壳、✕ 全归 core，我们不挑组件不塞节点
 						onOpenReview: (locator: ChangedFileReviewLocator) => {
