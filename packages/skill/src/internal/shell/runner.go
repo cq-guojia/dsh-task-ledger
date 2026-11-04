@@ -144,9 +144,11 @@ func runCommand(command string, args *Args, log *store.WriteLog) (int, error) {
 	scope := bootScope.Or(actScope)
 
 	if syncing {
+		stepf("check")
 		if err := g.GuardBeforeWrite(scope); err != nil {
 			return 0, err
 		}
+		stepf("sync")
 		entries, err := g.SyncDown(scope)
 		if err != nil {
 			return 0, err
@@ -180,6 +182,7 @@ func runCommand(command string, args *Args, log *store.WriteLog) (int, error) {
 		return 0, err
 	}
 
+	stepf("write")
 	if err := withAtom(repo, actScope.Files, func() error {
 		var runErr error
 		value, runErr = spec.Run(repo, me, params)
@@ -237,9 +240,11 @@ func finalize(command string, args *Args, log *store.WriteLog, message *string) 
 	if message != nil && *message != "" {
 		msg = *message
 	}
+	stepf("commit")
 	if err := g.Commit(log.CommitSet(), msg); err != nil {
 		return err
 	}
+	stepf("push")
 	g.Push(8, pushDeadline())
 	log.Clear()
 	return nil

@@ -15,6 +15,8 @@ export function CancelTaskModal(props: {
 	taskTitle: string;
 	/** 提交中：确定键转圈、其余按钮与关闭路径全禁。 */
 	busy: boolean;
+	/** 底栏左侧的过程提示（提交中才给；给空 = 不占位）。 */
+	notice?: string;
 	/** host 回的人话错误：红字列在输入框下。 */
 	error: string | null;
 	onClose: () => void;
@@ -40,32 +42,52 @@ export function CancelTaskModal(props: {
 				{
 					style: {
 						display: "flex",
-						justifyContent: "flex-end",
+						alignItems: "center",
+						justifyContent: "space-between",
 						gap: "var(--dtl-space-2)",
 						width: "100%",
 					},
 				},
+				props.notice === undefined
+					? null
+					: h(
+							"span",
+							{
+								style: {
+									color: "var(--dtl-fg-3)",
+									fontSize: "var(--dtl-font-sm)",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									whiteSpace: "nowrap",
+								},
+							},
+							props.notice,
+						),
 				h(
-					Button,
-					{
-						variant: "secondary",
-						size: "md",
-						disabled: props.busy,
-						onClick: props.onClose,
-					},
-					t("settingsCancel"),
-				),
-				h(
-					Button,
-					{
-						variant: "primary",
-						size: "md",
-						loading: props.busy,
-						// 无 icon ⇒ loading 时清掉文案、只留居中的圈（核心自己锁宽，中英文都不跳）
-						loadingText: false,
-						onClick: submit,
-					},
-					t("cancelModalOk"),
+					"div",
+					{ style: { display: "flex", gap: "var(--dtl-space-2)" } },
+					h(
+						Button,
+						{
+							variant: "secondary",
+							size: "md",
+							disabled: props.busy,
+							onClick: props.onClose,
+						},
+						t("settingsCancel"),
+					),
+					h(
+						Button,
+						{
+							variant: "primary",
+							size: "md",
+							loading: props.busy,
+							// 无 icon ⇒ loading 时清掉文案、只留居中的圈（核心自己锁宽，中英文都不跳）
+							loadingText: false,
+							onClick: submit,
+						},
+						t("cancelModalOk"),
+					),
 				),
 			),
 		},

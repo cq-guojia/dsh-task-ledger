@@ -21,7 +21,7 @@ import {
 import { getBoardHome } from "./services/stats.service.js";
 import { listDirs, writeDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
-import { actOnTask } from "./services/task.service.js";
+import { actOnTask, type TaskActionInput } from "./services/task.service.js";
 import {
 	continueTask,
 	resolveWorkspace,
@@ -320,8 +320,14 @@ export function registerRoutes(
 		},
 	});
 
-	// 任务动作（在办行内的按钮）：认领 / 释放。前端只给工作区 id + 任务号，
-	// 台账根由 host 解析，改台账一律交给 skill（claim / set --release），插件不碰文件。
+	// 任务动作（在办行内的按钮）：认领 / 释放 / 取消 / 结案。前端只给工作区 id + 任务号，
+	// 台账根由 host 解析，改台账一律交给 skill（claim / set --release / close），插件不碰文件。
+	//
+	// **响应是 NDJSON 流**（2026-11-04）：一条写命令要跑「检查 → 拉取 → 写 → 提交 → 推送」好几秒，
+	// 攒完再回只能给界面一句固定提示。skill 每进一个阶段在 stderr 打 `#step <key>`，
+	// host 原样转成一行 JSON 推出去，界面据此翻进度文案：
+	//   {"type":"step","step":"sync"} / {"type":"done"} / {"type":"error","error":"…","code":"…"}
+	// ⚠️ 头一旦发出去，后面的失败只能进流（状态码改不了）⇒ 参数类错误必须在发头之前挡掉。
 	webServer.register({
 		kind: "exact",
 		path: `${API_PREFIX}/task/action`,
@@ -330,6 +336,7 @@ export function registerRoutes(
 				sendJson(res, 405, { error: "任务动作只接受 POST" });
 				return;
 			}
+			let input: TaskActionInput;
 			try {
 				let raw: unknown;
 				try {
@@ -360,11 +367,25 @@ export function registerRoutes(
 				);
 				if (workspace === undefined)
 					throw new Error(`${BAD_REQUEST}找不到这个工作区，改不了任务`);
-				await actOnTask({ action, repo: workspace.path, id, summary });
-				sendJson(res, 200, { ok: true });
+				input = { action, repo: workspace.path, id, summary };
 			} catch (error) {
 				sendWriteFailure(res, error);
+				return;
 			}
+			res.writeHead(200, {
+				"content-type": "application/x-ndjson; charset=utf-8",
+				"cache-control": "no-store",
+			});
+			const send = (event: unknown): void => {
+				res.write(`${JSON.stringify(event)}\n`);
+			};
+			try {
+				await actOnTask(input, (step) => send({ type: "step", step }));
+				send({ type: "done" });
+			} catch (error) {
+				send({ type: "error", error: messageOf(error), code: codeOf(error) });
+			}
+			res.end();
 		},
 	});
 

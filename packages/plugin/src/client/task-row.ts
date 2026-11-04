@@ -30,24 +30,36 @@ import {
 	Fragment,
 	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
-	useEffect,
-	useRef,
 	useState,
 } from "react";
-import { SessionViewModal, type SessionViewTarget } from "dsh-plugin-core/session";
-import { getWorkspaceKind, postTaskAction, postTaskContinue } from "./api";
+import { ConfirmModal } from "dsh-plugin-core/ui";
+import {
+	getWorkspaceKind,
+	postTaskAction,
+	postTaskContinue,
+	type TaskActionStep,
+} from "./api";
 import { CancelTaskModal } from "./cancel-task-modal";
-import { hasSessions, openCloseSessionView, startCloseSession } from "./close-session";
+import { hasSessions, startCloseSession } from "./close-session";
 import { CloseTaskModal } from "./close-task-modal";
 import { formatDateTime, formatRelative } from "./format";
 import { archiveSession, openSession } from "./nav";
-import type { Translate } from "./locales";
+import type { LocaleKey, Translate } from "./locales";
 import { closePrompt, continuePrompt } from "./prompts";
 import { displayName, type Row, resolveActions } from "./rows";
 import { boardSnapshot, focusOwner, refresh, setQuery } from "./store";
-import { Button, confirmModal, IconButton, notify, Surface, Tag, Tip } from "./ui";
+import { Button, IconButton, notify, Surface, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
+
+/** 写命令的阶段 → 底栏进度文案（skill 那边新增阶段、这边没对上 ⇒ 继续显示上一句）。 */
+const STEP_LABEL: Record<TaskActionStep, LocaleKey> = {
+	check: "actionStepCheck",
+	sync: "actionStepSync",
+	write: "actionStepWrite",
+	commit: "actionStepCommit",
+	push: "actionStepPush",
+};
 
 /** 行标题：任务名（缺则任务号）。 */
 function titleOf(row: Row): string {
@@ -96,54 +108,27 @@ export function TaskRowView(props: {
 	solo?: boolean;
 	/** 查看：弹右侧 dock 预览过程文档 / 台账文件夹。 */
 	onView?: (row: Row) => void;
+	/** 打开只读会话视图（由看板托管：行结案后会被移除，视图得活在行外面）。 */
+	onShowSession?: (id: string, heading: string) => boolean;
 }): ReactNode {
 	const { t, row } = props;
 	const solo = props.solo === true;
 	const tone = toneOf(row);
 	const tags = row.task.tags ?? [];
 
-	// 行内动作（认领 / 释放）：确认框不关、确定键转圈（用户 2026-11-03：写命令要跑一次 git 往返，
-	// 慢网三四秒，确认即关会让人干等）。核心 0.22 起 `onConfirm` 返回 Promise 就自动 loading + 锁框。
-	// 失败：toast 后 rethrow ⇒ 核心保持弹窗可重试；成功：核心关窗。
+	// 行内动作（认领 / 释放）：确认框不关、确定键转圈。
+	// 写命令是**一次 spawn**，但 skill 每进一个阶段会打一行 `#step`，host 用 NDJSON 流推回来 ⇒
+	// 底栏进度文案跟着翻（检查 → 拉取 → 写 → 提交 → 推送），比一句固定的「同步中」有准头。
 	const [busy, setBusy] = useState(false);
-	const runAction = async (action: "claim" | "release"): Promise<void> => {
-		if (busy) return;
-		const title = titleOf(row);
-		const claim = action === "claim";
-		await confirmModal({
-			title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
-			message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
-			confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
-			cancelText: t("settingsCancel"),
-			// 确定键无 icon ⇒ loading 时清文字、只留圈（核心自己锁宽，中英文都不跳）
-			loadingText: false,
-			onConfirm: async () => {
-				setBusy(true);
-				try {
-					await postTaskAction({
-						action,
-						workspace: row.task.workspace.id,
-						id: row.task.id,
-					});
-					notify(t(claim ? "actionClaimDone" : "actionReleaseDone", { title }), {
-						variant: "success",
-					});
-					// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
-					await refresh();
-				} catch (failure) {
-					notify(
-						t("actionFailed", {
-							error: failure instanceof Error ? failure.message : String(failure),
-						}),
-						{ variant: "error" },
-					);
-					// 核心据此不关窗：框留着、确定键恢复可点，能原地重试
-					throw failure;
-				} finally {
-					setBusy(false);
-				}
-			},
-		});
+	const [step, setStep] = useState<TaskActionStep | null>(null);
+	/** 底栏进度文案：还没收到第一个阶段就先用一句「同步中」。 */
+	const progressNotice = (): string =>
+		step === null ? t("actionSyncing") : t(STEP_LABEL[step]);
+	/** 起一条写命令：清掉上一轮的阶段，每个阶段到了就翻文案。 */
+	const onStep = (next: TaskActionStep): void => setStep(next);
+	const [confirmAct, setConfirmAct] = useState<"claim" | "release" | null>(null);
+	const runAction = (action: "claim" | "release"): void => {
+		if (!busy) setConfirmAct(action);
 	};
 
 	// 取消（归档）：走带理由输入框的弹窗（用户 2026-11-03：理由作为备注记进历史）。
@@ -152,14 +137,18 @@ export function TaskRowView(props: {
 	const [cancelError, setCancelError] = useState<string | null>(null);
 	const cancelTask = async (reason: string): Promise<void> => {
 		setBusy(true);
+		setStep(null);
 		setCancelError(null);
 		try {
-			await postTaskAction({
-				action: "cancel",
-				workspace: row.task.workspace.id,
-				id: row.task.id,
-				...(reason === "" ? {} : { summary: reason }),
-			});
+			await postTaskAction(
+				{
+					action: "cancel",
+					workspace: row.task.workspace.id,
+					id: row.task.id,
+					...(reason === "" ? {} : { summary: reason }),
+				},
+				onStep,
+			);
 			setCancelOpen(false);
 			notify(t("actionCancelDone", { title: titleOf(row) }), { variant: "success" });
 			await refresh();
@@ -167,6 +156,7 @@ export function TaskRowView(props: {
 			setCancelError(error instanceof Error ? error.message : String(error));
 		} finally {
 			setBusy(false);
+			setStep(null);
 		}
 	};
 
@@ -224,35 +214,10 @@ export function TaskRowView(props: {
 	const [closing, setClosing] = useState(false);
 	// 在跑的结案会话 id：会话视图被关掉后靠它重开（null = 还没有会话 / 已跑完）
 	const [closingId, setClosingId] = useState<string | null>(null);
-	// 叠在结案弹窗上面的只读会话视图（核心组件，实时刷新）；ref 只为关窗时 dispose
-	const [sessionView, setSessionView] = useState<{
-		id: string;
-		view: SessionViewTarget;
-	} | null>(null);
-	const sessionViewRef = useRef<{ id: string; view: SessionViewTarget } | null>(null);
-	// 行被卸载（列表刷新 / 切页）时也要还掉 retain 引用，否则会话 scope 永不回收
-	useEffect(
-		() => () => {
-			sessionViewRef.current?.view.dispose();
-			sessionViewRef.current = null;
-		},
-		[],
-	);
-
-	const dropSessionView = (): void => {
-		sessionViewRef.current?.view.dispose();
-		sessionViewRef.current = null;
-		setSessionView(null);
-	};
-	const showSessionView = (id: string): boolean => {
-		const view = openCloseSessionView(id);
-		if (view === null) return false;
-		sessionViewRef.current?.view.dispose();
-		const next = { id, view };
-		sessionViewRef.current = next;
-		setSessionView(next);
-		return true;
-	};
+	// 只读会话视图由看板托管（行结案后会从列表移除并卸载，视图必须活在行外面）
+	const sessionHeading = t("closeSessionTitle", { title: titleOf(row) });
+	const showSession = (id: string): boolean =>
+		props.onShowSession?.(id, sessionHeading) ?? false;
 
 	/** 结案后确认一眼台账：这条还在不在办列表里（读不到就按"没结"处理，不谎报成功）。 */
 	const stillOpen = (): boolean => {
@@ -263,16 +228,20 @@ export function TaskRowView(props: {
 
 	const finishTask = async (input: { useAgent: boolean; note: string }): Promise<void> => {
 		setBusy(true);
+		setStep(null);
 		setCloseError(null);
 		const title = titleOf(row);
 		try {
 			if (!input.useAgent) {
-				await postTaskAction({
-					action: "close",
-					workspace: row.task.workspace.id,
-					id: row.task.id,
-					summary: input.note,
-				});
+				await postTaskAction(
+					{
+						action: "close",
+						workspace: row.task.workspace.id,
+						id: row.task.id,
+						summary: input.note,
+					},
+					onStep,
+				);
 				setCloseOpen(false);
 				notify(t("closeDone", { title }), { variant: "success" });
 				await refresh();
@@ -328,8 +297,7 @@ export function TaskRowView(props: {
 							const open = stillOpen();
 							if (!open) {
 								notify(t("closeDone", { title }), { variant: "success" });
-								// 结成了 ⇒ 关视图 + 归档 + 关结案框（一条龙，别留残窗）
-								dropSessionView();
+								// 成功只关自己的结案弹窗；会话视图归看板托管，留着让人看完再自己关
 								setCloseOpen(false);
 								await archiveSession(outcome.sessionId);
 								return;
@@ -390,7 +358,7 @@ export function TaskRowView(props: {
 			setClosingId(started);
 			// 视图起不来（宿主没给 uiConversation）⇒ 回到老路：关框 + 一句「已交给 Agent」，
 			// 别把人锁在一个永远重开不了的弹窗里
-			if (!showSessionView(started)) {
+			if (!showSession(started)) {
 				setClosingId(null);
 				setClosing(false);
 				setCloseOpen(false);
@@ -420,6 +388,7 @@ export function TaskRowView(props: {
 			setCloseOpen(true);
 		} finally {
 			setBusy(false);
+			setStep(null);
 		}
 	};
 
@@ -711,11 +680,65 @@ export function TaskRowView(props: {
 		Fragment,
 		null,
 		card,
+		confirmAct === null
+			? null
+			: (() => {
+					const action = confirmAct;
+					const claim = action === "claim";
+					const title = titleOf(row);
+					return h(ConfirmModal, {
+						title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
+						message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
+						confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
+						cancelText: t("settingsCancel"),
+						// 确定键无 icon ⇒ loading 时清文字、只留圈（核心自己锁宽，中英文都不跳）
+						loadingText: false,
+						// 提交中：底栏提示跟着 skill 的阶段翻（检查 → 拉取 → 写 → 提交 → 推送）
+						notice: busy ? progressNotice() : undefined,
+						onCancel: () => setConfirmAct(null),
+						onConfirm: async () => {
+							setBusy(true);
+							setStep(null);
+							try {
+								await postTaskAction(
+									{
+										action,
+										workspace: row.task.workspace.id,
+										id: row.task.id,
+									},
+									onStep,
+								);
+								notify(t(claim ? "actionClaimDone" : "actionReleaseDone", { title }), {
+									variant: "success",
+								});
+								// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
+								setConfirmAct(null);
+								await refresh();
+							} catch (failure) {
+								notify(
+									t("actionFailed", {
+										error:
+											failure instanceof Error
+												? failure.message
+												: String(failure),
+									}),
+									{ variant: "error" },
+								);
+								// 不关框：确定键恢复可点，能原地重试
+								throw failure;
+							} finally {
+								setBusy(false);
+								setStep(null);
+							}
+						},
+					});
+				})(),
 		cancelOpen
 			? h(CancelTaskModal, {
 					t,
 					taskTitle: titleOf(row),
 					busy,
+					notice: busy ? progressNotice() : undefined,
 					error: cancelError,
 					onClose: () => setCancelOpen(false),
 					onSubmit: (reason) => void cancelTask(reason),
@@ -726,26 +749,20 @@ export function TaskRowView(props: {
 					t,
 					taskTitle: titleOf(row),
 					busy,
+					notice: busy ? progressNotice() : undefined,
 					error: closeError,
 					canUseAgent: hasSessions(),
 					locked: closing,
 					...(closingId === null
 						? {}
-						: { onShowSession: () => showSessionView(closingId) }),
+						: {
+								onShowSession: () => {
+									if (closingId !== null) showSession(closingId);
+								},
+							}),
 					onClose: () => setCloseOpen(false),
 					onSubmit: (input) => void finishTask(input),
 				})
 			: null,
-		// 会话视图排在结案框之后 ⇒ DOM 靠后，浮在它上面；关掉即露出下面的结案框（禁用态）
-		sessionView === null
-			? null
-			: h(SessionViewModal, {
-					sessionId: sessionView.id,
-					view: sessionView.view,
-					heading: t("closeSessionTitle", { title: titleOf(row) }),
-					archived: false,
-					openHostSession: (id: string) => openSession(id),
-					onClose: dropSessionView,
-				}),
 	);
 }

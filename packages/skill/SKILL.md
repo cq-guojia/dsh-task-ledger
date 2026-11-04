@@ -337,6 +337,8 @@ allowed-tools: Read,Edit,Bash,Grep
 
 `new` 按模板建好六节骨架，路径由 `show` 给出；前五节是本 skill 唯一允许手写的内容。
 
+改前先用 Read 读该文件 —— `show` 打出来的内容不算读过，直接 Edit 会被拒（`file has not been read`）。
+
 | 节 | 写什么 |
 |---|---|
 | Background（背景） | 为什么做：触发它的原话 / 现象 / 链接 |

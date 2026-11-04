@@ -31,6 +31,9 @@ import {
 import type { LocaleKey, Translate } from "./locales";
 import { formatCount, mondayOf, pad2, ymdOf } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
+import { SessionViewModal, type SessionViewTarget } from "dsh-plugin-core/session";
+import { openCloseSessionView } from "./close-session";
+import { openSession } from "./nav";
 import {
 	groupRows,
 	isSoloLedger,
@@ -239,6 +242,33 @@ export function BoardHome(props: {
 	}, []);
 	const clearHistScroll = useCallback((): void => {
 		setHistScroll(null);
+	}, []);
+	// 只读会话视图托管在这里：任务行结案后会从列表移除并卸载，视图得活在行外面
+	const [sessionView, setSessionView] = useState<{
+		id: string;
+		view: SessionViewTarget;
+		heading: string;
+	} | null>(null);
+	const sessionViewRef = useRef<{ view: SessionViewTarget } | null>(null);
+	useEffect(
+		() => () => {
+			sessionViewRef.current?.view.dispose();
+			sessionViewRef.current = null;
+		},
+		[],
+	);
+	const dropSessionView = useCallback((): void => {
+		sessionViewRef.current?.view.dispose();
+		sessionViewRef.current = null;
+		setSessionView(null);
+	}, []);
+	const showSessionView = useCallback((id: string, heading: string): boolean => {
+		const view = openCloseSessionView(id);
+		if (view === null) return false;
+		sessionViewRef.current?.view.dispose();
+		sessionViewRef.current = { view };
+		setSessionView({ id, view, heading });
+		return true;
 	}, []);
 	/** 点历史页右侧 4 格 = 图表与列表一起跳过去（用户 2026-11-01）：
 	 *  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，
@@ -916,6 +946,7 @@ export function BoardHome(props: {
 													row,
 													solo,
 													onView: handleView,
+													onShowSession: showSessionView,
 												}),
 											),
 											truncated
@@ -940,6 +971,17 @@ export function BoardHome(props: {
 				backToTop: { label: t("backToTop") },
 				ariaLabel: t("quickToolbarAria"),
 			}),
+			// 会话视图托管在看板层：行结案后从列表消失、组件卸载，这个框也不会被带走
+			sessionView === null
+				? null
+				: h(SessionViewModal, {
+						sessionId: sessionView.id,
+						view: sessionView.view,
+						heading: sessionView.heading,
+						archived: false,
+						openHostSession: (id: string) => openSession(id),
+						onClose: dropSessionView,
+					}),
 		),
 	);
 }

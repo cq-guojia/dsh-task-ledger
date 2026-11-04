@@ -18,6 +18,15 @@ import (
 
 func out(text string) { writeRaw(os.Stdout, text+"\n") }
 
+// stepf 打一行机器可读的过程标记。只有宿主设了 TASK_LEDGER_STEPS=1 才打，
+// 普通 CLI 用法不受影响；宿主逐行读 stderr，换成界面文案做进度翻牌。
+func stepf(key string) {
+	if os.Getenv("TASK_LEDGER_STEPS") != "1" {
+		return
+	}
+	writeRaw(os.Stderr, "#step "+key+"\n")
+}
+
 func errOut(text string) { writeRaw(os.Stderr, text+"\n") }
 
 // FlushNotices 把 notices 一次性打到 stderr（退出前调一次，同一句只打一次）。

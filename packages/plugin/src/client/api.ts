@@ -183,26 +183,132 @@ export function postForgetIdentity(uuid: string): Promise<ForgetReport> {
 const TASK_WRITE_TIMEOUT_MS = 120_000;
 
 /**
- * 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）。
- * 取消可带一句理由（`summary`），进历史摘要与执行记录。成功后由调用方重读快照。
+ * 任务动作的过程阶段（与 skill `runner.go` 里的 `stepf(...)` 一一对应）：
+ * 检查本地改动 → 拉取最新台账 → 写入台账 → 提交 → 推送。
  */
-export function postTaskAction(body: {
-	readonly action: "claim" | "release" | "cancel" | "close";
-	/** 工作区 id（host 据此找台账根）。 */
-	readonly workspace: string;
-	readonly id: string;
-	/** 取消用理由（可空）/ 结案用摘要（必填）：一句话。 */
-	readonly summary?: string;
-}): Promise<{ readonly ok: boolean }> {
-	return fetchJson<{ ok: boolean }>(
-		"/task/action",
-		{
+export type TaskActionStep = "check" | "sync" | "write" | "commit" | "push";
+
+/** host 在 `/task/action` 的 NDJSON 流里推的一行。 */
+type ActionEvent =
+	| { readonly type: "step"; readonly step: TaskActionStep }
+	| { readonly type: "done" }
+	| { readonly type: "error"; readonly error: string; readonly code: string | null };
+
+/** 认识的阶段 key（skill 那边多打一个、这边没跟上就整行忽略，界面继续显示上一句）。 */
+function isStep(value: string): value is TaskActionStep {
+	return (
+		value === "check" ||
+		value === "sync" ||
+		value === "write" ||
+		value === "commit" ||
+		value === "push"
+	);
+}
+
+/** 解析一行 NDJSON；不是我们的形状（空行 / 坏行）就返回 null，交给外层继续读。 */
+function actionEventOf(line: string): ActionEvent | null {
+	if (line.trim() === "") return null;
+	let raw: unknown;
+	try {
+		raw = JSON.parse(line);
+	} catch {
+		return null;
+	}
+	if (raw === null || typeof raw !== "object") return null;
+	const event = raw as Record<string, unknown>;
+	if (event.type === "done") return { type: "done" };
+	if (event.type === "step" && typeof event.step === "string" && isStep(event.step))
+		return { type: "step", step: event.step };
+	if (event.type === "error")
+		return {
+			type: "error",
+			error: typeof event.error === "string" ? event.error : "任务动作失败",
+			code: typeof event.code === "string" ? event.code : null,
+		};
+	return null;
+}
+
+/**
+ * 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）/ 结案（`close`）。
+ * 取消可带一句理由（`summary`），进历史摘要与执行记录。
+ *
+ * 写命令要跑「检查 → 拉取 → 写 → 提交 → 推送」好几秒，host 回的是 **NDJSON 流**：
+ * 每个阶段一行 `{type:"step",step}` 喂给 `onStep` 翻进度文案，末尾 `{type:"done"}` 收尾；
+ * 跑挂时推 `{type:"error",error,code}` ⇒ 这里抛 HttpError（码照旧，界面能认出「没身份」）。
+ * 请求参数本身有问题时 host 还没来得及发头，仍是普通 JSON 400/500。
+ *
+ * 成功后由调用方重读快照。
+ */
+export async function postTaskAction(
+	body: {
+		readonly action: "claim" | "release" | "cancel" | "close";
+		/** 工作区 id（host 据此找台账根）。 */
+		readonly workspace: string;
+		readonly id: string;
+		/** 取消用理由（可空）/ 结案用摘要（必填）：一句话。 */
+		readonly summary?: string;
+	},
+	onStep?: (step: TaskActionStep) => void,
+): Promise<{ readonly ok: boolean }> {
+	const controller = new AbortController();
+	const timer = setTimeout(() => {
+		controller.abort(
+			new DOMException(
+				`请求超时（${TASK_WRITE_TIMEOUT_MS}ms 未响应）`,
+				"TimeoutError",
+			),
+		);
+	}, TASK_WRITE_TIMEOUT_MS);
+	try {
+		const res = await fetch(`${API_PREFIX}/task/action`, {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify(body),
-		},
-		TASK_WRITE_TIMEOUT_MS,
-	);
+			signal: controller.signal,
+			cache: "no-store",
+		});
+		if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
+		if (res.body === null)
+			throw new HttpError("任务动作没有返回内容（响应流不可读）", null);
+		const reader = res.body.getReader();
+		const decoder = new TextDecoder();
+		let buffer = "";
+		/**
+		 * 处理一行：翻一行进度文案、`done` 返回 true（该收摊了）、`error` 直接抛。
+		 * 坏行 / 空行当没看见 —— 一条读不懂的行不该让整条命令算失败。
+		 */
+		const handle = (line: string): boolean => {
+			const event = actionEventOf(line);
+			if (event === null) return false;
+			if (event.type === "step") {
+				onStep?.(event.step);
+				return false;
+			}
+			if (event.type === "error") throw new HttpError(event.error, event.code);
+			return true;
+		};
+		try {
+			for (;;) {
+				const chunk = await reader.read();
+				if (chunk.done) break;
+				buffer += decoder.decode(chunk.value, { stream: true });
+				const lines = buffer.split("\n");
+				buffer = lines.pop() ?? "";
+				for (const line of lines) {
+					if (handle(line)) return { ok: true };
+				}
+			}
+			// 流没以换行结尾时，最后一行还留在 buffer 里
+			buffer += decoder.decode();
+			if (handle(buffer)) return { ok: true };
+		} finally {
+			// 提前收摊（done / 出错）时把剩下的流扔掉，别让连接吊着
+			void reader.cancel().catch(() => undefined);
+		}
+		throw new HttpError("任务动作没有返回结果（连接中断）", null);
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 /**

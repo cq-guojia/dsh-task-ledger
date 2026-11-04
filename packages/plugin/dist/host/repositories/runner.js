@@ -28,6 +28,16 @@ export function failureOf(result, prefix = "", workspaceId = null) {
 }
 /** skill 侧 `ExitIdentityMissing`（`packages/skill/src/internal/shell/runner.go`）。 */
 const IDENTITY_MISSING_EXIT = 100;
+/** skill 过程标记的行前缀（`shell/render.go` 的 stepf）。 */
+const STEP_PREFIX = "#step ";
+/** 去掉 stderr 里的过程标记行：报错文案只留人话，别把 `#step` 漏到界面上。 */
+function withoutSteps(stderr) {
+    return stderr
+        .split("\n")
+        .filter((line) => !line.startsWith(STEP_PREFIX))
+        .join("\n")
+        .trim();
+}
 /**
  * 起一次台账程序、收 stdout / stderr。出错一律归一成人话（起不了程序 / 超时 / 非零退出）。
  * 解析留给调用方：读命令要 JSON，写命令要原文。
@@ -35,12 +45,18 @@ const IDENTITY_MISSING_EXIT = 100;
 function exec(sub, args, opts) {
     const scriptPath = opts?.scriptPath ?? DEFAULT_SCRIPT_PATH;
     const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    const onStep = opts?.onStep;
     return new Promise((resolve) => {
         const child = spawn(scriptPath, [sub, ...args], {
             stdio: ["ignore", "pipe", "pipe"],
+            env: onStep === undefined
+                ? process.env
+                : { ...process.env, TASK_LEDGER_STEPS: "1" },
         });
         let stdout = "";
         let stderr = "";
+        /** 未收完的一行（stderr 是流，标记可能被切在两个 chunk 里）。 */
+        let stderrRest = "";
         let settled = false;
         const timer = setTimeout(() => {
             child.kill();
@@ -60,7 +76,17 @@ function exec(sub, args, opts) {
             stdout += chunk.toString();
         });
         child.stderr.on("data", (chunk) => {
-            stderr += chunk.toString();
+            const text = chunk.toString();
+            stderr += text;
+            if (onStep === undefined)
+                return;
+            stderrRest += text;
+            const lines = stderrRest.split("\n");
+            stderrRest = lines.pop() ?? "";
+            for (const line of lines) {
+                if (line.startsWith(STEP_PREFIX))
+                    onStep(line.slice(STEP_PREFIX.length));
+            }
         });
         child.on("error", (error) => {
             settle({
@@ -69,15 +95,16 @@ function exec(sub, args, opts) {
             });
         });
         child.on("close", (code) => {
+            const message = withoutSteps(stderr);
             if (code !== 0) {
                 settle({
                     ok: false,
-                    error: stderr.trim() || `台账程序退出码 ${String(code)}`,
+                    error: message || `台账程序退出码 ${String(code)}`,
                     exitCode: code ?? undefined,
                 });
                 return;
             }
-            settle({ ok: true, stdout, stderr: stderr.trim() });
+            settle({ ok: true, stdout, stderr: message });
         });
     });
 }

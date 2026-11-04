@@ -54,6 +54,24 @@ export interface RunOptions {
 	scriptPath?: string;
 	/** 覆盖超时。 */
 	timeoutMs?: number;
+	/**
+	 * 过程步骤回调（写命令专用）：skill 每进一个阶段就在 stderr 打一行 `#step <key>`
+	 * （`shell/render.go` 的 stepf，只有宿主设了 `TASK_LEDGER_STEPS=1` 才打）。
+	 * 给了它才让 skill 打标记，读命令不传、不产生任何额外输出。
+	 */
+	onStep?: (step: string) => void;
+}
+
+/** skill 过程标记的行前缀（`shell/render.go` 的 stepf）。 */
+const STEP_PREFIX = "#step ";
+
+/** 去掉 stderr 里的过程标记行：报错文案只留人话，别把 `#step` 漏到界面上。 */
+function withoutSteps(stderr: string): string {
+	return stderr
+		.split("\n")
+		.filter((line) => !line.startsWith(STEP_PREFIX))
+		.join("\n")
+		.trim();
 }
 
 type ExecResult =
@@ -71,12 +89,19 @@ function exec(
 ): Promise<ExecResult> {
 	const scriptPath = opts?.scriptPath ?? DEFAULT_SCRIPT_PATH;
 	const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+	const onStep = opts?.onStep;
 	return new Promise((resolve) => {
 		const child = spawn(scriptPath, [sub, ...args], {
 			stdio: ["ignore", "pipe", "pipe"],
+			env:
+				onStep === undefined
+					? process.env
+					: { ...process.env, TASK_LEDGER_STEPS: "1" },
 		});
 		let stdout = "";
 		let stderr = "";
+		/** 未收完的一行（stderr 是流，标记可能被切在两个 chunk 里）。 */
+		let stderrRest = "";
 		let settled = false;
 		const timer = setTimeout(() => {
 			child.kill();
@@ -95,7 +120,15 @@ function exec(
 			stdout += chunk.toString();
 		});
 		child.stderr.on("data", (chunk: Buffer) => {
-			stderr += chunk.toString();
+			const text = chunk.toString();
+			stderr += text;
+			if (onStep === undefined) return;
+			stderrRest += text;
+			const lines = stderrRest.split("\n");
+			stderrRest = lines.pop() ?? "";
+			for (const line of lines) {
+				if (line.startsWith(STEP_PREFIX)) onStep(line.slice(STEP_PREFIX.length));
+			}
 		});
 		child.on("error", (error: Error) => {
 			settle({
@@ -104,15 +137,16 @@ function exec(
 			});
 		});
 		child.on("close", (code: number | null) => {
+			const message = withoutSteps(stderr);
 			if (code !== 0) {
 				settle({
 					ok: false,
-					error: stderr.trim() || `台账程序退出码 ${String(code)}`,
+					error: message || `台账程序退出码 ${String(code)}`,
 					exitCode: code ?? undefined,
 				});
 				return;
 			}
-			settle({ ok: true, stdout, stderr: stderr.trim() });
+			settle({ ok: true, stdout, stderr: message });
 		});
 	});
 }

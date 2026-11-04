@@ -24,6 +24,8 @@ export function CloseTaskModal(props: {
 	taskTitle: string;
 	/** 提交中：确定键转圈、其余按钮与关闭路径全禁。 */
 	busy: boolean;
+	/** 底栏左侧的过程提示（提交中才给，跟随 skill 的阶段翻；给空 = 不占位）。 */
+	notice?: string;
 	/** host 回的人话错误：红字列在输入框下。 */
 	error: string | null;
 	/** 宿主是否提供会话服务（false ⇒ 「交给 Agent」段置灰，只能直接结案）。 */
@@ -86,6 +88,24 @@ export function CloseTaskModal(props: {
 						width: "100%",
 					},
 				},
+				// 左下：结案命令跑到哪一步（与取消框同一条底栏样式）
+				props.notice === undefined
+					? null
+					: h(
+							"span",
+							{
+								style: {
+									marginRight: "auto",
+									maxWidth: "220px",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									whiteSpace: "nowrap",
+									color: "var(--dtl-fg-3)",
+									fontSize: "var(--dtl-font-sm)",
+								},
+							},
+							props.notice,
+						),
 				// 左下：会话在跑时唯一能点的东西（关掉会话视图后回到这个框也能重开）
 				locked && props.onShowSession !== undefined
 					? h(

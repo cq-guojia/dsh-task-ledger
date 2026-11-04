@@ -46,10 +46,10 @@ window.__ModuleLoader__.load({
 		let react_jsx_runtime = require("react/jsx-runtime");
 		let react_dom = require("react-dom");
 		react_dom = __toESM(react_dom, 1);
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/design/tokens-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/design/tokens-css.generated.js
 		const TOKENS_CSS_TEMPLATE = "\n/* ── 文字（宿主 label 四档 + 反色面用字）────────────────────────────── */\nbody{\n  --dshpc-fg:var(--dsw-alias-label-primary,#1f2328);\n  --dshpc-fg-2:var(--dsw-alias-label-secondary,#5c6370);\n  --dshpc-fg-3:var(--dsw-alias-label-tertiary,#767d87);\n  --dshpc-fg-4:var(--dsw-alias-label-caption,#9aa1ab);\n  --dshpc-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);\n  /* 反色面上的字（实心钮 / 角标）：暗色下是 bluish-1000，故用 -foreground 而非 -inverted */\n  --dshpc-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);\n\n  /* ── 面（宿主 bg-layer 三档 + 下沉轨道底）──────────────────────────── */\n  --dshpc-surface-1:var(--dsw-alias-bg-layer-1,#fff);\n  --dshpc-surface-2:var(--dsw-alias-bg-layer-2,#fff);\n  --dshpc-surface-3:var(--dsw-alias-bg-layer-3,#fff);\n  /* 「选中亮片」的底盘色（配 --dshpc-shadow-raised 用） */\n  --dshpc-surface-raised:var(--dsw-alias-bg-layer-1,#fff);\n  /* 轨道 / 下沉底（官方分段控件轨道用的就是这条） */\n  --dshpc-surface-sunken:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));\n  /* 整页 / 编辑器底（bg-base） */\n  --dshpc-surface-base:var(--dsw-alias-bg-base,#fff);\n  /* 自绘浮层 / 菜单卡的不透明底（= base；不要用半透明的 specific-menu） */\n  --dshpc-surface-menu:var(--dshpc-surface-base);\n  /* markdown 代码块面 / 字体（会话镜像里用到） */\n  --dshpc-code-surface:var(--dsw-alias-markdown-code-block,rgba(128,128,128,.10));\n  --dshpc-code-font:var(--dsw-font-markdown-code-block-small,12px/18px var(--ds-font-family-code,monospace));\n  /* 警告文字色（宿主 state-warn-label） */\n  --dshpc-warning-label:var(--dsw-alias-state-warn-label,#f5a623);\n  /* 固定中性实面（自绘浮层、深色主题下必须自己变的那几个）——只有它需要暗色覆盖 */\n  --dshpc-solid:var(--dsw-static-neutral-00,#fff);\n  --dshpc-on-solid:var(--dsw-alias-label-primary,#1f2328);\n  /* 交付文件卡那种「浅底盘 + hover 加深」两拍 */\n  --dshpc-plate:var(--dsw-static-neutral-50,#fafafa);\n  --dshpc-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);\n  /* ⚠️ 这些**固定中性面一律用 rgba 字面量**（2026-10-19 真机教训）：不要写成\n     「rgba 回退行 + 嵌 --dsw-static-* 的 color-mix 行」两条同名声明——自定义属性**后者恒胜**，\n     哪怕它的值在宿主里算不出来（static 变量 invalid）⇒ 整条 token 作废、rgba 兜底一起被废，\n     0.2.6 里 Segmented 轨道全透明就是这么来的。要跟宿主主题联动的面用 alias token（那些实测有效）。 */\n  --dshpc-icon-plate:rgba(255,255,255,.5);\n  /* 表头底：浅色主题**偏深**，且必须**比斑马纹（--dshpc-plate）再深一档**——\n     两者不能撞色（用户 2026-10-02：表头跟斑马纹一模一样）。 */\n  --dshpc-head-bg:var(--dsw-static-neutral-100,#f5f5f5);\n  /* 表格底 / 行 hover（2026-10-30 用户二次定案：表头与通栏**互换**底色）：\n     表头默认底 = 通栏原来那层灰（--dshpc-surface-sunken，跟着宿主交互面走）；\n     通栏默认底 = 表头原来那色（亮 #f6f8fa / 暗 #151b23，参考图实测，与深色段同源）；\n     行 hover 是「一层极淡的黑」≈1.5%（用户：再浅一半，要特别淡）。 */\n  --dshpc-table-head-bg:var(--dshpc-surface-sunken);\n  --dshpc-table-banner-bg:#f6f8fa;\n  --dshpc-table-row-hover:rgba(15,15,15,.015);\n  /* 图标小底板（产出物）：浅色下要**看得见**（原先取 plate ⇒ 在白底上等于没有）；hover 加倍。 */\n  --dshpc-chip-bg:rgba(15,15,15,.07);\n  --dshpc-chip-bg-hover:rgba(15,15,15,.14);\n  /* 展开行：**带透明度的蓝**——不是灰、也不是纯色，透出卡片底色，一眼看出「这是展开的」\n     （用户 2026-10-02：灰色跟斑马纹分不出来）。内容区再淡一档，形成「行深 / 内容浅」的区隔。 */\n  --dshpc-open-bg:rgba(37,99,235,.10);\n  --dshpc-open-bg-soft:rgba(37,99,235,.05);\n  --dshpc-card-hover:rgba(37,99,235,.07);\n\n  /* ── 描边四档（宿主真值：l1 4% / l2 10% / l3 12% / l4 16%）────────── */\n  --dshpc-border-faint:var(--dsw-alias-border-l1,#0000000a);\n  --dshpc-border:var(--dsw-alias-border-l2,#0000001a);\n  --dshpc-border-strong:var(--dsw-alias-border-l3,#0000001f);\n  --dshpc-border-heavy:var(--dsw-alias-border-l4,#00000029);\n\n  /* ── 品牌 / 语义色 ────────────────────────────────────────────────── */\n  /* 品牌「面」色：明色近黑、暗色近白（官方 Switch 选中态即此），**不是蓝色** */\n  --dshpc-accent:var(--dsw-alias-brand-primary,#0f1115);\n  /* 蓝色：强调 / 选中 / 焦点，一律走这条 */\n  --dshpc-business:var(--dsw-alias-state-business-primary,#3b5bdb);\n  --dshpc-success:var(--dsw-alias-state-success-primary,#22c55e);\n  /* ⚠️ 是 state-warn（不是 state-warning，后者宿主无此定义） */\n  --dshpc-warning:var(--dsw-alias-state-warn-primary,#f59e0b);\n  --dshpc-danger:var(--dsw-alias-state-error-primary,#ec1313);\n  --dshpc-link:var(--dsw-alias-link,#3b5bdb);\n  /* 语义色**实面**上的字（角标 / 实心提示）：宿主红绿黄三色都是中调 ⇒ 白字两个主题都可读，\n     故这是一条与主题无关的常量；不要拿 --dshpc-fg-inverse 顶——它在暗色下是近黑，压在红底上看不清。 */\n  --dshpc-on-signal:#fff;\n  /* 黄底上的字：黄色是中高明度，白字看不清 ⇒ 固定深色（与主题无关）。 */\n  --dshpc-on-warning:#1f2328;\n  /* 告警严重度的圆点底色（2026-11-03 从 feedback.css 收到这里）。\n     与主题无关的一组常量：这几个色要在任意底色上都认得出来，所以**不跟宿主 state 色走**\n     （宿主 state-warn-primary 偏亮，压白 ✕ 看不清）。语义色改动请只改这里。 */\n  --dshpc-sev-info:#2563eb;\n  --dshpc-sev-success:#16a34a;\n  --dshpc-sev-warning:#d97706;\n  --dshpc-sev-error:#dc2626;\n\n  /* ── 实心按钮的 hover / active 派生态（2026-10-19 用户点名）─────────────────\n     原实现是 :hover 直接压 opacity .9：黑底压 10% 几乎看不出来，用户原话「完全感觉不到颜色变了」。\n     ⇒ 改成对底色做**明确的混色**（压 22% / 34%），不用 opacity：\n       · 亮色主题：黑底（--dshpc-accent）掺白提亮；红 / 绿 / 黄 / 蓝底掺黑压深；\n       · 暗色主题：反过来（暗底掺白、亮底掺黑）。\n     混色对象是**固定中性色字面量**（#fff / #000），不依赖宿主 static-neutral 是否存在；\n     旧内核不认 color-mix 时整条声明作废 ⇒ 回落各档原色（可接受：仍可点，只是没有 hover 反馈）。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 78%,#ffffff);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 64%,#ffffff);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#000000);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#000000);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#000000);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#000000);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#000000);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#000000);\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 78%,#000000);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 64%,#000000);\n  /* 语义色**浅底**：状态色系的「一块底色」——执行记录页每条流水账的块底就是它\n     （用户 2026-10-04：正常态给同色系很浅的透明底、失败用红底透出来）。\n     用 「color-mix」 现算而不写死 rgba：状态色本身跟随宿主 alias，主题一换自动成立。\n     ⚠️ **深色下要更淡**：用户 2026-10-04「深色风格的绿色和红色好像都有点深」⇒ dark 段\n     把这四条压到 5%（更贴近面板底、存在感更弱）；浅色段维持 8%。两端各自给值，不共用一条曲线。\n     命名收在 tokens.ts 单点（本仓硬规矩：业务文件不许自造 --dshpc-*）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 8%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 8%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 8%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 8%,transparent);\n\n  /* ── 扩展语义色（2026-10-29 用户拍板：分类 / 图表常用色八支）──────────────\n     宿主无对应 alias ⇒ 写死 hex（不跟随宿主换肤）；实心面字色统一走 --dshpc-on-signal（白），\n     因八支明度都低于黄 / 青柠，白字两主题均 ≥4.5:1 可读。每条自带 hover/active/soft 派生；\n     暗色段只覆盖派生（base 写死、两主题同值）。 */\n  --dshpc-purple:#9333ea;\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 78%,#000000);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 64%,#000000);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 8%,transparent);\n  --dshpc-pink:#db2777;\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 78%,#000000);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 64%,#000000);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 8%,transparent);\n  --dshpc-cyan:#0e7490;\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 78%,#000000);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 64%,#000000);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 8%,transparent);\n  --dshpc-teal:#0f766e;\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 78%,#000000);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 64%,#000000);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 8%,transparent);\n  --dshpc-orange:#c2410c;\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 78%,#000000);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 64%,#000000);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 8%,transparent);\n  --dshpc-indigo:#4f46e5;\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 78%,#000000);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 64%,#000000);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 8%,transparent);\n  --dshpc-rose:#e11d48;\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 78%,#000000);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 64%,#000000);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 8%,transparent);\n  --dshpc-slate:#475569;\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 78%,#000000);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 64%,#000000);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 8%,transparent);\n\n  /* ⚠️ 2026-10-18 用户拍板：宿主 alias 的 hover（暗色白 8% / 亮色 6%）**太弱**，\n     「移上去要仔细看才看得出来」⇒ 不再委托宿主 hover 别名，改为自掺中性色并加重：\n     亮色掺黑 10%、暗色掺白 14%（active 再加一档）。按钮 / 分段轨道 / 各类 hover 底同时受益。\n     ⚠️ 必须保留 rgba 兜底行在前（本文件惯例，见 icon-plate 注释）：掺的是**固定中性色**\n     （neutral-900=#0f0f0f / neutral-00=#fff），预计算无损；旧内核不认 color-mix 时走兜底，\n     否则整条 background:var(--seg-track) 作废 ⇒ 分段轨道透明（真踩过：预览站轨道消失）。 */\n  --dshpc-hover:rgba(15,15,15,.10);\n  --dshpc-active:rgba(15,15,15,.18);\n  /* 分段控件轨道底：专用 token（rgba 字面量、不借 --dshpc-hover 中转）——\n     2026-10-19 教训：变量链中间任何一环 invalid ⇒ background 整条作废、轨道全透明。\n     亮色：黑 7%（比 hover 的 10% 淡一档，选中白片才跳得出）。 */\n  --dshpc-seg-track:rgba(15,15,15,.07);\n  --dshpc-mask:var(--dsw-alias-bg-mask-1,#0000003d);\n  /* 「选中面」（2026-10-06，任务日程页首创）= 当前底色**朝更深掺 12% 文字色**：\n     浅色主题下文字色是黑 ⇒ 选中面比常态底色**深一档**。深色分支见 body[data-ds-dark-theme]（朝背景色掺）。\n     语义：标记「正在看的东西」，比常态明显、又不许盖住内容（不许用半透明叠状态色）。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 88%,var(--dshpc-fg));\n  /* 任务日程页本月格默认底（2026-10-06 → 续2）：浅色下给**淡蓝**（business 8% 透白底）——\n     参照用户参考稿里未选中日程块 / Tuesday 列的那种蓝、再浅一点点；\n     相邻月补位格仍走 --dshpc-surface-2（更灰），不受影响。\n     深色段维持 #23262e（用户：深色 UI 已差不多，不动）。 */\n  --dshpc-cal-cell-bg:color-mix(in srgb,var(--dshpc-business) 8%,var(--dshpc-surface-1));\n  /* 任务日程页「点开某天」展开的面板底（2026-10-06 续）：浅色下**无限接近白、只带一丁点灰**\n     （neutral-50 = #fafafa）——面板里装半透明执行记录列表，底再深整片就发糊发灰；\n     深色段沿用原 selected-bg 暗值，保持不动。 */\n  --dshpc-cal-panel-bg:var(--dsw-static-neutral-50,#fafafa);\n  /* 任务日程页本月格 hover 底（浅色段，2026-10-06 续3）：不再走灰色通用交互底——\n     鼠标移上去应是「更亮一点点的蓝」（与深色段同语义：hover = 提亮的蓝，不是灰下去）。\n     浓度**介于**表头蓝（14%）与未选中格蓝（8%）之间、略偏表头一侧：business 12% 透白底\n     （比表头浅一点、比未选中格深一点）。 */\n  --dshpc-cal-cell-hover:color-mix(in srgb,var(--dshpc-business) 12%,var(--dshpc-surface-1));\n\n  /* ── 投影 / 焦点 ──────────────────────────────────────────────────── */\n  --dshpc-shadow-1:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  /* 亮片自带的浮起感（选中态用；与 --dshpc-surface-raised 配对） */\n  --dshpc-shadow-raised:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  --dshpc-shadow-2:var(--dsw-shadow-lv3,0 12px 32px 0 #00000014);\n  /* 键盘焦点环。⚠️ 不用宿主 --dsw-focus-ring-color：它默认值是 transparent（兜底不生效、会隐身） */\n  --dshpc-focus:var(--dsw-alias-state-business-primary,#3b5bdb);\n\n  /* ── 圆角（宿主真值 4 / 8 / 12 / 16 / 20 / 28）─────────────────────── */\n  --dshpc-radius-xs:var(--dsw-radius-xs,4px);\n  --dshpc-radius-sm:var(--dsw-radius-sm,8px);\n  --dshpc-radius-md:var(--dsw-radius-md,12px);\n  --dshpc-radius-lg:var(--dsw-radius-lg,16px);\n  --dshpc-radius-xl:var(--dsw-radius-xl,20px);\n  --dshpc-radius-panel:var(--dsw-radius-panel,28px);\n  /* 全圆（胶囊标签）：宿主的 radius 档最大只有 28px，撑不满 24px 高的 chip */\n  --dshpc-radius-pill:999px;\n\n  /* ── 间距四拍（只许用这四档，不许出现 5 / 7 / 9px）────────────────── */\n  --dshpc-space-1:4px;\n  --dshpc-space-2:8px;\n  --dshpc-space-3:12px;\n  --dshpc-space-4:16px;\n\n  /* ── 控件高度：离散三档（控件用 size=\"sm|md|lg\" 选；调用点不许自定义高度，\n       真不够用才允许在调用点本地覆盖 --dshpc-control-h-*，属例外而非常态）── */\n  --dshpc-control-h-sm:24px;\n  --dshpc-control-h-md:28px;\n  --dshpc-control-h-lg:32px;\n\n  /* ── 字号 / 行高：直绑宿主字号族（宿主真值 11 / 12 / 13 / 14 / 16）───── */\n  --dshpc-font-xs:var(--dsw-font-xxxs-11-font-size,11px);\n  --dshpc-font-sm:var(--dsw-font-xxs-12-font-size,12px);\n  --dshpc-font-md:var(--dsw-font-xs-13-font-size,13px);\n  --dshpc-font-lg:var(--dsw-font-s-14-font-size,14px);\n  --dshpc-font-xl:var(--dsw-font-base-16-font-size,16px);\n  --dshpc-line-xs:var(--dsw-font-xxxs-11-line-height,14px);\n  --dshpc-line-sm:var(--dsw-font-xxs-12-line-height,18px);\n  --dshpc-line-md:var(--dsw-font-xs-13-line-height,20px);\n  --dshpc-line-lg:var(--dsw-font-s-14-line-height,22px);\n  --dshpc-line-xl:var(--dsw-font-base-16-line-height,24px);\n  --dshpc-font-mono:var(--ds-font-family-code,monospace);\n\n  /* ── 层级阶梯（业务文件不许再写裸 z-index）───────────────────────── */\n  /* 页面级预览分栏 → 抽屉（新建/编辑）→ 弹窗/确认框 → 浮层菜单 → 浮层提示 */\n  /* 内容层吸顶（天标签 / 表头这类「跟着滚但压住同层内容」的元素）：只压同层兄弟，\n     必须低于下面所有浮层档 —— 所以它不是「开新浮层档」，而是内容层内部的排序位。 */\n  --dshpc-z-sticky:10;\n  --dshpc-z-dock:1030;\n  --dshpc-z-drawer:1040;\n  --dshpc-z-modal:1070;\n  --dshpc-z-menu:1100;\n  --dshpc-z-tip:1200;\n  /* 语义别名（2026-11-03 面板皮肤统一）：业务文件只许用这两个说「我要一层浮层」，\n     不再各自写 1099/1100/1200/1201 这类字面量。\n       panel   = 浮层面板本体（picker 弹窗、锚定面板）；\n       popmenu = 叠在面板之上的菜单（▾ 选层、Picker 下拉）与其透明遮罩。 */\n  --dshpc-z-panel:var(--dshpc-z-menu);\n  --dshpc-z-popmenu:var(--dshpc-z-tip);\n\n  /* ── 动效 ─────────────────────────────────────────────────────────── */\n  --dshpc-dur:var(--ds-transition-duration,.2s);\n  --dshpc-dur-fast:var(--ds-transition-duration-fast,.12s);\n  --dshpc-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));\n  /* 运行中状态的脉动时长（2026-10-06 统一前后两端：任务配置里的绿呼吸 → 蓝、放慢；\n     执行记录里的蓝闪 → 放慢一点。两者用同一个值，动画形状本就一致）。 */\n  --dshpc-dur-run:500ms;\n}\n\n/* ── 明暗差异的**唯一**落点 ──────────────────────────────────────────────\n   判据 = body[data-ds-dark-theme]（宿主 0.2.0-rc.2 源码核实：启动脚本 toggleAttribute 写入，\n   唯一明暗判据；插件禁止用 prefers-color-scheme —— 它跟的是系统、不是用户在宿主里的选择）。\n   下面只放 alias 表达不了的「固定中性面」；颜色若能靠 alias 自动跟随，一律不要写在这里。 */\nbody[data-ds-dark-theme]{\n  /* 深色段的蓝**刻意不跟随宿主 alias**（唯一例外）：宿主暗色 alias 给的是 #60a5fa 一档的高亮蓝，\n     实心面（Chip / Button info / 日期选中格）压白字会发糊 —— 用户 2026-10-29 实测反馈。\n     ⇒ 深色下改定向浅色状态的蓝（#3b5bdb）靠，只在明度上抬一点点，保证它在暗底上仍看得见：\n     #4c6bd8 对白字 ≈4.8:1（原亮蓝只有 ~2.3:1），对日历格底 ≈3.2:1 仍过 UI 件的 3:1 线。\n     代价：宿主换品牌色时深色不再自动跟着变，需要这里手动同步。 */\n  --dshpc-business:#4c6bd8;\n  --dshpc-solid:var(--dsw-static-neutral-900,#0f0f0f);\n  --dshpc-on-solid:var(--dsw-static-neutral-00,#fff);\n  /* 实心按钮 hover / active（暗色版）：黑底（浅色主题的近黑 → 暗色下的近白）掺黑压深；\n     红 / 绿 / 黄 / 蓝掺白提亮。与亮色段方向相反，保证两种主题下「一眼看出变了」。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 80%,#000000);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 66%,#000000);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#ffffff);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#ffffff);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#ffffff);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#ffffff);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#ffffff);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#ffffff);\n  /* 同上：掺白比例从 22% / 36% 收到 12% / 22% —— 底色已变深，照旧比例提亮会在 hover 瞬间\n     把白字对比打回 ~3:1（正是用户嫌糊的那一档）；收窄后 hover 仍可感知、字仍清晰。 */\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 88%,#ffffff);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 78%,#ffffff);\n  /* 暗色 hover 掺白 14% / active 24%（对齐上面 2026-10-18 的加重拍板）。rgba 兜底行同上。 */\n  --dshpc-hover:rgba(255,255,255,.14);\n  --dshpc-active:rgba(255,255,255,.24);\n  /* 分段轨道（暗色版）：白 10%——比 hover 淡一档，选中亮片才跳得出。 */\n  --dshpc-seg-track:rgba(255,255,255,.10);\n  --dshpc-plate:var(--dsw-static-neutral-850,#212123);\n  --dshpc-plate-hover:var(--dsw-static-neutral-800,#292929);\n  --dshpc-icon-plate:rgba(255,255,255,.05);\n  /* 暗色主题**反过来**：表头要比卡片面**亮**、比斑马纹再**浅一档**（用户：纯黑背景没法看）。 */\n  --dshpc-head-bg:var(--dshpc-surface-2);\n  /* 表格（2026-10-30 用户二次定案：与通栏互换底色）：通栏底取表头原来那色 #151b23\n     （亮色段对应 #f6f8fa）；表头默认底沿用亮色段定义的 --dshpc-surface-sunken，不在暗色段重写；\n     行 hover 是「一层极淡的白」≈3% —— 暗底上用黑会越悬越暗，看不出「浅灰」反馈。 */\n  --dshpc-table-banner-bg:#151b23;\n  --dshpc-table-row-hover:rgba(255,255,255,.03);\n  /* 暗色底板**微亮**；hover **更亮**（原先 hover 取 plate-hover 反而更淡 ⇒ 鼠标移上去就没了）。 */\n  --dshpc-chip-bg:rgba(255,255,255,.08);\n  --dshpc-chip-bg-hover:rgba(255,255,255,.16);\n  /* 暗色下蓝色要更亮、透明度略高才压得住深底。 */\n  --dshpc-open-bg:rgba(96,165,250,.18);\n  --dshpc-open-bg-soft:rgba(96,165,250,.08);\n  --dshpc-card-hover:rgba(96,165,250,.13);\n  /* 语义色**浅底**（深色版）：用户嫌深色的绿 / 红「有点深」⇒ 压到 **5%**（浅色段是 8%），\n     更贴近面板底色、存在感更弱；块底与状态色竖条仍同源（竖条是实色，不受这条影响）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 5%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 5%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 5%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 5%,transparent);\n  /* 扩展色深色派生：底色写死、hover 掺白 12%/22%（同 business，防白字发糊），soft 5%。 */\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 88%,#ffffff);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 78%,#ffffff);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 5%,transparent);\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 88%,#ffffff);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 78%,#ffffff);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 5%,transparent);\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 88%,#ffffff);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 78%,#ffffff);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 5%,transparent);\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 88%,#ffffff);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 78%,#ffffff);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 5%,transparent);\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 88%,#ffffff);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 78%,#ffffff);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 5%,transparent);\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 88%,#ffffff);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 78%,#ffffff);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 5%,transparent);\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 88%,#ffffff);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 78%,#ffffff);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 5%,transparent);\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 88%,#ffffff);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 78%,#ffffff);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 5%,transparent);\n  /* 「选中面」（深色版，2026-10-06）：掺 **~40% 背景色**（--dshpc-surface-base）⇒ 无限接近页面背景的黑、\n     只比背景略深一点点（用户：深色下展开区压着任务透明绿会发灰，底色要尽量贴近背景才不显灰）。\n     ⚠️ 深色下不能掺文字色 —— 那是白，会变亮，选中反而比本月日期浅。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n  /* 任务日程页本月格的默认底（深色版，2026-10-06）：深的、带点灰蓝的暗色（用户给的参考图 ≈ #23262e），\n     比原来的卡片面更沉、更偏蓝灰；选中格仍走 --dshpc-selected-bg（更暗一档），层级不变。 */\n  --dshpc-cal-cell-bg:#23262e;\n  /* 任务日程页本月格 hover 底（深色段，2026-10-06）：原先走 --dshpc-hover（宿主浅色叠加）在深底上显得\n     「灰发亮」，不好看 ⇒ 换成更贴底的蓝调微亮（与 open-bg-soft 同族），hover 时不刺眼、又有反馈。 */\n  --dshpc-cal-cell-hover:rgba(96,165,250,.12);\n  /* 任务日程页展开面板底（深色段，2026-10-06 续）：与原 selected-bg 暗值一致，深色 UI 不动 */\n  --dshpc-cal-panel-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/design/style-kit.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/design/style-kit.js
 		/** 全生态统一的 CSS 变量前缀。 */
 		const CSS_PREFIX = "dshpc";
 		/** token 域固定名：变量定义必须先于消费它的规则出现。 */
@@ -120,7 +120,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/css.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/css.js
 		/**
 		* 当前插件的样式设施。
 		*
@@ -161,10 +161,10 @@ window.__ModuleLoader__.load({
 			kit.applyStyle(domain, css);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/marquee-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/marquee-css.generated.js
 		const MARQUEE_CSS = "/* 跑马灯（MarqueeText）：双层——外层只裁剪，内层才 transform 滚动；非 hover 内层自带省略号。\n   2026-10-20：本文件原是杂烩「select.css」（下拉 / 日历 / 时分的皮肤都装过），随着那些控件\n   一个个删完，最后只剩跑马灯，故按本包「一个 css 服务一个对象」的格局改名归档。\n   同批清掉的还有零引用的省略号类 .dshpc-ellipsis —— 本包三个用到截断的地方都没采纳它。 */\n.dshpc-mq{display:block;overflow:hidden;white-space:nowrap;}\n.dshpc-mq .dshpc-mq-in{display:inline-block;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top;}\n/* ⚠️ 跑法（用户 2026-10-03 拍板）：**跑一遍、停在尾字**（播放 1 次 + forwards），不来回弹、不无限跑。\n   滚距 = 精确溢出量 ⇒ 停下时最后一个字正好贴右缘，**不会跑进黑块**（黑块是旧手写版把\n   内层盒子裁了、按「半截文本」平移导致的）。鼠标移开 ⇒ :hover 失效 ⇒ 自动复位回省略号态。 */\n.dshpc-mq-run:hover .dshpc-mq-in{max-width:none;overflow:visible;animation:dshpc-mq-scroll var(--dshpc-mq-dur,6s) linear .4s 1 forwards;}\n@keyframes dshpc-mq-scroll{from{transform:translateX(0)}to{transform:translateX(var(--dshpc-mq-dist,-40px))}}\n/* 溢出渐影（用户 2026-10-24 拍板「左右稍微有点渐影」；官方口径 = dsh-client-ui-primitives@0.2.1-rc.2\n   PathLabel.module.css:13-15：mask-image 线性渐隐 + 28px 随官方）。⚠️ 只在 **hover 滚动态** 加：\n   静态态（三个点）不要渐影（用户 2026-10-24 二次拍板），hover 滚动时两端渐影——左缘柔化被裁的文字头。 */\n/* token-ok：遮罩模板色（纯黑 = 完全不透明），不是主题色；换主题也不该变。 */\n.dshpc-mq-run:hover{mask-image:linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/MarqueeText.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/MarqueeText.js
 		/**
 		* 跑马灯文本 —— **全站唯一实现**（L2，P6 从 editor-fields 迁入 ui）
 		*
@@ -217,43 +217,43 @@ window.__ModuleLoader__.load({
 			}, props.text));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/segmented-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/segmented-css.generated.js
 		const SEGMENTED_CSS = "\n/* ── 分段控件 P2 ─────────────────────────────────────────────────────\n   结构照兄弟项目 dsh-task-dispatch-table 的 Segmented 皮肤（item 无边框、hover 只提亮文字），\n   前缀 / 变量名换成本仓口径。用户额外要的两处（兄弟没有）：weekday 方块间隔（现为 2px）；段内中性计数 __count。\n   ⚠️ 2026-10-19 两次误判均已澄清：① 「宿主只认单行 CSS」——假，多行一直正常；\n   ② 「宿主吃掉 token 块之后第一条规则」——也假，真因是 tokens 模板字符串结尾多了一个反斜杠，\n   注入文本里留下字面反引号，把紧随其后的那条规则的选择器污染掉了（见 dsh-host.md §9）。\n   样式照常多行书写，不必压行；也不需要任何「牺牲规则」。 */\n/* 外观只有一套（2026-10-26）：原 variant 的 default / inset 两档在 CSS 里只差 1px 内距，\n   且 default 比文档承诺矮 2px，却让下游以为「有得选」而反复对图 ⇒ 整轴删除。\n   padding 3px 是尺寸契约的一部分：item 高度 = 控制高 − 6px，加起来正好 24 / 28 / 32。 */\n/* 选中片配色收在两条局部变量里（--seg-thumb 底 / --seg-on 字）：默认走主题亮片，\n   tone 档与自定义 {bg, fg} 都只改这两条（后者由组件内联写根节点，内联恒胜）。 */\n.dshpc-seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--dshpc-radius-md);--seg-thumb:var(--dshpc-surface-raised);--seg-on:var(--dshpc-fg);background:var(--dshpc-seg-track);}\n.dshpc-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:calc(var(--dshpc-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);font-family:inherit;font-size:var(--dshpc-font-xs);font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:color var(--dshpc-dur-fast) var(--dshpc-ease),background-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-seg--md .dshpc-seg__item{height:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item{height:calc(var(--dshpc-control-h-lg) - 6px);}\n/* 段内图标（前置）：与 Button 同口径 —— inline-flex 吃掉行高基线，svg 按块级。 */\n.dshpc-seg__icon{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-seg__icon svg{display:block;margin:0;}\n/* 只有图标（无文字 / 计数 / 角标）：段必须是正方形 ⇒ 宽 = 段高、左右内距归零、内容居中；\n   否则基础规则的 0 12px 会把它拉成长方形。放在三档之后：同名特异性下后写者胜。 */\n.dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-sm) - 6px);padding:0;justify-content:center;}\n.dshpc-seg--md .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-lg) - 6px);}\n.dshpc-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dshpc-fg);}\n.dshpc-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);color:var(--seg-on);font-weight:600;}\n.dshpc-seg__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n.dshpc-seg__item:disabled{cursor:default;opacity:.4;}\n/* 段内角标（如「异常」的数量）：语义色实面 + 反白字，0 由组件侧不渲染。必须是正圆（用户 2026-10-03）。 */\n.dshpc-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;background:var(--dshpc-danger);color:var(--dshpc-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}\n/* 段内中性计数（如筛选条「全部 11」）：纯文字、无底无边（对齐 task-ledger .dtl-seg__num 拍板口径）；0 由组件侧不渲染。 */\n.dshpc-seg__count{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;background:none;color:var(--dshpc-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}\n/* 选中段（彩色实面）里的计数：必须跟着 --seg-on 走再压暗一档（72% 白 ≈ 「比正文稍灰」）。\n   不许用 --dshpc-fg-3：它跟主题走，暗色下是深灰 ⇒ 蓝底上几乎看不见（2026-10-29 用户截图「My todos 4」）。 */\n.dshpc-seg__item[aria-pressed='true'] .dshpc-seg__count{color:color-mix(in srgb,var(--seg-on) 72%,transparent);}\n/* block：撑满父宽（表单行用），各段等分 */\n.dshpc-seg--block{display:flex;width:100%;}\n.dshpc-seg--block .dshpc-seg__item{flex:1 1 auto;justify-content:center;}\n/* weekday：星期多选方块。基础插件的特殊化定制（用户 2026-10-01：原 WeekdayPicker 即「蓝底 + 近似方形」）：\n   每格正方形（宽 = 段高）、选中品牌蓝反白字、**无外描边**（2026-10-18 重申）、\n   方块之间间距 gap:2px（2026-10-20 用户定稿：方块改小后 6px 显得太宽。10-18 曾从 2px 放宽到 6px，\n   两次都是用户拍板 —— 别自作主张改回去）。 */\n.dshpc-seg--weekday{--seg-track:var(--dshpc-seg-track);gap:2px;border:0;padding:3px;background:var(--seg-track);}\n.dshpc-seg--weekday .dshpc-seg__item{width:calc(var(--dshpc-control-h-lg) - 8px);padding:0;justify-content:center;}\n/* 蓝底反白：字色必须是常量白（--dshpc-on-signal）。2026-10-29 用户实测：暗色主题下这里曾用\n   --dshpc-fg-inverse，而它跟随宿主 label-primary-foreground，暗色下是近黑 ⇒ 蓝底黑字看不清。 */\n.dshpc-seg--weekday{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n\n/* ── tone（2026-10-29 用户）：选中片传内置基础色名，底 / 字由核心给，深浅两主题各自成立。\n   放在 weekday 之后：同名变量后写者胜，tone 与 className=\"dshpc-seg--weekday\" 同给时以 tone 为准。\n   黄底按 Chip / Button 同源口径用 on-warning（中高明度，白字看不清）。 */\n.dshpc-seg--tone-business{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-success{--seg-thumb:var(--dshpc-success);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-warning{--seg-thumb:var(--dshpc-warning);--seg-on:var(--dshpc-on-warning);}\n.dshpc-seg--tone-danger{--seg-thumb:var(--dshpc-danger);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-purple{--seg-thumb:var(--dshpc-purple);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-pink{--seg-thumb:var(--dshpc-pink);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-cyan{--seg-thumb:var(--dshpc-cyan);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-teal{--seg-thumb:var(--dshpc-teal);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-orange{--seg-thumb:var(--dshpc-orange);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-indigo{--seg-thumb:var(--dshpc-indigo);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-rose{--seg-thumb:var(--dshpc-rose);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-slate{--seg-thumb:var(--dshpc-slate);--seg-on:var(--dshpc-on-signal);}\n\n/* ── 单选滑动块（2026-10-26 用户：点选后选中底应「滑过去」，不是旧段消失、新段直接亮）。\n   结构 = 一块绝对定位的共用底 + 各段透明；位置/尺寸由组件量出后内联，这里只管外观与过渡。\n   --slide 只在单选挂上：多选（如星期）每段各自着色，没有唯一滑块可滑，保持原样。 */\n.dshpc-seg--slide{position:relative;}\n.dshpc-seg--slide .dshpc-seg__item{position:relative;z-index:1;}\n.dshpc-seg--slide .dshpc-seg__item[aria-pressed='true']{background:transparent;box-shadow:none;}\n.dshpc-seg__thumb{position:absolute;z-index:0;border-radius:var(--dshpc-radius-sm);background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);pointer-events:none;transition:left var(--dshpc-dur) var(--dshpc-ease),top var(--dshpc-dur) var(--dshpc-ease),width var(--dshpc-dur) var(--dshpc-ease),height var(--dshpc-dur) var(--dshpc-ease);}\n\n/* ── bordered 外框（2026-10-20 用户要的第二种模式）：**只在最外面套一圈 1px 描边**，\n   里面一概不动 —— 选中片的填充色 / 阴影 / 文字色全部保持原样（weekday 的蓝面照旧），\n   这里不写任何针对 __item 的规则。\n   总高必须与无框版逐像素一致：border 1px×2 由 padding 各让 1px 抵消（3 → 2）；\n   weekday 自己声明的 3px 在文件更后面，靠双类选择器压回 2px。 */\n.dshpc-seg--bordered{border:1px solid var(--dshpc-border);padding:2px;}\n.dshpc-seg--bordered.dshpc-seg--weekday{padding:2px;}\n\n@media (prefers-reduced-motion: reduce){.dshpc-seg__item{transition:none;}.dshpc-seg__thumb{transition:none;}}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/button-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/button-css.generated.js
 		const BUTTON_CSS = "\n/* ── 按钮 / 图标钮 P2 ───────────────────────────────────────────────────\n   与 Segmented 同一条高度纪律：--dshpc-control-h-sm(24) / -md(28) / -lg(32)，\n   有边框的 variant 用 1px 真边框 + 内部 padding 补回，**有边 / 无边同高**。\n\n   三条受控轴（2026-10-19 重写，对齐主流 UI 框架的分类口径）：\n     · variant —— 外观档 = 形态 + 语义色，共 10 档：\n         primary / secondary / outline / ghost / danger / success / warning / info /\n         danger-outline（红字描边）/ link（行内链接）\n     · size —— sm / md / lg\n     · block —— 撑满父宽\n   每一档**只填 5 个局部变量**（--btn-bg / -fg / -border / -bg-hover / -bg-active），\n   结构与交互只有上面这一份；任何档位都不许再写一遍 display/height/padding。\n   自定义颜色（Button 的 color 参数）同样只覆盖这 5 个变量（token 覆盖，不是新皮肤）。\n\n   ⚠️ hover 不再用 opacity 压一层（用户 2026-10-19：「黑色和红色的按钮移上去变化太小，\n   完全感觉不到颜色变了」）⇒ 走 --dshpc-*-hover / -active 的明确混色，见 tokens-css.ts。 */\n.dshpc-btn{--btn-bg:transparent;--btn-fg:var(--dshpc-fg);--btn-border:transparent;--btn-pad:12px;\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);--btn-fg-hover:var(--btn-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;\n  box-sizing:border-box;border:1px solid var(--btn-border);border-radius:var(--dshpc-radius-md);\n  background-color:var(--btn-bg);color:var(--btn-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease),transform var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-btn--sm{--btn-pad:10px;height:var(--dshpc-control-h-sm);padding:0 var(--btn-pad);font-size:var(--dshpc-font-sm);line-height:1;}\n.dshpc-btn--md{--btn-pad:12px;height:var(--dshpc-control-h-md);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n.dshpc-btn--lg{--btn-pad:14px;height:var(--dshpc-control-h-lg);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n/* block：撑满父宽（表单底栏 / 抽屉底部的主操作） */\n.dshpc-btn--block{display:flex;width:100%;}\n/* block + 前置图标 ⇒ 文字视觉居中（2026-10-19 用户点名）：\n   内容组 [图标 + 间距 + 文字] 整体在盒内居中时，**文字**的中心会被图标推右半格。\n   把右内边距补上「图标宽 + 间距」，可用盒随之左移同量 ⇒ 文字落回视觉中心，图标贴左侧。\n   图标宽按 1.2em 估（官方图标 14/16px vs 字号 12/13px），em 随字号档自动缩放。 */\n.dshpc-btn--block.dshpc-btn--icon-start{padding-right:calc(var(--btn-pad) + 1.2em + 6px);}\n/* 图标比同档文字小一号（用户 2026-11-02）：容器吃掉 0.875em，内联 SVG 一律跟随 1em，\n   不再由调用方的 size={16} 说了算 —— 全站按钮图标尺寸只由这一处决定。 */\n.dshpc-btn__icon,.dshpc-btn__icon-end{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;font-size:.875em;}\n.dshpc-btn__icon svg,.dshpc-btn__icon-end svg{display:block;margin:0;width:1em;height:1em;}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-btn .dshpc-btn__label{min-width:0;}\n/* loading：不换 DOM 结构，只在文案前插一枚 Loader（size=xs，12px）。\n   环的画法与动画统一在 controls/loader.css（本文件不再维护第二份 SVG 弧 / keyframes）。 */\n\n/* 交互态：颜色变化写在变量上 ⇒ 所有档位一次生效，且变化幅度由 token 决定（够明显） */\n.dshpc-btn:hover:not(:disabled){background-color:var(--btn-bg-hover);color:var(--btn-fg-hover);}\n.dshpc-btn:active:not(:disabled){background-color:var(--btn-bg-active);transform:translateY(1px);}\n.dshpc-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-btn:disabled{cursor:default;opacity:.5;}\n\n.dshpc-btn--primary{--btn-bg:var(--dshpc-accent);--btn-fg:var(--dshpc-fg-inverse);\n  --btn-bg-hover:var(--dshpc-accent-hover);--btn-bg-active:var(--dshpc-accent-active);}\n/* secondary：中性实心（灰面），用于「取消 / 次要」这类与主操作并排的按钮 */\n.dshpc-btn--secondary{--btn-bg:var(--dshpc-hover);--btn-fg:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-active);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--outline{--btn-bg:var(--dshpc-surface-1);--btn-border:var(--dshpc-border-strong);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--ghost{--btn-fg:var(--dshpc-fg-2);--btn-fg-hover:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--danger{--btn-bg:var(--dshpc-danger);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-danger-hover);--btn-bg-active:var(--dshpc-danger-active);}\n.dshpc-btn--success{--btn-bg:var(--dshpc-success);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-success-hover);--btn-bg-active:var(--dshpc-success-active);}\n.dshpc-btn--warning{--btn-bg:var(--dshpc-warning);--btn-fg:var(--dshpc-on-warning);\n  --btn-bg-hover:var(--dshpc-warning-hover);--btn-bg-active:var(--dshpc-warning-active);}\n.dshpc-btn--info{--btn-bg:var(--dshpc-business);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-business-hover);--btn-bg-active:var(--dshpc-business-active);}\n/* 扩展八色实心（2026-10-29）：白字两主题均 ≥4.5:1；hover/active 走各自 token 派生。 */\n.dshpc-btn--purple{--btn-bg:var(--dshpc-purple);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-purple-hover);--btn-bg-active:var(--dshpc-purple-active);}\n.dshpc-btn--pink{--btn-bg:var(--dshpc-pink);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-pink-hover);--btn-bg-active:var(--dshpc-pink-active);}\n.dshpc-btn--cyan{--btn-bg:var(--dshpc-cyan);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-cyan-hover);--btn-bg-active:var(--dshpc-cyan-active);}\n.dshpc-btn--teal{--btn-bg:var(--dshpc-teal);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-teal-hover);--btn-bg-active:var(--dshpc-teal-active);}\n.dshpc-btn--orange{--btn-bg:var(--dshpc-orange);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-orange-hover);--btn-bg-active:var(--dshpc-orange-active);}\n.dshpc-btn--indigo{--btn-bg:var(--dshpc-indigo);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-indigo-hover);--btn-bg-active:var(--dshpc-indigo-active);}\n.dshpc-btn--rose{--btn-bg:var(--dshpc-rose);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-rose-hover);--btn-bg-active:var(--dshpc-rose-active);}\n.dshpc-btn--slate{--btn-bg:var(--dshpc-slate);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-slate-hover);--btn-bg-active:var(--dshpc-slate-active);}\n/* danger-outline：红字描边（破坏性次要操作，如卡片上的「删除」）。\n   ⚠️ 旧修饰类 danger-ink 保留为别名（消费方可能还在挂），两者同一套皮肤。 */\n.dshpc-btn--danger-outline,.dshpc-btn--danger-ink{--btn-border:var(--dshpc-danger);--btn-fg:var(--dshpc-danger);\n  --btn-fg-hover:var(--dshpc-danger);--btn-bg-hover:var(--dshpc-danger-soft);--btn-bg-active:var(--dshpc-danger-soft);}\n/* link：行内文字链接型（会话 / 产出文件名），无底无边、品牌蓝、hover 下划线 */\n.dshpc-btn--link{--btn-fg:var(--dshpc-link);--btn-fg-hover:var(--dshpc-link);\n  --btn-bg-hover:transparent;--btn-bg-active:transparent;\n  height:auto;padding:0;border:0;background:none;font-weight:400;text-align:left;}\n.dshpc-btn--link:hover:not(:disabled){text-decoration:underline;}\n\n/* 图标钮：纯图标，方形；尺寸档的宽高与同档文字按钮等高、圆角统一吃 md（与 .dshpc-btn 同款，2026-10-28 拍板）\n   底色 / 图标色全走局部变量：默认**无底色**，消费方可传 color（图标色）/ background（底色）覆盖（用户 2026-11-02）。 */\n.dshpc-iconbtn{--icb-bg:transparent;--icb-bg-hover:var(--dshpc-hover);--icb-fg:var(--dshpc-fg-2);--icb-fg-hover:var(--dshpc-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;\n  border:1px solid var(--icb-border,transparent);border-radius:var(--dshpc-radius-md);\n  background:var(--icb-bg);color:var(--icb-fg);\n  font-family:inherit;cursor:pointer;flex:none;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),opacity var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-iconbtn--sm{width:var(--dshpc-control-h-sm);height:var(--dshpc-control-h-sm);font-size:var(--dshpc-font-sm);}\n.dshpc-iconbtn--md{width:var(--dshpc-control-h-md);height:var(--dshpc-control-h-md);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--lg{width:var(--dshpc-control-h-lg);height:var(--dshpc-control-h-lg);font-size:var(--dshpc-font-md);}\n/* 图标与文字按钮同口径：内联 SVG 一律跟随 1em（比 16px 档小一号） */\n.dshpc-iconbtn > svg{display:block;width:1em;height:1em;}\n.dshpc-iconbtn--outline{--icb-bg:var(--dshpc-surface-1);--icb-border:var(--dshpc-border);}\n.dshpc-iconbtn--danger{--icb-fg:var(--dshpc-danger);--icb-bg-hover:var(--dshpc-danger-soft);--icb-fg-hover:var(--dshpc-danger);}\n.dshpc-iconbtn:hover:not(:disabled){background:var(--icb-bg-hover);color:var(--icb-fg-hover);}\n.dshpc-iconbtn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-iconbtn:disabled{cursor:default;opacity:.4;}\n\n/* ── 行式文件按钮（图标 + 文件名）P2：**全站唯一实现**（2026-10-04 收编）──────────\n   用途：「产出物 / 附件」那种**一行一个文件**的清单项（基础信息右栏产出物清单、附件区、\n   执行记录页的展开区）。平时透明、**鼠标移上去才出浅底**（沿用用户 2026-10-03 定的观感）。\n   两个形态修饰类：\n     --block   撑满父宽（清单里一项一行）\n     --inline  内容宽（跟在文字后头，如附件行）\n   收编原因：这份皮肤此前只写在 task-list.tsx 的 TASK_LIST_CSS 里（旧名 .dshpc-info-out），\n   执行记录页展开区要用同一种观感 ⇒ 上提基础层，避免再出现「各写一份外观」（同名不同皮的坑刚踩过）。 */\n.dshpc-filechip{appearance:none;-webkit-appearance:none;border:0;border-radius:var(--dshpc-radius-xs);\n  background:transparent;color:var(--dshpc-fg);font:inherit;text-align:left;cursor:pointer;min-width:0;\n  transition:background-color var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-filechip:hover:not(:disabled){background:var(--dshpc-chip-bg);}\n.dshpc-filechip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n.dshpc-filechip:disabled{cursor:default;background:transparent;color:var(--dshpc-fg-3);}\n.dshpc-filechip--block{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;\n  padding:4px 6px;font-size:var(--dshpc-font-xs);}\n.dshpc-filechip--inline{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:var(--dshpc-font-sm);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-btn,.dshpc-iconbtn,.dshpc-filechip{transition:none;}}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/field-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/field-css.generated.js
 		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-dim);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;height:auto;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* height:auto 必须：iconbtn--md/lg 的固定 height 会让 absolute 的 bottom 被忽略\n   （top:1 + 固定高 ⇒ 整钮错位 1px，× 显得没居中，2026-10-28 用户截图抓的）。 */\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-dim);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-dim);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/loader-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/loader-css.generated.js
 		const LOADER_CSS = "/* ── Loader：统一的加载动画图标（无背景 / 无定位 / 颜色跟随 currentColor）────────\n   形态 × 尺寸两轴正交：形态管几何与动画；尺寸档只改 width / height，几何按\n   viewBox=\"0 0 24 24\" 等比缩放 —— 一套几何吃五档，12px 时描边即 1.5px、48px 时 6px，\n   视觉重量一致，不用逐个尺寸换算 calc。\n\n   边界：本控件**只管图标本身**。背景 / 圆角 / 内距 / 阴影 / 定位（fixed、居中、漂浮）\n   一律归调用方 —— 套 Chip、套 Card，或自己包一个 div。 */\n\n.dshpc-loader { display: inline-block; flex: none; vertical-align: middle; line-height: 0; color: inherit; }\n\n.dshpc-loader--xs { width: 12px; height: 12px; }\n.dshpc-loader--sm { width: 16px; height: 16px; }\n.dshpc-loader--md { width: 24px; height: 24px; }\n.dshpc-loader--lg { width: 32px; height: 32px; }\n.dshpc-loader--xl { width: 48px; height: 48px; }\n\n/* 形态一 ring：开口弧整体旋转。必须走 SVG 矢量弧 —— 次像素边框画圆在 12px 下会被\n   抗锯齿拉毛、看着像圆角方（2026-10-20 真机实测，曾被误判成 border-radius 被覆盖）。 */\n.dshpc-loader--ring { animation: dshpc-loader-rotate .8s linear infinite; }\n@keyframes dshpc-loader-rotate { to { transform: rotate(360deg) } }\n\n/* 形态二 blocks：三个方块依次脉动放大。\n   transform-box: fill-box 是 SVG 子元素做 CSS transform 的必要条件 —— 否则 origin\n   落在 viewBox 原点，节点会绕着左上角飞出去。 */\n.dshpc-loader__node { transform-box: fill-box; transform-origin: center; }\n.dshpc-loader--blocks .dshpc-loader__node { animation: dshpc-loader-blink 1.2s ease-in-out infinite; }\n.dshpc-loader__node:nth-child(2) { animation-delay: .15s; }\n.dshpc-loader__node:nth-child(3) { animation-delay: .3s; }\n@keyframes dshpc-loader-blink {\n  0%, 80%, 100% { opacity: .25; transform: scale(.8) }\n  40% { opacity: 1; transform: scale(1) }\n}\n\n/* 降低动效：停在「全部可见、实体大小」，而不是停在动画中途的半透明小点。 */\n@media (prefers-reduced-motion: reduce) {\n  .dshpc-loader--ring { animation: none; }\n  .dshpc-loader__node { animation: none; opacity: 1; transform: none; }\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/quick-toolbar-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/quick-toolbar-css.generated.js
 		const QUICK_TOOLBAR_CSS = "/* 快捷工具栏：右侧悬浮的一列独立圆钮。\n   横向 left / right 与 bottom、按钮直径、纵向间距由组件按 props 实时写入 style；\n   这里只放与位置无关的皮肤。 */\n.dshpc-quick-toolbar{\n  position:fixed;\n  z-index:var(--dshpc-z-dock);\n  display:flex;\n  flex-direction:column;\n  align-items:center;\n}\n/* 出现 / 消失：挂载即淡入，退场先播 fade-out（组件延迟卸载，见 QuickToolbar.ts）。 */\n@keyframes dshpc-quick-toolbar-in{\n  from{opacity:0;transform:translateY(6px) scale(.9);}\n  to{opacity:1;transform:none;}\n}\n@keyframes dshpc-quick-toolbar-out{\n  from{opacity:1;transform:none;}\n  to{opacity:0;transform:translateY(6px) scale(.9);}\n}\n.dshpc-quick-toolbar__item{\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  padding:0;\n  margin:0;\n  box-sizing:border-box;\n  border:1px solid var(--dshpc-border);\n  border-radius:50%;\n  /* 自定义底色 / 字色只写这两个变量（见 QuickToolbar.ts），hover/active 才能跟着混色。 */\n  background:var(--dshpc-quick-toolbar-bg, var(--dshpc-solid));\n  color:var(--dshpc-quick-toolbar-fg, var(--dshpc-on-solid));\n  box-shadow:var(--dshpc-shadow-2);\n  cursor:pointer;\n  animation:dshpc-quick-toolbar-in var(--dshpc-dur) var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),\n             color var(--dshpc-dur-fast) var(--dshpc-ease),\n             transform var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 退场期保留占位，避免同列其他按钮瞬时跳位。 */\n.dshpc-quick-toolbar__item.is-leaving{\n  animation:dshpc-quick-toolbar-out var(--dshpc-dur) var(--dshpc-ease) forwards;\n  pointer-events:none;\n}\n/* 变色与核心 Button 实心档同一套：按 --dshpc-fg 混出 hover / active 底色（自定义 color 也跟随）。 */\n.dshpc-quick-toolbar__item:hover{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 82%, var(--dshpc-fg));\n}\n.dshpc-quick-toolbar__item:active{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 70%, var(--dshpc-fg));\n  transform:scale(.94);\n}\n.dshpc-quick-toolbar__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n@media (prefers-reduced-motion: reduce){\n  .dshpc-quick-toolbar__item{transition:none;transform:none;animation:none;}\n  .dshpc-quick-toolbar__item.is-leaving{animation:none;opacity:0;}\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/hint-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/hint-css.generated.js
 		const HINT_CSS = "\n/* ── 问号提示 P4（用户 2026-10-18：对齐真实插件 HelpButton——**带圈的问号图标**）──\n   本体 14px 细圈 + 圈内 ?，颜色 fg-3、hover 只提亮不加底（与 dshpc-ed-help 同规矩）。\n   气泡不在本文件：2026-10-19 用户拍板「问号必须用官方 Tooltip 那一个」⇒ 气泡由注入的\n   官方组件渲染（src/ui/tooltip.ts），这里只管问号图标本身。 */\n.dshpc-hint{display:inline-flex;align-items:center;justify-content:center;flex:none;\n  box-sizing:border-box;width:14px;height:14px;padding:0;border:1px solid currentColor;border-radius:50%;background:transparent;\n  color:var(--dshpc-fg-3);font-family:inherit;font-size:8px;font-weight:600;line-height:12px;cursor:help;vertical-align:middle;\n  transition:color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-hint:hover,.dshpc-hint:focus-visible{color:var(--dshpc-fg);background:0 0;}\n.dshpc-hint:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/split-group-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/split-group-css.generated.js
 		const SPLIT_GROUP_CSS = "\n/* ── 拼接外壳 SplitGroup ──────────────────────────────────────────────\n   职责只有一条：把两个控件在外观上焊成一体（外框 / 圆角 / 中间 1px 分隔 / 整体聚焦圈）。\n   它**不持状态、不出联动回调** —— 选中与联动全走内件自己的 value / onChange\n   （用户 2026-10-28 拍板：外壳不必知道右边那个下拉管什么）。\n\n   ⚠️ 与内件类名有意耦合：内件是 Picker / Segmented 时由下面几条规则把它们自己的\n   边框 / 底色 / 圆角交出来，由外壳统一画。内件改名或改结构要同步改这里，\n   否则会出现双边框、双底色。\n\n   高度不写死：内件自己按 size 档（sm 24 / md 28 / lg 32）撑开，外壳跟着长。\n   两格要等高，就给内件传**同一个 size**。万一两格 size 不一致，外壳内件用 align-items:center\n   居中（不会顶对齐露白，用户 2026-10-28 截图反馈「本月偏上」后的处理）；**别用 height:100%**，\n   它会覆盖三档高度（与 --lg/--sm 同特异性且注入更晚）。\n\n   左格统一灰底（用户 2026-10-28 拍板）：滑块保留自己的灰轨，左格下拉把底色换成\n   surface-sunken；右格保持原样。层次感 = 左格是「档位/范围」，右格是「值」。 */\n   .dshpc-split{display:inline-flex;align-items:stretch;max-width:100%;overflow:hidden;border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n   /* 两格宽度都由内容给；容器再窄也让内件自己省略，不让外壳被撑破 */\n   .dshpc-split > *{min-width:0;max-width:100%;}\n   /* 分隔：相邻兄弟的左描边，不额外插 DOM，hover / focus 时也不会断 */\n   .dshpc-split > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n   /* 整体聚焦：只在**下拉展开**时画一整圈（判据是内件的 aria-expanded，不是 :focus-within）。\n      2026-11-02 用户定稿：滑块那格是「选中」不是「输入聚焦」，鼠标点它不该让整框常亮；\n      而且选取值后焦点会留在按钮上，用 :focus-within 会一直亮着。 */\n   .dshpc-split:has(.dshpc-picker__trigger[aria-expanded='true']){border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n   /* Picker：去掉自身外框与底色；display 改成 flex，消掉 inline-block 行盒带来的基线间隙。\n      注意**不能用 height:100%**：它会和 .dshpc-picker__trigger--lg / --sm 同特异性（都是两个类），\n      且 split-group.css 在 picker.css 之后注入，会把三档高度全吃掉（md/lg 看起来一样大）。\n      改用 align-items:center —— 同 size 时两格自然等高的同时文字垂直居中；万一两格 size 不一致，\n      较矮的格也只是居中、不会顶对齐露白。 */\n   .dshpc-split .dshpc-picker{display:flex;align-items:center;}\n   .dshpc-split .dshpc-picker__trigger{border:0;border-radius:0;background:transparent;}\n   .dshpc-split .dshpc-picker__trigger:focus-visible{outline:0;}\n   /* 左格下拉：灰底（滑块的灰轨是它自己的 --dshpc-seg-track，不在这里覆盖） */\n   .dshpc-split > :first-child .dshpc-picker__trigger{background:var(--dshpc-surface-sunken);}\n   /* Segmented：只去外圆角与描边，灰轨保留；padding 保持 3px 不动 —— 它是高度契约的一部分\n    （3 + item + 3 = control-h）。bordered 那档去掉描边、把让给描边的 1px 还回 padding，\n    否则会比右边矮 2px。 */\n   .dshpc-split .dshpc-seg{border-radius:0;border:0;}\n   .dshpc-split .dshpc-seg--bordered{padding:3px;}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/input-group-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/input-group-css.generated.js
 		const INPUT_GROUP_CSS = "\n/* ── 组合输入框 InputGroup ─────────────────────────────────────────────\n   输入框 + 后置按钮（一枚或多枚）+ 可选前置标题，焊成一体。\n   与 SplitGroup 同一套外观口径：外框 / 圆角 / 相邻 1px 分隔 / 整体聚焦圈都由外壳画，\n   内件（.dshpc-input / .dshpc-btn / .dshpc-iconbtn）把自己的边框、圆角、外圈交出来。\n\n   高度默认吃 --dshpc-control-h-*（sm 24 / md 28 / lg 32）；调用方要自定义就在根节点\n   内联 height，这里让内件 height:100% 跟上 —— 内件档位高度只有 0,1,0，被本文件的\n   0,2,0 压掉，不会出现「外壳变高了、里面的框还是 32」。\n   （⚠️ 别改成不写 height:100% 只靠 stretch：input 有确定高度时 flex 不会拉伸它。） */\n/* min-width：输入格是 flex:1，没有它时 inline-flex 按占位文字宽收得很窄（搜索框 + 按钮的典型用法会难看）。\n   要更宽 / 更窄由调用方在外面套壳或给 className，不许在这里写死 max-width。 */\n.dshpc-igroup{display:inline-flex;align-items:stretch;min-width:200px;max-width:100%;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n.dshpc-igroup--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-igroup--md{height:var(--dshpc-control-h-md);}\n.dshpc-igroup--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-igroup--error{border-color:var(--dshpc-danger);}\n/* 整体聚焦：内件自己的焦点圈交出来，由外壳画一整圈（各画各的会变成格内半圈） */\n.dshpc-igroup:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n\n/* 前置标题：与输入框同格，灰底区分（与 SplitGroup 左格同一口径） */\n.dshpc-igroup__label{display:inline-flex;align-items:center;flex:none;padding:0 8px;white-space:nowrap;\n  background:var(--dshpc-surface-sunken);color:var(--dshpc-fg-2);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-igroup--md .dshpc-igroup__label,.dshpc-igroup--lg .dshpc-igroup__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 输入格：交出边框 / 圆角 / 底色 / 焦点圈；宽度交给 flex（原生 width:100% 会和 flex-basis 打架） */\n.dshpc-igroup > .dshpc-input{flex:1 1 auto;width:auto;min-width:0;height:100%;border:0;border-radius:0;background:transparent;}\n.dshpc-igroup > .dshpc-input:focus{box-shadow:none;}\n\n/* 按钮格：交出边框与圆角；实心底色保留（右侧「确定」该有重量）。\n   纯图标钮本身是固定宽的方块，这里改成按高度撑出的正方形，自定义高度时才不会变成竖长条。 */\n.dshpc-igroup > .dshpc-btn,.dshpc-igroup > .dshpc-iconbtn{flex:none;height:100%;border-radius:0;}\n.dshpc-igroup > .dshpc-iconbtn{width:auto;aspect-ratio:1;}\n.dshpc-igroup > .dshpc-btn{border:0;}\n\n/* 分隔线：相邻兄弟的左描边，不额外插 DOM。后两条是给「清过边框」的格子补回来的，\n   必须写成 0,2,0 且写在上面的 border:0 之后 —— 否则被 border:0 压掉，格子之间没分隔。 */\n.dshpc-igroup > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-input{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-btn{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/table-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/table-css.generated.js
 		const TABLE_BASE_CSS = "/* ── 表格基础层（结构 + 交互 + 空态）─────────────────────────────────────\n   外观分档 = 分组件 + 分文件：本文件只放所有外观共用的部分；\n   表头底色、分隔线、悬浮 / 选中色由皮肤文件负责（table-plain.css 是第一档）。\n   皮肤选择器一律挂在 .dshpc-table--<skin> 下，与基础层不同名 —— 注入顺序不影响胜负\n   （test/css-contract.test.mjs 禁止跨常量同名选择器）。\n   圆角裁剪 / 横向滚动归调用方容器，本层不设 overflow；也不做表头吸顶：\n   分组表头是多行，统一 top:0 会在滚动时互相盖住（要吸顶请在外层容器处理）。 */\n\n.dshpc-table{--dshpc-table-pad-x:var(--dshpc-space-3);--dshpc-table-head-h:44px;--dshpc-table-row-h:48px;\n  width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;box-sizing:border-box;\n  color:var(--dshpc-fg);font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 密度三档：只改行高与水平内距，配色与分隔线归皮肤。compact / comfortable 各一行，\n   新增档位在此追加；列级 padding 走内联 style 覆盖（不在这里再开一套变量）。\n   默认水平内距 12px（space-3）—— 参考稿的色块间距，16px 偏松。 */\n.dshpc-table--density-compact{--dshpc-table-pad-x:var(--dshpc-space-2);--dshpc-table-head-h:36px;--dshpc-table-row-h:36px;}\n.dshpc-table--density-comfortable{--dshpc-table-pad-x:var(--dshpc-space-4);--dshpc-table-head-h:52px;--dshpc-table-row-h:60px;}\n\n.dshpc-table__head-cell,.dshpc-table__cell{box-sizing:border-box;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  text-align:left;vertical-align:middle;font-weight:400;}\n\n/* 表头 44 / 数据行 48 是 default 档（参考稿密度）；height 在 table-cell 上是最小高，\n   多行内容会自动把行撑高，不会被截断。 */\n.dshpc-table__head-cell{height:var(--dshpc-table-head-h);font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg-2);}\n.dshpc-table__head-cell--group{text-align:center;}\n.dshpc-table__cell{height:var(--dshpc-table-row-h);}\n\n.dshpc-table__head-cell--center,.dshpc-table__cell--center{text-align:center;}\n.dshpc-table__head-cell--right,.dshpc-table__cell--right{text-align:right;}\n\n.dshpc-table__row{transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n/* 只有传了 onRowClick 的行才是可点的（数据属性由组件按此打）。 */\n.dshpc-table__row[data-interactive='true']{cursor:pointer;}\n.dshpc-table__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n\n/* 斑马纹是通用能力（表级 striped 开关），放在基础层：底色取 token，各档皮肤不必各自实现。\n   选择器刻意只到 3 个类级别（表级 + 行 + :nth-child）；皮肤层的行态规则带 __body 上下文\n   + 属性选择器，必然是 4 级 ⇒ 与注入顺序无关地压过它。\n   2026-10-30 真机事故：这里曾写满 4 级（多了一个 __body），与选中的 4 级相同 ⇒ 基础层\n   比皮肤后注入，偶数行永远被斑马纹盖住（「单数行能选中、双数行点了没反应」）。 */\n.dshpc-table--striped .dshpc-table__row:nth-child(even){background:var(--dshpc-plate);}\n\n/* 分组通栏：一个表格里放多个板块（工作区 A / 工作区 B）时，每组先来一行横跨全部列的大标题，\n   然后才是这一组自己的表头与数据行。结构 + 底色归基础层（只用 token，各档皮肤共同成立）；\n   通栏底走 --dshpc-table-banner-bg（与表头互换的那一档，2026-10-30 用户定）；\n   通栏与组表头之间画一条线（用户 2026-10-30：那之间也要有 border）；\n   组与组之间用通栏顶线隔开，第一组顶部不画（外框已经在那儿，画了就成双线）。 */\n.dshpc-table__group-cell{height:var(--dshpc-table-head-h);padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;background:var(--dshpc-table-banner-bg);border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  text-align:left;vertical-align:middle;font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg);}\n.dshpc-table__group-body:first-of-type .dshpc-table__group-cell{border-top:0;}\n\n/* 通栏标题的固定标签（短竖线）与排版由 SectionHead 自带（4px 圆头），本层不再画。 */\n\n.dshpc-table__empty{height:80px;padding:0 var(--dshpc-space-4);text-align:center;\n  color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n\n/* 加载态行（加载更多 / 没有更多 / 整表加载）：单元格自身不画边框（底部状态行的顶线由皮肤补），内容居中；\n   整表加载默认占位 160px（可由 loadingHeight 覆盖），底部那行只占一行高。 */\n.dshpc-table__state-cell{padding:0;border:0;text-align:center;vertical-align:middle;}\n.dshpc-table__state{display:flex;align-items:center;justify-content:center;\n  gap:var(--dshpc-space-2);min-height:40px;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state--full{flex-direction:column;min-height:160px;gap:var(--dshpc-space-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state-text{line-height:1;}\n/* 底部哨兵：零高、无边框、无内容，只给 IntersectionObserver 一个落点。 */\n.dshpc-table__sentinel>td{height:0;padding:0;border:0;line-height:0;}\n\n/* 内建分页的外壳：表格在上、分页条在下，间距走 space-3（分页条自己管左右对齐）。 */\n.dshpc-table-frame{display:flex;flex-direction:column;gap:var(--dshpc-space-3);}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/table-plain-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/table-plain-css.generated.js
 		const TABLE_PLAIN_CSS = "/* ── 外观一 · Plain（第一个样式：白卡片上的轻量表格）─────────────────────\n   特征：外框 + 灰底表头（含下边线，双行分组表头也清楚）、竖向分隔线、\n   数据行只保留极淡底线（不画重横线）、行悬浮淡蓝、选中行淡蓝底 + 左侧 3px 蓝竖条。\n   选择器全部挂在 .dshpc-table--plain 下，和基础层不同名（注入顺序无关）。\n   竖分隔线按列声明（格子上的 data-divider），不用相邻兄弟选择器 —— 后者会让每行首格\n   永远没有左线（用户 2026-10-30 真机看到的 Name 左侧缺线），且单元格跨列后会画错位置。\n   后续外观照此另建：table-grid.css / table-zebra.css，各自一个组件、各自 import 自己那份。 */\n\n/* 外框四态：all 四边 / x 只有左右 / y 只有上下 / none 全不要。\n   组件总会按 borders 属性和上对应 class，故这里不存在「无 class 的裸表」。\n   「不要左右两条边」就是 borders='y'。 */\n.dshpc-table--plain.dshpc-table--borders-all{border:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-x{border-left:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-y{border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-none{border:0;}\n\n/* 表头：中性灰底 + 下边线。底色走 --dshpc-table-head-bg（= --dshpc-surface-sunken，\n   与通栏那层灰同源；2026-10-30 用户二次定案：表头 / 通栏互换底色）；下边线兜住分组表头的第二层。 */\n.dshpc-table--plain .dshpc-table__head-cell{\n  background:var(--dshpc-table-head-bg);\n  border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-table--plain .dshpc-table__head-cell--group{color:var(--dshpc-fg-3);}\n\n/* 表头多色：列级 headerTone 打到 data-header-tone，浅底 + 同色文字。\n   色值全部来自 token（soft 底 / 实色字），暗色主题自动跟随，不写死任何 hex。\n   这组规则比上方灰底规则多一个属性选择器，必然覆盖默认灰底。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='business']{background:var(--dshpc-business-soft);color:var(--dshpc-business);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='success']{background:var(--dshpc-success-soft);color:var(--dshpc-success);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='warning']{background:var(--dshpc-warning-soft);color:var(--dshpc-warning);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='danger']{background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='purple']{background:var(--dshpc-purple-soft);color:var(--dshpc-purple);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='pink']{background:var(--dshpc-pink-soft);color:var(--dshpc-pink);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='cyan']{background:var(--dshpc-cyan-soft);color:var(--dshpc-cyan);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='teal']{background:var(--dshpc-teal-soft);color:var(--dshpc-teal);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='orange']{background:var(--dshpc-orange-soft);color:var(--dshpc-orange);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='indigo']{background:var(--dshpc-indigo-soft);color:var(--dshpc-indigo);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='rose']{background:var(--dshpc-rose-soft);color:var(--dshpc-rose);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='slate']{background:var(--dshpc-slate-soft);color:var(--dshpc-slate);}\n\n/* 竖分隔线：按列声明，**默认不画**。组件只给 divider: true 的列打 data-divider='left'，\n   首列恒不画（那是外框的位置）。默认表格 = 只有横线、没有一条竖线；\n   要「列间有线」就给对应列 divider:true。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-divider='left'],\n.dshpc-table--plain .dshpc-table__cell[data-divider='left']{border-left:1px solid var(--dshpc-border);}\n\n/* 数据行之间的极淡底线：只帮眼睛「分行」，不回到粗横线表格的老样子。 */\n.dshpc-table--plain .dshpc-table__row + .dshpc-table__row .dshpc-table__cell{\n  border-top:1px solid var(--dshpc-border-faint);\n}\n\n/* 底部状态行（加载更多 / 到底）：整行通栏，与上方数据行之间补一条实线。\n   只补顶线：左右两条不由这一格重复画 —— borders=all / x 时表级外框已经兜住；\n   borders=y / none 本来就没有左右边。整表加载占位行不加（表头已有下边线，再加就成双线）。 */\n.dshpc-table--plain .dshpc-table__state-row--footer .dshpc-table__state-cell{\n  border-top:1px solid var(--dshpc-border);\n}\n\n/* 没有左右外框时（borders=y）底部状态行下面那条表底线也去掉：\n   状态行只留上方一条实线，否则图标 / 文案下方还多一条孤线（2026-10-31 用户定）。\n   borders=none 本来就没有底边，无需在此重复。 */\n.dshpc-table--plain.dshpc-table--borders-y.dshpc-table--foot-no-bottom{border-bottom:0;}\n\n/* 行悬浮：只在可点行上给反馈，静态表格不误导用户以为能点。\n   底色是极淡中性灰（--dshpc-table-row-hover：亮色一层淡黑 ≈1.5%，暗色一层淡白 ≈3%）——\n   2026-10-30 用户：hover 要特别淡的灰、不要淡蓝（第二次又要求再浅一半）。带 __body 上下文是为了压过基础层的斑马纹（见 table.css）。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-interactive='true']:hover{background:var(--dshpc-table-row-hover);}\n\n/* 选中行：淡蓝底 + 左侧蓝竖条。用背景渐变画条，避免 tr 上伪元素 / 定位的兼容问题；\n   两条选择器同一份声明：悬浮态（多一个属性 + 伪类）不会盖掉选中态。\n   底色用 business-soft（比悬浮再明确一档但仍是浅色），条本身才是「选中」的信号。\n   特异性 4 级，高于基础层的斑马纹（3 级）⇒ 偶数行也能正常选中。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'],\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'][data-interactive='true']:hover{\n  background:linear-gradient(to right,var(--dshpc-business) 3px,var(--dshpc-business-soft) 3px);\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/pagination-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/pagination-css.generated.js
 		const PAGINATION_CSS = "/* ── 分页（‹ Previous 1 2 3 … 36 Next ›）────────────────────────────────────\n   当前页 = 蓝色圆角方块 + 白字（实心面的字必须走 --dshpc-on-signal，不许用主题反色）；\n   其余页码是纯文字按钮，悬浮只给极淡中性底。对齐由 --left / --center / --right 三个修饰决定，\n   组件默认 right。颜色全部走 token，明暗自动跟随宿主。 */\n\n.dshpc-pagination{display:flex;align-items:center;gap:var(--dshpc-space-2);flex-wrap:wrap;\n  font-size:var(--dshpc-font-sm);line-height:1;color:var(--dshpc-fg-2);}\n\n.dshpc-pagination--left{justify-content:flex-start;}\n.dshpc-pagination--center{justify-content:center;}\n.dshpc-pagination--right{justify-content:flex-end;}\n\n.dshpc-pagination__total{color:var(--dshpc-fg-3);margin-inline-end:var(--dshpc-space-1);}\n\n.dshpc-pagination__pages{display:flex;align-items:center;gap:2px;}\n\n/* 页码 / 上下页 = 核心 Button（当前页 info 实心蓝、其余 ghost），箭头 = 全站唯一 Chevron。\n   这里只补尺寸与间距，不重画按钮皮肤；两级选择器压过 .dshpc-btn--md 的内距。 */\n.dshpc-pagination .dshpc-pagination__page{padding:0 6px;min-width:28px;}\n.dshpc-pagination .dshpc-pagination__nav{padding:0 var(--dshpc-space-2);}\n\n.dshpc-pagination__ellipsis{display:inline-flex;align-items:center;justify-content:center;\n  min-width:28px;height:28px;color:var(--dshpc-fg-3);}\n\n.dshpc-pagination__simple{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;\n  color:var(--dshpc-fg);}\n\n/* 简洁模式只留箭头：文字标签隐藏，箭头仍然可见（无障碍名还在 aria-label 上）。 */\n.dshpc-pagination--simple .dshpc-pagination__text{display:none;}\n\n/* 每页条数下拉 = 核心 Picker（箭头是全站唯一的 Chevron）：只收窄不参与伸缩。 */\n.dshpc-pagination__size{flex:none;}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/controls/section-head-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/controls/section-head-css.generated.js
 		const SECTION_HEAD_CSS = "/* 分区标题行：标签（可选，画出来的短竖线）/ icon + 标题 + 右侧控件。 */\n.dshpc-section-head{display:flex;align-items:center;gap:var(--dshpc-space-2);\n  margin-bottom:var(--dshpc-space-3);}\n.dshpc-section-head--flush{margin-bottom:0;}\n\n.dshpc-section-head__bar{flex:none;width:4px;height:1em;border-radius:999px;\n  font-size:var(--dshpc-font-lg);background:var(--dshpc-fg-2);}\n\n.dshpc-section-head__icon{display:inline-flex;align-items:center;flex:none;\n  line-height:var(--dshpc-line-lg);color:var(--dshpc-fg-3);}\n\n.dshpc-section-head__title{font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);\n  font-weight:600;color:var(--dshpc-fg);flex:none;}\n\n.dshpc-section-head__right{flex:1;display:flex;align-items:center;\n  justify-content:flex-end;gap:var(--dshpc-space-2);min-width:0;}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Loader.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Loader.js
 		/**
 		* Loader —— 统一的加载动画图标（UI 基础层 · 反馈族）。
 		*
@@ -336,7 +336,7 @@ window.__ModuleLoader__.load({
 			}, variant === "ring" ? ringNode() : blockNodes());
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/thenable.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/thenable.js
 		/** 返回值是不是 thenable。Button 的自动 loading 与命令式弹窗的收尾共用这一份判定。 */
 		function isThenable(value) {
 			if (value === null || value === void 0) return false;
@@ -351,7 +351,7 @@ window.__ModuleLoader__.load({
 			return value !== false;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Button.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Button.js
 		/**
 		* 按钮 / 图标钮 —— **全站唯一实现**（L2 组件皮肤，P2）
 		*
@@ -554,7 +554,7 @@ window.__ModuleLoader__.load({
 			return (0, react$1.createElement)("button", attrs, loading ? (0, react$1.createElement)(Loader$2, { size: "xs" }) : icon);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/utils/i18n.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/utils/i18n.js
 		/**
 		* utils 自带的最小多语言。
 		*
@@ -1156,16 +1156,16 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/feedback-css.generated.js
-		const FEEDBACK_CSS = "/* 遮罩与头部在 overlay.css，表面（底色/描边/圆角/阴影）在 panel.css 的 --modal 档，\n   这里只剩**家族布局与尺寸**。三者各管一段，别再把皮肤抄回来。 */\n.dshpc-modal{\n  display:flex;flex-direction:column;box-sizing:border-box;\n}\n/* body = 唯一滚动容器：内距与滚动都归它（滚动条贴面板右缘，不被内距挤进来）；\n   内容按流排，不设 height:100%、不自己开滚动条。\n   透明右边框 = 让滚动条与面板右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-modal__body{flex:1 1 auto;min-height:0;overflow:auto;padding:17px 18px;border-right:1px solid transparent}\n/* 底栏与头部同一口径（2026-11-02 用户）：上下内距相等、内容垂直居中、默认带一条分隔线。\n   线可由消费方关掉（Modal 的 footerDivider=false）—— 确认框家族本来就没有线（与头部一致）。 */\n.dshpc-modal .dshpc-modal__foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:18px;border-top:1px solid var(--dshpc-border)}\n.dshpc-modal .dshpc-modal__foot--bare{border-top:none}\n/* 自绘 toast 的样式在 2026-11-03 删除：Toast 早已改走宿主 toast()（Toast.ts 的 showNative），\n   .dshpc-toast* 这几个类没有任何消费者，留着只是死样式（还带着裸 z-index 与裸阴影）。 */\n.dshpc-error__retry{\n  margin-top:8px;color:var(--dshpc-link);cursor:pointer;background:none;border:none;padding:0;\n}\n/* 原生弹窗演示：经宿主 Modal 的 contentClassName 注入，证明宿主内容区尺寸可经类名自定义。 */\n.dshpc-native-demo-content{max-width:520px}\n/* 头部信号图标（AlertModal 按 severity 注入）：自含配色，色值在 tokens.css 的 --dshpc-sev-*。 */\n.dshpc-alert-sev{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:12px;color:var(--dshpc-on-signal);flex:none}\n.dshpc-alert-sev--info{background:var(--dshpc-sev-info)}\n.dshpc-alert-sev--success{background:var(--dshpc-sev-success)}\n.dshpc-alert-sev--warning{background:var(--dshpc-sev-warning)}\n.dshpc-alert-sev--error{background:var(--dshpc-sev-error)}\n/* 小确认框家族（sm）：严格抄兄弟项目 renderConfirm 的 dialogStyle（task-list.tsx:456）——\n   360px 宽 / 18px 内距 / 头部无分隔线 / 说明文字 fg-2 / 底部按钮右对齐。 */\n.dshpc-modal--sm{padding:18px}\n.dshpc-modal--sm .dshpc-overlay-head{padding:0 0 8px;border-bottom:none}\n.dshpc-modal--sm .dshpc-modal__body{padding:0 0 14px;overflow:visible;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);line-height:var(--dshpc-line-sm)}\n.dshpc-modal--sm .dshpc-modal__foot{padding:0;border-top:none}\n";
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/feedback-css.generated.js
+		const FEEDBACK_CSS = "/* 遮罩与头部在 overlay.css，表面（底色/描边/圆角/阴影）在 panel.css 的 --modal 档，\n   这里只剩**家族布局与尺寸**。三者各管一段，别再把皮肤抄回来。 */\n.dshpc-modal{\n  display:flex;flex-direction:column;box-sizing:border-box;\n}\n/* body = 唯一滚动容器：内距与滚动都归它（滚动条贴面板右缘，不被内距挤进来）；\n   内容按流排，不设 height:100%、不自己开滚动条。\n   透明右边框 = 让滚动条与面板右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-modal__body{flex:1 1 auto;min-height:0;overflow:auto;padding:17px 18px;border-right:1px solid transparent}\n/* 底栏与头部同一口径（2026-11-02 用户）：上下内距相等、内容垂直居中、默认带一条分隔线。\n   线可由消费方关掉（Modal 的 footerDivider=false）—— 确认框家族本来就没有线（与头部一致）。 */\n.dshpc-modal .dshpc-modal__foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:18px;border-top:1px solid var(--dshpc-border)}\n.dshpc-modal .dshpc-modal__foot--bare{border-top:none}\n/* 底栏左侧的过程提示：吃掉按钮之外的剩余宽，超长交给 FlipText 省略 / hover 跑马灯。 */\n.dshpc-modal .dshpc-modal__notice{flex:1 1 auto;min-width:0;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-3)}\n/* 自绘 toast 的样式在 2026-11-03 删除：Toast 早已改走宿主 toast()（Toast.ts 的 showNative），\n   .dshpc-toast* 这几个类没有任何消费者，留着只是死样式（还带着裸 z-index 与裸阴影）。 */\n.dshpc-error__retry{\n  margin-top:8px;color:var(--dshpc-link);cursor:pointer;background:none;border:none;padding:0;\n}\n/* 原生弹窗演示：经宿主 Modal 的 contentClassName 注入，证明宿主内容区尺寸可经类名自定义。 */\n.dshpc-native-demo-content{max-width:520px}\n/* 头部信号图标（AlertModal 按 severity 注入）：自含配色，色值在 tokens.css 的 --dshpc-sev-*。 */\n.dshpc-alert-sev{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:12px;color:var(--dshpc-on-signal);flex:none}\n.dshpc-alert-sev--info{background:var(--dshpc-sev-info)}\n.dshpc-alert-sev--success{background:var(--dshpc-sev-success)}\n.dshpc-alert-sev--warning{background:var(--dshpc-sev-warning)}\n.dshpc-alert-sev--error{background:var(--dshpc-sev-error)}\n/* 小确认框家族（sm）：严格抄兄弟项目 renderConfirm 的 dialogStyle（task-list.tsx:456）——\n   360px 宽 / 18px 内距 / 头部无分隔线 / 说明文字 fg-2 / 底部按钮右对齐。 */\n.dshpc-modal--sm{padding:18px}\n.dshpc-modal--sm .dshpc-overlay-head{padding:0 0 8px;border-bottom:none}\n.dshpc-modal--sm .dshpc-modal__body{padding:0 0 14px;overflow:visible;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);line-height:var(--dshpc-line-sm)}\n.dshpc-modal--sm .dshpc-modal__foot{padding:0;border-top:none}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/overlay-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/overlay-css.generated.js
 		const OVERLAY_CSS = "/* 浮层公共骨架：遮罩 + 头部。Modal（居中）/ SideSheet（侧边）/ 选文件弹窗（锚定）共用这一份，\n   各家各自 registerStyle 同一份（幂等），谁也不许再抄一份遮罩。\n   关闭钮的皮肤在 panel.css（.dshpc-panel__close，旧类名作别名），不在这里再写一份。 */\n\n/* 遮罩 = 宿主遮罩变量 --dsw-alias-bg-mask-1（与官方 Modal / 兄弟项目 --tdt-mask 同一条真值，用户 2026-10-20）。 */\n/* 右边界让位页面级分栏（PanelDock 发布的 --dshpc-page-inset-right，用户 2026-10-22）：\n   分栏不被压暗、照常可点；浮层在这块**剩下**的区域里排版，就像整页被推出去一样。 */\n.dshpc-overlay{\n  position:fixed;inset:0 var(--dshpc-page-inset-right,0px) 0 0;\n  background:var(--dshpc-mask);\n}\n/* 居中档（Modal）：z 走 modal 档。 */\n.dshpc-overlay--center{\n  display:flex;align-items:center;justify-content:center;\n  z-index:var(--dshpc-z-modal);\n}\n/* 侧边档（SideSheet）：面板 absolute 贴边，不需要 flex 居中；z 走 drawer 档（低于 modal）。 */\n.dshpc-overlay--side{z-index:var(--dshpc-z-drawer)}\n/* 锚定档（选文件弹窗）：遮罩照旧压暗 + 点外部关闭，面板自己 fixed 贴锚点，这里不做布局。 */\n.dshpc-overlay--plain{z-index:var(--dshpc-z-panel)}\n\n/* 头部四槽：左图标 / 标题组 / 弹性间隔 / 右侧动作区 + 关闭钮。\n   上下内距必须相等（18/12 会让标题离面板顶远、离分隔线近，用户 2026-11-02）。 */\n.dshpc-overlay-head{\n  display:flex;align-items:center;gap:8px;padding:18px;\n  border-bottom:1px solid var(--dshpc-border);flex-wrap:wrap;\n}\n.dshpc-overlay-head__heading{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 auto}\n.dshpc-overlay-head__lead{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1}\n/* 标题组：第一行 = 标题 + 右侧小块（徽标紧跟标题），第二行 = 副标题。 */\n.dshpc-overlay-head__titlegroup{display:flex;flex-direction:column;gap:2px;min-width:0;flex:0 1 auto}\n.dshpc-overlay-head__titlerow{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-overlay-head__title{font-size:var(--dshpc-font-lg);font-weight:600;line-height:1.4;min-width:0}\n/* 标题下副标题行（兄弟项目 .dsh-tdt-sv-sid：等宽字体、caption 色、可换行）。 */\n.dshpc-overlay-head__sid{font-family:var(--ds-font-family-code,monospace);font-size:var(--dshpc-font-xs);color:var(--dshpc-fg-3);word-break:break-all}\n.dshpc-overlay-head__extra{flex:none;display:inline-flex;align-items:center}\n.dshpc-overlay-head__spacer{flex:1 1 auto;min-width:8px}\n.dshpc-overlay-head__actions{flex:none;display:flex;align-items:center;gap:8px}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/panel-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/panel-css.generated.js
 		const PANEL_CSS = "/* 浮层面板皮肤（2026-11-03 用户定：皮肤统一，只改样式不动交互）。\n *\n * 这份文件是**所有「浮起来的框」的皮肤真源**。定位（fixed / absolute、贴谁、怎么翻转、多大的\n * 层序）留在各自控件里，这里只管表面四件：底色 / 描边宽 / 圆角 / 阴影。\n * ⚠️ 组件 CSS 里不许再写这四个字面值 —— 想改外观就改这里，别在消费方另起一套。\n *\n * 三档（差异只在这三段定义，别处分叉）：\n *   --modal    居中模态（Modal / ConfirmModal / AlertModal 家族）\n *   --popover  贴锚点的浮层面板（pickWorkspaceFile 的选文件弹窗）\n *   --menu     下拉菜单（文件浏览器 ▾ 选层、Picker 下拉）\n *\n * 不并入三档的：PanelDock 与 SideSheet 是**贴边家族**（side-panel.css 的\n * .dshpc-side-surface，surface-base、无外描边）—— 2026-11-02 拍板「两者皮肤一模一样」，\n * 一个是布局成员、一个是贴边抽屉，都不是浮层。\n */\n.dshpc-panel{\n  background:var(--dshpc-panel-bg);color:var(--dshpc-fg);\n  border:var(--dshpc-panel-bw) solid var(--dshpc-border);\n  border-radius:var(--dshpc-panel-radius);box-shadow:var(--dshpc-panel-shadow);\n}\n.dshpc-panel--modal{\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:3px;\n  --dshpc-panel-radius:var(--dshpc-radius-xl);\n  --dshpc-panel-shadow:var(--dshpc-shadow-2);\n  overflow:hidden;\n}\n.dshpc-panel--popover{\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:1px;\n  --dshpc-panel-radius:var(--dshpc-radius-lg);\n  --dshpc-panel-shadow:var(--dshpc-shadow-2);\n  overflow:hidden;\n}\n.dshpc-panel--menu{\n  /* 菜单底与模态同一层（用户 2026-11-03：别用页面底色，暗色下看着全黑）。 */\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:1px;\n  --dshpc-panel-radius:var(--dshpc-radius-sm);\n  --dshpc-panel-shadow:var(--dshpc-shadow-1);\n}\n\n/* 浮层唯一的关闭钮（20×20 方角图标位）。\n   旧类名 .dshpc-overlay-head__close 保留为别名：消费方写在旧类名上的覆盖仍生效。 */\n.dshpc-panel__close,.dshpc-overlay-head__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-panel__close:hover,.dshpc-overlay-head__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-panel__close:focus-visible,.dshpc-overlay-head__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/panel.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/panel.js
 		/**
 		* 浮层面板公共件（2026-11-03）：`PanelSurface` = 皮肤载体，`PanelClose` = 唯一那枚关闭钮。
 		*
@@ -1200,7 +1200,7 @@ window.__ModuleLoader__.load({
 			}, props.icon ?? "✕");
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/overlay.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/overlay.js
 		/**
 		* 浮层公共件 —— Modal 与 SideSheet 共用，**别各写一份**。
 		*
@@ -1243,7 +1243,72 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Modal.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/flip-css.generated.js
+		const FLIP_CSS = "/* 翻牌文本（FlipText）：一个单行窗口 + 两层同格叠放，换字时旧的上移出、新的从下进。\n   溢出（三点省略 + hover 跑马灯）不在这里做 —— 交给 MarqueeText，本文件只管裁剪与切换动效。\n   叠放用 grid 同格而不是绝对定位：容器高度天然等于一行，不用测量、也不依赖 lh 单位。 */\n.dshpc-flip{--dshpc-flip-dur:260ms;--dshpc-flip-ease:cubic-bezier(.22,.61,.36,1);display:grid;min-width:0;overflow:hidden}\n.dshpc-flip__item{grid-area:1/1;min-width:0}\n.dshpc-flip__in{animation:dshpc-flip-in var(--dshpc-flip-dur) var(--dshpc-flip-ease) both}\n.dshpc-flip__out{animation:dshpc-flip-out var(--dshpc-flip-dur) var(--dshpc-flip-ease) both}\n@keyframes dshpc-flip-in{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}\n@keyframes dshpc-flip-out{from{transform:translateY(0);opacity:1}to{transform:translateY(-100%);opacity:0}}\n/* 前庭敏感 / 低性能设备关掉位移动画：换字仍在，只是不再翻。\n   旧帧没有动画可播，必须自己隐形 —— 两层同格叠放，留着就重影。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-flip__in,.dshpc-flip__out{animation:none}\n  .dshpc-flip__out{opacity:0}\n}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/FlipText.js
+		/**
+		* 翻牌文本 —— 一行文字，换字时旧的上移出、新的从下进（机场翻牌那种）。
+		*
+		* 与 `MarqueeText` 的分工：跑马灯（三点省略 + hover 滚）由它负责，本组件只管「换字动效 + 裁剪」，
+		* 所以两层叠放的每一层就是一个 `MarqueeText`，不重复实现测宽。
+		*
+		* 宽度三档与 `Button` / `Chip` 同一口径：`width` 优先，`width` 未设时 `minWidth` / `maxWidth` 生效。
+		* 全不传 = 随父容器（flex 子项自然伸缩），这也是弹窗 footer 里的用法。
+		*
+		* 空串 = 没有文案：不渲染、不占位。所以「同一块地方复用」时传 `''` 就把上一句清干净了，
+		* 之后第一次给值是从无到有，直接出现（没有上一句可翻）。
+		*/
+		/** 与 flip.css 的 --dshpc-flip-dur（260ms）对齐，留一点余量给慢帧。 */
+		const FLIP_MS = 300;
+		/**
+		* 换字推导：文本没变原样返回（同一句重复设置不重播）；变了把当前帧降为上一帧、seq+1。
+		* 上一帧是空串 ⇒ 不设 prev：第一句直接出现，不从下方翻上来。
+		*/
+		function nextFlipSlot(slot, text) {
+			if (slot.curr === text) return slot;
+			return {
+				curr: text,
+				prev: slot.curr === "" ? null : slot.curr,
+				seq: slot.seq + 1
+			};
+		}
+		function FlipText(props) {
+			ensureComponentStyles("flip", FLIP_CSS);
+			const [slot, setSlot] = (0, react$1.useState)({
+				curr: props.text,
+				prev: null,
+				seq: 0
+			});
+			const next = nextFlipSlot(slot, props.text);
+			if (next !== slot) setSlot(next);
+			(0, react$1.useEffect)(() => {
+				if (slot.prev === null) return void 0;
+				const id = window.setTimeout(() => setSlot((s) => s.prev === null ? s : {
+					...s,
+					prev: null
+				}), FLIP_MS);
+				return () => window.clearTimeout(id);
+			}, [slot.seq, slot.prev]);
+			if (props.text === "") return null;
+			const style = props.width !== void 0 ? { width: props.width } : {
+				minWidth: props.minWidth,
+				maxWidth: props.maxWidth
+			};
+			const item = "dshpc-flip__item";
+			return (0, react$1.createElement)("span", {
+				className: props.className === void 0 ? "dshpc-flip" : `dshpc-flip ${props.className}`,
+				style
+			}, slot.prev === null ? null : (0, react$1.createElement)("span", {
+				key: `p${String(slot.seq)}`,
+				className: `${item} dshpc-flip__out`
+			}, (0, react$1.createElement)(MarqueeText, { text: slot.prev })), (0, react$1.createElement)("span", {
+				key: `c${String(slot.seq)}`,
+				className: slot.prev === null ? item : `${item} dshpc-flip__in`
+			}, (0, react$1.createElement)(MarqueeText, { text: slot.curr })));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Modal.js
 		/**
 		* 模态弹窗（自绘 overlay，**不用 react-dom 的 portal**，避免多一个必需依赖）。
 		*
@@ -1255,6 +1320,7 @@ window.__ModuleLoader__.load({
 			const busy = props.busy === true;
 			const closeOnMask = !busy && props.closeOnMask !== false;
 			useEscapeClose(!busy && props.escClose !== false, busy ? void 0 : props.onClose);
+			const notice = props.notice === "" ? void 0 : props.notice;
 			const s = {
 				sm: {
 					width: "360px",
@@ -1293,10 +1359,13 @@ window.__ModuleLoader__.load({
 				actions: props.headerActions,
 				closeLabel: tt("modalClose"),
 				onClose: showClose ? props.onClose : void 0
-			}) : null, (0, react$1.createElement)("div", { className: "dshpc-modal__body" }, props.children ?? null), props.footer === void 0 ? null : (0, react$1.createElement)("div", { className: `dshpc-modal__foot${props.footerDivider === false ? " dshpc-modal__foot--bare" : ""}` }, props.footer)));
+			}) : null, (0, react$1.createElement)("div", { className: "dshpc-modal__body" }, props.children ?? null), props.footer === void 0 && notice === void 0 ? null : (0, react$1.createElement)("div", { className: `dshpc-modal__foot${props.footerDivider === false ? " dshpc-modal__foot--bare" : ""}` }, notice === void 0 ? null : (0, react$1.createElement)(FlipText, {
+				text: notice,
+				className: "dshpc-modal__notice"
+			}), props.footer)));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/ConfirmModal.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/ConfirmModal.js
 		/**
 		* 确认框（语义层，基于 Modal）：双按钮（取消 outline + 确认语义档）、无 ✕；无标题时整条头部消失。
 		* 样式封闭：按钮只暴露语义档（tone → variant），不透传任意 className/style。
@@ -1319,6 +1388,7 @@ window.__ModuleLoader__.load({
 				closeOnMask: props.closeOnMask,
 				busy,
 				onClose: props.onCancel,
+				notice: props.notice,
 				footer: (0, react$1.createElement)("div", { style: {
 					display: "flex",
 					gap: "8px",
@@ -1341,7 +1411,7 @@ window.__ModuleLoader__.load({
 			}, props.message ?? null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/modal-host.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/modal-host.js
 		let hostRoot = null;
 		let hostContainer = null;
 		let entries = [];
@@ -1429,7 +1499,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/official.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/official.js
 		/**
 		* L1 adapter —— 全仓**唯一** import 官方 primitives 平台模块的文件。
 		*
@@ -1540,7 +1610,7 @@ window.__ModuleLoader__.load({
 			alert: hostAlert
 		});
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/host-data.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/host-data.js
 		/** 模型目录的 observable store（useSyncExternalStore 直接消费）。 */
 		var ModelCatalogStore = class {
 			constructor() {
@@ -1633,7 +1703,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/locale.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/locale.js
 		/** 返回当前语言，并在宿主语言切换（`<html lang>` 变化）时触发重渲。 */
 		function useLocale() {
 			const [locale, setLocaleState] = (0, react$1.useState)(getLocale);
@@ -1652,7 +1722,7 @@ window.__ModuleLoader__.load({
 			return locale;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/utils/path.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/utils/path.js
 		/**
 		* 纯路径方法 —— 只做字符串切分 / 拼接，不碰宿主、不依赖 React / DOM。
 		*
@@ -1691,7 +1761,7 @@ window.__ModuleLoader__.load({
 			return dir === "" ? name : `${dir}/${name}`;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/types.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/types.js
 		/** HTML 静态预览的扩展名（与官方 htmlBodyDefinition 同款）。 */
 		const HTML_KINDS = ["html", "htm"];
 		/**
@@ -1993,10 +2063,10 @@ window.__ModuleLoader__.load({
 			return best;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/explorer-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/explorer-css.generated.js
 		const EXPLORER_CSS = "/* 工作区文件浏览器（dshpc-fb-*）。\n *\n * 度量真源 = 兄弟项目 dsh-task-dispatch-table 的 src/client/archive-session-css.ts\n * （.dsh-tdt-sv-* 全族）。**逐条照抄，不许自己估**：padding / gap / 圆角 / 字号 / 行高 /\n * 边框色 / 悬停色 / 透明度动画 / 溢出策略，一一对应，改这里之前先去那边对原文。\n * 前缀与变量名换成本仓口径（--tdt-* → --dshpc-*），数值不换。\n * **例外**：容器级内距（__bar / __title / __tree / __body）2026-11-03 起改成四周一致\n * 的 token 档（space-2 / space-3）——用户反馈兄弟那套「左右比上下宽」在这两处窗口里不对称。\n * 行级内距（__row / __row-note / __banner）仍是兄弟数值，未动。\n *\n * 控件：能核心就核心（面包屑 = Button ghost、行尾 = Button outline、展开 / 图标 = IconButton、\n * 分段 = Segmented、文字 = MarqueeText）。核心控件自带的 padding / 高度 / 皮肤在本文件里\n * **按兄弟数值覆盖**（选择器带 .dshpc-fb 前缀提高特异性，确保盖得住控件默认值）。\n */\n/* 背景不在这里画：dock 由 .dshpc-side-surface、选文件弹窗由 .dshpc-panel 提供。\n   自己再刷一层 surface-base 会把面板档位（modal 同色的 surface-1）盖掉 —— 弹窗就显得发黑。 */\n.dshpc-fb{\n  position:relative;display:flex;flex-direction:column;height:100%;min-height:0;\n  background:transparent;color:var(--dshpc-fg);\n}\n\n/* 第一排：▾ 选层 + 面包屑 + 动作（兄弟 .dsh-tdt-sv-crumbbar）\n   ⚠️ 不能 overflow:hidden —— 下拉浮层挂在它下面，裁了就看不见。 */\n.dshpc-fb__bar{\n  position:relative;flex:none;display:flex;align-items:center;gap:2px;\n  /* 四周内距一致（用户 2026-11-03：原来 4/10，左右比上下宽，看着不对称）——下文 __title / __tree / __body 同口径。 */\n  padding:var(--dshpc-space-2);border-bottom:1px solid var(--dshpc-border);white-space:nowrap;\n}\n.dshpc-fb__menu-wrap{position:relative;flex:none;display:inline-flex}\n.dshpc-fb__crumbs{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:2px;overflow:hidden}\n.dshpc-fb__crumbs-measure{\n  position:absolute;top:0;left:0;display:inline-flex;align-items:center;gap:2px;\n  visibility:hidden;pointer-events:none;white-space:nowrap;\n}\n\n/* 面包屑：核心 ghost 钮，但皮肤与尺寸取兄弟 .dsh-tdt-sv-crumb（高由内容决定，不锁控制高）。 */\n.dshpc-fb .dshpc-fb__crumb{\n  appearance:none;background:0 0;border:none;height:auto;\n  padding:2px 4px;border-radius:var(--dshpc-radius-sm);\n  font:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis;\n}\n.dshpc-fb .dshpc-fb__crumb:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-fb .dshpc-fb__crumb:disabled{color:var(--dshpc-fg-2);cursor:default}\n.dshpc-fb .dshpc-fb__crumb--current{cursor:default;color:var(--dshpc-fg);font-weight:600;min-width:0}\n.dshpc-fb .dshpc-fb__crumb--current:hover{background:0 0}\n.dshpc-fb__crumb-mq{flex:1 1 auto;min-width:0}\n.dshpc-fb__crumb-sep{flex:none;color:var(--dshpc-fg-3)}\n\n/* 越界（outside-workspace）第一排：只读完整路径（兄弟 .dsh-tdt-sv-crumbbar-plain-inner）。 */\n.dshpc-fb__bar-plain{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-2);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;user-select:none;\n}\n.dshpc-fb__actions{flex:none;display:flex;align-items:center;gap:4px}\n/* 选择器头部「选当前文件 / 当前文件夹」钮：与 ✕ 并排，不被面包屑挤扁。\n   「选当前目录」= 核心 Button outline（sm 档）：尺寸与皮肤全归核心，这里只留布局。\n   ⚠️ 别再往这里写 height / padding 覆盖 —— 域按登记顺序拼接，核心 .dshpc-btn--sm 谁先谁后\n   取决于渲染次序，覆盖会时灵时不灵（2026-11-03 前就是这么写的）。 */\n.dshpc-fb__pick{flex:none}\n\n/* ▾ 选层浮层。\n   层序：遮罩必须高于 picker 面板（--dshpc-z-panel），否则菜单开着点面板不算「点外部」；\n   菜单再压在遮罩之上，所以是 popmenu 一档 +1。表皮来自 panel.css 的 menu 档。 */\n.dshpc-fb__crumbs-backdrop{position:fixed;inset:0;z-index:var(--dshpc-z-popmenu);background:transparent}\n.dshpc-fb__crumbs-menu{\n  position:absolute;top:calc(100% + 4px);left:0;z-index:calc(var(--dshpc-z-popmenu) + 1);\n  min-width:160px;max-height:240px;overflow:auto;padding:4px;display:flex;flex-direction:column;\n}\n.dshpc-fb__menu-item{\n  appearance:none;background:0 0;border:none;text-align:left;font:inherit;\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);\n  padding:4px 8px;border-radius:var(--dshpc-radius-sm);color:var(--dshpc-fg);cursor:pointer;\n  max-width:280px;display:flex;align-items:center;gap:2px;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n.dshpc-fb__menu-item:hover{background:var(--dshpc-hover)}\n.dshpc-fb__menu-empty{\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);padding:4px 8px;color:var(--dshpc-fg-3);\n}\n.dshpc-fb__menu-icon{flex:none;display:inline-flex}\n.dshpc-fb__menu-chev{flex:none;color:var(--dshpc-fg-3);margin-right:1px}\n.dshpc-fb__menu-chev-slot{flex:none;width:11px;height:11px;margin-right:1px}\n.dshpc-fb__menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n\n/* 第二排（仅预览态）：文件名 + 工具（兄弟 .dsh-tdt-sv-titlebar / -preview-title-inner）。 */\n.dshpc-fb__title{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:var(--dshpc-space-2);border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-fb__title-inner{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;\n}\n\n/* 主体（兄弟 .dsh-tdt-sv-preview-body / -hint / -preview-err）\n   下面三个滚动容器都带透明右边框 = 滚动条与右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-fb__body{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;padding:var(--dshpc-space-3);border-right:1px solid transparent}\n.dshpc-fb__note{font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);text-align:center;padding:12px 0}\n.dshpc-fb__err{\n  display:flex;flex-direction:column;align-items:flex-start;gap:10px;\n  font-size:var(--dshpc-font-sm);line-height:1.6;color:var(--dshpc-fg-2);padding:8px 0;\n}\n\n/* 目录树（兄弟 .dsh-tdt-sv-tree*） */\n.dshpc-fb__tree{flex:1;min-height:0;overflow:auto;padding:var(--dshpc-space-2);border-right:1px solid transparent;border-bottom:1px solid transparent}\n.dshpc-fb__row{\n  display:flex;align-items:center;gap:8px;padding:6px 8px;\n  border-radius:var(--dshpc-radius-sm);cursor:pointer;user-select:none;\n}\n.dshpc-fb__row:hover{background:var(--dshpc-hover)}\n.dshpc-fb__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px}\n.dshpc-fb__row-icon{flex:none;display:inline-flex;color:var(--dshpc-fg-2)}\n.dshpc-fb__row-name{\n  flex:1;min-width:0;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);color:var(--dshpc-fg);\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n\n/* 展开开关：核心 IconButton，命中位 20×20 + 展开时转 90°（兄弟 .dsh-tdt-sv-tree-toggle{,-open}）。 */\n.dshpc-fb .dshpc-fb__row-toggle{\n  appearance:none;background:0 0;border:none;flex:none;\n  width:20px;height:20px;padding:0;margin:0;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;justify-content:center;\n  transition:transform var(--dshpc-dur-fast) var(--dshpc-ease),background var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb .dshpc-fb__row-toggle--open{transform:rotate(90deg)}\n\n/* 行尾「进入 / 选择」：按钮**皮肤完全交给核心 Button**（2026-11-03：原来这里又写了一遍描边/内距/\n   字号，等于自己手搓了一颗，跟别处的按钮长得不一样）。本仓只保留布局与「悬停才现身」：\n   平时隐身但占位（opacity 而非 display）⇒ 出现时不顶动行内布局。 */\n.dshpc-fb .dshpc-fb__row-act{\n  flex:none;margin-left:auto;\n  opacity:0;pointer-events:none;\n  transition:opacity var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb__row:hover .dshpc-fb__row-act,.dshpc-fb .dshpc-fb__row-act:focus-visible{opacity:1;pointer-events:auto}\n\n.dshpc-fb__row-children{\n  margin-left:9px;padding-left:7px;border-left:1px solid var(--dshpc-border);\n  display:flex;flex-direction:column;\n}\n.dshpc-fb__row-note{flex:none;padding:8px 10px;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3)}\n.dshpc-fb__row-err{padding:4px 8px 4px 36px;font-size:var(--dshpc-font-sm);color:var(--dshpc-danger)}\n\n/* 预览体内部容器（仅本仓预览组件用；兄弟对应 preview-fill / preview-body-code 一类）。\n   必须 border-box：渲染态 inline 加了 padding:12px 14px，content-box 下 width:100%+padding\n   会溢出父层 28px（父 .dshpc-fb 无 overflow 裁切）→ 恒多一条横滚条；border-box 把 padding\n   算进 100%，从根消除该溢出。 */\n.dshpc-fb__text{flex:1;min-height:0;overflow:auto;width:100%;box-sizing:border-box;border-right:1px solid transparent;border-bottom:1px solid transparent}\n.dshpc-fb__banner{padding:6px 10px;background:var(--dshpc-open-bg);color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm)}\n.dshpc-fb__more{display:flex;justify-content:center;padding:10px}\n.dshpc-fb__image{max-width:100%;border-radius:var(--dshpc-radius-sm);border:1px solid var(--dshpc-border)}\n/* iframe 的外壳（兄弟 .dsh-tdt-sv-preview-fill）：iframe 必须包在这一层里才拿得到高度——\n   裸挂 iframe 时替换元素的自动最小尺寸会让高度算不出来（表现为预览区整片空白、像没反应）。 */\n.dshpc-fb__fill{flex:1;min-height:0;display:flex;overflow:hidden;padding:0}\n.dshpc-fb__frame{flex:1;min-height:0;width:100%;height:100%;border:none;background:var(--dshpc-surface-1)}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/preview/BytesPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/preview/BytesPreview.js
 		function BytesPreview(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const tt = props.translate ?? t$2;
@@ -47434,7 +47504,7 @@ window.__ModuleLoader__.load({
 		const stex = mkStex(false);
 		mkStex(true);
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/code-viewer-lang.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/code-viewer-lang.js
 		/**
 		* 源码态语法高亮：扩展名 → CodeMirror 语言映射。
 		*
@@ -47587,7 +47657,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/code-viewer-theme.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/code-viewer-theme.js
 		/**
 		* CodeMirror 6 主题（DSH 共享底座版）。
 		*
@@ -47991,10 +48061,10 @@ window.__ModuleLoader__.load({
 			];
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/code-viewer-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/code-viewer-css.generated.js
 		const CODE_VIEWER_CSS = "/* CodeViewer（只读 CodeMirror 查看器）样式。类名固定 dshpc-cv*；颜色吃 --dshpc-* token，\n   深色由 design 的 token 深色段自动生效（不写死颜色值）。 */\n.dshpc-cv{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;}\n/* 复制钮复用核心 IconButton（variant=outline / size=md）：盒型、描边、圆角（已统一 md）、底色、hover 全由核心提供；\n   这里只管「绝对定位 + 默认隐藏、hover/聚焦才显」（overlay 浮在编辑器右上角）。 */\n.dshpc-cv__copy{position:absolute;top:6px;right:6px;z-index:5;opacity:0;}\n.dshpc-cv:hover .dshpc-cv__copy,.dshpc-cv__copy:focus-visible{opacity:1;}\n.dshpc-cv__copy svg{width:16px;height:16px;}\n.dshpc-cv__editor{flex:1 1 auto;min-height:0;overflow:hidden;}\n.dshpc-cv__editor .cm-editor{height:100%;}\n/* 透明右边框 = 滚动条与右缘隔 1px（口径见 style.md §滚动条让位）。\n   只给右边：给底边会改 scroller 高度，CodeMirror 的测量循环会多算一条横滚条。 */\n.dshpc-cv__editor .cm-scroller{overflow:auto;border-right:1px solid transparent}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/CodeViewer.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/CodeViewer.js
 		/**
 		* CodeViewer —— 只读源码查看器（替代官方 Shiki CodeBlock），DSH 共享底座版。
 		*
@@ -48087,7 +48157,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/utils/number.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/utils/number.js
 		/**
 		* 字节数 → 人话（`12 KB` / `3.4 MB`）。
 		* 0 与负数 ⇒ `—`（不显示「0 B」这种假精确）。
@@ -48110,7 +48180,7 @@ window.__ModuleLoader__.load({
 			return `${value >= 10 ? String(Math.round(value)) : value.toFixed(1)} ${units[unit]}`;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/preview/md-labels.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/preview/md-labels.js
 		function markdownLabels() {
 			return {
 				code: {
@@ -48126,7 +48196,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/preview/TextPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/preview/TextPreview.js
 		function TextPreview(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const tt = props.translate ?? t$2;
@@ -48218,7 +48288,7 @@ window.__ModuleLoader__.load({
 			}, tt("previewLoadMore"))) : null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/preview/HtmlPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/preview/HtmlPreview.js
 		/** 官方 CSP 原文（documentpreview lib/client.js 同款，不多开不少关）。 */
 		const HTML_CSP = "default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:";
 		/** 禁用标签（官方清单）。 */
@@ -48323,7 +48393,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/preview/OfficePreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/preview/OfficePreview.js
 		function OfficePreview(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const tt = props.translate ?? t$2;
@@ -48374,7 +48444,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/preview/index.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/preview/index.js
 		function FilePreview(props) {
 			ensureControls();
 			const tt = props.translate ?? t$2;
@@ -48413,7 +48483,7 @@ window.__ModuleLoader__.load({
 			return null;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/crumbs-menu.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/crumbs-menu.js
 		/**
 		* ▾ 选层下拉的**条目构造**（picker 与 dock 共用同一段代码，差别只在入参 —— 源实现用户 2026-09-29
 		* 点名提炼，严禁两处各写一份）。
@@ -48515,7 +48585,7 @@ window.__ModuleLoader__.load({
 			return out;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/crumb-nav.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/crumb-nav.js
 		/**
 		* 文件浏览器的第一排：▾ 选层 + 面包屑 + 右侧动作（选择 / ✕）。
 		*
@@ -48598,7 +48668,7 @@ window.__ModuleLoader__.load({
 			}), actions(pickNow, tt, onClose));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/landing.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/landing.js
 		/**
 		* 落地页主体（picker 刚打开、还没进任何目录时的那张表）：上面一排根层（「根目录」或盘符），
 		* 下面全部工作区。行 = 进去，行尾钮 = 直接选这个目录。
@@ -48630,7 +48700,7 @@ window.__ModuleLoader__.load({
 			return (0, react$1.createElement)("div", { className: "dshpc-fb__tree" }, roots.map((root) => row(`root:${root.path}`, root.label, root.path)), anchors.filter((item) => item.path !== void 0 && item.path !== "").map((item) => row(`ws:${item.title}`, item.title, item.path)));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/tooltip.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/tooltip.js
 		let renderer;
 		/** 注入官方 Tooltip（插件启动时调一次；传 undefined 撤销，回到自绘降级）。 */
 		function setTooltipRenderer(fn) {
@@ -48641,7 +48711,7 @@ window.__ModuleLoader__.load({
 			return renderer;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Segmented.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Segmented.js
 		/**
 		* 角标 / 计数要不要显示，返回要显示的文本。
 		* 数字 ≤0 是「没东西可数」的老口径；字符串（`'1K'` / `'99+'`）由调用方决定，原样显示，空串不显示。
@@ -48762,7 +48832,7 @@ window.__ModuleLoader__.load({
 			})]);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/preview-title-bar.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/preview-title-bar.js
 		/**
 		* 预览态的第二排：文件名 + 渲染⇄源码切换 / 复制路径 / 刷新。
 		*
@@ -48807,7 +48877,7 @@ window.__ModuleLoader__.load({
 			})));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/FileBrowser.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/FileBrowser.js
 		/**
 		* 「根」在 POSIX 上的落点 `/`。Windows 没有这一个根 —— 根层是盘符清单，由宿主 `op:'roots'` 给出
 		* （见下面 `roots` 状态），本常量只在 POSIX / 探不到盘符时用。
@@ -49322,7 +49392,7 @@ window.__ModuleLoader__.load({
 			}, nav, titleBar, body);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/resizer.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/resizer.js
 		/** 开始一次拖拽调宽（监听 window 的 pointermove / pointerup，松手自动清理）。 */
 		function startResizeLayoutWidth(opts) {
 			opts.startEvent.preventDefault?.();
@@ -49361,7 +49431,7 @@ window.__ModuleLoader__.load({
 			window.addEventListener("pointerup", onUp);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/panel-dock-logic.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/panel-dock-logic.js
 		/**
 		* 停靠面板的状态逻辑（纯函数，零 React / 零 DOM）。
 		*
@@ -49492,13 +49562,13 @@ window.__ModuleLoader__.load({
 			}, 0);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/panel-dock-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/panel-dock-css.generated.js
 		const PANEL_DOCK_CSS = "/* 停靠栏 = **布局成员**，不是浮层：它占宽度、把主区真正挤窄（兄弟项目 2026-09-28：\n   「分栏压过来，不是盖上去」）。所以调用方必须把它放进自己的 flex 根里。\n   皮肤（头部 / 拖拽条 / 关闭钮 / 背景阴影）在 side-panel.css，与 SideSheet 共用。 */\n.dshpc-dock{display:flex;flex:0 0 auto;align-self:stretch;min-width:0}\n/* dock 不再替主区让缝（原 --dshpc-dock-gap 的 1px margin 已删，用户 2026-11-02）：\n   滚动条与容器边缘的 1px 统一由滚动容器自己的透明边框提供（见 style.md §滚动条让位），\n   主区容器带了让位，滚动条与这条分隔线之间自然还是 1px。别再往这里加 margin。 */\n\n/* 自动加的宿主行（openFilePreview 加 / 关闭即摘）：消费方那行不必自己写 flex。\n   只让「第一个非预览子项」当主区伸展，其余直接子项不动（页脚条、工具条不误伤）；\n   display 不在这里写死 —— 本来就是 grid 等布局的元素保持原样，由 TS 侧按计算值补 flex。 */\n.dshpc-dock-host{min-width:0;min-height:0}\n.dshpc-dock-host>:not([data-dshpc-file-preview]){min-width:0}\n.dshpc-dock-host>:first-child:not([data-dshpc-file-preview]){flex:1 1 auto}\n\n/* 单栏**占位**：sticky + 视口高让它在页面滚动时保持可见，同时仍然占宽度。\n   ⚠️ **本条刻意不设 z-index**：布局成员一旦带正 z-index，就会无条件压过宿主 portal 到 body 的\n   弹窗（兄弟项目 2026-10-05 真机事故「侧边栏盖住宿主设置弹窗」）。层序交给 DOM 顺序裁决。\n   外观来自 .dshpc-side-surface（side-panel.css），这里只管怎么占位与朝哪边描边。 */\n.dshpc-dock__panel{\n  position:sticky;top:0;align-self:stretch;\n  /* 高度默认视口高（整页场景）；嵌在定高容器里时由调用方给 --dshpc-dock-h（如 420px / 100%）。 */\n  height:var(--dshpc-dock-h,100vh);max-height:var(--dshpc-dock-h,100vh);\n  border-left:1px solid var(--dshpc-border);\n}\n/* 收起的出场：宽度收到 0、透明淡出；落定后组件才真正摘掉这一栏（JS 延时 220ms 配合）。 */\n.dshpc-dock__panel--closing{\n  width:0!important;min-width:0!important;opacity:0;border-left-width:0;\n  transition:width .2s var(--dshpc-ease),opacity .2s var(--dshpc-ease),border-left-width .2s var(--dshpc-ease);\n}\n\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove，\n   向右拖进 iframe 就卡死 —— 整片让出指针事件；② contain 把重排隔离在栏内，\n   否则每帧改宽度都会牵动整页重排（兄弟项目 2026-10-04 真机「挪很久才动一下」）。 */\n.dshpc-dock.dshpc-dock--resizing iframe{pointer-events:none}\n.dshpc-dock.dshpc-dock--resizing .dshpc-dock__panel{contain:layout paint;will-change:width}\n\n/* 收起钮：**待在面板自己的框里**（用户 2026-10-28 三轮：占面板内部空间，不伸到外面去）。\n   left:0 从内侧贴着分隔线 —— 贴线的一边不描边（线是面板自己的 border-left），页签与线不重合。\n   20×44（用户 2026-10-28 四轮定尺寸）；实色底（--dshpc-plate，明暗各有实值），hover 亮一档。\n   padding-right:2px 是**视觉居中**：右侧是圆角，箭头往直线那边挪 1px（用户 2026-10-28 四轮）。 */\n.dshpc-dock__collapse{\n  position:absolute;left:0;top:50%;transform:translateY(-50%);\n  z-index:8;display:inline-flex;align-items:center;justify-content:center;\n  width:20px;height:44px;padding:0 2px 0 0;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);\n  border-left:none;\n  border-radius:0 var(--dshpc-radius-sm) var(--dshpc-radius-sm) 0;\n  background:var(--dshpc-plate);color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:16px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__collapse:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__collapse:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n\n/* 收起后的浮动耳朵：**fixed 贴右缘、垂直居中、独立于分栏**（用户 2026-10-28 定稿：\n   小页签挂中间、里面放面板图标、不显示文字，箭头与收起钮反向）。多个按收起顺序纵向堆叠。\n   z 走 dock 档（低于宿主弹窗），避免盖住宿主 portal 层。 */\n.dshpc-dock__ears{\n  position:fixed;top:50%;right:0;transform:translateY(-50%);\n  z-index:var(--dshpc-z-dock,1030);\n  display:flex;flex-direction:column;gap:8px;align-items:flex-end;\n  pointer-events:none;\n}\n.dshpc-dock__ear{\n  pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;\n  /* 与收起钮**同尺寸**（20×44，用户 2026-10-28 四轮）：上/下/左描边，贴右缘的一侧不描。\n     实色底（--dshpc-plate），不用透明色 —— 透明底下透出东西很难看。\n     padding-left:2px 是**视觉居中**：左侧是圆角，箭头往直线（右缘）那边挪 1px。 */\n  width:20px;height:44px;box-sizing:border-box;padding:0 0 0 2px;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-left:1px solid var(--dshpc-border);\n  border-right:none;\n  border-radius:var(--dshpc-radius-sm) 0 0 var(--dshpc-radius-sm);\n  background:var(--dshpc-plate);color:var(--dshpc-fg-2);\n  cursor:pointer;font-family:inherit;line-height:1;\n  animation:dshpc-ear-in .2s var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 入场：从右缘外滑进来，别「突然出现」（用户 2026-10-28）。 */\n@keyframes dshpc-ear-in{from{opacity:0;transform:translateX(14px)}}\n.dshpc-dock__ear:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__ear:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 与收起钮的箭头同一字号（16px）：收进去前后箭头一模一样大（用户 2026-10-28）。 */\n.dshpc-dock__ear-arrow{font-size:16px;color:var(--dshpc-fg-3)}\n.dshpc-dock__ear:hover .dshpc-dock__ear-arrow{color:var(--dshpc-fg)}\n/* 动效礼貌：系统声明减少动效时全部关掉，收起退化为瞬时、功能不受影响。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-dock__panel{animation:none}\n  .dshpc-dock__panel--closing{transition:none}\n  .dshpc-dock__ear{animation:none}\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/side-panel-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/side-panel-css.generated.js
 		const SIDE_PANEL_CSS = "/* 侧边面板的公共皮肤 —— PanelDock（占宽分栏）与 SideSheet（覆盖抽屉）共用这一份。\n *\n * 分界：**皮肤在这里，定位各自写**。两者唯一的形态差异就是「怎么占位」——\n * PanelDock 用 sticky 占宽挤窄主区（panel-dock.css），SideSheet 用 absolute 盖在页面上（side-sheet.css）。\n *\n * 类名沿用 dshpc-dock__* 前缀：那是既有公开面（文档与消费方都在用），\n * 这里只搬文件不改名；新增的中性类是 .dshpc-side-surface（外观基类）。 */\n\n/* 入场：宽度从 0 长出来（keyframes 只写 from，终点取内联 / 状态宽度）。两边共用。 */\n@keyframes dshpc-side-in{from{width:0;opacity:0;overflow:hidden}}\n\n/* 外观基类：背景 / 文字色 / 阴影 / 纵向 flex。**不含** position、高度、边框方向、动画触发。 */\n.dshpc-side-surface{\n  box-sizing:border-box;\n  display:flex;flex-direction:column;flex:0 0 auto;min-width:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n  box-shadow:var(--dshpc-shadow-2);\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease);\n  animation:dshpc-side-in .22s var(--dshpc-ease);\n}\n\n/* 头部：右侧 34px = 8(边距) + 20(关钮) + 6(呼吸)：给绝对定位的关钮留位，标题/extra 不从它底下钻。 */\n.dshpc-dock__head{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:10px 34px 10px 14px;\n  border-bottom:1px solid var(--dshpc-border-faint);\n}\n/* 图标位 / 标题右侧的内容位：消费方传 ReactNode，可塞多个；库只负责排布，不抢宽度。 */\n.dshpc-dock__lead{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-dock__extra{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto}\n/* 自定义头部：整行归调用方 —— 不加内边距/边框/背景，也不给关钮留内联空间（关钮是绝对定位的）。 */\n.dshpc-dock__head--custom{display:block;padding:0;border-bottom:none}\n.dshpc-dock__title{\n  flex:1 1 auto;min-width:0;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n  font-size:var(--dshpc-font-md);font-weight:600;\n}\n/* 关闭钮：20×20 方角图标位（与 Modal 的关闭钮同规格，不借 Picker 触发器皮肤）。 */\n.dshpc-dock__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-dock__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 头部关钮：绝对定位（top 10 / right 8），锚点是面板本身 —— 正文滚动它不跟滚。 */\n.dshpc-dock__close--abs{position:absolute;top:10px;right:8px;z-index:8}\n/* 浮动关钮：无头部面板用，略收一点边距。 */\n.dshpc-dock__close--floating{\n  position:absolute;top:6px;right:6px;z-index:8;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border-faint);\n}\n\n/* 内容区自己滚（面板高度锁死，内容不设内部滚动就会把页面撑高）。\n   透明右边框 = 滚动条与面板右缘隔 1px（口径见 style.md §滚动条让位）。 */\n.dshpc-dock__body{flex:1 1 auto;min-height:0;overflow:auto;border-right:1px solid transparent}\n\n/* 拖拽条：6px 命中区，**自己不画任何线**（贴在朝内那一侧，镜像由各自的定位文件做）。\n   hover / 拖动时把面板自己的边框染成蓝 —— 蓝线只准改原线，不准在旁边再加一条。\n   z-index 7 必须高于面板内容里的浮层（复制钮一类），否则命中区会被内容盖住。 */\n.dshpc-dock__resizer{\n  position:absolute;left:0;top:0;bottom:0;width:6px;\n  z-index:7;cursor:col-resize;background:transparent;\n}\n.dshpc-side-surface:has(> .dshpc-dock__resizer:hover),\n.dshpc-side-surface--resizing{\n  /* 原线保留「上下渐隐」工作区指示条质感：把面板自己的那条边框换成同款渐变。\n     面板四边里只有朝内一侧有宽度，所以渐变只落在那一侧。 */\n  border-image:linear-gradient(180deg,transparent,var(--dshpc-business) 30% 70%,transparent) 1;\n}\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove ——\n   让出指针事件；② contain 把重排隔离在面板内，否则每帧改宽都会牵动整页重排。 */\n.dshpc-side-surface--resizing{contain:layout paint;will-change:width}\n.dshpc-side-surface--resizing iframe{pointer-events:none}\n\n/* 动效礼貌：系统声明减少动效时退化为瞬时（功能不受影响）。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-side-surface{animation:none}\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/PanelDock.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/PanelDock.js
 		/**
 		* 停靠面板（PanelDock）—— 可停靠的右侧分栏容器。
 		*
@@ -49813,7 +49883,7 @@ window.__ModuleLoader__.load({
 			})));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/fs-face.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/fs-face.js
 		/**
 		* client 侧的**只读文件面**：fetch 宿主 `serveFsRoute` 挂的那条路由（`src/host/fs-route.ts`）。
 		*
@@ -49971,7 +50041,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/explorer/open.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/explorer/open.js
 		/**
 		* 入参路径解析成**绝对路径**（`''` = 虚拟根）。用户 2026-11-03 定：绝对/相对都收。
 		*
@@ -50250,7 +50320,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/picker-logic.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/picker-logic.js
 		/** 两种输入归一成 groups：给了 `options` 就当成一个无标题的组。 */
 		function toGroups(groups, options) {
 			if (groups !== void 0 && groups.length > 0) return groups;
@@ -52484,7 +52554,7 @@ window.__ModuleLoader__.load({
 			]);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/chevron.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/chevron.js
 		/**
 		* 全站唯一的箭头：**自绘 chevron**（就是下拉框右侧那颗）。
 		*
@@ -52522,7 +52592,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/FieldHint.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/FieldHint.js
 		/**
 		* 问号提示 —— **全站唯一实现、独立组件**（L2，P4）
 		*
@@ -52556,10 +52626,10 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/picker-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/picker-css.generated.js
 		const PICKER_CSS = "\n.dshpc-picker{position:relative;display:inline-block;max-width:100%;font-size:13px;line-height:20px}\n.dshpc-picker__trigger{\n  display:inline-flex;align-items:center;justify-content:space-between;gap:6px;\n  min-width:120px;max-width:100%;height:28px;padding:0 8px;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-1);\n  border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);cursor:pointer;\n}\n.dshpc-picker__trigger:disabled{color:var(--dshpc-fg-dim);cursor:not-allowed;opacity:.7}\n/* 聚焦（键盘或点击选中）时与全站一致的蓝色描边；菜单打开后焦点会进去，触发器自然失去焦点。 */\n.dshpc-picker__trigger:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 文字默认靠左（吃掉剩余宽度），不给 space-between 把短文案推到中间的机会；\n   确实要居中就显式传 align=\"center\"。 */\n.dshpc-picker__label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}\n.dshpc-picker__trigger--center .dshpc-picker__label{text-align:center}\n.dshpc-picker__caret{flex:none;color:var(--dshpc-fg-3)}\n.dshpc-picker__icon{display:inline-flex;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-picker__option-icon{display:inline-flex;flex:none;color:var(--dshpc-fg-2)}\n/* 下拉面板只留定位 / 滚动 / 字号：底色·描边·圆角·阴影来自 panel.css 的 menu 档。 */\n.dshpc-picker__menu{\n  z-index:var(--dshpc-z-popmenu);max-height:280px;overflow:auto;padding:4px;\n  /* 菜单经 FloatingPortal 挂到 body，脱离 .dshpc-picker，须显式字号，否则继承 body 的大字号 */\n  font-size:13px;line-height:20px;\n}\n/* 尺寸档（与 Field 的 sm/md/lg 对应）。 */\n.dshpc-picker__trigger--sm{height:24px;font-size:12px}\n.dshpc-picker__trigger--lg{height:32px}\n/* 键盘游标所在项（无 hover 也要看得见）。 */\n.dshpc-picker__option[data-active='true']{background:var(--dshpc-surface-sunken);outline:1px solid var(--dshpc-border)}\n.dshpc-picker__option--clear{color:var(--dshpc-fg-3)}\n.dshpc-picker__search{\n  width:100%;height:28px;margin-bottom:4px;padding:0 8px;box-sizing:border-box;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-sunken);\n  border:1px solid var(--dshpc-border-faint);border-radius:var(--dshpc-radius-md);outline:none;\n}\n.dshpc-picker__group-label{\n  padding:6px 8px 2px;color:var(--dshpc-fg-3);font-size:11px;\n}\n.dshpc-picker__option{\n  display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:var(--dshpc-radius-sm);cursor:pointer;\n  color:var(--dshpc-fg);white-space:nowrap;\n}\n.dshpc-picker__option:hover{background:var(--dshpc-surface-sunken)}\n.dshpc-picker__option--active{background:var(--dshpc-open-bg);color:var(--dshpc-business)}\n.dshpc-picker__option--disabled{color:var(--dshpc-fg-dim);cursor:not-allowed}\n/* 选项文字吃掉剩余宽度：超长省略号（配合 MarqueeText hover 跑马灯），不撑宽菜单。 */\n.dshpc-picker__option-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.dshpc-picker__tick{width:12px;color:var(--dshpc-business)}\n.dshpc-picker__empty{padding:8px;color:var(--dshpc-fg-3);text-align:center}\n.dshpc-picker__degraded{\n  padding:6px 8px;margin-bottom:4px;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-warning-label);background:color-mix(in srgb,var(--dshpc-warning) 12%,transparent);\n  font-size:11px;\n}\n.dshpc-picker__row{display:flex;align-items:center;gap:8px}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Picker.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Picker.js
 		/**
 		* 通用选择器：单选 / 多选 / 上限 / 搜索 / 分组 / 空态 / 降级。
 		*
@@ -52729,19 +52799,19 @@ window.__ModuleLoader__.load({
 			return Array.isArray(v) ? [...v] : [v];
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/utils/date.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/utils/date.js
 		/** 两位补零：`9` → `09`（数字 / 纯数字字符串都收）。 */
 		function pad2$1(value) {
 			return String(value).padStart(2, "0");
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/card-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/card-css.generated.js
 		const CARD_CSS = "\n/* ── Card / StripCard：Surface 外框 + 头部契约 + 色条 ─────────────────────\n   外框（底 / 边框 / 圆角 / 内距）全部来自 .dshpc-surface（src/ui/surface.css）：\n   本文件**不再写 border / border-radius**，圆角契约因此只有一个定义点（容器档 = 12）。\n   这里只管两件 Surface 不该知道的事：色条几何、头部布局。\n\n   色条几何默认值都可被 props 覆盖（Card.ts 写对应的 CSS 变量）：\n     --card-bar-size   条子粗细\n     --card-bar-inset  条子距卡片边缘的距离（= 贴边那一侧的内距）\n     --card-bar-gap    条子距内容的距离（= body 的 gap）\n     --card-bar-length 上下方位时的条长（100% = 跟内容同宽）\n   这些变量只在本文件消费（3 份文件一起引时，跨文件引用别处的变量会静默失效），\n   所以默认值必须写在这里，而不是令牌或别的皮肤里。 */\n.dshpc-card{\n  --card-accent:var(--dshpc-business);\n  --card-accent-soft:var(--dshpc-business-soft);\n  --card-bar-size:6px;\n  --card-bar-inset:12px;\n  --card-bar-gap:12px;\n  --card-bar-length:100%;\n}\n/* 档位 → token（照 records-timeline 的 tone 模式：一个变量切档，不写 5 套规则；浅底与色条同源）。 */\n.dshpc-card--success{--card-accent:var(--dshpc-success);--card-accent-soft:var(--dshpc-success-soft)}\n.dshpc-card--warning{--card-accent:var(--dshpc-warning);--card-accent-soft:var(--dshpc-warning-soft)}\n.dshpc-card--danger{--card-accent:var(--dshpc-danger);--card-accent-soft:var(--dshpc-danger-soft)}\n/* neutral 浅底借 chip 底（兄弟项目 mute 档同款：明暗都成立）。 */\n.dshpc-card--neutral{--card-accent:var(--dshpc-fg-4);--card-accent-soft:var(--dshpc-chip-bg)}\n/* 扩展八色（2026-10-29）：色条 + 浅底同源，软底走各自 -soft。 */\n.dshpc-card--purple{--card-accent:var(--dshpc-purple);--card-accent-soft:var(--dshpc-purple-soft)}\n.dshpc-card--pink{--card-accent:var(--dshpc-pink);--card-accent-soft:var(--dshpc-pink-soft)}\n.dshpc-card--cyan{--card-accent:var(--dshpc-cyan);--card-accent-soft:var(--dshpc-cyan-soft)}\n.dshpc-card--teal{--card-accent:var(--dshpc-teal);--card-accent-soft:var(--dshpc-teal-soft)}\n.dshpc-card--orange{--card-accent:var(--dshpc-orange);--card-accent-soft:var(--dshpc-orange-soft)}\n.dshpc-card--indigo{--card-accent:var(--dshpc-indigo);--card-accent-soft:var(--dshpc-indigo-soft)}\n.dshpc-card--rose{--card-accent:var(--dshpc-rose);--card-accent-soft:var(--dshpc-rose-soft)}\n.dshpc-card--slate{--card-accent:var(--dshpc-slate);--card-accent-soft:var(--dshpc-slate-soft)}\n\n/* body = 色条 + 头部。方向跟着条子贴的边切 ⇒ 四个方位只是「换一个方向的 flex 项」，\n   不用为每个方位各写一套定位。 */\n.dshpc-card__body{display:flex;gap:var(--card-bar-gap);min-width:0}\n.dshpc-card--bar-top .dshpc-card__body,\n.dshpc-card--bar-bottom .dshpc-card__body{flex-direction:column}\n\n/* 头部一行 = 主内容 + 右侧槽，**整体垂直居中**：调用方在 action 里裸放一个元素\n   （按钮 / 文字 / 图标）不用自己套容器居中；一行两行、右边怎么放由调用方在框内自定。 */\n.dshpc-card__head{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-card--bar-left .dshpc-card__head,\n.dshpc-card--bar-right .dshpc-card__head{flex:1 1 auto}\n.dshpc-card__main{flex:1;min-width:0}\n.dshpc-card__side{display:flex;align-items:center;gap:6px;flex:none}\n\n/* 色条：左/右 = 竖向条（高度跟内容，最小一行）；上/下 = 横向条（长度默认跟内容同宽）。\n   右/下方位靠 order 排到头部之后，DOM 顺序始终不变。 */\n.dshpc-card__bar{flex:none;background:var(--card-accent);border-radius:var(--dshpc-radius-xs)}\n.dshpc-card--bar-left .dshpc-card__bar,\n.dshpc-card--bar-right .dshpc-card__bar{width:var(--card-bar-size);align-self:stretch;min-height:var(--dshpc-line-md)}\n.dshpc-card--bar-top .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{width:var(--card-bar-length);height:var(--card-bar-size);align-self:flex-start}\n.dshpc-card--bar-right .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{order:1}\n\n/* ── 外观一 · StripCard：同色系浅底 + 1px 不可见占位边框 + 方角 + 4px 通高方角色条贴左缘 ──\n   底色 / 方角 / 占位边框由 Surface 的三条修饰类提供（Card.ts 按 kind 传），此处只管内距与条子。 */\n.dshpc-card.dshpc-card--strip{\n  --card-bar-size:4px;--card-bar-inset:0;\n  padding:12px 12px 12px 20px;\n  background:var(--card-accent-soft,transparent);\n}\n/* 左内边距 20px = 16 留白 + 4 条宽 ⇒ 内容从色条右缘起算；色条绝对定位通高，跟着内容高度自适应。\n   特异性 0,3,0：压过上面 .dshpc-card--bar-left .dshpc-card__bar 的宽度规则，与注入顺序无关。 */\n.dshpc-card.dshpc-card--strip .dshpc-card__bar{position:absolute;left:0;top:0;bottom:0;width:4px;align-self:auto}\n\n/* ── 外观二 · Card：Surface 外框（底 + 1px 实色边框 + 圆角 12）+ 色条贴边那一侧的内距 ──\n   内距用 0,2,0 / 0,3,0 的长写法：高过 .dshpc-surface 的 padding 简写，与两份 CSS 的注入顺序无关。 */\n.dshpc-card.dshpc-card--bordered{padding:14px}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-left{padding-left:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-right{padding-right:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-top{padding-top:var(--card-bar-inset)}\n.dshpc-card.dshpc-card--bordered.dshpc-card--bar-bottom{padding-bottom:var(--card-bar-inset)}\n\n.dshpc-card__toggle{\n  display:inline-flex;align-items:center;justify-content:center;\n  width:24px;height:24px;padding:0;background:none;border:none;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-3);cursor:pointer;\n}\n.dshpc-card__toggle:hover{background:var(--dshpc-surface-sunken);color:var(--dshpc-fg)}\n/* 箭头是 svg（Chevron），不是字形 ⇒ 不要 font-size；inline-flex 免掉 svg 的基线留白。 */\n.dshpc-card__caret{display:inline-flex;transition:transform .15s ease}\n.dshpc-card__caret.is-open{transform:rotate(180deg)}\n.dshpc-card__panel{margin-top:8px;padding-top:8px;border-top:1px solid var(--dshpc-border-faint)}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/surface-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/surface-css.generated.js
 		const SURFACE_CSS = "\n/* ── Surface · 纯框容器 ───────────────────────────────────────────────────\n   只回答「一块面长什么样」：底 / 边 / 圆角 / 内距，四根轴，零业务语义。\n   它是**圆角契约的唯一真源**：容器档 = --dshpc-radius-md(12)，与 Button / Input 同档，\n   外框永远不小于里面的控件 —— 杜绝「卡片 8 < 按钮 12」这类倒挂（2026-11-01）。\n\n   所有轴都用**变量**表达，修饰类只改这些变量、不改属性：\n   消费方（Card、下游插件）自己写规则时，无论两份 CSS 谁先注入，胜负都不依赖顺序。\n\n     tone    plain(默认 surface-1) / raised / sunken / subtle\n     border  默认 1px 实线；faint 更淡；none 透明（保留 1px 占位，不跳高）；\n             dashed 虚线（占位框用，线色仍是 border token）\n     radius  默认 md；none / sm / lg\n     padding 默认由调用方选档；none / sm(8) / md(12) / lg(16)\n   基类不带内距：容器要自己算四边内距时（如 Card 的色条贴边），不传 pad 档即可，不需要覆盖。 */\n.dshpc-surface{\n  position:relative;box-sizing:border-box;color:var(--dshpc-fg);font:inherit;text-align:left;\n  --surface-bg:var(--dshpc-surface-1);\n  --surface-border:var(--dshpc-border);\n  --surface-border-style:solid;\n  --surface-radius:var(--dshpc-radius-md);\n  --surface-pad:0;\n  border:1px var(--surface-border-style) var(--surface-border);\n  border-radius:var(--surface-radius);\n  background:var(--surface-bg);\n  padding:var(--surface-pad);\n}\n.dshpc-surface--tone-raised{--surface-bg:var(--dshpc-surface-raised)}\n.dshpc-surface--tone-sunken{--surface-bg:var(--dshpc-surface-sunken)}\n.dshpc-surface--tone-subtle{--surface-bg:var(--dshpc-chip-bg)}\n.dshpc-surface--border-faint{--surface-border:var(--dshpc-border-faint)}\n.dshpc-surface--border-none{--surface-border:transparent}\n.dshpc-surface--border-dashed{--surface-border-style:dashed}\n.dshpc-surface--radius-none{--surface-radius:0}\n.dshpc-surface--radius-sm{--surface-radius:var(--dshpc-radius-sm)}\n.dshpc-surface--radius-lg{--surface-radius:var(--dshpc-radius-lg)}\n.dshpc-surface--pad-none{--surface-pad:0}\n.dshpc-surface--pad-sm{--surface-pad:var(--dshpc-space-2)}\n.dshpc-surface--pad-md{--surface-pad:var(--dshpc-space-3)}\n.dshpc-surface--pad-lg{--surface-pad:var(--dshpc-space-4)}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Surface.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Surface.js
 		/**
 		* 拼 Surface 的类名。独立导出是给组合类容器（Card）用的：
 		* 容器要把 Surface 当外框、又不想吃它的内距时，传 `padding: null` 即可。
@@ -52776,7 +52846,7 @@ window.__ModuleLoader__.load({
 			}, props.children ?? null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Card.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Card.js
 		/** 色条档位（映射到 design 的 token，不新增 token；也接受任意 CSS 颜色值）。 */
 		const CARD_ACCENTS = [
 			"business",
@@ -52867,10 +52937,10 @@ window.__ModuleLoader__.load({
 			return CardShell("bordered", props);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/chip-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/chip-css.generated.js
 		const CHIP_CSS = "\n/* 三条局部变量承载配色：neutral 走旧灰面；语义档换底字配对（2026-10-20 用户要多色多尺寸标签）。 */\n.dshpc-chip{--chip-bg:var(--dshpc-chip-bg);--chip-fg:var(--dshpc-fg);--chip-bg-hover:var(--dshpc-chip-bg-hover);\n  display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:1px 8px;\n  box-sizing:border-box;border-radius:var(--dshpc-radius-pill,999px);border:none;\n  background:var(--chip-bg);color:var(--chip-fg);\n  font-family:inherit;font-size:11px;line-height:18px;margin:0;\n  /* 2026-10-18：chip 是 flex 行里的常用项，禁止被压缩换行（预览站出现过文字竖排、互相叠压的挤压）。 */\n  white-space:nowrap;flex:none;\n  appearance:none;-webkit-appearance:none;\n}\n/* md 档：卡片元信息行等稍大场景；sm 即旧版默认，逐像素不动。 */\n.dshpc-chip--md{padding:2px 10px;font-size:12px;line-height:20px;}\n/* xs 档：标题后缀等极紧凑场景（2026-10-20 用户要更小标签）；16px 高、font 10。 */\n.dshpc-chip--xs{padding:0 6px;font-size:10px;line-height:16px;}\n/* 语义色实心档：底 / 字 / hover 配对与 Button 同源（黄底中高明度 ⇒ 字用 --dshpc-on-warning）。 */\n.dshpc-chip--business{--chip-bg:var(--dshpc-business);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-business-hover);}\n.dshpc-chip--success{--chip-bg:var(--dshpc-success);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-success-hover);}\n.dshpc-chip--warning{--chip-bg:var(--dshpc-warning);--chip-fg:var(--dshpc-on-warning);--chip-bg-hover:var(--dshpc-warning-hover);}\n.dshpc-chip--danger{--chip-bg:var(--dshpc-danger);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-danger-hover);}\n/* 扩展八色（2026-10-29）：实心面字色统一白（on-signal），明度均低于黄 / 青柠，白字两主题可读。 */\n.dshpc-chip--purple{--chip-bg:var(--dshpc-purple);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-purple-hover);}\n.dshpc-chip--pink{--chip-bg:var(--dshpc-pink);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-pink-hover);}\n.dshpc-chip--cyan{--chip-bg:var(--dshpc-cyan);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-cyan-hover);}\n.dshpc-chip--teal{--chip-bg:var(--dshpc-teal);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-teal-hover);}\n.dshpc-chip--orange{--chip-bg:var(--dshpc-orange);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-orange-hover);}\n.dshpc-chip--indigo{--chip-bg:var(--dshpc-indigo);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-indigo-hover);}\n.dshpc-chip--rose{--chip-bg:var(--dshpc-rose);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-rose-hover);}\n.dshpc-chip--slate{--chip-bg:var(--dshpc-slate);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-slate-hover);}\n/* 可点态：button 渲染（见 Chip.ts），光标 + hover 加深。 */\n.dshpc-chip--clickable{cursor:pointer;transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-chip--clickable:hover:not(:disabled){background:var(--chip-bg-hover)}\n.dshpc-chip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 禁用态字色从 --chip-fg 派生（45% ≈ 旧 fg-3 的弱化观感），不许直接用 --dshpc-fg-3：\n   它跟主题走，暗色下是深灰 ⇒ 语义色实心标签（蓝 / 红底）上几乎看不见（与 Segmented 计数 2026-10-29 同类）。 */\n.dshpc-chip:disabled{cursor:default;color:color-mix(in srgb,var(--chip-fg) 45%,transparent)}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-chip .dshpc-chip__label{min-width:0;}\n@media (prefers-reduced-motion: reduce){.dshpc-chip{transition:none}}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Chip.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Chip.js
 		/** 小标签（neutral 用现成的 `--dshpc-chip-bg`；传 `onClick` 才是可点的）。 */
 		function Chip(props) {
 			ensureComponentStyles("chip", CHIP_CSS);
@@ -52894,7 +52964,7 @@ window.__ModuleLoader__.load({
 			}) : children ?? null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/pagination-logic.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/pagination-logic.js
 		/**
 		* 分页纯逻辑：总页数、页码夹取、省略号窗口、当前页可见区间。
 		*
@@ -52958,7 +53028,7 @@ window.__ModuleLoader__.load({
 			return items;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Pagination.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Pagination.js
 		/**
 		* 分页（`‹ Previous  1 [2] 3 … 36  Next ›`）。
 		*
@@ -53059,7 +53129,7 @@ window.__ModuleLoader__.load({
 			}, totalNode === null ? null : (0, react$1.createElement)("span", { className: "dshpc-pagination__total" }, totalNode), (0, react$1.createElement)("div", { className: "dshpc-pagination__pages" }, navButton("prev"), ...middle, navButton("next")), sizeNode);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/SectionHead.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/SectionHead.js
 		/**
 		* 模块标题行（UI 基础层）：**标签（可选，画出来的短竖线）/ icon（可选）+ 标题 + 右侧控件**。
 		*
@@ -53108,7 +53178,7 @@ window.__ModuleLoader__.load({
 			}), props.icon === void 0 ? null : (0, react$1.createElement)("span", { className: "dshpc-section-head__icon" }, props.icon), (0, react$1.createElement)("span", { className: "dshpc-section-head__title" }, props.title), props.right === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-section-head__right" }, props.right));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/table-logic.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/table-logic.js
 		/**
 		* 单元格值是不是「对象写法」（跨列 / 跨行 / 对齐）。
 		*
@@ -53179,7 +53249,7 @@ window.__ModuleLoader__.load({
 			return rows;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/table-shared.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/table-shared.js
 		function widthOf(width) {
 			if (width === void 0) return void 0;
 			return typeof width === "number" ? `${width}px` : width;
@@ -53398,7 +53468,7 @@ window.__ModuleLoader__.load({
 			}))), groups.length > 0 ? null : (0, react$1.createElement)("thead", { className: "dshpc-table__head" }, ...headRows.map((cells, level) => headRowOf(cells, level))), ...body);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Table.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Table.js
 		/**
 		* 底部哨兵的滚动监听：哨兵进入视口（提前 200px）就调一次 `onLoadMore`。
 		* `enabled` 由调用方决定（分页 / 分组模式下关掉）；正在加载或已到底时 `blockedRef` 挡住重复触发。
@@ -54436,7 +54506,7 @@ window.__ModuleLoader__.load({
 			}));
 		});
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/toast-host.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/toast-host.js
 		/** 全局注册表键：Symbol.for 跨 bundle 副本天然共享同一个符号。 */
 		const TOAST_HOST_KEY = Symbol.for("dsh-plugin-core/toast-host");
 		/** 全局单例：已注册则直接返回（不触发 create），否则建一个并注册。 */
@@ -54449,7 +54519,7 @@ window.__ModuleLoader__.load({
 			return created;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Toast.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Toast.js
 		const DEFAULT_MS = 2600;
 		const ROOT_ID = "dshpc-toast-root";
 		function currentTheme() {
@@ -54650,7 +54720,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/SplitGroup.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/SplitGroup.js
 		/**
 		* 拼接外壳 —— 两个控件在外观上焊成一体（L2 组件皮肤，P1）
 		*
@@ -54684,7 +54754,7 @@ window.__ModuleLoader__.load({
 			}, props.children);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Field.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Field.js
 		/**
 		* 输入类控件 —— **全站唯一实现**（L2 组件皮肤，P3）
 		*
@@ -54752,7 +54822,7 @@ window.__ModuleLoader__.load({
 			}) : null), props.hint);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/InputGroup.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/InputGroup.js
 		/**
 		* 组合输入框 —— 输入框 + 后置按钮组（+ 可选前置标题）焊成一体（L2 组件皮肤，P3）
 		*
@@ -54868,7 +54938,7 @@ window.__ModuleLoader__.load({
 			}, nodes), props.hint);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/Textarea.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/Textarea.js
 		/**
 		* 多行文本输入（P3 输入类家族唯一实现；皮肤见 controls-css.ts 的 `.dshpc-textarea`）。
 		*
@@ -54928,7 +54998,7 @@ window.__ModuleLoader__.load({
 			return true;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/ui/QuickToolbar.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/ui/QuickToolbar.js
 		/**
 		* 快捷工具栏（UI 基础层）：**右侧悬浮的一列圆钮**，内置「回到顶部」，并可挂自定义按钮。
 		*
@@ -55276,16 +55346,94 @@ window.__ModuleLoader__.load({
 		* 默认 8s 会在脚本还在改的时候报超时 ⇒ 与 host 侧 120s 对齐。
 		*/
 		const TASK_WRITE_TIMEOUT_MS = 12e4;
+		/** 认识的阶段 key（skill 那边多打一个、这边没跟上就整行忽略，界面继续显示上一句）。 */
+		function isStep(value) {
+			return value === "check" || value === "sync" || value === "write" || value === "commit" || value === "push";
+		}
+		/** 解析一行 NDJSON；不是我们的形状（空行 / 坏行）就返回 null，交给外层继续读。 */
+		function actionEventOf(line) {
+			if (line.trim() === "") return null;
+			let raw;
+			try {
+				raw = JSON.parse(line);
+			} catch {
+				return null;
+			}
+			if (raw === null || typeof raw !== "object") return null;
+			const event = raw;
+			if (event.type === "done") return { type: "done" };
+			if (event.type === "step" && typeof event.step === "string" && isStep(event.step)) return {
+				type: "step",
+				step: event.step
+			};
+			if (event.type === "error") return {
+				type: "error",
+				error: typeof event.error === "string" ? event.error : "任务动作失败",
+				code: typeof event.code === "string" ? event.code : null
+			};
+			return null;
+		}
 		/**
-		* 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）。
-		* 取消可带一句理由（`summary`），进历史摘要与执行记录。成功后由调用方重读快照。
+		* 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）/ 结案（`close`）。
+		* 取消可带一句理由（`summary`），进历史摘要与执行记录。
+		*
+		* 写命令要跑「检查 → 拉取 → 写 → 提交 → 推送」好几秒，host 回的是 **NDJSON 流**：
+		* 每个阶段一行 `{type:"step",step}` 喂给 `onStep` 翻进度文案，末尾 `{type:"done"}` 收尾；
+		* 跑挂时推 `{type:"error",error,code}` ⇒ 这里抛 HttpError（码照旧，界面能认出「没身份」）。
+		* 请求参数本身有问题时 host 还没来得及发头，仍是普通 JSON 400/500。
+		*
+		* 成功后由调用方重读快照。
 		*/
-		function postTaskAction(body) {
-			return fetchJson("/task/action", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify(body)
+		async function postTaskAction(body, onStep) {
+			const controller = new AbortController();
+			const timer = setTimeout(() => {
+				controller.abort(new DOMException(`请求超时（${TASK_WRITE_TIMEOUT_MS}ms 未响应）`, "TimeoutError"));
 			}, TASK_WRITE_TIMEOUT_MS);
+			try {
+				const res = await fetch(`${API_PREFIX}/task/action`, {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify(body),
+					signal: controller.signal,
+					cache: "no-store"
+				});
+				if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
+				if (res.body === null) throw new HttpError("任务动作没有返回内容（响应流不可读）", null);
+				const reader = res.body.getReader();
+				const decoder = new TextDecoder();
+				let buffer = "";
+				/**
+				* 处理一行：翻一行进度文案、`done` 返回 true（该收摊了）、`error` 直接抛。
+				* 坏行 / 空行当没看见 —— 一条读不懂的行不该让整条命令算失败。
+				*/
+				const handle = (line) => {
+					const event = actionEventOf(line);
+					if (event === null) return false;
+					if (event.type === "step") {
+						onStep?.(event.step);
+						return false;
+					}
+					if (event.type === "error") throw new HttpError(event.error, event.code);
+					return true;
+				};
+				try {
+					for (;;) {
+						const chunk = await reader.read();
+						if (chunk.done) break;
+						buffer += decoder.decode(chunk.value, { stream: true });
+						const lines = buffer.split("\n");
+						buffer = lines.pop() ?? "";
+						for (const line of lines) if (handle(line)) return { ok: true };
+					}
+					buffer += decoder.decode();
+					if (handle(buffer)) return { ok: true };
+				} finally {
+					reader.cancel().catch(() => void 0);
+				}
+				throw new HttpError("任务动作没有返回结果（连接中断）", null);
+			} finally {
+				clearTimeout(timer);
+			}
 		}
 		/**
 		* 「继续」建会话的超时：不跑 git，但 host 侧要建 agent、挂 preset、归组工作区，
@@ -55387,6 +55535,3620 @@ window.__ModuleLoader__.load({
 			if (abs >= 1e6) return step(abs / 1e6, "M");
 			if (abs >= 1e3) return step(abs / 1e3, "K");
 			return String(n);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/official-classes.js
+		/** 官方注入 style 标签的 data-plugin-css 包前缀（chat 主视图 + ui-tool 工具卡 + ui-deliverables）。 */
+		const CSS_PKG_PREFIXES = [
+			"@deepseek-ai/dsh-client-ui-chat/",
+			"@deepseek-ai/dsh-client-ui-tool/",
+			"@deepseek-ai/dsh-client-ui-deliverables/",
+			"@deepseek-ai/dsh-client-ui-sidebar-documentpreview/"
+		];
+		/**
+		* 解析一段官方 CSS module 文本，抽出 {语义名 → 真实类名}。
+		* 纯函数、无 DOM 依赖（冒烟可直接对夹具断言）。
+		* @param css - style 标签的 textContent。
+		* @returns 语义名到真实类名的映射；解析不出哈希前缀时为空表。
+		*/
+		function parseOfficialCss(css) {
+			const out = /* @__PURE__ */ new Map();
+			const tokens = [];
+			const tokenRe = /\.([A-Za-z0-9_-]+)/g;
+			let m = tokenRe.exec(css);
+			while (m !== null) {
+				const token = m[1];
+				if (token !== void 0) tokens.push(token);
+				m = tokenRe.exec(css);
+			}
+			const counts = /* @__PURE__ */ new Map();
+			for (const token of tokens) {
+				const at = token.lastIndexOf("_");
+				if (at <= 0 || at === token.length - 1) continue;
+				const prefix = token.slice(0, at);
+				counts.set(prefix, (counts.get(prefix) ?? 0) + 1);
+			}
+			let prefix = "";
+			let best = 0;
+			counts.forEach((count, key) => {
+				if (count > best) {
+					best = count;
+					prefix = key;
+				}
+			});
+			if (prefix === "") return out;
+			for (const token of tokens) {
+				if (!token.startsWith(prefix + "_")) continue;
+				const semantic = token.slice(prefix.length + 1);
+				if (semantic === "" || semantic.includes("_")) continue;
+				if (!out.has(semantic)) out.set(semantic, token);
+			}
+			return out;
+		}
+		/** 已发现的官方模块表（只在真的发现到模块时才缓存，见 discoverOfficialClasses 内注释）。 */
+		let discovered = null;
+		/**
+		* 扫描 document 里官方 chat 包注入的 style 标签，按模块缓存解析结果。
+		* 无 document（SSR / 冒烟）时返回空表。
+		*/
+		function discoverOfficialClasses() {
+			if (discovered !== null) return discovered;
+			const result = /* @__PURE__ */ new Map();
+			if (typeof document !== "undefined") {
+				const tags = document.querySelectorAll("style[data-plugin-css]");
+				for (let i = 0; i < tags.length; i++) {
+					const tag = tags[i];
+					const id = tag.dataset.pluginCss ?? "";
+					const prefix = CSS_PKG_PREFIXES.find((candidate) => id.startsWith(candidate));
+					if (prefix === void 0) continue;
+					const module = id.slice(prefix.length).replace(/\.module\.css$/, "");
+					const parsed = parseOfficialCss(tag.textContent ?? "");
+					if (parsed.size === 0 && (tag.textContent ?? "").includes(".")) console.warn(`[dsh-plugin-core:session] 官方模块 ${module} 类名解析为空（格式可能变了）`);
+					result.set(module, parsed);
+				}
+			}
+			if (result.size > 0) discovered = result;
+			return result;
+		}
+		/** 已发现的官方模块数（0 = 官方样式未注入，调用方应走自绘兜底）。 */
+		function officialModuleCount() {
+			return discoverOfficialClasses().size;
+		}
+		/**
+		* 取一个官方类名；取不到返回 null（调用方回退自绘样式）。
+		* @param module - 模块名（如 `ChatView`）。
+		* @param semantic - 语义名（如 `frame`）。
+		*/
+		function officialClass(module, semantic) {
+			return discoverOfficialClasses().get(module)?.get(semantic) ?? null;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/ChatNodeSeat.js
+		/**
+		* 官方 TURN_PROCESS_INDEPENDENT_KINDS（lib/client.js:1525）：这些 kind 永远不进过程折叠区。
+		*/
+		const TURN_PROCESS_INDEPENDENT_KINDS = /* @__PURE__ */ new Set([
+			"system-prompt",
+			"user",
+			"steering",
+			"turn-trigger",
+			"turn-process",
+			"turn-error",
+			"turn-max-tokens",
+			"turn-tail"
+		]);
+		/**
+		* 读过程席位快照。宿主 API 形态变了也只降级成「不折叠」，不让整个弹窗白屏。
+		*/
+		function readPresentation(store, key) {
+			if (store === void 0) return void 0;
+			try {
+				const source = store.processSource;
+				if (typeof source !== "function") return void 0;
+				return source.call(store, key)?.getSnapshot();
+			} catch {
+				return;
+			}
+		}
+		/** 取节点所属 turn（官方 turnOf，ChatNodeSeat.tsx:1660）。 */
+		function turnOf(node) {
+			const location = node?.location;
+			return location?.kind === "turn" || location?.kind === "step" ? location.turn?.turn : void 0;
+		}
+		/** 官方 turnProcessAlwaysOpen（lib/client.js:1558）：live / 已停止 / 失败的 turn 不折叠。 */
+		function turnProcessAlwaysOpen(node) {
+			const location = node?.location;
+			if (location?.kind !== "turn" && location?.kind !== "step") return false;
+			const reason = location.turn?.end?.data?.reason?.kind;
+			return location.turn?.status === "open" || reason === "aborted" || reason === "error";
+		}
+		/** 一个 keyed 节点 → 一个 flowItem（官方 ChatNodeSeat 的 JSX 等价物）。 */
+		function ChatNodeSeatMirror(props) {
+			const { node, groupPart, store, openState, onSetOpen, foldCompleted, renderNode } = props;
+			const turn = turnOf(node);
+			const presentation = readPresentation(store, node.key);
+			const spec = presentation?.spec ?? void 0 ?? (node.kind === "turn-process" ? node.data : void 0);
+			const liveProcess = presentation !== void 0 && presentation.turnClosed !== true;
+			const interleavedInput = presentation?.hasInterleavedInput === true;
+			const alwaysOpen = liveProcess || interleavedInput || turnProcessAlwaysOpen(node);
+			const storedAnswerStep = turn === void 0 ? void 0 : openState.get(turn);
+			const processOpen = alwaysOpen || spec !== void 0 && storedAnswerStep === (spec.answerStep ?? 0);
+			const setOpen = (open) => {
+				if (spec !== void 0 && !alwaysOpen && turn !== void 0) onSetOpen(turn, spec.answerStep ?? 0, open);
+			};
+			const processWindowReady = spec !== void 0 && presentation !== void 0 && foldCompleted && presentation.turn === spec.turn && (presentation.turnStarted === true || presentation.turnClosed === true);
+			const dataStep = typeof node.data?.step === "number" ? node.data.step : void 0;
+			const processMember = processWindowReady && spec !== void 0 && !TURN_PROCESS_INDEPENDENT_KINDS.has(node.kind) && node.anchorSeq >= spec.processStartSeq && (liveProcess || spec.answerAnchorSeq === null || node.anchorSeq < spec.answerAnchorSeq || groupPart === "reasoning" && node.kind === "assistant-step" && dataStep === spec.answerStep);
+			const processAnswer = processWindowReady && spec !== void 0 && !liveProcess && groupPart !== "reasoning" && node.kind === "assistant-step" && dataStep === spec.answerStep;
+			const ownsDisclosure = node.kind === "turn-process" || processAnswer;
+			const foldable = processWindowReady && (liveProcess || processMember || ownsDisclosure);
+			const turnProcess = spec === void 0 ? void 0 : {
+				spec,
+				foldable,
+				hasContent: !interleavedInput && (presentation?.hasExternalProcess === true || spec.inlineReasoning),
+				open: processOpen,
+				alwaysOpen,
+				setOpen
+			};
+			const controllerInactive = node.kind === "turn-process" && foldCompleted && !foldable;
+			const compactAnswer = processAnswer && foldable && presentation?.compactAnswer === true && !processOpen;
+			const processHidden = controllerInactive || foldable && processMember && !processOpen;
+			const inner = renderNode(node, turnProcess, groupPart);
+			if (inner === null || inner === void 0) return null;
+			const flowKey = groupPart === void 0 || groupPart === "response" ? node.key : JSON.stringify([node.key, groupPart]);
+			return (0, react$1.createElement)("div", {
+				className: officialClass("ChatView", "flowItem") ?? "",
+				"data-chat-anchor-key": flowKey,
+				"data-chat-flow-key": flowKey,
+				"data-chat-paging-anchor": node.kind !== "turn-process" || void 0,
+				"data-chat-node-key": node.key,
+				"data-chat-group-part": groupPart,
+				"data-chat-flow-kind": node.kind,
+				"data-chat-turn": turn,
+				"data-turn-process-member": processMember || void 0,
+				"data-turn-process-hidden": processHidden || void 0,
+				"data-turn-process-answer": compactAnswer || void 0,
+				hidden: processHidden || void 0
+			}, inner);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/process-groups.js
+		/** 官方 INDEPENDENT（process-groups.js:10565；注意与 ChatNodeSeat 的清单不同）。 */
+		const INDEPENDENT = /* @__PURE__ */ new Set([
+			"user",
+			"steering",
+			"turn-trigger",
+			"model-retry",
+			"turn-error",
+			"turn-max-tokens",
+			"turn-tail"
+		]);
+		/** 节点所属 turn（官方 turnOf，process-groups.js:10574）。 */
+		function turnOfNode(node) {
+			const location = node.location;
+			return location?.kind === "turn" || location?.kind === "step" ? location.turn?.turn : void 0;
+		}
+		/** 官方 reasoning（10578）：assistant-step 带非空思考块。 */
+		function hasReasoning(node) {
+			if (node.kind !== "assistant-step" || !Array.isArray(node.data?.blocks)) return false;
+			return (node.data?.blocks).some((block) => block?.kind === "reasoning" && (block.text ?? "").trim() !== "");
+		}
+		/** 官方 reply（10581）：assistant-step 带回复内容（reasoning / tool-call 不算，空文本不算）。 */
+		function hasReply(node) {
+			if (node.kind !== "assistant-step" || !Array.isArray(node.data?.blocks)) return false;
+			return (node.data?.blocks).some((block) => {
+				if (block === null || typeof block !== "object") return false;
+				if (block.kind === "reasoning" || block.kind === "tool-call") return false;
+				if (block.kind === "text") return (block.text ?? "").trim() !== "";
+				return true;
+			});
+		}
+		/** 官方 activity（10426-10449）：工具名 → 活动类别。 */
+		function toolActivity(name) {
+			if (name === "read") return "read";
+			if (name === "read_image") return "readImage";
+			if (name === "grep" || name === "glob" || name.endsWith("_inspect")) return "search";
+			if (name === "write") return "write";
+			if (name === "edit" || name === "apply_patch") return "edit";
+			if ([
+				"bash",
+				"pwsh",
+				"exec_command",
+				"write_stdin"
+			].includes(name) || name.startsWith("terminal_")) return "commands";
+			if (name === "run_code") return "code";
+			if (name === "web_search") return "webSearch";
+			if (name === "web_fetch") return "webFetch";
+			if (name === "subagent" || name.startsWith("subagent_")) return "subagents";
+			if ([
+				"todo_write",
+				"create_goal",
+				"update_goal",
+				"get_goal"
+			].includes(name)) return "plan";
+			if (name === "ask_user_question" || name === "request_user_input") return "questions";
+			return "tools";
+		}
+		/** ToolCallBlock → 本次调用的名字面（running 半截在根上，settled 在 call 里）。 */
+		function toolCallFace(root) {
+			const callId = typeof root.callId === "string" ? root.callId : "";
+			if (root.kind === "tool-result") {
+				const name = typeof root.call?.name === "string" ? root.call.name : "";
+				return callId === "" || name === "" ? null : {
+					callId,
+					name
+				};
+			}
+			const name = typeof root.name === "string" ? root.name : "";
+			return callId === "" || name === "" ? null : {
+				callId,
+				name
+			};
+		}
+		/** 官方 processActivity（10527-10561）：按去重调用数排序的活动类别（含子调用递归）。 */
+		function processActivity(nodes) {
+			const counts = /* @__PURE__ */ new Map();
+			const seen = /* @__PURE__ */ new Set();
+			const visit = (tool) => {
+				const face = toolCallFace(tool);
+				if (face !== null && !seen.has(face.callId)) {
+					seen.add(face.callId);
+					const kind = toolActivity(face.name);
+					counts.set(kind, (counts.get(kind) ?? 0) + 1);
+				}
+				for (const child of tool.subCalls ?? []) visit(child);
+			};
+			for (const node of nodes) {
+				if (node.kind !== "tool-call") continue;
+				const root = node.data?.root;
+				if (root !== void 0 && root !== null) visit(root);
+			}
+			return [...counts].map(([kind, count]) => ({
+				kind,
+				count
+			})).sort((left, right) => right.count - left.count);
+		}
+		/**
+		* 官方 TurnGroups.rebuild 的移植：把 keyed 流切成「独立条目 + 过程分组」。
+		* @param order - 官方渲染顺序（node key 列表）。
+		* @param readNode - keyed 节点读取。
+		* @param isTurnClosed - turn 是否已闭合（官方 turns.get(turn).status === 'closed'）。
+		*/
+		function buildProcessGroups(order, readNode, isTurnClosed) {
+			const entries = [];
+			const groups = /* @__PURE__ */ new Map();
+			let pending = [];
+			let currentTurn;
+			const flush = (closed) => {
+				const first = pending[0];
+				if (first === void 0) return;
+				const turn = currentTurn;
+				const ended = closed || turn !== void 0 && isTurnClosed(turn);
+				const members = pending;
+				const nodes = members.map((member) => readNode(member.key)).filter((node) => node !== void 0);
+				const groupKey = JSON.stringify([
+					"process",
+					first.key,
+					first.groupPart ?? null
+				]);
+				groups.set(groupKey, {
+					key: groupKey,
+					members,
+					data: {
+						turn: turn ?? -1,
+						closed: ended,
+						summary: { counts: processActivity(nodes) }
+					}
+				});
+				entries.push({
+					kind: "group",
+					key: groupKey
+				});
+				pending = [];
+			};
+			for (const key of order) {
+				const node = readNode(key);
+				if (node === void 0) continue;
+				const turn = turnOfNode(node);
+				if (turn !== currentTurn) {
+					flush(true);
+					currentTurn = turn;
+				}
+				if (INDEPENDENT.has(node.kind)) {
+					flush(true);
+					entries.push({
+						kind: "node",
+						key
+					});
+				} else if (node.kind === "turn-process") entries.push({
+					kind: "node",
+					key
+				});
+				else if (node.kind === "assistant-step") {
+					if (hasReasoning(node)) pending.push({
+						key,
+						groupPart: "reasoning"
+					});
+					if (hasReply(node)) {
+						flush(true);
+						entries.push({
+							kind: "node",
+							key,
+							groupPart: "response"
+						});
+					}
+				} else pending.push({ key });
+			}
+			flush(currentTurn === void 0 ? true : isTurnClosed(currentTurn));
+			return {
+				entries,
+				groups
+			};
+		}
+		/** 官方 message.stepProcess.done.* 的键面（zh/en 文案见 utils/i18n 字典）。 */
+		const STEP_DONE_KEYS = {
+			thinking: "stepProcessDoneThinking",
+			read: "stepProcessDoneRead",
+			readImage: "stepProcessDoneReadImage",
+			write: "stepProcessDoneWrite",
+			search: "stepProcessDoneSearch",
+			edit: "stepProcessDoneEdit",
+			commands: "stepProcessDoneCommands",
+			code: "stepProcessDoneCode",
+			webSearch: "stepProcessDoneWebSearch",
+			webFetch: "stepProcessDoneWebFetch",
+			subagents: "stepProcessDoneSubagents",
+			plan: "stepProcessDonePlan",
+			questions: "stepProcessDoneQuestions",
+			tools: "stepProcessDoneTools"
+		};
+		/**
+		* 官方 processTitle（1820-1836）：closed 组标题 = 前 3 类活动拼接
+		* （2 类用「A并B」且去「已」前缀；≥3 类用「，」连接、超 3 类补「等」）。
+		*/
+		function processTitle(summary, t) {
+			const labels = summary.counts.slice(0, 3).map(({ kind }) => t(STEP_DONE_KEYS[kind]));
+			const first = labels[0];
+			if (first === void 0) return t("stepProcessDoneThinking");
+			const continuation = (label) => label.charAt(0).toLowerCase() + label.slice(1);
+			const second = labels[1];
+			if (second === void 0) return first;
+			if (labels.length === 2) {
+				const prefix = t("stepProcessSharedPrefix");
+				return t("stepProcessJoinTwo", {
+					first,
+					second: continuation(prefix !== "" && first.startsWith(prefix) && second.startsWith(prefix) ? second.slice(prefix.length) : second)
+				});
+			}
+			const title = [first, ...labels.slice(1).map(continuation)].join(t("stepProcessComma"));
+			return summary.counts.length > 3 ? t("stepProcessMore", { title }) : title;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/ChatGroupSeat.js
+		/** 官方 PROCESS_ICONS（lib/client.js:2187-2201）；工具行图标同源（edit/write=铅笔、generic=sparkle）。 */
+		const PROCESS_ICONS = {
+			thinking: official_exports.IconThinkOutlineRegular,
+			read: official_exports.IconBrowseOutlineRegular,
+			readImage: official_exports.IconBrowseOutlineRegular,
+			search: official_exports.IconSearchOutlineRegular,
+			edit: official_exports.IconEditOutlineRegular,
+			write: official_exports.IconEditOutlineRegular,
+			commands: official_exports.IconApiOutlineRegular,
+			code: official_exports.IconCodeOutlineRegular,
+			webSearch: official_exports.IconGlobeOutlineRegular,
+			webFetch: official_exports.IconBrowseOutlineRegular,
+			subagents: official_exports.IconAgentPresetOutlineRegular,
+			plan: official_exports.IconPlanOutlineRegular,
+			questions: official_exports.IconQuestionOutlineRegular,
+			tools: official_exports.IconSparkleRegular
+		};
+		/** 官方图标尺寸（14px，除 thinking/commands/webSearch/plan/questions 用默认）。 */
+		const SMALL_ICONS = /* @__PURE__ */ new Set([
+			"read",
+			"readImage",
+			"search",
+			"edit",
+			"write",
+			"code",
+			"webFetch",
+			"subagents",
+			"tools"
+		]);
+		/** 过程分组（二级收折）：汇总行 + 组内条目。 */
+		function ChatGroupSeatMirror(props) {
+			const { group, grouped, store, openState, onSetOpen, foldCompleted, renderNode, t } = props;
+			const [open, setOpen] = (0, react$1.useState)(false);
+			const first = group.members[0];
+			const firstNode = first === void 0 ? void 0 : store?.get(first.key);
+			const presentation = first === void 0 ? void 0 : readPresentation(store, first.key);
+			const spec = presentation?.spec ?? void 0;
+			const location = firstNode?.location;
+			const reason = location?.kind === "turn" || location?.kind === "step" ? location.turn?.end?.data?.reason?.kind : void 0;
+			const alwaysOpen = presentation?.turnClosed === false || presentation?.hasInterleavedInput === true || reason === "aborted" || reason === "error";
+			const storedAnswerStep = openState.get(group.data.turn);
+			const outerHidden = foldCompleted && presentation?.turnClosed === true && spec !== void 0 && !alwaysOpen && storedAnswerStep !== (spec.answerStep ?? 0);
+			(0, react$1.useEffect)(() => {
+				if (outerHidden) setOpen(false);
+			}, [outerHidden]);
+			const bodyRef = (0, react$1.useRef)(null);
+			const [edges, setEdges] = (0, react$1.useState)({
+				up: false,
+				down: false
+			});
+			const measure = (0, react$1.useCallback)(() => {
+				const el = bodyRef.current;
+				if (el === null) return;
+				setEdges({
+					up: el.scrollTop > 1,
+					down: el.scrollTop + el.clientHeight < el.scrollHeight - 1
+				});
+			}, []);
+			(0, react$1.useEffect)(() => {
+				if (grouped && open) measure();
+			}, [
+				grouped,
+				open,
+				measure
+			]);
+			if (first === void 0 || firstNode === void 0) return null;
+			const label = group.data.closed ? processTitle(group.data.summary, t) : t("stepProcessDoneThinking");
+			const activity = group.data.summary.counts[0]?.kind ?? "thinking";
+			const ActivityIcon = PROCESS_ICONS[activity] ?? official_exports.IconThinkOutlineRegular;
+			const bodyClass = [
+				officialClass("ChatGroupSeat", "body") ?? "",
+				grouped ? "" : officialClass("ChatGroupSeat", "expandedBody") ?? "",
+				grouped && edges.up ? officialClass("ChatGroupSeat", "fadeTop") ?? "" : "",
+				grouped && edges.down ? officialClass("ChatGroupSeat", "fadeBottom") ?? "" : ""
+			].filter((part) => part !== "").join(" ");
+			return (0, react$1.createElement)("div", {
+				className: officialClass("ChatGroupSeat", "root") ?? "",
+				"data-chat-group-key": group.key,
+				"data-chat-flow-key": group.key,
+				"data-chat-anchor-key": `group:${group.key}`,
+				"data-chat-turn": group.data.turn,
+				"data-step-process": true,
+				"data-group-expanded-mode": !grouped || void 0,
+				hidden: outerHidden || void 0
+			}, grouped ? (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("ChatGroupSeat", "title") ?? "",
+				"aria-expanded": open,
+				onClick: () => {
+					setOpen((value) => !value);
+				}
+			}, (0, react$1.createElement)("span", {
+				className: officialClass("ChatGroupSeat", "leading") ?? "",
+				"aria-hidden": true
+			}, (0, react$1.createElement)("span", {
+				className: officialClass("ChatGroupSeat", "activityIcon") ?? "",
+				"data-step-process-icon": true
+			}, (0, react$1.createElement)(ActivityIcon, SMALL_ICONS.has(activity) ? { size: 14 } : {})), open ? (0, react$1.createElement)(official_exports.IconChevronUpOutlineRegular, { className: officialClass("ChatGroupSeat", "chevron") ?? "" }) : (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, { className: officialClass("ChatGroupSeat", "chevron") ?? "" })), (0, react$1.createElement)("span", { className: officialClass("ChatGroupSeat", "label") ?? "" }, label)) : null, (0, react$1.createElement)("div", {
+				ref: bodyRef,
+				className: bodyClass,
+				"data-step-process-body": true,
+				"data-scroll-up": edges.up || void 0,
+				"data-scroll-down": edges.down || void 0,
+				onScroll: measure,
+				hidden: grouped && !open || void 0
+			}, (0, react$1.createElement)("div", {
+				className: officialClass("ChatGroupSeat", "content") ?? "",
+				"data-step-process-content": true,
+				"data-chat-flow": ""
+			}, group.members.map((member) => (0, react$1.createElement)(ChatNodeSeatMirror, {
+				key: JSON.stringify([member.key, member.groupPart ?? null]),
+				node: store?.get(member.key) ?? {
+					key: member.key,
+					kind: "",
+					anchorSeq: 0
+				},
+				groupPart: member.groupPart,
+				store,
+				openState,
+				onSetOpen,
+				foldCompleted,
+				renderNode
+			})))));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/session-css.generated.js
+		const SESSION_CSS = "/* 会话预览（SessionViewModal）自绘样式：只装本包自己的组件（暂存输入区 / fork / 探针等）\n   + 两个稳定钩子类（dshpc-sv-frame / dshpc-sv-scroll）。\n   已删：ChangedFiles 卡与 FileDiff 的全部自绘规则（2026-10-24）——官方 ChangedFiles /\n   FileDiff 模块类由 officialClass() 运行时发现并挂在元素上，本包不再有一行兜底。\n   ⚠️ 2026-10-23 起不再有官方类兜底：镜像官方组件的元素一律挂官方 CSS-module 类名\n   （officialClass() 运行时发现，取不到 = 空类、裸结构不白屏）——本包只跑 DSH 宿主、官方样式必在场，\n   自绘一一对应是死代码。要改官方观感走 token 覆盖 / 双类名钩子（见 ChatView.ts 头注），别在这加兜底。\n   类名固定 dshpc-sv-*；颜色一律走 --dshpc-* token（明暗自适应）。\n   外壳（遮罩 / 面板 / 头部 / 关闭钮）= 核心 Modal（size lg）。 */\n/* 会话区 = 普通纵向流：不设高度、不自己滚（滚动与内距归核心 Modal body，用户 2026-10-22 口径）。 */\n.dshpc-sv{display:flex;flex-direction:column;min-width:0;gap:10px}\n\n/* 官方样式未命中时的可见探针（挂在头部副标题行，不占正文）。 */\n.dshpc-sv-probe{font-size:var(--dshpc-font-xs);color:var(--dshpc-warning)}\n\n/* 头部归档标识（官方归档图标 + 「已归档」）。 */\n.dshpc-sv-archived{display:inline-flex;align-items:center;gap:4px;font-size:var(--dshpc-font-xs);font-weight:400;color:var(--dshpc-fg-3)}\n\n/* 内距与滚动全部让给核心 Modal body ⇒ 这里把官方 ChatView.frame / scroll 的内距、\n   overflow、高度一律归零（双类名 0,2,0 压过 CSS module，不靠注入顺序）。\n   ⚠️ 必须同时把 flex 收掉：官方 scroll 是 flex:1（basis=0），在**自动高**的容器里会把\n   会话区压成 0 高 —— 这正是「内容自管高度」的老毛病，别再放回来。 */\n.dshpc-sv-frame.dshpc-sv-frame{padding-top:0;padding-bottom:0;}\n\n.dshpc-sv-scroll.dshpc-sv-scroll{padding:0;overflow:visible;height:auto;max-height:none;flex:none;}\n\n/* 会话区保底：高度由内容决定（撑开由 Modal body 滚）。 */\n.dshpc-sv-chat{flex:none;min-height:0;}\n\n\n.dshpc-sv-assistant{align-self:stretch;font-size:var(--dshpc-font-lg);line-height:1.7;word-break:break-word;}\n\n.dshpc-sv-image{align-self:flex-start;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3);border:1px dashed var(--dshpc-border);border-radius:var(--dshpc-radius-sm);padding:4px 10px;}\n\n/* 工具卡根（SessionViewModal legacy 兜底渲染直接用；正常 keyed 路径一律挂官方 ToolRow 类）。 */\n.dshpc-sv-tool{flex-direction:column;display:flex;}\n\n.dshpc-sv-notice{align-self:center;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3);padding:2px 8px;}\n\n\n.dshpc-sv-forkerr{margin:0;font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);color:var(--dshpc-danger);word-break:break-word;}\n\n.dshpc-sv-forktext{margin:0;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-2);}\n\n/* ── 暂存输入区（期4：打字 → 确定 → fork 带话跳官方视图）── */\n.dshpc-sv-composer{flex:1;display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;}\n\n.dshpc-sv-composer textarea{flex:1;min-width:0;resize:none;font:inherit;font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);color:var(--dshpc-fg);background:var(--dshpc-surface-2);border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);padding:8px 12px;min-height:40px;max-height:120px;}\n\n.dshpc-sv-composer textarea:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-1px;}\n\n.dshpc-sv-composer-hint{flex:none;font-size:var(--dshpc-font-xs);color:var(--dshpc-fg-3);padding-bottom:10px;white-space:nowrap;}";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/ChatView.js
+		/** 会话区骨架：frame > root > scroll > column（类名一律取官方 ChatView.module.css，取不到 = 空类）。
+		*
+		*  `dshpc-sv-frame` / `dshpc-sv-scroll` = 本包**稳定钩子类**（不走 officialClass 发现，官方类命中时也照样挂）：
+		* 会话区**纵向间距的唯一真源**。官方 scroll 自带纵向 16px、官方 frame 的纵向值又不确定，
+		* 归一方案（移植自兄弟项目 2026-10-03 定尺）：**scroll 钩子把官方纵向 16px 归零，
+		* frame 钩子独自定 17/17**，两条钩子都用双类名提高特异性压过官方 CSS module（0,2,0 > 0,1,0），
+		* 不依赖注入顺序 ⇒ 命中 / 未命中两条路径纵向完全一致。
+		*/
+		function ChatViewFrame(props) {
+			ensureComponentStyles("session", SESSION_CSS);
+			return (0, react$1.createElement)("div", { className: `${officialClass("ChatView", "frame") ?? ""} dshpc-sv-frame dshpc-sv-chat` }, (0, react$1.createElement)("div", { className: officialClass("ChatView", "root") ?? "" }, (0, react$1.createElement)("div", { className: `${officialClass("ChatView", "scroll") ?? ""} dshpc-sv-scroll` }, (0, react$1.createElement)("div", {
+				className: officialClass("ChatView", "column") ?? "",
+				"data-chat-flow": ""
+			}, props.children))));
+		}
+		/** 官方 ChatNodeList：order → seat 列表（grouped 视图 = entries + groups 路径）。 */
+		function ChatNodeListMirror(props) {
+			const { order, store, entries, groups, turns, openState, onSetOpen, foldCompleted, renderNode, t } = props;
+			const rows = [];
+			const read = store === void 0 ? void 0 : store.get;
+			if (typeof read !== "function" || store === void 0) return rows;
+			const readSafe = (key) => {
+				try {
+					return read.call(store, key);
+				} catch {
+					return;
+				}
+			};
+			if (entries !== void 0 && groups !== void 0) {
+				const flatKeys = /* @__PURE__ */ new Set();
+				{
+					let bucket = [];
+					let bucketTurn;
+					const closeBucket = () => {
+						const last = bucket[bucket.length - 1];
+						if (last !== void 0) flatKeys.add(last);
+						bucket = [];
+					};
+					for (const entry of entries) {
+						if (entry.kind !== "group") continue;
+						const turn = groups.get(entry.key)?.data.turn ?? -1;
+						if (turn >= 1) {
+							if (bucketTurn !== void 0 && turn !== bucketTurn) closeBucket();
+							bucketTurn = turn;
+						}
+						bucket.push(entry.key);
+					}
+					closeBucket();
+				}
+				for (const entry of entries) if (entry.kind === "group") {
+					const group = groups.get(entry.key);
+					if (group === void 0) continue;
+					const latest = flatKeys.has(group.key);
+					rows.push((0, react$1.createElement)(ChatGroupSeatMirror, {
+						key: entry.key,
+						group,
+						grouped: turnStatus(turns, group.data.turn) !== "open" && !latest,
+						store,
+						openState,
+						onSetOpen,
+						foldCompleted,
+						renderNode,
+						t
+					}));
+				} else {
+					const node = readSafe(entry.key);
+					if (node === void 0) continue;
+					rows.push((0, react$1.createElement)(ChatNodeSeatMirror, {
+						key: JSON.stringify([entry.key, entry.groupPart ?? null]),
+						node,
+						groupPart: entry.groupPart,
+						store,
+						openState,
+						onSetOpen,
+						foldCompleted,
+						renderNode
+					}));
+				}
+				return rows;
+			}
+			for (const key of order) {
+				const node = readSafe(key);
+				if (node === void 0) continue;
+				rows.push((0, react$1.createElement)(ChatNodeSeatMirror, {
+					key,
+					node,
+					store,
+					openState,
+					onSetOpen,
+					foldCompleted,
+					renderNode
+				}));
+			}
+			return rows;
+		}
+		/** turn 状态（官方 turns.get(turn)?.status）。 */
+		function turnStatus(turns, turn) {
+			return (turns?.get(turn) ?? turns?.get(String(turn)))?.status;
+		}
+		/** 加载 / 空态提示行（13px tertiary）。 */
+		function ChatHint(props) {
+			return (0, react$1.createElement)("div", { className: officialClass("ChatView", "hint") ?? "" }, props.text);
+		}
+		/** 「加载更早记录」按钮（官方 older：按钮 4px 12px / 12px 字号 / radius-sm / 底色 interactive-bg-hover-solid）。 */
+		function ChatOlderButton(props) {
+			return (0, react$1.createElement)("div", { className: officialClass("ChatView", "older") ?? "" }, (0, react$1.createElement)("button", {
+				type: "button",
+				onClick: props.onClick
+			}, props.label));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/GenericCommandCard.js
+		/** 官方 TOOL_VARIANTS（tool client.js:83-100，cordis_* 一并保留）。 */
+		const TOOL_VARIANTS = {
+			bash: "bash",
+			pwsh: "bash",
+			read: "read",
+			read_image: "read",
+			web_fetch: "read",
+			web_search: "search",
+			grep: "search",
+			glob: "search",
+			write: "write",
+			edit: "edit",
+			run_code: "code",
+			cordis_package_inspect: "read",
+			cordis_runtime_inspect: "read",
+			cordis_run: "others",
+			cordis_stop: "others",
+			cordis_undefine: "others"
+		};
+		const classifyTool = (name) => TOOL_VARIANTS[name] ?? "others";
+		/** 官方 VARIANT_TITLE_KEYS + TOOL_TITLE_KEYS（tool client.js:65-149；本仓库键名前缀 toolTitle）。 */
+		const VARIANT_TITLE_KEYS = {
+			search: "toolTitleSearch",
+			read: "toolTitleRead",
+			bash: "toolTitleBash",
+			write: "toolTitleWrite",
+			edit: "toolTitleEdit",
+			code: "toolTitleCode",
+			others: "toolTitleGeneric"
+		};
+		const TOOL_TITLE_KEYS = {
+			pwsh: "toolTitleBash",
+			read_image: "toolTitleReadImage",
+			grep: "toolTitleGrep",
+			glob: "toolTitleGlob",
+			web_search: "toolTitleWebSearch",
+			web_fetch: "toolTitleWebFetch"
+		};
+		const toolTitleKey = (name) => TOOL_TITLE_KEYS[name] ?? VARIANT_TITLE_KEYS[classifyTool(name)];
+		/** 官方 VARIANT_ICONS（tool client.js:1749-1757，size 14）。 */
+		const VARIANT_ICONS = {
+			search: (0, react$1.createElement)(official_exports.IconSearchOutlineRegular, { size: 14 }),
+			read: (0, react$1.createElement)(official_exports.IconBrowseOutlineRegular, { size: 14 }),
+			bash: (0, react$1.createElement)(official_exports.IconApiOutlineRegular, { size: 14 }),
+			write: (0, react$1.createElement)(official_exports.IconEditOutlineRegular, { size: 14 }),
+			edit: (0, react$1.createElement)(official_exports.IconEditOutlineRegular, { size: 14 }),
+			code: (0, react$1.createElement)(official_exports.IconCodeOutlineRegular, { size: 14 }),
+			others: (0, react$1.createElement)(official_exports.IconSparkleRegular, { size: 14 })
+		};
+		/** 官方 SUMMARY_KEYS（tool client.js:204-220）：摘要取参键偏好。 */
+		const SUMMARY_KEYS = {
+			bash: ["description", "command"],
+			read: [
+				"path",
+				"file_path",
+				"url"
+			],
+			search: [
+				"query",
+				"pattern",
+				"url"
+			],
+			write: ["path", "file_path"],
+			edit: ["path", "file_path"],
+			code: ["description"],
+			others: []
+		};
+		/** 官方 FILE_PATH_VARIANTS（tool client.js:237-241）：摘要可开预览的文件型变体。 */
+		const FILE_PATH_VARIANTS = /* @__PURE__ */ new Set([
+			"read",
+			"write",
+			"edit"
+		]);
+		const firstLine$2 = (text) => {
+			const nl = text.indexOf("\n");
+			return nl === -1 ? text : text.slice(0, nl);
+		};
+		/** 官方 parseArgs（tool client.js:186-192）。 */
+		const parseArgs = (raw) => {
+			try {
+				return JSON.parse(raw);
+			} catch {
+				return;
+			}
+		};
+		const pickString = (args, keys) => {
+			for (const key of keys) {
+				const value = args[key];
+				if (typeof value === "string" && value !== "") return value;
+			}
+		};
+		/** 官方 deriveSummary（tool client.js:221-233）。 */
+		function deriveSummary(variant, argsRaw) {
+			const parsed = parseArgs(argsRaw);
+			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return firstLine$2(argsRaw);
+			const args = parsed;
+			if (variant === "search" && Array.isArray(args.queries)) {
+				const queries = args.queries.filter((query) => typeof query === "string" && query !== "");
+				if (queries.length > 0) return queries.map(firstLine$2).join(", ");
+			}
+			const picked = pickString(args, SUMMARY_KEYS[variant]);
+			if (picked !== void 0) return firstLine$2(picked);
+			for (const value of Object.values(args)) if (typeof value === "string" && value !== "") return firstLine$2(value);
+			return firstLine$2(argsRaw);
+		}
+		/** 官方 deriveFilePath（tool client.js:242-248）：read/write/edit 的路径取参。 */
+		function deriveFilePath(variant, argsRaw) {
+			if (!FILE_PATH_VARIANTS.has(variant)) return void 0;
+			const parsed = parseArgs(argsRaw);
+			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return void 0;
+			const picked = pickString(parsed, ["path", "file_path"]);
+			return picked === void 0 ? void 0 : firstLine$2(picked);
+		}
+		/** 官方 formatToolBody（tool client.js:255-264）：通用展开体的输入正文。 */
+		function formatToolBody(variant, argsRaw) {
+			if (argsRaw === "") return null;
+			const parsed = parseArgs(argsRaw);
+			if (parsed === void 0) return argsRaw;
+			if (variant === "code" && typeof parsed === "object" && parsed !== null) {
+				const code = parsed.code;
+				if (typeof code === "string" && code !== "") return code;
+			}
+			return JSON.stringify(parsed, null, 2);
+		}
+		/** 官方 validEscalationFields（tool client.js:347-353）。 */
+		function validEscalationFields(args) {
+			const permission = args.sandbox_permissions;
+			const justification = args.justification;
+			if (permission === void 0 && justification === void 0) return true;
+			if (permission !== "workspace-write" && permission !== "danger-full-access") return false;
+			return typeof justification === "string" && justification.trim() !== "";
+		}
+		/** 官方 intendedDiff（tool client.js:460-517）：write/edit/str_replace_editor 的参数侧意图 diff。 */
+		function intendedDiff(name, argsRaw) {
+			const parsed = parseArgs(argsRaw);
+			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
+			const args = parsed;
+			if (name === "str_replace_editor") {
+				const { command, path, file_text: fileText, old_str: oldText, new_str: newText } = args;
+				if (typeof path !== "string" || path.trim() === "") return null;
+				if (command === "create") {
+					if (fileText !== void 0 && typeof fileText !== "string") return null;
+					return {
+						tool: name,
+						diff: {
+							path,
+							oldText: null,
+							newText: typeof fileText === "string" ? fileText : ""
+						}
+					};
+				}
+				if (command === "str_replace") {
+					if (oldText !== void 0 && typeof oldText !== "string") return null;
+					if (newText !== void 0 && typeof newText !== "string") return null;
+					return {
+						tool: name,
+						diff: {
+							path,
+							oldText: typeof oldText === "string" ? oldText : null,
+							newText: typeof newText === "string" ? newText : ""
+						}
+					};
+				}
+				return null;
+			}
+			const { file_path: path } = args;
+			if (typeof path !== "string" || path.trim() === "") return null;
+			if (!validEscalationFields(args)) return null;
+			if (name === "write") {
+				const { content } = args;
+				return typeof content === "string" ? {
+					tool: name,
+					diff: {
+						path,
+						oldText: null,
+						newText: content
+					}
+				} : null;
+			}
+			if (name !== "edit") return null;
+			const { old_string: oldText, new_string: newText, replace_all: replaceAll } = args;
+			if (typeof oldText !== "string" || typeof newText !== "string") return null;
+			if (replaceAll !== void 0 && typeof replaceAll !== "boolean") return null;
+			return {
+				tool: name,
+				diff: {
+					path,
+					oldText: oldText || null,
+					newText
+				}
+			};
+		}
+		/** 官方 narrowDiffs（tool client.js:443-459）。 */
+		function narrowDiffs(diffs) {
+			if (!Array.isArray(diffs) || diffs.length === 0) return null;
+			const out = [];
+			for (const hunk of diffs) {
+				if (typeof hunk !== "object" || hunk === null || Array.isArray(hunk)) return null;
+				const { path, oldText, newText } = hunk;
+				if (typeof path !== "string") return null;
+				if (oldText !== null && typeof oldText !== "string") return null;
+				if (typeof newText !== "string") return null;
+				out.push({
+					path,
+					oldText,
+					newText
+				});
+			}
+			return out;
+		}
+		/** 官方 appliedDiffs（tool client.js:518-524）。 */
+		function appliedDiffs(meta) {
+			if (typeof meta !== "object" || meta === null || Array.isArray(meta)) return null;
+			const diffs = meta.diffs;
+			if (!Array.isArray(diffs)) return null;
+			if (diffs.length === 0) return "empty";
+			return narrowDiffs(diffs);
+		}
+		/** 官方 diffCardModel（tool client.js:534-544；keyed 流里只有根调用，parentCallId 分支略）。 */
+		function diffCardModel(name, argsRaw, meta, isError, settled) {
+			const intended = intendedDiff(name, argsRaw);
+			if (intended === null) return null;
+			if (!settled) return [intended.diff];
+			if (name === "str_replace_editor") return null;
+			if (isError) return null;
+			const applied = appliedDiffs(meta);
+			if (applied === null || applied === "empty") return name === "write" ? [intended.diff] : null;
+			return applied;
+		}
+		const positiveInteger = (value) => typeof value === "number" && Number.isInteger(value) && value >= 1;
+		/** 官方 readMeta（tool client.js:369-395）：宿主写入的读取窗口 meta 收窄。 */
+		function readMeta(meta) {
+			if (typeof meta !== "object" || meta === null || Array.isArray(meta)) return null;
+			const { path, offset, lines, totalLines, lang } = meta;
+			if (typeof path !== "string" || typeof offset !== "number" || !Number.isInteger(offset) || offset < 1) return null;
+			if (typeof totalLines !== "number" || !Number.isInteger(totalLines) || totalLines < 0 || !Array.isArray(lines)) return null;
+			if (lang !== void 0 && typeof lang !== "string") return null;
+			const narrowed = [];
+			let previous = offset - 1;
+			for (const line of lines) {
+				if (typeof line !== "object" || line === null || Array.isArray(line)) return null;
+				const { number, text } = line;
+				if (typeof number !== "number" || !Number.isInteger(number) || number < 1 || number <= previous) return null;
+				if (number > totalLines || typeof text !== "string") return null;
+				previous = number;
+				narrowed.push({
+					number,
+					text
+				});
+			}
+			return {
+				label: path,
+				lines: narrowed,
+				totalLines,
+				...lang === void 0 ? {} : { lang }
+			};
+		}
+		/** 官方 readCardModel（tool client.js:421-435）：read + 合法参数 + meta + 结果 envelope。 */
+		function readCardModel(name, argsRaw, output, meta, isError, settled) {
+			if (!settled || isError || name !== "read") return null;
+			const parsed = parseArgs(argsRaw);
+			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
+			const { file_path: path, offset, limit } = parsed;
+			if (typeof path !== "string" || path.trim() === "") return null;
+			if (offset !== void 0 && !positiveInteger(offset)) return null;
+			if (limit !== void 0 && !positiveInteger(limit)) return null;
+			const face = readMeta(meta);
+			if (face === null) return null;
+			if (/^<path>[^\n]*<\/path>\n<type>file<\/type>\n<content>\n([\s\S]*)\n<\/content>$/u.exec(output)?.[1] === void 0) return null;
+			return face;
+		}
+		/** 官方 shellCall（tool client.js:831-855）：无 description = persistent（结算走 generic）。 */
+		function shellCall(name, args) {
+			if (name !== "bash" && name !== "pwsh") return null;
+			const { command, description, timeoutMs, workdir, run_in_background: background } = args;
+			if (typeof command !== "string" || command.trim() === "") return null;
+			if (timeoutMs !== void 0 && (typeof timeoutMs !== "number" || !Number.isFinite(timeoutMs) || timeoutMs <= 0)) return null;
+			if (workdir !== void 0 && typeof workdir !== "string") return null;
+			if (background !== void 0 && typeof background !== "boolean") return null;
+			if (!validEscalationFields(args)) return null;
+			if (description === void 0) return {
+				command,
+				description: "",
+				workdir: void 0,
+				persistent: true,
+				background: false
+			};
+			if (typeof description !== "string" || description.trim() === "") return null;
+			return {
+				command,
+				description,
+				workdir,
+				persistent: false,
+				background: background === true
+			};
+		}
+		/** 官方 terminalSendCall（tool client.js:884-896）。 */
+		function terminalSendCall(name, args) {
+			if (name !== "terminal_send") return null;
+			const { sessionId, text, run_in_background: background } = args;
+			if (typeof sessionId !== "string" || sessionId === "" || typeof text !== "string") return null;
+			if (background !== void 0 && typeof background !== "boolean") return null;
+			return {
+				text,
+				sessionId,
+				background: background === true
+			};
+		}
+		/** 官方 parseExitStatus（tool client.js:903-918）：结果尾部退出码 / 信号标记剥离。 */
+		function parseExitStatus(text) {
+			const signal = /\n\[killed by signal: ([^\]\n]+)\]$/.exec(text);
+			if (signal?.[1] !== void 0) return {
+				output: text.slice(0, signal.index),
+				signal: signal[1]
+			};
+			const exit = /\n\[exit code: (\d+)\]$/.exec(text);
+			if (exit?.[1] !== void 0) return {
+				output: text.slice(0, exit.index),
+				exitCode: Number(exit[1])
+			};
+			return {
+				output: text,
+				exitCode: 0
+			};
+		}
+		/**
+		* 官方 spill notice 识别（spill-policy notice.ts，tool client.js:660-703）：
+		* 结尾 `)` + 「\n\n( Full formatted result stored at: 」段。超长输出被 spill 化的
+		* bash 结果走 generic（官方 isSpilledShellCall 同向；此处放宽为字面匹配，宁滥勿漏）。
+		*/
+		function hasSpillNotice(text) {
+			if (!text.endsWith(")")) return false;
+			return text.includes("\n\n( Full formatted result stored at: ");
+		}
+		/** 官方 resolveTerminalCwd + normalizeSegments（tool client.js:776-798）的显示用简化版：
+		*  弹窗侧拿不到会话 cwd ⇒ 绝对路径原样、相对路径弹出 `.`/`..` 段。 */
+		function normalizeSegments(path) {
+			if (!/(?:^|[/\\])\.\.?(?:[/\\]|$)/.test(path)) return path;
+			const out = [];
+			for (const segment of path.split(/[/\\]+/)) {
+				if (segment === "" || segment === ".") continue;
+				if (segment === "..") {
+					out.pop();
+					continue;
+				}
+				out.push(segment);
+			}
+			return out.join("/");
+		}
+		/** 官方 terminalCardModel（tool client.js:929-968）：running 半截返回 running 卡。 */
+		function terminalCardModel(name, argsRaw, output, isError, settled) {
+			const parsed = parseArgs(argsRaw);
+			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
+			const args = parsed;
+			const shell = shellCall(name, args);
+			const send = shell === null ? terminalSendCall(name, args) : null;
+			if (shell === null && send === null) return null;
+			if (shell !== null && shell.background || send !== null && send.background) return null;
+			if (!settled) return shell !== null ? {
+				command: shell.command,
+				cwd: shell.workdir === void 0 ? void 0 : normalizeSegments(shell.workdir),
+				running: true
+			} : {
+				command: send.text,
+				running: true,
+				sessionId: send.sessionId
+			};
+			if (isError || shell !== null && shell.persistent || hasSpillNotice(output)) return null;
+			if (send !== null) return {
+				command: send.text,
+				running: false,
+				sessionId: send.sessionId
+			};
+			const shellCmd = shell;
+			const status = parseExitStatus(output);
+			return {
+				command: shellCmd.command,
+				cwd: shellCmd.workdir === void 0 ? void 0 : normalizeSegments(shellCmd.workdir),
+				output: status.output,
+				exitCode: status.exitCode,
+				signal: status.signal,
+				running: false
+			};
+		}
+		/** 词典：代码工具栏（官方 codeToolbarLabels，tool client.js:1098-1104）。 */
+		const codeToolbarLabels = (t) => ({
+			codeLabel: t("codeBlockLabel"),
+			wrapLabel: t("diffWrapLabel"),
+			unwrapLabel: t("diffUnwrapLabel")
+		});
+		/** 官方 diffBlockLabels（tool client.js:1125-1135）。 */
+		const diffLabels = (t) => ({
+			...codeToolbarLabels(t),
+			copy: t("copyLabel"),
+			copied: t("copiedLabel"),
+			collapseAria: t("diffCollapseAria"),
+			expandAria: (count) => t("diffExpandAria", { count }),
+			collapse: t("collapseLabel"),
+			expand: (count) => t("diffExpandRest", { count })
+		});
+		/** 官方 readBlockLabels（tool client.js:1141-1155）。 */
+		const readLabels = (t) => ({
+			...codeToolbarLabels(t),
+			window: (shown, total) => t("readWindow", {
+				shown,
+				total
+			}),
+			copy: t("copyLabel"),
+			copied: t("copiedLabel"),
+			collapseAria: t("readCollapseAria"),
+			expandAria: (count) => t("readExpandAria", { count }),
+			collapse: t("collapseLabel"),
+			expand: (count) => t("readExpandRest", { count })
+		});
+		/** 官方 terminalBlockLabels（tool client.js:708-737 的键面）。 */
+		const terminalLabels = (t) => ({
+			commandLine: (line) => t("terminalCommandLine", { n: line }),
+			signal: (signal) => t("terminalSignal", { signal }),
+			exitCode: (code) => t("terminalExitCode", { code }),
+			noExitCode: t("terminalNoExitCode"),
+			running: t("terminalRunning"),
+			failed: t("terminalFailed"),
+			done: t("terminalDone"),
+			copy: t("copyLabel"),
+			copied: t("copiedLabel"),
+			noOutput: t("terminalNoOutput"),
+			collapseAria: t("terminalCollapseAria"),
+			collapse: t("collapseLabel"),
+			expandAria: (hidden) => t("terminalExpandAria", { n: hidden }),
+			expand: (hidden) => t("terminalExpandRest", { n: hidden })
+		});
+		/** 摘要链接（官方 fileLink）：点击只跟随、不折叠行。 */
+		const stopLinkClick = (event) => {
+			event.stopPropagation();
+		};
+		/**
+		* 工具调用 / 命令卡（官方 GenericToolCard + ToolRow 镜像）。
+		* 折叠行 = 图标 + 标题 [+ 分隔点 + 摘要（文件路径链接化）+ 后缀]；展开体按官方分发链。
+		*/
+		function GenericCommandCard(props) {
+			const { name, argsRaw, output, isError, meta, settled = true, phase, interrupted, onOpenFile, t } = props;
+			const [expanded, setExpanded] = (0, react$1.useState)(false);
+			const variant = classifyTool(name);
+			const titleKey = toolTitleKey(name);
+			const state = !settled ? phase === "preparing" ? "preparing" : "running" : interrupted ? "stopped" : isError ? "error" : "ok";
+			const terminalFace = (0, react$1.useMemo)(() => terminalCardModel(name, argsRaw, output, isError, settled), [
+				name,
+				argsRaw,
+				output,
+				isError,
+				settled
+			]);
+			const read = (0, react$1.useMemo)(() => readCardModel(name, argsRaw, output, meta, isError, settled), [
+				name,
+				argsRaw,
+				output,
+				meta,
+				isError,
+				settled
+			]);
+			const diffs = (0, react$1.useMemo)(() => diffCardModel(name, argsRaw, meta, isError, settled), [
+				name,
+				argsRaw,
+				meta,
+				isError,
+				settled
+			]);
+			const terminal = (0, react$1.useMemo)(() => {
+				if (terminalFace === null) return null;
+				return terminalFace.sessionId !== void 0 ? {
+					...terminalFace,
+					command: terminalFace.command === "" ? t("terminalSendInput") : terminalFace.command,
+					description: t("terminalSession", { sessionId: terminalFace.sessionId })
+				} : terminalFace;
+			}, [terminalFace, t]);
+			const failedTerminal = terminal !== null && terminal.running !== true && (terminal.exitCode !== void 0 && terminal.exitCode !== 0 || terminal.signal !== void 0);
+			const rowState = state === "ok" && failedTerminal ? "error" : state;
+			const running = rowState === "running" || rowState === "preparing";
+			const generic = titleKey === "toolTitleGeneric";
+			const base = argsRaw === "" ? "" : deriveSummary(variant, argsRaw);
+			const plainSummary = [generic ? name : "", base].filter(Boolean).join(" · ");
+			const errorSummary = rowState === "error" && output !== "" ? firstLine$2(output) : null;
+			const summaryText = (rowState === "error" ? errorSummary ?? terminal?.description ?? plainSummary : null) ?? terminal?.description ?? plainSummary;
+			const totals = diffs === null ? null : (0, official_exports.diffTotals)(diffs);
+			const diffStat = totals === null ? null : `+${totals.added} -${totals.removed}`;
+			const settledWithCue = rowState === "error" || rowState === "stopped";
+			const suffix = settledWithCue ? null : diffStat;
+			const filePath = argsRaw === "" ? void 0 : deriveFilePath(variant, argsRaw);
+			const openFile = filePath !== void 0 && onOpenFile !== void 0 && !settledWithCue ? () => {
+				onOpenFile(filePath);
+			} : void 0;
+			const inputRaw = argsRaw === "" ? null : argsRaw;
+			const outputText = output === "" ? null : output;
+			const card = terminal !== null ? "terminal" : diffs !== null ? "diff" : read !== null ? "read" : null;
+			const bodyText = expanded && card === null && inputRaw !== null ? formatToolBody(variant, inputRaw) : null;
+			const cardBody = variant === "code" ? null : bodyText;
+			const expandable = rowState !== "preparing" && (inputRaw !== null || outputText !== null || card !== null);
+			const open = expanded && expandable;
+			const blockLabels = (0, react$1.useMemo)(() => ({
+				diff: diffLabels(t),
+				read: readLabels(t),
+				terminal: terminalLabels(t)
+			}), [t]);
+			const statusText = rowState === "preparing" ? t("rowPreparing") : rowState === "running" ? t("rowRunning") : rowState === "error" ? t("rowFailed") : rowState === "stopped" ? t("rowStopped") : null;
+			const summaryClassName = `${officialClass("ToolRow", "summary") ?? ""}${rowState === "error" ? ` ${officialClass("ToolRow", "errorSummary") ?? ""}` : ""}${rowState === "stopped" ? ` ${officialClass("ToolRow", "stoppedSummary") ?? ""}` : ""}`;
+			const collapsedContent = summaryText === "" ? void 0 : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
+				className: officialClass("ToolRow", "sep") ?? "",
+				"aria-hidden": true
+			}), openFile !== void 0 ? (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("ToolRow", "fileLink") ?? "",
+				onClick: (event) => {
+					stopLinkClick(event);
+					openFile();
+				}
+			}, (0, react$1.createElement)(official_exports.TextShimmer, { active: running }, summaryText)) : (0, react$1.createElement)("span", { className: summaryClassName }, (0, react$1.createElement)(official_exports.TextShimmer, { active: running }, summaryText)), suffix !== null ? (0, react$1.createElement)(official_exports.TextShimmer, {
+				className: `${officialClass("ToolRow", "summarySuffix") ?? ""} ${officialClass("ToolRow", "diffStat") ?? ""}`,
+				active: running
+			}, suffix) : null);
+			const expandedContent = open ? (0, react$1.createElement)("div", { className: officialClass("ToolRow", "bodyWrap") ?? "" }, terminal !== null ? (0, react$1.createElement)(official_exports.TerminalBlock, {
+				command: terminal.command,
+				cwd: terminal.cwd,
+				output: terminal.output,
+				exitCode: terminal.exitCode,
+				signal: terminal.signal,
+				running: terminal.running,
+				maxLines: Infinity,
+				labels: blockLabels.terminal,
+				className: officialClass("ToolRow", "terminalBody") ?? ""
+			}) : diffs !== null ? (0, react$1.createElement)(official_exports.DiffBlock, {
+				diffs,
+				labels: blockLabels.diff,
+				maxLines: 9,
+				className: officialClass("ToolRow", "diffBody") ?? ""
+			}) : read !== null ? (0, react$1.createElement)(official_exports.ReadBlock, {
+				label: read.label,
+				lines: read.lines,
+				totalLines: read.totalLines,
+				lang: read.lang,
+				labels: blockLabels.read,
+				maxLines: 8,
+				className: officialClass("ToolRow", "readBody") ?? ""
+			}) : (0, react$1.createElement)(react$1.Fragment, null, variant === "code" && bodyText !== null ? (0, react$1.createElement)("div", { className: officialClass("ToolRow", "bodyScroll") ?? "" }, (0, react$1.createElement)(CodeViewer, {
+				text: bodyText,
+				path: "tool-code.ts",
+				t,
+				className: officialClass("ToolRow", "codeBody") ?? "",
+				height: "auto",
+				style: { height: "auto" }
+			})) : null, (cardBody !== null || outputText !== null) && (0, react$1.createElement)("div", { className: officialClass("ToolRow", "ioCard") ?? "" }, cardBody !== null && (0, react$1.createElement)("div", { className: officialClass("ToolRow", "ioSection") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("ToolRow", "ioLabel") ?? "" }, t("toolInputLabel")), (0, react$1.createElement)("span", { className: officialClass("ToolRow", "ioText") ?? "" }, cardBody)), cardBody !== null && outputText !== null && (0, react$1.createElement)("span", {
+				className: officialClass("ToolRow", "ioDivider") ?? "",
+				"aria-hidden": true
+			}), outputText !== null && (0, react$1.createElement)("div", { className: officialClass("ToolRow", "ioSection") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("ToolRow", "ioLabel") ?? "" }, t("toolOutputLabel")), (0, react$1.createElement)("span", {
+				className: officialClass("ToolRow", "ioText") ?? "",
+				"data-error": rowState === "error" || void 0
+			}, outputText))))) : void 0;
+			return (0, react$1.createElement)("div", {
+				className: officialClass("ToolRow", "root") ?? "",
+				"data-variant": variant,
+				"data-tool": name,
+				"data-state": rowState
+			}, statusText !== null ? (0, react$1.createElement)("span", { className: officialClass("ToolRow", "visuallyHidden") ?? "" }, statusText) : null, (0, react$1.createElement)(official_exports.DisclosureRow, {
+				rowClassName: officialClass("ToolRow", "row") ?? "",
+				leadingClassName: officialClass("ToolRow", "leading") ?? "",
+				titleClassName: officialClass("ToolRow", "title") ?? "",
+				chevronClassName: officialClass("ToolRow", "chevron") ?? "",
+				icon: VARIANT_ICONS[variant],
+				title: t(titleKey),
+				running,
+				open,
+				expandable,
+				expandOnRowClick: true,
+				keepContentWhenOpen: true,
+				onToggle: () => {
+					setExpanded((value) => !value);
+				},
+				collapsedContent,
+				children: expandedContent
+			}));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/CommandCard.js
+		/** 官方 GenericCommandCard 模块类（宿主必注入；缺席 = 空串，裸结构不白屏，不写自绘兜底）。 */
+		const gcc = (semantic) => officialClass("GenericCommandCard", semantic) ?? "";
+		/** 官方 stateOf：未决 = running；outcome.kind==='error' = error；否则 ok。 */
+		function stateOf(outcome) {
+			if (outcome === null || outcome === void 0) return "running";
+			return outcome.kind === "error" ? "error" : "ok";
+		}
+		/** 命令卡（官方 GenericCommandCard 镜像）：裸命令名 + 落定摘要 + 多行输出可展开。 */
+		function CommandCard(props) {
+			const { node, t, runningSummary } = props;
+			const [expanded, setExpanded] = (0, react$1.useState)(false);
+			const outcome = node.outcome ?? null;
+			const text = outcome?.text;
+			const summary = outcome === null ? runningSummary ?? t("commandRunning") : text ?? (outcome.kind === "error" ? t("commandFailed") : t("commandDone"));
+			const title = node.name ?? t("commandTitle");
+			const state = stateOf(outcome);
+			const running = state === "running";
+			const body = text !== void 0 && text.includes("\n") ? text : null;
+			const open = expanded && body !== null;
+			const toggle = (0, react$1.useCallback)(() => {
+				setExpanded((value) => !value);
+			}, []);
+			const hidden = officialClass("ToolRow", "visuallyHidden") ?? "";
+			return (0, react$1.createElement)("div", {
+				className: gcc("root"),
+				"data-state": state
+			}, state === "running" ? (0, react$1.createElement)("span", { className: hidden }, t("rowRunning")) : state === "error" ? (0, react$1.createElement)("span", { className: hidden }, t("rowFailed")) : null, (0, react$1.createElement)(official_exports.DisclosureRow, {
+				leadingClassName: gcc("leading"),
+				titleClassName: gcc("title"),
+				icon: (0, react$1.createElement)(official_exports.IconApiOutlineRegular, { size: 14 }),
+				title,
+				running,
+				open,
+				expandable: body !== null,
+				expandOnRowClick: true,
+				keepContentWhenOpen: true,
+				onToggle: toggle,
+				collapsedContent: (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
+					className: gcc("separator"),
+					"aria-hidden": true
+				}), (0, react$1.createElement)("span", {
+					className: gcc("summary"),
+					"data-error": state === "error" || void 0
+				}, (0, react$1.createElement)(official_exports.TextShimmer, { active: running }, summary))),
+				children: open && body !== null ? (0, react$1.createElement)("div", {
+					className: gcc("body"),
+					"data-error": state === "error" || void 0
+				}, body) : void 0
+			}));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/message-chrome.js
+		/**
+		* 官方 formatRunDuration：整秒；≥1 分带零补秒；≥1 小时带零补分秒。
+		*/
+		function formatRunDuration(ms, tt) {
+			const total = Math.max(0, Math.floor(ms / 1e3));
+			const hours = Math.floor(total / 3600);
+			const minutes = Math.floor(total / 60) % 60;
+			const seconds = total % 60;
+			if (hours > 0) return tt("durationHours", {
+				hours,
+				minutes: pad2$1(minutes),
+				seconds: pad2$1(seconds)
+			});
+			return minutes > 0 ? tt("durationMinutes", {
+				minutes,
+				seconds: pad2$1(seconds)
+			}) : tt("durationSeconds", { seconds });
+		}
+		/** 官方 formatLiveRunDuration：秒不补零、分钟自 60 秒起。 */
+		function formatLiveRunDuration(ms, tt) {
+			const totalSeconds = Math.max(0, Math.floor(ms / 1e3));
+			const hours = Math.floor(totalSeconds / 3600);
+			const minutes = Math.floor(totalSeconds / 60) % 60;
+			const seconds = String(totalSeconds % 60);
+			if (hours > 0) return tt("durationHours", {
+				hours,
+				minutes: pad2$1(minutes),
+				seconds
+			});
+			return minutes > 0 ? tt("durationMinutes", {
+				minutes,
+				seconds
+			}) : tt("durationSeconds", { seconds });
+		}
+		/**
+		* 官方 formatMessageClock：同日 → `HH:mm`；同年 → `{m}月{d}日 HH:mm`；跨年 → `{y}年{m}月{d}日 HH:mm`。
+		*/
+		function formatMessageClock(time, tt, now = Date.now()) {
+			const d = new Date(time);
+			const n = new Date(now);
+			const clock = `${pad2$1(d.getHours())}:${pad2$1(d.getMinutes())}`;
+			if (d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate()) return clock;
+			const params = {
+				y: d.getFullYear(),
+				m: d.getMonth() + 1,
+				d: d.getDate()
+			};
+			return `${d.getFullYear() === n.getFullYear() ? tt("clockDate", params) : tt("clockDateYear", params)} ${clock}`;
+		}
+		/** 官方 formatTokens：517 / 12.2K / 517K / 1.2M。 */
+		function formatTokens(value, tt) {
+			const scaled = (candidate) => candidate >= 100 ? String(Math.round(candidate)) : String(Math.round(candidate * 10) / 10);
+			if (value < 1e3) return String(value);
+			if (value < 1e6) return tt("numberThousand", { value: scaled(value / 1e3) });
+			return tt("numberMillion", { value: scaled(value / 1e6) });
+		}
+		/** 官方 formatCompactCount：紧凑 token 数 + 「 tok」。 */
+		function formatCompactCount(value, tt) {
+			return tt("turnUsageCount", { count: formatTokens(value, tt) });
+		}
+		/** 官方 formatExactTokens：按本地千分位分组（number.groupSeparator）。 */
+		function formatExactTokens(value, tt) {
+			const digits = String(value);
+			const groups = [];
+			for (let end = digits.length; end > 0; end -= 3) groups.unshift(digits.slice(Math.max(0, end - 3), end));
+			return groups.join(tt("numberGroupSeparator"));
+		}
+		/** 官方 formatExactCount：精确计数 + 「 tok」。 */
+		function formatExactCount(value, tt) {
+			return tt("turnUsageCount", { count: formatExactTokens(value, tt) });
+		}
+		/** 官方 roundedPercentUnits（message-chrome.ts:1024）：按精确比例取整，正半数向上。 */
+		function roundedPercentUnits(cacheReadTokens, denominator, decimalPlaces) {
+			const scale = (decimalPlaces === 0 ? 1 : 10) * 100;
+			const doubledScale = scale * 2;
+			const denominatorQuotient = Math.floor(denominator / doubledScale);
+			const denominatorRemainder = denominator % doubledScale;
+			let lower = 0;
+			let upper = scale;
+			while (lower < upper) {
+				const candidate = Math.floor((lower + upper + 1) / 2);
+				const factor = candidate * 2 - 1;
+				if (cacheReadTokens >= factor * denominatorQuotient + Math.ceil(factor * denominatorRemainder / doubledScale)) lower = candidate;
+				else upper = candidate - 1;
+			}
+			return lower;
+		}
+		/** 官方 displayPercentUnits。 */
+		function displayPercentUnits(units, decimalPlaces) {
+			if (decimalPlaces === 0) return String(units);
+			const whole = Math.floor(units / 10);
+			const tenths = units % 10;
+			return tenths === 0 ? String(whole) : `${whole}.${tenths}`;
+		}
+		/**
+		* 官方 formatCacheHitPercent：缓存命中率；部分命中不四舍五入成 100%（自动加精度）。
+		* @returns 百分比文本；无输入时 null。
+		*/
+		function formatCacheHitPercent(cacheReadTokens, promptTokens, decimalPlaces = 0) {
+			if (promptTokens === 0) return null;
+			const missedInputTokens = promptTokens - cacheReadTokens;
+			if (missedInputTokens === 0) return "100";
+			const roundedUnits = roundedPercentUnits(cacheReadTokens, promptTokens, decimalPlaces);
+			if (roundedUnits < (decimalPlaces === 0 ? 100 : 1e3)) return displayPercentUnits(roundedUnits, decimalPlaces);
+			let distinguishingPlaces = 1;
+			let scaledDoubleGap = missedInputTokens * 200;
+			const denominatorTens = Math.floor(promptTokens / 10);
+			while (scaledDoubleGap <= denominatorTens) {
+				scaledDoubleGap *= 10;
+				distinguishingPlaces += 1;
+			}
+			const denominatorOnes = promptTokens % 10;
+			let roundedLoss = 5;
+			for (let loss = 1; loss < 5; loss += 1) {
+				const factor = loss * 2 + 1;
+				const threshold = factor * denominatorTens + Math.floor(factor * denominatorOnes / 10);
+				if (scaledDoubleGap <= threshold) {
+					roundedLoss = loss;
+					break;
+				}
+			}
+			return `99.${"9".repeat(distinguishingPlaces - 1)}${10 - roundedLoss}`;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/MessageIconActions.js
+		/** 官方「已复制」复位时间。 */
+		const COPIED_RESET_MS = 1e3;
+		/** 消息操作行（复制 / 分支 / 用量 / 时钟）。 */
+		function MessageIconActionsMirror(props) {
+			const { text, time, clock, onBranch, branchUnavailable = false, className, extraActions, usageAction, t } = props;
+			const [copied, setCopied] = (0, react$1.useState)(false);
+			const [pending, setPending] = (0, react$1.useState)(false);
+			const timerRef = (0, react$1.useRef)(void 0);
+			(0, react$1.useEffect)(() => () => {
+				if (timerRef.current !== void 0) clearTimeout(timerRef.current);
+			}, []);
+			const copyLabel = copied ? t("copiedLabel") : t("copyLabel");
+			const onCopy = () => {
+				if (copied || pending) return;
+				setPending(true);
+				(0, official_exports.writeClipboard)(text).then((ok) => {
+					setPending(false);
+					if (!ok) return;
+					setCopied(true);
+					timerRef.current = setTimeout(() => {
+						setCopied(false);
+					}, COPIED_RESET_MS);
+				});
+			};
+			const clockClass = (clock === "end" ? officialClass("MessageIconActions", "timeEnd") ?? officialClass("MessageIconActions", "clock") : officialClass("MessageIconActions", "timeStart") ?? officialClass("MessageIconActions", "clock")) ?? "";
+			const clockEl = time === void 0 ? null : (0, react$1.createElement)("time", {
+				className: clockClass,
+				dateTime: new Date(time).toISOString()
+			}, formatMessageClock(time, t));
+			const reasonId = "dshpc-sv-branch-unavailable";
+			return (0, react$1.createElement)("div", {
+				className: `${officialClass("MessageIconActions", "actions") ?? ""}${className === void 0 ? "" : ` ${className}`}`,
+				"data-clock": clock
+			}, clock === "start" ? clockEl : null, (0, react$1.createElement)(official_exports.Tooltip, {
+				label: copyLabel,
+				side: "bottom"
+			}, (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("MessageIconActions", "action") ?? "",
+				"aria-label": copyLabel,
+				onClick: onCopy
+			}, copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular, null) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular, null))), extraActions, onBranch === void 0 ? null : (0, react$1.createElement)(official_exports.Tooltip, {
+				label: branchUnavailable ? t("branchUnavailableLabel") : t("branchLabel"),
+				side: "bottom"
+			}, (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("MessageIconActions", "action") ?? "",
+				"aria-label": t("branchLabel"),
+				"aria-disabled": branchUnavailable || void 0,
+				"aria-describedby": branchUnavailable ? reasonId : void 0,
+				"data-unavailable": branchUnavailable || void 0,
+				onClick: branchUnavailable ? void 0 : onBranch
+			}, (0, react$1.createElement)(official_exports.IconBranchOutlineRegular, null))), onBranch === void 0 || !branchUnavailable ? null : (0, react$1.createElement)("span", {
+				id: reasonId,
+				className: officialClass("accessibility", "visuallyHidden") ?? ""
+			}, t("branchUnavailableLabel")), clock === "end" ? (0, react$1.createElement)("span", { className: officialClass("MessageIconActions", "endInfo") ?? "" }, usageAction, clockEl) : usageAction);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/MessageItem.js
+		/** 助手正文：官方 MarkdownText 渲染 + 官方 AssistantMarkdown.root 类（fallback 自绘）。
+		* U11：fileMentions 词表就位时行内 code 文件引用渲成可点链接（官方语义：resolve 不出保持惰性 code）。 */
+		function AssistantMarkdown(props) {
+			if (props.text.trim() === "") return (0, react$1.createElement)("span", null);
+			return (0, react$1.createElement)("div", { className: officialClass("AssistantMarkdown", "root") ?? "" }, (0, react$1.createElement)(official_exports.MarkdownText, {
+				text: props.text,
+				labels: markdownLabels(),
+				fileMentions: props.fileMentions
+			}));
+		}
+		/**
+		* 用户消息：官方 MessageItem userRow > userStack > bubble（右对齐气泡）
+		* + 气泡下方的 **attachmentRow / fileCard**（官方 MessageItem 的附件行）。
+		*
+		* 官方附件卡 = 图标 + 文件名 + 大小；**不可点开**——引用里没有路径，宿主也没给出
+		* 「按 attachmentId 打开」的公开面 ⇒ 如实降级为只读展示，不伪造打开行为。
+		*/
+		function UserMessage(props) {
+			const { text, files } = props;
+			const chips = files ?? [];
+			return (0, react$1.createElement)("div", { className: officialClass("MessageItem", "userRow") ?? "" }, (0, react$1.createElement)("div", { className: officialClass("MessageItem", "userStack") ?? "" }, text === "" ? null : (0, react$1.createElement)("div", { className: officialClass("MessageItem", "bubble") ?? "" }, (0, react$1.createElement)(official_exports.MarkdownText, {
+				text,
+				labels: markdownLabels()
+			})), chips.length === 0 ? null : (0, react$1.createElement)("div", { className: officialClass("MessageItem", "attachmentRow") ?? "" }, chips.map((file, index) => (0, react$1.createElement)("div", {
+				key: `${file.name}:${index}`,
+				className: officialClass("MessageItem", "fileCard") ?? "",
+				title: file.name
+			}, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "fileIcon") ?? "" }, (0, react$1.createElement)(official_exports.FileTypeIcon, {
+				path: file.name,
+				size: 16
+			})), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "fileContent") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "fileName") ?? "" }, file.name), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "fileMeta") ?? "" }, formatBytes(file.bytes))))))));
+		}
+		/** 官方 retrySeconds（lib/client.js:1215）：下限 1 秒。 */
+		function retrySeconds(milliseconds) {
+			return Math.max(1, Math.ceil(milliseconds / 1e3));
+		}
+		/**
+		* 官方 failureMessage（lib/client.js:1219）：已知机器码走本地化文案，其余原样展示。
+		* 官方判定顺序逐字：ACCOUNT_SIGNED_OUT / ACCOUNT_SIGN_IN_REQUIRED / QUOTA|ACCOUNT_QUOTA / AUTH。
+		*/
+		function failureMessage(message, code, t) {
+			if (code === "ACCOUNT_SIGNED_OUT") return t("failureAccountSignedOut");
+			if (code === "ACCOUNT_SIGN_IN_REQUIRED") return t("failureAccountSignInRequired");
+			if (code === "QUOTA" || code === "ACCOUNT_QUOTA") return t("failureQuota");
+			return code === "AUTH" ? t("failureAuth") : message ?? "";
+		}
+		/**
+		* 重试行（官方 ModelRetryItem）：折叠 = 「已重试模型请求 (5/5) · 9s ⌄」摘要；
+		* 展开 = 重试延迟 / 失败原因 两行。active（等待重试）时官方走 250ms 倒计时 + 渐隐 shimmer。
+		*/
+		function ModelRetryItemMirror(props) {
+			const { active, t } = props;
+			const node = props.node;
+			const delayMs = typeof node.delayMs === "number" ? node.delayMs : 0;
+			const maximum = node.mode === "normal" && typeof node.maxRetries === "number" ? node.maxRetries : "∞";
+			const deadline = (0, react$1.useMemo)(() => Date.now() + delayMs, [delayMs, node.retryState]);
+			const scheduledSeconds = retrySeconds(delayMs);
+			const [countdown, setCountdown] = (0, react$1.useState)(() => ({
+				deadline,
+				seconds: retrySeconds(deadline - Date.now())
+			}));
+			const remainingSeconds = countdown.deadline === deadline ? countdown.seconds : retrySeconds(deadline - Date.now());
+			(0, react$1.useEffect)(() => {
+				if (!active) return;
+				const updateCountdown = () => {
+					const next = retrySeconds(deadline - Date.now());
+					setCountdown((current) => current.deadline === deadline && current.seconds === next ? current : {
+						deadline,
+						seconds: next
+					});
+					return next;
+				};
+				if (updateCountdown() === 1) return;
+				const timer = window.setInterval(() => {
+					if (updateCountdown() === 1) window.clearInterval(timer);
+				}, 250);
+				return () => {
+					window.clearInterval(timer);
+				};
+			}, [active, deadline]);
+			const label = active ? t("retryActive") : node.retryState === "cancelled" ? t("retryCancelled") : node.retryState === "started" ? t("retryStarted") : t("retryScheduled");
+			const seconds = active ? remainingSeconds : scheduledSeconds;
+			const failure = node.failure;
+			return (0, react$1.createElement)("details", {
+				className: officialClass("MessageItem", "retryRow") ?? "",
+				"data-active": active || void 0
+			}, (0, react$1.createElement)("summary", { className: officialClass("MessageItem", "retrySummary") ?? "" }, (0, react$1.createElement)("span", {
+				className: officialClass("MessageItem", "retryText") ?? "",
+				role: "status"
+			}, t("retryStatus", {
+				label,
+				retry: node.retry ?? 0,
+				maximum,
+				seconds
+			}))), (0, react$1.createElement)("div", { className: officialClass("MessageItem", "retryDetails") ?? "" }, (0, react$1.createElement)("div", null, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "retryDetailLabel") ?? "" }, t("retryDelay")), t("durationMilliseconds", { milliseconds: Math.round(delayMs) })), (0, react$1.createElement)("div", null, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "retryDetailLabel") ?? "" }, t("retryFailure")), failureMessage(failure?.message, failure?.code, t))));
+		}
+		/** 轮次失败行（官方 TurnErrorItem）：红点 + 红标题「本轮运行失败」+ 灰原因 + 右侧机器码标签。 */
+		function TurnErrorItemMirror(props) {
+			const { node, t } = props;
+			return (0, react$1.createElement)("div", {
+				className: officialClass("MessageItem", "turnErrorRow") ?? "",
+				role: "status"
+			}, (0, react$1.createElement)(official_exports.StateDot, {
+				state: "error",
+				className: officialClass("MessageItem", "turnErrorDot") ?? ""
+			}), (0, react$1.createElement)("div", { className: officialClass("MessageItem", "turnErrorCopy") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "turnErrorTitle") ?? "" }, node.code === "ACCOUNT_SIGNED_OUT" ? t("accountStopped") : t("turnErrorTitle")), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "turnErrorMessage") ?? "" }, failureMessage(node.message, node.code, t))), node.code !== void 0 && node.code !== "" ? (0, react$1.createElement)("code", { className: officialClass("MessageItem", "turnErrorCode") ?? "" }, node.code) : null);
+		}
+		/** 限长行（官方 TurnMaxTokensItem）：黄点 + 警示标题 + 截断提示。 */
+		function TurnMaxTokensItemMirror(props) {
+			const { t } = props;
+			return (0, react$1.createElement)("div", {
+				className: officialClass("MessageItem", "turnErrorRow") ?? "",
+				role: "status"
+			}, (0, react$1.createElement)(official_exports.StateDot, {
+				state: "warning",
+				className: officialClass("MessageItem", "turnErrorDot") ?? ""
+			}), (0, react$1.createElement)("div", { className: officialClass("MessageItem", "turnErrorCopy") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "maxTokensTitle") ?? "" }, t("maxTokensTitle")), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "turnErrorMessage") ?? "" }, t("maxTokensHint"))));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/ReasoningRow.js
+		/** 官方 firstLine（lib/client.js:5687）：首行。 */
+		function firstLine$1(text) {
+			const newline = text.indexOf("\n");
+			return newline === -1 ? text : text.slice(0, newline);
+		}
+		/** 思考行：折叠 = 「思考 · 首行预览 ⌄」；展开 = thinkBody 全文（MarkdownText compact）。 */
+		function ReasoningRowMirror(props) {
+			const { text, running = false, preview = true, t } = props;
+			const [open, setOpen] = (0, react$1.useState)(false);
+			if (text.trim() === "") return null;
+			const summary = firstLine$1(text).split("**").join("");
+			return (0, react$1.createElement)("div", {
+				className: officialClass("ReasoningRow", "root") ?? "",
+				"data-variant": "think",
+				"data-state": running ? "running" : "ok",
+				"data-expanded": open || void 0,
+				"data-preview": preview && summary !== "" || void 0
+			}, (0, react$1.createElement)(official_exports.DisclosureRow, {
+				icon: (0, react$1.createElement)(official_exports.IconThinkOutlineRegular, { size: 14 }),
+				title: t("thinkLabel"),
+				open,
+				expandable: true,
+				expandOnRowClick: true,
+				onToggle: () => {
+					setOpen((value) => !value);
+				},
+				rowClassName: officialClass("ReasoningRow", "row") ?? "",
+				leadingClassName: officialClass("ReasoningRow", "leading") ?? "",
+				titleClassName: officialClass("ReasoningRow", "title") ?? "",
+				chevronClassName: officialClass("ReasoningRow", "chevron") ?? "",
+				collapsedContent: (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
+					className: officialClass("ReasoningRow", "separator") ?? "",
+					"aria-hidden": true
+				}), (0, react$1.createElement)("span", { className: officialClass("ReasoningRow", "summary") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("ReasoningRow", "summaryText") ?? "" }, summary))),
+				children: open ? (0, react$1.createElement)("div", { className: officialClass("ReasoningRow", "thinkBody") ?? "" }, (0, react$1.createElement)(official_exports.MarkdownText, {
+					text,
+					labels: markdownLabels(),
+					variant: "compact"
+				})) : void 0
+			}));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/TurnProcessNodeView.js
+		/** 官方 LIVE_RUN_CLOCK_INTERVAL_MS（lib/client.js:979）。 */
+		const LIVE_RUN_CLOCK_INTERVAL_MS = 1e3;
+		/** Turn 过程行：折叠时只有 label + 箭头；点开由外层 seat 把过程节点放出来。 */
+		function TurnProcessNodeViewMirror(props) {
+			const { turn, turnProcess, t } = props;
+			const open = !turnProcess.foldable || turnProcess.open;
+			const [now, setNow] = (0, react$1.useState)(() => Date.now());
+			const ticking = turn?.status === "open" && turn.start !== void 0;
+			(0, react$1.useEffect)(() => {
+				if (!ticking) return;
+				setNow(Date.now());
+				const timer = setInterval(() => {
+					setNow(Date.now());
+				}, LIVE_RUN_CLOCK_INTERVAL_MS);
+				return () => {
+					clearInterval(timer);
+				};
+			}, [ticking]);
+			if (turn === void 0 || turn.start === void 0 && turn.status !== "closed") return null;
+			const canCollapse = turnProcess.foldable && turnProcess.hasContent && !turnProcess.alwaysOpen;
+			const running = turn.status === "open";
+			const reason = turn.end?.data?.reason?.kind;
+			const elapsedMs = turn.start === void 0 ? void 0 : Math.max(1e3, (turn.end?.time ?? now) - turn.start.time);
+			const duration = elapsedMs === void 0 ? void 0 : running ? formatLiveRunDuration(elapsedMs, t) : formatRunDuration(elapsedMs, t);
+			const label = running ? duration === void 0 ? t("chatDeepDiving") : t("turnProcessDeepDiving", { duration }) : reason === "aborted" ? t("turnStopped") : reason === "error" ? t("turnProcessFailed") : duration === void 0 ? t("turnProcessWorked") : t("turnProcessTook", { duration });
+			const announcement = running ? t("chatDeepDiving") : reason === "aborted" ? t("turnStopped") : reason === "error" ? t("turnProcessFailed") : t("turnProcessWorked");
+			const spec = turnProcess.spec;
+			return (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
+				className: officialClass("accessibility", "visuallyHidden") ?? "",
+				role: "status",
+				"aria-live": "polite",
+				"aria-atomic": "true"
+			}, announcement), (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("TurnProcessNodeView", "root") ?? "",
+				"data-open": open || void 0,
+				"data-turn-process": spec?.turn,
+				"data-turn-process-messages": spec?.messageCount,
+				"data-turn-process-tool-calls": spec?.toolCallCount,
+				"data-turn-process-subagents": spec?.subagentCount,
+				disabled: !canCollapse,
+				"aria-expanded": turnProcess.hasContent ? open : void 0,
+				onClick: () => {
+					turnProcess.setOpen(!open);
+				}
+			}, (0, react$1.createElement)("span", { className: officialClass("TurnProcessNodeView", "label") ?? "" }, label), canCollapse ? (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, { className: officialClass("TurnProcessNodeView", "chevron") ?? "" }) : null));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/StatDialog.js
+		const PANEL_MARGIN = 12;
+		const PANEL_GAP = 8;
+		/**
+		* 官方 stat-dialog.ts 的 MEASURE_STYLE：首趟（pos 未定）时面板「隐藏但仍布局」，
+		* 好让 useAnchoredPosition 量到真实尺寸。官方要求面板铺 `pos ?? MEASURE_STYLE`；
+		* 漏了它 ⇒ 首趟完全无定位、面板落进文档流撑长页面（真机 2026-10-23：点用量无反应 + 滚动条变长）。
+		*/
+		const STAT_MEASURE_STYLE = {
+			visibility: "hidden",
+			left: 0,
+			top: 0
+		};
+		/** 官方 useStatDialog：把弹层挂在触发器上方（side: 'top'），点外 / Esc 关闭。 */
+		function useStatDialog(controlled) {
+			const [ownOpen, setOwnOpen] = (0, react$1.useState)(false);
+			const open = controlled?.open ?? ownOpen;
+			const setOpen = controlled?.setOpen ?? setOwnOpen;
+			const rootRef = (0, react$1.useRef)(null);
+			const panelRef = (0, react$1.useRef)(null);
+			const pos = (0, official_exports.useAnchoredPosition)({
+				open,
+				anchorRef: rootRef,
+				panelRef,
+				side: "top",
+				gap: PANEL_GAP,
+				margin: PANEL_MARGIN
+			});
+			(0, official_exports.useDismissOnOutsidePointer)(rootRef, open, setOpen, panelRef);
+			(0, react$1.useEffect)(() => {
+				if (!open) return;
+				const onKeyDown = (event) => {
+					if (event.key === "Escape") setOpen(false);
+				};
+				document.addEventListener("keydown", onKeyDown);
+				return () => {
+					document.removeEventListener("keydown", onKeyDown);
+				};
+			}, [open, setOpen]);
+			return {
+				open,
+				setOpen,
+				rootRef,
+				panelRef,
+				pos
+			};
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/TurnUsagePanel.js
+		/** 本轮用量 pill + 明细弹层。 */
+		function TurnUsagePanelMirror(props) {
+			const { usage, t } = props;
+			const { open, setOpen, rootRef, panelRef, pos } = useStatDialog();
+			const cacheHit = usage.cacheReadTokens === void 0 ? null : formatCacheHitPercent(usage.cacheReadTokens, usage.totalTokens - usage.outputTokens, 1);
+			const total = formatCompactCount(usage.totalTokens, t);
+			const routes = usage.routes?.map((route) => `${route.provider}/${route.model}`).join(", ") ?? "";
+			return (0, react$1.createElement)("span", {
+				ref: rootRef,
+				className: officialClass("TurnUsagePanel", "root") ?? ""
+			}, (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("TurnUsagePanel", "trigger") ?? "",
+				"aria-haspopup": "dialog",
+				"aria-expanded": open,
+				onClick: () => {
+					setOpen(!open);
+				}
+			}, (0, react$1.createElement)(official_exports.IconDatabaseOutlineRegular, null), (0, react$1.createElement)("span", { className: officialClass("TurnUsagePanel", "label") ?? "" }, t("turnUsageConsumed", { total }))), open ? (0, react_dom.createPortal)((0, react$1.createElement)("div", {
+				ref: panelRef,
+				className: officialClass("stat-dialog", "panel") ?? "",
+				role: "dialog",
+				"aria-label": t("turnUsageTitle"),
+				style: pos ?? STAT_MEASURE_STYLE
+			}, (0, react$1.createElement)("div", { className: officialClass("stat-dialog", "title") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "titleLabel") ?? "" }, (0, react$1.createElement)(official_exports.IconDatabaseOutlineRegular, null), t("turnUsageTitle")), (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "titleValue") ?? "" }, formatExactCount(usage.totalTokens, t))), (0, react$1.createElement)("div", {
+				className: officialClass("stat-dialog", "titleRule") ?? "",
+				"aria-hidden": true
+			}), (0, react$1.createElement)("dl", {
+				className: officialClass("stat-dialog", "details") ?? "",
+				"data-turn-usage-details": true
+			}, routes === "" ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageModel")), (0, react$1.createElement)("dd", { className: officialClass("stat-dialog", "route") ?? "" }, routes)), cacheHit === null ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheHit")), (0, react$1.createElement)("dd", null, `${cacheHit}%`)), (0, react$1.createElement)("dt", null, t("turnUsageInput")), (0, react$1.createElement)("dd", null, formatExactCount(usage.uncachedInputTokens, t)), usage.cacheReadTokens === void 0 ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheRead")), (0, react$1.createElement)("dd", null, formatExactCount(usage.cacheReadTokens, t))), usage.cacheWriteTokens === void 0 ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheWrite")), (0, react$1.createElement)("dd", null, formatExactCount(usage.cacheWriteTokens, t))), (0, react$1.createElement)("dt", null, t("turnUsageOutput")), (0, react$1.createElement)("dd", null, formatExactCount(usage.outputTokens, t), usage.reasoningTokens === void 0 ? null : (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "reasoning") ?? "" }, t("turnUsageReasoning", { tokens: formatExactCount(usage.reasoningTokens, t) }))))), document.body) : null);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/TurnTailNodeView.js
+		/** 官方 assistantText：只取 text 块。 */
+		function assistantText$1(blocks) {
+			return blocks.flatMap((block) => block.kind === "text" ? [block.text ?? ""] : []).join("");
+		}
+		/** Turn 尾部操作行：复制 / 分支 / 用量 / 结束时钟。 */
+		function TurnTailNodeViewMirror(props) {
+			const { data, onBranchAt, tailSlot, t } = props;
+			const closing = data.closing;
+			if (closing === null || closing === void 0) return null;
+			const text = assistantText$1(closing.blocks);
+			return (0, react$1.createElement)("div", {
+				className: officialClass("TurnTailNodeView", "root") ?? "",
+				"data-turn-tail": data.turn,
+				"data-actions-reveal": "always"
+			}, tailSlot === void 0 || tailSlot === null ? null : tailSlot, (0, react$1.createElement)(MessageIconActionsMirror, {
+				text,
+				time: closing.time,
+				clock: "end",
+				onBranch: onBranchAt === void 0 ? void 0 : () => {
+					onBranchAt(data.seq);
+				},
+				className: officialClass("TurnTailNodeView", "actions") ?? "",
+				usageAction: data.tokenUsage === void 0 ? void 0 : (0, react$1.createElement)(TurnUsagePanelMirror, {
+					usage: data.tokenUsage,
+					t
+				}),
+				t
+			}));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/TurnTriggerNodeView.js
+		/** 官方 TRIGGER_ICONS（lib/client.js:6634）。 */
+		const TRIGGER_ICONS = {
+			request: official_exports.IconContextInjectionOutlineRegular,
+			goal: official_exports.IconGoalOutlineRegular,
+			agent: official_exports.IconPaperPlaneOutlineRegular,
+			team: official_exports.IconAgentPresetOutlineRegular,
+			subagent: official_exports.IconAgentPresetOutlineRegular,
+			github: official_exports.IconBranchOutlineRegular,
+			webhook: official_exports.IconGlobeOutlineRegular,
+			schedule: official_exports.IconAlarmClockOutlineRegular,
+			job: official_exports.IconQueueOutlineRegular,
+			plugin: official_exports.IconCordisPluginOutlineRegular
+		};
+		/** 官方 turnTriggerDetails：source.kind → 标题与图标家族（默认 request）。 */
+		function turnTriggerDetails(source) {
+			const record = (value) => typeof value === "object" && value !== null && !Array.isArray(value) ? value : {};
+			const src = record(source);
+			switch (typeof src.kind === "string" ? src.kind : "") {
+				case "goal": return {
+					title: "triggerGoal",
+					icon: "goal"
+				};
+				case "agent-message": return {
+					title: "triggerAgent",
+					icon: "agent"
+				};
+				case "team-message": return {
+					title: "triggerTeam",
+					icon: "team"
+				};
+				case "subagent-settled": return {
+					title: "triggerSubagent",
+					icon: "subagent"
+				};
+				case "webhook": return src.provider === "github" ? {
+					title: "triggerGithub",
+					icon: "github"
+				} : {
+					title: "triggerWebhook",
+					icon: "webhook"
+				};
+				case "schedule": return {
+					title: "triggerSchedule",
+					icon: "schedule"
+				};
+				case "tool-jobs": return {
+					title: "triggerJob",
+					icon: "job"
+				};
+				case "cordis-host-runner": return {
+					title: "triggerPlugin",
+					icon: "plugin"
+				};
+				default: return {
+					title: "triggerRequest",
+					icon: "request"
+				};
+			}
+		}
+		/** 触发行：折叠时只有「图标 + 标题 + 时间 + 箭头」，点开展示注入原文。 */
+		function TurnTriggerNodeViewMirror(props) {
+			const { data, t } = props;
+			const [open, setOpen] = (0, react$1.useState)(false);
+			const details = turnTriggerDetails(data?.source);
+			const TriggerIcon = TRIGGER_ICONS[details.icon] ?? official_exports.IconContextInjectionOutlineRegular;
+			const time = typeof data?.time === "number" ? data.time : void 0;
+			const content = triggerContent(data?.content);
+			return (0, react$1.createElement)("section", {
+				className: officialClass("TurnTriggerNodeView", "root") ?? "",
+				"data-turn-trigger": true
+			}, (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("TurnTriggerNodeView", "header") ?? "",
+				"aria-expanded": open,
+				onClick: () => {
+					setOpen((value) => !value);
+				}
+			}, (0, react$1.createElement)("span", {
+				className: officialClass("TurnTriggerNodeView", "icon") ?? "",
+				"aria-hidden": true
+			}, (0, react$1.createElement)(TriggerIcon, { size: 14 })), (0, react$1.createElement)("span", { className: officialClass("TurnTriggerNodeView", "title") ?? "" }, t(details.title)), time === void 0 ? null : (0, react$1.createElement)("time", {
+				className: officialClass("TurnTriggerNodeView", "time") ?? "",
+				dateTime: new Date(time).toISOString()
+			}, formatMessageClock(time, t)), (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, {
+				size: 12,
+				className: open ? officialClass("TurnTriggerNodeView", "openChevron") ?? "" : officialClass("TurnTriggerNodeView", "chevron") ?? ""
+			})), open ? (0, react$1.createElement)("div", { className: officialClass("TurnTriggerNodeView", "body") ?? "" }, (0, react$1.createElement)("p", { className: officialClass("TurnTriggerNodeView", "explanation") ?? "" }, t("triggerExplanation")), (0, react$1.createElement)("div", { className: officialClass("TurnTriggerNodeView", "content") ?? "" }, content === "" ? t("sessionEmpty") : content)) : null);
+		}
+		/** 注入原文：content 块的 text 拼接（官方 NoticeBody 的文本消费面）。 */
+		function triggerContent(content) {
+			if (!Array.isArray(content)) return "";
+			return content.map((block) => {
+				const b = block;
+				if (b !== null && typeof b === "object" && b.type === "text" && typeof b.text === "string") return b.text;
+				return "";
+			}).filter((part) => part !== "").join("\n");
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/Deliverables.js
+		const basename = (path) => path.slice(Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1);
+		/** 官方 fileNames（PresentRow.tsx）：argsRaw.files[].path 逗号连接；解析不出回原样。 */
+		function fileNames(raw) {
+			let args;
+			try {
+				args = JSON.parse(raw);
+			} catch {
+				return raw;
+			}
+			if (typeof args !== "object" || args === null || !("files" in args) || !Array.isArray(args.files)) return raw;
+			return args.files.flatMap((file) => typeof file === "object" && file !== null && "path" in file && typeof file.path === "string" ? [file.path] : []).join(", ");
+		}
+		/** 官方 PresentRow：present 工具调用的状态行（折叠 = 状态词 + 路径；展开 = 结果原文）。 */
+		function PresentRowMirror(props) {
+			const { block, t } = props;
+			const b = block ?? {};
+			const settled = typeof b.kind === "string";
+			const state = !settled ? b.phase === "preparing" ? "preparing" : "running" : b.error?.code === "interrupted" ? "stopped" : b.isError ? "error" : "ok";
+			const argsRaw = (settled ? b.call?.argsRaw : b.argsRaw) ?? "";
+			const details = settled ? (b.content ?? []).map((item) => item.type === "text" ? item.text ?? "" : JSON.stringify(item)).join("\n") || (b.error ? `${b.error.name ?? ""}: ${b.error.code ?? ""}` : "") : "";
+			const [expanded, setExpanded] = (0, react$1.useState)(false);
+			const statusKey = state === "preparing" ? "deliverRowPreparing" : state === "running" ? "deliverRowRunning" : state === "error" ? "deliverRowError" : state === "stopped" ? "deliverRowStopped" : "deliverRowOk";
+			return (0, react$1.createElement)("div", {
+				className: officialClass("ToolRow", "root") ?? "",
+				"data-tool": "present",
+				"data-state": state
+			}, (0, react$1.createElement)(official_exports.DisclosureRow, {
+				icon: (0, react$1.createElement)(official_exports.IconDeliverDocRegular, { size: 14 }),
+				title: t("deliverRowTitle"),
+				open: expanded && details !== "",
+				expandable: details !== "",
+				expandOnRowClick: true,
+				keepContentWhenOpen: true,
+				onToggle: () => {
+					setExpanded((value) => !value);
+				},
+				running: state === "running" || state === "preparing",
+				rowClassName: officialClass("ToolRow", "row") ?? "",
+				leadingClassName: officialClass("ToolRow", "leading") ?? "",
+				titleClassName: officialClass("ToolRow", "title") ?? "",
+				chevronClassName: officialClass("ToolRow", "chevron") ?? "",
+				collapsedContent: (0, react$1.createElement)("span", { className: officialClass("PresentRow", "summary") ?? "" }, (0, react$1.createElement)("span", null, t(statusKey)), (0, react$1.createElement)("span", { className: officialClass("PresentRow", "paths") ?? "" }, fileNames(argsRaw))),
+				children: details !== "" && expanded ? (0, react$1.createElement)("pre", { className: officialClass("PresentRow", "output") ?? "" }, details) : null
+			}));
+		}
+		/** 官方 COLLAPSED_PRESENTED_COUNT（Deliverables.tsx）：超过 4 张折叠。 */
+		const COLLAPSED_DELIVERED_COUNT = 4;
+		/** 官方 cardDescription：简介去尾部括注后为空则回退扩展名大写（再退「文件」）。 */
+		function cardDescription(description, fallback) {
+			const trimmed = description?.replace(/\s*(?:\([^()]*\)|（[^（）]*）)\s*$/u, "").trim();
+			return trimmed === void 0 || trimmed === "" ? fallback : trimmed;
+		}
+		/** 官方 PresentedFileCard：整卡可点 → onPreview（官方 = 右栏预览，本弹窗 = 调用方 openFile）。 */
+		function DeliveredFileCard(props) {
+			const { file, onPreview, t } = props;
+			const name = basename(file.path);
+			const metadata = (0, official_exports.fileExtension)(name).toUpperCase() || t("deliverFileLabel");
+			return (0, react$1.createElement)("div", {
+				className: officialClass("Deliverables", "file") ?? "",
+				"data-presented-file": true
+			}, onPreview !== void 0 ? (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("Deliverables", "cardPreview") ?? "",
+				title: file.path,
+				"aria-label": t("deliverPreviewCard", { name: file.path }),
+				onClick: (event) => {
+					event.stopPropagation();
+					onPreview();
+				}
+			}) : null, (0, react$1.createElement)("span", { className: officialClass("Deliverables", "fileIcon") ?? "" }, (0, react$1.createElement)(official_exports.FileTypeIcon, {
+				path: file.path,
+				size: 20
+			})), (0, react$1.createElement)("div", { className: officialClass("Deliverables", "fileBody") ?? "" }, (0, react$1.createElement)("div", { className: officialClass("Deliverables", "details") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("Deliverables", "fileName") ?? "" }, name), (0, react$1.createElement)("span", {
+				className: officialClass("Deliverables", "description") ?? "",
+				"data-presented-description": true
+			}, (0, react$1.createElement)("span", { className: officialClass("Deliverables", "secondaryText") ?? "" }, cardDescription(file.description, metadata)), onPreview !== void 0 ? (0, react$1.createElement)("span", { className: officialClass("Deliverables", "previewHint") ?? "" }, t("deliverPreviewHint")) : null))));
+		}
+		/**
+		* 官方 DeliverablesTail 的 presented 网格（FileTypeIcon + 文件名 + 简介，整卡可点 → 预览）。
+		* 「已编辑文件」卡（ChangedFiles）不在这里：它走宿主 api/changes.summary，见
+		* mirror/ChangedFilesCard.ts。数据真源 = turn 级 `deliverables.presented`
+		* （官方 TurnLocation.data.get('deliverables')，见 changes.ts）。
+		*/
+		function DeliverablesGridMirror(props) {
+			const { files, onOpen, t } = props;
+			const [expanded, setExpanded] = (0, react$1.useState)(false);
+			if (files.length === 0) return null;
+			const collapsible = files.length > COLLAPSED_DELIVERED_COUNT;
+			const shown = collapsible && !expanded ? files.slice(0, COLLAPSED_DELIVERED_COUNT) : files;
+			return (0, react$1.createElement)("div", {
+				className: officialClass("Deliverables", "root") ?? "",
+				"data-presented-files-grid": true
+			}, (0, react$1.createElement)("div", {
+				className: officialClass("Deliverables", "presented") ?? "",
+				"data-presented-files-row": true
+			}, shown.map((file, index) => (0, react$1.createElement)(DeliveredFileCard, {
+				key: `${file.path}:${index}`,
+				file,
+				onPreview: onOpen === void 0 ? void 0 : () => {
+					onOpen(file.path);
+				},
+				t
+			}))), collapsible ? (0, react$1.createElement)("button", {
+				type: "button",
+				className: officialClass("Deliverables", "toggle") ?? "",
+				"aria-expanded": expanded,
+				"aria-label": t(expanded ? "deliverCollapseAria" : "deliverExpandAria", { count: files.length }),
+				onClick: () => {
+					setExpanded((value) => !value);
+				}
+			}, (0, react$1.createElement)("span", null, t(expanded ? "deliverCollapse" : "deliverAll", { count: files.length })), expanded ? (0, react$1.createElement)(official_exports.IconChevronUpOutlineRegular, {}) : (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, {})) : null);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/utils/string.js
+		/**
+		* 路径取末段（文件名显示用）。`/` 与 `\` 都认。
+		*
+		* ⚠️ 必须**先剔尾斜杠**：「目录」常用尾斜杠表达（`a.md` / `b/`），
+		* 不剔的话 `baseNameOf('b/')` 会返回空串 ⇒ 目录在界面上渲染成空标签。
+		*/
+		function baseNameOf(path) {
+			const trimmed = path.replace(/[\\/]+$/, "");
+			if (trimmed === "") return path;
+			const cut = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf("\\"));
+			return cut < 0 ? trimmed : trimmed.slice(cut + 1);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/changes.js
+		/** 官方 changesSummaryUrl（client.js:90-96）：文档相对路由。 */
+		function changesSummaryUrl(sessionId, seq) {
+			return `api/changes.summary?${new URLSearchParams({
+				sessionId,
+				seq: String(seq)
+			})}`;
+		}
+		const isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+		const isInt = (value) => typeof value === "number" && Number.isSafeInteger(value);
+		/** 官方 isChangedFile（client.js:34-42）。 */
+		function isChangedFile(value) {
+			if (!isRecord(value)) return false;
+			const { path, display, added, deleted, binary, oversized } = value;
+			return typeof path === "string" && path.length > 0 && typeof display === "string" && display.length > 0 && isInt(added) && isInt(deleted) && (binary === void 0 || binary === true) && (oversized === void 0 || oversized === true);
+		}
+		/** 官方 isChangesSummary（client.js:49-53）：不合规返回 null（官方按 missing 处理）。 */
+		function parseChangesSummary(value) {
+			if (!isRecord(value)) return null;
+			const { turn, files, total, added, deleted } = value;
+			if (!isInt(turn) || turn < 1) return null;
+			if (!isInt(total) || !isInt(added) || !isInt(deleted)) return null;
+			if (!Array.isArray(files) || !files.every(isChangedFile)) return null;
+			return {
+				turn,
+				total,
+				added,
+				deleted,
+				files
+			};
+		}
+		/**
+		* 读某 turn 的 turn 级业务值（官方 `TurnLocation.data`：`ConversationLocationDataStore`，
+		* 用 `.get(key)` 读，**不是 Map 也不是普通对象** —— conversation.d.ts:87-95）。
+		* 兼容 Map / 纯对象两种形态只为容忍宿主改版；官方契约就是 `.get`。
+		*/
+		function turnDeliverablesValue(face, key) {
+			const data = face?.data;
+			if (data === void 0 || data === null) return void 0;
+			const get = data.get;
+			if (typeof get === "function") return get.call(data, key);
+			if (data instanceof Map) return data.get(key);
+			return data[key];
+		}
+		/**
+		* 官方 CHANGES_DIFF_PATH（client.js）的文档相对路由：单文件某轮首尾对比的只读 GET。
+		* 与 `changesSummaryUrl` 同属宿主 changes 服务（鉴权随宿主会话，裸 fetch 同机制）。
+		*/
+		function changesDiffUrl(sessionId, seq, index) {
+			return `api/changes.diff?${new URLSearchParams({
+				sessionId,
+				seq: String(seq),
+				index: String(index)
+			})}`;
+		}
+		/** 官方 isHunk（client.js）。 */
+		function isDiffHunk(value) {
+			if (!isRecord(value)) return false;
+			const { oldStart, oldLines, newStart, newLines, lines } = value;
+			return [
+				oldStart,
+				oldLines,
+				newStart,
+				newLines
+			].every((field) => isInt(field) && field >= 0) && Array.isArray(lines) && lines.every((line) => typeof line === "string" && /^[+ -]/.test(line));
+		}
+		/** 官方 isChangesDiff（client.js）：不合规返回 null（官方按 missing 处理）。 */
+		function parseChangesDiff(value) {
+			if (!isRecord(value)) return null;
+			const { kind, path, display, before, after, coarse, hunks } = value;
+			if (typeof path !== "string" || path.length === 0 || typeof display !== "string" || display.length === 0) return null;
+			if (kind === "binary" || kind === "oversized") return kind === "binary" ? {
+				kind: "binary",
+				path,
+				display
+			} : {
+				kind: "oversized",
+				path,
+				display
+			};
+			if (kind !== "text") return null;
+			if (typeof before !== "boolean" || typeof after !== "boolean" || typeof coarse !== "boolean") return null;
+			if (!Array.isArray(hunks) || !hunks.every(isDiffHunk)) return null;
+			return {
+				kind: "text",
+				path,
+				display,
+				before,
+				after,
+				coarse,
+				hunks
+			};
+		}
+		/** 官方 MAX_RENDERED_LINES：超过即截断（出 diff.truncated 提示），防巨型对比卡死预览。 */
+		const DIFF_MAX_RENDERED_LINES = 5e3;
+		/** 官方 hunkRows（client.js）。 */
+		function hunkRows(hunk) {
+			let oldNo = hunk.oldStart;
+			let newNo = hunk.newStart;
+			return hunk.lines.map((line) => {
+				const text = line.slice(1);
+				switch (line[0]) {
+					case "+": return {
+						kind: "add",
+						old: void 0,
+						new: newNo++,
+						text
+					};
+					case "-": return {
+						kind: "del",
+						old: oldNo++,
+						new: void 0,
+						text
+					};
+					default: return {
+						kind: "context",
+						old: oldNo++,
+						new: newNo++,
+						text
+					};
+				}
+			});
+		}
+		/** 官方 hunkHeader：`@@ -oldStart,oldLines +newStart,newLines @@`。 */
+		function hunkHeader(hunk) {
+			return `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`;
+		}
+		/** 官方 noteOf：新建 / 删除 / 无变化 的提示键（无提示 = undefined）。 */
+		function diffNoteKey(diff) {
+			if (diff.before === false) return "diffCreated";
+			if (diff.after === false) return "diffDeleted";
+			if ((diff.hunks?.length ?? 0) === 0) return "diffUnchanged";
+		}
+		/**
+		* 某 turn 的 `workspace/changes` 事件 seq（官方 changesForClosing：读 turn.data 的
+		* `deliverables.changes`）。没有公告 = null（官方此时不挂卡）。
+		*/
+		function turnDeliverablesChangesSeq(face) {
+			const seq = (turnDeliverablesValue(face, "deliverables")?.changes)?.seq;
+			return isInt(seq) ? seq : null;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/ChangedFileDiff.js
+		/** 官方 ChangedFiles / FileDiff 模块类（ui-deliverables；取不到 = 空类，不白屏）。 */
+		const C$1 = (semantic) => officialClass("ChangedFiles", semantic) ?? "";
+		const D = (semantic) => officialClass("FileDiff", semantic) ?? "";
+		/** 会话级缓存：同一 (sessionId, seq, index) 只拉一次（官方 ChangesDiffStore 同语义）。 */
+		const cache$1 = /* @__PURE__ */ new Map();
+		/** 官方 highlightedSide：一侧收集 → 整段高亮 → 按行号回表。 */
+		function highlightedSide(rows, side, highlighter) {
+			const source = rows.flatMap((row) => row[side] === void 0 ? [] : [{
+				no: row[side],
+				text: row.text
+			}]);
+			if (source.length === 0) return /* @__PURE__ */ new Map();
+			const highlighted = highlighter(source.map((line) => line.text).join("\n"));
+			if (highlighted === void 0) return void 0;
+			return new Map(source.map((line, index) => [line.no, highlighted[index] ?? []]));
+		}
+		/** 官方 DiffText：有高亮 spans 就逐段上色，否则纯文本。 */
+		function DiffText(props) {
+			const { text, spans } = props;
+			return (0, react$1.createElement)("span", {
+				className: D("text"),
+				"data-diff-code": spans === void 0 ? void 0 : ""
+			}, spans === void 0 ? text : spans.map((span, index) => (0, react$1.createElement)("span", {
+				key: index,
+				style: span.style
+			}, span.text)));
+		}
+		/** 官方 FileDiff 的行：grid 四列（旧号 / 新号 / 符号 / 文本）。 */
+		function DiffLine(props) {
+			const { row } = props;
+			const kindClass = row.kind === "add" ? D("add") : row.kind === "del" ? D("del") : D("context");
+			const spans = row.kind === "del" ? props.oldSpans : props.newSpans;
+			return (0, react$1.createElement)("div", {
+				className: `${D("line")} ${kindClass}`,
+				"data-diff-line": row.kind
+			}, (0, react$1.createElement)("span", { className: D("number") }, row.old ?? ""), (0, react$1.createElement)("span", { className: D("number") }, row.new ?? ""), (0, react$1.createElement)("span", { className: D("sign") }, row.kind === "add" ? "+" : row.kind === "del" ? "-" : " "), (0, react$1.createElement)(DiffText, {
+				text: row.text,
+				spans
+			}));
+		}
+		/** 一个变更文件的 diff 体（状态机 + unified 行渲染）。 */
+		function ChangedFileDiff(props) {
+			const { sessionId, seq, index, display, t = t$2, variant = "preview", onClose } = props;
+			const url = changesDiffUrl(sessionId, seq, index);
+			const [state, setState] = (0, react$1.useState)(void 0);
+			const [attempt, setAttempt] = (0, react$1.useState)(0);
+			const [wrap, setWrap] = (0, react$1.useState)(false);
+			(0, react$1.useEffect)(() => {
+				if (cache$1.has(url)) {
+					setState(cache$1.get(url));
+					return;
+				}
+				let alive = true;
+				(async () => {
+					let next = null;
+					try {
+						const res = await fetch(url);
+						if (res.ok) next = parseChangesDiff(await res.json());
+						else if (res.status !== 404) {
+							if (alive) setState("error");
+							return;
+						}
+					} catch {
+						if (alive) setState("error");
+						return;
+					}
+					cache$1.set(url, next);
+					if (alive) setState(next);
+				})();
+				return () => {
+					alive = false;
+				};
+			}, [url, attempt]);
+			const retry = (0, react$1.useCallback)(() => {
+				setAttempt((value) => value + 1);
+			}, []);
+			const path = state === void 0 || state === "error" || state === null ? void 0 : state.path;
+			const highlighter = (0, official_exports.useCodeHighlighter)(path === void 0 ? void 0 : (0, official_exports.languageForPath)(path));
+			const body = (0, react$1.useMemo)(() => {
+				if (state === void 0) return (0, react$1.createElement)("p", {
+					className: D("status"),
+					role: "status"
+				}, t("diffLoading"));
+				if (state === "error") return (0, react$1.createElement)("div", { className: D("status") }, (0, react$1.createElement)("span", null, t("diffError")), (0, react$1.createElement)(official_exports.Button, {
+					size: "sm",
+					onClick: retry
+				}, t("errorRetry")));
+				if (state === null) return (0, react$1.createElement)("p", { className: D("status") }, t("diffMissing"));
+				if (state.kind === "binary") return (0, react$1.createElement)("p", { className: D("status") }, t("diffBinary"));
+				if (state.kind === "oversized") return (0, react$1.createElement)("p", { className: D("status") }, t("diffOversized"));
+				const note = diffNoteKey(state);
+				const hunks = state.hunks ?? [];
+				let budget = DIFF_MAX_RENDERED_LINES;
+				const kept = [];
+				let truncated = false;
+				for (const hunk of hunks) {
+					if (budget <= 0) {
+						truncated = true;
+						break;
+					}
+					if (hunk.lines.length > budget) {
+						kept.push({
+							...hunk,
+							lines: hunk.lines.slice(0, budget)
+						});
+						budget = 0;
+						truncated = true;
+						break;
+					}
+					kept.push(hunk);
+					budget -= hunk.lines.length;
+				}
+				return (0, react$1.createElement)("div", {
+					className: D("body"),
+					"data-review-view": "unified",
+					"data-review-wrap": wrap ? true : void 0
+				}, note === void 0 ? null : (0, react$1.createElement)("p", {
+					className: D("note"),
+					"data-diff-note": hunks.length === 0 ? "empty" : "metadata"
+				}, t(note)), state.coarse === true ? (0, react$1.createElement)("p", {
+					className: D("note"),
+					"data-diff-coarse": true
+				}, t("diffCoarse")) : null, truncated ? (0, react$1.createElement)("p", {
+					className: D("note"),
+					"data-diff-truncated": true
+				}, t("diffTruncated", { count: String(DIFF_MAX_RENDERED_LINES) })) : null, kept.map((hunk, position) => {
+					const rows = hunkRows(hunk);
+					const oldSpans = highlightedSide(rows, "old", highlighter);
+					const newSpans = highlightedSide(rows, "new", highlighter);
+					return (0, react$1.createElement)("section", {
+						key: position,
+						className: D("hunk")
+					}, (0, react$1.createElement)("div", {
+						className: D("hunkHeader"),
+						"data-diff-hunk-header": true
+					}, hunkHeader(hunk)), rows.map((row, at) => (0, react$1.createElement)(DiffLine, {
+						key: at,
+						row,
+						oldSpans: oldSpans?.get(row.old ?? -1),
+						newSpans: newSpans?.get(row.new ?? -1)
+					})));
+				}));
+			}, [
+				state,
+				highlighter,
+				t,
+				retry,
+				wrap
+			]);
+			const preview = variant !== "review";
+			return (0, react$1.createElement)("div", {
+				className: preview ? `${D("root")} ${C$1("preview")}` : D("root"),
+				"data-changes-hover-preview": preview ? true : void 0,
+				style: preview ? void 0 : { height: "100%" }
+			}, (0, react$1.createElement)("div", { className: D("header") }, (0, react$1.createElement)("span", {
+				className: C$1("previewPath"),
+				"data-changes-preview-path": true
+			}, display), preview ? null : (0, react$1.createElement)(IconButton$1, {
+				variant: "plain",
+				size: "md",
+				icon: (0, react$1.createElement)(wrap ? official_exports.IconNowrapFillRegular : official_exports.IconWrapFillRegular, { size: 14 }),
+				label: wrap ? t("diffNowrap") : t("diffWrap"),
+				onClick: () => {
+					setWrap((value) => !value);
+				}
+			}), preview || onClose === void 0 ? null : (0, react$1.createElement)(IconButton$1, {
+				variant: "plain",
+				size: "md",
+				icon: (0, react$1.createElement)(official_exports.IconCloseOutlineRegular, { size: 14 }),
+				label: t("previewClose"),
+				onClick: onClose
+			})), body);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/mirror/ChangedFilesCard.js
+		/** 官方 ChangedFiles 模块类（ui-deliverables；取不到 = 空类，不白屏）。 */
+		const C = (semantic) => officialClass("ChangedFiles", semantic) ?? "";
+		/** 会话级缓存：同一 (sessionId, seq) 只拉一次（官方 ChangesSummaryStore 同语义）。 */
+		const cache = /* @__PURE__ */ new Map();
+		/** 官方 COLLAPSED_ROWS（适配收尾消息的汇总高度）：超过才折叠 + 出 toggle。 */
+		const COLLAPSED_ROWS = 4;
+		/** 官方 Counts：added（成功色）+ deleted（错误色），常显不靠 hover。 */
+		function Counts(props) {
+			const grouped = new Intl.NumberFormat("en-US");
+			return (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", { className: C("added") }, `+${grouped.format(props.added)}`), " ", (0, react$1.createElement)("span", { className: C("deleted") }, `-${grouped.format(props.deleted)}`));
+		}
+		/** 计数或状态词（官方 binary / oversized 顶替计数）。 */
+		function countsOf(file, t) {
+			if (file.binary === true) return t("changesBinary");
+			if (file.oversized === true) return t("changesOversized");
+			return (0, react$1.createElement)(Counts, {
+				added: file.added,
+				deleted: file.deleted
+			});
+		}
+		function ChangedFilesCard(props) {
+			const { sessionId, seq, onOpenReview, t } = props;
+			const url = changesSummaryUrl(sessionId, seq);
+			const [summary, setSummary] = (0, react$1.useState)(void 0);
+			const [expanded, setExpanded] = (0, react$1.useState)(false);
+			const cardRef = (0, react$1.useRef)(null);
+			(0, react$1.useEffect)(() => {
+				if (cache.has(url)) {
+					setSummary(cache.get(url));
+					return;
+				}
+				let alive = true;
+				(async () => {
+					let next = null;
+					try {
+						const res = await fetch(url);
+						next = res.ok ? parseChangesSummary(await res.json()) : null;
+					} catch {
+						next = null;
+					}
+					cache.set(url, next);
+					if (alive) setSummary(next);
+				})();
+				return () => {
+					alive = false;
+				};
+			}, [url]);
+			if (summary === void 0 || summary === null || summary.total === 0 || summary.files.length === 0) return null;
+			const single = summary.total === 1 ? summary.files[0] : void 0;
+			const icon = single !== void 0 ? (0, react$1.createElement)(official_exports.FileTypeIcon, {
+				path: single.path,
+				size: 20
+			}) : (0, react$1.createElement)(official_exports.FileTypeIcon, {
+				kind: "code",
+				size: 20
+			});
+			const title = single === void 0 ? t("changesMulti", { count: String(summary.total) }) : t("changesSingle", { name: baseNameOf(single.path) });
+			const foldable = summary.files.length > COLLAPSED_ROWS;
+			const rows = foldable && !expanded ? summary.files.slice(0, COLLAPSED_ROWS) : summary.files;
+			const headerBody = (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", { className: C("tile") }, icon), (0, react$1.createElement)("span", { className: C("titles") }, (0, react$1.createElement)("span", { className: C("title") }, title), (0, react$1.createElement)("span", { className: C("stat") }, (0, react$1.createElement)("span", { className: C("statCounts") }, countsOf(single ?? summary, t)), (0, react$1.createElement)("span", { className: C("previewHint") }, t("deliverPreviewHint")))));
+			const headerLocator = {
+				sessionId,
+				seq,
+				index: 0,
+				display: single?.display ?? summary.files[0].display
+			};
+			const headerNode = onOpenReview === void 0 ? (0, react$1.createElement)("div", { className: C("header") }, headerBody) : (0, react$1.createElement)("button", {
+				type: "button",
+				className: C("header"),
+				title: headerLocator.display,
+				onClick: () => {
+					onOpenReview(headerLocator);
+				}
+			}, headerBody);
+			/** 官方 hover 预览卡（variant preview + dwell 500 + 宽度跟整卡）；content 挂上才取数。 */
+			const previewOf = (index, display) => (0, react$1.createElement)(ChangedFileDiff, {
+				sessionId,
+				seq,
+				index,
+				display,
+				t
+			});
+			const rowOf = (file, index) => {
+				const body = (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", { className: C("path") }, file.display), (0, react$1.createElement)("span", { className: C("counts") }, countsOf(file, t)));
+				const locator = {
+					sessionId,
+					seq,
+					index,
+					display: file.display
+				};
+				const row = onOpenReview === void 0 ? (0, react$1.createElement)("div", {
+					className: C("row"),
+					title: file.path
+				}, body) : (0, react$1.createElement)("button", {
+					type: "button",
+					className: C("row"),
+					title: file.path,
+					onClick: () => {
+						onOpenReview(locator);
+					}
+				}, body);
+				return (0, react$1.createElement)(official_exports.HoverCard, {
+					key: file.display,
+					variant: "preview",
+					widthAnchorRef: cardRef,
+					openDelayMs: 500,
+					anchor: row,
+					content: previewOf(index, file.display)
+				});
+			};
+			const list = single === void 0 ? (0, react$1.createElement)("ul", { className: C("list") }, rows.map((file) => {
+				const index = summary.files.indexOf(file);
+				return (0, react$1.createElement)("li", { key: file.display }, rowOf(file, index));
+			})) : null;
+			const toggle = foldable ? (0, react$1.createElement)("button", {
+				type: "button",
+				className: C("toggle"),
+				"aria-expanded": expanded,
+				"aria-label": t(expanded ? "deliverCollapseAria" : "deliverExpandAria", { count: summary.files.length }),
+				onClick: () => {
+					setExpanded((value) => !value);
+				}
+			}, (0, react$1.createElement)("span", null, t(expanded ? "changesCollapse" : "changesAll", { count: summary.files.length })), expanded ? (0, react$1.createElement)(official_exports.IconChevronUpOutlineRegular, {}) : (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, {})) : null;
+			const header = single === void 0 ? headerNode : (0, react$1.createElement)(official_exports.HoverCard, {
+				variant: "preview",
+				widthAnchorRef: cardRef,
+				openDelayMs: 500,
+				anchor: headerNode,
+				content: previewOf(0, single.display)
+			});
+			return (0, react$1.createElement)("div", {
+				ref: cardRef,
+				className: C("card"),
+				"data-changed-files": true,
+				"data-single": single !== void 0 || void 0
+			}, header, list, toggle);
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/SessionViewModal.js
+		/** 稳定的空序列（避免默认值每次新建数组）。 */
+		const EMPTY_ORDER = [];
+		/** 官方样式缺失告警只打一次（避免每次渲染刷屏）。 */
+		let officialWarned = false;
+		/** JSON 安全序列化（循环引用 / 特殊值不抛）。 */
+		function safeJson(value) {
+			try {
+				return JSON.stringify(value, null, 2) ?? String(value);
+			} catch {
+				return String(value);
+			}
+		}
+		/** 提取内容块的可读文本：text 拼接、图片占位（官方 ContentBlock 是 merge-extensible map）。 */
+		function contentText(blocks) {
+			if (blocks === void 0) return "";
+			return blocks.map((block) => {
+				if (block !== null && typeof block === "object" && block.type === "text" && typeof block.text === "string") return block.text;
+				if (block !== null && typeof block === "object" && block.type === "image") return t$2("sessionImage");
+				return "";
+			}).filter((part) => part !== "").join("\n");
+		}
+		/**
+		* 提取内容块里的**官方 file 块**（2026-10-03 核实）：随附文件以官方附件形式发进会话后，
+		* 会话快照的 user 节点 content 里就是它 ⇒ 弹窗里照样渲染成附件卡（与官方页一致）。
+		* 拿不到（宿主投影未透传）⇒ 空数组：附件卡不渲染，**绝不造一个假卡**。
+		*
+		* @returns `files` = 去重后要画的附件；`hadFiles` = 该轮**原本**有没有 file 块
+		* （去重让位后可能为空 —— 调用方据此判断该轮要不要渲染，不能因为让位把整条消息吞掉）。
+		*/
+		function contentFiles(blocks, exclude) {
+			if (blocks === void 0) return {
+				files: [],
+				hadFiles: false
+			};
+			const out = [];
+			let hadFiles = false;
+			for (const block of blocks) {
+				if (block === null || typeof block !== "object" || block.type !== "file") continue;
+				const attachment = block.attachment;
+				if (typeof attachment !== "object" || attachment === null) continue;
+				hadFiles = true;
+				const name = typeof attachment.name === "string" && attachment.name !== "" ? attachment.name : "file";
+				if (exclude?.has(name) === true) continue;
+				out.push({
+					name,
+					bytes: typeof attachment.bytes === "number" ? attachment.bytes : 0
+				});
+			}
+			return {
+				files: out,
+				hadFiles
+			};
+		}
+		/** legacy assistant 节点的纯文本（复制按钮用）。 */
+		function assistantText(node) {
+			return (node.blocks ?? []).map((block) => block.kind === "text" ? block.text : "").join("");
+		}
+		/** keyed 节点的 data（官方 ChatNodeDataMap[kind]）。 */
+		function dataOf(node) {
+			return node.data ?? {};
+		}
+		/** 节点位置 → turn 位置（官方 node.location 收窄，ChatNodeSeat.tsx:1660 的反向）。 */
+		function turnLocationOf(node) {
+			const location = node.location;
+			return location?.kind === "turn" || location?.kind === "step" ? location.turn : void 0;
+		}
+		/** 官方 AssistantChatData.blocks（ui-chat contract/chat-nodes.d.ts:22）。 */
+		function blocksOf(value) {
+			return Array.isArray(value) ? value : void 0;
+		}
+		/**
+		* 官方 ToolCallBlock（uic contract/records.d.ts:140）→ 工具卡 props。
+		* running 半截（phase: preparing/start）只有 name/argsRaw；settled（kind: tool-result）带输出与错误。
+		*/
+		function toolCallCard(node, t, onOpenFile) {
+			const root = dataOf(node).root;
+			if (root === void 0 || root === null) return null;
+			const settled = root.kind === "tool-result";
+			const call = settled ? root.call : root;
+			const error = root.error;
+			return {
+				name: typeof call?.name === "string" ? call.name : "tool",
+				argsRaw: typeof call?.argsRaw === "string" ? call.argsRaw : "",
+				output: settled ? contentText(root.content) : "",
+				isError: root.isError === true,
+				errorName: error?.name,
+				meta: root.meta,
+				settled,
+				phase: settled ? void 0 : root.phase === "preparing" ? "preparing" : "start",
+				interrupted: error?.code === "interrupted",
+				onOpenFile,
+				t
+			};
+		}
+		/** 官方 Tool / ToolResult block 是否为 present 调用（交付文件行专属渲染；running 名在顶层，结算名在 call 里）。 */
+		function isPresentRoot(root) {
+			if (typeof root !== "object" || root === null) return false;
+			const r = root;
+			if (r.name === "present") return true;
+			return r.kind === "tool-result" && r.call !== null && typeof r.call === "object" && r.call.name === "present";
+		}
+		/** 官方 present 调用参数里的 files（deliverables/presented 事件同源数据）。 */
+		function presentFiles(root) {
+			if (typeof root !== "object" || root === null) return [];
+			const r = root;
+			const settled = r.kind === "tool-result";
+			if (r.isError === true) return [];
+			const raw = settled ? r.call?.argsRaw : r.argsRaw;
+			if (typeof raw !== "string") return [];
+			try {
+				const files = JSON.parse(raw)?.files;
+				if (!Array.isArray(files)) return [];
+				const out = [];
+				for (const file of files) {
+					if (typeof file !== "object" || file === null) continue;
+					const path = file.path;
+					if (typeof path !== "string" || path.trim() === "") continue;
+					const description = file.description;
+					out.push(typeof description === "string" && description.trim() !== "" ? {
+						path,
+						description
+					} : { path });
+				}
+				return out;
+			} catch {
+				return [];
+			}
+		}
+		/**
+		* keyed 节点 → 视图（等价于官方 slot "conversation.chat.node" 的按 kind 分发）。
+		* @param node - keyed ChatNode。
+		* @param turnProcess - seat 下发的过程席位（turn-process / 折叠答案节点要用）。
+		* @param t - 翻译席位。
+		* @param onBranchAt - 消息行分支按钮（以该轮 tail seq 开分支；undefined = 不渲染按钮）。
+		* @param fileOpen - 文件打开上下文（undefined = 链接全部降级为纯文本）。
+		* @param groupPart - 过程分组侧（'response' | 'reasoning'）。
+		* @returns 节点视图；null = 决策 28 过滤的噪音 kind。
+		*/
+		function renderKeyedNode(node, turnProcess, t, onBranchAt, fileOpen, groupPart, deliverFiles, lastTailTurn, changesSeq, sessionId, onOpenReview) {
+			switch (node.kind) {
+				case "turn-trigger": return (0, react$1.createElement)(TurnTriggerNodeViewMirror, {
+					data: node.data,
+					t
+				});
+				case "turn-process": return turnProcess === void 0 ? null : (0, react$1.createElement)(TurnProcessNodeViewMirror, {
+					turn: turnLocationOf(node),
+					turnProcess,
+					t
+				});
+				case "turn-tail": {
+					const data = node.data;
+					const turn = data?.turn ?? turnLocationOf(node)?.turn;
+					const atLastTail = turn !== void 0 && lastTailTurn !== void 0 && turn === lastTailTurn;
+					const showGrid = deliverFiles !== void 0 && deliverFiles.length > 0 && atLastTail;
+					const changesCard = atLastTail && changesSeq !== void 0 && sessionId !== void 0 ? (0, react$1.createElement)(ChangedFilesCard, {
+						sessionId,
+						seq: changesSeq,
+						onOpenReview,
+						t
+					}) : null;
+					const tailSlot = changesCard === null && !showGrid ? null : (0, react$1.createElement)(react$1.Fragment, null, changesCard, showGrid ? (0, react$1.createElement)(DeliverablesGridMirror, {
+						files: deliverFiles,
+						onOpen: fileOpen?.open,
+						t
+					}) : null);
+					return data === void 0 || data.closing === null || data.closing === void 0 ? null : (0, react$1.createElement)(TurnTailNodeViewMirror, {
+						data,
+						onBranchAt,
+						tailSlot,
+						t
+					});
+				}
+				case "assistant-step": {
+					const blocks = blocksOf(dataOf(node).blocks) ?? [];
+					const contentBlocks = blocks.filter((block) => block.kind !== "tool-call");
+					if (blocks.length > 0 && contentBlocks.length === 0) return null;
+					const parts = assistantBlocks(groupPart === "reasoning" ? contentBlocks.filter((block) => block.kind === "reasoning") : groupPart === "response" ? contentBlocks.filter((block) => block.kind !== "reasoning") : contentBlocks, t, fileOpen?.mentions);
+					return parts.length === 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-sv-assistant" }, parts);
+				}
+				case "tool-call": {
+					const root = dataOf(node).root;
+					if (isPresentRoot(root)) return (0, react$1.createElement)(PresentRowMirror, {
+						block: root,
+						t
+					});
+					const card = toolCallCard(node, t, fileOpen?.open);
+					return card === null ? null : (0, react$1.createElement)(GenericCommandCard, card);
+				}
+				case "command": return (0, react$1.createElement)(CommandCard, {
+					node: dataOf(node),
+					t
+				});
+				case "user":
+				case "steering": {
+					const blocks = dataOf(node).content;
+					const text = contentText(blocks);
+					const { files, hadFiles } = contentFiles(blocks);
+					if (text === "" && !hadFiles) return null;
+					return (0, react$1.createElement)(UserMessage, {
+						text,
+						files
+					});
+				}
+				case "turn-error": return (0, react$1.createElement)(TurnErrorItemMirror, {
+					node: dataOf(node),
+					t
+				});
+				case "turn-max-tokens": return (0, react$1.createElement)(TurnMaxTokensItemMirror, { t });
+				case "model-retry": {
+					const data = dataOf(node);
+					const attempts = Array.isArray(data.attempts) ? data.attempts : [];
+					const current = typeof data.current === "object" && data.current !== null ? data.current : attempts[attempts.length - 1];
+					if (current === void 0) return null;
+					return (0, react$1.createElement)(ModelRetryItemMirror, {
+						node: current,
+						active: current.retryState === "scheduled",
+						t
+					});
+				}
+				case "context":
+				case "compaction":
+				case "manual-compaction":
+				case "unknown": return null;
+				default: return (0, react$1.createElement)("details", { className: "dshpc-sv-tool" }, (0, react$1.createElement)("summary", { className: "dshpc-sv-notice" }, `${t("sessionUnknownKind")} ${node.kind}`), (0, react$1.createElement)("pre", null, safeJson(node.data)));
+			}
+		}
+		/**
+		* assistant 内容块 → 子元素数组（官方块渲染器 lib/client.js:5826-5870 的同构）：
+		* text → 官方 MarkdownText、reasoning → 官方 ReasoningRow（标题「思考」）、image 占位；
+		* tool-call 块一律跳过（官方 case "tool-call": break——由独立工具节点渲染，重复画 = ×2）；
+		* 未知块折叠原文。
+		*/
+		function assistantBlocks(blocks, t, fileMentions) {
+			if (blocks === void 0) return [];
+			const parts = [];
+			blocks.forEach((block, index) => {
+				switch (block.kind) {
+					case "text":
+						if (block.text.trim() !== "") parts.push((0, react$1.createElement)(AssistantMarkdown, {
+							key: `t${index}`,
+							text: block.text,
+							fileMentions
+						}));
+						break;
+					case "reasoning":
+						if (block.text.trim() !== "") parts.push((0, react$1.createElement)(ReasoningRowMirror, {
+							key: `r${index}`,
+							text: block.text,
+							t
+						}));
+						break;
+					case "image":
+						parts.push((0, react$1.createElement)("div", {
+							key: `i${index}`,
+							className: "dshpc-sv-image"
+						}, t("sessionImage")));
+						break;
+					case "tool-call": break;
+					default: parts.push((0, react$1.createElement)("details", {
+						key: `o${index}`,
+						className: "dshpc-sv-tool"
+					}, (0, react$1.createElement)("summary", null, t("sessionUnknownKind")), (0, react$1.createElement)("pre", null, safeJson(block.block))));
+				}
+			});
+			return parts;
+		}
+		/**
+		* legacy 兜底渲染：官方兼容投影（老 kind 名）的单个节点；返回 null = 按决策 28 过滤的噪音 kind。
+		* 仅在 keyed `order` 缺失时使用（正常路径见 renderKeyedNode）。
+		*/
+		function renderLegacyNode(node, t, fileOpen) {
+			switch (node.kind) {
+				case "user":
+				case "steering": {
+					const text = contentText(node.content);
+					const { files, hadFiles } = contentFiles(node.content);
+					if (text === "" && !hadFiles) return null;
+					return (0, react$1.createElement)(UserMessage, {
+						key: node.seq,
+						text,
+						files
+					});
+				}
+				case "assistant": {
+					const parts = assistantBlocks(node.blocks, t, fileOpen?.mentions);
+					return parts.length === 0 ? null : (0, react$1.createElement)("div", {
+						key: node.seq,
+						className: "dshpc-sv-assistant"
+					}, parts);
+				}
+				case "tool-result":
+					if (node.call?.name === "present") return (0, react$1.createElement)(PresentRowMirror, {
+						key: node.seq,
+						block: node,
+						t
+					});
+					return (0, react$1.createElement)(GenericCommandCard, {
+						key: node.seq,
+						name: node.call?.name ?? "tool",
+						argsRaw: node.call?.argsRaw ?? "",
+						output: contentText(node.content),
+						isError: node.isError === true,
+						errorName: node.error?.name,
+						meta: node.meta,
+						settled: true,
+						interrupted: node.error?.code === "interrupted",
+						onOpenFile: fileOpen?.open,
+						t
+					});
+				case "command": return (0, react$1.createElement)(GenericCommandCard, {
+					key: node.seq,
+					name: `/${node.name ?? "?"}`,
+					argsRaw: node.args ?? "",
+					output: node.outcome?.text ?? "",
+					isError: node.outcome?.kind === "error",
+					t
+				});
+				case "turn-error": return (0, react$1.createElement)(TurnErrorItemMirror, {
+					key: node.seq,
+					node,
+					t
+				});
+				case "turn-max-tokens": return (0, react$1.createElement)(TurnMaxTokensItemMirror, {
+					key: node.seq,
+					t
+				});
+				case "model-retry": return (0, react$1.createElement)(ModelRetryItemMirror, {
+					key: node.seq,
+					node,
+					active: node.retryState === "scheduled",
+					t
+				});
+				case "context":
+				case "compaction":
+				case "unknown": return null;
+				default: return (0, react$1.createElement)("details", {
+					key: node.seq,
+					className: "dshpc-sv-tool"
+				}, (0, react$1.createElement)("summary", { className: "dshpc-sv-notice" }, `${t("sessionUnknownKind")} ${node.kind}`), (0, react$1.createElement)("pre", null, safeJson(node)));
+			}
+		}
+		/**
+		* 把连续的 tool-result / command 收成一个「过程」组——官方就是把工具调用折进
+		* turn 的过程块（默认收起），页面才不会变成一列流水账。单个工具不再包组，避免多一层。
+		*/
+		function groupNodes(list) {
+			const out = [];
+			let run = [];
+			const flush = () => {
+				if (run.length === 0) return;
+				const only = run[0];
+				if (only === void 0) {
+					run = [];
+					return;
+				}
+				if (run.length >= 2) out.push({
+					kind: "process",
+					nodes: run
+				});
+				else out.push({
+					kind: "node",
+					node: only
+				});
+				run = [];
+			};
+			for (const node of list) {
+				if (node.kind === "tool-result" || node.kind === "command") {
+					run.push(node);
+					continue;
+				}
+				flush();
+				out.push({
+					kind: "node",
+					node
+				});
+			}
+			flush();
+			return out;
+		}
+		/** legacy 兜底整流的渲染（keyed order 缺失时才会走到）。 */
+		function renderLegacyRows(nodes, t, fileOpen) {
+			const items = groupNodes(nodes);
+			const rows = [];
+			items.forEach((entry, index) => {
+				const parts = [];
+				if (entry.kind === "process") {
+					parts.push((0, react$1.createElement)("div", {
+						key: "lead",
+						className: "dshpc-sv-notice"
+					}, `${t("sessionProcess")} · ${entry.nodes.length}`));
+					entry.nodes.forEach((node, i) => {
+						const rendered = renderLegacyNode(node, t, fileOpen);
+						if (rendered !== null) parts.push((0, react$1.createElement)("div", { key: `p${i}` }, rendered));
+					});
+				} else {
+					const inner = renderLegacyNode(entry.node, t, fileOpen);
+					if (inner !== null) parts.push(inner);
+					if (entry.node.kind === "assistant") {
+						const next = items[index + 1];
+						if (next === void 0 || !(next.kind === "node" && next.node.kind === "assistant")) parts.push((0, react$1.createElement)(MessageIconActionsMirror, {
+							key: "act",
+							text: assistantText(entry.node),
+							clock: "end",
+							t
+						}));
+					}
+				}
+				if (parts.length === 0) return;
+				rows.push((0, react$1.createElement)("div", {
+					key: `lg${index}`,
+					className: officialClass("ChatView", "flowItem") ?? ""
+				}, parts));
+			});
+			return rows;
+		}
+		/** 路径归一：去 './' 前缀（词表键与 resolve 两侧同规则）。 */
+		function normalizeFilePath(p) {
+			let s = p.trim();
+			while (s.startsWith("./")) s = s.slice(2);
+			return s;
+		}
+		/** 交付文件词表 / 每轮交付卡的数据读取（真源 = 官方 TurnLocation.data，见 changes.ts）。 */
+		function turnDeliverablesPresented(face) {
+			const presented = turnDeliverablesValue(face, "deliverables")?.presented;
+			return Array.isArray(presented) ? presented : [];
+		}
+		/** 与 turnDeliverablesPresented 对称：读 turn 级 deliverables.produced（工具产出的文件）。
+		* 官方 chatFileMentions = produced + presented；我们原先只收 presented，导致「只有 produced
+		* 没有 present/get 参数」的会话里行内文件链接词表为空 —— 这里补齐（字段容错 path/name）。 */
+		function turnDeliverablesProducedPaths(face) {
+			const produced = turnDeliverablesValue(face, "deliverables")?.produced;
+			if (!Array.isArray(produced)) return [];
+			const out = [];
+			for (const item of produced) {
+				const p = typeof item === "string" ? item : item !== null && typeof item === "object" ? item.path ?? item.name : void 0;
+				if (typeof p === "string" && p.trim() !== "") out.push(p);
+			}
+			return out;
+		}
+		/**
+		* 从 keyed 节点流收集真实文件词表（禁模拟：全部来自工具调用参数 / meta.diffs）：
+		* tool-call 节点 argsRaw 的 file_path/path 字段（read/grep/glob/write/edit…）与
+		* tool-fs 写入 meta.diffs[].path。会话级词表 = 官方 per-turn chatFileMentions 的简化偏差
+		* （决策 39：resolve 命中才渲链接，解析不出保持惰性 code，永不猜）。
+		*/
+		function collectFilePaths(order, store, turns) {
+			if (store === void 0) return [];
+			const out = /* @__PURE__ */ new Set();
+			if (turns !== null && turns !== void 0) {
+				const map = turns;
+				for (const [, face] of map) {
+					const presented = turnDeliverablesPresented(face);
+					for (const file of presented) {
+						const path = typeof file?.path === "string" ? file.path : void 0;
+						if (path !== void 0 && path.trim() !== "") out.add(normalizeFilePath(path));
+					}
+					for (const p of turnDeliverablesProducedPaths(face)) out.add(normalizeFilePath(p));
+				}
+			}
+			for (const key of order) {
+				const node = store.get(key);
+				if (node === void 0 || node.kind !== "tool-call") continue;
+				const root = node.data?.root;
+				if (root === void 0 || root === null || typeof root !== "object") continue;
+				if (isPresentRoot(root)) {
+					for (const file of presentFiles(root)) out.add(normalizeFilePath(file.path));
+					continue;
+				}
+				const call = root.kind === "tool-result" ? root.call : root;
+				if (call === null || typeof call !== "object") continue;
+				const raw = typeof call.argsRaw === "string" ? call.argsRaw.trim() : "";
+				if (raw.startsWith("{")) try {
+					const parsed = JSON.parse(raw);
+					for (const field of ["file_path", "path"]) {
+						const value = parsed[field];
+						if (typeof value === "string" && value.trim() !== "") out.add(normalizeFilePath(value));
+					}
+				} catch {}
+				const meta = root.meta;
+				if (typeof meta === "object" && meta !== null) {
+					const diffs = meta.diffs;
+					if (Array.isArray(diffs)) for (const diff of diffs) {
+						const p = diff?.path;
+						if (typeof p === "string" && p.trim() !== "") out.add(normalizeFilePath(p));
+					}
+				}
+			}
+			return [...out];
+		}
+		/**
+		* 每轮交付文件（官方 DeliverablesTail 同源数据）：读会话 turn 级 `deliverables.presented`。
+		* 按 turn 归组、按路径去重（后者覆盖前者，与官方 presentedForClosing 的 map 语义一致）。
+		* 纯客户端推导，零额外请求。
+		*/
+		function collectPresentedByTurn(turns) {
+			const out = /* @__PURE__ */ new Map();
+			if (turns === null || turns === void 0) return out;
+			const map = turns;
+			for (const [key, face] of map) {
+				const turn = typeof key === "number" ? key : Number(key);
+				if (!Number.isInteger(turn) || turn < 1) continue;
+				const presented = turnDeliverablesPresented(face);
+				if (presented.length === 0) continue;
+				const files = [];
+				for (const file of presented) {
+					const path = typeof file?.path === "string" ? file.path : void 0;
+					if (path === void 0 || path.trim() === "") continue;
+					const description = typeof file?.description === "string" && file.description.trim() !== "" ? file.description : void 0;
+					files.push(description === void 0 ? { path } : {
+						path,
+						description
+					});
+				}
+				if (files.length > 0) out.set(turn, files);
+			}
+			return out;
+		}
+		/** 诊断：行内 code 命中真文件时记一行（去重 + 上限），确认 fileMentions 链路活着。 */
+		const mentionLog = /* @__PURE__ */ new Set();
+		function logMentionHit(value, hit) {
+			const key = `${value}\u0000${hit}`;
+			if (mentionLog.has(key) || mentionLog.size >= 40) return;
+			mentionLog.add(key);
+			console.log("[preview] mention hit:", value, `→ ${hit}`);
+		}
+		/**
+		* 从候选里挑一条真路径：同一个文件在词表里常有**多种写法**（工具参数是相对式
+		* `2026Q4/1023/x.txt`，fs 改动事件是绝对式 `/workspace/Temp/2026Q4/1023/x.txt`）。
+		* 判定 = 候选之间是否互为「尾段」（`longest.endsWith('/' + other)`）⇒ 是同一文件的两种写法，
+		* 取**最长那条**（工作区根在 Temp，拿相对式去解析会落错根 ⇒ 必须给最完整的，否则预览报「文件不存在」）；
+		* 不是同一文件且不止一条 ⇒ 不可判定，返回 undefined（永不猜）。
+		*/
+		function pickPath(candidates) {
+			if (candidates === void 0 || candidates.length === 0) return void 0;
+			let longest = candidates[0];
+			for (const p of candidates) if (p.length > longest.length) longest = p;
+			return candidates.every((p) => p === longest || longest.endsWith(`/${p}`)) ? longest : candidates.length === 1 ? longest : void 0;
+		}
+		/**
+		* 构建 fileMentions：按「路径尾段」匹配（词表里是绝对路径、markdown 里写的是工作区相对路径时，
+		* 靠尾段对齐）；同一文件的多种写法取最长那条（见 pickPath）；不可判定 ⇒ undefined
+		* ⇒ MarkdownText 保持惰性 code，永不猜。
+		*/
+		function makeFileMentions(paths, open) {
+			const bySuffix = /* @__PURE__ */ new Map();
+			for (const p of paths) {
+				const norm = p.replace(/\\/g, "/");
+				const parts = norm.split("/");
+				for (let at = 0; at < parts.length; at++) {
+					const key = parts.slice(at).join("/");
+					const bucket = bySuffix.get(key);
+					if (bucket === void 0) bySuffix.set(key, [norm]);
+					else if (!bucket.includes(norm)) bucket.push(norm);
+				}
+			}
+			return { resolve(value) {
+				const norm = normalizeFilePath(value).replace(/\\/g, "/");
+				const hit = pickPath(bySuffix.get(norm));
+				if (hit === void 0) return void 0;
+				logMentionHit(value, hit);
+				return {
+					label: value,
+					title: hit,
+					open: () => {
+						open(hit);
+					}
+				};
+			} };
+		}
+		/**
+		* 面板内只读会话弹窗：只读、不可在框内续聊（底层 keyed 数组是只读快照，官方无写面）。
+		* 续聊正道 = 头部「继续对话（开分支）」/ 消息行分支 icon（fork → openSession），
+		* 以及底部暂存输入框（打字 → 确定 → onContinue 带话开分支并起轮次）。
+		*/
+		function SessionViewModal(props) {
+			ensureComponentStyles("session", SESSION_CSS);
+			const tt = props.t ?? t$2;
+			const { heading, sessionId, view, onClose, archived, forkSession, openHostSession, onContinue, onOpenFile } = props;
+			const subscribe = (0, react$1.useMemo)(() => (onChange) => view.target.subscribe(onChange), [view]);
+			const getSnapshot = (0, react$1.useMemo)(() => () => view.target.getSnapshot(), [view]);
+			const chat = (0, react$1.useSyncExternalStore)(subscribe, getSnapshot);
+			const sessionSub = (0, react$1.useMemo)(() => (onChange) => view.session.subscribe(onChange), [view]);
+			const sessionGet = (0, react$1.useMemo)(() => () => view.session.getSnapshot(), [view]);
+			const sessionSnap = (0, react$1.useSyncExternalStore)(sessionSub, sessionGet);
+			const [openTurns, setOpenTurns] = (0, react$1.useState)(() => /* @__PURE__ */ new Map());
+			const onSetOpen = (0, react$1.useCallback)((turn, answerStep, open) => {
+				setOpenTurns((prev) => {
+					const next = new Map(prev);
+					if (open) next.set(turn, answerStep);
+					else next.delete(turn);
+					return next;
+				});
+			}, []);
+			const isArchived = archived === true;
+			const showContinue = isArchived ? forkSession !== void 0 && openHostSession !== void 0 : openHostSession !== void 0;
+			const [forkTarget, setForkTarget] = (0, react$1.useState)(null);
+			const [forking, setForking] = (0, react$1.useState)(false);
+			const [forkErr, setForkErr] = (0, react$1.useState)(null);
+			const aliveRef = (0, react$1.useRef)(true);
+			(0, react$1.useEffect)(() => () => {
+				aliveRef.current = false;
+			}, []);
+			const flowRef = (0, react$1.useRef)(null);
+			(0, react$1.useEffect)(() => {
+				const flow = flowRef.current;
+				const scroller = flow === null ? null : flow.closest(".dshpc-modal__body");
+				if (scroller === null) return;
+				let following = true;
+				let lastHeight = 0;
+				let lastTop = scroller.scrollTop;
+				const nearBottom = () => scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 24;
+				const onScroll = () => {
+					const top = scroller.scrollTop;
+					if (top < lastTop - 1) following = false;
+					else if (nearBottom()) following = true;
+					lastTop = top;
+				};
+				scroller.addEventListener("scroll", onScroll, { passive: true });
+				const observer = new ResizeObserver(() => {
+					const height = flow === null ? 0 : flow.scrollHeight;
+					if (height === lastHeight) return;
+					const firstPaint = lastHeight === 0;
+					lastHeight = height;
+					if (!following) return;
+					scroller.scrollTo({
+						top: scroller.scrollHeight,
+						behavior: firstPaint ? "auto" : "smooth"
+					});
+				});
+				if (flow !== null) observer.observe(flow);
+				return () => {
+					observer.disconnect();
+					scroller.removeEventListener("scroll", onScroll);
+				};
+			}, []);
+			const onForkAccept = (0, react$1.useCallback)(() => {
+				if (forking || forkSession === void 0 || openHostSession === void 0) return;
+				setForking(true);
+				setForkErr(null);
+				(async () => {
+					try {
+						const child = await forkSession(sessionId, forkTarget?.atSeq);
+						if (!aliveRef.current) return;
+						onClose();
+						openHostSession(child);
+					} catch (error) {
+						if (!aliveRef.current) return;
+						setForkErr(error instanceof Error ? error.message : String(error));
+					} finally {
+						if (aliveRef.current) setForking(false);
+					}
+				})();
+			}, [
+				forking,
+				forkSession,
+				openHostSession,
+				sessionId,
+				forkTarget,
+				onClose
+			]);
+			const onBranchAt = (0, react$1.useCallback)((seq) => {
+				setForkErr(null);
+				setForkTarget({ atSeq: seq });
+			}, []);
+			const [draft, setDraft] = (0, react$1.useState)("");
+			const [sending, setSending] = (0, react$1.useState)(false);
+			const [sendErr, setSendErr] = (0, react$1.useState)(null);
+			const onSend = (0, react$1.useCallback)(() => {
+				const message = draft.trim();
+				if (sending || message === "" || onContinue === void 0) return;
+				setSending(true);
+				setSendErr(null);
+				(async () => {
+					try {
+						await onContinue(message);
+						if (!aliveRef.current) return;
+						setDraft("");
+					} catch (error) {
+						if (!aliveRef.current) return;
+						setSendErr(error instanceof Error ? error.message : String(error));
+					} finally {
+						if (aliveRef.current) setSending(false);
+					}
+				})();
+			}, [
+				draft,
+				sending,
+				onContinue
+			]);
+			const openFile = (0, react$1.useCallback)((path) => {
+				onOpenFile?.(path, sessionId);
+			}, [onOpenFile, sessionId]);
+			const order = chat?.order ?? EMPTY_ORDER;
+			const store = chat?.nodes;
+			const keyed = order.length > 0 && store !== void 0;
+			const turns = chat?.timeline?.turns;
+			const fileOpen = (0, react$1.useMemo)(() => {
+				if (onOpenFile === void 0) return void 0;
+				return {
+					open: openFile,
+					mentions: makeFileMentions(collectFilePaths(order, store, turns), openFile)
+				};
+			}, [
+				onOpenFile,
+				openFile,
+				order,
+				store,
+				turns
+			]);
+			/**
+			* 官方 markdown **链接**的打开出口（`[名](<路径>)` ⇒ 官方 MarkdownFileLink）。
+			* 与 `fileMentions`（管行内 code）是两条独立的路：官方只有 `openFile` 就位才把链接渲成
+			* `fileMention fileLink` 按钮（lib/index.js:11819），否则退回纯文本。
+			* markdown 里常写工作区相对路径（如 `2026Q4/1023/x.txt`），词表里是 `/workspace/…` 前缀的真路径，
+			* 故先用同一个词表归一到真路径再交给调用方；词表里没有就原样给（不猜）。
+			*/
+			const openDelegatedFile = (0, react$1.useMemo)(() => {
+				if (fileOpen === void 0) return () => {};
+				return (path) => {
+					const hit = fileOpen.mentions.resolve(path);
+					if (hit === void 0) {
+						fileOpen.open(path);
+						return;
+					}
+					hit.open();
+				};
+			}, [fileOpen]);
+			const deliveredByTurn = (0, react$1.useMemo)(() => collectPresentedByTurn(turns), [turns]);
+			const deliverFiles = (0, react$1.useMemo)(() => {
+				const byPath = /* @__PURE__ */ new Map();
+				const add = (file) => {
+					const key = file.path.trim();
+					if (key === "" || byPath.has(key)) return;
+					byPath.set(key, file);
+				};
+				for (const files of deliveredByTurn.values()) for (const file of files) add(file);
+				return [...byPath.values()];
+			}, [deliveredByTurn]);
+			const lastTailTurn = (0, react$1.useMemo)(() => {
+				if (!keyed || store === void 0) return void 0;
+				for (let i = order.length - 1; i >= 0; i--) {
+					const key = order[i];
+					if (key === void 0) continue;
+					const node = store.get(key);
+					if (node?.kind !== "turn-tail") continue;
+					const turn = node.data?.turn ?? turnLocationOf(node)?.turn;
+					if (typeof turn === "number") return turn;
+				}
+			}, [
+				keyed,
+				order,
+				store
+			]);
+			const lastTailChangesSeq = (0, react$1.useMemo)(() => {
+				if (turns === null || turns === void 0) return void 0;
+				const map = turns;
+				let best = null;
+				let bestTurn = -Infinity;
+				for (const [key, face] of map) {
+					const seq = turnDeliverablesChangesSeq(face);
+					if (seq === null) continue;
+					const t = typeof key === "number" ? key : Number(key);
+					if (!Number.isFinite(t) || t <= bestTurn) continue;
+					bestTurn = t;
+					best = seq;
+				}
+				return best ?? void 0;
+			}, [turns]);
+			const diagChatRef = (0, react$1.useRef)(void 0);
+			(0, react$1.useEffect)(() => {
+				if (diagChatRef.current === chat) return;
+				diagChatRef.current = chat;
+				const turnsMap = turns;
+				const face = turnsMap === void 0 ? void 0 : turnsMap.get(lastTailTurn) ?? turnsMap.get(String(lastTailTurn));
+				const deliverables = face === void 0 ? void 0 : turnDeliverablesValue(face, "deliverables");
+				const mentionPaths = fileOpen === void 0 ? void 0 : collectFilePaths(order, store, turns);
+				const turnsDetail = turnsMap === void 0 ? [] : [...turnsMap.entries()].map(([k, f]) => {
+					try {
+						const dv = f === void 0 ? void 0 : turnDeliverablesValue(f, "deliverables");
+						const changes = dv === void 0 ? void 0 : dv.changes;
+						const produced = dv === void 0 ? void 0 : dv.produced;
+						const presented = dv === void 0 ? void 0 : dv.presented;
+						return {
+							turn: k,
+							deliverKeys: dv === void 0 ? "none" : typeof dv === "object" && !Array.isArray(dv) ? Object.keys(dv) : Array.isArray(dv) ? "array" : "non-object",
+							changesSeq: changes && typeof changes === "object" && "seq" in changes ? changes.seq : void 0,
+							producedLen: Array.isArray(produced) ? produced.length : void 0,
+							presentedLen: Array.isArray(presented) ? presented.length : void 0
+						};
+					} catch {
+						return {
+							turn: k,
+							error: true
+						};
+					}
+				});
+				console.log("[preview] diag", {
+					hasChat: chat !== void 0,
+					orderLen: order.length,
+					turns: turnsMap === void 0 ? "undefined" : `Map(${turnsMap.size})`,
+					turnKeySample: turnsMap === void 0 ? [] : [...turnsMap.keys()].slice(0, 6),
+					lastTailTurn,
+					lastTailChangesSeq,
+					deliverablesKeys: deliverables === void 0 ? "none" : Object.keys(deliverables),
+					deliverFiles: deliverFiles.length,
+					onOpenFile: onOpenFile !== void 0,
+					mentionCount: mentionPaths === void 0 ? "no-fileOpen" : mentionPaths.length,
+					mentionSample: mentionPaths === void 0 ? [] : mentionPaths.slice(0, 6)
+				});
+				console.log("[preview] turnsDetail", turnsDetail);
+			}, [
+				chat,
+				order,
+				turns,
+				lastTailTurn,
+				lastTailChangesSeq,
+				deliverFiles,
+				onOpenFile,
+				fileOpen,
+				store
+			]);
+			const renderNode = (0, react$1.useCallback)((node, turnProcess, groupPart) => renderKeyedNode(node, turnProcess, tt, onBranchAt, fileOpen, groupPart, deliverFiles, lastTailTurn, lastTailChangesSeq, sessionId, props.onOpenReview), [
+				tt,
+				onBranchAt,
+				fileOpen,
+				deliverFiles,
+				lastTailTurn,
+				lastTailChangesSeq,
+				sessionId,
+				props.onOpenReview
+			]);
+			const isTurnClosed = (0, react$1.useCallback)((turn) => (turns?.get(turn) ?? turns?.get(String(turn)))?.status !== "open", [turns]);
+			const groupedView = (0, react$1.useMemo)(() => keyed ? buildProcessGroups(order, (key) => store?.get(key), isTurnClosed) : void 0, [
+				keyed,
+				order,
+				store,
+				isTurnClosed
+			]);
+			const rendered = (keyed ? ChatNodeListMirror({
+				order,
+				store,
+				entries: groupedView?.entries,
+				groups: groupedView?.groups,
+				turns,
+				openState: openTurns,
+				onSetOpen,
+				foldCompleted: true,
+				renderNode,
+				t: tt
+			}) : renderLegacyRows(chat?.legacy?.nodes ?? [], tt, fileOpen)).filter((row) => row !== null && row !== void 0);
+			const officialCount = officialModuleCount();
+			if (!officialWarned) {
+				officialWarned = true;
+				console.info(`[dsh-plugin-core:session] 官方 ui-chat 模块数=${officialCount}；类名样例 frame=${officialClass("ChatView", "frame")} flowItem=${officialClass("ChatView", "flowItem")} trigger=${officialClass("TurnTriggerNodeView", "root")} turnProcess=${officialClass("TurnProcessNodeView", "root")} tail=${officialClass("TurnTailNodeView", "root")}`);
+				if (officialCount === 0) console.warn("[dsh-plugin-core:session] 未发现官方 ui-chat 样式模块 ⇒ 弹窗观感退回自绘样式（功能不受影响）");
+			}
+			const openState = sessionSnap?.openState;
+			const showLoadOlder = sessionSnap?.hasMore !== false;
+			const body = rendered.length === 0 ? (0, react$1.createElement)(ChatHint, { text: openState === "error" ? tt("sessionFailed") : openState === "loading" || openState === "cold" ? tt("sessionLoading") : tt("sessionEmpty") }) : [showLoadOlder ? (0, react$1.createElement)(ChatOlderButton, {
+				key: "older",
+				label: tt("sessionLoadOlder"),
+				onClick: () => {
+					view.loadOlder();
+				}
+			}) : null, ...rendered];
+			const flowChildren = Array.isArray(body) ? body : [body];
+			return (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)(Modal, {
+				size: "lg",
+				title: heading ?? tt("sessionHeading"),
+				subtitle: (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", null, sessionId), officialCount === 0 ? (0, react$1.createElement)("span", { className: "dshpc-sv-probe" }, " ⚠ ", tt("sessionProbeStyle")) : null),
+				headerExtra: isArchived ? (0, react$1.createElement)("span", {
+					className: "dshpc-sv-archived",
+					title: tt("sessionArchived")
+				}, (0, react$1.createElement)(official_exports.IconArchiveOutlineRegular, { size: 12 }), tt("sessionArchived")) : void 0,
+				headerActions: showContinue ? (0, react$1.createElement)(Button$2, {
+					variant: "outline",
+					size: "sm",
+					disabled: forking,
+					title: tt("continueBranch"),
+					icon: isArchived ? (0, react$1.createElement)(official_exports.IconBranchOutlineRegular, { size: 14 }) : (0, react$1.createElement)(official_exports.IconNewChatOutlineRegular, { size: 14 }),
+					onClick: () => {
+						if (isArchived) {
+							setForkErr(null);
+							setForkTarget({});
+						} else if (openHostSession !== void 0) {
+							onClose();
+							openHostSession(sessionId);
+						}
+					}
+				}, tt("continueBranch")) : void 0,
+				onClose,
+				translate: tt,
+				footer: onContinue === void 0 ? void 0 : (0, react$1.createElement)("div", { className: "dshpc-sv-composer" }, (0, react$1.createElement)("textarea", {
+					value: draft,
+					placeholder: tt("composerPlaceholder"),
+					disabled: sending,
+					onChange: (event) => {
+						setDraft(event.target.value);
+					},
+					onKeyDown: (event) => {
+						if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+							event.preventDefault();
+							onSend();
+						}
+					}
+				}), (0, react$1.createElement)(Button$2, {
+					variant: "primary",
+					size: "sm",
+					disabled: sending || draft.trim() === "",
+					onClick: onSend
+				}, sending ? tt("forkWorking") : tt("confirm")), (0, react$1.createElement)("span", {
+					className: "dshpc-sv-composer-hint",
+					title: tt("composerHint")
+				}, "⌘/Ctrl + ↵"), sendErr !== null ? (0, react$1.createElement)("div", { className: "dshpc-sv-forkerr" }, sendErr) : null)
+			}, (0, react$1.createElement)("div", {
+				className: "dshpc-sv",
+				ref: flowRef
+			}, fileOpen === void 0 ? (0, react$1.createElement)(ChatViewFrame, { children: flowChildren }) : (0, react$1.createElement)(official_exports.MarkdownDelegateProvider, { openFile: openDelegatedFile }, (0, react$1.createElement)(ChatViewFrame, { children: flowChildren })))), forkTarget === null ? null : (0, react$1.createElement)(Modal, {
+				size: "sm",
+				onClose: () => {
+					if (!forking) setForkTarget(null);
+				},
+				title: tt("forkConfirmTitle"),
+				translate: tt,
+				footer: [(0, react$1.createElement)(Button$2, {
+					key: "cancel",
+					variant: "outline",
+					disabled: forking,
+					onClick: () => {
+						setForkTarget(null);
+					}
+				}, tt("cancel")), (0, react$1.createElement)(Button$2, {
+					key: "accept",
+					variant: "primary",
+					disabled: forking,
+					onClick: onForkAccept
+				}, forking ? tt("forkWorking") : tt("forkConfirmAccept"))]
+			}, (0, react$1.createElement)("p", { className: "dshpc-sv-forktext" }, tt("forkConfirmText")), forkErr !== null ? (0, react$1.createElement)("p", { className: "dshpc-sv-forkerr" }, tt("forkFailed", { error: forkErr })) : null));
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.26.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_6dafd9f02b620fdef0db87585428e9a8/node_modules/dsh-plugin-core/dist/session/open-session-view.js
+		/** 默认 retain source（写进宿主 retainedBy；调用方可覆盖成自己的插件名）。 */
+		const DEFAULT_RETAIN_SOURCE = "dsh-plugin-core";
+		/** 打开只读视图：物化 binding → 探测拉尾页 → 建 chat target。会话不可解析时返回 null。 */
+		function openSessionView(sessions, uiConversation, id, retainSource = DEFAULT_RETAIN_SOURCE) {
+			const log = (level, msg, extra) => {
+				if (level === "warn") console.warn(`[dsh-plugin-core:session] ${msg}`, extra ?? "");
+				else console.info(`[dsh-plugin-core:session] ${msg}`);
+			};
+			let retainedRef = null;
+			const releaseRef = () => {
+				try {
+					retainedRef?.release();
+				} catch (err) {
+					log("warn", `sessions.retain 引用释放失败（${id}）`, err);
+				}
+				retainedRef = null;
+			};
+			let binding;
+			try {
+				const S0 = sessions;
+				const retainFn = S0.retain;
+				if (typeof retainFn === "function") try {
+					retainedRef = retainFn.call(S0, id, { source: retainSource });
+					log("info", `sessions.retain(${id}, { source: '${retainSource}' }) 成功：scope 已物化`);
+				} catch (err) {
+					log("warn", `sessions.retain(${id}) 抛错（未知会话？）`, err);
+				}
+				else log("warn", `sessions 无 retain 方法；归档 / 久未打开的会话将不可读。自身键=[${Object.keys(S0).join(",")}]`);
+				const found = sessions.binding(id);
+				if (found === void 0 || found === null) {
+					const S0d = sessions;
+					log("warn", `sessions.binding(${id}) 为空（会话未就位，retain 也未物化）。sessions 方法全清单=[${(() => {
+						const out = /* @__PURE__ */ new Set();
+						let cur = S0d;
+						while (cur && (typeof cur === "object" || typeof cur === "function")) {
+							for (const k of Object.getOwnPropertyNames(cur)) if (typeof cur[k] === "function" && k !== "constructor") out.add(k);
+							cur = Object.getPrototypeOf(cur);
+						}
+						return [...out];
+					})().join(",")}]；自身键=[${Object.keys(S0d).join(",")}]`);
+					releaseRef();
+					return null;
+				}
+				binding = found;
+			} catch (err) {
+				log("warn", `openSessionView 返回 null：sessions.binding(${id}) 抛错`, err);
+				releaseRef();
+				return null;
+			}
+			const session = binding.session;
+			try {
+				const opened = session.open?.();
+				if (opened !== void 0 && typeof opened.catch === "function") opened.catch((err) => log("warn", `session.open(${id}) 失败（仅影响历史加载，不阻断弹窗）`, err));
+			} catch (err) {
+				log("warn", `session.open(${id}) 抛错`, err);
+			}
+			let conversation;
+			try {
+				conversation = uiConversation.binding(binding);
+			} catch (err) {
+				log("warn", "openSessionView 返回 null：uiConversation.binding 抛错（binding 已取得，断点在 uiConversation 装配）", err);
+				return null;
+			}
+			let target;
+			try {
+				target = conversation.target("chat");
+			} catch (err) {
+				log("warn", "openSessionView 返回 null：conversation.target('chat') 抛错", err);
+				return null;
+			}
+			log("info", `openSessionView 成功建立 target（${id}）；首屏 nodes 待订阅回填`);
+			return {
+				target,
+				session,
+				dispose: releaseRef,
+				loadOlder() {
+					try {
+						const page = session.loadOlder?.();
+						if (page !== void 0 && typeof page.catch === "function") page.catch((err) => log("warn", `session.loadOlder(${id}) 失败`, err));
+					} catch (err) {
+						log("warn", `session.loadOlder(${id}) 抛错`, err);
+					}
+				}
+			};
+		}
+		//#endregion
+		//#region src/client/close-session.ts
+		/**
+		* 「完成 → 由 Agent 结案」：全程走宿主**官方客户端会话面**，不建自家 HTTP 路由、不轮询。
+		*
+		* 官方能力（`@deepseek-ai/dsh-api-session-controller@0.2.0-rc.1`，与本机宿主同版本线）：
+		*  · `ctx.sessions.create({ cwd })`              —— 建会话，归组由宿主做（`contract/sessions.d.ts:88-93`）；
+		*  · `ctx.sessions.retain(id, { source })`       —— 拿会话句柄（`:52`）；
+		*  · `face.rename(title)` / `face.prompt(...)`   —— 命名 + 注入提示词（`contract/session.d.ts:82-117`）；
+		*  · `face.subscribe` + `snapshot.running`       —— 「这一轮跑完没」由宿主推流（`:156`）；
+		*  · `snapshot.lastAgentError`                   —— 跑挂了的原因（`contract/snapshot.d.ts:75`）。
+		*
+		* 判据必须「先见到 true 再变 false」：刚 create 出来 `running` 就是 false，
+		* 直接看 false 会立刻误报结案。
+		*
+		* 注意：**成功与否以台账为准**，本模块只负责回答「跑完没 / 为什么挂」，不解析模型自述。
+		*/
+		let service = null;
+		let conversation = null;
+		/** 由入口在 `sessions` 就位时注册（服务缺席 ⇒ 结案只能走手动分支）。 */
+		function setSessions(next) {
+			service = next;
+		}
+		/** 由入口在 `uiConversation` 就位时注册（缺席 ⇒ 没有会话视图，只能跳官方会话页）。 */
+		function setUiConversation(next) {
+			conversation = next;
+		}
+		/** 建只读会话视图；两个服务缺一个、或会话解析不出来 ⇒ null。 */
+		function openCloseSessionView(sessionId) {
+			if (service === null || conversation === null) return null;
+			return openSessionView(service, conversation, sessionId, "dsh-task-ledger");
+		}
+		/** 宿主是否提供了会话服务（界面据此决定「由 Agent 结案」能不能勾）。 */
+		function hasSessions() {
+			return service !== null;
+		}
+		/** 远端调用返回 `{ ok: false, ... }` 时当失败处理（业务错误不走 throw）。 */
+		function remoteFailure(result) {
+			if (result === null || typeof result !== "object") return null;
+			const record = result;
+			if (record.ok !== false) return null;
+			return /* @__PURE__ */ new Error(`远端拒绝：${JSON.stringify(record.error ?? "unknown")}`);
+		}
+		/**
+		* 起一个「结案会话」并注入提示词。
+		*
+		* @returns 会话 id（`null` = 宿主没提供会话服务，调用方应改走手动分支）；
+		*   起跑阶段的失败走 `onFailed`，此时返回值可能是已建好的 id（供「去会话」用）。
+		*/
+		async function startCloseSession(input) {
+			const svc = service;
+			if (svc === null) return null;
+			let sessionId;
+			try {
+				sessionId = await svc.create(input.workspaceId === void 0 ? { cwd: input.cwd } : { workspaceId: input.workspaceId });
+			} catch (error) {
+				input.onFailed(error instanceof Error ? error : new Error(String(error)), null);
+				return null;
+			}
+			const ref = svc.retain(sessionId, { source: "task-ledger" });
+			let unsubscribe = () => {};
+			try {
+				const { session } = await ref.ready;
+				await session.rename(input.title);
+				let seenRunning = false;
+				let done = false;
+				const settle = () => {
+					if (done) return;
+					const snapshot = session.getSnapshot();
+					if (snapshot.running) {
+						seenRunning = true;
+						return;
+					}
+					if (!seenRunning) return;
+					done = true;
+					unsubscribe();
+					ref.release();
+					input.onSettled({
+						sessionId,
+						lastAgentError: snapshot.lastAgentError
+					});
+				};
+				unsubscribe = session.subscribe(settle);
+				const rejected = remoteFailure(await session.prompt([{
+					type: "text",
+					text: input.prompt
+				}], "queue"));
+				if (rejected !== null) throw rejected;
+				return sessionId;
+			} catch (error) {
+				unsubscribe();
+				ref.release();
+				input.onFailed(error instanceof Error ? error : new Error(String(error)), sessionId);
+				return sessionId;
+			}
+		}
+		//#endregion
+		//#region src/client/nav.ts
+		/**
+		* 会话导航 / 归档的**唯一出口**（`uiWorkspace` 服务）。
+		*
+		* 「继续」建完会话跳到那个会话：官方导航是 `uiWorkspace.openSession(id)`
+		* （它自己 `retain('mainView')` + 切选择，插件**不得**自己 retain）。
+		*
+		* 「完成」结案成功后把会话归档（用户 2026-11-03：不归档会攒一堆垃圾会话）：
+		* 官方是 `uiWorkspace.archiveSession(id, { stopActivity? })`，不自己动会话列表。
+		*
+		* 服务由入口（index.ts）在就位时注册进来；取不到就退化成空操作 —— 会话本身已经建好，
+		* 用户照样能在侧栏找到，不该因为跳不过去 / 归档不了而报错。
+		*/
+		let opener = null;
+		let archiver = null;
+		/** 由入口在 `uiWorkspace` 就位时调用（只注册一次）。 */
+		function setSessionOpener(next) {
+			opener = next;
+		}
+		/** 由入口在 `uiWorkspace` 就位时调用（只注册一次）。 */
+		function setSessionArchiver(next) {
+			archiver = next;
+		}
+		/** @returns 是否真的跳了（false = 宿主没这个服务，只是少一步跳转，不算失败）。 */
+		function openSession(sessionId) {
+			if (opener === null) return false;
+			opener(sessionId);
+			return true;
+		}
+		/** @returns 是否真的归档了（false = 宿主没这个服务，会话会留在侧栏，不算失败）。 */
+		async function archiveSession(sessionId) {
+			if (archiver === null) return false;
+			await archiver(sessionId);
+			return true;
 		}
 		//#endregion
 		//#region src/client/rows.ts
@@ -56541,7 +60303,7 @@ body[data-ds-dark-theme]{
 		*  `loading` = 核心自带的前置小圈 + 自动禁用（转圈动画只此一份，不自绘）。
 		*  宽度三件（width/minWidth/maxWidth）核心已支持：给 maxWidth + 纯文字 ⇒ 核心自动省略号 +
 		*  hover 跑马灯，本层原样透传，别再自己写截断。 */
-		function Button$1(props) {
+		function Button(props) {
 			return (0, react$1.createElement)(Button$2, {
 				variant: props.variant,
 				size: props.size ?? "md",
@@ -57237,7 +60999,7 @@ body[data-ds-dark-theme]{
 		/** 记录 → 各列内容。第一列：标题 + 标签（创建徽已挪到「创建人」列，2026-10-31 用户定）。 */
 		function cellsOf(record, opts) {
 			const stop = (event) => event.stopPropagation();
-			const who = opts.solo || record.ownerName === "" ? record.ownerName : (0, react$1.createElement)("span", { onClick: stop }, (0, react$1.createElement)(Button$1, {
+			const who = opts.solo || record.ownerName === "" ? record.ownerName : (0, react$1.createElement)("span", { onClick: stop }, (0, react$1.createElement)(Button, {
 				variant: "link",
 				size: "sm",
 				maxWidth: 180,
@@ -57737,3488 +61499,6 @@ body[data-ds-dark-theme]{
 			}
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/official-classes.js
-		/** 官方注入 style 标签的 data-plugin-css 包前缀（chat 主视图 + ui-tool 工具卡 + ui-deliverables）。 */
-		const CSS_PKG_PREFIXES = [
-			"@deepseek-ai/dsh-client-ui-chat/",
-			"@deepseek-ai/dsh-client-ui-tool/",
-			"@deepseek-ai/dsh-client-ui-deliverables/",
-			"@deepseek-ai/dsh-client-ui-sidebar-documentpreview/"
-		];
-		/**
-		* 解析一段官方 CSS module 文本，抽出 {语义名 → 真实类名}。
-		* 纯函数、无 DOM 依赖（冒烟可直接对夹具断言）。
-		* @param css - style 标签的 textContent。
-		* @returns 语义名到真实类名的映射；解析不出哈希前缀时为空表。
-		*/
-		function parseOfficialCss(css) {
-			const out = /* @__PURE__ */ new Map();
-			const tokens = [];
-			const tokenRe = /\.([A-Za-z0-9_-]+)/g;
-			let m = tokenRe.exec(css);
-			while (m !== null) {
-				const token = m[1];
-				if (token !== void 0) tokens.push(token);
-				m = tokenRe.exec(css);
-			}
-			const counts = /* @__PURE__ */ new Map();
-			for (const token of tokens) {
-				const at = token.lastIndexOf("_");
-				if (at <= 0 || at === token.length - 1) continue;
-				const prefix = token.slice(0, at);
-				counts.set(prefix, (counts.get(prefix) ?? 0) + 1);
-			}
-			let prefix = "";
-			let best = 0;
-			counts.forEach((count, key) => {
-				if (count > best) {
-					best = count;
-					prefix = key;
-				}
-			});
-			if (prefix === "") return out;
-			for (const token of tokens) {
-				if (!token.startsWith(prefix + "_")) continue;
-				const semantic = token.slice(prefix.length + 1);
-				if (semantic === "" || semantic.includes("_")) continue;
-				if (!out.has(semantic)) out.set(semantic, token);
-			}
-			return out;
-		}
-		/** 已发现的官方模块表（只在真的发现到模块时才缓存，见 discoverOfficialClasses 内注释）。 */
-		let discovered = null;
-		/**
-		* 扫描 document 里官方 chat 包注入的 style 标签，按模块缓存解析结果。
-		* 无 document（SSR / 冒烟）时返回空表。
-		*/
-		function discoverOfficialClasses() {
-			if (discovered !== null) return discovered;
-			const result = /* @__PURE__ */ new Map();
-			if (typeof document !== "undefined") {
-				const tags = document.querySelectorAll("style[data-plugin-css]");
-				for (let i = 0; i < tags.length; i++) {
-					const tag = tags[i];
-					const id = tag.dataset.pluginCss ?? "";
-					const prefix = CSS_PKG_PREFIXES.find((candidate) => id.startsWith(candidate));
-					if (prefix === void 0) continue;
-					const module = id.slice(prefix.length).replace(/\.module\.css$/, "");
-					const parsed = parseOfficialCss(tag.textContent ?? "");
-					if (parsed.size === 0 && (tag.textContent ?? "").includes(".")) console.warn(`[dsh-plugin-core:session] 官方模块 ${module} 类名解析为空（格式可能变了）`);
-					result.set(module, parsed);
-				}
-			}
-			if (result.size > 0) discovered = result;
-			return result;
-		}
-		/** 已发现的官方模块数（0 = 官方样式未注入，调用方应走自绘兜底）。 */
-		function officialModuleCount() {
-			return discoverOfficialClasses().size;
-		}
-		/**
-		* 取一个官方类名；取不到返回 null（调用方回退自绘样式）。
-		* @param module - 模块名（如 `ChatView`）。
-		* @param semantic - 语义名（如 `frame`）。
-		*/
-		function officialClass(module, semantic) {
-			return discoverOfficialClasses().get(module)?.get(semantic) ?? null;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/ChatNodeSeat.js
-		/**
-		* 官方 TURN_PROCESS_INDEPENDENT_KINDS（lib/client.js:1525）：这些 kind 永远不进过程折叠区。
-		*/
-		const TURN_PROCESS_INDEPENDENT_KINDS = /* @__PURE__ */ new Set([
-			"system-prompt",
-			"user",
-			"steering",
-			"turn-trigger",
-			"turn-process",
-			"turn-error",
-			"turn-max-tokens",
-			"turn-tail"
-		]);
-		/**
-		* 读过程席位快照。宿主 API 形态变了也只降级成「不折叠」，不让整个弹窗白屏。
-		*/
-		function readPresentation(store, key) {
-			if (store === void 0) return void 0;
-			try {
-				const source = store.processSource;
-				if (typeof source !== "function") return void 0;
-				return source.call(store, key)?.getSnapshot();
-			} catch {
-				return;
-			}
-		}
-		/** 取节点所属 turn（官方 turnOf，ChatNodeSeat.tsx:1660）。 */
-		function turnOf(node) {
-			const location = node?.location;
-			return location?.kind === "turn" || location?.kind === "step" ? location.turn?.turn : void 0;
-		}
-		/** 官方 turnProcessAlwaysOpen（lib/client.js:1558）：live / 已停止 / 失败的 turn 不折叠。 */
-		function turnProcessAlwaysOpen(node) {
-			const location = node?.location;
-			if (location?.kind !== "turn" && location?.kind !== "step") return false;
-			const reason = location.turn?.end?.data?.reason?.kind;
-			return location.turn?.status === "open" || reason === "aborted" || reason === "error";
-		}
-		/** 一个 keyed 节点 → 一个 flowItem（官方 ChatNodeSeat 的 JSX 等价物）。 */
-		function ChatNodeSeatMirror(props) {
-			const { node, groupPart, store, openState, onSetOpen, foldCompleted, renderNode } = props;
-			const turn = turnOf(node);
-			const presentation = readPresentation(store, node.key);
-			const spec = presentation?.spec ?? void 0 ?? (node.kind === "turn-process" ? node.data : void 0);
-			const liveProcess = presentation !== void 0 && presentation.turnClosed !== true;
-			const interleavedInput = presentation?.hasInterleavedInput === true;
-			const alwaysOpen = liveProcess || interleavedInput || turnProcessAlwaysOpen(node);
-			const storedAnswerStep = turn === void 0 ? void 0 : openState.get(turn);
-			const processOpen = alwaysOpen || spec !== void 0 && storedAnswerStep === (spec.answerStep ?? 0);
-			const setOpen = (open) => {
-				if (spec !== void 0 && !alwaysOpen && turn !== void 0) onSetOpen(turn, spec.answerStep ?? 0, open);
-			};
-			const processWindowReady = spec !== void 0 && presentation !== void 0 && foldCompleted && presentation.turn === spec.turn && (presentation.turnStarted === true || presentation.turnClosed === true);
-			const dataStep = typeof node.data?.step === "number" ? node.data.step : void 0;
-			const processMember = processWindowReady && spec !== void 0 && !TURN_PROCESS_INDEPENDENT_KINDS.has(node.kind) && node.anchorSeq >= spec.processStartSeq && (liveProcess || spec.answerAnchorSeq === null || node.anchorSeq < spec.answerAnchorSeq || groupPart === "reasoning" && node.kind === "assistant-step" && dataStep === spec.answerStep);
-			const processAnswer = processWindowReady && spec !== void 0 && !liveProcess && groupPart !== "reasoning" && node.kind === "assistant-step" && dataStep === spec.answerStep;
-			const ownsDisclosure = node.kind === "turn-process" || processAnswer;
-			const foldable = processWindowReady && (liveProcess || processMember || ownsDisclosure);
-			const turnProcess = spec === void 0 ? void 0 : {
-				spec,
-				foldable,
-				hasContent: !interleavedInput && (presentation?.hasExternalProcess === true || spec.inlineReasoning),
-				open: processOpen,
-				alwaysOpen,
-				setOpen
-			};
-			const controllerInactive = node.kind === "turn-process" && foldCompleted && !foldable;
-			const compactAnswer = processAnswer && foldable && presentation?.compactAnswer === true && !processOpen;
-			const processHidden = controllerInactive || foldable && processMember && !processOpen;
-			const inner = renderNode(node, turnProcess, groupPart);
-			if (inner === null || inner === void 0) return null;
-			const flowKey = groupPart === void 0 || groupPart === "response" ? node.key : JSON.stringify([node.key, groupPart]);
-			return (0, react$1.createElement)("div", {
-				className: officialClass("ChatView", "flowItem") ?? "",
-				"data-chat-anchor-key": flowKey,
-				"data-chat-flow-key": flowKey,
-				"data-chat-paging-anchor": node.kind !== "turn-process" || void 0,
-				"data-chat-node-key": node.key,
-				"data-chat-group-part": groupPart,
-				"data-chat-flow-kind": node.kind,
-				"data-chat-turn": turn,
-				"data-turn-process-member": processMember || void 0,
-				"data-turn-process-hidden": processHidden || void 0,
-				"data-turn-process-answer": compactAnswer || void 0,
-				hidden: processHidden || void 0
-			}, inner);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/process-groups.js
-		/** 官方 INDEPENDENT（process-groups.js:10565；注意与 ChatNodeSeat 的清单不同）。 */
-		const INDEPENDENT = /* @__PURE__ */ new Set([
-			"user",
-			"steering",
-			"turn-trigger",
-			"model-retry",
-			"turn-error",
-			"turn-max-tokens",
-			"turn-tail"
-		]);
-		/** 节点所属 turn（官方 turnOf，process-groups.js:10574）。 */
-		function turnOfNode(node) {
-			const location = node.location;
-			return location?.kind === "turn" || location?.kind === "step" ? location.turn?.turn : void 0;
-		}
-		/** 官方 reasoning（10578）：assistant-step 带非空思考块。 */
-		function hasReasoning(node) {
-			if (node.kind !== "assistant-step" || !Array.isArray(node.data?.blocks)) return false;
-			return (node.data?.blocks).some((block) => block?.kind === "reasoning" && (block.text ?? "").trim() !== "");
-		}
-		/** 官方 reply（10581）：assistant-step 带回复内容（reasoning / tool-call 不算，空文本不算）。 */
-		function hasReply(node) {
-			if (node.kind !== "assistant-step" || !Array.isArray(node.data?.blocks)) return false;
-			return (node.data?.blocks).some((block) => {
-				if (block === null || typeof block !== "object") return false;
-				if (block.kind === "reasoning" || block.kind === "tool-call") return false;
-				if (block.kind === "text") return (block.text ?? "").trim() !== "";
-				return true;
-			});
-		}
-		/** 官方 activity（10426-10449）：工具名 → 活动类别。 */
-		function toolActivity(name) {
-			if (name === "read") return "read";
-			if (name === "read_image") return "readImage";
-			if (name === "grep" || name === "glob" || name.endsWith("_inspect")) return "search";
-			if (name === "write") return "write";
-			if (name === "edit" || name === "apply_patch") return "edit";
-			if ([
-				"bash",
-				"pwsh",
-				"exec_command",
-				"write_stdin"
-			].includes(name) || name.startsWith("terminal_")) return "commands";
-			if (name === "run_code") return "code";
-			if (name === "web_search") return "webSearch";
-			if (name === "web_fetch") return "webFetch";
-			if (name === "subagent" || name.startsWith("subagent_")) return "subagents";
-			if ([
-				"todo_write",
-				"create_goal",
-				"update_goal",
-				"get_goal"
-			].includes(name)) return "plan";
-			if (name === "ask_user_question" || name === "request_user_input") return "questions";
-			return "tools";
-		}
-		/** ToolCallBlock → 本次调用的名字面（running 半截在根上，settled 在 call 里）。 */
-		function toolCallFace(root) {
-			const callId = typeof root.callId === "string" ? root.callId : "";
-			if (root.kind === "tool-result") {
-				const name = typeof root.call?.name === "string" ? root.call.name : "";
-				return callId === "" || name === "" ? null : {
-					callId,
-					name
-				};
-			}
-			const name = typeof root.name === "string" ? root.name : "";
-			return callId === "" || name === "" ? null : {
-				callId,
-				name
-			};
-		}
-		/** 官方 processActivity（10527-10561）：按去重调用数排序的活动类别（含子调用递归）。 */
-		function processActivity(nodes) {
-			const counts = /* @__PURE__ */ new Map();
-			const seen = /* @__PURE__ */ new Set();
-			const visit = (tool) => {
-				const face = toolCallFace(tool);
-				if (face !== null && !seen.has(face.callId)) {
-					seen.add(face.callId);
-					const kind = toolActivity(face.name);
-					counts.set(kind, (counts.get(kind) ?? 0) + 1);
-				}
-				for (const child of tool.subCalls ?? []) visit(child);
-			};
-			for (const node of nodes) {
-				if (node.kind !== "tool-call") continue;
-				const root = node.data?.root;
-				if (root !== void 0 && root !== null) visit(root);
-			}
-			return [...counts].map(([kind, count]) => ({
-				kind,
-				count
-			})).sort((left, right) => right.count - left.count);
-		}
-		/**
-		* 官方 TurnGroups.rebuild 的移植：把 keyed 流切成「独立条目 + 过程分组」。
-		* @param order - 官方渲染顺序（node key 列表）。
-		* @param readNode - keyed 节点读取。
-		* @param isTurnClosed - turn 是否已闭合（官方 turns.get(turn).status === 'closed'）。
-		*/
-		function buildProcessGroups(order, readNode, isTurnClosed) {
-			const entries = [];
-			const groups = /* @__PURE__ */ new Map();
-			let pending = [];
-			let currentTurn;
-			const flush = (closed) => {
-				const first = pending[0];
-				if (first === void 0) return;
-				const turn = currentTurn;
-				const ended = closed || turn !== void 0 && isTurnClosed(turn);
-				const members = pending;
-				const nodes = members.map((member) => readNode(member.key)).filter((node) => node !== void 0);
-				const groupKey = JSON.stringify([
-					"process",
-					first.key,
-					first.groupPart ?? null
-				]);
-				groups.set(groupKey, {
-					key: groupKey,
-					members,
-					data: {
-						turn: turn ?? -1,
-						closed: ended,
-						summary: { counts: processActivity(nodes) }
-					}
-				});
-				entries.push({
-					kind: "group",
-					key: groupKey
-				});
-				pending = [];
-			};
-			for (const key of order) {
-				const node = readNode(key);
-				if (node === void 0) continue;
-				const turn = turnOfNode(node);
-				if (turn !== currentTurn) {
-					flush(true);
-					currentTurn = turn;
-				}
-				if (INDEPENDENT.has(node.kind)) {
-					flush(true);
-					entries.push({
-						kind: "node",
-						key
-					});
-				} else if (node.kind === "turn-process") entries.push({
-					kind: "node",
-					key
-				});
-				else if (node.kind === "assistant-step") {
-					if (hasReasoning(node)) pending.push({
-						key,
-						groupPart: "reasoning"
-					});
-					if (hasReply(node)) {
-						flush(true);
-						entries.push({
-							kind: "node",
-							key,
-							groupPart: "response"
-						});
-					}
-				} else pending.push({ key });
-			}
-			flush(currentTurn === void 0 ? true : isTurnClosed(currentTurn));
-			return {
-				entries,
-				groups
-			};
-		}
-		/** 官方 message.stepProcess.done.* 的键面（zh/en 文案见 utils/i18n 字典）。 */
-		const STEP_DONE_KEYS = {
-			thinking: "stepProcessDoneThinking",
-			read: "stepProcessDoneRead",
-			readImage: "stepProcessDoneReadImage",
-			write: "stepProcessDoneWrite",
-			search: "stepProcessDoneSearch",
-			edit: "stepProcessDoneEdit",
-			commands: "stepProcessDoneCommands",
-			code: "stepProcessDoneCode",
-			webSearch: "stepProcessDoneWebSearch",
-			webFetch: "stepProcessDoneWebFetch",
-			subagents: "stepProcessDoneSubagents",
-			plan: "stepProcessDonePlan",
-			questions: "stepProcessDoneQuestions",
-			tools: "stepProcessDoneTools"
-		};
-		/**
-		* 官方 processTitle（1820-1836）：closed 组标题 = 前 3 类活动拼接
-		* （2 类用「A并B」且去「已」前缀；≥3 类用「，」连接、超 3 类补「等」）。
-		*/
-		function processTitle(summary, t) {
-			const labels = summary.counts.slice(0, 3).map(({ kind }) => t(STEP_DONE_KEYS[kind]));
-			const first = labels[0];
-			if (first === void 0) return t("stepProcessDoneThinking");
-			const continuation = (label) => label.charAt(0).toLowerCase() + label.slice(1);
-			const second = labels[1];
-			if (second === void 0) return first;
-			if (labels.length === 2) {
-				const prefix = t("stepProcessSharedPrefix");
-				return t("stepProcessJoinTwo", {
-					first,
-					second: continuation(prefix !== "" && first.startsWith(prefix) && second.startsWith(prefix) ? second.slice(prefix.length) : second)
-				});
-			}
-			const title = [first, ...labels.slice(1).map(continuation)].join(t("stepProcessComma"));
-			return summary.counts.length > 3 ? t("stepProcessMore", { title }) : title;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/ChatGroupSeat.js
-		/** 官方 PROCESS_ICONS（lib/client.js:2187-2201）；工具行图标同源（edit/write=铅笔、generic=sparkle）。 */
-		const PROCESS_ICONS = {
-			thinking: official_exports.IconThinkOutlineRegular,
-			read: official_exports.IconBrowseOutlineRegular,
-			readImage: official_exports.IconBrowseOutlineRegular,
-			search: official_exports.IconSearchOutlineRegular,
-			edit: official_exports.IconEditOutlineRegular,
-			write: official_exports.IconEditOutlineRegular,
-			commands: official_exports.IconApiOutlineRegular,
-			code: official_exports.IconCodeOutlineRegular,
-			webSearch: official_exports.IconGlobeOutlineRegular,
-			webFetch: official_exports.IconBrowseOutlineRegular,
-			subagents: official_exports.IconAgentPresetOutlineRegular,
-			plan: official_exports.IconPlanOutlineRegular,
-			questions: official_exports.IconQuestionOutlineRegular,
-			tools: official_exports.IconSparkleRegular
-		};
-		/** 官方图标尺寸（14px，除 thinking/commands/webSearch/plan/questions 用默认）。 */
-		const SMALL_ICONS = /* @__PURE__ */ new Set([
-			"read",
-			"readImage",
-			"search",
-			"edit",
-			"write",
-			"code",
-			"webFetch",
-			"subagents",
-			"tools"
-		]);
-		/** 过程分组（二级收折）：汇总行 + 组内条目。 */
-		function ChatGroupSeatMirror(props) {
-			const { group, grouped, store, openState, onSetOpen, foldCompleted, renderNode, t } = props;
-			const [open, setOpen] = (0, react$1.useState)(false);
-			const first = group.members[0];
-			const firstNode = first === void 0 ? void 0 : store?.get(first.key);
-			const presentation = first === void 0 ? void 0 : readPresentation(store, first.key);
-			const spec = presentation?.spec ?? void 0;
-			const location = firstNode?.location;
-			const reason = location?.kind === "turn" || location?.kind === "step" ? location.turn?.end?.data?.reason?.kind : void 0;
-			const alwaysOpen = presentation?.turnClosed === false || presentation?.hasInterleavedInput === true || reason === "aborted" || reason === "error";
-			const storedAnswerStep = openState.get(group.data.turn);
-			const outerHidden = foldCompleted && presentation?.turnClosed === true && spec !== void 0 && !alwaysOpen && storedAnswerStep !== (spec.answerStep ?? 0);
-			(0, react$1.useEffect)(() => {
-				if (outerHidden) setOpen(false);
-			}, [outerHidden]);
-			const bodyRef = (0, react$1.useRef)(null);
-			const [edges, setEdges] = (0, react$1.useState)({
-				up: false,
-				down: false
-			});
-			const measure = (0, react$1.useCallback)(() => {
-				const el = bodyRef.current;
-				if (el === null) return;
-				setEdges({
-					up: el.scrollTop > 1,
-					down: el.scrollTop + el.clientHeight < el.scrollHeight - 1
-				});
-			}, []);
-			(0, react$1.useEffect)(() => {
-				if (grouped && open) measure();
-			}, [
-				grouped,
-				open,
-				measure
-			]);
-			if (first === void 0 || firstNode === void 0) return null;
-			const label = group.data.closed ? processTitle(group.data.summary, t) : t("stepProcessDoneThinking");
-			const activity = group.data.summary.counts[0]?.kind ?? "thinking";
-			const ActivityIcon = PROCESS_ICONS[activity] ?? official_exports.IconThinkOutlineRegular;
-			const bodyClass = [
-				officialClass("ChatGroupSeat", "body") ?? "",
-				grouped ? "" : officialClass("ChatGroupSeat", "expandedBody") ?? "",
-				grouped && edges.up ? officialClass("ChatGroupSeat", "fadeTop") ?? "" : "",
-				grouped && edges.down ? officialClass("ChatGroupSeat", "fadeBottom") ?? "" : ""
-			].filter((part) => part !== "").join(" ");
-			return (0, react$1.createElement)("div", {
-				className: officialClass("ChatGroupSeat", "root") ?? "",
-				"data-chat-group-key": group.key,
-				"data-chat-flow-key": group.key,
-				"data-chat-anchor-key": `group:${group.key}`,
-				"data-chat-turn": group.data.turn,
-				"data-step-process": true,
-				"data-group-expanded-mode": !grouped || void 0,
-				hidden: outerHidden || void 0
-			}, grouped ? (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("ChatGroupSeat", "title") ?? "",
-				"aria-expanded": open,
-				onClick: () => {
-					setOpen((value) => !value);
-				}
-			}, (0, react$1.createElement)("span", {
-				className: officialClass("ChatGroupSeat", "leading") ?? "",
-				"aria-hidden": true
-			}, (0, react$1.createElement)("span", {
-				className: officialClass("ChatGroupSeat", "activityIcon") ?? "",
-				"data-step-process-icon": true
-			}, (0, react$1.createElement)(ActivityIcon, SMALL_ICONS.has(activity) ? { size: 14 } : {})), open ? (0, react$1.createElement)(official_exports.IconChevronUpOutlineRegular, { className: officialClass("ChatGroupSeat", "chevron") ?? "" }) : (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, { className: officialClass("ChatGroupSeat", "chevron") ?? "" })), (0, react$1.createElement)("span", { className: officialClass("ChatGroupSeat", "label") ?? "" }, label)) : null, (0, react$1.createElement)("div", {
-				ref: bodyRef,
-				className: bodyClass,
-				"data-step-process-body": true,
-				"data-scroll-up": edges.up || void 0,
-				"data-scroll-down": edges.down || void 0,
-				onScroll: measure,
-				hidden: grouped && !open || void 0
-			}, (0, react$1.createElement)("div", {
-				className: officialClass("ChatGroupSeat", "content") ?? "",
-				"data-step-process-content": true,
-				"data-chat-flow": ""
-			}, group.members.map((member) => (0, react$1.createElement)(ChatNodeSeatMirror, {
-				key: JSON.stringify([member.key, member.groupPart ?? null]),
-				node: store?.get(member.key) ?? {
-					key: member.key,
-					kind: "",
-					anchorSeq: 0
-				},
-				groupPart: member.groupPart,
-				store,
-				openState,
-				onSetOpen,
-				foldCompleted,
-				renderNode
-			})))));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/session-css.generated.js
-		const SESSION_CSS = "/* 会话预览（SessionViewModal）自绘样式：只装本包自己的组件（暂存输入区 / fork / 探针等）\n   + 两个稳定钩子类（dshpc-sv-frame / dshpc-sv-scroll）。\n   已删：ChangedFiles 卡与 FileDiff 的全部自绘规则（2026-10-24）——官方 ChangedFiles /\n   FileDiff 模块类由 officialClass() 运行时发现并挂在元素上，本包不再有一行兜底。\n   ⚠️ 2026-10-23 起不再有官方类兜底：镜像官方组件的元素一律挂官方 CSS-module 类名\n   （officialClass() 运行时发现，取不到 = 空类、裸结构不白屏）——本包只跑 DSH 宿主、官方样式必在场，\n   自绘一一对应是死代码。要改官方观感走 token 覆盖 / 双类名钩子（见 ChatView.ts 头注），别在这加兜底。\n   类名固定 dshpc-sv-*；颜色一律走 --dshpc-* token（明暗自适应）。\n   外壳（遮罩 / 面板 / 头部 / 关闭钮）= 核心 Modal（size lg）。 */\n/* 会话区 = 普通纵向流：不设高度、不自己滚（滚动与内距归核心 Modal body，用户 2026-10-22 口径）。 */\n.dshpc-sv{display:flex;flex-direction:column;min-width:0;gap:10px}\n\n/* 官方样式未命中时的可见探针（挂在头部副标题行，不占正文）。 */\n.dshpc-sv-probe{font-size:var(--dshpc-font-xs);color:var(--dshpc-warning)}\n\n/* 头部归档标识（官方归档图标 + 「已归档」）。 */\n.dshpc-sv-archived{display:inline-flex;align-items:center;gap:4px;font-size:var(--dshpc-font-xs);font-weight:400;color:var(--dshpc-fg-3)}\n\n/* 内距与滚动全部让给核心 Modal body ⇒ 这里把官方 ChatView.frame / scroll 的内距、\n   overflow、高度一律归零（双类名 0,2,0 压过 CSS module，不靠注入顺序）。\n   ⚠️ 必须同时把 flex 收掉：官方 scroll 是 flex:1（basis=0），在**自动高**的容器里会把\n   会话区压成 0 高 —— 这正是「内容自管高度」的老毛病，别再放回来。 */\n.dshpc-sv-frame.dshpc-sv-frame{padding-top:0;padding-bottom:0;}\n\n.dshpc-sv-scroll.dshpc-sv-scroll{padding:0;overflow:visible;height:auto;max-height:none;flex:none;}\n\n/* 会话区保底：高度由内容决定（撑开由 Modal body 滚）。 */\n.dshpc-sv-chat{flex:none;min-height:0;}\n\n\n.dshpc-sv-assistant{align-self:stretch;font-size:var(--dshpc-font-lg);line-height:1.7;word-break:break-word;}\n\n.dshpc-sv-image{align-self:flex-start;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3);border:1px dashed var(--dshpc-border);border-radius:var(--dshpc-radius-sm);padding:4px 10px;}\n\n/* 工具卡根（SessionViewModal legacy 兜底渲染直接用；正常 keyed 路径一律挂官方 ToolRow 类）。 */\n.dshpc-sv-tool{flex-direction:column;display:flex;}\n\n.dshpc-sv-notice{align-self:center;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3);padding:2px 8px;}\n\n\n.dshpc-sv-forkerr{margin:0;font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);color:var(--dshpc-danger);word-break:break-word;}\n\n.dshpc-sv-forktext{margin:0;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-2);}\n\n/* ── 暂存输入区（期4：打字 → 确定 → fork 带话跳官方视图）── */\n.dshpc-sv-composer{flex:1;display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;}\n\n.dshpc-sv-composer textarea{flex:1;min-width:0;resize:none;font:inherit;font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);color:var(--dshpc-fg);background:var(--dshpc-surface-2);border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);padding:8px 12px;min-height:40px;max-height:120px;}\n\n.dshpc-sv-composer textarea:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-1px;}\n\n.dshpc-sv-composer-hint{flex:none;font-size:var(--dshpc-font-xs);color:var(--dshpc-fg-3);padding-bottom:10px;white-space:nowrap;}";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/ChatView.js
-		/** 会话区骨架：frame > root > scroll > column（类名一律取官方 ChatView.module.css，取不到 = 空类）。
-		*
-		*  `dshpc-sv-frame` / `dshpc-sv-scroll` = 本包**稳定钩子类**（不走 officialClass 发现，官方类命中时也照样挂）：
-		* 会话区**纵向间距的唯一真源**。官方 scroll 自带纵向 16px、官方 frame 的纵向值又不确定，
-		* 归一方案（移植自兄弟项目 2026-10-03 定尺）：**scroll 钩子把官方纵向 16px 归零，
-		* frame 钩子独自定 17/17**，两条钩子都用双类名提高特异性压过官方 CSS module（0,2,0 > 0,1,0），
-		* 不依赖注入顺序 ⇒ 命中 / 未命中两条路径纵向完全一致。
-		*/
-		function ChatViewFrame(props) {
-			ensureComponentStyles("session", SESSION_CSS);
-			return (0, react$1.createElement)("div", { className: `${officialClass("ChatView", "frame") ?? ""} dshpc-sv-frame dshpc-sv-chat` }, (0, react$1.createElement)("div", { className: officialClass("ChatView", "root") ?? "" }, (0, react$1.createElement)("div", { className: `${officialClass("ChatView", "scroll") ?? ""} dshpc-sv-scroll` }, (0, react$1.createElement)("div", {
-				className: officialClass("ChatView", "column") ?? "",
-				"data-chat-flow": ""
-			}, props.children))));
-		}
-		/** 官方 ChatNodeList：order → seat 列表（grouped 视图 = entries + groups 路径）。 */
-		function ChatNodeListMirror(props) {
-			const { order, store, entries, groups, turns, openState, onSetOpen, foldCompleted, renderNode, t } = props;
-			const rows = [];
-			const read = store === void 0 ? void 0 : store.get;
-			if (typeof read !== "function" || store === void 0) return rows;
-			const readSafe = (key) => {
-				try {
-					return read.call(store, key);
-				} catch {
-					return;
-				}
-			};
-			if (entries !== void 0 && groups !== void 0) {
-				const flatKeys = /* @__PURE__ */ new Set();
-				{
-					let bucket = [];
-					let bucketTurn;
-					const closeBucket = () => {
-						const last = bucket[bucket.length - 1];
-						if (last !== void 0) flatKeys.add(last);
-						bucket = [];
-					};
-					for (const entry of entries) {
-						if (entry.kind !== "group") continue;
-						const turn = groups.get(entry.key)?.data.turn ?? -1;
-						if (turn >= 1) {
-							if (bucketTurn !== void 0 && turn !== bucketTurn) closeBucket();
-							bucketTurn = turn;
-						}
-						bucket.push(entry.key);
-					}
-					closeBucket();
-				}
-				for (const entry of entries) if (entry.kind === "group") {
-					const group = groups.get(entry.key);
-					if (group === void 0) continue;
-					const latest = flatKeys.has(group.key);
-					rows.push((0, react$1.createElement)(ChatGroupSeatMirror, {
-						key: entry.key,
-						group,
-						grouped: turnStatus(turns, group.data.turn) !== "open" && !latest,
-						store,
-						openState,
-						onSetOpen,
-						foldCompleted,
-						renderNode,
-						t
-					}));
-				} else {
-					const node = readSafe(entry.key);
-					if (node === void 0) continue;
-					rows.push((0, react$1.createElement)(ChatNodeSeatMirror, {
-						key: JSON.stringify([entry.key, entry.groupPart ?? null]),
-						node,
-						groupPart: entry.groupPart,
-						store,
-						openState,
-						onSetOpen,
-						foldCompleted,
-						renderNode
-					}));
-				}
-				return rows;
-			}
-			for (const key of order) {
-				const node = readSafe(key);
-				if (node === void 0) continue;
-				rows.push((0, react$1.createElement)(ChatNodeSeatMirror, {
-					key,
-					node,
-					store,
-					openState,
-					onSetOpen,
-					foldCompleted,
-					renderNode
-				}));
-			}
-			return rows;
-		}
-		/** turn 状态（官方 turns.get(turn)?.status）。 */
-		function turnStatus(turns, turn) {
-			return (turns?.get(turn) ?? turns?.get(String(turn)))?.status;
-		}
-		/** 加载 / 空态提示行（13px tertiary）。 */
-		function ChatHint(props) {
-			return (0, react$1.createElement)("div", { className: officialClass("ChatView", "hint") ?? "" }, props.text);
-		}
-		/** 「加载更早记录」按钮（官方 older：按钮 4px 12px / 12px 字号 / radius-sm / 底色 interactive-bg-hover-solid）。 */
-		function ChatOlderButton(props) {
-			return (0, react$1.createElement)("div", { className: officialClass("ChatView", "older") ?? "" }, (0, react$1.createElement)("button", {
-				type: "button",
-				onClick: props.onClick
-			}, props.label));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/GenericCommandCard.js
-		/** 官方 TOOL_VARIANTS（tool client.js:83-100，cordis_* 一并保留）。 */
-		const TOOL_VARIANTS = {
-			bash: "bash",
-			pwsh: "bash",
-			read: "read",
-			read_image: "read",
-			web_fetch: "read",
-			web_search: "search",
-			grep: "search",
-			glob: "search",
-			write: "write",
-			edit: "edit",
-			run_code: "code",
-			cordis_package_inspect: "read",
-			cordis_runtime_inspect: "read",
-			cordis_run: "others",
-			cordis_stop: "others",
-			cordis_undefine: "others"
-		};
-		const classifyTool = (name) => TOOL_VARIANTS[name] ?? "others";
-		/** 官方 VARIANT_TITLE_KEYS + TOOL_TITLE_KEYS（tool client.js:65-149；本仓库键名前缀 toolTitle）。 */
-		const VARIANT_TITLE_KEYS = {
-			search: "toolTitleSearch",
-			read: "toolTitleRead",
-			bash: "toolTitleBash",
-			write: "toolTitleWrite",
-			edit: "toolTitleEdit",
-			code: "toolTitleCode",
-			others: "toolTitleGeneric"
-		};
-		const TOOL_TITLE_KEYS = {
-			pwsh: "toolTitleBash",
-			read_image: "toolTitleReadImage",
-			grep: "toolTitleGrep",
-			glob: "toolTitleGlob",
-			web_search: "toolTitleWebSearch",
-			web_fetch: "toolTitleWebFetch"
-		};
-		const toolTitleKey = (name) => TOOL_TITLE_KEYS[name] ?? VARIANT_TITLE_KEYS[classifyTool(name)];
-		/** 官方 VARIANT_ICONS（tool client.js:1749-1757，size 14）。 */
-		const VARIANT_ICONS = {
-			search: (0, react$1.createElement)(official_exports.IconSearchOutlineRegular, { size: 14 }),
-			read: (0, react$1.createElement)(official_exports.IconBrowseOutlineRegular, { size: 14 }),
-			bash: (0, react$1.createElement)(official_exports.IconApiOutlineRegular, { size: 14 }),
-			write: (0, react$1.createElement)(official_exports.IconEditOutlineRegular, { size: 14 }),
-			edit: (0, react$1.createElement)(official_exports.IconEditOutlineRegular, { size: 14 }),
-			code: (0, react$1.createElement)(official_exports.IconCodeOutlineRegular, { size: 14 }),
-			others: (0, react$1.createElement)(official_exports.IconSparkleRegular, { size: 14 })
-		};
-		/** 官方 SUMMARY_KEYS（tool client.js:204-220）：摘要取参键偏好。 */
-		const SUMMARY_KEYS = {
-			bash: ["description", "command"],
-			read: [
-				"path",
-				"file_path",
-				"url"
-			],
-			search: [
-				"query",
-				"pattern",
-				"url"
-			],
-			write: ["path", "file_path"],
-			edit: ["path", "file_path"],
-			code: ["description"],
-			others: []
-		};
-		/** 官方 FILE_PATH_VARIANTS（tool client.js:237-241）：摘要可开预览的文件型变体。 */
-		const FILE_PATH_VARIANTS = /* @__PURE__ */ new Set([
-			"read",
-			"write",
-			"edit"
-		]);
-		const firstLine$2 = (text) => {
-			const nl = text.indexOf("\n");
-			return nl === -1 ? text : text.slice(0, nl);
-		};
-		/** 官方 parseArgs（tool client.js:186-192）。 */
-		const parseArgs = (raw) => {
-			try {
-				return JSON.parse(raw);
-			} catch {
-				return;
-			}
-		};
-		const pickString = (args, keys) => {
-			for (const key of keys) {
-				const value = args[key];
-				if (typeof value === "string" && value !== "") return value;
-			}
-		};
-		/** 官方 deriveSummary（tool client.js:221-233）。 */
-		function deriveSummary(variant, argsRaw) {
-			const parsed = parseArgs(argsRaw);
-			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return firstLine$2(argsRaw);
-			const args = parsed;
-			if (variant === "search" && Array.isArray(args.queries)) {
-				const queries = args.queries.filter((query) => typeof query === "string" && query !== "");
-				if (queries.length > 0) return queries.map(firstLine$2).join(", ");
-			}
-			const picked = pickString(args, SUMMARY_KEYS[variant]);
-			if (picked !== void 0) return firstLine$2(picked);
-			for (const value of Object.values(args)) if (typeof value === "string" && value !== "") return firstLine$2(value);
-			return firstLine$2(argsRaw);
-		}
-		/** 官方 deriveFilePath（tool client.js:242-248）：read/write/edit 的路径取参。 */
-		function deriveFilePath(variant, argsRaw) {
-			if (!FILE_PATH_VARIANTS.has(variant)) return void 0;
-			const parsed = parseArgs(argsRaw);
-			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return void 0;
-			const picked = pickString(parsed, ["path", "file_path"]);
-			return picked === void 0 ? void 0 : firstLine$2(picked);
-		}
-		/** 官方 formatToolBody（tool client.js:255-264）：通用展开体的输入正文。 */
-		function formatToolBody(variant, argsRaw) {
-			if (argsRaw === "") return null;
-			const parsed = parseArgs(argsRaw);
-			if (parsed === void 0) return argsRaw;
-			if (variant === "code" && typeof parsed === "object" && parsed !== null) {
-				const code = parsed.code;
-				if (typeof code === "string" && code !== "") return code;
-			}
-			return JSON.stringify(parsed, null, 2);
-		}
-		/** 官方 validEscalationFields（tool client.js:347-353）。 */
-		function validEscalationFields(args) {
-			const permission = args.sandbox_permissions;
-			const justification = args.justification;
-			if (permission === void 0 && justification === void 0) return true;
-			if (permission !== "workspace-write" && permission !== "danger-full-access") return false;
-			return typeof justification === "string" && justification.trim() !== "";
-		}
-		/** 官方 intendedDiff（tool client.js:460-517）：write/edit/str_replace_editor 的参数侧意图 diff。 */
-		function intendedDiff(name, argsRaw) {
-			const parsed = parseArgs(argsRaw);
-			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
-			const args = parsed;
-			if (name === "str_replace_editor") {
-				const { command, path, file_text: fileText, old_str: oldText, new_str: newText } = args;
-				if (typeof path !== "string" || path.trim() === "") return null;
-				if (command === "create") {
-					if (fileText !== void 0 && typeof fileText !== "string") return null;
-					return {
-						tool: name,
-						diff: {
-							path,
-							oldText: null,
-							newText: typeof fileText === "string" ? fileText : ""
-						}
-					};
-				}
-				if (command === "str_replace") {
-					if (oldText !== void 0 && typeof oldText !== "string") return null;
-					if (newText !== void 0 && typeof newText !== "string") return null;
-					return {
-						tool: name,
-						diff: {
-							path,
-							oldText: typeof oldText === "string" ? oldText : null,
-							newText: typeof newText === "string" ? newText : ""
-						}
-					};
-				}
-				return null;
-			}
-			const { file_path: path } = args;
-			if (typeof path !== "string" || path.trim() === "") return null;
-			if (!validEscalationFields(args)) return null;
-			if (name === "write") {
-				const { content } = args;
-				return typeof content === "string" ? {
-					tool: name,
-					diff: {
-						path,
-						oldText: null,
-						newText: content
-					}
-				} : null;
-			}
-			if (name !== "edit") return null;
-			const { old_string: oldText, new_string: newText, replace_all: replaceAll } = args;
-			if (typeof oldText !== "string" || typeof newText !== "string") return null;
-			if (replaceAll !== void 0 && typeof replaceAll !== "boolean") return null;
-			return {
-				tool: name,
-				diff: {
-					path,
-					oldText: oldText || null,
-					newText
-				}
-			};
-		}
-		/** 官方 narrowDiffs（tool client.js:443-459）。 */
-		function narrowDiffs(diffs) {
-			if (!Array.isArray(diffs) || diffs.length === 0) return null;
-			const out = [];
-			for (const hunk of diffs) {
-				if (typeof hunk !== "object" || hunk === null || Array.isArray(hunk)) return null;
-				const { path, oldText, newText } = hunk;
-				if (typeof path !== "string") return null;
-				if (oldText !== null && typeof oldText !== "string") return null;
-				if (typeof newText !== "string") return null;
-				out.push({
-					path,
-					oldText,
-					newText
-				});
-			}
-			return out;
-		}
-		/** 官方 appliedDiffs（tool client.js:518-524）。 */
-		function appliedDiffs(meta) {
-			if (typeof meta !== "object" || meta === null || Array.isArray(meta)) return null;
-			const diffs = meta.diffs;
-			if (!Array.isArray(diffs)) return null;
-			if (diffs.length === 0) return "empty";
-			return narrowDiffs(diffs);
-		}
-		/** 官方 diffCardModel（tool client.js:534-544；keyed 流里只有根调用，parentCallId 分支略）。 */
-		function diffCardModel(name, argsRaw, meta, isError, settled) {
-			const intended = intendedDiff(name, argsRaw);
-			if (intended === null) return null;
-			if (!settled) return [intended.diff];
-			if (name === "str_replace_editor") return null;
-			if (isError) return null;
-			const applied = appliedDiffs(meta);
-			if (applied === null || applied === "empty") return name === "write" ? [intended.diff] : null;
-			return applied;
-		}
-		const positiveInteger = (value) => typeof value === "number" && Number.isInteger(value) && value >= 1;
-		/** 官方 readMeta（tool client.js:369-395）：宿主写入的读取窗口 meta 收窄。 */
-		function readMeta(meta) {
-			if (typeof meta !== "object" || meta === null || Array.isArray(meta)) return null;
-			const { path, offset, lines, totalLines, lang } = meta;
-			if (typeof path !== "string" || typeof offset !== "number" || !Number.isInteger(offset) || offset < 1) return null;
-			if (typeof totalLines !== "number" || !Number.isInteger(totalLines) || totalLines < 0 || !Array.isArray(lines)) return null;
-			if (lang !== void 0 && typeof lang !== "string") return null;
-			const narrowed = [];
-			let previous = offset - 1;
-			for (const line of lines) {
-				if (typeof line !== "object" || line === null || Array.isArray(line)) return null;
-				const { number, text } = line;
-				if (typeof number !== "number" || !Number.isInteger(number) || number < 1 || number <= previous) return null;
-				if (number > totalLines || typeof text !== "string") return null;
-				previous = number;
-				narrowed.push({
-					number,
-					text
-				});
-			}
-			return {
-				label: path,
-				lines: narrowed,
-				totalLines,
-				...lang === void 0 ? {} : { lang }
-			};
-		}
-		/** 官方 readCardModel（tool client.js:421-435）：read + 合法参数 + meta + 结果 envelope。 */
-		function readCardModel(name, argsRaw, output, meta, isError, settled) {
-			if (!settled || isError || name !== "read") return null;
-			const parsed = parseArgs(argsRaw);
-			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
-			const { file_path: path, offset, limit } = parsed;
-			if (typeof path !== "string" || path.trim() === "") return null;
-			if (offset !== void 0 && !positiveInteger(offset)) return null;
-			if (limit !== void 0 && !positiveInteger(limit)) return null;
-			const face = readMeta(meta);
-			if (face === null) return null;
-			if (/^<path>[^\n]*<\/path>\n<type>file<\/type>\n<content>\n([\s\S]*)\n<\/content>$/u.exec(output)?.[1] === void 0) return null;
-			return face;
-		}
-		/** 官方 shellCall（tool client.js:831-855）：无 description = persistent（结算走 generic）。 */
-		function shellCall(name, args) {
-			if (name !== "bash" && name !== "pwsh") return null;
-			const { command, description, timeoutMs, workdir, run_in_background: background } = args;
-			if (typeof command !== "string" || command.trim() === "") return null;
-			if (timeoutMs !== void 0 && (typeof timeoutMs !== "number" || !Number.isFinite(timeoutMs) || timeoutMs <= 0)) return null;
-			if (workdir !== void 0 && typeof workdir !== "string") return null;
-			if (background !== void 0 && typeof background !== "boolean") return null;
-			if (!validEscalationFields(args)) return null;
-			if (description === void 0) return {
-				command,
-				description: "",
-				workdir: void 0,
-				persistent: true,
-				background: false
-			};
-			if (typeof description !== "string" || description.trim() === "") return null;
-			return {
-				command,
-				description,
-				workdir,
-				persistent: false,
-				background: background === true
-			};
-		}
-		/** 官方 terminalSendCall（tool client.js:884-896）。 */
-		function terminalSendCall(name, args) {
-			if (name !== "terminal_send") return null;
-			const { sessionId, text, run_in_background: background } = args;
-			if (typeof sessionId !== "string" || sessionId === "" || typeof text !== "string") return null;
-			if (background !== void 0 && typeof background !== "boolean") return null;
-			return {
-				text,
-				sessionId,
-				background: background === true
-			};
-		}
-		/** 官方 parseExitStatus（tool client.js:903-918）：结果尾部退出码 / 信号标记剥离。 */
-		function parseExitStatus(text) {
-			const signal = /\n\[killed by signal: ([^\]\n]+)\]$/.exec(text);
-			if (signal?.[1] !== void 0) return {
-				output: text.slice(0, signal.index),
-				signal: signal[1]
-			};
-			const exit = /\n\[exit code: (\d+)\]$/.exec(text);
-			if (exit?.[1] !== void 0) return {
-				output: text.slice(0, exit.index),
-				exitCode: Number(exit[1])
-			};
-			return {
-				output: text,
-				exitCode: 0
-			};
-		}
-		/**
-		* 官方 spill notice 识别（spill-policy notice.ts，tool client.js:660-703）：
-		* 结尾 `)` + 「\n\n( Full formatted result stored at: 」段。超长输出被 spill 化的
-		* bash 结果走 generic（官方 isSpilledShellCall 同向；此处放宽为字面匹配，宁滥勿漏）。
-		*/
-		function hasSpillNotice(text) {
-			if (!text.endsWith(")")) return false;
-			return text.includes("\n\n( Full formatted result stored at: ");
-		}
-		/** 官方 resolveTerminalCwd + normalizeSegments（tool client.js:776-798）的显示用简化版：
-		*  弹窗侧拿不到会话 cwd ⇒ 绝对路径原样、相对路径弹出 `.`/`..` 段。 */
-		function normalizeSegments(path) {
-			if (!/(?:^|[/\\])\.\.?(?:[/\\]|$)/.test(path)) return path;
-			const out = [];
-			for (const segment of path.split(/[/\\]+/)) {
-				if (segment === "" || segment === ".") continue;
-				if (segment === "..") {
-					out.pop();
-					continue;
-				}
-				out.push(segment);
-			}
-			return out.join("/");
-		}
-		/** 官方 terminalCardModel（tool client.js:929-968）：running 半截返回 running 卡。 */
-		function terminalCardModel(name, argsRaw, output, isError, settled) {
-			const parsed = parseArgs(argsRaw);
-			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
-			const args = parsed;
-			const shell = shellCall(name, args);
-			const send = shell === null ? terminalSendCall(name, args) : null;
-			if (shell === null && send === null) return null;
-			if (shell !== null && shell.background || send !== null && send.background) return null;
-			if (!settled) return shell !== null ? {
-				command: shell.command,
-				cwd: shell.workdir === void 0 ? void 0 : normalizeSegments(shell.workdir),
-				running: true
-			} : {
-				command: send.text,
-				running: true,
-				sessionId: send.sessionId
-			};
-			if (isError || shell !== null && shell.persistent || hasSpillNotice(output)) return null;
-			if (send !== null) return {
-				command: send.text,
-				running: false,
-				sessionId: send.sessionId
-			};
-			const shellCmd = shell;
-			const status = parseExitStatus(output);
-			return {
-				command: shellCmd.command,
-				cwd: shellCmd.workdir === void 0 ? void 0 : normalizeSegments(shellCmd.workdir),
-				output: status.output,
-				exitCode: status.exitCode,
-				signal: status.signal,
-				running: false
-			};
-		}
-		/** 词典：代码工具栏（官方 codeToolbarLabels，tool client.js:1098-1104）。 */
-		const codeToolbarLabels = (t) => ({
-			codeLabel: t("codeBlockLabel"),
-			wrapLabel: t("diffWrapLabel"),
-			unwrapLabel: t("diffUnwrapLabel")
-		});
-		/** 官方 diffBlockLabels（tool client.js:1125-1135）。 */
-		const diffLabels = (t) => ({
-			...codeToolbarLabels(t),
-			copy: t("copyLabel"),
-			copied: t("copiedLabel"),
-			collapseAria: t("diffCollapseAria"),
-			expandAria: (count) => t("diffExpandAria", { count }),
-			collapse: t("collapseLabel"),
-			expand: (count) => t("diffExpandRest", { count })
-		});
-		/** 官方 readBlockLabels（tool client.js:1141-1155）。 */
-		const readLabels = (t) => ({
-			...codeToolbarLabels(t),
-			window: (shown, total) => t("readWindow", {
-				shown,
-				total
-			}),
-			copy: t("copyLabel"),
-			copied: t("copiedLabel"),
-			collapseAria: t("readCollapseAria"),
-			expandAria: (count) => t("readExpandAria", { count }),
-			collapse: t("collapseLabel"),
-			expand: (count) => t("readExpandRest", { count })
-		});
-		/** 官方 terminalBlockLabels（tool client.js:708-737 的键面）。 */
-		const terminalLabels = (t) => ({
-			commandLine: (line) => t("terminalCommandLine", { n: line }),
-			signal: (signal) => t("terminalSignal", { signal }),
-			exitCode: (code) => t("terminalExitCode", { code }),
-			noExitCode: t("terminalNoExitCode"),
-			running: t("terminalRunning"),
-			failed: t("terminalFailed"),
-			done: t("terminalDone"),
-			copy: t("copyLabel"),
-			copied: t("copiedLabel"),
-			noOutput: t("terminalNoOutput"),
-			collapseAria: t("terminalCollapseAria"),
-			collapse: t("collapseLabel"),
-			expandAria: (hidden) => t("terminalExpandAria", { n: hidden }),
-			expand: (hidden) => t("terminalExpandRest", { n: hidden })
-		});
-		/** 摘要链接（官方 fileLink）：点击只跟随、不折叠行。 */
-		const stopLinkClick = (event) => {
-			event.stopPropagation();
-		};
-		/**
-		* 工具调用 / 命令卡（官方 GenericToolCard + ToolRow 镜像）。
-		* 折叠行 = 图标 + 标题 [+ 分隔点 + 摘要（文件路径链接化）+ 后缀]；展开体按官方分发链。
-		*/
-		function GenericCommandCard(props) {
-			const { name, argsRaw, output, isError, meta, settled = true, phase, interrupted, onOpenFile, t } = props;
-			const [expanded, setExpanded] = (0, react$1.useState)(false);
-			const variant = classifyTool(name);
-			const titleKey = toolTitleKey(name);
-			const state = !settled ? phase === "preparing" ? "preparing" : "running" : interrupted ? "stopped" : isError ? "error" : "ok";
-			const terminalFace = (0, react$1.useMemo)(() => terminalCardModel(name, argsRaw, output, isError, settled), [
-				name,
-				argsRaw,
-				output,
-				isError,
-				settled
-			]);
-			const read = (0, react$1.useMemo)(() => readCardModel(name, argsRaw, output, meta, isError, settled), [
-				name,
-				argsRaw,
-				output,
-				meta,
-				isError,
-				settled
-			]);
-			const diffs = (0, react$1.useMemo)(() => diffCardModel(name, argsRaw, meta, isError, settled), [
-				name,
-				argsRaw,
-				meta,
-				isError,
-				settled
-			]);
-			const terminal = (0, react$1.useMemo)(() => {
-				if (terminalFace === null) return null;
-				return terminalFace.sessionId !== void 0 ? {
-					...terminalFace,
-					command: terminalFace.command === "" ? t("terminalSendInput") : terminalFace.command,
-					description: t("terminalSession", { sessionId: terminalFace.sessionId })
-				} : terminalFace;
-			}, [terminalFace, t]);
-			const failedTerminal = terminal !== null && terminal.running !== true && (terminal.exitCode !== void 0 && terminal.exitCode !== 0 || terminal.signal !== void 0);
-			const rowState = state === "ok" && failedTerminal ? "error" : state;
-			const running = rowState === "running" || rowState === "preparing";
-			const generic = titleKey === "toolTitleGeneric";
-			const base = argsRaw === "" ? "" : deriveSummary(variant, argsRaw);
-			const plainSummary = [generic ? name : "", base].filter(Boolean).join(" · ");
-			const errorSummary = rowState === "error" && output !== "" ? firstLine$2(output) : null;
-			const summaryText = (rowState === "error" ? errorSummary ?? terminal?.description ?? plainSummary : null) ?? terminal?.description ?? plainSummary;
-			const totals = diffs === null ? null : (0, official_exports.diffTotals)(diffs);
-			const diffStat = totals === null ? null : `+${totals.added} -${totals.removed}`;
-			const settledWithCue = rowState === "error" || rowState === "stopped";
-			const suffix = settledWithCue ? null : diffStat;
-			const filePath = argsRaw === "" ? void 0 : deriveFilePath(variant, argsRaw);
-			const openFile = filePath !== void 0 && onOpenFile !== void 0 && !settledWithCue ? () => {
-				onOpenFile(filePath);
-			} : void 0;
-			const inputRaw = argsRaw === "" ? null : argsRaw;
-			const outputText = output === "" ? null : output;
-			const card = terminal !== null ? "terminal" : diffs !== null ? "diff" : read !== null ? "read" : null;
-			const bodyText = expanded && card === null && inputRaw !== null ? formatToolBody(variant, inputRaw) : null;
-			const cardBody = variant === "code" ? null : bodyText;
-			const expandable = rowState !== "preparing" && (inputRaw !== null || outputText !== null || card !== null);
-			const open = expanded && expandable;
-			const blockLabels = (0, react$1.useMemo)(() => ({
-				diff: diffLabels(t),
-				read: readLabels(t),
-				terminal: terminalLabels(t)
-			}), [t]);
-			const statusText = rowState === "preparing" ? t("rowPreparing") : rowState === "running" ? t("rowRunning") : rowState === "error" ? t("rowFailed") : rowState === "stopped" ? t("rowStopped") : null;
-			const summaryClassName = `${officialClass("ToolRow", "summary") ?? ""}${rowState === "error" ? ` ${officialClass("ToolRow", "errorSummary") ?? ""}` : ""}${rowState === "stopped" ? ` ${officialClass("ToolRow", "stoppedSummary") ?? ""}` : ""}`;
-			const collapsedContent = summaryText === "" ? void 0 : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
-				className: officialClass("ToolRow", "sep") ?? "",
-				"aria-hidden": true
-			}), openFile !== void 0 ? (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("ToolRow", "fileLink") ?? "",
-				onClick: (event) => {
-					stopLinkClick(event);
-					openFile();
-				}
-			}, (0, react$1.createElement)(official_exports.TextShimmer, { active: running }, summaryText)) : (0, react$1.createElement)("span", { className: summaryClassName }, (0, react$1.createElement)(official_exports.TextShimmer, { active: running }, summaryText)), suffix !== null ? (0, react$1.createElement)(official_exports.TextShimmer, {
-				className: `${officialClass("ToolRow", "summarySuffix") ?? ""} ${officialClass("ToolRow", "diffStat") ?? ""}`,
-				active: running
-			}, suffix) : null);
-			const expandedContent = open ? (0, react$1.createElement)("div", { className: officialClass("ToolRow", "bodyWrap") ?? "" }, terminal !== null ? (0, react$1.createElement)(official_exports.TerminalBlock, {
-				command: terminal.command,
-				cwd: terminal.cwd,
-				output: terminal.output,
-				exitCode: terminal.exitCode,
-				signal: terminal.signal,
-				running: terminal.running,
-				maxLines: Infinity,
-				labels: blockLabels.terminal,
-				className: officialClass("ToolRow", "terminalBody") ?? ""
-			}) : diffs !== null ? (0, react$1.createElement)(official_exports.DiffBlock, {
-				diffs,
-				labels: blockLabels.diff,
-				maxLines: 9,
-				className: officialClass("ToolRow", "diffBody") ?? ""
-			}) : read !== null ? (0, react$1.createElement)(official_exports.ReadBlock, {
-				label: read.label,
-				lines: read.lines,
-				totalLines: read.totalLines,
-				lang: read.lang,
-				labels: blockLabels.read,
-				maxLines: 8,
-				className: officialClass("ToolRow", "readBody") ?? ""
-			}) : (0, react$1.createElement)(react$1.Fragment, null, variant === "code" && bodyText !== null ? (0, react$1.createElement)("div", { className: officialClass("ToolRow", "bodyScroll") ?? "" }, (0, react$1.createElement)(CodeViewer, {
-				text: bodyText,
-				path: "tool-code.ts",
-				t,
-				className: officialClass("ToolRow", "codeBody") ?? "",
-				height: "auto",
-				style: { height: "auto" }
-			})) : null, (cardBody !== null || outputText !== null) && (0, react$1.createElement)("div", { className: officialClass("ToolRow", "ioCard") ?? "" }, cardBody !== null && (0, react$1.createElement)("div", { className: officialClass("ToolRow", "ioSection") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("ToolRow", "ioLabel") ?? "" }, t("toolInputLabel")), (0, react$1.createElement)("span", { className: officialClass("ToolRow", "ioText") ?? "" }, cardBody)), cardBody !== null && outputText !== null && (0, react$1.createElement)("span", {
-				className: officialClass("ToolRow", "ioDivider") ?? "",
-				"aria-hidden": true
-			}), outputText !== null && (0, react$1.createElement)("div", { className: officialClass("ToolRow", "ioSection") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("ToolRow", "ioLabel") ?? "" }, t("toolOutputLabel")), (0, react$1.createElement)("span", {
-				className: officialClass("ToolRow", "ioText") ?? "",
-				"data-error": rowState === "error" || void 0
-			}, outputText))))) : void 0;
-			return (0, react$1.createElement)("div", {
-				className: officialClass("ToolRow", "root") ?? "",
-				"data-variant": variant,
-				"data-tool": name,
-				"data-state": rowState
-			}, statusText !== null ? (0, react$1.createElement)("span", { className: officialClass("ToolRow", "visuallyHidden") ?? "" }, statusText) : null, (0, react$1.createElement)(official_exports.DisclosureRow, {
-				rowClassName: officialClass("ToolRow", "row") ?? "",
-				leadingClassName: officialClass("ToolRow", "leading") ?? "",
-				titleClassName: officialClass("ToolRow", "title") ?? "",
-				chevronClassName: officialClass("ToolRow", "chevron") ?? "",
-				icon: VARIANT_ICONS[variant],
-				title: t(titleKey),
-				running,
-				open,
-				expandable,
-				expandOnRowClick: true,
-				keepContentWhenOpen: true,
-				onToggle: () => {
-					setExpanded((value) => !value);
-				},
-				collapsedContent,
-				children: expandedContent
-			}));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/CommandCard.js
-		/** 官方 GenericCommandCard 模块类（宿主必注入；缺席 = 空串，裸结构不白屏，不写自绘兜底）。 */
-		const gcc = (semantic) => officialClass("GenericCommandCard", semantic) ?? "";
-		/** 官方 stateOf：未决 = running；outcome.kind==='error' = error；否则 ok。 */
-		function stateOf(outcome) {
-			if (outcome === null || outcome === void 0) return "running";
-			return outcome.kind === "error" ? "error" : "ok";
-		}
-		/** 命令卡（官方 GenericCommandCard 镜像）：裸命令名 + 落定摘要 + 多行输出可展开。 */
-		function CommandCard(props) {
-			const { node, t, runningSummary } = props;
-			const [expanded, setExpanded] = (0, react$1.useState)(false);
-			const outcome = node.outcome ?? null;
-			const text = outcome?.text;
-			const summary = outcome === null ? runningSummary ?? t("commandRunning") : text ?? (outcome.kind === "error" ? t("commandFailed") : t("commandDone"));
-			const title = node.name ?? t("commandTitle");
-			const state = stateOf(outcome);
-			const running = state === "running";
-			const body = text !== void 0 && text.includes("\n") ? text : null;
-			const open = expanded && body !== null;
-			const toggle = (0, react$1.useCallback)(() => {
-				setExpanded((value) => !value);
-			}, []);
-			const hidden = officialClass("ToolRow", "visuallyHidden") ?? "";
-			return (0, react$1.createElement)("div", {
-				className: gcc("root"),
-				"data-state": state
-			}, state === "running" ? (0, react$1.createElement)("span", { className: hidden }, t("rowRunning")) : state === "error" ? (0, react$1.createElement)("span", { className: hidden }, t("rowFailed")) : null, (0, react$1.createElement)(official_exports.DisclosureRow, {
-				leadingClassName: gcc("leading"),
-				titleClassName: gcc("title"),
-				icon: (0, react$1.createElement)(official_exports.IconApiOutlineRegular, { size: 14 }),
-				title,
-				running,
-				open,
-				expandable: body !== null,
-				expandOnRowClick: true,
-				keepContentWhenOpen: true,
-				onToggle: toggle,
-				collapsedContent: (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
-					className: gcc("separator"),
-					"aria-hidden": true
-				}), (0, react$1.createElement)("span", {
-					className: gcc("summary"),
-					"data-error": state === "error" || void 0
-				}, (0, react$1.createElement)(official_exports.TextShimmer, { active: running }, summary))),
-				children: open && body !== null ? (0, react$1.createElement)("div", {
-					className: gcc("body"),
-					"data-error": state === "error" || void 0
-				}, body) : void 0
-			}));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/message-chrome.js
-		/**
-		* 官方 formatRunDuration：整秒；≥1 分带零补秒；≥1 小时带零补分秒。
-		*/
-		function formatRunDuration(ms, tt) {
-			const total = Math.max(0, Math.floor(ms / 1e3));
-			const hours = Math.floor(total / 3600);
-			const minutes = Math.floor(total / 60) % 60;
-			const seconds = total % 60;
-			if (hours > 0) return tt("durationHours", {
-				hours,
-				minutes: pad2$1(minutes),
-				seconds: pad2$1(seconds)
-			});
-			return minutes > 0 ? tt("durationMinutes", {
-				minutes,
-				seconds: pad2$1(seconds)
-			}) : tt("durationSeconds", { seconds });
-		}
-		/** 官方 formatLiveRunDuration：秒不补零、分钟自 60 秒起。 */
-		function formatLiveRunDuration(ms, tt) {
-			const totalSeconds = Math.max(0, Math.floor(ms / 1e3));
-			const hours = Math.floor(totalSeconds / 3600);
-			const minutes = Math.floor(totalSeconds / 60) % 60;
-			const seconds = String(totalSeconds % 60);
-			if (hours > 0) return tt("durationHours", {
-				hours,
-				minutes: pad2$1(minutes),
-				seconds
-			});
-			return minutes > 0 ? tt("durationMinutes", {
-				minutes,
-				seconds
-			}) : tt("durationSeconds", { seconds });
-		}
-		/**
-		* 官方 formatMessageClock：同日 → `HH:mm`；同年 → `{m}月{d}日 HH:mm`；跨年 → `{y}年{m}月{d}日 HH:mm`。
-		*/
-		function formatMessageClock(time, tt, now = Date.now()) {
-			const d = new Date(time);
-			const n = new Date(now);
-			const clock = `${pad2$1(d.getHours())}:${pad2$1(d.getMinutes())}`;
-			if (d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate()) return clock;
-			const params = {
-				y: d.getFullYear(),
-				m: d.getMonth() + 1,
-				d: d.getDate()
-			};
-			return `${d.getFullYear() === n.getFullYear() ? tt("clockDate", params) : tt("clockDateYear", params)} ${clock}`;
-		}
-		/** 官方 formatTokens：517 / 12.2K / 517K / 1.2M。 */
-		function formatTokens(value, tt) {
-			const scaled = (candidate) => candidate >= 100 ? String(Math.round(candidate)) : String(Math.round(candidate * 10) / 10);
-			if (value < 1e3) return String(value);
-			if (value < 1e6) return tt("numberThousand", { value: scaled(value / 1e3) });
-			return tt("numberMillion", { value: scaled(value / 1e6) });
-		}
-		/** 官方 formatCompactCount：紧凑 token 数 + 「 tok」。 */
-		function formatCompactCount(value, tt) {
-			return tt("turnUsageCount", { count: formatTokens(value, tt) });
-		}
-		/** 官方 formatExactTokens：按本地千分位分组（number.groupSeparator）。 */
-		function formatExactTokens(value, tt) {
-			const digits = String(value);
-			const groups = [];
-			for (let end = digits.length; end > 0; end -= 3) groups.unshift(digits.slice(Math.max(0, end - 3), end));
-			return groups.join(tt("numberGroupSeparator"));
-		}
-		/** 官方 formatExactCount：精确计数 + 「 tok」。 */
-		function formatExactCount(value, tt) {
-			return tt("turnUsageCount", { count: formatExactTokens(value, tt) });
-		}
-		/** 官方 roundedPercentUnits（message-chrome.ts:1024）：按精确比例取整，正半数向上。 */
-		function roundedPercentUnits(cacheReadTokens, denominator, decimalPlaces) {
-			const scale = (decimalPlaces === 0 ? 1 : 10) * 100;
-			const doubledScale = scale * 2;
-			const denominatorQuotient = Math.floor(denominator / doubledScale);
-			const denominatorRemainder = denominator % doubledScale;
-			let lower = 0;
-			let upper = scale;
-			while (lower < upper) {
-				const candidate = Math.floor((lower + upper + 1) / 2);
-				const factor = candidate * 2 - 1;
-				if (cacheReadTokens >= factor * denominatorQuotient + Math.ceil(factor * denominatorRemainder / doubledScale)) lower = candidate;
-				else upper = candidate - 1;
-			}
-			return lower;
-		}
-		/** 官方 displayPercentUnits。 */
-		function displayPercentUnits(units, decimalPlaces) {
-			if (decimalPlaces === 0) return String(units);
-			const whole = Math.floor(units / 10);
-			const tenths = units % 10;
-			return tenths === 0 ? String(whole) : `${whole}.${tenths}`;
-		}
-		/**
-		* 官方 formatCacheHitPercent：缓存命中率；部分命中不四舍五入成 100%（自动加精度）。
-		* @returns 百分比文本；无输入时 null。
-		*/
-		function formatCacheHitPercent(cacheReadTokens, promptTokens, decimalPlaces = 0) {
-			if (promptTokens === 0) return null;
-			const missedInputTokens = promptTokens - cacheReadTokens;
-			if (missedInputTokens === 0) return "100";
-			const roundedUnits = roundedPercentUnits(cacheReadTokens, promptTokens, decimalPlaces);
-			if (roundedUnits < (decimalPlaces === 0 ? 100 : 1e3)) return displayPercentUnits(roundedUnits, decimalPlaces);
-			let distinguishingPlaces = 1;
-			let scaledDoubleGap = missedInputTokens * 200;
-			const denominatorTens = Math.floor(promptTokens / 10);
-			while (scaledDoubleGap <= denominatorTens) {
-				scaledDoubleGap *= 10;
-				distinguishingPlaces += 1;
-			}
-			const denominatorOnes = promptTokens % 10;
-			let roundedLoss = 5;
-			for (let loss = 1; loss < 5; loss += 1) {
-				const factor = loss * 2 + 1;
-				const threshold = factor * denominatorTens + Math.floor(factor * denominatorOnes / 10);
-				if (scaledDoubleGap <= threshold) {
-					roundedLoss = loss;
-					break;
-				}
-			}
-			return `99.${"9".repeat(distinguishingPlaces - 1)}${10 - roundedLoss}`;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/MessageIconActions.js
-		/** 官方「已复制」复位时间。 */
-		const COPIED_RESET_MS = 1e3;
-		/** 消息操作行（复制 / 分支 / 用量 / 时钟）。 */
-		function MessageIconActionsMirror(props) {
-			const { text, time, clock, onBranch, branchUnavailable = false, className, extraActions, usageAction, t } = props;
-			const [copied, setCopied] = (0, react$1.useState)(false);
-			const [pending, setPending] = (0, react$1.useState)(false);
-			const timerRef = (0, react$1.useRef)(void 0);
-			(0, react$1.useEffect)(() => () => {
-				if (timerRef.current !== void 0) clearTimeout(timerRef.current);
-			}, []);
-			const copyLabel = copied ? t("copiedLabel") : t("copyLabel");
-			const onCopy = () => {
-				if (copied || pending) return;
-				setPending(true);
-				(0, official_exports.writeClipboard)(text).then((ok) => {
-					setPending(false);
-					if (!ok) return;
-					setCopied(true);
-					timerRef.current = setTimeout(() => {
-						setCopied(false);
-					}, COPIED_RESET_MS);
-				});
-			};
-			const clockClass = (clock === "end" ? officialClass("MessageIconActions", "timeEnd") ?? officialClass("MessageIconActions", "clock") : officialClass("MessageIconActions", "timeStart") ?? officialClass("MessageIconActions", "clock")) ?? "";
-			const clockEl = time === void 0 ? null : (0, react$1.createElement)("time", {
-				className: clockClass,
-				dateTime: new Date(time).toISOString()
-			}, formatMessageClock(time, t));
-			const reasonId = "dshpc-sv-branch-unavailable";
-			return (0, react$1.createElement)("div", {
-				className: `${officialClass("MessageIconActions", "actions") ?? ""}${className === void 0 ? "" : ` ${className}`}`,
-				"data-clock": clock
-			}, clock === "start" ? clockEl : null, (0, react$1.createElement)(official_exports.Tooltip, {
-				label: copyLabel,
-				side: "bottom"
-			}, (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("MessageIconActions", "action") ?? "",
-				"aria-label": copyLabel,
-				onClick: onCopy
-			}, copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular, null) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular, null))), extraActions, onBranch === void 0 ? null : (0, react$1.createElement)(official_exports.Tooltip, {
-				label: branchUnavailable ? t("branchUnavailableLabel") : t("branchLabel"),
-				side: "bottom"
-			}, (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("MessageIconActions", "action") ?? "",
-				"aria-label": t("branchLabel"),
-				"aria-disabled": branchUnavailable || void 0,
-				"aria-describedby": branchUnavailable ? reasonId : void 0,
-				"data-unavailable": branchUnavailable || void 0,
-				onClick: branchUnavailable ? void 0 : onBranch
-			}, (0, react$1.createElement)(official_exports.IconBranchOutlineRegular, null))), onBranch === void 0 || !branchUnavailable ? null : (0, react$1.createElement)("span", {
-				id: reasonId,
-				className: officialClass("accessibility", "visuallyHidden") ?? ""
-			}, t("branchUnavailableLabel")), clock === "end" ? (0, react$1.createElement)("span", { className: officialClass("MessageIconActions", "endInfo") ?? "" }, usageAction, clockEl) : usageAction);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/MessageItem.js
-		/** 助手正文：官方 MarkdownText 渲染 + 官方 AssistantMarkdown.root 类（fallback 自绘）。
-		* U11：fileMentions 词表就位时行内 code 文件引用渲成可点链接（官方语义：resolve 不出保持惰性 code）。 */
-		function AssistantMarkdown(props) {
-			if (props.text.trim() === "") return (0, react$1.createElement)("span", null);
-			return (0, react$1.createElement)("div", { className: officialClass("AssistantMarkdown", "root") ?? "" }, (0, react$1.createElement)(official_exports.MarkdownText, {
-				text: props.text,
-				labels: markdownLabels(),
-				fileMentions: props.fileMentions
-			}));
-		}
-		/**
-		* 用户消息：官方 MessageItem userRow > userStack > bubble（右对齐气泡）
-		* + 气泡下方的 **attachmentRow / fileCard**（官方 MessageItem 的附件行）。
-		*
-		* 官方附件卡 = 图标 + 文件名 + 大小；**不可点开**——引用里没有路径，宿主也没给出
-		* 「按 attachmentId 打开」的公开面 ⇒ 如实降级为只读展示，不伪造打开行为。
-		*/
-		function UserMessage(props) {
-			const { text, files } = props;
-			const chips = files ?? [];
-			return (0, react$1.createElement)("div", { className: officialClass("MessageItem", "userRow") ?? "" }, (0, react$1.createElement)("div", { className: officialClass("MessageItem", "userStack") ?? "" }, text === "" ? null : (0, react$1.createElement)("div", { className: officialClass("MessageItem", "bubble") ?? "" }, (0, react$1.createElement)(official_exports.MarkdownText, {
-				text,
-				labels: markdownLabels()
-			})), chips.length === 0 ? null : (0, react$1.createElement)("div", { className: officialClass("MessageItem", "attachmentRow") ?? "" }, chips.map((file, index) => (0, react$1.createElement)("div", {
-				key: `${file.name}:${index}`,
-				className: officialClass("MessageItem", "fileCard") ?? "",
-				title: file.name
-			}, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "fileIcon") ?? "" }, (0, react$1.createElement)(official_exports.FileTypeIcon, {
-				path: file.name,
-				size: 16
-			})), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "fileContent") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "fileName") ?? "" }, file.name), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "fileMeta") ?? "" }, formatBytes(file.bytes))))))));
-		}
-		/** 官方 retrySeconds（lib/client.js:1215）：下限 1 秒。 */
-		function retrySeconds(milliseconds) {
-			return Math.max(1, Math.ceil(milliseconds / 1e3));
-		}
-		/**
-		* 官方 failureMessage（lib/client.js:1219）：已知机器码走本地化文案，其余原样展示。
-		* 官方判定顺序逐字：ACCOUNT_SIGNED_OUT / ACCOUNT_SIGN_IN_REQUIRED / QUOTA|ACCOUNT_QUOTA / AUTH。
-		*/
-		function failureMessage(message, code, t) {
-			if (code === "ACCOUNT_SIGNED_OUT") return t("failureAccountSignedOut");
-			if (code === "ACCOUNT_SIGN_IN_REQUIRED") return t("failureAccountSignInRequired");
-			if (code === "QUOTA" || code === "ACCOUNT_QUOTA") return t("failureQuota");
-			return code === "AUTH" ? t("failureAuth") : message ?? "";
-		}
-		/**
-		* 重试行（官方 ModelRetryItem）：折叠 = 「已重试模型请求 (5/5) · 9s ⌄」摘要；
-		* 展开 = 重试延迟 / 失败原因 两行。active（等待重试）时官方走 250ms 倒计时 + 渐隐 shimmer。
-		*/
-		function ModelRetryItemMirror(props) {
-			const { active, t } = props;
-			const node = props.node;
-			const delayMs = typeof node.delayMs === "number" ? node.delayMs : 0;
-			const maximum = node.mode === "normal" && typeof node.maxRetries === "number" ? node.maxRetries : "∞";
-			const deadline = (0, react$1.useMemo)(() => Date.now() + delayMs, [delayMs, node.retryState]);
-			const scheduledSeconds = retrySeconds(delayMs);
-			const [countdown, setCountdown] = (0, react$1.useState)(() => ({
-				deadline,
-				seconds: retrySeconds(deadline - Date.now())
-			}));
-			const remainingSeconds = countdown.deadline === deadline ? countdown.seconds : retrySeconds(deadline - Date.now());
-			(0, react$1.useEffect)(() => {
-				if (!active) return;
-				const updateCountdown = () => {
-					const next = retrySeconds(deadline - Date.now());
-					setCountdown((current) => current.deadline === deadline && current.seconds === next ? current : {
-						deadline,
-						seconds: next
-					});
-					return next;
-				};
-				if (updateCountdown() === 1) return;
-				const timer = window.setInterval(() => {
-					if (updateCountdown() === 1) window.clearInterval(timer);
-				}, 250);
-				return () => {
-					window.clearInterval(timer);
-				};
-			}, [active, deadline]);
-			const label = active ? t("retryActive") : node.retryState === "cancelled" ? t("retryCancelled") : node.retryState === "started" ? t("retryStarted") : t("retryScheduled");
-			const seconds = active ? remainingSeconds : scheduledSeconds;
-			const failure = node.failure;
-			return (0, react$1.createElement)("details", {
-				className: officialClass("MessageItem", "retryRow") ?? "",
-				"data-active": active || void 0
-			}, (0, react$1.createElement)("summary", { className: officialClass("MessageItem", "retrySummary") ?? "" }, (0, react$1.createElement)("span", {
-				className: officialClass("MessageItem", "retryText") ?? "",
-				role: "status"
-			}, t("retryStatus", {
-				label,
-				retry: node.retry ?? 0,
-				maximum,
-				seconds
-			}))), (0, react$1.createElement)("div", { className: officialClass("MessageItem", "retryDetails") ?? "" }, (0, react$1.createElement)("div", null, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "retryDetailLabel") ?? "" }, t("retryDelay")), t("durationMilliseconds", { milliseconds: Math.round(delayMs) })), (0, react$1.createElement)("div", null, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "retryDetailLabel") ?? "" }, t("retryFailure")), failureMessage(failure?.message, failure?.code, t))));
-		}
-		/** 轮次失败行（官方 TurnErrorItem）：红点 + 红标题「本轮运行失败」+ 灰原因 + 右侧机器码标签。 */
-		function TurnErrorItemMirror(props) {
-			const { node, t } = props;
-			return (0, react$1.createElement)("div", {
-				className: officialClass("MessageItem", "turnErrorRow") ?? "",
-				role: "status"
-			}, (0, react$1.createElement)(official_exports.StateDot, {
-				state: "error",
-				className: officialClass("MessageItem", "turnErrorDot") ?? ""
-			}), (0, react$1.createElement)("div", { className: officialClass("MessageItem", "turnErrorCopy") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "turnErrorTitle") ?? "" }, node.code === "ACCOUNT_SIGNED_OUT" ? t("accountStopped") : t("turnErrorTitle")), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "turnErrorMessage") ?? "" }, failureMessage(node.message, node.code, t))), node.code !== void 0 && node.code !== "" ? (0, react$1.createElement)("code", { className: officialClass("MessageItem", "turnErrorCode") ?? "" }, node.code) : null);
-		}
-		/** 限长行（官方 TurnMaxTokensItem）：黄点 + 警示标题 + 截断提示。 */
-		function TurnMaxTokensItemMirror(props) {
-			const { t } = props;
-			return (0, react$1.createElement)("div", {
-				className: officialClass("MessageItem", "turnErrorRow") ?? "",
-				role: "status"
-			}, (0, react$1.createElement)(official_exports.StateDot, {
-				state: "warning",
-				className: officialClass("MessageItem", "turnErrorDot") ?? ""
-			}), (0, react$1.createElement)("div", { className: officialClass("MessageItem", "turnErrorCopy") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "maxTokensTitle") ?? "" }, t("maxTokensTitle")), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "turnErrorMessage") ?? "" }, t("maxTokensHint"))));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/ReasoningRow.js
-		/** 官方 firstLine（lib/client.js:5687）：首行。 */
-		function firstLine$1(text) {
-			const newline = text.indexOf("\n");
-			return newline === -1 ? text : text.slice(0, newline);
-		}
-		/** 思考行：折叠 = 「思考 · 首行预览 ⌄」；展开 = thinkBody 全文（MarkdownText compact）。 */
-		function ReasoningRowMirror(props) {
-			const { text, running = false, preview = true, t } = props;
-			const [open, setOpen] = (0, react$1.useState)(false);
-			if (text.trim() === "") return null;
-			const summary = firstLine$1(text).split("**").join("");
-			return (0, react$1.createElement)("div", {
-				className: officialClass("ReasoningRow", "root") ?? "",
-				"data-variant": "think",
-				"data-state": running ? "running" : "ok",
-				"data-expanded": open || void 0,
-				"data-preview": preview && summary !== "" || void 0
-			}, (0, react$1.createElement)(official_exports.DisclosureRow, {
-				icon: (0, react$1.createElement)(official_exports.IconThinkOutlineRegular, { size: 14 }),
-				title: t("thinkLabel"),
-				open,
-				expandable: true,
-				expandOnRowClick: true,
-				onToggle: () => {
-					setOpen((value) => !value);
-				},
-				rowClassName: officialClass("ReasoningRow", "row") ?? "",
-				leadingClassName: officialClass("ReasoningRow", "leading") ?? "",
-				titleClassName: officialClass("ReasoningRow", "title") ?? "",
-				chevronClassName: officialClass("ReasoningRow", "chevron") ?? "",
-				collapsedContent: (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
-					className: officialClass("ReasoningRow", "separator") ?? "",
-					"aria-hidden": true
-				}), (0, react$1.createElement)("span", { className: officialClass("ReasoningRow", "summary") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("ReasoningRow", "summaryText") ?? "" }, summary))),
-				children: open ? (0, react$1.createElement)("div", { className: officialClass("ReasoningRow", "thinkBody") ?? "" }, (0, react$1.createElement)(official_exports.MarkdownText, {
-					text,
-					labels: markdownLabels(),
-					variant: "compact"
-				})) : void 0
-			}));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/TurnProcessNodeView.js
-		/** 官方 LIVE_RUN_CLOCK_INTERVAL_MS（lib/client.js:979）。 */
-		const LIVE_RUN_CLOCK_INTERVAL_MS = 1e3;
-		/** Turn 过程行：折叠时只有 label + 箭头；点开由外层 seat 把过程节点放出来。 */
-		function TurnProcessNodeViewMirror(props) {
-			const { turn, turnProcess, t } = props;
-			const open = !turnProcess.foldable || turnProcess.open;
-			const [now, setNow] = (0, react$1.useState)(() => Date.now());
-			const ticking = turn?.status === "open" && turn.start !== void 0;
-			(0, react$1.useEffect)(() => {
-				if (!ticking) return;
-				setNow(Date.now());
-				const timer = setInterval(() => {
-					setNow(Date.now());
-				}, LIVE_RUN_CLOCK_INTERVAL_MS);
-				return () => {
-					clearInterval(timer);
-				};
-			}, [ticking]);
-			if (turn === void 0 || turn.start === void 0 && turn.status !== "closed") return null;
-			const canCollapse = turnProcess.foldable && turnProcess.hasContent && !turnProcess.alwaysOpen;
-			const running = turn.status === "open";
-			const reason = turn.end?.data?.reason?.kind;
-			const elapsedMs = turn.start === void 0 ? void 0 : Math.max(1e3, (turn.end?.time ?? now) - turn.start.time);
-			const duration = elapsedMs === void 0 ? void 0 : running ? formatLiveRunDuration(elapsedMs, t) : formatRunDuration(elapsedMs, t);
-			const label = running ? duration === void 0 ? t("chatDeepDiving") : t("turnProcessDeepDiving", { duration }) : reason === "aborted" ? t("turnStopped") : reason === "error" ? t("turnProcessFailed") : duration === void 0 ? t("turnProcessWorked") : t("turnProcessTook", { duration });
-			const announcement = running ? t("chatDeepDiving") : reason === "aborted" ? t("turnStopped") : reason === "error" ? t("turnProcessFailed") : t("turnProcessWorked");
-			const spec = turnProcess.spec;
-			return (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
-				className: officialClass("accessibility", "visuallyHidden") ?? "",
-				role: "status",
-				"aria-live": "polite",
-				"aria-atomic": "true"
-			}, announcement), (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("TurnProcessNodeView", "root") ?? "",
-				"data-open": open || void 0,
-				"data-turn-process": spec?.turn,
-				"data-turn-process-messages": spec?.messageCount,
-				"data-turn-process-tool-calls": spec?.toolCallCount,
-				"data-turn-process-subagents": spec?.subagentCount,
-				disabled: !canCollapse,
-				"aria-expanded": turnProcess.hasContent ? open : void 0,
-				onClick: () => {
-					turnProcess.setOpen(!open);
-				}
-			}, (0, react$1.createElement)("span", { className: officialClass("TurnProcessNodeView", "label") ?? "" }, label), canCollapse ? (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, { className: officialClass("TurnProcessNodeView", "chevron") ?? "" }) : null));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/StatDialog.js
-		const PANEL_MARGIN = 12;
-		const PANEL_GAP = 8;
-		/**
-		* 官方 stat-dialog.ts 的 MEASURE_STYLE：首趟（pos 未定）时面板「隐藏但仍布局」，
-		* 好让 useAnchoredPosition 量到真实尺寸。官方要求面板铺 `pos ?? MEASURE_STYLE`；
-		* 漏了它 ⇒ 首趟完全无定位、面板落进文档流撑长页面（真机 2026-10-23：点用量无反应 + 滚动条变长）。
-		*/
-		const STAT_MEASURE_STYLE = {
-			visibility: "hidden",
-			left: 0,
-			top: 0
-		};
-		/** 官方 useStatDialog：把弹层挂在触发器上方（side: 'top'），点外 / Esc 关闭。 */
-		function useStatDialog(controlled) {
-			const [ownOpen, setOwnOpen] = (0, react$1.useState)(false);
-			const open = controlled?.open ?? ownOpen;
-			const setOpen = controlled?.setOpen ?? setOwnOpen;
-			const rootRef = (0, react$1.useRef)(null);
-			const panelRef = (0, react$1.useRef)(null);
-			const pos = (0, official_exports.useAnchoredPosition)({
-				open,
-				anchorRef: rootRef,
-				panelRef,
-				side: "top",
-				gap: PANEL_GAP,
-				margin: PANEL_MARGIN
-			});
-			(0, official_exports.useDismissOnOutsidePointer)(rootRef, open, setOpen, panelRef);
-			(0, react$1.useEffect)(() => {
-				if (!open) return;
-				const onKeyDown = (event) => {
-					if (event.key === "Escape") setOpen(false);
-				};
-				document.addEventListener("keydown", onKeyDown);
-				return () => {
-					document.removeEventListener("keydown", onKeyDown);
-				};
-			}, [open, setOpen]);
-			return {
-				open,
-				setOpen,
-				rootRef,
-				panelRef,
-				pos
-			};
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/TurnUsagePanel.js
-		/** 本轮用量 pill + 明细弹层。 */
-		function TurnUsagePanelMirror(props) {
-			const { usage, t } = props;
-			const { open, setOpen, rootRef, panelRef, pos } = useStatDialog();
-			const cacheHit = usage.cacheReadTokens === void 0 ? null : formatCacheHitPercent(usage.cacheReadTokens, usage.totalTokens - usage.outputTokens, 1);
-			const total = formatCompactCount(usage.totalTokens, t);
-			const routes = usage.routes?.map((route) => `${route.provider}/${route.model}`).join(", ") ?? "";
-			return (0, react$1.createElement)("span", {
-				ref: rootRef,
-				className: officialClass("TurnUsagePanel", "root") ?? ""
-			}, (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("TurnUsagePanel", "trigger") ?? "",
-				"aria-haspopup": "dialog",
-				"aria-expanded": open,
-				onClick: () => {
-					setOpen(!open);
-				}
-			}, (0, react$1.createElement)(official_exports.IconDatabaseOutlineRegular, null), (0, react$1.createElement)("span", { className: officialClass("TurnUsagePanel", "label") ?? "" }, t("turnUsageConsumed", { total }))), open ? (0, react_dom.createPortal)((0, react$1.createElement)("div", {
-				ref: panelRef,
-				className: officialClass("stat-dialog", "panel") ?? "",
-				role: "dialog",
-				"aria-label": t("turnUsageTitle"),
-				style: pos ?? STAT_MEASURE_STYLE
-			}, (0, react$1.createElement)("div", { className: officialClass("stat-dialog", "title") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "titleLabel") ?? "" }, (0, react$1.createElement)(official_exports.IconDatabaseOutlineRegular, null), t("turnUsageTitle")), (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "titleValue") ?? "" }, formatExactCount(usage.totalTokens, t))), (0, react$1.createElement)("div", {
-				className: officialClass("stat-dialog", "titleRule") ?? "",
-				"aria-hidden": true
-			}), (0, react$1.createElement)("dl", {
-				className: officialClass("stat-dialog", "details") ?? "",
-				"data-turn-usage-details": true
-			}, routes === "" ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageModel")), (0, react$1.createElement)("dd", { className: officialClass("stat-dialog", "route") ?? "" }, routes)), cacheHit === null ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheHit")), (0, react$1.createElement)("dd", null, `${cacheHit}%`)), (0, react$1.createElement)("dt", null, t("turnUsageInput")), (0, react$1.createElement)("dd", null, formatExactCount(usage.uncachedInputTokens, t)), usage.cacheReadTokens === void 0 ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheRead")), (0, react$1.createElement)("dd", null, formatExactCount(usage.cacheReadTokens, t))), usage.cacheWriteTokens === void 0 ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheWrite")), (0, react$1.createElement)("dd", null, formatExactCount(usage.cacheWriteTokens, t))), (0, react$1.createElement)("dt", null, t("turnUsageOutput")), (0, react$1.createElement)("dd", null, formatExactCount(usage.outputTokens, t), usage.reasoningTokens === void 0 ? null : (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "reasoning") ?? "" }, t("turnUsageReasoning", { tokens: formatExactCount(usage.reasoningTokens, t) }))))), document.body) : null);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/TurnTailNodeView.js
-		/** 官方 assistantText：只取 text 块。 */
-		function assistantText$1(blocks) {
-			return blocks.flatMap((block) => block.kind === "text" ? [block.text ?? ""] : []).join("");
-		}
-		/** Turn 尾部操作行：复制 / 分支 / 用量 / 结束时钟。 */
-		function TurnTailNodeViewMirror(props) {
-			const { data, onBranchAt, tailSlot, t } = props;
-			const closing = data.closing;
-			if (closing === null || closing === void 0) return null;
-			const text = assistantText$1(closing.blocks);
-			return (0, react$1.createElement)("div", {
-				className: officialClass("TurnTailNodeView", "root") ?? "",
-				"data-turn-tail": data.turn,
-				"data-actions-reveal": "always"
-			}, tailSlot === void 0 || tailSlot === null ? null : tailSlot, (0, react$1.createElement)(MessageIconActionsMirror, {
-				text,
-				time: closing.time,
-				clock: "end",
-				onBranch: onBranchAt === void 0 ? void 0 : () => {
-					onBranchAt(data.seq);
-				},
-				className: officialClass("TurnTailNodeView", "actions") ?? "",
-				usageAction: data.tokenUsage === void 0 ? void 0 : (0, react$1.createElement)(TurnUsagePanelMirror, {
-					usage: data.tokenUsage,
-					t
-				}),
-				t
-			}));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/TurnTriggerNodeView.js
-		/** 官方 TRIGGER_ICONS（lib/client.js:6634）。 */
-		const TRIGGER_ICONS = {
-			request: official_exports.IconContextInjectionOutlineRegular,
-			goal: official_exports.IconGoalOutlineRegular,
-			agent: official_exports.IconPaperPlaneOutlineRegular,
-			team: official_exports.IconAgentPresetOutlineRegular,
-			subagent: official_exports.IconAgentPresetOutlineRegular,
-			github: official_exports.IconBranchOutlineRegular,
-			webhook: official_exports.IconGlobeOutlineRegular,
-			schedule: official_exports.IconAlarmClockOutlineRegular,
-			job: official_exports.IconQueueOutlineRegular,
-			plugin: official_exports.IconCordisPluginOutlineRegular
-		};
-		/** 官方 turnTriggerDetails：source.kind → 标题与图标家族（默认 request）。 */
-		function turnTriggerDetails(source) {
-			const record = (value) => typeof value === "object" && value !== null && !Array.isArray(value) ? value : {};
-			const src = record(source);
-			switch (typeof src.kind === "string" ? src.kind : "") {
-				case "goal": return {
-					title: "triggerGoal",
-					icon: "goal"
-				};
-				case "agent-message": return {
-					title: "triggerAgent",
-					icon: "agent"
-				};
-				case "team-message": return {
-					title: "triggerTeam",
-					icon: "team"
-				};
-				case "subagent-settled": return {
-					title: "triggerSubagent",
-					icon: "subagent"
-				};
-				case "webhook": return src.provider === "github" ? {
-					title: "triggerGithub",
-					icon: "github"
-				} : {
-					title: "triggerWebhook",
-					icon: "webhook"
-				};
-				case "schedule": return {
-					title: "triggerSchedule",
-					icon: "schedule"
-				};
-				case "tool-jobs": return {
-					title: "triggerJob",
-					icon: "job"
-				};
-				case "cordis-host-runner": return {
-					title: "triggerPlugin",
-					icon: "plugin"
-				};
-				default: return {
-					title: "triggerRequest",
-					icon: "request"
-				};
-			}
-		}
-		/** 触发行：折叠时只有「图标 + 标题 + 时间 + 箭头」，点开展示注入原文。 */
-		function TurnTriggerNodeViewMirror(props) {
-			const { data, t } = props;
-			const [open, setOpen] = (0, react$1.useState)(false);
-			const details = turnTriggerDetails(data?.source);
-			const TriggerIcon = TRIGGER_ICONS[details.icon] ?? official_exports.IconContextInjectionOutlineRegular;
-			const time = typeof data?.time === "number" ? data.time : void 0;
-			const content = triggerContent(data?.content);
-			return (0, react$1.createElement)("section", {
-				className: officialClass("TurnTriggerNodeView", "root") ?? "",
-				"data-turn-trigger": true
-			}, (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("TurnTriggerNodeView", "header") ?? "",
-				"aria-expanded": open,
-				onClick: () => {
-					setOpen((value) => !value);
-				}
-			}, (0, react$1.createElement)("span", {
-				className: officialClass("TurnTriggerNodeView", "icon") ?? "",
-				"aria-hidden": true
-			}, (0, react$1.createElement)(TriggerIcon, { size: 14 })), (0, react$1.createElement)("span", { className: officialClass("TurnTriggerNodeView", "title") ?? "" }, t(details.title)), time === void 0 ? null : (0, react$1.createElement)("time", {
-				className: officialClass("TurnTriggerNodeView", "time") ?? "",
-				dateTime: new Date(time).toISOString()
-			}, formatMessageClock(time, t)), (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, {
-				size: 12,
-				className: open ? officialClass("TurnTriggerNodeView", "openChevron") ?? "" : officialClass("TurnTriggerNodeView", "chevron") ?? ""
-			})), open ? (0, react$1.createElement)("div", { className: officialClass("TurnTriggerNodeView", "body") ?? "" }, (0, react$1.createElement)("p", { className: officialClass("TurnTriggerNodeView", "explanation") ?? "" }, t("triggerExplanation")), (0, react$1.createElement)("div", { className: officialClass("TurnTriggerNodeView", "content") ?? "" }, content === "" ? t("sessionEmpty") : content)) : null);
-		}
-		/** 注入原文：content 块的 text 拼接（官方 NoticeBody 的文本消费面）。 */
-		function triggerContent(content) {
-			if (!Array.isArray(content)) return "";
-			return content.map((block) => {
-				const b = block;
-				if (b !== null && typeof b === "object" && b.type === "text" && typeof b.text === "string") return b.text;
-				return "";
-			}).filter((part) => part !== "").join("\n");
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/Deliverables.js
-		const basename = (path) => path.slice(Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1);
-		/** 官方 fileNames（PresentRow.tsx）：argsRaw.files[].path 逗号连接；解析不出回原样。 */
-		function fileNames(raw) {
-			let args;
-			try {
-				args = JSON.parse(raw);
-			} catch {
-				return raw;
-			}
-			if (typeof args !== "object" || args === null || !("files" in args) || !Array.isArray(args.files)) return raw;
-			return args.files.flatMap((file) => typeof file === "object" && file !== null && "path" in file && typeof file.path === "string" ? [file.path] : []).join(", ");
-		}
-		/** 官方 PresentRow：present 工具调用的状态行（折叠 = 状态词 + 路径；展开 = 结果原文）。 */
-		function PresentRowMirror(props) {
-			const { block, t } = props;
-			const b = block ?? {};
-			const settled = typeof b.kind === "string";
-			const state = !settled ? b.phase === "preparing" ? "preparing" : "running" : b.error?.code === "interrupted" ? "stopped" : b.isError ? "error" : "ok";
-			const argsRaw = (settled ? b.call?.argsRaw : b.argsRaw) ?? "";
-			const details = settled ? (b.content ?? []).map((item) => item.type === "text" ? item.text ?? "" : JSON.stringify(item)).join("\n") || (b.error ? `${b.error.name ?? ""}: ${b.error.code ?? ""}` : "") : "";
-			const [expanded, setExpanded] = (0, react$1.useState)(false);
-			const statusKey = state === "preparing" ? "deliverRowPreparing" : state === "running" ? "deliverRowRunning" : state === "error" ? "deliverRowError" : state === "stopped" ? "deliverRowStopped" : "deliverRowOk";
-			return (0, react$1.createElement)("div", {
-				className: officialClass("ToolRow", "root") ?? "",
-				"data-tool": "present",
-				"data-state": state
-			}, (0, react$1.createElement)(official_exports.DisclosureRow, {
-				icon: (0, react$1.createElement)(official_exports.IconDeliverDocRegular, { size: 14 }),
-				title: t("deliverRowTitle"),
-				open: expanded && details !== "",
-				expandable: details !== "",
-				expandOnRowClick: true,
-				keepContentWhenOpen: true,
-				onToggle: () => {
-					setExpanded((value) => !value);
-				},
-				running: state === "running" || state === "preparing",
-				rowClassName: officialClass("ToolRow", "row") ?? "",
-				leadingClassName: officialClass("ToolRow", "leading") ?? "",
-				titleClassName: officialClass("ToolRow", "title") ?? "",
-				chevronClassName: officialClass("ToolRow", "chevron") ?? "",
-				collapsedContent: (0, react$1.createElement)("span", { className: officialClass("PresentRow", "summary") ?? "" }, (0, react$1.createElement)("span", null, t(statusKey)), (0, react$1.createElement)("span", { className: officialClass("PresentRow", "paths") ?? "" }, fileNames(argsRaw))),
-				children: details !== "" && expanded ? (0, react$1.createElement)("pre", { className: officialClass("PresentRow", "output") ?? "" }, details) : null
-			}));
-		}
-		/** 官方 COLLAPSED_PRESENTED_COUNT（Deliverables.tsx）：超过 4 张折叠。 */
-		const COLLAPSED_DELIVERED_COUNT = 4;
-		/** 官方 cardDescription：简介去尾部括注后为空则回退扩展名大写（再退「文件」）。 */
-		function cardDescription(description, fallback) {
-			const trimmed = description?.replace(/\s*(?:\([^()]*\)|（[^（）]*）)\s*$/u, "").trim();
-			return trimmed === void 0 || trimmed === "" ? fallback : trimmed;
-		}
-		/** 官方 PresentedFileCard：整卡可点 → onPreview（官方 = 右栏预览，本弹窗 = 调用方 openFile）。 */
-		function DeliveredFileCard(props) {
-			const { file, onPreview, t } = props;
-			const name = basename(file.path);
-			const metadata = (0, official_exports.fileExtension)(name).toUpperCase() || t("deliverFileLabel");
-			return (0, react$1.createElement)("div", {
-				className: officialClass("Deliverables", "file") ?? "",
-				"data-presented-file": true
-			}, onPreview !== void 0 ? (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("Deliverables", "cardPreview") ?? "",
-				title: file.path,
-				"aria-label": t("deliverPreviewCard", { name: file.path }),
-				onClick: (event) => {
-					event.stopPropagation();
-					onPreview();
-				}
-			}) : null, (0, react$1.createElement)("span", { className: officialClass("Deliverables", "fileIcon") ?? "" }, (0, react$1.createElement)(official_exports.FileTypeIcon, {
-				path: file.path,
-				size: 20
-			})), (0, react$1.createElement)("div", { className: officialClass("Deliverables", "fileBody") ?? "" }, (0, react$1.createElement)("div", { className: officialClass("Deliverables", "details") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("Deliverables", "fileName") ?? "" }, name), (0, react$1.createElement)("span", {
-				className: officialClass("Deliverables", "description") ?? "",
-				"data-presented-description": true
-			}, (0, react$1.createElement)("span", { className: officialClass("Deliverables", "secondaryText") ?? "" }, cardDescription(file.description, metadata)), onPreview !== void 0 ? (0, react$1.createElement)("span", { className: officialClass("Deliverables", "previewHint") ?? "" }, t("deliverPreviewHint")) : null))));
-		}
-		/**
-		* 官方 DeliverablesTail 的 presented 网格（FileTypeIcon + 文件名 + 简介，整卡可点 → 预览）。
-		* 「已编辑文件」卡（ChangedFiles）不在这里：它走宿主 api/changes.summary，见
-		* mirror/ChangedFilesCard.ts。数据真源 = turn 级 `deliverables.presented`
-		* （官方 TurnLocation.data.get('deliverables')，见 changes.ts）。
-		*/
-		function DeliverablesGridMirror(props) {
-			const { files, onOpen, t } = props;
-			const [expanded, setExpanded] = (0, react$1.useState)(false);
-			if (files.length === 0) return null;
-			const collapsible = files.length > COLLAPSED_DELIVERED_COUNT;
-			const shown = collapsible && !expanded ? files.slice(0, COLLAPSED_DELIVERED_COUNT) : files;
-			return (0, react$1.createElement)("div", {
-				className: officialClass("Deliverables", "root") ?? "",
-				"data-presented-files-grid": true
-			}, (0, react$1.createElement)("div", {
-				className: officialClass("Deliverables", "presented") ?? "",
-				"data-presented-files-row": true
-			}, shown.map((file, index) => (0, react$1.createElement)(DeliveredFileCard, {
-				key: `${file.path}:${index}`,
-				file,
-				onPreview: onOpen === void 0 ? void 0 : () => {
-					onOpen(file.path);
-				},
-				t
-			}))), collapsible ? (0, react$1.createElement)("button", {
-				type: "button",
-				className: officialClass("Deliverables", "toggle") ?? "",
-				"aria-expanded": expanded,
-				"aria-label": t(expanded ? "deliverCollapseAria" : "deliverExpandAria", { count: files.length }),
-				onClick: () => {
-					setExpanded((value) => !value);
-				}
-			}, (0, react$1.createElement)("span", null, t(expanded ? "deliverCollapse" : "deliverAll", { count: files.length })), expanded ? (0, react$1.createElement)(official_exports.IconChevronUpOutlineRegular, {}) : (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, {})) : null);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/utils/string.js
-		/**
-		* 路径取末段（文件名显示用）。`/` 与 `\` 都认。
-		*
-		* ⚠️ 必须**先剔尾斜杠**：「目录」常用尾斜杠表达（`a.md` / `b/`），
-		* 不剔的话 `baseNameOf('b/')` 会返回空串 ⇒ 目录在界面上渲染成空标签。
-		*/
-		function baseNameOf(path) {
-			const trimmed = path.replace(/[\\/]+$/, "");
-			if (trimmed === "") return path;
-			const cut = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf("\\"));
-			return cut < 0 ? trimmed : trimmed.slice(cut + 1);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/changes.js
-		/** 官方 changesSummaryUrl（client.js:90-96）：文档相对路由。 */
-		function changesSummaryUrl(sessionId, seq) {
-			return `api/changes.summary?${new URLSearchParams({
-				sessionId,
-				seq: String(seq)
-			})}`;
-		}
-		const isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
-		const isInt = (value) => typeof value === "number" && Number.isSafeInteger(value);
-		/** 官方 isChangedFile（client.js:34-42）。 */
-		function isChangedFile(value) {
-			if (!isRecord(value)) return false;
-			const { path, display, added, deleted, binary, oversized } = value;
-			return typeof path === "string" && path.length > 0 && typeof display === "string" && display.length > 0 && isInt(added) && isInt(deleted) && (binary === void 0 || binary === true) && (oversized === void 0 || oversized === true);
-		}
-		/** 官方 isChangesSummary（client.js:49-53）：不合规返回 null（官方按 missing 处理）。 */
-		function parseChangesSummary(value) {
-			if (!isRecord(value)) return null;
-			const { turn, files, total, added, deleted } = value;
-			if (!isInt(turn) || turn < 1) return null;
-			if (!isInt(total) || !isInt(added) || !isInt(deleted)) return null;
-			if (!Array.isArray(files) || !files.every(isChangedFile)) return null;
-			return {
-				turn,
-				total,
-				added,
-				deleted,
-				files
-			};
-		}
-		/**
-		* 读某 turn 的 turn 级业务值（官方 `TurnLocation.data`：`ConversationLocationDataStore`，
-		* 用 `.get(key)` 读，**不是 Map 也不是普通对象** —— conversation.d.ts:87-95）。
-		* 兼容 Map / 纯对象两种形态只为容忍宿主改版；官方契约就是 `.get`。
-		*/
-		function turnDeliverablesValue(face, key) {
-			const data = face?.data;
-			if (data === void 0 || data === null) return void 0;
-			const get = data.get;
-			if (typeof get === "function") return get.call(data, key);
-			if (data instanceof Map) return data.get(key);
-			return data[key];
-		}
-		/**
-		* 官方 CHANGES_DIFF_PATH（client.js）的文档相对路由：单文件某轮首尾对比的只读 GET。
-		* 与 `changesSummaryUrl` 同属宿主 changes 服务（鉴权随宿主会话，裸 fetch 同机制）。
-		*/
-		function changesDiffUrl(sessionId, seq, index) {
-			return `api/changes.diff?${new URLSearchParams({
-				sessionId,
-				seq: String(seq),
-				index: String(index)
-			})}`;
-		}
-		/** 官方 isHunk（client.js）。 */
-		function isDiffHunk(value) {
-			if (!isRecord(value)) return false;
-			const { oldStart, oldLines, newStart, newLines, lines } = value;
-			return [
-				oldStart,
-				oldLines,
-				newStart,
-				newLines
-			].every((field) => isInt(field) && field >= 0) && Array.isArray(lines) && lines.every((line) => typeof line === "string" && /^[+ -]/.test(line));
-		}
-		/** 官方 isChangesDiff（client.js）：不合规返回 null（官方按 missing 处理）。 */
-		function parseChangesDiff(value) {
-			if (!isRecord(value)) return null;
-			const { kind, path, display, before, after, coarse, hunks } = value;
-			if (typeof path !== "string" || path.length === 0 || typeof display !== "string" || display.length === 0) return null;
-			if (kind === "binary" || kind === "oversized") return kind === "binary" ? {
-				kind: "binary",
-				path,
-				display
-			} : {
-				kind: "oversized",
-				path,
-				display
-			};
-			if (kind !== "text") return null;
-			if (typeof before !== "boolean" || typeof after !== "boolean" || typeof coarse !== "boolean") return null;
-			if (!Array.isArray(hunks) || !hunks.every(isDiffHunk)) return null;
-			return {
-				kind: "text",
-				path,
-				display,
-				before,
-				after,
-				coarse,
-				hunks
-			};
-		}
-		/** 官方 MAX_RENDERED_LINES：超过即截断（出 diff.truncated 提示），防巨型对比卡死预览。 */
-		const DIFF_MAX_RENDERED_LINES = 5e3;
-		/** 官方 hunkRows（client.js）。 */
-		function hunkRows(hunk) {
-			let oldNo = hunk.oldStart;
-			let newNo = hunk.newStart;
-			return hunk.lines.map((line) => {
-				const text = line.slice(1);
-				switch (line[0]) {
-					case "+": return {
-						kind: "add",
-						old: void 0,
-						new: newNo++,
-						text
-					};
-					case "-": return {
-						kind: "del",
-						old: oldNo++,
-						new: void 0,
-						text
-					};
-					default: return {
-						kind: "context",
-						old: oldNo++,
-						new: newNo++,
-						text
-					};
-				}
-			});
-		}
-		/** 官方 hunkHeader：`@@ -oldStart,oldLines +newStart,newLines @@`。 */
-		function hunkHeader(hunk) {
-			return `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`;
-		}
-		/** 官方 noteOf：新建 / 删除 / 无变化 的提示键（无提示 = undefined）。 */
-		function diffNoteKey(diff) {
-			if (diff.before === false) return "diffCreated";
-			if (diff.after === false) return "diffDeleted";
-			if ((diff.hunks?.length ?? 0) === 0) return "diffUnchanged";
-		}
-		/**
-		* 某 turn 的 `workspace/changes` 事件 seq（官方 changesForClosing：读 turn.data 的
-		* `deliverables.changes`）。没有公告 = null（官方此时不挂卡）。
-		*/
-		function turnDeliverablesChangesSeq(face) {
-			const seq = (turnDeliverablesValue(face, "deliverables")?.changes)?.seq;
-			return isInt(seq) ? seq : null;
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/ChangedFileDiff.js
-		/** 官方 ChangedFiles / FileDiff 模块类（ui-deliverables；取不到 = 空类，不白屏）。 */
-		const C$1 = (semantic) => officialClass("ChangedFiles", semantic) ?? "";
-		const D = (semantic) => officialClass("FileDiff", semantic) ?? "";
-		/** 会话级缓存：同一 (sessionId, seq, index) 只拉一次（官方 ChangesDiffStore 同语义）。 */
-		const cache$1 = /* @__PURE__ */ new Map();
-		/** 官方 highlightedSide：一侧收集 → 整段高亮 → 按行号回表。 */
-		function highlightedSide(rows, side, highlighter) {
-			const source = rows.flatMap((row) => row[side] === void 0 ? [] : [{
-				no: row[side],
-				text: row.text
-			}]);
-			if (source.length === 0) return /* @__PURE__ */ new Map();
-			const highlighted = highlighter(source.map((line) => line.text).join("\n"));
-			if (highlighted === void 0) return void 0;
-			return new Map(source.map((line, index) => [line.no, highlighted[index] ?? []]));
-		}
-		/** 官方 DiffText：有高亮 spans 就逐段上色，否则纯文本。 */
-		function DiffText(props) {
-			const { text, spans } = props;
-			return (0, react$1.createElement)("span", {
-				className: D("text"),
-				"data-diff-code": spans === void 0 ? void 0 : ""
-			}, spans === void 0 ? text : spans.map((span, index) => (0, react$1.createElement)("span", {
-				key: index,
-				style: span.style
-			}, span.text)));
-		}
-		/** 官方 FileDiff 的行：grid 四列（旧号 / 新号 / 符号 / 文本）。 */
-		function DiffLine(props) {
-			const { row } = props;
-			const kindClass = row.kind === "add" ? D("add") : row.kind === "del" ? D("del") : D("context");
-			const spans = row.kind === "del" ? props.oldSpans : props.newSpans;
-			return (0, react$1.createElement)("div", {
-				className: `${D("line")} ${kindClass}`,
-				"data-diff-line": row.kind
-			}, (0, react$1.createElement)("span", { className: D("number") }, row.old ?? ""), (0, react$1.createElement)("span", { className: D("number") }, row.new ?? ""), (0, react$1.createElement)("span", { className: D("sign") }, row.kind === "add" ? "+" : row.kind === "del" ? "-" : " "), (0, react$1.createElement)(DiffText, {
-				text: row.text,
-				spans
-			}));
-		}
-		/** 一个变更文件的 diff 体（状态机 + unified 行渲染）。 */
-		function ChangedFileDiff(props) {
-			const { sessionId, seq, index, display, t = t$2, variant = "preview", onClose } = props;
-			const url = changesDiffUrl(sessionId, seq, index);
-			const [state, setState] = (0, react$1.useState)(void 0);
-			const [attempt, setAttempt] = (0, react$1.useState)(0);
-			const [wrap, setWrap] = (0, react$1.useState)(false);
-			(0, react$1.useEffect)(() => {
-				if (cache$1.has(url)) {
-					setState(cache$1.get(url));
-					return;
-				}
-				let alive = true;
-				(async () => {
-					let next = null;
-					try {
-						const res = await fetch(url);
-						if (res.ok) next = parseChangesDiff(await res.json());
-						else if (res.status !== 404) {
-							if (alive) setState("error");
-							return;
-						}
-					} catch {
-						if (alive) setState("error");
-						return;
-					}
-					cache$1.set(url, next);
-					if (alive) setState(next);
-				})();
-				return () => {
-					alive = false;
-				};
-			}, [url, attempt]);
-			const retry = (0, react$1.useCallback)(() => {
-				setAttempt((value) => value + 1);
-			}, []);
-			const path = state === void 0 || state === "error" || state === null ? void 0 : state.path;
-			const highlighter = (0, official_exports.useCodeHighlighter)(path === void 0 ? void 0 : (0, official_exports.languageForPath)(path));
-			const body = (0, react$1.useMemo)(() => {
-				if (state === void 0) return (0, react$1.createElement)("p", {
-					className: D("status"),
-					role: "status"
-				}, t("diffLoading"));
-				if (state === "error") return (0, react$1.createElement)("div", { className: D("status") }, (0, react$1.createElement)("span", null, t("diffError")), (0, react$1.createElement)(official_exports.Button, {
-					size: "sm",
-					onClick: retry
-				}, t("errorRetry")));
-				if (state === null) return (0, react$1.createElement)("p", { className: D("status") }, t("diffMissing"));
-				if (state.kind === "binary") return (0, react$1.createElement)("p", { className: D("status") }, t("diffBinary"));
-				if (state.kind === "oversized") return (0, react$1.createElement)("p", { className: D("status") }, t("diffOversized"));
-				const note = diffNoteKey(state);
-				const hunks = state.hunks ?? [];
-				let budget = DIFF_MAX_RENDERED_LINES;
-				const kept = [];
-				let truncated = false;
-				for (const hunk of hunks) {
-					if (budget <= 0) {
-						truncated = true;
-						break;
-					}
-					if (hunk.lines.length > budget) {
-						kept.push({
-							...hunk,
-							lines: hunk.lines.slice(0, budget)
-						});
-						budget = 0;
-						truncated = true;
-						break;
-					}
-					kept.push(hunk);
-					budget -= hunk.lines.length;
-				}
-				return (0, react$1.createElement)("div", {
-					className: D("body"),
-					"data-review-view": "unified",
-					"data-review-wrap": wrap ? true : void 0
-				}, note === void 0 ? null : (0, react$1.createElement)("p", {
-					className: D("note"),
-					"data-diff-note": hunks.length === 0 ? "empty" : "metadata"
-				}, t(note)), state.coarse === true ? (0, react$1.createElement)("p", {
-					className: D("note"),
-					"data-diff-coarse": true
-				}, t("diffCoarse")) : null, truncated ? (0, react$1.createElement)("p", {
-					className: D("note"),
-					"data-diff-truncated": true
-				}, t("diffTruncated", { count: String(DIFF_MAX_RENDERED_LINES) })) : null, kept.map((hunk, position) => {
-					const rows = hunkRows(hunk);
-					const oldSpans = highlightedSide(rows, "old", highlighter);
-					const newSpans = highlightedSide(rows, "new", highlighter);
-					return (0, react$1.createElement)("section", {
-						key: position,
-						className: D("hunk")
-					}, (0, react$1.createElement)("div", {
-						className: D("hunkHeader"),
-						"data-diff-hunk-header": true
-					}, hunkHeader(hunk)), rows.map((row, at) => (0, react$1.createElement)(DiffLine, {
-						key: at,
-						row,
-						oldSpans: oldSpans?.get(row.old ?? -1),
-						newSpans: newSpans?.get(row.new ?? -1)
-					})));
-				}));
-			}, [
-				state,
-				highlighter,
-				t,
-				retry,
-				wrap
-			]);
-			const preview = variant !== "review";
-			return (0, react$1.createElement)("div", {
-				className: preview ? `${D("root")} ${C$1("preview")}` : D("root"),
-				"data-changes-hover-preview": preview ? true : void 0,
-				style: preview ? void 0 : { height: "100%" }
-			}, (0, react$1.createElement)("div", { className: D("header") }, (0, react$1.createElement)("span", {
-				className: C$1("previewPath"),
-				"data-changes-preview-path": true
-			}, display), preview ? null : (0, react$1.createElement)(IconButton$1, {
-				variant: "plain",
-				size: "md",
-				icon: (0, react$1.createElement)(wrap ? official_exports.IconNowrapFillRegular : official_exports.IconWrapFillRegular, { size: 14 }),
-				label: wrap ? t("diffNowrap") : t("diffWrap"),
-				onClick: () => {
-					setWrap((value) => !value);
-				}
-			}), preview || onClose === void 0 ? null : (0, react$1.createElement)(IconButton$1, {
-				variant: "plain",
-				size: "md",
-				icon: (0, react$1.createElement)(official_exports.IconCloseOutlineRegular, { size: 14 }),
-				label: t("previewClose"),
-				onClick: onClose
-			})), body);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/mirror/ChangedFilesCard.js
-		/** 官方 ChangedFiles 模块类（ui-deliverables；取不到 = 空类，不白屏）。 */
-		const C = (semantic) => officialClass("ChangedFiles", semantic) ?? "";
-		/** 会话级缓存：同一 (sessionId, seq) 只拉一次（官方 ChangesSummaryStore 同语义）。 */
-		const cache = /* @__PURE__ */ new Map();
-		/** 官方 COLLAPSED_ROWS（适配收尾消息的汇总高度）：超过才折叠 + 出 toggle。 */
-		const COLLAPSED_ROWS = 4;
-		/** 官方 Counts：added（成功色）+ deleted（错误色），常显不靠 hover。 */
-		function Counts(props) {
-			const grouped = new Intl.NumberFormat("en-US");
-			return (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", { className: C("added") }, `+${grouped.format(props.added)}`), " ", (0, react$1.createElement)("span", { className: C("deleted") }, `-${grouped.format(props.deleted)}`));
-		}
-		/** 计数或状态词（官方 binary / oversized 顶替计数）。 */
-		function countsOf(file, t) {
-			if (file.binary === true) return t("changesBinary");
-			if (file.oversized === true) return t("changesOversized");
-			return (0, react$1.createElement)(Counts, {
-				added: file.added,
-				deleted: file.deleted
-			});
-		}
-		function ChangedFilesCard(props) {
-			const { sessionId, seq, onOpenReview, t } = props;
-			const url = changesSummaryUrl(sessionId, seq);
-			const [summary, setSummary] = (0, react$1.useState)(void 0);
-			const [expanded, setExpanded] = (0, react$1.useState)(false);
-			const cardRef = (0, react$1.useRef)(null);
-			(0, react$1.useEffect)(() => {
-				if (cache.has(url)) {
-					setSummary(cache.get(url));
-					return;
-				}
-				let alive = true;
-				(async () => {
-					let next = null;
-					try {
-						const res = await fetch(url);
-						next = res.ok ? parseChangesSummary(await res.json()) : null;
-					} catch {
-						next = null;
-					}
-					cache.set(url, next);
-					if (alive) setSummary(next);
-				})();
-				return () => {
-					alive = false;
-				};
-			}, [url]);
-			if (summary === void 0 || summary === null || summary.total === 0 || summary.files.length === 0) return null;
-			const single = summary.total === 1 ? summary.files[0] : void 0;
-			const icon = single !== void 0 ? (0, react$1.createElement)(official_exports.FileTypeIcon, {
-				path: single.path,
-				size: 20
-			}) : (0, react$1.createElement)(official_exports.FileTypeIcon, {
-				kind: "code",
-				size: 20
-			});
-			const title = single === void 0 ? t("changesMulti", { count: String(summary.total) }) : t("changesSingle", { name: baseNameOf(single.path) });
-			const foldable = summary.files.length > COLLAPSED_ROWS;
-			const rows = foldable && !expanded ? summary.files.slice(0, COLLAPSED_ROWS) : summary.files;
-			const headerBody = (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", { className: C("tile") }, icon), (0, react$1.createElement)("span", { className: C("titles") }, (0, react$1.createElement)("span", { className: C("title") }, title), (0, react$1.createElement)("span", { className: C("stat") }, (0, react$1.createElement)("span", { className: C("statCounts") }, countsOf(single ?? summary, t)), (0, react$1.createElement)("span", { className: C("previewHint") }, t("deliverPreviewHint")))));
-			const headerLocator = {
-				sessionId,
-				seq,
-				index: 0,
-				display: single?.display ?? summary.files[0].display
-			};
-			const headerNode = onOpenReview === void 0 ? (0, react$1.createElement)("div", { className: C("header") }, headerBody) : (0, react$1.createElement)("button", {
-				type: "button",
-				className: C("header"),
-				title: headerLocator.display,
-				onClick: () => {
-					onOpenReview(headerLocator);
-				}
-			}, headerBody);
-			/** 官方 hover 预览卡（variant preview + dwell 500 + 宽度跟整卡）；content 挂上才取数。 */
-			const previewOf = (index, display) => (0, react$1.createElement)(ChangedFileDiff, {
-				sessionId,
-				seq,
-				index,
-				display,
-				t
-			});
-			const rowOf = (file, index) => {
-				const body = (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", { className: C("path") }, file.display), (0, react$1.createElement)("span", { className: C("counts") }, countsOf(file, t)));
-				const locator = {
-					sessionId,
-					seq,
-					index,
-					display: file.display
-				};
-				const row = onOpenReview === void 0 ? (0, react$1.createElement)("div", {
-					className: C("row"),
-					title: file.path
-				}, body) : (0, react$1.createElement)("button", {
-					type: "button",
-					className: C("row"),
-					title: file.path,
-					onClick: () => {
-						onOpenReview(locator);
-					}
-				}, body);
-				return (0, react$1.createElement)(official_exports.HoverCard, {
-					key: file.display,
-					variant: "preview",
-					widthAnchorRef: cardRef,
-					openDelayMs: 500,
-					anchor: row,
-					content: previewOf(index, file.display)
-				});
-			};
-			const list = single === void 0 ? (0, react$1.createElement)("ul", { className: C("list") }, rows.map((file) => {
-				const index = summary.files.indexOf(file);
-				return (0, react$1.createElement)("li", { key: file.display }, rowOf(file, index));
-			})) : null;
-			const toggle = foldable ? (0, react$1.createElement)("button", {
-				type: "button",
-				className: C("toggle"),
-				"aria-expanded": expanded,
-				"aria-label": t(expanded ? "deliverCollapseAria" : "deliverExpandAria", { count: summary.files.length }),
-				onClick: () => {
-					setExpanded((value) => !value);
-				}
-			}, (0, react$1.createElement)("span", null, t(expanded ? "changesCollapse" : "changesAll", { count: summary.files.length })), expanded ? (0, react$1.createElement)(official_exports.IconChevronUpOutlineRegular, {}) : (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, {})) : null;
-			const header = single === void 0 ? headerNode : (0, react$1.createElement)(official_exports.HoverCard, {
-				variant: "preview",
-				widthAnchorRef: cardRef,
-				openDelayMs: 500,
-				anchor: headerNode,
-				content: previewOf(0, single.display)
-			});
-			return (0, react$1.createElement)("div", {
-				ref: cardRef,
-				className: C("card"),
-				"data-changed-files": true,
-				"data-single": single !== void 0 || void 0
-			}, header, list, toggle);
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/SessionViewModal.js
-		/** 稳定的空序列（避免默认值每次新建数组）。 */
-		const EMPTY_ORDER = [];
-		/** 官方样式缺失告警只打一次（避免每次渲染刷屏）。 */
-		let officialWarned = false;
-		/** JSON 安全序列化（循环引用 / 特殊值不抛）。 */
-		function safeJson(value) {
-			try {
-				return JSON.stringify(value, null, 2) ?? String(value);
-			} catch {
-				return String(value);
-			}
-		}
-		/** 提取内容块的可读文本：text 拼接、图片占位（官方 ContentBlock 是 merge-extensible map）。 */
-		function contentText(blocks) {
-			if (blocks === void 0) return "";
-			return blocks.map((block) => {
-				if (block !== null && typeof block === "object" && block.type === "text" && typeof block.text === "string") return block.text;
-				if (block !== null && typeof block === "object" && block.type === "image") return t$2("sessionImage");
-				return "";
-			}).filter((part) => part !== "").join("\n");
-		}
-		/**
-		* 提取内容块里的**官方 file 块**（2026-10-03 核实）：随附文件以官方附件形式发进会话后，
-		* 会话快照的 user 节点 content 里就是它 ⇒ 弹窗里照样渲染成附件卡（与官方页一致）。
-		* 拿不到（宿主投影未透传）⇒ 空数组：附件卡不渲染，**绝不造一个假卡**。
-		*
-		* @returns `files` = 去重后要画的附件；`hadFiles` = 该轮**原本**有没有 file 块
-		* （去重让位后可能为空 —— 调用方据此判断该轮要不要渲染，不能因为让位把整条消息吞掉）。
-		*/
-		function contentFiles(blocks, exclude) {
-			if (blocks === void 0) return {
-				files: [],
-				hadFiles: false
-			};
-			const out = [];
-			let hadFiles = false;
-			for (const block of blocks) {
-				if (block === null || typeof block !== "object" || block.type !== "file") continue;
-				const attachment = block.attachment;
-				if (typeof attachment !== "object" || attachment === null) continue;
-				hadFiles = true;
-				const name = typeof attachment.name === "string" && attachment.name !== "" ? attachment.name : "file";
-				if (exclude?.has(name) === true) continue;
-				out.push({
-					name,
-					bytes: typeof attachment.bytes === "number" ? attachment.bytes : 0
-				});
-			}
-			return {
-				files: out,
-				hadFiles
-			};
-		}
-		/** legacy assistant 节点的纯文本（复制按钮用）。 */
-		function assistantText(node) {
-			return (node.blocks ?? []).map((block) => block.kind === "text" ? block.text : "").join("");
-		}
-		/** keyed 节点的 data（官方 ChatNodeDataMap[kind]）。 */
-		function dataOf(node) {
-			return node.data ?? {};
-		}
-		/** 节点位置 → turn 位置（官方 node.location 收窄，ChatNodeSeat.tsx:1660 的反向）。 */
-		function turnLocationOf(node) {
-			const location = node.location;
-			return location?.kind === "turn" || location?.kind === "step" ? location.turn : void 0;
-		}
-		/** 官方 AssistantChatData.blocks（ui-chat contract/chat-nodes.d.ts:22）。 */
-		function blocksOf(value) {
-			return Array.isArray(value) ? value : void 0;
-		}
-		/**
-		* 官方 ToolCallBlock（uic contract/records.d.ts:140）→ 工具卡 props。
-		* running 半截（phase: preparing/start）只有 name/argsRaw；settled（kind: tool-result）带输出与错误。
-		*/
-		function toolCallCard(node, t, onOpenFile) {
-			const root = dataOf(node).root;
-			if (root === void 0 || root === null) return null;
-			const settled = root.kind === "tool-result";
-			const call = settled ? root.call : root;
-			const error = root.error;
-			return {
-				name: typeof call?.name === "string" ? call.name : "tool",
-				argsRaw: typeof call?.argsRaw === "string" ? call.argsRaw : "",
-				output: settled ? contentText(root.content) : "",
-				isError: root.isError === true,
-				errorName: error?.name,
-				meta: root.meta,
-				settled,
-				phase: settled ? void 0 : root.phase === "preparing" ? "preparing" : "start",
-				interrupted: error?.code === "interrupted",
-				onOpenFile,
-				t
-			};
-		}
-		/** 官方 Tool / ToolResult block 是否为 present 调用（交付文件行专属渲染；running 名在顶层，结算名在 call 里）。 */
-		function isPresentRoot(root) {
-			if (typeof root !== "object" || root === null) return false;
-			const r = root;
-			if (r.name === "present") return true;
-			return r.kind === "tool-result" && r.call !== null && typeof r.call === "object" && r.call.name === "present";
-		}
-		/** 官方 present 调用参数里的 files（deliverables/presented 事件同源数据）。 */
-		function presentFiles(root) {
-			if (typeof root !== "object" || root === null) return [];
-			const r = root;
-			const settled = r.kind === "tool-result";
-			if (r.isError === true) return [];
-			const raw = settled ? r.call?.argsRaw : r.argsRaw;
-			if (typeof raw !== "string") return [];
-			try {
-				const files = JSON.parse(raw)?.files;
-				if (!Array.isArray(files)) return [];
-				const out = [];
-				for (const file of files) {
-					if (typeof file !== "object" || file === null) continue;
-					const path = file.path;
-					if (typeof path !== "string" || path.trim() === "") continue;
-					const description = file.description;
-					out.push(typeof description === "string" && description.trim() !== "" ? {
-						path,
-						description
-					} : { path });
-				}
-				return out;
-			} catch {
-				return [];
-			}
-		}
-		/**
-		* keyed 节点 → 视图（等价于官方 slot "conversation.chat.node" 的按 kind 分发）。
-		* @param node - keyed ChatNode。
-		* @param turnProcess - seat 下发的过程席位（turn-process / 折叠答案节点要用）。
-		* @param t - 翻译席位。
-		* @param onBranchAt - 消息行分支按钮（以该轮 tail seq 开分支；undefined = 不渲染按钮）。
-		* @param fileOpen - 文件打开上下文（undefined = 链接全部降级为纯文本）。
-		* @param groupPart - 过程分组侧（'response' | 'reasoning'）。
-		* @returns 节点视图；null = 决策 28 过滤的噪音 kind。
-		*/
-		function renderKeyedNode(node, turnProcess, t, onBranchAt, fileOpen, groupPart, deliverFiles, lastTailTurn, changesSeq, sessionId, onOpenReview) {
-			switch (node.kind) {
-				case "turn-trigger": return (0, react$1.createElement)(TurnTriggerNodeViewMirror, {
-					data: node.data,
-					t
-				});
-				case "turn-process": return turnProcess === void 0 ? null : (0, react$1.createElement)(TurnProcessNodeViewMirror, {
-					turn: turnLocationOf(node),
-					turnProcess,
-					t
-				});
-				case "turn-tail": {
-					const data = node.data;
-					const turn = data?.turn ?? turnLocationOf(node)?.turn;
-					const atLastTail = turn !== void 0 && lastTailTurn !== void 0 && turn === lastTailTurn;
-					const showGrid = deliverFiles !== void 0 && deliverFiles.length > 0 && atLastTail;
-					const changesCard = atLastTail && changesSeq !== void 0 && sessionId !== void 0 ? (0, react$1.createElement)(ChangedFilesCard, {
-						sessionId,
-						seq: changesSeq,
-						onOpenReview,
-						t
-					}) : null;
-					const tailSlot = changesCard === null && !showGrid ? null : (0, react$1.createElement)(react$1.Fragment, null, changesCard, showGrid ? (0, react$1.createElement)(DeliverablesGridMirror, {
-						files: deliverFiles,
-						onOpen: fileOpen?.open,
-						t
-					}) : null);
-					return data === void 0 || data.closing === null || data.closing === void 0 ? null : (0, react$1.createElement)(TurnTailNodeViewMirror, {
-						data,
-						onBranchAt,
-						tailSlot,
-						t
-					});
-				}
-				case "assistant-step": {
-					const blocks = blocksOf(dataOf(node).blocks) ?? [];
-					const contentBlocks = blocks.filter((block) => block.kind !== "tool-call");
-					if (blocks.length > 0 && contentBlocks.length === 0) return null;
-					const parts = assistantBlocks(groupPart === "reasoning" ? contentBlocks.filter((block) => block.kind === "reasoning") : groupPart === "response" ? contentBlocks.filter((block) => block.kind !== "reasoning") : contentBlocks, t, fileOpen?.mentions);
-					return parts.length === 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-sv-assistant" }, parts);
-				}
-				case "tool-call": {
-					const root = dataOf(node).root;
-					if (isPresentRoot(root)) return (0, react$1.createElement)(PresentRowMirror, {
-						block: root,
-						t
-					});
-					const card = toolCallCard(node, t, fileOpen?.open);
-					return card === null ? null : (0, react$1.createElement)(GenericCommandCard, card);
-				}
-				case "command": return (0, react$1.createElement)(CommandCard, {
-					node: dataOf(node),
-					t
-				});
-				case "user":
-				case "steering": {
-					const blocks = dataOf(node).content;
-					const text = contentText(blocks);
-					const { files, hadFiles } = contentFiles(blocks);
-					if (text === "" && !hadFiles) return null;
-					return (0, react$1.createElement)(UserMessage, {
-						text,
-						files
-					});
-				}
-				case "turn-error": return (0, react$1.createElement)(TurnErrorItemMirror, {
-					node: dataOf(node),
-					t
-				});
-				case "turn-max-tokens": return (0, react$1.createElement)(TurnMaxTokensItemMirror, { t });
-				case "model-retry": {
-					const data = dataOf(node);
-					const attempts = Array.isArray(data.attempts) ? data.attempts : [];
-					const current = typeof data.current === "object" && data.current !== null ? data.current : attempts[attempts.length - 1];
-					if (current === void 0) return null;
-					return (0, react$1.createElement)(ModelRetryItemMirror, {
-						node: current,
-						active: current.retryState === "scheduled",
-						t
-					});
-				}
-				case "context":
-				case "compaction":
-				case "manual-compaction":
-				case "unknown": return null;
-				default: return (0, react$1.createElement)("details", { className: "dshpc-sv-tool" }, (0, react$1.createElement)("summary", { className: "dshpc-sv-notice" }, `${t("sessionUnknownKind")} ${node.kind}`), (0, react$1.createElement)("pre", null, safeJson(node.data)));
-			}
-		}
-		/**
-		* assistant 内容块 → 子元素数组（官方块渲染器 lib/client.js:5826-5870 的同构）：
-		* text → 官方 MarkdownText、reasoning → 官方 ReasoningRow（标题「思考」）、image 占位；
-		* tool-call 块一律跳过（官方 case "tool-call": break——由独立工具节点渲染，重复画 = ×2）；
-		* 未知块折叠原文。
-		*/
-		function assistantBlocks(blocks, t, fileMentions) {
-			if (blocks === void 0) return [];
-			const parts = [];
-			blocks.forEach((block, index) => {
-				switch (block.kind) {
-					case "text":
-						if (block.text.trim() !== "") parts.push((0, react$1.createElement)(AssistantMarkdown, {
-							key: `t${index}`,
-							text: block.text,
-							fileMentions
-						}));
-						break;
-					case "reasoning":
-						if (block.text.trim() !== "") parts.push((0, react$1.createElement)(ReasoningRowMirror, {
-							key: `r${index}`,
-							text: block.text,
-							t
-						}));
-						break;
-					case "image":
-						parts.push((0, react$1.createElement)("div", {
-							key: `i${index}`,
-							className: "dshpc-sv-image"
-						}, t("sessionImage")));
-						break;
-					case "tool-call": break;
-					default: parts.push((0, react$1.createElement)("details", {
-						key: `o${index}`,
-						className: "dshpc-sv-tool"
-					}, (0, react$1.createElement)("summary", null, t("sessionUnknownKind")), (0, react$1.createElement)("pre", null, safeJson(block.block))));
-				}
-			});
-			return parts;
-		}
-		/**
-		* legacy 兜底渲染：官方兼容投影（老 kind 名）的单个节点；返回 null = 按决策 28 过滤的噪音 kind。
-		* 仅在 keyed `order` 缺失时使用（正常路径见 renderKeyedNode）。
-		*/
-		function renderLegacyNode(node, t, fileOpen) {
-			switch (node.kind) {
-				case "user":
-				case "steering": {
-					const text = contentText(node.content);
-					const { files, hadFiles } = contentFiles(node.content);
-					if (text === "" && !hadFiles) return null;
-					return (0, react$1.createElement)(UserMessage, {
-						key: node.seq,
-						text,
-						files
-					});
-				}
-				case "assistant": {
-					const parts = assistantBlocks(node.blocks, t, fileOpen?.mentions);
-					return parts.length === 0 ? null : (0, react$1.createElement)("div", {
-						key: node.seq,
-						className: "dshpc-sv-assistant"
-					}, parts);
-				}
-				case "tool-result":
-					if (node.call?.name === "present") return (0, react$1.createElement)(PresentRowMirror, {
-						key: node.seq,
-						block: node,
-						t
-					});
-					return (0, react$1.createElement)(GenericCommandCard, {
-						key: node.seq,
-						name: node.call?.name ?? "tool",
-						argsRaw: node.call?.argsRaw ?? "",
-						output: contentText(node.content),
-						isError: node.isError === true,
-						errorName: node.error?.name,
-						meta: node.meta,
-						settled: true,
-						interrupted: node.error?.code === "interrupted",
-						onOpenFile: fileOpen?.open,
-						t
-					});
-				case "command": return (0, react$1.createElement)(GenericCommandCard, {
-					key: node.seq,
-					name: `/${node.name ?? "?"}`,
-					argsRaw: node.args ?? "",
-					output: node.outcome?.text ?? "",
-					isError: node.outcome?.kind === "error",
-					t
-				});
-				case "turn-error": return (0, react$1.createElement)(TurnErrorItemMirror, {
-					key: node.seq,
-					node,
-					t
-				});
-				case "turn-max-tokens": return (0, react$1.createElement)(TurnMaxTokensItemMirror, {
-					key: node.seq,
-					t
-				});
-				case "model-retry": return (0, react$1.createElement)(ModelRetryItemMirror, {
-					key: node.seq,
-					node,
-					active: node.retryState === "scheduled",
-					t
-				});
-				case "context":
-				case "compaction":
-				case "unknown": return null;
-				default: return (0, react$1.createElement)("details", {
-					key: node.seq,
-					className: "dshpc-sv-tool"
-				}, (0, react$1.createElement)("summary", { className: "dshpc-sv-notice" }, `${t("sessionUnknownKind")} ${node.kind}`), (0, react$1.createElement)("pre", null, safeJson(node)));
-			}
-		}
-		/**
-		* 把连续的 tool-result / command 收成一个「过程」组——官方就是把工具调用折进
-		* turn 的过程块（默认收起），页面才不会变成一列流水账。单个工具不再包组，避免多一层。
-		*/
-		function groupNodes(list) {
-			const out = [];
-			let run = [];
-			const flush = () => {
-				if (run.length === 0) return;
-				const only = run[0];
-				if (only === void 0) {
-					run = [];
-					return;
-				}
-				if (run.length >= 2) out.push({
-					kind: "process",
-					nodes: run
-				});
-				else out.push({
-					kind: "node",
-					node: only
-				});
-				run = [];
-			};
-			for (const node of list) {
-				if (node.kind === "tool-result" || node.kind === "command") {
-					run.push(node);
-					continue;
-				}
-				flush();
-				out.push({
-					kind: "node",
-					node
-				});
-			}
-			flush();
-			return out;
-		}
-		/** legacy 兜底整流的渲染（keyed order 缺失时才会走到）。 */
-		function renderLegacyRows(nodes, t, fileOpen) {
-			const items = groupNodes(nodes);
-			const rows = [];
-			items.forEach((entry, index) => {
-				const parts = [];
-				if (entry.kind === "process") {
-					parts.push((0, react$1.createElement)("div", {
-						key: "lead",
-						className: "dshpc-sv-notice"
-					}, `${t("sessionProcess")} · ${entry.nodes.length}`));
-					entry.nodes.forEach((node, i) => {
-						const rendered = renderLegacyNode(node, t, fileOpen);
-						if (rendered !== null) parts.push((0, react$1.createElement)("div", { key: `p${i}` }, rendered));
-					});
-				} else {
-					const inner = renderLegacyNode(entry.node, t, fileOpen);
-					if (inner !== null) parts.push(inner);
-					if (entry.node.kind === "assistant") {
-						const next = items[index + 1];
-						if (next === void 0 || !(next.kind === "node" && next.node.kind === "assistant")) parts.push((0, react$1.createElement)(MessageIconActionsMirror, {
-							key: "act",
-							text: assistantText(entry.node),
-							clock: "end",
-							t
-						}));
-					}
-				}
-				if (parts.length === 0) return;
-				rows.push((0, react$1.createElement)("div", {
-					key: `lg${index}`,
-					className: officialClass("ChatView", "flowItem") ?? ""
-				}, parts));
-			});
-			return rows;
-		}
-		/** 路径归一：去 './' 前缀（词表键与 resolve 两侧同规则）。 */
-		function normalizeFilePath(p) {
-			let s = p.trim();
-			while (s.startsWith("./")) s = s.slice(2);
-			return s;
-		}
-		/** 交付文件词表 / 每轮交付卡的数据读取（真源 = 官方 TurnLocation.data，见 changes.ts）。 */
-		function turnDeliverablesPresented(face) {
-			const presented = turnDeliverablesValue(face, "deliverables")?.presented;
-			return Array.isArray(presented) ? presented : [];
-		}
-		/** 与 turnDeliverablesPresented 对称：读 turn 级 deliverables.produced（工具产出的文件）。
-		* 官方 chatFileMentions = produced + presented；我们原先只收 presented，导致「只有 produced
-		* 没有 present/get 参数」的会话里行内文件链接词表为空 —— 这里补齐（字段容错 path/name）。 */
-		function turnDeliverablesProducedPaths(face) {
-			const produced = turnDeliverablesValue(face, "deliverables")?.produced;
-			if (!Array.isArray(produced)) return [];
-			const out = [];
-			for (const item of produced) {
-				const p = typeof item === "string" ? item : item !== null && typeof item === "object" ? item.path ?? item.name : void 0;
-				if (typeof p === "string" && p.trim() !== "") out.push(p);
-			}
-			return out;
-		}
-		/**
-		* 从 keyed 节点流收集真实文件词表（禁模拟：全部来自工具调用参数 / meta.diffs）：
-		* tool-call 节点 argsRaw 的 file_path/path 字段（read/grep/glob/write/edit…）与
-		* tool-fs 写入 meta.diffs[].path。会话级词表 = 官方 per-turn chatFileMentions 的简化偏差
-		* （决策 39：resolve 命中才渲链接，解析不出保持惰性 code，永不猜）。
-		*/
-		function collectFilePaths(order, store, turns) {
-			if (store === void 0) return [];
-			const out = /* @__PURE__ */ new Set();
-			if (turns !== null && turns !== void 0) {
-				const map = turns;
-				for (const [, face] of map) {
-					const presented = turnDeliverablesPresented(face);
-					for (const file of presented) {
-						const path = typeof file?.path === "string" ? file.path : void 0;
-						if (path !== void 0 && path.trim() !== "") out.add(normalizeFilePath(path));
-					}
-					for (const p of turnDeliverablesProducedPaths(face)) out.add(normalizeFilePath(p));
-				}
-			}
-			for (const key of order) {
-				const node = store.get(key);
-				if (node === void 0 || node.kind !== "tool-call") continue;
-				const root = node.data?.root;
-				if (root === void 0 || root === null || typeof root !== "object") continue;
-				if (isPresentRoot(root)) {
-					for (const file of presentFiles(root)) out.add(normalizeFilePath(file.path));
-					continue;
-				}
-				const call = root.kind === "tool-result" ? root.call : root;
-				if (call === null || typeof call !== "object") continue;
-				const raw = typeof call.argsRaw === "string" ? call.argsRaw.trim() : "";
-				if (raw.startsWith("{")) try {
-					const parsed = JSON.parse(raw);
-					for (const field of ["file_path", "path"]) {
-						const value = parsed[field];
-						if (typeof value === "string" && value.trim() !== "") out.add(normalizeFilePath(value));
-					}
-				} catch {}
-				const meta = root.meta;
-				if (typeof meta === "object" && meta !== null) {
-					const diffs = meta.diffs;
-					if (Array.isArray(diffs)) for (const diff of diffs) {
-						const p = diff?.path;
-						if (typeof p === "string" && p.trim() !== "") out.add(normalizeFilePath(p));
-					}
-				}
-			}
-			return [...out];
-		}
-		/**
-		* 每轮交付文件（官方 DeliverablesTail 同源数据）：读会话 turn 级 `deliverables.presented`。
-		* 按 turn 归组、按路径去重（后者覆盖前者，与官方 presentedForClosing 的 map 语义一致）。
-		* 纯客户端推导，零额外请求。
-		*/
-		function collectPresentedByTurn(turns) {
-			const out = /* @__PURE__ */ new Map();
-			if (turns === null || turns === void 0) return out;
-			const map = turns;
-			for (const [key, face] of map) {
-				const turn = typeof key === "number" ? key : Number(key);
-				if (!Number.isInteger(turn) || turn < 1) continue;
-				const presented = turnDeliverablesPresented(face);
-				if (presented.length === 0) continue;
-				const files = [];
-				for (const file of presented) {
-					const path = typeof file?.path === "string" ? file.path : void 0;
-					if (path === void 0 || path.trim() === "") continue;
-					const description = typeof file?.description === "string" && file.description.trim() !== "" ? file.description : void 0;
-					files.push(description === void 0 ? { path } : {
-						path,
-						description
-					});
-				}
-				if (files.length > 0) out.set(turn, files);
-			}
-			return out;
-		}
-		/** 诊断：行内 code 命中真文件时记一行（去重 + 上限），确认 fileMentions 链路活着。 */
-		const mentionLog = /* @__PURE__ */ new Set();
-		function logMentionHit(value, hit) {
-			const key = `${value}\u0000${hit}`;
-			if (mentionLog.has(key) || mentionLog.size >= 40) return;
-			mentionLog.add(key);
-			console.log("[preview] mention hit:", value, `→ ${hit}`);
-		}
-		/**
-		* 从候选里挑一条真路径：同一个文件在词表里常有**多种写法**（工具参数是相对式
-		* `2026Q4/1023/x.txt`，fs 改动事件是绝对式 `/workspace/Temp/2026Q4/1023/x.txt`）。
-		* 判定 = 候选之间是否互为「尾段」（`longest.endsWith('/' + other)`）⇒ 是同一文件的两种写法，
-		* 取**最长那条**（工作区根在 Temp，拿相对式去解析会落错根 ⇒ 必须给最完整的，否则预览报「文件不存在」）；
-		* 不是同一文件且不止一条 ⇒ 不可判定，返回 undefined（永不猜）。
-		*/
-		function pickPath(candidates) {
-			if (candidates === void 0 || candidates.length === 0) return void 0;
-			let longest = candidates[0];
-			for (const p of candidates) if (p.length > longest.length) longest = p;
-			return candidates.every((p) => p === longest || longest.endsWith(`/${p}`)) ? longest : candidates.length === 1 ? longest : void 0;
-		}
-		/**
-		* 构建 fileMentions：按「路径尾段」匹配（词表里是绝对路径、markdown 里写的是工作区相对路径时，
-		* 靠尾段对齐）；同一文件的多种写法取最长那条（见 pickPath）；不可判定 ⇒ undefined
-		* ⇒ MarkdownText 保持惰性 code，永不猜。
-		*/
-		function makeFileMentions(paths, open) {
-			const bySuffix = /* @__PURE__ */ new Map();
-			for (const p of paths) {
-				const norm = p.replace(/\\/g, "/");
-				const parts = norm.split("/");
-				for (let at = 0; at < parts.length; at++) {
-					const key = parts.slice(at).join("/");
-					const bucket = bySuffix.get(key);
-					if (bucket === void 0) bySuffix.set(key, [norm]);
-					else if (!bucket.includes(norm)) bucket.push(norm);
-				}
-			}
-			return { resolve(value) {
-				const norm = normalizeFilePath(value).replace(/\\/g, "/");
-				const hit = pickPath(bySuffix.get(norm));
-				if (hit === void 0) return void 0;
-				logMentionHit(value, hit);
-				return {
-					label: value,
-					title: hit,
-					open: () => {
-						open(hit);
-					}
-				};
-			} };
-		}
-		/**
-		* 面板内只读会话弹窗：只读、不可在框内续聊（底层 keyed 数组是只读快照，官方无写面）。
-		* 续聊正道 = 头部「继续对话（开分支）」/ 消息行分支 icon（fork → openSession），
-		* 以及底部暂存输入框（打字 → 确定 → onContinue 带话开分支并起轮次）。
-		*/
-		function SessionViewModal(props) {
-			ensureComponentStyles("session", SESSION_CSS);
-			const tt = props.t ?? t$2;
-			const { heading, sessionId, view, onClose, archived, forkSession, openHostSession, onContinue, onOpenFile } = props;
-			const subscribe = (0, react$1.useMemo)(() => (onChange) => view.target.subscribe(onChange), [view]);
-			const getSnapshot = (0, react$1.useMemo)(() => () => view.target.getSnapshot(), [view]);
-			const chat = (0, react$1.useSyncExternalStore)(subscribe, getSnapshot);
-			const sessionSub = (0, react$1.useMemo)(() => (onChange) => view.session.subscribe(onChange), [view]);
-			const sessionGet = (0, react$1.useMemo)(() => () => view.session.getSnapshot(), [view]);
-			const sessionSnap = (0, react$1.useSyncExternalStore)(sessionSub, sessionGet);
-			const [openTurns, setOpenTurns] = (0, react$1.useState)(() => /* @__PURE__ */ new Map());
-			const onSetOpen = (0, react$1.useCallback)((turn, answerStep, open) => {
-				setOpenTurns((prev) => {
-					const next = new Map(prev);
-					if (open) next.set(turn, answerStep);
-					else next.delete(turn);
-					return next;
-				});
-			}, []);
-			const isArchived = archived === true;
-			const showContinue = isArchived ? forkSession !== void 0 && openHostSession !== void 0 : openHostSession !== void 0;
-			const [forkTarget, setForkTarget] = (0, react$1.useState)(null);
-			const [forking, setForking] = (0, react$1.useState)(false);
-			const [forkErr, setForkErr] = (0, react$1.useState)(null);
-			const aliveRef = (0, react$1.useRef)(true);
-			(0, react$1.useEffect)(() => () => {
-				aliveRef.current = false;
-			}, []);
-			const flowRef = (0, react$1.useRef)(null);
-			(0, react$1.useEffect)(() => {
-				const flow = flowRef.current;
-				const scroller = flow === null ? null : flow.closest(".dshpc-modal__body");
-				if (scroller === null) return;
-				let following = true;
-				let lastHeight = 0;
-				let lastTop = scroller.scrollTop;
-				const nearBottom = () => scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 24;
-				const onScroll = () => {
-					const top = scroller.scrollTop;
-					if (top < lastTop - 1) following = false;
-					else if (nearBottom()) following = true;
-					lastTop = top;
-				};
-				scroller.addEventListener("scroll", onScroll, { passive: true });
-				const observer = new ResizeObserver(() => {
-					const height = flow === null ? 0 : flow.scrollHeight;
-					if (height === lastHeight) return;
-					const firstPaint = lastHeight === 0;
-					lastHeight = height;
-					if (!following) return;
-					scroller.scrollTo({
-						top: scroller.scrollHeight,
-						behavior: firstPaint ? "auto" : "smooth"
-					});
-				});
-				if (flow !== null) observer.observe(flow);
-				return () => {
-					observer.disconnect();
-					scroller.removeEventListener("scroll", onScroll);
-				};
-			}, []);
-			const onForkAccept = (0, react$1.useCallback)(() => {
-				if (forking || forkSession === void 0 || openHostSession === void 0) return;
-				setForking(true);
-				setForkErr(null);
-				(async () => {
-					try {
-						const child = await forkSession(sessionId, forkTarget?.atSeq);
-						if (!aliveRef.current) return;
-						onClose();
-						openHostSession(child);
-					} catch (error) {
-						if (!aliveRef.current) return;
-						setForkErr(error instanceof Error ? error.message : String(error));
-					} finally {
-						if (aliveRef.current) setForking(false);
-					}
-				})();
-			}, [
-				forking,
-				forkSession,
-				openHostSession,
-				sessionId,
-				forkTarget,
-				onClose
-			]);
-			const onBranchAt = (0, react$1.useCallback)((seq) => {
-				setForkErr(null);
-				setForkTarget({ atSeq: seq });
-			}, []);
-			const [draft, setDraft] = (0, react$1.useState)("");
-			const [sending, setSending] = (0, react$1.useState)(false);
-			const [sendErr, setSendErr] = (0, react$1.useState)(null);
-			const onSend = (0, react$1.useCallback)(() => {
-				const message = draft.trim();
-				if (sending || message === "" || onContinue === void 0) return;
-				setSending(true);
-				setSendErr(null);
-				(async () => {
-					try {
-						await onContinue(message);
-						if (!aliveRef.current) return;
-						setDraft("");
-					} catch (error) {
-						if (!aliveRef.current) return;
-						setSendErr(error instanceof Error ? error.message : String(error));
-					} finally {
-						if (aliveRef.current) setSending(false);
-					}
-				})();
-			}, [
-				draft,
-				sending,
-				onContinue
-			]);
-			const openFile = (0, react$1.useCallback)((path) => {
-				onOpenFile?.(path, sessionId);
-			}, [onOpenFile, sessionId]);
-			const order = chat?.order ?? EMPTY_ORDER;
-			const store = chat?.nodes;
-			const keyed = order.length > 0 && store !== void 0;
-			const turns = chat?.timeline?.turns;
-			const fileOpen = (0, react$1.useMemo)(() => {
-				if (onOpenFile === void 0) return void 0;
-				return {
-					open: openFile,
-					mentions: makeFileMentions(collectFilePaths(order, store, turns), openFile)
-				};
-			}, [
-				onOpenFile,
-				openFile,
-				order,
-				store,
-				turns
-			]);
-			/**
-			* 官方 markdown **链接**的打开出口（`[名](<路径>)` ⇒ 官方 MarkdownFileLink）。
-			* 与 `fileMentions`（管行内 code）是两条独立的路：官方只有 `openFile` 就位才把链接渲成
-			* `fileMention fileLink` 按钮（lib/index.js:11819），否则退回纯文本。
-			* markdown 里常写工作区相对路径（如 `2026Q4/1023/x.txt`），词表里是 `/workspace/…` 前缀的真路径，
-			* 故先用同一个词表归一到真路径再交给调用方；词表里没有就原样给（不猜）。
-			*/
-			const openDelegatedFile = (0, react$1.useMemo)(() => {
-				if (fileOpen === void 0) return () => {};
-				return (path) => {
-					const hit = fileOpen.mentions.resolve(path);
-					if (hit === void 0) {
-						fileOpen.open(path);
-						return;
-					}
-					hit.open();
-				};
-			}, [fileOpen]);
-			const deliveredByTurn = (0, react$1.useMemo)(() => collectPresentedByTurn(turns), [turns]);
-			const deliverFiles = (0, react$1.useMemo)(() => {
-				const byPath = /* @__PURE__ */ new Map();
-				const add = (file) => {
-					const key = file.path.trim();
-					if (key === "" || byPath.has(key)) return;
-					byPath.set(key, file);
-				};
-				for (const files of deliveredByTurn.values()) for (const file of files) add(file);
-				return [...byPath.values()];
-			}, [deliveredByTurn]);
-			const lastTailTurn = (0, react$1.useMemo)(() => {
-				if (!keyed || store === void 0) return void 0;
-				for (let i = order.length - 1; i >= 0; i--) {
-					const key = order[i];
-					if (key === void 0) continue;
-					const node = store.get(key);
-					if (node?.kind !== "turn-tail") continue;
-					const turn = node.data?.turn ?? turnLocationOf(node)?.turn;
-					if (typeof turn === "number") return turn;
-				}
-			}, [
-				keyed,
-				order,
-				store
-			]);
-			const lastTailChangesSeq = (0, react$1.useMemo)(() => {
-				if (turns === null || turns === void 0) return void 0;
-				const map = turns;
-				let best = null;
-				let bestTurn = -Infinity;
-				for (const [key, face] of map) {
-					const seq = turnDeliverablesChangesSeq(face);
-					if (seq === null) continue;
-					const t = typeof key === "number" ? key : Number(key);
-					if (!Number.isFinite(t) || t <= bestTurn) continue;
-					bestTurn = t;
-					best = seq;
-				}
-				return best ?? void 0;
-			}, [turns]);
-			const diagChatRef = (0, react$1.useRef)(void 0);
-			(0, react$1.useEffect)(() => {
-				if (diagChatRef.current === chat) return;
-				diagChatRef.current = chat;
-				const turnsMap = turns;
-				const face = turnsMap === void 0 ? void 0 : turnsMap.get(lastTailTurn) ?? turnsMap.get(String(lastTailTurn));
-				const deliverables = face === void 0 ? void 0 : turnDeliverablesValue(face, "deliverables");
-				const mentionPaths = fileOpen === void 0 ? void 0 : collectFilePaths(order, store, turns);
-				const turnsDetail = turnsMap === void 0 ? [] : [...turnsMap.entries()].map(([k, f]) => {
-					try {
-						const dv = f === void 0 ? void 0 : turnDeliverablesValue(f, "deliverables");
-						const changes = dv === void 0 ? void 0 : dv.changes;
-						const produced = dv === void 0 ? void 0 : dv.produced;
-						const presented = dv === void 0 ? void 0 : dv.presented;
-						return {
-							turn: k,
-							deliverKeys: dv === void 0 ? "none" : typeof dv === "object" && !Array.isArray(dv) ? Object.keys(dv) : Array.isArray(dv) ? "array" : "non-object",
-							changesSeq: changes && typeof changes === "object" && "seq" in changes ? changes.seq : void 0,
-							producedLen: Array.isArray(produced) ? produced.length : void 0,
-							presentedLen: Array.isArray(presented) ? presented.length : void 0
-						};
-					} catch {
-						return {
-							turn: k,
-							error: true
-						};
-					}
-				});
-				console.log("[preview] diag", {
-					hasChat: chat !== void 0,
-					orderLen: order.length,
-					turns: turnsMap === void 0 ? "undefined" : `Map(${turnsMap.size})`,
-					turnKeySample: turnsMap === void 0 ? [] : [...turnsMap.keys()].slice(0, 6),
-					lastTailTurn,
-					lastTailChangesSeq,
-					deliverablesKeys: deliverables === void 0 ? "none" : Object.keys(deliverables),
-					deliverFiles: deliverFiles.length,
-					onOpenFile: onOpenFile !== void 0,
-					mentionCount: mentionPaths === void 0 ? "no-fileOpen" : mentionPaths.length,
-					mentionSample: mentionPaths === void 0 ? [] : mentionPaths.slice(0, 6)
-				});
-				console.log("[preview] turnsDetail", turnsDetail);
-			}, [
-				chat,
-				order,
-				turns,
-				lastTailTurn,
-				lastTailChangesSeq,
-				deliverFiles,
-				onOpenFile,
-				fileOpen,
-				store
-			]);
-			const renderNode = (0, react$1.useCallback)((node, turnProcess, groupPart) => renderKeyedNode(node, turnProcess, tt, onBranchAt, fileOpen, groupPart, deliverFiles, lastTailTurn, lastTailChangesSeq, sessionId, props.onOpenReview), [
-				tt,
-				onBranchAt,
-				fileOpen,
-				deliverFiles,
-				lastTailTurn,
-				lastTailChangesSeq,
-				sessionId,
-				props.onOpenReview
-			]);
-			const isTurnClosed = (0, react$1.useCallback)((turn) => (turns?.get(turn) ?? turns?.get(String(turn)))?.status !== "open", [turns]);
-			const groupedView = (0, react$1.useMemo)(() => keyed ? buildProcessGroups(order, (key) => store?.get(key), isTurnClosed) : void 0, [
-				keyed,
-				order,
-				store,
-				isTurnClosed
-			]);
-			const rendered = (keyed ? ChatNodeListMirror({
-				order,
-				store,
-				entries: groupedView?.entries,
-				groups: groupedView?.groups,
-				turns,
-				openState: openTurns,
-				onSetOpen,
-				foldCompleted: true,
-				renderNode,
-				t: tt
-			}) : renderLegacyRows(chat?.legacy?.nodes ?? [], tt, fileOpen)).filter((row) => row !== null && row !== void 0);
-			const officialCount = officialModuleCount();
-			if (!officialWarned) {
-				officialWarned = true;
-				console.info(`[dsh-plugin-core:session] 官方 ui-chat 模块数=${officialCount}；类名样例 frame=${officialClass("ChatView", "frame")} flowItem=${officialClass("ChatView", "flowItem")} trigger=${officialClass("TurnTriggerNodeView", "root")} turnProcess=${officialClass("TurnProcessNodeView", "root")} tail=${officialClass("TurnTailNodeView", "root")}`);
-				if (officialCount === 0) console.warn("[dsh-plugin-core:session] 未发现官方 ui-chat 样式模块 ⇒ 弹窗观感退回自绘样式（功能不受影响）");
-			}
-			const openState = sessionSnap?.openState;
-			const showLoadOlder = sessionSnap?.hasMore !== false;
-			const body = rendered.length === 0 ? (0, react$1.createElement)(ChatHint, { text: openState === "error" ? tt("sessionFailed") : openState === "loading" || openState === "cold" ? tt("sessionLoading") : tt("sessionEmpty") }) : [showLoadOlder ? (0, react$1.createElement)(ChatOlderButton, {
-				key: "older",
-				label: tt("sessionLoadOlder"),
-				onClick: () => {
-					view.loadOlder();
-				}
-			}) : null, ...rendered];
-			const flowChildren = Array.isArray(body) ? body : [body];
-			return (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)(Modal, {
-				size: "lg",
-				title: heading ?? tt("sessionHeading"),
-				subtitle: (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", null, sessionId), officialCount === 0 ? (0, react$1.createElement)("span", { className: "dshpc-sv-probe" }, " ⚠ ", tt("sessionProbeStyle")) : null),
-				headerExtra: isArchived ? (0, react$1.createElement)("span", {
-					className: "dshpc-sv-archived",
-					title: tt("sessionArchived")
-				}, (0, react$1.createElement)(official_exports.IconArchiveOutlineRegular, { size: 12 }), tt("sessionArchived")) : void 0,
-				headerActions: showContinue ? (0, react$1.createElement)(Button$2, {
-					variant: "outline",
-					size: "sm",
-					disabled: forking,
-					title: tt("continueBranch"),
-					icon: isArchived ? (0, react$1.createElement)(official_exports.IconBranchOutlineRegular, { size: 14 }) : (0, react$1.createElement)(official_exports.IconNewChatOutlineRegular, { size: 14 }),
-					onClick: () => {
-						if (isArchived) {
-							setForkErr(null);
-							setForkTarget({});
-						} else if (openHostSession !== void 0) {
-							onClose();
-							openHostSession(sessionId);
-						}
-					}
-				}, tt("continueBranch")) : void 0,
-				onClose,
-				translate: tt,
-				footer: onContinue === void 0 ? void 0 : (0, react$1.createElement)("div", { className: "dshpc-sv-composer" }, (0, react$1.createElement)("textarea", {
-					value: draft,
-					placeholder: tt("composerPlaceholder"),
-					disabled: sending,
-					onChange: (event) => {
-						setDraft(event.target.value);
-					},
-					onKeyDown: (event) => {
-						if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-							event.preventDefault();
-							onSend();
-						}
-					}
-				}), (0, react$1.createElement)(Button$2, {
-					variant: "primary",
-					size: "sm",
-					disabled: sending || draft.trim() === "",
-					onClick: onSend
-				}, sending ? tt("forkWorking") : tt("confirm")), (0, react$1.createElement)("span", {
-					className: "dshpc-sv-composer-hint",
-					title: tt("composerHint")
-				}, "⌘/Ctrl + ↵"), sendErr !== null ? (0, react$1.createElement)("div", { className: "dshpc-sv-forkerr" }, sendErr) : null)
-			}, (0, react$1.createElement)("div", {
-				className: "dshpc-sv",
-				ref: flowRef
-			}, fileOpen === void 0 ? (0, react$1.createElement)(ChatViewFrame, { children: flowChildren }) : (0, react$1.createElement)(official_exports.MarkdownDelegateProvider, { openFile: openDelegatedFile }, (0, react$1.createElement)(ChatViewFrame, { children: flowChildren })))), forkTarget === null ? null : (0, react$1.createElement)(Modal, {
-				size: "sm",
-				onClose: () => {
-					if (!forking) setForkTarget(null);
-				},
-				title: tt("forkConfirmTitle"),
-				translate: tt,
-				footer: [(0, react$1.createElement)(Button$2, {
-					key: "cancel",
-					variant: "outline",
-					disabled: forking,
-					onClick: () => {
-						setForkTarget(null);
-					}
-				}, tt("cancel")), (0, react$1.createElement)(Button$2, {
-					key: "accept",
-					variant: "primary",
-					disabled: forking,
-					onClick: onForkAccept
-				}, forking ? tt("forkWorking") : tt("forkConfirmAccept"))]
-			}, (0, react$1.createElement)("p", { className: "dshpc-sv-forktext" }, tt("forkConfirmText")), forkErr !== null ? (0, react$1.createElement)("p", { className: "dshpc-sv-forkerr" }, tt("forkFailed", { error: forkErr })) : null));
-		}
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.25.0_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirror_7a1884d21a20319f048c4d4d5f6a91f2/node_modules/dsh-plugin-core/dist/session/open-session-view.js
-		/** 默认 retain source（写进宿主 retainedBy；调用方可覆盖成自己的插件名）。 */
-		const DEFAULT_RETAIN_SOURCE = "dsh-plugin-core";
-		/** 打开只读视图：物化 binding → 探测拉尾页 → 建 chat target。会话不可解析时返回 null。 */
-		function openSessionView(sessions, uiConversation, id, retainSource = DEFAULT_RETAIN_SOURCE) {
-			const log = (level, msg, extra) => {
-				if (level === "warn") console.warn(`[dsh-plugin-core:session] ${msg}`, extra ?? "");
-				else console.info(`[dsh-plugin-core:session] ${msg}`);
-			};
-			let retainedRef = null;
-			const releaseRef = () => {
-				try {
-					retainedRef?.release();
-				} catch (err) {
-					log("warn", `sessions.retain 引用释放失败（${id}）`, err);
-				}
-				retainedRef = null;
-			};
-			let binding;
-			try {
-				const S0 = sessions;
-				const retainFn = S0.retain;
-				if (typeof retainFn === "function") try {
-					retainedRef = retainFn.call(S0, id, { source: retainSource });
-					log("info", `sessions.retain(${id}, { source: '${retainSource}' }) 成功：scope 已物化`);
-				} catch (err) {
-					log("warn", `sessions.retain(${id}) 抛错（未知会话？）`, err);
-				}
-				else log("warn", `sessions 无 retain 方法；归档 / 久未打开的会话将不可读。自身键=[${Object.keys(S0).join(",")}]`);
-				const found = sessions.binding(id);
-				if (found === void 0 || found === null) {
-					const S0d = sessions;
-					log("warn", `sessions.binding(${id}) 为空（会话未就位，retain 也未物化）。sessions 方法全清单=[${(() => {
-						const out = /* @__PURE__ */ new Set();
-						let cur = S0d;
-						while (cur && (typeof cur === "object" || typeof cur === "function")) {
-							for (const k of Object.getOwnPropertyNames(cur)) if (typeof cur[k] === "function" && k !== "constructor") out.add(k);
-							cur = Object.getPrototypeOf(cur);
-						}
-						return [...out];
-					})().join(",")}]；自身键=[${Object.keys(S0d).join(",")}]`);
-					releaseRef();
-					return null;
-				}
-				binding = found;
-			} catch (err) {
-				log("warn", `openSessionView 返回 null：sessions.binding(${id}) 抛错`, err);
-				releaseRef();
-				return null;
-			}
-			const session = binding.session;
-			try {
-				const opened = session.open?.();
-				if (opened !== void 0 && typeof opened.catch === "function") opened.catch((err) => log("warn", `session.open(${id}) 失败（仅影响历史加载，不阻断弹窗）`, err));
-			} catch (err) {
-				log("warn", `session.open(${id}) 抛错`, err);
-			}
-			let conversation;
-			try {
-				conversation = uiConversation.binding(binding);
-			} catch (err) {
-				log("warn", "openSessionView 返回 null：uiConversation.binding 抛错（binding 已取得，断点在 uiConversation 装配）", err);
-				return null;
-			}
-			let target;
-			try {
-				target = conversation.target("chat");
-			} catch (err) {
-				log("warn", "openSessionView 返回 null：conversation.target('chat') 抛错", err);
-				return null;
-			}
-			log("info", `openSessionView 成功建立 target（${id}）；首屏 nodes 待订阅回填`);
-			return {
-				target,
-				session,
-				dispose: releaseRef,
-				loadOlder() {
-					try {
-						const page = session.loadOlder?.();
-						if (page !== void 0 && typeof page.catch === "function") page.catch((err) => log("warn", `session.loadOlder(${id}) 失败`, err));
-					} catch (err) {
-						log("warn", `session.loadOlder(${id}) 抛错`, err);
-					}
-				}
-			};
-		}
-		//#endregion
 		//#region src/client/cancel-task-modal.ts
 		/**
 		* 取消（归档）任务的弹窗：正文点名任务，中间一个理由输入框（可留空），
@@ -61242,21 +61522,31 @@ body[data-ds-dark-theme]{
 				escClose: !props.busy,
 				footer: (0, react$1.createElement)("div", { style: {
 					display: "flex",
-					justifyContent: "flex-end",
+					alignItems: "center",
+					justifyContent: "space-between",
 					gap: "var(--dtl-space-2)",
 					width: "100%"
-				} }, (0, react$1.createElement)(Button$1, {
+				} }, props.notice === void 0 ? null : (0, react$1.createElement)("span", { style: {
+					color: "var(--dtl-fg-3)",
+					fontSize: "var(--dtl-font-sm)",
+					overflow: "hidden",
+					textOverflow: "ellipsis",
+					whiteSpace: "nowrap"
+				} }, props.notice), (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					gap: "var(--dtl-space-2)"
+				} }, (0, react$1.createElement)(Button, {
 					variant: "secondary",
 					size: "md",
 					disabled: props.busy,
 					onClick: props.onClose
-				}, t("settingsCancel")), (0, react$1.createElement)(Button$1, {
+				}, t("settingsCancel")), (0, react$1.createElement)(Button, {
 					variant: "primary",
 					size: "md",
 					loading: props.busy,
 					loadingText: false,
 					onClick: submit
-				}, t("cancelModalOk")))
+				}, t("cancelModalOk"))))
 			}, (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				flexDirection: "column",
@@ -61280,102 +61570,6 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-danger)",
 				fontSize: "var(--dtl-font-sm)"
 			} }, props.error)));
-		}
-		//#endregion
-		//#region src/client/close-session.ts
-		/**
-		* 「完成 → 由 Agent 结案」：全程走宿主**官方客户端会话面**，不建自家 HTTP 路由、不轮询。
-		*
-		* 官方能力（`@deepseek-ai/dsh-api-session-controller@0.2.0-rc.1`，与本机宿主同版本线）：
-		*  · `ctx.sessions.create({ cwd })`              —— 建会话，归组由宿主做（`contract/sessions.d.ts:88-93`）；
-		*  · `ctx.sessions.retain(id, { source })`       —— 拿会话句柄（`:52`）；
-		*  · `face.rename(title)` / `face.prompt(...)`   —— 命名 + 注入提示词（`contract/session.d.ts:82-117`）；
-		*  · `face.subscribe` + `snapshot.running`       —— 「这一轮跑完没」由宿主推流（`:156`）；
-		*  · `snapshot.lastAgentError`                   —— 跑挂了的原因（`contract/snapshot.d.ts:75`）。
-		*
-		* 判据必须「先见到 true 再变 false」：刚 create 出来 `running` 就是 false，
-		* 直接看 false 会立刻误报结案。
-		*
-		* 注意：**成功与否以台账为准**，本模块只负责回答「跑完没 / 为什么挂」，不解析模型自述。
-		*/
-		let service = null;
-		let conversation = null;
-		/** 由入口在 `sessions` 就位时注册（服务缺席 ⇒ 结案只能走手动分支）。 */
-		function setSessions(next) {
-			service = next;
-		}
-		/** 由入口在 `uiConversation` 就位时注册（缺席 ⇒ 没有会话视图，只能跳官方会话页）。 */
-		function setUiConversation(next) {
-			conversation = next;
-		}
-		/** 建只读会话视图；两个服务缺一个、或会话解析不出来 ⇒ null。 */
-		function openCloseSessionView(sessionId) {
-			if (service === null || conversation === null) return null;
-			return openSessionView(service, conversation, sessionId, "dsh-task-ledger");
-		}
-		/** 宿主是否提供了会话服务（界面据此决定「由 Agent 结案」能不能勾）。 */
-		function hasSessions() {
-			return service !== null;
-		}
-		/** 远端调用返回 `{ ok: false, ... }` 时当失败处理（业务错误不走 throw）。 */
-		function remoteFailure(result) {
-			if (result === null || typeof result !== "object") return null;
-			const record = result;
-			if (record.ok !== false) return null;
-			return /* @__PURE__ */ new Error(`远端拒绝：${JSON.stringify(record.error ?? "unknown")}`);
-		}
-		/**
-		* 起一个「结案会话」并注入提示词。
-		*
-		* @returns 会话 id（`null` = 宿主没提供会话服务，调用方应改走手动分支）；
-		*   起跑阶段的失败走 `onFailed`，此时返回值可能是已建好的 id（供「去会话」用）。
-		*/
-		async function startCloseSession(input) {
-			const svc = service;
-			if (svc === null) return null;
-			let sessionId;
-			try {
-				sessionId = await svc.create(input.workspaceId === void 0 ? { cwd: input.cwd } : { workspaceId: input.workspaceId });
-			} catch (error) {
-				input.onFailed(error instanceof Error ? error : new Error(String(error)), null);
-				return null;
-			}
-			const ref = svc.retain(sessionId, { source: "task-ledger" });
-			let unsubscribe = () => {};
-			try {
-				const { session } = await ref.ready;
-				await session.rename(input.title);
-				let seenRunning = false;
-				let done = false;
-				const settle = () => {
-					if (done) return;
-					const snapshot = session.getSnapshot();
-					if (snapshot.running) {
-						seenRunning = true;
-						return;
-					}
-					if (!seenRunning) return;
-					done = true;
-					unsubscribe();
-					ref.release();
-					input.onSettled({
-						sessionId,
-						lastAgentError: snapshot.lastAgentError
-					});
-				};
-				unsubscribe = session.subscribe(settle);
-				const rejected = remoteFailure(await session.prompt([{
-					type: "text",
-					text: input.prompt
-				}], "queue"));
-				if (rejected !== null) throw rejected;
-				return sessionId;
-			} catch (error) {
-				unsubscribe();
-				ref.release();
-				input.onFailed(error instanceof Error ? error : new Error(String(error)), sessionId);
-				return sessionId;
-			}
 		}
 		//#endregion
 		//#region src/client/close-task-modal.ts
@@ -61424,9 +61618,17 @@ body[data-ds-dark-theme]{
 					alignItems: "center",
 					gap: "var(--dtl-space-2)",
 					width: "100%"
-				} }, locked && props.onShowSession !== void 0 ? (0, react$1.createElement)("div", { style: { marginRight: "auto" } }, (0, react$1.createElement)(Tip, {
+				} }, props.notice === void 0 ? null : (0, react$1.createElement)("span", { style: {
+					marginRight: "auto",
+					maxWidth: "220px",
+					overflow: "hidden",
+					textOverflow: "ellipsis",
+					whiteSpace: "nowrap",
+					color: "var(--dtl-fg-3)",
+					fontSize: "var(--dtl-font-sm)"
+				} }, props.notice), locked && props.onShowSession !== void 0 ? (0, react$1.createElement)("div", { style: { marginRight: "auto" } }, (0, react$1.createElement)(Tip, {
 					label: t("tipViewSession"),
-					children: (0, react$1.createElement)(Button$1, {
+					children: (0, react$1.createElement)(Button, {
 						variant: "ghost",
 						size: "md",
 						icon: (0, react$1.createElement)(Loader, {
@@ -61435,12 +61637,12 @@ body[data-ds-dark-theme]{
 						}),
 						onClick: props.onShowSession
 					}, t("closeViewSession"))
-				})) : null, (0, react$1.createElement)(Button$1, {
+				})) : null, (0, react$1.createElement)(Button, {
 					variant: "secondary",
 					size: "md",
 					disabled: props.busy || locked,
 					onClick: props.onClose
-				}, t("settingsCancel")), (0, react$1.createElement)(Button$1, {
+				}, t("settingsCancel")), (0, react$1.createElement)(Button, {
 					variant: "primary",
 					size: "md",
 					loading: props.busy,
@@ -61493,42 +61695,6 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-danger)",
 				fontSize: "var(--dtl-font-sm)"
 			} }, props.error)));
-		}
-		//#endregion
-		//#region src/client/nav.ts
-		/**
-		* 会话导航 / 归档的**唯一出口**（`uiWorkspace` 服务）。
-		*
-		* 「继续」建完会话跳到那个会话：官方导航是 `uiWorkspace.openSession(id)`
-		* （它自己 `retain('mainView')` + 切选择，插件**不得**自己 retain）。
-		*
-		* 「完成」结案成功后把会话归档（用户 2026-11-03：不归档会攒一堆垃圾会话）：
-		* 官方是 `uiWorkspace.archiveSession(id, { stopActivity? })`，不自己动会话列表。
-		*
-		* 服务由入口（index.ts）在就位时注册进来；取不到就退化成空操作 —— 会话本身已经建好，
-		* 用户照样能在侧栏找到，不该因为跳不过去 / 归档不了而报错。
-		*/
-		let opener = null;
-		let archiver = null;
-		/** 由入口在 `uiWorkspace` 就位时调用（只注册一次）。 */
-		function setSessionOpener(next) {
-			opener = next;
-		}
-		/** 由入口在 `uiWorkspace` 就位时调用（只注册一次）。 */
-		function setSessionArchiver(next) {
-			archiver = next;
-		}
-		/** @returns 是否真的跳了（false = 宿主没这个服务，只是少一步跳转，不算失败）。 */
-		function openSession(sessionId) {
-			if (opener === null) return false;
-			opener(sessionId);
-			return true;
-		}
-		/** @returns 是否真的归档了（false = 宿主没这个服务，会话会留在侧栏，不算失败）。 */
-		async function archiveSession(sessionId) {
-			if (archiver === null) return false;
-			await archiver(sessionId);
-			return true;
 		}
 		//#endregion
 		//#region src/client/locales.ts
@@ -61709,6 +61875,12 @@ body[data-ds-dark-theme]{
 			actionClaimDone: "已认领：{title}",
 			actionReleaseDone: "已释放：{title}",
 			actionFailed: "操作失败：{error}",
+			actionSyncing: "正在同步台账并提交…",
+			actionStepCheck: "正在检查本地台账改动…",
+			actionStepSync: "正在拉取最新台账…",
+			actionStepWrite: "正在写入台账…",
+			actionStepCommit: "正在提交改动…",
+			actionStepPush: "正在推送到远端…",
 			continueNotDshTitle: "此任务不属于 DeepSeek Harness 工作区",
 			continueNotDshBody: "相关提示词已复制，请打开对应的 Agent 粘贴继续任务",
 			continueNotDshCopyFailedBody: "提示词复制失败，请重试或手动复制后到对应的 Agent 继续任务",
@@ -61974,6 +62146,12 @@ body[data-ds-dark-theme]{
 			actionClaimDone: "Claimed: {title}",
 			actionReleaseDone: "Released: {title}",
 			actionFailed: "Action failed: {error}",
+			actionSyncing: "Syncing the ledger and committing…",
+			actionStepCheck: "Checking local ledger changes…",
+			actionStepSync: "Pulling the latest ledger…",
+			actionStepWrite: "Writing the ledger…",
+			actionStepCommit: "Committing changes…",
+			actionStepPush: "Pushing to the remote…",
 			continueNotDshTitle: "This task does not belong to a DeepSeek Harness workspace",
 			continueNotDshBody: "The prompt has been copied — please open the matching agent and paste it to continue.",
 			continueNotDshCopyFailedBody: "Copying the prompt failed — copy it manually, then paste it into the matching agent.",
@@ -62285,6 +62463,14 @@ body[data-ds-dark-theme]{
 		* （2026-11-03，统一走 `/task/action`）；继续走 `/task/continue` 起会话（2026-11-03 晚）；
 		* **完成仍未接**，先只摆按钮。
 		*/
+		/** 写命令的阶段 → 底栏进度文案（skill 那边新增阶段、这边没对上 ⇒ 继续显示上一句）。 */
+		const STEP_LABEL = {
+			check: "actionStepCheck",
+			sync: "actionStepSync",
+			write: "actionStepWrite",
+			commit: "actionStepCommit",
+			push: "actionStepPush"
+		};
 		/** 行标题：任务名（缺则任务号）。 */
 		function titleOf(row) {
 			return row.task.title || row.task.id;
@@ -62330,39 +62516,20 @@ body[data-ds-dark-theme]{
 			const tone = toneOf(row);
 			const tags = row.task.tags ?? [];
 			const [busy, setBusy] = (0, react$1.useState)(false);
-			const runAction = async (action) => {
-				if (busy) return;
-				const title = titleOf(row);
-				const claim = action === "claim";
-				await confirmModal({
-					title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
-					message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
-					confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
-					cancelText: t("settingsCancel"),
-					loadingText: false,
-					onConfirm: async () => {
-						setBusy(true);
-						try {
-							await postTaskAction({
-								action,
-								workspace: row.task.workspace.id,
-								id: row.task.id
-							});
-							notify(t(claim ? "actionClaimDone" : "actionReleaseDone", { title }), { variant: "success" });
-							await refresh();
-						} catch (failure) {
-							notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
-							throw failure;
-						} finally {
-							setBusy(false);
-						}
-					}
-				});
+			const [step, setStep] = (0, react$1.useState)(null);
+			/** 底栏进度文案：还没收到第一个阶段就先用一句「同步中」。 */
+			const progressNotice = () => step === null ? t("actionSyncing") : t(STEP_LABEL[step]);
+			/** 起一条写命令：清掉上一轮的阶段，每个阶段到了就翻文案。 */
+			const onStep = (next) => setStep(next);
+			const [confirmAct, setConfirmAct] = (0, react$1.useState)(null);
+			const runAction = (action) => {
+				if (!busy) setConfirmAct(action);
 			};
 			const [cancelOpen, setCancelOpen] = (0, react$1.useState)(false);
 			const [cancelError, setCancelError] = (0, react$1.useState)(null);
 			const cancelTask = async (reason) => {
 				setBusy(true);
+				setStep(null);
 				setCancelError(null);
 				try {
 					await postTaskAction({
@@ -62370,7 +62537,7 @@ body[data-ds-dark-theme]{
 						workspace: row.task.workspace.id,
 						id: row.task.id,
 						...reason === "" ? {} : { summary: reason }
-					});
+					}, onStep);
 					setCancelOpen(false);
 					notify(t("actionCancelDone", { title: titleOf(row) }), { variant: "success" });
 					await refresh();
@@ -62378,6 +62545,7 @@ body[data-ds-dark-theme]{
 					setCancelError(error instanceof Error ? error.message : String(error));
 				} finally {
 					setBusy(false);
+					setStep(null);
 				}
 			};
 			const resumeTask = async () => {
@@ -62413,29 +62581,8 @@ body[data-ds-dark-theme]{
 			const [closeError, setCloseError] = (0, react$1.useState)(null);
 			const [closing, setClosing] = (0, react$1.useState)(false);
 			const [closingId, setClosingId] = (0, react$1.useState)(null);
-			const [sessionView, setSessionView] = (0, react$1.useState)(null);
-			const sessionViewRef = (0, react$1.useRef)(null);
-			(0, react$1.useEffect)(() => () => {
-				sessionViewRef.current?.view.dispose();
-				sessionViewRef.current = null;
-			}, []);
-			const dropSessionView = () => {
-				sessionViewRef.current?.view.dispose();
-				sessionViewRef.current = null;
-				setSessionView(null);
-			};
-			const showSessionView = (id) => {
-				const view = openCloseSessionView(id);
-				if (view === null) return false;
-				sessionViewRef.current?.view.dispose();
-				const next = {
-					id,
-					view
-				};
-				sessionViewRef.current = next;
-				setSessionView(next);
-				return true;
-			};
+			const sessionHeading = t("closeSessionTitle", { title: titleOf(row) });
+			const showSession = (id) => props.onShowSession?.(id, sessionHeading) ?? false;
 			/** 结案后确认一眼台账：这条还在不在办列表里（读不到就按"没结"处理，不谎报成功）。 */
 			const stillOpen = () => {
 				const board = boardSnapshot().board;
@@ -62444,6 +62591,7 @@ body[data-ds-dark-theme]{
 			};
 			const finishTask = async (input) => {
 				setBusy(true);
+				setStep(null);
 				setCloseError(null);
 				const title = titleOf(row);
 				try {
@@ -62453,7 +62601,7 @@ body[data-ds-dark-theme]{
 							workspace: row.task.workspace.id,
 							id: row.task.id,
 							summary: input.note
-						});
+						}, onStep);
 						setCloseOpen(false);
 						notify(t("closeDone", { title }), { variant: "success" });
 						await refresh();
@@ -62496,7 +62644,6 @@ body[data-ds-dark-theme]{
 									await refresh();
 									if (!stillOpen()) {
 										notify(t("closeDone", { title }), { variant: "success" });
-										dropSessionView();
 										setCloseOpen(false);
 										await archiveSession(outcome.sessionId);
 										return;
@@ -62542,7 +62689,7 @@ body[data-ds-dark-theme]{
 						return;
 					}
 					setClosingId(started);
-					if (!showSessionView(started)) {
+					if (!showSession(started)) {
 						setClosingId(null);
 						setClosing(false);
 						setCloseOpen(false);
@@ -62569,6 +62716,7 @@ body[data-ds-dark-theme]{
 					setCloseOpen(true);
 				} finally {
 					setBusy(false);
+					setStep(null);
 				}
 			};
 			const created = row.task.created ?? null;
@@ -62624,7 +62772,7 @@ body[data-ds-dark-theme]{
 			});
 			const tipBtn = (icon, actionKey, tipKey, onPress) => (0, react$1.createElement)(Tip, {
 				label: t(tipKey),
-				children: (0, react$1.createElement)(Button$1, {
+				children: (0, react$1.createElement)(Button, {
 					variant: "secondary",
 					size: "md",
 					icon: icon ?? void 0,
@@ -62688,7 +62836,7 @@ body[data-ds-dark-theme]{
 			const metaText = `${t("whenSubmitted", { time: whenRaw === null || whenRaw === void 0 || Number.isNaN(Date.parse(whenRaw)) ? t("timeUnknown") : formatDateTime(whenRaw).slice(5) })} 丨 ${whenRaw === null || whenRaw === void 0 ? t("timeUnknown") : formatRelative(whenRaw, t)}`;
 			const ownerName = displayName(row.task.owner_name, row.task.owner);
 			const ownerUuid = (row.task.owner ?? "").trim();
-			const whoNode = solo || row.task.status === "open" || ownerUuid === "" ? null : (0, react$1.createElement)(Button$1, {
+			const whoNode = solo || row.task.status === "open" || ownerUuid === "" ? null : (0, react$1.createElement)(Button, {
 				variant: "link",
 				size: "sm",
 				maxWidth: 180,
@@ -62714,10 +62862,44 @@ body[data-ds-dark-theme]{
 				maxWidth: 160,
 				onClick: () => setQuery({ keyword: tag })
 			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, copyButton, actions.view ? viewButton : null)));
-			return (0, react$1.createElement)(react$1.Fragment, null, card, cancelOpen ? (0, react$1.createElement)(CancelTaskModal, {
+			return (0, react$1.createElement)(react$1.Fragment, null, card, confirmAct === null ? null : (() => {
+				const action = confirmAct;
+				const claim = action === "claim";
+				const title = titleOf(row);
+				return (0, react$1.createElement)(ConfirmModal, {
+					title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
+					message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
+					confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
+					cancelText: t("settingsCancel"),
+					loadingText: false,
+					notice: busy ? progressNotice() : void 0,
+					onCancel: () => setConfirmAct(null),
+					onConfirm: async () => {
+						setBusy(true);
+						setStep(null);
+						try {
+							await postTaskAction({
+								action,
+								workspace: row.task.workspace.id,
+								id: row.task.id
+							}, onStep);
+							notify(t(claim ? "actionClaimDone" : "actionReleaseDone", { title }), { variant: "success" });
+							setConfirmAct(null);
+							await refresh();
+						} catch (failure) {
+							notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
+							throw failure;
+						} finally {
+							setBusy(false);
+							setStep(null);
+						}
+					}
+				});
+			})(), cancelOpen ? (0, react$1.createElement)(CancelTaskModal, {
 				t,
 				taskTitle: titleOf(row),
 				busy,
+				notice: busy ? progressNotice() : void 0,
 				error: cancelError,
 				onClose: () => setCancelOpen(false),
 				onSubmit: (reason) => void cancelTask(reason)
@@ -62725,20 +62907,16 @@ body[data-ds-dark-theme]{
 				t,
 				taskTitle: titleOf(row),
 				busy,
+				notice: busy ? progressNotice() : void 0,
 				error: closeError,
 				canUseAgent: hasSessions(),
 				locked: closing,
-				...closingId === null ? {} : { onShowSession: () => showSessionView(closingId) },
+				...closingId === null ? {} : { onShowSession: () => {
+					if (closingId !== null) showSession(closingId);
+				} },
 				onClose: () => setCloseOpen(false),
 				onSubmit: (input) => void finishTask(input)
-			}) : null, sessionView === null ? null : (0, react$1.createElement)(SessionViewModal, {
-				sessionId: sessionView.id,
-				view: sessionView.view,
-				heading: t("closeSessionTitle", { title: titleOf(row) }),
-				archived: false,
-				openHostSession: (id) => openSession(id),
-				onClose: dropSessionView
-			}));
+			}) : null);
 		}
 		//#endregion
 		//#region src/client/trend-chart.ts
@@ -63309,7 +63487,7 @@ body[data-ds-dark-theme]{
 			/** 本机到底有没有身份（`uuid` / `name` 任一为空都算没有）—— 卡片配色与内容都按它二选一。 */
 			const hasIdentity = props.identity.uuid !== null && props.identity.name !== null;
 			const profileOf = (who, uuid) => {
-				if (who === null || uuid === null) return (0, react$1.createElement)("div", { className: "dtl-profile" }, (0, react$1.createElement)("div", { className: "dtl-avatar dtl-avatar--empty" }, "?"), (0, react$1.createElement)("div", { className: "dtl-profile__main" }, (0, react$1.createElement)("div", { className: "dtl-profile__name" }, t("settingsNoIdentityTitle")), (0, react$1.createElement)("div", { className: "dtl-profile__hint" }, t("settingsNoIdentityHint")), (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button$1, {
+				if (who === null || uuid === null) return (0, react$1.createElement)("div", { className: "dtl-profile" }, (0, react$1.createElement)("div", { className: "dtl-avatar dtl-avatar--empty" }, "?"), (0, react$1.createElement)("div", { className: "dtl-profile__main" }, (0, react$1.createElement)("div", { className: "dtl-profile__name" }, t("settingsNoIdentityTitle")), (0, react$1.createElement)("div", { className: "dtl-profile__hint" }, t("settingsNoIdentityHint")), (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
 					variant: "primary",
 					size: "sm",
 					onClick: openUserModal
@@ -63373,7 +63551,7 @@ body[data-ds-dark-theme]{
 							stopRename();
 						}
 					}
-				})) : (0, react$1.createElement)("div", { className: "dtl-profile__nameline" }, (0, react$1.createElement)("span", { className: "dtl-profile__nametext" }, `@${who}`)), (0, react$1.createElement)("div", { className: "dtl-profile__uuid" }, uuid), renamingName ? (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button$1, {
+				})) : (0, react$1.createElement)("div", { className: "dtl-profile__nameline" }, (0, react$1.createElement)("span", { className: "dtl-profile__nametext" }, `@${who}`)), (0, react$1.createElement)("div", { className: "dtl-profile__uuid" }, uuid), renamingName ? (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
 					variant: "info",
 					size: "sm",
 					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }),
@@ -63382,16 +63560,16 @@ body[data-ds-dark-theme]{
 					onClick: () => {
 						saveName();
 					}
-				}, t("settingsSave")), (0, react$1.createElement)(Button$1, {
+				}, t("settingsSave")), (0, react$1.createElement)(Button, {
 					variant: "secondary",
 					size: "sm",
 					disabled: savingName,
 					onClick: stopRename
-				}, t("settingsCancel"))) : (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button$1, {
+				}, t("settingsCancel"))) : (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
 					variant: "outline",
 					size: "sm",
 					onClick: startRename
-				}, t("settingsRenameUser")), (0, react$1.createElement)(Button$1, {
+				}, t("settingsRenameUser")), (0, react$1.createElement)(Button, {
 					variant: "outline",
 					size: "sm",
 					onClick: openUserModal
@@ -63582,7 +63760,7 @@ body[data-ds-dark-theme]{
 							placeholder: t("settingsRenamePlaceholder"),
 							"aria-label": t("settingsRenamePlaceholder"),
 							inputRef: renameInputRef
-						})), (0, react$1.createElement)(Button$1, {
+						})), (0, react$1.createElement)(Button, {
 							variant: "info",
 							size: "lg",
 							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }),
@@ -63591,7 +63769,7 @@ body[data-ds-dark-theme]{
 							onClick: () => {
 								saveRename(dir);
 							}
-						}, t("settingsSave")), (0, react$1.createElement)(Button$1, {
+						}, t("settingsSave")), (0, react$1.createElement)(Button, {
 							variant: "secondary",
 							size: "lg",
 							onClick: () => {
@@ -63631,7 +63809,7 @@ body[data-ds-dark-theme]{
 							label: t("settingsDirVisible"),
 							disabled: dirBusy !== null
 						}),
-						actions: (0, react$1.createElement)("div", { className: "dtl-dir__acts" }, (0, react$1.createElement)(Button$1, {
+						actions: (0, react$1.createElement)("div", { className: "dtl-dir__acts" }, (0, react$1.createElement)(Button, {
 							variant: "secondary",
 							size: "sm",
 							onClick: () => {
@@ -63753,7 +63931,7 @@ body[data-ds-dark-theme]{
 							maxWidth: 160
 						}),
 						name: (0, react$1.createElement)("span", { className: "dtl-roster__who" }, (0, react$1.createElement)("span", { className: "dtl-roster__name" }, `@${row.name}`), (0, react$1.createElement)("span", { className: "dtl-roster__uuid" }, row.uuid.slice(-8))),
-						action: (0, react$1.createElement)("div", { className: "dtl-users__acts" }, row.uuid === props.identity.uuid ? null : (0, react$1.createElement)(Button$1, {
+						action: (0, react$1.createElement)("div", { className: "dtl-users__acts" }, row.uuid === props.identity.uuid ? null : (0, react$1.createElement)(Button, {
 							variant: "info",
 							size: "sm",
 							loading: pending === `claim:${row.uuid}`,
@@ -63804,7 +63982,7 @@ body[data-ds-dark-theme]{
 					size: "md",
 					tone: "business",
 					label: t("settingsDirsTitle")
-				}), (0, react$1.createElement)(Button$1, {
+				}), (0, react$1.createElement)(Button, {
 					variant: "outline",
 					size: "md",
 					loading: dirBusy === "add",
@@ -64007,6 +64185,29 @@ body[data-ds-dark-theme]{
 			}, []);
 			const clearHistScroll = (0, react$1.useCallback)(() => {
 				setHistScroll(null);
+			}, []);
+			const [sessionView, setSessionView] = (0, react$1.useState)(null);
+			const sessionViewRef = (0, react$1.useRef)(null);
+			(0, react$1.useEffect)(() => () => {
+				sessionViewRef.current?.view.dispose();
+				sessionViewRef.current = null;
+			}, []);
+			const dropSessionView = (0, react$1.useCallback)(() => {
+				sessionViewRef.current?.view.dispose();
+				sessionViewRef.current = null;
+				setSessionView(null);
+			}, []);
+			const showSessionView = (0, react$1.useCallback)((id, heading) => {
+				const view = openCloseSessionView(id);
+				if (view === null) return false;
+				sessionViewRef.current?.view.dispose();
+				sessionViewRef.current = { view };
+				setSessionView({
+					id,
+					view,
+					heading
+				});
+				return true;
 			}, []);
 			/** 点历史页右侧 4 格 = 图表与列表一起跳过去（用户 2026-11-01）：
 			*  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，
@@ -64283,11 +64484,11 @@ body[data-ds-dark-theme]{
 				alignItems: "center",
 				gap: "var(--dtl-space-3)",
 				minWidth: 0
-			} }, (0, react$1.createElement)(Button$1, {
+			} }, (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.126 261104-112043-844`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.126 261104-115820-899`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -64315,7 +64516,7 @@ body[data-ds-dark-theme]{
 					}
 				],
 				onChange: (next) => setViewMode(next)
-			}), (0, react$1.createElement)(Button$1, {
+			}), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
@@ -64355,7 +64556,7 @@ body[data-ds-dark-theme]{
 			} }, (0, react$1.createElement)("span", { style: {
 				color: "var(--dtl-danger)",
 				fontSize: "var(--dtl-font-md)"
-			} }, `${t("loadFailed")}：${state.error ?? ""}`), (0, react$1.createElement)(Button$1, {
+			} }, `${t("loadFailed")}：${state.error ?? ""}`), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "sm",
 				loading: state.refreshing,
@@ -64401,13 +64602,21 @@ body[data-ds-dark-theme]{
 					t,
 					row,
 					solo,
-					onView: handleView
+					onView: handleView,
+					onShowSession: showSessionView
 				})), truncated ? (0, react$1.createElement)("div", { style: limitHintStyle }, t("wsLimitHint", { n: WS_LIMIT })) : null);
 			})), (0, react$1.createElement)("div", { className: "dtl-page-foot" })), (0, react$1.createElement)(QuickToolbar, {
 				anchor: toolbarAnchor,
 				scrollContainer: toolbarScroll,
 				backToTop: { label: t("backToTop") },
 				ariaLabel: t("quickToolbarAria")
+			}), sessionView === null ? null : (0, react$1.createElement)(SessionViewModal, {
+				sessionId: sessionView.id,
+				view: sessionView.view,
+				heading: sessionView.heading,
+				archived: false,
+				openHostSession: (id) => openSession(id),
+				onClose: dropSessionView
 			})));
 		}
 		//#endregion

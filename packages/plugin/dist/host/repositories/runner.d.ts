@@ -22,6 +22,12 @@ export interface RunOptions {
     scriptPath?: string;
     /** 覆盖超时。 */
     timeoutMs?: number;
+    /**
+     * 过程步骤回调（写命令专用）：skill 每进一个阶段就在 stderr 打一行 `#step <key>`
+     * （`shell/render.go` 的 stepf，只有宿主设了 `TASK_LEDGER_STEPS=1` 才打）。
+     * 给了它才让 skill 打标记，读命令不传、不产生任何额外输出。
+     */
+    onStep?: (step: string) => void;
 }
 /**
  * 读命令：跑内嵌台账程序，收 stdout JSON。

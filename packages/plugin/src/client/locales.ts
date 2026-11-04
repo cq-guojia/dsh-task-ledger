@@ -193,6 +193,13 @@ export type LocaleKey =
 	| "actionClaimDone"
 	| "actionReleaseDone"
 	| "actionFailed"
+	| "actionSyncing"
+	// 写命令的分步进度（skill 每进一个阶段推一行，弹窗底栏跟着翻）
+	| "actionStepCheck"
+	| "actionStepSync"
+	| "actionStepWrite"
+	| "actionStepCommit"
+	| "actionStepPush"
 	// 「继续」：非 DSH 工作区的警告（标题 + 描述两行；描述分「已复制」/「复制失败」两版）+ 建好会话的提示
 	| "continueNotDshTitle"
 	| "continueNotDshBody"
@@ -482,6 +489,12 @@ export const zh: Record<LocaleKey, string> = {
 	actionClaimDone: "已认领：{title}",
 	actionReleaseDone: "已释放：{title}",
 	actionFailed: "操作失败：{error}",
+	actionSyncing: "正在同步台账并提交…",
+	actionStepCheck: "正在检查本地台账改动…",
+	actionStepSync: "正在拉取最新台账…",
+	actionStepWrite: "正在写入台账…",
+	actionStepCommit: "正在提交改动…",
+	actionStepPush: "正在推送到远端…",
 	continueNotDshTitle: "此任务不属于 DeepSeek Harness 工作区",
 	continueNotDshBody: "相关提示词已复制，请打开对应的 Agent 粘贴继续任务",
 	continueNotDshCopyFailedBody: "提示词复制失败，请重试或手动复制后到对应的 Agent 继续任务",
@@ -772,6 +785,12 @@ export const en: Record<LocaleKey, string> = {
 	actionClaimDone: "Claimed: {title}",
 	actionReleaseDone: "Released: {title}",
 	actionFailed: "Action failed: {error}",
+	actionSyncing: "Syncing the ledger and committing…",
+	actionStepCheck: "Checking local ledger changes…",
+	actionStepSync: "Pulling the latest ledger…",
+	actionStepWrite: "Writing the ledger…",
+	actionStepCommit: "Committing changes…",
+	actionStepPush: "Pushing to the remote…",
 	continueNotDshTitle: "This task does not belong to a DeepSeek Harness workspace",
 	continueNotDshBody:
 		"The prompt has been copied — please open the matching agent and paste it to continue.",
