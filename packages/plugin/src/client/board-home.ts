@@ -31,7 +31,12 @@ import {
 import type { LocaleKey, Translate } from "./locales";
 import { formatCount, mondayOf, pad2, ymdOf } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
-import { SessionViewModal, type SessionViewTarget } from "dsh-plugin-core/session";
+import {
+	ChangedFileDiff,
+	SessionViewModal,
+	type ChangedFileReviewLocator,
+	type SessionViewTarget,
+} from "dsh-plugin-core/session";
 import { openCloseSessionView } from "./close-session";
 import { openSession } from "./nav";
 import {
@@ -980,6 +985,20 @@ export function BoardHome(props: {
 						heading: sessionView.heading,
 						archived: false,
 						openHostSession: (id: string) => openSession(id),
+						// 会话里的文件 / 变更卡点开就走我们右侧那个 dock（同一个预览面，不另起一套）；
+						// 第二个参数是文件所属会话 id —— 相对路径靠它定位到正确工作区
+						onOpenFile: (path: string, sessionId: string) => {
+							const mount = mountRef.current;
+							if (mount !== null) openFilePreview({ mount, path, sessionId });
+						},
+						onOpenReview: (locator: ChangedFileReviewLocator) => {
+							const mount = mountRef.current;
+							if (mount === null) return;
+							openFilePreview({
+								mount,
+								content: () => h(ChangedFileDiff, { ...locator, variant: "review" }),
+							});
+						},
 						onClose: dropSessionView,
 					}),
 		),

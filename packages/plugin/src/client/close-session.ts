@@ -86,6 +86,11 @@ export function hasSessions(): boolean {
 	return service !== null;
 }
 
+/** 只读会话视图能不能开（两个服务缺一个就开不了 ⇒ 界面别给「查看会话」这个死按钮）。 */
+export function hasSessionView(): boolean {
+	return service !== null && conversation !== null;
+}
+
 /** 远端调用返回 `{ ok: false, ... }` 时当失败处理（业务错误不走 throw）。 */
 function remoteFailure(result: unknown): Error | null {
 	if (result === null || typeof result !== "object") return null;

@@ -820,7 +820,7 @@ export const en: Record<LocaleKey, string> = {
 	closeSessionTitle: "Close: {title}",
 	continueSessionTitle: "Continue: {title}",
 	closeStarted: "Handed to an agent: {title}",
-	closeDone: "Closed: {title}",
+	closeDone: "Task closed: {title}",
 	closeNotClosed: "The turn finished, but the task is still open",
 	closeNotClosedDesc: "Open the session to see where it stopped",
 	closeAgentFailed: "The agent turn failed: {error}",

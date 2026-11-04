@@ -40,7 +40,7 @@ import {
 	type TaskActionStep,
 } from "./api";
 import { CancelTaskModal } from "./cancel-task-modal";
-import { hasSessions, startCloseSession } from "./close-session";
+import { hasSessions, hasSessionView, startCloseSession } from "./close-session";
 import { CloseTaskModal } from "./close-task-modal";
 import { formatDateTime, formatRelative } from "./format";
 import { archiveSession, openSession } from "./nav";
@@ -296,9 +296,9 @@ export function TaskRowView(props: {
 							await refresh();
 							const open = stillOpen();
 							if (!open) {
-								notify(t("closeDone", { title }), { variant: "success" });
-								// 成功只关自己的结案弹窗；会话视图归看板托管，留着让人看完再自己关
+								// 弹窗先消失再亮提示（提示不被框压住）；他点开的会话视图不动，归他自己关
 								setCloseOpen(false);
+								notify(t("closeDone", { title }), { variant: "success" });
 								await archiveSession(outcome.sessionId);
 								return;
 							}
@@ -354,16 +354,16 @@ export function TaskRowView(props: {
 				setCloseError(t("closeNoSessions"));
 				return;
 			}
-			// 会话起来了 ⇒ 把只读视图叠上来（实时刷新），同时记住 id 供「查看会话」重开
-			setClosingId(started);
-			// 视图起不来（宿主没给 uiConversation）⇒ 回到老路：关框 + 一句「已交给 Agent」，
-			// 别把人锁在一个永远重开不了的弹窗里
-			if (!showSession(started)) {
-				setClosingId(null);
+			// 交给 Agent 之后**不自动弹开会话**（用户 2026-11-04）：框留在锁定态，
+			// 想看过程就点左下「查看会话」自己点开；他点开的那一个，跑完不归我们关。
+			if (!hasSessionView()) {
+				// 宿主没给只读视图服务 ⇒ 没有可点的东西，退回老路：关框 + 一句「已交给 Agent」
 				setClosing(false);
 				setCloseOpen(false);
 				notify(t("closeStarted", { title }), { variant: "success" });
+				return;
 			}
+			setClosingId(started);
 			// 10 分钟还没等到「这一轮跑完」⇒ 多半是会话被关掉了：只解除按钮锁定，不改结果
 			guard = setTimeout(() => {
 				guard = null;
