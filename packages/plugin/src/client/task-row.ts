@@ -298,7 +298,18 @@ export function TaskRowView(props: {
 							if (!open) {
 								// 弹窗先消失再亮提示（提示不被框压住）；他点开的会话视图不动，归他自己关
 								setCloseOpen(false);
-								notify(t("closeDone", { title }), { variant: "success" });
+								// 成功提示也带「查看会话」：想看过程就点，弹的是同一个只读视图（开着就等同再开一次）
+								notify(t("closeDone", { title }), {
+									variant: "success",
+									actions: [
+										{
+											text: t("actionOpenSession"),
+											onClick: () => {
+												showSession(outcome.sessionId);
+											},
+										},
+									],
+								});
 								await archiveSession(outcome.sessionId);
 								return;
 							}

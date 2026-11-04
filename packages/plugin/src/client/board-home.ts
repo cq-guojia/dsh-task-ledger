@@ -32,7 +32,7 @@ import type { LocaleKey, Translate } from "./locales";
 import { formatCount, mondayOf, pad2, ymdOf } from "./format";
 import { openFilePreview } from "dsh-plugin-core/explorer";
 import {
-	ChangedFileDiff,
+	openSessionReview,
 	SessionViewModal,
 	type ChangedFileReviewLocator,
 	type SessionViewTarget,
@@ -991,13 +991,10 @@ export function BoardHome(props: {
 							const mount = mountRef.current;
 							if (mount !== null) openFilePreview({ mount, path, sessionId });
 						},
+						// 变更卡走核心的 review 入口：面板、壳、✕ 全归 core，我们不挑组件不塞节点
 						onOpenReview: (locator: ChangedFileReviewLocator) => {
 							const mount = mountRef.current;
-							if (mount === null) return;
-							openFilePreview({
-								mount,
-								content: () => h(ChangedFileDiff, { ...locator, variant: "review" }),
-							});
+							if (mount !== null) openSessionReview({ mount, locator });
 						},
 						onClose: dropSessionView,
 					}),
