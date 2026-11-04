@@ -9,20 +9,21 @@ import { failureOf, runLedgerCommand, type LedgerCommandResult } from "./runner.
  */
 const WRITE_TIMEOUT_MS = 120_000;
 
-/** 界面行内按钮对应的三个动作。 */
-export type TaskAction = "claim" | "release" | "cancel";
+/** 界面行内按钮对应的动作：认领 / 释放 / 取消归档 / 正常结案。 */
+export type TaskAction = "claim" | "release" | "cancel" | "close";
 
 const ACTION_NAME: Record<TaskAction, string> = {
 	claim: "认领",
 	release: "释放",
 	cancel: "取消",
+	close: "结案",
 };
 
 /**
  * 跑一条任务写命令。
  *
- * @param summary - 只有「取消」用：一句话理由，写进历史行摘要与执行记录（`cancelled: <理由>`）。
- *   留空就不传 `--summary`（skill 允许取消不带摘要）。
+ * @param summary - 「取消」与「结案」都用：一句话理由 / 结案摘要，写进历史行与执行记录。
+ *   留空就不传 `--summary`（skill 允许取消不带摘要；正常结案由界面强制填）。
  */
 export async function runTaskAction(
 	repo: string,
@@ -40,6 +41,19 @@ export async function runTaskAction(
 			result = await runLedgerCommand(
 				"set",
 				["--id", id, "--release", "--repo", repo],
+				opts,
+			);
+			break;
+		case "close":
+			result = await runLedgerCommand(
+				"close",
+				[
+					"--id",
+					id,
+					...(summary === "" ? [] : ["--summary", summary]),
+					"--repo",
+					repo,
+				],
 				opts,
 			);
 			break;

@@ -187,11 +187,11 @@ const TASK_WRITE_TIMEOUT_MS = 120_000;
  * 取消可带一句理由（`summary`），进历史摘要与执行记录。成功后由调用方重读快照。
  */
 export function postTaskAction(body: {
-	readonly action: "claim" | "release" | "cancel";
+	readonly action: "claim" | "release" | "cancel" | "close";
 	/** 工作区 id（host 据此找台账根）。 */
 	readonly workspace: string;
 	readonly id: string;
-	/** 仅取消用：一句话理由，可留空。 */
+	/** 取消用理由（可空）/ 结案用摘要（必填）：一句话。 */
 	readonly summary?: string;
 }): Promise<{ readonly ok: boolean }> {
 	return fetchJson<{ ok: boolean }>(
@@ -226,6 +226,8 @@ export function postTaskContinue(body: {
 	/** 工作区 id（= 台账目录绝对路径）。 */
 	readonly workspace: string;
 	readonly id: string;
+	/** 注入的首条消息正文（客户端按界面语言拼好；host 不再自带中文模板）。 */
+	readonly prompt: string;
 }): Promise<ContinueResult> {
 	return fetchJson<ContinueResult>(
 		"/task/continue",
@@ -236,6 +238,16 @@ export function postTaskContinue(body: {
 		},
 		CONTINUE_TIMEOUT_MS,
 	);
+}
+
+/** 台账目录的宿主工作区归属：`dsh` 才起得了会话（「继续」「完成」都先问这一下）。 */
+export type WorkspaceKind =
+	| { readonly kind: "dsh"; readonly workspaceId: string }
+	| { readonly kind: "not-dsh" };
+
+/** 问 host：这个台账目录是不是宿主登记过的工作区（判据与「继续」同一条）。 */
+export function getWorkspaceKind(path: string): Promise<WorkspaceKind> {
+	return fetchJson<WorkspaceKind>(`/workspace/kind?path=${encodeURIComponent(path)}`);
 }
 
 /**

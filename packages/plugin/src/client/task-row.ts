@@ -32,13 +32,16 @@ import {
 	type ReactNode,
 	useState,
 } from "react";
-import { postTaskAction, postTaskContinue } from "./api";
+import { getWorkspaceKind, postTaskAction, postTaskContinue } from "./api";
 import { CancelTaskModal } from "./cancel-task-modal";
+import { hasSessions, startCloseSession } from "./close-session";
+import { CloseTaskModal } from "./close-task-modal";
 import { formatDateTime, formatRelative } from "./format";
-import { openSession } from "./nav";
+import { archiveSession, openSession } from "./nav";
 import type { Translate } from "./locales";
+import { closePrompt, continuePrompt } from "./prompts";
 import { displayName, type Row, resolveActions } from "./rows";
-import { focusOwner, refresh, setQuery } from "./store";
+import { boardSnapshot, focusOwner, refresh, setQuery } from "./store";
 import { Button, confirmModal, IconButton, notify, Surface, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
@@ -172,20 +175,24 @@ export function TaskRowView(props: {
 		setBusy(true);
 		const title = titleOf(row);
 		try {
+			// 提示词按界面语言拼（英文环境给英文），host 只负责注入原文
+			const prompt = continuePrompt(t, row.task.id);
 			const result = await postTaskContinue({
 				workspace: row.task.workspace.id,
 				id: row.task.id,
+				prompt,
 			});
 			if (result.kind === "not-dsh") {
-				const copied = await copyText(row.task.id);
-				notify(
-					t(copied ? "continueNotDsh" : "continueNotDshCopyFailed", {
-						title,
-						id: row.task.id,
-					}),
-					// 两句话说清「为什么不行 + 你去哪继续」，默认 2.6s 读不完 ⇒ 给足时间
-					{ variant: "warning", durationMs: 8000 },
-				);
+				// 非 DSH 工作区起不了会话：复制的是**整段提示词**（用户 2026-11-03 改口径），
+				// 不是任务号 —— 用户拿去直接贴给对应 Agent 就能接着干。
+				const copied = await copyText(prompt);
+				notify(t("continueNotDshTitle"), {
+					description: t(
+						copied ? "continueNotDshBody" : "continueNotDshCopyFailedBody",
+					),
+					variant: "warning",
+					durationMs: 8000,
+				});
 				return;
 			}
 			notify(t("continueStarted", { title }), { variant: "success" });
@@ -198,6 +205,171 @@ export function TaskRowView(props: {
 				}),
 				{ variant: "error" },
 			);
+		} finally {
+			setBusy(false);
+		}
+	};
+
+	// 完成（用户 2026-11-03 定口径）：默认交给 Agent —— 官方客户端会话面起会话、注入结案提示词，
+	// 监听 `running` 由真变假（宿主推流，不轮询），然后**只查一次**台账确认结没结；
+	// 结成了立刻把会话归档（不归档会攒一堆垃圾会话）。不勾「由 Agent」⇒ 留言即摘要，直接结案。
+	// 成功与否**以台账为准**，不看模型自述；`lastAgentError` 只用来解释「为什么没结」。
+	const [closeOpen, setCloseOpen] = useState(false);
+	const [closeError, setCloseError] = useState<string | null>(null);
+	// 点了「交给 Agent」才探测到不是 DSH 工作区 ⇒ 复制提示词 + 弹警告 Toast，弹窗照旧开着让人改选
+	const [closing, setClosing] = useState(false);
+
+	/** 结案后确认一眼台账：这条还在不在办列表里（读不到就按"没结"处理，不谎报成功）。 */
+	const stillOpen = (): boolean => {
+		const board = boardSnapshot().board;
+		if (board === null) return true;
+		return board.tasks.some((task) => task.id === row.task.id);
+	};
+
+	const finishTask = async (input: { useAgent: boolean; note: string }): Promise<void> => {
+		setBusy(true);
+		setCloseError(null);
+		const title = titleOf(row);
+		try {
+			if (!input.useAgent) {
+				await postTaskAction({
+					action: "close",
+					workspace: row.task.workspace.id,
+					id: row.task.id,
+					summary: input.note,
+				});
+				setCloseOpen(false);
+				notify(t("closeDone", { title }), { variant: "success" });
+				await refresh();
+				return;
+			}
+
+			const prompt = closePrompt(t, row.task.id, input.note);
+			// 先判工作区（与「继续」同一条判据）：非 DSH 工作区**起不了会话**。
+			// 处理与「继续」一致：复制提示词 + 警告 Toast；弹窗**不关也不锁**，人还能改成「直接结案」
+			// （用户 2026-11-04：别把 Agent 选项禁掉，也别在弹窗框里加提示行）。
+			let workspaceId: string | undefined;
+			try {
+				const kind = await getWorkspaceKind(row.task.workspace.id);
+				if (kind.kind === "not-dsh") {
+					const copied = await copyText(prompt);
+					// 复制失败得如实改口，不能照说"已复制"
+					notify(t("closeNotDshTitle"), {
+						description: t(
+							copied ? "closeNotDshBody" : "closeNotDshCopyFailedBody",
+						),
+						variant: "warning",
+						durationMs: 8000,
+					});
+					return;
+				}
+				workspaceId = kind.workspaceId;
+			} catch (probeError) {
+				setCloseError(
+					probeError instanceof Error ? probeError.message : String(probeError),
+				);
+				return;
+			}
+			// 判过关再关窗：后面是几十秒到几分钟的事，不该把人锁在弹窗里
+			setCloseOpen(false);
+			setClosing(true);
+			// 兜底：会话被手动关掉 / 宿主重启 ⇒ 事件永远不来。只兜「一直显示结案中」，
+			// 不用它判断结果（结果照样以台账为准）。
+			let guard: ReturnType<typeof setTimeout> | null = null;
+			const clearGuard = (): void => {
+				if (guard === null) return;
+				clearTimeout(guard);
+				guard = null;
+			};
+			const started = await startCloseSession({
+				cwd: row.task.workspace.id,
+				...(workspaceId === undefined ? {} : { workspaceId }),
+				title: t("closeSessionTitle", { title }),
+				prompt,
+				onSettled: (outcome) => {
+					clearGuard();
+					void (async (): Promise<void> => {
+						try {
+							await refresh();
+							const open = stillOpen();
+							if (!open) {
+								notify(t("closeDone", { title }), { variant: "success" });
+								// 结成了 ⇒ 归档，别让结案会话堆满侧栏
+								await archiveSession(outcome.sessionId);
+								return;
+							}
+							notify(t("closeNotClosed"), {
+								description:
+									outcome.lastAgentError === null
+										? t("closeNotClosedDesc")
+										: t("closeAgentFailed", { error: outcome.lastAgentError }),
+								variant: "warning",
+								durationMs: 8000,
+								actions: [
+									{
+										text: t("actionOpenSession"),
+										onClick: () => {
+											openSession(outcome.sessionId);
+										},
+									},
+								],
+							});
+						} finally {
+							setClosing(false);
+						}
+					})();
+				},
+				onFailed: (error, sessionId) => {
+					clearGuard();
+					setClosing(false);
+					notify(t("closeAgentFailed", { error: error.message }), {
+						variant: "error",
+						durationMs: 8000,
+						...(sessionId === null
+							? {}
+							: {
+									actions: [
+										{
+											text: t("actionOpenSession"),
+											onClick: () => {
+												openSession(sessionId);
+											},
+										},
+									],
+								}),
+					});
+				},
+			});
+			// null = 宿主没提供会话服务：退回手动分支，别让人以为点了个寂寞
+			if (started === null) {
+				clearGuard();
+				setClosing(false);
+				setCloseOpen(true);
+				setCloseError(t("closeNoSessions"));
+				return;
+			}
+			// 10 分钟还没等到「这一轮跑完」⇒ 多半是会话被关掉了：只解除按钮锁定，不改结果
+			guard = setTimeout(() => {
+				guard = null;
+				setClosing(false);
+				notify(t("closeNotClosed"), {
+					description: t("closeNotClosedDesc"),
+					variant: "warning",
+					durationMs: 8000,
+					actions: [
+						{
+							text: t("actionOpenSession"),
+							onClick: () => {
+								openSession(started);
+							},
+						},
+					],
+				});
+			}, 600_000);
+			notify(t("closeStarted", { title }), { variant: "success" });
+		} catch (error) {
+			setCloseError(error instanceof Error ? error.message : String(error));
+			setCloseOpen(true);
 		} finally {
 			setBusy(false);
 		}
@@ -268,11 +440,11 @@ export function TaskRowView(props: {
 		}),
 	});
 	// 文字动作钮：**灰底、不带边**（核心 `secondary` 档，用户 2026-10-30：原来那圈描边不要）。
-	// `onPress` 没给 = 功能未接（目前只剩「完成」），先只画样子。
+	// `onPress` 没给 = 这个钮此刻不可点（结案中），提示语换成「正在结案」。
 	const tipBtn = (
 		icon: ReactNode,
 		actionKey: "actionClaim" | "actionResume" | "actionFinish" | "actionRelease",
-		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease",
+		tipKey: "tipClaim" | "tipResume" | "tipFinish" | "tipRelease" | "closeInProgress",
 		onPress?: () => void,
 	): ReactNode =>
 		h(Tip, {
@@ -300,7 +472,14 @@ export function TaskRowView(props: {
 	const finishButton = tipBtn(
 		h(IconCheckOutlineRegular, { size: 14 }),
 		"actionFinish",
-		"tipFinish",
+		// 结案中（会话在跑）不再给点：避免一任务开两个结案会话
+		closing ? "closeInProgress" : "tipFinish",
+		closing
+			? undefined
+			: () => {
+					setCloseError(null);
+					setCloseOpen(true);
+				},
 	);
 	// 释放 = 退回公共池：左向箭头（与「继续」的右箭头成一进一出，用户 2026-10-30）
 	const releaseButton = tipBtn(
@@ -479,7 +658,7 @@ export function TaskRowView(props: {
 			),
 		),
 	);
-	// 取消弹窗与卡片并列（弹窗自带遮罩，挂在哪一层都不影响定位）。
+	// 弹窗与卡片并列（弹窗自带遮罩，挂在哪一层都不影响定位）。
 	return h(
 		Fragment,
 		null,
@@ -492,6 +671,17 @@ export function TaskRowView(props: {
 					error: cancelError,
 					onClose: () => setCancelOpen(false),
 					onSubmit: (reason) => void cancelTask(reason),
+				})
+			: null,
+		closeOpen
+			? h(CloseTaskModal, {
+					t,
+					taskTitle: titleOf(row),
+					busy,
+					error: closeError,
+					canUseAgent: hasSessions(),
+					onClose: () => setCloseOpen(false),
+					onSubmit: (input) => void finishTask(input),
 				})
 			: null,
 	);

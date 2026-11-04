@@ -24,6 +24,7 @@ import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { actOnTask } from "./services/task.service.js";
 import {
 	continueTask,
+	resolveWorkspace,
 	type AgentDefaultModelLike,
 	type AgentPresetsLike,
 	type AgentsLike,
@@ -336,11 +337,19 @@ export function registerRoutes(
 				}
 				const body = (raw ?? {}) as Record<string, unknown>;
 				const action = body.action;
-				if (action !== "claim" && action !== "release" && action !== "cancel")
-					throw new Error(`${BAD_REQUEST}action 只能是 claim / release / cancel`);
-				// 取消理由：一句话就够，超长的截掉（历史摘要不该被一段小作文撑开）
+				if (
+					action !== "claim" &&
+					action !== "release" &&
+					action !== "cancel" &&
+					action !== "close"
+				)
+					throw new Error(`${BAD_REQUEST}action 只能是 claim / release / cancel / close`);
+				// 摘要 / 理由：一句话就够，超长的截掉（历史行不该被一段小作文撑开）
 				const summary =
 					typeof body.summary === "string" ? body.summary.trim().slice(0, 200) : "";
+				// 正常结案必须有摘要（取消可以没有）：空着也要在界面先挡住，这里兜一层
+				if (action === "close" && summary === "")
+					throw new Error(`${BAD_REQUEST}结案必须填一句摘要`);
 				const id = typeof body.id === "string" ? body.id.trim() : "";
 				if (id === "") throw new Error(`${BAD_REQUEST}必须给任务号`);
 				const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
@@ -353,6 +362,30 @@ export function registerRoutes(
 				sendJson(res, 200, { ok: true });
 			} catch (error) {
 				sendWriteFailure(res, error);
+			}
+		},
+	});
+
+	// 工作区归属探测（2026-11-03）：非 DSH 工作区**起不了会话**，「继续」与「完成」都先问这一下，
+	// 判据与「继续」完全同一条（`resolveWorkspace`，含 realpath 归一），不各写一份。
+	webServer.register({
+		kind: "exact",
+		path: `${API_PREFIX}/workspace/kind`,
+		handler: (req, res) => {
+			try {
+				const path =
+					new URL(req.url ?? "/", "http://localhost").searchParams.get("path") ?? "";
+				if (path.trim() === "") throw new Error(`${BAD_REQUEST}必须给台账目录路径`);
+				const resolved = resolveWorkspace(deps.registry, path);
+				sendJson(
+					res,
+					200,
+					resolved.kind === "dsh"
+						? { kind: "dsh", workspaceId: resolved.workspace.id }
+						: { kind: "not-dsh" },
+				);
+			} catch (error) {
+				sendFailure(res, error);
 			}
 		},
 	});
@@ -379,6 +412,9 @@ export function registerRoutes(
 				if (id === "") throw new Error(`${BAD_REQUEST}必须给任务号`);
 				const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
 				if (workspaceId === "") throw new Error(`${BAD_REQUEST}必须给工作区`);
+				// 提示词由客户端拼（要跟界面语言走），host 只负责注入原文
+				const prompt = typeof body.prompt === "string" ? body.prompt : "";
+				if (prompt.trim() === "") throw new Error(`${BAD_REQUEST}必须给提示词`);
 				sendJson(
 					res,
 					200,
@@ -389,7 +425,7 @@ export function registerRoutes(
 							presets: deps.presets?.(),
 							defaultModel: deps.defaultModel?.(),
 						},
-						{ workspaceId, id },
+						{ workspaceId, id, prompt },
 					),
 				);
 			} catch (error) {

@@ -83,11 +83,39 @@ export interface ContinueDeps {
 	readonly defaultModel: AgentDefaultModelLike | undefined;
 }
 
+/** 宿主工作区解析结果：`dsh` 带上 registry 实体（建会话要靠它归组、取名）。 */
+export type WorkspaceResolution =
+	| { readonly kind: "dsh"; readonly workspace: RegistryWorkspace }
+	| { readonly kind: "not-dsh" };
+
+/**
+ * 判据：台账目录的 path 能不能在宿主工作区里找到实体。
+ *
+ * 「继续」和「完成」两条链都先过这一关 —— 非 DSH 工作区**起不了会话**，
+ * 只能退化成「把提示词复制给用户，让他去对应的 Agent 粘」。
+ */
+export function resolveWorkspace(
+	registry: { list(): readonly RegistryWorkspace[] },
+	path: string,
+): WorkspaceResolution {
+	const list = registry.list();
+	const wanted = canonical(path);
+	const workspace =
+		list.find((item) => item.path === path) ??
+		list.find((item) => canonical(item.path) === wanted);
+	return workspace === undefined ? { kind: "not-dsh" } : { kind: "dsh", workspace };
+}
+
 export interface ContinueInput {
 	/** 台账工作区 id（= 台账目录绝对路径）。 */
 	readonly workspaceId: string;
 	/** 任务号（含任务名的那一串，skill 精确匹配用）。 */
 	readonly id: string;
+	/**
+	 * 注入的首条消息正文。**由客户端拼好传进来** —— 提示词要跟界面语言（中/英）走，
+	 * 而语言只有浏览器半知道；host 不再自带中文模板（否则英文环境收到的仍是中文）。
+	 */
+	readonly prompt: string;
 }
 
 /** `not-dsh` = 该台账目录不是宿主登记过的工作区（预期分支，不是错误）。 */
@@ -95,53 +123,11 @@ export type ContinueResult =
 	| { readonly kind: "started"; readonly sessionId: string }
 	| { readonly kind: "not-dsh" };
 
-/**
- * 「继续」注入的首条消息。**只依赖任务号与 task-ledger skill 的存在** ——
- * 不写命令、不写脚本路径、不写文档章节名：skill 或过程文档模板一改，这段就不用跟着改
- * （用户 2026-11-03 三次纠正后定的口径）。
- */
-export function buildContinuePrompt(id: string): string {
-	return [
-		`请先只读了解任务 \`${id}\` 的当前进度，汇报完停下。`,
-		"",
-		"## 第一步：读",
-		"",
-		"用 task-ledger skill 查这个任务，按 skill 自己的说明走，不要另拼命令、不要猜脚本路径。",
-		"",
-		"把任务字段和它指向的过程文档完整读完 —— 要真的打开读，不要只看查询回执的摘要。",
-		"",
-		"查不到这个任务、或过程文档读不到：把错误原样贴出来就停下，不要换关键词模糊搜，",
-		"不要猜任务号，不要另找一份文档顶上，也不要当成已完成来汇报。",
-		"",
-		"## 第二步：报",
-		"",
-		"开头写一行 `过程文档：<路径>`，然后只输出这三块，不要加别的：",
-		"",
-		"1. **当前进度** —— 已做到哪一步；最近一条进展记录（时间 + 一句话）。",
-		"2. **下一步** —— 文档里写的下一个具体动作；没写就写「文档没有写下一步」。",
-		"3. **风险与阻塞** —— 文档里记的未完成项和坑；没有就写「没有」。",
-		"",
-		"如实转述文档写了什么，不要补推测；文档没写的地方标「文档未写」。",
-		"",
-		"## 第三步：停",
-		"",
-		"输出完立即停下，等用户指令。不要开始执行下一步里的动作，",
-		"也不要额外提方案、不要追问。",
-		"",
-		"## 硬约束",
-		"",
-		"- 本轮只读：不写文件、不装依赖、不跑构建、不动 git，不执行 task-ledger skill 的任何写操作。",
-		"- 不新建会话、不派发子 agent、不派生后台任务、不新建台账任务。",
-		"- 不修改台账与过程文档；你认为该改的地方只列出来，等用户发话。",
-		"- 命令报错就原样贴出，不要绕过、不要手改台账文件。",
-	].join("\n");
-}
-
-function continueMessage(id: string): UserMessageLike {
+function continueMessage(id: string, prompt: string): UserMessageLike {
 	return {
 		id: randomUUID(),
 		role: "user",
-		content: [{ type: "text", text: buildContinuePrompt(id) }],
+		content: [{ type: "text", text: prompt }],
 		// source 的 kind 与别的插件不冲突（合并扩展的判别字段），form/summary 只影响气泡上那行小字。
 		source: { kind: "task-ledger", form: "notice", summary: `继续任务 ${id}` },
 	};
@@ -191,12 +177,9 @@ export async function continueTask(
 	input: ContinueInput,
 ): Promise<ContinueResult> {
 	// ① 判据：台账目录的 path 能不能在宿主工作区里找到实体 —— 找不到就是非 DSH 工作区。
-	const registryList = deps.registry.list();
-	const wanted = canonical(input.workspaceId);
-	const workspace =
-		registryList.find((item) => item.path === input.workspaceId) ??
-		registryList.find((item) => canonical(item.path) === wanted);
-	if (workspace === undefined) return { kind: "not-dsh" };
+	const resolved = resolveWorkspace(deps.registry, input.workspaceId);
+	if (resolved.kind === "not-dsh") return { kind: "not-dsh" };
+	const workspace = resolved.workspace;
 
 	const agents = deps.agents;
 	if (agents === undefined)
@@ -236,6 +219,6 @@ export async function continueTask(
 	}
 
 	// ④ 注入首条消息并唤醒 driver
-	handle.agent.send(continueMessage(input.id), "next-turn", true);
+	handle.agent.send(continueMessage(input.id, input.prompt), "next-turn", true);
 	return { kind: "started", sessionId };
 }

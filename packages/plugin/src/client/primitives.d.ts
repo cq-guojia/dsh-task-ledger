@@ -128,6 +128,11 @@ declare module "@deepseek-ai/dsh-client-ui-primitives" {
 		size?: number;
 		className?: string;
 	}>;
+	/** 带圈的勾（结案弹窗标题用）：`icons/index.d.ts:342` 与 `lib/index.js` 同名导出亲验（2026-11-03）。 */
+	export const IconCheckCircleOutlineRegular: ComponentType<{
+		size?: number;
+		className?: string;
+	}>;
 	export const IconUsersOutlineRegular: ComponentType<{
 		size?: number;
 		className?: string;

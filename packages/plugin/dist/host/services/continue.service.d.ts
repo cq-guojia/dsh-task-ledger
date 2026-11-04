@@ -72,11 +72,32 @@ export interface ContinueDeps {
     readonly presets: AgentPresetsLike | undefined;
     readonly defaultModel: AgentDefaultModelLike | undefined;
 }
+/** 宿主工作区解析结果：`dsh` 带上 registry 实体（建会话要靠它归组、取名）。 */
+export type WorkspaceResolution = {
+    readonly kind: "dsh";
+    readonly workspace: RegistryWorkspace;
+} | {
+    readonly kind: "not-dsh";
+};
+/**
+ * 判据：台账目录的 path 能不能在宿主工作区里找到实体。
+ *
+ * 「继续」和「完成」两条链都先过这一关 —— 非 DSH 工作区**起不了会话**，
+ * 只能退化成「把提示词复制给用户，让他去对应的 Agent 粘」。
+ */
+export declare function resolveWorkspace(registry: {
+    list(): readonly RegistryWorkspace[];
+}, path: string): WorkspaceResolution;
 export interface ContinueInput {
     /** 台账工作区 id（= 台账目录绝对路径）。 */
     readonly workspaceId: string;
     /** 任务号（含任务名的那一串，skill 精确匹配用）。 */
     readonly id: string;
+    /**
+     * 注入的首条消息正文。**由客户端拼好传进来** —— 提示词要跟界面语言（中/英）走，
+     * 而语言只有浏览器半知道；host 不再自带中文模板（否则英文环境收到的仍是中文）。
+     */
+    readonly prompt: string;
 }
 /** `not-dsh` = 该台账目录不是宿主登记过的工作区（预期分支，不是错误）。 */
 export type ContinueResult = {
@@ -85,12 +106,6 @@ export type ContinueResult = {
 } | {
     readonly kind: "not-dsh";
 };
-/**
- * 「继续」注入的首条消息。**只依赖任务号与 task-ledger skill 的存在** ——
- * 不写命令、不写脚本路径、不写文档章节名：skill 或过程文档模板一改，这段就不用跟着改
- * （用户 2026-11-03 三次纠正后定的口径）。
- */
-export declare function buildContinuePrompt(id: string): string;
 /**
  * 起会话并注入只读提示词。
  *

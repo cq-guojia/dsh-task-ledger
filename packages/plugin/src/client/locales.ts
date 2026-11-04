@@ -193,10 +193,35 @@ export type LocaleKey =
 	| "actionClaimDone"
 	| "actionReleaseDone"
 	| "actionFailed"
-	// 「继续」：非 DSH 工作区的警告（已复制 / 复制失败两版）+ 建好会话的提示
-	| "continueNotDsh"
-	| "continueNotDshCopyFailed"
+	// 「继续」：非 DSH 工作区的警告（标题 + 描述两行；描述分「已复制」/「复制失败」两版）+ 建好会话的提示
+	| "continueNotDshTitle"
+	| "continueNotDshBody"
+	| "continueNotDshCopyFailedBody"
+	| "closeNotDshTitle"
+	| "closeNotDshBody"
+	| "closeNotDshCopyFailedBody"
 	| "continueStarted"
+	// 「完成」：结案弹窗 + 交给 Agent 后的各种结果
+	| "closeModalTitle"
+	| "closeModalHintAgent"
+	| "closeModalHintManual"
+	| "closeModalHintManualOnly"
+	| "closeModeManual"
+	| "closeModeAgent"
+	| "closeModalMode"
+	| "closeModalNotePlaceholder"
+	| "closeModalSummaryPlaceholder"
+	| "closeModalOkAgent"
+	| "closeModalOkManual"
+	| "closeSessionTitle"
+	| "closeStarted"
+	| "closeDone"
+	| "closeNotClosed"
+	| "closeNotClosedDesc"
+	| "closeAgentFailed"
+	| "closeNoSessions"
+	| "actionOpenSession"
+	| "closeInProgress"
 	| "tipClaim"
 	| "tipResume"
 	| "tipFinish"
@@ -454,11 +479,35 @@ export const zh: Record<LocaleKey, string> = {
 	actionClaimDone: "已认领：{title}",
 	actionReleaseDone: "已释放：{title}",
 	actionFailed: "操作失败：{error}",
-	continueNotDsh:
-		"此台账不属于 DeepSeek Harness 工作区，无法在当前环境内直接继续。「{title}」（任务号 {id}）的任务 ID 已复制到剪贴板，请到对应的 Agent 中继续该任务。",
-	continueNotDshCopyFailed:
-		"此台账不属于 DeepSeek Harness 工作区，无法在当前环境内直接继续。任务 ID 复制失败，请手动复制「{id}」，再到对应的 Agent 中继续该任务。",
+	continueNotDshTitle: "此任务不属于 DeepSeek Harness 工作区",
+	continueNotDshBody: "相关提示词已复制，请打开对应的 Agent 粘贴继续任务",
+	continueNotDshCopyFailedBody: "提示词复制失败，请重试或手动复制后到对应的 Agent 继续任务",
+	// 标题与「继续」同一句；正文多一句「也可以选直接结案」—— 结案有这条退路，继续没有
+	closeNotDshTitle: "此任务不属于 DeepSeek Harness 工作区",
+	closeNotDshBody:
+		"相关提示词已复制，请打开对应的 Agent 粘贴完成结案，也可以选「直接结案」",
+	closeNotDshCopyFailedBody: "结案提示词复制失败，请重试或手动复制后到对应的 Agent 粘贴完成结案",
 	continueStarted: "已新建会话：{title}",
+	closeModalTitle: "结案任务",
+	closeModalHintAgent: "Agent 会读完当前进度、写出结论与遗留项，然后结案。",
+	closeModalHintManual: "用这句摘要直接结案。",
+	closeModalHintManualOnly: "此台账不在本环境内，无法交给 Agent，请写一句结案摘要。",
+	closeModeManual: "直接结案",
+	closeModeAgent: "交给 Agent 结案",
+	closeModalMode: "结案方式",
+	closeModalNotePlaceholder: "给 Agent 留句话（可留空）",
+	closeModalSummaryPlaceholder: "结案摘要（必填，一句话）",
+	closeModalOkAgent: "交给 Agent",
+	closeModalOkManual: "直接结案",
+	closeSessionTitle: "完成：{title}",
+	closeStarted: "已交给 Agent 结案：{title}",
+	closeDone: "已结案：{title}",
+	closeNotClosed: "这轮跑完了，但任务没结",
+	closeNotClosedDesc: "去会话里看看它停在哪儿",
+	closeAgentFailed: "Agent 这轮没跑成：{error}",
+	closeNoSessions: "宿主没有提供会话服务，只能手动结案",
+	actionOpenSession: "查看会话",
+	closeInProgress: "Agent 正在结案，完成前不能再点",
 	tipClaim: "将该任务归入本人名下，状态置为进行中",
 	tipResume: "恢复对该任务的推进",
 	tipFinish: "将该任务标记为完成，并归档入历史",
@@ -717,11 +766,39 @@ export const en: Record<LocaleKey, string> = {
 	actionClaimDone: "Claimed: {title}",
 	actionReleaseDone: "Released: {title}",
 	actionFailed: "Action failed: {error}",
-	continueNotDsh:
-		'This ledger does not belong to a DeepSeek Harness workspace, so the task cannot be resumed here. The task ID for "{title}" ({id}) has been copied — open it in its own agent to continue.',
-	continueNotDshCopyFailed:
-		'This ledger does not belong to a DeepSeek Harness workspace, so the task cannot be resumed here. Copying the task ID failed — copy "{id}" manually, then continue it in its own agent.',
+	continueNotDshTitle: "This task does not belong to a DeepSeek Harness workspace",
+	continueNotDshBody:
+		"The prompt has been copied — please open the matching agent and paste it to continue.",
+	continueNotDshCopyFailedBody:
+		"Copying the prompt failed — copy it manually, then paste it into the matching agent.",
+	closeNotDshTitle: "This task does not belong to a DeepSeek Harness workspace",
+	closeNotDshBody:
+		"The prompt has been copied — please open the matching agent and paste it to close the task, or pick “Close now”.",
+	closeNotDshCopyFailedBody:
+		"Copying the closing prompt failed — copy it manually, then paste it into the matching agent to close the task.",
 	continueStarted: "Session started: {title}",
+	closeModalTitle: "Close task",
+	closeModalHintAgent:
+		"An agent reads the current progress, writes the conclusion and leftovers, then closes.",
+	closeModalHintManual: "Close right away with this summary.",
+	closeModalHintManualOnly:
+		"This ledger is outside this environment, so no agent is available — write a one-line summary.",
+	closeModeManual: "Close now",
+	closeModeAgent: "Hand to agent",
+	closeModalMode: "Close mode",
+	closeModalNotePlaceholder: "Leave a note for the agent (optional)",
+	closeModalSummaryPlaceholder: "Closing summary (required, one line)",
+	closeModalOkAgent: "Hand to agent",
+	closeModalOkManual: "Close now",
+	closeSessionTitle: "Close: {title}",
+	closeStarted: "Handed to an agent: {title}",
+	closeDone: "Closed: {title}",
+	closeNotClosed: "The turn finished, but the task is still open",
+	closeNotClosedDesc: "Open the session to see where it stopped",
+	closeAgentFailed: "The agent turn failed: {error}",
+	closeNoSessions: "This host exposes no session service — close it manually",
+	actionOpenSession: "Open session",
+	closeInProgress: "An agent is closing this task; wait for it to finish",
 	tipClaim: "assign this task to me and set it to in progress",
 	tipResume: "resume work on this task",
 	tipFinish: "mark this task as done and archive it",

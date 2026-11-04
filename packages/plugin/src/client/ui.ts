@@ -636,6 +636,7 @@ export { MarqueeText } from "dsh-plugin-core/ui";
 
 /** 文本输入（核心唯一实现：size sm/md/lg、error 描红、hint 问号一气呵成）。 */
 export { Input } from "dsh-plugin-core/ui";
+export { Textarea } from "dsh-plugin-core/ui";
 
 /** 组合输入框（核心唯一实现：前置标题 + 输入 + 后置按钮焊成一体）—— 创建身份那条用它。 */
 export { InputGroup } from "dsh-plugin-core/ui";

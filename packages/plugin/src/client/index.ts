@@ -23,7 +23,8 @@ import {
 	type Translate,
 	zh,
 } from "./locales";
-import { setSessionOpener } from "./nav";
+import { setSessions, type SessionsLike } from "./close-session";
+import { setSessionArchiver, setSessionOpener } from "./nav";
 import { LedgerIcon } from "./ui";
 
 // 核心控件样式设施：id 插件内唯一（多插件同页互不覆盖）；控件首次渲染时 ensureControls() 挂载。
@@ -52,10 +53,13 @@ interface ClientContext {
 	layout?: {
 		selectPanel(panelId: string | null): void;
 	};
-	/** 会话导航（「继续」建完会话跳过去）：`openSession` 自己 retain mainView，插件不得自己 retain。 */
+	/** 会话导航 / 归档（「继续」跳过去、「完成」结案后归档）：自己 retain mainView，插件不得自己 retain。 */
 	uiWorkspace?: {
 		openSession(sessionId: string): void;
+		archiveSession?(sessionId: string, options?: { stopActivity?: boolean }): Promise<void>;
 	};
+	/** 官方客户端会话面（「完成」由 Agent 结案：create / retain / prompt / subscribe）。 */
+	sessions?: SessionsLike;
 	slots: {
 		inject(slot: string, factory: () => () => void): () => void;
 		register(options: Record<string, unknown>, component: unknown): () => void;
@@ -95,16 +99,25 @@ export function apply(ctx: ClientContext): void {
 			};
 	});
 
-	// ③ 会话跳转（「继续」在 host 建完会话后跳过去）：服务缺席 = 只是不跳，会话已在侧栏
+	// ③ 会话导航 / 归档（「继续」跳过去、「完成」结案成功后归档）：服务缺席 = 只是不跳不归档
 	ctx.inject(["uiWorkspace"], (sub) => {
 		const uiWorkspace = sub.uiWorkspace;
-		if (uiWorkspace !== undefined)
-			setSessionOpener((sessionId) => {
-				uiWorkspace.openSession(sessionId);
-			});
+		if (uiWorkspace === undefined) return;
+		setSessionOpener((sessionId) => {
+			uiWorkspace.openSession(sessionId);
+		});
+		const archive = uiWorkspace.archiveSession;
+		if (archive !== undefined)
+			setSessionArchiver((sessionId) => archive.call(uiWorkspace, sessionId));
 	});
 
-	// ④ 槽位注册（只依赖 slots，自成一块：locale / layout 缺席也不该让入口消失）
+	// ④ 官方会话面（「完成」交给 Agent）：服务缺席 ⇒ 弹窗里勾选框置灰，只剩手动结案
+	ctx.inject(["sessions"], (sub) => {
+		const sessions = sub.sessions;
+		if (sessions !== undefined) setSessions(sessions);
+	});
+
+	// ⑤ 槽位注册（只依赖 slots，自成一块：locale / layout 缺席也不该让入口消失）
 	ctx.inject(["slots"], (sub) => {
 		// 左侧入口：侧栏面板条目（list 槽）。**行按钮、点击、激活态全由侧栏 / 布局服务托管**，
 		// 组件只画图标；id 必须与 main 槽的 key 一致（同一 MainPanelId）。
