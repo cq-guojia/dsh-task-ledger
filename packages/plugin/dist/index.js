@@ -45,6 +45,7 @@ export function apply(ctx) {
             agents: serviceOf(ctx, "agents"),
             presets: serviceOf(ctx, "agentPresets"),
             defaultModel: serviceOf(ctx, "agentDefaultModel"),
+            sessionTitle: serviceOf(ctx, "sessionTitle"),
         });
         console.info("[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot；写 /task/action、/task/continue）");
     });

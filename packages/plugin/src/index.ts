@@ -15,6 +15,7 @@ import type {
 	AgentDefaultModelLike,
 	AgentPresetsLike,
 	AgentsLike,
+	SessionTitleLike,
 } from "./host/services/continue.service.js";
 import {
 	buildSkillRegistration,
@@ -71,6 +72,7 @@ export function apply(ctx: PluginContext): void {
 			agents: serviceOf<AgentsLike>(ctx, "agents"),
 			presets: serviceOf<AgentPresetsLike>(ctx, "agentPresets"),
 			defaultModel: serviceOf<AgentDefaultModelLike>(ctx, "agentDefaultModel"),
+			sessionTitle: serviceOf<SessionTitleLike>(ctx, "sessionTitle"),
 		});
 		console.info(
 			"[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot；写 /task/action、/task/continue）",

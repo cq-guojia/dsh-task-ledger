@@ -28,6 +28,7 @@ import {
 	type AgentDefaultModelLike,
 	type AgentPresetsLike,
 	type AgentsLike,
+	type SessionTitleLike,
 } from "./services/continue.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 import type { RegistryWorkspace } from "./types.js";
@@ -59,6 +60,7 @@ export interface RouteDeps {
 	readonly agents?: () => AgentsLike | undefined;
 	readonly presets?: () => AgentPresetsLike | undefined;
 	readonly defaultModel?: () => AgentDefaultModelLike | undefined;
+	readonly sessionTitle?: () => SessionTitleLike | undefined;
 }
 
 /** API 前缀（唯一真源就在这一处）。 */
@@ -412,9 +414,13 @@ export function registerRoutes(
 				if (id === "") throw new Error(`${BAD_REQUEST}必须给任务号`);
 				const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
 				if (workspaceId === "") throw new Error(`${BAD_REQUEST}必须给工作区`);
-				// 提示词由客户端拼（要跟界面语言走），host 只负责注入原文
+				// 提示词 / 标题都由客户端拼（要跟界面语言走），host 只负责注入原文
 				const prompt = typeof body.prompt === "string" ? body.prompt : "";
 				if (prompt.trim() === "") throw new Error(`${BAD_REQUEST}必须给提示词`);
+				const title =
+					typeof body.title === "string" && body.title.trim() !== ""
+						? body.title
+						: `继续任务 ${id}`;
 				sendJson(
 					res,
 					200,
@@ -424,8 +430,9 @@ export function registerRoutes(
 							agents: deps.agents?.(),
 							presets: deps.presets?.(),
 							defaultModel: deps.defaultModel?.(),
+							sessionTitle: deps.sessionTitle?.(),
 						},
-						{ workspaceId, id, prompt },
+						{ workspaceId, id, title, prompt },
 					),
 				);
 			} catch (error) {

@@ -44,6 +44,8 @@ interface UserMessageLike {
 
 interface AgentHandleLike {
 	readonly agent: {
+		/** 宿主 `Session`：命名的入参（`sessionTitle.rename(agent.session, …)`）。 */
+		readonly session: unknown;
 		send(
 			message: UserMessageLike,
 			target: "next-turn" | "next-step",
@@ -63,6 +65,11 @@ export interface AgentsLike {
 	}): Promise<AgentHandleLike>;
 }
 
+/** 宿主 `sessionTitle` 服务的最小面（给会话起名；缺席就保持「未命名」，不影响继续）。 */
+export interface SessionTitleLike {
+	rename(session: unknown, title: string): unknown;
+}
+
 /** 宿主 `ctx.get('agentPresets')` 的最小面。 */
 export interface AgentPresetsLike {
 	/** 省略参数 = 部署默认 preset（settings 的 selectionPolicy().defaultId，热读）。 */
@@ -77,10 +84,12 @@ export interface AgentDefaultModelLike {
 
 export interface ContinueDeps {
 	readonly registry: { list(): readonly RegistryWorkspace[] };
-	/** 以下三项**按需现取**：服务可能晚于路由就位，取不到由本文件报人话，不让路由整块失效。 */
+	/** 以下四项**按需现取**：服务可能晚于路由就位，取不到由本文件报人话，不让路由整块失效。 */
 	readonly agents: AgentsLike | undefined;
 	readonly presets: AgentPresetsLike | undefined;
 	readonly defaultModel: AgentDefaultModelLike | undefined;
+	/** 命名服务；缺席会话就叫「未命名」，继续照跑。 */
+	readonly sessionTitle: SessionTitleLike | undefined;
 }
 
 /** 宿主工作区解析结果：`dsh` 带上 registry 实体（建会话要靠它归组、取名）。 */
@@ -111,6 +120,8 @@ export interface ContinueInput {
 	readonly workspaceId: string;
 	/** 任务号（含任务名的那一串，skill 精确匹配用）。 */
 	readonly id: string;
+	/** 会话标题（客户端按界面语言拼好，会话列表里显示的名字）。 */
+	readonly title: string;
 	/**
 	 * 注入的首条消息正文。**由客户端拼好传进来** —— 提示词要跟界面语言（中/英）走，
 	 * 而语言只有浏览器半知道；host 不再自带中文模板（否则英文环境收到的仍是中文）。
@@ -218,7 +229,17 @@ export async function continueTask(
 		throw error;
 	}
 
-	// ④ 注入首条消息并唤醒 driver
+	// ④ 命名：`sessionTitle.rename` 写的是「用户来源」标题（会锁定自动命名，正是我们要的稳定名字）。
+	// 服务缺席 / 写失败都只丢标题，不能连累已经建好并归组的会话。
+	if (deps.sessionTitle !== undefined) {
+		try {
+			deps.sessionTitle.rename(handle.agent.session, input.title);
+		} catch {
+			/* 命名失败不阻断继续 */
+		}
+	}
+
+	// ⑤ 注入首条消息并唤醒 driver
 	handle.agent.send(continueMessage(input.id, input.prompt), "next-turn", true);
 	return { kind: "started", sessionId };
 }

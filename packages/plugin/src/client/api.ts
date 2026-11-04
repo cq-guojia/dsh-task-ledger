@@ -226,6 +226,8 @@ export function postTaskContinue(body: {
 	/** 工作区 id（= 台账目录绝对路径）。 */
 	readonly workspace: string;
 	readonly id: string;
+	/** 会话标题（客户端按界面语言拼好，会话列表里显示的名字）。 */
+	readonly title: string;
 	/** 注入的首条消息正文（客户端按界面语言拼好；host 不再自带中文模板）。 */
 	readonly prompt: string;
 }): Promise<ContinueResult> {

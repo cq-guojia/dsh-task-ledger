@@ -8,7 +8,7 @@
  * 详情 / 历史 / 筛选项 / 趋势 / 写动作的端点与实现已删除（要接回按 skill 方法重写，不复用旧直读逻辑）。
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { type AgentDefaultModelLike, type AgentPresetsLike, type AgentsLike } from "./services/continue.service.js";
+import { type AgentDefaultModelLike, type AgentPresetsLike, type AgentsLike, type SessionTitleLike } from "./services/continue.service.js";
 import type { RegistryWorkspace } from "./types.js";
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 external/host-webserver.md）。 */
 export interface WebServerLike {
@@ -32,6 +32,7 @@ export interface RouteDeps {
     readonly agents?: () => AgentsLike | undefined;
     readonly presets?: () => AgentPresetsLike | undefined;
     readonly defaultModel?: () => AgentDefaultModelLike | undefined;
+    readonly sessionTitle?: () => SessionTitleLike | undefined;
 }
 /** 核心 explorer 的只读文件路由（`serveFsRoute` 挂这里，client 的 `connectFs` 用同一个值）。 */
 export declare const FS_ROUTE = "/api/task-ledger/fs";

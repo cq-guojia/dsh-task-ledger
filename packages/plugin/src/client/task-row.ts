@@ -30,11 +30,14 @@ import {
 	Fragment,
 	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
+	useEffect,
+	useRef,
 	useState,
 } from "react";
+import { SessionViewModal, type SessionViewTarget } from "dsh-plugin-core/session";
 import { getWorkspaceKind, postTaskAction, postTaskContinue } from "./api";
 import { CancelTaskModal } from "./cancel-task-modal";
-import { hasSessions, startCloseSession } from "./close-session";
+import { hasSessions, openCloseSessionView, startCloseSession } from "./close-session";
 import { CloseTaskModal } from "./close-task-modal";
 import { formatDateTime, formatRelative } from "./format";
 import { archiveSession, openSession } from "./nav";
@@ -180,6 +183,7 @@ export function TaskRowView(props: {
 			const result = await postTaskContinue({
 				workspace: row.task.workspace.id,
 				id: row.task.id,
+				title: t("continueSessionTitle", { title }),
 				prompt,
 			});
 			if (result.kind === "not-dsh") {
@@ -218,6 +222,37 @@ export function TaskRowView(props: {
 	const [closeError, setCloseError] = useState<string | null>(null);
 	// 点了「交给 Agent」才探测到不是 DSH 工作区 ⇒ 复制提示词 + 弹警告 Toast，弹窗照旧开着让人改选
 	const [closing, setClosing] = useState(false);
+	// 在跑的结案会话 id：会话视图被关掉后靠它重开（null = 还没有会话 / 已跑完）
+	const [closingId, setClosingId] = useState<string | null>(null);
+	// 叠在结案弹窗上面的只读会话视图（核心组件，实时刷新）；ref 只为关窗时 dispose
+	const [sessionView, setSessionView] = useState<{
+		id: string;
+		view: SessionViewTarget;
+	} | null>(null);
+	const sessionViewRef = useRef<{ id: string; view: SessionViewTarget } | null>(null);
+	// 行被卸载（列表刷新 / 切页）时也要还掉 retain 引用，否则会话 scope 永不回收
+	useEffect(
+		() => () => {
+			sessionViewRef.current?.view.dispose();
+			sessionViewRef.current = null;
+		},
+		[],
+	);
+
+	const dropSessionView = (): void => {
+		sessionViewRef.current?.view.dispose();
+		sessionViewRef.current = null;
+		setSessionView(null);
+	};
+	const showSessionView = (id: string): boolean => {
+		const view = openCloseSessionView(id);
+		if (view === null) return false;
+		sessionViewRef.current?.view.dispose();
+		const next = { id, view };
+		sessionViewRef.current = next;
+		setSessionView(next);
+		return true;
+	};
 
 	/** 结案后确认一眼台账：这条还在不在办列表里（读不到就按"没结"处理，不谎报成功）。 */
 	const stillOpen = (): boolean => {
@@ -250,7 +285,7 @@ export function TaskRowView(props: {
 			// （用户 2026-11-04：别把 Agent 选项禁掉，也别在弹窗框里加提示行）。
 			let workspaceId: string | undefined;
 			try {
-				const kind = await getWorkspaceKind(row.task.workspace.id);
+				const kind = await getWorkspaceKind(row.task.workspace.path);
 				if (kind.kind === "not-dsh") {
 					const copied = await copyText(prompt);
 					// 复制失败得如实改口，不能照说"已复制"
@@ -270,8 +305,7 @@ export function TaskRowView(props: {
 				);
 				return;
 			}
-			// 判过关再关窗：后面是几十秒到几分钟的事，不该把人锁在弹窗里
-			setCloseOpen(false);
+			// 不关窗（用户 2026-11-04）：本框禁用到跑完，上面叠只读会话视图；视图关掉就露出这个框
 			setClosing(true);
 			// 兜底：会话被手动关掉 / 宿主重启 ⇒ 事件永远不来。只兜「一直显示结案中」，
 			// 不用它判断结果（结果照样以台账为准）。
@@ -282,7 +316,7 @@ export function TaskRowView(props: {
 				guard = null;
 			};
 			const started = await startCloseSession({
-				cwd: row.task.workspace.id,
+				cwd: row.task.workspace.path,
 				...(workspaceId === undefined ? {} : { workspaceId }),
 				title: t("closeSessionTitle", { title }),
 				prompt,
@@ -294,7 +328,9 @@ export function TaskRowView(props: {
 							const open = stillOpen();
 							if (!open) {
 								notify(t("closeDone", { title }), { variant: "success" });
-								// 结成了 ⇒ 归档，别让结案会话堆满侧栏
+								// 结成了 ⇒ 关视图 + 归档 + 关结案框（一条龙，别留残窗）
+								dropSessionView();
+								setCloseOpen(false);
 								await archiveSession(outcome.sessionId);
 								return;
 							}
@@ -316,12 +352,14 @@ export function TaskRowView(props: {
 							});
 						} finally {
 							setClosing(false);
+							setClosingId(null);
 						}
 					})();
 				},
 				onFailed: (error, sessionId) => {
 					clearGuard();
 					setClosing(false);
+					setClosingId(null);
 					notify(t("closeAgentFailed", { error: error.message }), {
 						variant: "error",
 						durationMs: 8000,
@@ -348,10 +386,21 @@ export function TaskRowView(props: {
 				setCloseError(t("closeNoSessions"));
 				return;
 			}
+			// 会话起来了 ⇒ 把只读视图叠上来（实时刷新），同时记住 id 供「查看会话」重开
+			setClosingId(started);
+			// 视图起不来（宿主没给 uiConversation）⇒ 回到老路：关框 + 一句「已交给 Agent」，
+			// 别把人锁在一个永远重开不了的弹窗里
+			if (!showSessionView(started)) {
+				setClosingId(null);
+				setClosing(false);
+				setCloseOpen(false);
+				notify(t("closeStarted", { title }), { variant: "success" });
+			}
 			// 10 分钟还没等到「这一轮跑完」⇒ 多半是会话被关掉了：只解除按钮锁定，不改结果
 			guard = setTimeout(() => {
 				guard = null;
 				setClosing(false);
+				setClosingId(null);
 				notify(t("closeNotClosed"), {
 					description: t("closeNotClosedDesc"),
 					variant: "warning",
@@ -366,7 +415,6 @@ export function TaskRowView(props: {
 					],
 				});
 			}, 600_000);
-			notify(t("closeStarted", { title }), { variant: "success" });
 		} catch (error) {
 			setCloseError(error instanceof Error ? error.message : String(error));
 			setCloseOpen(true);
@@ -680,9 +728,24 @@ export function TaskRowView(props: {
 					busy,
 					error: closeError,
 					canUseAgent: hasSessions(),
+					locked: closing,
+					...(closingId === null
+						? {}
+						: { onShowSession: () => showSessionView(closingId) }),
 					onClose: () => setCloseOpen(false),
 					onSubmit: (input) => void finishTask(input),
 				})
 			: null,
+		// 会话视图排在结案框之后 ⇒ DOM 靠后，浮在它上面；关掉即露出下面的结案框（禁用态）
+		sessionView === null
+			? null
+			: h(SessionViewModal, {
+					sessionId: sessionView.id,
+					view: sessionView.view,
+					heading: t("closeSessionTitle", { title: titleOf(row) }),
+					archived: false,
+					openHostSession: (id: string) => openSession(id),
+					onClose: dropSessionView,
+				}),
 	);
 }

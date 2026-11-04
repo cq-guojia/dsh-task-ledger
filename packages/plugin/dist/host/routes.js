@@ -331,16 +331,20 @@ export function registerRoutes(webServer, deps) {
                 const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
                 if (workspaceId === "")
                     throw new Error(`${BAD_REQUEST}必须给工作区`);
-                // 提示词由客户端拼（要跟界面语言走），host 只负责注入原文
+                // 提示词 / 标题都由客户端拼（要跟界面语言走），host 只负责注入原文
                 const prompt = typeof body.prompt === "string" ? body.prompt : "";
                 if (prompt.trim() === "")
                     throw new Error(`${BAD_REQUEST}必须给提示词`);
+                const title = typeof body.title === "string" && body.title.trim() !== ""
+                    ? body.title
+                    : `继续任务 ${id}`;
                 sendJson(res, 200, await continueTask({
                     registry: deps.registry,
                     agents: deps.agents?.(),
                     presets: deps.presets?.(),
                     defaultModel: deps.defaultModel?.(),
-                }, { workspaceId, id, prompt }));
+                    sessionTitle: deps.sessionTitle?.(),
+                }, { workspaceId, id, title, prompt }));
             }
             catch (error) {
                 sendWriteFailure(res, error);

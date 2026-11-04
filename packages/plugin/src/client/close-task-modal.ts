@@ -14,7 +14,7 @@
 import { IconCheckCircleOutlineRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useState } from "react";
 import type { Translate } from "./locales";
-import { Button, Modal, Segmented, Textarea } from "./ui";
+import { Button, Loader, Modal, Segmented, Textarea, Tip } from "./ui";
 
 type CloseMode = "manual" | "agent";
 
@@ -28,6 +28,13 @@ export function CloseTaskModal(props: {
 	error: string | null;
 	/** 宿主是否提供会话服务（false ⇒ 「交给 Agent」段置灰，只能直接结案）。 */
 	canUseAgent: boolean;
+	/**
+	 * 交给 Agent 之后：会话在跑，本框**关不掉也提交不了**，只留左下「查看会话」重开会话视图
+	 * （用户 2026-11-04：会话视图可以关，关掉就露出这个框，但框本身不许关）。
+	 */
+	locked?: boolean;
+	/** 重开会话视图（locked 时才显示左下按钮）。 */
+	onShowSession?: () => void;
 	onClose: () => void;
 	onSubmit: (input: { useAgent: boolean; note: string }) => void;
 }): ReactNode {
@@ -36,6 +43,7 @@ export function CloseTaskModal(props: {
 	const [note, setNote] = useState("");
 	const useAgent = mode === "agent";
 	const submitBlocked = !useAgent && note.trim() === "";
+	const locked = props.locked === true;
 
 	const hint = !props.canUseAgent
 		? t("closeModalHintManualOnly")
@@ -64,25 +72,47 @@ export function CloseTaskModal(props: {
 				h(IconCheckCircleOutlineRegular, { size: 16 }),
 				t("closeModalTitle"),
 			),
-			onClose: props.busy ? undefined : props.onClose,
-			closeOnMask: !props.busy,
-			escClose: !props.busy,
+			onClose: props.busy || locked ? undefined : props.onClose,
+			closeOnMask: !props.busy && !locked,
+			escClose: !props.busy && !locked,
 			footer: h(
 				"div",
 				{
 					style: {
 						display: "flex",
 						justifyContent: "flex-end",
+						alignItems: "center",
 						gap: "var(--dtl-space-2)",
 						width: "100%",
 					},
 				},
+				// 左下：会话在跑时唯一能点的东西（关掉会话视图后回到这个框也能重开）
+				locked && props.onShowSession !== undefined
+					? h(
+							"div",
+							{ style: { marginRight: "auto" } },
+							h(Tip, {
+								label: t("tipViewSession"),
+								children: h(
+									Button,
+									{
+										variant: "ghost",
+										size: "md",
+										// 三块脉动的官方加载图标：会话在跑
+										icon: h(Loader, { variant: "blocks", size: "xs" }),
+										onClick: props.onShowSession,
+									},
+									t("closeViewSession"),
+								),
+							}),
+						)
+					: null,
 				h(
 					Button,
 					{
 						variant: "secondary",
 						size: "md",
-						disabled: props.busy,
+						disabled: props.busy || locked,
 						onClick: props.onClose,
 					},
 					t("settingsCancel"),
@@ -94,7 +124,7 @@ export function CloseTaskModal(props: {
 						size: "md",
 						loading: props.busy,
 						loadingText: false,
-						disabled: submitBlocked,
+						disabled: submitBlocked || locked,
 						onClick: submit,
 					},
 					useAgent ? t("closeModalOkAgent") : t("closeModalOkManual"),
@@ -150,9 +180,9 @@ export function CloseTaskModal(props: {
 					{
 						value: "agent",
 						label: t("closeModeAgent"),
-						disabled: !props.canUseAgent,
-					},
-				],
+						disabled: !props.canUseAgent || locked,
+						},
+						],
 				value: useAgent ? "agent" : "manual",
 				onChange: setMode,
 				size: "md",
@@ -172,7 +202,7 @@ export function CloseTaskModal(props: {
 				"aria-label": useAgent
 					? t("closeModalNotePlaceholder")
 					: t("closeModalSummaryPlaceholder"),
-				disabled: props.busy,
+				disabled: props.busy || locked,
 				error: props.error !== null,
 			}),
 			props.error === null

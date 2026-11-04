@@ -213,7 +213,10 @@ export type LocaleKey =
 	| "closeModalSummaryPlaceholder"
 	| "closeModalOkAgent"
 	| "closeModalOkManual"
+	| "closeViewSession"
+	| "tipViewSession"
 	| "closeSessionTitle"
+	| "continueSessionTitle"
 	| "closeStarted"
 	| "closeDone"
 	| "closeNotClosed"
@@ -499,7 +502,10 @@ export const zh: Record<LocaleKey, string> = {
 	closeModalSummaryPlaceholder: "结案摘要（必填，一句话）",
 	closeModalOkAgent: "交给 Agent",
 	closeModalOkManual: "直接结案",
+	closeViewSession: "Agent 会话中",
+	tipViewSession: "查看会话",
 	closeSessionTitle: "完成：{title}",
+	continueSessionTitle: "继续：{title}",
 	closeStarted: "已交给 Agent 结案：{title}",
 	closeDone: "已结案：{title}",
 	closeNotClosed: "这轮跑完了，但任务没结",
@@ -790,7 +796,10 @@ export const en: Record<LocaleKey, string> = {
 	closeModalSummaryPlaceholder: "Closing summary (required, one line)",
 	closeModalOkAgent: "Hand to agent",
 	closeModalOkManual: "Close now",
+	closeViewSession: "Agent running",
+	tipViewSession: "View session",
 	closeSessionTitle: "Close: {title}",
+	continueSessionTitle: "Continue: {title}",
 	closeStarted: "Handed to an agent: {title}",
 	closeDone: "Closed: {title}",
 	closeNotClosed: "The turn finished, but the task is still open",

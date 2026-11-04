@@ -23,7 +23,8 @@ import {
 	type Translate,
 	zh,
 } from "./locales";
-import { setSessions, type SessionsLike } from "./close-session";
+import { setSessions, setUiConversation, type SessionsLike } from "./close-session";
+import type { UiConversationFace } from "dsh-plugin-core/session";
 import { setSessionArchiver, setSessionOpener } from "./nav";
 import { LedgerIcon } from "./ui";
 
@@ -60,6 +61,8 @@ interface ClientContext {
 	};
 	/** 官方客户端会话面（「完成」由 Agent 结案：create / retain / prompt / subscribe）。 */
 	sessions?: SessionsLike;
+	/** 官方会话视图数据面（核心 `openSessionView` 要它）；缺席 ⇒ 没有会话视图，只能跳官方会话页。 */
+	uiConversation?: UiConversationFace;
 	slots: {
 		inject(slot: string, factory: () => () => void): () => void;
 		register(options: Record<string, unknown>, component: unknown): () => void;
@@ -115,6 +118,11 @@ export function apply(ctx: ClientContext): void {
 	ctx.inject(["sessions"], (sub) => {
 		const sessions = sub.sessions;
 		if (sessions !== undefined) setSessions(sessions);
+	});
+
+	// ④b 会话视图数据面：只读预览（结案会话在跑时给人看过程）；缺席 ⇒ 退回跳官方会话页
+	ctx.inject(["uiConversation"], (sub) => {
+		if (sub.uiConversation !== undefined) setUiConversation(sub.uiConversation);
 	});
 
 	// ⑤ 槽位注册（只依赖 slots，自成一块：locale / layout 缺席也不该让入口消失）

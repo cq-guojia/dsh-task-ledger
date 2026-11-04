@@ -14,6 +14,14 @@
  * 注意：**成功与否以台账为准**，本模块只负责回答「跑完没 / 为什么挂」，不解析模型自述。
  */
 
+// 只读会话视图（核心）：会话在跑时给人看过程，实时刷新；两个服务缺一个就返回 null。
+import {
+	openSessionView,
+	type SessionsFace,
+	type SessionViewTarget,
+	type UiConversationFace,
+} from "dsh-plugin-core/session";
+
 /** 会话快照里本模块用到的两位。 */
 interface SnapshotLike {
 	readonly running: boolean;
@@ -49,10 +57,28 @@ export interface CloseOutcome {
 }
 
 let service: SessionsLike | null = null;
+let conversation: UiConversationFace | null = null;
 
 /** 由入口在 `sessions` 就位时注册（服务缺席 ⇒ 结案只能走手动分支）。 */
 export function setSessions(next: SessionsLike): void {
 	service = next;
+}
+
+/** 由入口在 `uiConversation` 就位时注册（缺席 ⇒ 没有会话视图，只能跳官方会话页）。 */
+export function setUiConversation(next: UiConversationFace): void {
+	conversation = next;
+}
+
+/** 建只读会话视图；两个服务缺一个、或会话解析不出来 ⇒ null。 */
+export function openCloseSessionView(sessionId: string): SessionViewTarget | null {
+	if (service === null || conversation === null) return null;
+	// SessionsLike 只声明了本模块用到的方法；binding 在宿主的同一个 sessions 服务上
+	return openSessionView(
+		service as unknown as SessionsFace,
+		conversation,
+		sessionId,
+		"dsh-task-ledger",
+	);
 }
 
 /** 宿主是否提供了会话服务（界面据此决定「由 Agent 结案」能不能勾）。 */
@@ -69,9 +95,12 @@ function remoteFailure(result: unknown): Error | null {
 }
 
 export interface CloseSessionInput {
-	/** 工作区目录（= 台账目录，会话 cwd）。 */
+	/** 台账目录（工作区 realpath）—— 只在**拿不到 workspaceId** 时作为裸 cwd 兜底。 */
 	readonly cwd: string;
-	/** 宿主 registry 的工作区 id：给得出就按它归组（比 cwd 准），给不出靠 cwd 兜。 */
+	/**
+	 * 宿主 registry 的工作区 id（**uuid**，由 `getWorkspaceKind` 从路径反查得到）。
+	 * 有它就按它归组、会话 cwd 取该工作区的 realpath；与 `cwd` 互斥（宿主只收一个）。
+	 */
 	readonly workspaceId?: string;
 	/** 会话标题（客户端按语言拼好）。 */
 	readonly title: string;
@@ -95,10 +124,13 @@ export async function startCloseSession(input: CloseSessionInput): Promise<strin
 
 	let sessionId: string;
 	try {
+		// 宿主 `session.create`：`workspaceId` 与 `cwd` **二选一**，两个都给直接 bad-request
+		// （`@deepseek-ai/dsh-api-session-controller` `lib/index.js` create 首行）；
+		// 给了 workspaceId 就按它归组、cwd 取该工作区 realpath，给了 cwd 才是不归组的裸目录。
 		sessionId = await svc.create(
 			input.workspaceId === undefined
 				? { cwd: input.cwd }
-				: { cwd: input.cwd, workspaceId: input.workspaceId },
+				: { workspaceId: input.workspaceId },
 		);
 	} catch (error) {
 		input.onFailed(

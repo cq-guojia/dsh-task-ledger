@@ -122,7 +122,17 @@ export async function continueTask(deps, input) {
         await handle.dispose().catch(() => { });
         throw error;
     }
-    // ④ 注入首条消息并唤醒 driver
+    // ④ 命名：`sessionTitle.rename` 写的是「用户来源」标题（会锁定自动命名，正是我们要的稳定名字）。
+    // 服务缺席 / 写失败都只丢标题，不能连累已经建好并归组的会话。
+    if (deps.sessionTitle !== undefined) {
+        try {
+            deps.sessionTitle.rename(handle.agent.session, input.title);
+        }
+        catch {
+            /* 命名失败不阻断继续 */
+        }
+    }
+    // ⑤ 注入首条消息并唤醒 driver
     handle.agent.send(continueMessage(input.id, input.prompt), "next-turn", true);
     return { kind: "started", sessionId };
 }
