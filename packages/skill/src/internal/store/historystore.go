@@ -154,6 +154,7 @@ func (h *HistoryStore) AppendRow(path string, row map[string]any) (map[string]an
 		strOf(row["creator_name"]),
 		strOf(row["deleted"]),
 		strOf(row["deleted_by"]),
+		strOf(row["deleted_by_name"]),
 		strOf(row["deleted_at"]),
 	)
 	return map[string]any{"text": appendHistoryLine(text, line), "duplicate": state == Hit}, nil

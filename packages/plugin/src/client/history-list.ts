@@ -467,7 +467,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 
 	// 单人台账：执行人整列不摆（与待办里「单人不显示执行人名」同一条规矩）
 	// 末尾多一列放删除钮：**不写表头文字**，定宽 48px 靠右（用户 2026-11-04）。
-	const columns = props.solo ? ([175, 185, 48] as const) : ([175, 140, 185, 48] as const);
+	// 执行时间列 185→150：两排 `S/E 2026-10-31 09:56` 实测约 143px 够用，不再空一大截。
+	const columns = props.solo ? ([175, 150, 48] as const) : ([175, 140, 150, 48] as const);
 	const colSpan = columns.length + 1;
 	const labels = props.solo
 		? [t("histColCreator"), t("histColTime")]

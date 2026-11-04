@@ -6,18 +6,18 @@ import (
 	"strings"
 )
 
-// 历史表格的文本操作：拼一行、解析一行。只认十二列；老十一列的行解析时告警跳过。
+// 历史表格的文本操作：拼一行、解析一行。只认十六列；列数不符的行静默跳过。
 
 // HistoryTitle 历史文件的一级标题。
 const HistoryTitle = "# History (closed)"
 
-// HistoryHeader 十五列表头。
+// HistoryHeader 十六列表头。
 const HistoryHeader = "| Finished | Created | Title | Category | Tags " +
 	"| Owner | Owner Name | Creator | Creator Name | Summary | Result | Worklog " +
-	"| Deleted | Deleted By | Deleted At |"
+	"| Deleted | Deleted By | Deleted By Name | Deleted At |"
 
 // HistorySep 表头分隔行。
-const HistorySep = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
+const HistorySep = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
 
 // 结果列取值：正常结案 / 取消。
 const (
@@ -36,22 +36,23 @@ var (
 
 // Row 一条历史行。
 type Row struct {
-	Finished    string
-	Created     string
-	Title       string
-	Category    string
-	Tags        []string
-	Owner       string
-	OwnerName   string
-	Creator     string
-	CreatorName string
-	Summary     string
-	Result      string
-	Worklog     string
-	Deleted     string
-	DeletedBy   string
-	DeletedAt   string
-	Line        int
+	Finished      string
+	Created       string
+	Title         string
+	Category      string
+	Tags          []string
+	Owner         string
+	OwnerName     string
+	Creator       string
+	CreatorName   string
+	Summary       string
+	Result        string
+	Worklog       string
+	Deleted       string
+	DeletedBy     string
+	DeletedByName string
+	DeletedAt     string
+	Line          int
 }
 
 // EscCell 表格单元格：折叠空白并转义竖线。
@@ -122,8 +123,9 @@ func looksLikeHeader(cells []string) bool {
 	return len(cells) > 0 && cells[0] == "Finished"
 }
 
-// HistoryLine 十五列的一行。worklog 收**相对 ledger/** 的路径；末尾三格是删除标记 / 删除人 / 删除时间。
-func HistoryLine(finished string, created, title, owner, summary, result, worklog string, category string, tags []string, creator, ownerName, creatorName, deleted, deletedBy, deletedAt string) string {
+// HistoryLine 十六列的一行。worklog 收**相对 ledger/** 的路径；
+// 末尾四格是删除标记 / 删除人 uuid / 删除人显示名 / 删除时间。
+func HistoryLine(finished string, created, title, owner, summary, result, worklog string, category string, tags []string, creator, ownerName, creatorName, deleted, deletedBy, deletedByName, deletedAt string) string {
 	logRel := ""
 	if worklog != "" {
 		logRel = ToHistoryRel(worklog)
@@ -139,11 +141,11 @@ func HistoryLine(finished string, created, title, owner, summary, result, worklo
 	fmt.Fprintf(&b, " | %s | %s", EscCell(category), tagCell)
 	fmt.Fprintf(&b, " | %s | %s", EscCell(OwnerCell(owner)), EscCell(NameCell(ownerName)))
 	fmt.Fprintf(&b, " | %s | %s", EscCell(CreatorCell(creator)), EscCell(NameCell(creatorName)))
-	fmt.Fprintf(&b, " | %s | %s | %s | %s | %s | %s |\n", EscCell(summary), result, link, EscCell(deleted), EscCell(deletedBy), EscCell(deletedAt))
+	fmt.Fprintf(&b, " | %s | %s | %s | %s | %s | %s | %s |\n", EscCell(summary), result, link, EscCell(deleted), EscCell(deletedBy), EscCell(NameCell(deletedByName)), EscCell(deletedAt))
 	return b.String()
 }
 
-// ParseHistory 解析历史表 → (records, warnings)。只认十五列；列数不符 / 时间不合法的行静默跳过。
+// ParseHistory 解析历史表 → (records, warnings)。只认十六列；列数不符 / 时间不合法的行静默跳过。
 func ParseHistory(text string) ([]Row, []string) {
 	var records []Row
 	for i, raw := range splitLines(text) {
@@ -155,7 +157,7 @@ func ParseHistory(text string) ([]Row, []string) {
 		if len(cells) == 0 || IsSepRow(cells) || looksLikeHeader(cells) {
 			continue
 		}
-		if len(cells) != 15 {
+		if len(cells) != 16 {
 			continue
 		}
 		finished := cells[0]
@@ -174,25 +176,24 @@ func ParseHistory(text string) ([]Row, []string) {
 			worklog = m[1]
 		}
 		records = append(records, Row{
-			Finished:    finished,
-			Created:     TimeKey(strings.TrimSpace(cells[1])),
-			Title:       cells[2],
-			Category:    strings.TrimSpace(cells[3]),
-			Tags:        tags,
-			Owner:       strings.TrimPrefix(strings.TrimSpace(cells[5]), "@"),
-			OwnerName:   strings.TrimPrefix(strings.TrimSpace(cells[6]), "@"),
-			Creator:     strings.TrimPrefix(strings.TrimSpace(cells[7]), "@"),
-			CreatorName: strings.TrimPrefix(strings.TrimSpace(cells[8]), "@"),
-			Summary:     cells[9],
-			Result:      result,
-			Worklog:     worklog,
-			Deleted:     strings.TrimSpace(cells[12]),
-			DeletedBy:   strings.TrimSpace(cells[13]),
-			DeletedAt:   strings.TrimSpace(cells[14]),
-			Line:        lineno,
+			Finished:      finished,
+			Created:       TimeKey(strings.TrimSpace(cells[1])),
+			Title:         cells[2],
+			Category:      strings.TrimSpace(cells[3]),
+			Tags:          tags,
+			Owner:         strings.TrimPrefix(strings.TrimSpace(cells[5]), "@"),
+			OwnerName:     strings.TrimPrefix(strings.TrimSpace(cells[6]), "@"),
+			Creator:       strings.TrimPrefix(strings.TrimSpace(cells[7]), "@"),
+			CreatorName:   strings.TrimPrefix(strings.TrimSpace(cells[8]), "@"),
+			Summary:       cells[9],
+			Result:        result,
+			Worklog:       worklog,
+			Deleted:       strings.TrimSpace(cells[12]),
+			DeletedBy:     strings.TrimSpace(cells[13]),
+			DeletedByName: strings.TrimPrefix(strings.TrimSpace(cells[14]), "@"),
+			DeletedAt:     strings.TrimSpace(cells[15]),
+			Line:          lineno,
 		})
 	}
 	return records, nil
 }
-
-

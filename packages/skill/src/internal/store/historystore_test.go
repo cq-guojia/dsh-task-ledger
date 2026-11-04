@@ -53,7 +53,7 @@ func TestAppendRowAcceptsNewFormat(t *testing.T) {
 	}
 	head := core.HistoryTitle + "\n\n" + core.HistoryHeader + "\n" + core.HistorySep + "\n"
 	head += core.HistoryLine("2026-10-01 10:00", "2026-10-01 09:00", "老任务", "u1", "做完了",
-		core.ResultDone, "", "建设", []string{"甲"}, "u1", "@甲", "@甲", "", "", "")
+		core.ResultDone, "", "建设", []string{"甲"}, "u1", "@甲", "@甲", "", "", "", "")
 	if err := os.WriteFile(path, []byte(head), 0o644); err != nil {
 		t.Fatal(err)
 	}

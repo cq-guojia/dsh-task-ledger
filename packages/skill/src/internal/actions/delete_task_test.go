@@ -17,7 +17,7 @@ const (
 	delWhen     = "2026-11-04 13:00:00"
 )
 
-// 在办任务删除：结果列留空、删除三列落值、来源行移走、读侧不再出现。
+// 在办任务删除：结果列留空、删除四列落值、来源行移走、读侧不再出现。
 func TestDeleteTaskMarksHistoryRow(t *testing.T) {
 	repo, me := tempLedger(t, map[string]any{
 		"tid": delTid, "status": "open", "title": "建错的", "created": delCreated,
@@ -38,21 +38,21 @@ func TestDeleteTaskMarksHistoryRow(t *testing.T) {
 	}
 	rows, _ := core.ParseHistory(string(raw))
 	if len(rows) != 1 {
-		t.Fatalf("应读回一行 15 列，实际 %d 行：\n%s", len(rows), raw)
+		t.Fatalf("应读回一行 16 列，实际 %d 行：\n%s", len(rows), raw)
 	}
 	row := rows[0]
 	if row.Result != "" {
 		t.Errorf("在办直接删 ⇒ 结果列留空，实际 %q", row.Result)
 	}
-	if row.Deleted != core.DeletedYes || row.DeletedBy != me.UUID || row.DeletedAt != delFinished {
-		t.Errorf("删除三列没落值：deleted=%q by=%q at=%q", row.Deleted, row.DeletedBy, row.DeletedAt)
+	if row.Deleted != core.DeletedYes || row.DeletedBy != me.UUID || row.DeletedByName != me.Name || row.DeletedAt != delFinished {
+		t.Errorf("删除四列没落值：deleted=%q by=%q name=%q at=%q", row.Deleted, row.DeletedBy, row.DeletedByName, row.DeletedAt)
 	}
 	if rowMatches(row, HistoryQuery{}, me, "", "") {
 		t.Error("已删除行不该出现在 history 明细里")
 	}
 }
 
-// 历史行删除：Result 与摘要原值不动，只改末尾三格；过程文档追加一条 delete 执行记录。
+// 历史行删除：Result 与摘要原值不动，只改末尾四格；过程文档追加一条 delete 执行记录。
 func TestDeleteHistoryRowKeepsResult(t *testing.T) {
 	repo, me := tempLedger(t)
 	const tid = "20261101-0900-做完的-bbbb"
@@ -63,7 +63,7 @@ func TestDeleteHistoryRowKeepsResult(t *testing.T) {
 	}
 
 	line := core.HistoryLine(delFinished, delCreated, "做完的", me.UUID, "原摘要", core.ResultDone,
-		core.WorklogRel(tid, delCreated), "建设", nil, me.UUID, "@甲", "@甲", "", "", "")
+		core.WorklogRel(tid, delCreated), "建设", nil, me.UUID, "@甲", "@甲", "", "", "", "")
 	histPath := store.NewHistoryStore(repo).PathFor(delFinished)
 	if err := os.MkdirAll(filepath.Dir(histPath), 0o755); err != nil {
 		t.Fatal(err)
@@ -85,14 +85,14 @@ func TestDeleteHistoryRowKeepsResult(t *testing.T) {
 	}
 	rows, _ := core.ParseHistory(string(after))
 	if len(rows) != 1 {
-		t.Fatalf("改完仍应读回一行 15 列，实际 %d 行：\n%s", len(rows), after)
+		t.Fatalf("改完仍应读回一行 16 列，实际 %d 行：\n%s", len(rows), after)
 	}
 	row := rows[0]
 	if row.Result != core.ResultDone || row.Summary != "原摘要" {
 		t.Errorf("原结果与原摘要不许被盖：result=%q summary=%q", row.Result, row.Summary)
 	}
-	if row.Deleted != core.DeletedYes || row.DeletedBy != me.UUID || row.DeletedAt != delWhen {
-		t.Errorf("删除三列没落值：deleted=%q by=%q at=%q", row.Deleted, row.DeletedBy, row.DeletedAt)
+	if row.Deleted != core.DeletedYes || row.DeletedBy != me.UUID || row.DeletedByName != me.Name || row.DeletedAt != delWhen {
+		t.Errorf("删除四列没落值：deleted=%q by=%q name=%q at=%q", row.Deleted, row.DeletedBy, row.DeletedByName, row.DeletedAt)
 	}
 	if rowMatches(row, HistoryQuery{}, me, "", "") {
 		t.Error("已删除行不该出现在 history 明细里")

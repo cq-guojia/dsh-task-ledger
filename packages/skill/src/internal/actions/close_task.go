@@ -212,6 +212,7 @@ func CloseTask(repo string, me core.Identity, tid string, p CloseTaskParams) (*R
 	if p.Delete {
 		row["deleted"] = core.DeletedYes
 		row["deleted_by"] = me.UUID
+		row["deleted_by_name"] = me.Name
 		row["deleted_at"] = p.Finished
 	}
 	if docPath != "" {

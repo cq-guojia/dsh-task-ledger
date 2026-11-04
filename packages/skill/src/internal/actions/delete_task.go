@@ -9,8 +9,8 @@ import (
 	"github.com/cq-guojia/dsh-task-ledger/skill/src/internal/store"
 )
 
-// 删除：不是「把记录抹掉」，是给记录打上删除三列后整行退出所有读侧。
-// 在办任务走结案写序移进历史；历史里的行原地改末尾三格。
+// 删除：不是「把记录抹掉」，是给记录打上删除四列后整行退出所有读侧。
+// 在办任务走结案写序移进历史；历史里的行原地改末尾四格。
 
 // DeleteTaskParams 删除在办任务的入参。
 type DeleteTaskParams struct {
@@ -18,7 +18,7 @@ type DeleteTaskParams struct {
 	Finished string // 由外壳算好的 UTC 时刻
 }
 
-// DeleteTask 删除在办任务（公共池 / 自己名下分片）→ 追加一行 15 列历史。
+// DeleteTask 删除在办任务（公共池 / 自己名下分片）→ 追加一行 16 列历史。
 // 与取消共用结案写序，保证并发、崩溃恢复、封卷、判重都走同一套。
 func DeleteTask(repo string, me core.Identity, tid string, p DeleteTaskParams) (*Result, error) {
 	return CloseTask(repo, me, tid, CloseTaskParams{
@@ -36,7 +36,7 @@ type DeleteHistoryParams struct {
 	When string // 由外壳算好的 UTC 时刻
 }
 
-// DeleteHistoryRow 给历史行打删除三列：Result 与其余十二列原值一律不动。
+// DeleteHistoryRow 给历史行打删除四列：Result 与其余十二列原值一律不动。
 // 过程文档只追加一条 delete 执行记录，不改状态行（状态行还留着原来的 done / cancelled）。
 func DeleteHistoryRow(repo string, me core.Identity, p DeleteHistoryParams) (*Result, error) {
 	if p.When == "" {
@@ -62,8 +62,8 @@ func DeleteHistoryRow(repo string, me core.Identity, p DeleteHistoryParams) (*Re
 		return nil, core.Failf("历史文件 %s 没有第 %d 行。", rel, p.Line)
 	}
 	cells := core.SplitRow(lines[p.Line-1])
-	if len(cells) != 15 {
-		return nil, core.Failf("第 %d 行不是 15 列，已中止。", p.Line)
+	if len(cells) != 16 {
+		return nil, core.Failf("第 %d 行不是 16 列，已中止。", p.Line)
 	}
 	if cells[12] == core.DeletedYes {
 		return &Result{
@@ -116,7 +116,8 @@ func DeleteHistoryRow(repo string, me core.Identity, p DeleteHistoryParams) (*Re
 
 	cells[12] = core.DeletedYes
 	cells[13] = me.UUID
-	cells[14] = p.When
+	cells[14] = core.NameCell(me.Name)
+	cells[15] = p.When
 	lines[p.Line-1] = joinHistoryRow(cells)
 	if err := history.Write(histPath, strings.Join(lines, "\n")); err != nil {
 		restoreAll()
@@ -141,7 +142,7 @@ func DeleteHistoryRow(repo string, me core.Identity, p DeleteHistoryParams) (*Re
 	}
 
 	return &Result{
-		Changed: []string{"deleted", "deleted_by", "deleted_at"},
+		Changed: []string{"deleted", "deleted_by", "deleted_by_name", "deleted_at"},
 		Where:   StrOrNil(Rel(repo, histPath)),
 		Message: StrOrNil("删除历史记录：" + cells[2]),
 		Payload: map[string]any{

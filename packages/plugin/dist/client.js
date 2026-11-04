@@ -64213,12 +64213,12 @@ body[data-ds-dark-theme]{
 			]);
 			const columns = props.solo ? [
 				175,
-				185,
+				150,
 				48
 			] : [
 				175,
 				140,
-				185,
+				150,
 				48
 			];
 			const colSpan = columns.length + 1;
@@ -67504,7 +67504,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.129 261104-225146-477`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.129 261104-233413-539`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
