@@ -1,8 +1,9 @@
 # 20261026-0917-在-skill-里增加-html-台账展示页-e276: 在 skill 里增加 HTML 台账展示页
 
 - **Tags**: 建设, 台账, 展示, 静态页面
-- **Status**: open · 2026-10-28 09:22:28
+- **Status**: deleted · 2026-11-04 16:16:13 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-10-26 09:17:15 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-11-04 16:16:13 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
      The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
@@ -64,3 +65,4 @@
 - 2026-10-26 20:56:31 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户叫停撤销全部命令行看板改动：git checkout 恢复 10 个文件、删 3 个新增文件，skill 与内嵌副本无残留；未碰插件 UI 在途改动，等新方向
 - 2026-10-26 21:00:09 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 本任务挂起：HTML 方案停止推进，需求转入新任务「台账命令行看板脚本」；worklog 已写明挂起现状与恢复前提
 - 2026-10-28 09:22:28 · release · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · released to pool
+- 2026-11-04 16:16:13 · delete · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · deleted
