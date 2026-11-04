@@ -67261,7 +67261,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.128 261104-173816-910`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.128 261104-220628-166`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
