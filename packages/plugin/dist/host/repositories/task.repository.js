@@ -12,15 +12,16 @@ const ACTION_NAME = {
     release: "释放",
     cancel: "取消",
     close: "结案",
+    delete: "删除",
 };
 /**
  * 跑一条任务写命令。
  *
- * @param summary - 「取消」与「结案」都用：一句话理由 / 结案摘要，写进历史行与执行记录。
- *   留空就不传 `--summary`（skill 允许取消不带摘要；正常结案由界面强制填）。
+ * @param summary - 取消 / 结案的摘要、删除的留言；留空就不传 `--summary`。
  * @param onStep - 过程步骤回调（逐条转发给界面做进度翻牌），不传就不让 skill 打标记。
+ * @param history - 给就是删历史行（`delete --src/--line`），不给就是删在办任务（`delete --id`）。
  */
-export async function runTaskAction(repo, id, action, summary = "", onStep) {
+export async function runTaskAction(repo, id, action, summary = "", onStep, history) {
     const opts = {
         timeoutMs: WRITE_TIMEOUT_MS,
         ...(onStep === undefined
@@ -52,6 +53,17 @@ export async function runTaskAction(repo, id, action, summary = "", onStep) {
                 "--id",
                 id,
                 "--cancel",
+                ...(summary === "" ? [] : ["--summary", summary]),
+                "--repo",
+                repo,
+            ], opts);
+            break;
+        case "delete":
+            // 留言可选；删除时刻由 skill 外壳统一算，插件不补录。
+            result = await runLedgerCommand("delete", [
+                ...(history === undefined
+                    ? ["--id", id]
+                    : ["--src", history.src, "--line", String(history.line)]),
                 ...(summary === "" ? [] : ["--summary", summary]),
                 "--repo",
                 repo,

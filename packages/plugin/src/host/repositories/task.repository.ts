@@ -14,8 +14,8 @@ import {
  */
 const WRITE_TIMEOUT_MS = 120_000;
 
-/** 界面行内按钮对应的动作：认领 / 释放 / 取消归档 / 正常结案。 */
-export type TaskAction = "claim" | "release" | "cancel" | "close";
+/** 界面行内按钮对应的动作：认领 / 释放 / 取消归档 / 正常结案 / 删除。 */
+export type TaskAction = "claim" | "release" | "cancel" | "close" | "delete";
 
 /** 写命令的阶段 key（与 skill `runner.go` 里的 `stepf(...)` 一一对应）。 */
 export type TaskActionStep = "check" | "sync" | "write" | "commit" | "push";
@@ -25,14 +25,15 @@ const ACTION_NAME: Record<TaskAction, string> = {
 	release: "释放",
 	cancel: "取消",
 	close: "结案",
+	delete: "删除",
 };
 
 /**
  * 跑一条任务写命令。
  *
- * @param summary - 「取消」与「结案」都用：一句话理由 / 结案摘要，写进历史行与执行记录。
- *   留空就不传 `--summary`（skill 允许取消不带摘要；正常结案由界面强制填）。
+ * @param summary - 取消 / 结案的摘要、删除的留言；留空就不传 `--summary`。
  * @param onStep - 过程步骤回调（逐条转发给界面做进度翻牌），不传就不让 skill 打标记。
+ * @param history - 给就是删历史行（`delete --src/--line`），不给就是删在办任务（`delete --id`）。
  */
 export async function runTaskAction(
 	repo: string,
@@ -40,6 +41,7 @@ export async function runTaskAction(
 	action: TaskAction,
 	summary = "",
 	onStep?: (step: TaskActionStep) => void,
+	history?: { readonly src: string; readonly line: number },
 ): Promise<void> {
 	const opts: RunOptions = {
 		timeoutMs: WRITE_TIMEOUT_MS,
@@ -82,6 +84,21 @@ export async function runTaskAction(
 					"--id",
 					id,
 					"--cancel",
+					...(summary === "" ? [] : ["--summary", summary]),
+					"--repo",
+					repo,
+				],
+				opts,
+			);
+			break;
+		case "delete":
+			// 留言可选；删除时刻由 skill 外壳统一算，插件不补录。
+			result = await runLedgerCommand(
+				"delete",
+				[
+					...(history === undefined
+						? ["--id", id]
+						: ["--src", history.src, "--line", String(history.line)]),
 					...(summary === "" ? [] : ["--summary", summary]),
 					"--repo",
 					repo,

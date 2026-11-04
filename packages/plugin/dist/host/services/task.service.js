@@ -10,6 +10,8 @@ import { runTaskAction, } from "../repositories/task.repository.js";
  *   命令跑完 / 失败前都会先收到前面那几个阶段，界面据此换文案。
  */
 export async function actOnTask(input, onStep) {
-    await runTaskAction(input.repo, input.id, input.action, input.summary ?? "", onStep);
+    await runTaskAction(input.repo, input.id, input.action, input.summary ?? "", onStep, input.src !== undefined && input.line !== undefined
+        ? { src: input.src, line: input.line }
+        : undefined);
     invalidate();
 }

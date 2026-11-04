@@ -74,17 +74,21 @@ export interface TaskActions {
 	 * 公共池（待认领）任务可直接取消，我名下的也能取消；**别人名下的不行**。
 	 */
 	readonly cancel: boolean;
+	/** 删除：与取消同范围（公共池 / 我名下）；别人名下的一律不给，skill 侧也会拒。 */
+	readonly delete: boolean;
 }
 
 export function resolveActions(task: BoardTask): TaskActions {
 	const mine = isMine(task);
+	const archivable = mine || task.status === "open";
 	return {
 		view: true,
 		claim: !mine && task.status === "open",
 		resume: mine,
 		finish: mine,
 		release: mine,
-		cancel: mine || task.status === "open",
+		cancel: archivable,
+		delete: archivable,
 	};
 }
 

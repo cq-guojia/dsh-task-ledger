@@ -31,6 +31,9 @@ function toRecord(
 ): HistoryRecord {
 	const src = typeof raw.src === "string" ? raw.src : "";
 	const line = typeof raw.line === "number" ? raw.line : 0;
+	// history --json 的 src 相对 repo 根（ledger/history/YYYYMM.md），
+	// skill 的 delete --src 只收相对 ledger/ 的路径（history/YYYYMM.md）⇒ 在这里收口一次。
+	const deleteSrc = src.startsWith("ledger/") ? src.slice("ledger/".length) : src;
 	const text = (value: unknown): string =>
 		typeof value === "string" ? value : "";
 	return {
@@ -58,6 +61,8 @@ function toRecord(
 			text(raw.worklog) === ""
 				? ""
 				: path.join(workspace.path, "ledger", "history", text(raw.worklog)),
+		src: deleteSrc,
+		line,
 	};
 }
 

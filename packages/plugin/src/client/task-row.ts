@@ -24,6 +24,7 @@ import {
 	IconCloseOutlineRegular,
 	IconCopyOutlineRegular,
 	IconSearchOutlineRegular,
+	IconTrashOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import {
 	createElement as h,
@@ -39,7 +40,7 @@ import {
 	postTaskContinue,
 	type TaskActionStep,
 } from "./api";
-import { CancelTaskModal } from "./cancel-task-modal";
+import { CancelTaskModal, ReasonTaskModal } from "./cancel-task-modal";
 import { hasSessions, hasSessionView, startCloseSession } from "./close-session";
 import { CloseTaskModal } from "./close-task-modal";
 import { formatDateTime, formatRelative } from "./format";
@@ -154,6 +155,35 @@ export function TaskRowView(props: {
 			await refresh();
 		} catch (error) {
 			setCancelError(error instanceof Error ? error.message : String(error));
+		} finally {
+			setBusy(false);
+			setStep(null);
+		}
+	};
+
+	// 删除在办任务（2026-11-04）：与取消同款带留言弹窗，走 skill 的 delete --id。
+	// 删完整行退出所有读侧 ⇒ 重读首屏即可；不提供恢复 / 查询入口。
+	const [deleteOpen, setDeleteOpen] = useState(false);
+	const [deleteError, setDeleteError] = useState<string | null>(null);
+	const deleteTask = async (note: string): Promise<void> => {
+		setBusy(true);
+		setStep(null);
+		setDeleteError(null);
+		try {
+			await postTaskAction(
+				{
+					action: "delete",
+					workspace: row.task.workspace.id,
+					id: row.task.id,
+					...(note === "" ? {} : { summary: note }),
+				},
+				onStep,
+			);
+			setDeleteOpen(false);
+			notify(t("actionDeleteDone", { title: titleOf(row) }), { variant: "success" });
+			await refresh();
+		} catch (error) {
+			setDeleteError(error instanceof Error ? error.message : String(error));
 		} finally {
 			setBusy(false);
 			setStep(null);
@@ -535,6 +565,23 @@ export function TaskRowView(props: {
 			},
 		}),
 	});
+	// 删除（2026-11-04）：紧跟小叉右边，同款次级图标钮；悬停提示「删除任务」。
+	const deleteButton = h(Tip, {
+		label: t("tipDeleteTask"),
+		children: h(IconButton, {
+			variant: "plain",
+			size: "md",
+			label: t("actionDelete"),
+			title: "",
+			className: "dtl-iconbtn--muted",
+			icon: h(IconTrashOutlineRegular, { size: 14 }),
+			disabled: busy,
+			onClick: () => {
+				setDeleteError(null);
+				setDeleteOpen(true);
+			},
+		}),
+	});
 
 	// 状态标签（五色实心块，用户 2026-10-18 定稿）：
 	// 三枚异常标签带 skill 下发的阈值解释（没配就不解释，不编）。
@@ -681,6 +728,7 @@ export function TaskRowView(props: {
 				actions.finish ? finishButton : null,
 				actions.release ? releaseButton : null,
 				actions.cancel ? cancelButton : null,
+				actions.delete ? deleteButton : null,
 				copyButton,
 				actions.view ? viewButton : null,
 			),
@@ -753,6 +801,18 @@ export function TaskRowView(props: {
 					error: cancelError,
 					onClose: () => setCancelOpen(false),
 					onSubmit: (reason) => void cancelTask(reason),
+				})
+			: null,
+		deleteOpen
+			? h(ReasonTaskModal, {
+					kind: "delete",
+					t,
+					taskTitle: titleOf(row),
+					busy,
+					notice: busy ? progressNotice() : undefined,
+					error: deleteError,
+					onClose: () => setDeleteOpen(false),
+					onSubmit: (note) => void deleteTask(note),
 				})
 			: null,
 		closeOpen

@@ -145,6 +145,11 @@ declare module "@deepseek-ai/dsh-client-ui-primitives" {
 		size?: number;
 		className?: string;
 	}>;
+	/** 垃圾桶（删除）：`lib/types/icons/index.d.ts:142` 声明、`lib/index.js:1176` 定义 / `:12381` 导出亲验（2026-11-04）。 */
+	export const IconTrashOutlineRegular: ComponentType<{
+		size?: number;
+		className?: string;
+	}>;
 	export const IconFlatListOutlineRegular: ComponentType<{
 		size?: number;
 		className?: string;

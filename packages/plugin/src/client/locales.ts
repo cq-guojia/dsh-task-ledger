@@ -190,6 +190,12 @@ export type LocaleKey =
 	| "cancelModalPlaceholder"
 	| "cancelModalOk"
 	| "actionCancelDone"
+	| "deleteModalTitle"
+	| "deleteModalBody"
+	| "deleteModalPlaceholder"
+	| "deleteModalOk"
+	| "actionDeleteDone"
+	| "actionDelete"
 	| "actionClaimDone"
 	| "actionReleaseDone"
 	| "actionFailed"
@@ -237,6 +243,8 @@ export type LocaleKey =
 	| "tipFinish"
 	| "tipRelease"
 	| "tipCancel"
+	| "tipDeleteTask"
+	| "tipDelete"
 	| "viewDetail"
 	| "fieldCreatorStamp"
 	// 视图切换（在办 / 历史）
@@ -486,6 +494,14 @@ export const zh: Record<LocaleKey, string> = {
 	cancelModalPlaceholder: "写一句取消的理由（可留空）",
 	cancelModalOk: "确定取消",
 	actionCancelDone: "已取消归档：{title}",
+	deleteModalTitle: "删除任务",
+	deleteModalBody: "确定删除「{title}」吗？删除后所有台账统计都不再计入这条记录，且不能恢复。",
+	deleteModalPlaceholder: "写一句删除留言（可留空）",
+	deleteModalOk: "确定删除",
+	actionDeleteDone: "已删除：{title}",
+	actionDelete: "删除任务",
+	tipDeleteTask: "删除任务",
+	tipDelete: "删除",
 	actionClaimDone: "已认领：{title}",
 	actionReleaseDone: "已释放：{title}",
 	actionFailed: "操作失败：{error}",
@@ -782,6 +798,15 @@ export const en: Record<LocaleKey, string> = {
 	cancelModalPlaceholder: "One line on why (optional)",
 	cancelModalOk: "Cancel it",
 	actionCancelDone: "Cancelled: {title}",
+	deleteModalTitle: "Delete task",
+	deleteModalBody:
+		"Delete “{title}”? This record will be excluded from all ledger statistics and cannot be restored.",
+	deleteModalPlaceholder: "One line as a note (optional)",
+	deleteModalOk: "Delete it",
+	actionDeleteDone: "Deleted: {title}",
+	actionDelete: "Delete task",
+	tipDeleteTask: "Delete task",
+	tipDelete: "Delete",
 	actionClaimDone: "Claimed: {title}",
 	actionReleaseDone: "Released: {title}",
 	actionFailed: "Action failed: {error}",

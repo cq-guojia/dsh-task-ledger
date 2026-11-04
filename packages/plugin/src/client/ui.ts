@@ -382,6 +382,13 @@ const UI_BASE_CSS = `
 .dtl-histlist__row[data-selected='true'][data-interactive='true']:hover{
   background:linear-gradient(to right,var(--dtl-business) 3px,var(--dtl-business-soft) 3px);}
 .dtl-histlist__row:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+/* 末尾操作列：不写表头文字；垃圾桶只在行 hover / 键盘聚焦时出现。
+   用 opacity 而非 display，免得行高测量与虚拟窗口偏移跟着抖（2026-11-04）。 */
+.dtl-histlist__opcell{text-align:right;padding:0 var(--dtl-space-2);}
+.dtl-histlist__delete{opacity:0;pointer-events:none;
+  transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-histlist__row[data-interactive='true']:hover .dtl-histlist__delete,
+.dtl-histlist__row[data-interactive='true']:focus-within .dtl-histlist__delete{opacity:1;pointer-events:auto;}
 .dtl-histlist__row + .dtl-histlist__row .dtl-histlist__cell{border-top:1px solid var(--dtl-border-faint);}
 /* 屏幕外的行用两个等高占位行顶着滚动高度：无内距、无边框，高度由 JS 给 */
 .dtl-histlist__spacer>td{padding:0;border:0;}

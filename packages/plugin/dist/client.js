@@ -55857,8 +55857,9 @@ window.__ModuleLoader__.load({
 			return null;
 		}
 		/**
-		* 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）/ 结案（`close`）。
-		* 取消可带一句理由（`summary`），进历史摘要与执行记录。
+		* 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）/ 结案（`close`）/ 删除（`delete`）。
+		* 取消 / 删除可带一句留言（`summary`），进过程文档执行记录。
+		* 删除在办任务用 `id`；删除历史行用 `src` + `line`（两者二选一）。
 		*
 		* 写命令要跑「检查 → 拉取 → 写 → 提交 → 推送」好几秒，host 回的是 **NDJSON 流**：
 		* 每个阶段一行 `{type:"step",step}` 喂给 `onStep` 翻进度文案，末尾 `{type:"done"}` 收尾；
@@ -61932,13 +61933,15 @@ window.__ModuleLoader__.load({
 		}
 		function resolveActions(task) {
 			const mine = isMine(task);
+			const archivable = mine || task.status === "open";
 			return {
 				view: true,
 				claim: !mine && task.status === "open",
 				resume: mine,
 				finish: mine,
 				release: mine,
-				cancel: mine || task.status === "open"
+				cancel: archivable,
+				delete: archivable
 			};
 		}
 		/** 六档菜单命中。标记（`stale` / `overdue` / `backlog`）都由 skill 判定，前端只读布尔。 */
@@ -62995,6 +62998,13 @@ body[data-ds-dark-theme]{
 .dtl-histlist__row[data-selected='true'][data-interactive='true']:hover{
   background:linear-gradient(to right,var(--dtl-business) 3px,var(--dtl-business-soft) 3px);}
 .dtl-histlist__row:focus-visible{outline:2px solid var(--dtl-business);outline-offset:-2px;}
+/* 末尾操作列：不写表头文字；垃圾桶只在行 hover / 键盘聚焦时出现。
+   用 opacity 而非 display，免得行高测量与虚拟窗口偏移跟着抖（2026-11-04）。 */
+.dtl-histlist__opcell{text-align:right;padding:0 var(--dtl-space-2);}
+.dtl-histlist__delete{opacity:0;pointer-events:none;
+  transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
+.dtl-histlist__row[data-interactive='true']:hover .dtl-histlist__delete,
+.dtl-histlist__row[data-interactive='true']:focus-within .dtl-histlist__delete{opacity:1;pointer-events:auto;}
 .dtl-histlist__row + .dtl-histlist__row .dtl-histlist__cell{border-top:1px solid var(--dtl-border-faint);}
 /* 屏幕外的行用两个等高占位行顶着滚动高度：无内距、无边框，高度由 JS 给 */
 .dtl-histlist__spacer>td{padding:0;border:0;}
@@ -63710,6 +63720,96 @@ body[data-ds-dark-theme]{
 			}, (0, react$1.createElement)("div", { className: "dtl-hist__grid" }, (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--none" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--dashed" }), (0, react$1.createElement)("div", { className: "dtl-hist__gridline dtl-hist__gridline--base" })), (0, react$1.createElement)("div", { className: "dtl-hist__cols" }, ...buckets.map(colOf)), curve()), (0, react$1.createElement)("div", { className: "dtl-hist__labels" }, ...buckets.map((bucket, index) => labelOf(bucket, index))))));
 		}
 		//#endregion
+		//#region src/client/cancel-task-modal.ts
+		/**
+		* 带一句留言的任务弹窗：取消归档 / 删除共用同一套结构（只换文案键）。
+		*
+		* 弹窗 / 输入框都用核心件（Modal + Input），不另画遮罩。提交中锁住所有关闭路径（遮罩 / Esc / ✕），
+		* 免得请求还在跑就被关掉、错误无处显示；失败时弹窗不关，改完留言可以直接重试。
+		*
+		* 底栏与核心 `ConfirmModal` 对齐（2026-11-04 修）：按钮 `flex-end` 居右、`outline` + `primary`、
+		* 同为 `lg` 档；过程提示交给 `Modal.notice` 的左侧插槽，footer 里不再画 span。
+		* 原写法用 `space-between`，notice 缺席时左边没占位 ⇒ 两个按钮被顶到最左；`md` 也比核心小一档。
+		*/
+		const LABELS = {
+			cancel: {
+				title: "cancelModalTitle",
+				body: "cancelModalBody",
+				placeholder: "cancelModalPlaceholder",
+				ok: "cancelModalOk"
+			},
+			delete: {
+				title: "deleteModalTitle",
+				body: "deleteModalBody",
+				placeholder: "deleteModalPlaceholder",
+				ok: "deleteModalOk"
+			}
+		};
+		function ReasonTaskModal(props) {
+			const { t } = props;
+			const labels = LABELS[props.kind];
+			const [note, setNote] = (0, react$1.useState)("");
+			const submit = () => {
+				if (!props.busy) props.onSubmit(note.trim());
+			};
+			return (0, react$1.createElement)(Modal, {
+				size: "sm",
+				width: "420px",
+				title: t(labels.title),
+				onClose: props.busy ? void 0 : props.onClose,
+				closeOnMask: !props.busy,
+				escClose: !props.busy,
+				notice: props.notice,
+				footer: (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "flex-end",
+					gap: "8px",
+					width: "100%"
+				} }, (0, react$1.createElement)(Button, {
+					variant: "outline",
+					size: "lg",
+					disabled: props.busy,
+					onClick: props.onClose
+				}, t("settingsCancel")), (0, react$1.createElement)(Button, {
+					variant: "primary",
+					size: "lg",
+					loading: props.busy,
+					loadingText: false,
+					onClick: submit
+				}, t(labels.ok)))
+			}, (0, react$1.createElement)("div", { style: {
+				display: "flex",
+				flexDirection: "column",
+				gap: "var(--dtl-space-3)"
+			} }, (0, react$1.createElement)("div", { style: {
+				fontSize: "var(--dtl-font-md)",
+				lineHeight: "var(--dtl-line-md)",
+				color: "var(--dtl-fg-2)"
+			} }, t(labels.body, { title: props.taskTitle })), (0, react$1.createElement)(Input, {
+				value: note,
+				onChange: setNote,
+				placeholder: t(labels.placeholder),
+				size: "md",
+				"aria-label": t(labels.placeholder),
+				disabled: props.busy,
+				error: props.error !== null,
+				onKeyDown: (event) => {
+					if (event.key === "Enter") submit();
+				}
+			}), props.error === null ? null : (0, react$1.createElement)("div", { style: {
+				color: "var(--dtl-danger)",
+				fontSize: "var(--dtl-font-sm)"
+			} }, props.error)));
+		}
+		/** 取消归档：薄包装，任务行沿用这个入口。 */
+		function CancelTaskModal(props) {
+			return (0, react$1.createElement)(ReasonTaskModal, {
+				...props,
+				kind: "cancel"
+			});
+		}
+		//#endregion
 		//#region src/client/history-list.ts
 		/**
 		* 历史页下半部分：筛选行（工作区 / 执行人）+ 结案记录表格。
@@ -63876,6 +63976,13 @@ body[data-ds-dark-theme]{
 			const lastScrollToken = (0, react$1.useRef)(-1);
 			/** 取过的月份（`ym|工作区|执行人` → 记录 + 取回时刻）：来回切月不再请求，60 秒后重取。 */
 			const monthCache = (0, react$1.useRef)(/* @__PURE__ */ new Map());
+			/** 删除弹窗：目标历史行 / 提交状态 / 阶段 / host 回的人话错误。 */
+			const [deleteTarget, setDeleteTarget] = (0, react$1.useState)(null);
+			const [deleteBusy, setDeleteBusy] = (0, react$1.useState)(false);
+			const [deleteStep, setDeleteStep] = (0, react$1.useState)(null);
+			const [deleteError, setDeleteError] = (0, react$1.useState)(null);
+			/** 删除成功后让取数 effect 重跑（月份缓存会清掉，不能让 60 秒内的旧行再冒出来）。 */
+			const [reloadToken, setReloadToken] = (0, react$1.useState)(0);
 			/** 三类行的固定行高：首帧量一次，之后所有偏移都按它算。 */
 			const [heights, setHeights] = (0, react$1.useState)(null);
 			/** 表格本身（**不是**外层容器：容器里还有筛选条，行号偏移从表格顶边算）。 */
@@ -63931,7 +64038,8 @@ body[data-ds-dark-theme]{
 			}, [
 				owner,
 				props.ym,
-				workspace
+				workspace,
+				reloadToken
 			]);
 			const orderOf = (0, react$1.useCallback)((id) => {
 				const index = props.workspaceOptions.findIndex((option) => option.value === id);
@@ -64042,10 +64150,15 @@ body[data-ds-dark-theme]{
 				props.scrollTo,
 				props.ym
 			]);
-			const columns = props.solo ? [175, 185] : [
+			const columns = props.solo ? [
+				175,
+				185,
+				48
+			] : [
 				175,
 				140,
-				185
+				185,
+				48
 			];
 			const colSpan = columns.length + 1;
 			const labels = props.solo ? [t("histColCreator"), t("histColTime")] : [
@@ -64069,6 +64182,47 @@ body[data-ds-dark-theme]{
 					pendingOpen.current = null;
 					props.onOpen(file);
 				}, 0);
+			};
+			/** 删除写命令的阶段 → 底栏进度文案（与在办页同一套键）。 */
+			const stepLabel = {
+				check: "actionStepCheck",
+				sync: "actionStepSync",
+				write: "actionStepWrite",
+				commit: "actionStepCommit",
+				push: "actionStepPush"
+			};
+			const deleteNotice = () => deleteBusy ? deleteStep === null ? t("actionSyncing") : t(stepLabel[deleteStep]) : void 0;
+			/** 删除历史行：按 src + line 让 skill 原地打删除三列；成功后清月份缓存并重取。 */
+			const deleteRecord = async (note) => {
+				const target = deleteTarget;
+				if (target === null || target.src === "" || target.line <= 0) return;
+				setDeleteBusy(true);
+				setDeleteStep(null);
+				setDeleteError(null);
+				try {
+					await postTaskAction({
+						action: "delete",
+						workspace: target.workspaceId,
+						src: target.src,
+						line: target.line,
+						...note === "" ? {} : { summary: note }
+					}, (next) => setDeleteStep(next));
+					setDeleteTarget(null);
+					setSelected(null);
+					if (pendingOpen.current !== null) {
+						window.clearTimeout(pendingOpen.current);
+						pendingOpen.current = null;
+					}
+					monthCache.current.clear();
+					setReloadToken((value) => value + 1);
+					props.onDeleted();
+					notify(t("actionDeleteDone", { title: target.title }), { variant: "success" });
+				} catch (error) {
+					setDeleteError(error instanceof Error ? error.message : String(error));
+				} finally {
+					setDeleteBusy(false);
+					setDeleteStep(null);
+				}
 			};
 			/** 可选年份：今年往前 5 年。 */
 			const now = /* @__PURE__ */ new Date();
@@ -64104,7 +64258,13 @@ body[data-ds-dark-theme]{
 				className: "dtl-histlist__headcell",
 				scope: "col",
 				style: cellHeight("day")
-			}, label)));
+			}, label)), (0, react$1.createElement)("th", {
+				key: "delete",
+				className: "dtl-histlist__headcell",
+				scope: "col",
+				style: cellHeight("day"),
+				"aria-label": t("actionDelete")
+			}));
 			const wsRow = (item) => (0, react$1.createElement)("tr", {
 				key: item.key,
 				className: "dtl-histlist__row",
@@ -64152,7 +64312,29 @@ body[data-ds-dark-theme]{
 					key,
 					className: "dtl-histlist__cell",
 					style: cellHeight("rec")
-				}, cells[key] ?? null)));
+				}, cells[key] ?? null)), (0, react$1.createElement)("td", {
+					key: "delete",
+					className: "dtl-histlist__cell dtl-histlist__opcell",
+					style: cellHeight("rec")
+				}, (0, react$1.createElement)("div", {
+					className: "dtl-histlist__delete",
+					onClick: (event) => event.stopPropagation()
+				}, (0, react$1.createElement)(Tip, {
+					label: t("tipDelete"),
+					children: (0, react$1.createElement)(IconButton, {
+						variant: "plain",
+						size: "md",
+						label: t("actionDelete"),
+						title: "",
+						className: "dtl-iconbtn--muted",
+						icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconTrashOutlineRegular, { size: 14 }),
+						disabled: deleteBusy || record.src === "" || record.line <= 0,
+						onClick: () => {
+							setDeleteError(null);
+							setDeleteTarget(record);
+						}
+					})
+				}))));
 			};
 			/** 表格外壳：colgroup 只给固定列宽，首列吃掉剩余宽度（与改版前同一条算式）。 */
 			const tableOf = (rows, extra) => (0, react$1.createElement)("table", {
@@ -64209,7 +64391,16 @@ body[data-ds-dark-theme]{
 			return (0, react$1.createElement)("div", { className: "dtl-histlist" }, filtersOf(), error === null ? null : (0, react$1.createElement)("div", { className: "dtl-histlist__error" }, `${t("loadFailed")}：${error}`), (0, react$1.createElement)(Surface, {
 				className: "dtl-histlist__frame",
 				padding: null
-			}, body));
+			}, body), deleteTarget === null ? null : (0, react$1.createElement)(ReasonTaskModal, {
+				kind: "delete",
+				t,
+				taskTitle: deleteTarget.title || deleteTarget.key,
+				busy: deleteBusy,
+				notice: deleteNotice(),
+				error: deleteError,
+				onClose: () => setDeleteTarget(null),
+				onSubmit: (note) => void deleteRecord(note)
+			}));
 			/** 筛选行（工作区 / 执行人 + 年月）。 */
 			function filtersOf() {
 				return (0, react$1.createElement)("div", { className: "dtl-histlist__filters" }, (0, react$1.createElement)("div", { className: "dtl-histlist__filters-main" }, (0, react$1.createElement)(SplitGroup, { label: t("histMonthLabel") }, (0, react$1.createElement)(Select, {
@@ -64261,79 +64452,6 @@ body[data-ds-dark-theme]{
 					onChange: setOwner
 				})));
 			}
-		}
-		//#endregion
-		//#region src/client/cancel-task-modal.ts
-		/**
-		* 取消（归档）任务的弹窗：正文点名任务，中间一个理由输入框（可留空），
-		* 理由随 `close --cancel --summary` 落进历史行摘要与执行记录（`cancelled: <理由>`）。
-		*
-		* 弹窗 / 输入框都用核心件（Modal + Input），不另画遮罩。提交中锁住所有关闭路径（遮罩 / Esc / ✕），
-		* 免得请求还在跑就被关掉、错误无处显示；失败时弹窗不关，改完理由可以直接重试。
-		*/
-		function CancelTaskModal(props) {
-			const { t } = props;
-			const [reason, setReason] = (0, react$1.useState)("");
-			const submit = () => {
-				if (!props.busy) props.onSubmit(reason.trim());
-			};
-			return (0, react$1.createElement)(Modal, {
-				size: "sm",
-				width: "420px",
-				title: t("cancelModalTitle"),
-				onClose: props.busy ? void 0 : props.onClose,
-				closeOnMask: !props.busy,
-				escClose: !props.busy,
-				footer: (0, react$1.createElement)("div", { style: {
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "space-between",
-					gap: "var(--dtl-space-2)",
-					width: "100%"
-				} }, props.notice === void 0 ? null : (0, react$1.createElement)("span", { style: {
-					color: "var(--dtl-fg-3)",
-					fontSize: "var(--dtl-font-sm)",
-					overflow: "hidden",
-					textOverflow: "ellipsis",
-					whiteSpace: "nowrap"
-				} }, props.notice), (0, react$1.createElement)("div", { style: {
-					display: "flex",
-					gap: "var(--dtl-space-2)"
-				} }, (0, react$1.createElement)(Button, {
-					variant: "secondary",
-					size: "md",
-					disabled: props.busy,
-					onClick: props.onClose
-				}, t("settingsCancel")), (0, react$1.createElement)(Button, {
-					variant: "primary",
-					size: "md",
-					loading: props.busy,
-					loadingText: false,
-					onClick: submit
-				}, t("cancelModalOk"))))
-			}, (0, react$1.createElement)("div", { style: {
-				display: "flex",
-				flexDirection: "column",
-				gap: "var(--dtl-space-3)"
-			} }, (0, react$1.createElement)("div", { style: {
-				fontSize: "var(--dtl-font-md)",
-				lineHeight: "var(--dtl-line-md)",
-				color: "var(--dtl-fg-2)"
-			} }, t("cancelModalBody", { title: props.taskTitle })), (0, react$1.createElement)(Input, {
-				value: reason,
-				onChange: setReason,
-				placeholder: t("cancelModalPlaceholder"),
-				size: "md",
-				"aria-label": t("cancelModalPlaceholder"),
-				disabled: props.busy,
-				error: props.error !== null,
-				onKeyDown: (event) => {
-					if (event.key === "Enter") submit();
-				}
-			}), props.error === null ? null : (0, react$1.createElement)("div", { style: {
-				color: "var(--dtl-danger)",
-				fontSize: "var(--dtl-font-sm)"
-			} }, props.error)));
 		}
 		//#endregion
 		//#region src/client/close-task-modal.ts
@@ -64637,6 +64755,14 @@ body[data-ds-dark-theme]{
 			cancelModalPlaceholder: "写一句取消的理由（可留空）",
 			cancelModalOk: "确定取消",
 			actionCancelDone: "已取消归档：{title}",
+			deleteModalTitle: "删除任务",
+			deleteModalBody: "确定删除「{title}」吗？删除后所有台账统计都不再计入这条记录，且不能恢复。",
+			deleteModalPlaceholder: "写一句删除留言（可留空）",
+			deleteModalOk: "确定删除",
+			actionDeleteDone: "已删除：{title}",
+			actionDelete: "删除任务",
+			tipDeleteTask: "删除任务",
+			tipDelete: "删除",
 			actionClaimDone: "已认领：{title}",
 			actionReleaseDone: "已释放：{title}",
 			actionFailed: "操作失败：{error}",
@@ -64908,6 +65034,14 @@ body[data-ds-dark-theme]{
 			cancelModalPlaceholder: "One line on why (optional)",
 			cancelModalOk: "Cancel it",
 			actionCancelDone: "Cancelled: {title}",
+			deleteModalTitle: "Delete task",
+			deleteModalBody: "Delete “{title}”? This record will be excluded from all ledger statistics and cannot be restored.",
+			deleteModalPlaceholder: "One line as a note (optional)",
+			deleteModalOk: "Delete it",
+			actionDeleteDone: "Deleted: {title}",
+			actionDelete: "Delete task",
+			tipDeleteTask: "Delete task",
+			tipDelete: "Delete",
 			actionClaimDone: "Claimed: {title}",
 			actionReleaseDone: "Released: {title}",
 			actionFailed: "Action failed: {error}",
@@ -65313,6 +65447,29 @@ body[data-ds-dark-theme]{
 					setStep(null);
 				}
 			};
+			const [deleteOpen, setDeleteOpen] = (0, react$1.useState)(false);
+			const [deleteError, setDeleteError] = (0, react$1.useState)(null);
+			const deleteTask = async (note) => {
+				setBusy(true);
+				setStep(null);
+				setDeleteError(null);
+				try {
+					await postTaskAction({
+						action: "delete",
+						workspace: row.task.workspace.id,
+						id: row.task.id,
+						...note === "" ? {} : { summary: note }
+					}, onStep);
+					setDeleteOpen(false);
+					notify(t("actionDeleteDone", { title: titleOf(row) }), { variant: "success" });
+					await refresh();
+				} catch (error) {
+					setDeleteError(error instanceof Error ? error.message : String(error));
+				} finally {
+					setBusy(false);
+					setStep(null);
+				}
+			};
 			const resumeTask = async () => {
 				if (busy) return;
 				setBusy(true);
@@ -65576,6 +65733,22 @@ body[data-ds-dark-theme]{
 					}
 				})
 			});
+			const deleteButton = (0, react$1.createElement)(Tip, {
+				label: t("tipDeleteTask"),
+				children: (0, react$1.createElement)(IconButton, {
+					variant: "plain",
+					size: "md",
+					label: t("actionDelete"),
+					title: "",
+					className: "dtl-iconbtn--muted",
+					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconTrashOutlineRegular, { size: 14 }),
+					disabled: busy,
+					onClick: () => {
+						setDeleteError(null);
+						setDeleteOpen(true);
+					}
+				})
+			});
 			const tagOf = (which, tip) => {
 				const text = statusLabel(which, t);
 				return (0, react$1.createElement)(Tag, {
@@ -65634,7 +65807,7 @@ body[data-ds-dark-theme]{
 				text: `#${tag}`,
 				maxWidth: 160,
 				onClick: () => setQuery({ keyword: tag })
-			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, copyButton, actions.view ? viewButton : null)));
+			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, actions.delete ? deleteButton : null, copyButton, actions.view ? viewButton : null)));
 			return (0, react$1.createElement)(react$1.Fragment, null, card, confirmAct === null ? null : (() => {
 				const action = confirmAct;
 				const claim = action === "claim";
@@ -65676,6 +65849,15 @@ body[data-ds-dark-theme]{
 				error: cancelError,
 				onClose: () => setCancelOpen(false),
 				onSubmit: (reason) => void cancelTask(reason)
+			}) : null, deleteOpen ? (0, react$1.createElement)(ReasonTaskModal, {
+				kind: "delete",
+				t,
+				taskTitle: titleOf(row),
+				busy,
+				notice: busy ? progressNotice() : void 0,
+				error: deleteError,
+				onClose: () => setDeleteOpen(false),
+				onSubmit: (note) => void deleteTask(note)
 			}) : null, closeOpen ? (0, react$1.createElement)(CloseTaskModal, {
 				t,
 				taskTitle: titleOf(row),
@@ -67261,7 +67443,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.128 261104-220628-166`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.128 261104-223020-972`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -67353,7 +67535,13 @@ body[data-ds-dark-theme]{
 				onYmChange: setHistYm,
 				scrollTo: histScroll,
 				onScrolled: clearHistScroll,
-				scrollContainer: toolbarScroll
+				scrollContainer: toolbarScroll,
+				onDeleted: () => {
+					refresh();
+					setHistoryByGran({});
+					lastTrendRef.current = null;
+					setHistoryError(null);
+				}
 			}) : board === null ? state.status === "error" ? null : (0, react$1.createElement)("div", { className: "dtl-loading" }, (0, react$1.createElement)(Loader, {
 				variant: "blocks",
 				size: "xl"

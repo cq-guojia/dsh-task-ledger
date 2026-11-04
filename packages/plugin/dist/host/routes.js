@@ -271,21 +271,45 @@ export function registerRoutes(webServer, deps) {
                 if (action !== "claim" &&
                     action !== "release" &&
                     action !== "cancel" &&
-                    action !== "close")
-                    throw new Error(`${BAD_REQUEST}action 只能是 claim / release / cancel / close`);
-                // 摘要 / 理由：一句话就够，超长的截掉（历史行不该被一段小作文撑开）
+                    action !== "close" &&
+                    action !== "delete")
+                    throw new Error(`${BAD_REQUEST}action 只能是 claim / release / cancel / close / delete`);
+                // 摘要 / 留言：一句话就够，超长的截掉（历史行不该被一段小作文撑开）
                 const summary = typeof body.summary === "string" ? body.summary.trim().slice(0, 200) : "";
-                // 正常结案必须有摘要（取消可以没有）：空着也要在界面先挡住，这里兜一层
+                // 正常结案必须有摘要（取消 / 删除可以没有）：空着也要在界面先挡住，这里兜一层
                 if (action === "close" && summary === "")
                     throw new Error(`${BAD_REQUEST}结案必须填一句摘要`);
                 const id = typeof body.id === "string" ? body.id.trim() : "";
-                if (id === "")
+                // 删历史行不用任务号，改用 skill 的 delete --src/--line 定位（src 相对 ledger/）
+                const src = typeof body.src === "string" ? body.src.trim() : "";
+                const line = typeof body.line === "number" &&
+                    Number.isInteger(body.line) &&
+                    body.line > 0
+                    ? body.line
+                    : 0;
+                const historyDelete = action === "delete" && src !== "";
+                if (historyDelete) {
+                    if (!src.startsWith("history/") ||
+                        !src.endsWith(".md") ||
+                        src.includes(".."))
+                        throw new Error(`${BAD_REQUEST}历史文件路径不合法`);
+                    if (line === 0)
+                        throw new Error(`${BAD_REQUEST}历史行号不合法`);
+                }
+                else if (id === "") {
                     throw new Error(`${BAD_REQUEST}必须给任务号`);
+                }
                 const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
                 const workspace = (await workspacesOf(deps)).find((item) => item.id === workspaceId);
                 if (workspace === undefined)
                     throw new Error(`${BAD_REQUEST}找不到这个工作区，改不了任务`);
-                input = { action, repo: workspace.path, id, summary };
+                input = {
+                    action,
+                    repo: workspace.path,
+                    id,
+                    summary,
+                    ...(historyDelete ? { src, line } : {}),
+                };
             }
             catch (error) {
                 sendWriteFailure(res, error);

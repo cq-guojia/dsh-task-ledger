@@ -13,6 +13,7 @@
  */
 import {
 	IconFolderCloseRegular,
+	IconTrashOutlineRegular,
 	IconUsersOutlineRegular,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { PickerGroup } from "dsh-plugin-core/ui";
@@ -27,12 +28,16 @@ import {
 	type ReactNode,
 	type Ref,
 } from "react";
-import { fetchHistoryList, isIdentityMissing } from "./api";
-import type { Translate } from "./locales";
+import { fetchHistoryList, isIdentityMissing, postTaskAction, type TaskActionStep } from "./api";
+import { ReasonTaskModal } from "./cancel-task-modal";
+import type { LocaleKey, Translate } from "./locales";
 import { displayName } from "./rows";
 import { markIdentityMissing } from "./store";
 import type { HistoryRecord } from "./types";
-import { Select, Button, SectionHead, Segmented, SplitGroup, Surface, Tag, Loader } from "./ui";
+import {
+	Select, Button, SectionHead, Segmented, SplitGroup, Surface, Tag, Loader,
+	IconButton, Tip, notify,
+} from "./ui";
 
 const WEEKDAY_KEYS = [
 	"weekdaySun",
@@ -92,6 +97,8 @@ export interface HistoryListProps {
 	readonly onScrolled: () => void;
 	/** 页面滚动层（`.dtl-page`）：虚拟窗口按它的可视区算，不是 window。 */
 	readonly scrollContainer: () => HTMLElement | null;
+	/** 删除成功后通知页面层重取统计与趋势（删掉的行不该还留在图表里）。 */
+	readonly onDeleted: () => void;
 }
 
 /** 一行是什么：日期头 / 工作区段头 / 记录。 */
@@ -284,6 +291,13 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const lastScrollToken = useRef<number>(-1);
 	/** 取过的月份（`ym|工作区|执行人` → 记录 + 取回时刻）：来回切月不再请求，60 秒后重取。 */
 	const monthCache = useRef(new Map<string, { records: readonly HistoryRecord[]; at: number }>());
+	/** 删除弹窗：目标历史行 / 提交状态 / 阶段 / host 回的人话错误。 */
+	const [deleteTarget, setDeleteTarget] = useState<HistoryRecord | null>(null);
+	const [deleteBusy, setDeleteBusy] = useState(false);
+	const [deleteStep, setDeleteStep] = useState<TaskActionStep | null>(null);
+	const [deleteError, setDeleteError] = useState<string | null>(null);
+	/** 删除成功后让取数 effect 重跑（月份缓存会清掉，不能让 60 秒内的旧行再冒出来）。 */
+	const [reloadToken, setReloadToken] = useState(0);
 	/** 三类行的固定行高：首帧量一次，之后所有偏移都按它算。 */
 	const [heights, setHeights] = useState<Heights | null>(null);
 	/** 表格本身（**不是**外层容器：容器里还有筛选条，行号偏移从表格顶边算）。 */
@@ -336,7 +350,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		return () => {
 			alive = false;
 		};
-	}, [owner, props.ym, workspace]);
+	}, [owner, props.ym, workspace, reloadToken]);
 
 	// 天 → 工作区段（段序跟「全部工作区」下拉一致）
 	const orderOf = useCallback(
@@ -452,7 +466,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	}, [items, loadedYm, loading, offsets, props.onScrolled, props.scrollContainer, props.scrollTo, props.ym]);
 
 	// 单人台账：执行人整列不摆（与待办里「单人不显示执行人名」同一条规矩）
-	const columns = props.solo ? ([175, 185] as const) : ([175, 140, 185] as const);
+	// 末尾多一列放删除钮：**不写表头文字**，定宽 48px 靠右（用户 2026-11-04）。
+	const columns = props.solo ? ([175, 185, 48] as const) : ([175, 140, 185, 48] as const);
 	const colSpan = columns.length + 1;
 	const labels = props.solo
 		? [t("histColCreator"), t("histColTime")]
@@ -478,6 +493,57 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			pendingOpen.current = null;
 			props.onOpen(file);
 		}, 0);
+	};
+
+	/** 删除写命令的阶段 → 底栏进度文案（与在办页同一套键）。 */
+	const stepLabel: Record<TaskActionStep, LocaleKey> = {
+		check: "actionStepCheck",
+		sync: "actionStepSync",
+		write: "actionStepWrite",
+		commit: "actionStepCommit",
+		push: "actionStepPush",
+	};
+	const deleteNotice = (): string | undefined =>
+		deleteBusy
+			? deleteStep === null
+				? t("actionSyncing")
+				: t(stepLabel[deleteStep])
+			: undefined;
+
+	/** 删除历史行：按 src + line 让 skill 原地打删除三列；成功后清月份缓存并重取。 */
+	const deleteRecord = async (note: string): Promise<void> => {
+		const target = deleteTarget;
+		if (target === null || target.src === "" || target.line <= 0) return;
+		setDeleteBusy(true);
+		setDeleteStep(null);
+		setDeleteError(null);
+		try {
+			await postTaskAction(
+				{
+					action: "delete",
+					workspace: target.workspaceId,
+					src: target.src,
+					line: target.line,
+					...(note === "" ? {} : { summary: note }),
+				},
+				(next) => setDeleteStep(next),
+			);
+			setDeleteTarget(null);
+			setSelected(null);
+			if (pendingOpen.current !== null) {
+				window.clearTimeout(pendingOpen.current);
+				pendingOpen.current = null;
+			}
+			monthCache.current.clear();
+			setReloadToken((value) => value + 1);
+			props.onDeleted();
+			notify(t("actionDeleteDone", { title: target.title }), { variant: "success" });
+		} catch (error) {
+			setDeleteError(error instanceof Error ? error.message : String(error));
+		} finally {
+			setDeleteBusy(false);
+			setDeleteStep(null);
+		}
 	};
 
 	/** 可选年份：今年往前 5 年。 */
@@ -527,6 +593,14 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 					label,
 				),
 			),
+			// 操作列表头：一个字都不写，只占位对齐（读屏仍给个列名）
+			h("th", {
+				key: "delete",
+				className: "dtl-histlist__headcell",
+				scope: "col",
+				style: cellHeight("day"),
+				"aria-label": t("actionDelete"),
+			}),
 		);
 
 	const wsRow = (item: Item): ReactNode =>
@@ -567,6 +641,39 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			},
 			...keys.map((key) =>
 				h("td", { key, className: "dtl-histlist__cell", style: cellHeight("rec") }, cells[key] ?? null),
+			),
+			// 删除钮：行 hover 才显（CSS 管显隐）。外层 div 拦住点击冒泡，
+			// 否则点删除会顺带把这一行的过程文档打开到右侧 dock。
+			h(
+				"td",
+				{
+					key: "delete",
+					className: "dtl-histlist__cell dtl-histlist__opcell",
+					style: cellHeight("rec"),
+				},
+				h(
+					"div",
+					{
+						className: "dtl-histlist__delete",
+						onClick: (event: { stopPropagation: () => void }) => event.stopPropagation(),
+					},
+					h(Tip, {
+						label: t("tipDelete"),
+						children: h(IconButton, {
+							variant: "plain",
+							size: "md",
+							label: t("actionDelete"),
+							title: "",
+							className: "dtl-iconbtn--muted",
+							icon: h(IconTrashOutlineRegular, { size: 14 }),
+							disabled: deleteBusy || record.src === "" || record.line <= 0,
+							onClick: () => {
+								setDeleteError(null);
+								setDeleteTarget(record);
+							},
+						}),
+					}),
+				),
 			),
 		);
 	};
@@ -652,6 +759,18 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			: h("div", { className: "dtl-histlist__error" }, `${t("loadFailed")}：${error}`),
 		// 表格外框（四边 1px + 圆角 12）交核心 Surface，表格自己只画内部分隔线
 		h(Surface, { className: "dtl-histlist__frame", padding: null }, body),
+		deleteTarget === null
+			? null
+			: h(ReasonTaskModal, {
+					kind: "delete",
+					t,
+					taskTitle: deleteTarget.title || deleteTarget.key,
+					busy: deleteBusy,
+					notice: deleteNotice(),
+					error: deleteError,
+					onClose: () => setDeleteTarget(null),
+					onSubmit: (note) => void deleteRecord(note),
+				}),
 	);
 
 	/** 筛选行（工作区 / 执行人 + 年月）。 */

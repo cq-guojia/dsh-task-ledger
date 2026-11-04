@@ -891,6 +891,13 @@ export function BoardHome(props: {
 							scrollTo: histScroll,
 							onScrolled: clearHistScroll,
 							scrollContainer: toolbarScroll,
+							// 删掉一行历史后统计卡与趋势图都得重取，不能留着旧数
+							onDeleted: () => {
+								void refresh();
+								setHistoryByGran({});
+								lastTrendRef.current = null;
+								setHistoryError(null);
+							},
 						})
 					: board === null
 						? state.status === "error"

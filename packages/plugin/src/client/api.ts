@@ -229,8 +229,9 @@ function actionEventOf(line: string): ActionEvent | null {
 }
 
 /**
- * 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）/ 结案（`close`）。
- * 取消可带一句理由（`summary`），进历史摘要与执行记录。
+ * 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）/ 结案（`close`）/ 删除（`delete`）。
+ * 取消 / 删除可带一句留言（`summary`），进过程文档执行记录。
+ * 删除在办任务用 `id`；删除历史行用 `src` + `line`（两者二选一）。
  *
  * 写命令要跑「检查 → 拉取 → 写 → 提交 → 推送」好几秒，host 回的是 **NDJSON 流**：
  * 每个阶段一行 `{type:"step",step}` 喂给 `onStep` 翻进度文案，末尾 `{type:"done"}` 收尾；
@@ -241,11 +242,15 @@ function actionEventOf(line: string): ActionEvent | null {
  */
 export async function postTaskAction(
 	body: {
-		readonly action: "claim" | "release" | "cancel" | "close";
+		readonly action: "claim" | "release" | "cancel" | "close" | "delete";
 		/** 工作区 id（host 据此找台账根）。 */
 		readonly workspace: string;
-		readonly id: string;
-		/** 取消用理由（可空）/ 结案用摘要（必填）：一句话。 */
+		/** 在办任务号；删历史行时不给。 */
+		readonly id?: string;
+		/** 历史行定位：相对 ledger/ 的路径 + 原文行号（删历史行时必给）。 */
+		readonly src?: string;
+		readonly line?: number;
+		/** 取消 / 删除用留言（可空）/ 结案用摘要（必填）：一句话。 */
 		readonly summary?: string;
 	},
 	onStep?: (step: TaskActionStep) => void,

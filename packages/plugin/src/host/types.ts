@@ -255,6 +255,10 @@ export interface HistoryRecord {
 	readonly finished: string;
 	/** 过程文档绝对路径；空串 = 这行没有 worklog，不可点开。 */
 	readonly filePath: string;
+	/** 历史文件相对 ledger/ 的路径（skill `delete --src` 口径）；空 = 定位不到，不给删。 */
+	readonly src: string;
+	/** 原文行号（1 起）；0 = 定位不到，不给删。 */
+	readonly line: number;
 }
 
 /** `/history/list` 响应：选中那个月的结案记录（按结案时间正序）。
