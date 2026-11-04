@@ -130,8 +130,8 @@ export function CloseTaskModal(props: {
 				h(
 					Button,
 					{
-						variant: "secondary",
-						size: "md",
+						variant: "outline",
+						size: "lg",
 						disabled: props.busy || locked,
 						onClick: props.onClose,
 					},
@@ -141,7 +141,7 @@ export function CloseTaskModal(props: {
 					Button,
 					{
 						variant: "primary",
-						size: "md",
+						size: "lg",
 						loading: props.busy,
 						loadingText: false,
 						disabled: submitBlocked || locked,

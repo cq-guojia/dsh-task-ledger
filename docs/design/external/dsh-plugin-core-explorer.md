@@ -1,8 +1,8 @@
 # 核心 explorer：选目录 + 只读文件面（dsh-plugin-core）
 
 > **类型**：🌐 **外部事实** —— 记的是**共享底座 `dsh-plugin-core`** 能给什么，不是本项目的设计
-> **适用版本**：`dsh-plugin-core@0.20.9`（本插件 `packages/plugin` 的依赖线）
-> **状态**：✅ 已核实（2026-11-03：`npm` 装 0.20.9 后读 `dist/explorer/*.d.ts`、`dist/explorer/picker-placement.js`、`dist/host/index.d.ts` 原文 + `src/explorer/FileBrowser.ts:541` 选择器入口）
+> **适用版本**：`dsh-plugin-core@0.30.1`（本插件 `packages/plugin` 的依赖线；首次核实于 0.20.9）
+> **状态**：✅ 已核实（2026-11-03：装 0.20.9 后读 `dist/explorer/*.d.ts`、`dist/explorer/picker-placement.js`、`dist/host/index.d.ts` 原文 + `src/explorer/FileBrowser.ts:541` 选择器入口；2026-11-04 升 0.30.1 后按 §四 复核方式重查 `pickWorkspaceFile` / `PickFilter` / `PickedPath` / `serveFsRoute` / `connectFs`，符号仍在）
 > **来源**：`dsh-plugin-core` 解包产物（`node_modules/dsh-plugin-core`）
 
 ## 一、结论

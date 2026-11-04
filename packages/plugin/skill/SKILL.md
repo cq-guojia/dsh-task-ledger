@@ -395,7 +395,7 @@ allowed-tools: Read,Edit,Bash,Grep
 
 ### 数据完整性（脚本管不了的，违反了数据就脏）
 
-- **执行记录禁手改**：只由脚本按 `new / claim / set / release / log / close` 追加，只增不改（**交接记的是 `set`**，看不到 `handoff` 是正常的）。
+- **执行记录禁手改**：只由脚本按 `new / claim / set / release / log / close / cancel / delete` 追加，只增不改（**交接记的是 `set`**，看不到 `handoff` 是正常的；取消记 `cancel`、删除记 `delete`）。
 - **改正文必配一条日志**：动了 worklog 的正文（改一句、补一节、改标题、修错字都算）就必须立刻跑一次 `log`。
 - **换人只能「释放 → 认领」**：`set --release` 放回公共池，对方自己 `claim`；不许替别人挂名字。`set --owner <别人>`（预留转接通道，agent 一律不用）。
 - **身份由脚本从本机 identity 文件自取，agent 全程不传身份**：跑命令前不用查身份；只有当命令**退出码为 100** 时，才按 `references/init-identity.md` 引导用户跑 `init`（一台机器一次）。查自己用 `--mine`，查别人才传**对方 uuid**（`list --owner <uuid>`）；释放用 `--release`，不传身份。

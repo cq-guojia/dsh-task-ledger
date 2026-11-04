@@ -990,7 +990,7 @@ export function BoardHome(props: {
 						sessionId: sessionView.id,
 						view: sessionView.view,
 						heading: sessionView.heading,
-						archived: false,
+						// 0.30.1 起归档态由核心订阅宿主 workspaces 快照自己判，调用方不再注入
 						openHostSession: (id: string) => openSession(id),
 						// 会话里的文件 / 变更卡点开就走我们右侧那个 dock（同一个预览面，不另起一套）；
 						// 第二个参数是文件所属会话 id —— 相对路径靠它定位到正确工作区
