@@ -77,6 +77,7 @@ type Args struct {
 	Cancel      bool
 	Src         string // delete --src：历史文件相对 ledger/ 的路径
 	Line        int    // delete --line：历史文件原文行号（1 起）
+	Expect      string // delete --expect：该行指纹（history --json 的 fingerprint），写前核对
 	Release     bool
 	Claim       *string
 	NewID       bool
@@ -98,7 +99,7 @@ var commandFlags = map[string]map[string]bool{
 	"set":      setOf("--id", "--owner", "--release", "--tags", "--repo"),
 	"log":      setOf("--id", "--note", "--repo"),
 	"close":    setOf("--id", "--summary", "--finished", "--tags", "--cancel", "--repo"),
-	"delete":   setOf("--id", "--src", "--line", "--summary", "--repo"),
+	"delete":   setOf("--id", "--src", "--line", "--expect", "--summary", "--repo"),
 	"list":     setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--json", "--repo"),
 	"stats":    setOf("--pool", "--mine", "--owner", "--owner-name", "--status", "--category", "--tag", "--since", "--until", "--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--by-owner", "--json", "--repo"),
 	"owners":   setOf("--json", "--repo"),
@@ -130,7 +131,7 @@ func takesValue(name string) bool {
 		"--note", "--summary", "--finished", "--owner", "--owner-name",
 		"--status", "--tag", "--keyword", "--since", "--until", "--limit", "--months",
 		"--stale-days", "--overdue-days", "--backlog-days", "--trend", "--last", "--dir",
-		"--claim", "--name", "--rename", "--src", "--line":
+		"--claim", "--name", "--rename", "--src", "--line", "--expect":
 		return true
 	}
 	return false
@@ -359,6 +360,8 @@ func applyFlag(a *Args, name, value string) error {
 			return usageErr("--line 需要整数：%s", value)
 		}
 		a.Line = n
+	case "--expect":
+		a.Expect = value
 	case "--summary":
 		a.Summary = value
 	case "--finished":
@@ -430,6 +433,9 @@ func requireFlags(a *Args) error {
 		}
 		if a.Line > 0 && a.Src == "" {
 			return usageErr("delete --line 要配 --src <历史文件>")
+		}
+		if a.Expect != "" && a.Src == "" {
+			return usageErr("delete --expect（行指纹）只配 --src + --line 用：在办任务靠 --id 定位")
 		}
 	case "switch":
 		if a.DirRename != nil && (a.Claim != nil || a.NewID || a.Name != "") {

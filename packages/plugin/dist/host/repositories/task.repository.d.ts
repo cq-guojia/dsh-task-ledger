@@ -7,9 +7,11 @@ export type TaskActionStep = "check" | "sync" | "write" | "commit" | "push";
  *
  * @param summary - 取消 / 结案的摘要、删除的留言；留空就不传 `--summary`。
  * @param onStep - 过程步骤回调（逐条转发给界面做进度翻牌），不传就不让 skill 打标记。
- * @param history - 给就是删历史行（`delete --src/--line`），不给就是删在办任务（`delete --id`）。
+ * @param history - 给就是删历史行（`delete --src/--line [--expect]`），不给就是删在办任务（`delete --id`）。
+ *   `fingerprint` 是该行指纹：skill 写前核对，行已变（行号漂移 / 别处改过）就整条拒绝。
  */
 export declare function runTaskAction(repo: string, id: string, action: TaskAction, summary?: string, onStep?: (step: TaskActionStep) => void, history?: {
     readonly src: string;
     readonly line: number;
+    readonly fingerprint?: string;
 }): Promise<void>;

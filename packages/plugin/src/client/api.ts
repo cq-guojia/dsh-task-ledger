@@ -250,6 +250,8 @@ export async function postTaskAction(
 		/** 历史行定位：相对 ledger/ 的路径 + 原文行号（删历史行时必给）。 */
 		readonly src?: string;
 		readonly line?: number;
+		/** 该行指纹（`history --json` 的 fingerprint）：skill 写前核对，行已变就拒绝删。 */
+		readonly fingerprint?: string;
 		/** 取消 / 删除用留言（可空）/ 结案用摘要（必填）：一句话。 */
 		readonly summary?: string;
 	},

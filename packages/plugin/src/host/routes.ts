@@ -371,6 +371,10 @@ export function registerRoutes(
 					body.line > 0
 						? body.line
 						: 0;
+				// 行指纹（skill `history --json` 的 fingerprint）：删历史行必须带 ——
+				// 行号只是坐标，只有整行指纹能证明「要删的还是用户看到的那一条」。
+				const fingerprint =
+					typeof body.fingerprint === "string" ? body.fingerprint.trim() : "";
 				const historyDelete = action === "delete" && src !== "";
 				if (historyDelete) {
 					if (
@@ -380,6 +384,8 @@ export function registerRoutes(
 					)
 						throw new Error(`${BAD_REQUEST}历史文件路径不合法`);
 					if (line === 0) throw new Error(`${BAD_REQUEST}历史行号不合法`);
+					if (!/^[0-9a-f]{12}$/.test(fingerprint))
+						throw new Error(`${BAD_REQUEST}历史行指纹不合法（缺少行身份，删除已拒绝）`);
 				} else if (id === "") {
 					throw new Error(`${BAD_REQUEST}必须给任务号`);
 				}
@@ -394,7 +400,7 @@ export function registerRoutes(
 					repo: workspace.path,
 					id,
 					summary,
-					...(historyDelete ? { src, line } : {}),
+					...(historyDelete ? { src, line, fingerprint } : {}),
 				};
 			} catch (error) {
 				sendWriteFailure(res, error);

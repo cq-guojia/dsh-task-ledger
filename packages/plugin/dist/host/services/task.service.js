@@ -11,7 +11,7 @@ import { runTaskAction, } from "../repositories/task.repository.js";
  */
 export async function actOnTask(input, onStep) {
     await runTaskAction(input.repo, input.id, input.action, input.summary ?? "", onStep, input.src !== undefined && input.line !== undefined
-        ? { src: input.src, line: input.line }
+        ? { src: input.src, line: input.line, fingerprint: input.fingerprint ?? "" }
         : undefined);
     invalidate();
 }

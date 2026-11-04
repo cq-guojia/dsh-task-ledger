@@ -186,6 +186,8 @@ export interface HistoryRecord {
 	/** 历史文件相对 ledger/ 的路径 + 原文行号：删除这一行用；空 / 0 = 不给删。 */
 	readonly src: string;
 	readonly line: number;
+	/** 整行指纹（skill `history --json` 的 fingerprint）：删这行时回传，skill 写前核对行身份。 */
+	readonly fingerprint: string;
 }
 
 /** `/history/list` 响应：近一年窗口内的全部结案记录（分页由前端按天切片）。 */

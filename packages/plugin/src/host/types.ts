@@ -259,6 +259,8 @@ export interface HistoryRecord {
 	readonly src: string;
 	/** 原文行号（1 起）；0 = 定位不到，不给删。 */
 	readonly line: number;
+	/** 整行指纹（skill `history --json` 的 fingerprint）：删这行时回传，skill 写前核对；空 = 不给删。 */
+	readonly fingerprint: string;
 }
 
 /** `/history/list` 响应：选中那个月的结案记录（按结案时间正序）。

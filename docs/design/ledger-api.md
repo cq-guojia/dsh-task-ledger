@@ -232,7 +232,7 @@ func IsReadOnly(command string) bool
 - **`Scope`** = 这次要碰的台账文件（`Files`）+ 要刷的目录（`Dirs`）；锁集与取最新都用它，**算锁集只有 `LockScope` 一处**。
 - **`RequireUUID` / `RequireTask` / `RequireOwner` / `IsMine`**：归属与前置判定的唯一入口，别在动作里手搓。
 
-### 3.2 写动作（8 个）
+### 3.2 写动作（9 个）
 
 | 动作 | 签名 | 写序（崩在中间的收敛判据见 [`ledger-data.md`](ledger-data.md) §六） |
 |---|---|---|
@@ -244,8 +244,10 @@ func IsReadOnly(command string) bool
 | 改标签 `Relabel` | `(repo, me, tid, tags) (*Result, error)` | 算最终值 → 过程文档（标签行 + 执行记录 + 状态行，一次写）→ 分片。**分类不可改**（2026-10-27 拍板，`new` 时定死） |
 | 记进展 `LogProgress` | `(repo, me, tid, note) (*Result, error)` | 刷分片 `updated` → 过程文档追加一行 |
 | 结案 `CloseTask` | `(repo, me, tid, CloseTaskParams) (*Result, error)` | 改标签行（给了 `--tags` 才做）→ 历史加一行 → 封卷 → 删分片（**永远最后一步**）；多步失败靠 `Snapshot`/`Restore` |
+| 删除在办 `DeleteTask` | `(repo, me, tid, DeleteTaskParams) (*Result, error)` | 只做转接：`CloseTask{Delete: true}`，写序与崩溃恢复和结案同一套；区别是结果列留空、删除四列落值 |
+| 删历史行 `DeleteHistoryRow` | `(repo, me, DeleteHistoryParams) (*Result, error)` | 读历史文件 → 「已删过」判重（幂等返回）→ **行指纹核对**（`Expect` 与 `core.RowStamp` 不符即中止、零写入）→ 只改该行末尾四格 → 过程文档追加一条 `delete` 执行记录；失败靠 `Snapshot`/`Restore` |
 
-### 3.3 只读动作（7 个）
+### 3.3 只读动作（8 个）
 
 | 动作 | 签名 |
 |---|---|
@@ -316,9 +318,9 @@ func (t *termState) readKey() key
 | `identity.go` | `Identity{uuid,name}`、`Normalize`、`LooksLikeUUID`、`IsMe`、`Label`、`Stamp` |
 | `labels.go` | `NormalizeLabel`、`ParseTags`、`SplitTags`、`LabelLine`、`ParseLabelLine` |
 | `worklog_md.go` | 建篇：`RenderWorklog`（套六节模板）、`RenderStatusLine` / `RenderStatusBody`；锚点编辑：`AppendExecLog`、`StampFrozen` / `HasFrozenLine`、`RewriteLabelLine`、`RewriteStatusLine` / `ReadStatus`；读：`HeadMeta` / `HeadTitle` / `HeadCreated` / `HeadFrozen` / `HeadCreator` / `HeadCreatorUUID`；校验：`SectionHeads` / `FormatProblems` / `DuplicatedSections` / `LacksExecSection` / `IsSkeleton`；顺序：`HeadKeyOrder` / `insertHeadLine` |
-| `history_md.go` | `HistoryLine`（十六列一行）、`ParseHistory`（只认十六列）、`SplitRow`、`IsSepRow`、`EscCell` |
+| `history_md.go` | `HistoryLine`（十六列一行）、`ParseHistory`（只认十六列）、`SplitRow`、`IsSepRow`、`EscCell`、`RowStamp`（整行指纹：sha256 前 12 hex，供删除前核对行身份） |
 | `roots.go` | `AsRoot`（校验 `--repo`）、`RootOf`（从 cwd 往上找 `ledger/`）、`IsDir`、`AbsDir`、`HasLedger`（直接含 `ledger/`）、`UnderLedger`（在台账目录里） |
-| `rowmap.go` | `Row.ToMap()`（历史行 → JSON 形状） |
+| `rowmap.go` | `Row.ToMap()`（历史行 → JSON 形状；含 `fingerprint` = `Row.Stamp`） |
 
 **时间口径**：存盘一律 UTC（`ToUTC`），对外输出（人话与 `--json`）都过 `FmtLocal` 转本机时区；只给日期时 `--since` 顶 `00:00:00`、`--until` 顶 `23:59:59`。
 
@@ -357,15 +359,20 @@ func (t *termState) readKey() key
 | `set` | `--id`（必填）+ `--release` / `--owner` / `--tags` 三选一 | `Release` / `Handoff` / `Relabel`（`set_task.go` 只做路由） |
 | `log` | `--id`、`--note`（都必填） | `LogProgress` |
 | `close` | `--id`、`--summary`（正常结案必填，取消可省）、`--cancel`、`--finished`、`--tags` | `CloseTaskParams` |
+| `delete` | `--id`（在办任务）**或** `--src` + `--line`（历史行，二选一）；历史行可加 `--expect <指纹>`、`--summary <留言>` | `--id` ⇒ `DeleteTask` ⇒ `CloseTask{Delete: true}`（结果列留空、删除四列落值）；`--src` ⇒ `DeleteHistoryRow`（原地只改末尾四格；`--expect` 与 `core.RowStamp(该行原文)` 不符即整条拒绝、零写入）。`--expect` 只配 `--src` |
 | `list` | `--mine` / `--pool` / `--owner` / `--owner-name` / `--status` / `--category` / `--tag` / `--since` / `--until` / `--stale-days` / `--overdue-days` / `--backlog-days` / `--json` | `ListQuery`（范围优先级 mine → pool → owner；阈值可选，不传回默认） |
 | `stats` | 与 `list` 完全同名的那套（含三个阈值） / `--json` | `StatsTasks`（共用同一个 `ListQuery`） |
 | `stats --trend` | `--trend <day\|week\|month\|quarter\|year>` + `--since` / `--until` 或 `--last <N><d\|w\|m\|y>`（默认 `8w`）+ `--mine` / `--owner <uuid>[,<uuid>]` / `--by-owner` | `TrendQuery` ⇒ `TrendStats`；**不认** `--pool` / `--owner-name` / `--status` / `--category` / `--tag` / 三个阈值 / `--json`（自带 JSON），给了就是用法错 |
 | `owners` | `--json` | `ListOwners` |
 | `show` | `--id`、`--json` | `ShowTask` |
-| `history` | `--owner` / `--owner-name` / `--mine` / `--category` / `--tag` / `--since` / `--until` / `--months` / `--limit` / `--json` | `HistoryQuery` |
+| `history` | `--owner` / `--owner-name` / `--mine` / `--category` / `--tag` / `--keyword` / `--since` / `--until` / `--months` / `--limit` / `--json` | `HistoryQuery`（`--keyword` 是标题 / 摘要 / 标签的子串匹配） |
 | `validate` | `--deep`、`--json` | `Validate(repo, deep)` |
 | `root` | `--dir <目录>`、`--json` | `DetectRoot`（**定位之前**旁路调用，不认 `--repo`、不依赖身份） |
 | `whoami` | `--json` | 直接读 `env`，不解析台账 |
 | `init` | `--claim` / `--new` / `--name` / `--yes`（禁用） | `InitIdentity`，只在真终端交互 |
+| `dirs` | `--dir <目录>` + `--add` / `--rename <新名>` / `--hide` / `--unhide` / `--remove`（动作只能给一个）、`--name`、`--all`、`--json` | `AddDir` / `RenameDir` / `SetHidden` / `RemoveDir` / `ListDirs`；机器级清单，不碰任何一本台账、不读身份 |
+| `forget` | `--id <uuid>`（必填）、`--keep-identity`、`--json` | `ForgetOwner`：摘名册与分片；`--keep-identity` 只摘台账、不动本机身份文件（界面逐本删自己时用） |
+| `logout` | `--json` | `Logout`：只清 `~/.taskledger/identity.json`，**走只读路径**（不取最新、不提交） |
+| `switch` | `--claim=<uuid>` / `--new --name=<名字>` / `--rename <新昵称>` 三选一，`--json` | `SwitchIdentity` / `RenameSelf`；**只给界面用、不进 SKILL.md**（agent 不该替用户换身份） |
 
 公共：`--repo <工作区根>`（命令前后都认）、`--no-sync`（**挂顶层**，放子命令后面是用法错）、`TASK_LEDGER_NO_SYNC=1`。

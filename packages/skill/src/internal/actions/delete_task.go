@@ -30,10 +30,11 @@ func DeleteTask(repo string, me core.Identity, tid string, p DeleteTaskParams) (
 
 // DeleteHistoryParams 删除历史行的入参。
 type DeleteHistoryParams struct {
-	Src  string // 历史文件相对 ledger/ 的路径，如 history/202610.md
-	Line int    // 原文行号（1 起，与 ParseHistory 的 Row.Line 同一个号）
-	Note string // 删除留言
-	When string // 由外壳算好的 UTC 时刻
+	Src    string // 历史文件相对 ledger/ 的路径，如 history/202610.md
+	Line   int    // 原文行号（1 起，与 ParseHistory 的 Row.Line 同一个号）
+	Expect string // 该行指纹（history --json 的 fingerprint）：给了就必须与盘上那一行一致
+	Note   string // 删除留言
+	When   string // 由外壳算好的 UTC 时刻
 }
 
 // DeleteHistoryRow 给历史行打删除四列：Result 与其余十二列原值一律不动。
@@ -71,6 +72,13 @@ func DeleteHistoryRow(repo string, me core.Identity, p DeleteHistoryParams) (*Re
 			Where:       StrOrNil(Rel(repo, histPath)),
 			Notices:     []string{"这条历史记录已经删除过了。"},
 		}, nil
+	}
+
+	// 身份核对（在「已删过」之后判：重复跑同一条命令仍然幂等）：
+	// 行号只是坐标，盘上那行可能已经被改过 / 换过内容（别人删了别的行、手工编辑、合并冲突）。
+	// 删是原地打标记、写下去收不回来 ⇒ 指纹对不上就一个字节都不写。
+	if p.Expect != "" && core.RowStamp(lines[p.Line-1]) != p.Expect {
+		return nil, core.Failf("历史文件 %s 第 %d 行已经不是你看到的那条记录了（期间被改过 / 被删过），已中止、未写入任何内容。\n  处理：重读一次再删（列表刷新后重试）。", rel, p.Line)
 	}
 
 	docRel := historyDocRel(cells[11])

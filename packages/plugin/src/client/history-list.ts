@@ -291,6 +291,10 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const lastScrollToken = useRef<number>(-1);
 	/** 取过的月份（`ym|工作区|执行人` → 记录 + 取回时刻）：来回切月不再请求，60 秒后重取。 */
 	const monthCache = useRef(new Map<string, { records: readonly HistoryRecord[]; at: number }>());
+	/** 表里这批记录属于哪个筛选键：同一键的**重取**（删完一行刷新）不清表，只静默替换。 */
+	const loadedKey = useRef<string | null>(null);
+	/** 删除后的滚动锚点：被删行之后第一条还活着的记录 + 它在删除前的表格偏移（见 captureDeletion）。 */
+	const deleteAnchor = useRef<{ key: string; oldOffset: number; scrollTop: number } | null>(null);
 	/** 删除弹窗：目标历史行 / 提交状态 / 阶段 / host 回的人话错误。 */
 	const [deleteTarget, setDeleteTarget] = useState<HistoryRecord | null>(null);
 	const [deleteBusy, setDeleteBusy] = useState(false);
@@ -316,9 +320,13 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	useEffect(() => {
 		let alive = true;
 		const key = `${props.ym}|${workspace}|${owner}`;
+		// 同一套筛选的重取（删完一行后的刷新）⇒ 保留旧数据：清表会闪一屏空表，
+		// 内容一归零浏览器还会把 scrollTop 夹到顶上（删一行 = 跳回列表开头）。
+		const sameFilter = loadedKey.current === key;
 		const hit = monthCache.current.get(key);
 		if (hit !== undefined && Date.now() - hit.at < 60_000) {
 			setRecords(hit.records);
+			loadedKey.current = key;
 			setLoadedYm(props.ym);
 			setLoading(false);
 			setError(null);
@@ -326,12 +334,15 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		}
 		setLoading(true);
 		setError(null);
-		setRecords([]);
-		setLoadedYm(null);
+		if (!sameFilter) {
+			setRecords([]);
+			setLoadedYm(null);
+		}
 		fetchHistoryList({ ym: props.ym, workspace, owner })
 			.then((payload) => {
 				if (!alive) return;
 				monthCache.current.set(key, { records: payload.records, at: Date.now() });
+				loadedKey.current = key;
 				setRecords(payload.records);
 				setLoadedYm(props.ym);
 			})
@@ -342,6 +353,8 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 					markIdentityMissing();
 					return;
 				}
+				// 表里还是同一套筛选的旧行（没清过）⇒ 它们仍然属于这个月，别把列表判成「没数据」
+				if (sameFilter) setLoadedYm(props.ym);
 				setError(reason instanceof Error ? reason.message : String(reason));
 			})
 			.finally(() => {
@@ -365,6 +378,62 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		() => (heights === null ? null : offsetsOf(items, heights)),
 		[heights, items],
 	);
+
+	/**
+	 * 删除前记下滚动锚点（用户 2026-11-04）：
+	 * 删一行会让它下面的一切整体上移一格，于是「删完列表跳一下」。
+	 * 先记住**被删行之后第一条还活着的记录**在表格坐标系里的偏移，新列表渲染完再按它回填
+	 * （见下面那个 useLayoutEffect）。
+	 *
+	 * 为什么按身份回填、而不是「scrollTop 减去行高」：浏览器自带 scroll anchoring 也会在
+	 * DOM 变短时自己调 scrollTop，减法会和它叠成两次。按存活行重算绝对位置才是可叠加、可验证的。
+	 */
+	const captureDeletion = (key: string): void => {
+		deleteAnchor.current = null;
+		if (heights === null || offsets === null) return;
+		const table = tableRef.current;
+		const container = props.scrollContainer();
+		if (table === null || container === null) return;
+		const index = items.findIndex((item) => item.key === key);
+		if (index < 0) return;
+		// 视口顶端落在表格坐标系里的位置：容器滚动量减去「表格顶边在滚动内容里的偏移」
+		const base = container.scrollTop + (table.getBoundingClientRect().top - container.getBoundingClientRect().top);
+		const viewTop = container.scrollTop - base;
+		// 被删行整个在视口下方 ⇒ 上面的内容一格都没动，不用回填
+		if ((offsets[index] ?? 0) >= viewTop + container.clientHeight) return;
+		let nextIndex = -1;
+		for (let i = index + 1; i < items.length; i += 1) {
+			if (items[i]?.kind === "rec") {
+				nextIndex = i;
+				break;
+			}
+		}
+		// 它是本页最后一条记录：下面没有需要保持位置的东西
+		if (nextIndex < 0) return;
+		const next = items[nextIndex];
+		if (next === undefined) return;
+		deleteAnchor.current = {
+			key: next.key,
+			oldOffset: offsets[nextIndex] ?? 0,
+			scrollTop: container.scrollTop,
+		};
+	};
+
+	// 删除后回填（布局阶段、绘制之前）：把锚点行放回它删除前所在的屏幕位置。
+	// 必须排在下面那个 recompute 的 layout effect 之前 —— 窗口要按回填后的 scrollTop 算。
+	useLayoutEffect(() => {
+		const anchor = deleteAnchor.current;
+		if (anchor === null) return;
+		deleteAnchor.current = null;
+		if (offsets === null) return;
+		const container = props.scrollContainer();
+		if (container === null) return;
+		const index = items.findIndex((item) => item.key === anchor.key);
+		// 锚点没了（理论上不会：它是另一条记录）⇒ 不动，交给浏览器夹紧
+		if (index < 0) return;
+		container.scrollTop =
+			anchor.scrollTop + (offsets[index] ?? 0) - anchor.oldOffset;
+	}, [items, offsets, props.scrollContainer]);
 
 	// 首帧：先按自然高度画前几行，量出三类行的真实行高（样式一改自动跟着走，不许在 JS 里写死像素），
 	// 量到之后整表换成「定高 + 窗口」。量的就是真行，不另建探针表 —— 少一份可能对不上的样式。
@@ -514,7 +583,13 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	/** 删除历史行：按 src + line 让 skill 原地打删除三列；成功后清月份缓存并重取。 */
 	const deleteRecord = async (note: string): Promise<void> => {
 		const target = deleteTarget;
-		if (target === null || target.src === "" || target.line <= 0) return;
+		if (
+			target === null ||
+			target.src === "" ||
+			target.line <= 0 ||
+			target.fingerprint === ""
+		)
+			return;
 		setDeleteBusy(true);
 		setDeleteStep(null);
 		setDeleteError(null);
@@ -525,6 +600,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 					workspace: target.workspaceId,
 					src: target.src,
 					line: target.line,
+					fingerprint: target.fingerprint,
 					...(note === "" ? {} : { summary: note }),
 				},
 				(next) => setDeleteStep(next),
@@ -535,6 +611,10 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 				window.clearTimeout(pendingOpen.current);
 				pendingOpen.current = null;
 			}
+			// 就地摘掉这一行（不等重取）：列表不闪、滚动位置按锚点回填。
+			// 重取只是把本地视图与台账重新对齐（别的会话可能也刚改过）。
+			captureDeletion(target.key);
+			setRecords((prev) => prev.filter((row) => row.key !== target.key));
 			monthCache.current.clear();
 			setReloadToken((value) => value + 1);
 			props.onDeleted();
@@ -667,7 +747,11 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							title: "",
 							className: "dtl-iconbtn--muted",
 							icon: h(IconTrashOutlineRegular, { size: 14 }),
-							disabled: deleteBusy || record.src === "" || record.line <= 0,
+							disabled:
+								deleteBusy ||
+								record.src === "" ||
+								record.line <= 0 ||
+								record.fingerprint === "",
 							onClick: () => {
 								setDeleteError(null);
 								setDeleteTarget(record);

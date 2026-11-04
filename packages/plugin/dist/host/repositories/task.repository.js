@@ -19,7 +19,8 @@ const ACTION_NAME = {
  *
  * @param summary - 取消 / 结案的摘要、删除的留言；留空就不传 `--summary`。
  * @param onStep - 过程步骤回调（逐条转发给界面做进度翻牌），不传就不让 skill 打标记。
- * @param history - 给就是删历史行（`delete --src/--line`），不给就是删在办任务（`delete --id`）。
+ * @param history - 给就是删历史行（`delete --src/--line [--expect]`），不给就是删在办任务（`delete --id`）。
+ *   `fingerprint` 是该行指纹：skill 写前核对，行已变（行号漂移 / 别处改过）就整条拒绝。
  */
 export async function runTaskAction(repo, id, action, summary = "", onStep, history) {
     const opts = {
@@ -63,7 +64,15 @@ export async function runTaskAction(repo, id, action, summary = "", onStep, hist
             result = await runLedgerCommand("delete", [
                 ...(history === undefined
                     ? ["--id", id]
-                    : ["--src", history.src, "--line", String(history.line)]),
+                    : [
+                        "--src",
+                        history.src,
+                        "--line",
+                        String(history.line),
+                        ...((history.fingerprint ?? "") === ""
+                            ? []
+                            : ["--expect", history.fingerprint ?? ""]),
+                    ]),
                 ...(summary === "" ? [] : ["--summary", summary]),
                 "--repo",
                 repo,

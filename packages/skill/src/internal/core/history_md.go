@@ -1,6 +1,8 @@
 package core
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 	"strings"
@@ -53,6 +55,18 @@ type Row struct {
 	DeletedByName string
 	DeletedAt     string
 	Line          int
+	Stamp         string // 整行指纹（见 RowStamp）：删除前核对「这一行还是不是它」
+}
+
+// RowStamp 一行原始文本的指纹：sha256 前 12 个 hex。
+//
+// 历史行靠「文件 + 行号」定位，行号会随文件被改写而漂移（别人删了 / 手工编辑 / 合并）。
+// 删除是原地打标记、写下去就收不回来，所以调用方必须能证明「要动的确实是读到的那一条」——
+// 指证据就是一个整行指纹（与 HTTP 的 ETag / If-Match 同一个用法）。
+// 取 TrimSpace 后的原文：两侧（history 读、delete 写前）算的是同一串。
+func RowStamp(raw string) string {
+	sum := sha256.Sum256([]byte(strings.TrimSpace(raw)))
+	return hex.EncodeToString(sum[:])[:12]
 }
 
 // EscCell 表格单元格：折叠空白并转义竖线。
@@ -193,6 +207,7 @@ func ParseHistory(text string) ([]Row, []string) {
 			DeletedByName: strings.TrimPrefix(strings.TrimSpace(cells[14]), "@"),
 			DeletedAt:     strings.TrimSpace(cells[15]),
 			Line:          lineno,
+			Stamp:         RowStamp(raw),
 		})
 	}
 	return records, nil

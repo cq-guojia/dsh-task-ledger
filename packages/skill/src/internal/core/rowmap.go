@@ -24,5 +24,6 @@ func (r Row) ToMap() map[string]any {
 		"deleted_by_name": r.DeletedByName,
 		"deleted_at":      r.DeletedAt,
 		"line":            r.Line,
+		"fingerprint":     r.Stamp,
 	}
 }

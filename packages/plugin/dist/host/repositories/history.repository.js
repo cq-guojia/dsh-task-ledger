@@ -35,6 +35,8 @@ function toRecord(raw, workspace) {
             : path.join(workspace.path, "ledger", "history", text(raw.worklog)),
         src: deleteSrc,
         line,
+        // 整行指纹：删除时原样回传给 skill（`delete --expect`），行已变就会被拒，防止行号漂移删错行。
+        fingerprint: text(raw.fingerprint),
     };
 }
 export async function readHistory(workspace, options) {
