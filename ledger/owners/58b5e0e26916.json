@@ -2,7 +2,7 @@
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
     "20261105-0544-e3d4-出版": {"category": "发布", "created": "2026-11-05 05:44:04", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 05:48:01", "status": "doing", "tags": ["文档", "发布", "双包"], "title": "出版", "updated": "2026-11-05 05:48:01", "worklog": "worklog/202611/05-0544-e3d4-出版.md"},
-    "20261105-0712-b468-插件设置页面": {"category": "功能增强", "created": "2026-11-05 07:12:20", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 07:12:20", "status": "doing", "tags": ["设置页", "插件入口", "品牌名", "友情链接"], "title": "插件设置页面", "updated": "2026-11-05 07:12:20", "worklog": "worklog/202611/05-0712-b468-插件设置页面.md"}
+    "20261105-0712-b468-插件设置页面": {"category": "功能增强", "created": "2026-11-05 07:12:20", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 07:12:20", "status": "doing", "tags": ["设置页", "插件入口", "品牌名", "友情链接"], "title": "插件设置页面", "updated": "2026-11-05 07:13:10", "worklog": "worklog/202611/05-0712-b468-插件设置页面.md"}
   },
   "version": "20261022000000"
 }
