@@ -1,5 +1,6 @@
 {
   "tasks": {
+    "20261105-0051-4c02-移除身份显示分步进度": {"category": "功能增强", "created": "2026-11-05 00:51:42", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": null, "owner_name": null, "started": "2026-11-05 00:51:42", "status": "open", "tags": ["设置页", "身份", "进度回调"], "title": "移除身份显示分步进度", "updated": "2026-11-05 01:20:41", "worklog": "worklog/202611/05-0051-4c02-移除身份显示分步进度.md"}
   },
   "version": "20261022000000"
 }
