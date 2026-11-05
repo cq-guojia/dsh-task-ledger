@@ -63632,9 +63632,8 @@ body[data-ds-dark-theme]{
 .dtl-roster__uuid{flex:none;font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);
   color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   white-space:nowrap;}
-/* 弹窗页脚：左边放进行中的骨架（删除要逐本台账走网络，慢），右边是「创建新用户」组合框。
-   组合框靠 style 里的 margin-left:auto 贴右 —— 这里不用 space-between，否则只有一个子元素时会跑到左边。 */
-.dtl-modal__foot{display:flex;align-items:center;gap:var(--dtl-space-3);width:100%;}
+/* 弹窗页脚左侧的进行中骨架（删除要逐本台账走网络，慢）；右边是「创建新用户」组合框，
+   两块都是核心 foot 的直接子项，组合框靠 style 里的 margin-left:auto 贴右。 */
 .dtl-modal__busy{flex:none;display:flex;align-items:center;min-width:56px;}
 /* 身份表不要表头（用户 2026-11-02）：核心 Table 没有「隐藏表头」的档，只能把 thead 藏掉 */
 .dtl-users-table thead{display:none;}
@@ -67356,7 +67355,7 @@ body[data-ds-dark-theme]{
 				onClose: () => {
 					if (pending === null) setUserOpen(false);
 				},
-				footer: (0, react$1.createElement)("div", { className: "dtl-modal__foot" }, (0, react$1.createElement)("div", { className: "dtl-modal__busy" }, pending === null ? null : (0, react$1.createElement)(Loader, {
+				footer: (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("div", { className: "dtl-modal__busy" }, pending === null ? null : (0, react$1.createElement)(Loader, {
 					variant: "blocks",
 					size: "lg"
 				})), (0, react$1.createElement)(InputGroup, {
@@ -67991,7 +67990,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.1 261105-210712-725`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.1 261105-211229-085`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

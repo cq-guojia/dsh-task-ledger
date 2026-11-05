@@ -18,7 +18,7 @@ import {
 	Switch,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
-import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
+import { createElement as h, Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { fetchDirs, fetchRoster, postDirs, postForgetIdentity, postSwitchIdentity, type DirsWriteBody, type ForgetStep } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import { STEP_LABEL } from "./task-row";
@@ -924,9 +924,11 @@ export function SettingsPage(props: {
 					},
 					// 分隔线归核心 foot（0.20.0 起默认带）。左边留给正在跑的动作（删除要逐本台账走
 					// 一次 git 往返，慢），右边是「创建新用户」组合框。
+					// 两块**直接当底栏的子项**：不套一层 footer 容器 —— 核心 foot 是 flex 一行，
+					// 容器一撑满宽就会和 `notice` 抢同一行（见 close-task-modal 的教训）。
 					footer: h(
-						"div",
-						{ className: "dtl-modal__foot" },
+						Fragment,
+						null,
 						// 左下角：有动作在跑就晃三个块（删除要逐本台账走网络，慢）
 						h(
 							"div",
@@ -934,27 +936,27 @@ export function SettingsPage(props: {
 							pending === null ? null : h(Loader, { variant: "blocks", size: "lg" }),
 						),
 						h(InputGroup, {
-						label: t("settingsCreateUser"),
-						value: name,
-						onChange: setName,
-						placeholder: t("settingsNamePlaceholder"),
-						size: "lg",
-						disabled: pending !== null,
-						onSubmit: create,
-						// marginLeft:auto 让它始终贴右，左边留白只给 loading
-						style: { width: "360px", marginLeft: "auto" },
-						actions: [
-							{
-								label: t("settingsUserModalConfirm"),
-								variant: "info",
-								icon: h(IconCheckOutlineRegular, { size: 14 }),
-								disabled: pending !== null || name.trim() === "",
-								onClick: create,
-							},
-						],
+							label: t("settingsCreateUser"),
+							value: name,
+							onChange: setName,
+							placeholder: t("settingsNamePlaceholder"),
+							size: "lg",
+							disabled: pending !== null,
+							onSubmit: create,
+							// marginLeft:auto 让它始终贴右，左边留白只给 loading
+							style: { width: "360px", marginLeft: "auto" },
+							actions: [
+								{
+									label: t("settingsUserModalConfirm"),
+									variant: "info",
+									icon: h(IconCheckOutlineRegular, { size: 14 }),
+									disabled: pending !== null || name.trim() === "",
+									onClick: create,
+								},
+							],
 						}),
-						),
-						},
+					),
+				},
 						error === null
 						? null
 						: h("div", { className: "dtl-set__error" }, t("settingsFailed", { message: error })),

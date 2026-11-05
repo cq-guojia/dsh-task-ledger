@@ -317,9 +317,8 @@ export const UI_CONTROLS_CSS = `
 .dtl-roster__uuid{flex:none;font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);
   color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   white-space:nowrap;}
-/* 弹窗页脚：左边放进行中的骨架（删除要逐本台账走网络，慢），右边是「创建新用户」组合框。
-   组合框靠 style 里的 margin-left:auto 贴右 —— 这里不用 space-between，否则只有一个子元素时会跑到左边。 */
-.dtl-modal__foot{display:flex;align-items:center;gap:var(--dtl-space-3);width:100%;}
+/* 弹窗页脚左侧的进行中骨架（删除要逐本台账走网络，慢）；右边是「创建新用户」组合框，
+   两块都是核心 foot 的直接子项，组合框靠 style 里的 margin-left:auto 贴右。 */
 .dtl-modal__busy{flex:none;display:flex;align-items:center;min-width:56px;}
 /* 身份表不要表头（用户 2026-11-02）：核心 Table 没有「隐藏表头」的档，只能把 thead 藏掉 */
 .dtl-users-table thead{display:none;}
