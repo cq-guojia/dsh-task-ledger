@@ -138,12 +138,17 @@ export function HistoryStats(props: {
 		period === undefined ? dash : compactTick(period.done + period.cancelled);
 	/** 本期小字：只补取消数（总数已是大数字，不再重复写「完成」）。 */
 	const cancelOf = (period: PeriodCount): string | null =>
-		period.cancelled > 0 ? `取消 ${compactTick(period.cancelled)}` : null;
+		period.cancelled > 0
+			? t("statCancelOnly", { n: compactTick(period.cancelled) })
+			: null;
 	/** 上一期写法：`完成 X · 取消 Y`；没取消就只留 `完成 X`。 */
 	const splitOf = (period: PeriodCount): string =>
 		period.cancelled > 0
-			? `完成 ${compactTick(period.done)} · 取消 ${compactTick(period.cancelled)}`
-			: `完成 ${compactTick(period.done)}`;
+			? t("statWeekSplit", {
+					done: compactTick(period.done),
+					cancelled: compactTick(period.cancelled),
+				})
+			: t("statDoneOnly", { n: compactTick(period.done) });
 	const cell = (
 		pick: PeriodPick,
 		label: string,
@@ -161,7 +166,10 @@ export function HistoryStats(props: {
 				h("span", null, totalOf(period)),
 				sub === null ? null : h("span", { className: "dtl-stat__sub" }, sub),
 			),
-			hint: prev === undefined ? `${prevLabel}丨${dash}` : `${prevLabel}丨${splitOf(prev)}`,
+			hint:
+				prev === undefined
+					? `${prevLabel}${t("metaDivider")}${dash}`
+					: `${prevLabel}${t("metaDivider")}${splitOf(prev)}`,
 			showZero: true,
 			onClick: () => {
 				props.onPick(pick);

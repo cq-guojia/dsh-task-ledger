@@ -653,7 +653,7 @@ export function TaskRowView(props: {
 		whenRaw === null || whenRaw === undefined || Number.isNaN(Date.parse(whenRaw))
 			? t("timeUnknown")
 			: formatDateTime(whenRaw).slice(5);
-	const metaText = `${t("whenSubmitted", { time: whenStamp })} 丨 ${
+	const metaText = `${t("whenSubmitted", { time: whenStamp })}${t("metaDivider")}${
 		whenRaw === null || whenRaw === undefined
 			? t("timeUnknown")
 			: formatRelative(whenRaw, t)

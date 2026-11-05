@@ -15,6 +15,7 @@
  */
 
 // 只读会话视图（核心）：会话在跑时给人看过程，实时刷新；两个服务缺一个就返回 null。
+import { globalT } from "./locales";
 import {
 	openSessionView,
 	type SessionsFace,
@@ -96,7 +97,11 @@ function remoteFailure(result: unknown): Error | null {
 	if (result === null || typeof result !== "object") return null;
 	const record = result as { ok?: unknown; error?: unknown };
 	if (record.ok !== false) return null;
-	return new Error(`远端拒绝：${JSON.stringify(record.error ?? "unknown")}`);
+	return new Error(
+		globalT("errRemoteRefused", {
+			detail: JSON.stringify(record.error ?? "unknown"),
+		}),
+	);
 }
 
 export interface CloseSessionInput {

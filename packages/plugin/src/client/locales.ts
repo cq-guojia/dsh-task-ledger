@@ -124,6 +124,17 @@ export type LocaleKey =
 	| "statWeekDone"
 	| "statLastWeekDone"
 	| "statWeekSplit"
+	| "statDoneOnly"
+	| "statCancelOnly"
+	| "metaDivider"
+	// 非组件代码的错误消息（api / 会话模块，走 globalT 席位）
+	| "errTimeout"
+	| "errEmptyBody"
+	| "errRenameFailed"
+	| "errRenameInterrupted"
+	| "errTaskActionFailed"
+	| "errTaskActionInterrupted"
+	| "errRemoteRefused"
 	| "daysNone"
 	| "daysValue"
 	// 趋势图 / 历史图：三个口径的正式名 —— 浮卡与图例共用一套（用户 2026-11-02 统一）
@@ -336,7 +347,7 @@ export const zh: Record<LocaleKey, string> = {
 	configNameInvalid: "这个名称不可用。",
 	configOverridden: "自定义",
 	configReset: "恢复默认",
-	configGithub: "GitHub 项目",
+	configGithub: "访问 GitHub",
 	configComponents: "蓝鲸组件库",
 	configSave: "保存",
 	configSaving: "保存中…",
@@ -460,6 +471,16 @@ export const zh: Record<LocaleKey, string> = {
 	statWeekDone: "本周结案",
 	statLastWeekDone: "上周结案",
 	statWeekSplit: "完成 {done} · 取消 {cancelled}",
+	statDoneOnly: "完成 {n}",
+	statCancelOnly: "取消 {n}",
+	metaDivider: "丨",
+	errTimeout: "请求超时（{ms}ms 未响应）",
+	errEmptyBody: "响应没有内容（响应流不可读）",
+	errRenameFailed: "摘人失败",
+	errRenameInterrupted: "摘人没有返回结果（连接中断）",
+	errTaskActionFailed: "任务动作失败",
+	errTaskActionInterrupted: "任务动作没有返回结果（连接中断）",
+	errRemoteRefused: "远端拒绝：{detail}",
 	daysNone: "—",
 	daysValue: "{n} 天",
 
@@ -652,7 +673,7 @@ export const en: Record<LocaleKey, string> = {
 	configNameInvalid: "That name is not accepted.",
 	configOverridden: "Custom",
 	configReset: "Restore default",
-	configGithub: "Project on GitHub",
+	configGithub: "Visit GitHub",
 	configComponents: "dsh-plugin-core",
 	configSave: "Save",
 	configSaving: "Saving…",
@@ -777,7 +798,17 @@ export const en: Record<LocaleKey, string> = {
 	statBacklogTitle: "backlog = unclaimed for {n}+ days",
 	statWeekDone: "Closed this week",
 	statLastWeekDone: "Closed last week",
-	statWeekSplit: "Done {done} · Cancelled {cancelled}",
+	statWeekSplit: "{done}✓ {cancelled}✕",
+	statDoneOnly: "{n}✓",
+	statCancelOnly: "{n}✕",
+	metaDivider: " · ",
+	errTimeout: "Request timed out ({ms}ms without a response)",
+	errEmptyBody: "Empty response body (stream not readable)",
+	errRenameFailed: "Rename failed",
+	errRenameInterrupted: "Rename returned no result (connection dropped)",
+	errTaskActionFailed: "Task action failed",
+	errTaskActionInterrupted: "Task action returned no result (connection dropped)",
+	errRemoteRefused: "Rejected by the remote: {detail}",
 	daysNone: "—",
 	daysValue: "{n}d",
 
@@ -989,3 +1020,14 @@ export function fallbackTranslate(
 ): string {
 	return interpolateTranslate((name) => zh[name] ?? name)(key, params);
 }
+
+/**
+ * 模块级 t 席位：**非组件代码**（api 的错误消息、会话模块）用 —— 那两处拿不到组件 props
+ * 里的 `t`。入口在 locale 就绪后覆盖；没覆盖就按中文词典兜底（`fallbackTranslate`）。
+ */
+let activeTranslate: Translate | null = null;
+export function setActiveTranslate(next: Translate): void {
+	activeTranslate = next;
+}
+export const globalT: Translate = (key, params) =>
+	(activeTranslate ?? fallbackTranslate)(key, params);

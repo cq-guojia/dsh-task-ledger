@@ -8,6 +8,7 @@
  * 而不带 reason 时浏览器把 error.message 填成「signal is aborted without reason」，
  * 看不出是超时（姊妹仓 2026-10-07 真机教训）。
  */
+import { globalT } from "./locales";
 import type {
 	BoardPayload,
 	DirsPayload,
@@ -80,7 +81,7 @@ export async function fetchJson<T>(
 	const controller = new AbortController();
 	const timer = setTimeout(() => {
 		controller.abort(
-			new DOMException(`请求超时（${timeoutMs}ms 未响应）`, "TimeoutError"),
+			new DOMException(globalT("errTimeout", { ms: timeoutMs }), "TimeoutError"),
 		);
 	}, timeoutMs);
 	try {
@@ -104,7 +105,7 @@ async function readLines(
 	res: Response,
 	handle: (line: string) => boolean,
 ): Promise<boolean> {
-	if (res.body === null) throw new HttpError("响应没有内容（响应流不可读）", null);
+	if (res.body === null) throw new HttpError(globalT("errEmptyBody"), null);
 	const reader = res.body.getReader();
 	const decoder = new TextDecoder();
 	let buffer = "";
@@ -229,7 +230,7 @@ function forgetEventOf(line: string): ForgetEvent | null {
 	if (event.type === "error")
 		return {
 			type: "error",
-			error: typeof event.error === "string" ? event.error : "摘人失败",
+			error: typeof event.error === "string" ? event.error : globalT("errRenameFailed"),
 			code: typeof event.code === "string" ? event.code : null,
 		};
 	return null;
@@ -250,7 +251,7 @@ export async function postForgetIdentity(
 	const timer = setTimeout(() => {
 		controller.abort(
 			new DOMException(
-				`请求超时（${RENAME_TIMEOUT_MS}ms 未响应）`,
+				globalT("errTimeout", { ms: RENAME_TIMEOUT_MS }),
 				"TimeoutError",
 			),
 		);
@@ -279,7 +280,7 @@ export async function postForgetIdentity(
 		});
 		const report = reports[0];
 		if (report === undefined)
-			throw new HttpError("摘人没有返回结果（连接中断）", null);
+			throw new HttpError(globalT("errRenameInterrupted"), null);
 		return report;
 	} finally {
 		clearTimeout(timer);
@@ -332,7 +333,7 @@ function actionEventOf(line: string): ActionEvent | null {
 	if (event.type === "error")
 		return {
 			type: "error",
-			error: typeof event.error === "string" ? event.error : "任务动作失败",
+			error: typeof event.error === "string" ? event.error : globalT("errTaskActionFailed"),
 			code: typeof event.code === "string" ? event.code : null,
 		};
 	return null;
@@ -371,7 +372,7 @@ export async function postTaskAction(
 	const timer = setTimeout(() => {
 		controller.abort(
 			new DOMException(
-				`请求超时（${TASK_WRITE_TIMEOUT_MS}ms 未响应）`,
+				globalT("errTimeout", { ms: TASK_WRITE_TIMEOUT_MS }),
 				"TimeoutError",
 			),
 		);
@@ -400,7 +401,7 @@ export async function postTaskAction(
 			return true;
 		});
 		if (done) return { ok: true };
-		throw new HttpError("任务动作没有返回结果（连接中断）", null);
+		throw new HttpError(globalT("errTaskActionInterrupted"), null);
 	} finally {
 		clearTimeout(timer);
 	}

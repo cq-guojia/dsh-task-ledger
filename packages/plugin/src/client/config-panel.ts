@@ -150,8 +150,10 @@ export function ConfigPanel(props: ConfigPanelProps): ReactNode {
 	const mode: EntryMode = state.entryMode.text === "more" ? "more" : "first";
 
 	const handleSave = (): void => {
-		// 与默认名相同 = 用户没在设名字：折成「清空」，用户层不留这一项。
-		// 只在确实覆盖过时折（否则会 stage 一个空的 clear，表单永远显得没保存完）。
+		// 两个字段同一个口径：**跟默认值一样就不算「自定义」**，保存前折成「清空」，
+		// 用户层不留这一项（只在这一项真被覆盖过时折，免得 stage 一个空 clear 永远存不完）。
+		if (state.entryMode.overridden && mode === "first")
+			props.resetField(ENTRY_MODE_FIELD);
 		if (
 			state.displayName.overridden &&
 			state.displayName.text.trim() === props.defaultName
@@ -206,7 +208,9 @@ export function ConfigPanel(props: ConfigPanelProps): ReactNode {
 					disabled: !state.writable,
 					ariaLabel: t("configEntryLabel"),
 					onChange: (next) => {
-						props.edit(ENTRY_MODE_FIELD, String(next));
+						// 选中的就是当前值 ⇒ 不算改动，别把表单弄脏（否则保存后凭空多出「自定义」）。
+						const picked = String(next);
+						if (picked !== mode) props.edit(ENTRY_MODE_FIELD, picked);
 					},
 				}),
 			}),

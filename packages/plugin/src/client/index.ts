@@ -34,6 +34,7 @@ import {
 	en,
 	fallbackTranslate,
 	interpolateTranslate,
+	setActiveTranslate,
 	type LocaleKey,
 	type Translate,
 	zh,
@@ -209,9 +210,14 @@ export function apply(ctx: ClientContext): void {
 	// ① 字典注册（宿主语言切换 ⇒ 渲染器换 t 引用 ⇒ 整页重渲染）
 	ctx.inject(["locale"], (localeCtx) => {
 		ctx.effect(() => localeCtx.locale?.register(NS, { zh, en }));
-		// 模块级 t 席位：`sidebar.panellist` 的 label 由侧栏在渲染期求值，拿不到组件 props 的 t
+		// 模块级 t 席位：`sidebar.panellist` 的 label 由侧栏在渲染期求值、api 的错误消息在
+		// 模块里拼 —— 两处都拿不到组件 props 的 t，统一从这里取。
 		try {
-			runtimeT = localeCtx.locale?.bind(NS) ?? runtimeT;
+			const bound = localeCtx.locale?.bind(NS);
+			if (bound !== undefined) {
+				runtimeT = bound;
+				setActiveTranslate(interpolateTranslate(bound));
+			}
 		} catch {
 			/* 保持键名兜底 */
 		}

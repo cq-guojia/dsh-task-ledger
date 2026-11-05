@@ -14,13 +14,13 @@
 |---|---|---|
 | **入口位置** | 核心库 `Picker`（下拉单选，`width: 100%`），两档：`一级菜单`（默认，左侧栏一级）/ `更多`（收进侧栏底部的「更多」菜单） | 设置文档字段 `entryMode` |
 | **显示名称** | 核心库 `Input`（文本） | 设置文档字段 `displayName` |
-| **GitHub 项目** | 核心库 `Button`（outline + 链图标），点开 `https://github.com/cq-guojia/dsh-task-ledger` | 常量，不进设置 |
+| **访问 GitHub** | 核心库 `Button`（outline + 链接图标，同 `dsh-plugin-core` demo），点开 `https://github.com/cq-guojia/dsh-task-ledger` | 常量，不进设置 |
 | **蓝鲸组件库** | 同上，点开 `https://github.com/cq-guojia/dsh-plugin-core` | 常量，不进设置 |
 
 版式（用户 2026-11-05 指定照兄弟仓 `dsh-session-title-pattern` 抄）：
 
 - **两个设置项一行、左右各半**（`grid 1fr 1fr`）：左「显示名称」、右「入口位置」。
-- **保存与两个链接同一排，保存在最前**：保存 → GitHub 项目 → 蓝鲸组件库。
+- **保存与两个链接同一排，保存在最前**：保存 → 访问 GitHub → 蓝鲸组件库。
 - **「是否改过」的提示**：改过的字段显示「自定义」标签 +「恢复默认」（文字链接），没改过两者都不出现。标签与恢复按钮都用核心库件（`Chip` / `Button variant='link'`），**不手搓**。
 - **控件全部走核心控件库**：`Input` / `Picker` / `Chip` / `Button`（用户 2026-11-05：「不要自己手搓…用核心空间里面的」）；本文件只排标签、说明与两列容器（`.dtl-config__*`）。
 - **两条分隔线**：字段区顶部一条实线（`--dtl-border`，从「显示名称」上沿开始），保存按钮那一排底部一条实线；保存行与字段区之间留 36px（字段下内距 12 + 上外边距 24）。

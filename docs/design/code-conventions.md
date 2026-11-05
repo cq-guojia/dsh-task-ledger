@@ -33,6 +33,8 @@ skill/              # 构建时从 packages/skill/ 纳入的内嵌副本（只�
 
 **同一样东西只有一份实现**：改样式先想「是不是该进 `ui.ts` / `tokens.ts`」；改取数先想「是不是该进 `api.ts`」。
 
+**上界面的文字一律走 `t()`**（组件里用 props 的 `t`；**非组件代码**——`api.ts` 的错误消息、`close-session.ts` 的失败原因——用 `locales.ts` 的 `globalT` 席位，由 `index.ts` 在 locale 就绪时注入）。2026-11-05 真机事故：历史统计的小字（「完成 X · 取消 Y」「取消 N」）和分隔符「丨」硬编码中文，英文环境下只剩卡片标签是英文，小字全中文。连标点一起走词典（`metaDivider`），别在代码里写「丨」。
+
 ## 二、模块导入的两条铁律
 
 1. `client/` **不 import `host/`**，也不 import 官方包（rc 接口会无声变 ⇒ 只本地结构化声明，见 `primitives.d.ts`）。
