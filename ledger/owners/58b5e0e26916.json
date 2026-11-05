@@ -2,7 +2,7 @@
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
     "20261105-0544-e3d4-出版": {"category": "发布", "created": "2026-11-05 05:44:04", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 05:48:01", "status": "doing", "tags": ["文档", "发布", "双包"], "title": "出版", "updated": "2026-11-05 05:48:01", "worklog": "worklog/202611/05-0544-e3d4-出版.md"},
-    "20261105-0552-9045-确定插件中英文名与图标并配置官方页": {"category": "配置", "created": "2026-11-05 05:52:36", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 05:52:36", "status": "doing", "tags": ["DSH", "命名", "图标", "插件页面"], "title": "确定插件中英文名与图标并配置官方页", "updated": "2026-11-05 05:56:20", "worklog": "worklog/202611/05-0552-9045-确定插件中英文名与图标并配置官方页.md"}
+    "20261105-0552-9045-确定插件中英文名与图标并配置官方页": {"category": "配置", "created": "2026-11-05 05:52:36", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 05:52:36", "status": "doing", "tags": ["DSH", "命名", "图标", "插件页面"], "title": "确定插件中英文名与图标并配置官方页", "updated": "2026-11-05 06:01:04", "worklog": "worklog/202611/05-0552-9045-确定插件中英文名与图标并配置官方页.md"}
   },
   "version": "20261022000000"
 }
