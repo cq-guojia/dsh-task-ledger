@@ -22,6 +22,7 @@
 | **skill 全局集成** | 装插件即把 `task-ledger` 注册进 dsh 全局（`ctx.skills.register`） | 📝 待设计 | 事实见 [`external/dsh-skill-registration.md`](external/dsh-skill-registration.md) |
 | **台账数据面** | host 进程跨工作区读 `ledger/` 文件，经 webServer 路由供 UI 消费（JSON，按需查询，无 SSE 推送） | 📝 待设计 | 事实见 [`external/host-webserver.md`](external/host-webserver.md) |
 | **skill 独立分发** | `task-ledger` npm 包零代码直发，供 CodeBuddy / 其他 agent 安装 | 📝 待设计 | 发布事实见 [`external/publish-oidc.md`](external/publish-oidc.md) |
+| **插件页呈现** | 官方 Plugins 页点进本插件时的标题 / 图标 / 说明（`locale/*.json` 的 `meta` + `package.json` 的 `icon`），以及侧栏入口的无色图标 | 🔵 落码（2026-11-05），宿主真机待验 | [`features/plugin-listing.md`](features/plugin-listing.md) |
 
 ---
 

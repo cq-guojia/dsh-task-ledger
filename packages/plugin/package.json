@@ -1,7 +1,8 @@
 {
 	"name": "dsh-task-ledger",
 	"version": "0.0.131",
-	"description": "Task ledger board for dsh (DeepSeek Harness): read-only board over task-ledger skill workspaces. The task-ledger skill is bundled — install the plugin, get the skill globally.",
+	"description": "Tasks are created, claimed, advanced and closed by the agent and written straight into a plain-text ledger in the workspace, so the owner, the current state and the next step are always on record. It is not limited to development work — research, documentation, presentations and video production all fit. No cloud service is involved: everything is managed locally. Single-user and multi-user both work, with Git synchronisation, and every action is on record. The control panel summarises in-flight, overdue and stalled work with weekly trends.",
+	"icon": "./assets/icon.svg",
 	"keywords": [
 		"deepseek",
 		"harness",
@@ -15,11 +16,14 @@
 	"exports": {
 		".": "./dist/index.js",
 		"./client": "./dist/client.js",
+		"./locale/*.json": "./locale/*.json",
 		"./package.json": "./package.json"
 	},
 	"files": [
 		"dist",
 		"skill",
+		"assets",
+		"locale",
 		"cordis.patch.yml",
 		"README.md"
 	],

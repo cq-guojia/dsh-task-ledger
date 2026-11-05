@@ -309,7 +309,7 @@ export type LocaleKey =
 /** 中文（默认档）。 */
 export const zh: Record<LocaleKey, string> = {
 	backToConversation: "返回会话",
-	panelTitle: "任务台账",
+	panelTitle: "蓝鲸任务台账",
 	refresh: "刷新",
 	refreshing: "刷新中",
 	loading: "读取中…",
@@ -609,7 +609,7 @@ export const zh: Record<LocaleKey, string> = {
 /** English（与 zh 键完全对齐）。 */
 export const en: Record<LocaleKey, string> = {
 	backToConversation: "Back to chat",
-	panelTitle: "Task ledger",
+	panelTitle: "Whale Ledger",
 	refresh: "Refresh",
 	refreshing: "Refreshing",
 	loading: "Loading…",

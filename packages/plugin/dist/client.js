@@ -63544,31 +63544,21 @@ body[data-ds-dark-theme]{
 				color: "var(--dtl-fg-2)"
 			} }, props.hint));
 		}
-		/** 台账图标（黑白线条，描边走 currentColor ⇒ 随主题 / 选中态反色）。
+		/** 台账图标（与插件页彩色图标同源，纯填充 currentColor ⇒ 随主题 / 选中态反色）。
 		*  侧栏条目与右上浮标共用这一份（图标只画一次，别处不许再画第二个）。 */
 		function LedgerIcon(props) {
 			const size = props.size ?? 18;
-			const stroke = {
-				fill: "none",
-				stroke: "currentColor",
-				strokeWidth: 7,
-				strokeLinecap: "round",
-				strokeLinejoin: "round"
-			};
 			return (0, react$1.createElement)("svg", {
 				width: size,
 				height: size,
-				viewBox: "0 0 128 128",
+				viewBox: "153 153 718 696",
 				"aria-hidden": true
 			}, (0, react$1.createElement)("path", {
-				d: "M96 34 A10 10 0 0 1 106 44 V102 A10 10 0 0 1 96 112 H32 A10 10 0 0 1 22 102 V44 A10 10 0 0 1 32 34 Z",
-				...stroke
+				d: "M725.333333 181.333333A117.333333 117.333333 0 0 1 842.666667 298.666667v298.666666A117.333333 117.333333 0 0 1 725.333333 714.666667h-181.333333v42.666666h74.666667a32 32 0 0 1 0 64h-213.333334a32 32 0 0 1 0-64h74.666667v-42.666666H298.666667A117.333333 117.333333 0 0 1 181.333333 597.333333V298.666667A117.333333 117.333333 0 0 1 298.666667 181.333333h426.666666zM298.666667 245.333333c-29.44 0-53.333333 23.893333-53.333334 53.333334v298.666666c0 29.44 23.893333 53.333333 53.333334 53.333334h426.666666c29.44 0 53.333333-23.893333 53.333334-53.333334V298.666667c0-29.44-23.893333-53.333333-53.333334-53.333334H298.666667z",
+				fill: "currentColor"
 			}), (0, react$1.createElement)("path", {
-				d: "M50 22 V46 M78 22 V46",
-				...stroke
-			}), (0, react$1.createElement)("path", {
-				d: "M44 66 H84 M44 86 H70",
-				...stroke
+				d: "M384 480a32 32 0 0 1 32 32v42.666667a32 32 0 0 1-64 0v-42.666667a32 32 0 0 1 32-32z m128-85.333333a32 32 0 0 1 32 32v128a32 32 0 0 1-64 0v-128a32 32 0 0 1 32-32z m128-85.333334a32 32 0 0 1 32 32v213.333334a32 32 0 0 1-64 0V341.333333a32 32 0 0 1 32-32z",
+				fill: "currentColor"
 			}));
 		}
 		//#endregion
@@ -64950,7 +64940,7 @@ body[data-ds-dark-theme]{
 		/** 中文（默认档）。 */
 		const zh = {
 			backToConversation: "返回会话",
-			panelTitle: "任务台账",
+			panelTitle: "蓝鲸任务台账",
 			refresh: "刷新",
 			refreshing: "刷新中",
 			loading: "读取中…",
@@ -65230,7 +65220,7 @@ body[data-ds-dark-theme]{
 		/** English（与 zh 键完全对齐）。 */
 		const en = {
 			backToConversation: "Back to chat",
-			panelTitle: "Task ledger",
+			panelTitle: "Whale Ledger",
 			refresh: "Refresh",
 			refreshing: "Refreshing",
 			loading: "Loading…",
@@ -67845,7 +67835,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.131 261105-131329-001`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.131 261105-143725-058`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
