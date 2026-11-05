@@ -73,7 +73,7 @@ Notes:
 Once installed, run the identity setup once per machine. It is interactive and must be run by you, not by the agent:
 
 ```bash
-~/.claude/skills/task-ledger/scripts/progress init --new --name "Your Name"
+~/.claude/skills/task-ledger/scripts/progress init
 ```
 
 Requirements: Git 2.27 or newer for multi-user synchronisation. No runtime, package manager or network access is required afterwards — the CLI ships as a static binary for Linux, macOS and Windows.

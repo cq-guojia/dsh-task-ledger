@@ -73,7 +73,7 @@ git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-l
 安装完成后，每台机器需执行一次身份初始化。该步骤为交互式，必须由你本人执行，不能交由代理代做：
 
 ```bash
-~/.claude/skills/task-ledger/scripts/progress init --new --name "你的名字"
+~/.claude/skills/task-ledger/scripts/progress init
 ```
 
 环境要求：多人同步需 Git 2.27 及以上。此后无需任何运行时、包管理器或网络 —— 命令行以静态二进制形式提供，覆盖 Linux、macOS 与 Windows。

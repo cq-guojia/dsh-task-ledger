@@ -63,7 +63,7 @@ git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-l
 每台机器需执行一次身份初始化，此后所有台账记录均以该身份署名。该步骤为交互式，必须由你本人执行 —— 代理不得代为创建或改写身份：
 
 ```bash
-~/.claude/skills/task-ledger/scripts/progress init --new --name "你的名字"
+~/.claude/skills/task-ledger/scripts/progress init
 ```
 
 在第二台机器上，直接运行 `init` 并从台账名册中认领已有身份，两台机器便以同一账号写入。

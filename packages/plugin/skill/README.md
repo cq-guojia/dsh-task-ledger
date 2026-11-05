@@ -63,7 +63,7 @@ Then copy it for the agent you use. User-level paths apply to every project; pro
 Once per machine, initialise the identity that signs every ledger entry. The step is interactive and must be run by you — the agent is not allowed to create or rewrite an identity on your behalf:
 
 ```bash
-~/.claude/skills/task-ledger/scripts/progress init --new --name "Your Name"
+~/.claude/skills/task-ledger/scripts/progress init
 ```
 
 On a second machine, run `init` without arguments and claim the identity already present in the ledger roster, so that both machines write under the same account.
