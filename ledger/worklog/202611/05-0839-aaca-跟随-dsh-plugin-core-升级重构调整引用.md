@@ -1,7 +1,7 @@
 # 20261105-0839-aaca-跟随-dsh-plugin-core-升级重构调整引用: 跟随 dsh-plugin-core 升级重构调整引用
 
 - **Tags**: dsh-plugin-core, 依赖升级, 引用路径
-- **Status**: doing · 2026-11-05 09:11:51 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-05 09:37:33 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-05 08:39:55 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -34,7 +34,8 @@
 
 ## Next
 
-待用户验收：开一次看板，确认文件预览（`adv/explorer`）与会话预览（`adv/session`）两条链路正常 ——
+无（用户 2026-11-05 决定结案，随本轮 `plugin-v*` 发版）。
+遗留：文件预览（`adv/explorer`）与会话预览（`adv/session`）两条链路没有单独真机复验过 ——
 改的是模块 specifier，打包能过只证明解析得到，真机才证明面板拉得起来。
 
 ## Process
@@ -67,6 +68,9 @@
 重建的 `dist/client.js(.map)`、`docs/design/external/dsh-plugin-core-explorer.md`、
 `docs/design/features/ledger-dirs.md`（一处旧路径）。
 
+结案时（2026-11-05）状态：代码与产物已在 `main` 上，文件预览 / 会话预览两条链路未单独真机复验 ——
+这条验收动作没做，属已知遗留，不写成已验。
+
 ## Execution Log
 
 <!-- Maintained by the script: appended by new / claim / set / release / log / close. Do not edit.
@@ -75,3 +79,4 @@
 - 2026-11-05 08:42:25 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 升 dsh-plugin-core 0.32.0→0.33.1（packages/plugin/package.json ^0.33.1）；核心 exports 与 10 个入口导出符号和 0.32.0 全等、36 个导入符号齐 ⇒ 源码零改动，build+typecheck 过；external 文档行号按新包重核
 - 2026-11-05 09:08:47 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 升 dsh-plugin-core 0.33.2（核心 2b8cc55：exports 改 ./adv/*、清 624 孤儿产物）；改 6 处 specifier 为 adv/explorer、adv/session（board-home.ts:33,39 / settings-page.ts:20 / index.ts:16,43 / close-session.ts:24）；36 符号复核全在，build+typecheck 过；文档同步
 - 2026-11-05 09:11:51 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 发版：插件 0.0.132，提交 6d87f92 已推 main、tag plugin-v0.0.132 已推；未动 skill 故不升 skill-v*；build/typecheck/codelint 均过，待真机验收文件预览与会话预览
+- 2026-11-05 09:37:33 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 收尾：Next 改为结案，遗留「文件预览/会话预览未真机复验」写进 Conclusion（不写成已验）
