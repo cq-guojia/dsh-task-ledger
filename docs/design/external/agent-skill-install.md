@@ -29,8 +29,11 @@
 
 | 事实 | 出处 |
 |---|---|
-| 通用安装器 `npx skills add <owner>/<repo>` 会扫描仓库内的 `SKILL.md` 并按所选 agent 落位；默认装到当前项目，`-g` 为全局 | <https://www.skills.sh/docs/cli>；<https://github.com/vercel-labs/skills> |
-| 该安装器的 monorepo 内多份同内容副本会各自成为一个条目（同名），选择时需人工指定 | 同上（发现规则未在文档中展开，按仓库目录结构推断，未实测） |
+| 通用安装器 `npx skills add <owner>/<repo>` 会扫描仓库内的 `SKILL.md` 并按所选 agent 落位；默认装到当前项目，`-g` 为全局，`--agent` 限定目标、`--skill` 限定条目 | <https://www.npmjs.com/package/skills>；<https://www.skills.sh/docs/cli> |
+| 该安装器支持三种来源：`owner/repo`、完整 GitHub URL、**仓库内某个技能的直接路径**（`https://github.com/<owner>/<repo>/tree/<branch>/<dir>`）——monorepo 用第三种可绕开同名副本的歧义 | <https://www.npmjs.com/package/skills>（Source Formats 节） |
+| 它有 `find` / `list` / `use` 子命令；`use` 可临时加载而不安装 | 同上 |
+| SkillHub（<https://skillhub.cn>）是 CodeBuddy / WorkBuddy 背后的技能市场，带 CLI（`skillhub install`，默认落到当前目录 `skills/`）；上架需 `skillhub publish`。本项目未上架，故 README 只写「检索不到时走本地导入 / GitHub 来源」 | <https://skillhub.cn/install/skillhub.md>；<https://github.com/totwo2/reskill/blob/master/HANDOVER.md> |
+| SkillHub 桌面版（<https://github.com/VipBeCool/SkillHub>）可把本地文件夹、GitHub 仓库、在线链接作为来源统一管理 | 该项目 README |
 | Windows 下用户级目录即 `%USERPROFILE%\<同上>` | 各出处命令示例一致 |
 
 ## 三、对本项目的落地含义

@@ -68,9 +68,13 @@ ledger/
 
 The plugin only reads this structure, except for the actions listed above, which run the same CLI that the skill uses. State files are never edited by the board directly.
 
+## Using the ledger
+
+The board is a view over the ledger; the ledger itself is driven by what you say to the agent — open a task, claim it, record progress, hand it back, close it, cancel it. Which phrase triggers which operation, and the rules the agent follows, are listed in the [`task-ledger`](https://www.npmjs.com/package/task-ledger) README.
+
 ## Other agents
 
-Agents that are not dsh can install the same skill on its own; see the [`task-ledger`](https://www.npmjs.com/package/task-ledger) package for per-agent installation.
+Agents that are not dsh can install the same skill on its own — with the skills CLI, or by copying `packages/skill` into their skills directory; see the [`task-ledger`](https://www.npmjs.com/package/task-ledger) package for per-agent installation.
 
 ## Links
 

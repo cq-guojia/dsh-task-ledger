@@ -19,6 +19,20 @@ Four properties define it:
 
 ## Install
 
+### With a skill manager
+
+The [skills CLI](https://skills.sh) (Vercel) detects the agents installed on the machine, writes the skill into the right directory for each, and can update it later:
+
+```bash
+npx skills add https://github.com/cq-guojia/dsh-task-ledger/tree/main/packages/skill
+```
+
+The path is part of the command: this repository is a monorepo holding two copies of the skill, and `packages/skill` selects the source. Add `-g` to install for every project rather than the current one, and `--agent` to restrict the targets.
+
+[SkillHub](https://skillhub.cn) — the market behind CodeBuddy and WorkBuddy — installs a skill once it is listed there. When search does not find `task-ledger`, use the client's local import and point it at `packages/skill`, or add this repository as a GitHub source in the SkillHub desktop application.
+
+### Manually
+
 Installing means copying the skill directory into the directory your agent reads. Fetch the source once:
 
 ```bash
@@ -55,6 +69,32 @@ Once per machine, initialise the identity that signs every ledger entry. The ste
 On a second machine, run `init` without arguments and claim the identity already present in the ledger roster, so that both machines write under the same account.
 
 No runtime, package manager or network access is required afterwards.
+
+## Using it
+
+There are no commands for you to type. The ledger is driven by what you say to the agent: when a request matches one of the intents below, the agent runs the corresponding operation and records it.
+
+| You say | What the agent does | Result |
+|---|---|---|
+| "Open a task: get the release pipeline working" | creates the task with the tags you gave | In the shared pool, state `open`, unclaimed |
+| "Open a task and start on it" | creates and claims it | Owned by you, state `doing` |
+| "I'll take that one" / "continue with X" | claims the task | Moved to your name, state `doing` |
+| *(while working)* | writes the task document, then appends an execution record | Progress, conclusions and blockers on record |
+| "Blocked for now" / "leave it for a while" | records the blocker, leaves the state alone | Still `doing` — a pause is neither a release nor a cancellation |
+| "Hand it back" | releases it | Returns to the shared pool for anyone to claim |
+| "Close this task" | closes it with your summary | One row written to history; read-only afterwards |
+| "Cancel it" | closes it as void, with the reason | Closed, not completed |
+| "Delete it" | asks you to confirm, then deletes | Removed permanently — no undo, no restore |
+| "What should I be doing?" / "what did we close last week?" | lists in-flight tasks, one task, or history | Query only, nothing written |
+
+Creating a task requires two inputs: **what the work is** — one sentence, without category or project prefixes — and **what it touches** — one to five tags. A category may be given at creation; it is immutable afterwards.
+
+Four rules bind the agent:
+
+- It never creates, claims, releases, closes or deletes a task on its own initiative. Each of those needs an explicit instruction from you, and a vague "done" is answered with a question rather than a closure.
+- It never edits state files, the history file or the execution log. Only the task document's first five sections are its to write.
+- It completes the written record before closing: a closed task cannot be written to again.
+- When it cannot find a task for the work at hand, it asks whether to create one instead of registering work you did not ask for.
 
 ## What gets written
 

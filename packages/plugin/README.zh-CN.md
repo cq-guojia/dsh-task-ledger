@@ -68,9 +68,13 @@ ledger/
 
 除上述操作外，插件只读这套结构；写操作走与 skill 相同的命令行工具，看板不会直接改写状态文件。
 
+## 怎么用
+
+看板只是台账之上的一层视图；台账本身由你对代理说的话驱动 —— 建任务、认领、记进度、退回、结案、取消。哪句话触发哪个操作，以及代理必须遵守的约束，见 [`task-ledger`](https://www.npmjs.com/package/task-ledger) 包的 README。
+
 ## 其他代理
 
-非 dsh 的代理可单独安装同一份 skill；各代理的安装方式见 [`task-ledger`](https://www.npmjs.com/package/task-ledger) 包。
+非 dsh 的代理可单独安装同一份 skill —— 用 skills CLI，或把 `packages/skill` 复制进其技能目录；各代理的安装方式见 [`task-ledger`](https://www.npmjs.com/package/task-ledger) 包。
 
 ## 链接
 
