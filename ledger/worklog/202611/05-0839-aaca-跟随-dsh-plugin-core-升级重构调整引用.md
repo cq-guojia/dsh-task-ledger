@@ -1,7 +1,7 @@
 # 20261105-0839-aaca-跟随-dsh-plugin-core-升级重构调整引用: 跟随 dsh-plugin-core 升级重构调整引用
 
 - **Tags**: dsh-plugin-core, 依赖升级, 引用路径
-- **Status**: doing · 2026-11-05 09:08:47 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-05 09:11:51 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-05 08:39:55 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -74,3 +74,4 @@
 - 2026-11-05 08:39:55 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · created and claimed
 - 2026-11-05 08:42:25 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 升 dsh-plugin-core 0.32.0→0.33.1（packages/plugin/package.json ^0.33.1）；核心 exports 与 10 个入口导出符号和 0.32.0 全等、36 个导入符号齐 ⇒ 源码零改动，build+typecheck 过；external 文档行号按新包重核
 - 2026-11-05 09:08:47 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 升 dsh-plugin-core 0.33.2（核心 2b8cc55：exports 改 ./adv/*、清 624 孤儿产物）；改 6 处 specifier 为 adv/explorer、adv/session（board-home.ts:33,39 / settings-page.ts:20 / index.ts:16,43 / close-session.ts:24）；36 符号复核全在，build+typecheck 过；文档同步
+- 2026-11-05 09:11:51 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 发版：插件 0.0.132，提交 6d87f92 已推 main、tag plugin-v0.0.132 已推；未动 skill 故不升 skill-v*；build/typecheck/codelint 均过，待真机验收文件预览与会话预览
