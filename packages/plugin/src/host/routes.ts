@@ -8,6 +8,7 @@
  * 详情 / 历史 / 筛选项 / 趋势 / 写动作的端点与实现已删除（要接回按 skill 方法重写，不复用旧直读逻辑）。
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { gzipSync } from "node:zlib";
 import { codeOf, messageOf } from "./errors.js";
 import { invalidate } from "./repositories/cache.js";
 import { scriptPath } from "./repositories/runner.js";
@@ -69,9 +70,39 @@ const API_PREFIX = "/api/task-ledger";
 /** 核心 explorer 的只读文件路由（`serveFsRoute` 挂这里，client 的 `connectFs` 用同一个值）。 */
 export const FS_ROUTE = `${API_PREFIX}/fs`;
 
+/**
+ * JSON 响应出口（全仓唯一）：客户端声明收 gzip 且响应够大就压。
+ * 宿主的压缩默认关闭（`DEFAULT_COMPRESSION = "none"`），趋势页那份 166KB 原样发出去太贵 ——
+ * 由路由自己压，插件侧一行配置都不需要（浏览器 / fetch 自动解压）。小响应压完反而更大，故留门槛。
+ */
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
-	res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
-	res.end(JSON.stringify(body));
+	const raw = Buffer.from(JSON.stringify(body), "utf8");
+	if (raw.length > GZIP_MIN_BYTES && acceptsGzip(res)) {
+		const zipped = gzipSync(raw);
+		res.writeHead(status, {
+			"content-type": "application/json; charset=utf-8",
+			"content-encoding": "gzip",
+			// 同一 URL 可能回压过 / 没压过两种字节，缓存要按这个头分开
+			vary: "accept-encoding",
+			"content-length": String(zipped.length),
+		});
+		res.end(zipped);
+		return;
+	}
+	res.writeHead(status, {
+		"content-type": "application/json; charset=utf-8",
+		"content-length": String(raw.length),
+	});
+	res.end(raw);
+}
+
+/** 压缩门槛：比这还小，gzip 头 + 字典开销反倒让线上字节变多。 */
+const GZIP_MIN_BYTES = 1024;
+
+function acceptsGzip(res: ServerResponse): boolean {
+	// res.req 是 Node 自带的引用（ServerResponse.req），不用把 req 逐层传进 20 多个调用点
+	const header = res.req?.headers["accept-encoding"];
+	return String(header ?? "").includes("gzip");
 }
 
 /**
