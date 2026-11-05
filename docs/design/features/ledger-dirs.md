@@ -94,7 +94,7 @@ progress dirs --json                             # {dirs, removed, added, reason
 
 ## 六、添加目录（设置页）
 
-**入口**：设置页「台账目录」块的「添加目录」→ 核心选目录弹窗（`dsh-plugin-core/explorer` 的
+**入口**：设置页「台账目录」块的「添加目录」→ 核心选目录弹窗（`dsh-plugin-core/adv/explorer` 的
 `pickWorkspaceFile({ filter: { dirs: true } })`，**只能选目录、不限工作区**；事实见
 [`../external/dsh-plugin-core-explorer.md`](../external/dsh-plugin-core-explorer.md)）。
 

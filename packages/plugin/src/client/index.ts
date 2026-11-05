@@ -13,7 +13,7 @@
  * `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
  */
 import { createStyleKit } from "dsh-plugin-core/design";
-import { connectFs } from "dsh-plugin-core/explorer";
+import { connectFs } from "dsh-plugin-core/adv/explorer";
 import { connectHost, setStyleKit } from "dsh-plugin-core/ui";
 import { createElement as h } from "react";
 import {
@@ -40,7 +40,7 @@ import {
 	zh,
 } from "./locales";
 import { setSessions, setUiConversation, type SessionsLike } from "./close-session";
-import type { UiConversationFace } from "dsh-plugin-core/session";
+import type { UiConversationFace } from "dsh-plugin-core/adv/session";
 import { setSessionArchiver, setSessionOpener } from "./nav";
 import { LedgerIcon } from "./ui";
 

@@ -21,7 +21,7 @@ import {
 	type SessionsFace,
 	type SessionViewTarget,
 	type UiConversationFace,
-} from "dsh-plugin-core/session";
+} from "dsh-plugin-core/adv/session";
 
 /** 会话快照里本模块用到的两位。 */
 interface SnapshotLike {

@@ -30,13 +30,13 @@ import {
 } from "react";
 import type { LocaleKey, Translate } from "./locales";
 import { formatCount, mondayOf, pad2, ymdOf } from "./format";
-import { openFilePreview } from "dsh-plugin-core/explorer";
+import { openFilePreview } from "dsh-plugin-core/adv/explorer";
 import {
 	openSessionReview,
 	SessionViewModal,
 	type ChangedFileReviewLocator,
 	type SessionViewTarget,
-} from "dsh-plugin-core/session";
+} from "dsh-plugin-core/adv/session";
 import { openCloseSessionView } from "./close-session";
 import { openSession } from "./nav";
 import {

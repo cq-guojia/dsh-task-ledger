@@ -1,8 +1,9 @@
 # 核心 explorer：选目录 + 只读文件面（dsh-plugin-core）
 
 > **类型**：🌐 **外部事实** —— 记的是**共享底座 `dsh-plugin-core`** 能给什么，不是本项目的设计
-> **适用版本**：`dsh-plugin-core@0.30.1`（本插件 `packages/plugin` 的依赖线；首次核实于 0.20.9）
-> **状态**：✅ 已核实（2026-11-03：装 0.20.9 后读 `dist/explorer/*.d.ts`、`dist/explorer/picker-placement.js`、`dist/host/index.d.ts` 原文 + `src/explorer/FileBrowser.ts:541` 选择器入口；2026-11-04 升 0.30.1 后按 §四 复核方式重查 `pickWorkspaceFile` / `PickFilter` / `PickedPath` / `serveFsRoute` / `connectFs`，符号仍在）
+> **适用版本**：`dsh-plugin-core@0.33.2`（本插件 `packages/plugin` 的依赖线；首次核实于 0.20.9）
+> **状态**：✅ 已核实（2026-11-03：装 0.20.9 后读 `dist/explorer/*.d.ts`、`dist/explorer/picker-placement.js`、`dist/host/index.d.ts` 原文 + 选择器入口；2026-11-04 升 0.30.1 后按 §四 复核方式重查符号仍在；2026-11-05 升 **0.33.2** 后重核：源码搬家 `src/explorer` → `src/adv/explorer`、对外子路径同步改为 `dsh-plugin-core/adv/explorer` / `adv/session`（`./ui/host` 一并改名 `./ui/host-toast`），旧产物已清，本文出处按 0.33.2 实包重核、行号不变）
+> **路径口径**：0.33.2 起源码与产物同构 —— 源码 `src/adv/explorer/`、产物 `dist/adv/explorer/`，`exports` 只给 `./adv/explorer`；旧的 `./explorer` / `dist/explorer/` 已于 0.33.2 删除。
 > **来源**：`dsh-plugin-core` 解包产物（`node_modules/dsh-plugin-core`）
 
 ## 一、结论
@@ -15,18 +16,18 @@
 
 | 事实 | 原文 / 证据 | 出处 |
 |---|---|---|
-| 选目录入口 | `pickWorkspaceFile(options): Promise<PickedPath \| null>`；取消（Esc / 点外部 / ✕）resolve `null` | `dist/explorer/open.d.ts:105` |
-| 过滤档 | `PickFilter { exts?: readonly string[]; dirs?: boolean }`；`dirs: true` = 只要文件夹 | `dist/explorer/types.d.ts:170-175` |
-| 回传形状 | `PickedPath { path: string（**绝对路径**）; isDir: boolean; workspaceRel?; workspace?（仅当落在某个工作区内） }` | `dist/explorer/types.d.ts:161-172` |
-| 「选当前目录」 | 进到某层后行上没有它自己 ⇒ 面包屑行尾给一枚「选当前目录」钮（`dirPickable` 且有 `onPick` 时才出） | `src/explorer/FileBrowser.ts:541-556` |
-| 行内可点选目录 | `dirPickable = picker && onPick && !extsOnly`；目录行点即 `onPick(toPicked(path, true))` | `dist/explorer/FileBrowser.js:389,452` |
-| 展开方位 | `placement?: PickPlacement`：`auto`（旧行为：下方优先、不够翻上方、横向夹紧）+ 八档（`bottom-start` = 下方左缘对齐 … `left-end` = 左侧底边对齐）。0.20.9 起语义 = **优先方位**：① 该侧够用就照它；② 该侧不够、对侧更宽敞 ⇒ 自动翻边（bottom↔top、left↔right，start/end 不变）；③ 两侧都窄 ⇒ 守原侧再夹紧进视口 | `dist/explorer/open.d.ts:75-92`；`dist/explorer/picker-placement.js:1-22,66-80` |
-| `bottom-start` ≈ 旧 `auto` | 下方有空间时两者算出的盒子完全一致（都是「下方 + 左缘对齐 + 夹紧」）⇒ 换这档看不出变化；要「面板挪到按钮左边」得用 `bottom-end` | `dist/explorer/picker-placement.js:66-80` |
-| 文件面接线（client） | `connectFs({ path })` → `createHttpFsFace(path)`；未接 ⇒ `getFsFace()` 为 undefined，picker / 预览都直接放弃并 warn | `dist/explorer/fs-face.d.ts`；`open.js:374-378` |
+| 选目录入口 | `pickWorkspaceFile(options): Promise<PickedPath \| null>`；取消（Esc / 点外部 / ✕）resolve `null` | `dist/adv/explorer/open.d.ts:136` |
+| 过滤档 | `PickFilter { exts?: readonly string[]; dirs?: boolean }`；`dirs: true` = 只要文件夹 | `dist/adv/explorer/types.d.ts:170-173` |
+| 回传形状 | `PickedPath { path: string（**绝对路径**）; isDir: boolean; workspaceRel?; workspace?（仅当落在某个工作区内） }` | `dist/adv/explorer/types.d.ts:161-168` |
+| 「选当前目录」 | 进到某层后行上没有它自己 ⇒ 面包屑行尾给一枚「选当前目录」钮（`dirPickable` 且有 `onPick` 时才出） | `src/adv/explorer/FileBrowser.ts:702-705` |
+| 行内可点选目录 | `dirPickable = picker && onPick && !extsOnly`；目录行点即 `onPick(toPicked(path, true))` | `dist/adv/explorer/FileBrowser.js:392,455` |
+| 展开方位 | `placement?: PickPlacement`：`auto`（旧行为：下方优先、不够翻上方、横向夹紧）+ 八档（`bottom-start` = 下方左缘对齐 … `left-end` = 左侧底边对齐）。0.20.9 起语义 = **优先方位**：① 该侧够用就照它；② 该侧不够、对侧更宽敞 ⇒ 自动翻边（bottom↔top、left↔right，start/end 不变）；③ 两侧都窄 ⇒ 守原侧再夹紧进视口 | `dist/adv/explorer/open.d.ts:105`；`dist/adv/explorer/picker-placement.js:1-22,66-80` |
+| `bottom-start` ≈ 旧 `auto` | 下方有空间时两者算出的盒子完全一致（都是「下方 + 左缘对齐 + 夹紧」）⇒ 换这档看不出变化；要「面板挪到按钮左边」得用 `bottom-end` | `dist/adv/explorer/picker-placement.js:66-80` |
+| 文件面接线（client） | `connectFs({ path })` → `createHttpFsFace(path)`；未接 ⇒ `getFsFace()` 为 undefined，picker / 预览都直接放弃并 warn | `dist/adv/explorer/fs-face.d.ts`；`open.js:94,268` |
 | 文件路由（host） | `serveFsRoute(ctx, { path })`：`kind: 'prefix'`，`op = list \| read \| readBytes \| roots`，**只读**、绝对路径、单层最多 500 条（`FS_PAGE_LIMIT`）、list 8s 超时 | `dist/host/index.d.ts:66`；`src/host/fs-route.ts:205-237` |
 | 不限工作区 | 路由用 `node:fs` 直读，路径只做「必须绝对」校验，不与任何工作区根比对 | `src/host/fs-route.ts:57-65,67-110` |
-| 预览共用同一面 | `openFilePreview` 与 `pickWorkspaceFile` 用的是同一个 `FileBrowser` + 同一个 FS 面 | `src/explorer/open.ts:7-9` |
-| 内置文案 | 不传 `translate` 时用核心自带中英字典（`utils/i18n` 的 `setLocale`），默认中文 | `src/explorer/FileBrowser.ts:137`；`src/utils/i18n.ts:849-864` |
+| 预览共用同一面 | `openFilePreview` 与 `pickWorkspaceFile` 用的是同一个 `FileBrowser` + 同一个 FS 面 | `src/adv/explorer/open.ts:7-9` |
+| 内置文案 | 不传 `translate` 时用核心自带中英字典（`utils/i18n` 的 `setLocale`），默认中文；0.33.1 起 `setLocale(null)` 恢复跟随宿主 | `src/adv/explorer/FileBrowser.ts:145`；`src/utils/i18n.ts:548,1058,1568` |
 
 ## 三、对本插件的落地含义
 
@@ -38,7 +39,12 @@
 
 ```bash
 cd packages/plugin && pnpm why dsh-plugin-core
-grep -n "pickWorkspaceFile\|PickFilter\|PickedPath" node_modules/dsh-plugin-core/dist/explorer/*.d.ts
-grep -n "serveFsRoute\|connectFs" node_modules/dsh-plugin-core/dist/host/index.d.ts node_modules/dsh-plugin-core/dist/explorer/*.d.ts
+grep -n "pickWorkspaceFile\|PickFilter\|PickedPath" node_modules/dsh-plugin-core/dist/adv/explorer/*.d.ts
+grep -n "serveFsRoute\|connectFs" node_modules/dsh-plugin-core/dist/host/index.d.ts node_modules/dsh-plugin-core/dist/adv/explorer/*.d.ts
+node -e "console.log(require('dsh-plugin-core/package.json').exports)"   # 子路径是否还在
 # 看三处：pickWorkspaceFile 是否仍在 / filter.dirs 语义是否变 / FS 路由是否仍只读
 ```
+
+本项目全部用法是**包入口**（`dsh-plugin-core/adv/explorer|adv/session|ui|design|host`），没有 deep import ⇒
+`exports` 里这些子路径还在、入口符号还在就不用改代码。**例外**：0.33.2 把 `./explorer` → `./adv/explorer`、
+`./session` → `./adv/session`、`./ui/host` → `./ui/host-toast`，本项目 6 处 import 已随之改名。

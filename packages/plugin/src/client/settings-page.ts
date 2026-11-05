@@ -17,7 +17,7 @@ import {
 	IconFlatListOutlineRegular,
 	Switch,
 } from "@deepseek-ai/dsh-client-ui-primitives";
-import { pickWorkspaceFile } from "dsh-plugin-core/explorer";
+import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
 import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
 import { fetchDirs, fetchRoster, postDirs, postForgetIdentity, postSwitchIdentity, type DirsWriteBody, type ForgetStep } from "./api";
 import type { LocaleKey, Translate } from "./locales";
