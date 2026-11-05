@@ -12,7 +12,7 @@
  * 提交中锁住所有关闭路径（同 cancel-task-modal），失败时弹窗不关、错误红字留在框下可重试。
  */
 import { IconCheckCircleOutlineRegular } from "@deepseek-ai/dsh-client-ui-primitives";
-import { createElement as h, type ReactNode, useState } from "react";
+import { createElement as h, Fragment, type ReactNode, useState } from "react";
 import type { Translate } from "./locales";
 import { Button, Loader, Modal, Segmented, Textarea, Tip } from "./ui";
 
@@ -77,35 +77,13 @@ export function CloseTaskModal(props: {
 			onClose: props.busy || locked ? undefined : props.onClose,
 			closeOnMask: !props.busy && !locked,
 			escClose: !props.busy && !locked,
+			// 过程提示走核心 notice 插槽（底栏左侧、翻牌 + 超长省略 / hover 跑马灯），
+			// 与取消 / 删除框同一条路；footer 里不再自绘 span，也**不设 width:100%**
+			// （那是和 notice 抢同一行，会把提示压成几个字）。
+			notice: props.notice,
 			footer: h(
-				"div",
-				{
-					style: {
-						display: "flex",
-						justifyContent: "flex-end",
-						alignItems: "center",
-						gap: "var(--dtl-space-2)",
-						width: "100%",
-					},
-				},
-				// 左下：结案命令跑到哪一步（与取消框同一条底栏样式）
-				props.notice === undefined
-					? null
-					: h(
-							"span",
-							{
-								style: {
-									marginRight: "auto",
-									maxWidth: "220px",
-									overflow: "hidden",
-									textOverflow: "ellipsis",
-									whiteSpace: "nowrap",
-									color: "var(--dtl-fg-3)",
-									fontSize: "var(--dtl-font-sm)",
-								},
-							},
-							props.notice,
-						),
+				Fragment,
+				null,
 				// 左下：会话在跑时唯一能点的东西（关掉会话视图后回到这个框也能重开）
 				locked && props.onShowSession !== undefined
 					? h(
@@ -128,26 +106,37 @@ export function CloseTaskModal(props: {
 						)
 					: null,
 				h(
-					Button,
+					"div",
 					{
-						variant: "outline",
-						size: "lg",
-						disabled: props.busy || locked,
-						onClick: props.onClose,
+						style: {
+							display: "flex",
+							justifyContent: "flex-end",
+							alignItems: "center",
+							gap: "var(--dtl-space-2)",
+						},
 					},
-					t("settingsCancel"),
-				),
-				h(
-					Button,
-					{
-						variant: "primary",
-						size: "lg",
-						loading: props.busy,
-						loadingText: false,
-						disabled: submitBlocked || locked,
-						onClick: submit,
-					},
-					useAgent ? t("closeModalOkAgent") : t("closeModalOkManual"),
+					h(
+						Button,
+						{
+							variant: "outline",
+							size: "lg",
+							disabled: props.busy || locked,
+							onClick: props.onClose,
+						},
+						t("settingsCancel"),
+					),
+					h(
+						Button,
+						{
+							variant: "primary",
+							size: "lg",
+							loading: props.busy,
+							loadingText: false,
+							disabled: submitBlocked || locked,
+							onClick: submit,
+						},
+						useAgent ? t("closeModalOkAgent") : t("closeModalOkManual"),
+					),
 				),
 			),
 		},

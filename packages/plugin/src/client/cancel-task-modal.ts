@@ -74,7 +74,6 @@ export function ReasonTaskModal(props: ReasonTaskModalProps): ReactNode {
 						alignItems: "center",
 						justifyContent: "flex-end",
 						gap: "8px",
-						width: "100%",
 					},
 				},
 				h(
