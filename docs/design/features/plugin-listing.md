@@ -73,7 +73,7 @@ DSH 的 Plugins 页点进本插件后，顶部显示**标题 + 图标 + 说明**
 - 侧栏面板标题用「蓝鲸任务台账」/ `Whale Ledger`（`src/client/locales.ts` `panelTitle` 两档都改）。
 - 彩色图标不用底板，黑色轮廓换兄弟项目 demo 的深蓝 `#405580`（暗色底上纯黑不可见；浅蓝 `#BFD9FF` 在白底几乎消失，故取深蓝）。
 - 包名 `dsh-task-ledger` 与 `plugin-v*` tag 不动，改名只做展示层。
-- 官方插件设置项（`plugins.item`）不注册。
+- 官方插件设置项（`plugins.item`）不注册；插件自身的配置走 bundle 详情页的配置区（`plugins.bundle.config`），见 [`plugin-settings.md`](plugin-settings.md)。
 
 ## 七、验收判据
 

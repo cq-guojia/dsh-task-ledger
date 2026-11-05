@@ -174,4 +174,95 @@ declare module "@deepseek-ai/dsh-client-ui-primitives" {
 		size?: number;
 		className?: string;
 	}>;
+	/** 链条（外链按钮）：`primitives@0.2.0-rc.1` `icons/index.d.ts:130` 亲验（2026-11-05）。 */
+	export const IconLinkOutlineRegular: ComponentType<{
+		size?: number;
+		className?: string;
+	}>;
+
+	/** 「更多」菜单里的一行（`Menu.d.ts` MenuItemButtonProps，2026-11-05 亲验 rc.1）。 */
+	export function MenuItemButton(props: {
+		children: ReactNode;
+		shortcut?: unknown;
+		icon?: ReactNode;
+		disabled?: boolean;
+		danger?: boolean;
+		separatorBefore?: boolean;
+		onSelect: () => void;
+	}): ReactNode;
+
+	// ── 官方设置表单（`settings-form/*.d.ts`，2026-11-05 逐条对照 rc.1） ──
+	/** 表单外壳文案（由本插件词典给）。 */
+	export interface SettingsFormLabels {
+		unavailable: string;
+		readOnly: string;
+		saveFailed: string;
+		save: string;
+		saving: string;
+	}
+	/** 卡片级状态：是否可用 / 可写 / 有草稿 / 保存中 / 上次保存失败。 */
+	export interface SettingsFormShell {
+		available: boolean;
+		writable: boolean;
+		dirty: boolean;
+		invalid: boolean;
+		saving: boolean;
+		failed: boolean;
+	}
+	/** 单个字段的控件态。 */
+	export interface SettingsFieldState {
+		/** 控件渲染的草稿文本。 */
+		text: string;
+		/** 保存后是否会在用户层留下这一项（= 覆盖默认值）。 */
+		overridden: boolean;
+		/** 草稿不是本字段接受的值（阻止保存）。 */
+		invalid: boolean;
+	}
+	/** 一个字段在存储值与草稿文本之间的换算规则。 */
+	export interface SettingsFieldSpec {
+		field: string;
+		format: (value: unknown) => string;
+		parse: (text: string) => unknown;
+	}
+	/** 某个命名空间的设置文档（宿主托管）：读快照 + 原子写。 */
+	export interface SettingsFormScope<T> {
+		getSnapshot(): {
+			status: "loading" | "ready" | "unavailable";
+			value: T | undefined;
+			base: unknown;
+			user: unknown;
+			writable: boolean;
+			revision: number | undefined;
+		};
+		subscribe(listener: () => void): () => void;
+		mutate(ops: readonly unknown[], expectedRevision?: number): Promise<boolean>;
+	}
+	/** 自由文本字段：空草稿 = 清掉该项（重新继承默认值）。 */
+	export function settingsTextField(field: string): SettingsFieldSpec;
+	/** 草稿状态机：dirty / overridden / invalid / saving / failed，save 时一次原子提交。 */
+	export class SettingsFormModel<T> {
+		constructor(scope: SettingsFormScope<T>, specs: SettingsFieldSpec[]);
+		bind<S>(project: () => S): {
+			getSnapshot(): S;
+			subscribe(listener: () => void): () => void;
+		};
+		shell(): SettingsFormShell;
+		field(field: string): SettingsFieldState;
+		actions(): {
+			edit: (field: string, text: string) => void;
+			resetField: (field: string) => void;
+			save: () => void;
+			discard: () => void;
+		};
+		save(): Promise<void>;
+		dispose(): void;
+	}
+	/** 表单框架：只读提示 / 保存按钮 / 不可用分支。 */
+	export function SettingsForm(props: {
+		labels: SettingsFormLabels;
+		state: SettingsFormShell;
+		onSave: () => void;
+		onDiscard: () => void;
+		children: ReactNode;
+	}): ReactNode;
 }

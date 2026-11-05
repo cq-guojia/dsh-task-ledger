@@ -69,3 +69,16 @@ cd /tmp && npm pack @deepseek-ai/dsh-client-ui-layout@<版本> @deepseek-ai/dsh-
 # 看：sidebar.panellist / main / selectPanel 是否仍在、签名是否变
 #     primitives 是否新增 Table 类件；DisclosureRow / StateDot / FileTypeIcon 签名
 ```
+
+## 五、插件详情页配置区与「更多」菜单（2026-11-05 核实）
+
+> 本节是 0.2.0-rc.1 的解包原文；本文件其它节是 rc.2。两槽名在 rc.2 未见变更，但升级后按 §四 复核一遍。
+
+| 事实 | 原文 / 证据 | 出处 |
+|---|---|---|
+| bundle 详情页配置槽 | `'plugins.bundle.config': { kind: 'keyed'; scope: 'root'; owner: PluginConfigViewProps }`；*"A bundle's own configuration, keyed by the bundle's package name and rendered on the bundle's page between its description and its rows (`view: 'page'` only)."* | `dsh-client-ui-plugin-manager@0.2.0-rc.1` `lib/types/client/slot-contract.d.ts:100` |
+| 槽位 owner props | `{ view: 'summary' \| 'page'; form?: { state: ConfigFormSnapshot; mutate } }` —— 宿主只投喂**快照 + mutate**，不是可订阅的 store | 同上 `:20-26`、`:150-158` |
+| 详情页按包名取用 | `renderSlot("plugins.bundle.config", { view: "page" }, { entryKey: pkg.name })` | 同上 `lib/client.js:2527` |
+| 插件设置文档服务 | `ctx.configForms.get(ns)`（`ConfigForm<T>`：`getSnapshot` / `subscribe` / `mutate` / `set` / `unset`）；命名空间 = 活跃 entry 的 id，schema 由 host 侧 `Config` 的 `.volatile()` 字段派生 | `dsh-client-ui-settings@0.2.0-rc.1` `lib/types/client/config-form-types.d.ts`、`config-form.d.ts` |
+| 官方设置表单 | `SettingsForm` / `SettingsFormModel` / `settingsTextField` / `settingsNumberField` / `SettingsValueField`（**没有**单选 / 布尔 / 下拉字段工厂，那类要自己拼 `SegmentedControl` / `Menu`，值仍走文本字段） | `dsh-client-ui-primitives@0.2.0-rc.1` `lib/types/settings-form/*.d.ts`、`lib/types/index.d.ts:59-64` |
+| 「更多」菜单槽 | `sidebar.panellist.actions`：注册一行 `MenuItemButton`（props 由 owner 给 `onDismiss`），行里跳整页并收起菜单 | `dsh-plugin-core/packages/demo/src/client/index.tsx:113-137`（同栈样本；`dsh-client-ui-sidebar` 本机未装，`.d.ts` 未逐行核实） |

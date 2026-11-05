@@ -52,6 +52,8 @@
 
 **判据**：核心库有的控件，一律用核心库，本地只允许薄包裹（转 props、拼 className 做布局），**不得重写高度 / 内距 / 边框 / 圆角 / 配色**。核心没有的（表格、行内排版、图表画法），才允许自绘，且颜色圆角字号只吃 `var(--dtl-*)`。
 
+**插件详情页配置区（2026-11-05 定稿）**——`client/config-panel.ts` 的控件**全部走核心控件库**（`Input` / `Picker` / `Chip` / `Button`，用户原话「不要自己手搓…用核心空间里面的」）；本文件只排标签、说明与两列容器，用 `.dtl-config__*` 一组类（写在 `ui.ts` 的 `UI_BASE_CSS`，随同一处注入器挂载），颜色只吃 `var(--dtl-*)`。宿主官方 primitives 只用到图标与 `SettingsFormModel`（设置文档的状态机）。
+
 **2026-11-01 外框统一走 `Surface`**（用户原话：「很多外边框不都是自己画的吗？那种带圆角的外框，现在核心库里已经有了，名字叫 surface……统一风格」）：
 
 - 删掉的自绘外框：`.dtl-card` / `.dtl-card--clickable` / `.dtl-card--pad`（连同它们的 `background + border + border-radius` 三条声明）。

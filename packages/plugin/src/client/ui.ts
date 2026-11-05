@@ -415,6 +415,24 @@ const UI_BASE_CSS = `
    虚拟窗口算歪），放不下的裁掉不显示 */
 .dtl-histlist__tags{display:flex;flex-wrap:nowrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;
   overflow:hidden;}
+
+/* ── 插件详情页配置区（config-panel.ts）：两个字段一行左右各半，保存与链接一排。
+   形态与尺寸照兄弟仓 dsh-session-title-pattern 的 .stp-pairField 一套（同源抄自官方字段），
+   颜色仍只吃 --dtl-*。 ── */
+.dtl-config__pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;
+  border-top:1px solid var(--dtl-border);}
+.dtl-config__field{display:flex;flex-direction:column;gap:6px;padding:24px 0 12px;}
+.dtl-config__head{display:flex;align-items:center;gap:8px;}
+.dtl-config__label{flex:1;min-width:0;font-size:var(--dtl-font-md);font-weight:500;
+  line-height:var(--dtl-line-md);color:var(--dtl-fg);}
+.dtl-config__hint{margin:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);}
+.dtl-config__row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-top:24px;padding:0 0 32px;border-bottom:1px solid var(--dtl-border);}
+.dtl-config__failed{margin:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-danger);}
+.dtl-config__note{margin:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);}
 `;
 
 const STYLE_ID = "dtl-ui-base";

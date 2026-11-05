@@ -305,11 +305,44 @@ export type LocaleKey =
 	| "month12"
 	// 空态
 	// 浮标入口
+	// 插件详情页配置区
+	| "configEntryLabel"
+	| "configEntryFirst"
+	| "configEntryMore"
+	| "configEntryHint"
+	| "configNameLabel"
+	| "configNameHint"
+	| "configNameInvalid"
+	| "configOverridden"
+	| "configReset"
+	| "configGithub"
+	| "configComponents"
+	| "configSave"
+	| "configSaving"
+	| "configSaveFailed"
+	| "configReadOnly"
+	| "configUnavailable"
 
 /** 中文（默认档）。 */
 export const zh: Record<LocaleKey, string> = {
 	backToConversation: "返回会话",
 	panelTitle: "蓝鲸任务台账",
+	configEntryLabel: "入口位置",
+	configEntryFirst: "一级菜单",
+	configEntryMore: "更多",
+	configEntryHint: "放在左侧栏一级，或收进侧栏底部的「更多」菜单。",
+	configNameLabel: "显示名称",
+	configNameHint: "留空即用默认名「蓝鲸任务台账」；填成与默认名相同则不保存这一项。",
+	configNameInvalid: "这个名称不可用。",
+	configOverridden: "自定义",
+	configReset: "恢复默认",
+	configGithub: "GitHub 项目",
+	configComponents: "蓝鲸组件库",
+	configSave: "保存",
+	configSaving: "保存中…",
+	configSaveFailed: "保存失败，请重试",
+	configReadOnly: "此部署下的设置为只读",
+	configUnavailable: "设置当前不可用",
 	refresh: "刷新",
 	refreshing: "刷新中",
 	loading: "读取中…",
@@ -610,6 +643,22 @@ export const zh: Record<LocaleKey, string> = {
 export const en: Record<LocaleKey, string> = {
 	backToConversation: "Back to chat",
 	panelTitle: "Whale Ledger",
+	configEntryLabel: "Entry point",
+	configEntryFirst: "Sidebar",
+	configEntryMore: "More menu",
+	configEntryHint: "Show it as a sidebar item, or tuck it into the More menu at the sidebar foot.",
+	configNameLabel: "Display name",
+	configNameHint: "Leave it empty to use the default name (Whale Ledger); saving the default itself stores nothing.",
+	configNameInvalid: "That name is not accepted.",
+	configOverridden: "Custom",
+	configReset: "Restore default",
+	configGithub: "Project on GitHub",
+	configComponents: "dsh-plugin-core",
+	configSave: "Save",
+	configSaving: "Saving…",
+	configSaveFailed: "Save failed, please retry",
+	configReadOnly: "Settings are read-only in this deployment",
+	configUnavailable: "Settings are unavailable right now",
 	refresh: "Refresh",
 	refreshing: "Refreshing",
 	loading: "Loading…",

@@ -63335,6 +63335,24 @@ body[data-ds-dark-theme]{
    虚拟窗口算歪），放不下的裁掉不显示 */
 .dtl-histlist__tags{display:flex;flex-wrap:nowrap;gap:var(--dtl-space-2);margin-top:6px;min-width:0;
   overflow:hidden;}
+
+/* ── 插件详情页配置区（config-panel.ts）：两个字段一行左右各半，保存与链接一排。
+   形态与尺寸照兄弟仓 dsh-session-title-pattern 的 .stp-pairField 一套（同源抄自官方字段），
+   颜色仍只吃 --dtl-*。 ── */
+.dtl-config__pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;
+  border-top:1px solid var(--dtl-border);}
+.dtl-config__field{display:flex;flex-direction:column;gap:6px;padding:24px 0 12px;}
+.dtl-config__head{display:flex;align-items:center;gap:8px;}
+.dtl-config__label{flex:1;min-width:0;font-size:var(--dtl-font-md);font-weight:500;
+  line-height:var(--dtl-line-md);color:var(--dtl-fg);}
+.dtl-config__hint{margin:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);}
+.dtl-config__row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-top:24px;padding:0 0 32px;border-bottom:1px solid var(--dtl-border);}
+.dtl-config__failed{margin:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-danger);}
+.dtl-config__note{margin:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);}
 `;
 		const STYLE_ID = "dtl-ui-base";
 		/** 幂等注入 token 层 + 控件皮肤 + 基础层（面板与浮标谁先挂载都只注入一次）。
@@ -64941,6 +64959,22 @@ body[data-ds-dark-theme]{
 		const zh = {
 			backToConversation: "返回会话",
 			panelTitle: "蓝鲸任务台账",
+			configEntryLabel: "入口位置",
+			configEntryFirst: "一级菜单",
+			configEntryMore: "更多",
+			configEntryHint: "放在左侧栏一级，或收进侧栏底部的「更多」菜单。",
+			configNameLabel: "显示名称",
+			configNameHint: "留空即用默认名「蓝鲸任务台账」；填成与默认名相同则不保存这一项。",
+			configNameInvalid: "这个名称不可用。",
+			configOverridden: "自定义",
+			configReset: "恢复默认",
+			configGithub: "GitHub 项目",
+			configComponents: "蓝鲸组件库",
+			configSave: "保存",
+			configSaving: "保存中…",
+			configSaveFailed: "保存失败，请重试",
+			configReadOnly: "此部署下的设置为只读",
+			configUnavailable: "设置当前不可用",
 			refresh: "刷新",
 			refreshing: "刷新中",
 			loading: "读取中…",
@@ -65221,6 +65255,22 @@ body[data-ds-dark-theme]{
 		const en = {
 			backToConversation: "Back to chat",
 			panelTitle: "Whale Ledger",
+			configEntryLabel: "Entry point",
+			configEntryFirst: "Sidebar",
+			configEntryMore: "More menu",
+			configEntryHint: "Show it as a sidebar item, or tuck it into the More menu at the sidebar foot.",
+			configNameLabel: "Display name",
+			configNameHint: "Leave it empty to use the default name (Whale Ledger); saving the default itself stores nothing.",
+			configNameInvalid: "That name is not accepted.",
+			configOverridden: "Custom",
+			configReset: "Restore default",
+			configGithub: "Project on GitHub",
+			configComponents: "dsh-plugin-core",
+			configSave: "Save",
+			configSaving: "Saving…",
+			configSaveFailed: "Save failed, please retry",
+			configReadOnly: "Settings are read-only in this deployment",
+			configUnavailable: "Settings are unavailable right now",
 			refresh: "Refresh",
 			refreshing: "Refreshing",
 			loading: "Loading…",
@@ -67835,7 +67885,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.131 261105-143725-058`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.131 261105-160239-768`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -67988,27 +68038,238 @@ body[data-ds-dark-theme]{
 			})));
 		}
 		//#endregion
+		//#region src/client/config-panel.ts
+		/**
+		* 插件详情页的配置区（官方 `plugins.bundle.config` 槽位，key = 包名）。
+		*
+		* 版式照兄弟仓 `dsh-session-title-pattern` 的配置表单（用户 2026-11-05：「去抄」）：
+		*
+		*  · **两个设置项一行左右各半**：左「显示名称」、右「入口位置」。
+		*  · **保存与两个链接同一排，保存最前**。
+		*  · 「是否改过」的提示：改过的字段出「自定义」标签 +「恢复默认」，没改过两者都不出现。
+		*
+		* 控件一律走核心控件库（用户 2026-11-05：「不要自己手搓…用核心空间里面的」）：
+		* `Input` / `Picker`（下拉单选）/ `Chip`（标签）/ `Button`。本文件只排 label、hint 与两列
+		* 的容器（`.dtl-config__*` 一组类，颜色只吃 `--dtl-*`），不写控件皮肤。
+		*
+		* 两个字段 = host 侧 `Config` 的两个 volatile 字段（`src/index.ts`）：`entryMode` /
+		* `displayName`。显示名为空串时用词典默认名（`panelTitle`）；**填成与默认名相同则不落盘**
+		* ——保存前把它折成「清空」，用户层不留这一项。
+		*/
+		/** 本仓库地址（设置区的第一个链接）。 */
+		const PROJECT_URL = "https://github.com/cq-guojia/dsh-task-ledger";
+		/** 友情链接：蓝鲸组件库（UI 基础控件包）。 */
+		const COMPONENTS_URL = "https://github.com/cq-guojia/dsh-plugin-core";
+		/** 字段名：与 host 侧 `Config` 的键逐字一致。 */
+		const ENTRY_MODE_FIELD = "entryMode";
+		const DISPLAY_NAME_FIELD = "displayName";
+		/** 一个字段：标签行（标签 + 改过徽标 + 恢复默认）→ 控件 → 说明。 */
+		function configField(props) {
+			return (0, react$1.createElement)("div", { className: "dtl-config__field" }, (0, react$1.createElement)("div", { className: "dtl-config__head" }, (0, react$1.createElement)("span", {
+				className: "dtl-config__label",
+				id: props.id
+			}, props.label), props.overridden ? (0, react$1.createElement)(Chip, {
+				tone: "neutral",
+				size: "xs"
+			}, props.overriddenLabel) : null, props.overridden ? (0, react$1.createElement)(Button$2, {
+				variant: "link",
+				size: "sm",
+				disabled: props.disabled,
+				onClick: props.onReset
+			}, props.resetLabel) : null), props.control, (0, react$1.createElement)("p", { className: "dtl-config__hint" }, props.hint));
+		}
+		/** 一个小外链按钮（图标 + 文案，核心 Button）。 */
+		const linkButton = (label, url) => (0, react$1.createElement)(Button$2, {
+			size: "lg",
+			variant: "outline",
+			icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconLinkOutlineRegular, { size: 16 }),
+			onClick: () => {
+				window.open(url, "_blank", "noopener");
+			}
+		}, label);
+		function ConfigPanel(props) {
+			ensureUiBase();
+			const { t, store } = props;
+			const [, bump] = (0, react$1.useState)(0);
+			(0, react$1.useEffect)(() => store.subscribe(() => bump((n) => n + 1)), [store]);
+			const discard = (0, react$1.useRef)(props.discard);
+			discard.current = props.discard;
+			(0, react$1.useEffect)(() => () => discard.current(), []);
+			if (props.view !== "page") return null;
+			const state = store.getSnapshot();
+			if (!state.available) return (0, react$1.createElement)("p", {
+				className: "dtl-config__note",
+				role: "status"
+			}, t("configUnavailable"));
+			const mode = state.entryMode.text === "more" ? "more" : "first";
+			const handleSave = () => {
+				if (state.displayName.overridden && state.displayName.text.trim() === props.defaultName) props.resetField(DISPLAY_NAME_FIELD);
+				props.save();
+			};
+			return (0, react$1.createElement)("div", null, (0, react$1.createElement)("div", { className: "dtl-config__pair" }, configField({
+				id: "dtl-config-name",
+				label: t("configNameLabel"),
+				hint: t("configNameHint"),
+				overridden: state.displayName.overridden,
+				resetLabel: t("configReset"),
+				overriddenLabel: t("configOverridden"),
+				disabled: !state.writable,
+				onReset: () => props.resetField(DISPLAY_NAME_FIELD),
+				control: (0, react$1.createElement)(Input, {
+					value: state.displayName.text,
+					onChange: (text) => props.edit(DISPLAY_NAME_FIELD, text),
+					placeholder: props.defaultName,
+					size: "lg",
+					error: state.displayName.invalid,
+					disabled: !state.writable,
+					"aria-label": t("configNameLabel")
+				})
+			}), configField({
+				id: "dtl-config-entry",
+				label: t("configEntryLabel"),
+				hint: t("configEntryHint"),
+				overridden: state.entryMode.overridden,
+				resetLabel: t("configReset"),
+				overriddenLabel: t("configOverridden"),
+				disabled: !state.writable,
+				onReset: () => props.resetField(ENTRY_MODE_FIELD),
+				control: (0, react$1.createElement)(Picker, {
+					value: mode,
+					options: [{
+						value: "first",
+						label: t("configEntryFirst")
+					}, {
+						value: "more",
+						label: t("configEntryMore")
+					}],
+					mode: "single",
+					size: "lg",
+					width: "100%",
+					disabled: !state.writable,
+					ariaLabel: t("configEntryLabel"),
+					onChange: (next) => {
+						props.edit(ENTRY_MODE_FIELD, String(next));
+					}
+				})
+			})), (0, react$1.createElement)("div", { className: "dtl-config__row" }, (0, react$1.createElement)(Button$2, {
+				variant: "primary",
+				size: "lg",
+				disabled: !state.dirty || state.invalid || state.saving,
+				onClick: handleSave
+			}, state.saving ? t("configSaving") : t("configSave")), linkButton(t("configGithub"), PROJECT_URL), linkButton(t("configComponents"), COMPONENTS_URL), state.failed ? (0, react$1.createElement)("p", {
+				className: "dtl-config__failed",
+				role: "status"
+			}, t("configSaveFailed")) : null, !state.writable ? (0, react$1.createElement)("p", {
+				className: "dtl-config__note",
+				role: "status"
+			}, t("configReadOnly")) : null));
+		}
+		//#endregion
 		//#region src/client/index.ts
 		/**
 		* 浏览器半入口（client bundle，产物 dist/client.js）：装配层，不写业务逻辑。
 		*
-		* 三处注册各自挂进「服务就位才触发」的 slots 注入（参考插件真机教训：顶层 inject 声明
+		* 四处注册各自挂进「服务就位才触发」的 slots 注入（参考插件真机教训：顶层 inject 声明
 		* 组合满足不了的依赖会让 entry 一直 pending、卡死整个 dsh 启动）：
 		*  · locale 字典（zh / en）——界面语言跟随宿主，插件不自备开关；
-		*  · `main` keyed 槽整页（看板首页）。
+		*  · `main` keyed 槽整页（看板首页）；
+		*  · 侧栏入口（`sidebar.panellist` 一级 / `sidebar.panellist.actions`「更多」）——
+		*    位置与显示名由插件设置决定（见 `config-panel.ts`）；
+		*  · `plugins.bundle.config` keyed 槽（插件详情页的配置区）。
 		*
 		* 宿主能力一律**本地结构化声明**，不 import 官方包（rc 接口会无声变）；
 		* `t` 席位由宿主渲染器按注册项的 `locale:` 声明合成进组件 props。
 		*/
 		setStyleKit(createStyleKit({ id: "dsh-task-ledger" }));
-		/** 命名空间（settings / locale / 面板 id 同名，便于对应）。 */
+		/** 命名空间（settings / locale / 面板 id / 详情页配置槽 key 同名，便于对应）。 */
 		/** 模块级 t 席位（侧栏 label 渲染期求值用；绑不上就回落键名，绝不上界面）。 */
 		let runtimeT = (key) => key;
 		const NS = "dsh-task-ledger";
+		/** 控制台前缀（与宿主日志区分）。 */
+		const LOG = "[task-ledger]";
 		/** `main` 槽的 key（非 `conversation` ⇒ 不绑 Session）。 */
 		const PANEL_ID = NS;
+		/** 插件详情页配置区的槽位（keyed，key 必须与包名逐字相同）。 */
+		const BUNDLE_CONFIG_SLOT = "plugins.bundle.config";
+		/** 入口位置：`first` = 左侧第一级（默认）/ `more` = 「更多」菜单。 */
+		let entryMode = "first";
+		/** 自定义显示名；空串 = 用词典默认名（`panelTitle`）。 */
+		let customName = "";
 		/** 宿主没给 t 席位时的兜底（键名绝不上界面）。 */
 		const t = interpolateTranslate((key, params) => fallbackTranslate(key, params));
+		/** 侧栏 / 「更多」菜单里那一行的文案：设了名字用自己的，否则用词典默认名。 */
+		const entryLabel = () => customName === "" ? runtimeT("panelTitle") : customName;
+		/**
+		* 取宿主实际登记的本插件设置命名空间。
+		*
+		* `cordis.patch.yml` 的 entry id 是 `dsh-task-ledger`，但宿主内部命名空间不保证逐字相同
+		* （兄弟项目 demo 的 `resolveServedEntryId` 同款顾虑）；问不到就按包名兜底。
+		*/
+		function resolveSettingsNamespace(forms) {
+			try {
+				const served = forms.describe?.().getSnapshot().view?.namespaces?.map((item) => item.ns) ?? [];
+				return served.find((ns) => ns === NS) ?? served.find((ns) => ns.includes(NS)) ?? NS;
+			} catch {
+				return NS;
+			}
+		}
+		/** 「更多」菜单里的一行：点开跳整页，并收起菜单（收起由宿主给的 onDismiss 负责）。 */
+		function MoreEntry(props) {
+			return (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.MenuItemButton, {
+				icon: (0, react$1.createElement)(LedgerIcon, { size: 16 }),
+				onSelect: () => {
+					props.onDismiss();
+					selectPanel(PANEL_ID);
+				},
+				children: entryLabel()
+			});
+		}
+		/** slots 服务引用（apply 时赋值）。 */
+		let slotsRef = null;
+		/** 当前入口的注册 disposer；切换位置时先摘旧的再挂新的。 */
+		let entryDisposer = null;
+		/** 当前 `slots.inject` 的 disposer（反复切换不能让 factory 越积越多）。 */
+		let entryInjected = null;
+		/**
+		* 把入口注册成 `entryMode` 说的样子。
+		*
+		* 两个 slot 的 owner 到达顺序、以及设置与 slots 两个注入块谁先到都没有保证 ⇒ 每次都用
+		* **模块级当前值**重挂一遍：先摘旧 factory 与旧条目，再按现值注册。重复调用是无害的。
+		*/
+		function applySidebarEntry() {
+			const slots = slotsRef;
+			if (slots === null) return;
+			entryInjected?.();
+			entryDisposer?.();
+			entryInjected = null;
+			entryDisposer = null;
+			if (entryMode === "more") {
+				entryInjected = slots.inject("sidebar.panellist.actions", () => {
+					console.info(`${LOG} 入口已挂到 sidebar.panellist.actions（「更多」菜单）`);
+					entryDisposer = slots.register({
+						name: "sidebar.panellist.actions",
+						id: `${PANEL_ID}-more`,
+						order: 30,
+						locale: NS
+					}, (props) => (0, react$1.createElement)(MoreEntry, { onDismiss: props.onDismiss }));
+					return entryDisposer;
+				});
+				return;
+			}
+			entryInjected = slots.inject("sidebar.panellist", () => {
+				console.info(`${LOG} 入口已挂到 sidebar.panellist（一级菜单）`);
+				entryDisposer = slots.register({
+					name: "sidebar.panellist",
+					id: PANEL_ID,
+					order: 30,
+					label: entryLabel,
+					locale: NS
+				}, (props) => (0, react$1.createElement)(LedgerIcon, { size: props.size ?? 18 }));
+				return entryDisposer;
+			});
+		}
+		/** 布局服务：浮标点开整页 / 整页返回会话 / 「更多」那一行跳整页。 */
+		let selectPanel = () => {};
 		function apply(ctx) {
 			connectHost(ctx);
 			connectFs({ path: FS_PATH });
@@ -68021,7 +68282,6 @@ body[data-ds-dark-theme]{
 					runtimeT = localeCtx.locale?.bind(NS) ?? runtimeT;
 				} catch {}
 			});
-			let selectPanel = () => {};
 			ctx.inject(["layout"], (sub) => {
 				const layout = sub.layout;
 				if (layout !== void 0) selectPanel = (id) => {
@@ -68045,13 +68305,8 @@ body[data-ds-dark-theme]{
 				if (sub.uiConversation !== void 0) setUiConversation(sub.uiConversation);
 			});
 			ctx.inject(["slots"], (sub) => {
-				sub.slots.inject("sidebar.panellist", () => sub.slots.register({
-					name: "sidebar.panellist",
-					id: PANEL_ID,
-					order: 30,
-					label: () => runtimeT("panelTitle"),
-					locale: NS
-				}, (props) => (0, react$1.createElement)(LedgerIcon, { size: props.size ?? 18 })));
+				slotsRef = sub.slots;
+				applySidebarEntry();
 				sub.slots.inject("main", () => sub.slots.register({
 					name: "main",
 					key: PANEL_ID,
@@ -68062,6 +68317,60 @@ body[data-ds-dark-theme]{
 						selectPanel(null);
 					}
 				})));
+			});
+			ctx.inject([
+				"slots",
+				"locale",
+				"configForms"
+			], (sub) => {
+				const forms = sub.configForms;
+				if (forms === void 0) {
+					console.warn(`${LOG} configForms 服务未就位，插件详情页配置区不注册`);
+					return;
+				}
+				const ns = resolveSettingsNamespace(forms);
+				if (ns !== NS) console.info(`${LOG} 设置命名空间取宿主登记的 ${ns}（包名 ${NS}）`);
+				const scope = forms.get(ns);
+				const model = new _deepseek_ai_dsh_client_ui_primitives.SettingsFormModel(scope, [(0, _deepseek_ai_dsh_client_ui_primitives.settingsTextField)(ENTRY_MODE_FIELD), (0, _deepseek_ai_dsh_client_ui_primitives.settingsTextField)(DISPLAY_NAME_FIELD)]);
+				const store = model.bind(() => ({
+					...model.shell(),
+					entryMode: model.field(ENTRY_MODE_FIELD),
+					displayName: model.field(DISPLAY_NAME_FIELD)
+				}));
+				const actions = model.actions();
+				ctx.effect(() => () => model.dispose());
+				const sync = () => {
+					const snapshot = scope.getSnapshot();
+					const value = snapshot.value;
+					entryMode = value?.entryMode === "more" ? "more" : "first";
+					customName = (value?.displayName ?? "").trim();
+					if (snapshot.status === "unavailable") console.warn(`${LOG} 设置命名空间 ${ns} 未被宿主登记（host 侧 Config schema 没生效？），配置区会显示「不可用」`);
+					applySidebarEntry();
+				};
+				sync();
+				ctx.effect(() => scope.subscribe(sync));
+				ctx.effect(() => sub.slots.inject(BUNDLE_CONFIG_SLOT, () => {
+					console.info(`${LOG} 已注册插件详情页配置区到 ${BUNDLE_CONFIG_SLOT}（${NS}）`);
+					return sub.slots.register({
+						name: BUNDLE_CONFIG_SLOT,
+						key: NS,
+						locale: NS
+					}, (props) => {
+						const translate = props.t ?? t;
+						return (0, react$1.createElement)(ConfigPanel, {
+							view: props.view ?? "page",
+							store,
+							t: translate,
+							defaultName: translate("panelTitle"),
+							save: () => {
+								model.save();
+							},
+							edit: actions.edit,
+							resetField: actions.resetField,
+							discard: actions.discard
+						});
+					});
+				}));
 			});
 		}
 		//#endregion

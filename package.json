@@ -12,5 +12,8 @@
 	],
 	"scripts": {
 		"test": "cd packages/skill/src && go vet ./... && go test ./..."
+	},
+	"dependencies": {
+		"@deepseek-ai/schemastery": "^3.18.5"
 	}
 }

@@ -2,8 +2,9 @@
  * dsh-task-ledger host 半入口：装配层，不写业务逻辑。
  *
  * 已落地：数据面路由（任务 3，routes.ts）、内嵌 skill 全局注册（任务 2，
- * skill-registration.ts）。入口 / 图标 / 设置页（任务 1）与按钮会话交接
- * （任务 4）各自落地时再往本文件加装配，业务逻辑一律进 host/ 对应文件。
+ * skill-registration.ts）、插件配置 schema（`Config`，宿主托管的设置区）、
+ * 只读文件路由。按钮会话交接（任务 4）落地时再往本文件加装配，业务逻辑一律进
+ * host/ 对应文件。
  *
  * 服务等待写在 apply 内的 ctx.inject（参考插件真机教训：顶层 inject 声明组合
  * 满足不了的依赖会令 entry 一直 pending、卡死整个 dsh 启动）；两条注入线
@@ -13,6 +14,40 @@ import { serveFsRoute } from "dsh-plugin-core/host";
 import { FS_ROUTE, registerRoutes } from "./host/routes.js";
 import { buildSkillRegistration, } from "./host/skill/registration.js";
 export const name = "dsh-task-ledger";
+/**
+ * 取官方 schema 库。**动态 import + 兜底**而不是静态 import：静态 import 一旦解析不到，
+ * 整个 server entry 加载失败，插件管理页把它标成「异常」——连侧栏与整页一起没了
+ * （dsh-plugin-core demo 2026-10-25 真机事故的同一坑）。退化成 undefined 的代价只是
+ * 「详情页没有配置区」，入口照常可用。
+ */
+async function loadSchemastery() {
+    try {
+        return (await import("@deepseek-ai/schemastery")).default;
+    }
+    catch {
+        return undefined;
+    }
+}
+const z = await loadSchemastery();
+if (z === undefined)
+    console.warn("[task-ledger] @deepseek-ai/schemastery 解析失败：插件详情页没有配置区（侧栏入口与看板不受影响）");
+/**
+ * 插件配置 schema —— 插件详情页配置区的唯一来源（dsh 0.1.7+：settings 服务按活跃
+ * entry 的 `Config` 派生表单，命名空间 = `cordis.patch.yml` 那条 insert 的 id = 包名）。
+ *
+ * · 只有 `.volatile()` 字段会进表单，且由宿主**原位热更新 + 持久化**（写到 profile
+ *   patch 文档）；插件不自己落盘、不碰 localStorage。
+ * · `entryMode`：`first` = 左侧第一级（默认，= 既有位置）/ `more` = 「更多」菜单。
+ * · `displayName`：空串 = 用词典里的默认名（见 client/locales.ts 的 `panelTitle`）。
+ *
+ * 刻意不带 `z<Config>` 类型标注：`.volatile()` 改变推导类型，带上反而 TS2322。
+ */
+export const Config = z === undefined
+    ? undefined
+    : z.object({
+        entryMode: z.string().default("first").volatile(),
+        displayName: z.string().default("").volatile(),
+    });
 /**
  * 「继续」用的宿主服务读取器：**现取、不预先注入**。
  *
