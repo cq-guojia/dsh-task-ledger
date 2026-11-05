@@ -1,7 +1,7 @@
 # 20261105-0839-aaca-跟随-dsh-plugin-core-升级重构调整引用: 跟随 dsh-plugin-core 升级重构调整引用
 
 - **Tags**: dsh-plugin-core, 依赖升级, 引用路径
-- **Status**: doing · 2026-11-05 08:42:25 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-05 09:08:47 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-05 08:39:55 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -26,40 +26,46 @@
 
 ## To Do
 
-- [x] `pnpm --filter ./packages/plugin add dsh-plugin-core@0.33.1`
-- [x] 逐项核对本项目对核心的全部 import（27 处 / 36 个符号），确认子路径与符号未变
-- [x] `docs/design/external/dsh-plugin-core-explorer.md` 按新版复核（版本号 + 源码路径 + 行号）
+- [x] `pnpm --filter ./packages/plugin add dsh-plugin-core@0.33.1`（第一跳，纯内部重组，零改动）
+- [x] 逐项核对本项目对核心的全部 import（27 处 / 36 个符号）
+- [x] 核心发 **0.33.2**（提交 `2b8cc55`：`exports` 改 `./adv/*`、清 624 个孤儿产物、build 加 prune-dist）→ 升 0.33.2 并改 6 处 specifier
+- [x] `docs/design/external/dsh-plugin-core-explorer.md` + `docs/design/features/ledger-dirs.md` 按 0.33.2 复核
 - [x] build + typecheck + dist 产物重建
 
 ## Next
 
-待用户验收。**观察项（不是我方待办）**：核心 `0.33.1` 的 `exports` 仍是 `./explorer` / `./session`，
-而其台账已拍板改用 `dsh-plugin-core/adv/explorer` / `adv/session`；若核心后续真改，本项目需跟着改
-6 处 specifier（`client/board-home.ts:33,39`、`client/settings-page.ts:20`、`client/index.ts:16`、`index.ts:13`）。
+待用户验收：开一次看板，确认文件预览（`adv/explorer`）与会话预览（`adv/session`）两条链路正常 ——
+改的是模块 specifier，打包能过只证明解析得到，真机才证明面板拉得起来。
 
 ## Process
 
 - 核心这次重构（其台账 `20261105-0600-bde5-整理控件归类与文档结构`，提交 `257c945`）：`src/ui` 按七类归档、
   `src/explorer` → `src/adv/explorer`、`src/session` → `src/adv/session`、183 个文件迁移。
-- **对外没变**：`dsh-plugin-core@0.33.1` 与 `0.32.0` 的 `package.json` 的 `exports` 逐条相同
-  （`./design ./ui ./ui/official ./ui/code-viewer ./ui/host ./utils ./explorer ./explorer/preview ./session ./host`），
-  打包里 `dist/explorer`、`dist/session` 与 `dist/adv/*` 并存 ⇒ 消费方子路径照旧可用。
-- 逐入口比导出符号集合（0.32.0 vs 0.33.1）：10 个入口全等（`ui` 229、`explorer` 39、`session` 30、`utils` 31 …），无删无增。
+- **第一跳（0.32.0 → 0.33.1）对外没变**：两版 `exports` 逐条相同，打包里 `dist/explorer`、`dist/session`
+  与 `dist/adv/*` 并存 ⇒ 子路径照旧可用。10 个入口导出符号集合全等（`ui` 229、`explorer` 39、`session` 30、`utils` 31 …）。
 - `d.ts` 内容比对（剥掉 import 行）：唯一实质变化是 `src/utils/i18n.ts:1568` 的
-  `setLocale(locale: Locale | null)`（新增「传 null 恢复跟随宿主」），属放宽，向后兼容。
+  `setLocale(locale: Locale | null)`（新增「传 null 恢复跟随宿主」），属放宽，向后兼容；本项目没用到。
 - 本项目引用面：`dsh-plugin-core/ui` 19 处、`/session` 3、`/explorer` 3、`/design` 1、`/host` 1；
-  **无 deep import**（`src/` 里没有任何 `dsh-plugin-core/dist/…`）。36 个导入符号逐个对照入口导出，全部存在。
-- 升级后 `pnpm --filter ./packages/plugin run verify` 零代码改动通过；`dist/client.js` 因内联新核心实现而重建（+1163/−322 行）。
-- 文档行号随目录重构失效，已按 0.33.1 实包重核：`dist/explorer/open.d.ts` 的 `pickWorkspaceFile` 105→136、
-  `placement` 75-92→105、`PickFilter` 170-175→170-173、`PickedPath` 161-172→161-168；
-  源码出处 `src/explorer/*` → `src/adv/explorer/*`（「选当前目录」541-556→702-705，`translate` 137→145，i18n 字典 849-864→548,1058）。
+  **无 deep import**（`src/` 里没有任何 `dsh-plugin-core/dist/…`）。
+- **0.33.1 的坑**：`dist/explorer`、`dist/session` 是重构前构建的 224 个孤儿产物（build 无 clean，且已入 git），
+  `exports` 仍指向它们 ⇒ 消费方拿到的是旧副本（实测 js 等价，仅一行注释路径不同，但下次改 `src/adv/*` 会改了不发）。
+  已在核心侧修掉（`2b8cc55`）。
+- **第二跳（0.33.1 → 0.33.2）是真 break**：`exports` 变为
+  `./design ./ui ./ui/official ./ui/code-viewer ./ui/host-toast ./utils ./adv/explorer ./adv/explorer/preview ./adv/session ./host`，
+  `dist/` 只剩 `adv design host ui utils`。`./ui/host` 一并改名 `./ui/host-toast`（本项目未用）。
+- 已改 6 处 specifier：`client/board-home.ts:33,39`、`client/settings-page.ts:20`、`client/index.ts:16,43`、
+  `client/close-session.ts:24`（`/explorer`→`/adv/explorer`、`/session`→`/adv/session`）。
+- 改后 `pnpm --filter ./packages/plugin run verify` 通过；36 个导入符号在 0.33.2 下逐个复核仍在（0 个缺失）。
+- 文档行号复核结果：目录改名但行号不变（`open.d.ts` 的 `pickWorkspaceFile` 136、`placement` 105、
+  `types.d.ts` 的 `PickedPath` 161-168 / `PickFilter` 170-173、`FileBrowser.js` 392,455、`open.js` 94,268）。
 
 ## Conclusion
 
-`dsh-plugin-core` 0.32.0 → 0.33.1 升级完成，**本项目源码零改动**：核心这次是内部目录重组 + 文档重组，
-对外子路径与全部导出符号不变，唯一签名变化（`setLocale` 接受 `null`）我们没用到。
-落盘变更：`packages/plugin/package.json`（`^0.33.1`）、`pnpm-lock.yaml`、重建的 `dist/client.js(.map)`、
-`docs/design/external/dsh-plugin-core-explorer.md`（版本 + 路径 + 行号复核）。
+`dsh-plugin-core` 0.32.0 → 0.33.2 完成。第一跳零改动，第二跳（0.33.2 把子路径搬进 `adv/`）改了本项目 6 处 import；
+36 个导入符号全部仍在，build + typecheck 通过。
+落盘变更：`packages/plugin/package.json`（`^0.33.2`）、`pnpm-lock.yaml`、6 个 client 源文件的 specifier、
+重建的 `dist/client.js(.map)`、`docs/design/external/dsh-plugin-core-explorer.md`、
+`docs/design/features/ledger-dirs.md`（一处旧路径）。
 
 ## Execution Log
 
@@ -67,3 +73,4 @@
      Backfill with: progress log --id 20261105-0839-aaca-跟随-dsh-plugin-core-升级重构调整引用 --note "...". -->
 - 2026-11-05 08:39:55 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · created and claimed
 - 2026-11-05 08:42:25 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 升 dsh-plugin-core 0.32.0→0.33.1（packages/plugin/package.json ^0.33.1）；核心 exports 与 10 个入口导出符号和 0.32.0 全等、36 个导入符号齐 ⇒ 源码零改动，build+typecheck 过；external 文档行号按新包重核
+- 2026-11-05 09:08:47 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 升 dsh-plugin-core 0.33.2（核心 2b8cc55：exports 改 ./adv/*、清 624 孤儿产物）；改 6 处 specifier 为 adv/explorer、adv/session（board-home.ts:33,39 / settings-page.ts:20 / index.ts:16,43 / close-session.ts:24）；36 符号复核全在，build+typecheck 过；文档同步

@@ -2,7 +2,7 @@
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
     "20261105-0544-e3d4-出版": {"category": "发布", "created": "2026-11-05 05:44:04", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 05:48:01", "status": "doing", "tags": ["文档", "发布", "双包"], "title": "出版", "updated": "2026-11-05 09:05:42", "worklog": "worklog/202611/05-0544-e3d4-出版.md"},
-    "20261105-0839-aaca-跟随-dsh-plugin-core-升级重构调整引用": {"category": "依赖升级", "created": "2026-11-05 08:39:55", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 08:39:55", "status": "doing", "tags": ["dsh-plugin-core", "依赖升级", "引用路径"], "title": "跟随 dsh-plugin-core 升级重构调整引用", "updated": "2026-11-05 08:42:25", "worklog": "worklog/202611/05-0839-aaca-跟随-dsh-plugin-core-升级重构调整引用.md"}
+    "20261105-0839-aaca-跟随-dsh-plugin-core-升级重构调整引用": {"category": "依赖升级", "created": "2026-11-05 08:39:55", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-05 08:39:55", "status": "doing", "tags": ["dsh-plugin-core", "依赖升级", "引用路径"], "title": "跟随 dsh-plugin-core 升级重构调整引用", "updated": "2026-11-05 09:08:47", "worklog": "worklog/202611/05-0839-aaca-跟随-dsh-plugin-core-升级重构调整引用.md"}
   },
   "version": "20261022000000"
 }
