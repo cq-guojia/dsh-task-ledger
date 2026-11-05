@@ -1,53 +1,105 @@
 # task-ledger
 
-> 给人看的概览与索引。给 agent 的执行说明在 `SKILL.md`（每次会话整份注入），两者不重复；本文件不进 agent 上下文、不占 token。
+**English** · [简体中文](https://github.com/cq-guojia/dsh-task-ledger/blob/main/packages/skill/README.zh-CN.md)
 
-## 它做什么
+A task ledger for AI coding agents. The agent records what it is working on — who owns it, how far it has got, when it was opened and when it was closed — as plain text inside the repository, so the answer survives the end of the conversation.
 
-管一个工作区 / 项目的任务进度（开发活、琐事、调研、备忘都算），一共三件东西：
+The package is a skill: a `SKILL.md` file, a prebuilt command-line tool, and reference material. It runs on any agent that loads the open `SKILL.md` format: Claude Code, Cursor, Codex, CodeBuddy, WorkBuddy, Trae, Doubao Work and others.
 
-- **谁在做、做到哪**：状态只在台账 JSON —— `ledger/pool.json`（公共池）+ 每人一份 `ledger/owners/<hash>.json` 分片，索引 `ledger/owners.json`。
-- **过程正文**：全在 `ledger/worklog/<年月>/<月日>-<时分>-<说明>-<码>.md`（六节），agent 直接编辑前五节，末节「执行记录」只由脚本写。
-- **已结案**：一行一条在 `ledger/history/<年月>.md`（16 列），只由脚本写。
+Four properties define it:
 
-状态改动与正文重写分开、全部经脚本改 —— 不另建副本、不手改状态表和历史。覆盖动作：建任务、认领、释放、结案、查在办、查历史、标签归并、体检。
-
-## 文件布局（脚本只写这些）
-
-| 文件 | 装什么 |
+| Property | What it means |
 |---|---|
-| `ledger/pool.json` | 公共池：未认领任务（owner 空） |
-| `ledger/owners.json` | 索引：身份 uuid → 分片文件（`name` 只做显示 / 模糊筛） |
-| `ledger/owners/<hash>.json` | 每人一份分片：自己认领的任务 |
-| `ledger/worklog/<年月>/*.md` | 任务正文（六节） |
-| `ledger/history/<年月>.md` | 已结案（一行一条，16 列） |
+| **Task lifecycle tracking** | Tasks are created, claimed, resumed, handed over and closed. Every transition carries a timestamp and an owner; progress, the conclusion and open issues are written into the task document. |
+| **Local by design** | No account, no hosted backend, no service marketplace. The ledger is JSON and Markdown committed with the repository; it works offline and is reviewable in a pull request. |
+| **Single-user and multi-user** | One person on one machine, or a team sharing one repository. Ownership state is sharded per person, so concurrent work never writes the same file. |
+| **Version control as the sync layer** | Git is the transport. Push, pull and merge carry the ledger between machines and contributors. |
 
-## 为什么这么设计
+![Task document](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/worklog.png)
 
-跨项目固定用 `ledger/`（不占项目的 `docs/`）；状态用 JSON 而非 Markdown（改动面最小）；状态与过程正文分离（互不踩）；一人一份分片把并发冲突面从整份文件缩到公共池里几行；**所有存盘时间（含过程文档里的日志行）一律 UTC**，脚本输出时统一转本机时区（人话与 `--json` 一致）。
+## Install
 
-## 怎么用（执行规则在 SKILL.md）
-
-直接跑：
+Installing means copying the skill directory into the directory your agent reads. Fetch the source once:
 
 ```bash
-<SKILL.md 所在目录>/scripts/progress <子命令> --repo <工作区根>
+git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-ledger-src
 ```
 
-`scripts/progress` 按平台 exec `scripts/bin/ledger-<os>-<arch>`（静态二进制；已带 linux/amd64、darwin/arm64 与 windows/amd64）。
+Then copy it for the agent you use. User-level paths apply to every project; project-level paths apply to one repository and can be committed, which is how a team shares one skill.
 
-**不需要安装任何东西**：直接执行上面那个路径就行。它是个 `sh` 脚本——若某个安装环节丢了可执行位（报 `Permission denied`），前面加 `sh ` 照样能跑：`sh <SKILL.md 所在目录>/scripts/progress <子命令> --repo <工作区根>`。
+| Agent | User-level directory | Command |
+|---|---|---|
+| **Claude Code** | `~/.claude/skills/` | `mkdir -p ~/.claude/skills && cp -R /tmp/task-ledger-src/packages/skill ~/.claude/skills/task-ledger` |
+| **Cursor** | `~/.cursor/skills/` | `mkdir -p ~/.cursor/skills && cp -R /tmp/task-ledger-src/packages/skill ~/.cursor/skills/task-ledger` |
+| **Codex CLI** | `~/.codex/skills/` | `mkdir -p ~/.codex/skills && cp -R /tmp/task-ledger-src/packages/skill ~/.codex/skills/task-ledger` |
+| **CodeBuddy** | `~/.codebuddy/skills/` | `mkdir -p ~/.codebuddy/skills && cp -R /tmp/task-ledger-src/packages/skill ~/.codebuddy/skills/task-ledger` |
+| **WorkBuddy** | `~/.workbuddy/skills/` | `mkdir -p ~/.workbuddy/skills && cp -R /tmp/task-ledger-src/packages/skill ~/.workbuddy/skills/task-ledger` |
+| **Trae** | `~/.trae/skills/` (Trae CN: `~/.trae-cn/skills/`) | `mkdir -p ~/.trae/skills && cp -R /tmp/task-ledger-src/packages/skill ~/.trae/skills/task-ledger` |
 
-子命令：`new` `claim` `set` `log` `close` `delete` `list` `history` `show` `whoami` `validate`。命令参考（参数 / 一句话 / 举例）、任务生命周期、纪律（数据完整性 / 人类授权 / 故障处置）全在 `SKILL.md`；参数细节看 `<子命令> --help`（不要凭记忆编）。
+**Project-level installation.** The same copy works inside a repository: `.claude/skills/`, `.cursor/skills/`, `.codebuddy/skills/`, `.trae/skills/`, or `.agents/skills/` — the cross-agent convention read by Codex and Cursor. Committed alongside the code, it gives every contributor the same instructions.
 
-## 深入参考（references/，按需读）
+**Doubao Work (豆包工作).** Import the folder from the application: open the sidebar, choose Skills, and import `packages/skill` as a local skill. The application does not document a user-level skills directory, so in-app import is the supported route.
 
-| 文件 | 看什么 |
+**Other agents.** Place the directory under `.agents/skills/task-ledger/`, or wherever the agent scans for `SKILL.md`. Nothing in the package depends on the host: the CLI is a static binary, the content is Markdown.
+
+**Windows.** Substitute `%USERPROFILE%\` for `~`. The CLI ships binaries for Linux (amd64), macOS (arm64) and Windows (amd64); the wrapper script selects the right one.
+
+## First run
+
+Once per machine, initialise the identity that signs every ledger entry. The step is interactive and must be run by you — the agent is not allowed to create or rewrite an identity on your behalf:
+
+```bash
+~/.claude/skills/task-ledger/scripts/progress init --new --name "Your Name"
+```
+
+On a second machine, run `init` without arguments and claim the identity already present in the ledger roster, so that both machines write under the same account.
+
+No runtime, package manager or network access is required afterwards.
+
+## What gets written
+
+```
+ledger/
+├── pool.json                 unclaimed tasks (shared)
+├── owners.json               index: identity → shard file
+├── owners/<hash>.json        one shard per person: the tasks they own
+├── worklog/<YYYYMM>/*.md     task documents, six fixed sections
+└── history/<YYYYMM>.md       closed tasks, one row each
+```
+
+State and prose are kept apart: JSON records ownership and state, Markdown records the reasoning. Only the CLI writes state, history and the execution log; the agent writes the first five sections of a task document and nothing else. All timestamps are stored in UTC and rendered in local time.
+
+## Commands
+
+| Command | Purpose |
 |---|---|
-| [`references/state-model.md`](references/state-model.md) | 状态机、时间口径（UTC / 本地、补录、筛选）、任务号、身份 |
-| [`references/log-note.md`](references/log-note.md) | 执行记录什么算一个节点、`--note` 怎么写（正 / 反例） |
-| [`references/troubleshooting.md`](references/troubleshooting.md) | 退出码、常见错误、硬约束、环境要求（git ≥ 2.27） |
+| `init` | Initialise or claim the machine identity (once per machine) |
+| `new` | Create a task |
+| `claim` | Take ownership of a task |
+| `set` | Change state, owner, tags or notes |
+| `log` | Append an execution record to a task document |
+| `close` | Close a task and write its history row |
+| `delete` | Delete a task created in error |
+| `list` | List in-flight tasks |
+| `show` | Show one task |
+| `history` | List closed tasks |
+| `stats` | Aggregate counters and trend |
+| `owners` | List known identities |
+| `root` | Detect whether a directory holds a ledger |
+| `whoami` | Show the current identity |
+| `validate` | Check ledger consistency |
 
-## 本仓自己的台账
+Run `scripts/progress <command> --help` for parameters. The agent-facing workflow lives in `SKILL.md`.
 
-本仓库（`dsh-task-ledger`）也用自己的这套脚本（`scripts/progress` → `src/` 编译出的二进制）管自己的活，台账数据在 `ledger/`；它和本 skill 源码 `packages/skill/` 是两回事 —— **改 skill 请别动 `ledger/`**。
+## Multiple users
+
+Ownership is sharded: each person's tasks live in their own file, so two people advancing two tasks never touch the same file. Git merges the shards, the worklog documents and the history file. Where two people edit the same task document, the conflict is confined to that one file.
+
+## Links
+
+- Repository and full documentation: <https://github.com/cq-guojia/dsh-task-ledger>
+- The dsh plugin, which bundles this skill with a board UI: [`dsh-task-ledger`](https://www.npmjs.com/package/dsh-task-ledger)
+
+## Licence
+
+MIT
