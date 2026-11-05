@@ -55790,6 +55790,30 @@ window.__ModuleLoader__.load({
 				clearTimeout(timer);
 			}
 		}
+		/**
+		* 逐行读 NDJSON 流：每拆出一行交给 `handle`，它返回 true = 到此为止。
+		* 返回值 `true` 表示被 `handle` 收摊、`false` 表示流读完了还没收摊（调用方按「连接中断」处理）。
+		*/
+		async function readLines(res, handle) {
+			if (res.body === null) throw new HttpError("响应没有内容（响应流不可读）", null);
+			const reader = res.body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = "";
+			try {
+				for (;;) {
+					const chunk = await reader.read();
+					if (chunk.done) break;
+					buffer += decoder.decode(chunk.value, { stream: true });
+					const lines = buffer.split("\n");
+					buffer = lines.pop() ?? "";
+					for (const line of lines) if (handle(line)) return true;
+				}
+				buffer += decoder.decode();
+				return handle(buffer);
+			} finally {
+				reader.cancel().catch(() => void 0);
+			}
+		}
 		/** 本机身份：进面板的**第一个**请求（没身份时快照会 500，所以必须先问它）。 */
 		function fetchIdentity() {
 			return fetchJson("/identity");
@@ -55827,13 +55851,75 @@ window.__ModuleLoader__.load({
 				body: JSON.stringify(body)
 			}, body.action === "rename" ? RENAME_TIMEOUT_MS : void 0);
 		}
-		/** 从名册摘掉一个人：每本登记过他的台账各删各的（还有任务的那本由 host 回报为 kept）。 */
-		function postForgetIdentity(uuid) {
-			return fetchJson("/identity/forget", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ uuid })
+		/** 解析一行；不是我们的形状就返回 null，交给外层继续读。 */
+		function forgetEventOf(line) {
+			if (line.trim() === "") return null;
+			let raw;
+			try {
+				raw = JSON.parse(line);
+			} catch {
+				return null;
+			}
+			if (raw === null || typeof raw !== "object") return null;
+			const event = raw;
+			if (event.type === "step" && typeof event.step === "string" && isStep(event.step)) return {
+				type: "step",
+				step: event.step,
+				workspace: typeof event.workspace === "string" ? event.workspace : ""
+			};
+			if (event.type === "done" && event.report !== null && typeof event.report === "object") return {
+				type: "done",
+				report: event.report
+			};
+			if (event.type === "error") return {
+				type: "error",
+				error: typeof event.error === "string" ? event.error : "摘人失败",
+				code: typeof event.code === "string" ? event.code : null
+			};
+			return null;
+		}
+		/**
+		* 从名册摘掉一个人：每本登记过他的台账各删各的（还有任务的那本由 host 回报为 kept）。
+		*
+		* host 回的是 **NDJSON 流**：逐本台账各跑一条 skill 写命令，每进一个阶段推一行
+		* `{type:"step",step,workspace}` 喂给 `onStep` 翻进度文案，末行 `{type:"done",report}`
+		* 带汇总；跑挂时推 `{type:"error",error,code}` ⇒ 这里抛 HttpError（码照旧）。
+		*/
+		async function postForgetIdentity(uuid, onStep) {
+			const controller = new AbortController();
+			const timer = setTimeout(() => {
+				controller.abort(new DOMException(`请求超时（${RENAME_TIMEOUT_MS}ms 未响应）`, "TimeoutError"));
 			}, RENAME_TIMEOUT_MS);
+			try {
+				const res = await fetch(`${API_PREFIX}/identity/forget`, {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({ uuid }),
+					signal: controller.signal,
+					cache: "no-store"
+				});
+				if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
+				const reports = [];
+				await readLines(res, (line) => {
+					const event = forgetEventOf(line);
+					if (event === null) return false;
+					if (event.type === "step") {
+						onStep?.({
+							step: event.step,
+							workspace: event.workspace
+						});
+						return false;
+					}
+					if (event.type === "error") throw new HttpError(event.error, event.code);
+					reports.push(event.report);
+					return true;
+				});
+				const report = reports[0];
+				if (report === void 0) throw new HttpError("摘人没有返回结果（连接中断）", null);
+				return report;
+			} finally {
+				clearTimeout(timer);
+			}
 		}
 		/**
 		* 任务写动作（认领 / 释放）的超时：host 要跑一次「取最新 → 改 → 提交 → 推送」，
@@ -55893,15 +55979,7 @@ window.__ModuleLoader__.load({
 					cache: "no-store"
 				});
 				if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
-				if (res.body === null) throw new HttpError("任务动作没有返回内容（响应流不可读）", null);
-				const reader = res.body.getReader();
-				const decoder = new TextDecoder();
-				let buffer = "";
-				/**
-				* 处理一行：翻一行进度文案、`done` 返回 true（该收摊了）、`error` 直接抛。
-				* 坏行 / 空行当没看见 —— 一条读不懂的行不该让整条命令算失败。
-				*/
-				const handle = (line) => {
+				if (await readLines(res, (line) => {
 					const event = actionEventOf(line);
 					if (event === null) return false;
 					if (event.type === "step") {
@@ -55910,21 +55988,7 @@ window.__ModuleLoader__.load({
 					}
 					if (event.type === "error") throw new HttpError(event.error, event.code);
 					return true;
-				};
-				try {
-					for (;;) {
-						const chunk = await reader.read();
-						if (chunk.done) break;
-						buffer += decoder.decode(chunk.value, { stream: true });
-						const lines = buffer.split("\n");
-						buffer = lines.pop() ?? "";
-						for (const line of lines) if (handle(line)) return { ok: true };
-					}
-					buffer += decoder.decode();
-					if (handle(buffer)) return { ok: true };
-				} finally {
-					reader.cancel().catch(() => void 0);
-				}
+				})) return { ok: true };
 				throw new HttpError("任务动作没有返回结果（连接中断）", null);
 			} finally {
 				clearTimeout(timer);
@@ -64860,6 +64924,7 @@ body[data-ds-dark-theme]{
 			settingsForgetDoneCount: "已移除 {count} 本台账",
 			settingsForgetPartialTitle: "@{name} 移除未完成",
 			settingsForgetFailedTitle: "@{name} 移除失败",
+			settingsForgetStep: "{step}（{workspace}）",
 			settingsCreateDone: "已创建身份 @{name}",
 			settingsSwitchDone: "已切换到 @{name}",
 			settingsRosterEmpty: "所列台账中暂无已创建的身份。",
@@ -65139,6 +65204,7 @@ body[data-ds-dark-theme]{
 			settingsForgetDoneCount: "Removed from {count} ledger(s)",
 			settingsForgetPartialTitle: "Identity @{name} partially removed",
 			settingsForgetFailedTitle: "Failed to remove identity @{name}",
+			settingsForgetStep: "{step} ({workspace})",
 			settingsCreateDone: "Created identity @{name}",
 			settingsSwitchDone: "Switched to @{name}",
 			settingsRosterEmpty: "No identity has been created in the listed ledgers.",
@@ -65598,7 +65664,8 @@ body[data-ds-dark-theme]{
 		* （2026-11-03，统一走 `/task/action`）；继续走 `/task/continue` 起会话（2026-11-03 晚）；
 		* **完成仍未接**，先只摆按钮。
 		*/
-		/** 写命令的阶段 → 底栏进度文案（skill 那边新增阶段、这边没对上 ⇒ 继续显示上一句）。 */
+		/** 写命令的阶段 → 底栏进度文案（skill 那边新增阶段、这边没对上 ⇒ 继续显示上一句）。
+		*  设置页的「移除身份」也逐本跑写命令，同一个映射，别抄第二份。 */
 		const STEP_LABEL = {
 			check: "actionStepCheck",
 			sync: "actionStepSync",
@@ -66608,20 +66675,28 @@ body[data-ds-dark-theme]{
 					notify(t("settingsSwitchDone", { name: picked.name ?? shown }), { variant: "success" });
 				});
 			};
-			/** 小叉：从所有登记过他的台账里摘掉；哪本里还有任务，那本不删并由 host 回报。 */
-			const forgetUser = async (row) => {
+			/**
+			* 小叉：先开确认框，真删在框里跑（`removeUser`）—— 逐本台账各跑一条写命令，一本几秒，
+			* 所以底栏左侧跟着 skill 的阶段翻文案（用户 2026-11-05）。用声明式 `ConfirmModal`：
+			* Promise 版的 `notice` 只能在开框时给一次，运行中改不了。
+			*/
+			const [forgetRow, setForgetRow] = (0, react$1.useState)(null);
+			const [forgetStep, setForgetStep] = (0, react$1.useState)(null);
+			const forgetUser = (row) => {
 				if (pending !== null) return;
-				if (!await confirmModal({
-					title: t("settingsDeleteConfirmTitle"),
-					message: t("settingsDeleteConfirmBody", { name: row.name }),
-					confirmText: t("settingsDeleteConfirmOk"),
-					cancelText: t("settingsCancel"),
-					tone: "danger"
-				})) return;
+				setError(null);
+				setForgetStep(null);
+				setForgetRow(row);
+			};
+			/** 从所有登记过他的台账里摘掉；哪本里还有任务，那本不删并由 host 回报。 */
+			const removeUser = async () => {
+				const row = forgetRow;
+				if (row === null || pending !== null) return;
 				setPending(`forget:${row.uuid}`);
 				setError(null);
+				setForgetStep(null);
 				try {
-					const report = await postForgetIdentity(row.uuid);
+					const report = await postForgetIdentity(row.uuid, setForgetStep);
 					if (report.failed.length === 0 && report.kept.length === 0) notify(t("settingsForgetDone", { name: row.name }), { variant: "success" });
 					else {
 						const lines = [];
@@ -66642,10 +66717,13 @@ body[data-ds-dark-theme]{
 					}
 					setRoster(null);
 					onSwitched();
+					setForgetRow(null);
 				} catch (failure) {
 					setError(failure instanceof Error ? failure.message : String(failure));
+					throw failure;
 				} finally {
 					setPending(null);
+					setForgetStep(null);
 				}
 			};
 			/** 点「使用」先确认：切换身份会影响此后所有台账记录的归属，不能一下点上。 */
@@ -67147,6 +67225,22 @@ body[data-ds-dark-theme]{
 					}
 				}))
 			}))) : null;
+			/** 移除确认框：底栏左侧那行跟着 skill 的阶段翻（还没收到第一个阶段就先说「正在同步」）。 */
+			const forgetDialog = forgetRow === null ? null : (0, react$1.createElement)(ConfirmModal, {
+				title: t("settingsDeleteConfirmTitle"),
+				message: t("settingsDeleteConfirmBody", { name: forgetRow.name }),
+				confirmText: t("settingsDeleteConfirmOk"),
+				cancelText: t("settingsCancel"),
+				tone: "danger",
+				notice: forgetStep === null ? t("actionSyncing") : t("settingsForgetStep", {
+					step: t(STEP_LABEL[forgetStep.step]),
+					workspace: forgetStep.workspace
+				}),
+				onCancel: () => {
+					if (pending === null) setForgetRow(null);
+				},
+				onConfirm: removeUser
+			});
 			return (0, react$1.createElement)("div", { className: "dtl-set" }, (0, react$1.createElement)("div", { className: "dtl-hero" }, (0, react$1.createElement)("div", { className: "dtl-hero__col" }, (0, react$1.createElement)(Card, {
 				accent: hasIdentity ? "success" : "danger",
 				bar: { side: "left" }
@@ -67183,7 +67277,7 @@ body[data-ds-dark-theme]{
 						addDirFromPicker(event.currentTarget);
 					}
 				}, t("settingsDirsAdd")))
-			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), userModal);
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), userModal, forgetDialog);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -67679,7 +67773,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.130 261105-002746-871`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.0.131 261105-090901-727`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

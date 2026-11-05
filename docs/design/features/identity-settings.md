@@ -56,5 +56,6 @@
 | `GET /identity` | `whoami --json` | 未初始化双 null、退 0；响应另带 `initCommand`（host 拼好的绝对路径） |
 | `GET /identity/roster` | `owners --json`（每工作区） | 2026-11-01 起**读名册不需要身份**；读挂的工作区跳过 |
 | `POST /identity/switch` | `switch --json`（隐藏命令） | 三档 `action`：`new` 建新人 / `claim` 认领 / `rename` 改昵称（逐本台账 取→改→提交→推送，超时 180s）。允许覆盖已有身份、不受真终端限制；不进 `SKILL.md`；实现在 `shell/cli.go` 的 `runSwitch` / `runRenameSelf` |
+| `POST /identity/forget` | `forget --id <uuid> --keep-identity --json`（逐本台账） | 每本登记过他的台账各跑一次，分片里还有任务的那本不删、由 host 回报为 kept；全部删成才顺手 `logout`。**响应是 NDJSON 流**（2026-11-05）：`{type:"step",step,workspace}` / `{type:"done",report}` / `{type:"error",error,code}` —— 移除确认框底栏左侧跟着 skill 的阶段翻文案（`notice`） |
 
 后端细节见 [`../host-data-plane.md`](../host-data-plane.md)；命令侧实现在 `packages/skill/src/internal/shell/cli.go` 的 `runSwitch`。

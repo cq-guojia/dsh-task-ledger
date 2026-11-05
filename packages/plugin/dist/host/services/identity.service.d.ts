@@ -38,6 +38,12 @@ export interface ForgetReport {
     /** 删的是本机身份、并且**每一本都删成了** ⇒ 顺手退出了登录。 */
     readonly signedOut: boolean;
 }
+/** 一次摘人过程里的阶段（逐本台账各跑一条 skill 写命令，带台账名免得交错时分不清）。 */
+export interface ForgetStep {
+    readonly workspace: string;
+    /** skill `stepf` 的 key：check / sync / write / commit / push。 */
+    readonly step: string;
+}
 /**
  * 把某个人从**所有登记过他的台账**里摘掉（用户 2026-11-02 定的口径）：
  * 每本台账各删各的，分片里还有任务的那本不删、如实回报；历史记录与其他台账一概不动。
@@ -47,7 +53,7 @@ export interface ForgetReport {
  * 删 identity.json，先跑完的那本会让后面几本读不到身份（报「这台机器还没有初始化身份」）。
  * 所以 forget 一律带 --keep-identity，全部跑完之后才按需要 logout。
  */
-export declare function forgetOwner(workspaces: readonly LedgerWorkspace[], uuid: string): Promise<ForgetReport>;
+export declare function forgetOwner(workspaces: readonly LedgerWorkspace[], uuid: string, onStep?: (step: ForgetStep) => void): Promise<ForgetReport>;
 export declare function getRoster(workspaces: readonly LedgerWorkspace[]): Promise<{
     readonly workspaces: readonly RosterWorkspace[];
 }>;

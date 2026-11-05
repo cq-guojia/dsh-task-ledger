@@ -52,6 +52,7 @@ export type LocaleKey =
 	| "settingsForgetDoneCount"
 	| "settingsForgetPartialTitle"
 	| "settingsForgetFailedTitle"
+	| "settingsForgetStep"
 	| "settingsCreateDone"
 	| "settingsSwitchDone"
 	| "settingsRosterEmpty"
@@ -351,6 +352,7 @@ export const zh: Record<LocaleKey, string> = {
 	settingsForgetDoneCount: "已移除 {count} 本台账",
 	settingsForgetPartialTitle: "@{name} 移除未完成",
 	settingsForgetFailedTitle: "@{name} 移除失败",
+	settingsForgetStep: "{step}（{workspace}）",
 	settingsCreateDone: "已创建身份 @{name}",
 	settingsSwitchDone: "已切换到 @{name}",
 	settingsRosterEmpty: "所列台账中暂无已创建的身份。",
@@ -651,6 +653,7 @@ export const en: Record<LocaleKey, string> = {
 	settingsForgetDoneCount: "Removed from {count} ledger(s)",
 	settingsForgetPartialTitle: "Identity @{name} partially removed",
 	settingsForgetFailedTitle: "Failed to remove identity @{name}",
+	settingsForgetStep: "{step} ({workspace})",
 	settingsCreateDone: "Created identity @{name}",
 	settingsSwitchDone: "Switched to @{name}",
 	settingsRosterEmpty: "No identity has been created in the listed ledgers.",

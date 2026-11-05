@@ -155,6 +155,11 @@ export function registerRoutes(webServer, deps) {
         },
     });
     // 从名册摘人（设置页每行的小叉）：逐本台账各删各的，分片还有任务的那本不删。
+    //
+    // **响应是 NDJSON 流**（2026-11-05）：每本台账各跑一条 skill 写命令，逐本走
+    // 「检查 → 拉取 → 写 → 提交 → 推送」好几秒，攒完再回只能给界面一句固定提示。
+    // 行形状：{"type":"step","step","workspace"} / {"type":"done","report"} / {"type":"error","error","code"}。
+    // ⚠️ 头一旦发出去，后面的失败只能进流（状态码改不了）⇒ 参数类错误必须在发头之前挡掉。
     webServer.register({
         kind: "exact",
         path: `${API_PREFIX}/identity/forget`,
@@ -163,6 +168,8 @@ export function registerRoutes(webServer, deps) {
                 sendJson(res, 405, { error: "身份写入只接受 POST" });
                 return;
             }
+            let uuid;
+            let workspaces;
             try {
                 let raw;
                 try {
@@ -172,14 +179,30 @@ export function registerRoutes(webServer, deps) {
                     throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
                 }
                 const body = (raw ?? {});
-                const uuid = typeof body.uuid === "string" ? body.uuid.trim() : "";
+                uuid = typeof body.uuid === "string" ? body.uuid.trim() : "";
                 if (uuid === "")
                     throw new Error(`${BAD_REQUEST}摘人必须给 uuid`);
-                sendJson(res, 200, await forgetOwner(await workspacesOf(deps), uuid));
+                workspaces = await workspacesOf(deps);
             }
             catch (error) {
                 sendWriteFailure(res, error);
+                return;
             }
+            res.writeHead(200, {
+                "content-type": "application/x-ndjson; charset=utf-8",
+                "cache-control": "no-store",
+            });
+            const send = (event) => {
+                res.write(`${JSON.stringify(event)}\n`);
+            };
+            try {
+                const report = await forgetOwner(workspaces, uuid, (step) => send({ type: "step", step: step.step, workspace: step.workspace }));
+                send({ type: "done", report });
+            }
+            catch (error) {
+                send({ type: "error", error: messageOf(error), code: codeOf(error) });
+            }
+            res.end();
         },
     });
     registerRead("/workspaces", async (_req, res) => {

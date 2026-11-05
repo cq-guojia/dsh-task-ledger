@@ -19,10 +19,11 @@ import {
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { pickWorkspaceFile } from "dsh-plugin-core/explorer";
 import { createElement as h, type ReactNode, useEffect, useRef, useState } from "react";
-import { fetchDirs, fetchRoster, postDirs, postForgetIdentity, postSwitchIdentity, type DirsWriteBody } from "./api";
+import { fetchDirs, fetchRoster, postDirs, postForgetIdentity, postSwitchIdentity, type DirsWriteBody, type ForgetStep } from "./api";
 import type { LocaleKey, Translate } from "./locales";
+import { STEP_LABEL } from "./task-row";
 import type { DirsPayload, IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, FieldHint, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
+import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 const GithubMark = (): ReactNode =>
@@ -200,21 +201,30 @@ export function SettingsPage(props: {
 		});
 	};
 
-	/** 小叉：从所有登记过他的台账里摘掉；哪本里还有任务，那本不删并由 host 回报。 */
-	const forgetUser = async (row: RosterRow): Promise<void> => {
+	/**
+	 * 小叉：先开确认框，真删在框里跑（`removeUser`）—— 逐本台账各跑一条写命令，一本几秒，
+	 * 所以底栏左侧跟着 skill 的阶段翻文案（用户 2026-11-05）。用声明式 `ConfirmModal`：
+	 * Promise 版的 `notice` 只能在开框时给一次，运行中改不了。
+	 */
+	const [forgetRow, setForgetRow] = useState<RosterRow | null>(null);
+	const [forgetStep, setForgetStep] = useState<ForgetStep | null>(null);
+
+	const forgetUser = (row: RosterRow): void => {
 		if (pending !== null) return;
-		const ok = await confirmModal({
-			title: t("settingsDeleteConfirmTitle"),
-			message: t("settingsDeleteConfirmBody", { name: row.name }),
-			confirmText: t("settingsDeleteConfirmOk"),
-			cancelText: t("settingsCancel"),
-			tone: "danger",
-		});
-		if (!ok) return;
+		setError(null);
+		setForgetStep(null);
+		setForgetRow(row);
+	};
+
+	/** 从所有登记过他的台账里摘掉；哪本里还有任务，那本不删并由 host 回报。 */
+	const removeUser = async (): Promise<void> => {
+		const row = forgetRow;
+		if (row === null || pending !== null) return;
 		setPending(`forget:${row.uuid}`);
 		setError(null);
+		setForgetStep(null);
 		try {
-			const report = await postForgetIdentity(row.uuid);
+			const report = await postForgetIdentity(row.uuid, setForgetStep);
 			// 一次操作只给**一条**回执（用户 2026-11-02：又绿又红谁看得懂）。
 			// 全成 ⇒ 绿；有任何一本没删成/失败 ⇒ 一条黄或红，正文逐行写清是哪本、为什么。
 			if (report.failed.length === 0 && report.kept.length === 0) {
@@ -257,14 +267,18 @@ export function SettingsPage(props: {
 					},
 				);
 			}
-			// 删完**不关**弹窗（用户 2026-11-02）：可能想接着清好几个人。
+			// 删完**不关**「用户弹窗」（用户 2026-11-02）：可能想接着清好几个人；关掉的只是上面的确认框。
 			// 名册已经变了：丢掉缓存让它在弹窗里就地重取，被删的人立刻从列表上消失。
 			setRoster(null);
 			onSwitched();
+			setForgetRow(null);
 		} catch (failure) {
 			setError(failure instanceof Error ? failure.message : String(failure));
+			// 不关框：确认键恢复可点，能原地重试（口径同 task-row 的动作确认框）
+			throw failure;
 		} finally {
 			setPending(null);
+			setForgetStep(null);
 		}
 	};
 
@@ -1023,7 +1037,7 @@ export function SettingsPage(props: {
 												loading: pending === `forget:${row.uuid}`,
 												disabled: pending !== null,
 												onClick: () => {
-													void forgetUser(row);
+													forgetUser(row);
 												},
 											}),
 										),
@@ -1033,6 +1047,30 @@ export function SettingsPage(props: {
 						),
 			)
 		: null;
+
+	/** 移除确认框：底栏左侧那行跟着 skill 的阶段翻（还没收到第一个阶段就先说「正在同步」）。 */
+	const forgetDialog =
+		forgetRow === null
+			? null
+			: h(ConfirmModal, {
+					title: t("settingsDeleteConfirmTitle"),
+					message: t("settingsDeleteConfirmBody", { name: forgetRow.name }),
+					confirmText: t("settingsDeleteConfirmOk"),
+					cancelText: t("settingsCancel"),
+					tone: "danger",
+					notice:
+						forgetStep === null
+							? t("actionSyncing")
+							: t("settingsForgetStep", {
+									step: t(STEP_LABEL[forgetStep.step]),
+									workspace: forgetStep.workspace,
+								}),
+					// 跑着的时候不给关（核心按「按钮在跑」自己锁遮罩 / Esc）
+					onCancel: () => {
+						if (pending === null) setForgetRow(null);
+					},
+					onConfirm: removeUser,
+				});
 
 	return h(
 		"div",
@@ -1102,6 +1140,7 @@ export function SettingsPage(props: {
 			h("div", { className: "dtl-set__body" }, dirsBody),
 		),
 		userModal,
+		forgetDialog,
 	);
 }
 
@@ -1151,6 +1190,8 @@ export type SettingsLocaleKey = Extract<
 	| "settingsAddDoneBody"
 	| "settingsAddDoneMany"
 	| "settingsAddDoneManyBody"
+	| "settingsForgetStep"
+	| "actionSyncing"
 	| "settingsListSep"
 	| "settingsFlow1"
 	| "settingsFlow1Desc"

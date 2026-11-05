@@ -96,6 +96,38 @@ export async function fetchJson<T>(
 	}
 }
 
+/**
+ * 逐行读 NDJSON 流：每拆出一行交给 `handle`，它返回 true = 到此为止。
+ * 返回值 `true` 表示被 `handle` 收摊、`false` 表示流读完了还没收摊（调用方按「连接中断」处理）。
+ */
+async function readLines(
+	res: Response,
+	handle: (line: string) => boolean,
+): Promise<boolean> {
+	if (res.body === null) throw new HttpError("响应没有内容（响应流不可读）", null);
+	const reader = res.body.getReader();
+	const decoder = new TextDecoder();
+	let buffer = "";
+	try {
+		for (;;) {
+			const chunk = await reader.read();
+			if (chunk.done) break;
+			buffer += decoder.decode(chunk.value, { stream: true });
+			const lines = buffer.split("\n");
+			buffer = lines.pop() ?? "";
+			for (const line of lines) {
+				if (handle(line)) return true;
+			}
+		}
+		// 流没以换行结尾时，最后一行还留在 buffer 里
+		buffer += decoder.decode();
+		return handle(buffer);
+	} finally {
+		// 提前收摊（done / 出错）时把剩下的流扔掉，别让连接吊着
+		void reader.cancel().catch(() => undefined);
+	}
+}
+
 /** 本机身份：进面板的**第一个**请求（没身份时快照会 500，所以必须先问它）。 */
 export function fetchIdentity(): Promise<IdentityView> {
 	return fetchJson<IdentityView>("/identity");
@@ -163,17 +195,95 @@ export interface ForgetReport {
 	readonly signedOut: boolean;
 }
 
-/** 从名册摘掉一个人：每本登记过他的台账各删各的（还有任务的那本由 host 回报为 kept）。 */
-export function postForgetIdentity(uuid: string): Promise<ForgetReport> {
-	return fetchJson<ForgetReport>(
-		"/identity/forget",
-		{
+/** 摘人过程的阶段事件：哪本台账进了哪一步（逐本并行跑，交错时靠台账名分清）。 */
+export interface ForgetStep {
+	readonly workspace: string;
+	readonly step: TaskActionStep;
+}
+
+/** host 在 `/identity/forget` 的 NDJSON 流里推的一行。 */
+type ForgetEvent =
+	| { readonly type: "step"; readonly step: TaskActionStep; readonly workspace: string }
+	| { readonly type: "done"; readonly report: ForgetReport }
+	| { readonly type: "error"; readonly error: string; readonly code: string | null };
+
+/** 解析一行；不是我们的形状就返回 null，交给外层继续读。 */
+function forgetEventOf(line: string): ForgetEvent | null {
+	if (line.trim() === "") return null;
+	let raw: unknown;
+	try {
+		raw = JSON.parse(line);
+	} catch {
+		return null;
+	}
+	if (raw === null || typeof raw !== "object") return null;
+	const event = raw as Record<string, unknown>;
+	if (event.type === "step" && typeof event.step === "string" && isStep(event.step))
+		return {
+			type: "step",
+			step: event.step,
+			workspace: typeof event.workspace === "string" ? event.workspace : "",
+		};
+	if (event.type === "done" && event.report !== null && typeof event.report === "object")
+		return { type: "done", report: event.report as ForgetReport };
+	if (event.type === "error")
+		return {
+			type: "error",
+			error: typeof event.error === "string" ? event.error : "摘人失败",
+			code: typeof event.code === "string" ? event.code : null,
+		};
+	return null;
+}
+
+/**
+ * 从名册摘掉一个人：每本登记过他的台账各删各的（还有任务的那本由 host 回报为 kept）。
+ *
+ * host 回的是 **NDJSON 流**：逐本台账各跑一条 skill 写命令，每进一个阶段推一行
+ * `{type:"step",step,workspace}` 喂给 `onStep` 翻进度文案，末行 `{type:"done",report}`
+ * 带汇总；跑挂时推 `{type:"error",error,code}` ⇒ 这里抛 HttpError（码照旧）。
+ */
+export async function postForgetIdentity(
+	uuid: string,
+	onStep?: (event: ForgetStep) => void,
+): Promise<ForgetReport> {
+	const controller = new AbortController();
+	const timer = setTimeout(() => {
+		controller.abort(
+			new DOMException(
+				`请求超时（${RENAME_TIMEOUT_MS}ms 未响应）`,
+				"TimeoutError",
+			),
+		);
+	}, RENAME_TIMEOUT_MS);
+	try {
+		const res = await fetch(`${API_PREFIX}/identity/forget`, {
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({ uuid }),
-		},
-		RENAME_TIMEOUT_MS,
-	);
+			signal: controller.signal,
+			cache: "no-store",
+		});
+		if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
+		// done 行的报告塞进数组：闭包里赋值，外层拿不到（TS 也不认）
+		const reports: ForgetReport[] = [];
+		await readLines(res, (line) => {
+			const event = forgetEventOf(line);
+			if (event === null) return false;
+			if (event.type === "step") {
+				onStep?.({ step: event.step, workspace: event.workspace });
+				return false;
+			}
+			if (event.type === "error") throw new HttpError(event.error, event.code);
+			reports.push(event.report);
+			return true;
+		});
+		const report = reports[0];
+		if (report === undefined)
+			throw new HttpError("摘人没有返回结果（连接中断）", null);
+		return report;
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 /**
@@ -275,16 +385,11 @@ export async function postTaskAction(
 			cache: "no-store",
 		});
 		if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
-		if (res.body === null)
-			throw new HttpError("任务动作没有返回内容（响应流不可读）", null);
-		const reader = res.body.getReader();
-		const decoder = new TextDecoder();
-		let buffer = "";
 		/**
 		 * 处理一行：翻一行进度文案、`done` 返回 true（该收摊了）、`error` 直接抛。
 		 * 坏行 / 空行当没看见 —— 一条读不懂的行不该让整条命令算失败。
 		 */
-		const handle = (line: string): boolean => {
+		const done = await readLines(res, (line) => {
 			const event = actionEventOf(line);
 			if (event === null) return false;
 			if (event.type === "step") {
@@ -293,25 +398,8 @@ export async function postTaskAction(
 			}
 			if (event.type === "error") throw new HttpError(event.error, event.code);
 			return true;
-		};
-		try {
-			for (;;) {
-				const chunk = await reader.read();
-				if (chunk.done) break;
-				buffer += decoder.decode(chunk.value, { stream: true });
-				const lines = buffer.split("\n");
-				buffer = lines.pop() ?? "";
-				for (const line of lines) {
-					if (handle(line)) return { ok: true };
-				}
-			}
-			// 流没以换行结尾时，最后一行还留在 buffer 里
-			buffer += decoder.decode();
-			if (handle(buffer)) return { ok: true };
-		} finally {
-			// 提前收摊（done / 出错）时把剩下的流扔掉，别让连接吊着
-			void reader.cancel().catch(() => undefined);
-		}
+		});
+		if (done) return { ok: true };
 		throw new HttpError("任务动作没有返回结果（连接中断）", null);
 	} finally {
 		clearTimeout(timer);

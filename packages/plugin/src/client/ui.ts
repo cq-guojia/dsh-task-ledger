@@ -626,6 +626,9 @@ export { notify } from "dsh-plugin-core/ui";
 /** 命令式确认框（Promise：true = 确定 / false = 取消）。 */
 export { confirmModal } from "dsh-plugin-core/ui";
 
+/** 声明式确认框：要「底栏左侧跟着过程翻文案」就用它（`notice`），Promise 版给不了运行中的更新。 */
+export { ConfirmModal } from "dsh-plugin-core/ui";
+
 /** 分区标题（icon + 标题 + 右槽）：列表按工作区分组的组头，核心原样，不再包一层。 */
 export { SectionHead } from "dsh-plugin-core/ui";
 

@@ -58,7 +58,7 @@ export async function switchIdentity(input) {
     }
     return viewOf(result.data);
 }
-export async function forgetOwner(repo, uuid) {
+export async function forgetOwner(repo, uuid, onStep) {
     // 删人也走一遍「写前取最新 → 改 → 提交 → 推送」，一次网络往返就可能几秒，
     // 默认的 10s 会把它判超时（脚本被 kill 时连分片都还没删）。
     //
@@ -66,6 +66,7 @@ export async function forgetOwner(repo, uuid) {
     // 后面几本就会报「这台机器还没有初始化身份」（用户 2026-11-02 实测）。清身份留到最后一步。
     const result = await runLedgerScript("forget", ["--id", uuid, "--keep-identity", "--repo", repo, "--json"], {
         timeoutMs: FORGET_TIMEOUT_MS,
+        ...(onStep === undefined ? {} : { onStep }),
     });
     if (!result.ok)
         throw new Error(result.error);

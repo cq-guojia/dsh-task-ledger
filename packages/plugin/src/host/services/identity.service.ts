@@ -50,6 +50,13 @@ export interface ForgetReport {
 	readonly signedOut: boolean;
 }
 
+/** 一次摘人过程里的阶段（逐本台账各跑一条 skill 写命令，带台账名免得交错时分不清）。 */
+export interface ForgetStep {
+	readonly workspace: string;
+	/** skill `stepf` 的 key：check / sync / write / commit / push。 */
+	readonly step: string;
+}
+
 /**
  * 把某个人从**所有登记过他的台账**里摘掉（用户 2026-11-02 定的口径）：
  * 每本台账各删各的，分片里还有任务的那本不删、如实回报；历史记录与其他台账一概不动。
@@ -62,6 +69,7 @@ export interface ForgetReport {
 export async function forgetOwner(
 	workspaces: readonly LedgerWorkspace[],
 	uuid: string,
+	onStep?: (step: ForgetStep) => void,
 ): Promise<ForgetReport> {
 	const key = uuid.trim().toLowerCase();
 	const removed: string[] = [];
@@ -78,7 +86,9 @@ export async function forgetOwner(
 	const isSelf = me.uuid !== null && me.uuid === key;
 
 	const outcomes = await Promise.allSettled(
-		targets.map((workspace) => runForget(workspace.path, key)),
+		targets.map((workspace) =>
+			runForget(workspace.path, key, (step) => onStep?.({ workspace: workspace.title, step })),
+		),
 	);
 	outcomes.forEach((result, index) => {
 		const workspace = targets[index];

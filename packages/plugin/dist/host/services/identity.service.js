@@ -15,7 +15,7 @@ export async function switchIdentity(input) {
  * 删 identity.json，先跑完的那本会让后面几本读不到身份（报「这台机器还没有初始化身份」）。
  * 所以 forget 一律带 --keep-identity，全部跑完之后才按需要 logout。
  */
-export async function forgetOwner(workspaces, uuid) {
+export async function forgetOwner(workspaces, uuid, onStep) {
     const key = uuid.trim().toLowerCase();
     const removed = [];
     const kept = [];
@@ -30,7 +30,7 @@ export async function forgetOwner(workspaces, uuid) {
     // 摘的是不是自己：只有「自己」才需要最后退出登录
     const me = await readIdentity().catch(() => ({ uuid: null, name: null }));
     const isSelf = me.uuid !== null && me.uuid === key;
-    const outcomes = await Promise.allSettled(targets.map((workspace) => runForget(workspace.path, key)));
+    const outcomes = await Promise.allSettled(targets.map((workspace) => runForget(workspace.path, key, (step) => onStep?.({ workspace: workspace.title, step }))));
     outcomes.forEach((result, index) => {
         const workspace = targets[index];
         if (result.status === "rejected") {

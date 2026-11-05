@@ -53,8 +53,9 @@ import { Button, IconButton, notify, Surface, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
 
-/** 写命令的阶段 → 底栏进度文案（skill 那边新增阶段、这边没对上 ⇒ 继续显示上一句）。 */
-const STEP_LABEL: Record<TaskActionStep, LocaleKey> = {
+/** 写命令的阶段 → 底栏进度文案（skill 那边新增阶段、这边没对上 ⇒ 继续显示上一句）。
+ *  设置页的「移除身份」也逐本跑写命令，同一个映射，别抄第二份。 */
+export const STEP_LABEL: Record<TaskActionStep, LocaleKey> = {
 	check: "actionStepCheck",
 	sync: "actionStepSync",
 	write: "actionStepWrite",
