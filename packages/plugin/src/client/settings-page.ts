@@ -1048,7 +1048,11 @@ export function SettingsPage(props: {
 			)
 		: null;
 
-	/** 移除确认框：底栏左侧那行跟着 skill 的阶段翻（还没收到第一个阶段就先说「正在同步」）。 */
+	/**
+	 * 移除确认框：底栏左侧那行跟着 skill 的阶段翻（还没收到第一个阶段就先说「正在同步」）。
+	 * ⚠️ `notice` 只在**真的在跑**时给：它一给就占位显示 —— 刚打开、还没点就冒出「正在同步」是 bug
+	 * （用户 2026-11-05 当场撞到）。
+	 */
 	const forgetDialog =
 		forgetRow === null
 			? null
@@ -1058,16 +1062,22 @@ export function SettingsPage(props: {
 					confirmText: t("settingsDeleteConfirmOk"),
 					cancelText: t("settingsCancel"),
 					tone: "danger",
-					notice:
-						forgetStep === null
-							? t("actionSyncing")
-							: t("settingsForgetStep", {
-									step: t(STEP_LABEL[forgetStep.step]),
-									workspace: forgetStep.workspace,
-								}),
-					// 跑着的时候不给关（核心按「按钮在跑」自己锁遮罩 / Esc）
+					...(pending === null
+						? {}
+						: {
+								notice:
+									forgetStep === null
+										? t("actionSyncing")
+										: t("settingsForgetStep", {
+												step: t(STEP_LABEL[forgetStep.step]),
+												workspace: forgetStep.workspace,
+											}),
+							}),
+					// 跑着的时候整框锁死（核心 0.31 的 `locked`：inert 全禁 + 灰层 + 三条关闭路径一起封）。
+					// 命令是逐本台账 fire-and-forget，中途停不下来 ⇒ 别让人以为能取消（用户 2026-11-05）。
+					locked: pending !== null,
 					onCancel: () => {
-						if (pending === null) setForgetRow(null);
+						setForgetRow(null);
 					},
 					onConfirm: removeUser,
 				});

@@ -755,6 +755,9 @@ export function TaskRowView(props: {
 						loadingText: false,
 						// 提交中：底栏提示跟着 skill 的阶段翻（检查 → 拉取 → 写 → 提交 → 推送）
 						notice: busy ? progressNotice() : undefined,
+						// 提交中整框锁死（核心 0.31 的 `locked`）：命令是 fire-and-forget、中途停不下来，
+						// 以前取消键照旧可点、点了只关框、活还在跑（用户 2026-11-05）。
+						locked: busy,
 						onCancel: () => setConfirmAct(null),
 						onConfirm: async () => {
 							setBusy(true);
