@@ -1,7 +1,6 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261106-0823-85b7-readme-补提醒与主动建账提醒": {"category": "功能改进", "created": "2026-11-06 08:23:10", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-06 08:23:29", "status": "doing", "tags": ["README", "提醒", "skill", "规则文件"], "title": "README 补提醒与主动建账提醒", "updated": "2026-11-06 09:02:24", "worklog": "worklog/202611/06-0823-85b7-readme-补提醒与主动建账提醒.md"}
   },
   "version": "20261022000000"
 }
