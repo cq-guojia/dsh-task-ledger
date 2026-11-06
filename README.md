@@ -104,6 +104,18 @@ Four rules bind the agent:
 - It completes the written record before closing: a closed task cannot be written to again.
 - When it cannot find a task for the work at hand, it asks whether to create one instead of registering work you did not ask for.
 
+### Recommended: put it in your rules file
+
+The skill only loads when a request matches one of those intents, and "should this piece of work be tracked" is not one of them. A standing rule in the project's `AGENTS.md` (or whichever rules file your agent reads) is far more reliable on its own. Copy this block:
+
+```markdown
+- **Every piece of task progress, work item and work log (create / advance / query / close) goes through the `task-ledger` skill**; answer progress and history questions from it, never from conversation memory or a hand-rolled list.
+- **Creation anchor**: hand something to `task-ledger` only when the user explicitly asks for a new task ("open a task", "log this first", "create a task"). Questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
+- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）" Once asked in a session, do not ask again; no reply means ignore it.
+```
+
+Without it the skill still works — it just acts only when you mention the task yourself.
+
 ## What gets written
 
 ```
