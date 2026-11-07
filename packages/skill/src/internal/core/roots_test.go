@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // 显式 --repo 的收口判据（2026-11-04）：读命令绝不静默读空台账，
@@ -78,7 +79,9 @@ func TestAsRootCheckedRejectsLedgerDirItself(t *testing.T) {
 
 func TestAsRootCheckedRejectsHomeAndAbove(t *testing.T) {
 	home := t.TempDir()
+	// Windows 的 os.UserHomeDir 读 USERPROFILE（不读 HOME），CI 只在 Linux 跑不会暴露这点。
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	for _, probe := range []string{home, filepath.Dir(home)} {
 		if !IsHomeOrAbove(probe) {
 			t.Errorf("%s 应算 home 或其上层", probe)
@@ -107,5 +110,62 @@ func TestCandidateRootsUnreadableDirIsNotAnError(t *testing.T) {
 	}
 	if _, err := AsRootChecked(missing, "--repo", true); err == nil {
 		t.Error("不存在的目录仍应报「不是目录/不是根」")
+	}
+}
+
+// within 给 fn 套一个超时：上溯循环一旦漏掉终点判定，表现是「卡死」而不是「失败」，
+// 直接跑会挂住整个 CI；套超时后表现为这条测试失败，并指出是哪个入口没返回。
+func within(t *testing.T, d time.Duration, what string, fn func()) {
+	t.Helper()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		fn()
+	}()
+	select {
+	case <-done:
+	case <-time.After(d):
+		t.Fatalf("%s 在 %s 内没有返回（上溯循环没终止？）", what, d)
+	}
+}
+
+// 回归 issue #1：Windows 盘符根（C:\）与 UNC 根上 filepath.Dir 指向自己，
+// 只判 "." 和 Separator 会在盘符根死循环（100% CPU）。t.TempDir() 的父链必然经过盘符根。
+func TestAncestorWalkTerminatesOutsideLedger(t *testing.T) {
+	dir := t.TempDir()
+	within(t, 5*time.Second, "UnderLedger", func() {
+		if UnderLedger(dir) {
+			t.Errorf("普通目录不该被算作在 ledger 下")
+		}
+	})
+	within(t, 5*time.Second, "AsRoot", func() {
+		if got, err := AsRoot(dir, "--repo"); err != nil {
+			t.Errorf("全新目录应该收，实际报错：%v", err)
+		} else if got == "" {
+			t.Error("AsRoot 返回了空路径")
+		}
+	})
+	within(t, 5*time.Second, "AsRootChecked", func() {
+		if _, err := AsRootChecked(dir, "--repo", false); err != nil {
+			t.Errorf("写档应允许在全新目录建台账，实际报错：%v", err)
+		}
+	})
+}
+
+// 修终点判定不能把「真的在 ledger 下」判丢：AsRoot 要靠它给「指到台账里面」的理由。
+func TestAncestorWalkStillDetectsLedger(t *testing.T) {
+	root := t.TempDir()
+	mkLedger(t, root)
+	nested := filepath.Join(root, LedgerDir, "worklog")
+	if err := os.MkdirAll(nested, 0o777); err != nil {
+		t.Fatal(err)
+	}
+	within(t, 5*time.Second, "UnderLedger(nested)", func() {
+		if !UnderLedger(nested) {
+			t.Errorf("%s 在 ledger/ 下，应被判为台账目录里面", nested)
+		}
+	})
+	if _, err := AsRoot(nested, "--repo"); err == nil || !strings.Contains(err.Error(), "台账目录里面") {
+		t.Errorf("--repo 指到 ledger/ 里面应报「指到了台账目录里面」，实际：%v", err)
 	}
 }

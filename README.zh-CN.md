@@ -67,7 +67,7 @@ git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-l
 
 - **项目级安装** — 同样的复制方式也适用于仓库内：`.claude/skills/`、`.cursor/skills/`、`.codebuddy/skills/`、`.trae/skills/`，以及 Codex 与 Cursor 都能读取的跨代理约定目录 `.agents/skills/`。
 - **豆包工作** — 在应用内导入：打开侧栏，进入「技能」，将 `packages/skill` 作为本地技能导入。
-- **Windows** — 将路径中的 `~` 替换为 `%USERPROFILE%\`。
+- **Windows** — 将路径中的 `~` 替换为 `%USERPROFILE%\`；并且下面所有 `scripts/progress` 都要换成 `scripts\bin\ledger-windows-amd64.exe`（无扩展名的 sh 包装在 Windows 上不可执行：CreateProcessW 会按扩展名补 `.exe` 去找，然后报找不到）。在 Git Bash / WSL 里仍可用 `scripts/progress`。
 - 仓库内有两份内容完全相同的副本：`packages/skill/` 为源，`packages/plugin/skill/` 是随 dsh 插件一起分发的副本。装哪一份都可以，内容一致。
 
 安装完成后，每台机器需执行一次身份初始化。该步骤为交互式，必须由你本人执行，不能交由代理代做：
