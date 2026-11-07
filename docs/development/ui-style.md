@@ -20,7 +20,9 @@
 
 判据是纯 CSS 选择器，宿主 `toggleAttribute` 一改样式立即生效，不需要 `MutationObserver`，JS 侧没有「当前是什么主题」这个概念。
 
-统计卡与任务行一律用核心 `Card`：`filled` 默认有底、`hoverable: true` + `hoverScope: 'card'` 负责悬停变色，插件不写任何卡片 `:hover` 背景规则。`Card` 的 `hoverable` 默认只作用于头部（`hoverScope: 'head'`），要整卡变色须显式给 `'card'`，展开区内容放 `panel` 才不会被 hover 区裁掉内距。任务行的左缘状态条也交给 `Card` 的 `accent`（核心接受任意 CSS 色值），不再自绘 `.dtl-rail`。唯一保留的本地 hover 是自绘历史表格行（核心 `Table` 不支持窗口化），见 §三。
+任务行用核心 `Card`：`filled` 默认有底、`hoverable: true` + `hoverScope: 'card'` 负责悬停变色，左缘状态条交给 `accent`（核心接受任意 CSS 色值），不再自绘 `.dtl-rail`。`Card` 的 `hoverable` 默认只作用于头部（`hoverScope: 'head'`），要整卡变色须显式给 `'card'`，展开区内容放 `panel` 才不会被 hover 区裁掉内距。
+
+统计卡是纯数字块、没有色条，本来就不是 `Card` 那种样式，**保持原来的 `Surface`**，悬停只改 `--surface-bg` 取核心 `--dshpc-card-hover`；不要为了借 `hoverable` 给它套带色条的 `Card`。唯一保留的本地 hover 是自绘历史表格行（核心 `Table` 不支持窗口化），见 §三。
 
 ## 三、控件全部走核心库，不许自绘皮肤
 
@@ -36,7 +38,8 @@
 | 提示气泡 | 官方 `Tooltip`（`dsh-client-ui-primitives`） | 无 |
 | 图标 | `Icon*`（色随 currentColor） | 无 |
 | 容器外框（底 / 1px 边 / 圆角 / 内距） | `Surface`（`tone` / `border` / `radius` / `padding` 四轴） | 无 |
-| 统计卡 / 任务行 | 整张用 `Card`（底色 / 边框 / 状态色条 / 悬停变色全归核心），本插件只补行内排版（`.dtl-stat` / `.dtl-taskrow__row`） | 仅排版与尺寸 |
+| 任务行 | 整张用 `Card`（底色 / 边框 / 状态色条 / 悬停变色全归核心），本插件只补行内排版（`.dtl-taskrow__row`） | 仅排版与尺寸 |
+| 统计卡 | 外框用 `Surface`（纯数字块、无色条，保持原样式），悬停只换 `--surface-bg` | 仅排版与尺寸 |
 | 图表卡 / 空态 / 图表浮卡 / 流程节点 | 外框用 `Surface`，本插件只补排版（`.dtl-hist` / `.dtl-trend` / `.dtl-empty-guide` / `*__tip` / `.dtl-flow__box`） | 仅排版与尺寸 |
 | 表格 | 核心 `Table` 支撑不了窗口化 ⇒ 自绘 `.dtl-histlist__*`，外框仍用 `Surface` | 仅表格内部线 |
 
@@ -66,3 +69,4 @@
 - 2026-11-07 23:03:04：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
 - 2026-11-08 01:29:51：补 Card 的 hoverScope 默认档与 panel 约束
 - 2026-11-08 01:44:01：统计卡与任务行改走核心 Card 的 filled / hoverable
+- 2026-11-08 02:05:58：统计卡回退为 Surface 原样式，只有任务行用核心 Card

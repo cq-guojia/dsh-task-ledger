@@ -3,7 +3,7 @@
 | 项 | 值 |
 |---|---|
 | 用途 | 设置页「添加台账目录」的选目录弹窗与只读文件路由 |
-| 适用版本 | `dsh-plugin-core@0.35.6`（本插件 `packages/plugin` 的依赖线；路径口径自 0.33.2 起） |
+| 适用版本 | `dsh-plugin-core@0.35.7`（本插件 `packages/plugin` 的依赖线；路径口径自 0.33.2 起） |
 | 版本真源 | `node_modules/dsh-plugin-core` 解包产物 `dist/adv/explorer/*.d.ts`、`dist/host/index.d.ts`、`src/host/fs-route.ts` |
 | 复核日期 | 2026-11-08 |
 
@@ -52,3 +52,4 @@ node -e "console.log(require('dsh-plugin-core/package.json').exports)"   # 子�
 
 - 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
 - 2026-11-08 01:29:51：复核到 0.35.6，重验 explorer 与 FS 路由符号
+- 2026-11-08 02:13:21：复核到 0.35.7，重验 explorer 与 FS 路由符号
