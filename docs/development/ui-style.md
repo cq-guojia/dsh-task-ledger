@@ -22,7 +22,7 @@
 
 任务行用核心 `Card`：`filled` 默认有底、`hoverable: true` + `hoverScope: 'card'` 负责悬停变色，左缘状态条交给 `accent`（核心接受任意 CSS 色值），不再自绘 `.dtl-rail`。`Card` 的 `hoverable` 默认只作用于头部（`hoverScope: 'head'`），要整卡变色须显式给 `'card'`，展开区内容放 `panel` 才不会被 hover 区裁掉内距。
 
-统计卡是纯数字块、没有色条，本来就不是 `Card` 那种样式，**保持原来的 `Surface`**，悬停只改 `--surface-bg` 取核心 `--dshpc-card-hover`；不要为了借 `hoverable` 给它套带色条的 `Card`。唯一保留的本地 hover 是自绘历史表格行（核心 `Table` 不支持窗口化），见 §三。
+统计卡是纯数字块、没有色条，保持原来的 `Surface`，不用 `Card`；悬停只改 `--surface-bg` 取核心 `--dshpc-card-hover`。本地因此仍有两条 hover 规则：统计卡这条（只换底色变量）与自绘历史表格行那条（核心 `Table` 不支持窗口化，见 §三）。
 
 ## 三、控件全部走核心库，不许自绘皮肤
 
@@ -33,7 +33,6 @@
 | 下拉 | `Picker`（含 `PickerGroup`） | 无 |
 | 分段 | `Segmented` | 无 |
 | 标签 / chip | `Chip`（`Tag` 只做宽度截断 + tone 映射） | 无 |
-| 条带卡 | `StripCard` | 无 |
 | 一行一条 | `ListRow`（自带底色 / hover / 右侧操作槽，整行可点） | 无 |
 | 提示气泡 | 官方 `Tooltip`（`dsh-client-ui-primitives`） | 无 |
 | 图标 | `Icon*`（色随 currentColor） | 无 |
@@ -45,7 +44,7 @@
 
 判据：核心库有的控件一律用核心库，本地只允许薄包裹（转 props、拼 className 做布局），不得重写高度 / 内距 / 边框 / 圆角 / 配色。核心没有的（表格、行内排版、图表画法）才允许自绘，且颜色圆角字号只吃 `var(--dtl-*)`。
 
-宿主 primitives 没有 Table / DataGrid / List / 排序 / 分页 / 虚拟滚动件，最接近的行件是 `DisclosureRow`。列表行与历史页表格是本插件仅有的自绘件：自绘是因为核心 `Table` 支撑不了窗口化渲染（整表逐行渲染、没有插入占位行的口子），不是外观另起一套。历史表头底、行悬浮底、边色在 `tokens.ts` 里 alias 核心 token（`--dtl-table-head-bg` / `--dtl-table-row-hover` / `--dtl-border-faint`），不另写色值；四边外框（1px + 圆角 12）由外套 `Surface` 提供（`.dtl-histlist__frame`，`overflow:hidden`）。核心 `Table` 支持窗口化后，这套应当收回去。
+宿主 primitives 没有 Table / DataGrid / List / 排序 / 分页 / 虚拟滚动件，最接近的行件是 `DisclosureRow`。任务行已改用核心 `Card`，历史页表格是本插件仅有的自绘行件：自绘是因为核心 `Table` 支撑不了窗口化渲染（整表逐行渲染、没有插入占位行的口子），不是外观另起一套。历史表头底、行悬浮底、边色在 `tokens.ts` 里 alias 核心 token（`--dtl-table-head-bg` / `--dtl-table-row-hover` / `--dtl-border-faint`），不另写色值；四边外框（1px + 圆角 12）由外套 `Surface` 提供（`.dtl-histlist__frame`，`overflow:hidden`）。核心 `Table` 支持窗口化后，这套应当收回去。
 
 插件详情页配置区的控件同样全部走核心控件库（`Input` / `Picker` / `Chip` / `Button`），本文件只排标签、说明与两列容器（`.dtl-config__*`，随同一处注入器挂载），颜色只吃 `var(--dtl-*)`；宿主官方 primitives 只用到图标与 `SettingsFormModel`。
 
@@ -70,3 +69,4 @@
 - 2026-11-08 01:29:51：补 Card 的 hoverScope 默认档与 panel 约束
 - 2026-11-08 01:44:01：统计卡与任务行改走核心 Card 的 filled / hoverable
 - 2026-11-08 02:05:58：统计卡回退为 Surface 原样式，只有任务行用核心 Card
+- 2026-11-08 02:18:01：整理卡片口径：统计卡 Surface、任务行 Card，去掉未用控件行
