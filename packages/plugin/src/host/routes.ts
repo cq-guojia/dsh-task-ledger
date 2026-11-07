@@ -145,9 +145,12 @@ function sendWriteFailure(res: ServerResponse, error: unknown): void {
 	sendFailure(res, error);
 }
 
-/** 界面上给用户复制到终端的 init 命令（有工作区就带上 --repo，否则脚本找不到台账）。 */
+/** 界面上给用户复制到终端的 init 命令（有工作区就带上 --repo，否则脚本找不到台账）。
+ *  Windows 上 scriptPath() 已经是 bin 下的 exe，不能加 `sh ` 前缀。 */
 function initCommandOf(repoPath: string): string {
-	const head = `sh "${scriptPath()}" init`;
+	const entry = scriptPath();
+	const head =
+		process.platform === "win32" ? `"${entry}" init` : `sh "${entry}" init`;
 	return repoPath === "" ? head : `${head} --repo "${repoPath}"`;
 }
 
