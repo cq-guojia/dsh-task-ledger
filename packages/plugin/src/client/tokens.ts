@@ -77,8 +77,8 @@ body{
   --dtl-chart-stripe:color-mix(in srgb,var(--dtl-surface-1) 8%,transparent);
 
   /* ── 交互底 ──────────────────────────────────────────────────── */
-  /* 卡 / 行 hover 高亮：淡蓝（灰高亮在卡底上几乎看不出来） */
-  --dtl-card-hover:rgba(37,99,235,.07);
+  /* 卡 / 行 hover 高亮直接用核心 --dshpc-card-hover（与核心 Card 的 hoverable 同源），
+     本文件不再自带一份色值。 */
   /* 「有底无边」控件底（图表右上角翻页箭头，用户 2026-10-30）：
      在卡片底色上掺一档前景色 ⇒ 不透明（压得住下面的刻度线）又比卡面略深，
      明暗两主题都跟着 fg / surface 自动走 */
@@ -133,8 +133,6 @@ body{
 /* ── 明暗差异的唯一落点 ─────────────────────────────────────────
    只放 alias 表达不了的固定面 / 半透明底；颜色若能靠 alias 自动跟随，一律不写在这里。 */
 body[data-ds-dark-theme]{
-  /* 暗色下蓝要更亮、透明度更高才压得住深底 */
-  --dtl-card-hover:rgba(96,165,250,.13);
   /* 暗底上掺白 8% 太浅 ⇒ 提到 12%，仍与卡面同族（不是另一套皮肤） */
   --dtl-btn-soft:color-mix(in srgb,var(--dtl-fg) 12%,var(--dtl-surface-1));
   /* 语义色浅底在深色下压到 12% / 5%（8% 在深底上偏重） */
@@ -273,14 +271,10 @@ export const UI_CONTROLS_CSS = `
 /* 说明小字（安装格：其他 Agent 的安装 Skill） */
 .dtl-flow__sub{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
-/* 安装命令 + 复制按钮：外框是核心 Surface（圆角契约唯一真源，别手搓 border + radius），
-   这里只管横向排布。 */
-.dshpc-surface.dtl-flow__code{display:flex;align-items:center;gap:var(--dtl-space-2);
-  width:100%;box-sizing:border-box;}
-.dtl-flow__cmd{flex:1 1 auto;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+/* 包名 + 两个图标钮：整行是核心 ListRow（自带底 / hover / 右侧操作槽），
+   这里只管包名单行省略。 */
+.dtl-flow__cmd{display:block;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* 右侧两个图标按钮（GitHub / npm）：不参与拉伸，各自保持图标钮的方形尺寸 */
-.dtl-flow__code > button{flex:none;}
 /* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}

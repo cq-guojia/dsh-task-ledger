@@ -41,7 +41,9 @@ const UI_BASE_CSS = `
 .dtl-stat-shell{display:block;width:100%;margin:0;padding:0;border:0;background:none;
   font:inherit;color:inherit;text-align:left;}
 .dtl-stat-shell--clickable{cursor:pointer;}
-.dtl-stat-shell--clickable:hover .dshpc-surface.dtl-stat{--surface-bg:var(--dtl-card-hover);}
+/* 悬停色取核心 --dshpc-card-hover（与核心 Card 的 hoverable 同一支 token），
+   本插件不再自带一份卡 hover 色。 */
+.dtl-stat-shell--clickable:hover .dshpc-surface.dtl-stat{--surface-bg:var(--dshpc-card-hover);}
 .dtl-stat-shell[data-active='true'] .dshpc-surface.dtl-stat{--surface-border:var(--dtl-business);}
 .dtl-stat-shell:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
 /* 复合选择器（0,2,0）压过核心基类（0,1,0）⇒ 谁先注入都不影响胜负 */
@@ -293,7 +295,7 @@ const UI_BASE_CSS = `
 .dtl-taskrow{margin-bottom:10px;}
 .dtl-taskrow__row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:inherit;
   cursor:pointer;transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-taskrow__row:hover{background:var(--dtl-card-hover);}
+.dtl-taskrow__row:hover{background:var(--dshpc-card-hover);}
 
 /* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
 .dtl-rail{display:inline-block;width:6px;height:36px;flex:none;border-radius:var(--dtl-radius-xs);}
@@ -674,6 +676,10 @@ export { InputGroup } from "dsh-plugin-core/ui";
 
 /** 表格（核心唯一实现：列定义 + 行；身份管理弹窗的「工作区 / 名字 / 使用」三列）。 */
 export { Table } from "dsh-plugin-core/ui";
+
+/** 一行一条（核心唯一实现：自带底色 / hover / 右侧操作槽，整行可点）——
+ *  设置页「安装 Skill」里那行包名 + GitHub / npm 两个图标钮用它。 */
+export { ListRow } from "dsh-plugin-core/ui";
 
 /** 弹窗：核心 `Modal`（自绘遮罩、不走 portal；设置页的用户管理与添加台账都用它）。
  *  卡片：核心 `Card`（白底 + 1px 边框 + 圆角 + 左缘行内短色条）—— 跟其它页面同一套外观。

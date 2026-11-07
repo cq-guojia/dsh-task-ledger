@@ -23,7 +23,7 @@ import { fetchDirs, fetchRoster, postDirs, postForgetIdentity, postSwitchIdentit
 import type { LocaleKey, Translate } from "./locales";
 import { STEP_LABEL } from "./task-row";
 import type { DirsPayload, IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
+import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, ListRow, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 const GithubMark = (): ReactNode =>
@@ -525,38 +525,47 @@ export function SettingsPage(props: {
 				),
 		);
 
-	/** npm 包名 + GitHub / npm 两个图标按钮。
+	/** 一行：npm 包名（整行可点 → npm 页）+ GitHub / npm 两个图标钮。
+	 *  整行用核心 `ListRow`（自带底色、hover、右侧操作槽，点右侧不连带整行），不再自建框。
 	 *  悬停提示走本地 `Tip`（官方 Tooltip + 真 DOM 锚点；用户 2026-11-03 点名要加，文案就
 	 *  「GitHub」「NPM」两个词）。IconButton 是函数组件挂不上 ref，Tip 的垫片 span 正好当锚点；
 	 *  `title: ""` 仍压原生提示，避免系统 title 与官方气泡双出（口径同 task-row 的动作钮）。 */
-	const NpmLink = ({ pkg }: { pkg: string }): ReactNode =>
-		h(
-			Surface,
-			{ tone: "sunken", border: "faint", radius: "md", padding: "sm", className: "dtl-flow__code" },
+	const NpmLink = ({ pkg }: { pkg: string }): ReactNode => {
+		const openNpm = (): void => {
+			window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
+		};
+		return h(
+			ListRow,
+			{
+				onClick: openNpm,
+				actions: h(
+					Fragment,
+					null,
+					h(Tip, {
+						label: "GitHub",
+						children: h(IconButton, {
+							icon: h(GithubMark, null),
+							label: "GitHub",
+							title: "",
+							onClick: () => {
+								window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
+							},
+						}),
+					}),
+					h(Tip, {
+						label: "NPM",
+						children: h(IconButton, {
+							icon: h(NpmMark, null),
+							label: "npm",
+							title: "",
+							onClick: openNpm,
+						}),
+					}),
+				),
+			},
 			h("code", { className: "dtl-flow__cmd" }, pkg),
-			h(Tip, {
-				label: "GitHub",
-				children: h(IconButton, {
-					icon: h(GithubMark, null),
-					label: "GitHub",
-					title: "",
-					onClick: () => {
-						window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
-					},
-				}),
-			}),
-			h(Tip, {
-				label: "NPM",
-				children: h(IconButton, {
-					icon: h(NpmMark, null),
-					label: "npm",
-					title: "",
-					onClick: () => {
-						window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
-					},
-				}),
-			}),
 		);
+	};
 
 	/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
 	 *  圆 + 箭头都画在同一个 SVG 里：一条 `<path>`（横杆 + `>` 箭头，描边不填充，
