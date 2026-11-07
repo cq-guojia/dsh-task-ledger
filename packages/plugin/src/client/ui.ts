@@ -16,6 +16,7 @@ import {
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import {
 	Button as CoreButton,
+	Card as CoreCard,
 	Chip as CoreChip,
 	IconButton as CoreIconButton,
 	Input as CoreInput,
@@ -41,16 +42,15 @@ const UI_BASE_CSS = `
 .dtl-stat-shell{display:block;width:100%;margin:0;padding:0;border:0;background:none;
   font:inherit;color:inherit;text-align:left;}
 .dtl-stat-shell--clickable{cursor:pointer;}
-/* 悬停色取核心 --dshpc-card-hover（与核心 Card 的 hoverable 同一支 token），
-   本插件不再自带一份卡 hover 色。 */
-.dtl-stat-shell--clickable:hover .dshpc-surface.dtl-stat{--surface-bg:var(--dshpc-card-hover);}
+/* 悬停变色由核心 Card 的 hoverable + hoverScope='card' 负责，这里不再写 :hover 背景。 */
 .dtl-stat-shell[data-active='true'] .dshpc-surface.dtl-stat{--surface-border:var(--dtl-business);}
 .dtl-stat-shell:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
-/* 复合选择器（0,2,0）压过核心基类（0,1,0）⇒ 谁先注入都不影响胜负 */
-.dshpc-surface.dtl-stat{display:flex;flex-direction:column;justify-content:flex-start;gap:var(--dtl-space-1);
-  height:var(--dtl-stat-h);overflow:hidden;
-  padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+/* 复合选择器（0,2,0）压过核心基类（0,1,0）⇒ 谁先注入都不影响胜负。
+   内距由 Card 的 __body 承担（style.padding → --card-pad-all），三行文字排在 __main 里。 */
+.dshpc-surface.dtl-stat{height:var(--dtl-stat-h);overflow:hidden;text-align:left;}
+.dshpc-card.dtl-stat .dshpc-card__bar{display:none;}
+.dshpc-card.dtl-stat .dshpc-card__main{display:flex;flex-direction:column;justify-content:flex-start;
+  gap:var(--dtl-space-1);min-width:0;}
 /* 三行文字各自的行高必须显式写死，--dtl-stat-h 的算式才对得上（别让行高继承宿主） */
 .dtl-stat__label{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
@@ -290,20 +290,10 @@ const UI_BASE_CSS = `
 .dtl-group__count{margin-left:var(--dtl-space-2);font-size:var(--dtl-font-xs);font-weight:400;
   color:var(--dtl-fg-3);white-space:nowrap;}
 
-/* 任务行 = 一张卡：外框（底 / 1px 边框 / 圆角 8）交核心 Surface（radius='sm'），
-   本文件只留行间距与左缘状态条；hover 只亮主行，右侧 时间⇄按钮排 互换 */
-.dtl-taskrow{margin-bottom:10px;}
-.dtl-taskrow__row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:inherit;
-  cursor:pointer;transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-taskrow__row:hover{background:var(--dshpc-card-hover);}
-
-/* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
-.dtl-rail{display:inline-block;width:6px;height:36px;flex:none;border-radius:var(--dtl-radius-xs);}
-.dtl-rail--doing{background:var(--dtl-success);}
-.dtl-rail--backlog{background:var(--dtl-warning);}
-.dtl-rail--overdue{background:var(--dtl-overdue);}
-.dtl-rail--stale{background:var(--dtl-danger);}
-.dtl-rail--open{background:var(--dtl-fg-3);}
+/* 任务行 = 一张核心 Card：底色 / 边框 / 圆角 / 左缘状态条 / 悬停变色全由核心提供，
+   本文件只留行间距与行内横排；hover 时右侧 时间⇄按钮排 互换仍由本文件管。 */
+.dtl-taskrow{margin-bottom:10px;cursor:pointer;}
+.dtl-taskrow__row{display:flex;align-items:center;gap:12px;width:100%;min-width:0;}
 /* 待认领标签：灰系，比 #标签 那层深一档、又不到深灰块（用户 2026-11-01；实心 slate 太深、
    纯 neutral 又跟 #标签 一个样、蓝色系不要）。只喂核心 Chip 自己的 --chip-* 变量，
    并抬一级优先级压过 .dshpc-chip--business，不覆盖它的皮肤。 */
@@ -326,8 +316,8 @@ const UI_BASE_CSS = `
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
 .dtl-taskrow__actions{display:none;flex:none;gap:6px;align-items:center;}
-.dtl-taskrow__row:hover .dtl-taskrow__meta{display:none;}
-.dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
+.dtl-taskrow:hover .dtl-taskrow__meta{display:none;}
+.dtl-taskrow:hover .dtl-taskrow__actions{display:inline-flex;}
 /* 次级图标钮（复制 ID / 查看）：动作排里**常驻**，故比旁边那几个描边动作钮浅一档
    （用户 2026-10-28：灰一点、别抢眼）——灰字、无底无边；hover 才回到正常字色。
    明暗都靠 --dtl-fg-3（别名随宿主主题变），不写第二套颜色。 */
@@ -777,7 +767,7 @@ export function StatCard(props: {
 		props.interactive !== false && props.onClick !== undefined;
 	const zero = props.value === 0 || props.value === "0";
 	const shown = zero && props.showZero !== true ? "—" : props.value;
-	// 外壳（button / div）只承担语义与点击；**外框（底 / 边框 / 圆角 / 内距）交核心 Surface**
+	// 外壳（button / div）只承担语义与点击；**底色 / 边框 / 圆角 / 悬停变色全交核心 Card**
 	return h(
 		interactive ? "button" : "div",
 		{
@@ -787,8 +777,15 @@ export function StatCard(props: {
 			onClick: interactive ? props.onClick : undefined,
 		},
 		h(
-			CoreSurface,
-			{ className: "dtl-stat", padding: null },
+			CoreCard,
+			{
+				className: "dtl-stat",
+				accent: "transparent",
+				bar: { size: 0, gap: 0 },
+				hoverable: interactive,
+				hoverScope: "card",
+				style: { padding: "var(--dtl-space-3) var(--dtl-space-4)" },
+			},
 			h("span", { className: "dtl-stat__label" }, props.label),
 			h("span", { className: "dtl-stat__value" }, shown),
 			props.hint === undefined || props.hint === null || props.hint === ""

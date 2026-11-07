@@ -49,9 +49,18 @@ import type { LocaleKey, Translate } from "./locales";
 import { closePrompt, continuePrompt } from "./prompts";
 import { displayName, type Row, resolveActions } from "./rows";
 import { boardSnapshot, focusOwner, refresh, setQuery } from "./store";
-import { Button, IconButton, notify, Surface, Tag, Tip } from "./ui";
+import { Button, Card, IconButton, notify, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
+
+/** 状态条颜色原样喂核心 Card 的 accent（核心接受任意 CSS 色值，档位映射反而不准）。 */
+const RAIL_COLOR: Record<Tone, string> = {
+	doing: "var(--dtl-success)",
+	overdue: "var(--dtl-overdue)",
+	stale: "var(--dtl-danger)",
+	backlog: "var(--dtl-warning)",
+	open: "var(--dtl-fg-3)",
+};
 
 /** 写命令的阶段 → 底栏进度文案（skill 那边新增阶段、这边没对上 ⇒ 继续显示上一句）。
  *  设置页的「移除身份」也逐本跑写命令，同一个映射，别抄第二份。 */
@@ -684,16 +693,22 @@ export function TaskRowView(props: {
 		if (target !== null && target.closest("button") !== null) return;
 		props.onView?.(row);
 	};
-	// 卡片外框（底 / 1px 边 / 圆角 12）交核心 Surface，本文件只摆行内内容。
-	// ⚠️ 不传 radius：容器圆角只有一档（核心 Surface 默认 md=12），与框内 Button / Input 同档；
-	// 传 sm 会变成「卡 8 < 按钮 12」的倒挂（用户 2026-11-01 一眼看出圆角不对）。
+	// 整张卡交核心 Card：底色（filled 默认有底）、圆角边框、状态色条、悬停变色全由它提供，
+	// 本文件只摆行内内容；不再自己写 :hover 背景。
 	const card = h(
-		Surface,
-		{ className: "dtl-taskrow", padding: null },
+		"div",
+		{ className: "dtl-taskrow", onClick: handleRowClick },
 		h(
-			"div",
-			{ className: "dtl-taskrow__row", onClick: handleRowClick },
-			h("span", { className: `dtl-rail dtl-rail--${tone}` }),
+			Card,
+			{
+				accent: RAIL_COLOR[tone],
+				hoverable: true,
+				hoverScope: "card",
+				style: { padding: "12px 14px" },
+			},
+			h(
+				"div",
+				{ className: "dtl-taskrow__row" },
 			h(
 				"div",
 				{ style: { flex: "1 1 auto", minWidth: 0 } },
@@ -733,6 +748,7 @@ export function TaskRowView(props: {
 				copyButton,
 				actions.view ? viewButton : null,
 			),
+		),
 		),
 	);
 	// 弹窗与卡片并列（弹窗自带遮罩，挂在哪一层都不影响定位）。

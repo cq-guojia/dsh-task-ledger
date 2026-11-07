@@ -64484,16 +64484,15 @@ body[data-ds-dark-theme]{
 .dtl-stat-shell{display:block;width:100%;margin:0;padding:0;border:0;background:none;
   font:inherit;color:inherit;text-align:left;}
 .dtl-stat-shell--clickable{cursor:pointer;}
-/* 悬停色取核心 --dshpc-card-hover（与核心 Card 的 hoverable 同一支 token），
-   本插件不再自带一份卡 hover 色。 */
-.dtl-stat-shell--clickable:hover .dshpc-surface.dtl-stat{--surface-bg:var(--dshpc-card-hover);}
+/* 悬停变色由核心 Card 的 hoverable + hoverScope='card' 负责，这里不再写 :hover 背景。 */
 .dtl-stat-shell[data-active='true'] .dshpc-surface.dtl-stat{--surface-border:var(--dtl-business);}
 .dtl-stat-shell:focus-visible{outline:2px solid var(--dtl-business);outline-offset:1px;}
-/* 复合选择器（0,2,0）压过核心基类（0,1,0）⇒ 谁先注入都不影响胜负 */
-.dshpc-surface.dtl-stat{display:flex;flex-direction:column;justify-content:flex-start;gap:var(--dtl-space-1);
-  height:var(--dtl-stat-h);overflow:hidden;
-  padding:var(--dtl-space-3) var(--dtl-space-4);text-align:left;
-  transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
+/* 复合选择器（0,2,0）压过核心基类（0,1,0）⇒ 谁先注入都不影响胜负。
+   内距由 Card 的 __body 承担（style.padding → --card-pad-all），三行文字排在 __main 里。 */
+.dshpc-surface.dtl-stat{height:var(--dtl-stat-h);overflow:hidden;text-align:left;}
+.dshpc-card.dtl-stat .dshpc-card__bar{display:none;}
+.dshpc-card.dtl-stat .dshpc-card__main{display:flex;flex-direction:column;justify-content:flex-start;
+  gap:var(--dtl-space-1);min-width:0;}
 /* 三行文字各自的行高必须显式写死，--dtl-stat-h 的算式才对得上（别让行高继承宿主） */
 .dtl-stat__label{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-stat__value{font-size:var(--dtl-font-stat);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
@@ -64733,20 +64732,10 @@ body[data-ds-dark-theme]{
 .dtl-group__count{margin-left:var(--dtl-space-2);font-size:var(--dtl-font-xs);font-weight:400;
   color:var(--dtl-fg-3);white-space:nowrap;}
 
-/* 任务行 = 一张卡：外框（底 / 1px 边框 / 圆角 8）交核心 Surface（radius='sm'），
-   本文件只留行间距与左缘状态条；hover 只亮主行，右侧 时间⇄按钮排 互换 */
-.dtl-taskrow{margin-bottom:10px;}
-.dtl-taskrow__row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:inherit;
-  cursor:pointer;transition:background-color var(--dtl-dur-fast) var(--dtl-ease);}
-.dtl-taskrow__row:hover{background:var(--dshpc-card-hover);}
-
-/* 状态条：贴卡片左缘、与正文两行等高的竖向色条（dispatch StatusRail 同款 6×36） */
-.dtl-rail{display:inline-block;width:6px;height:36px;flex:none;border-radius:var(--dtl-radius-xs);}
-.dtl-rail--doing{background:var(--dtl-success);}
-.dtl-rail--backlog{background:var(--dtl-warning);}
-.dtl-rail--overdue{background:var(--dtl-overdue);}
-.dtl-rail--stale{background:var(--dtl-danger);}
-.dtl-rail--open{background:var(--dtl-fg-3);}
+/* 任务行 = 一张核心 Card：底色 / 边框 / 圆角 / 左缘状态条 / 悬停变色全由核心提供，
+   本文件只留行间距与行内横排；hover 时右侧 时间⇄按钮排 互换仍由本文件管。 */
+.dtl-taskrow{margin-bottom:10px;cursor:pointer;}
+.dtl-taskrow__row{display:flex;align-items:center;gap:12px;width:100%;min-width:0;}
 /* 待认领标签：灰系，比 #标签 那层深一档、又不到深灰块（用户 2026-11-01；实心 slate 太深、
    纯 neutral 又跟 #标签 一个样、蓝色系不要）。只喂核心 Chip 自己的 --chip-* 变量，
    并抬一级优先级压过 .dshpc-chip--business，不覆盖它的皮肤。 */
@@ -64769,8 +64758,8 @@ body[data-ds-dark-theme]{
   font-size:var(--dtl-font-xs);color:var(--dtl-fg-3);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
 .dtl-taskrow__actions{display:none;flex:none;gap:6px;align-items:center;}
-.dtl-taskrow__row:hover .dtl-taskrow__meta{display:none;}
-.dtl-taskrow__row:hover .dtl-taskrow__actions{display:inline-flex;}
+.dtl-taskrow:hover .dtl-taskrow__meta{display:none;}
+.dtl-taskrow:hover .dtl-taskrow__actions{display:inline-flex;}
 /* 次级图标钮（复制 ID / 查看）：动作排里**常驻**，故比旁边那几个描边动作钮浅一档
    （用户 2026-10-28：灰一点、别抢眼）——灰字、无底无边；hover 才回到正常字色。
    明暗都靠 --dtl-fg-3（别名随宿主主题变），不写第二套颜色。 */
@@ -65031,9 +65020,16 @@ body[data-ds-dark-theme]{
 				className: `dtl-stat-shell${interactive ? " dtl-stat-shell--clickable" : ""}`,
 				"data-active": props.active === true,
 				onClick: interactive ? props.onClick : void 0
-			}, (0, react$1.createElement)(Surface, {
+			}, (0, react$1.createElement)(Card, {
 				className: "dtl-stat",
-				padding: null
+				accent: "transparent",
+				bar: {
+					size: 0,
+					gap: 0
+				},
+				hoverable: interactive,
+				hoverScope: "card",
+				style: { padding: "var(--dtl-space-3) var(--dtl-space-4)" }
 			}, (0, react$1.createElement)("span", { className: "dtl-stat__label" }, props.label), (0, react$1.createElement)("span", { className: "dtl-stat__value" }, shown), props.hint === void 0 || props.hint === null || props.hint === "" ? null : (0, react$1.createElement)("span", { className: "dtl-stat__hint" }, props.hint)));
 		}
 		/** 本地 7 档语义色 → 核心 `Chip` 档。core 缺 doing / backlog / overdue / stale / person 的独立色：
@@ -66683,6 +66679,14 @@ body[data-ds-dark-theme]{
 		* （2026-11-03，统一走 `/task/action`）；继续走 `/task/continue` 起会话（2026-11-03 晚）；
 		* **完成仍未接**，先只摆按钮。
 		*/
+		/** 状态条颜色原样喂核心 Card 的 accent（核心接受任意 CSS 色值，档位映射反而不准）。 */
+		const RAIL_COLOR = {
+			doing: "var(--dtl-success)",
+			overdue: "var(--dtl-overdue)",
+			stale: "var(--dtl-danger)",
+			backlog: "var(--dtl-warning)",
+			open: "var(--dtl-fg-3)"
+		};
 		/** 写命令的阶段 → 底栏进度文案（skill 那边新增阶段、这边没对上 ⇒ 继续显示上一句）。
 		*  设置页的「移除身份」也逐本跑写命令，同一个映射，别抄第二份。 */
 		const STEP_LABEL = {
@@ -67115,13 +67119,15 @@ body[data-ds-dark-theme]{
 				if (target !== null && target.closest("button") !== null) return;
 				props.onView?.(row);
 			};
-			const card = (0, react$1.createElement)(Surface, {
+			const card = (0, react$1.createElement)("div", {
 				className: "dtl-taskrow",
-				padding: null
-			}, (0, react$1.createElement)("div", {
-				className: "dtl-taskrow__row",
 				onClick: handleRowClick
-			}, (0, react$1.createElement)("span", { className: `dtl-rail dtl-rail--${tone}` }), (0, react$1.createElement)("div", { style: {
+			}, (0, react$1.createElement)(Card, {
+				accent: RAIL_COLOR[tone],
+				hoverable: true,
+				hoverScope: "card",
+				style: { padding: "12px 14px" }
+			}, (0, react$1.createElement)("div", { className: "dtl-taskrow__row" }, (0, react$1.createElement)("div", { style: {
 				flex: "1 1 auto",
 				minWidth: 0
 			} }, titleLine, (0, react$1.createElement)("div", { className: "dtl-taskrow__l2" }, ...statusTags, tags.map((tag) => (0, react$1.createElement)(Tag, {
@@ -67129,7 +67135,7 @@ body[data-ds-dark-theme]{
 				text: `#${tag}`,
 				maxWidth: 160,
 				onClick: () => setQuery({ keyword: tag })
-			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, actions.delete ? deleteButton : null, copyButton, actions.view ? viewButton : null)));
+			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, actions.delete ? deleteButton : null, copyButton, actions.view ? viewButton : null))));
 			return (0, react$1.createElement)(react$1.Fragment, null, card, confirmAct === null ? null : (() => {
 				const action = confirmAct;
 				const claim = action === "claim";
@@ -68799,7 +68805,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.6 261108-013151-361`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.6 261108-014510-641`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
