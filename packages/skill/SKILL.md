@@ -319,6 +319,7 @@ allowed-tools: Read,Edit,Bash,Grep
 - **不需要安装任何东西**（不装解释器、不装运行时、不往 PATH 里加命令）：直接执行上面那条绝对路径即可。
 - 若报 `Permission denied`（某些安装环节会丢可执行位），前面加 `sh `：`sh <本 SKILL.md 所在目录>/scripts/progress <子命令> …`。
 - **交给用户的命令必须是这个绝对路径**，不许简写成 `progress` —— 用户机器的 PATH 里没有这个命令，简写后用户一跑就是 `command not found`。
+- **Windows 上直接跑 `scripts/bin/ledger-windows-amd64.exe`**：`scripts/progress` 是无扩展名的 sh 包装，CreateProcessW 不会执行它（还会按扩展名补 `.exe` 去找 → 报找不到）。同一目录下的 exe 参数完全一致；Git Bash / WSL 里仍可用 `scripts/progress`。
 
 - 定位项目：`--repo <工作区根>`（**直接含有 `ledger/` 的那个目录**）给了就校验后用；不给就从当前目录逐级向上找。当前目录已经在这个工作区里时不要带 `--repo`，只有要操作别的工作区才带。`ledger/` 本身、以及它下面的任何子目录都不是根，指过去会被直接拒绝（判据只看位置，不看目录里有哪些文件 —— 项目根自带 `pool.json`、`history/`、`worklog/` 都不影响）。
 - `--no-sync`（放在子命令**前**）：用户明确要求「先别同步」时才用；之后自己 `git add ledger && commit && push`。

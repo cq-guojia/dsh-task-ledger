@@ -10,16 +10,38 @@ import (
 // 工作区根的判定：哪个目录才是「直接含有 ledger/ 的那个根」。
 // 全仓唯一实现 —— shell 与 actions 都调这里。判据是结构，不看目录里有哪些文件。
 
+// forEachAncestor 从 p 的上一级开始逐级上溯，visitor 返回 true 时提前结束。
+//
+// 终点判定必须是「父目录 == 自身」：Windows 的盘符根（C:\）与 UNC 根（\\host\share）
+// 的 filepath.Dir 都指向自己；只判 "." 和 Separator 不够——Windows 上 Separator 是 "\"，
+// 而盘符根是 "C:\"，永远不会命中，循环就在盘符根原地打转（100% CPU 挂死，见 issue #1）。
+func forEachAncestor(p string, visitor func(dir string) bool) {
+	for dir := filepath.Dir(p); ; dir = filepath.Dir(dir) {
+		if dir == p || dir == "." || dir == string(filepath.Separator) {
+			return
+		}
+		if visitor(dir) {
+			return
+		}
+		if filepath.Dir(dir) == dir {
+			return
+		}
+	}
+}
+
 func underLedger(p string) bool {
 	if filepath.Base(p) == LedgerDir {
 		return true
 	}
-	for dir := filepath.Dir(p); dir != p && dir != "." && dir != string(filepath.Separator); dir = filepath.Dir(dir) {
+	found := false
+	forEachAncestor(p, func(dir string) bool {
 		if filepath.Base(dir) == LedgerDir {
+			found = true
 			return true
 		}
-	}
-	return false
+		return false
+	})
+	return found
 }
 
 // IsDir 这个路径是不是一个已存在的目录（不存在 / 不是目录都算否）。
@@ -57,12 +79,13 @@ func AsRoot(repo, source string) (string, error) {
 	if underLedger(p) {
 		anc := p
 		if filepath.Base(p) != LedgerDir {
-			for dir := filepath.Dir(p); dir != p && dir != "." && dir != string(filepath.Separator); dir = filepath.Dir(dir) {
+			forEachAncestor(p, func(dir string) bool {
 				if filepath.Base(dir) == LedgerDir {
 					anc = dir
-					break
+					return true
 				}
-			}
+				return false
+			})
 		}
 		root := filepath.Dir(anc)
 		var what, why string

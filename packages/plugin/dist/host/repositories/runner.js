@@ -2,14 +2,25 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { IdentityMissingError } from "../errors.js";
 /**
- * 内嵌 skill 入口的默认路径：dist/host/repositories/runner.js → 包根 skill/scripts/progress
- * （比原 host/script.js 深一层 ⇒ 相对路径多一级 `../`）。
+ * 内嵌 skill 的平台入口：dist/host/repositories/runner.js → 包根 skill/scripts（比原
+ * host/script.js 深一层 ⇒ 相对路径多一级 `../`）。
  *
- * 这是个薄 shell 包装，按平台 exec `skill/scripts/bin/ledger-<os>-<arch>`（自带运行时的
- * 静态二进制）——所以本插件不需要系统装任何运行时。
+ * POSIX：`scripts/progress` 这个薄 shell 包装，按平台 exec `scripts/bin/ledger-<os>-<arch>`
+ * （自带运行时的静态二进制）——所以本插件不需要系统装任何运行时。
+ *
+ * Windows：不能起这个包装。CreateProcessW 不执行无扩展名的 sh 脚本，还会按扩展名补
+ * `.exe` 去找 `scripts/progress.exe`，结果就是 spawn ENOENT（issue #1）⇒ 直接起
+ * `scripts/bin/` 下的静态二进制。Windows 资产目前只有 amd64 一份，Intel 与 ARM64 都能跑。
+ *
  * 构建时 scripts/copy-skill.mjs 把 packages/skill 的运行时拷到 packages/plugin/skill/。
  */
-const DEFAULT_SCRIPT_PATH = fileURLToPath(new URL("../../../skill/scripts/progress", import.meta.url));
+function defaultScriptPath() {
+    if (process.platform === "win32") {
+        return fileURLToPath(new URL("../../../skill/scripts/bin/ledger-windows-amd64.exe", import.meta.url));
+    }
+    return fileURLToPath(new URL("../../../skill/scripts/progress", import.meta.url));
+}
+const DEFAULT_SCRIPT_PATH = defaultScriptPath();
 /** 单次脚本调用超时上限（ms）。实测单仓 5 万行全量 1.2s，10s 是宽松上限。 */
 const DEFAULT_TIMEOUT_MS = 10_000;
 /** 脚本绝对路径（界面上要写给用户复制的命令用；别在别处再拼一份）。 */

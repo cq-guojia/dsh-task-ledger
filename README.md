@@ -67,7 +67,7 @@ Notes:
 
 - **Project-level install** — the same copies work under the repository: `.claude/skills/`, `.cursor/skills/`, `.codebuddy/skills/`, `.trae/skills/`, or `.agents/skills/` for the cross-agent convention read by Codex and Cursor.
 - **Doubao Work (豆包工作)** — import the folder from the application: open the sidebar, choose Skills, and import `packages/skill` as a local skill.
-- **Windows** — substitute `%USERPROFILE%\` for `~`.
+- **Windows** — substitute `%USERPROFILE%\` for `~`. Everywhere below, replace `scripts/progress` with `scripts\bin\ledger-windows-amd64.exe`: CreateProcessW cannot execute an extensionless sh wrapper (it appends `.exe`, finds nothing, and fails). The wrapper still works under Git Bash / WSL.
 - The repository holds two identical copies: `packages/skill/` is the source, `packages/plugin/skill/` is the copy bundled into the dsh plugin. Either may be installed; the content is the same.
 
 Once installed, run the identity setup once per machine. It is interactive and must be run by you, not by the agent:
