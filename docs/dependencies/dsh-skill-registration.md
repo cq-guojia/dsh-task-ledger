@@ -1,13 +1,15 @@
 # 宿主 skill 注册接口（ctx.skills）
 
-> **类型**：🌐 **外部事实** —— 记的是**宿主（DSH）**能给什么，不是本项目的设计
-> **适用版本**：`@deepseek-ai/dsh-skill@0.2.0-rc.2`（宿主版本线 0.2.0-rc.2；升级后按下方「复核方式」重跑）
-> **状态**：✅ 已核实（2026-10-16，`npm pack` 解包读 `lib/types/index.d.ts` + `README.md` 原文）
-> **来源**：`@deepseek-ai/dsh-skill@0.2.0-rc.2` 解包产物 `lib/types/index.d.ts` + `README.md`
+| 项 | 值 |
+|---|---|
+| 用途 | host 插件在 `apply` 里把内嵌 skill 注册进宿主全局 |
+| 适用版本 | `@deepseek-ai/dsh-skill@0.2.0-rc.2`（宿主版本线） |
+| 版本真源 | `@deepseek-ai/dsh-skill@0.2.0-rc.2` 解包产物 `lib/types/index.d.ts` + `README.md` |
+| 复核日期 | 2026-10-16 |
 
 ## 一、结论
 
-**「装插件即把 skill 带进 dsh 全局」可行**：host 插件在 `apply` 里调 `ctx.skills.register(skill)` 注册一个内存态 skill；unscoped 注册落**全局层**，模型侧经 `dsh-tool-skill` 消费。
+「装插件即把 skill 带进 dsh 全局」可行：host 插件在 `apply` 里调 `ctx.skills.register(skill)` 注册一个内存态 skill；unscoped 注册落**全局层**，模型侧经 `dsh-tool-skill` 消费。
 
 ## 二、逐条事实与出处
 
@@ -24,14 +26,13 @@
 | 资源基座 | `SkillResourceBase` = `{kind:'directory',path}` / `{kind:'url',url}` / `{kind:'opaque',description}`；注释：*"Optional provider-specific base used by loaded skill bodies to resolve relative resources"* | `lib/types/index.d.ts:26-35` |
 | 模型侧渲染 | `renderSkillContent(skill)` 产出 `<skill_content>` 块（name 走转义属性、正文原样嵌入） | `lib/types/index.d.ts:143` |
 | bundled 优先级 | `BUNDLED_SKILL_RANK = 600`（打包 provider 与本地 bundled root 的标准优先级） | `lib/types/index.d.ts:16` |
-| 失效通知 | 注册 / dispose / provider invalidate 后发 `skills/change` 事件；registry **无 TTL**，不推断远端变更 | `lib/types/index.d.ts:203-211`；`README.md` §Known Limitations |
+| 失效通知 | 注册 / dispose / provider invalidate 后发 `skills/change` 事件；registry 无 TTL，不推断远端变更 | `lib/types/index.d.ts:203-211`；`README.md` §Known Limitations |
 
 ## 三、对本插件的落地含义
 
-1. **内嵌 skill 副本**：插件构建时把 `packages/skill/` 的运行时（SKILL.md + scripts + assets + references）纳入产物，`apply` 时 `register({ name: 'task-ledger', description, content })`。
-2. **相对路径解析二选一（未拍板）**：① 正文里插值插件安装目录，保住 skill「`scripts/progress` 相对 SKILL.md 定位」的写法；② 用 `resourceBase: { kind: 'directory', path: <安装目录> }`（宿主原生机制，但消费者如何呈现待验证）。
-3. **卸载即失效**：`register` 返回的 disposer 随插件 dispose 自动注销，无需额外清理。
-4. **独立分发不依赖宿主**：`task-ledger` npm 包零代码直发（SKILL.md + scripts + assets），其他 agent 按各自约定安装；与插件内嵌副本同源（见 [`../architecture.md`](../architecture.md) 不变量 2）。
+1. 内嵌 skill 副本：插件构建时把 `packages/skill/` 的运行时（SKILL.md + scripts + assets + references）纳入产物，`apply` 时 `register({ name: 'task-ledger', description, content })`；正文里插值插件安装目录，保住 skill「`scripts/progress` 相对 SKILL.md 定位」的写法（另一条路是 `resourceBase: { kind: 'directory', path: <安装目录> }`，宿主原生机制，消费者如何呈现待验证）。
+2. 卸载即失效：`register` 返回的 disposer 随插件 dispose 自动注销，无需额外清理。
+3. 独立分发不依赖宿主：`task-ledger` 包零代码直发（SKILL.md + scripts + assets），其他 agent 按各自约定安装；与插件内嵌副本同源，见 [overview.md](../architecture/overview.md) 的不变量。
 
 ## 四、复核方式（宿主升级后）
 
@@ -41,3 +42,7 @@ cd /tmp && npm pack @deepseek-ai/dsh-skill@<版本> && tar xzf *.tgz
 # 看两处：SkillRegistration 形状是否变（lib/types/index.d.ts）
 #         register / registerProvider 签名与分层语义（同文件 + README）
 ```
+
+## 更新日志
+
+- 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头

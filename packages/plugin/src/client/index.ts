@@ -262,7 +262,7 @@ export function apply(ctx: ClientContext): void {
 		applySidebarEntry();
 		// 整页面板：`main` keyed 槽。**行按钮、点击、激活态全由侧栏 / 布局服务托管**，
 		// 组件只画图标；id 必须与 main 槽的 key 一致（同一 MainPanelId）。
-		// 事实见 external/client-ui-layout.md §一/§二（0.2.0-rc.2 亲验）。
+		// 事实见 docs/dependencies/client-ui-layout.md §一/§二（0.2.0-rc.2 亲验）。
 		sub.slots.inject("main", () =>
 			sub.slots.register(
 				{ name: "main", key: PANEL_ID, locale: NS },

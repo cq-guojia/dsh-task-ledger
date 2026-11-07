@@ -1,6 +1,6 @@
 /**
  * 内嵌 skill 的注册体组装（任务 2「skill 注册最小闭环」）。
- * 宿主事实（0.2.0-rc.2 npm pack 亲验）：external/dsh-skill-registration.md。
+ * 宿主事实（0.2.0-rc.2 npm pack 亲验）：docs/dependencies/dsh-skill-registration.md。
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -31,9 +31,8 @@ function parseFrontmatter(text) {
  * 组装注册体：读内嵌 SKILL.md → 取 name / description → 正文里的脚本路径占位符
  * 替换为绝对路径。
  *
- * 相对资源解析的二选一（external/dsh-skill-registration.md §三）**未拍板**；
- * 最小闭环选「插值绝对路径」——resourceBase 的消费者呈现未验证，不押注。
- * 拍板后如改走 resourceBase，只动本函数，调用方无感。
+ * 相对资源解析见 docs/dependencies/dsh-skill-registration.md：本实现选「插值绝对路径」，
+ * resourceBase 的消费者呈现未验证，不押注。若改走 resourceBase，只动本函数，调用方无感。
  */
 export function buildSkillRegistration(skillDir = SKILL_DIR) {
     const text = readFileSync(`${skillDir}/SKILL.md`, "utf-8");

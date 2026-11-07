@@ -5,7 +5,7 @@
  * （`dsh-client-ui-conversation` `contract/input.d.ts:165`，经 `SessionInputResolver.for(actx)` 取），
  * 根级 client 插件拿不到某个会话的 `actx`；按 id 取的 `input.shell()` 是包内部件。
  * 且任务↔会话之间没有绑定字段 ⇒「往哪个会话塞」本身没有答案。链路事实见
- * `docs/design/external/dsh-session-handoff.md`，兄弟插件实证 `dsh-task-dispatch-table/src/dispatch.ts:519/562/627`。
+ * `docs/dependencies/dsh-session-handoff.md`，兄弟插件实证 `dsh-task-dispatch-table/src/dispatch.ts:519/562/627`。
  *
  * 三条硬约束（宿主 rc 线的坑，缺一条就是"会话建了但没法干活"）：
  *  1. `setup` 里必须 `agentPresets.mount()` —— 不挂 preset 的 agent 落到空的全局层，fs / bash 全无；

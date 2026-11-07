@@ -1,7 +1,7 @@
 /**
  * 语义 token 层：`--dtl-*`（dtl = dsh-task-ledger）。
  *
- * 规矩（docs/design/ui-style.md §三）：
+ * 规矩（docs/development/ui-style.md §三）：
  *  - **只有本文件定义 `--dtl-*`**；其它文件一律 `var(--dtl-*)` 消费，不许直接写 `var(--dsw-*)`；
  *  - 每个 token 都带兜底值 ⇒ 宿主升级换名时不炸（最坏退到兜底色，不会白屏）；
  *  - 明暗差异只写在本文件末尾的 `body[data-ds-dark-theme]` 段：能靠宿主 alias 表达的
@@ -271,9 +271,9 @@ export const UI_CONTROLS_CSS = `
 /* 说明小字（安装格：其他 Agent 的安装 Skill） */
 .dtl-flow__sub{font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
-/* 包名 + 两个图标钮：整行是核心 ListRow（自带底 / hover / 右侧操作槽），
-   这里只管包名单行省略。 */
-.dtl-flow__cmd{display:block;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+/* 包名 + 两个图标钮：整行是核心 ListRow（自带底 / hover / 右侧操作槽）。
+   __main 是 flex 容器且垂直居中，包名要 flex:1 才占满剩余宽度、长名能省略。 */
+.dtl-flow__cmd{flex:1 1 auto;display:block;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){

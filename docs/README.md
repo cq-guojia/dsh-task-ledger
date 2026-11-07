@@ -1,56 +1,40 @@
-# 文档规范：每种文档落在哪
+# 文档索引
 
-> 本文件只回答一件事：**本项目每一种文档落在哪个实际路径**。
-> 槽位全集、命名纪律、写权限、生命周期由工作区级规则与进度工具定义 —— 本文件不复述、不摘引、不编号指代它们的条目（它们独立改版，抄来的必然过期）。
+按 `koc-code-docwriter` 的固定槽位组织。本文件是唯一索引，目录树由 `tree` 生成、行尾备注手写，槽位下不再建索引。任务进度与过程叙事不入 `docs/`，由 `task-ledger` 台账管理（`ledger/`）。
 
----
+## 目录
 
-## 一、槽位表
+- architecture/
+  - [host 数据面](architecture/host-data-plane.md) — host 三层分工、降级与缓存语义、当前路由清单
+  - [架构总览](architecture/overview.md) — 单仓双包、读写链路、七步流程与不可破的不变量
+- features/
+  - [看板首页](features/board-home.md) — 三段视图、统计卡、趋势图、筛选与任务动作
+  - [身份与设置页](features/identity-settings.md) — 身份闸门、花名册、安装 Skill 引导与页面边界
+  - [台账目录清单与隐藏](features/ledger-dirs.md) — 机器级清单、`dirs` 命令面与添加目录判据
+  - [插件在官方插件页的呈现](features/plugin-listing.md) — 标题 / 图标 / 说明的品牌值与宿主读取口径
+  - [插件详情页配置区](features/plugin-settings.md) — 入口位置、显示名、两个外链的字段与版式
+- api/
+  - [接口契约：数据层 / 业务层 / 驱动外壳（Go 实现）](api/ledger-api.md) — 四层职责、准入规则、逐方法签名与命令行参数表
+- data/
+  - [台账文件格式](data/ledger-files.md) — 目录布局、任务表 / 历史 / 过程文档字段与崩溃恢复写序
+- development/
+  - [方法规范：client 分层 + 脚本两层](development/code-conventions.md) — 目录分层、导入铁律、产物构建与脚本分层纪律
+  - [样式规范](development/ui-style.md) — 明暗判据、token 层、核心控件分工与文案真源
+- dependencies/
+  - [各 agent 的 skill 安装位置（SKILL.md 生态）](dependencies/agent-skill-install.md) — 各客户端用户级 / 项目级扫描目录与证据强度
+  - [宿主 client UI：入口槽位、元件与设计变量](dependencies/client-ui-layout.md) — 全槽位清单、官方元件与 `--dsw-*` 设计变量
+  - [核心 explorer：选目录 + 只读文件面（dsh-plugin-core）](dependencies/dsh-plugin-core-explorer.md) — `pickWorkspaceFile` 与只读 FS 路由的签名和边界
+  - [宿主会话交接 API：把任务交给大模型的可行链路](dependencies/dsh-session-handoff.md) — 起会话唯一已验证链路与两条预置提示词模板
+  - [宿主 skill 注册接口（ctx.skills）](dependencies/dsh-skill-registration.md) — `register` 的分层语义、必填字段与失效通知
+  - [宿主工作区注册表（ctx.workspaceRegistry）](dependencies/dsh-workspace-registry.md) — `list()` 返回实体与台账根判定口径
+  - [宿主 webServer 路由与流式（SSE）能力](dependencies/host-webserver.md) — 原始 req/res、SSE、压缩与鉴权边界
+  - [npm 信任发布（OIDC）链路](dependencies/npm-trusted-publishing.md) — OIDC 触发条件、tag 取版本与 `repository.url` 约束
 
-| 槽位 | 本项目落位 |
-|---|---|
-| 文档规范 | `docs/README.md`（本文件） |
-| 任务进度（在办 / 已结案 / 过程叙事） | **不入 `docs/`** —— 由 `task-ledger` skill 统一管理（`ledger/pool.json` + `ledger/owners.json` + `ledger/owners/<hash>.json`、`ledger/history/<年月>.md`、`ledger/worklog/<年月>/`，路径以 skill 为准） |
-| 运行逻辑 | `docs/design/architecture.md` |
-| 功能总索引 | `docs/design/features.md` |
-| 各功能 | `docs/design/features/`（一功能一文件，清单见功能总索引） |
-| 外部事实 | `docs/design/external/`：`dsh-skill-registration.md`、`host-webserver.md`、`client-ui-layout.md`、`dsh-session-handoff.md`、`dsh-workspace-registry.md`、`dsh-plugin-core-explorer.md`、`publish-oidc.md`、`agent-skill-install.md` |
-| 数据库说明 | `docs/design/ledger-data.md`（本项目的「数据」= 各工作区台账文件，插件只读、不自建数据库） |
-| 样式规范 | `docs/design/ui-style.md` |
-| 方法规范 | `docs/design/code-conventions.md`（client 半分层 + 脚本侧两层（L1 / L2 / 外壳）、铁律与防塌线；宿主接口核实方法写在各 `external/` **宿主接口**文档的「复核方式」节，`publish-oidc.md` 是发布链路、无此节） |
-| 接口契约 | `docs/design/ledger-api.md`（Go 实现的目录树 + 每层方法签名与职责 + 可机械检查的准入 `grep` 表 + 改完必跑的防塌线清单 + 命令行参数映射） |
-| 后端数据面 | `docs/design/host-data-plane.md`（host 三层架构、降级/缓存语义、性能实测基线与优化路线） |
-| 测试与验收判据 | `docs/design/ledger-api.md` §〇（分层准入 `grep`，全为 0）+ §七（`go vet` / `go test` / 三平台编译）、`npm test`、`npm run verify`（build + typecheck） |
-| 样例 | 不适用（无独立样例产出；台账文件的真实样例直接看本仓 `ledger/history/202610.md` 与 `ledger/worklog/202610/`） |
+## 写作约定
 
-## 二、本项目补充的写作约定
-
-### 2.1 头部（`design/` 下文档必带）
-
-```markdown
-# <标题>
-
-> **状态**：📝 待拍板 / 📝 待落码 / 🔵 落码 / ✅ 定型
-> **来源**：需求出处（用户原话 / 决策编号）
-> **配套**：相关文档链接
-> **重构前快照**：（可选，仅当本文档被整篇重写过；指向归档，一句话说明不作依据）
-```
-
-`external/` 下的另加 `> **类型**：` 与 `> **适用版本**：`（写清是哪个包、哪个版本；宿主 / 官方升级后据此复核）。
-
-**状态词只认这四档**，一格只写一档，别混搭（「已拍板」「已核实」这类词放来源行或正文，不进状态位）。📝 两档的区别：还没定方案用「待拍板」，方案定了但代码没写用「待落码」。
-
-**未落码的设计必须显式标注**：文档里写的架构/接口如果代码里还没有，标题或节标题必须带「📝 计划 / 未落码」，正文不得用现在时叙述 —— 读者会照着不存在的东西改代码（2026-10-22 踩过：三篇文档把未落码的 `atom` / `JsonStore` 写成了现状）。
-
-### 2.2 各层不得写什么
-
-| 层 | 不得写 |
-|---|---|
-| `design/` 定型文档 | 进度、过程日志 |
-| `external/` 外部事实 | 猜测、未核实内容；不得写成「我们的设计」 |
-| `features/` 各功能 | 实现细节（归过程叙事） |
-| 根 `README` 对外 | 内部设计 |
-
-### 2.3 只链接，不摘引
-
-文档之间一律用链接指路 —— 不抄正文，也不用「见某文件第 X 节 / 第 X 条」这类编号定位：被引用方随时改版，抄来的和编号指来的都会过期。
+- 文档只写长期成立的事实与约束；日期、过程词、用户原话、方案取舍、验收判据、待办与分期都不进正文。
+- 可变正文只有一个真源，其余处只放标识、最小摘要和链接，不复制正文。
+- 文档与源码冲突时以源码为准，先核实再改文档。
+- 外部事实必须带适用版本、版本真源与复核日期，并按各自的复核方式定期重查。
+- 命名用纯 ASCII 小写 kebab-case，不带日期与版本号；只有根 `docs/README.md` 一份索引，结构行由 `tree` 生成，人只写每行 `—` 后的备注。
+- 描述文件 / 目录结构时一律用「树 + 每行 `—` 备注」，不另起一套代码框目录树。

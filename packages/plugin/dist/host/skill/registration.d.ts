@@ -20,8 +20,7 @@ export interface SkillsRegistry {
  * 组装注册体：读内嵌 SKILL.md → 取 name / description → 正文里的脚本路径占位符
  * 替换为绝对路径。
  *
- * 相对资源解析的二选一（external/dsh-skill-registration.md §三）**未拍板**；
- * 最小闭环选「插值绝对路径」——resourceBase 的消费者呈现未验证，不押注。
- * 拍板后如改走 resourceBase，只动本函数，调用方无感。
+ * 相对资源解析见 docs/dependencies/dsh-skill-registration.md：本实现选「插值绝对路径」，
+ * resourceBase 的消费者呈现未验证，不押注。若改走 resourceBase，只动本函数，调用方无感。
  */
 export declare function buildSkillRegistration(skillDir?: string): SkillRegistration;

@@ -1,16 +1,18 @@
 # 各 agent 的 skill 安装位置（SKILL.md 生态）
 
-> **类型**：🌐 **外部事实** —— 记的是各家 agent 客户端自己的扫描目录，不是本项目的设计
-> **适用版本**：各客户端截至 2026-11-05 的公开文档 / 官方社区帖；客户端改版后按下方「复核方式」重查
-> **状态**：✅ 已核实（2026-11-05 联网查证；证据强度逐行标注）
-> **来源**：各行「出处」列，均为客户端官方文档、官方博客 / 官方社区，或社区实测对照件
+| 项 | 值 |
+|---|---|
+| 用途 | 给其他 agent 装 `task-ledger` skill 时，确定该把目录复制到哪 |
+| 适用版本 | 各客户端当前公开文档 / 官方社区帖；客户端改版后重查 |
+| 版本真源 | 各行「出处」列的官方文档、官方博客 / 社区，或社区实测对照件 |
+| 复核日期 | 2026-11-05 |
 
 ## 一、结论
 
 本 skill 是一个含 `SKILL.md` 的普通目录，**安装 = 把目录复制到目标 agent 扫描的位置**，无构建、无运行时依赖。
 
-- **用户级**（对所有项目生效）与**项目级**（仅单仓库生效、可随仓库提交）两级并存；项目级是团队共用同一份 skill 的方式。
-- **豆包工作是例外**：未公开用户级技能目录，只能走应用内「技能」面板导入。
+- 用户级（对所有项目生效）与项目级（仅单仓库生效、可随仓库提交）两级并存；项目级是团队共用同一份 skill 的方式。
+- 豆包工作是例外：未公开用户级技能目录，只能走应用内「技能」面板导入。
 - 仓库内 `packages/skill/`（源）与 `packages/plugin/skill/`（随插件分发的副本）内容一致，装任一份皆可；两份同名会让按目录扫描的工具列出两个同名项。
 
 ## 二、逐条事实与出处
@@ -30,7 +32,7 @@
 | 事实 | 出处 |
 |---|---|
 | 通用安装器 `npx skills add <owner>/<repo>` 会扫描仓库内的 `SKILL.md` 并按所选 agent 落位；默认装到当前项目，`-g` 为全局，`--agent` 限定目标、`--skill` 限定条目 | <https://www.npmjs.com/package/skills>；<https://www.skills.sh/docs/cli> |
-| 该安装器支持三种来源：`owner/repo`、完整 GitHub URL、**仓库内某个技能的直接路径**（`https://github.com/<owner>/<repo>/tree/<branch>/<dir>`）——monorepo 用第三种可绕开同名副本的歧义 | <https://www.npmjs.com/package/skills>（Source Formats 节） |
+| 该安装器支持三种来源：`owner/repo`、完整 GitHub URL、**仓库内某个技能的直接路径**（`https://github.com/<owner>/<repo>/tree/<branch>/<dir>`）—— monorepo 用第三种可绕开同名副本的歧义 | <https://www.npmjs.com/package/skills>（Source Formats 节） |
 | 它有 `find` / `list` / `use` 子命令；`use` 可临时加载而不安装 | 同上 |
 | SkillHub（<https://skillhub.cn>）是 CodeBuddy / WorkBuddy 背后的技能市场，带 CLI（`skillhub install`，默认落到当前目录 `skills/`）；上架需 `skillhub publish`。本项目未上架，故 README 只写「检索不到时走本地导入 / GitHub 来源」 | <https://skillhub.cn/install/skillhub.md>；<https://github.com/totwo2/reskill/blob/master/HANDOVER.md> |
 | SkillHub 桌面版（<https://github.com/VipBeCool/SkillHub>）可把本地文件夹、GitHub 仓库、在线链接作为来源统一管理 | 该项目 README |
@@ -46,4 +48,8 @@
 
 1. 客户端大版本升级后，打开上表「出处」列的官方文档页，逐行核对目录是否仍成立。
 2. 官方文档未覆盖的（Codex / WorkBuddy / Trae / 豆包工作），以官方社区帖或客户端设置页自述为准；仍无权威来源的条目降级为「无公开目录」。
-3. 复核结果直接改本表，并在「状态」行更新日期。
+3. 复核结果直接改本表，并更新「复核日期」。
+
+## 更新日志
+
+- 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头

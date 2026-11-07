@@ -1,7 +1,7 @@
 /**
  * 文案唯一真源：命名空间 `dsh-task-ledger`，zh / en 两档。
  *
- * 规矩（docs/design/ui-style.md §五）：
+ * 规矩（docs/development/ui-style.md §五）：
  *  - 两档**键必须完全对齐**（冒烟有断言），漏一种语言界面就露键名；
  *  - 界面上不许出现未登记的硬编码中文；
  *  - 占位符一律 `{name}`，由 `interpolateTranslate` 自己替换（不依赖宿主是否支持 params）；
