@@ -4,10 +4,13 @@
 
 ## 一、目录分层（`packages/plugin/src/`）
 
-- `index.ts` — 插件入口（`apply`）
-- `host/` — Node 侧：读台账 / 聚合 / 路由（不得 import `client/`）
-- `client/` — 浏览器侧：只经 HTTP 取数（不得 import `host/`、不得直接摸文件系统）
-- `skill/` — 构建时从 `packages/skill/` 纳入的内嵌副本（只含运行时；真源在 `packages/skill/`）
+```text
+packages/plugin/src/ # 插件源码根
+├── index.ts # 插件入口（`apply`）
+├── host/ # Node 侧：读台账 / 聚合 / 路由（不得 import `client/`）
+├── client/ # 浏览器侧：只经 HTTP 取数（不得 import `host/`、不得直接摸文件系统）
+└── skill/ # 构建时从 `packages/skill/` 纳入的内嵌副本（只含运行时；真源在 `packages/skill/`）
+```
 
 `client/` 内部按职责分：
 
@@ -108,3 +111,4 @@
 - 2026-11-07 23:03:04：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
 - 2026-11-07 23:04:17：标题去过程词
 - 2026-11-08 01:29:50：目录分层改为树 + 每行备注
+- 2026-11-08 23:04:19：目录结构统一为字符画树，逐行补说明

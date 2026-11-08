@@ -44,25 +44,27 @@ core/                     ← 只做文本和时间的换算，一个文件都�
 
 ## 一、目录树
 
-- `packages/skill/` — skill 包根
-  - `SKILL.md` — 给 agent 的说明书（命令、口径、坑）
-  - `README.md` — 给装 skill 的人看
-  - `assets/worklog.md` — 过程文档六节模板（真源只有这一份）
-  - `references/` — init-identity / state-model / log-note / troubleshooting
-  - `scripts/` — 运行时要用的东西，只有两项
-    - `progress` — 入口 shim：认平台 → 校验可执行位 → exec 二进制
-    - `bin/ledger-<os>-<arch>[.exe]` — 三平台静态产物（linux/amd64、darwin/arm64、windows/amd64）
-  - `src/` — 实现源码（目录名与语言无关）
-    - `go.mod` — Go 模块清单
-    - `main.go` — 只把 argv 与退出码转给 `shell.Main`
-    - `internal/` — 各层实现都在这
-      - `shell/` — 外壳：cli / runner / gitops / merge / render / help / presync / term_*
-      - `actions/` — 业务层：一个动作一个文件 + registry / scope / guard / query
-      - `store/` — 数据层：atomic / dirty / locks(+平台) / jsonstore / 四张表
-      - `core/` — 工具层：time / paths / ids / identity / labels / worklog_md / history_md / roots / rowmap
-      - `env/` — 我是谁
-      - `notices/` — 提示收集
-      - `jsonfmt/` — `--json` 输出排版
+```text
+packages/skill/ # skill 包根
+├── SKILL.md # 给 agent 的说明书（命令、口径、坑）
+├── README.md # 给装 skill 的人看
+├── assets/worklog.md # 过程文档六节模板（真源只有这一份）
+├── references/ # init-identity / state-model / log-note / troubleshooting
+├── scripts/ # 运行时要用的东西，只有两项
+│   ├── progress # 入口 shim：认平台 → 校验可执行位 → exec 二进制
+│   └── bin/ledger-<os>-<arch>[.exe] # 三平台静态产物（linux/amd64、darwin/arm64、windows/amd64）
+└── src/ # 实现源码（目录名与语言无关）
+    ├── go.mod # Go 模块清单
+    ├── main.go # 只把 argv 与退出码转给 `shell.Main`
+    └── internal/ # 各层实现都在这
+        ├── shell/ # 外壳：cli / runner / gitops / merge / render / help / presync / term_*
+        ├── actions/ # 业务层：一个动作一个文件 + registry / scope / guard / query
+        ├── store/ # 数据层：atomic / dirty / locks(+平台) / jsonstore / 四张表
+        ├── core/ # 工具层：time / paths / ids / identity / labels / worklog_md / history_md / roots / rowmap
+        ├── env/ # 我是谁
+        ├── notices/ # 提示收集
+        └── jsonfmt/ # `--json` 输出排版
+```
 
 分发时不带 `src/`：`package.json` 的 `files` 只列 `scripts/`、`assets/`、`references/`、`SKILL.md`、`README.md`；插件内嵌副本（`packages/plugin/skill/`）也只同步这几项。
 
@@ -332,3 +334,4 @@ func (t *termState) readKey() key
 
 - 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
 - 2026-11-08 01:29:50：目录结构改为树 + 每行备注
+- 2026-11-08 23:04:19：目录结构统一为字符画树，逐行补说明
