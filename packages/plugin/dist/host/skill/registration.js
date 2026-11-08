@@ -1,6 +1,6 @@
 /**
  * 内嵌 skill 的注册体组装（任务 2「skill 注册最小闭环」）。
- * 宿主事实（0.2.0-rc.2 npm pack 亲验）：docs/dependencies/dsh-skill-registration.md。
+ * 宿主事实（0.2.2-rc.1 npm pack 亲验）：docs/dependencies/dsh-skill-registration.md。
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -44,5 +44,11 @@ export function buildSkillRegistration(skillDir = SKILL_DIR) {
     if (!content.includes(`${skillDir}/scripts/progress`)) {
         throw new Error("占位符替换异常：替换后找不到脚本路径");
     }
-    return { name, description, content, path: `${skillDir}/SKILL.md` };
+    return {
+        name,
+        description,
+        content,
+        source: "runtime",
+        path: `${skillDir}/SKILL.md`,
+    };
 }

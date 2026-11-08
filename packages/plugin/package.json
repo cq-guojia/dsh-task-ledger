@@ -1,6 +1,6 @@
 {
 	"name": "dsh-task-ledger",
-	"version": "0.1.9",
+	"version": "0.1.10",
 	"description": "Tasks are created, claimed, advanced and closed by the agent and written straight into a plain-text ledger in the workspace, so the owner, the current state and the next step are always on record. It is not limited to development work — research, documentation, presentations and video production all fit. No cloud service is involved: everything is managed locally. Single-user and multi-user both work, with Git synchronisation, and every action is on record. The control panel summarises in-flight, overdue and stalled work with weekly trends.",
 	"icon": "./assets/icon.svg",
 	"keywords": [
@@ -32,7 +32,7 @@
 		"build:host": "node scripts/clean-dist.mjs && tsc && node scripts/copy-skill.mjs",
 		"build:client": "tsc --noEmit -p tsconfig.client.json && tsdown --config tsdown.client.config.ts",
 		"typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
-		"verify": "npm run build && npm run typecheck"
+		"verify": "npm run build && npm run typecheck && node scripts/verify-skill.mjs"
 	},
 	"engines": {
 		"node": ">=22.5"

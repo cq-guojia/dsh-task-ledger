@@ -3,9 +3,10 @@ export interface SkillRegistration {
     name: string;
     description: string;
     content: string;
+    /** 宿主加载期必填：register() 不补默认值，缺了要等模型调用 skill 才报错。 */
+    source: "runtime";
     whenToUse?: string;
     path?: string;
-    source?: string;
     resourceBase?: {
         kind: "directory";
         path: string;
