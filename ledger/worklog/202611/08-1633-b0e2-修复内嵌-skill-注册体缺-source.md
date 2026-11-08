@@ -1,8 +1,9 @@
 # 20261108-1633-b0e2-修复内嵌-skill-注册体缺-source: 修复内嵌 skill 注册体缺 source
 
 - **Tags**: 注册体, 宿主契约, 依赖复核, 回归验证
-- **Status**: doing · 2026-11-08 16:41:59 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: done · 2026-11-08 16:42:03 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-08 16:33:18 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-11-08 16:42:03 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
      The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
@@ -42,3 +43,4 @@ GitHub issue #3（ysongyang，2026-11-08）：DSH `V0.2.2-rc.1` 上调用 `task-
 - 2026-11-08 16:33:41 · claim · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · claimed → doing
 - 2026-11-08 16:38:10 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 已交付待验收：注册体补 source=runtime（registration.ts:69），verify-skill.mjs 5 项断言全过，宿主 0.2.2-rc.1 validateDefinition PASS；插件 0.1.10 发版 de9e6a0 与 tag plugin-v0.1.10 已推送；待 DSH 真机验收
 - 2026-11-08 16:41:59 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 结案收尾：worklog 前五节更新为结案态；宿主 0.2.2-rc.1 原码校验 PASS、真机未验收；issue #3 关闭受凭证权限限制（403 Must have admin rights），待仓库管理员关闭
+- 2026-11-08 16:42:03 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed: 注册体补 source=runtime（registration.ts:69），宿主 0.2.2-rc.1 validateDefinition PASS，verify/typecheck/go test/codelint 全过；插件 0.1.10 发版 de9e6a0 与 tag plugin-v0.1.10；真机验收由用户升级后确认，issue #3 因凭证无 admin 权限未关闭
