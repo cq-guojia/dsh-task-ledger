@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261108-0308-1098-审查仓库-pr-与-issues": {"category": "审查", "created": "2026-11-08 03:08:58", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-08 03:08:58", "status": "doing", "tags": ["GitHub", "PR审查", "issues"], "title": "审查仓库 PR 与 issues", "updated": "2026-11-08 03:12:43", "worklog": "worklog/202611/08-0308-1098-审查仓库-pr-与-issues.md"}
+    "20261108-0308-1098-审查仓库-pr-与-issues": {"category": "审查", "created": "2026-11-08 03:08:58", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-08 03:08:58", "status": "doing", "tags": ["GitHub", "PR审查", "issues"], "title": "审查仓库 PR 与 issues", "updated": "2026-11-08 03:48:42", "worklog": "worklog/202611/08-0308-1098-审查仓库-pr-与-issues.md"}
   },
   "version": "20261022000000"
 }
