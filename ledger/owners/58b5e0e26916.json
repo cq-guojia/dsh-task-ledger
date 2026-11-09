@@ -1,6 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
+    "20261109-1110-fe37-修复等宽字体硬编码": {"category": "缺陷修复", "created": "2026-11-09 11:10:51", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-09 11:10:51", "status": "doing", "tags": ["样式", "字体", "Windows"], "title": "修复等宽字体硬编码", "updated": "2026-11-09 11:10:51", "worklog": "worklog/202611/09-1110-fe37-修复等宽字体硬编码.md"}
   },
   "version": "20261022000000"
 }
