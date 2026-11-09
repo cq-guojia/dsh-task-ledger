@@ -114,6 +114,13 @@ body{
   /* 统计卡主数字：宿主字号族最大 16px，看板主数字要更大 ⇒ 单开一档（别处不许直接写 px） */
   --dtl-font-stat:26px;
 
+  /* ── 等宽字体（UUID / 路径 / 命令）────────────────────────────────
+     宿主在 body 发布 --ds-font-family-code（由「代码字体」设置注入），
+     自带跨平台内置栈；宿主缺该变量时才退到含 Consolas 的兜底栈。
+     不写死 macOS 字体栈：Windows 上 SFMono-Regular / Menlo 都不存在，
+     会一路落到通用 monospace，小字号看着像点阵字。 */
+  --dtl-font-mono:var(--ds-font-family-code,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);
+
   /* ── 统计卡固定高度（用户 2026-10-29 定）────────────────────────
      卡高**只由这一条决定**，不跟内容走：小字缺行 / 小字凑巧换行都不改卡高。
      算式 = 三行正文（标签 18 + 数字 26×1.15 + 小字 14）+ 上下 padding 24 + 两处 gap 8，
@@ -204,7 +211,7 @@ export const UI_CONTROLS_CSS = `
 .dtl-profile__editor{width:100%;}
 .dtl-profile__editor > *{flex:1 1 auto;min-width:0;}
 .dtl-profile__uuid{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
-  color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:var(--dtl-fg-3);font-family:var(--dtl-font-mono);
   word-break:break-all;}
 .dtl-profile__hint{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-2);}
 .dtl-acts{display:flex;align-items:center;gap:var(--dtl-space-2);flex:0 0 auto;flex-wrap:wrap;}
@@ -273,7 +280,7 @@ export const UI_CONTROLS_CSS = `
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
 /* 包名 + 两个图标钮：整行是核心 ListRow（自带底 / hover / 右侧操作槽）。
    __main 是 flex 容器且垂直居中，包名要 flex:1 才占满剩余宽度、长名能省略。 */
-.dtl-flow__cmd{flex:1 1 auto;display:block;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+.dtl-flow__cmd{flex:1 1 auto;display:block;min-width:0;font-family:var(--dtl-font-mono);
   font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* 窄面板：三格落成一列，分隔转横向（必须写在基础分隔规则之后，同权重靠顺序取胜） */
 @media (max-width:900px){
@@ -289,7 +296,7 @@ export const UI_CONTROLS_CSS = `
 .dtl-dir__name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .dtl-dir__path{display:flex;align-items:center;gap:var(--dtl-space-1);min-width:0;}
 .dtl-dir__pathtext{min-width:0;font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);
-  color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:var(--dtl-fg-3);font-family:var(--dtl-font-mono);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* 复制钮：鼠标移到这一列才浮出（用户 2026-11-02 要求）；键盘聚焦也显形 */
 .dtl-dir__copy{flex:none;opacity:0;transition:opacity var(--dtl-dur-fast) var(--dtl-ease);}
@@ -309,7 +316,7 @@ export const UI_CONTROLS_CSS = `
 /* 只显示 uuid 尾 8 位（用户 2026-11-02：36 位硬塞会把整行挤爆，尾段足够分重名的人；
    完整值挂在 title 上，鼠标停一下就看得到） */
 .dtl-roster__uuid{flex:none;font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);
-  color:var(--dtl-fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:var(--dtl-fg-3);font-family:var(--dtl-font-mono);
   white-space:nowrap;}
 /* 弹窗页脚左侧的进行中骨架（删除要逐本台账走网络，慢）；右边是「创建新用户」组合框，
    两块都是核心 foot 的直接子项，组合框靠 style 里的 margin-left:auto 贴右。 */
