@@ -20,13 +20,15 @@ import {
 	Switch,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
+/** 可编辑输入框只从核心的 ui/code-viewer 子路径导出（重依赖不进 ui/index.ts），不能用 ./ui 汇总表。 */
+import { CodeEditor } from "dsh-plugin-core/ui/code-viewer";
 import { createElement as h, Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { fetchDirs, fetchRoster, fetchRulesInjection, postDirs, postForgetIdentity, postRulesInjection, postSwitchIdentity, type DirsWriteBody, type ForgetStep } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import { isEnglish } from "./prompts";
 import { STEP_LABEL } from "./task-row";
 import type { DirsPayload, IdentityView, LedgerDirView, RosterPayload, RulesLang } from "./types";
-import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, ListRow, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Textarea, Tip, confirmModal, notify } from "./ui";
+import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, ListRow, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 const GithubMark = (): ReactNode =>
@@ -1272,7 +1274,12 @@ export function SettingsPage(props: {
 			{ padding: "lg" },
 			h(SectionHead, {
 				icon: h(IconChecklistOutlineRegular, { size: 16 }),
-				title: t("settingsRulesTitle"),
+				title: h(
+					"span",
+					{ className: "dtl-set__rules-title" },
+					t("settingsRulesTitle"),
+					h(FieldHint, { text: t("settingsRulesHint"), side: "bottom", maxWidth: 380 }),
+				),
 				right: h(
 					"span",
 					{ className: "dtl-set__rules-switch" },
@@ -1303,7 +1310,6 @@ export function SettingsPage(props: {
 						h(
 						"div",
 						{ className: "dtl-set__body" },
-						h("p", null, t("settingsRulesHint")),
 						h(
 						"span",
 						{
@@ -1319,12 +1325,24 @@ export function SettingsPage(props: {
 						),
 						t(rulesCustomized ? "settingsRulesCustom" : "settingsRulesDefault"),
 						),
-						h(Textarea, {
-					value: rulesText,
-					onChange: setRulesText,
-					"aria-label": t("settingsRulesTextLabel"),
-					disabled: rulesBusy,
-				}),
+						h(
+							"div",
+							{
+								className: rulesBusy
+									? "dtl-set__rules-editor dtl-set__rules-editor--busy"
+									: "dtl-set__rules-editor",
+								role: "group",
+								"aria-label": t("settingsRulesTextLabel"),
+							},
+							h(CodeEditor, {
+								value: rulesText,
+								onChange: (next: string) => {
+									if (!rulesBusy) setRulesText(next);
+								},
+								height: "200px",
+								lineNumbers: false,
+							}),
+						),
 				h(
 					"div",
 					{ className: "dtl-set__tools" },

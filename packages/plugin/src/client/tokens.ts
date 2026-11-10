@@ -180,6 +180,11 @@ export const UI_CONTROLS_CSS = `
   margin-bottom:var(--dtl-space-2);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);
   color:var(--dtl-fg-3);}
 .dtl-set__rules-origin--custom{color:var(--dtl-warning);}
+/* 标题后的问号提示：标题与问号同一行；气泡文案显式断行并由 maxWidth 限宽 */
+.dtl-set__rules-title{display:inline-flex;align-items:center;gap:var(--dtl-space-1);}
+/* 可编辑文案框：高度由核心 CodeEditor 的 height 给，这里只补间距与保存中的锁定态 */
+.dtl-set__rules-editor{margin-bottom:var(--dtl-space-2);}
+.dtl-set__rules-editor--busy{opacity:.65;pointer-events:none;}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
    两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：
