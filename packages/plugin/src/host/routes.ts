@@ -400,8 +400,14 @@ export function registerRoutes(
 					throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
 				}
 				const body = (raw ?? {}) as Record<string, unknown>;
-				const input: { enabled?: boolean; text?: string; reset?: boolean } = {};
+				const input: {
+					enabled?: boolean;
+					lang?: "zh" | "en";
+					text?: string;
+					reset?: boolean;
+				} = {};
 				if (typeof body.enabled === "boolean") input.enabled = body.enabled;
+				if (body.lang === "zh" || body.lang === "en") input.lang = body.lang;
 				if (typeof body.text === "string") input.text = body.text;
 				if (body.action === "reset") input.reset = true;
 				sendJson(res, 200, writeSettings(input));

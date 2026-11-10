@@ -1,56 +1,96 @@
 /**
- * 会话规则注入：写死的默认文案、插件自有设置读写、host 半 pre-step 注入。
+ * 会话规则注入：写死的中英默认文案、插件自有设置读写、host 半 pre-step 注入。
  *
  * 设置只落本机私有文件，不经宿主官方配置区；注入逻辑照同栈已实机跑通的 pre-step 实现，
  * 不自加判据（用户 2026-11-10 定：不要过度设计）。
+ *
+ * 语言（用户 2026-11-10 定）：注入在 host 半，拿不到宿主渲染器的 t 席位，所以由 client
+ * 在写请求里带当前界面语言、落盘为 lang；默认文案按 lang 挑，用户自定义文案只有一份、
+ * 不分语言。保存时按本次请求语言比对该语言默认值，相等就不落用户值、继续用默认。
  */
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-/** 恢复默认的唯一参照：用户保存的值另存，写入不覆盖它。 */
-export const DEFAULT_RULES_TEXT = "凡任务进度、工作事项与工作日志（新建 / 推进 / 查询 / 结案）一律调用 task-ledger skill 管理；进度 / 历史类问题一律走它作答，不凭对话记忆或自建清单顶替。用户明确说要新建（如「开个新坑」「建个任务」）才登记；提问 / 查询 / 讨论 / 顺手小改不算。";
+/** 恢复默认的唯一参照：中英各一份写死常量；用户保存的值另存，写入不覆盖它们。 */
+export const DEFAULT_RULES_TEXT_ZH = [
+    "以下是本会话的常驻规则。",
+    "凡任务进度、工作事项与工作日志（新建 / 推进 / 查询 / 结案）一律调用 task-ledger skill 管理；进度 / 历史类问题一律走它作答，不凭对话记忆或自建清单顶替。",
+    "开工锚点：仅当用户明确说要新建（如「开个新坑」「先记一下」「建个任务」）才登记；提问 / 查询 / 讨论 / 顺手小改不算，拿不准先问，未经明确指令不得擅自新建任务。",
+    "怎么建、按什么顺序、命令的授权与确认口径，一律以 task-ledger skill 的说明为准。",
+    "顺手问一句：用户在推进一件跨轮的事（这轮答完、手上还有下一步动作没做完）、却从没提过记账时，答完问一次「你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）」；本会话问过一次就别再问，用户不接就当他不需要。",
+].join("\n");
+/** 英文与中文五条对齐；最后那句问话按定稿保留中文原句。 */
+export const DEFAULT_RULES_TEXT_EN = [
+    "These are standing rules for this session.",
+    "Every piece of task progress, work item and work log (create / advance / query / close) goes through the task-ledger skill; answer progress and history questions from it, never from conversation memory or a hand-rolled list.",
+    'Creation anchor: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.',
+    "How to create, in what order, and the authorization and confirmation rules all follow the task-ledger skill's own instructions.",
+    'Ask in passing: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）"; once asked in a session, do not ask again; no reply means ignore it.',
+].join("\n");
+const DEFAULTS = {
+    zh: DEFAULT_RULES_TEXT_ZH,
+    en: DEFAULT_RULES_TEXT_EN,
+};
 /** 注入块标记：去重与压缩判定靠它，照同栈实现。 */
 const MANAGED_HEADER = "<!-- dsh-task-ledger:managed -->";
+function isRulesLang(value) {
+    return value === "zh" || value === "en";
+}
+/** 比对归一化：只用来判断「用户有没有改」，不改落盘值。 */
+function normalizeForCompare(value) {
+    return value.replace(/\r\n/g, "\n").trim();
+}
 function settingsFile() {
     const home = process.env.TASK_LEDGER_HOME ?? join(homedir(), ".taskledger");
     return join(home, "rules-injection.json");
 }
 /** 文件不存在或坏掉都按默认处理，不覆盖磁盘。 */
-export function readSettings() {
-    let enabled = false;
-    let text = null;
+function readStored() {
+    const fallback = { enabled: false, lang: "zh", text: null };
     try {
         const raw = JSON.parse(readFileSync(settingsFile(), "utf8"));
-        if (raw !== null && typeof raw === "object") {
-            const saved = raw;
-            if (typeof saved.enabled === "boolean")
-                enabled = saved.enabled;
-            if (typeof saved.text === "string")
-                text = saved.text;
-        }
+        if (raw === null || typeof raw !== "object")
+            return fallback;
+        const saved = raw;
+        return {
+            enabled: typeof saved.enabled === "boolean" ? saved.enabled : false,
+            lang: isRulesLang(saved.lang) ? saved.lang : "zh",
+            text: typeof saved.text === "string" ? saved.text : null,
+        };
     }
     catch {
-        return { enabled: false, text: DEFAULT_RULES_TEXT, defaultText: DEFAULT_RULES_TEXT };
+        return fallback;
     }
+}
+/** GET 与注入都走这里：不传语言，按文件里落盘的 lang 返回。 */
+export function readSettings() {
+    const stored = readStored();
     return {
-        enabled,
-        text: text ?? DEFAULT_RULES_TEXT,
-        defaultText: DEFAULT_RULES_TEXT,
+        enabled: stored.enabled,
+        lang: stored.lang,
+        text: stored.text ?? DEFAULTS[stored.lang],
+        defaultText: DEFAULTS[stored.lang],
     };
 }
-/** 原子替换写盘；恢复默认只清用户值，不动写死的常量。 */
+/** 原子替换写盘；恢复默认或「内容与默认一致」都只清用户值，不动写死的常量。 */
 export function writeSettings(input) {
-    const current = readSettings();
+    const current = readStored();
+    const lang = isRulesLang(input.lang) ? input.lang : current.lang;
+    let text;
+    if (input.reset === true)
+        text = null;
+    else if (typeof input.text === "string")
+        text =
+            normalizeForCompare(input.text) === normalizeForCompare(DEFAULTS[lang])
+                ? null
+                : input.text;
+    else
+        text = current.text;
     const stored = {
         enabled: typeof input.enabled === "boolean" ? input.enabled : current.enabled,
-        text: input.reset === true
-            ? null
-            : typeof input.text === "string"
-                ? input.text
-                : current.text === current.defaultText
-                    ? null
-                    : current.text,
+        lang,
+        text,
     };
     const file = settingsFile();
     mkdirSync(dirname(file), { recursive: true });
@@ -59,8 +99,9 @@ export function writeSettings(input) {
     renameSync(tmp, file);
     return {
         enabled: stored.enabled,
-        text: stored.text ?? DEFAULT_RULES_TEXT,
-        defaultText: DEFAULT_RULES_TEXT,
+        lang,
+        text: stored.text ?? DEFAULTS[lang],
+        defaultText: DEFAULTS[lang],
     };
 }
 function hasUserTurn(messages) {

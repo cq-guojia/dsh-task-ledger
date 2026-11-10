@@ -12,7 +12,7 @@
 import { en, type Translate } from "./locales";
 
 /** 当前界面语言是不是英文（比对自家字典，不依赖宿主是否暴露 locale code）。 */
-function isEnglish(t: Translate): boolean {
+export function isEnglish(t: Translate): boolean {
 	return t("panelTitle") === en.panelTitle;
 }
 

@@ -21,8 +21,9 @@ import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
 import { createElement as h, Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { fetchDirs, fetchRoster, fetchRulesInjection, postDirs, postForgetIdentity, postRulesInjection, postSwitchIdentity, type DirsWriteBody, type ForgetStep } from "./api";
 import type { LocaleKey, Translate } from "./locales";
+import { isEnglish } from "./prompts";
 import { STEP_LABEL } from "./task-row";
-import type { DirsPayload, IdentityView, LedgerDirView, RosterPayload } from "./types";
+import type { DirsPayload, IdentityView, LedgerDirView, RosterPayload, RulesLang } from "./types";
 import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, ListRow, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Textarea, Tip, confirmModal, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
@@ -129,11 +130,16 @@ export function SettingsPage(props: {
 	/** 目录写动作的进行中标记（`动作:路径`）：同一个记录不让连点。 */
 	const [dirBusy, setDirBusy] = useState<string | null>(null);
 
-	// 会话规则注入：设置放插件自有文件，默认文案写死在 host（恢复默认 = 清掉用户值）
+	// 会话规则注入：设置放插件自有文件，默认文案写死在 host（恢复默认 = 清掉用户值）。
+	// 语言跟宿主：host 半拿不到 t 席位，写请求一律带当前界面语言，host 落盘后按它挑默认文案。
 	const [rulesEnabled, setRulesEnabled] = useState(false);
 	const [rulesText, setRulesText] = useState("");
+	const [rulesDefaultText, setRulesDefaultText] = useState("");
+	const [rulesLang, setRulesLang] = useState<RulesLang | null>(null);
 	const [rulesBusy, setRulesBusy] = useState(false);
+	const [rulesSwitchBusy, setRulesSwitchBusy] = useState(false);
 	const [rulesError, setRulesError] = useState<string | null>(null);
+	const uiLang: RulesLang = isEnglish(t) ? "en" : "zh";
 
 	useEffect(() => {
 		let alive = true;
@@ -142,6 +148,8 @@ export function SettingsPage(props: {
 				if (!alive) return;
 				setRulesEnabled(payload.enabled);
 				setRulesText(payload.text);
+				setRulesDefaultText(payload.defaultText);
+				setRulesLang(payload.lang);
 			})
 			.catch((failure: unknown) => {
 				if (alive)
@@ -154,19 +162,61 @@ export function SettingsPage(props: {
 		};
 	}, []);
 
-	/** 保存 / 恢复默认都走同一条写路由；回执里的 text 就是当前生效文案。 */
-	const writeRules = async (body: {
-		readonly enabled?: boolean;
-		readonly text?: string;
-		readonly action?: "reset";
-	}, done: string): Promise<void> => {
+	/** 界面语言变了就同步一次 lang；没改过的默认文案跟着换，正在编辑的草稿不动。 */
+	useEffect(() => {
+		if (rulesLang === null || rulesLang === uiLang) return;
+		let alive = true;
+		void postRulesInjection({ lang: uiLang })
+			.then((payload) => {
+				if (!alive) return;
+				setRulesLang(payload.lang);
+				setRulesDefaultText(payload.defaultText);
+				setRulesText((draft) =>
+					draft === rulesDefaultText ? payload.text : draft,
+				);
+			})
+			.catch((failure: unknown) => {
+				if (alive)
+					setRulesError(
+						failure instanceof Error ? failure.message : String(failure),
+					);
+			});
+		return () => {
+			alive = false;
+		};
+	}, [uiLang, rulesLang, rulesDefaultText]);
+
+	/** 开关切换即写盘生效，不等「保存」；失败回滚，不覆盖正在编辑的文案。 */
+	const flipRulesEnabled = async (next: boolean): Promise<void> => {
+		if (rulesSwitchBusy) return;
+		setRulesSwitchBusy(true);
+		setRulesError(null);
+		setRulesEnabled(next);
+		try {
+			const payload = await postRulesInjection({ enabled: next, lang: uiLang });
+			setRulesEnabled(payload.enabled);
+			setRulesLang(payload.lang);
+		} catch (failure: unknown) {
+			setRulesEnabled(!next);
+			setRulesError(failure instanceof Error ? failure.message : String(failure));
+		} finally {
+			setRulesSwitchBusy(false);
+		}
+	};
+
+	/** 保存只提交文案；与默认一致时 host 清掉用户值，继续用写死的默认。 */
+	const writeRules = async (
+		body: { readonly text?: string; readonly action?: "reset" },
+		done: string,
+	): Promise<void> => {
 		if (rulesBusy) return;
 		setRulesBusy(true);
 		setRulesError(null);
 		try {
-			const payload = await postRulesInjection(body);
-			setRulesEnabled(payload.enabled);
+			const payload = await postRulesInjection({ ...body, lang: uiLang });
 			setRulesText(payload.text);
+			setRulesDefaultText(payload.defaultText);
+			setRulesLang(payload.lang);
 			notify(done, { variant: "success" });
 		} catch (failure: unknown) {
 			setRulesError(failure instanceof Error ? failure.message : String(failure));
@@ -1212,17 +1262,28 @@ export function SettingsPage(props: {
 			h(SectionHead, {
 				icon: h(IconChecklistOutlineRegular, { size: 16 }),
 				title: t("settingsRulesTitle"),
+				right: h(
+					"span",
+					{ className: "dtl-set__rules-switch" },
+					h(Switch, {
+						checked: rulesEnabled,
+						onChange: (next: boolean) => {
+							void flipRulesEnabled(next);
+						},
+						label: t("settingsRulesSwitch"),
+						disabled: rulesSwitchBusy,
+					}),
+					h(
+						"span",
+						{ className: "dtl-set__rules-state" },
+						t(rulesEnabled ? "settingsRulesOn" : "settingsRulesOff"),
+					),
+				),
 			}),
 			h(
 				"div",
 				{ className: "dtl-set__body" },
 				h("p", null, t("settingsRulesHint")),
-				h(Switch, {
-					checked: rulesEnabled,
-					onChange: setRulesEnabled,
-					label: t("settingsRulesSwitch"),
-					disabled: rulesBusy,
-				}),
 				h(Textarea, {
 					value: rulesText,
 					onChange: setRulesText,
@@ -1240,10 +1301,7 @@ export function SettingsPage(props: {
 							loading: rulesBusy,
 							disabled: rulesBusy,
 							onClick: () => {
-								void writeRules(
-									{ enabled: rulesEnabled, text: rulesText },
-									t("settingsRulesSaved"),
-								);
+								void writeRules({ text: rulesText }, t("settingsRulesSaved"));
 							},
 						},
 						t("settingsSave"),
@@ -1285,6 +1343,8 @@ export type SettingsLocaleKey = Extract<
 	| "settingsRulesSaved"
 	| "settingsRulesResetDone"
 	| "settingsRulesFailed"
+	| "settingsRulesOn"
+	| "settingsRulesOff"
 	| "settingsSave"
 	| "loadFailed"
 	| "settingsSwitchUser"

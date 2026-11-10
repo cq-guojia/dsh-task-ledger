@@ -165,8 +165,9 @@ export function fetchRulesInjection(): Promise<RulesInjectionView> {
 	return fetchJson<RulesInjectionView>("/rules-injection");
 }
 
-/** 保存开关与文案；`action: "reset"` 恢复写死的默认文案。 */
+/** 每个写请求都带当前界面语言；`action: "reset"` 恢复写死的默认文案。 */
 export function postRulesInjection(body: {
+	readonly lang: "zh" | "en";
 	readonly enabled?: boolean;
 	readonly text?: string;
 	readonly action?: "reset";

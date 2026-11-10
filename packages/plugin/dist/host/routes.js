@@ -322,6 +322,8 @@ export function registerRoutes(webServer, deps) {
                 const input = {};
                 if (typeof body.enabled === "boolean")
                     input.enabled = body.enabled;
+                if (body.lang === "zh" || body.lang === "en")
+                    input.lang = body.lang;
                 if (typeof body.text === "string")
                     input.text = body.text;
                 if (body.action === "reset")

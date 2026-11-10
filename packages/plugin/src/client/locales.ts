@@ -84,6 +84,8 @@ export type LocaleKey =
 	| "settingsRulesSaved"
 	| "settingsRulesResetDone"
 	| "settingsRulesFailed"
+	| "settingsRulesOn"
+	| "settingsRulesOff"
 	| "settingsCancel"
 	| "settingsPathCopied"
 	| "settingsPathCopy"
@@ -440,6 +442,8 @@ export const zh: Record<LocaleKey, string> = {
 	settingsRulesSaved: "注入设置已保存",
 	settingsRulesResetDone: "已恢复默认文案",
 	settingsRulesFailed: "注入设置未保存：{message}",
+	settingsRulesOn: "开启",
+	settingsRulesOff: "关闭",
 	settingsCancel: "取消",
 	settingsPathCopied: "复制完成",
 	settingsPathCopy: "复制路径",
@@ -777,6 +781,8 @@ export const en: Record<LocaleKey, string> = {
 	settingsRulesSaved: "Injection settings saved",
 	settingsRulesResetDone: "Default prompt restored",
 	settingsRulesFailed: "Injection settings not saved: {message}",
+	settingsRulesOn: "On",
+	settingsRulesOff: "Off",
 	settingsCancel: "Cancel",
 	settingsPathCopied: "Copied",
 	settingsPathCopy: "Copy path",

@@ -56234,6 +56234,8 @@ window.__ModuleLoader__.load({
 			settingsRulesSaved: "注入设置已保存",
 			settingsRulesResetDone: "已恢复默认文案",
 			settingsRulesFailed: "注入设置未保存：{message}",
+			settingsRulesOn: "开启",
+			settingsRulesOff: "关闭",
 			settingsCancel: "取消",
 			settingsPathCopied: "复制完成",
 			settingsPathCopy: "复制路径",
@@ -56548,6 +56550,8 @@ window.__ModuleLoader__.load({
 			settingsRulesSaved: "Injection settings saved",
 			settingsRulesResetDone: "Default prompt restored",
 			settingsRulesFailed: "Injection settings not saved: {message}",
+			settingsRulesOn: "On",
+			settingsRulesOff: "Off",
 			settingsCancel: "Cancel",
 			settingsPathCopied: "Copied",
 			settingsPathCopy: "Copy path",
@@ -56904,7 +56908,7 @@ window.__ModuleLoader__.load({
 		function fetchRulesInjection() {
 			return fetchJson("/rules-injection");
 		}
-		/** 保存开关与文案；`action: "reset"` 恢复写死的默认文案。 */
+		/** 每个写请求都带当前界面语言；`action: "reset"` 恢复写死的默认文案。 */
 		function postRulesInjection(body) {
 			return fetchJson("/rules-injection", {
 				method: "POST",
@@ -64446,6 +64450,9 @@ body[data-ds-dark-theme]{
 .dtl-set__body{margin-top:var(--dtl-space-3);}
 /* 标题行右槽（核心 SectionHead 的 right）：三档筛选 + 添加目录，窄了就换行 */
 .dtl-set__tools{display:flex;align-items:center;gap:var(--dtl-space-2);flex-wrap:wrap;}
+/* 规则注入开关进标题行右槽，后面跟当前状态的小字 */
+.dtl-set__rules-switch{display:inline-flex;align-items:center;gap:var(--dtl-space-2);}
+.dtl-set__rules-state{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
    两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：
@@ -67796,14 +67803,20 @@ body[data-ds-dark-theme]{
 			const [dirBusy, setDirBusy] = (0, react$1.useState)(null);
 			const [rulesEnabled, setRulesEnabled] = (0, react$1.useState)(false);
 			const [rulesText, setRulesText] = (0, react$1.useState)("");
+			const [rulesDefaultText, setRulesDefaultText] = (0, react$1.useState)("");
+			const [rulesLang, setRulesLang] = (0, react$1.useState)(null);
 			const [rulesBusy, setRulesBusy] = (0, react$1.useState)(false);
+			const [rulesSwitchBusy, setRulesSwitchBusy] = (0, react$1.useState)(false);
 			const [rulesError, setRulesError] = (0, react$1.useState)(null);
+			const uiLang = isEnglish(t) ? "en" : "zh";
 			(0, react$1.useEffect)(() => {
 				let alive = true;
 				fetchRulesInjection().then((payload) => {
 					if (!alive) return;
 					setRulesEnabled(payload.enabled);
 					setRulesText(payload.text);
+					setRulesDefaultText(payload.defaultText);
+					setRulesLang(payload.lang);
 				}).catch((failure) => {
 					if (alive) setRulesError(failure instanceof Error ? failure.message : String(failure));
 				});
@@ -67811,15 +67824,59 @@ body[data-ds-dark-theme]{
 					alive = false;
 				};
 			}, []);
-			/** 保存 / 恢复默认都走同一条写路由；回执里的 text 就是当前生效文案。 */
+			/** 界面语言变了就同步一次 lang；没改过的默认文案跟着换，正在编辑的草稿不动。 */
+			(0, react$1.useEffect)(() => {
+				if (rulesLang === null || rulesLang === uiLang) return;
+				let alive = true;
+				postRulesInjection({ lang: uiLang }).then((payload) => {
+					if (!alive) return;
+					setRulesLang(payload.lang);
+					setRulesDefaultText(payload.defaultText);
+					setRulesText((draft) => draft === rulesDefaultText ? payload.text : draft);
+				}).catch((failure) => {
+					if (alive) setRulesError(failure instanceof Error ? failure.message : String(failure));
+				});
+				return () => {
+					alive = false;
+				};
+			}, [
+				uiLang,
+				rulesLang,
+				rulesDefaultText
+			]);
+			/** 开关切换即写盘生效，不等「保存」；失败回滚，不覆盖正在编辑的文案。 */
+			const flipRulesEnabled = async (next) => {
+				if (rulesSwitchBusy) return;
+				setRulesSwitchBusy(true);
+				setRulesError(null);
+				setRulesEnabled(next);
+				try {
+					const payload = await postRulesInjection({
+						enabled: next,
+						lang: uiLang
+					});
+					setRulesEnabled(payload.enabled);
+					setRulesLang(payload.lang);
+				} catch (failure) {
+					setRulesEnabled(!next);
+					setRulesError(failure instanceof Error ? failure.message : String(failure));
+				} finally {
+					setRulesSwitchBusy(false);
+				}
+			};
+			/** 保存只提交文案；与默认一致时 host 清掉用户值，继续用写死的默认。 */
 			const writeRules = async (body, done) => {
 				if (rulesBusy) return;
 				setRulesBusy(true);
 				setRulesError(null);
 				try {
-					const payload = await postRulesInjection(body);
-					setRulesEnabled(payload.enabled);
+					const payload = await postRulesInjection({
+						...body,
+						lang: uiLang
+					});
 					setRulesText(payload.text);
+					setRulesDefaultText(payload.defaultText);
+					setRulesLang(payload.lang);
 					notify(done, { variant: "success" });
 				} catch (failure) {
 					setRulesError(failure instanceof Error ? failure.message : String(failure));
@@ -68495,13 +68552,16 @@ body[data-ds-dark-theme]{
 				}, t("settingsDirsAdd")))
 			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)(SectionHead, {
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 }),
-				title: t("settingsRulesTitle")
-			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, (0, react$1.createElement)("p", null, t("settingsRulesHint")), (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
-				checked: rulesEnabled,
-				onChange: setRulesEnabled,
-				label: t("settingsRulesSwitch"),
-				disabled: rulesBusy
-			}), (0, react$1.createElement)(Textarea, {
+				title: t("settingsRulesTitle"),
+				right: (0, react$1.createElement)("span", { className: "dtl-set__rules-switch" }, (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
+					checked: rulesEnabled,
+					onChange: (next) => {
+						flipRulesEnabled(next);
+					},
+					label: t("settingsRulesSwitch"),
+					disabled: rulesSwitchBusy
+				}), (0, react$1.createElement)("span", { className: "dtl-set__rules-state" }, t(rulesEnabled ? "settingsRulesOn" : "settingsRulesOff")))
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, (0, react$1.createElement)("p", null, t("settingsRulesHint")), (0, react$1.createElement)(Textarea, {
 				value: rulesText,
 				onChange: setRulesText,
 				"aria-label": t("settingsRulesTextLabel"),
@@ -68512,10 +68572,7 @@ body[data-ds-dark-theme]{
 				loading: rulesBusy,
 				disabled: rulesBusy,
 				onClick: () => {
-					writeRules({
-						enabled: rulesEnabled,
-						text: rulesText
-					}, t("settingsRulesSaved"));
+					writeRules({ text: rulesText }, t("settingsRulesSaved"));
 				}
 			}, t("settingsSave")), (0, react$1.createElement)(Button, {
 				variant: "outline",
@@ -69020,7 +69077,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.12 261110-223749-874`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.12 261110-234359-886`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

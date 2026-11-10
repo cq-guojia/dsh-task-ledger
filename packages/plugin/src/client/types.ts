@@ -3,10 +3,14 @@
  * UI 侧不许 import `src/host/`（2026-10-17 定稿：方法与页面严格分家），也不 import 官方包。
  */
 
+/** 界面语言；注入按它挑写死的默认文案（用户自定义文案不分语言）。 */
+export type RulesLang = "zh" | "en";
+
 /** 会话规则注入设置（host 自有文件，非宿主配置区）。 */
 export interface RulesInjectionView {
 	readonly enabled: boolean;
-	/** 当前生效文案（用户值或写死的默认值）。 */
+	readonly lang: RulesLang;
+	/** 当前生效文案（用户值或该语言默认值）。 */
 	readonly text: string;
 	readonly defaultText: string;
 }
