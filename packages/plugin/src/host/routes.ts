@@ -32,6 +32,7 @@ import {
 	type SessionTitleLike,
 } from "./services/continue.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
+import { readSettings, writeSettings } from "./services/rules-injection.service.js";
 import type { RegistryWorkspace } from "./types.js";
 
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 docs/dependencies/host-webserver.md）。 */
@@ -372,6 +373,38 @@ export function registerRoutes(
 					return;
 				}
 				throw new Error(`${BAD_REQUEST}action 只能是 add / hide / unhide / rename / remove`);
+			} catch (error) {
+				sendWriteFailure(res, error);
+			}
+		},
+	});
+
+	// 会话规则注入设置（插件自有文件，非宿主配置区）：GET 读、POST 保存 / 恢复默认。
+	webServer.register({
+		kind: "exact",
+		path: `${API_PREFIX}/rules-injection`,
+		handler: async (req, res) => {
+			if (req.method !== "POST") {
+				try {
+					sendJson(res, 200, readSettings());
+				} catch (error) {
+					sendFailure(res, error);
+				}
+				return;
+			}
+			try {
+				let raw: unknown;
+				try {
+					raw = JSON.parse(await readBody(req));
+				} catch {
+					throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
+				}
+				const body = (raw ?? {}) as Record<string, unknown>;
+				const input: { enabled?: boolean; text?: string; reset?: boolean } = {};
+				if (typeof body.enabled === "boolean") input.enabled = body.enabled;
+				if (typeof body.text === "string") input.text = body.text;
+				if (body.action === "reset") input.reset = true;
+				sendJson(res, 200, writeSettings(input));
 			} catch (error) {
 				sendWriteFailure(res, error);
 			}

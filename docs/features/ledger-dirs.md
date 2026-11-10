@@ -63,7 +63,7 @@ progress dirs --json                             # {dirs, removed, added, reason
   ③ 去掉 hidden → LedgerWorkspace{id: 路径, title: 显示名, path}
 ```
 
-三层归属：编排在 `services/`，清单读写只在 `repositories/dirs.repository.ts`，`routes.ts` 只做协议。`id` 用路径：清单条目没有别的唯一标识，而路径本来唯一（历史筛选、缓存键都靠它）。
+三层归属：编排在 `services/`，清单读写只在 `packages/plugin/src/host/repositories/dirs.repository.ts`，`routes.ts` 只做协议。`id` 用路径：清单条目没有别的唯一标识，而路径本来唯一（历史筛选、缓存键都靠它）。
 
 第 ② 步「拿宿主工作区补登记」只在两个时刻跑：进看板首读（`GET /board/snapshot?sync=1`）与手动点刷新。其余请求（名册、历史趋势、写动作后的重读、错误重试）不带 `sync`，只读清单，不起 skill 进程、不 stat、不写盘 —— 同步一次要起一个 skill 进程加 N 次 `stat`，而产物在稳态下永远一样。
 
@@ -101,3 +101,4 @@ pickWorkspaceFile({ anchor: event.currentTarget, placement: "bottom-end", filter
 ## 更新日志
 
 - 2026-11-07 23:03:04：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
+- 2026-11-10 22:37:28：源码路径补全为仓库内完整路径

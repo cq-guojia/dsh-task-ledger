@@ -56226,6 +56226,14 @@ window.__ModuleLoader__.load({
 			settingsDirOpFailed: "台账目录未更新",
 			settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
 			settingsSave: "保存",
+			settingsRulesTitle: "会话规则注入",
+			settingsRulesHint: "开启后，每个新会话的首轮会自动带上这段提示词；关闭则不注入。设置保存在插件自己的文件里，不写入宿主配置区。",
+			settingsRulesSwitch: "自动注入提示词",
+			settingsRulesTextLabel: "提示词文案",
+			settingsRulesReset: "恢复默认",
+			settingsRulesSaved: "注入设置已保存",
+			settingsRulesResetDone: "已恢复默认文案",
+			settingsRulesFailed: "注入设置未保存：{message}",
 			settingsCancel: "取消",
 			settingsPathCopied: "复制完成",
 			settingsPathCopy: "复制路径",
@@ -56532,6 +56540,14 @@ window.__ModuleLoader__.load({
 			settingsDirOpFailed: "Ledger folders were not updated",
 			settingsRenamePlaceholder: "New name (empty keeps the folder name)",
 			settingsSave: "Save",
+			settingsRulesTitle: "Session rules injection",
+			settingsRulesHint: "When enabled, the first turn of every new session carries this prompt. Settings live in the plugin's own local file, not in the host's plugin settings.",
+			settingsRulesSwitch: "Inject prompt automatically",
+			settingsRulesTextLabel: "Prompt text",
+			settingsRulesReset: "Restore default",
+			settingsRulesSaved: "Injection settings saved",
+			settingsRulesResetDone: "Default prompt restored",
+			settingsRulesFailed: "Injection settings not saved: {message}",
 			settingsCancel: "Cancel",
 			settingsPathCopied: "Copied",
 			settingsPathCopy: "Copy path",
@@ -56879,6 +56895,18 @@ window.__ModuleLoader__.load({
 		/** 返回改完之后的完整清单（含隐藏项），调用方就地换掉表格。 */
 		function postDirs(body) {
 			return fetchJson("/dirs", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(body)
+			});
+		}
+		/** 会话规则注入设置（插件自有文件）；回当前生效文案与写死的默认文案。 */
+		function fetchRulesInjection() {
+			return fetchJson("/rules-injection");
+		}
+		/** 保存开关与文案；`action: "reset"` 恢复写死的默认文案。 */
+		function postRulesInjection(body) {
+			return fetchJson("/rules-injection", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify(body)
@@ -67766,6 +67794,39 @@ body[data-ds-dark-theme]{
 			const [copied, setCopied] = (0, react$1.useState)(null);
 			/** 目录写动作的进行中标记（`动作:路径`）：同一个记录不让连点。 */
 			const [dirBusy, setDirBusy] = (0, react$1.useState)(null);
+			const [rulesEnabled, setRulesEnabled] = (0, react$1.useState)(false);
+			const [rulesText, setRulesText] = (0, react$1.useState)("");
+			const [rulesBusy, setRulesBusy] = (0, react$1.useState)(false);
+			const [rulesError, setRulesError] = (0, react$1.useState)(null);
+			(0, react$1.useEffect)(() => {
+				let alive = true;
+				fetchRulesInjection().then((payload) => {
+					if (!alive) return;
+					setRulesEnabled(payload.enabled);
+					setRulesText(payload.text);
+				}).catch((failure) => {
+					if (alive) setRulesError(failure instanceof Error ? failure.message : String(failure));
+				});
+				return () => {
+					alive = false;
+				};
+			}, []);
+			/** 保存 / 恢复默认都走同一条写路由；回执里的 text 就是当前生效文案。 */
+			const writeRules = async (body, done) => {
+				if (rulesBusy) return;
+				setRulesBusy(true);
+				setRulesError(null);
+				try {
+					const payload = await postRulesInjection(body);
+					setRulesEnabled(payload.enabled);
+					setRulesText(payload.text);
+					notify(done, { variant: "success" });
+				} catch (failure) {
+					setRulesError(failure instanceof Error ? failure.message : String(failure));
+				} finally {
+					setRulesBusy(false);
+				}
+			};
 			(0, react$1.useEffect)(() => {
 				let alive = true;
 				fetchDirs().then((payload) => {
@@ -68432,7 +68493,38 @@ body[data-ds-dark-theme]{
 						addDirFromPicker(event.currentTarget);
 					}
 				}, t("settingsDirsAdd")))
-			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), userModal, forgetDialog);
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)(SectionHead, {
+				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 }),
+				title: t("settingsRulesTitle")
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, (0, react$1.createElement)("p", null, t("settingsRulesHint")), (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
+				checked: rulesEnabled,
+				onChange: setRulesEnabled,
+				label: t("settingsRulesSwitch"),
+				disabled: rulesBusy
+			}), (0, react$1.createElement)(Textarea, {
+				value: rulesText,
+				onChange: setRulesText,
+				"aria-label": t("settingsRulesTextLabel"),
+				disabled: rulesBusy
+			}), (0, react$1.createElement)("div", { className: "dtl-set__tools" }, (0, react$1.createElement)(Button, {
+				variant: "secondary",
+				size: "md",
+				loading: rulesBusy,
+				disabled: rulesBusy,
+				onClick: () => {
+					writeRules({
+						enabled: rulesEnabled,
+						text: rulesText
+					}, t("settingsRulesSaved"));
+				}
+			}, t("settingsSave")), (0, react$1.createElement)(Button, {
+				variant: "outline",
+				size: "md",
+				disabled: rulesBusy,
+				onClick: () => {
+					writeRules({ action: "reset" }, t("settingsRulesResetDone"));
+				}
+			}, t("settingsRulesReset"))), rulesError !== null ? (0, react$1.createElement)("p", null, t("settingsRulesFailed", { message: rulesError })) : null)), userModal, forgetDialog);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -68928,7 +69020,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.12 261110-175412-330`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.12 261110-223749-874`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

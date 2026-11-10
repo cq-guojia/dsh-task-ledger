@@ -3,6 +3,14 @@
  * UI 侧不许 import `src/host/`（2026-10-17 定稿：方法与页面严格分家），也不 import 官方包。
  */
 
+/** 会话规则注入设置（host 自有文件，非宿主配置区）。 */
+export interface RulesInjectionView {
+	readonly enabled: boolean;
+	/** 当前生效文案（用户值或写死的默认值）。 */
+	readonly text: string;
+	readonly defaultText: string;
+}
+
 /** 一个活跃台账工作区（宿主 id + title + 归一绝对路径）。 */
 export interface Workspace {
 	readonly id: string;

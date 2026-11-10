@@ -21,6 +21,8 @@ interface PluginContext {
     effect(setup: () => (() => void) | undefined): void;
     /** 按名取服务（取不到给 undefined）。**读属性**在未 inject 的模块上会直接 throw ⇒ 见 serviceOf。 */
     get(name: string): unknown;
+    /** 组合内事件监听（agent/pre-step 等）；签名按宿主 cordis 面。 */
+    on(event: string, listener: (...args: never[]) => unknown): unknown;
 }
 export declare function apply(ctx: PluginContext): void;
 export {};

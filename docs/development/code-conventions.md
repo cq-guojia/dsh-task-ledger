@@ -5,11 +5,11 @@
 ## 一、目录分层（`packages/plugin/src/`）
 
 ```text
-packages/plugin/src/ # 插件源码根
-├── index.ts # 插件入口（`apply`）
-├── host/ # Node 侧：读台账 / 聚合 / 路由（不得 import `client/`）
-├── client/ # 浏览器侧：只经 HTTP 取数（不得 import `host/`、不得直接摸文件系统）
-└── skill/ # 构建时从 `packages/skill/` 纳入的内嵌副本（只含运行时；真源在 `packages/skill/`）
+packages/plugin/src/                                # 插件源码根
+├── index.ts                                        # 插件入口（`apply`）
+├── host/                                           # Node 侧：读台账 / 聚合 / 路由（不得 import `client/`）
+├── client/                                         # 浏览器侧：只经 HTTP 取数（不得 import `host/`、不得直接摸文件系统）
+└── skill/                                          # 构建时从 `packages/skill/` 纳入的内嵌副本（只含运行时；真源在 `packages/skill/`）
 ```
 
 `client/` 内部按职责分：
@@ -56,7 +56,7 @@ packages/plugin/src/ # 插件源码根
 
 目录结构、每个文件的职责、逐方法签名全在 [ledger-api.md](../api/ledger-api.md)，本节只记纪律。
 
-物理落点：`scripts/progress`（POSIX shim：认平台 → 校验可执行位 → `exec`）→ `src/main.go`（只把参数与退出码转给 `shell.Main`）→ `src/internal/` 下四个子包 `core/`（纯换算）、`store/`（数据层）、`actions/`（业务层）、`shell/`（驱动），加三个旁路包 `notices`（只收不打印）、`env`（我是谁）、`jsonfmt`（`--json` 屏幕输出排版）。入口路径与产物目录 `scripts/bin/` 都不许改名（宿主与 `SKILL.md` 按它们调）。
+物理落点：`scripts/progress`（POSIX shim：认平台 → 校验可执行位 → `exec`）→ `packages/skill/src/main.go`（只把参数与退出码转给 `shell.Main`）→ `src/internal/` 下四个子包 `core/`（纯换算）、`store/`（数据层）、`actions/`（业务层）、`shell/`（驱动），加三个旁路包 `notices`（只收不打印）、`env`（我是谁）、`jsonfmt`（`--json` 屏幕输出排版）。入口路径与产物目录 `scripts/bin/` 都不许改名（宿主与 `SKILL.md` 按它们调）。
 
 ```
 外壳  shell.Main / shell.Run / runCommand   解析参数 → 取最新 → 自举 → 调一个业务函数 → 打印 → 提交 → 推送
@@ -73,8 +73,8 @@ packages/plugin/src/ # 插件源码根
 | 铁律 | 为什么 |
 |---|---|
 | 数据层绝不自己加锁 | 认领写序「分片→池」、释放「池→分片」，两向相反；数据层各自加锁会 ABBA 死锁。`ProgressLock` 阻塞无超时、不重入，同进程同路径第二次加会自死锁 ⇒ 任何失败补偿只能在同一 `Atom` 内做完 |
-| 业务层不直接碰文件 | 出现 `os.WriteFile` / `os.Create` / `store.LedgerLock`（`actions/scope.go` 的 `Atom` 除外）/ `fmt.Print` / `exec.Command` 就是塌回老样子，写序与回滚会重新散落 |
-| 数据层不做业务判断 | `RequireOwner` 这类判定留在业务层（`actions/guard.go`）；数据层懂 `owner` 就等于每个文件都会判「谁能改」 |
+| 业务层不直接碰文件 | 出现 `os.WriteFile` / `os.Create` / `store.LedgerLock`（`packages/skill/src/internal/actions/scope.go` 的 `Atom` 除外）/ `fmt.Print` / `exec.Command` 就是塌回老样子，写序与回滚会重新散落 |
+| 数据层不做业务判断 | `RequireOwner` 这类判定留在业务层（`packages/skill/src/internal/actions/guard.go`）；数据层懂 `owner` 就等于每个文件都会判「谁能改」 |
 
 数据层不做什么：不加锁、不判 `owner`/`status`、不打印、不碰 git、不问「这次该写哪些文件」。四条容易写错的纪律：
 
@@ -95,7 +95,7 @@ packages/plugin/src/ # 插件源码根
 
 ### 5.3 防塌线
 
-准入规则按**目录**扫（`grep -rn … internal/<层>/`），不按函数体扫，全部必须为 0；唯一一份表在 [ledger-api.md](../api/ledger-api.md) §〇。入口两行的口径：`scripts/progress` 只做三件事（认平台 / 校验可执行位 / `exec`），`src/main.go` 只做一件事（`os.Exit(shell.Main(os.Args[1:]))`），谁都不许在里面写业务。
+准入规则按**目录**扫（`grep -rn … internal/<层>/`），不按函数体扫，全部必须为 0；唯一一份表在 [ledger-api.md](../api/ledger-api.md) §〇。入口两行的口径：`scripts/progress` 只做三件事（认平台 / 校验可执行位 / `exec`），`packages/skill/src/main.go` 只做一件事（`os.Exit(shell.Main(os.Args[1:]))`），谁都不许在里面写业务。
 
 ### 5.4 非目标
 
@@ -106,9 +106,20 @@ packages/plugin/src/ # 插件源码根
 
 前两条是架构边界，后两条是明确非目标；今后提「加个修复命令」「加个并发保护」直接引这一节。
 
+## 六、文档写作约定
+
+- 文档只写长期成立的事实与约束；日期、过程词、用户原话、方案取舍、验收判据、待办与分期都不进正文。
+- 可变正文只有一个真源，其余处只放标识、最小摘要和链接，不复制正文。
+- 文档与源码冲突时以源码为准，先核实再改文档。
+- 外部事实必须带适用版本、版本真源与复核日期，并按各自的复核方式定期重查。
+- 命名用纯 ASCII 小写 kebab-case，不带日期与版本号；只有根 `docs/README.md` 一份索引，结构行由 `tree` 生成，人只写每行 `#` 后的说明。
+- 描述文件 / 目录结构一律用「`text` 代码块里的字符画树 + 每行 `#` 说明」，不另起一套缩进列表；`#` 固定在第 53 列（左列宽 52），README 结构行由 `tree` 生成，正文里的树按同一格式手写。
+
 ## 更新日志
 
 - 2026-11-07 23:03:04：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
 - 2026-11-07 23:04:17：标题去过程词
 - 2026-11-08 01:29:50：目录分层改为树 + 每行备注
 - 2026-11-08 23:04:19：目录结构统一为字符画树，逐行补说明
+- 2026-11-10 22:12:21：从根索引迁入文档写作约定，并按 1.2.0 统一树说明列口径
+- 2026-11-10 22:37:28：源码路径补全为仓库内完整路径

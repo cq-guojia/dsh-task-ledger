@@ -12,6 +12,7 @@
  */
 import { serveFsRoute } from "dsh-plugin-core/host";
 import { FS_ROUTE, registerRoutes, type WebServerLike, type WorkspaceRegistryLike } from "./host/routes.js";
+import { installRulesInjection } from "./host/services/rules-injection.service.js";
 import type {
 	AgentDefaultModelLike,
 	AgentPresetsLike,
@@ -76,6 +77,8 @@ interface PluginContext {
 	effect(setup: () => (() => void) | undefined): void;
 	/** 按名取服务（取不到给 undefined）。**读属性**在未 inject 的模块上会直接 throw ⇒ 见 serviceOf。 */
 	get(name: string): unknown;
+	/** 组合内事件监听（agent/pre-step 等）；签名按宿主 cordis 面。 */
+	on(event: string, listener: (...args: never[]) => unknown): unknown;
 }
 
 /**
@@ -144,4 +147,7 @@ export function apply(ctx: PluginContext): void {
 			return dispose;
 		});
 	});
+
+	// 会话规则注入：监听 pre-step，开关由插件自有设置文件控制（默认关）
+	installRulesInjection(ctx);
 }

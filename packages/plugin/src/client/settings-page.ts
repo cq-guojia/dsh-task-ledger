@@ -19,11 +19,11 @@ import {
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
 import { createElement as h, Fragment, type ReactNode, useEffect, useRef, useState } from "react";
-import { fetchDirs, fetchRoster, postDirs, postForgetIdentity, postSwitchIdentity, type DirsWriteBody, type ForgetStep } from "./api";
+import { fetchDirs, fetchRoster, fetchRulesInjection, postDirs, postForgetIdentity, postRulesInjection, postSwitchIdentity, type DirsWriteBody, type ForgetStep } from "./api";
 import type { LocaleKey, Translate } from "./locales";
 import { STEP_LABEL } from "./task-row";
 import type { DirsPayload, IdentityView, LedgerDirView, RosterPayload } from "./types";
-import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, ListRow, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
+import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, ListRow, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Textarea, Tip, confirmModal, notify } from "./ui";
 
 /** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
 const GithubMark = (): ReactNode =>
@@ -128,6 +128,52 @@ export function SettingsPage(props: {
 	const [copied, setCopied] = useState<string | null>(null);
 	/** 目录写动作的进行中标记（`动作:路径`）：同一个记录不让连点。 */
 	const [dirBusy, setDirBusy] = useState<string | null>(null);
+
+	// 会话规则注入：设置放插件自有文件，默认文案写死在 host（恢复默认 = 清掉用户值）
+	const [rulesEnabled, setRulesEnabled] = useState(false);
+	const [rulesText, setRulesText] = useState("");
+	const [rulesBusy, setRulesBusy] = useState(false);
+	const [rulesError, setRulesError] = useState<string | null>(null);
+
+	useEffect(() => {
+		let alive = true;
+		fetchRulesInjection()
+			.then((payload) => {
+				if (!alive) return;
+				setRulesEnabled(payload.enabled);
+				setRulesText(payload.text);
+			})
+			.catch((failure: unknown) => {
+				if (alive)
+					setRulesError(
+						failure instanceof Error ? failure.message : String(failure),
+					);
+			});
+		return () => {
+			alive = false;
+		};
+	}, []);
+
+	/** 保存 / 恢复默认都走同一条写路由；回执里的 text 就是当前生效文案。 */
+	const writeRules = async (body: {
+		readonly enabled?: boolean;
+		readonly text?: string;
+		readonly action?: "reset";
+	}, done: string): Promise<void> => {
+		if (rulesBusy) return;
+		setRulesBusy(true);
+		setRulesError(null);
+		try {
+			const payload = await postRulesInjection(body);
+			setRulesEnabled(payload.enabled);
+			setRulesText(payload.text);
+			notify(done, { variant: "success" });
+		} catch (failure: unknown) {
+			setRulesError(failure instanceof Error ? failure.message : String(failure));
+		} finally {
+			setRulesBusy(false);
+		}
+	};
 
 	useEffect(() => {
 		let alive = true;
@@ -1160,6 +1206,69 @@ export function SettingsPage(props: {
 			}),
 			h("div", { className: "dtl-set__body" }, dirsBody),
 		),
+		h(
+			Surface,
+			{ padding: "lg" },
+			h(SectionHead, {
+				icon: h(IconChecklistOutlineRegular, { size: 16 }),
+				title: t("settingsRulesTitle"),
+			}),
+			h(
+				"div",
+				{ className: "dtl-set__body" },
+				h("p", null, t("settingsRulesHint")),
+				h(Switch, {
+					checked: rulesEnabled,
+					onChange: setRulesEnabled,
+					label: t("settingsRulesSwitch"),
+					disabled: rulesBusy,
+				}),
+				h(Textarea, {
+					value: rulesText,
+					onChange: setRulesText,
+					"aria-label": t("settingsRulesTextLabel"),
+					disabled: rulesBusy,
+				}),
+				h(
+					"div",
+					{ className: "dtl-set__tools" },
+					h(
+						Button,
+						{
+							variant: "secondary",
+							size: "md",
+							loading: rulesBusy,
+							disabled: rulesBusy,
+							onClick: () => {
+								void writeRules(
+									{ enabled: rulesEnabled, text: rulesText },
+									t("settingsRulesSaved"),
+								);
+							},
+						},
+						t("settingsSave"),
+					),
+					h(
+						Button,
+						{
+							variant: "outline",
+							size: "md",
+							disabled: rulesBusy,
+							onClick: () => {
+								void writeRules(
+									{ action: "reset" },
+									t("settingsRulesResetDone"),
+								);
+							},
+						},
+						t("settingsRulesReset"),
+					),
+				),
+				rulesError !== null
+					? h("p", null, t("settingsRulesFailed", { message: rulesError }))
+					: null,
+			),
+		),
 		userModal,
 		forgetDialog,
 	);
@@ -1168,6 +1277,15 @@ export function SettingsPage(props: {
 /** 设置页要用到的键（改文案时漏键会在这里报错）。 */
 export type SettingsLocaleKey = Extract<
 	LocaleKey,
+	| "settingsRulesTitle"
+	| "settingsRulesHint"
+	| "settingsRulesSwitch"
+	| "settingsRulesTextLabel"
+	| "settingsRulesReset"
+	| "settingsRulesSaved"
+	| "settingsRulesResetDone"
+	| "settingsRulesFailed"
+	| "settingsSave"
 	| "loadFailed"
 	| "settingsSwitchUser"
 	| "settingsRenameUser"

@@ -50,7 +50,7 @@ git 只在命令的前后两端，业务中间不碰 git。推送被拒会触发
 5. **唯一一个不回滚的失败分支**：下游读走人（broken pipe）。`shell.IgnoreSIGPIPE()` 让写 stdout 失败变成错误返回，进程继续走完暂存与提交；本次已写过文件就必须提交，否则台账停在「已写未提交」，下一条写命令会被写前 guard 拦死。
 6. **原子性 = 单文件原子写 + 固定写序 + 重跑幂等**，不引入 journal / recover。单文件写走全仓唯一出口 `store.WriteTextAtomic`：临时文件 → write → fsync(file) → chmod → rename → fsync(父目录)。多文件先写目标、后删源，删永远是最后一步。
 7. **写前 guard 会硬拦**：本地台账有未提交改动 / 有未推送的台账提交 / 有未入库的同名文件 / 处于 rebase 中间态 ⇒ 中止并说明怎么处理。detached HEAD 或无上游时只做本地提交并在 stderr 提示。worklog 里人写的改动先 stash、刷完再叠回。
-8. **开关只有两组**：动作是否只读由 `actions/registry.go` 的 `ActionSpec.ReadOnly` 决定；`--no-sync` / `TASK_LEDGER_NO_SYNC` 只控制不碰 git。
+8. **开关只有两组**：动作是否只读由 `packages/skill/src/internal/actions/registry.go` 的 `ActionSpec.ReadOnly` 决定；`--no-sync` / `TASK_LEDGER_NO_SYNC` 只控制不碰 git。
 9. **skill 内容单一真源**：内嵌副本是入库产物，改完源重跑 `npm run build` 再提交即可保持一致。
 10. **宿主接口一律查已核实事实**：见 [dependencies/](../dependencies/)，不得凭方法名猜签名。
 11. **dist 入仓**：git 直装不跑构建脚本，推送前必须 build（含 typecheck）。
@@ -64,3 +64,4 @@ git 只在命令的前后两端，业务中间不碰 git。推送被拒会触发
 ## 更新日志
 
 - 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
+- 2026-11-10 22:37:28：源码路径补全为仓库内完整路径

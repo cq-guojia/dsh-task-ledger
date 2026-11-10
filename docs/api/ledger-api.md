@@ -11,8 +11,8 @@
 | 外壳（`internal/shell/`） | 跑一条命令的外围杂事：解析命令行、取最新、提交推送、打印结果、决定退出码。不懂业务 |
 | 工具层（`internal/core/`） | 纯换算：时间格式、路径拼接、任务号生成、标签校验、markdown 增删行。不读写文件、不联网、不打印 |
 | `internal/env/` | 唯一被允许确认「我现在是谁」的地方（`~/.taskledger/identity.json` 的 `uuid` / `name`） |
-| `internal/notices/` | 进程级提示收集器：只收文本、永不打印，最后由 `shell/render.go` 一次性打到 stderr |
-| `internal/jsonfmt/` | 只服务 `--json` 的屏幕输出（唯一调用点 `shell/render.go` 的 `jsonOut`）：两空格缩进、中文不转 `\uXXXX`、空容器写 `{}` / `[]`，键序按字典序。写台账文件不走它，走 `store.DumpLedgerJSON` |
+| `internal/notices/` | 进程级提示收集器：只收文本、永不打印，最后由 `packages/skill/src/internal/shell/render.go` 一次性打到 stderr |
+| `internal/jsonfmt/` | 只服务 `--json` 的屏幕输出（唯一调用点 `packages/skill/src/internal/shell/render.go` 的 `jsonOut`）：两空格缩进、中文不转 `\uXXXX`、空容器写 `{}` / `[]`，键序按字典序。写台账文件不走它，走 `store.DumpLedgerJSON` |
 
 依赖只能从上往下，不许反向：
 
@@ -45,25 +45,25 @@ core/                     ← 只做文本和时间的换算，一个文件都�
 ## 一、目录树
 
 ```text
-packages/skill/ # skill 包根
-├── SKILL.md # 给 agent 的说明书（命令、口径、坑）
-├── README.md # 给装 skill 的人看
-├── assets/worklog.md # 过程文档六节模板（真源只有这一份）
-├── references/ # init-identity / state-model / log-note / troubleshooting
-├── scripts/ # 运行时要用的东西，只有两项
-│   ├── progress # 入口 shim：认平台 → 校验可执行位 → exec 二进制
-│   └── bin/ledger-<os>-<arch>[.exe] # 三平台静态产物（linux/amd64、darwin/arm64、windows/amd64）
-└── src/ # 实现源码（目录名与语言无关）
-    ├── go.mod # Go 模块清单
-    ├── main.go # 只把 argv 与退出码转给 `shell.Main`
-    └── internal/ # 各层实现都在这
-        ├── shell/ # 外壳：cli / runner / gitops / merge / render / help / presync / term_*
-        ├── actions/ # 业务层：一个动作一个文件 + registry / scope / guard / query
-        ├── store/ # 数据层：atomic / dirty / locks(+平台) / jsonstore / 四张表
-        ├── core/ # 工具层：time / paths / ids / identity / labels / worklog_md / history_md / roots / rowmap
-        ├── env/ # 我是谁
-        ├── notices/ # 提示收集
-        └── jsonfmt/ # `--json` 输出排版
+packages/skill/                                     # skill 包根
+├── SKILL.md                                        # 给 agent 的说明书（命令、口径、坑）
+├── README.md                                       # 给装 skill 的人看
+├── assets/worklog.md                               # 过程文档六节模板（真源只有这一份）
+├── references/                                     # init-identity / state-model / log-note / troubleshooting
+├── scripts/                                        # 运行时要用的东西，只有两项
+│   ├── progress                                    # 入口 shim：认平台 → 校验可执行位 → exec 二进制
+│   └── bin/ledger-<os>-<arch>[.exe]                # 三平台静态产物（linux/amd64、darwin/arm64、windows/amd64）
+└── src/                                            # 实现源码（目录名与语言无关）
+    ├── go.mod                                      # Go 模块清单
+    ├── main.go                                     # 只把 argv 与退出码转给 `shell.Main`
+    └── internal/                                   # 各层实现都在这
+        ├── shell/                                  # 外壳：cli / runner / gitops / merge / render / help / presync / term_*
+        ├── actions/                                # 业务层：一个动作一个文件 + registry / scope / guard / query
+        ├── store/                                  # 数据层：atomic / dirty / locks(+平台) / jsonstore / 四张表
+        ├── core/                                   # 工具层：time / paths / ids / identity / labels / worklog_md / history_md / roots / rowmap
+        ├── env/                                    # 我是谁
+        ├── notices/                                # 提示收集
+        └── jsonfmt/                                # `--json` 输出排版
 ```
 
 分发时不带 `src/`：`package.json` 的 `files` 只列 `scripts/`、`assets/`、`references/`、`SKILL.md`、`README.md`；插件内嵌副本（`packages/plugin/skill/`）也只同步这几项。
@@ -154,7 +154,7 @@ func NewWorklogStore(repo string) *WorklogStore
 | `TaskStore` | 内嵌 `JSONStore` 的 `All/Get/Put/Drop/Flush/EnsureFile` | 公共池与分片只是 `rel` 不同；`identity` 只用于写盘格式，不参与判断 |
 | `OwnersIndex` | `Get/All/Ensure/KeysOfName/Shards/DiskShards/AssertPresent` | `Ensure` 只登记一次；`DiskShards` 是全仓唯一扫 `owners/` 目录的地方，只给 `validate` 用 |
 | `HistoryStore` | `Sources/MonthKey/PathFor/Read/HasLog/AppendRow/Write` | 「算新全文」与「落盘」是两个方法，结案要控顺序；`HasLog` 是结案重跑认账依据 |
-| `WorklogStore` | `Template/Find/ByName/All/Read/HeadMeta/Create/Write/AppendExec` | `Create` 建六节骨架；`AppendExec` 写不进只返回 `false`、不抛；模板读 `assets/worklog.md`，读不到用内置骨架并 `notices.Note` |
+| `WorklogStore` | `Template/Find/ByName/All/Read/HeadMeta/Create/Write/AppendExec` | `Create` 建六节骨架；`AppendExec` 写不进只返回 `false`、不抛；模板读 `packages/skill/assets/worklog.md`，读不到用内置骨架并 `notices.Note` |
 
 趋势缓存（`trendcache.go`）不是台账表，落 `~/.taskledger/cache/trend/<仓库哈希>/<offset>/<YYYYMM>.json`，本机私有、不进 git、随时可删。
 
@@ -335,3 +335,4 @@ func (t *termState) readKey() key
 - 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
 - 2026-11-08 01:29:50：目录结构改为树 + 每行备注
 - 2026-11-08 23:04:19：目录结构统一为字符画树，逐行补说明
+- 2026-11-10 22:37:27：统一正文树说明列宽，源码路径补全为仓库内完整路径

@@ -76,6 +76,14 @@ export type LocaleKey =
 	| "settingsDirOpFailed"
 	| "settingsRenamePlaceholder"
 	| "settingsSave"
+	| "settingsRulesTitle"
+	| "settingsRulesHint"
+	| "settingsRulesSwitch"
+	| "settingsRulesTextLabel"
+	| "settingsRulesReset"
+	| "settingsRulesSaved"
+	| "settingsRulesResetDone"
+	| "settingsRulesFailed"
 	| "settingsCancel"
 	| "settingsPathCopied"
 	| "settingsPathCopy"
@@ -422,6 +430,16 @@ export const zh: Record<LocaleKey, string> = {
 	settingsDirOpFailed: "台账目录未更新",
 	settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
 	settingsSave: "保存",
+
+	settingsRulesTitle: "会话规则注入",
+	settingsRulesHint:
+		"开启后，每个新会话的首轮会自动带上这段提示词；关闭则不注入。设置保存在插件自己的文件里，不写入宿主配置区。",
+	settingsRulesSwitch: "自动注入提示词",
+	settingsRulesTextLabel: "提示词文案",
+	settingsRulesReset: "恢复默认",
+	settingsRulesSaved: "注入设置已保存",
+	settingsRulesResetDone: "已恢复默认文案",
+	settingsRulesFailed: "注入设置未保存：{message}",
 	settingsCancel: "取消",
 	settingsPathCopied: "复制完成",
 	settingsPathCopy: "复制路径",
@@ -749,6 +767,16 @@ export const en: Record<LocaleKey, string> = {
 	settingsDirOpFailed: "Ledger folders were not updated",
 	settingsRenamePlaceholder: "New name (empty keeps the folder name)",
 	settingsSave: "Save",
+
+	settingsRulesTitle: "Session rules injection",
+	settingsRulesHint:
+		"When enabled, the first turn of every new session carries this prompt. Settings live in the plugin's own local file, not in the host's plugin settings.",
+	settingsRulesSwitch: "Inject prompt automatically",
+	settingsRulesTextLabel: "Prompt text",
+	settingsRulesReset: "Restore default",
+	settingsRulesSaved: "Injection settings saved",
+	settingsRulesResetDone: "Default prompt restored",
+	settingsRulesFailed: "Injection settings not saved: {message}",
 	settingsCancel: "Cancel",
 	settingsPathCopied: "Copied",
 	settingsPathCopy: "Copy path",

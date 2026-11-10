@@ -12,6 +12,7 @@
  */
 import { serveFsRoute } from "dsh-plugin-core/host";
 import { FS_ROUTE, registerRoutes } from "./host/routes.js";
+import { installRulesInjection } from "./host/services/rules-injection.service.js";
 import { buildSkillRegistration, } from "./host/skill/registration.js";
 export const name = "dsh-task-ledger";
 /**
@@ -102,4 +103,6 @@ export function apply(ctx) {
             return dispose;
         });
     });
+    // 会话规则注入：监听 pre-step，开关由插件自有设置文件控制（默认关）
+    installRulesInjection(ctx);
 }

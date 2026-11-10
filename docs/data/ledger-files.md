@@ -1,20 +1,20 @@
 # 台账文件格式
 
-本项目不自建数据库：插件只读各工作区的台账文件。格式真源在 `packages/skill/src/internal/` 与 `assets/worklog.md`，本文档只做索引级说明；字面值以代码为准。运行链路见 [overview.md](../architecture/overview.md)，分层签名见 [ledger-api.md](../api/ledger-api.md)。
+本项目不自建数据库：插件只读各工作区的台账文件。格式真源在 `packages/skill/src/internal/` 与 `packages/skill/assets/worklog.md`，本文档只做索引级说明；字面值以代码为准。运行链路见 [overview.md](../architecture/overview.md)，分层签名见 [ledger-api.md](../api/ledger-api.md)。
 
 ## 一、目录布局（每个工作区根下）
 
 工作区根 = **直接含有 `ledger/` 的那个目录**；`ledger/` 本身不是根（`--repo` 指到它会被拒绝）。
 
 ```text
-<工作区>/ # 工作区根（直接含 `ledger/`）
-└── ledger/ # 台账目录
-    ├── pool.json # 公共池：未认领任务（`owner=null`、`status=open`）
-    ├── owners.json # 索引：身份 uuid → 分片文件（`name` 只做显示）
-    ├── owners/<hash12>.json # 每人一份分片：自己名下的任务
-    ├── history/<年月>.md # 已结案索引，按结案时间分月（16 列）
-    └── worklog/<年月>/ # 过程正文，一任务一篇
-        └── <日>-<时分>-<说明>-<随机码>.md # 单篇过程文档
+<工作区>/                                              # 工作区根（直接含 `ledger/`）
+└── ledger/                                         # 台账目录
+    ├── pool.json                                   # 公共池：未认领任务（`owner=null`、`status=open`）
+    ├── owners.json                                 # 索引：身份 uuid → 分片文件（`name` 只做显示）
+    ├── owners/<hash12>.json                        # 每人一份分片：自己名下的任务
+    ├── history/<年月>.md                             # 已结案索引，按结案时间分月（16 列）
+    └── worklog/<年月>/                               # 过程正文，一任务一篇
+        └── <日>-<时分>-<说明>-<随机码>.md                  # 单篇过程文档
 ```
 
 五类文件只由脚本写。历史只认 16 列（`Worklog` 后追加 `Deleted` / `Deleted By` / `Deleted By Name` / `Deleted At` 四列），列数不对或时间不合法的行静默跳过：不告警、不提示迁移、不双读、不写升级命令；平铺历史文件不再读。
@@ -35,7 +35,7 @@
 | `tags` | `["文档架构","初始化"]` | 1~5 个；`new` 必填（空则报错），老任务可能为空 |
 | `worklog` | `worklog/202610/16-1742-…-5563.md` | 相对 `ledger/` 的过程文档路径 |
 
-版本字段 `version` 与当前格式不符只告警不拦（退出时汇总一条）；只有 `tasks` 不是对象才直接报错；要写回的文件缺 `version` 时补当前值。落点写死在 `store/jsonstore.go`：读盘与 `core.FormatVersion` 不符 ⇒ `JSONStore.checkVersion` 走 `notices.Note` 一次（进程级去重、不拦），写盘一律带当前值。
+版本字段 `version` 与当前格式不符只告警不拦（退出时汇总一条）；只有 `tasks` 不是对象才直接报错；要写回的文件缺 `version` 时补当前值。落点写死在 `packages/skill/src/internal/store/jsonstore.go`：读盘与 `core.FormatVersion` 不符 ⇒ `JSONStore.checkVersion` 走 `notices.Note` 一次（进程级去重、不拦），写盘一律带当前值。
 
 不变量：池里的行恒为 `open` 且 `owner` 为空；分片里的行 `owner` 必须等于该分片主人（`validate` 查）。
 
@@ -64,7 +64,7 @@
 
 ## 五、过程文档：`worklog/<年月>/*.md`
 
-固定六节：**Background / To Do / Next / Process / Conclusion / Execution Log**。模板真源是 `assets/worklog.md`。
+固定六节：**Background / To Do / Next / Process / Conclusion / Execution Log**。模板真源是 `packages/skill/assets/worklog.md`。
 
 头部是四行无序列表，顺序固定（`core.HeadKeyOrder = ["meta","status","created","frozen"]`，插入位置由 `core.insertHeadLine` 按 `rankOf` 算），值一律 `字段: 值 · 值 · 值`：
 
@@ -130,3 +130,4 @@
 - 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
 - 2026-11-08 01:29:50：目录结构改为树 + 每行备注，样例时间改为格式串
 - 2026-11-08 23:04:19：目录结构统一为字符画树，逐行补说明
+- 2026-11-10 22:37:28：统一正文树说明列宽，源码路径补全为仓库内完整路径

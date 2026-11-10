@@ -18,6 +18,7 @@ import type {
 	IdentityView,
 	RenameView,
 	RosterPayload,
+	RulesInjectionView,
 } from "./types";
 
 /** host 路由前缀（全仓唯一；与 host/routes.ts 的 API_PREFIX 对应）。 */
@@ -153,6 +154,24 @@ export type DirsWriteBody =
 /** 返回改完之后的完整清单（含隐藏项），调用方就地换掉表格。 */
 export function postDirs(body: DirsWriteBody): Promise<DirsPayload> {
 	return fetchJson<DirsPayload>("/dirs", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(body),
+	});
+}
+
+/** 会话规则注入设置（插件自有文件）；回当前生效文案与写死的默认文案。 */
+export function fetchRulesInjection(): Promise<RulesInjectionView> {
+	return fetchJson<RulesInjectionView>("/rules-injection");
+}
+
+/** 保存开关与文案；`action: "reset"` 恢复写死的默认文案。 */
+export function postRulesInjection(body: {
+	readonly enabled?: boolean;
+	readonly text?: string;
+	readonly action?: "reset";
+}): Promise<RulesInjectionView> {
+	return fetchJson<RulesInjectionView>("/rules-injection", {
 		method: "POST",
 		headers: { "content-type": "application/json" },
 		body: JSON.stringify(body),

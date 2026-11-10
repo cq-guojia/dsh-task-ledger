@@ -9,6 +9,7 @@ import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { actOnTask } from "./services/task.service.js";
 import { continueTask, resolveWorkspace, } from "./services/continue.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
+import { readSettings, writeSettings } from "./services/rules-injection.service.js";
 /** API 前缀（唯一真源就在这一处）。 */
 const API_PREFIX = "/api/task-ledger";
 /** 核心 explorer 的只读文件路由（`serveFsRoute` 挂这里，client 的 `connectFs` 用同一个值）。 */
@@ -289,6 +290,43 @@ export function registerRoutes(webServer, deps) {
                     return;
                 }
                 throw new Error(`${BAD_REQUEST}action 只能是 add / hide / unhide / rename / remove`);
+            }
+            catch (error) {
+                sendWriteFailure(res, error);
+            }
+        },
+    });
+    // 会话规则注入设置（插件自有文件，非宿主配置区）：GET 读、POST 保存 / 恢复默认。
+    webServer.register({
+        kind: "exact",
+        path: `${API_PREFIX}/rules-injection`,
+        handler: async (req, res) => {
+            if (req.method !== "POST") {
+                try {
+                    sendJson(res, 200, readSettings());
+                }
+                catch (error) {
+                    sendFailure(res, error);
+                }
+                return;
+            }
+            try {
+                let raw;
+                try {
+                    raw = JSON.parse(await readBody(req));
+                }
+                catch {
+                    throw new Error(`${BAD_REQUEST}请求体不是合法 JSON`);
+                }
+                const body = (raw ?? {});
+                const input = {};
+                if (typeof body.enabled === "boolean")
+                    input.enabled = body.enabled;
+                if (typeof body.text === "string")
+                    input.text = body.text;
+                if (body.action === "reset")
+                    input.reset = true;
+                sendJson(res, 200, writeSettings(input));
             }
             catch (error) {
                 sendWriteFailure(res, error);

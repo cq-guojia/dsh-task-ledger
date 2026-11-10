@@ -57,7 +57,7 @@
 
 趋势图图表色只有两档：`--dtl-chart-open`（琥珀，取 `--dtl-warning`）与 `--dtl-chart-added`（灰，取 `--dtl-fg-dim`，明暗自带）；「完成」直接用既有的 `--dtl-business`。柱 / 浮卡样式全在 `ui.ts` 的 `.dtl-trend*` 一组类里，组件不写内联色值。
 
-## 四、文案唯一真源：`src/client/locales.ts`
+## 四、文案唯一真源：`packages/plugin/src/client/locales.ts`
 
 - 命名空间 `dsh-task-ledger`，`zh` / `en` 两档键必须完全对齐；界面上不许出现未登记的硬编码中文。
 - 语言切换跟随宿主（`ctx.locale.register(ns,{zh,en})` + 注册项声明 `locale:` ⇒ 宿主渲染器把 `t` 席位合成进 props）；插件不自带语言开关。
@@ -70,3 +70,4 @@
 - 2026-11-08 01:44:01：统计卡与任务行改走核心 Card 的 filled / hoverable
 - 2026-11-08 02:05:58：统计卡回退为 Surface 原样式，只有任务行用核心 Card
 - 2026-11-08 02:18:01：整理卡片口径：统计卡 Surface、任务行 Card，去掉未用控件行
+- 2026-11-10 22:37:28：源码路径补全为仓库内完整路径
