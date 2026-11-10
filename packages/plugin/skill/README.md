@@ -56,7 +56,7 @@ Then copy it for the agent you use. User-level paths apply to every project; pro
 
 **Other agents.** Place the directory under `.agents/skills/task-ledger/`, or wherever the agent scans for `SKILL.md`. Nothing in the package depends on the host: the CLI is a static binary, the content is Markdown.
 
-**Windows.** Substitute `%USERPROFILE%\` for `~`. The CLI ships binaries for Linux (amd64), macOS (arm64) and Windows (amd64); the wrapper script selects the right one.
+**Windows.** Substitute `%USERPROFILE%\` for `~`, and replace every `scripts/progress` below with `scripts\bin\ledger-windows-amd64.exe`: CreateProcessW cannot execute an extensionless sh wrapper (it appends `.exe`, finds nothing, and fails). The wrapper still works under Git Bash / WSL. The CLI ships binaries for Linux (amd64), macOS (arm64) and Windows (amd64).
 
 ## First run
 
@@ -68,7 +68,7 @@ Once per machine, initialise the identity that signs every ledger entry. The ste
 
 On a second machine, run `init` without arguments and claim the identity already present in the ledger roster, so that both machines write under the same account.
 
-No runtime, package manager or network access is required afterwards.
+No runtime, package manager or network access is required afterwards. Multi-user synchronisation requires Git 2.27 or newer.
 
 ## Using it
 
@@ -96,6 +96,18 @@ Four rules bind the agent:
 - It completes the written record before closing: a closed task cannot be written to again.
 - When it cannot find a task for the work at hand, it asks whether to create one instead of registering work you did not ask for.
 
+### Recommended: put it in your rules file
+
+The skill only loads when a request matches one of those intents, and "should this piece of work be tracked" is not one of them. A standing rule in the project's `AGENTS.md` (or whichever rules file your agent reads) is far more reliable on its own. Copy this block:
+
+```markdown
+- **Every piece of task progress, work item and work log (create / advance / query / close) goes through the `task-ledger` skill**; answer progress and history questions from it, never from conversation memory or a hand-rolled list.
+- **Creation anchor**: hand something to `task-ledger` only when the user explicitly asks for a new task ("open a task", "log this first", "create a task"). Questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
+- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）" Once asked in a session, do not ask again; no reply means ignore it.
+```
+
+Without it the skill still works — it just acts only when you mention the task yourself.
+
 ## What gets written
 
 ```
@@ -116,7 +128,7 @@ State and prose are kept apart: JSON records ownership and state, Markdown recor
 | `init` | Initialise or claim the machine identity (once per machine) |
 | `new` | Create a task |
 | `claim` | Take ownership of a task |
-| `set` | Change state, owner, tags or notes |
+| `set` | Release a task, hand it to someone, or replace its tags |
 | `log` | Append an execution record to a task document |
 | `close` | Close a task and write its history row |
 | `delete` | Delete a task created in error |

@@ -56,7 +56,7 @@ git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-l
 
 **其他代理。** 将目录放到 `.agents/skills/task-ledger/`，或该代理扫描 `SKILL.md` 的位置。本包不依赖任何宿主：命令行是静态二进制，内容均为 Markdown。
 
-**Windows。** 将路径中的 `~` 替换为 `%USERPROFILE%\`。命令行提供 Linux（amd64）、macOS（arm64）与 Windows（amd64）三个平台的二进制，由包装脚本自动选择。
+**Windows。** 将路径中的 `~` 替换为 `%USERPROFILE%\`；下面所有 `scripts/progress` 都要换成 `scripts\bin\ledger-windows-amd64.exe`（无扩展名的 sh 包装在 Windows 上不可执行：CreateProcessW 会按扩展名补 `.exe` 去找，然后报找不到）。在 Git Bash / WSL 里仍可用 `scripts/progress`。命令行提供 Linux（amd64）、macOS（arm64）与 Windows（amd64）三个平台的二进制。
 
 ## 首次使用
 
@@ -68,7 +68,7 @@ git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-l
 
 在第二台机器上，直接运行 `init` 并从台账名册中认领已有身份，两台机器便以同一账号写入。
 
-此后无需任何运行时、包管理器或网络。
+此后无需任何运行时、包管理器或网络；多人同步需 Git 2.27 及以上。
 
 ## 怎么用
 
@@ -96,6 +96,18 @@ git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-l
 - 结案前必须先把记录写完 —— 已结案的任务不能再写。
 - 找不到对应任务时，它问你要不要新建，而不是替你登记你没要求登记的工作。
 
+### 建议把它写进规则文件
+
+skill 只在请求命中意图时才加载 —— 你手上这件活该不该记账，不在这几个触发词里。所以在项目的 `AGENTS.md`（或等价的代理规则文件）里放一段常驻规则，比只装 skill 稳得多。复制下面这块即可：
+
+```markdown
+- **凡任务进度、工作事项与工作日志（新建 / 推进 / 查询 / 结案）一律调用 `task-ledger` skill 管理**；进度 / 历史类问题一律走它作答，不凭对话记忆或自建清单顶替。
+- **开工锚点**：仅当用户明确说要新建（如「开个新坑」「先记一下」「建个任务」）才交给 `task-ledger` 登记；提问 / 查询 / 讨论 / 顺手小改不算，拿不准先问，未经用户明确指令不得擅自新建任务。
+- **顺手问一句**：用户在推进一件跨轮的事（这轮答完、手上还有下一步动作没做完）、却从没提过记账时，答完问一次「你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）」；本会话问过一次就别再问，无回复就忽略。
+```
+
+不写这段也能用，只是它只在你明确提到任务时才会动。
+
 ## 落盘的数据
 
 ```
@@ -116,7 +128,7 @@ ledger/
 | `init` | 初始化或认领本机身份（一台机器一次） |
 | `new` | 新建任务 |
 | `claim` | 认领任务 |
-| `set` | 修改状态、责任人、标签或备注 |
+| `set` | 释放任务、转交他人或整组替换标签 |
 | `log` | 向任务正文追加一条执行记录 |
 | `close` | 结案，并写入历史 |
 | `delete` | 删除建错的任务 |
