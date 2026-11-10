@@ -56234,8 +56234,12 @@ window.__ModuleLoader__.load({
 			settingsRulesSaved: "注入设置已保存",
 			settingsRulesResetDone: "已恢复默认文案",
 			settingsRulesFailed: "注入设置未保存：{message}",
-			settingsRulesOn: "开启",
-			settingsRulesOff: "关闭",
+			settingsRulesOn: "已开启自动注入",
+			settingsRulesOff: "已关闭自动注入",
+			settingsRulesEnabledToast: "提示注入已开启",
+			settingsRulesDisabledToast: "提示注入已关闭",
+			settingsRulesCustom: "自定义文案",
+			settingsRulesDefault: "默认文案",
 			settingsCancel: "取消",
 			settingsPathCopied: "复制完成",
 			settingsPathCopy: "复制路径",
@@ -56550,8 +56554,12 @@ window.__ModuleLoader__.load({
 			settingsRulesSaved: "Injection settings saved",
 			settingsRulesResetDone: "Default prompt restored",
 			settingsRulesFailed: "Injection settings not saved: {message}",
-			settingsRulesOn: "On",
-			settingsRulesOff: "Off",
+			settingsRulesOn: "Auto-inject on",
+			settingsRulesOff: "Auto-inject off",
+			settingsRulesEnabledToast: "Prompt injection enabled",
+			settingsRulesDisabledToast: "Prompt injection disabled",
+			settingsRulesCustom: "Custom prompt",
+			settingsRulesDefault: "Default prompt",
 			settingsCancel: "Cancel",
 			settingsPathCopied: "Copied",
 			settingsPathCopy: "Copy path",
@@ -64450,9 +64458,17 @@ body[data-ds-dark-theme]{
 .dtl-set__body{margin-top:var(--dtl-space-3);}
 /* 标题行右槽（核心 SectionHead 的 right）：三档筛选 + 添加目录，窄了就换行 */
 .dtl-set__tools{display:flex;align-items:center;gap:var(--dtl-space-2);flex-wrap:wrap;}
-/* 规则注入开关进标题行右槽，后面跟当前状态的小字 */
+/* 规则注入开关进标题行右槽；状态小字本身可点（等同点开关），开绿关灰 */
 .dtl-set__rules-switch{display:inline-flex;align-items:center;gap:var(--dtl-space-2);}
-.dtl-set__rules-state{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
+.dtl-set__rules-state{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
+  border:0;background:none;padding:0;cursor:pointer;font-family:inherit;}
+.dtl-set__rules-state:disabled{cursor:default;opacity:.65;}
+.dtl-set__rules-state--on{color:var(--dtl-success);}
+/* 文案来源小标识：默认灰勾、自定义琥珀齿轮 */
+.dtl-set__rules-origin{display:inline-flex;align-items:center;gap:var(--dtl-space-1);
+  margin-bottom:var(--dtl-space-2);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);}
+.dtl-set__rules-origin--custom{color:var(--dtl-warning);}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
    两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：
@@ -67804,6 +67820,7 @@ body[data-ds-dark-theme]{
 			const [rulesEnabled, setRulesEnabled] = (0, react$1.useState)(false);
 			const [rulesText, setRulesText] = (0, react$1.useState)("");
 			const [rulesDefaultText, setRulesDefaultText] = (0, react$1.useState)("");
+			const [rulesCustomized, setRulesCustomized] = (0, react$1.useState)(false);
 			const [rulesLang, setRulesLang] = (0, react$1.useState)(null);
 			const [rulesBusy, setRulesBusy] = (0, react$1.useState)(false);
 			const [rulesSwitchBusy, setRulesSwitchBusy] = (0, react$1.useState)(false);
@@ -67816,6 +67833,7 @@ body[data-ds-dark-theme]{
 					setRulesEnabled(payload.enabled);
 					setRulesText(payload.text);
 					setRulesDefaultText(payload.defaultText);
+					setRulesCustomized(payload.customized);
 					setRulesLang(payload.lang);
 				}).catch((failure) => {
 					if (alive) setRulesError(failure instanceof Error ? failure.message : String(failure));
@@ -67832,6 +67850,7 @@ body[data-ds-dark-theme]{
 					if (!alive) return;
 					setRulesLang(payload.lang);
 					setRulesDefaultText(payload.defaultText);
+					setRulesCustomized(payload.customized);
 					setRulesText((draft) => draft === rulesDefaultText ? payload.text : draft);
 				}).catch((failure) => {
 					if (alive) setRulesError(failure instanceof Error ? failure.message : String(failure));
@@ -67844,7 +67863,7 @@ body[data-ds-dark-theme]{
 				rulesLang,
 				rulesDefaultText
 			]);
-			/** 开关切换即写盘生效，不等「保存」；失败回滚，不覆盖正在编辑的文案。 */
+			/** 开关切换即写盘生效；成功给一条提示（开绿关灰），失败回滚且不碰草稿。 */
 			const flipRulesEnabled = async (next) => {
 				if (rulesSwitchBusy) return;
 				setRulesSwitchBusy(true);
@@ -67857,6 +67876,8 @@ body[data-ds-dark-theme]{
 					});
 					setRulesEnabled(payload.enabled);
 					setRulesLang(payload.lang);
+					setRulesCustomized(payload.customized);
+					notify(t(next ? "settingsRulesEnabledToast" : "settingsRulesDisabledToast"), { variant: next ? "success" : "info" });
 				} catch (failure) {
 					setRulesEnabled(!next);
 					setRulesError(failure instanceof Error ? failure.message : String(failure));
@@ -67864,7 +67885,7 @@ body[data-ds-dark-theme]{
 					setRulesSwitchBusy(false);
 				}
 			};
-			/** 保存只提交文案；与默认一致时 host 清掉用户值，继续用写死的默认。 */
+			/** 保存只提交文案；与默认一致时 host 清掉用户值，继续用写死的默认。恢复默认不弹提示。 */
 			const writeRules = async (body, done) => {
 				if (rulesBusy) return;
 				setRulesBusy(true);
@@ -67876,8 +67897,9 @@ body[data-ds-dark-theme]{
 					});
 					setRulesText(payload.text);
 					setRulesDefaultText(payload.defaultText);
+					setRulesCustomized(payload.customized);
 					setRulesLang(payload.lang);
-					notify(done, { variant: "success" });
+					if (done !== void 0) notify(done, { variant: "success" });
 				} catch (failure) {
 					setRulesError(failure instanceof Error ? failure.message : String(failure));
 				} finally {
@@ -68560,8 +68582,15 @@ body[data-ds-dark-theme]{
 					},
 					label: t("settingsRulesSwitch"),
 					disabled: rulesSwitchBusy
-				}), (0, react$1.createElement)("span", { className: "dtl-set__rules-state" }, t(rulesEnabled ? "settingsRulesOn" : "settingsRulesOff")))
-			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, (0, react$1.createElement)("p", null, t("settingsRulesHint")), (0, react$1.createElement)(Textarea, {
+				}), (0, react$1.createElement)("button", {
+					type: "button",
+					className: rulesEnabled ? "dtl-set__rules-state dtl-set__rules-state--on" : "dtl-set__rules-state",
+					disabled: rulesSwitchBusy,
+					onClick: () => {
+						flipRulesEnabled(!rulesEnabled);
+					}
+				}, t(rulesEnabled ? "settingsRulesOn" : "settingsRulesOff")))
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, (0, react$1.createElement)("p", null, t("settingsRulesHint")), (0, react$1.createElement)("span", { className: rulesCustomized ? "dtl-set__rules-origin dtl-set__rules-origin--custom" : "dtl-set__rules-origin" }, (0, react$1.createElement)(rulesCustomized ? _deepseek_ai_dsh_client_ui_primitives.IconSettingsOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconCheckCircleOutlineRegular, { size: 12 }), t(rulesCustomized ? "settingsRulesCustom" : "settingsRulesDefault")), (0, react$1.createElement)(Textarea, {
 				value: rulesText,
 				onChange: setRulesText,
 				"aria-label": t("settingsRulesTextLabel"),
@@ -68579,7 +68608,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				disabled: rulesBusy,
 				onClick: () => {
-					writeRules({ action: "reset" }, t("settingsRulesResetDone"));
+					writeRules({ action: "reset" });
 				}
 			}, t("settingsRulesReset"))), rulesError !== null ? (0, react$1.createElement)("p", null, t("settingsRulesFailed", { message: rulesError })) : null)), userModal, forgetDialog);
 		}
@@ -69077,7 +69106,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.12 261110-234359-886`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.12 261111-001938-803`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

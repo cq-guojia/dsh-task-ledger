@@ -9,12 +9,14 @@
  * （`pickWorkspaceFile({ filter: { dirs: true } })`，只能选目录、不限工作区）。
  */
 import {
+	IconCheckCircleOutlineRegular,
 	IconChecklistOutlineRegular,
 	IconCheckOutlineRegular,
 	IconCloseOutlineRegular,
 	IconCopyOutlineRegular,
 	IconDownloadOutlineRegular,
 	IconFlatListOutlineRegular,
+	IconSettingsOutlineRegular,
 	Switch,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
@@ -135,6 +137,7 @@ export function SettingsPage(props: {
 	const [rulesEnabled, setRulesEnabled] = useState(false);
 	const [rulesText, setRulesText] = useState("");
 	const [rulesDefaultText, setRulesDefaultText] = useState("");
+	const [rulesCustomized, setRulesCustomized] = useState(false);
 	const [rulesLang, setRulesLang] = useState<RulesLang | null>(null);
 	const [rulesBusy, setRulesBusy] = useState(false);
 	const [rulesSwitchBusy, setRulesSwitchBusy] = useState(false);
@@ -149,6 +152,7 @@ export function SettingsPage(props: {
 				setRulesEnabled(payload.enabled);
 				setRulesText(payload.text);
 				setRulesDefaultText(payload.defaultText);
+				setRulesCustomized(payload.customized);
 				setRulesLang(payload.lang);
 			})
 			.catch((failure: unknown) => {
@@ -171,6 +175,7 @@ export function SettingsPage(props: {
 				if (!alive) return;
 				setRulesLang(payload.lang);
 				setRulesDefaultText(payload.defaultText);
+				setRulesCustomized(payload.customized);
 				setRulesText((draft) =>
 					draft === rulesDefaultText ? payload.text : draft,
 				);
@@ -186,7 +191,7 @@ export function SettingsPage(props: {
 		};
 	}, [uiLang, rulesLang, rulesDefaultText]);
 
-	/** 开关切换即写盘生效，不等「保存」；失败回滚，不覆盖正在编辑的文案。 */
+	/** 开关切换即写盘生效；成功给一条提示（开绿关灰），失败回滚且不碰草稿。 */
 	const flipRulesEnabled = async (next: boolean): Promise<void> => {
 		if (rulesSwitchBusy) return;
 		setRulesSwitchBusy(true);
@@ -196,6 +201,11 @@ export function SettingsPage(props: {
 			const payload = await postRulesInjection({ enabled: next, lang: uiLang });
 			setRulesEnabled(payload.enabled);
 			setRulesLang(payload.lang);
+			setRulesCustomized(payload.customized);
+			notify(
+				t(next ? "settingsRulesEnabledToast" : "settingsRulesDisabledToast"),
+				{ variant: next ? "success" : "info" },
+			);
 		} catch (failure: unknown) {
 			setRulesEnabled(!next);
 			setRulesError(failure instanceof Error ? failure.message : String(failure));
@@ -204,10 +214,10 @@ export function SettingsPage(props: {
 		}
 	};
 
-	/** 保存只提交文案；与默认一致时 host 清掉用户值，继续用写死的默认。 */
+	/** 保存只提交文案；与默认一致时 host 清掉用户值，继续用写死的默认。恢复默认不弹提示。 */
 	const writeRules = async (
 		body: { readonly text?: string; readonly action?: "reset" },
-		done: string,
+		done?: string,
 	): Promise<void> => {
 		if (rulesBusy) return;
 		setRulesBusy(true);
@@ -216,8 +226,9 @@ export function SettingsPage(props: {
 			const payload = await postRulesInjection({ ...body, lang: uiLang });
 			setRulesText(payload.text);
 			setRulesDefaultText(payload.defaultText);
+			setRulesCustomized(payload.customized);
 			setRulesLang(payload.lang);
-			notify(done, { variant: "success" });
+			if (done !== undefined) notify(done, { variant: "success" });
 		} catch (failure: unknown) {
 			setRulesError(failure instanceof Error ? failure.message : String(failure));
 		} finally {
@@ -1274,17 +1285,41 @@ export function SettingsPage(props: {
 						disabled: rulesSwitchBusy,
 					}),
 					h(
-						"span",
-						{ className: "dtl-set__rules-state" },
+						"button",
+						{
+							type: "button",
+							className: rulesEnabled
+								? "dtl-set__rules-state dtl-set__rules-state--on"
+								: "dtl-set__rules-state",
+							disabled: rulesSwitchBusy,
+							onClick: () => {
+								void flipRulesEnabled(!rulesEnabled);
+							},
+						},
 						t(rulesEnabled ? "settingsRulesOn" : "settingsRulesOff"),
-					),
-				),
-			}),
-			h(
-				"div",
-				{ className: "dtl-set__body" },
-				h("p", null, t("settingsRulesHint")),
-				h(Textarea, {
+						),
+						),
+						}),
+						h(
+						"div",
+						{ className: "dtl-set__body" },
+						h("p", null, t("settingsRulesHint")),
+						h(
+						"span",
+						{
+						className: rulesCustomized
+							? "dtl-set__rules-origin dtl-set__rules-origin--custom"
+							: "dtl-set__rules-origin",
+						},
+						h(
+						rulesCustomized
+							? IconSettingsOutlineRegular
+							: IconCheckCircleOutlineRegular,
+						{ size: 12 },
+						),
+						t(rulesCustomized ? "settingsRulesCustom" : "settingsRulesDefault"),
+						),
+						h(Textarea, {
 					value: rulesText,
 					onChange: setRulesText,
 					"aria-label": t("settingsRulesTextLabel"),
@@ -1313,10 +1348,7 @@ export function SettingsPage(props: {
 							size: "md",
 							disabled: rulesBusy,
 							onClick: () => {
-								void writeRules(
-									{ action: "reset" },
-									t("settingsRulesResetDone"),
-								);
+								void writeRules({ action: "reset" });
 							},
 						},
 						t("settingsRulesReset"),
@@ -1345,6 +1377,10 @@ export type SettingsLocaleKey = Extract<
 	| "settingsRulesFailed"
 	| "settingsRulesOn"
 	| "settingsRulesOff"
+	| "settingsRulesEnabledToast"
+	| "settingsRulesDisabledToast"
+	| "settingsRulesCustom"
+	| "settingsRulesDefault"
 	| "settingsSave"
 	| "loadFailed"
 	| "settingsSwitchUser"

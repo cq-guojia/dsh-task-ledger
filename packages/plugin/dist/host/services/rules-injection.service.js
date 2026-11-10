@@ -63,15 +63,18 @@ function readStored() {
         return fallback;
     }
 }
-/** GET 与注入都走这里：不传语言，按文件里落盘的 lang 返回。 */
-export function readSettings() {
-    const stored = readStored();
+function toView(stored) {
     return {
         enabled: stored.enabled,
         lang: stored.lang,
         text: stored.text ?? DEFAULTS[stored.lang],
         defaultText: DEFAULTS[stored.lang],
+        customized: stored.text !== null,
     };
+}
+/** GET 与注入都走这里：按文件里落盘的 lang 返回。 */
+export function readSettings() {
+    return toView(readStored());
 }
 /** 原子替换写盘；恢复默认或「内容与默认一致」都只清用户值，不动写死的常量。 */
 export function writeSettings(input) {
@@ -97,12 +100,7 @@ export function writeSettings(input) {
     const tmp = `${file}.${process.pid}.tmp`;
     writeFileSync(tmp, JSON.stringify(stored, null, 2), "utf8");
     renameSync(tmp, file);
-    return {
-        enabled: stored.enabled,
-        lang,
-        text: stored.text ?? DEFAULTS[lang],
-        defaultText: DEFAULTS[lang],
-    };
+    return toView(stored);
 }
 function hasUserTurn(messages) {
     return messages.some((message) => {

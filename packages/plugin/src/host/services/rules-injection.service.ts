@@ -48,6 +48,8 @@ export interface RulesInjectionView {
 	/** 当前生效文案（用户值或该语言默认值）。 */
 	readonly text: string;
 	readonly defaultText: string;
+	/** 是否保存过用户自定义文案（设置页的小标识用它，不跟着草稿变）。 */
+	readonly customized: boolean;
 }
 
 interface StoredSettings {
@@ -95,15 +97,19 @@ function readStored(): StoredSettings {
 	}
 }
 
-/** GET 与注入都走这里：不传语言，按文件里落盘的 lang 返回。 */
-export function readSettings(): RulesInjectionView {
-	const stored = readStored();
+function toView(stored: StoredSettings): RulesInjectionView {
 	return {
 		enabled: stored.enabled,
 		lang: stored.lang,
 		text: stored.text ?? DEFAULTS[stored.lang],
 		defaultText: DEFAULTS[stored.lang],
+		customized: stored.text !== null,
 	};
+}
+
+/** GET 与注入都走这里：按文件里落盘的 lang 返回。 */
+export function readSettings(): RulesInjectionView {
+	return toView(readStored());
 }
 
 /** 原子替换写盘；恢复默认或「内容与默认一致」都只清用户值，不动写死的常量。 */
@@ -128,12 +134,7 @@ export function writeSettings(input: WriteSettingsInput): RulesInjectionView {
 	const tmp = `${file}.${process.pid}.tmp`;
 	writeFileSync(tmp, JSON.stringify(stored, null, 2), "utf8");
 	renameSync(tmp, file);
-	return {
-		enabled: stored.enabled,
-		lang,
-		text: stored.text ?? DEFAULTS[lang],
-		defaultText: DEFAULTS[lang],
-	};
+	return toView(stored);
 }
 
 interface SessionLike {

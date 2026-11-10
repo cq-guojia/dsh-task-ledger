@@ -86,6 +86,10 @@ export type LocaleKey =
 	| "settingsRulesFailed"
 	| "settingsRulesOn"
 	| "settingsRulesOff"
+	| "settingsRulesEnabledToast"
+	| "settingsRulesDisabledToast"
+	| "settingsRulesCustom"
+	| "settingsRulesDefault"
 	| "settingsCancel"
 	| "settingsPathCopied"
 	| "settingsPathCopy"
@@ -442,8 +446,12 @@ export const zh: Record<LocaleKey, string> = {
 	settingsRulesSaved: "注入设置已保存",
 	settingsRulesResetDone: "已恢复默认文案",
 	settingsRulesFailed: "注入设置未保存：{message}",
-	settingsRulesOn: "开启",
-	settingsRulesOff: "关闭",
+	settingsRulesOn: "已开启自动注入",
+	settingsRulesOff: "已关闭自动注入",
+	settingsRulesEnabledToast: "提示注入已开启",
+	settingsRulesDisabledToast: "提示注入已关闭",
+	settingsRulesCustom: "自定义文案",
+	settingsRulesDefault: "默认文案",
 	settingsCancel: "取消",
 	settingsPathCopied: "复制完成",
 	settingsPathCopy: "复制路径",
@@ -781,8 +789,12 @@ export const en: Record<LocaleKey, string> = {
 	settingsRulesSaved: "Injection settings saved",
 	settingsRulesResetDone: "Default prompt restored",
 	settingsRulesFailed: "Injection settings not saved: {message}",
-	settingsRulesOn: "On",
-	settingsRulesOff: "Off",
+	settingsRulesOn: "Auto-inject on",
+	settingsRulesOff: "Auto-inject off",
+	settingsRulesEnabledToast: "Prompt injection enabled",
+	settingsRulesDisabledToast: "Prompt injection disabled",
+	settingsRulesCustom: "Custom prompt",
+	settingsRulesDefault: "Default prompt",
 	settingsCancel: "Cancel",
 	settingsPathCopied: "Copied",
 	settingsPathCopy: "Copy path",

@@ -169,9 +169,17 @@ export const UI_CONTROLS_CSS = `
 .dtl-set__body{margin-top:var(--dtl-space-3);}
 /* 标题行右槽（核心 SectionHead 的 right）：三档筛选 + 添加目录，窄了就换行 */
 .dtl-set__tools{display:flex;align-items:center;gap:var(--dtl-space-2);flex-wrap:wrap;}
-/* 规则注入开关进标题行右槽，后面跟当前状态的小字 */
+/* 规则注入开关进标题行右槽；状态小字本身可点（等同点开关），开绿关灰 */
 .dtl-set__rules-switch{display:inline-flex;align-items:center;gap:var(--dtl-space-2);}
-.dtl-set__rules-state{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
+.dtl-set__rules-state{font-size:var(--dtl-font-sm);line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);
+  border:0;background:none;padding:0;cursor:pointer;font-family:inherit;}
+.dtl-set__rules-state:disabled{cursor:default;opacity:.65;}
+.dtl-set__rules-state--on{color:var(--dtl-success);}
+/* 文案来源小标识：默认灰勾、自定义琥珀齿轮 */
+.dtl-set__rules-origin{display:inline-flex;align-items:center;gap:var(--dtl-space-1);
+  margin-bottom:var(--dtl-space-2);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);
+  color:var(--dtl-fg-3);}
+.dtl-set__rules-origin--custom{color:var(--dtl-warning);}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
    两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：

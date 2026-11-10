@@ -10,6 +10,8 @@ export interface RulesInjectionView {
     /** 当前生效文案（用户值或该语言默认值）。 */
     readonly text: string;
     readonly defaultText: string;
+    /** 是否保存过用户自定义文案（设置页的小标识用它，不跟着草稿变）。 */
+    readonly customized: boolean;
 }
 export interface WriteSettingsInput {
     readonly enabled?: boolean;
@@ -17,7 +19,7 @@ export interface WriteSettingsInput {
     readonly text?: string;
     readonly reset?: boolean;
 }
-/** GET 与注入都走这里：不传语言，按文件里落盘的 lang 返回。 */
+/** GET 与注入都走这里：按文件里落盘的 lang 返回。 */
 export declare function readSettings(): RulesInjectionView;
 /** 原子替换写盘；恢复默认或「内容与默认一致」都只清用户值，不动写死的常量。 */
 export declare function writeSettings(input: WriteSettingsInput): RulesInjectionView;

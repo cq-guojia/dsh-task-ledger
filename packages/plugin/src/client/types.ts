@@ -13,6 +13,8 @@ export interface RulesInjectionView {
 	/** 当前生效文案（用户值或该语言默认值）。 */
 	readonly text: string;
 	readonly defaultText: string;
+	/** 是否保存过用户自定义文案。 */
+	readonly customized: boolean;
 }
 
 /** 一个活跃台账工作区（宿主 id + title + 归一绝对路径）。 */
