@@ -9,17 +9,17 @@
  * （`pickWorkspaceFile({ filter: { dirs: true } })`，只能选目录、不限工作区）。
  */
 import {
-	IconCheckCircleOutlineRegular,
 	IconChecklistOutlineRegular,
 	IconCheckOutlineRegular,
 	IconCloseOutlineRegular,
 	IconCopyOutlineRegular,
 	IconDownloadOutlineRegular,
 	IconFlatListOutlineRegular,
-	IconSettingsOutlineRegular,
 	Switch,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
+/** 自定义小标签与 config-panel.ts 的「显示名称」同款：核心 Chip 的 neutral xs 档。 */
+import { Chip } from "dsh-plugin-core/ui";
 /** 可编辑输入框只从核心的 ui/code-viewer 子路径导出（重依赖不进 ui/index.ts），不能用 ./ui 汇总表。 */
 import { CodeEditor } from "dsh-plugin-core/ui/code-viewer";
 import { createElement as h, Fragment, type ReactNode, useEffect, useRef, useState } from "react";
@@ -1311,21 +1311,6 @@ export function SettingsPage(props: {
 						"div",
 						{ className: "dtl-set__body" },
 						h(
-						"span",
-						{
-						className: rulesCustomized
-							? "dtl-set__rules-origin dtl-set__rules-origin--custom"
-							: "dtl-set__rules-origin",
-						},
-						h(
-						rulesCustomized
-							? IconSettingsOutlineRegular
-							: IconCheckCircleOutlineRegular,
-						{ size: 12 },
-						),
-						t(rulesCustomized ? "settingsRulesCustom" : "settingsRulesDefault"),
-						),
-						h(
 							"div",
 							{
 								className: rulesBusy
@@ -1339,8 +1324,9 @@ export function SettingsPage(props: {
 								onChange: (next: string) => {
 									if (!rulesBusy) setRulesText(next);
 								},
+								path: "rules.md",
 								height: "200px",
-								lineNumbers: false,
+								lineNumbers: true,
 							}),
 						),
 				h(
@@ -1371,6 +1357,9 @@ export function SettingsPage(props: {
 						},
 						t("settingsRulesReset"),
 					),
+					rulesCustomized
+						? h(Chip, { tone: "neutral", size: "xs" }, t("configOverridden"))
+						: null,
 				),
 				rulesError !== null
 					? h("p", null, t("settingsRulesFailed", { message: rulesError }))
@@ -1397,8 +1386,7 @@ export type SettingsLocaleKey = Extract<
 	| "settingsRulesOff"
 	| "settingsRulesEnabledToast"
 	| "settingsRulesDisabledToast"
-	| "settingsRulesCustom"
-	| "settingsRulesDefault"
+	| "configOverridden"
 	| "settingsSave"
 	| "loadFailed"
 	| "settingsSwitchUser"

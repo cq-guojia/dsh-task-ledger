@@ -88,8 +88,6 @@ export type LocaleKey =
 	| "settingsRulesOff"
 	| "settingsRulesEnabledToast"
 	| "settingsRulesDisabledToast"
-	| "settingsRulesCustom"
-	| "settingsRulesDefault"
 	| "settingsCancel"
 	| "settingsPathCopied"
 	| "settingsPathCopy"
@@ -439,7 +437,7 @@ export const zh: Record<LocaleKey, string> = {
 
 	settingsRulesTitle: "会话规则注入",
 	settingsRulesHint:
-		"开启后，每个新会话首轮自动附加这段提示词，\n使 Agent 按台账口径跟进任务。",
+		"自动注入提示词：让 Agent 更准确地按台账口径跟进任务，\n少依赖对话记忆（建议开启）。",
 	settingsRulesSwitch: "自动注入提示词",
 	settingsRulesTextLabel: "提示词文案",
 	settingsRulesReset: "恢复默认",
@@ -450,8 +448,6 @@ export const zh: Record<LocaleKey, string> = {
 	settingsRulesOff: "关闭",
 	settingsRulesEnabledToast: "提示注入已开启",
 	settingsRulesDisabledToast: "提示注入已关闭",
-	settingsRulesCustom: "自定义文案",
-	settingsRulesDefault: "默认文案",
 	settingsCancel: "取消",
 	settingsPathCopied: "复制完成",
 	settingsPathCopy: "复制路径",
@@ -782,7 +778,7 @@ export const en: Record<LocaleKey, string> = {
 
 	settingsRulesTitle: "Session rules injection",
 	settingsRulesHint:
-		"When enabled, the first turn of every new session\ncarries this prompt, so the agent follows ledger rules.",
+		"Auto-injects the prompt so the agent follows\none ledger convention more reliably, relying\nless on chat memory (recommended).",
 	settingsRulesSwitch: "Inject prompt automatically",
 	settingsRulesTextLabel: "Prompt text",
 	settingsRulesReset: "Restore default",
@@ -793,8 +789,6 @@ export const en: Record<LocaleKey, string> = {
 	settingsRulesOff: "Off",
 	settingsRulesEnabledToast: "Prompt injection enabled",
 	settingsRulesDisabledToast: "Prompt injection disabled",
-	settingsRulesCustom: "Custom prompt",
-	settingsRulesDefault: "Default prompt",
 	settingsCancel: "Cancel",
 	settingsPathCopied: "Copied",
 	settingsPathCopy: "Copy path",

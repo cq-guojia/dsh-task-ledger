@@ -15,18 +15,20 @@ import { dirname, join } from "node:path";
 /** 恢复默认的唯一参照：中英各一份写死常量；用户保存的值另存，写入不覆盖它们。 */
 export const DEFAULT_RULES_TEXT_ZH = [
     "以下是本会话的常驻规则。",
-    "凡任务进度、工作事项与工作日志（新建 / 推进 / 查询 / 结案）一律调用 task-ledger skill 管理；进度 / 历史类问题一律走它作答，不凭对话记忆或自建清单顶替。",
-    "开工锚点：仅当用户明确说要新建（如「开个新坑」「先记一下」「建个任务」）才登记；提问 / 查询 / 讨论 / 顺手小改不算，拿不准先问，未经明确指令不得擅自新建任务。",
-    "怎么建、按什么顺序、命令的授权与确认口径，一律以 task-ledger skill 的说明为准。",
-    "顺手问一句：用户在推进一件跨轮的事（这轮答完、手上还有下一步动作没做完）、却从没提过记账时，答完问一次「你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）」；本会话问过一次就别再问，用户不接就当他不需要。",
+    "",
+    "- **凡任务进度、工作事项与工作日志**：（新建 / 推进 / 查询 / 结案）一律调用 task-ledger skill 管理；进度 / 历史类问题一律走它作答，不凭对话记忆或自建清单顶替。",
+    "- **开工锚点**：仅当用户明确说要新建（如「开个新坑」「先记一下」「建个任务」）才登记；提问 / 查询 / 讨论 / 顺手小改不算，拿不准先问，未经明确指令不得擅自新建任务。",
+    "- **怎么建、按什么顺序**：命令的授权与确认口径，一律以 task-ledger skill 的说明为准。",
+    "- **顺手问一句**：用户在推进一件跨轮的事（这轮答完、手上还有下一步动作没做完）、却从没提过记账时，答完问一次「你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）」；本会话问过一次就别再问，用户不接就当他不需要。",
 ].join("\n");
-/** 英文与中文五条对齐；最后那句问话按定稿保留中文原句。 */
+/** 英文与中文条目对齐，格式同为 `- **关键词**：…`；最后那句问话按定稿保留中文原句。 */
 export const DEFAULT_RULES_TEXT_EN = [
     "These are standing rules for this session.",
-    "Every piece of task progress, work item and work log (create / advance / query / close) goes through the task-ledger skill; answer progress and history questions from it, never from conversation memory or a hand-rolled list.",
-    'Creation anchor: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.',
-    "How to create, in what order, and the authorization and confirmation rules all follow the task-ledger skill's own instructions.",
-    'Ask in passing: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）"; once asked in a session, do not ask again; no reply means ignore it.',
+    "",
+    "- **Task progress, work items and work logs**: (create / advance / query / close) go through the task-ledger skill; answer progress and history questions from it, never from conversation memory or a hand-rolled list.",
+    '- **Creation anchor**: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.',
+    "- **How to create and in what order**: the authorization and confirmation rules all follow the task-ledger skill's own instructions.",
+    '- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）"; once asked in a session, do not ask again; no reply means ignore it.',
 ].join("\n");
 const DEFAULTS = {
     zh: DEFAULT_RULES_TEXT_ZH,

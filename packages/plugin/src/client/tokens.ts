@@ -175,11 +175,6 @@ export const UI_CONTROLS_CSS = `
   border:0;background:none;padding:0;cursor:pointer;font-family:inherit;}
 .dtl-set__rules-state:disabled{cursor:default;opacity:.65;}
 .dtl-set__rules-state--on{color:var(--dtl-success);}
-/* 文案来源小标识：默认灰勾、自定义琥珀齿轮 */
-.dtl-set__rules-origin{display:inline-flex;align-items:center;gap:var(--dtl-space-1);
-  margin-bottom:var(--dtl-space-2);font-size:var(--dtl-font-xs);line-height:var(--dtl-line-sm);
-  color:var(--dtl-fg-3);}
-.dtl-set__rules-origin--custom{color:var(--dtl-warning);}
 /* 标题后的问号提示：标题与问号同一行；气泡文案显式断行并由 maxWidth 限宽 */
 .dtl-set__rules-title{display:inline-flex;align-items:center;gap:var(--dtl-space-1);}
 /* 可编辑文案框：高度由核心 CodeEditor 的 height 给，这里只补间距与保存中的锁定态 */
