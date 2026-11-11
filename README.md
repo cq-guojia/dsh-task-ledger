@@ -1,128 +1,128 @@
 # dsh-task-ledger
 
-**English** · [简体中文](README.zh-CN.md)
+[English](README.en.md) · **简体中文**
 
-A task ledger that lives in your workspace: any kind of task is fair game — not just development work, but research, documentation, presentations and video production. Tasks are created, claimed, advanced and closed by the agent, and every one of those steps is written into a plain-text `ledger/` directory — so the owner, the current state, the next step and the conclusion stay on record instead of dissolving into chat history.
+一本放在工作区里的任务台账：什么任务都可以用，不限于开发工作，调研、文档、演示、视频制作都能建任务。任务由 Agent 创建、认领、推进与结案，每一步都写入纯文本 `ledger/` 目录 —— 谁在做、做到哪、下一步是什么、结论是什么，全程留痕，不会随对话窗口关闭而丢失。
 
-![Task ledger board](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/board.png)
+![任务台账看板](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/board.png)
 
-## Why it exists
+## 它解决什么问题
 
-Work that spans several sessions, several days or several people loses three answers: who is doing it, how far it has progressed, and what it was supposed to achieve. A chat log does not preserve them reliably, and a hosted project tool keeps them outside the workspace, away from the work they describe.
+只要一件工作跨了多次会话、跨了若干天，或者由多人接力，三个问题就再也答不上来：谁在做、做到哪一步、原本要达成什么。对话记录留不住，托管型项目管理工具虽然答得上，却把答案放在工作区之外、离这件事本身很远。
 
-This ledger keeps those answers inside the workspace, in files that can be read, diffed and reviewed. Four properties define it:
+本台账把答案记在工作区里，以可读、可 diff、可评审的纯文本文件保存。它的定位由四点界定：
 
-| Property | What it means |
+| 特性 | 具体含义 |
 |---|---|
-| **Task lifecycle tracking** | Tasks are created, claimed, resumed, handed over and closed. Every transition carries a timestamp and an owner; free-form progress, the conclusion and open issues live in the task document. |
-| **Local by design** | No account, no hosted backend, no service marketplace. The ledger is plain JSON and Markdown committed with the repository; it works offline and can be reviewed line by line. |
-| **Single-user and multi-user** | One person on one machine, or a team sharing one repository. Ownership state is sharded per person, so two people advancing two tasks never write the same file. |
-| **Version control as the sync layer** | Git is the transport. Push, pull and merge carry the ledger between machines and contributors, and commit history doubles as the audit trail. |
+| **任务全生命周期跟踪** | 任务可创建、认领、续做、移交、结案。每次状态变更都带时间与责任人；过程叙述、结案结论与遗留问题写在任务正文中。 |
+| **本地化工具** | 不需要账号、不需要托管后端、不依赖任何服务市场。台账是与仓库一同提交的 JSON 与 Markdown，离线可用，可在评审中逐行审阅。 |
+| **单人可用，多人亦可用** | 单机单人可直接使用；团队共用一个仓库同样成立。归属状态按人分片存储，两人各自推进各自的任务时不会写同一份文件。 |
+| **以 Git 承载版本同步** | Git 即传输通道。push、pull、merge 把台账带到其他机器与其他人，提交历史本身构成审计记录。 |
 
-## Using it
+## 怎么用
 
-There are no commands for you to type. The ledger is driven by what you say to the agent: when a request matches one of the intents below, the agent runs the corresponding operation and records it.
+不需要你敲任何命令。台账由你对 Agent 说的话驱动：请求命中下列意图时，Agent 执行对应操作并留痕。
 
-| You say | What the agent does | Result |
+| 你说 | Agent 做什么 | 结果 |
 |---|---|---|
-| "Open a task: get the release pipeline working" | creates the task with the tags you gave | In the shared pool, state `open`, unclaimed |
-| "Open a task and start on it" | creates and claims it | Owned by you, state `doing` |
-| "I'll take that one" / "continue with X" | claims the task | Moved to your name, state `doing` |
-| *(while working)* | writes the task document, then appends an execution record | Progress, conclusions and blockers on record |
-| "Blocked for now" / "leave it for a while" | records the blocker, leaves the state alone | Still `doing` — a pause is neither a release nor a cancellation |
-| "Hand it back" | releases it | Returns to the shared pool for anyone to claim |
-| "Close this task" | closes it with your summary | One row written to history; read-only afterwards |
-| "Cancel it" | closes it as void, with the reason | Closed, not completed |
-| "Delete it" | asks you to confirm, then deletes | Removed permanently — no undo, no restore |
-| "What should I be doing?" / "what did we close last week?" | lists in-flight tasks, one task, or history | Query only, nothing written |
+| 「新建一个任务：把发布流程走通」 | 按你给的标签建任务 | 落公共池，状态「待认领」 |
+| 「新建个任务并开始做」 | 建并认领 | 归你名下，状态「进行中」 |
+| 「这活我领了」/「接着做 X」 | 认领该任务 | 转到你名下，状态「进行中」 |
+| （干活过程中） | 写任务正文，再追加一条执行记录 | 进度、结论、卡点全程留痕 |
+| 「卡住了」/「先放一放」 | 记下卡点，状态不动 | 仍是「进行中」—— 暂停既不是释放，也不是取消 |
+| 「退回去」 | 释放任务 | 回公共池，任何人可认领 |
+| 「这个任务结束掉」 | 带摘要结案 | 写入历史，此后只读 |
+| 「取消 / 作废」 | 作废结案，记下原因 | 已关闭，但不算完成 |
+| 「删除」 | 先请你确认，再删除 | 彻底删除，无撤销、无恢复 |
+| 「现在该做什么」/「上周结了什么」 | 列在办、看单条、查历史 | 只读查询，不写任何东西 |
 
-Creating a task requires two inputs: **what the work is** — one sentence, without category or project prefixes — and **what it touches** — one to five tags. A category may be given at creation; it is immutable afterwards.
+建任务需要两项输入：**做什么** —— 一句话，不加分类或项目名前缀；**涉及什么** —— 一到五个标签。分类可在建任务时给出，此后不可更改。
 
-Four rules bind the agent:
+四条约束对 Agent 生效：
 
-- It never creates, claims, releases, closes or deletes a task on its own initiative. Each of those needs an explicit instruction from you, and a vague "done" is answered with a question rather than a closure.
-- It never edits state files, the history file or the execution log. Only the task document's first five sections are its to write.
-- It completes the written record before closing: a closed task cannot be written to again.
-- When it cannot find a task for the work at hand, it asks whether to create one instead of registering work you did not ask for.
+- 建、认领、释放、结案、删除，没有一项由 Agent 自行发起。每一项都需要你的明确指令；你只说了「做完了」这类含糊的话，它回问，而不是直接结案。
+- 状态文件、历史文件、执行记录一律不由 Agent 改动。它只能写任务正文的前五节。
+- 结案前必须先把记录写完 —— 已结案的任务不能再写。
+- 找不到对应任务时，它问你要不要新建，而不是替你登记你没要求登记的工作。
 
-## Installing on DeepSeek Harness
+## 在 DeepSeek Harness 上安装
 
-The main form of this project is a plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh): installing it gives you the full board, with the skill bundled in, so there is nothing else to install. Pick any of the three ways below.
+本项目的主形态是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（下称 DSH）插件：装好就有完整看板，skill 也已内置，无需另外安装。三种方式任选其一：
 
-1. **Add a plugin in DSH** — open the plugins page, click "Add plugin", enter the package name `dsh-task-ledger` and confirm.
-2. **Install from the command line**:
+1. **在 DSH 里添加插件** —— 打开插件页，点「添加插件」，输入包名 `dsh-task-ledger`，确认安装。
+2. **命令行安装** —— 在终端执行：
 
    ```bash
    dsh plugin add dsh-task-ledger
    ```
 
-3. **Install from the plugin marketplace** — search for `dsh-task-ledger` in the DSH plugin marketplace and install it.
+3. **在插件市场安装** —— 在 DSH 的插件市场搜索 `dsh-task-ledger`，直接安装。
 
-## Use from other agents
+## 在其他 Agent 中使用
 
-If you use several agent tools, install this Skill in each of them to keep the ledger; the same skill installed in another agent still writes to this project's ledger, and the board sums it up. Three steps:
+如果你有多个 Agent 工具，可以在各自的 Agent 中安装这个 Skill 记录台账；同一份 skill 装在其他 Agent 上，记录的仍是这个项目的台账。三步：
 
-### 1. Install the skill
+### 1. 安装 Skill
 
 ```bash
 npx skills add cq-guojia/dsh-task-ledger -g
 ```
 
-The command detects the agents installed on this machine (Claude Code, Codex, CodeBuddy, …) and writes into each skills directory. Or send this line to any agent and let it install:
+命令会自动识别本机已装的 Agent（Claude Code、Codex、CodeBuddy 等），写进各自的技能目录。也可以把这句话发给任意 Agent，让它自己装：
 
-> Install the task-ledger skill (npm package task-ledger, GitHub repo cq-guojia/dsh-task-ledger).
+> 帮我安装 task-ledger 这个 skill（npm 包名 task-ledger，GitHub 包名 cq-guojia/dsh-task-ledger）。
 
-### 2. Inject the rules (optional)
+### 2. 注入规则文件（可选）
 
-Add this to `AGENTS.md` in the project root so the agent follows the ledger convention:
+把下面这段加进项目根目录的 `AGENTS.md`，让 Agent 按台账口径跟进任务：
 
 ```markdown
-Usage rules for the task-ledger tool [task-ledger skill]:
+任务台账工具[task-ledger skill]使用规则：
 
-- **Task progress, work items and work logs**: (create / advance / query / close) go through the task-ledger skill; answer questions about progress and task history from it, never from conversation memory or a hand-rolled list.
-- **Creation anchor**: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
-- **How to create and in what order**: the authorization and confirmation rules all follow the task-ledger skill's own instructions.
-- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "Want me to open a ledger for this task? (Ignore this if not needed — no reply necessary.)"; once asked in a session, do not ask again; no reply means ignore it.
+- **凡任务进度、工作事项与工作日志**：（新建 / 推进 / 查询 / 结案）一律调用 task-ledger skill 管理；进度 / 历史任务类问题一律走它作答，不凭对话记忆或自建清单顶替。
+- **开工锚点**：仅当用户明确说要新建（如「开个新坑」「先记一下」「建个任务」）才登记；提问 / 查询 / 讨论 / 顺手小改不算，拿不准先问，未经明确指令不得擅自新建任务。
+- **怎么建、按什么顺序**：命令的授权与确认口径，一律以 task-ledger skill 的说明为准。
+- **顺手问一句**：用户在推进一件跨轮的事（这轮答完、手上还有下一步动作没做完）、却从没提过记账时，答完问一次「你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）」；本会话问过一次就别再问，用户不接就当他不需要。
 ```
 
-### 3. Manage it on the board
+### 3. 到看板管理
 
-The board is currently available only as a DeepSeek Harness plugin board. To view and manage these tasks on a board, install the plugin as described under [Installing on DeepSeek Harness](#installing-on-deepseek-harness).
+看板目前仅支持 DeepSeek Harness 的插件看板。装完 skill 后想用看板统一查看管理，按上面「在 DeepSeek Harness 上安装」把插件装上即可。
 
-Claude Code, Cursor, Codex, CodeBuddy, Trae, and any agent tool that loads `SKILL.md` are supported. For manual installation, identity setup and the skills directory of each agent, see the [skill package documentation](packages/skill/README.md).
+Claude Code、Cursor、Codex、CodeBuddy、Trae，以及任何加载 `SKILL.md` 的 Agent 工具都适用。手动安装、身份初始化与各 Agent 的技能目录位置见 [skill 包文档](packages/skill/README.md)。
 
-## Other
+## 其他
 
-The ledger lives in a `ledger/` directory, with state and prose kept apart: JSON holds who owns what and in which state, Markdown holds the reasoning. Only the CLI writes state, history and the execution log; the agent writes the first five sections of a task document and nothing else.
+台账落在 `ledger/` 目录，状态与正文分离 —— JSON 记归属与状态，Markdown 记来龙去脉；只有命令行工具可写状态、历史与执行记录，Agent 只能写任务正文的前五节：
 
 ```
 ledger/
-├── pool.json                 unclaimed tasks (shared)
-├── owners.json               index: identity → shard file
-├── owners/<hash>.json        one shard per person: tasks they own
-├── worklog/<YYYYMM>/*.md     task documents, six fixed sections
-└── history/<YYYYMM>.md       closed tasks, one row each
+├── pool.json                 公共池:未认领任务
+├── owners.json               索引:身份 → 分片文件
+├── owners/<hash>.json        每人一份分片:其名下任务
+├── worklog/<年月>/*.md       任务正文,固定六节
+└── history/<年月>.md         已结案任务,一行一条
 ```
 
-![Task document](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/worklog.png)
+![任务正文](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/worklog.png)
 
-The board shows in-flight tasks by owner, unclaimed work, overdue and stalled items, weekly trend, and a history view that aggregates closed tasks by day, week, month and quarter.
+看板按责任人展示在办任务、待认领任务、逾期与停滞项、周度趋势，以及按日 / 周 / 月 / 季度聚合的结案历史。
 
-![History](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/history.png)
+![历史视图](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/history.png)
 
-Tasks can be closed from the board in two ways: directly, with a one-line summary, or by handing the task back to the agent, which reads the recorded progress, writes the conclusion and open issues, then closes it.
+任务可在看板上以两种方式结案：直接结案并写一句摘要；或交还给 Agent，由 Agent 读完已记录的进度，写出结论与遗留问题，再行结案。
 
-![Closing a task](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/close-task.png)
+![结案任务](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/close-task.png)
 
-Detailed documentation lives in each package: [plugin](packages/plugin/README.md) · [skill](packages/skill/README.md).
+各包的完整说明：[插件](packages/plugin/README.md) · [skill](packages/skill/README.md)。
 
-## Development
+## 开发
 
 ```bash
-npm test        # Go: vet + unit tests
-cd packages/plugin && npm run verify   # build + typecheck
+npm test        # Go:vet 与单元测试
+cd packages/plugin && npm run verify   # 构建与类型检查
 ```
 
-## Licence
+## 许可
 
-MIT — see [LICENSE](LICENSE).
+MIT，见 [LICENSE](LICENSE)。

@@ -40,7 +40,7 @@
 
 ## 三、对本项目的落地含义
 
-- 上表是各客户端目录的核实记录，不再搬进 README：`packages/skill/README.md`、`packages/skill/README.zh-CN.md` 与根 README 都只写安装动作，不列逐行目录表。
+- 上表是各客户端目录的核实记录，不再搬进 README：`packages/skill/README.md`、`packages/skill/README.en.md` 与根 README 都只写安装动作，不列逐行目录表。
 - 包 README 的安装只有一个章节、两条路径：`npx skills add cq-guojia/dsh-task-ledger -g` 或把一句提示词交给 Agent 自行安装。不写手动复制目录的步骤 —— 把仓库 clone 下来放进技能目录并不能直接运行，会误导读者。
 - 应用内导入、项目级目录与 Windows 二进制等细节下沉到本表与 `SKILL.md`，包 README 不再展开。
 

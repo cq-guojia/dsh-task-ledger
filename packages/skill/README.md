@@ -1,4 +1,4 @@
-**简体中文** · [English](https://github.com/cq-guojia/dsh-task-ledger/blob/main/packages/skill/README.zh-CN.md)
+[English](README.en.md) · **简体中文**
 
 一本放在工作区里的任务台账：什么任务都可以用，不限于开发工作，调研、文档、演示、视频制作都能建任务。Agent 把正在做的事 —— 谁在做、做到哪一步、何时开始、何时结束 —— 以纯文本形式记录在仓库内，答案不会随对话结束而丢失。
 
@@ -17,7 +17,7 @@
 
 ## 安装
 
-使用 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的用户**无需重复安装本 skill** —— `dsh-task-ledger` 插件已内置这份 skill，插件的安装办法见[根 README](https://github.com/cq-guojia/dsh-task-ledger/blob/main/README.zh-CN.md)。
+使用 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的用户**无需重复安装本 skill** —— `dsh-task-ledger` 插件已内置这份 skill，插件的安装办法见[根 README](https://github.com/cq-guojia/dsh-task-ledger/blob/main/README.md)。
 
 以下面向其他 Agent。支持 Claude Code、Cursor、Codex、CodeBuddy、WorkBuddy、Trae、豆包工作，以及任何加载 `SKILL.md` 的 Agent；同一份 skill 装在不同 Agent 上，记录的仍是同一个项目的台账。
 
@@ -52,7 +52,7 @@ npx skills add cq-guojia/dsh-task-ledger -g
 
 ### 3. 到看板管理
 
-看板目前仅支持 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的插件看板。想用看板统一查看管理，按[根 README](https://github.com/cq-guojia/dsh-task-ledger/blob/main/README.zh-CN.md)在 DSH 里装好 `dsh-task-ledger` 插件即可。
+看板目前仅支持 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的插件看板。想用看板统一查看管理，按[根 README](https://github.com/cq-guojia/dsh-task-ledger/blob/main/README.md)在 DSH 里装好 `dsh-task-ledger` 插件即可。
 
 ## 怎么用
 

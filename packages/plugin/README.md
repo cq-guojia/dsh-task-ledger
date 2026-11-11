@@ -1,4 +1,4 @@
-**简体中文** · [English](https://github.com/cq-guojia/dsh-task-ledger/blob/main/packages/plugin/README.zh-CN.md)
+[English](README.en.md) · **简体中文**
 
 [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh)(dsh)插件，为 `task-ledger` skill 提供看板。任务、进度与结论由代理以纯文本文件写入仓库；本插件读取这些文件，呈现为一个可操作的视图 —— 按责任人划分的在办工作、待认领任务、逾期与停滞项，以及全部已结案任务的历史。
 

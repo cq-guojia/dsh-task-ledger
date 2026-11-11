@@ -17,6 +17,7 @@ const skillDst = path.join(pluginRoot, "skill");
 const RUNTIME_ENTRIES = [
 	"SKILL.md",
 	"README.md",
+	"README.en.md",
 	"package.json",
 	"assets",
 	"references",
