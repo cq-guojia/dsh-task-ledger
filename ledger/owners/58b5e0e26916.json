@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261110-1125-cff5-讨论提示词注入dsh宿主": {"category": null, "created": "2026-11-10 11:25:54", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-10 13:55:01", "status": "doing", "tags": ["宿主", "提示词", "可行性"], "title": "讨论提示词注入DSH宿主", "updated": "2026-11-11 00:22:18", "worklog": "worklog/202611/10-1125-cff5-讨论提示词注入dsh宿主.md"}
+    "20261110-1125-cff5-讨论提示词注入dsh宿主": {"category": null, "created": "2026-11-10 11:25:54", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-10 13:55:01", "status": "doing", "tags": ["宿主", "提示词", "可行性"], "title": "讨论提示词注入DSH宿主", "updated": "2026-11-11 02:45:44", "worklog": "worklog/202611/10-1125-cff5-讨论提示词注入dsh宿主.md"}
   },
   "version": "20261022000000"
 }
