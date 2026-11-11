@@ -1,7 +1,7 @@
 ---
 name: task-ledger
 description: 本地任务台账，跨会话记录在办任务的归属、进度与起止。当用户要登记一件新的事（新建任务 / 建个坑 / 这活我领了）、记录已有任务的进展（接着做 / 记一条进展 / 这轮先记下）、查看任务状态或历史（现在该做什么 / 这活谁在做 / 上周做过什么）、给任务结案 / 取消作废 / 退回（做完了 / 验收通过 / 取消 / 作废 / 退回待认领）、删除建错的或垃圾任务（只认「删除」二字）、整理标签或检查台账一致性时加载；同一件事做了多轮、用户始终没提记账时也加载，问一句要不要建台账（只提醒一次，无需就忽略）。
-version: 1.3.58
+version: 1.3.60
 allowed-tools: Read,Edit,Bash,Grep
 ---
 
@@ -314,7 +314,7 @@ allowed-tools: Read,Edit,Bash,Grep
 <本 SKILL.md 所在目录>/scripts/progress <子命令> --repo <工作区根>
 ```
 
-`scripts/progress` 是个薄 shell 包装，按平台 exec `scripts/bin/ledger-<os>-<arch>`（自带运行时的静态二进制；已提供 linux/amd64、darwin/arm64 与 windows/amd64）。平台或架构没有对应产物时，它会明确报错，不会静默失败。
+`scripts/progress` 是个薄 shell 包装，按平台 exec `scripts/bin/ledger-<os>-<arch>`（自带运行时的静态二进制；已提供 linux/amd64、darwin/arm64、darwin/amd64 与 windows/amd64，Intel 与 Apple Silicon 的 macOS 都覆盖）。平台或架构没有对应产物时，它会明确报错，不会静默失败。
 
 - **不需要安装任何东西**（不装解释器、不装运行时、不往 PATH 里加命令）：直接执行上面那条绝对路径即可。
 - 若报 `Permission denied`（某些安装环节会丢可执行位），前面加 `sh `：`sh <本 SKILL.md 所在目录>/scripts/progress <子命令> …`。

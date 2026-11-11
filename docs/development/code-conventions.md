@@ -50,7 +50,7 @@ packages/plugin/src/                                # 插件源码根
 - 浏览器产物是 CJS 闭包工厂（`window.__ModuleLoader__.load`），平台模块必须保留成 `require()`，其余内联。
 - 无 DOM 依赖的纯逻辑模块允许剥类型直读源码直测。
 - pnpm 只认 `pnpm-workspace.yaml`，不读 `package.json` 的 `workspaces` 字段；改 workspace 结构别只改一处。
-- skill 侧：`cd packages/skill/src && go vet ./... && go test ./...`；三平台（linux/amd64、darwin/arm64、windows/amd64）都要编得过。
+- skill 侧：`cd packages/skill/src && go vet ./... && go test ./...`；四平台（linux/amd64、darwin/arm64、darwin/amd64、windows/amd64）都要编得过；产物矩阵漏一份由 `copy-skill.mjs` 在构建期直接报错。
 
 ## 五、脚本侧：两层 + 一个外壳
 

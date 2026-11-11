@@ -35,8 +35,15 @@ if [ ! -x "$bin" ]; then
 fi
 
 if [ ! -x "$bin" ]; then
-	echo "错误：找不到可执行的 $bin" >&2
-	echo "  处理：在装有 Go 的机器上跑 packages/skill/src 的构建脚本重新产出产物。" >&2
+	# 两种原因分开说：文件在但起不来（丢了可执行位 / noexec）与根本没有这个平台的产物
+	if [ -f "$bin" ]; then
+		echo "错误：$bin 存在但跑不起来（可执行位丢了，或所在分区不允许执行）" >&2
+		echo "  处理：chmod +x \"$bin\" 后重跑；仍不行就把 skill 装到普通本地目录。" >&2
+	else
+		echo "错误：当前平台（$os/$arch）没有配套的台账二进制：$bin" >&2
+		echo "  处理：在装有 Go 的机器上按 packages/skill/src 的源码交叉编译出 ledger-$os-$arch，放进 scripts/bin/。" >&2
+		echo "  进度见 https://github.com/cq-guojia/dsh-task-ledger/issues" >&2
+	fi
 	exit 1
 fi
 

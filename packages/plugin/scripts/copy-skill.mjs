@@ -42,12 +42,26 @@ if (isMain) {
 	// 可执行位不能指望各种拷贝 / 打包环节都保住：丢了的表现是运行期「起不了台账程序」，
 	// 而不是构建期报错。所以每次构建统一补齐——入口 shim + 各平台二进制。
 	const binDir = path.join(skillDst, "scripts", "bin");
+	const bins = await readdir(binDir).catch(() => []);
 	const executables = [path.join(skillDst, "scripts", "progress")];
-	for (const name of await readdir(binDir).catch(() => [])) {
+	for (const name of bins) {
 		if (name.startsWith("ledger-")) executables.push(path.join(binDir, name));
 	}
 	for (const file of executables) {
 		await chmod(file, 0o755).catch(() => {});
+	}
+
+	// 平台矩阵：SKILL.md 对外声明了这几份产物，少一份就是那个平台装完直接用不了
+	// （Intel Mac 漏掉 darwin/amd64 就是这么发出去的）。在 packages/skill/src 交叉编译后重跑构建。
+	const missing = [
+		"ledger-linux-amd64",
+		"ledger-darwin-arm64",
+		"ledger-darwin-amd64",
+		"ledger-windows-amd64.exe",
+	].filter((name) => !bins.includes(name));
+	if (missing.length > 0) {
+		console.error(`[copy-skill] 缺平台产物：${missing.join("、")}`);
+		process.exit(1);
 	}
 
 	console.log("[copy-skill] packages/skill → packages/plugin/skill（运行时）");
