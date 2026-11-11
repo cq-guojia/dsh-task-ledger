@@ -1,6 +1,6 @@
 # dsh-task-ledger
 
-**English** · [简体中文](README.md)
+[简体中文](README.md) · **English**
 
 A task ledger that lives in your workspace: any kind of task is fair game — not just development work, but research, documentation, presentations and video production. Tasks are created, claimed, advanced and closed by the agent, and every one of those steps is written into a plain-text `ledger/` directory — so the owner, the current state, the next step and the conclusion stay on record instead of dissolving into chat history.
 

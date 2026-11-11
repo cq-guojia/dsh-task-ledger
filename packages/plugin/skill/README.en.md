@@ -1,4 +1,6 @@
-**English** · [简体中文](README.md)
+# task-ledger
+
+[简体中文](README.md) · **English**
 
 A task ledger that lives in your workspace: any kind of task is fair game — not just development work, but research, documentation, presentations and video production. The agent records what it is working on — who owns it, how far it has got, when it was opened and when it was closed — as plain text inside the repository, so the answers survive the end of the conversation.
 
