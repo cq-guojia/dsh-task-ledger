@@ -1,107 +1,105 @@
-# dsh-task-ledger
+**简体中文** · [English](https://github.com/cq-guojia/dsh-task-ledger/blob/main/packages/plugin/README.zh-CN.md)
 
-**English** · [简体中文](https://github.com/cq-guojia/dsh-task-ledger/blob/main/packages/plugin/README.zh-CN.md)
+[DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh)(dsh)插件，为 `task-ledger` skill 提供看板。任务、进度与结论由代理以纯文本文件写入仓库；本插件读取这些文件，呈现为一个可操作的视图 —— 按责任人划分的在办工作、待认领任务、逾期与停滞项，以及全部已结案任务的历史。
 
-A [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh) (dsh) plugin that gives the `task-ledger` skill a board. The agent records tasks, progress and conclusions as plain files in the repository; this plugin reads those files and presents them as a working view — in-flight work by owner, unclaimed tasks, overdue and stalled items, and a history of everything closed.
+所有数据都在仓库内，不依赖账号、托管后端或任何服务市场。
 
-Nothing is stored outside the repository. There is no account, no hosted backend and no service marketplace involved.
+![任务台账看板](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/board.png)
 
-![Task ledger board](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/board.png)
-
-## Install
+## 安装
 
 ```bash
 dsh plugin add dsh-task-ledger
 ```
 
-The plugin bundles the skill: once installed, every dsh session has the ledger commands available and no separate skill installation is required.
+插件已内置 skill：安装后每个 dsh 会话都可直接使用台账命令，无需另行安装 skill。
 
-Requirements: dsh. The plugin reads Git repositories; multi-user synchronisation uses Git 2.27 or newer.
+环境要求：dsh 本体。插件读取 Git 仓库；多人同步需 Git 2.27 及以上。
 
-## What the board provides
+## 看板提供什么
 
-### Overview
+### 总览
 
-| Element | Content |
+| 元素 | 内容 |
 |---|---|
-| Summary cards | My open tasks, unclaimed, overdue, closed this week, in progress, backlog, stalled, closed last week |
-| Trend chart | Closed, still-open and newly created tasks per day or per week, with a "mine only" scope |
-| Task list | In-flight tasks with state, tags, owner and last update; tabs for all, unclaimed, in progress, backlog, overdue and stalled |
-| Filters | Workspace, owner and free-text search |
+| 统计卡 | 我的待办、待认领、逾期、本周结案、进行中、积压、停滞、上周结案 |
+| 趋势图 | 按日或按周展示已结、未结与新建任务，可限定「只看我的」 |
+| 任务列表 | 在办任务的状态、标签、责任人与最后更新时间；可按全部、待认领、进行中、积压、逾期、停滞切换 |
+| 筛选 | 工作区、执行人与关键词检索 |
 
-Overdue means fourteen days elapsed since the task was claimed; stalled means three days without an update. Both are derived from timestamps, never entered by hand.
+「逾期」指认领后已过十四天；「停滞」指三天没有进展。两者均由时间戳推导，不可手工填写。
 
-![Unclaimed tasks](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/board-unclaimed.png)
+![待认领任务](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/board-unclaimed.png)
 
-### Task actions
+### 任务操作
 
-Each row exposes the actions its state permits: claim, resume, complete, release and cancel.
+每一行只显示当前状态允许的操作：认领、继续、完成、释放、取消。
 
-- **Resume** opens an agent session with a prompt that reads the recorded progress and reports back.
-- **Complete** offers two modes: close directly with a one-line summary, or hand the task to an agent, which reads the progress, writes the conclusion and remaining issues, then closes it.
-- **Cancel** records a reason.
+- **继续** — 打开代理会话，提示词要求代理读取已记录的进度并汇报。
+- **完成** — 两种方式：直接结案并写一句摘要；或交给代理，由代理读完进度、写出结论与遗留问题后结案。
+- **取消** — 记录理由。
 
-![Closing a task](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/close-task.png)
+![结案任务](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/close-task.png)
 
-### History
+### 历史
 
-A separate view aggregates everything closed: a trend chart switchable between day, week and month, counters for today, this week, this month and this quarter with previous-period comparison, and the closed tasks grouped by day, showing creator, owner and execution time.
+独立视图聚合全部已结案任务：可在日、周、月之间切换的趋势图；今日、本周、本月、本季度的结案计数，并与上一周期对照；以及按日分组的结案任务，列出创建人、执行人与执行时间。
 
-![History](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/history-list.png)
+![历史视图](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/history-list.png)
 
-### Identity and settings
+### 身份与设置
 
-The first visit asks for an identity — create a new one or claim an existing one from the ledger roster. The settings page allows renaming (propagated to every registered ledger, committed and pushed where a remote exists), switching identity, and managing the list of ledgers: add a directory, or hide one from the board without affecting the data. It also holds **session rules injection** (enabled by default): the plugin delivers the default prompt into the first turn of each dsh session, with a switch, an editable prompt and "Restore default". The setting is stored in the plugin's own local file and never writes to the workspace rules file.
+首次进入需确认身份 —— 新建，或从台账名册中认领已有身份。设置页支持修改昵称（同步至每一本已登记台账，有远端则提交并推送）、切换身份，以及管理台账清单：添加目录，或将某一本从看板上隐藏（数据不受影响）。设置页还提供「会话规则注入」（默认开启）：插件在每个 dsh 会话首轮投递默认提示词，支持开关、编辑文案与恢复默认；设置存于插件本机私有文件，不向工作区规则文件写入任何内容。
 
-![Settings](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/settings.png)
+![设置](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/settings.png)
 
-## Where the data lives
+## 数据落点
 
 ```
 ledger/
-├── pool.json                 unclaimed tasks (shared)
-├── owners.json               index: identity → shard file
-├── owners/<hash>.json        one shard per person
-├── worklog/<YYYYMM>/*.md     task documents
-└── history/<YYYYMM>.md       closed tasks
+├── pool.json                 公共池:未认领任务
+├── owners.json               索引:身份 → 分片文件
+├── owners/<hash>.json        每人一份分片
+├── worklog/<年月>/*.md       任务正文
+└── history/<年月>.md         已结案任务
 ```
 
-The plugin only reads this structure, except for the actions listed above, which run the same CLI that the skill uses. State files are never edited by the board directly.
+除上述操作外，插件只读这套结构；写操作走与 skill 相同的命令行工具，看板不会直接改写状态文件。
 
-## Using the ledger
+## 怎么用
 
-The board is a view over the ledger; the ledger itself is driven by what you say to the agent — open a task, claim it, record progress, hand it back, close it, cancel it. Which phrase triggers which operation, and the rules the agent follows, are listed in the [`task-ledger`](https://www.npmjs.com/package/task-ledger) README.
+看板只是台账之上的一层视图；台账本身由你对代理说的话驱动 —— 建任务、认领、记进度、退回、结案、取消。哪句话触发哪个操作，以及代理必须遵守的约束，见 [`task-ledger`](https://www.npmjs.com/package/task-ledger) 包的 README。
 
-### Standing rule in the project rules file
+### 在项目规则文件中声明常驻规则
 
-The skill loads only when a request matches an explicit task intent; "should this piece of work be tracked" is not one of them. A standing rule in the project's `AGENTS.md` (or the equivalent rules file of the agent) makes the convention explicit. The block below is the plugin's built-in default prompt — the same text that **session rules injection** delivers into the first turn of every dsh session:
+技能仅在请求命中明确的任务意图时加载，「当前工作是否应当登记」并不属于触发条件。因此需在项目根目录的 `AGENTS.md`（或所用代理的等价规则文件）中声明一段常驻规则。以下片段即插件内置的默认提示词，与「会话规则注入」在每个 dsh 会话首轮投递的文本完全相同：
 
 ```markdown
-Usage rules for the task-ledger tool [task-ledger skill]:
+任务台账工具[task-ledger skill]使用规则：
 
-- **Task progress, work items and work logs**: (create / advance / query / close) go through the task-ledger skill; answer questions about progress and task history from it, never from conversation memory or a hand-rolled list.
-- **Creation anchor**: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
-- **How to create and in what order**: the authorization and confirmation rules all follow the task-ledger skill's own instructions.
-- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "Want me to open a ledger for this task? (Ignore this if not needed — no reply necessary.)"; once asked in a session, do not ask again; no reply means ignore it.
+- **凡任务进度、工作事项与工作日志**：（新建 / 推进 / 查询 / 结案）一律调用 task-ledger skill 管理；进度 / 历史任务类问题一律走它作答，不凭对话记忆或自建清单顶替。
+- **开工锚点**：仅当用户明确说要新建（如「开个新坑」「先记一下」「建个任务」）才登记；提问 / 查询 / 讨论 / 顺手小改不算，拿不准先问，未经明确指令不得擅自新建任务。
+- **怎么建、按什么顺序**：命令的授权与确认口径，一律以 task-ledger skill 的说明为准。
+- **顺手问一句**：用户在推进一件跨轮的事（这轮答完、手上还有下一步动作没做完）、却从没提过记账时，答完问一次「你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）」；本会话问过一次就别再问，用户不接就当他不需要。
 ```
 
-With injection enabled (the default), dsh sessions do not require this block in the rules file. Other agents do, because injection applies to dsh sessions only. Without either mechanism the skill still works, but only when the task is mentioned explicitly.
+会话规则注入默认开启时，dsh 会话无需再向规则文件写入该片段；其他代理仍需写入，因为注入仅作用于 dsh 会话。两种机制均未启用时技能依然可用，但仅在用户明确提及任务时生效。
 
-## Use from other agents
+## 在其他 Agent 中使用
 
-The board and the skill share one data source. An AI coding agent outside dsh can install the same Agent Skill and write to the same plain-text `ledger/` directory; the board then aggregates that work alongside dsh sessions. Deployment takes three steps:
+看板与技能共用同一数据源。非 dsh 的 AI 编码代理安装同一份 Agent Skill 后，写入的是同一个纯文本 `ledger/` 目录，看板可将其与 dsh 会话的记录一并汇总。部署分为三步：
 
-1. **Install the skill.** Run `npx skills add cq-guojia/dsh-task-ledger -g` — the skills CLI detects the installed agents and installs at user level — or send an agent the instruction `Install the task-ledger skill (npm package task-ledger, GitHub repo cq-guojia/dsh-task-ledger).`. Per-agent directories and manual installation are documented in the [`task-ledger`](https://www.npmjs.com/package/task-ledger) README.
-2. **Declare the standing rule (optional).** Add the default prompt shown above to the project's `AGENTS.md`. dsh sessions receive the same text automatically through session rules injection; other agents read it from the rules file.
-3. **Register the repository with the board.** In **Settings → Ledger folders**, click **Add folder** and select the project root. The board aggregates only the directories registered on this machine; registration changes no ledger data.
+1. **安装技能。** 执行 `npx skills add cq-guojia/dsh-task-ledger -g`，由 skills CLI 识别本机已装代理并完成用户级安装；也可向代理发送提示词 `帮我安装 task-ledger 这个 skill（npm 包名 task-ledger，GitHub 包名 cq-guojia/dsh-task-ledger）。`。各代理的目录与手动安装方式见 [`task-ledger`](https://www.npmjs.com/package/task-ledger) 包。
+2. **声明常驻规则（可选）。** 把上文的默认提示词加入项目根目录的 `AGENTS.md`。dsh 会话由「会话规则注入」自动获得同一段文本，其他代理则从规则文件读取。
+3. **登记台账目录。** 在「设置 → 台账目录」点击「添加目录」并选中项目根目录。看板只汇总本机已登记的目录，登记动作不改动任何台账数据。
 
-Supported clients include Claude Code, Cursor, Codex, CodeBuddy, WorkBuddy, Trae and any agent that loads `SKILL.md`. The plugin settings page presents the same three steps with copyable commands and prompt.
+支持的客户端包括 Claude Code、Cursor、Codex、CodeBuddy、WorkBuddy、Trae，以及任何加载 `SKILL.md` 的 AI 编码代理。插件设置页提供同样的三步说明，并支持一键复制命令与提示词。
 
-## Links
+## 链接
 
-- Repository and full documentation: <https://github.com/cq-guojia/dsh-task-ledger>
-- The skill package: [`task-ledger`](https://www.npmjs.com/package/task-ledger)
+- 仓库与完整文档：<https://github.com/cq-guojia/dsh-task-ledger>
+- skill 包：[`task-ledger`](https://www.npmjs.com/package/task-ledger)
 
-## Licence
+## 许可
 
 MIT
