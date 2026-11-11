@@ -148,6 +148,6 @@ export function apply(ctx: PluginContext): void {
 		});
 	});
 
-	// 会话规则注入：监听 pre-step，开关由插件自有设置文件控制（默认关）
+	// 会话规则注入：监听 pre-step，开关由插件自有设置文件控制（无设置文件时默认开）
 	installRulesInjection(ctx);
 }

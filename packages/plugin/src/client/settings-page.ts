@@ -139,7 +139,10 @@ export function SettingsPage(props: {
 	const [rulesEnabled, setRulesEnabled] = useState(false);
 	const [rulesText, setRulesText] = useState("");
 	const [rulesDefaultText, setRulesDefaultText] = useState("");
-	const [rulesCustomized, setRulesCustomized] = useState(false);
+	/** 「自定义」跟着草稿即时比较，不等保存；归一化口径与 host 保存比对一致。 */
+	const rulesCustomized =
+		rulesText.replace(/\r\n/g, "\n").trim() !==
+		rulesDefaultText.replace(/\r\n/g, "\n").trim();
 	const [rulesLang, setRulesLang] = useState<RulesLang | null>(null);
 	const [rulesBusy, setRulesBusy] = useState(false);
 	const [rulesSwitchBusy, setRulesSwitchBusy] = useState(false);
@@ -154,7 +157,6 @@ export function SettingsPage(props: {
 				setRulesEnabled(payload.enabled);
 				setRulesText(payload.text);
 				setRulesDefaultText(payload.defaultText);
-				setRulesCustomized(payload.customized);
 				setRulesLang(payload.lang);
 			})
 			.catch((failure: unknown) => {
@@ -177,7 +179,6 @@ export function SettingsPage(props: {
 				if (!alive) return;
 				setRulesLang(payload.lang);
 				setRulesDefaultText(payload.defaultText);
-				setRulesCustomized(payload.customized);
 				setRulesText((draft) =>
 					draft === rulesDefaultText ? payload.text : draft,
 				);
@@ -203,7 +204,6 @@ export function SettingsPage(props: {
 			const payload = await postRulesInjection({ enabled: next, lang: uiLang });
 			setRulesEnabled(payload.enabled);
 			setRulesLang(payload.lang);
-			setRulesCustomized(payload.customized);
 			notify(
 				t(next ? "settingsRulesEnabledToast" : "settingsRulesDisabledToast"),
 				{ variant: next ? "success" : "info" },
@@ -228,7 +228,6 @@ export function SettingsPage(props: {
 			const payload = await postRulesInjection({ ...body, lang: uiLang });
 			setRulesText(payload.text);
 			setRulesDefaultText(payload.defaultText);
-			setRulesCustomized(payload.customized);
 			setRulesLang(payload.lang);
 			if (done !== undefined) notify(done, { variant: "success" });
 		} catch (failure: unknown) {
@@ -1278,7 +1277,15 @@ export function SettingsPage(props: {
 					"span",
 					{ className: "dtl-set__rules-title" },
 					t("settingsRulesTitle"),
-					h(FieldHint, { text: t("settingsRulesHint"), side: "bottom", maxWidth: 380 }),
+					h(FieldHint, { text: t("settingsRulesHint"), side: "top", maxWidth: 380 }),
+					rulesCustomized
+						? h(Tip, {
+								label: t("settingsRulesCustomTip"),
+								side: "top",
+								maxWidth: 300,
+								children: h(Chip, { tone: "neutral", size: "xs", className: "dtl-set__rules-chip" }, t("configOverridden")),
+							})
+						: null,
 				),
 				right: h(
 					"span",
@@ -1357,9 +1364,6 @@ export function SettingsPage(props: {
 						},
 						t("settingsRulesReset"),
 					),
-					rulesCustomized
-						? h(Chip, { tone: "neutral", size: "xs" }, t("configOverridden"))
-						: null,
 				),
 				rulesError !== null
 					? h("p", null, t("settingsRulesFailed", { message: rulesError }))
@@ -1376,6 +1380,7 @@ export type SettingsLocaleKey = Extract<
 	LocaleKey,
 	| "settingsRulesTitle"
 	| "settingsRulesHint"
+	| "settingsRulesCustomTip"
 	| "settingsRulesSwitch"
 	| "settingsRulesTextLabel"
 	| "settingsRulesReset"

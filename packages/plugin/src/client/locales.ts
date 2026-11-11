@@ -78,6 +78,7 @@ export type LocaleKey =
 	| "settingsSave"
 	| "settingsRulesTitle"
 	| "settingsRulesHint"
+	| "settingsRulesCustomTip"
 	| "settingsRulesSwitch"
 	| "settingsRulesTextLabel"
 	| "settingsRulesReset"
@@ -437,7 +438,9 @@ export const zh: Record<LocaleKey, string> = {
 
 	settingsRulesTitle: "会话规则注入",
 	settingsRulesHint:
-		"自动注入提示词：让 Agent 更准确地按台账口径跟进任务，\n少依赖对话记忆（建议开启）。",
+		"自动注入提示词：让 Agent 按台账口径跟进任务。\n（建议开启）",
+	settingsRulesCustomTip:
+		"当前为自定义提示词。\n如需恢复，请点击「恢复默认」按钮。",
 	settingsRulesSwitch: "自动注入提示词",
 	settingsRulesTextLabel: "提示词文案",
 	settingsRulesReset: "恢复默认",
@@ -778,7 +781,9 @@ export const en: Record<LocaleKey, string> = {
 
 	settingsRulesTitle: "Session rules injection",
 	settingsRulesHint:
-		"Auto-injects the prompt so the agent follows\none ledger convention more reliably, relying\nless on chat memory (recommended).",
+		"Auto-injects the prompt so the agent follows\nthe ledger convention. (recommended)",
+	settingsRulesCustomTip:
+		'A custom prompt is in use.\nTo restore the default, click "Restore default".',
 	settingsRulesSwitch: "Inject prompt automatically",
 	settingsRulesTextLabel: "Prompt text",
 	settingsRulesReset: "Restore default",

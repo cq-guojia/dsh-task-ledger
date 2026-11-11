@@ -177,6 +177,8 @@ export const UI_CONTROLS_CSS = `
 .dtl-set__rules-state--on{color:var(--dtl-success);}
 /* 标题后的问号提示：标题与问号同一行；气泡文案显式断行并由 maxWidth 限宽 */
 .dtl-set__rules-title{display:inline-flex;align-items:center;gap:var(--dtl-space-1);}
+/* 自定义小标签：核心 Chip 无 onClick 时是默认光标，hover 要给手型 */
+.dtl-set__rules-chip{cursor:pointer;}
 /* 可编辑文案框：高度由核心 CodeEditor 的 height 给，这里只补间距与保存中的锁定态 */
 .dtl-set__rules-editor{margin-bottom:var(--dtl-space-2);}
 .dtl-set__rules-editor--busy{opacity:.65;pointer-events:none;}

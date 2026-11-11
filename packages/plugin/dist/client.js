@@ -55895,7 +55895,8 @@ window.__ModuleLoader__.load({
 			settingsRenamePlaceholder: "新名称（留空则沿用目录名）",
 			settingsSave: "保存",
 			settingsRulesTitle: "会话规则注入",
-			settingsRulesHint: "自动注入提示词：让 Agent 更准确地按台账口径跟进任务，\n少依赖对话记忆（建议开启）。",
+			settingsRulesHint: "自动注入提示词：让 Agent 按台账口径跟进任务。\n（建议开启）",
+			settingsRulesCustomTip: "当前为自定义提示词。\n如需恢复，请点击「恢复默认」按钮。",
 			settingsRulesSwitch: "自动注入提示词",
 			settingsRulesTextLabel: "提示词文案",
 			settingsRulesReset: "恢复默认",
@@ -56213,7 +56214,8 @@ window.__ModuleLoader__.load({
 			settingsRenamePlaceholder: "New name (empty keeps the folder name)",
 			settingsSave: "Save",
 			settingsRulesTitle: "Session rules injection",
-			settingsRulesHint: "Auto-injects the prompt so the agent follows\none ledger convention more reliably, relying\nless on chat memory (recommended).",
+			settingsRulesHint: "Auto-injects the prompt so the agent follows\nthe ledger convention. (recommended)",
+			settingsRulesCustomTip: "A custom prompt is in use.\nTo restore the default, click \"Restore default\".",
 			settingsRulesSwitch: "Inject prompt automatically",
 			settingsRulesTextLabel: "Prompt text",
 			settingsRulesReset: "Restore default",
@@ -64130,6 +64132,8 @@ body[data-ds-dark-theme]{
 .dtl-set__rules-state--on{color:var(--dtl-success);}
 /* 标题后的问号提示：标题与问号同一行；气泡文案显式断行并由 maxWidth 限宽 */
 .dtl-set__rules-title{display:inline-flex;align-items:center;gap:var(--dtl-space-1);}
+/* 自定义小标签：核心 Chip 无 onClick 时是默认光标，hover 要给手型 */
+.dtl-set__rules-chip{cursor:pointer;}
 /* 可编辑文案框：高度由核心 CodeEditor 的 height 给，这里只补间距与保存中的锁定态 */
 .dtl-set__rules-editor{margin-bottom:var(--dtl-space-2);}
 .dtl-set__rules-editor--busy{opacity:.65;pointer-events:none;}
@@ -67510,7 +67514,8 @@ body[data-ds-dark-theme]{
 			const [rulesEnabled, setRulesEnabled] = (0, react$1.useState)(false);
 			const [rulesText, setRulesText] = (0, react$1.useState)("");
 			const [rulesDefaultText, setRulesDefaultText] = (0, react$1.useState)("");
-			const [rulesCustomized, setRulesCustomized] = (0, react$1.useState)(false);
+			/** 「自定义」跟着草稿即时比较，不等保存；归一化口径与 host 保存比对一致。 */
+			const rulesCustomized = rulesText.replace(/\r\n/g, "\n").trim() !== rulesDefaultText.replace(/\r\n/g, "\n").trim();
 			const [rulesLang, setRulesLang] = (0, react$1.useState)(null);
 			const [rulesBusy, setRulesBusy] = (0, react$1.useState)(false);
 			const [rulesSwitchBusy, setRulesSwitchBusy] = (0, react$1.useState)(false);
@@ -67523,7 +67528,6 @@ body[data-ds-dark-theme]{
 					setRulesEnabled(payload.enabled);
 					setRulesText(payload.text);
 					setRulesDefaultText(payload.defaultText);
-					setRulesCustomized(payload.customized);
 					setRulesLang(payload.lang);
 				}).catch((failure) => {
 					if (alive) setRulesError(failure instanceof Error ? failure.message : String(failure));
@@ -67540,7 +67544,6 @@ body[data-ds-dark-theme]{
 					if (!alive) return;
 					setRulesLang(payload.lang);
 					setRulesDefaultText(payload.defaultText);
-					setRulesCustomized(payload.customized);
 					setRulesText((draft) => draft === rulesDefaultText ? payload.text : draft);
 				}).catch((failure) => {
 					if (alive) setRulesError(failure instanceof Error ? failure.message : String(failure));
@@ -67566,7 +67569,6 @@ body[data-ds-dark-theme]{
 					});
 					setRulesEnabled(payload.enabled);
 					setRulesLang(payload.lang);
-					setRulesCustomized(payload.customized);
 					notify(t(next ? "settingsRulesEnabledToast" : "settingsRulesDisabledToast"), { variant: next ? "success" : "info" });
 				} catch (failure) {
 					setRulesEnabled(!next);
@@ -67587,7 +67589,6 @@ body[data-ds-dark-theme]{
 					});
 					setRulesText(payload.text);
 					setRulesDefaultText(payload.defaultText);
-					setRulesCustomized(payload.customized);
 					setRulesLang(payload.lang);
 					if (done !== void 0) notify(done, { variant: "success" });
 				} catch (failure) {
@@ -68266,9 +68267,18 @@ body[data-ds-dark-theme]{
 				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 }),
 				title: (0, react$1.createElement)("span", { className: "dtl-set__rules-title" }, t("settingsRulesTitle"), (0, react$1.createElement)(FieldHint, {
 					text: t("settingsRulesHint"),
-					side: "bottom",
+					side: "top",
 					maxWidth: 380
-				})),
+				}), rulesCustomized ? (0, react$1.createElement)(Tip, {
+					label: t("settingsRulesCustomTip"),
+					side: "top",
+					maxWidth: 300,
+					children: (0, react$1.createElement)(Chip, {
+						tone: "neutral",
+						size: "xs",
+						className: "dtl-set__rules-chip"
+					}, t("configOverridden"))
+				}) : null),
 				right: (0, react$1.createElement)("span", { className: "dtl-set__rules-switch" }, (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
 					checked: rulesEnabled,
 					onChange: (next) => {
@@ -68311,10 +68321,7 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					writeRules({ action: "reset" });
 				}
-			}, t("settingsRulesReset")), rulesCustomized ? (0, react$1.createElement)(Chip, {
-				tone: "neutral",
-				size: "xs"
-			}, t("configOverridden")) : null), rulesError !== null ? (0, react$1.createElement)("p", null, t("settingsRulesFailed", { message: rulesError })) : null)), userModal, forgetDialog);
+			}, t("settingsRulesReset"))), rulesError !== null ? (0, react$1.createElement)("p", null, t("settingsRulesFailed", { message: rulesError })) : null)), userModal, forgetDialog);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -68810,7 +68817,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.12 261111-104351-427`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.13 261111-113734-119`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
