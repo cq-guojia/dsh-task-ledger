@@ -55930,6 +55930,20 @@ window.__ModuleLoader__.load({
 			settingsFlow3Todo: "在办：执行中的任务与待认领项",
 			settingsFlow3History: "历史：本项目已结案的任务数量",
 			settingsFlow3Stats: "设置：多 Agent 安装、台账目录管理",
+			settingsAgentsTitle: "在其他 Agent 中使用",
+			settingsAgentsHint: "如您有多个 Agent 工具，可以在各自的 Agent 中安装这个 Skill 记录台账，再由此看板统一查看管理。",
+			settingsAgentsLead: "同一份 skill 装在其他 Agent 上，记录的仍是这个项目的台账，看板一并汇总。",
+			settingsAgentsStep1: "安装 Skill",
+			settingsAgentsStep1Note: "命令会自动识别本机已装的 Agent（Claude Code、Codex、CodeBuddy 等），写进各自的技能目录。",
+			settingsAgentsPromptLabel: "也可以把这句话发给任意 Agent，让它自己装：",
+			settingsAgentsPrompt: "帮我安装 task-ledger 这个 skill（npm 包名 task-ledger，GitHub 包名 cq-guojia/dsh-task-ledger）。",
+			settingsAgentsStep2: "注入规则文件（可选）",
+			settingsAgentsStep2Note: "把下面这段加进项目根目录的 AGENTS.md，让 Agent 按台账口径跟进任务：",
+			settingsAgentsStep3: "加进看板",
+			settingsAgentsStep3Note: "在上面的「台账目录」点「添加目录」，选中项目根目录，看板就会汇总它。",
+			settingsAgentsSupport: "Claude Code、Cursor、Codex、CodeBuddy、Trae，以及任何加载 SKILL.md 的 Agent 工具。",
+			settingsAgentsCopied: "已复制",
+			settingsCopy: "复制",
 			settingsColDir: "台账名",
 			settingsColPath: "路径",
 			settingsColActions: "操作",
@@ -56249,6 +56263,20 @@ window.__ModuleLoader__.load({
 			settingsFlow3Todo: "In flight: running tasks and unclaimed items",
 			settingsFlow3History: "History: closed task count for this project",
 			settingsFlow3Stats: "Settings: multi-agent install, ledger folder management",
+			settingsAgentsTitle: "Use from other agents",
+			settingsAgentsHint: "If you use several agent tools, install this Skill in each of them to keep the ledger, then review and manage everything on this board.",
+			settingsAgentsLead: "The same skill installed in another agent still writes to this project's ledger, and the board sums it up.",
+			settingsAgentsStep1: "Install the skill",
+			settingsAgentsStep1Note: "The command detects the agents installed on this machine (Claude Code, Codex, CodeBuddy, …) and writes into each skills directory.",
+			settingsAgentsPromptLabel: "Or send this line to any agent and let it install:",
+			settingsAgentsPrompt: "Install the task-ledger skill (npm package task-ledger, GitHub repo cq-guojia/dsh-task-ledger).",
+			settingsAgentsStep2: "Inject the rules (optional)",
+			settingsAgentsStep2Note: "Add this to AGENTS.md in the project root so the agent follows the ledger convention:",
+			settingsAgentsStep3: "Add it to the board",
+			settingsAgentsStep3Note: "Under \"Ledger folders\" above, click \"Add folder\" and pick the project root; the board will include it.",
+			settingsAgentsSupport: "Claude Code, Cursor, Codex, CodeBuddy, Trae, and any agent tool that loads SKILL.md.",
+			settingsAgentsCopied: "Copied",
+			settingsCopy: "Copy",
 			settingsColDir: "Ledger name",
 			settingsColPath: "Path",
 			settingsColActions: "Actions",
@@ -64137,6 +64165,38 @@ body[data-ds-dark-theme]{
 /* 可编辑文案框：高度由核心 CodeEditor 的 height 给，这里只补间距与保存中的锁定态 */
 .dtl-set__rules-editor{margin-bottom:var(--dtl-space-2);}
 .dtl-set__rules-editor--busy{opacity:.65;pointer-events:none;}
+/* 「在其他 Agent 中使用」（2026-11-11）：三步，步与步之间一条横线。
+   命令单行省略（全文靠 Tip 气泡），复制钮紧贴右缘。 */
+.dtl-set__agents-lead{margin:0 0 var(--dtl-space-3);font-size:var(--dtl-font-md);
+  line-height:var(--dtl-line-md);color:var(--dtl-fg-2);}
+.dtl-set__step + .dtl-set__step{margin-top:var(--dtl-space-4);padding-top:var(--dtl-space-4);
+  border-top:1px solid var(--dtl-border);}
+.dtl-set__stephead{display:flex;align-items:center;gap:var(--dtl-space-2);
+  margin-bottom:var(--dtl-space-2);}
+.dtl-set__stepno{display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;flex:none;border-radius:50%;
+  background:var(--dtl-business-soft);color:var(--dtl-business);
+  font-size:var(--dtl-font-xs);font-weight:600;}
+.dtl-set__steptitle{font-size:var(--dtl-font-md);font-weight:600;color:var(--dtl-fg);}
+.dtl-set__cmd{display:flex;align-items:center;gap:var(--dtl-space-2);
+  padding:var(--dtl-space-2) var(--dtl-space-3);border:1px solid var(--dtl-border);
+  border-radius:var(--dtl-radius-sm);background:var(--dtl-table-head-bg);}
+.dtl-set__cmdtext{flex:1 1 auto;min-width:0;font-family:var(--dtl-font-mono);
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;}
+.dtl-set__agents-note{margin:var(--dtl-space-2) 0 0;font-size:var(--dtl-font-sm);
+  line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
+/* 复制钮钉在框的**右上角**（用户 2026-11-11）：距上、右同为 space-2。
+   正文右侧留出按钮位与间隙；单行时正文行高 = 按钮高 ⇒ 上 8 下 8，视觉上仍是垂直居中。 */
+.dtl-set__prompt{position:relative;margin-top:var(--dtl-space-2);
+  padding:var(--dtl-space-2) calc(var(--dtl-space-2) * 2 + 24px) var(--dtl-space-2) var(--dtl-space-3);
+  border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);}
+.dtl-set__promptact{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-2);}
+.dtl-set__promptbody{display:block;min-height:24px;font-size:var(--dtl-font-sm);
+  line-height:24px;color:var(--dtl-fg-2);white-space:pre-wrap;word-break:break-word;}
+.dtl-set__agents-support{margin:var(--dtl-space-4) 0 0;padding-top:var(--dtl-space-3);
+  border-top:1px solid var(--dtl-border-faint);font-size:var(--dtl-font-sm);
+  line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
    两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：
@@ -67447,6 +67507,9 @@ body[data-ds-dark-theme]{
 		}));
 		/** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 		const notYet = () => {};
+		/** skills CLI 只认 git / 下载 URL（实测 `add task-ledger` 会当 git 仓库克隆并失败），
+		*  所以走仓库坐标；CLI 自己会挑出 monorepo 里的这个 skill（实测只列一个）。 */
+		const SKILL_ADD = "npx skills add cq-guojia/dsh-task-ledger -g";
 		/** 名册 → 表格行（用户 2026-11-02）：多个工作区都有的身份合并成一行、工作区列写「通用用户」，
 		*  只在一个工作区出现的按各自工作区名；通用的排前面。 */
 		function rosterRows(roster, sharedTitle) {
@@ -67716,14 +67779,14 @@ body[data-ds-dark-theme]{
 					cancelText: t("settingsCancel")
 				})) claim(row.uuid, row.workspaceId, row.name);
 			};
-			const copyPath = (path) => {
+			const copyText = (value, done) => {
 				const clip = navigator.clipboard;
 				if (clip === void 0) return;
-				clip.writeText(path).then(() => {
-					setCopied(path);
-					notify(t("settingsPathCopied"), { variant: "success" });
+				clip.writeText(value).then(() => {
+					setCopied(value);
+					notify(done, { variant: "success" });
 					window.setTimeout(() => {
-						setCopied((current) => current === path ? null : current);
+						setCopied((current) => current === value ? null : current);
 					}, 1500);
 				}, notYet);
 			};
@@ -68044,7 +68107,7 @@ body[data-ds-dark-theme]{
 								size: "sm",
 								className: "dtl-dir__copy",
 								onClick: () => {
-									copyPath(dir.path);
+									copyText(dir.path, t("settingsPathCopied"));
 								}
 							})
 						})),
@@ -68117,6 +68180,31 @@ body[data-ds-dark-theme]{
 				],
 				rows: dirRows
 			});
+			const copyButton = (value) => (0, react$1.createElement)(Tip, {
+				label: t("settingsCopy"),
+				children: (0, react$1.createElement)(IconButton, {
+					icon: copied === value ? (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }) : (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutlineRegular, { size: 14 }),
+					label: t("settingsCopy"),
+					size: "sm",
+					onClick: () => {
+						copyText(value, t("settingsAgentsCopied"));
+					}
+				})
+			});
+			/** 一块可复制的正文（提示词 / 规则片段共用）：复制钮钉在框的右上角（CSS 绝对定位，
+			*  距上、右同距）；单行内容靠正文的 min-height 让它看起来仍是垂直居中。 */
+			const copyBlock = (text) => (0, react$1.createElement)("div", { className: "dtl-set__prompt" }, (0, react$1.createElement)("span", { className: "dtl-set__promptbody" }, text), (0, react$1.createElement)("div", { className: "dtl-set__promptact" }, copyButton(text)));
+			const step = (no, title, body) => (0, react$1.createElement)("div", { className: "dtl-set__step" }, (0, react$1.createElement)("div", { className: "dtl-set__stephead" }, (0, react$1.createElement)("span", { className: "dtl-set__stepno" }, no), (0, react$1.createElement)("span", { className: "dtl-set__steptitle" }, title)), body);
+			const note = (text) => (0, react$1.createElement)("p", { className: "dtl-set__agents-note" }, text);
+			const prompt = t("settingsAgentsPrompt");
+			const agentsBlock = (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)(SectionHead, {
+				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 16 }),
+				title: (0, react$1.createElement)("span", { className: "dtl-set__rules-title" }, t("settingsAgentsTitle"), (0, react$1.createElement)(FieldHint, {
+					text: t("settingsAgentsHint"),
+					side: "top",
+					maxWidth: 420
+				}))
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, (0, react$1.createElement)("p", { className: "dtl-set__agents-lead" }, t("settingsAgentsLead")), step("1", t("settingsAgentsStep1"), (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("div", { className: "dtl-set__cmd" }, (0, react$1.createElement)("code", { className: "dtl-set__cmdtext" }, SKILL_ADD), copyButton(SKILL_ADD)), note(t("settingsAgentsStep1Note")), note(t("settingsAgentsPromptLabel")), copyBlock(prompt))), step("2", t("settingsAgentsStep2"), (0, react$1.createElement)(react$1.Fragment, null, note(t("settingsAgentsStep2Note")), copyBlock(rulesDefaultText === "" ? rulesText : rulesDefaultText))), step("3", t("settingsAgentsStep3"), note(t("settingsAgentsStep3Note"))), (0, react$1.createElement)("p", { className: "dtl-set__agents-support" }, t("settingsAgentsSupport"))));
 			const userModal = userOpen ? (0, react$1.createElement)(Modal, {
 				title: t("settingsUserModalTitle"),
 				width: "576px",
@@ -68321,7 +68409,7 @@ body[data-ds-dark-theme]{
 				onClick: () => {
 					writeRules({ action: "reset" });
 				}
-			}, t("settingsRulesReset"))), rulesError !== null ? (0, react$1.createElement)("p", null, t("settingsRulesFailed", { message: rulesError })) : null)), userModal, forgetDialog);
+			}, t("settingsRulesReset"))), rulesError !== null ? (0, react$1.createElement)("p", null, t("settingsRulesFailed", { message: rulesError })) : null)), agentsBlock, userModal, forgetDialog);
 		}
 		//#endregion
 		//#region src/client/board-home.ts
@@ -68817,7 +68905,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.1.14 261111-114528-457`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.0 261111-125914-503`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

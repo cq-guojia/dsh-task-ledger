@@ -116,6 +116,21 @@ export type LocaleKey =
 	| "settingsColDir"
 	| "settingsColPath"
 	| "settingsColActions"
+	// 设置页 · 其他 Agent 使用
+	| "settingsAgentsTitle"
+	| "settingsAgentsHint"
+	| "settingsAgentsLead"
+	| "settingsAgentsStep1"
+	| "settingsAgentsStep1Note"
+	| "settingsAgentsPromptLabel"
+	| "settingsAgentsPrompt"
+	| "settingsAgentsStep2"
+	| "settingsAgentsStep2Note"
+	| "settingsAgentsStep3"
+	| "settingsAgentsStep3Note"
+	| "settingsAgentsSupport"
+	| "settingsAgentsCopied"
+	| "settingsCopy"
 	// 统计卡
 	| "statMyActive"
 	| "statOpen"
@@ -476,6 +491,29 @@ export const zh: Record<LocaleKey, string> = {
 	settingsFlow3Todo: "在办：执行中的任务与待认领项",
 	settingsFlow3History: "历史：本项目已结案的任务数量",
 	settingsFlow3Stats: "设置：多 Agent 安装、台账目录管理",
+
+	settingsAgentsTitle: "在其他 Agent 中使用",
+	settingsAgentsHint:
+		"如您有多个 Agent 工具，可以在各自的 Agent 中安装这个 Skill 记录台账，再由此看板统一查看管理。",
+	settingsAgentsLead:
+		"同一份 skill 装在其他 Agent 上，记录的仍是这个项目的台账，看板一并汇总。",
+	settingsAgentsStep1: "安装 Skill",
+	settingsAgentsStep1Note:
+		"命令会自动识别本机已装的 Agent（Claude Code、Codex、CodeBuddy 等），写进各自的技能目录。",
+	settingsAgentsPromptLabel: "也可以把这句话发给任意 Agent，让它自己装：",
+	settingsAgentsPrompt:
+		"帮我安装 task-ledger 这个 skill（npm 包名 task-ledger，GitHub 包名 cq-guojia/dsh-task-ledger）。",
+	settingsAgentsStep2: "注入规则文件（可选）",
+	settingsAgentsStep2Note:
+		"把下面这段加进项目根目录的 AGENTS.md，让 Agent 按台账口径跟进任务：",
+	settingsAgentsStep3: "加进看板",
+	settingsAgentsStep3Note:
+		"在上面的「台账目录」点「添加目录」，选中项目根目录，看板就会汇总它。",
+	settingsAgentsSupport:
+		"Claude Code、Cursor、Codex、CodeBuddy、Trae，以及任何加载 SKILL.md 的 Agent 工具。",
+	settingsAgentsCopied: "已复制",
+	settingsCopy: "复制",
+
 	settingsColDir: "台账名",
 	settingsColPath: "路径",
 	settingsColActions: "操作",
@@ -820,6 +858,29 @@ export const en: Record<LocaleKey, string> = {
 	settingsFlow3Todo: "In flight: running tasks and unclaimed items",
 	settingsFlow3History: "History: closed task count for this project",
 	settingsFlow3Stats: "Settings: multi-agent install, ledger folder management",
+
+	settingsAgentsTitle: "Use from other agents",
+	settingsAgentsHint:
+		"If you use several agent tools, install this Skill in each of them to keep the ledger, then review and manage everything on this board.",
+	settingsAgentsLead:
+		"The same skill installed in another agent still writes to this project's ledger, and the board sums it up.",
+	settingsAgentsStep1: "Install the skill",
+	settingsAgentsStep1Note:
+		"The command detects the agents installed on this machine (Claude Code, Codex, CodeBuddy, …) and writes into each skills directory.",
+	settingsAgentsPromptLabel: "Or send this line to any agent and let it install:",
+	settingsAgentsPrompt:
+		"Install the task-ledger skill (npm package task-ledger, GitHub repo cq-guojia/dsh-task-ledger).",
+	settingsAgentsStep2: "Inject the rules (optional)",
+	settingsAgentsStep2Note:
+		"Add this to AGENTS.md in the project root so the agent follows the ledger convention:",
+	settingsAgentsStep3: "Add it to the board",
+	settingsAgentsStep3Note:
+		"Under \"Ledger folders\" above, click \"Add folder\" and pick the project root; the board will include it.",
+	settingsAgentsSupport:
+		"Claude Code, Cursor, Codex, CodeBuddy, Trae, and any agent tool that loads SKILL.md.",
+	settingsAgentsCopied: "Copied",
+	settingsCopy: "Copy",
+
 	settingsColDir: "Ledger name",
 	settingsColPath: "Path",
 	settingsColActions: "Actions",

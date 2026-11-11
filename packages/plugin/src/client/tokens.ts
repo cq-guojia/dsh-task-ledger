@@ -182,6 +182,38 @@ export const UI_CONTROLS_CSS = `
 /* 可编辑文案框：高度由核心 CodeEditor 的 height 给，这里只补间距与保存中的锁定态 */
 .dtl-set__rules-editor{margin-bottom:var(--dtl-space-2);}
 .dtl-set__rules-editor--busy{opacity:.65;pointer-events:none;}
+/* 「在其他 Agent 中使用」（2026-11-11）：三步，步与步之间一条横线。
+   命令单行省略（全文靠 Tip 气泡），复制钮紧贴右缘。 */
+.dtl-set__agents-lead{margin:0 0 var(--dtl-space-3);font-size:var(--dtl-font-md);
+  line-height:var(--dtl-line-md);color:var(--dtl-fg-2);}
+.dtl-set__step + .dtl-set__step{margin-top:var(--dtl-space-4);padding-top:var(--dtl-space-4);
+  border-top:1px solid var(--dtl-border);}
+.dtl-set__stephead{display:flex;align-items:center;gap:var(--dtl-space-2);
+  margin-bottom:var(--dtl-space-2);}
+.dtl-set__stepno{display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;flex:none;border-radius:50%;
+  background:var(--dtl-business-soft);color:var(--dtl-business);
+  font-size:var(--dtl-font-xs);font-weight:600;}
+.dtl-set__steptitle{font-size:var(--dtl-font-md);font-weight:600;color:var(--dtl-fg);}
+.dtl-set__cmd{display:flex;align-items:center;gap:var(--dtl-space-2);
+  padding:var(--dtl-space-2) var(--dtl-space-3);border:1px solid var(--dtl-border);
+  border-radius:var(--dtl-radius-sm);background:var(--dtl-table-head-bg);}
+.dtl-set__cmdtext{flex:1 1 auto;min-width:0;font-family:var(--dtl-font-mono);
+  font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;}
+.dtl-set__agents-note{margin:var(--dtl-space-2) 0 0;font-size:var(--dtl-font-sm);
+  line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
+/* 复制钮钉在框的**右上角**（用户 2026-11-11）：距上、右同为 space-2。
+   正文右侧留出按钮位与间隙；单行时正文行高 = 按钮高 ⇒ 上 8 下 8，视觉上仍是垂直居中。 */
+.dtl-set__prompt{position:relative;margin-top:var(--dtl-space-2);
+  padding:var(--dtl-space-2) calc(var(--dtl-space-2) * 2 + 24px) var(--dtl-space-2) var(--dtl-space-3);
+  border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);}
+.dtl-set__promptact{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-2);}
+.dtl-set__promptbody{display:block;min-height:24px;font-size:var(--dtl-font-sm);
+  line-height:24px;color:var(--dtl-fg-2);white-space:pre-wrap;word-break:break-word;}
+.dtl-set__agents-support{margin:var(--dtl-space-4) 0 0;padding-top:var(--dtl-space-3);
+  border-top:1px solid var(--dtl-border-faint);font-size:var(--dtl-font-sm);
+  line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
 
 /* hero：左栏**定宽 320px**（用户 2026-11-01：别跟着窗口伸缩），右栏吃掉剩下的宽度。
    两侧**等高**（用户 2026-11-01：右边流程要跟左边身份卡一样高）：

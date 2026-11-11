@@ -1,7 +1,7 @@
 export type RulesLang = "zh" | "en";
 /** 恢复默认的唯一参照：中英各一份写死常量；用户保存的值另存，写入不覆盖它们。 */
 export declare const DEFAULT_RULES_TEXT_ZH: string;
-/** 英文与中文条目对齐，格式同为 `- **关键词**：…`；最后那句问话按定稿保留中文原句。 */
+/** 英文与中文条目对齐，格式同为 `- **关键词**：…`；最后那句问话也要说英文（英文界面下出现中文原句是 bug）。 */
 export declare const DEFAULT_RULES_TEXT_EN: string;
 export interface RulesInjectionView {
     readonly enabled: boolean;

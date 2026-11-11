@@ -29,6 +29,7 @@ const PACKAGE_NAME = "dsh-task-ledger";
 const PLUGIN_VERSION = JSON.parse(
 	readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 ).version as string;
+
 const BUILD_STAMP = (() => {
 	const d = new Date();
 	const p = (n: number, w = 2) => String(n).padStart(w, "0");

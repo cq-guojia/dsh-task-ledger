@@ -54,6 +54,10 @@ const NpmMark = (): ReactNode =>
 /** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 const notYet = (): void => {};
 
+/** skills CLI 只认 git / 下载 URL（实测 `add task-ledger` 会当 git 仓库克隆并失败），
+ *  所以走仓库坐标；CLI 自己会挑出 monorepo 里的这个 skill（实测只列一个）。 */
+const SKILL_ADD = "npx skills add cq-guojia/dsh-task-ledger -g";
+
 /** 表格一行：一个身份（`workspaceId` = 认领请求要的工作区；`workspace` = 那一列显示什么）。 */
 interface RosterRow {
 	readonly uuid: string;
@@ -402,16 +406,16 @@ export function SettingsPage(props: {
 		if (ok) claim(row.uuid, row.workspaceId, row.name);
 	};
 
-	const copyPath = (path: string): void => {
+	const copyText = (value: string, done: string): void => {
 		const clip = navigator.clipboard;
 		if (clip === undefined) return;
-		clip.writeText(path).then(
+		clip.writeText(value).then(
 			() => {
-				// 复制成功：按钮换小勾（1.5s 后复原）+ 一条 Toast，路径文字本身不动（用户 2026-11-02）
-				setCopied(path);
-				notify(t("settingsPathCopied"), { variant: "success" });
+				// 复制成功：按钮换小勾（1.5s 后复原）+ 一条 Toast，原文本身不动（用户 2026-11-02）
+				setCopied(value);
+				notify(done, { variant: "success" });
 				window.setTimeout(() => {
-					setCopied((current) => (current === path ? null : current));
+					setCopied((current) => (current === value ? null : current));
 				}, 1500);
 			},
 			notYet,
@@ -939,7 +943,7 @@ export function SettingsPage(props: {
 								size: "sm",
 								className: "dtl-dir__copy",
 								onClick: () => {
-									copyPath(dir.path);
+									copyText(dir.path, t("settingsPathCopied"));
 								},
 							}),
 						}),
@@ -1024,6 +1028,106 @@ export function SettingsPage(props: {
 						],
 						rows: dirRows,
 					});
+
+	/* ── 第 4 块：在其他 Agent 中使用（用户 2026-11-11 定为三步）──────
+	   ① 安装 skill（npm 包的 tarball 地址 + 给 Agent 的一句话）
+	   ② 把规则片段加进项目 AGENTS.md（可选）
+	   ③ 在「台账目录」添加项目目录
+	   三步之间一条横线；命令只有一个真源 SKILL_ADD。 */
+	const copyButton = (value: string): ReactNode =>
+		h(Tip, {
+			label: t("settingsCopy"),
+			children: h(IconButton, {
+				icon:
+					copied === value
+						? h(IconCheckOutlineRegular, { size: 14 })
+						: h(IconCopyOutlineRegular, { size: 14 }),
+				label: t("settingsCopy"),
+				size: "sm",
+				onClick: () => {
+					copyText(value, t("settingsAgentsCopied"));
+				},
+			}),
+		});
+
+	/** 一块可复制的正文（提示词 / 规则片段共用）：复制钮钉在框的右上角（CSS 绝对定位，
+	 *  距上、右同距）；单行内容靠正文的 min-height 让它看起来仍是垂直居中。 */
+	const copyBlock = (text: string): ReactNode =>
+		h(
+			"div",
+			{ className: "dtl-set__prompt" },
+			h("span", { className: "dtl-set__promptbody" }, text),
+			// 单独一层定按钮位置：Tooltip 内部还会包节点，直接选 `.dtl-tip` 不一定命中
+			h("div", { className: "dtl-set__promptact" }, copyButton(text)),
+		);
+
+	const step = (no: string, title: string, body: ReactNode): ReactNode =>
+		h(
+			"div",
+			{ className: "dtl-set__step" },
+			h(
+				"div",
+				{ className: "dtl-set__stephead" },
+				h("span", { className: "dtl-set__stepno" }, no),
+				h("span", { className: "dtl-set__steptitle" }, title),
+			),
+			body,
+		);
+
+	const note = (text: string): ReactNode =>
+		h("p", { className: "dtl-set__agents-note" }, text);
+
+	const prompt = t("settingsAgentsPrompt");
+
+	const agentsBlock = h(
+		Surface,
+		{ padding: "lg" },
+		h(SectionHead, {
+			icon: h(IconDownloadOutlineRegular, { size: 16 }),
+			title: h(
+				"span",
+				{ className: "dtl-set__rules-title" },
+				t("settingsAgentsTitle"),
+				h(FieldHint, { text: t("settingsAgentsHint"), side: "top", maxWidth: 420 }),
+			),
+		}),
+		h(
+			"div",
+			{ className: "dtl-set__body" },
+			h("p", { className: "dtl-set__agents-lead" }, t("settingsAgentsLead")),
+			step(
+				"1",
+				t("settingsAgentsStep1"),
+				h(
+					Fragment,
+					null,
+					h(
+						"div",
+						{ className: "dtl-set__cmd" },
+						h("code", { className: "dtl-set__cmdtext" }, SKILL_ADD),
+						copyButton(SKILL_ADD),
+					),
+					note(t("settingsAgentsStep1Note")),
+					note(t("settingsAgentsPromptLabel")),
+					copyBlock(prompt),
+				),
+			),
+			step(
+				"2",
+				t("settingsAgentsStep2"),
+				h(
+					Fragment,
+					null,
+					note(t("settingsAgentsStep2Note")),
+					// 与上面「会话规则注入」的默认文案是同一份（host 给的 defaultText），
+					// 不另写一版；Markdown 原样保留，用户整段复制。
+					copyBlock(rulesDefaultText === "" ? rulesText : rulesDefaultText),
+				),
+			),
+			step("3", t("settingsAgentsStep3"), note(t("settingsAgentsStep3Note"))),
+			h("p", { className: "dtl-set__agents-support" }, t("settingsAgentsSupport")),
+		),
+	);
 
 	/* ── 弹窗 ──────────────────────────────────────────────────────── */
 
@@ -1370,6 +1474,7 @@ export function SettingsPage(props: {
 					: null,
 			),
 		),
+		agentsBlock,
 		userModal,
 		forgetDialog,
 	);
@@ -1445,6 +1550,20 @@ export type SettingsLocaleKey = Extract<
 	| "settingsFlow2Desc"
 	| "settingsFlow3"
 	| "settingsFlow3Desc"
+	| "settingsAgentsTitle"
+	| "settingsAgentsHint"
+	| "settingsAgentsLead"
+	| "settingsAgentsStep1"
+	| "settingsAgentsStep1Note"
+	| "settingsAgentsPromptLabel"
+	| "settingsAgentsPrompt"
+	| "settingsAgentsStep2"
+	| "settingsAgentsStep2Note"
+	| "settingsAgentsStep3"
+	| "settingsAgentsStep3Note"
+	| "settingsAgentsSupport"
+	| "settingsAgentsCopied"
+	| "settingsCopy"
 	| "settingsColDir"
 	| "settingsColPath"
 >;
