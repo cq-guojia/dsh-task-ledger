@@ -51,7 +51,7 @@ A separate view aggregates everything closed: a trend chart switchable between d
 
 ### Identity and settings
 
-The first visit asks for an identity — create a new one or claim an existing one from the ledger roster. The settings page allows renaming (propagated to every registered ledger, committed and pushed where a remote exists), switching identity, and managing the list of ledgers: add a directory, or hide one from the board without affecting the data.
+The first visit asks for an identity — create a new one or claim an existing one from the ledger roster. The settings page allows renaming (propagated to every registered ledger, committed and pushed where a remote exists), switching identity, and managing the list of ledgers: add a directory, or hide one from the board without affecting the data. It also holds **session rules injection** (enabled by default): the plugin delivers the default prompt into the first turn of each dsh session, with a switch, an editable prompt and "Restore default". The setting is stored in the plugin's own local file and never writes to the workspace rules file.
 
 ![Settings](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/settings.png)
 
@@ -72,21 +72,30 @@ The plugin only reads this structure, except for the actions listed above, which
 
 The board is a view over the ledger; the ledger itself is driven by what you say to the agent — open a task, claim it, record progress, hand it back, close it, cancel it. Which phrase triggers which operation, and the rules the agent follows, are listed in the [`task-ledger`](https://www.npmjs.com/package/task-ledger) README.
 
-### Recommended: put it in your rules file
+### Standing rule in the project rules file
 
-The skill only loads when a request matches an explicit task intent, and "should this piece of work be tracked" is not one of them. A standing rule in the project's `AGENTS.md` (or whichever rules file your agent reads) is far more reliable on its own. Copy this block:
+The skill loads only when a request matches an explicit task intent; "should this piece of work be tracked" is not one of them. A standing rule in the project's `AGENTS.md` (or the equivalent rules file of the agent) makes the convention explicit. The block below is the plugin's built-in default prompt — the same text that **session rules injection** delivers into the first turn of every dsh session:
 
 ```markdown
-- **Every piece of task progress, work item and work log (create / advance / query / close) goes through the `task-ledger` skill**; answer progress and history questions from it, never from conversation memory or a hand-rolled list.
-- **Creation anchor**: hand something to `task-ledger` only when the user explicitly asks for a new task ("open a task", "log this first", "create a task"). Questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
-- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "Want me to open a ledger for this task? (Ignore this if not needed — no reply necessary.)" Once asked in a session, do not ask again; no reply means ignore it.
+Usage rules for the task-ledger tool [task-ledger skill]:
+
+- **Task progress, work items and work logs**: (create / advance / query / close) go through the task-ledger skill; answer questions about progress and task history from it, never from conversation memory or a hand-rolled list.
+- **Creation anchor**: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
+- **How to create and in what order**: the authorization and confirmation rules all follow the task-ledger skill's own instructions.
+- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "Want me to open a ledger for this task? (Ignore this if not needed — no reply necessary.)"; once asked in a session, do not ask again; no reply means ignore it.
 ```
 
-Without it the skill still works — it just acts only when you mention the task yourself.
+With injection enabled (the default), dsh sessions do not require this block in the rules file. Other agents do, because injection applies to dsh sessions only. Without either mechanism the skill still works, but only when the task is mentioned explicitly.
 
-## Other agents
+## Use from other agents
 
-Agents that are not dsh can install the same skill on its own — with the skills CLI, or by copying `packages/skill` into their skills directory; see the [`task-ledger`](https://www.npmjs.com/package/task-ledger) package for per-agent installation.
+The board and the skill share one data source. An AI coding agent outside dsh can install the same Agent Skill and write to the same plain-text `ledger/` directory; the board then aggregates that work alongside dsh sessions. Deployment takes three steps:
+
+1. **Install the skill.** Run `npx skills add cq-guojia/dsh-task-ledger -g` — the skills CLI detects the installed agents and installs at user level — or send an agent the instruction `Install the task-ledger skill (npm package task-ledger, GitHub repo cq-guojia/dsh-task-ledger).`. Per-agent directories and manual installation are documented in the [`task-ledger`](https://www.npmjs.com/package/task-ledger) README.
+2. **Declare the standing rule (optional).** Add the default prompt shown above to the project's `AGENTS.md`. dsh sessions receive the same text automatically through session rules injection; other agents read it from the rules file.
+3. **Register the repository with the board.** In **Settings → Ledger folders**, click **Add folder** and select the project root. The board aggregates only the directories registered on this machine; registration changes no ledger data.
+
+Supported clients include Claude Code, Cursor, Codex, CodeBuddy, WorkBuddy, Trae and any agent that loads `SKILL.md`. The plugin settings page presents the same three steps with copyable commands and prompt.
 
 ## Links
 

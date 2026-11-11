@@ -32,17 +32,23 @@ Detailed documentation lives in each package: [plugin](packages/plugin/README.md
 
 ## Installing the skill in an agent
 
+Deployment comprises three stages: install the skill into the agent's skills directory (this section), declare a standing rule in the project rules file (see below), and — for dsh users — register the repository as a ledger directory so the board aggregates it. See [Use from other agents](#use-from-other-agents) for the second and third stages.
+
 ### With a skill manager
 
-The [skills CLI](https://skills.sh) (Vercel) writes the skill into every agent it detects and keeps it updated:
+The [skills CLI](https://skills.sh) (Vercel) detects the AI coding agents installed on the machine, writes the skill into their user-level skills directories and keeps it updated:
 
 ```bash
-npx skills add https://github.com/cq-guojia/dsh-task-ledger/tree/main/packages/skill
+npx skills add cq-guojia/dsh-task-ledger -g
 ```
 
-The path matters: this repository holds two copies of the skill, and pointing at `packages/skill` selects the source. Add `-g` to install for all projects instead of the current one.
+The argument is a GitHub repository coordinate: the CLI resolves the monorepo and locates the `SKILL.md` skill within it. `-g` installs at user level for all projects; omit it to install for the current project only, and add `--agent` to restrict the targets. The CLI does not accept an npm package name as a source. Where the source directory must be pinned, the tree form `https://github.com/cq-guojia/dsh-task-ledger/tree/main/packages/skill` is also accepted.
 
-[SkillHub](https://skillhub.cn) and the markets built into CodeBuddy and WorkBuddy install a skill once it is listed; when search does not find `task-ledger`, use the client's local import and point it at `packages/skill`, or add this repository as a GitHub source.
+[SkillHub](https://skillhub.cn) and the skill marketplaces built into CodeBuddy and WorkBuddy install a skill once it is listed; when search does not find `task-ledger`, use the client's local import and point it at `packages/skill`, or add this repository as a GitHub source.
+
+**Delegated installation.** The deployment can also be handed to the agent itself:
+
+> Install the task-ledger skill (npm package task-ledger, GitHub repo cq-guojia/dsh-task-ledger).
 
 ### Manually
 
@@ -104,17 +110,20 @@ Four rules bind the agent:
 - It completes the written record before closing: a closed task cannot be written to again.
 - When it cannot find a task for the work at hand, it asks whether to create one instead of registering work you did not ask for.
 
-### Recommended: put it in your rules file
+### Standing rule in the project rules file
 
-The skill only loads when a request matches one of those intents, and "should this piece of work be tracked" is not one of them. A standing rule in the project's `AGENTS.md` (or whichever rules file your agent reads) is far more reliable on its own. Copy this block:
+The skill loads only when a request matches one of the intents above; "should this piece of work be tracked" is not one of them. A standing rule in the project's `AGENTS.md` (or the equivalent rules file of the agent) declares the convention explicitly. The block below is the built-in default prompt of the dsh plugin — the same text that **session rules injection** delivers into the first turn of every dsh session:
 
 ```markdown
-- **Every piece of task progress, work item and work log (create / advance / query / close) goes through the `task-ledger` skill**; answer progress and history questions from it, never from conversation memory or a hand-rolled list.
-- **Creation anchor**: hand something to `task-ledger` only when the user explicitly asks for a new task ("open a task", "log this first", "create a task"). Questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
-- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）" Once asked in a session, do not ask again; no reply means ignore it.
+Usage rules for the task-ledger tool [task-ledger skill]:
+
+- **Task progress, work items and work logs**: (create / advance / query / close) go through the task-ledger skill; answer questions about progress and task history from it, never from conversation memory or a hand-rolled list.
+- **Creation anchor**: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
+- **How to create and in what order**: the authorization and confirmation rules all follow the task-ledger skill's own instructions.
+- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "Want me to open a ledger for this task? (Ignore this if not needed — no reply necessary.)"; once asked in a session, do not ask again; no reply means ignore it.
 ```
 
-Without it the skill still works — it just acts only when you mention the task yourself.
+With injection enabled (the default), dsh sessions do not require this block. Other agents do, because injection applies to dsh sessions only. Without either mechanism the skill still works, but only when the task is mentioned explicitly.
 
 ## What gets written
 
@@ -140,6 +149,19 @@ The dsh plugin adds a board on top of the same data: in-flight tasks by owner, u
 Tasks can be closed from the board in two ways: directly, with a one-line summary, or by handing the task back to the agent, which reads the recorded progress, writes the conclusion and open issues, then closes it.
 
 ![Closing a task](https://raw.githubusercontent.com/cq-guojia/dsh-task-ledger/main/assets/screenshots/close-task.png)
+
+## Use from other agents
+
+One ledger is shared by every agent that writes to the repository. Installing the same Agent Skill in another AI coding agent — Claude Code, Cursor, Codex, CodeBuddy, WorkBuddy, Trae or any client that loads `SKILL.md` — gives it the same commands, and its records land in the same `ledger/` directory the board reads.
+
+The ledger convention reaches an agent through two independent mechanisms:
+
+| Mechanism | Applies to | Delivery |
+|---|---|---|
+| **Session rules injection** (dsh plugin) | dsh sessions only | The plugin injects the default prompt into the first turn of each session, once per session. Enabled by default and configurable on the plugin settings page; it never writes to the workspace rules file. |
+| **Standing rule in the project rules file** | Any agent | The same prompt is placed in `AGENTS.md` (or the equivalent rules file) and travels with the repository. |
+
+Three steps bring an external agent's work into the board: install the skill (`npx skills add cq-guojia/dsh-task-ledger -g`, or the delegated prompt above), declare the standing rule in `AGENTS.md` unless the agent is dsh with injection enabled, and register the project root under **Settings → Ledger folders → Add folder**. The board aggregates only directories registered on this machine; registration modifies no ledger data. The plugin settings page presents the same three steps with copyable commands and prompt.
 
 ## Development
 
