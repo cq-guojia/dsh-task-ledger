@@ -4,7 +4,7 @@
 
 A task ledger that lives in your workspace: any kind of task is fair game — not just development work, but research, documentation, presentations and video production. The agent records what it is working on — who owns it, how far it has got, when it was opened and when it was closed — as plain text inside the repository, so the answers survive the end of the conversation.
 
-This package is an Agent Skill: a `SKILL.md` instruction file, a prebuilt command-line tool and reference material. It is loaded by any agent that supports the open `SKILL.md` format — Claude Code, Cursor, Codex, CodeBuddy, WorkBuddy, Trae, Doubao Work and others. Several agents can install the same skill and record work in one shared ledger; see [Use from other agents](#use-from-other-agents).
+This package is an Agent Skill: a `SKILL.md` instruction file, a prebuilt command-line tool and reference material. It is loaded by any agent that supports the open `SKILL.md` format, and several agents can install the same skill and record work in one shared ledger.
 
 Four properties define it:
 
@@ -19,31 +19,42 @@ Four properties define it:
 
 ## Install
 
-### Install for any agent
+If you use [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), you **do not need to install this skill separately** — the `dsh-task-ledger` plugin bundles it. For plugin installation, see the [root README](https://github.com/cq-guojia/dsh-task-ledger#readme).
 
-One command installs the skill for every agent already on this machine — the [skills CLI](https://skills.sh) (Vercel) detects them and writes into each skills directory:
+The rest is for other agents. Claude Code, Cursor, Codex, CodeBuddy, WorkBuddy, Trae, Doubao Work and any agent that loads `SKILL.md` are supported; the same skill installed in different agents still writes to this project's ledger.
+
+### 1. Install the skill
+
+One command installs it for every agent already on this machine — the [skills CLI](https://skills.sh) (Vercel) detects them, so you never pick a directory:
 
 ```bash
 npx skills add cq-guojia/dsh-task-ledger -g
 ```
 
-Or send this line to any agent and let it install — no shell, no need to know where skills live:
+Or send this line to any agent and let it install:
 
 > Install the task-ledger skill (npm package task-ledger, GitHub repo cq-guojia/dsh-task-ledger).
 
-The argument is a GitHub repository coordinate: `-g` installs at user level so the skill applies to every project; omit it to install for the current project only, and add `--agent` to restrict the targets. The CLI does not accept an npm package name as a source. Where the source directory must be pinned, the tree form `https://github.com/cq-guojia/dsh-task-ledger/tree/main/packages/skill` is also accepted.
+The argument is a GitHub repository coordinate: `-g` installs at user level so the skill applies to every project; omit it to install for the current project only, and add `--agent` to restrict the targets. The CLI does not accept an npm package name as a source.
 
-[SkillHub](https://skillhub.cn) — the skill marketplace behind CodeBuddy and WorkBuddy — installs a skill once it is listed there. When search does not find `task-ledger`, use the client's local import and point it at `packages/skill`.
+### 2. Inject the rules (optional)
 
-### Manually (optional)
+Add this to `AGENTS.md` in the project root so the agent follows the ledger convention:
 
-```bash
-git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-ledger-src
+```markdown
+Usage rules for the task-ledger tool [task-ledger skill]:
+
+- **Task progress, work items and work logs**: (create / advance / query / close) go through the task-ledger skill; answer questions about progress and task history from it, never from conversation memory or a hand-rolled list.
+- **Creation anchor**: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
+- **How to create and in what order**: the authorization and confirmation rules all follow the task-ledger skill's own instructions.
+- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "Want me to open a ledger for this task? (Ignore this if not needed — no reply necessary.)"; once asked in a session, do not ask again; no reply means ignore it.
 ```
 
-Copy `packages/skill` into the skills directory your agent reads. Teams can commit the same directory to the repository so every contributor gets the same instructions.
+With session rules injection enabled (the default), dsh sessions do not need this block; other agents do.
 
-The skill has no build step. The CLI ships as a static binary for Linux, macOS and Windows; no runtime, package manager or network access is required afterwards. Multi-user synchronisation requires Git 2.27 or newer.
+### 3. Manage it on the board
+
+The board is currently available only as a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin board. To view and manage these tasks on a board, install the `dsh-task-ledger` plugin in dsh as described in the [root README](https://github.com/cq-guojia/dsh-task-ledger#readme).
 
 ## Using it
 
@@ -109,33 +120,6 @@ Run `scripts/progress <command> --help` for parameters. The agent-facing workflo
 ## Multiple users
 
 Ownership is sharded: each person's tasks live in their own file, so two people advancing two tasks never touch the same file. Git merges the shards, the worklog documents and the history file. Where two people edit the same task document, the conflict is confined to that one file.
-
-## Use from other agents
-
-The same skill installed in another agent still writes to this project's ledger. Claude Code, Cursor, Codex, CodeBuddy, WorkBuddy, Trae and any agent that loads `SKILL.md` are supported. Three steps:
-
-### 1. Install the skill
-
-See [Install](#install): one command or one line, with nothing agent-specific to decide.
-
-### 2. Inject the rules (optional)
-
-Add this to `AGENTS.md` in the project root so the agent follows the ledger convention:
-
-```markdown
-Usage rules for the task-ledger tool [task-ledger skill]:
-
-- **Task progress, work items and work logs**: (create / advance / query / close) go through the task-ledger skill; answer questions about progress and task history from it, never from conversation memory or a hand-rolled list.
-- **Creation anchor**: register a task only when the user explicitly asks for a new one ("open a task", "log this first", "create a task"); questions, queries, discussion and small incidental edits do not count — ask when unsure, and never create a task without an explicit instruction.
-- **How to create and in what order**: the authorization and confirmation rules all follow the task-ledger skill's own instructions.
-- **Ask in passing**: when the user is pushing forward work that spans turns (this turn ends with actions still on your plate) and has never mentioned tracking it, ask once after answering: "Want me to open a ledger for this task? (Ignore this if not needed — no reply necessary.)"; once asked in a session, do not ask again; no reply means ignore it.
-```
-
-With session rules injection enabled (the default), dsh sessions do not need this block; other agents do.
-
-### 3. Manage it on the board
-
-The board is currently available only as a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin board. To view and manage these tasks on a board, install the `dsh-task-ledger` plugin in dsh as described in the [root README](https://github.com/cq-guojia/dsh-task-ledger#readme).
 
 ## Links
 

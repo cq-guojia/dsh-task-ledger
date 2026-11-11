@@ -4,7 +4,7 @@
 
 一本放在工作区里的任务台账：什么任务都可以用，不限于开发工作，调研、文档、演示、视频制作都能建任务。Agent 把正在做的事 —— 谁在做、做到哪一步、何时开始、何时结束 —— 以纯文本形式记录在仓库内，答案不会随对话结束而丢失。
 
-本包是一份 Agent Skill：包含 `SKILL.md` 执行说明、预编译命令行工具与参考资料。凡支持开放 `SKILL.md` 格式的 Agent 均可加载，包括 Claude Code、Cursor、Codex、CodeBuddy、WorkBuddy、Trae、豆包工作等。多个 Agent 可同时安装同一份技能并写入同一本台账，见「在其他 Agent 中使用」。
+本包是一份 Agent Skill：包含 `SKILL.md` 执行说明、预编译命令行工具与参考资料。凡支持开放 `SKILL.md` 格式的 Agent 均可加载；多个 Agent 可同时安装同一份技能并写入同一本台账。
 
 它的定位由四点界定：
 
@@ -19,31 +19,42 @@
 
 ## 安装
 
-### 给任意 Agent 安装
+使用 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的用户**无需重复安装本 skill** —— `dsh-task-ledger` 插件已内置这份 skill，插件的安装办法见[根 README](https://github.com/cq-guojia/dsh-task-ledger/blob/main/README.zh-CN.md)。
 
-一条命令装到本机所有已装的 Agent —— [skills CLI](https://skills.sh)（Vercel）会自动识别它们，并写入各自的技能目录：
+以下面向其他 Agent。支持 Claude Code、Cursor、Codex、CodeBuddy、WorkBuddy、Trae、豆包工作，以及任何加载 `SKILL.md` 的 Agent；同一份 skill 装在不同 Agent 上，记录的仍是同一个项目的台账。
+
+### 1. 安装 Skill
+
+一条命令装到本机所有已装的 Agent —— [skills CLI](https://skills.sh)（Vercel）会自动识别它们，无需你指定目录：
 
 ```bash
 npx skills add cq-guojia/dsh-task-ledger -g
 ```
 
-也可以把这句话发给任意 Agent，让它自己装，不必敲命令、也不必管装到哪：
+也可以把这句话发给任意 Agent，让它自己装：
 
 > 帮我安装 task-ledger 这个 skill（npm 包名 task-ledger，GitHub 包名 cq-guojia/dsh-task-ledger）。
 
-参数为 GitHub 仓库坐标：`-g` 表示用户级安装、对所有项目生效；省略则仅作用于当前项目，`--agent` 可限定目标 Agent。该工具不接受 npm 包名作为来源；如需锁定来源目录，可用树路径形式 `https://github.com/cq-guojia/dsh-task-ledger/tree/main/packages/skill`。
+参数为 GitHub 仓库坐标：`-g` 表示用户级安装、对所有项目生效；省略则仅作用于当前项目，`--agent` 可限定目标 Agent。该工具不接受 npm 包名作为来源。
 
-[SkillHub](https://skillhub.cn) 以及 CodeBuddy、WorkBuddy 内置的技能市场，在技能已上架时可直接安装；检索不到 `task-ledger` 时，改用客户端「导入本地技能」指向 `packages/skill`。
+### 2. 注入规则文件（可选）
 
-### 手动安装（可选）
+把下面这段加进项目根目录的 `AGENTS.md`，让 Agent 按台账口径跟进任务：
 
-```bash
-git clone --depth 1 https://github.com/cq-guojia/dsh-task-ledger.git /tmp/task-ledger-src
+```markdown
+任务台账工具[task-ledger skill]使用规则：
+
+- **凡任务进度、工作事项与工作日志**：（新建 / 推进 / 查询 / 结案）一律调用 task-ledger skill 管理；进度 / 历史任务类问题一律走它作答，不凭对话记忆或自建清单顶替。
+- **开工锚点**：仅当用户明确说要新建（如「开个新坑」「先记一下」「建个任务」）才登记；提问 / 查询 / 讨论 / 顺手小改不算，拿不准先问，未经明确指令不得擅自新建任务。
+- **怎么建、按什么顺序**：命令的授权与确认口径，一律以 task-ledger skill 的说明为准。
+- **顺手问一句**：用户在推进一件跨轮的事（这轮答完、手上还有下一步动作没做完）、却从没提过记账时，答完问一次「你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）」；本会话问过一次就别再问，用户不接就当他不需要。
 ```
 
-把 `packages/skill` 复制到该 Agent 读取的技能目录即可；团队共用时也可把同一目录随仓库提交，让每位协作者拿到同一份执行说明。
+会话规则注入默认开启时，dsh 会话无需再写入该片段；其他 Agent 仍需写入。
 
-技能本身无需构建。命令行以静态二进制提供，覆盖 Linux、macOS 与 Windows，装完不需要运行时、包管理器或网络。多人同步需 Git 2.27 及以上。
+### 3. 到看板管理
+
+看板目前仅支持 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的插件看板。想用看板统一查看管理，按[根 README](https://github.com/cq-guojia/dsh-task-ledger/blob/main/README.zh-CN.md)在 DSH 里装好 `dsh-task-ledger` 插件即可。
 
 ## 怎么用
 
@@ -109,33 +120,6 @@ ledger/
 ## 多人协作
 
 归属按人分片：每人名下的任务保存在各自的分片文件中，两人各自推进各自的任务时不会写同一份文件。Git 负责合并分片、任务正文与历史文件。若两人同时修改同一份任务正文，冲突范围仅限于该文件。
-
-## 在其他 Agent 中使用
-
-同一份 skill 装在其他 Agent 上，记录的仍是同一个项目的台账。Claude Code、Cursor、Codex、CodeBuddy、WorkBuddy、Trae，以及任何加载 `SKILL.md` 的 Agent 都适用。三步：
-
-### 1. 安装 Skill
-
-见「安装」：一条命令或一句话即可，无需区分是哪一个 Agent。
-
-### 2. 注入规则文件（可选）
-
-把下面这段加进项目根目录的 `AGENTS.md`，让 Agent 按台账口径跟进任务：
-
-```markdown
-任务台账工具[task-ledger skill]使用规则：
-
-- **凡任务进度、工作事项与工作日志**：（新建 / 推进 / 查询 / 结案）一律调用 task-ledger skill 管理；进度 / 历史任务类问题一律走它作答，不凭对话记忆或自建清单顶替。
-- **开工锚点**：仅当用户明确说要新建（如「开个新坑」「先记一下」「建个任务」）才登记；提问 / 查询 / 讨论 / 顺手小改不算，拿不准先问，未经明确指令不得擅自新建任务。
-- **怎么建、按什么顺序**：命令的授权与确认口径，一律以 task-ledger skill 的说明为准。
-- **顺手问一句**：用户在推进一件跨轮的事（这轮答完、手上还有下一步动作没做完）、却从没提过记账时，答完问一次「你现在这个任务是需要帮你建一个台账吗？（如果无需，忽略这句话，也不用去回复。）」；本会话问过一次就别再问，用户不接就当他不需要。
-```
-
-会话规则注入默认开启时，dsh 会话无需再写入该片段；其他 Agent 仍需写入。
-
-### 3. 到看板管理
-
-看板目前仅支持 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的插件看板。想用看板统一查看管理，按[根 README](https://github.com/cq-guojia/dsh-task-ledger/blob/main/README.zh-CN.md)在 DSH 里装好 `dsh-task-ledger` 插件即可。
 
 ## 链接
 
