@@ -47,7 +47,7 @@
 
 ## 在 DeepSeek Harness 上安装
 
-本项目的主形态是 [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh)（下称 DSH）插件：装好就有完整看板，skill 也已内置，无需另外安装。三种方式任选其一：
+本项目的主形态是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（下称 DSH）插件：装好就有完整看板，skill 也已内置，无需另外安装。三种方式任选其一：
 
 1. **在 DSH 里添加插件** —— 打开插件页，点「添加插件」，输入包名 `dsh-task-ledger`，确认安装。
 2. **命令行安装** —— 在终端执行：
