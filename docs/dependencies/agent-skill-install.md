@@ -40,9 +40,9 @@
 
 ## 三、对本项目的落地含义
 
-- `packages/skill/README.md` 与 `packages/skill/README.zh-CN.md` 的安装表按上表逐行给出命令；根 `README.md` 同表。
-- 只写「复制目录」这一条路径，不写需要额外依赖或宿主私有 API 的安装方式。
-- 豆包工作只写应用内导入，不写猜测出的目录。
+- 上表是各客户端目录的核实记录，不再搬进 README：`packages/skill/README.md`、`packages/skill/README.zh-CN.md` 与根 README 都只写安装动作，不列逐行目录表。
+- 安装以 `npx skills add cq-guojia/dsh-task-ledger -g` 与委托 Agent 自行安装为主；手动安装只保留「把 `packages/skill` 复制到该 Agent 读取的技能目录」一句。
+- 应用内导入、项目级目录与 Windows 二进制等细节下沉到本表与 `SKILL.md`，包 README 不再展开。
 
 ## 四、复核方式
 
@@ -53,3 +53,4 @@
 ## 更新日志
 
 - 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
+- 2026-11-11 17:18:16：包 README 不再列逐行目录表，安装以 skills CLI 与委托安装为主
