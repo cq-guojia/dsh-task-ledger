@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261111-2322-7264-补-intel-mac-的台账二进制产物": {"category": "缺陷修复", "created": "2026-11-11 23:22:39", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-11 23:22:39", "status": "doing", "tags": ["跨平台", "构建产物", "台账"], "title": "补 Intel Mac 的台账二进制产物", "updated": "2026-11-11 23:22:39", "worklog": "worklog/202611/11-2322-7264-补-intel-mac-的台账二进制产物.md"}
+    "20261111-2322-7264-补-intel-mac-的台账二进制产物": {"category": "缺陷修复", "created": "2026-11-11 23:22:39", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-11 23:22:39", "status": "doing", "tags": ["跨平台", "构建产物", "台账"], "title": "补 Intel Mac 的台账二进制产物", "updated": "2026-11-11 23:25:53", "worklog": "worklog/202611/11-2322-7264-补-intel-mac-的台账二进制产物.md"}
   },
   "version": "20261022000000"
 }
