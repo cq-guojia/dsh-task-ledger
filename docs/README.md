@@ -28,7 +28,7 @@ docs/                                               # 项目文档库入口：�
     ├── client-ui-layout.md                         # 全槽位清单、官方元件与 `--dsw-*` 设计变量
     ├── dsh-plugin-core-explorer.md                 # `pickWorkspaceFile` 与只读 FS 路由的签名和边界
     ├── dsh-prestep-injection.md                    # pre-step 事件、消息契约、动态区淡出与待核实项
-    ├── dsh-session-handoff.md                      # 起会话唯一已验证链路与两条预置提示词模板
+    ├── dsh-session-handoff.md                      # 两条起会话链路、宿主注入口与提示词真源指针
     ├── dsh-skill-registration.md                   # `register` 的分层语义、必填字段与失效通知
     ├── dsh-workspace-registry.md                   # `list()` 返回实体与台账根判定口径
     ├── host-webserver.md                           # 原始 req/res、SSE、压缩与鉴权边界
@@ -40,3 +40,4 @@ docs/                                               # 项目文档库入口：�
 - 2026-11-10 21:35:29：新增会话规则注入与 pre-step 注入链路两篇文档
 - 2026-11-10 22:12:21：按 1.2.0 规范化为四段形态，写作约定迁入 development/code-conventions.md
 - 2026-11-12 07:23:23：平台矩阵补 darwin/amd64（Intel Mac），产物缺失改为构建期报错
+- 2026-11-12 08:54:50：同步会话交接文档的索引说明

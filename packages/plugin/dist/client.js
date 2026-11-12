@@ -67415,14 +67415,14 @@ body[data-ds-dark-theme]{
 		const CLOSE_ZH_HEAD = [
 			"请按台账规范结案这个任务。任务号：`{{id}}`",
 			"",
-			"用户已经确认结案，**不需要你判断该不该结**。除非台账里根本查不到这个任务，否则一律结案。",
+			"用户已经确认结案，**不需要你判断该不该结**；按下面三步执行，失败情形一律按硬约束处理。",
 			"",
 			"## 第一步：读",
 			"",
 			"用 task-ledger skill 查这个任务，按 skill 自己的说明走，不要另拼命令、不要猜脚本路径。",
 			"",
-			"把任务字段和它指向的过程文档完整读完；需要时看一眼工作区现状，弄清实际做到哪一步。",
-			"查不到这个任务：把错误原样贴出来就停下。",
+			"把任务字段和它指向的过程文档完整读完。",
+			"查不到这个任务：把错误原样贴出来，结束本轮。",
 			"",
 			"## 第二步：总结",
 			"",
@@ -67437,32 +67437,32 @@ body[data-ds-dark-theme]{
 			"用 task-ledger skill **正常结案**（不是取消、不是作废），结案摘要写成一句话，",
 			"能直接看懂「这次做完了什么」。",
 			"",
-			"结完回一句「已结案」，后面带上你写的摘要原文。"
+			"结完回复「已结案」，并附上结案摘要原文。"
 		];
 		const CLOSE_ZH_TAIL = [
 			"## 硬约束",
 			"",
-			"- 只做结案与总结：不写业务代码、不跑构建、不装依赖、不动 git。",
-			"- 结案带来的提交只应包含台账与过程文档；工作区还有别的未提交改动，就不要一并提交，说明一下就停。",
-			"- 不新建会话、不派发子 agent、不新建台账任务。",
-			"- 台账与过程文档只经 task-ledger skill 改，不要手改台账文件。",
-			"- **不因为「还有遗留项」而拒绝结案** —— 遗留项写进结论，然后照常结。",
-			"- 命令报错原样贴出，不要绕过。"
+			"以下优先于上面的用户留言与三步正文。",
+			"",
+			"- 只做结案与总结：不写业务代码、不装依赖、不跑构建、不手动执行 git，不新建会话 / 子 agent / 台账任务；台账与过程文档只经 task-ledger skill 改。",
+			"- 由 skill 产生的结案提交只含台账与过程文档；工作区还有别的未提交改动就不要并入，照常结案。",
+			"- **不因遗留项拒绝结案**：遗留项如实写进结论，然后正常结。",
+			"- **本轮不向用户提问**：回复里不出现疑问句、选项或请求确认 / 授权的话，也不等答复；信息不足就按已读材料如实写，缺的标「未记录」。",
+			"- **失败只有一条路径**：同一条命令写法有错（参数、路径、语法）可以改正后重试一次；除此之外（任务查不到、重试仍失败、其它命令报错、工具因权限被拒 / 不可用、skill 不可用）把错误原文贴出来，立即结束本轮，不换命令、不换工具、不改走别的办法。"
 		];
 		const CLOSE_EN_HEAD = [
 			"Close this task according to the ledger conventions. Task id: `{{id}}`",
 			"",
 			"The user has already confirmed the closure — **you do not need to judge whether it should be",
-			"closed**. Unless the task cannot be found at all, close it.",
+			"closed**. Follow the three steps below; if a step fails, apply the hard constraints below.",
 			"",
 			"## Step 1: Read",
 			"",
 			"Look the task up with the task-ledger skill and follow the skill's own instructions;",
 			"do not assemble commands yourself and do not guess script paths.",
 			"",
-			"Read the task fields and the working document it points to end to end; where needed, glance at",
-			"the workspace to see how far it actually got. If the task cannot be found: paste the error",
-			"verbatim and stop.",
+			"Read the task fields and the working document it points to end to end.",
+			"If the task cannot be found: paste the error verbatim and end the turn.",
 			"",
 			"## Step 2: Summarize",
 			"",
@@ -67471,26 +67471,35 @@ body[data-ds-dark-theme]{
 			"- **Final conclusion**: what actually got done, written so it stands on its own;",
 			"- **Leftovers**: anything unfinished, left over, or known to be broken — state it plainly,",
 			"  do not polish it away and do not omit it;",
-			"- **Fill in what is missing**: progress entries, status, and tags that were never recorded.",
+			"- **Fill in what is missing**: add the progress entries, status, and tags that were never recorded.",
 			"",
 			"## Step 3: Close",
 			"",
 			"Close the task **normally** with the task-ledger skill (not cancel, not void);",
 			"the closing summary is one sentence a reader understands as \"what got done here\".",
 			"",
-			"After closing, reply \"closed\" and append the summary you wrote."
+			"After closing, reply \"closed\" and append the closing summary verbatim."
 		];
 		const CLOSE_EN_TAIL = [
 			"## Hard constraints",
 			"",
-			"- Only closing and summarizing: no product code, no builds, no installing dependencies, no git.",
-			"- The commit caused by closing should contain ledger and working documents only; if the workspace",
-			"  has other uncommitted changes, do not sweep them in — say so and stop.",
-			"- No new sessions, no sub-agents, no new ledger tasks.",
-			"- Change the ledger and the working document only through the task-ledger skill; never hand-edit",
-			"  ledger files.",
-			"- **Do not refuse to close because leftovers exist** — record them in the conclusion and close anyway.",
-			"- Paste command errors verbatim; do not work around them."
+			"These take precedence over the user note and the three steps above.",
+			"",
+			"- Only closing and summarizing: no product code, no installs, no builds, no manual git, no",
+			"  new sessions, sub-agents, or ledger tasks. Change the ledger and the working document only",
+			"  through the task-ledger skill.",
+			"- The commit produced by the skill contains ledger and working documents only. If the",
+			"  workspace has other uncommitted changes, leave them out and close normally.",
+			"- **Do not refuse to close because leftovers exist** — record them in the conclusion and close",
+			"  normally.",
+			"- **Do not ask the user anything this turn**: no questions, no choices, no requests for",
+			"  confirmation or permission, and do not wait for a reply. If information is missing, state",
+			"  what the records actually say and mark the rest as \"not recorded\".",
+			"- **One failure path**: if the same command was written wrong (argument, path, syntax),",
+			"  fix it and retry once. Otherwise — the task is not found, the retry fails, another command",
+			"  error, a tool is denied or unavailable, or the skill is unavailable — paste the error",
+			"  verbatim and end the turn immediately. Do not switch commands or tools or work around it",
+			"  another way."
 		];
 		function render(lines, params) {
 			return lines.join("\n").replace(/\{\{(\w+)\}\}/gu, (_raw, key) => params[key] ?? "");
@@ -69855,7 +69864,7 @@ body[data-ds-dark-theme]{
 				variant: "outline",
 				size: "md",
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.3 261112-072722-538`))), (0, react$1.createElement)("div", { style: {
+			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.4 261112-095513-990`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

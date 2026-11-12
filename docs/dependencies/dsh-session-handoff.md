@@ -9,7 +9,14 @@
 
 ## 一、结论
 
-**浏览器半（client）没有「往会话里发自由文本」的官方 API。** 把任务交给大模型的唯一已验证链路 = **host 半 `ctx.agents.create()` 起会话并 `agent.send()` 发预置提示词**，浏览器再 `uiWorkspace.openSession` 跳过去，与同栈插件「立即执行」按钮同构。
+**浏览器半（client）没有「往任意会话发自由文本」的官方 API。** 本插件只在自己刚创建的会话上发首条 user message，两个动作各走一条链路，互不复用：
+
+| 动作 | 半侧 | 起会话 → 发消息 | 真源 |
+|---|---|---|---|
+| 「继续」 | host | `ctx.agents.create()` → `agent.send()` | `packages/plugin/src/host/services/continue.service.ts` |
+| 「完成（由 Agent 结案）」 | client | `ctx.sessions.create()` → `face.prompt()` | `packages/plugin/src/client/close-session.ts` |
+
+宿主没有 system prompt 参数（见 §二），所以注入的提示词只能是首条 user message，**是软约束，不是系统级硬规则**。
 
 ## 二、逐条事实与出处
 
@@ -20,6 +27,8 @@
 | `sessions.fork({sessionId, atSeq?, increaseTitle?})` | client | 开分支；省略 `atSeq` = 最新已完成 turn 前缀；失败抛 `SessionForkError` | `contract/sessions.d.ts:124`；`lib/client.js:3343` |
 | `uiWorkspace.openSession(id)` | client | 官方导航：自己 `retain('mainView')` + `selection.set` + `selectPanel(null)`；插件**不得**自己 retain `mainView` | `dsh-client-ui-workspace` `lib/client.js:819` → `:968-991` |
 | `layout.selectPanel(id \| null)` | client | 切主面板 / 回会话；未注册 id 抛错且保持当前选择 | `dsh-client-ui-layout` `lib/types/client/service.d.ts:17-32` |
+| `sessions.create({cwd}\|{workspaceId})` | client | 建会话；`cwd` / `workspaceId` 二选一，同给即 bad-request | `contract/sessions.d.ts:88-93`；二选一规则见本插件 `close-session.ts` 头注（**UNVERIFIED** 精确行号） |
+| `face.prompt(content, mode)` | client | 会话句柄上发 user message，`mode` 取 `queue` / `steer`；返回 `{ok:false}` 要按失败处理 | `contract/session.d.ts:82-117`（同上，**UNVERIFIED**） |
 | `remote.commands.execute(sessionId, line, args)` | client | **只能发斜杠命令**：host 侧 `parseCommand()` 正则 `^\/[a-z][a-z0-9_-]*`，不带斜杠静默无反应 | 调用例 `dsh-session-title-pattern/lib/client.js:1105`；装配 `dsh-api-remotes/lib/client.js`（**UNVERIFIED** 精确行号） |
 | `ctx.agents.create(...)` | host | 自建会话并驱动模型（自带 `sessions.prepare + enter + announce`）；**禁止**预建会话再驱动（撞 `already exists`） | 同栈仓 `dispatch.ts:519-548`；签名 `host.ts:105-120` |
 | `agent.send(message, target: 'next-turn'\|'next-step', wakeup)` | host | 往会话发 user message | `dispatch.ts:627-634`；类型 `@deepseek-ai/dsh-agent` `runtime-types.d.ts`（**UNVERIFIED** 行号） |
@@ -30,47 +39,28 @@
 
 社区插件实现过「浏览器半直发自由文本」，但其依赖的宿主 API 本地未验证，本插件不押注其上。
 
-## 三、预置提示词模板
+## 三、预置提示词的真源
 
 认领 / 释放 / 移交由 host 代跑 `progress`（不开会话）；只有「继续」和「结束」起会话，见 [overview.md](../architecture/overview.md) 的不变量。
 
-### 3.1 会话创建的三条硬事实
+提示词正文的唯一真源是 `packages/plugin/src/client/prompts.ts`。本文只记宿主链路事实，**不复刻正文、不在此维护文案**；改提示词改源码，不改本文。
+
+| 导出 | 用途 | 形态 |
+|---|---|---|
+| `continuePrompt()` | 「继续」 | 只读汇报：读任务与过程文档 → 输出三块 → 停下 |
+| `closePrompt()` | 「完成（由 Agent 结案）」 | 读 → 总结 → 用 skill 正常结案；用户留言插在正文与硬约束之间，空留言删掉整节 |
+
+两条铁律见源码头注：只依赖「任务号」与「task-ledger skill 存在」，不写命令、脚本路径、过程文档章节名，也不复述环境 —— skill 或过程文档模板改了，提示词不用跟着改；中英各一份，由 `isEnglish()` 比对自家字典决定（界面语言只有浏览器半知道，所以放在 client）。
+
+### 会话创建的三条硬事实（仅 host 半链路）
+
+以下三条只约束 `agents.create()`（「继续」）；client 半 `sessions.create()` 不挂 preset、不传 agentOptions、不调 `attachSession`。
 
 | 事实 | 后果 |
 |---|---|
 | `agents.create` 不 mount preset ⇒ agent 落到「空的全局层」，只有根作用域的东西，**fs / bash 全无** | 必须在 `setup(agentCtx)` 里 `agentPresets.mount(agentCtx, presetId)`，并把 `presetId` 写进 `meta.agentPreset` |
 | `agentOptions.provider/model` 缺省 **≠** 走宿主默认 | 用户不选模型时由插件读 `ctx.get('agentDefaultModel').currentSelection()` 补；补不到就报错，不建会话 |
 | `meta.cwd` 只决定会话 cwd，**不会**自动归进工作区 | 建完要调该工作区实体的 `attachSession(sessionId)`，否则侧栏找不到这个会话 |
-
-### 3.2 模板一：继续
-
-> 用户准备继续任务「<title>」（任务号 <id>）。过程文档在 <工作区>/ledger/worklog/<过程文档路径>，请读「下一步」一节接着做。
-
-### 3.3 模板二：结束（带用户留言）
-
-结构 = 预置说明在前，留言放最末，三条硬约束缺一不可。
-
-> 用户从任务台账看板点了「结束」，要把任务「<title>」（任务号 <id>）结案。
->
-> 工作区：<工作区>
-> 过程文档：<绝对路径>
->
-> 请按顺序做完这三件，然后停下：
->
-> 1. 读过程文档的「背景 / 待办 / 下一步」，核对这次到底做了什么、还留了什么坑。
-> 2. 用 task-ledger skill 的脚本结案（在工作区目录下、原样执行这一条命令）：
->    `<SKILL_DIR>/scripts/progress close --id <id> --repo <工作区> --summary "<一句话说清做成了什么、留了什么坑>"`
->    `--summary` 是必填参数，不许编套话；命令报错就原样报告错误，不要自己绕过、不要手改台账文件。
-> 3. 收尾即结束——这就是本条消息的全部要求。
->
-> 【硬约束】
->
-> - 不要在会话里继续派活，**不要新建会话或子 agent**：这是收尾动作，不是新任务的开始。
-> - 用户已经明确要结束，不会再回答提问：信息不足就按留言与过程文档如实写进摘要 / 结论，**不要停下来反问**。
-> - 只动这一个任务，不顺带改别的记录；写台账只经上面那个 skill 脚本（脚本绝对路径由插件在生成提示词时填好，不让模型猜）。
->
-> 用户现在处理结束，以下是用户的留言：
-> <用户留言，可空>
 
 ## 四、复核方式（宿主升级后）
 
@@ -85,3 +75,4 @@ cd /tmp && npm pack @deepseek-ai/dsh-api-session-controller@<版本> @deepseek-a
 ## 更新日志
 
 - 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
+- 2026-11-12 08:54:50：结论改为两条起会话链路；删过时模板正文，改为 prompts.ts 唯一真源指针
