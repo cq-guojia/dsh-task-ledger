@@ -3,9 +3,9 @@
 | 项 | 值 |
 |---|---|
 | 用途 | 设置页「添加台账目录」的选目录弹窗与只读文件路由 |
-| 适用版本 | `dsh-plugin-core@0.35.25`（本插件 `packages/plugin` 的依赖线；路径口径自 0.33.2 起） |
+| 适用版本 | `dsh-plugin-core@0.35.29`（本插件 `packages/plugin` 的依赖线；路径口径自 0.33.2 起） |
 | 版本真源 | `node_modules/dsh-plugin-core` 解包产物 `dist/adv/explorer/*.d.ts`、`dist/host/index.d.ts`、`src/host/fs-route.ts` |
-| 复核日期 | 2026-11-11 |
+| 复核日期 | 2026-11-15（复核到 0.35.29） |
 
 ## 一、结论
 
@@ -55,3 +55,4 @@ node -e "console.log(require('dsh-plugin-core/package.json').exports)"   # 子�
 - 2026-11-08 02:13:21：复核到 0.35.7，重验 explorer 与 FS 路由符号
 - 2026-11-09 20:37:07：复核到 0.35.10，重验 explorer 与 FS 路由符号及其 exports 子路径
 - 2026-11-12 00:05:00：复核到 0.35.25，重验 explorer 与 FS 路由符号及其 exports 子路径（结论未变）
+- 2026-11-15：复核到 0.35.29，重验 `adv/explorer`（`connectFs` / `pickWorkspaceFile` / `openFilePreview` / `FileBrowser` / `FilePreview`）、`adv/session`（`SessionViewModal` 等）、`host`（`serveFsRoute`）与三条 exports 子路径，结论未变（0.35.26 只做控件物理切割、0.35.28 换字体库、0.35.29 补类型导出，均不触 explorer）

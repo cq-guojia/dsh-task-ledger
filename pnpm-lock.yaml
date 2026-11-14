@@ -18,8 +18,8 @@ importers:
         specifier: ^3.18.5
         version: 3.18.5
       dsh-plugin-core:
-        specifier: ^0.35.28
-        version: 0.35.28(@babel/runtime@8.0.8)(@codemirror/autocomplete@6.20.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.31)(codemirror@6.0.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: ^0.35.29
+        version: 0.35.29(@babel/runtime@8.0.8)(@codemirror/autocomplete@6.20.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.31)(codemirror@6.0.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     devDependencies:
       '@types/node':
         specifier: ^22.20.4
@@ -376,8 +376,8 @@ packages:
   defu@6.1.7:
     resolution: {integrity: sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ==}
 
-  dsh-plugin-core@0.35.28:
-    resolution: {integrity: sha512-/cAafQJUt/vLmu8h7ELLe7gshsuWJiUhVo1MTWYxTTeS+ZyasqCknCo+UfJr7tOzf17HBYv+6pgN18+5fCDU+w==}
+  dsh-plugin-core@0.35.29:
+    resolution: {integrity: sha512-HplCoFre6GE1lpZwJtCM3eu7j4XtQEbR9pAEdPfY1ZM0kIFUbsS/suUDz3oOh/OSfkjSLnOgitoGPh1O1dlrYg==}
     engines: {node: '>=22.5'}
     peerDependencies:
       react: '>=18'
@@ -949,7 +949,7 @@ snapshots:
 
   defu@6.1.7: {}
 
-  dsh-plugin-core@0.35.28(@babel/runtime@8.0.8)(@codemirror/autocomplete@6.20.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.31)(codemirror@6.0.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
+  dsh-plugin-core@0.35.29(@babel/runtime@8.0.8)(@codemirror/autocomplete@6.20.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.31)(codemirror@6.0.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
       '@codemirror/lang-css': 6.3.1
       '@codemirror/lang-html': 6.4.12

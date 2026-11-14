@@ -11,10 +11,9 @@
  *
  * 提交中锁住所有关闭路径（同 cancel-task-modal），失败时弹窗不关、错误红字留在框下可重试。
  */
-import { IconCheckCircleOutlineRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, Fragment, type ReactNode, useState } from "react";
 import type { Translate } from "./locales";
-import { Button, Loader, Modal, Segmented, Textarea, Tip } from "./ui";
+import { Button, Icon, Loader, Modal, Segmented, Textarea, Tip } from "./ui";
 
 type CloseMode = "manual" | "agent";
 
@@ -71,7 +70,8 @@ export function CloseTaskModal(props: {
 						gap: "var(--dtl-space-2)",
 					},
 				},
-				h(IconCheckCircleOutlineRegular, { size: 16 }),
+				// 官方「带圈勾」：核心字体库没有这一档，按核心 `Icon` 的官方名协议直接取官方件
+				h(Icon, { name: "IconCheckCircleOutlineRegular", size: 16 }),
 				t("closeModalTitle"),
 			),
 			onClose: props.busy || locked ? undefined : props.onClose,

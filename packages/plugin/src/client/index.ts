@@ -14,7 +14,8 @@
  */
 import { createStyleKit } from "dsh-plugin-core/design";
 import { connectFs } from "dsh-plugin-core/adv/explorer";
-import { connectHost, setStyleKit } from "dsh-plugin-core/ui";
+import { connectHost } from "dsh-plugin-core/ui/host-data";
+import { setStyleKit } from "dsh-plugin-core/ui/styles";
 import { createElement as h } from "react";
 import {
 	MenuItemButton,

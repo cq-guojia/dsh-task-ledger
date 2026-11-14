@@ -2,29 +2,29 @@
  * UI 基础层：样式单源 + 薄包裹（**一类控件只有一份实现**）。
  *
  * 纪律（用户 2026-10-28：「以后就全用我们的核心空间库」）：
- *  1. **控件一律来自 `dsh-plugin-core/ui`**（Button / IconButton / Input / Picker /
- *     Segmented / Chip / StripCard），本文件只做「本插件需要的形状」薄包裹，
+ *  1. **控件一律来自 `dsh-plugin-core`**，按控件子路径引（`ui/button` / `ui/picker` /
+ *     `ui/icons` ……，核心 0.35.26 起物理切割），本文件只做「本插件需要的形状」薄包裹，
  *     **不再自绘任何控件皮肤**——旧的 `.dtl-btn / .dtl-input / .dtl-select` 等一套已删除；
  *  2. **样式**：颜色 / 圆角 / 字号一律 `var(--dtl-*)`（定义只在 tokens.ts），
  *     业务文件不许再写第二份 `var(--dsw-*)`、不许自造 `--dtl-*`；
- *  3. 官方 primitives 只留「官方做得更好」的（Tooltip / MarkdownText / 图标）。
+ *  3. 官方 primitives 只留「官方做得更好」的（Tooltip / Switch）；图标也归本出口
+ *     （核心 `ui/icons`，官方图标组件名可以照写进去，但不许在业务文件里直引官方图标）。
  */
 
 import { Tooltip } from "@deepseek-ai/dsh-client-ui-primitives";
-import {
-	Button as CoreButton,
-	Chip as CoreChip,
-	IconButton as CoreIconButton,
-	Input as CoreInput,
-	Picker as CorePicker,
-	type PickerGroup,
-	Loader as CoreLoader,
-	Segmented as CoreSegmented,
-	setTooltipRenderer,
-	showLoading as CoreShowLoading,
-	Surface as CoreSurface,
-	type LoadingHandle,
-} from "dsh-plugin-core/ui";
+/* 核心 0.35.26 起按控件物理切割（一个控件一个子路径）：这里**只引用到的入口**，
+   不再 `from "dsh-plugin-core/ui"` 整包引（用户 2026-11-15）。加控件就加一行对应子路径。 */
+import { Button as CoreButton, IconButton as CoreIconButton } from "dsh-plugin-core/ui/button";
+import { Chip as CoreChip } from "dsh-plugin-core/ui/chip";
+import { Input as CoreInput } from "dsh-plugin-core/ui/input";
+import { Picker as CorePicker, type PickerGroup } from "dsh-plugin-core/ui/picker";
+import { Loader as CoreLoader } from "dsh-plugin-core/ui/loader";
+import { Segmented as CoreSegmented } from "dsh-plugin-core/ui/segmented";
+import { setTooltipRenderer } from "dsh-plugin-core/ui/tooltip";
+/** 核心 0.35.29 起 `LoadingHandle` 随使用面一起给（`ui/loading` 直接导出），
+ *  不必再去引内部机制入口 `ui/loading-host`。 */
+import { showLoading as CoreShowLoading, type LoadingHandle } from "dsh-plugin-core/ui/loading";
+import { Surface as CoreSurface } from "dsh-plugin-core/ui/surface";
 import { Icon as CoreIcon } from "dsh-plugin-core/ui/icons";
 import { type CSSProperties, createElement as h, type ReactNode } from "react";
 import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
@@ -629,16 +629,16 @@ export function showLoading(text?: string): LoadingHandle {
 
 /** 核心封装的 Toast 卡（灰/绿/红/黄，随明暗；默认 info 灰卡、位置 bottom-center）。
  *  无关闭句柄，靠 `durationMs` 自退。 */
-export { notify } from "dsh-plugin-core/ui";
+export { notify } from "dsh-plugin-core/ui/notify";
 
 /** 命令式确认框（Promise：true = 确定 / false = 取消）。 */
-export { confirmModal } from "dsh-plugin-core/ui";
+export { confirmModal } from "dsh-plugin-core/ui/dialogs";
 
 /** 声明式确认框：要「底栏左侧跟着过程翻文案」就用它（`notice`），Promise 版给不了运行中的更新。 */
-export { ConfirmModal } from "dsh-plugin-core/ui";
+export { ConfirmModal } from "dsh-plugin-core/ui/confirm-modal";
 
 /** 分区标题（icon + 标题 + 右槽）：列表按工作区分组的组头，核心原样，不再包一层。 */
-export { SectionHead } from "dsh-plugin-core/ui";
+export { SectionHead } from "dsh-plugin-core/ui/section-head";
 
 /** 图标唯一出口（核心 0.35 `ui/icons`）：`name` 写 `库名:图标名`（如 `common.base:gou`）走字体库，
  *  写官方组件名（如 `IconFolderCloseRegular`）走官方 SVG 本体。
@@ -648,37 +648,38 @@ export { CoreIcon as Icon };
 
 /** 问号提示（核心唯一实现：14px 问号 + 官方 Tooltip 气泡，气泡走上面注入的 renderer）——
  *  标题 / 表头后面挂说明文字用它，别再写原生 title 或自绘气泡。 */
-export { FieldHint } from "dsh-plugin-core/ui";
+export { FieldHint } from "dsh-plugin-core/ui/field-hint";
 
 /** 拼接外壳：左下拉 + 右滑块焊成一体（外框 / 分隔 / 聚焦圈归核心）。
  *  注意：`Segmented` 本文件已有同名适配层，不要再从核心重复导出。 */
-export { SplitGroup } from "dsh-plugin-core/ui";
+export { SplitGroup } from "dsh-plugin-core/ui/split-group";
 
 /** 快捷工具栏（核心 0.15.0 起，内置「回到顶部」）：右侧一列圆钮。
  *  `anchor` 给核心内容区容器 ⇒ 横向贴它的右缘外侧；不给才挂整个窗口右下角（本项目不要那种）。 */
-export { QuickToolbar } from "dsh-plugin-core/ui";
+export { QuickToolbar } from "dsh-plugin-core/ui/quick-toolbar";
 
 /** 跑马灯文本（核心唯一实现：单行不折行、放不下就三个点，hover 滚一遍看全）。 */
-export { MarqueeText } from "dsh-plugin-core/ui";
+export { MarqueeText } from "dsh-plugin-core/ui/marquee-text";
 
 /** 文本输入（核心唯一实现：size sm/md/lg、error 描红、hint 问号一气呵成）。 */
-export { Input } from "dsh-plugin-core/ui";
-export { Textarea } from "dsh-plugin-core/ui";
+export { Input } from "dsh-plugin-core/ui/input";
+export { Textarea } from "dsh-plugin-core/ui/textarea";
 
 /** 组合输入框（核心唯一实现：前置标题 + 输入 + 后置按钮焊成一体）—— 创建身份那条用它。 */
-export { InputGroup } from "dsh-plugin-core/ui";
+export { InputGroup } from "dsh-plugin-core/ui/input-group";
 
 /** 表格（核心唯一实现：列定义 + 行；身份管理弹窗的「工作区 / 名字 / 使用」三列）。 */
-export { Table } from "dsh-plugin-core/ui";
+export { Table } from "dsh-plugin-core/ui/table";
 
 /** 一行一条（核心唯一实现：自带底色 / hover / 右侧操作槽，整行可点）——
  *  设置页「安装 Skill」里那行包名 + GitHub / npm 两个图标钮用它。 */
-export { ListRow } from "dsh-plugin-core/ui";
+export { ListRow } from "dsh-plugin-core/ui/list-row";
 
 /** 弹窗：核心 `Modal`（自绘遮罩、不走 portal；设置页的用户管理与添加台账都用它）。
  *  卡片：核心 `Card`（白底 + 1px 边框 + 圆角 + 左缘行内短色条）—— 跟其它页面同一套外观。
  *  开关：核心没有这一档，台账目录的「显示」直接用官方 `Switch`（见 settings-page.ts）。 */
-export { Card, Modal } from "dsh-plugin-core/ui";
+export { Card } from "dsh-plugin-core/ui/card";
+export { Modal } from "dsh-plugin-core/ui/modal";
 
 /** 纯框容器：核心 `Surface`（底 / 边 / 圆角 / 内距四根轴，圆角 12 的唯一真源）。
  *  本插件所有「一块面」都用它 —— 统计卡 / 图表卡 / 任务行 / 空态 / 流程节点 / 图表浮卡，

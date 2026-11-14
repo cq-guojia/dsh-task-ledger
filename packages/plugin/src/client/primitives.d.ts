@@ -92,93 +92,9 @@ declare module "@deepseek-ai/dsh-client-ui-primitives" {
 		variant?: "body" | "compact";
 	}>;
 
-	/** 图标：色随 currentColor。（2026-10-17 rc.2 icons/index.d.ts 亲验新增三个） */
-	export const IconRefreshOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconSearchOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	/** 复制（宿主 lib/types/icons/index.d.ts 核实存在，2026-10-28）。 */
-	export const IconCopyOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	/** 左右 chevron（翻页箭头）：rc.2 `lib/types/icons/index.d.ts:50/53` 亲验存在，
-	 *  运行时符 `lib/index.js` 里也有同名导出，色随 currentColor（2026-10-29）。 */
-	export const IconChevronLeftOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconChevronRightOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconChevronDownOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconPlayOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconCheckOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	/** 带圈的勾（结案弹窗标题用）：`icons/index.d.ts:342` 与 `lib/index.js` 同名导出亲验（2026-11-03）。 */
-	export const IconCheckCircleOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconUsersOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconChecklistOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconCloseOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	/** 垃圾桶（删除）：`lib/types/icons/index.d.ts:142` 声明、`lib/index.js:1176` 定义 / `:12381` 导出亲验（2026-11-04）。 */
-	export const IconTrashOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconFlatListOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	/** 文件夹开 / 合（工作区官方图标，同一套 Artwork 的一对）：
-	 *  `lib/index.js:1801` IconFolderOpenRegular、`lib/index.js:1811` IconFolderCloseRegular（2026-10-18 亲验）。 */
-	export const IconFolderOpenRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	export const IconFolderCloseRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	/** 「认领」图标（库里最接近「接进来」的：箭头入盘）——2026-10-18 解包 lib/index.js 亲验存在。 */
-	export const IconDownloadOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	/** 设置（齿轮）：`icons/index.d.ts` 与 `lib/index.js` 都有同名导出（2026-11-01 亲验）。 */
-	export const IconSettingsOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
-	/** 链条（外链按钮）：`primitives@0.2.0-rc.1` `icons/index.d.ts:130` 亲验（2026-11-05）。 */
-	export const IconLinkOutlineRegular: ComponentType<{
-		size?: number;
-		className?: string;
-	}>;
+	/** 图标不在本文件声明：插件统一经核心 `dsh-plugin-core/ui/icons` 的 `Icon` 取（`name` 写
+	 *  `库名:图标名` 走核心字体库，写官方组件名走官方 SVG 本体）⇒ 官方图标名是**字符串**，
+	 *  不需要逐个 ComponentType 声明，也不在业务文件里直引官方图标（用户 2026-11-15）。 */
 
 	/** 「更多」菜单里的一行（`Menu.d.ts` MenuItemButtonProps，2026-11-05 亲验 rc.1）。 */
 	export function MenuItemButton(props: {

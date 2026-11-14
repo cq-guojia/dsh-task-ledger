@@ -22,7 +22,10 @@ import {
 	useState,
 	type ReactNode,
 } from "react";
-import { Button, Chip, Input, Picker } from "dsh-plugin-core/ui";
+import { Button } from "dsh-plugin-core/ui/button";
+import { Chip } from "dsh-plugin-core/ui/chip";
+import { Input } from "dsh-plugin-core/ui/input";
+import { Picker } from "dsh-plugin-core/ui/picker";
 import type { Translate } from "./locales";
 import { ensureUiBase, Icon } from "./ui";
 

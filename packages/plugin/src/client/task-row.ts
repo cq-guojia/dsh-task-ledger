@@ -24,7 +24,7 @@ import {
 	type ReactNode,
 	useState,
 } from "react";
-import { ConfirmModal } from "dsh-plugin-core/ui";
+import { ConfirmModal } from "dsh-plugin-core/ui/confirm-modal";
 import {
 	getWorkspaceKind,
 	postTaskAction,

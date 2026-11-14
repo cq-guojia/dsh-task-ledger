@@ -11,7 +11,7 @@
  * 屏幕外的行用首尾两个等高占位行撑住滚动高度 ⇒ DOM 行数与总条数无关。
  * 分页、按天分片全部取消：整月数据一次取回、全在内存，滚动时只按行号重算窗口。
  */
-import type { PickerGroup } from "dsh-plugin-core/ui";
+import type { PickerGroup } from "dsh-plugin-core/ui/picker";
 import {
 	createElement as h,
 	useCallback,

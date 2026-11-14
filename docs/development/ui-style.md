@@ -28,14 +28,14 @@
 
 | 用途 | 用哪个 | 本地是否还有皮肤 |
 |---|---|---|
-| 按钮 / 图标按钮 | `dsh-plugin-core/ui::Button` / `IconButton` | 无（`ui.ts` 只转 props） |
+| 按钮 / 图标按钮 | `Button` / `IconButton`（`dsh-plugin-core/ui/button`） | 无（`ui.ts` 只转 props） |
 | 输入框 / 搜索框 | `Input` | 无 |
 | 下拉 | `Picker`（含 `PickerGroup`） | 无 |
 | 分段 | `Segmented` | 无 |
 | 标签 / chip | `Chip`（`Tag` 只做宽度截断 + tone 映射） | 无 |
 | 一行一条 | `ListRow`（自带底色 / hover / 右侧操作槽，整行可点） | 无 |
 | 提示气泡 | 官方 `Tooltip`（`dsh-client-ui-primitives`） | 无 |
-| 图标 | `Icon*`（色随 currentColor） | 无 |
+| 图标 | `Icon`（`dsh-plugin-core/ui/icons`）：`name` 写 `库名:图标名` 走核心字体库（`common.base` / `common.logo`），写官方组件名走官方 SVG；色随 currentColor，尺寸不传就跟随字号 | 无 |
 | 容器外框（底 / 1px 边 / 圆角 / 内距） | `Surface`（`tone` / `border` / `radius` / `padding` 四轴） | 无 |
 | 任务行 | 整张用 `Card`（底色 / 边框 / 状态色条 / 悬停变色全归核心），本插件只补行内排版（`.dtl-taskrow__row`） | 仅排版与尺寸 |
 | 统计卡 | 外框用 `Surface`（纯数字块、无色条，保持原样式），悬停只换 `--surface-bg` | 仅排版与尺寸 |
@@ -44,9 +44,11 @@
 
 判据：核心库有的控件一律用核心库，本地只允许薄包裹（转 props、拼 className 做布局），不得重写高度 / 内距 / 边框 / 圆角 / 配色。核心没有的（表格、行内排版、图表画法）才允许自绘，且颜色圆角字号只吃 `var(--dtl-*)`。
 
+**引用一律按控件子路径**（核心 ≥ 0.35.26 起物理切割：`./ui/` 子路径从 3 条增到 54 条，一条 `exports` 对一个独立 `dist/ui/**.js`）：`ui/button`、`ui/chip`、`ui/input`、`ui/picker`、`ui/table`、`ui/surface`、`ui/icons` …… 不要写 `from "dsh-plugin-core/ui"` 整包引（用户 2026-11-15）。例外只有两类：① `ui.ts` 是全插件唯一出口，业务文件从 `./ui` 取；② CodeMirror 这类重依赖走更窄的单块入口（只要编辑器就引 `ui/code-editor`，别引合集 `ui/code-viewer`）。实测整包引并不会真的把没用的控件打进产物（ESM + `sideEffects` 白名单会摇掉），这条纪律买的是「引什么一目了然」，不是包体变小。
+
 宿主 primitives 没有 Table / DataGrid / List / 排序 / 分页 / 虚拟滚动件，最接近的行件是 `DisclosureRow`。任务行已改用核心 `Card`，历史页表格是本插件仅有的自绘行件：自绘是因为核心 `Table` 支撑不了窗口化渲染（整表逐行渲染、没有插入占位行的口子），不是外观另起一套。历史表头底、行悬浮底、边色在 `tokens.ts` 里 alias 核心 token（`--dtl-table-head-bg` / `--dtl-table-row-hover` / `--dtl-border-faint`），不另写色值；四边外框（1px + 圆角 12）由外套 `Surface` 提供（`.dtl-histlist__frame`，`overflow:hidden`）。核心 `Table` 支持窗口化后，这套应当收回去。
 
-插件详情页配置区的控件同样全部走核心控件库（`Input` / `Picker` / `Chip` / `Button`），本文件只排标签、说明与两列容器（`.dtl-config__*`，随同一处注入器挂载），颜色只吃 `var(--dtl-*)`；宿主官方 primitives 只用到图标与 `SettingsFormModel`。
+插件详情页配置区的控件同样全部走核心控件库（`Input` / `Picker` / `Chip` / `Button`），本文件只排标签、说明与两列容器（`.dtl-config__*`，随同一处注入器挂载），颜色只吃 `var(--dtl-*)`；宿主官方 primitives 只剩 `Tooltip` / `Switch` / 菜单与表单模型（`MenuItemButton` / `SettingsFormModel` / `settingsTextField`），图标统一经核心 `Icon` 取。
 
 ### 3.1 用 `Surface` 的两条写法约束
 
@@ -71,3 +73,4 @@
 - 2026-11-08 02:05:58：统计卡回退为 Surface 原样式，只有任务行用核心 Card
 - 2026-11-08 02:18:01：整理卡片口径：统计卡 Surface、任务行 Card，去掉未用控件行
 - 2026-11-10 22:37:28：源码路径补全为仓库内完整路径
+- 2026-11-15：图标改走核心 `ui/icons`（`库名:图标名`）；补「引用一律按控件子路径」口径与 `ui/code-editor` 更窄入口

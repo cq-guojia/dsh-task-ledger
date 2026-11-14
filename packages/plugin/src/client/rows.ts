@@ -9,7 +9,7 @@
  * 单独成文件是为了能被冒烟直测（store.ts 引 api.ts，Node 剥类型解析不了无扩展名相对导入）。
  */
 
-import type { PickerGroup, PickerOption } from "dsh-plugin-core/ui";
+import type { PickerGroup, PickerOption } from "dsh-plugin-core/ui/picker";
 import type { Translate } from "./locales";
 import type { Query } from "./store";
 import type { BoardPayload, BoardTask, Workspace } from "./types";

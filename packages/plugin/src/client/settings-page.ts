@@ -11,9 +11,10 @@
 import { Switch } from "@deepseek-ai/dsh-client-ui-primitives";
 import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
 /** 自定义小标签与 config-panel.ts 的「显示名称」同款：核心 Chip 的 neutral xs 档。 */
-import { Chip } from "dsh-plugin-core/ui";
-/** 可编辑输入框只从核心的 ui/code-viewer 子路径导出（重依赖不进 ui/index.ts），不能用 ./ui 汇总表。 */
-import { CodeEditor } from "dsh-plugin-core/ui/code-viewer";
+import { Chip } from "dsh-plugin-core/ui/chip";
+/** 可编辑输入框只从核心的 `ui/code-editor` 子路径取（CodeMirror 是重依赖，绝不进 ./ui 汇总表）；
+ *  别再走 `ui/code-viewer`——那是「查看器 + 编辑器」的合集，会把只读查看器一起拖进来。 */
+import { CodeEditor } from "dsh-plugin-core/ui/code-editor";
 import { createElement as h, Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { fetchDirs, fetchRoster, fetchRulesInjection, postDirs, postForgetIdentity, postRulesInjection, postSwitchIdentity, type DirsWriteBody, type ForgetStep } from "./api";
 import type { LocaleKey, Translate } from "./locales";
@@ -687,7 +688,7 @@ export function SettingsPage(props: {
 			stepCell(
 				2,
 				"warning",
-				h(Icon, { name: "common.base:gongzuoqu", size: 22 }),
+				h(Icon, { name: "common.base:gongzuoqu", size: 16 }),
 				t("settingsFlow2"),
 				FlowList([t("settingsFlow2Create"), t("settingsFlow2Exec"), t("settingsFlow2Close")]),
 			),
