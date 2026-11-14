@@ -13,12 +13,6 @@
  * 前端只做布尔判断与渲染。刷新 = 挂载首读 + 手动刷新按钮，**不轮询**。
  */
 import {
-	IconFolderCloseRegular,
-	IconRefreshOutlineRegular,
-	IconSettingsOutlineRegular,
-	IconUsersOutlineRegular,
-} from "@deepseek-ai/dsh-client-ui-primitives";
-import {
 	createElement as h,
 	type ReactNode,
 	useCallback,
@@ -72,6 +66,7 @@ import {
 	Button,
 	EmptyState,
 	ensureUiBase,
+	Icon,
 	Loader,
 	notify,
 	QuickToolbar,
@@ -630,7 +625,7 @@ export function BoardHome(props: {
 				size: "lg",
 				minWidth: SELECT_MIN_WIDTH,
 				maxWidth: SELECT_MAX_WIDTH,
-				icon: h(IconFolderCloseRegular, { size: 16 }),
+				icon: h(Icon, { name: "common.base:gongzuoqu" }),
 				value: workspaceOptions.some(
 					(option) => option.value === state.query.workspace,
 				)
@@ -655,7 +650,7 @@ export function BoardHome(props: {
 						size: "lg",
 						minWidth: SELECT_MIN_WIDTH,
 						maxWidth: SELECT_MAX_WIDTH,
-						icon: h(IconUsersOutlineRegular, { size: 16 }),
+						icon: h(Icon, { name: "common.base:yonghu" }),
 						value: state.query.owner,
 						options: [{ value: "", label: t("ownerAll") }],
 						groups: ownerOptionGroups,
@@ -719,8 +714,13 @@ export function BoardHome(props: {
 						},
 						h(
 							Button,
-							{ variant: "outline", size: "md", onClick: onBack },
-							`← ${t("backToConversation")}`,
+							{
+								variant: "outline",
+								size: "md",
+								icon: h(Icon, { name: "common.base:jiantou-zuo" }),
+								onClick: onBack,
+							},
+							t("backToConversation"),
 						),
 						h(
 							"div",
@@ -763,7 +763,7 @@ export function BoardHome(props: {
 									// 最右一段只有齿轮（用户 2026-11-01）：核心 0.16 支持 icon-only，无需文字
 									{
 										value: "settings",
-										icon: h(IconSettingsOutlineRegular, { size: 16 }),
+										icon: h(Icon, { name: "common.base:shezhi1" }),
 										ariaLabel: t("settingsEntry"),
 									},
 								],
@@ -776,7 +776,7 @@ export function BoardHome(props: {
 								{
 									variant: "outline",
 									size: "lg",
-									icon: h(IconRefreshOutlineRegular, { size: 16 }),
+									icon: h(Icon, { name: "common.base:shuaxin" }),
 									loading: state.refreshing,
 									onClick: () => {
 										// 手动刷新顺带同步一次宿主工作区（用户 2026-11-03：只有这里和进看板才同步）

@@ -18,15 +18,6 @@
  */
 
 import {
-	IconCheckOutlineRegular,
-	IconChevronLeftOutlineRegular,
-	IconChevronRightOutlineRegular,
-	IconCloseOutlineRegular,
-	IconCopyOutlineRegular,
-	IconSearchOutlineRegular,
-	IconTrashOutlineRegular,
-} from "@deepseek-ai/dsh-client-ui-primitives";
-import {
 	createElement as h,
 	Fragment,
 	type MouseEvent as ReactMouseEvent,
@@ -49,7 +40,7 @@ import type { LocaleKey, Translate } from "./locales";
 import { closePrompt, continuePrompt } from "./prompts";
 import { displayName, type Row, resolveActions } from "./rows";
 import { boardSnapshot, focusOwner, refresh, setQuery } from "./store";
-import { Button, Card, IconButton, notify, Tag, Tip } from "./ui";
+import { Button, Card, Icon, IconButton, notify, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
 
@@ -503,7 +494,7 @@ export function TaskRowView(props: {
 			// 抑制原生 title（系统提示要悬停一两秒才出，和官方气泡抢）：核心是 `title ?? label`，空串即不渲染。
 			title: "",
 			className: "dtl-iconbtn--muted",
-			icon: h(IconSearchOutlineRegular, { size: 14 }),
+			icon: h(Icon, { name: "common.base:chazhao" }),
 			onClick: () => props.onView?.(row),
 		}),
 	});
@@ -532,13 +523,13 @@ export function TaskRowView(props: {
 	// 认领：只有待认领行才有（权限见 resolveActions.claim）。点了先确认再调 claim。
 	const claimButton = tipBtn(null, "actionClaim", "tipClaim", () => void runAction("claim"));
 	const resumeButton = tipBtn(
-		h(IconChevronRightOutlineRegular, { size: 14 }),
+		h(Icon, { name: "common.base:jiantou-you" }),
 		"actionResume",
 		"tipResume",
 		() => void resumeTask(),
 	);
 	const finishButton = tipBtn(
-		h(IconCheckOutlineRegular, { size: 14 }),
+		h(Icon, { name: "common.base:gou" }),
 		"actionFinish",
 		// 结案中（会话在跑）不再给点：避免一任务开两个结案会话
 		closing ? "closeInProgress" : "tipFinish",
@@ -551,7 +542,7 @@ export function TaskRowView(props: {
 	);
 	// 释放 = 退回公共池：左向箭头（与「继续」的右箭头成一进一出，用户 2026-10-30）
 	const releaseButton = tipBtn(
-		h(IconChevronLeftOutlineRegular, { size: 14 }),
+		h(Icon, { name: "common.base:shifang" }),
 		"actionRelease",
 		"tipRelease",
 		() => void runAction("release"),
@@ -567,7 +558,7 @@ export function TaskRowView(props: {
 			label: t("actionCancel"),
 			title: "",
 			className: "dtl-iconbtn--muted",
-			icon: h(IconCloseOutlineRegular, { size: 14 }),
+			icon: h(Icon, { name: "common.base:guanbi" }),
 			disabled: busy,
 			onClick: () => {
 				setCancelError(null);
@@ -584,7 +575,7 @@ export function TaskRowView(props: {
 			label: t("actionDelete"),
 			title: "",
 			className: "dtl-iconbtn--muted",
-			icon: h(IconTrashOutlineRegular, { size: 14 }),
+			icon: h(Icon, { name: "common.base:shanchu" }),
 			disabled: busy,
 			onClick: () => {
 				setDeleteError(null);
@@ -626,7 +617,7 @@ export function TaskRowView(props: {
 			// 核心 IconButton 是 `title ?? label`，给空串即不渲染原生提示。
 			title: "",
 			className: "dtl-iconbtn--muted",
-			icon: h(IconCopyOutlineRegular, { size: 14 }),
+			icon: h(Icon, { name: "common.base:fuzhi" }),
 			onClick: () => {
 				void copyText(row.task.id).then((copied) => {
 					notify(t(copied ? "copiedTaskId" : "copyFailed"));

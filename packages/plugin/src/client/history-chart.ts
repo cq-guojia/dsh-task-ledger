@@ -10,15 +10,12 @@
  * 翻页：步长随粒度（用户 2026-10-29 定）——日 10 天 / 周 4 周 / 月 3 月。
  */
 import { createElement as h, type ReactNode, useEffect, useState } from "react";
-import {
-	IconChevronLeftOutlineRegular,
-	IconChevronRightOutlineRegular,
-} from "@deepseek-ai/dsh-client-ui-primitives";
 import type { LocaleKey, Translate } from "./locales";
 import { addDays, mondayOf, ymdOf } from "./format";
 import type { HistoryBucket, HistoryGran, HistoryTrendPayload, PeriodCount } from "./types";
 import {
 	EmptyState,
+	Icon,
 	IconButton,
 	Loader,
 	Segmented,
@@ -279,12 +276,9 @@ export function HistoryChart(props: {
 			label,
 			side: "bottom",
 			children: h(IconButton, {
-				icon: h(
-					dir === "left"
-						? IconChevronLeftOutlineRegular
-						: IconChevronRightOutlineRegular,
-					{ size: 14 },
-				),
+				icon: h(Icon, {
+					name: dir === "left" ? "common.base:jiantou-zuo" : "common.base:jiantou-you",
+				}),
 				label,
 				title: "",
 				variant: "outline",

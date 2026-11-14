@@ -10,10 +10,7 @@
  *  3. 官方 primitives 只留「官方做得更好」的（Tooltip / MarkdownText / 图标）。
  */
 
-import {
-	IconSearchOutlineRegular,
-	Tooltip,
-} from "@deepseek-ai/dsh-client-ui-primitives";
+import { Tooltip } from "@deepseek-ai/dsh-client-ui-primitives";
 import {
 	Button as CoreButton,
 	Chip as CoreChip,
@@ -28,6 +25,7 @@ import {
 	Surface as CoreSurface,
 	type LoadingHandle,
 } from "dsh-plugin-core/ui";
+import { Icon as CoreIcon } from "dsh-plugin-core/ui/icons";
 import { type CSSProperties, createElement as h, type ReactNode } from "react";
 import { UI_CONTROLS_CSS, UI_TOKENS_CSS } from "./tokens";
 
@@ -642,6 +640,12 @@ export { ConfirmModal } from "dsh-plugin-core/ui";
 /** 分区标题（icon + 标题 + 右槽）：列表按工作区分组的组头，核心原样，不再包一层。 */
 export { SectionHead } from "dsh-plugin-core/ui";
 
+/** 图标唯一出口（核心 0.35 `ui/icons`）：`name` 写 `库名:图标名`（如 `common.base:gou`）走字体库，
+ *  写官方组件名（如 `IconFolderCloseRegular`）走官方 SVG 本体。
+ *  尺寸不传 = 跟随所在文字字号（核心 2026-11-14 契约）；只有装饰性小箭头 / 独立摆放才显式给 px。
+ *  ⚠️ 名字写错不会画成别的图标，而是**空白 + 控制台告警一次** —— 新增图标名一律先在库 CSS 里核对。 */
+export { CoreIcon as Icon };
+
 /** 问号提示（核心唯一实现：14px 问号 + 官方 Tooltip 气泡，气泡走上面注入的 renderer）——
  *  标题 / 表头后面挂说明文字用它，别再写原生 title 或自绘气泡。 */
 export { FieldHint } from "dsh-plugin-core/ui";
@@ -741,7 +745,7 @@ export function SearchInput(props: {
 		placeholder: props.placeholder,
 		size: props.size ?? "md",
 		"aria-label": props.ariaLabel,
-		icon: h(IconSearchOutlineRegular, { size: 16 }),
+		icon: h(CoreIcon, { name: "common.base:chazhao" }),
 	});
 }
 

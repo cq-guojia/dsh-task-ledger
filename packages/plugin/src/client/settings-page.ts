@@ -8,15 +8,7 @@
  * 下半台账目录表格。写动作（登记 / 显示 / 改名 / 移除）全部接通：登记走核心选目录弹窗
  * （`pickWorkspaceFile({ filter: { dirs: true } })`，只能选目录、不限工作区）。
  */
-import {
-	IconChecklistOutlineRegular,
-	IconCheckOutlineRegular,
-	IconCloseOutlineRegular,
-	IconCopyOutlineRegular,
-	IconDownloadOutlineRegular,
-	IconFlatListOutlineRegular,
-	Switch,
-} from "@deepseek-ai/dsh-client-ui-primitives";
+import { Switch } from "@deepseek-ai/dsh-client-ui-primitives";
 import { pickWorkspaceFile } from "dsh-plugin-core/adv/explorer";
 /** 自定义小标签与 config-panel.ts 的「显示名称」同款：核心 Chip 的 neutral xs 档。 */
 import { Chip } from "dsh-plugin-core/ui";
@@ -28,28 +20,7 @@ import type { LocaleKey, Translate } from "./locales";
 import { isEnglish } from "./prompts";
 import { STEP_LABEL } from "./task-row";
 import type { DirsPayload, IdentityView, LedgerDirView, RosterPayload, RulesLang } from "./types";
-import { Button, Card, ConfirmModal, FieldHint, IconButton, Input, InputGroup, ListRow, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
-
-/** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
-const GithubMark = (): ReactNode =>
-	h(
-		"svg",
-		{ width: 16, height: 16, viewBox: "0 0 16 16", "aria-hidden": true, fill: "currentColor" },
-		h("path", {
-			d: "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z",
-		}),
-	);
-
-/** npm 官方 mark（24×24 simple-icons 路径，evenodd 让「npm」字母镂空）。 */
-const NpmMark = (): ReactNode =>
-	h(
-		"svg",
-		{ width: 16, height: 16, viewBox: "0 0 24 24", "aria-hidden": true, fill: "currentColor" },
-		h("path", {
-			fillRule: "evenodd",
-			d: "M0 0v24h24V0H0zm19.2 19.2h-2.4v-9.6h-2.4v9.6H4.8V4.8h14.4v14.4z",
-		}),
-	);
+import { Button, Card, ConfirmModal, FieldHint, Icon, IconButton, Input, InputGroup, ListRow, Loader, MarqueeText, Modal, SectionHead, Segmented, Surface, Table, Tag, Tip, confirmModal, notify } from "./ui";
 
 /** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 const notYet = (): void => {};
@@ -554,7 +525,7 @@ export function SettingsPage(props: {
 								{
 									variant: "info",
 									size: "sm",
-									icon: h(IconCheckOutlineRegular, { size: 14 }),
+									icon: h(Icon, { name: "common.base:gou" }),
 									loading: savingName,
 									disabled: savingName || !canSaveName,
 									onClick: () => {
@@ -656,7 +627,7 @@ export function SettingsPage(props: {
 					h(Tip, {
 						label: "GitHub",
 						children: h(IconButton, {
-							icon: h(GithubMark, null),
+							icon: h(Icon, { name: "common.logo:github" }),
 							label: "GitHub",
 							title: "",
 							onClick: () => {
@@ -667,7 +638,7 @@ export function SettingsPage(props: {
 					h(Tip, {
 						label: "NPM",
 						children: h(IconButton, {
-							icon: h(NpmMark, null),
+							icon: h(Icon, { name: "common.logo:npm" }),
 							label: "npm",
 							title: "",
 							onClick: openNpm,
@@ -680,8 +651,8 @@ export function SettingsPage(props: {
 	};
 
 	/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
-	 *  圆 + 箭头都画在同一个 SVG 里：一条 `<path>`（横杆 + `>` 箭头，描边不填充，
-	 *  像 Lucide 的 arrow-right；坐标按包围盒中心对齐圆心，绝对居中）。 */
+	 *  圆底 = CSS 徽标（`.dtl-flow__node` 上的不透明圆，压得住虚线）；箭头 = 核心图标库的
+	 *  右向箭头（用户 2026-11-15：手绘的圆环 + 描边箭头换成 `common.base:jiantou-you`）。 */
 	const sep = (): ReactNode =>
 		h(
 			"span",
@@ -689,12 +660,7 @@ export function SettingsPage(props: {
 			h(
 				"span",
 				{ className: "dtl-flow__node" },
-				h(
-					"svg",
-					{ className: "dtl-flow__ring", width: 32, height: 32, viewBox: "0 0 32 32", "aria-hidden": true },
-					h("circle", { cx: 16, cy: 16, r: 14.5 }),
-					h("path", { className: "dtl-flow__arrow", d: "M10.25 16 H21.75 M16.25 10.5 L21.75 16 L16.25 21.5" }),
-				),
+				h(Icon, { name: "common.base:jiantou-you", size: 14 }),
 			),
 		);
 
@@ -707,7 +673,7 @@ export function SettingsPage(props: {
 			stepCell(
 				1,
 				"business",
-				h(IconDownloadOutlineRegular, { size: 18 }),
+				h(Icon, { name: "common.base:xiazai", size: 16 }),
 				t("settingsFlow1"),
 				h(
 					"div",
@@ -721,7 +687,7 @@ export function SettingsPage(props: {
 			stepCell(
 				2,
 				"warning",
-				h(IconChecklistOutlineRegular, { size: 18 }),
+				h(Icon, { name: "common.base:gongzuoqu", size: 22 }),
 				t("settingsFlow2"),
 				FlowList([t("settingsFlow2Create"), t("settingsFlow2Exec"), t("settingsFlow2Close")]),
 			),
@@ -729,7 +695,7 @@ export function SettingsPage(props: {
 			stepCell(
 				3,
 				"success",
-				h(IconFlatListOutlineRegular, { size: 18 }),
+				h(Icon, { name: "common.base:shuju", size: 16 }),
 				t("settingsFlow3"),
 				FlowList([t("settingsFlow3Todo"), t("settingsFlow3History"), t("settingsFlow3Stats")]),
 			),
@@ -894,7 +860,7 @@ export function SettingsPage(props: {
 									{
 										variant: "info",
 										size: "lg",
-										icon: h(IconCheckOutlineRegular, { size: 14 }),
+										icon: h(Icon, { name: "common.base:gou" }),
 										loading: dirBusy === `rename:${dir.path}`,
 										disabled: dirBusy !== null,
 										onClick: () => {
@@ -937,8 +903,8 @@ export function SettingsPage(props: {
 							children: h(IconButton, {
 								icon:
 									copied === dir.path
-										? h(IconCheckOutlineRegular, { size: 14 })
-										: h(IconCopyOutlineRegular, { size: 14 }),
+										? h(Icon, { name: "common.base:gou" })
+										: h(Icon, { name: "common.base:fuzhi" }),
 								label: t("settingsPathCopy"),
 								size: "sm",
 								className: "dtl-dir__copy",
@@ -978,7 +944,7 @@ export function SettingsPage(props: {
 						),
 						// 移除：只留一个小叉（危险动作，与身份表的删除同色）
 						h(IconButton, {
-							icon: h(IconCloseOutlineRegular, { size: 14 }),
+							icon: h(Icon, { name: "common.base:guanbi" }),
 							label: t("settingsDirRemove"),
 							size: "sm",
 							variant: "danger",
@@ -1040,8 +1006,8 @@ export function SettingsPage(props: {
 			children: h(IconButton, {
 				icon:
 					copied === value
-						? h(IconCheckOutlineRegular, { size: 14 })
-						: h(IconCopyOutlineRegular, { size: 14 }),
+						? h(Icon, { name: "common.base:gou" })
+						: h(Icon, { name: "common.base:fuzhi" }),
 				label: t("settingsCopy"),
 				size: "sm",
 				onClick: () => {
@@ -1050,12 +1016,13 @@ export function SettingsPage(props: {
 			}),
 		});
 
-	/** 一块可复制的正文（提示词 / 规则片段共用）：复制钮钉在框的右上角（CSS 绝对定位，
-	 *  距上、右同距）；单行内容靠正文的 min-height 让它看起来仍是垂直居中。 */
+	/** 一块可复制的正文（提示词 / 规则片段共用）：外框 = 核心 `Surface` 的 **dashed 档**
+	 *  （底 / 边 / 圆角 / 内距归核心，圆角 12 与其它面同档）；复制钮钉在框的右上角
+	 *  （CSS 绝对定位，距上、右同距）；单行内容靠正文的 min-height 让它看起来仍是垂直居中。 */
 	const copyBlock = (text: string): ReactNode =>
 		h(
-			"div",
-			{ className: "dtl-set__prompt" },
+			Surface,
+			{ className: "dtl-set__prompt", border: "dashed", padding: "sm" },
 			h("span", { className: "dtl-set__promptbody" }, text),
 			// 单独一层定按钮位置：Tooltip 内部还会包节点，直接选 `.dtl-tip` 不一定命中
 			h("div", { className: "dtl-set__promptact" }, copyButton(text)),
@@ -1083,7 +1050,7 @@ export function SettingsPage(props: {
 		Surface,
 		{ padding: "lg" },
 		h(SectionHead, {
-			icon: h(IconDownloadOutlineRegular, { size: 16 }),
+			icon: h(Icon, { name: "common.base:xiazai" }),
 			title: h(
 				"span",
 				{ className: "dtl-set__rules-title" },
@@ -1101,11 +1068,12 @@ export function SettingsPage(props: {
 				h(
 					Fragment,
 					null,
+					// 命令一行 = 核心 `ListRow`（带边档）：底 / 边 / 圆角 / 内距与右侧操作槽都归它，
+					// 复制钮进 `actions` 槽（点按钮不连带整行的事件）。
 					h(
-						"div",
-						{ className: "dtl-set__cmd" },
+						ListRow,
+						{ className: "dtl-set__cmd", bordered: true, actions: copyButton(SKILL_ADD) },
 						h("code", { className: "dtl-set__cmdtext" }, SKILL_ADD),
-						copyButton(SKILL_ADD),
 					),
 					note(t("settingsAgentsStep1Note")),
 					note(t("settingsAgentsPromptLabel")),
@@ -1170,7 +1138,7 @@ export function SettingsPage(props: {
 								{
 									label: t("settingsUserModalConfirm"),
 									variant: "info",
-									icon: h(IconCheckOutlineRegular, { size: 14 }),
+									icon: h(Icon, { name: "common.base:gou" }),
 									disabled: pending !== null || name.trim() === "",
 									onClick: create,
 								},
@@ -1250,7 +1218,7 @@ export function SettingsPage(props: {
 													),
 											// 删除：底色走核心 0.20 的 color/background 轴；点了先确认再逐本台账摘
 											h(IconButton, {
-												icon: h(IconCloseOutlineRegular, { size: 14 }),
+												icon: h(Icon, { name: "common.base:guanbi" }),
 												label: t("settingsDeleteUser"),
 												size: "sm",
 												variant: "danger",
@@ -1336,7 +1304,7 @@ export function SettingsPage(props: {
 			{ padding: "lg" },
 			// 标题行 = 核心 SectionHead（icon + 标题 + 右槽）：右槽放三档筛选与「添加目录」
 			h(SectionHead, {
-				icon: h(IconFlatListOutlineRegular, { size: 16 }),
+				icon: h(Icon, { name: "common.base:shuju" }),
 				title: t("settingsDirsTitle"),
 				right: h(
 					"div",
@@ -1376,7 +1344,7 @@ export function SettingsPage(props: {
 			Surface,
 			{ padding: "lg" },
 			h(SectionHead, {
-				icon: h(IconChecklistOutlineRegular, { size: 16 }),
+				icon: h(Icon, { name: "common.base:yonghu" }),
 				title: h(
 					"span",
 					{ className: "dtl-set__rules-title" },

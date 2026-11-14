@@ -46,10 +46,10 @@ window.__ModuleLoader__.load({
 		let react_jsx_runtime = require("react/jsx-runtime");
 		let react_dom = require("react-dom");
 		react_dom = __toESM(react_dom, 1);
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/design/tokens-css.generated.js
-		const TOKENS_CSS_TEMPLATE = "\n/* ── 文字（宿主 label 四档 + 反色面用字）────────────────────────────── */\nbody{\n  --dshpc-fg:var(--dsw-alias-label-primary,#1f2328);\n  --dshpc-fg-2:var(--dsw-alias-label-secondary,#5c6370);\n  --dshpc-fg-3:var(--dsw-alias-label-tertiary,#767d87);\n  --dshpc-fg-4:var(--dsw-alias-label-caption,#9aa1ab);\n  --dshpc-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);\n  /* 反色面上的字（实心钮 / 角标）：暗色下是 bluish-1000，故用 -foreground 而非 -inverted */\n  --dshpc-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);\n\n  /* ── 面（宿主 bg-layer 三档 + 下沉轨道底）──────────────────────────── */\n  --dshpc-surface-1:var(--dsw-alias-bg-layer-1,#fff);\n  --dshpc-surface-2:var(--dsw-alias-bg-layer-2,#fff);\n  --dshpc-surface-3:var(--dsw-alias-bg-layer-3,#fff);\n  /* 「选中亮片」的底盘色（配 --dshpc-shadow-raised 用） */\n  --dshpc-surface-raised:var(--dsw-alias-bg-layer-1,#fff);\n  /* 轨道 / 下沉底（官方分段控件轨道用的就是这条） */\n  --dshpc-surface-sunken:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));\n  /* 整页 / 编辑器底（bg-base） */\n  --dshpc-surface-base:var(--dsw-alias-bg-base,#fff);\n  /* 自绘浮层 / 菜单卡的不透明底（= base；不要用半透明的 specific-menu） */\n  --dshpc-surface-menu:var(--dshpc-surface-base);\n  /* markdown 代码块面 / 字体（会话镜像里用到） */\n  --dshpc-code-surface:var(--dsw-alias-markdown-code-block,rgba(128,128,128,.10));\n  --dshpc-code-font:var(--dsw-font-markdown-code-block-small,12px/18px var(--ds-font-family-code,monospace));\n  /* 警告文字色（宿主 state-warn-label） */\n  --dshpc-warning-label:var(--dsw-alias-state-warn-label,#f5a623);\n  /* 固定中性实面（自绘浮层、深色主题下必须自己变的那几个）——只有它需要暗色覆盖 */\n  --dshpc-solid:var(--dsw-static-neutral-00,#fff);\n  --dshpc-on-solid:var(--dsw-alias-label-primary,#1f2328);\n  /* 交付文件卡那种「浅底盘 + hover 加深」两拍 */\n  --dshpc-plate:var(--dsw-static-neutral-50,#fafafa);\n  --dshpc-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);\n  /* ⚠️ 这些**固定中性面一律用 rgba 字面量**（2026-10-19 真机教训）：不要写成\n     「rgba 回退行 + 嵌 --dsw-static-* 的 color-mix 行」两条同名声明——自定义属性**后者恒胜**，\n     哪怕它的值在宿主里算不出来（static 变量 invalid）⇒ 整条 token 作废、rgba 兜底一起被废，\n     0.2.6 里 Segmented 轨道全透明就是这么来的。要跟宿主主题联动的面用 alias token（那些实测有效）。 */\n  --dshpc-icon-plate:rgba(255,255,255,.5);\n  /* 表头底：浅色主题**偏深**，且必须**比斑马纹（--dshpc-plate）再深一档**——\n     两者不能撞色（用户 2026-10-02：表头跟斑马纹一模一样）。 */\n  --dshpc-head-bg:var(--dsw-static-neutral-100,#f5f5f5);\n  /* 表格底 / 行 hover（2026-10-30 用户二次定案：表头与通栏**互换**底色）：\n     表头默认底 = 通栏原来那层灰（--dshpc-surface-sunken，跟着宿主交互面走）；\n     通栏默认底 = 表头原来那色（亮 #f6f8fa / 暗 #151b23，参考图实测，与深色段同源）；\n     行 hover 是「一层极淡的黑」≈1.5%（用户：再浅一半，要特别淡）。 */\n  --dshpc-table-head-bg:var(--dshpc-surface-sunken);\n  --dshpc-table-banner-bg:#f6f8fa;\n  --dshpc-table-row-hover:rgba(15,15,15,.015);\n  /* 图标小底板（产出物）：浅色下要**看得见**（原先取 plate ⇒ 在白底上等于没有）；hover 加倍。 */\n  --dshpc-chip-bg:rgba(15,15,15,.07);\n  --dshpc-chip-bg-hover:rgba(15,15,15,.14);\n  /* 展开行：**带透明度的蓝**——不是灰、也不是纯色，透出卡片底色，一眼看出「这是展开的」\n     （用户 2026-10-02：灰色跟斑马纹分不出来）。内容区再淡一档，形成「行深 / 内容浅」的区隔。 */\n  --dshpc-open-bg:rgba(37,99,235,.10);\n  --dshpc-open-bg-soft:rgba(37,99,235,.05);\n  --dshpc-card-hover:rgba(37,99,235,.07);\n\n  /* ── 描边四档（宿主真值：l1 4% / l2 10% / l3 12% / l4 16%）────────── */\n  --dshpc-border-faint:var(--dsw-alias-border-l1,#0000000a);\n  --dshpc-border:var(--dsw-alias-border-l2,#0000001a);\n  --dshpc-border-strong:var(--dsw-alias-border-l3,#0000001f);\n  --dshpc-border-heavy:var(--dsw-alias-border-l4,#00000029);\n\n  /* ── 品牌 / 语义色 ────────────────────────────────────────────────── */\n  /* 品牌「面」色：明色近黑、暗色近白（官方 Switch 选中态即此），**不是蓝色** */\n  --dshpc-accent:var(--dsw-alias-brand-primary,#0f1115);\n  /* 蓝色：强调 / 选中 / 焦点，一律走这条 */\n  --dshpc-business:var(--dsw-alias-state-business-primary,#3b5bdb);\n  --dshpc-success:var(--dsw-alias-state-success-primary,#22c55e);\n  /* ⚠️ 是 state-warn（不是 state-warning，后者宿主无此定义） */\n  --dshpc-warning:var(--dsw-alias-state-warn-primary,#f59e0b);\n  --dshpc-danger:var(--dsw-alias-state-error-primary,#ec1313);\n  --dshpc-link:var(--dsw-alias-link,#3b5bdb);\n  /* 语义色**实面**上的字（角标 / 实心提示）：宿主红绿黄三色都是中调 ⇒ 白字两个主题都可读，\n     故这是一条与主题无关的常量；不要拿 --dshpc-fg-inverse 顶——它在暗色下是近黑，压在红底上看不清。 */\n  --dshpc-on-signal:#fff;\n  /* 黄底上的字：黄色是中高明度，白字看不清 ⇒ 固定深色（与主题无关）。 */\n  --dshpc-on-warning:#1f2328;\n  /* 告警严重度的圆点底色（2026-11-03 从 feedback.css 收到这里）。\n     与主题无关的一组常量：这几个色要在任意底色上都认得出来，所以**不跟宿主 state 色走**\n     （宿主 state-warn-primary 偏亮，压白 ✕ 看不清）。语义色改动请只改这里。 */\n  --dshpc-sev-info:#2563eb;\n  --dshpc-sev-success:#16a34a;\n  --dshpc-sev-warning:#d97706;\n  --dshpc-sev-error:#dc2626;\n\n  /* ── 实心按钮的 hover / active 派生态（2026-10-19 用户点名）─────────────────\n     原实现是 :hover 直接压 opacity .9：黑底压 10% 几乎看不出来，用户原话「完全感觉不到颜色变了」。\n     ⇒ 改成对底色做**明确的混色**（压 22% / 34%），不用 opacity：\n       · 亮色主题：黑底（--dshpc-accent）掺白提亮；红 / 绿 / 黄 / 蓝底掺黑压深；\n       · 暗色主题：反过来（暗底掺白、亮底掺黑）。\n     混色对象是**固定中性色字面量**（#fff / #000），不依赖宿主 static-neutral 是否存在；\n     旧内核不认 color-mix 时整条声明作废 ⇒ 回落各档原色（可接受：仍可点，只是没有 hover 反馈）。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 78%,#ffffff);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 64%,#ffffff);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#000000);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#000000);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#000000);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#000000);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#000000);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#000000);\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 78%,#000000);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 64%,#000000);\n  /* 语义色**浅底**：状态色系的「一块底色」——执行记录页每条流水账的块底就是它\n     （用户 2026-10-04：正常态给同色系很浅的透明底、失败用红底透出来）。\n     用 「color-mix」 现算而不写死 rgba：状态色本身跟随宿主 alias，主题一换自动成立。\n     ⚠️ **深色下要更淡**：用户 2026-10-04「深色风格的绿色和红色好像都有点深」⇒ dark 段\n     把这四条压到 5%（更贴近面板底、存在感更弱）；浅色段维持 8%。两端各自给值，不共用一条曲线。\n     命名收在 tokens.ts 单点（本仓硬规矩：业务文件不许自造 --dshpc-*）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 8%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 8%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 8%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 8%,transparent);\n\n  /* ── 扩展语义色（2026-10-29 用户拍板：分类 / 图表常用色八支）──────────────\n     宿主无对应 alias ⇒ 写死 hex（不跟随宿主换肤）；实心面字色统一走 --dshpc-on-signal（白），\n     因八支明度都低于黄 / 青柠，白字两主题均 ≥4.5:1 可读。每条自带 hover/active/soft 派生；\n     暗色段只覆盖派生（base 写死、两主题同值）。 */\n  --dshpc-purple:#9333ea;\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 78%,#000000);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 64%,#000000);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 8%,transparent);\n  --dshpc-pink:#db2777;\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 78%,#000000);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 64%,#000000);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 8%,transparent);\n  --dshpc-cyan:#0e7490;\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 78%,#000000);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 64%,#000000);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 8%,transparent);\n  --dshpc-teal:#0f766e;\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 78%,#000000);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 64%,#000000);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 8%,transparent);\n  --dshpc-orange:#c2410c;\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 78%,#000000);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 64%,#000000);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 8%,transparent);\n  --dshpc-indigo:#4f46e5;\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 78%,#000000);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 64%,#000000);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 8%,transparent);\n  --dshpc-rose:#e11d48;\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 78%,#000000);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 64%,#000000);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 8%,transparent);\n  --dshpc-slate:#475569;\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 78%,#000000);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 64%,#000000);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 8%,transparent);\n\n  /* ⚠️ 2026-10-18 用户拍板：宿主 alias 的 hover（暗色白 8% / 亮色 6%）**太弱**，\n     「移上去要仔细看才看得出来」⇒ 不再委托宿主 hover 别名，改为自掺中性色并加重：\n     亮色掺黑 10%、暗色掺白 14%（active 再加一档）。按钮 / 分段轨道 / 各类 hover 底同时受益。\n     ⚠️ 必须保留 rgba 兜底行在前（本文件惯例，见 icon-plate 注释）：掺的是**固定中性色**\n     （neutral-900=#0f0f0f / neutral-00=#fff），预计算无损；旧内核不认 color-mix 时走兜底，\n     否则整条 background:var(--seg-track) 作废 ⇒ 分段轨道透明（真踩过：预览站轨道消失）。 */\n  --dshpc-hover:rgba(15,15,15,.10);\n  --dshpc-active:rgba(15,15,15,.18);\n  /* 分段控件轨道底：专用 token（rgba 字面量、不借 --dshpc-hover 中转）——\n     2026-10-19 教训：变量链中间任何一环 invalid ⇒ background 整条作废、轨道全透明。\n     亮色：黑 7%（比 hover 的 10% 淡一档，选中白片才跳得出）。 */\n  --dshpc-seg-track:rgba(15,15,15,.07);\n  --dshpc-mask:var(--dsw-alias-bg-mask-1,#0000003d);\n  /* 弹窗锁定态给**自绘控件**的降透明度档（2026-11-05）。放在 token 里是为了让消费方\n     在自己元素上写 --dshpc-lock-dim: 1 就能退出这条效果，不用 !important 打架。 */\n  --dshpc-lock-dim:.5;\n  /* 「选中面」（2026-10-06，任务日程页首创）= 当前底色**朝更深掺 12% 文字色**：\n     浅色主题下文字色是黑 ⇒ 选中面比常态底色**深一档**。深色分支见 body[data-ds-dark-theme]（朝背景色掺）。\n     语义：标记「正在看的东西」，比常态明显、又不许盖住内容（不许用半透明叠状态色）。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 88%,var(--dshpc-fg));\n  /* ListRow 选中面（2026-11-07 用户定）：slate 的**极浅蓝灰**，不用上面那条通用「选中面」。\n     通用值亮色是掺文字色的中性灰、暗色是两个深色面互掺 ⇒ 深色下选中行发黑（用户实测）。\n     这里从 --dshpc-slate 派生半透明浅色：亮色 14% 叠白 ≈ #e5e7ea，比常态 tone-sunken\n     深一档才看得出「选中」；暗色浓度见 body[data-ds-dark-theme] 段。 */\n  --dshpc-listrow-selected-bg:color-mix(in srgb,var(--dshpc-slate) 14%,transparent);\n  /* ListRow hover（2026-11-07 用户：原来取 --dshpc-active 太夸张，「有一点变化就行」）：\n     常态 tone-sunken 是 6% 蓝灰叠白 ≈ #f0f1f3，这里只加深到 9% 中性黑 ≈ #e8e8e8，\n     能看出移上去了，又不会把整行内容和文字对比度一起改掉。暗色档见 body[data-ds-dark-theme]。 */\n  --dshpc-listrow-hover-bg:rgba(15,15,15,.09);\n  /* 任务日程页本月格默认底（2026-10-06 → 续2）：浅色下给**淡蓝**（business 8% 透白底）——\n     参照用户参考稿里未选中日程块 / Tuesday 列的那种蓝、再浅一点点；\n     相邻月补位格仍走 --dshpc-surface-2（更灰），不受影响。\n     深色段维持 #23262e（用户：深色 UI 已差不多，不动）。 */\n  --dshpc-cal-cell-bg:color-mix(in srgb,var(--dshpc-business) 8%,var(--dshpc-surface-1));\n  /* 任务日程页「点开某天」展开的面板底（2026-10-06 续）：浅色下**无限接近白、只带一丁点灰**\n     （neutral-50 = #fafafa）——面板里装半透明执行记录列表，底再深整片就发糊发灰；\n     深色段沿用原 selected-bg 暗值，保持不动。 */\n  --dshpc-cal-panel-bg:var(--dsw-static-neutral-50,#fafafa);\n  /* 任务日程页本月格 hover 底（浅色段，2026-10-06 续3）：不再走灰色通用交互底——\n     鼠标移上去应是「更亮一点点的蓝」（与深色段同语义：hover = 提亮的蓝，不是灰下去）。\n     浓度**介于**表头蓝（14%）与未选中格蓝（8%）之间、略偏表头一侧：business 12% 透白底\n     （比表头浅一点、比未选中格深一点）。 */\n  --dshpc-cal-cell-hover:color-mix(in srgb,var(--dshpc-business) 12%,var(--dshpc-surface-1));\n\n  /* ── 投影 / 焦点 ──────────────────────────────────────────────────── */\n  --dshpc-shadow-1:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  /* 亮片自带的浮起感（选中态用；与 --dshpc-surface-raised 配对） */\n  --dshpc-shadow-raised:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  --dshpc-shadow-2:var(--dsw-shadow-lv3,0 12px 32px 0 #00000014);\n  /* 键盘焦点环。⚠️ 不用宿主 --dsw-focus-ring-color：它默认值是 transparent（兜底不生效、会隐身） */\n  --dshpc-focus:var(--dsw-alias-state-business-primary,#3b5bdb);\n\n  /* ── 圆角（宿主真值 4 / 8 / 12 / 16 / 20 / 28）─────────────────────── */\n  --dshpc-radius-xs:var(--dsw-radius-xs,4px);\n  --dshpc-radius-sm:var(--dsw-radius-sm,8px);\n  --dshpc-radius-md:var(--dsw-radius-md,12px);\n  --dshpc-radius-lg:var(--dsw-radius-lg,16px);\n  --dshpc-radius-xl:var(--dsw-radius-xl,20px);\n  --dshpc-radius-panel:var(--dsw-radius-panel,28px);\n  /* 全圆（胶囊标签）：宿主的 radius 档最大只有 28px，撑不满 24px 高的 chip */\n  --dshpc-radius-pill:999px;\n\n  /* ── 间距四拍（只许用这四档，不许出现 5 / 7 / 9px）────────────────── */\n  --dshpc-space-1:4px;\n  --dshpc-space-2:8px;\n  --dshpc-space-3:12px;\n  --dshpc-space-4:16px;\n\n  /* ── 控件高度：离散三档（控件用 size=\"sm|md|lg\" 选；调用点不许自定义高度，\n       真不够用才允许在调用点本地覆盖 --dshpc-control-h-*，属例外而非常态）── */\n  --dshpc-control-h-sm:24px;\n  --dshpc-control-h-md:28px;\n  --dshpc-control-h-lg:32px;\n\n  /* ── 字号 / 行高：直绑宿主字号族（宿主真值 11 / 12 / 13 / 14 / 16）───── */\n  --dshpc-font-xs:var(--dsw-font-xxxs-11-font-size,11px);\n  --dshpc-font-sm:var(--dsw-font-xxs-12-font-size,12px);\n  --dshpc-font-md:var(--dsw-font-xs-13-font-size,13px);\n  --dshpc-font-lg:var(--dsw-font-s-14-font-size,14px);\n  --dshpc-font-xl:var(--dsw-font-base-16-font-size,16px);\n  --dshpc-line-xs:var(--dsw-font-xxxs-11-line-height,14px);\n  --dshpc-line-sm:var(--dsw-font-xxs-12-line-height,18px);\n  --dshpc-line-md:var(--dsw-font-xs-13-line-height,20px);\n  --dshpc-line-lg:var(--dsw-font-s-14-line-height,22px);\n  --dshpc-line-xl:var(--dsw-font-base-16-line-height,24px);\n  --dshpc-font-mono:var(--ds-font-family-code,monospace);\n\n  /* ── 细滚动条的让位值（线宽不能放 token，见文件末尾的注释）──────────\n     1px→2px 只改这一行；它用在普通元素上，var() 能正常解析。 */\n  --dshpc-scroll-inset:1px;\n\n  /* ── 层级阶梯（业务文件不许再写裸 z-index）───────────────────────── */\n  /* 页面级预览分栏 → 抽屉（新建/编辑）→ 弹窗/确认框 → 浮层菜单 → 浮层提示 */\n  /* **整条阶梯都必须低于官方浮点 1000 档**（2026-11-06 用户拍板）：官方原语\n     Modal / ImageLightbox 是 z-index 1000（body portal），Menu / Toast 是 1100。\n     我们只是宿主里的一个页面 ⇒ 宿主浮点恒在我们之上；以后弹窗里再开官方模态/预览，\n     不必逐个场景「临时让位」（此前 1070 压住官方原图预览就是这么踩出来的）。 */\n  /* 内容层吸顶（天标签 / 表头这类「跟着滚但压住同层内容」的元素）：只压同层兄弟，\n     必须低于下面所有浮层档 —— 所以它不是「开新浮层档」，而是内容层内部的排序位。 */\n  --dshpc-z-sticky:10;\n  --dshpc-z-dock:900;\n  --dshpc-z-drawer:920;\n  --dshpc-z-modal:940;\n  /* 收起后的耳朵：必须高于弹窗遮罩，否则弹窗一开就点不到它（2026-11-04 用户真机）。\n     只给耳朵用，页面级分栏本体仍是布局成员，不跟着抬高。 */\n  --dshpc-z-ear:950;\n  --dshpc-z-menu:960;\n  --dshpc-z-tip:970;\n  /* 语义别名（2026-11-03 面板皮肤统一）：业务文件只许用这两个说「我要一层浮层」，\n     不再各自写浮层字面量。\n       panel   = 浮层面板本体（picker 弹窗、锚定面板）；\n       popmenu = 叠在面板之上的菜单（▾ 选层、Picker 下拉）与其透明遮罩。 */\n  --dshpc-z-panel:var(--dshpc-z-menu);\n  --dshpc-z-popmenu:var(--dshpc-z-tip);\n\n  /* ── 动效 ─────────────────────────────────────────────────────────── */\n  --dshpc-dur:var(--ds-transition-duration,.2s);\n  --dshpc-dur-fast:var(--ds-transition-duration-fast,.12s);\n  --dshpc-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));\n  /* 运行中状态的脉动时长（2026-10-06 统一前后两端：任务配置里的绿呼吸 → 蓝、放慢；\n     执行记录里的蓝闪 → 放慢一点。两者用同一个值，动画形状本就一致）。 */\n  --dshpc-dur-run:500ms;\n}\n\n/* ── 明暗差异的**唯一**落点 ──────────────────────────────────────────────\n   判据 = body[data-ds-dark-theme]（宿主 0.2.0-rc.2 源码核实：启动脚本 toggleAttribute 写入，\n   唯一明暗判据；插件禁止用 prefers-color-scheme —— 它跟的是系统、不是用户在宿主里的选择）。\n   下面只放 alias 表达不了的「固定中性面」；颜色若能靠 alias 自动跟随，一律不要写在这里。 */\nbody[data-ds-dark-theme]{\n  /* 深色段的蓝**刻意不跟随宿主 alias**（唯一例外）：宿主暗色 alias 给的是 #60a5fa 一档的高亮蓝，\n     实心面（Chip / Button info / 日期选中格）压白字会发糊 —— 用户 2026-10-29 实测反馈。\n     ⇒ 深色下改定向浅色状态的蓝（#3b5bdb）靠，只在明度上抬一点点，保证它在暗底上仍看得见：\n     #4c6bd8 对白字 ≈4.8:1（原亮蓝只有 ~2.3:1），对日历格底 ≈3.2:1 仍过 UI 件的 3:1 线。\n     代价：宿主换品牌色时深色不再自动跟着变，需要这里手动同步。 */\n  --dshpc-business:#4c6bd8;\n  --dshpc-solid:var(--dsw-static-neutral-900,#0f0f0f);\n  --dshpc-on-solid:var(--dsw-static-neutral-00,#fff);\n  /* 实心按钮 hover / active（暗色版）：黑底（浅色主题的近黑 → 暗色下的近白）掺黑压深；\n     红 / 绿 / 黄 / 蓝掺白提亮。与亮色段方向相反，保证两种主题下「一眼看出变了」。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 80%,#000000);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 66%,#000000);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#ffffff);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#ffffff);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#ffffff);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#ffffff);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#ffffff);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#ffffff);\n  /* 同上：掺白比例从 22% / 36% 收到 12% / 22% —— 底色已变深，照旧比例提亮会在 hover 瞬间\n     把白字对比打回 ~3:1（正是用户嫌糊的那一档）；收窄后 hover 仍可感知、字仍清晰。 */\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 88%,#ffffff);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 78%,#ffffff);\n  /* 暗色 hover 掺白 14% / active 24%（对齐上面 2026-10-18 的加重拍板）。rgba 兜底行同上。 */\n  --dshpc-hover:rgba(255,255,255,.14);\n  --dshpc-active:rgba(255,255,255,.24);\n  /* 分段轨道（暗色版）：白 10%——比 hover 淡一档，选中亮片才跳得出。 */\n  --dshpc-seg-track:rgba(255,255,255,.10);\n  --dshpc-plate:var(--dsw-static-neutral-850,#212123);\n  --dshpc-plate-hover:var(--dsw-static-neutral-800,#292929);\n  --dshpc-icon-plate:rgba(255,255,255,.05);\n  /* 暗色主题**反过来**：表头要比卡片面**亮**、比斑马纹再**浅一档**（用户：纯黑背景没法看）。 */\n  --dshpc-head-bg:var(--dshpc-surface-2);\n  /* 表格（2026-10-30 用户二次定案：与通栏互换底色）：通栏底取表头原来那色 #151b23\n     （亮色段对应 #f6f8fa）；表头默认底沿用亮色段定义的 --dshpc-surface-sunken，不在暗色段重写；\n     行 hover 是「一层极淡的白」≈3% —— 暗底上用黑会越悬越暗，看不出「浅灰」反馈。 */\n  --dshpc-table-banner-bg:#151b23;\n  --dshpc-table-row-hover:rgba(255,255,255,.03);\n  /* 暗色底板**微亮**；hover **更亮**（原先 hover 取 plate-hover 反而更淡 ⇒ 鼠标移上去就没了）。 */\n  --dshpc-chip-bg:rgba(255,255,255,.08);\n  --dshpc-chip-bg-hover:rgba(255,255,255,.16);\n  /* 暗色下蓝色要更亮、透明度略高才压得住深底。 */\n  --dshpc-open-bg:rgba(96,165,250,.18);\n  --dshpc-open-bg-soft:rgba(96,165,250,.08);\n  --dshpc-card-hover:rgba(96,165,250,.13);\n  /* 语义色**浅底**（深色版）：用户嫌深色的绿 / 红「有点深」⇒ 压到 **5%**（浅色段是 8%），\n     更贴近面板底色、存在感更弱；块底与状态色竖条仍同源（竖条是实色，不受这条影响）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 5%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 5%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 5%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 5%,transparent);\n  /* 扩展色深色派生：底色写死、hover 掺白 12%/22%（同 business，防白字发糊），soft 5%。 */\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 88%,#ffffff);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 78%,#ffffff);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 5%,transparent);\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 88%,#ffffff);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 78%,#ffffff);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 5%,transparent);\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 88%,#ffffff);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 78%,#ffffff);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 5%,transparent);\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 88%,#ffffff);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 78%,#ffffff);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 5%,transparent);\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 88%,#ffffff);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 78%,#ffffff);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 5%,transparent);\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 88%,#ffffff);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 78%,#ffffff);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 5%,transparent);\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 88%,#ffffff);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 78%,#ffffff);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 5%,transparent);\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 88%,#ffffff);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 78%,#ffffff);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 5%,transparent);\n  /* 「选中面」（深色版，2026-10-06）：掺 **~40% 背景色**（--dshpc-surface-base）⇒ 无限接近页面背景的黑、\n     只比背景略深一点点（用户：深色下展开区压着任务透明绿会发灰，底色要尽量贴近背景才不显灰）。\n     ⚠️ 深色下不能掺文字色 —— 那是白，会变亮，选中反而比本月日期浅。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n  /* ListRow 选中面（暗色版）：slate 掺到 26% —— 深底上泛蓝灰，绝不退回接近背景的黑。\n     slate 是中明度蓝灰，暗底上要比亮色掺得更浓才看得出（亮色 14% / 暗色 26%）。 */\n  --dshpc-listrow-selected-bg:color-mix(in srgb,var(--dshpc-slate) 26%,transparent);\n  /* 暗色 hover：常态 6% 白 → 10% 白，只提亮一点点（原来是 active 的 24% 白，太跳）。 */\n  --dshpc-listrow-hover-bg:rgba(255,255,255,.10);\n  /* 任务日程页本月格的默认底（深色版，2026-10-06）：深的、带点灰蓝的暗色（用户给的参考图 ≈ #23262e），\n     比原来的卡片面更沉、更偏蓝灰；选中格仍走 --dshpc-selected-bg（更暗一档），层级不变。 */\n  --dshpc-cal-cell-bg:#23262e;\n  /* 任务日程页本月格 hover 底（深色段，2026-10-06）：原先走 --dshpc-hover（宿主浅色叠加）在深底上显得\n     「灰发亮」，不好看 ⇒ 换成更贴底的蓝调微亮（与 open-bg-soft 同族），hover 时不刺眼、又有反馈。 */\n  --dshpc-cal-cell-hover:rgba(96,165,250,.12);\n  /* 任务日程页展开面板底（深色段，2026-10-06 续）：与原 selected-bg 暗值一致，深色 UI 不动 */\n  --dshpc-cal-panel-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n}\n\n/* ── 细滚动条 + 离边 1px：全库唯一真源 ─────────────────────────────────\n   放在 tokens 域（ensureComponentStyles 每次必注册、且排在所有控件域之前）：\n   任何组件只要给滚动容器挂 .dshpc-scroll-thin 就生效，不必另行注入 panel 域。\n   改线宽 / 让位 / 圆角 / 颜色只改这一处；别在别的 CSS 里再抄一份。\n\n   只用 ::-webkit-scrollbar：一旦写 scrollbar-width，Chrome 会切到规范化滚动条、\n   忽略这里的宽度（2026-11-06 实测：留着 scrollbar-width:thin 时宽度回到 ~10px）。\n   2026-11-06 用户口径：1px 太细 ⇒ 线宽起步 2px、thumb 上下端圆角；现行值见下面三行。\n\n   让位（滚动条与容器可见边缘隔 1px）也由这个类负责：原生滚动条画在 padding box 之外、\n   border 之内，只有 border 能把它推离边缘（加 padding 无效）。挂类即自动让位，\n   容器不必自己再写透明边框。方向档（CSS 没有 :scrollable，推不出滚动方向，须显式声明）：\n     .dshpc-scroll-thin          竖滚（默认）：右让位\n     .dshpc-scroll-thin--x       横滚：底让位，且不叠右\n     .dshpc-scroll-thin--both    双向：右 + 底都让位\n   --x / --both 必须与基类同挂（线宽规则只认基类）。\n\n   挂 .dshpc-panel 的容器本身已有实色边框 ⇒ :not(.dshpc-panel) 跳过让位：滚动条贴那条\n   实色线即算让位，无条件叠透明边框会把实色右边框覆盖成透明。\n   CodeMirror 的 .cm-scroller 由官方生成、挂不上类 ⇒ 后代选择器一并命中线宽与让位；\n   它只让右不让底：给底会改 scroller 高度，CodeMirror 的测量循环会多算一条横滚条。\n   外层若自己不滚（如 CodeViewer），把 --dshpc-scroll-inset-right 设 0px 关掉自身让位，\n   免得外层与 .cm-scroller 两层各 1px 叠成 2px。 */\n/* ⚠️ 下面三行的线宽 / 圆角**必须是字面量**：WebKit 的 ::-webkit-scrollbar 系列伪元素\n   不解析 var()，带变量的声明会被静默丢弃 ⇒ 宽度整条作废、退回默认值。2026-11-06 把\n   width:2px 改成 var(--dshpc-scroll-w) 后真机当场打回（用户发现），故线宽不放 token。\n   改线宽只改这一块的三处数字（三处必须同值）；让位仍走 --dshpc-scroll-inset。 */\n.dshpc-scroll-thin::-webkit-scrollbar,\n.dshpc-scroll-thin .cm-scroller::-webkit-scrollbar{width:3px;height:3px}\n.dshpc-scroll-thin::-webkit-scrollbar-thumb,\n.dshpc-scroll-thin .cm-scroller::-webkit-scrollbar-thumb{background:var(--dshpc-border-heavy);border-radius:3px}\n.dshpc-scroll-thin::-webkit-scrollbar-track,\n.dshpc-scroll-thin .cm-scroller::-webkit-scrollbar-track{background:transparent}\n.dshpc-scroll-thin:not(.dshpc-panel){border-right:var(--dshpc-scroll-inset-right,var(--dshpc-scroll-inset)) solid transparent}\n.dshpc-scroll-thin--x:not(.dshpc-panel){border-right:0;border-bottom:var(--dshpc-scroll-inset) solid transparent}\n.dshpc-scroll-thin--both:not(.dshpc-panel){border-bottom:var(--dshpc-scroll-inset) solid transparent}\n.dshpc-scroll-thin .cm-scroller{border-right:var(--dshpc-scroll-inset) solid transparent}\n";
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/design/tokens-css.generated.js
+		const TOKENS_CSS_TEMPLATE = "\n/* ── 文字（宿主 label 四档 + 反色面用字）────────────────────────────── */\nbody{\n  --dshpc-fg:var(--dsw-alias-label-primary,#1f2328);\n  --dshpc-fg-2:var(--dsw-alias-label-secondary,#5c6370);\n  --dshpc-fg-3:var(--dsw-alias-label-tertiary,#767d87);\n  --dshpc-fg-4:var(--dsw-alias-label-caption,#9aa1ab);\n  --dshpc-fg-dim:var(--dsw-alias-label-dimmed,#b9bfc7);\n  /* 反色面上的字（实心钮 / 角标）：暗色下是 bluish-1000，故用 -foreground 而非 -inverted */\n  --dshpc-fg-inverse:var(--dsw-alias-label-primary-foreground,#fff);\n\n  /* ── 面（宿主 bg-layer 三档 + 下沉轨道底）──────────────────────────── */\n  --dshpc-surface-1:var(--dsw-alias-bg-layer-1,#fff);\n  --dshpc-surface-2:var(--dsw-alias-bg-layer-2,#fff);\n  --dshpc-surface-3:var(--dsw-alias-bg-layer-3,#fff);\n  /* 「选中亮片」的底盘色（配 --dshpc-shadow-raised 用） */\n  --dshpc-surface-raised:var(--dsw-alias-bg-layer-1,#fff);\n  /* 轨道 / 下沉底（官方分段控件轨道用的就是这条） */\n  --dshpc-surface-sunken:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));\n  /* 整页 / 编辑器底（bg-base） */\n  --dshpc-surface-base:var(--dsw-alias-bg-base,#fff);\n  /* 自绘浮层 / 菜单卡的不透明底（= base；不要用半透明的 specific-menu） */\n  --dshpc-surface-menu:var(--dshpc-surface-base);\n  /* markdown 代码块面 / 字体（会话镜像里用到） */\n  --dshpc-code-surface:var(--dsw-alias-markdown-code-block,rgba(128,128,128,.10));\n  --dshpc-code-font:var(--dsw-font-markdown-code-block-small,12px/18px var(--ds-font-family-code,monospace));\n  /* 警告文字色（宿主 state-warn-label） */\n  --dshpc-warning-label:var(--dsw-alias-state-warn-label,#f5a623);\n  /* 固定中性实面（自绘浮层、深色主题下必须自己变的那几个）——只有它需要暗色覆盖 */\n  --dshpc-solid:var(--dsw-static-neutral-00,#fff);\n  --dshpc-on-solid:var(--dsw-alias-label-primary,#1f2328);\n  /* 交付文件卡那种「浅底盘 + hover 加深」两拍 */\n  --dshpc-plate:var(--dsw-static-neutral-50,#fafafa);\n  --dshpc-plate-hover:var(--dsw-static-neutral-100,#f5f5f5);\n  /* ⚠️ 这些**固定中性面一律用 rgba 字面量**（2026-10-19 真机教训）：不要写成\n     「rgba 回退行 + 嵌 --dsw-static-* 的 color-mix 行」两条同名声明——自定义属性**后者恒胜**，\n     哪怕它的值在宿主里算不出来（static 变量 invalid）⇒ 整条 token 作废、rgba 兜底一起被废，\n     0.2.6 里 Segmented 轨道全透明就是这么来的。要跟宿主主题联动的面用 alias token（那些实测有效）。 */\n  --dshpc-icon-plate:rgba(255,255,255,.5);\n  /* 表头底：浅色主题**偏深**，且必须**比斑马纹（--dshpc-plate）再深一档**——\n     两者不能撞色（用户 2026-10-02：表头跟斑马纹一模一样）。 */\n  --dshpc-head-bg:var(--dsw-static-neutral-100,#f5f5f5);\n  /* 表格底 / 行 hover（2026-10-30 用户二次定案：表头与通栏**互换**底色）：\n     表头默认底 = 通栏原来那层灰（--dshpc-surface-sunken，跟着宿主交互面走）；\n     通栏默认底 = 表头原来那色（亮 #f6f8fa / 暗 #151b23，参考图实测，与深色段同源）；\n     行 hover 是「一层极淡的黑」≈1.5%（用户：再浅一半，要特别淡）。 */\n  --dshpc-table-head-bg:var(--dshpc-surface-sunken);\n  --dshpc-table-banner-bg:#f6f8fa;\n  --dshpc-table-row-hover:rgba(15,15,15,.015);\n  /* 图标小底板（产出物）：浅色下要**看得见**（原先取 plate ⇒ 在白底上等于没有）；hover 加倍。 */\n  --dshpc-chip-bg:rgba(15,15,15,.07);\n  --dshpc-chip-bg-hover:rgba(15,15,15,.14);\n  /* 展开行：**带透明度的蓝**——不是灰、也不是纯色，透出卡片底色，一眼看出「这是展开的」\n     （用户 2026-10-02：灰色跟斑马纹分不出来）。内容区再淡一档，形成「行深 / 内容浅」的区隔。 */\n  --dshpc-open-bg:rgba(37,99,235,.10);\n  --dshpc-open-bg-soft:rgba(37,99,235,.05);\n  --dshpc-card-hover:rgba(37,99,235,.07);\n\n  /* ── 描边四档（宿主真值：l1 4% / l2 10% / l3 12% / l4 16%）────────── */\n  --dshpc-border-faint:var(--dsw-alias-border-l1,#0000000a);\n  --dshpc-border:var(--dsw-alias-border-l2,#0000001a);\n  --dshpc-border-strong:var(--dsw-alias-border-l3,#0000001f);\n  --dshpc-border-heavy:var(--dsw-alias-border-l4,#00000029);\n\n  /* ── 品牌 / 语义色 ────────────────────────────────────────────────── */\n  /* 品牌「面」色：明色近黑、暗色近白（官方 Switch 选中态即此），**不是蓝色** */\n  --dshpc-accent:var(--dsw-alias-brand-primary,#0f1115);\n  /* 蓝色：强调 / 选中 / 焦点，一律走这条 */\n  --dshpc-business:var(--dsw-alias-state-business-primary,#3b5bdb);\n  --dshpc-success:var(--dsw-alias-state-success-primary,#22c55e);\n  /* ⚠️ 是 state-warn（不是 state-warning，后者宿主无此定义） */\n  --dshpc-warning:var(--dsw-alias-state-warn-primary,#f59e0b);\n  --dshpc-danger:var(--dsw-alias-state-error-primary,#ec1313);\n  --dshpc-link:var(--dsw-alias-link,#3b5bdb);\n  /* 语义色**实面**上的字（角标 / 实心提示）：宿主红绿黄三色都是中调 ⇒ 白字两个主题都可读，\n     故这是一条与主题无关的常量；不要拿 --dshpc-fg-inverse 顶——它在暗色下是近黑，压在红底上看不清。 */\n  --dshpc-on-signal:#fff;\n  /* 黄底上的字：黄色是中高明度，白字看不清 ⇒ 固定深色（与主题无关）。 */\n  --dshpc-on-warning:#1f2328;\n  /* 告警严重度的圆点底色（2026-11-03 从 feedback.css 收到这里）。\n     与主题无关的一组常量：这几个色要在任意底色上都认得出来，所以**不跟宿主 state 色走**\n     （宿主 state-warn-primary 偏亮，压白 ✕ 看不清）。语义色改动请只改这里。 */\n  --dshpc-sev-info:#2563eb;\n  --dshpc-sev-success:#16a34a;\n  --dshpc-sev-warning:#d97706;\n  --dshpc-sev-error:#dc2626;\n\n  /* ── 实心按钮的 hover / active 派生态（2026-10-19 用户点名）─────────────────\n     原实现是 :hover 直接压 opacity .9：黑底压 10% 几乎看不出来，用户原话「完全感觉不到颜色变了」。\n     ⇒ 改成对底色做**明确的混色**（压 22% / 34%），不用 opacity：\n       · 亮色主题：黑底（--dshpc-accent）掺白提亮；红 / 绿 / 黄 / 蓝底掺黑压深；\n       · 暗色主题：反过来（暗底掺白、亮底掺黑）。\n     混色对象是**固定中性色字面量**（#fff / #000），不依赖宿主 static-neutral 是否存在；\n     旧内核不认 color-mix 时整条声明作废 ⇒ 回落各档原色（可接受：仍可点，只是没有 hover 反馈）。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 78%,#ffffff);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 64%,#ffffff);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#000000);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#000000);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#000000);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#000000);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#000000);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#000000);\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 78%,#000000);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 64%,#000000);\n  /* 语义色**浅底**：状态色系的「一块底色」——执行记录页每条流水账的块底就是它\n     （用户 2026-10-04：正常态给同色系很浅的透明底、失败用红底透出来）。\n     用 「color-mix」 现算而不写死 rgba：状态色本身跟随宿主 alias，主题一换自动成立。\n     ⚠️ **深色下要更淡**：用户 2026-10-04「深色风格的绿色和红色好像都有点深」⇒ dark 段\n     把这四条压到 5%（更贴近面板底、存在感更弱）；浅色段维持 8%。两端各自给值，不共用一条曲线。\n     命名收在 tokens.ts 单点（本仓硬规矩：业务文件不许自造 --dshpc-*）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 8%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 8%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 8%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 8%,transparent);\n\n  /* ── 扩展语义色（2026-10-29 用户拍板：分类 / 图表常用色八支）──────────────\n     宿主无对应 alias ⇒ 写死 hex（不跟随宿主换肤）；实心面字色统一走 --dshpc-on-signal（白），\n     因八支明度都低于黄 / 青柠，白字两主题均 ≥4.5:1 可读。每条自带 hover/active/soft 派生；\n     暗色段只覆盖派生（base 写死、两主题同值）。 */\n  --dshpc-purple:#9333ea;\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 78%,#000000);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 64%,#000000);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 8%,transparent);\n  --dshpc-pink:#db2777;\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 78%,#000000);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 64%,#000000);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 8%,transparent);\n  --dshpc-cyan:#0e7490;\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 78%,#000000);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 64%,#000000);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 8%,transparent);\n  --dshpc-teal:#0f766e;\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 78%,#000000);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 64%,#000000);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 8%,transparent);\n  --dshpc-orange:#c2410c;\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 78%,#000000);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 64%,#000000);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 8%,transparent);\n  --dshpc-indigo:#4f46e5;\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 78%,#000000);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 64%,#000000);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 8%,transparent);\n  --dshpc-rose:#e11d48;\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 78%,#000000);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 64%,#000000);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 8%,transparent);\n  --dshpc-slate:#475569;\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 78%,#000000);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 64%,#000000);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 8%,transparent);\n\n  /* ⚠️ 2026-10-18 用户拍板：宿主 alias 的 hover（暗色白 8% / 亮色 6%）**太弱**，\n     「移上去要仔细看才看得出来」⇒ 不再委托宿主 hover 别名，改为自掺中性色并加重：\n     亮色掺黑 10%、暗色掺白 14%（active 再加一档）。按钮 / 分段轨道 / 各类 hover 底同时受益。\n     ⚠️ 必须保留 rgba 兜底行在前（本文件惯例，见 icon-plate 注释）：掺的是**固定中性色**\n     （neutral-900=#0f0f0f / neutral-00=#fff），预计算无损；旧内核不认 color-mix 时走兜底，\n     否则整条 background:var(--seg-track) 作废 ⇒ 分段轨道透明（真踩过：预览站轨道消失）。 */\n  --dshpc-hover:rgba(15,15,15,.10);\n  --dshpc-active:rgba(15,15,15,.18);\n  /* 极淡填充底：步进器的加减钮要「看得出是按钮、但几乎不抢眼」（2026-11-14 用户：\n     只要一点点，特别特别淡）。比 hover 淡两档，不要再拿 hover 冒充。 */\n  --dshpc-fill-faint:rgba(15,15,15,.04);\n  /* 分段控件轨道底：专用 token（rgba 字面量、不借 --dshpc-hover 中转）——\n     2026-10-19 教训：变量链中间任何一环 invalid ⇒ background 整条作废、轨道全透明。\n     亮色：黑 7%（比 hover 的 10% 淡一档，选中白片才跳得出）。 */\n  --dshpc-seg-track:rgba(15,15,15,.07);\n  --dshpc-mask:var(--dsw-alias-bg-mask-1,#0000003d);\n  /* 弹窗锁定态给**自绘控件**的降透明度档（2026-11-05）。放在 token 里是为了让消费方\n     在自己元素上写 --dshpc-lock-dim: 1 就能退出这条效果，不用 !important 打架。 */\n  --dshpc-lock-dim:.5;\n  /* 「选中面」（2026-10-06，任务日程页首创）= 当前底色**朝更深掺 12% 文字色**：\n     浅色主题下文字色是黑 ⇒ 选中面比常态底色**深一档**。深色分支见 body[data-ds-dark-theme]（朝背景色掺）。\n     语义：标记「正在看的东西」，比常态明显、又不许盖住内容（不许用半透明叠状态色）。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 88%,var(--dshpc-fg));\n  /* ListRow 选中面（2026-11-07 用户定）：slate 的**极浅蓝灰**，不用上面那条通用「选中面」。\n     通用值亮色是掺文字色的中性灰、暗色是两个深色面互掺 ⇒ 深色下选中行发黑（用户实测）。\n     这里从 --dshpc-slate 派生半透明浅色：亮色 14% 叠白 ≈ #e5e7ea，比常态 tone-sunken\n     深一档才看得出「选中」；暗色浓度见 body[data-ds-dark-theme] 段。 */\n  --dshpc-listrow-selected-bg:color-mix(in srgb,var(--dshpc-slate) 14%,transparent);\n  /* ListRow hover（2026-11-07 用户：原来取 --dshpc-active 太夸张，「有一点变化就行」）：\n     常态 tone-sunken 是 6% 蓝灰叠白 ≈ #f0f1f3，这里只加深到 9% 中性黑 ≈ #e8e8e8，\n     能看出移上去了，又不会把整行内容和文字对比度一起改掉。暗色档见 body[data-ds-dark-theme]。 */\n  --dshpc-listrow-hover-bg:rgba(15,15,15,.09);\n  /* 任务日程页本月格默认底（2026-10-06 → 续2）：浅色下给**淡蓝**（business 8% 透白底）——\n     参照用户参考稿里未选中日程块 / Tuesday 列的那种蓝、再浅一点点；\n     相邻月补位格仍走 --dshpc-surface-2（更灰），不受影响。\n     深色段维持 #23262e（用户：深色 UI 已差不多，不动）。 */\n  --dshpc-cal-cell-bg:color-mix(in srgb,var(--dshpc-business) 8%,var(--dshpc-surface-1));\n  /* 任务日程页「点开某天」展开的面板底（2026-10-06 续）：浅色下**无限接近白、只带一丁点灰**\n     （neutral-50 = #fafafa）——面板里装半透明执行记录列表，底再深整片就发糊发灰；\n     深色段沿用原 selected-bg 暗值，保持不动。 */\n  --dshpc-cal-panel-bg:var(--dsw-static-neutral-50,#fafafa);\n  /* 任务日程页本月格 hover 底（浅色段，2026-10-06 续3）：不再走灰色通用交互底——\n     鼠标移上去应是「更亮一点点的蓝」（与深色段同语义：hover = 提亮的蓝，不是灰下去）。\n     浓度**介于**表头蓝（14%）与未选中格蓝（8%）之间、略偏表头一侧：business 12% 透白底\n     （比表头浅一点、比未选中格深一点）。 */\n  --dshpc-cal-cell-hover:color-mix(in srgb,var(--dshpc-business) 12%,var(--dshpc-surface-1));\n\n  /* ── 投影 / 焦点 ──────────────────────────────────────────────────── */\n  --dshpc-shadow-1:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  /* 亮片自带的浮起感（选中态用；与 --dshpc-surface-raised 配对） */\n  --dshpc-shadow-raised:var(--dsw-elevation-soft,0 4px 16px 0 #00000008);\n  --dshpc-shadow-2:var(--dsw-shadow-lv3,0 12px 32px 0 #00000014);\n  /* 键盘焦点环。⚠️ 不用宿主 --dsw-focus-ring-color：它默认值是 transparent（兜底不生效、会隐身） */\n  --dshpc-focus:var(--dsw-alias-state-business-primary,#3b5bdb);\n\n  /* ── 圆角（宿主真值 4 / 8 / 12 / 16 / 20 / 28）─────────────────────── */\n  --dshpc-radius-xs:var(--dsw-radius-xs,4px);\n  --dshpc-radius-sm:var(--dsw-radius-sm,8px);\n  --dshpc-radius-md:var(--dsw-radius-md,12px);\n  --dshpc-radius-lg:var(--dsw-radius-lg,16px);\n  --dshpc-radius-xl:var(--dsw-radius-xl,20px);\n  --dshpc-radius-panel:var(--dsw-radius-panel,28px);\n  /* 全圆（胶囊标签）：宿主的 radius 档最大只有 28px，撑不满 24px 高的 chip */\n  --dshpc-radius-pill:999px;\n\n  /* ── 间距四拍（只许用这四档，不许出现 5 / 7 / 9px）────────────────── */\n  --dshpc-space-1:4px;\n  --dshpc-space-2:8px;\n  --dshpc-space-3:12px;\n  --dshpc-space-4:16px;\n\n  /* ── 控件高度：离散三档（控件用 size=\"sm|md|lg\" 选；调用点不许自定义高度，\n       真不够用才允许在调用点本地覆盖 --dshpc-control-h-*，属例外而非常态）── */\n  --dshpc-control-h-sm:24px;\n  --dshpc-control-h-md:28px;\n  --dshpc-control-h-lg:32px;\n\n  /* ── 字号 / 行高：直绑宿主字号族（宿主真值 11 / 12 / 13 / 14 / 16）───── */\n  --dshpc-font-xs:var(--dsw-font-xxxs-11-font-size,11px);\n  --dshpc-font-sm:var(--dsw-font-xxs-12-font-size,12px);\n  --dshpc-font-md:var(--dsw-font-xs-13-font-size,13px);\n  --dshpc-font-lg:var(--dsw-font-s-14-font-size,14px);\n  --dshpc-font-xl:var(--dsw-font-base-16-font-size,16px);\n  --dshpc-line-xs:var(--dsw-font-xxxs-11-line-height,14px);\n  --dshpc-line-sm:var(--dsw-font-xxs-12-line-height,18px);\n  --dshpc-line-md:var(--dsw-font-xs-13-line-height,20px);\n  --dshpc-line-lg:var(--dsw-font-s-14-line-height,22px);\n  --dshpc-line-xl:var(--dsw-font-base-16-line-height,24px);\n  --dshpc-font-mono:var(--ds-font-family-code,monospace);\n\n  /* ── 细滚动条的让位值（线宽不能放 token，见文件末尾的注释）──────────\n     1px→2px 只改这一行；它用在普通元素上，var() 能正常解析。 */\n  --dshpc-scroll-inset:1px;\n\n  /* ── 层级阶梯（业务文件不许再写裸 z-index）───────────────────────── */\n  /* 页面级预览分栏 → 抽屉（新建/编辑）→ 弹窗/确认框 → 浮层菜单 → 浮层提示 */\n  /* **整条阶梯都必须低于官方浮点 1000 档**（2026-11-06 用户拍板）：官方原语\n     Modal / ImageLightbox 是 z-index 1000（body portal），Menu / Toast 是 1100。\n     我们只是宿主里的一个页面 ⇒ 宿主浮点恒在我们之上；以后弹窗里再开官方模态/预览，\n     不必逐个场景「临时让位」（此前 1070 压住官方原图预览就是这么踩出来的）。 */\n  /* 内容层吸顶（天标签 / 表头这类「跟着滚但压住同层内容」的元素）：只压同层兄弟，\n     必须低于下面所有浮层档 —— 所以它不是「开新浮层档」，而是内容层内部的排序位。 */\n  --dshpc-z-sticky:10;\n  --dshpc-z-dock:900;\n  --dshpc-z-drawer:920;\n  --dshpc-z-modal:940;\n  /* 收起后的耳朵：必须高于弹窗遮罩，否则弹窗一开就点不到它（2026-11-04 用户真机）。\n     只给耳朵用，页面级分栏本体仍是布局成员，不跟着抬高。 */\n  --dshpc-z-ear:950;\n  --dshpc-z-menu:960;\n  --dshpc-z-tip:970;\n  /* 语义别名（2026-11-03 面板皮肤统一）：业务文件只许用这两个说「我要一层浮层」，\n     不再各自写浮层字面量。\n       panel   = 浮层面板本体（picker 弹窗、锚定面板）；\n       popmenu = 叠在面板之上的菜单（▾ 选层、Picker 下拉）与其透明遮罩。 */\n  --dshpc-z-panel:var(--dshpc-z-menu);\n  --dshpc-z-popmenu:var(--dshpc-z-tip);\n\n  /* ── 动效 ─────────────────────────────────────────────────────────── */\n  --dshpc-dur:var(--ds-transition-duration,.2s);\n  --dshpc-dur-fast:var(--ds-transition-duration-fast,.12s);\n  --dshpc-ease:var(--ds-ease-in-out,cubic-bezier(.4,0,.2,1));\n  /* 运行中状态的脉动时长（2026-10-06 统一前后两端：任务配置里的绿呼吸 → 蓝、放慢；\n     执行记录里的蓝闪 → 放慢一点。两者用同一个值，动画形状本就一致）。 */\n  --dshpc-dur-run:500ms;\n}\n\n/* ── 明暗差异的**唯一**落点 ──────────────────────────────────────────────\n   判据 = body[data-ds-dark-theme]（宿主 0.2.0-rc.2 源码核实：启动脚本 toggleAttribute 写入，\n   唯一明暗判据；插件禁止用 prefers-color-scheme —— 它跟的是系统、不是用户在宿主里的选择）。\n   下面只放 alias 表达不了的「固定中性面」；颜色若能靠 alias 自动跟随，一律不要写在这里。 */\nbody[data-ds-dark-theme]{\n  /* 深色段的蓝**刻意不跟随宿主 alias**（唯一例外）：宿主暗色 alias 给的是 #60a5fa 一档的高亮蓝，\n     实心面（Chip / Button info / 日期选中格）压白字会发糊 —— 用户 2026-10-29 实测反馈。\n     ⇒ 深色下改定向浅色状态的蓝（#3b5bdb）靠，只在明度上抬一点点，保证它在暗底上仍看得见：\n     #4c6bd8 对白字 ≈4.8:1（原亮蓝只有 ~2.3:1），对日历格底 ≈3.2:1 仍过 UI 件的 3:1 线。\n     代价：宿主换品牌色时深色不再自动跟着变，需要这里手动同步。 */\n  --dshpc-business:#4c6bd8;\n  --dshpc-solid:var(--dsw-static-neutral-900,#0f0f0f);\n  --dshpc-on-solid:var(--dsw-static-neutral-00,#fff);\n  /* 实心按钮 hover / active（暗色版）：黑底（浅色主题的近黑 → 暗色下的近白）掺黑压深；\n     红 / 绿 / 黄 / 蓝掺白提亮。与亮色段方向相反，保证两种主题下「一眼看出变了」。 */\n  --dshpc-accent-hover:color-mix(in srgb,var(--dshpc-accent) 80%,#000000);\n  --dshpc-accent-active:color-mix(in srgb,var(--dshpc-accent) 66%,#000000);\n  --dshpc-danger-hover:color-mix(in srgb,var(--dshpc-danger) 78%,#ffffff);\n  --dshpc-danger-active:color-mix(in srgb,var(--dshpc-danger) 64%,#ffffff);\n  --dshpc-success-hover:color-mix(in srgb,var(--dshpc-success) 78%,#ffffff);\n  --dshpc-success-active:color-mix(in srgb,var(--dshpc-success) 64%,#ffffff);\n  --dshpc-warning-hover:color-mix(in srgb,var(--dshpc-warning) 78%,#ffffff);\n  --dshpc-warning-active:color-mix(in srgb,var(--dshpc-warning) 64%,#ffffff);\n  /* 同上：掺白比例从 22% / 36% 收到 12% / 22% —— 底色已变深，照旧比例提亮会在 hover 瞬间\n     把白字对比打回 ~3:1（正是用户嫌糊的那一档）；收窄后 hover 仍可感知、字仍清晰。 */\n  --dshpc-business-hover:color-mix(in srgb,var(--dshpc-business) 88%,#ffffff);\n  --dshpc-business-active:color-mix(in srgb,var(--dshpc-business) 78%,#ffffff);\n  /* 暗色 hover 掺白 14% / active 24%（对齐上面 2026-10-18 的加重拍板）。rgba 兜底行同上。 */\n  --dshpc-hover:rgba(255,255,255,.14);\n  --dshpc-active:rgba(255,255,255,.24);\n  /* 极淡填充底（暗色版）：白 5%，与亮色版同档观感。 */\n  --dshpc-fill-faint:rgba(255,255,255,.05);\n  /* 分段轨道（暗色版）：白 10%——比 hover 淡一档，选中亮片才跳得出。 */\n  --dshpc-seg-track:rgba(255,255,255,.10);\n  --dshpc-plate:var(--dsw-static-neutral-850,#212123);\n  --dshpc-plate-hover:var(--dsw-static-neutral-800,#292929);\n  --dshpc-icon-plate:rgba(255,255,255,.05);\n  /* 暗色主题**反过来**：表头要比卡片面**亮**、比斑马纹再**浅一档**（用户：纯黑背景没法看）。 */\n  --dshpc-head-bg:var(--dshpc-surface-2);\n  /* 表格（2026-10-30 用户二次定案：与通栏互换底色）：通栏底取表头原来那色 #151b23\n     （亮色段对应 #f6f8fa）；表头默认底沿用亮色段定义的 --dshpc-surface-sunken，不在暗色段重写；\n     行 hover 是「一层极淡的白」≈3% —— 暗底上用黑会越悬越暗，看不出「浅灰」反馈。 */\n  --dshpc-table-banner-bg:#151b23;\n  --dshpc-table-row-hover:rgba(255,255,255,.03);\n  /* 暗色底板**微亮**；hover **更亮**（原先 hover 取 plate-hover 反而更淡 ⇒ 鼠标移上去就没了）。 */\n  --dshpc-chip-bg:rgba(255,255,255,.08);\n  --dshpc-chip-bg-hover:rgba(255,255,255,.16);\n  /* 暗色下蓝色要更亮、透明度略高才压得住深底。 */\n  --dshpc-open-bg:rgba(96,165,250,.18);\n  --dshpc-open-bg-soft:rgba(96,165,250,.08);\n  --dshpc-card-hover:rgba(96,165,250,.13);\n  /* 语义色**浅底**（深色版）：用户嫌深色的绿 / 红「有点深」⇒ 压到 **5%**（浅色段是 8%），\n     更贴近面板底色、存在感更弱；块底与状态色竖条仍同源（竖条是实色，不受这条影响）。 */\n  --dshpc-success-soft:color-mix(in srgb,var(--dshpc-success) 5%,transparent);\n  --dshpc-warning-soft:color-mix(in srgb,var(--dshpc-warning) 5%,transparent);\n  --dshpc-danger-soft:color-mix(in srgb,var(--dshpc-danger) 5%,transparent);\n  --dshpc-business-soft:color-mix(in srgb,var(--dshpc-business) 5%,transparent);\n  /* 扩展色深色派生：底色写死、hover 掺白 12%/22%（同 business，防白字发糊），soft 5%。 */\n  --dshpc-purple-hover:color-mix(in srgb,var(--dshpc-purple) 88%,#ffffff);\n  --dshpc-purple-active:color-mix(in srgb,var(--dshpc-purple) 78%,#ffffff);\n  --dshpc-purple-soft:color-mix(in srgb,var(--dshpc-purple) 5%,transparent);\n  --dshpc-pink-hover:color-mix(in srgb,var(--dshpc-pink) 88%,#ffffff);\n  --dshpc-pink-active:color-mix(in srgb,var(--dshpc-pink) 78%,#ffffff);\n  --dshpc-pink-soft:color-mix(in srgb,var(--dshpc-pink) 5%,transparent);\n  --dshpc-cyan-hover:color-mix(in srgb,var(--dshpc-cyan) 88%,#ffffff);\n  --dshpc-cyan-active:color-mix(in srgb,var(--dshpc-cyan) 78%,#ffffff);\n  --dshpc-cyan-soft:color-mix(in srgb,var(--dshpc-cyan) 5%,transparent);\n  --dshpc-teal-hover:color-mix(in srgb,var(--dshpc-teal) 88%,#ffffff);\n  --dshpc-teal-active:color-mix(in srgb,var(--dshpc-teal) 78%,#ffffff);\n  --dshpc-teal-soft:color-mix(in srgb,var(--dshpc-teal) 5%,transparent);\n  --dshpc-orange-hover:color-mix(in srgb,var(--dshpc-orange) 88%,#ffffff);\n  --dshpc-orange-active:color-mix(in srgb,var(--dshpc-orange) 78%,#ffffff);\n  --dshpc-orange-soft:color-mix(in srgb,var(--dshpc-orange) 5%,transparent);\n  --dshpc-indigo-hover:color-mix(in srgb,var(--dshpc-indigo) 88%,#ffffff);\n  --dshpc-indigo-active:color-mix(in srgb,var(--dshpc-indigo) 78%,#ffffff);\n  --dshpc-indigo-soft:color-mix(in srgb,var(--dshpc-indigo) 5%,transparent);\n  --dshpc-rose-hover:color-mix(in srgb,var(--dshpc-rose) 88%,#ffffff);\n  --dshpc-rose-active:color-mix(in srgb,var(--dshpc-rose) 78%,#ffffff);\n  --dshpc-rose-soft:color-mix(in srgb,var(--dshpc-rose) 5%,transparent);\n  --dshpc-slate-hover:color-mix(in srgb,var(--dshpc-slate) 88%,#ffffff);\n  --dshpc-slate-active:color-mix(in srgb,var(--dshpc-slate) 78%,#ffffff);\n  --dshpc-slate-soft:color-mix(in srgb,var(--dshpc-slate) 5%,transparent);\n  /* 「选中面」（深色版，2026-10-06）：掺 **~40% 背景色**（--dshpc-surface-base）⇒ 无限接近页面背景的黑、\n     只比背景略深一点点（用户：深色下展开区压着任务透明绿会发灰，底色要尽量贴近背景才不显灰）。\n     ⚠️ 深色下不能掺文字色 —— 那是白，会变亮，选中反而比本月日期浅。 */\n  --dshpc-selected-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n  /* ListRow 选中面（暗色版）：slate 掺到 26% —— 深底上泛蓝灰，绝不退回接近背景的黑。\n     slate 是中明度蓝灰，暗底上要比亮色掺得更浓才看得出（亮色 14% / 暗色 26%）。 */\n  --dshpc-listrow-selected-bg:color-mix(in srgb,var(--dshpc-slate) 26%,transparent);\n  /* 暗色 hover：常态 6% 白 → 10% 白，只提亮一点点（原来是 active 的 24% 白，太跳）。 */\n  --dshpc-listrow-hover-bg:rgba(255,255,255,.10);\n  /* 任务日程页本月格的默认底（深色版，2026-10-06）：深的、带点灰蓝的暗色（用户给的参考图 ≈ #23262e），\n     比原来的卡片面更沉、更偏蓝灰；选中格仍走 --dshpc-selected-bg（更暗一档），层级不变。 */\n  --dshpc-cal-cell-bg:#23262e;\n  /* 任务日程页本月格 hover 底（深色段，2026-10-06）：原先走 --dshpc-hover（宿主浅色叠加）在深底上显得\n     「灰发亮」，不好看 ⇒ 换成更贴底的蓝调微亮（与 open-bg-soft 同族），hover 时不刺眼、又有反馈。 */\n  --dshpc-cal-cell-hover:rgba(96,165,250,.12);\n  /* 任务日程页展开面板底（深色段，2026-10-06 续）：与原 selected-bg 暗值一致，深色 UI 不动 */\n  --dshpc-cal-panel-bg:color-mix(in srgb,var(--dshpc-surface-1) 60%,var(--dshpc-surface-base));\n}\n\n/* ── 细滚动条 + 离边 1px：全库唯一真源 ─────────────────────────────────\n   放在 tokens 域（ensureComponentStyles 每次必注册、且排在所有控件域之前）：\n   任何组件只要给滚动容器挂 .dshpc-scroll-thin 就生效，不必另行注入 panel 域。\n   改线宽 / 让位 / 圆角 / 颜色只改这一处；别在别的 CSS 里再抄一份。\n\n   只用 ::-webkit-scrollbar：一旦写 scrollbar-width，Chrome 会切到规范化滚动条、\n   忽略这里的宽度（2026-11-06 实测：留着 scrollbar-width:thin 时宽度回到 ~10px）。\n   2026-11-06 用户口径：1px 太细 ⇒ 线宽起步 2px、thumb 上下端圆角；现行值见下面三行。\n\n   让位（滚动条与容器可见边缘隔 1px）也由这个类负责：原生滚动条画在 padding box 之外、\n   border 之内，只有 border 能把它推离边缘（加 padding 无效）。挂类即自动让位，\n   容器不必自己再写透明边框。方向档（CSS 没有 :scrollable，推不出滚动方向，须显式声明）：\n     .dshpc-scroll-thin          竖滚（默认）：右让位\n     .dshpc-scroll-thin--x       横滚：底让位，且不叠右\n     .dshpc-scroll-thin--both    双向：右 + 底都让位\n   --x / --both 必须与基类同挂（线宽规则只认基类）。\n\n   挂 .dshpc-panel 的容器本身已有实色边框 ⇒ :not(.dshpc-panel) 跳过让位：滚动条贴那条\n   实色线即算让位，无条件叠透明边框会把实色右边框覆盖成透明。\n   CodeMirror 的 .cm-scroller 由官方生成、挂不上类 ⇒ 后代选择器一并命中线宽与让位；\n   它只让右不让底：给底会改 scroller 高度，CodeMirror 的测量循环会多算一条横滚条。\n   外层若自己不滚（如 CodeViewer），把 --dshpc-scroll-inset-right 设 0px 关掉自身让位，\n   免得外层与 .cm-scroller 两层各 1px 叠成 2px。 */\n/* ⚠️ 下面三行的线宽 / 圆角**必须是字面量**：WebKit 的 ::-webkit-scrollbar 系列伪元素\n   不解析 var()，带变量的声明会被静默丢弃 ⇒ 宽度整条作废、退回默认值。2026-11-06 把\n   width:2px 改成 var(--dshpc-scroll-w) 后真机当场打回（用户发现），故线宽不放 token。\n   改线宽只改这一块的三处数字（三处必须同值）；让位仍走 --dshpc-scroll-inset。 */\n.dshpc-scroll-thin::-webkit-scrollbar,\n.dshpc-scroll-thin .cm-scroller::-webkit-scrollbar{width:3px;height:3px}\n.dshpc-scroll-thin::-webkit-scrollbar-thumb,\n.dshpc-scroll-thin .cm-scroller::-webkit-scrollbar-thumb{background:var(--dshpc-border-heavy);border-radius:3px}\n.dshpc-scroll-thin::-webkit-scrollbar-track,\n.dshpc-scroll-thin .cm-scroller::-webkit-scrollbar-track{background:transparent}\n.dshpc-scroll-thin:not(.dshpc-panel){border-right:var(--dshpc-scroll-inset-right,var(--dshpc-scroll-inset)) solid transparent}\n.dshpc-scroll-thin--x:not(.dshpc-panel){border-right:0;border-bottom:var(--dshpc-scroll-inset) solid transparent}\n.dshpc-scroll-thin--both:not(.dshpc-panel){border-bottom:var(--dshpc-scroll-inset) solid transparent}\n.dshpc-scroll-thin .cm-scroller{border-right:var(--dshpc-scroll-inset) solid transparent}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/design/style-kit.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/design/style-kit.js
 		/** 全生态统一的 CSS 变量前缀。 */
 		const CSS_PREFIX = "dshpc";
 		/** token 域固定名：变量定义必须先于消费它的规则出现。 */
@@ -120,7 +120,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/css.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/css.js
 		/**
 		* 当前插件的样式设施。
 		*
@@ -161,10 +161,10 @@ window.__ModuleLoader__.load({
 			kit.applyStyle(domain, css);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/marquee-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/marquee-css.generated.js
 		const MARQUEE_CSS = "/* 跑马灯（MarqueeText）：双层——外层只裁剪，内层才 transform 滚动；非 hover 内层自带省略号。\n   2026-10-20：本文件原是杂烩「select.css」（下拉 / 日历 / 时分的皮肤都装过），随着那些控件\n   一个个删完，最后只剩跑马灯，故按本包「一个 css 服务一个对象」的格局改名归档。\n   同批清掉的还有零引用的省略号类 .dshpc-ellipsis —— 本包三个用到截断的地方都没采纳它。 */\n.dshpc-mq{display:block;overflow:hidden;white-space:nowrap;}\n.dshpc-mq .dshpc-mq-in{display:inline-block;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top;}\n/* ⚠️ 跑法（用户 2026-10-03 拍板）：**跑一遍、停在尾字**（播放 1 次 + forwards），不来回弹、不无限跑。\n   滚距 = 精确溢出量 ⇒ 停下时最后一个字正好贴右缘，**不会跑进黑块**（黑块是旧手写版把\n   内层盒子裁了、按「半截文本」平移导致的）。鼠标移开 ⇒ :hover 失效 ⇒ 自动复位回省略号态。 */\n.dshpc-mq-run:hover .dshpc-mq-in{max-width:none;overflow:visible;animation:dshpc-mq-scroll var(--dshpc-mq-dur,6s) linear .4s 1 forwards;}\n@keyframes dshpc-mq-scroll{from{transform:translateX(0)}to{transform:translateX(var(--dshpc-mq-dist,-40px))}}\n/* 溢出渐影（用户 2026-10-24 拍板「左右稍微有点渐影」；官方口径 = dsh-client-ui-primitives@0.2.1-rc.2\n   PathLabel.module.css:13-15：mask-image 线性渐隐 + 28px 随官方）。⚠️ 只在 **hover 滚动态** 加：\n   静态态（三个点）不要渐影（用户 2026-10-24 二次拍板），hover 滚动时两端渐影——左缘柔化被裁的文字头。 */\n/* token-ok：遮罩模板色（纯黑 = 完全不透明），不是主题色；换主题也不该变。 */\n.dshpc-mq-run:hover{mask-image:linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/MarqueeText.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/MarqueeText.js
 		/**
 		* 跑马灯文本 —— **全站唯一实现**（L2，P6 从 editor-fields 迁入 ui）
 		*
@@ -172,7 +172,7 @@ window.__ModuleLoader__.load({
 		* 测宽用 ResizeObserver + 文本变化重测；滚动距离 0 时不启用 hover 动画（`.dshpc-mq-run` 才有动画）。
 		*
 		* **双层结构**：外层 `.dshpc-mq` 只负责裁剪（overflow:hidden），内层 `.dshpc-mq-in` 才做
-		* transform 滚动——文字永远在自己那一块里跑，不会压到相邻文字。皮肤在 `controls-css.ts`。
+		* transform 滚动——文字永远在自己那一块里跑，不会压到相邻文字。皮肤在 `marquee.css`。
 		*/
 		/** 跑马灯文本。 */
 		function MarqueeText(props) {
@@ -216,43 +216,10 @@ window.__ModuleLoader__.load({
 			}, props.text));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/segmented-css.generated.js
-		const SEGMENTED_CSS = "\n/* ── 分段控件 P2 ─────────────────────────────────────────────────────\n   结构照兄弟项目 dsh-task-dispatch-table 的 Segmented 皮肤（item 无边框、hover 只提亮文字），\n   前缀 / 变量名换成本仓口径。用户额外要的两处（兄弟没有）：weekday 方块间隔（现为 2px）；段内中性计数 __count。\n   ⚠️ 2026-10-19 两次误判均已澄清：① 「宿主只认单行 CSS」——假，多行一直正常；\n   ② 「宿主吃掉 token 块之后第一条规则」——也假，真因是 tokens 模板字符串结尾多了一个反斜杠，\n   注入文本里留下字面反引号，把紧随其后的那条规则的选择器污染掉了（见 dsh-host.md §9）。\n   样式照常多行书写，不必压行；也不需要任何「牺牲规则」。 */\n/* 外观只有一套（2026-10-26）：原 variant 的 default / inset 两档在 CSS 里只差 1px 内距，\n   且 default 比文档承诺矮 2px，却让下游以为「有得选」而反复对图 ⇒ 整轴删除。\n   padding 3px 是尺寸契约的一部分：item 高度 = 控制高 − 6px，加起来正好 24 / 28 / 32。 */\n/* 选中片配色收在两条局部变量里（--seg-thumb 底 / --seg-on 字）：默认走主题亮片，\n   tone 档与自定义 {bg, fg} 都只改这两条（后者由组件内联写根节点，内联恒胜）。 */\n.dshpc-seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--dshpc-radius-md);--seg-thumb:var(--dshpc-surface-raised);--seg-on:var(--dshpc-fg);background:var(--dshpc-seg-track);}\n.dshpc-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:calc(var(--dshpc-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);font-family:inherit;font-size:var(--dshpc-font-xs);font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:color var(--dshpc-dur-fast) var(--dshpc-ease),background-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-seg--md .dshpc-seg__item{height:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item{height:calc(var(--dshpc-control-h-lg) - 6px);}\n/* 段内图标（前置）：与 Button 同口径 —— inline-flex 吃掉行高基线，svg 按块级。 */\n.dshpc-seg__icon{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-seg__icon svg{display:block;margin:0;}\n/* 只有图标（无文字 / 计数 / 角标）：段必须是正方形 ⇒ 宽 = 段高、左右内距归零、内容居中；\n   否则基础规则的 0 12px 会把它拉成长方形。放在三档之后：同名特异性下后写者胜。 */\n.dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-sm) - 6px);padding:0;justify-content:center;}\n.dshpc-seg--md .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-lg) - 6px);}\n/* 多选（2026-11-07 用户）：每段最小宽 = 该档段高 ⇒ 最窄也是正方形，绝不会出现比高还窄的竖条；\n   文案更长时由内容自然撑宽成横向长方形。三档各跟自己的控制高，不写死 px。\n   weekday / icon-only 那种固定 width 若小于段高，同样被 min-width 顶到正方形。 */\n.dshpc-seg--multiple .dshpc-seg__item{min-width:calc(var(--dshpc-control-h-sm) - 6px);}\n.dshpc-seg--multiple.dshpc-seg--md .dshpc-seg__item{min-width:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--multiple.dshpc-seg--lg .dshpc-seg__item{min-width:calc(var(--dshpc-control-h-lg) - 6px);}\n.dshpc-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dshpc-fg);}\n.dshpc-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);color:var(--seg-on);font-weight:600;}\n.dshpc-seg__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n.dshpc-seg__item:disabled{cursor:default;opacity:.4;}\n/* 段内角标（如「异常」的数量）：语义色实面 + 反白字，0 由组件侧不渲染。必须是正圆（用户 2026-10-03）。 */\n.dshpc-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;background:var(--dshpc-danger);color:var(--dshpc-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}\n/* 段内中性计数（如筛选条「全部 11」）：纯文字、无底无边（对齐 task-ledger .dtl-seg__num 拍板口径）；0 由组件侧不渲染。 */\n.dshpc-seg__count{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;background:none;color:var(--dshpc-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}\n/* 选中段（彩色实面）里的计数：必须跟着 --seg-on 走再压暗一档（72% 白 ≈ 「比正文稍灰」）。\n   不许用 --dshpc-fg-3：它跟主题走，暗色下是深灰 ⇒ 蓝底上几乎看不见（2026-10-29 用户截图「My todos 4」）。 */\n.dshpc-seg__item[aria-pressed='true'] .dshpc-seg__count{color:color-mix(in srgb,var(--seg-on) 72%,transparent);}\n/* block：撑满父宽（表单行用），各段等分 */\n.dshpc-seg--block{display:flex;width:100%;}\n.dshpc-seg--block .dshpc-seg__item{flex:1 1 auto;justify-content:center;}\n/* weekday：星期多选方块。基础插件的特殊化定制（用户 2026-10-01：原 WeekdayPicker 即「蓝底 + 近似方形」）：\n   每格正方形（宽 = 段高）、选中品牌蓝反白字、**无外描边**（2026-10-18 重申）、\n   方块之间间距 gap:2px（2026-10-20 用户定稿：方块改小后 6px 显得太宽。10-18 曾从 2px 放宽到 6px，\n   两次都是用户拍板 —— 别自作主张改回去）。 */\n.dshpc-seg--weekday{--seg-track:var(--dshpc-seg-track);gap:2px;border:0;padding:3px;background:var(--seg-track);}\n.dshpc-seg--weekday .dshpc-seg__item{width:calc(var(--dshpc-control-h-lg) - 8px);padding:0;justify-content:center;}\n/* 蓝底反白：字色必须是常量白（--dshpc-on-signal）。2026-10-29 用户实测：暗色主题下这里曾用\n   --dshpc-fg-inverse，而它跟随宿主 label-primary-foreground，暗色下是近黑 ⇒ 蓝底黑字看不清。 */\n.dshpc-seg--weekday{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n\n/* ── tone（2026-10-29 用户）：选中片传内置基础色名，底 / 字由核心给，深浅两主题各自成立。\n   放在 weekday 之后：同名变量后写者胜，tone 与 className=\"dshpc-seg--weekday\" 同给时以 tone 为准。\n   黄底按 Chip / Button 同源口径用 on-warning（中高明度，白字看不清）。 */\n.dshpc-seg--tone-business{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-success{--seg-thumb:var(--dshpc-success);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-warning{--seg-thumb:var(--dshpc-warning);--seg-on:var(--dshpc-on-warning);}\n.dshpc-seg--tone-danger{--seg-thumb:var(--dshpc-danger);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-purple{--seg-thumb:var(--dshpc-purple);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-pink{--seg-thumb:var(--dshpc-pink);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-cyan{--seg-thumb:var(--dshpc-cyan);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-teal{--seg-thumb:var(--dshpc-teal);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-orange{--seg-thumb:var(--dshpc-orange);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-indigo{--seg-thumb:var(--dshpc-indigo);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-rose{--seg-thumb:var(--dshpc-rose);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-slate{--seg-thumb:var(--dshpc-slate);--seg-on:var(--dshpc-on-signal);}\n\n/* ── 单选滑动块（2026-10-26 用户：点选后选中底应「滑过去」，不是旧段消失、新段直接亮）。\n   结构 = 一块绝对定位的共用底 + 各段透明；位置/尺寸由组件量出后内联，这里只管外观与过渡。\n   --slide 只在单选挂上：多选（如星期）每段各自着色，没有唯一滑块可滑，保持原样。 */\n.dshpc-seg--slide{position:relative;}\n.dshpc-seg--slide .dshpc-seg__item{position:relative;z-index:1;}\n.dshpc-seg--slide .dshpc-seg__item[aria-pressed='true']{background:transparent;box-shadow:none;}\n.dshpc-seg__thumb{position:absolute;z-index:0;border-radius:var(--dshpc-radius-sm);background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);pointer-events:none;transition:left var(--dshpc-dur) var(--dshpc-ease),top var(--dshpc-dur) var(--dshpc-ease),width var(--dshpc-dur) var(--dshpc-ease),height var(--dshpc-dur) var(--dshpc-ease);}\n\n/* ── bordered 外框（2026-10-20 用户要的第二种模式）：**只在最外面套一圈 1px 描边**，\n   里面一概不动 —— 选中片的填充色 / 阴影 / 文字色全部保持原样（weekday 的蓝面照旧），\n   这里不写任何针对 __item 的规则。\n   总高必须与无框版逐像素一致：border 1px×2 由 padding 各让 1px 抵消（3 → 2）；\n   weekday 自己声明的 3px 在文件更后面，靠双类选择器压回 2px。 */\n.dshpc-seg--bordered{border:1px solid var(--dshpc-border);padding:2px;}\n.dshpc-seg--bordered.dshpc-seg--weekday{padding:2px;}\n\n@media (prefers-reduced-motion: reduce){.dshpc-seg__item{transition:none;}.dshpc-seg__thumb{transition:none;}}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/actions/button-css.generated.js
-		const BUTTON_CSS = "\n/* ── 按钮 / 图标钮 P2 ───────────────────────────────────────────────────\n   与 Segmented 同一条高度纪律：--dshpc-control-h-sm(24) / -md(28) / -lg(32)，\n   有边框的 variant 用 1px 真边框 + 内部 padding 补回，**有边 / 无边同高**。\n\n   三条受控轴（2026-10-19 重写，对齐主流 UI 框架的分类口径）：\n     · variant —— 外观档 = 形态 + 语义色，共 10 档：\n         primary / secondary / outline / ghost / danger / success / warning / info /\n         danger-outline（红字描边）/ link（行内链接）\n     · size —— sm / md / lg\n     · block —— 撑满父宽\n   每一档**只填 5 个局部变量**（--btn-bg / -fg / -border / -bg-hover / -bg-active），\n   结构与交互只有上面这一份；任何档位都不许再写一遍 display/height/padding。\n   自定义颜色（Button 的 color 参数）同样只覆盖这 5 个变量（token 覆盖，不是新皮肤）。\n\n   ⚠️ hover 不再用 opacity 压一层（用户 2026-10-19：「黑色和红色的按钮移上去变化太小，\n   完全感觉不到颜色变了」）⇒ 走 --dshpc-*-hover / -active 的明确混色，见 tokens-css.ts。 */\n.dshpc-btn{--btn-bg:transparent;--btn-fg:var(--dshpc-fg);--btn-border:transparent;--btn-pad:12px;\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);--btn-fg-hover:var(--btn-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;\n  box-sizing:border-box;border:1px solid var(--btn-border);border-radius:var(--dshpc-radius-md);\n  background-color:var(--btn-bg);color:var(--btn-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease),transform var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-btn--sm{--btn-pad:10px;height:var(--dshpc-control-h-sm);padding:0 var(--btn-pad);font-size:var(--dshpc-font-sm);line-height:1;}\n.dshpc-btn--md{--btn-pad:12px;height:var(--dshpc-control-h-md);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n.dshpc-btn--lg{--btn-pad:14px;height:var(--dshpc-control-h-lg);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n/* block：撑满父宽（表单底栏 / 抽屉底部的主操作） */\n.dshpc-btn--block{display:flex;width:100%;}\n/* block + 前置图标 ⇒ 文字视觉居中（2026-10-19 用户点名）：\n   内容组 [图标 + 间距 + 文字] 整体在盒内居中时，**文字**的中心会被图标推右半格。\n   把右内边距补上「图标宽 + 间距」，可用盒随之左移同量 ⇒ 文字落回视觉中心，图标贴左侧。\n   图标宽按 1.2em 估（官方图标 14/16px vs 字号 12/13px），em 随字号档自动缩放。 */\n.dshpc-btn--block.dshpc-btn--icon-start{padding-right:calc(var(--btn-pad) + 1.2em + 6px);}\n/* 图标比同档文字小一号（用户 2026-11-02）：容器吃掉 0.875em，内联 SVG 一律跟随 1em，\n   不再由调用方的 size={16} 说了算 —— 全站按钮图标尺寸只由这一处决定。 */\n.dshpc-btn__icon,.dshpc-btn__icon-end{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;font-size:.875em;}\n.dshpc-btn__icon svg,.dshpc-btn__icon-end svg{display:block;margin:0;width:1em;height:1em;}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-btn .dshpc-btn__label{min-width:0;}\n/* loading：不换 DOM 结构，只在文案前插一枚 Loader（size=xs，12px）。\n   环的画法与动画统一在 controls/loader.css（本文件不再维护第二份 SVG 弧 / keyframes）。 */\n\n/* 交互态：颜色变化写在变量上 ⇒ 所有档位一次生效，且变化幅度由 token 决定（够明显） */\n.dshpc-btn:hover:not(:disabled){background-color:var(--btn-bg-hover);color:var(--btn-fg-hover);}\n.dshpc-btn:active:not(:disabled){background-color:var(--btn-bg-active);transform:translateY(1px);}\n.dshpc-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-btn:disabled{cursor:default;opacity:.5;}\n/* dense：尺寸档 / 高度一律不变，只把图标放大一档、内距收紧（描边细的文件类型图标用）。\n   只覆盖局部变量与图标字号，不另写一套皮肤；必须写在尺寸档与图标规则之后才压得过默认值。 */\n.dshpc-btn--dense{--btn-pad:6px;}\n.dshpc-btn--dense .dshpc-btn__icon,.dshpc-btn--dense .dshpc-btn__icon-end{font-size:1.25em;}\n\n.dshpc-btn--primary{--btn-bg:var(--dshpc-accent);--btn-fg:var(--dshpc-fg-inverse);\n  --btn-bg-hover:var(--dshpc-accent-hover);--btn-bg-active:var(--dshpc-accent-active);}\n/* secondary：中性实心（灰面），用于「取消 / 次要」这类与主操作并排的按钮 */\n.dshpc-btn--secondary{--btn-bg:var(--dshpc-hover);--btn-fg:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-active);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--outline{--btn-bg:var(--dshpc-surface-1);--btn-border:var(--dshpc-border-strong);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--ghost{--btn-fg:var(--dshpc-fg-2);--btn-fg-hover:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--danger{--btn-bg:var(--dshpc-danger);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-danger-hover);--btn-bg-active:var(--dshpc-danger-active);}\n.dshpc-btn--success{--btn-bg:var(--dshpc-success);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-success-hover);--btn-bg-active:var(--dshpc-success-active);}\n.dshpc-btn--warning{--btn-bg:var(--dshpc-warning);--btn-fg:var(--dshpc-on-warning);\n  --btn-bg-hover:var(--dshpc-warning-hover);--btn-bg-active:var(--dshpc-warning-active);}\n.dshpc-btn--info{--btn-bg:var(--dshpc-business);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-business-hover);--btn-bg-active:var(--dshpc-business-active);}\n/* 扩展八色实心（2026-10-29）：白字两主题均 ≥4.5:1；hover/active 走各自 token 派生。 */\n.dshpc-btn--purple{--btn-bg:var(--dshpc-purple);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-purple-hover);--btn-bg-active:var(--dshpc-purple-active);}\n.dshpc-btn--pink{--btn-bg:var(--dshpc-pink);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-pink-hover);--btn-bg-active:var(--dshpc-pink-active);}\n.dshpc-btn--cyan{--btn-bg:var(--dshpc-cyan);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-cyan-hover);--btn-bg-active:var(--dshpc-cyan-active);}\n.dshpc-btn--teal{--btn-bg:var(--dshpc-teal);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-teal-hover);--btn-bg-active:var(--dshpc-teal-active);}\n.dshpc-btn--orange{--btn-bg:var(--dshpc-orange);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-orange-hover);--btn-bg-active:var(--dshpc-orange-active);}\n.dshpc-btn--indigo{--btn-bg:var(--dshpc-indigo);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-indigo-hover);--btn-bg-active:var(--dshpc-indigo-active);}\n.dshpc-btn--rose{--btn-bg:var(--dshpc-rose);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-rose-hover);--btn-bg-active:var(--dshpc-rose-active);}\n.dshpc-btn--slate{--btn-bg:var(--dshpc-slate);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-slate-hover);--btn-bg-active:var(--dshpc-slate-active);}\n/* danger-outline：红字描边（破坏性次要操作，如卡片上的「删除」）。\n   ⚠️ 旧修饰类 danger-ink 保留为别名（消费方可能还在挂），两者同一套皮肤。 */\n.dshpc-btn--danger-outline,.dshpc-btn--danger-ink{--btn-border:var(--dshpc-danger);--btn-fg:var(--dshpc-danger);\n  --btn-fg-hover:var(--dshpc-danger);--btn-bg-hover:var(--dshpc-danger-soft);--btn-bg-active:var(--dshpc-danger-soft);}\n/* link：行内文字链接型（会话 / 产出文件名），无底无边、品牌蓝、hover 下划线 */\n.dshpc-btn--link{--btn-fg:var(--dshpc-link);--btn-fg-hover:var(--dshpc-link);\n  --btn-bg-hover:transparent;--btn-bg-active:transparent;\n  height:auto;padding:0;border:0;background:none;font-weight:400;text-align:left;}\n.dshpc-btn--link:hover:not(:disabled){text-decoration:underline;}\n\n/* 图标钮：纯图标，方形；尺寸档的宽高与同档文字按钮等高、圆角统一吃 md（与 .dshpc-btn 同款，2026-10-28 拍板）\n   底色 / 图标色全走局部变量：默认**无底色**，消费方可传 color（图标色）/ background（底色）覆盖（用户 2026-11-02）。 */\n.dshpc-iconbtn{--icb-bg:transparent;--icb-bg-hover:var(--dshpc-hover);--icb-fg:var(--dshpc-fg-2);--icb-fg-hover:var(--dshpc-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;padding:0;\n  border:1px solid var(--icb-border,transparent);border-radius:var(--dshpc-radius-md);\n  background:var(--icb-bg);color:var(--icb-fg);\n  font-family:inherit;cursor:pointer;flex:none;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),opacity var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-iconbtn--sm{width:var(--dshpc-control-h-sm);height:var(--dshpc-control-h-sm);font-size:var(--dshpc-font-sm);}\n.dshpc-iconbtn--md{width:var(--dshpc-control-h-md);height:var(--dshpc-control-h-md);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--lg{width:var(--dshpc-control-h-lg);height:var(--dshpc-control-h-lg);font-size:var(--dshpc-font-md);}\n/* 图标与文字按钮同口径：SVG 一律跟随 1em（比 16px 档小一号）。\n   ⚠️ flex:none 是硬约束：svg 是按钮的直接 flex item，默认 flex-shrink:1 会被按钮内距\n   挤成 10px 窄条；那是布局收缩，不是层叠优先级 —— 改 width、加 !important 都救不回来，\n   而 height 在交叉轴不受影响，于是图标被压扁变形。后代选择器兼容官方图标外的 wrapper。 */\n.dshpc-iconbtn svg{display:block;width:1em;height:1em;flex:none;}\n/* dense：只放大图标的 em 值，正方形宽高与高度档都不动；\n   1.25em 相对按钮字号 12/13 ⇒ 15/16.25px，与 .dshpc-btn--dense 一致。 */\n.dshpc-iconbtn.dshpc-iconbtn--dense svg{width:1.25em;height:1.25em;}\n.dshpc-iconbtn--outline{--icb-bg:var(--dshpc-surface-1);--icb-border:var(--dshpc-border);}\n.dshpc-iconbtn--danger{--icb-fg:var(--dshpc-danger);--icb-bg-hover:var(--dshpc-danger-soft);--icb-fg-hover:var(--dshpc-danger);}\n.dshpc-iconbtn:hover:not(:disabled){background:var(--icb-bg-hover);color:var(--icb-fg-hover);}\n.dshpc-iconbtn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-iconbtn:disabled{cursor:default;opacity:.4;}\n\n/* ── 行式文件按钮（图标 + 文件名）P2：**全站唯一实现**（2026-10-04 收编）──────────\n   用途：「产出物 / 附件」那种**一行一个文件**的清单项（基础信息右栏产出物清单、附件区、\n   执行记录页的展开区）。平时透明、**鼠标移上去才出浅底**（沿用用户 2026-10-03 定的观感）。\n   两个形态修饰类：\n     --block   撑满父宽（清单里一项一行）\n     --inline  内容宽（跟在文字后头，如附件行）\n   收编原因：这份皮肤此前只写在 task-list.tsx 的 TASK_LIST_CSS 里（旧名 .dshpc-info-out），\n   执行记录页展开区要用同一种观感 ⇒ 上提基础层，避免再出现「各写一份外观」（同名不同皮的坑刚踩过）。 */\n.dshpc-filechip{appearance:none;-webkit-appearance:none;border:0;border-radius:var(--dshpc-radius-xs);\n  background:transparent;color:var(--dshpc-fg);font:inherit;text-align:left;cursor:pointer;min-width:0;\n  transition:background-color var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-filechip:hover:not(:disabled){background:var(--dshpc-chip-bg);}\n.dshpc-filechip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n.dshpc-filechip:disabled{cursor:default;background:transparent;color:var(--dshpc-fg-3);}\n.dshpc-filechip--block{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;\n  padding:4px 6px;font-size:var(--dshpc-font-xs);}\n.dshpc-filechip--inline{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:var(--dshpc-font-sm);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-btn,.dshpc-iconbtn,.dshpc-filechip{transition:none;}}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/field-css.generated.js
-		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-3);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;height:auto;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* height:auto 必须：iconbtn--md/lg 的固定 height 会让 absolute 的 bottom 被忽略\n   （top:1 + 固定高 ⇒ 整钮错位 1px，× 显得没居中，2026-10-28 用户截图抓的）。 */\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-3);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-3);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/feedback/loader-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/loader-css.generated.js
 		const LOADER_CSS = "/* ── Loader：统一的加载动画图标（无背景 / 无定位 / 颜色跟随 currentColor）────────\n   形态 × 尺寸两轴正交：形态管几何与动画；尺寸档只改 width / height，几何按\n   viewBox=\"0 0 24 24\" 等比缩放 —— 一套几何吃五档，12px 时描边即 1.5px、48px 时 6px，\n   视觉重量一致，不用逐个尺寸换算 calc。\n\n   边界：本控件**只管图标本身**。背景 / 圆角 / 内距 / 阴影 / 定位（fixed、居中、漂浮）\n   一律归调用方 —— 套 Chip、套 Card，或自己包一个 div。 */\n\n.dshpc-loader { display: inline-block; flex: none; vertical-align: middle; line-height: 0; color: inherit; }\n\n.dshpc-loader--xs { width: 12px; height: 12px; }\n.dshpc-loader--sm { width: 16px; height: 16px; }\n.dshpc-loader--md { width: 24px; height: 24px; }\n.dshpc-loader--lg { width: 32px; height: 32px; }\n.dshpc-loader--xl { width: 48px; height: 48px; }\n\n/* 形态一 ring：开口弧整体旋转。必须走 SVG 矢量弧 —— 次像素边框画圆在 12px 下会被\n   抗锯齿拉毛、看着像圆角方（2026-10-20 真机实测，曾被误判成 border-radius 被覆盖）。 */\n.dshpc-loader--ring { animation: dshpc-loader-rotate .8s linear infinite; }\n@keyframes dshpc-loader-rotate { to { transform: rotate(360deg) } }\n\n/* 形态二 blocks：三个方块依次脉动放大。\n   transform-box: fill-box 是 SVG 子元素做 CSS transform 的必要条件 —— 否则 origin\n   落在 viewBox 原点，节点会绕着左上角飞出去。 */\n.dshpc-loader__node { transform-box: fill-box; transform-origin: center; }\n.dshpc-loader--blocks .dshpc-loader__node { animation: dshpc-loader-blink 1.2s ease-in-out infinite; }\n.dshpc-loader__node:nth-child(2) { animation-delay: .15s; }\n.dshpc-loader__node:nth-child(3) { animation-delay: .3s; }\n@keyframes dshpc-loader-blink {\n  0%, 80%, 100% { opacity: .25; transform: scale(.8) }\n  40% { opacity: 1; transform: scale(1) }\n}\n\n/* 降低动效：停在「全部可见、实体大小」，而不是停在动画中途的半透明小点。 */\n@media (prefers-reduced-motion: reduce) {\n  .dshpc-loader--ring { animation: none; }\n  .dshpc-loader__node { animation: none; opacity: 1; transform: none; }\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/layout/quick-toolbar-css.generated.js
-		const QUICK_TOOLBAR_CSS = "/* 快捷工具栏：右侧悬浮的一列独立圆钮。\n   横向 left / right 与 bottom、按钮直径、纵向间距由组件按 props 实时写入 style；\n   这里只放与位置无关的皮肤。 */\n.dshpc-quick-toolbar{\n  position:fixed;\n  z-index:var(--dshpc-z-dock);\n  display:flex;\n  flex-direction:column;\n  align-items:center;\n}\n/* 出现 / 消失：挂载即淡入，退场先播 fade-out（组件延迟卸载，见 QuickToolbar.ts）。 */\n@keyframes dshpc-quick-toolbar-in{\n  from{opacity:0;transform:translateY(6px) scale(.9);}\n  to{opacity:1;transform:none;}\n}\n@keyframes dshpc-quick-toolbar-out{\n  from{opacity:1;transform:none;}\n  to{opacity:0;transform:translateY(6px) scale(.9);}\n}\n.dshpc-quick-toolbar__item{\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  padding:0;\n  margin:0;\n  box-sizing:border-box;\n  border:1px solid var(--dshpc-border);\n  border-radius:50%;\n  /* 自定义底色 / 字色只写这两个变量（见 QuickToolbar.ts），hover/active 才能跟着混色。 */\n  background:var(--dshpc-quick-toolbar-bg, var(--dshpc-solid));\n  color:var(--dshpc-quick-toolbar-fg, var(--dshpc-on-solid));\n  box-shadow:var(--dshpc-shadow-2);\n  cursor:pointer;\n  animation:dshpc-quick-toolbar-in var(--dshpc-dur) var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),\n             color var(--dshpc-dur-fast) var(--dshpc-ease),\n             transform var(--dshpc-dur-fast) var(--dshpc-ease);\n  font-size:var(--dshpc-font-lg);\n}\n/* 圆钮里的图标走核心 1em 基线（button.css:112）：调用方不必、也不该再传 size 放大。 */\n.dshpc-quick-toolbar__item svg{display:block;width:1em;height:1em;flex:none;}\n/* 退场期保留占位，避免同列其他按钮瞬时跳位。 */\n.dshpc-quick-toolbar__item.is-leaving{\n  animation:dshpc-quick-toolbar-out var(--dshpc-dur) var(--dshpc-ease) forwards;\n  pointer-events:none;\n}\n/* 变色与核心 Button 实心档同一套：按 --dshpc-fg 混出 hover / active 底色（自定义 color 也跟随）。 */\n.dshpc-quick-toolbar__item:hover{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 82%, var(--dshpc-fg));\n}\n.dshpc-quick-toolbar__item:active{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 70%, var(--dshpc-fg));\n  transform:scale(.94);\n}\n.dshpc-quick-toolbar__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n@media (prefers-reduced-motion: reduce){\n  .dshpc-quick-toolbar__item{transition:none;transform:none;animation:none;}\n  .dshpc-quick-toolbar__item.is-leaving{animation:none;opacity:0;}\n}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/hint-css.generated.js
-		const HINT_CSS = "\n/* ── 问号提示 P4（用户 2026-10-18：对齐真实插件 HelpButton——**带圈的问号图标**）──\n   本体 14px 细圈 + 圈内 ?，颜色 fg-3、hover 只提亮不加底（与 dshpc-ed-help 同规矩）。\n   气泡不在本文件：2026-10-19 用户拍板「问号必须用官方 Tooltip 那一个」⇒ 气泡由注入的\n   官方组件渲染（src/ui/tooltip.ts），这里只管问号图标本身。 */\n.dshpc-hint{display:inline-flex;align-items:center;justify-content:center;flex:none;\n  box-sizing:border-box;width:14px;height:14px;padding:0;border:1px solid currentColor;border-radius:50%;background:transparent;\n  color:var(--dshpc-fg-3);font-family:inherit;font-size:8px;font-weight:600;line-height:12px;cursor:help;vertical-align:middle;\n  transition:color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-hint:hover,.dshpc-hint:focus-visible{color:var(--dshpc-fg);background:0 0;}\n.dshpc-hint:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/layout/split-group-css.generated.js
-		const SPLIT_GROUP_CSS = "\n/* ── 拼接外壳 SplitGroup ──────────────────────────────────────────────\n   职责只有一条：把两个控件在外观上焊成一体（外框 / 圆角 / 中间 1px 分隔 / 整体聚焦圈）。\n   它**不持状态、不出联动回调** —— 选中与联动全走内件自己的 value / onChange\n   （用户 2026-10-28 拍板：外壳不必知道右边那个下拉管什么）。\n\n   ⚠️ 与内件类名有意耦合：内件是 Picker / Segmented 时由下面几条规则把它们自己的\n   边框 / 底色 / 圆角交出来，由外壳统一画。内件改名或改结构要同步改这里，\n   否则会出现双边框、双底色。\n\n   高度不写死：内件自己按 size 档（sm 24 / md 28 / lg 32）撑开，外壳跟着长。\n   两格要等高，就给内件传**同一个 size**。万一两格 size 不一致，外壳内件用 align-items:center\n   居中（不会顶对齐露白，用户 2026-10-28 截图反馈「本月偏上」后的处理）；**别用 height:100%**，\n   它会覆盖三档高度（与 --lg/--sm 同特异性且注入更晚）。\n\n   左格统一灰底（用户 2026-10-28 拍板）：滑块保留自己的灰轨，左格下拉把底色换成\n   surface-sunken；右格保持原样。层次感 = 左格是「档位/范围」，右格是「值」。 */\n   .dshpc-split{display:inline-flex;align-items:stretch;max-width:100%;overflow:hidden;border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n   /* 两格宽度都由内容给；容器再窄也让内件自己省略，不让外壳被撑破 */\n   .dshpc-split > *{min-width:0;max-width:100%;}\n   /* 分隔：相邻兄弟的左描边，不额外插 DOM，hover / focus 时也不会断 */\n   .dshpc-split > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n   /* 整体聚焦：只在**下拉展开**时画一整圈（判据是内件的 aria-expanded，不是 :focus-within）。\n      2026-11-02 用户定稿：滑块那格是「选中」不是「输入聚焦」，鼠标点它不该让整框常亮；\n      而且选取值后焦点会留在按钮上，用 :focus-within 会一直亮着。 */\n   .dshpc-split:has(.dshpc-picker__trigger[aria-expanded='true']){border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n   /* Picker：去掉自身外框与底色；display 改成 flex，消掉 inline-block 行盒带来的基线间隙。\n      注意**不能用 height:100%**：它会和 .dshpc-picker__trigger--lg / --sm 同特异性（都是两个类），\n      且 split-group.css 在 picker.css 之后注入，会把三档高度全吃掉（md/lg 看起来一样大）。\n      改用 align-items:center —— 同 size 时两格自然等高的同时文字垂直居中；万一两格 size 不一致，\n      较矮的格也只是居中、不会顶对齐露白。 */\n   .dshpc-split .dshpc-picker{display:flex;align-items:center;}\n   .dshpc-split .dshpc-picker__trigger{border:0;border-radius:0;background:transparent;}\n   .dshpc-split .dshpc-picker__trigger:focus-visible{outline:0;}\n   /* 左格下拉：灰底（滑块的灰轨是它自己的 --dshpc-seg-track，不在这里覆盖） */\n   .dshpc-split > :first-child .dshpc-picker__trigger{background:var(--dshpc-surface-sunken);}\n   /* Segmented：只去外圆角与描边，灰轨保留；padding 保持 3px 不动 —— 它是高度契约的一部分\n    （3 + item + 3 = control-h）。bordered 那档去掉描边、把让给描边的 1px 还回 padding，\n    否则会比右边矮 2px。 */\n   .dshpc-split .dshpc-seg{border-radius:0;border:0;}\n   .dshpc-split .dshpc-seg--bordered{padding:3px;}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/input-group-css.generated.js
-		const INPUT_GROUP_CSS = "\n/* ── 组合输入框 InputGroup ─────────────────────────────────────────────\n   输入框 + 后置按钮（一枚或多枚）+ 可选前置标题，焊成一体。\n   与 SplitGroup 同一套外观口径：外框 / 圆角 / 相邻 1px 分隔 / 整体聚焦圈都由外壳画，\n   内件（.dshpc-input / .dshpc-btn / .dshpc-iconbtn）把自己的边框、圆角、外圈交出来。\n\n   高度默认吃 --dshpc-control-h-*（sm 24 / md 28 / lg 32）；调用方要自定义就在根节点\n   内联 height，这里让内件 height:100% 跟上 —— 内件档位高度只有 0,1,0，被本文件的\n   0,2,0 压掉，不会出现「外壳变高了、里面的框还是 32」。\n   （⚠️ 别改成不写 height:100% 只靠 stretch：input 有确定高度时 flex 不会拉伸它。） */\n/* min-width：输入格是 flex:1，没有它时 inline-flex 按占位文字宽收得很窄（搜索框 + 按钮的典型用法会难看）。\n   要更宽 / 更窄由调用方在外面套壳或给 className，不许在这里写死 max-width。 */\n.dshpc-igroup{display:inline-flex;align-items:stretch;min-width:200px;max-width:100%;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n.dshpc-igroup--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-igroup--md{height:var(--dshpc-control-h-md);}\n.dshpc-igroup--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-igroup--error{border-color:var(--dshpc-danger);}\n/* 整体聚焦：内件自己的焦点圈交出来，由外壳画一整圈（各画各的会变成格内半圈） */\n.dshpc-igroup:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n\n/* 前置标题：与输入框同格，灰底区分（与 SplitGroup 左格同一口径） */\n.dshpc-igroup__label{display:inline-flex;align-items:center;flex:none;padding:0 8px;white-space:nowrap;\n  background:var(--dshpc-surface-sunken);color:var(--dshpc-fg-2);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-igroup--md .dshpc-igroup__label,.dshpc-igroup--lg .dshpc-igroup__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 输入格：交出边框 / 圆角 / 底色 / 焦点圈；宽度交给 flex（原生 width:100% 会和 flex-basis 打架） */\n.dshpc-igroup > .dshpc-input{flex:1 1 auto;width:auto;min-width:0;height:100%;border:0;border-radius:0;background:transparent;}\n.dshpc-igroup > .dshpc-input:focus{box-shadow:none;}\n\n/* 按钮格：交出边框与圆角；实心底色保留（右侧「确定」该有重量）。\n   纯图标钮本身是固定宽的方块，这里改成按高度撑出的正方形，自定义高度时才不会变成竖长条。 */\n.dshpc-igroup > .dshpc-btn,.dshpc-igroup > .dshpc-iconbtn{flex:none;height:100%;border-radius:0;}\n.dshpc-igroup > .dshpc-iconbtn{width:auto;aspect-ratio:1;}\n.dshpc-igroup > .dshpc-btn{border:0;}\n\n/* 分隔线：相邻兄弟的左描边，不额外插 DOM。后两条是给「清过边框」的格子补回来的，\n   必须写成 0,2,0 且写在上面的 border:0 之后 —— 否则被 border:0 压掉，格子之间没分隔。 */\n.dshpc-igroup > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-input{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-btn{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/table-css.generated.js
-		const TABLE_BASE_CSS = "/* ── 表格基础层（结构 + 交互 + 空态）─────────────────────────────────────\n   外观分档 = 分组件 + 分文件：本文件只放所有外观共用的部分；\n   表头底色、分隔线、悬浮 / 选中色由皮肤文件负责（table-plain.css 是第一档）。\n   皮肤选择器一律挂在 .dshpc-table--<skin> 下，与基础层不同名 —— 注入顺序不影响胜负\n   （test/css-contract.test.mjs 禁止跨常量同名选择器）。\n   圆角裁剪 / 横向滚动归调用方容器，本层不设 overflow；也不做表头吸顶：\n   分组表头是多行，统一 top:0 会在滚动时互相盖住（要吸顶请在外层容器处理）。 */\n\n.dshpc-table{--dshpc-table-pad-x:var(--dshpc-space-3);--dshpc-table-head-h:44px;--dshpc-table-row-h:48px;\n  width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;box-sizing:border-box;\n  color:var(--dshpc-fg);font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 密度三档：只改行高与水平内距，配色与分隔线归皮肤。compact / comfortable 各一行，\n   新增档位在此追加；列级 padding 走内联 style 覆盖（不在这里再开一套变量）。\n   默认水平内距 12px（space-3）—— 参考稿的色块间距，16px 偏松。 */\n.dshpc-table--density-compact{--dshpc-table-pad-x:var(--dshpc-space-2);--dshpc-table-head-h:36px;--dshpc-table-row-h:36px;}\n.dshpc-table--density-comfortable{--dshpc-table-pad-x:var(--dshpc-space-4);--dshpc-table-head-h:52px;--dshpc-table-row-h:60px;}\n\n.dshpc-table__head-cell,.dshpc-table__cell{box-sizing:border-box;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  text-align:left;vertical-align:middle;font-weight:400;}\n\n/* 表头 44 / 数据行 48 是 default 档（参考稿密度）；height 在 table-cell 上是最小高，\n   多行内容会自动把行撑高，不会被截断。 */\n.dshpc-table__head-cell{height:var(--dshpc-table-head-h);font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg-2);}\n.dshpc-table__head-cell--group{text-align:center;}\n.dshpc-table__cell{height:var(--dshpc-table-row-h);}\n\n.dshpc-table__head-cell--center,.dshpc-table__cell--center{text-align:center;}\n.dshpc-table__head-cell--right,.dshpc-table__cell--right{text-align:right;}\n\n.dshpc-table__row{transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n/* 只有传了 onRowClick 的行才是可点的（数据属性由组件按此打）。 */\n.dshpc-table__row[data-interactive='true']{cursor:pointer;}\n.dshpc-table__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n\n/* 斑马纹是通用能力（表级 striped 开关），放在基础层：底色取 token，各档皮肤不必各自实现。\n   选择器刻意只到 3 个类级别（表级 + 行 + :nth-child）；皮肤层的行态规则带 __body 上下文\n   + 属性选择器，必然是 4 级 ⇒ 与注入顺序无关地压过它。\n   2026-10-30 真机事故：这里曾写满 4 级（多了一个 __body），与选中的 4 级相同 ⇒ 基础层\n   比皮肤后注入，偶数行永远被斑马纹盖住（「单数行能选中、双数行点了没反应」）。 */\n.dshpc-table--striped .dshpc-table__row:nth-child(even){background:var(--dshpc-plate);}\n\n/* 分组通栏：一个表格里放多个板块（工作区 A / 工作区 B）时，每组先来一行横跨全部列的大标题，\n   然后才是这一组自己的表头与数据行。结构 + 底色归基础层（只用 token，各档皮肤共同成立）；\n   通栏底走 --dshpc-table-banner-bg（与表头互换的那一档，2026-10-30 用户定）；\n   通栏与组表头之间画一条线（用户 2026-10-30：那之间也要有 border）；\n   组与组之间用通栏顶线隔开，第一组顶部不画（外框已经在那儿，画了就成双线）。 */\n.dshpc-table__group-cell{height:var(--dshpc-table-head-h);padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;background:var(--dshpc-table-banner-bg);border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  text-align:left;vertical-align:middle;font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg);}\n.dshpc-table__group-body:first-of-type .dshpc-table__group-cell{border-top:0;}\n\n/* 通栏标题的固定标签（短竖线）与排版由 SectionHead 自带（4px 圆头），本层不再画。 */\n\n.dshpc-table__empty{height:80px;padding:0 var(--dshpc-space-4);text-align:center;\n  color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n\n/* 加载态行（加载更多 / 没有更多 / 整表加载）：单元格自身不画边框（底部状态行的顶线由皮肤补），内容居中；\n   整表加载默认占位 160px（可由 loadingHeight 覆盖），底部那行只占一行高。 */\n.dshpc-table__state-cell{padding:0;border:0;text-align:center;vertical-align:middle;}\n.dshpc-table__state{display:flex;align-items:center;justify-content:center;\n  gap:var(--dshpc-space-2);min-height:40px;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state--full{flex-direction:column;min-height:160px;gap:var(--dshpc-space-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state-text{line-height:1;}\n/* 底部哨兵：零高、无边框、无内容，只给 IntersectionObserver 一个落点。 */\n.dshpc-table__sentinel>td{height:0;padding:0;border:0;line-height:0;}\n\n/* 内建分页的外壳：表格在上、分页条在下，间距走 space-3（分页条自己管左右对齐）。 */\n.dshpc-table-frame{display:flex;flex-direction:column;gap:var(--dshpc-space-3);}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/table-plain-css.generated.js
-		const TABLE_PLAIN_CSS = "/* ── 外观一 · Plain（第一个样式：白卡片上的轻量表格）─────────────────────\n   特征：外框 + 灰底表头（含下边线，双行分组表头也清楚）、竖向分隔线、\n   数据行只保留极淡底线（不画重横线）、行悬浮淡蓝、选中行淡蓝底 + 左侧 3px 蓝竖条。\n   选择器全部挂在 .dshpc-table--plain 下，和基础层不同名（注入顺序无关）。\n   竖分隔线按列声明（格子上的 data-divider），不用相邻兄弟选择器 —— 后者会让每行首格\n   永远没有左线（用户 2026-10-30 真机看到的 Name 左侧缺线），且单元格跨列后会画错位置。\n   后续外观照此另建：table-grid.css / table-zebra.css，各自一个组件、各自 import 自己那份。 */\n\n/* 外框四态：all 四边 / x 只有左右 / y 只有上下 / none 全不要。\n   组件总会按 borders 属性和上对应 class，故这里不存在「无 class 的裸表」。\n   「不要左右两条边」就是 borders='y'。 */\n.dshpc-table--plain.dshpc-table--borders-all{border:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-x{border-left:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-y{border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-none{border:0;}\n\n/* 表头：中性灰底 + 下边线。底色走 --dshpc-table-head-bg（= --dshpc-surface-sunken，\n   与通栏那层灰同源；2026-10-30 用户二次定案：表头 / 通栏互换底色）；下边线兜住分组表头的第二层。 */\n.dshpc-table--plain .dshpc-table__head-cell{\n  background:var(--dshpc-table-head-bg);\n  border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-table--plain .dshpc-table__head-cell--group{color:var(--dshpc-fg-3);}\n\n/* 表头多色：列级 headerTone 打到 data-header-tone，浅底 + 同色文字。\n   色值全部来自 token（soft 底 / 实色字），暗色主题自动跟随，不写死任何 hex。\n   这组规则比上方灰底规则多一个属性选择器，必然覆盖默认灰底。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='business']{background:var(--dshpc-business-soft);color:var(--dshpc-business);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='success']{background:var(--dshpc-success-soft);color:var(--dshpc-success);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='warning']{background:var(--dshpc-warning-soft);color:var(--dshpc-warning);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='danger']{background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='purple']{background:var(--dshpc-purple-soft);color:var(--dshpc-purple);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='pink']{background:var(--dshpc-pink-soft);color:var(--dshpc-pink);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='cyan']{background:var(--dshpc-cyan-soft);color:var(--dshpc-cyan);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='teal']{background:var(--dshpc-teal-soft);color:var(--dshpc-teal);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='orange']{background:var(--dshpc-orange-soft);color:var(--dshpc-orange);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='indigo']{background:var(--dshpc-indigo-soft);color:var(--dshpc-indigo);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='rose']{background:var(--dshpc-rose-soft);color:var(--dshpc-rose);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='slate']{background:var(--dshpc-slate-soft);color:var(--dshpc-slate);}\n\n/* 竖分隔线：按列声明，**默认不画**。组件只给 divider: true 的列打 data-divider='left'，\n   首列恒不画（那是外框的位置）。默认表格 = 只有横线、没有一条竖线；\n   要「列间有线」就给对应列 divider:true。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-divider='left'],\n.dshpc-table--plain .dshpc-table__cell[data-divider='left']{border-left:1px solid var(--dshpc-border);}\n\n/* 数据行之间的极淡底线：只帮眼睛「分行」，不回到粗横线表格的老样子。 */\n.dshpc-table--plain .dshpc-table__row + .dshpc-table__row .dshpc-table__cell{\n  border-top:1px solid var(--dshpc-border-faint);\n}\n\n/* 底部状态行（加载更多 / 到底）：整行通栏，与上方数据行之间补一条实线。\n   只补顶线：左右两条不由这一格重复画 —— borders=all / x 时表级外框已经兜住；\n   borders=y / none 本来就没有左右边。整表加载占位行不加（表头已有下边线，再加就成双线）。 */\n.dshpc-table--plain .dshpc-table__state-row--footer .dshpc-table__state-cell{\n  border-top:1px solid var(--dshpc-border);\n}\n\n/* 没有左右外框时（borders=y）底部状态行下面那条表底线也去掉：\n   状态行只留上方一条实线，否则图标 / 文案下方还多一条孤线（2026-10-31 用户定）。\n   borders=none 本来就没有底边，无需在此重复。 */\n.dshpc-table--plain.dshpc-table--borders-y.dshpc-table--foot-no-bottom{border-bottom:0;}\n\n/* 行悬浮：只在可点行上给反馈，静态表格不误导用户以为能点。\n   底色是极淡中性灰（--dshpc-table-row-hover：亮色一层淡黑 ≈1.5%，暗色一层淡白 ≈3%）——\n   2026-10-30 用户：hover 要特别淡的灰、不要淡蓝（第二次又要求再浅一半）。带 __body 上下文是为了压过基础层的斑马纹（见 table.css）。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-interactive='true']:hover{background:var(--dshpc-table-row-hover);}\n\n/* 选中行：淡蓝底 + 左侧蓝竖条。用背景渐变画条，避免 tr 上伪元素 / 定位的兼容问题；\n   两条选择器同一份声明：悬浮态（多一个属性 + 伪类）不会盖掉选中态。\n   底色用 business-soft（比悬浮再明确一档但仍是浅色），条本身才是「选中」的信号。\n   特异性 4 级，高于基础层的斑马纹（3 级）⇒ 偶数行也能正常选中。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'],\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'][data-interactive='true']:hover{\n  background:linear-gradient(to right,var(--dshpc-business) 3px,var(--dshpc-business-soft) 3px);\n}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/navigation/pagination-css.generated.js
-		const PAGINATION_CSS = "/* ── 分页（‹ Previous 1 2 3 … 36 Next ›）────────────────────────────────────\n   当前页 = 蓝色圆角方块 + 白字（实心面的字必须走 --dshpc-on-signal，不许用主题反色）；\n   其余页码是纯文字按钮，悬浮只给极淡中性底。对齐由 --left / --center / --right 三个修饰决定，\n   组件默认 right。颜色全部走 token，明暗自动跟随宿主。 */\n\n.dshpc-pagination{display:flex;align-items:center;gap:var(--dshpc-space-2);flex-wrap:wrap;\n  font-size:var(--dshpc-font-sm);line-height:1;color:var(--dshpc-fg-2);}\n\n.dshpc-pagination--left{justify-content:flex-start;}\n.dshpc-pagination--center{justify-content:center;}\n.dshpc-pagination--right{justify-content:flex-end;}\n\n.dshpc-pagination__total{color:var(--dshpc-fg-3);margin-inline-end:var(--dshpc-space-1);}\n\n.dshpc-pagination__pages{display:flex;align-items:center;gap:2px;}\n\n/* 页码 / 上下页 = 核心 Button（当前页 info 实心蓝、其余 ghost），箭头 = 全站唯一 Chevron。\n   这里只补尺寸与间距，不重画按钮皮肤；两级选择器压过 .dshpc-btn--md 的内距。 */\n.dshpc-pagination .dshpc-pagination__page{padding:0 6px;min-width:28px;}\n.dshpc-pagination .dshpc-pagination__nav{padding:0 var(--dshpc-space-2);}\n\n.dshpc-pagination__ellipsis{display:inline-flex;align-items:center;justify-content:center;\n  min-width:28px;height:28px;color:var(--dshpc-fg-3);}\n\n.dshpc-pagination__simple{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;\n  color:var(--dshpc-fg);}\n\n/* 简洁模式只留箭头：文字标签隐藏，箭头仍然可见（无障碍名还在 aria-label 上）。 */\n.dshpc-pagination--simple .dshpc-pagination__text{display:none;}\n\n/* 每页条数下拉 = 核心 Picker（箭头是全站唯一的 Chevron）：只收窄不参与伸缩。 */\n.dshpc-pagination__size{flex:none;}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/section-head-css.generated.js
-		const SECTION_HEAD_CSS = "/* 分区标题行：标签（可选，画出来的短竖线）/ icon + 标题 + 右侧控件。 */\n.dshpc-section-head{display:flex;align-items:center;gap:var(--dshpc-space-2);\n  margin-bottom:var(--dshpc-space-3);}\n.dshpc-section-head--flush{margin-bottom:0;}\n\n.dshpc-section-head__bar{flex:none;width:4px;height:1em;border-radius:999px;\n  font-size:var(--dshpc-font-lg);background:var(--dshpc-fg-2);}\n\n.dshpc-section-head__icon{display:inline-flex;align-items:center;flex:none;\n  line-height:var(--dshpc-line-lg);color:var(--dshpc-fg-3);}\n\n.dshpc-section-head__title{font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);\n  font-weight:600;color:var(--dshpc-fg);flex:none;}\n\n.dshpc-section-head__right{flex:1;display:flex;align-items:center;\n  justify-content:flex-end;gap:var(--dshpc-space-2);min-width:0;}\n";
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/feedback/Loader.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/Loader.js
 		/**
 		* Loader —— 统一的加载动画图标（UI 基础层 · 反馈族）。
 		*
@@ -274,7 +241,7 @@ window.__ModuleLoader__.load({
 		* `role="status"` 承担）；要让它自己承担语义时传 `label`，此时输出 `role="status"`。
 		*
 		* 扩展新形态：在 `LoaderVariant` 加一个值 + 本文件加一支几何 + `loader.css` 加一段规则，
-		* 不新增导出（形态由数据决定时直接传字符串即可，见 docs/help/ui.md）。
+		* 不新增导出（形态由数据决定时直接传字符串即可，见 docs/api/ui.md）。
 		*/
 		/** 形态一：约 265° 的开口弧（周长 59.7，画 44 的空缺留 15.7）。 */
 		function ringNode() {
@@ -316,7 +283,7 @@ window.__ModuleLoader__.load({
 		* @param props 见 {@link LoaderProps}。
 		* @returns `<svg>` 元素（inline，不占额外行高）。
 		*/
-		function Loader$2(props) {
+		function Loader$1(props) {
 			ensureComponentStyles("loader", LOADER_CSS);
 			const { variant = "ring", size = "md", label, className } = props;
 			const classes = [
@@ -335,13 +302,335 @@ window.__ModuleLoader__.load({
 			}, variant === "ring" ? ringNode() : blockNodes());
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/overlay-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/overlay-css.generated.js
 		const OVERLAY_CSS = "/* 浮层公共骨架：遮罩 + 头部。Modal（居中）/ SideSheet（侧边）/ 选文件弹窗（锚定）共用这一份，\n   各家各自 registerStyle 同一份（幂等），谁也不许再抄一份遮罩。\n   关闭钮的皮肤在 panel.css（.dshpc-panel__close，旧类名作别名），不在这里再写一份。 */\n\n/* 遮罩 = 宿主遮罩变量 --dsw-alias-bg-mask-1（与官方 Modal / 兄弟项目 --tdt-mask 同一条真值，用户 2026-10-20）。 */\n/* 右边界让位页面级分栏（PanelDock 发布的 --dshpc-page-inset-right，用户 2026-10-22）：\n   分栏不被压暗、照常可点；浮层在这块**剩下**的区域里排版，就像整页被推出去一样。 */\n.dshpc-overlay{\n  position:fixed;inset:0 var(--dshpc-page-inset-right,0px) 0 0;\n  background:var(--dshpc-mask);\n}\n/* 锁定态：禁用手势挂在遮罩上（面板外那一圈也要一致）。 */\n.dshpc-overlay[data-dshpc-locked]{cursor:not-allowed}\n/* 锁定时的透明点击层：吃指针、不改任何外观（变灰由各控件自己的 :disabled 负责）。\n   全透明是刻意的 —— 盖一层灰会让人以为界面坏了。 */\n.dshpc-lock-catcher{position:absolute;inset:0;z-index:1;cursor:not-allowed}\n/* 锁定态：消费方自绘的原生表单元素也「看起来禁用」。\n   整条选择器包在 :where() 里 = 特异性 0 —— 消费方任意一条自己的规则都能盖回来，我们只当默认值。\n   只写 opacity / cursor 两个属性；不想被灰就在自己元素上写 --dshpc-lock-dim: 1。\n   解锁 = 规则不再匹配，不存在「还原」，也就不会冲掉别人写的样式。 */\n:where(.dshpc-locked button:not(:disabled),.dshpc-locked input:not(:disabled),.dshpc-locked select:not(:disabled),.dshpc-locked textarea:not(:disabled)){\n  opacity:var(--dshpc-lock-dim);cursor:not-allowed;\n}\n/* 居中档（Modal）：z 走 modal 档。 */\n.dshpc-overlay--center{\n  display:flex;align-items:center;justify-content:center;\n  z-index:var(--dshpc-z-modal);\n}\n/* 侧边档（SideSheet）：面板 absolute 贴边，不需要 flex 居中；z 走 drawer 档（低于 modal）。 */\n.dshpc-overlay--side{z-index:var(--dshpc-z-drawer)}\n/* 锚定档（选文件弹窗）：遮罩照旧压暗 + 点外部关闭，面板自己 fixed 贴锚点，这里不做布局。 */\n.dshpc-overlay--plain{z-index:var(--dshpc-z-panel)}\n\n/* 头部四槽：左图标 / 标题组 / 弹性间隔 / 右侧动作区 + 关闭钮。\n   上下内距必须相等（18/12 会让标题离面板顶远、离分隔线近，用户 2026-11-02）。 */\n.dshpc-overlay-head{\n  display:flex;align-items:center;gap:8px;padding:18px;\n  border-bottom:1px solid var(--dshpc-border);flex-wrap:wrap;\n}\n.dshpc-overlay-head__heading{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 auto}\n/* 调用方整块自定义的标题区：占满左侧可用宽度、可换行（不是标题文字，别套标题字号）。 */\n.dshpc-overlay-head__heading--custom{flex:1 1 auto;flex-wrap:wrap}\n/* 图标尺寸只认核心 1em 基线（button.css:112）：这里不写死 16px 放大，调用方传的 size 也一并接管。 */\n.dshpc-overlay-head__lead{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:var(--dshpc-font-lg);line-height:1}\n.dshpc-overlay-head__lead svg{display:block;width:1em;height:1em;flex:none;}\n/* 标题组：第一行 = 标题 + 右侧小块（徽标紧跟标题），第二行 = 副标题。 */\n.dshpc-overlay-head__titlegroup{display:flex;flex-direction:column;gap:2px;min-width:0;flex:0 1 auto}\n.dshpc-overlay-head__titlerow{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-overlay-head__title{font-size:var(--dshpc-font-lg);font-weight:600;line-height:1.4;min-width:0}\n/* 标题下副标题行（兄弟项目 .dsh-tdt-sv-sid：等宽字体、caption 色、可换行）。 */\n.dshpc-overlay-head__sid{font-family:var(--ds-font-family-code,monospace);font-size:var(--dshpc-font-xs);color:var(--dshpc-fg-3);word-break:break-all}\n.dshpc-overlay-head__extra{flex:none;display:inline-flex;align-items:center}\n.dshpc-overlay-head__spacer{flex:1 1 auto;min-width:8px}\n.dshpc-overlay-head__actions{flex:none;display:flex;align-items:center;gap:8px}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/panel-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/panel-css.generated.js
 		const PANEL_CSS = "/* 浮层面板皮肤（2026-11-03 用户定：皮肤统一，只改样式不动交互）。\n *\n * 这份文件是**所有「浮起来的框」的皮肤真源**。定位（fixed / absolute、贴谁、怎么翻转、多大的\n * 层序）留在各自控件里，这里只管表面四件：底色 / 描边宽 / 圆角 / 阴影。\n * ⚠️ 组件 CSS 里不许再写这四个字面值 —— 想改外观就改这里，别在消费方另起一套。\n *\n * 三档（差异只在这三段定义，别处分叉）：\n *   --modal    居中模态（Modal / ConfirmModal / AlertModal 家族）\n *   --popover  贴锚点的浮层面板（pickWorkspaceFile 选文件弹窗、DateTimePicker 弹层）\n *   --menu     下拉菜单（文件浏览器 ▾ 选层、Picker 下拉）\n *\n * 不并入三档的：PanelDock 与 SideSheet 是**贴边家族**（side-panel.css 的\n * .dshpc-side-surface，surface-base、无外描边）—— 2026-11-02 拍板「两者皮肤一模一样」，\n * 一个是布局成员、一个是贴边抽屉，都不是浮层。\n */\n.dshpc-panel{\n  background:var(--dshpc-panel-bg);color:var(--dshpc-fg);\n  border:var(--dshpc-panel-bw) solid var(--dshpc-border);\n  border-radius:var(--dshpc-panel-radius);box-shadow:var(--dshpc-panel-shadow);\n}\n.dshpc-panel--modal{\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:3px;\n  --dshpc-panel-radius:var(--dshpc-radius-xl);\n  --dshpc-panel-shadow:var(--dshpc-shadow-2);\n  overflow:hidden;\n}\n.dshpc-panel--popover{\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:1px;\n  --dshpc-panel-radius:var(--dshpc-radius-lg);\n  --dshpc-panel-shadow:var(--dshpc-shadow-2);\n  overflow:hidden;\n  /* 与 menu 同口径的加重描边；日期弹层与选文件弹窗共用这一档（2026-11-06）。 */\n  border-color:var(--dshpc-border-heavy);\n}\n.dshpc-panel--menu{\n  /* 菜单底与模态同一层（用户 2026-11-03：别用页面底色，暗色下看着全黑）。 */\n  --dshpc-panel-bg:var(--dshpc-surface-1);\n  --dshpc-panel-bw:1px;\n  /* 圆角与 popover 档统一成 lg（2026-11-06 用户：下拉框也改成 16）。 */\n  --dshpc-panel-radius:var(--dshpc-radius-lg);\n  --dshpc-panel-shadow:var(--dshpc-shadow-1);\n  /* 下拉菜单同样加重描边；modal 的 3px 边框不动。 */\n  border-color:var(--dshpc-border-heavy);\n}\n\n/* 浮层唯一的关闭钮（20×20 方角图标位）。\n   旧类名 .dshpc-overlay-head__close 保留为别名：消费方写在旧类名上的覆盖仍生效。 */\n.dshpc-panel__close,.dshpc-overlay-head__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-panel__close:hover,.dshpc-overlay-head__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-panel__close:focus-visible,.dshpc-overlay-head__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n\n/* .dshpc-scroll-thin（细滚动条）的唯一定义已移到 design/tokens.css 的 tokens 域：\n   那里全局必在、挂类即生效。这里不再写第二份。 */\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/panel.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/icon-css.generated.js
+		const ICON_CSS = "/* 字体图标的自有基础类：尺寸契约归我们，字形归平台。\n *\n * 背景：iconfont 平台生成的在线 CSS 里，基础类（各库的 baseClass）会写死 font-size:16px，\n * 直接命中 <i>。继承值在层叠里优先级最低，控件字号再怎么设也盖不住它，于是图标恒 16px。\n * 成熟图标库的基础类不带这个声明：Font Awesome 的 .fa 与 Bootstrap Icons 的 .bi 都只给\n * font-family / font-style / line-height，尺寸默认继承父级文字（Font Awesome Sizing Icons 文档\n * 原文「By default, icons inherit the font-size of their parent container」）。\n *\n * 平台那张 CSS 我们是远程 <link> 加载的，改不了；这里用一条自有规则把 16px 中和掉，\n * 恢复「图标跟同一行文字等大」的语义。选择器特异性 (0,1,1) 高于平台基础类 (0,1,0)，\n * 因此不依赖 <link> 与本 <style> 的挂载先后。\n *\n * 只接管 font-size / line-height：font-family、字形、颜色、深色 -dark 字形仍归平台基础类。\n * 显式传 size 的图标带内联 font-size，优先级最高，不受本规则影响。\n * 放大档（按钮 dense）由 button.css 的 .dshpc-iconbtn--dense 规则给出 em 系数。\n */\ni.dshpc-icon{font-size:inherit;line-height:1;}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/icon-parse.js
+		/**
+		* 从 iconfont 在线 CSS 里读出这套库的事实 —— 家族、基础类、前缀、全部图标名。
+		*
+		* 为什么运行时读而不是构建期生成清单：远程 CSS 带 `access-control-allow-origin: *`，
+		* fetch 一次就能拿到原文；平台加图标 / 换链接后页面刷新即见，仓库里不留需要同步的生成物。
+		*
+		* 只解析结构，不改写样式：@font-face 与 glyph 规则仍由 `<link>` 加载的远程 CSS 提供。
+		*/
+		/** glyph 类名的公共前缀，截到最后一个 `-` 之后。 */
+		function commonPrefix(classes) {
+			let prefix = classes[0] ?? "";
+			for (const name of classes) {
+				let i = 0;
+				while (i < prefix.length && i < name.length && prefix[i] === name[i]) i += 1;
+				prefix = prefix.slice(0, i);
+			}
+			return prefix.slice(0, prefix.lastIndexOf("-") + 1);
+		}
+		/**
+		* 解析一份 iconfont CSS。
+		*
+		* @param css - 远程 CSS 原文。
+		* @returns 家族 / 基础类 / 前缀 / 图标名。
+		* @throws 结构不认识（没有 font-family、没有 glyph 类、找不到基础类）时抛错 —— 不静默返回空清单。
+		*/
+		function parseFontCss(css) {
+			const family = /font-family:\s*["']([^"']+)["']/.exec(css)?.[1];
+			const classes = [...css.matchAll(/\.([\w-]+):before\s*\{[^}]*content:/g)].map((m) => m[1] ?? "");
+			const baseClass = [...css.matchAll(/\.([\w-]+)\s*\{([^}]*)\}/g)].find((m) => (m[2] ?? "").includes("font-family"))?.[1];
+			if (family === void 0 || baseClass === void 0 || classes.length === 0) throw new Error("[dsh-plugin-core:icons] 图标 CSS 结构不认识（缺 font-family / 基础类 / glyph 类）");
+			const prefix = commonPrefix(classes);
+			return {
+				family,
+				baseClass,
+				prefix,
+				names: classes.map((name) => name.slice(prefix.length))
+			};
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/icon-runtime.js
+		/**
+		* 字体图标的运行时状态：**多色库的明暗字形**与**在线名字清单**。
+		*
+		* 为什么需要这一层：
+		*  - 多色（iconfont 的 Color fonts）颜色随字形走，CSS `color` 改不动 ⇒ 宿主切深色时得换成
+		*    另一个 `-dark` 字形。约定（用户 2026-11-13 定）：库里有 `<名字>-dark` 就用它，没有就
+		*    继续用原名字（说明这个字形亮暗通用）。
+		*  - 「有没有」只能查在线 CSS 的类名清单：CSS 无法表达「如果存在则覆盖」—— 两条选择器
+		*    特异性相同的规则谁赢取决于 iconfont 生成的顺序，我们控制不了。
+		*
+		* 名字清单与 `loadIconFont` 共用同一份缓存、同一个请求（同一 URL，浏览器 HTTP 缓存命中），
+		* 不额外发第二次。
+		*/
+		/** 宿主明暗判据（唯一）：`body[data-ds-dark-theme]`。禁用 prefers-color-scheme。 */
+		const DARK_ATTR$1 = "data-ds-dark-theme";
+		function hostDark$1() {
+			if (typeof document === "undefined") return false;
+			const body = document.body;
+			return body === null ? false : body.hasAttribute(DARK_ATTR$1);
+		}
+		const darkListeners = /* @__PURE__ */ new Set();
+		let darkObserver = null;
+		/** 全局只建一个 observer：第一个订阅者挂上，最后一个走了拆掉。 */
+		function subscribeDark(listener) {
+			darkListeners.add(listener);
+			if (darkObserver === null && typeof MutationObserver === "function" && typeof document !== "undefined") {
+				const body = document.body;
+				if (body !== null) {
+					darkObserver = new MutationObserver(() => {
+						for (const one of darkListeners) one();
+					});
+					darkObserver.observe(body, { attributeFilter: [DARK_ATTR$1] });
+				}
+			}
+			return () => {
+				darkListeners.delete(listener);
+				if (darkListeners.size === 0 && darkObserver !== null) {
+					darkObserver.disconnect();
+					darkObserver = null;
+				}
+			};
+		}
+		/** 当前是否深色；宿主切主题时自动重渲染。宿主外（node 自检）恒 false。 */
+		function useHostDark() {
+			return (0, react$1.useSyncExternalStore)(subscribeDark, hostDark$1, () => false);
+		}
+		const tasks = /* @__PURE__ */ new Map();
+		const nameSets = /* @__PURE__ */ new Map();
+		const nameListeners = /* @__PURE__ */ new Set();
+		/**
+		* 拉取并解析一套库的在线 CSS（同会话只请求一次）。
+		*
+		* @param id - 库 id（同名缓存键）。
+		* @param url - 该库的在线样式地址。
+		*/
+		function fetchIconFont(id, url) {
+			const hit = tasks.get(id);
+			if (hit !== void 0) return hit;
+			const task = fetch(url).then((res) => res.text()).then(parseFontCss).then((font) => {
+				nameSets.set(id, new Set(font.names));
+				for (const one of nameListeners) one();
+				return font;
+			});
+			tasks.set(id, task);
+			task.catch(() => {
+				tasks.delete(id);
+			});
+			return task;
+		}
+		/**
+		* 预取一套库的名字清单（多色库挂 `<link>` 时顺手调，缩短「首次切到深色」的等待）。
+		* 失败不抛：清单只是可选优化，缺了仍然按原名字渲染。
+		*/
+		function primeIconFont(id, url) {
+			if (nameSets.has(id) || tasks.has(id) || typeof fetch !== "function") return;
+			fetchIconFont(id, url).catch(() => {});
+		}
+		function subscribeNames(listener) {
+			nameListeners.add(listener);
+			return () => {
+				nameListeners.delete(listener);
+			};
+		}
+		/** 该库的图标名集合；未就绪时 `null`（调用方先用原名字渲染）。 */
+		function useIconNames(id) {
+			return (0, react$1.useSyncExternalStore)(subscribeNames, () => nameSets.get(id) ?? null, () => null);
+		}
+		/**
+		* 深色下该用哪个字形：库里有 `<名字>-dark` 就换成它，没有就原名字。
+		*
+		* 纯函数（名字集合由调用方给），便于单测；`names` 为 `null`（清单还没到）时按「没有」处理。
+		*/
+		function darkGlyphName(glyph, names) {
+			return names?.has(`${glyph}-dark`) === true ? `${glyph}-dark` : glyph;
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/font-icon.js
+		/**
+		* 字体图标（iconfont）：**只吃在线字体，不引任何平台模块**。
+		*
+		* 为什么和 `Icon` 分开：`Icon` 还要按名取官方 primitives 组件，那份静态 import 会把整个官方包
+		* 带进引入它的闭包 —— 纯控件入口不许带重依赖（`test/entry-isolation.test.mjs`）。
+		* 所以控件层画字体图标一律用它；`Icon` 是「两类来源一个组件」的对外门面，只在需要官方图标时用。
+		*
+		* 口径与 `Icon` 一致：`库名:图标名`（库名不可省）、找不到就**不渲染**并一次性告警、
+		* 多色库在宿主深色下自动换 `<名字>-dark` 字形。
+		*
+		* 尺寸口径（2026-11-14）：**不传 `size` 就继承所在文字的 `font-size`（1:1）**——字体图标本来
+		* 就是一个字形，跟同一行文字用同一个字号；显式传预设名 / px 数字才是「独立摆放」或
+		* 「装饰性小箭头」的绝对尺寸。按钮 / 输入框的 `sm|md|lg` 只决定文字字号，不另给图标定值。
+		*
+		* 平台基础类自带 `font-size:16px`，光靠继承盖不住 —— 所有 `<i>` 一律带自有基础类
+		* `dshpc-icon`，由 `icon.css` 的尺寸契约接管（见该文件头注）。
+		*/
+		/**
+		* 图标库注册表：加一套库 = 加一项，组件与展示页都不用改。
+		*
+		* key = `<所属域>.<库名>[.变体]`，就是 `name` 里冒号前那整段：
+		*  - `common.*` —— 所有开源框架共用的基础库（跨项目，不限于本仓）；
+		*  - `dsh-plugin-core.*` —— 本框架在 DSH 平台上对外提供的库。
+		*
+		* 每项必须与 iconfont 在线 CSS 里的实际值逐字一致（family / baseClass / prefix 三项），
+		* 平台重发布换的哈希只影响 `url`，但改了前缀就得同步这里 —— 写错的表现是「图标位空白」。
+		*/
+		const ICON_FONTS = {
+			"common.base": {
+				url: "https://at.alicdn.com/t/c/font_5252971_jpekkiqjy2.css",
+				family: "koc-i-common-base",
+				baseClass: "koc-i-common-base",
+				prefix: "koc-i-common-base-"
+			},
+			"common.base.color": {
+				url: "https://at.alicdn.com/t/c/font_5252972_tyb3966r1rh.css",
+				family: "koc-i-common-base-c",
+				baseClass: "koc-i-common-base-c",
+				prefix: "koc-i-common-base-c-",
+				color: true
+			},
+			"common.logo": {
+				url: "https://at.alicdn.com/t/c/font_5252974_y0yj8zp5mvm.css",
+				family: "koc-i-common-logo",
+				baseClass: "koc-i-common-logo",
+				prefix: "koc-i-common-logo-"
+			},
+			"common.logo.color": {
+				url: "https://at.alicdn.com/t/c/font_5252975_6bexc5n5vn5.css",
+				family: "koc-i-common-logo-c",
+				baseClass: "koc-i-common-logo-c",
+				prefix: "koc-i-common-logo-c-",
+				color: true
+			},
+			"dsh-plugin-core.base": {
+				url: "https://at.alicdn.com/t/c/font_5252865_zv3n1s2zg3e.css",
+				family: "dshpc-i-base",
+				baseClass: "dshpc-i-base",
+				prefix: "dshpc-i-base-"
+			}
+		};
+		/** 尺寸预设（px）；`size` 也可以直接给数字。 */
+		const ICON_SIZES = {
+			sm: 14,
+			md: 16,
+			lg: 20,
+			xl: 24
+		};
+		/**
+		* 保证该库的样式只挂一条 `<link>`。
+		*
+		* 地址变了就走改 `href`（iconfont 重发布 / 整库换链接都不会插出第二条），
+		* 没有 `document`（node 自检）直接返回。
+		*
+		* @param id - 库 id。
+		*/
+		function ensureIconFont(id) {
+			if (typeof document === "undefined") return;
+			const font = ICON_FONTS[id];
+			let link = document.querySelector(`link[data-dshpc-icon-font="${id}"]`);
+			if (link === null) {
+				link = document.createElement("link");
+				link.rel = "stylesheet";
+				link.dataset.dshpcIconFont = id;
+				link.href = font.url;
+				document.head.appendChild(link);
+			} else if (link.href !== font.url) link.href = font.url;
+			if (font.color === true) primeIconFont(id, font.url);
+		}
+		const warned$2 = /* @__PURE__ */ new Set();
+		/** 找不到图标时的一次性告警（`Icon` 与 `FontIcon` 共用，同一个名字只喊一次）。 */
+		function warnMissingIcon(name) {
+			if (warned$2.has(name)) return;
+			warned$2.add(name);
+			console.warn(`[dsh-plugin-core:icons] 找不到图标 "${name}"：字体图标写 "库名:图标名"（如 common.base:jia），官方图标直接写组件名（如 IconCheckOutlineRegular）`);
+		}
+		/** 拆 `库名:图标名`：没有冒号、或库没注册，都算没有。 */
+		function resolveIconName(name) {
+			const cut = name.indexOf(":");
+			if (cut <= 0) return void 0;
+			const font = ICON_FONTS[name.slice(0, cut)];
+			return font === void 0 ? void 0 : {
+				id: name.slice(0, cut),
+				font,
+				glyph: name.slice(cut + 1)
+			};
+		}
+		/** 自有基础类：平台类名由在线 CSS 动态解析、各库前缀还不一致，尺寸契约只能挂自己的类上。 */
+		const ICON_BASE_CLASS = "dshpc-icon";
+		/** `自有基础类 平台基础类 前缀+字形名 [调用方补的类]`。 */
+		function glyphClass(font, glyph, className) {
+			const extra = className === void 0 || className === "" ? "" : ` ${className}`;
+			return `${ICON_BASE_CLASS} ${font.baseClass} ${font.prefix}${glyph}${extra}`;
+		}
+		/** 尺寸：不传 → `undefined`（继承父级文字字号）；预设名或 px 数字 → 绝对尺寸。 */
+		function pxOf(size) {
+			if (size === void 0) return void 0;
+			return typeof size === "number" ? size : ICON_SIZES[size];
+		}
+		/** 不传 size 时不写 fontSize，让 `<i>` 继承所在文字的 font-size（1em）。 */
+		function sizeStyle(size, style) {
+			return {
+				...size === void 0 ? {} : { fontSize: size },
+				lineHeight: 1,
+				...style
+			};
+		}
+		/**
+		* 多色库的图标：宿主深色时换 `-dark` 字形（库里没有就继续用原名字）。
+		*
+		* 单独成组件是为了让 hooks 只在多色库上跑：单色库那条路一次渲染都不订阅。
+		* 名字清单还没到时先按原字形画，到货后自动重渲染 —— 多色库本来就是远程字体，这段空隙
+		* 与字体加载同量级。
+		*/
+		function ColorGlyph(props) {
+			const dark = useHostDark();
+			const names = useIconNames(props.id);
+			const glyph = dark ? darkGlyphName(props.glyph, names) : props.glyph;
+			return (0, react$1.createElement)("i", {
+				className: glyphClass(props.font, glyph, props.className),
+				role: props.title === void 0 ? void 0 : "img",
+				"aria-label": props.title,
+				title: props.title,
+				style: sizeStyle(props.size, props.style)
+			});
+		}
+		/**
+		* 字体图标。渲染成 `<i>`（字形来自远程字体），首次渲染自动挂该库的 `<link>`。
+		*
+		* @param props 见 {@link FontIconProps}。
+		* @returns 元素；库名不认识时返回 `null`（并一次性告警）。
+		*/
+		function FontIcon(props) {
+			const { name, title, className, style } = props;
+			const size = pxOf(props.size);
+			const hit = resolveIconName(name);
+			if (hit === void 0) {
+				warnMissingIcon(name);
+				return null;
+			}
+			const { id, font, glyph } = hit;
+			ensureIconFont(id);
+			ensureComponentStyles("icon", ICON_CSS);
+			if (font.color === true) return (0, react$1.createElement)(ColorGlyph, {
+				id,
+				font,
+				glyph,
+				size,
+				title,
+				className,
+				style
+			});
+			return (0, react$1.createElement)("i", {
+				className: glyphClass(font, glyph, className),
+				role: title === void 0 ? void 0 : "img",
+				"aria-label": title,
+				title,
+				style: sizeStyle(size, style)
+			});
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/panel.js
 		/**
 		* 浮层面板公共件（2026-11-03）：`PanelSurface` = 皮肤载体，`PanelClose` = 唯一那枚关闭钮。
 		*
@@ -373,10 +662,10 @@ window.__ModuleLoader__.load({
 				className: `dshpc-panel__close${props.className === void 0 ? "" : ` ${props.className}`}`,
 				"aria-label": props.label,
 				onClick: () => props.onClick()
-			}, props.icon ?? "✕");
+			}, props.icon ?? (0, react$1.createElement)(FontIcon, { name: "common.base:guanbi" }));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/overlay.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/overlay.js
 		/**
 		* 浮层公共件 —— Modal 与 SideSheet 共用，**别各写一份**。
 		*
@@ -460,7 +749,10 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/thenable.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/actions/button-css.generated.js
+		const BUTTON_CSS = "\n/* ── 按钮 / 图标钮 P2 ───────────────────────────────────────────────────\n   与 Segmented 同一条高度纪律：--dshpc-control-h-sm(24) / -md(28) / -lg(32)，\n   有边框的 variant 用 1px 真边框 + 内部 padding 补回，**有边 / 无边同高**。\n\n   三条受控轴（2026-10-19 重写，对齐主流 UI 框架的分类口径）：\n     · variant —— 外观档 = 形态 + 语义色，共 10 档：\n         primary / secondary / outline / ghost / danger / success / warning / info /\n         danger-outline（红字描边）/ link（行内链接）\n     · size —— sm / md / lg\n     · block —— 撑满父宽\n   每一档**只填 5 个局部变量**（--btn-bg / -fg / -border / -bg-hover / -bg-active），\n   结构与交互只有上面这一份；任何档位都不许再写一遍 display/height/padding。\n   自定义颜色（Button 的 color 参数）同样只覆盖这 5 个变量（token 覆盖，不是新皮肤）。\n\n   ⚠️ hover 不再用 opacity 压一层（用户 2026-10-19：「黑色和红色的按钮移上去变化太小，\n   完全感觉不到颜色变了」）⇒ 走 --dshpc-*-hover / -active 的明确混色，见 tokens-css.ts。 */\n.dshpc-btn{--btn-bg:transparent;--btn-fg:var(--dshpc-fg);--btn-border:transparent;--btn-pad:12px;\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);--btn-fg-hover:var(--btn-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;\n  box-sizing:border-box;border:1px solid var(--btn-border);border-radius:var(--dshpc-radius-md);\n  background-color:var(--btn-bg);color:var(--btn-fg);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease),transform var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-btn--sm{--btn-pad:10px;height:var(--dshpc-control-h-sm);padding:0 var(--btn-pad);font-size:var(--dshpc-font-sm);line-height:1;}\n.dshpc-btn--md{--btn-pad:12px;height:var(--dshpc-control-h-md);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n.dshpc-btn--lg{--btn-pad:14px;height:var(--dshpc-control-h-lg);padding:0 var(--btn-pad);font-size:var(--dshpc-font-md);line-height:1;}\n/* block：撑满父宽（表单底栏 / 抽屉底部的主操作） */\n.dshpc-btn--block{display:flex;width:100%;}\n/* block + 前置图标 ⇒ 文字视觉居中（2026-10-19 用户点名）：\n   内容组 [图标 + 间距 + 文字] 整体在盒内居中时，**文字**的中心会被图标推右半格。\n   把右内边距补上「图标宽 + 间距」，可用盒随之左移同量 ⇒ 文字落回视觉中心，图标贴左侧。\n   图标宽 = 1em（与文字等大），em 随字号档自动缩放。 */\n.dshpc-btn--block.dshpc-btn--icon-start{padding-right:calc(var(--btn-pad) + 1em + 6px);}\n/* 图标与同一行文字等大（2026-11-14）：字体 <i> 不写内联 fontSize 就继承这里，\n   官方 SVG 由下面的 1em 接管 —— 两类都跟文字 font-size 1:1，不由控件高度档决定。\n   绝对 px（size={16} 之类）只留给独立摆放与装饰性小箭头。 */\n.dshpc-btn__icon,.dshpc-btn__icon-end{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;font-size:1em;}\n.dshpc-btn__icon svg,.dshpc-btn__icon-end svg{display:block;margin:0;width:1em;height:1em;}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-btn .dshpc-btn__label{min-width:0;}\n/* loading：不换 DOM 结构，只在文案前插一枚 Loader（size=xs，12px）。\n   环的画法与动画统一在 controls/loader.css（本文件不再维护第二份 SVG 弧 / keyframes）。 */\n\n/* 交互态：颜色变化写在变量上 ⇒ 所有档位一次生效，且变化幅度由 token 决定（够明显） */\n.dshpc-btn:hover:not(:disabled){background-color:var(--btn-bg-hover);color:var(--btn-fg-hover);}\n.dshpc-btn:active:not(:disabled){background-color:var(--btn-bg-active);transform:translateY(1px);}\n.dshpc-btn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-btn:disabled{cursor:default;opacity:.5;}\n/* dense：尺寸档 / 高度一律不变，只把图标放大一档、内距收紧（描边细的文件类型图标用）。\n   只覆盖局部变量与图标字号，不另写一套皮肤；必须写在尺寸档与图标规则之后才压得过默认值。 */\n.dshpc-btn--dense{--btn-pad:6px;}\n.dshpc-btn--dense .dshpc-btn__icon,.dshpc-btn--dense .dshpc-btn__icon-end{font-size:1.25em;}\n\n.dshpc-btn--primary{--btn-bg:var(--dshpc-accent);--btn-fg:var(--dshpc-fg-inverse);\n  --btn-bg-hover:var(--dshpc-accent-hover);--btn-bg-active:var(--dshpc-accent-active);}\n/* secondary：中性实心（灰面），用于「取消 / 次要」这类与主操作并排的按钮 */\n.dshpc-btn--secondary{--btn-bg:var(--dshpc-hover);--btn-fg:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-active);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--outline{--btn-bg:var(--dshpc-surface-1);--btn-border:var(--dshpc-border-strong);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--ghost{--btn-fg:var(--dshpc-fg-2);--btn-fg-hover:var(--dshpc-fg);\n  --btn-bg-hover:var(--dshpc-hover);--btn-bg-active:var(--dshpc-active);}\n.dshpc-btn--danger{--btn-bg:var(--dshpc-danger);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-danger-hover);--btn-bg-active:var(--dshpc-danger-active);}\n.dshpc-btn--success{--btn-bg:var(--dshpc-success);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-success-hover);--btn-bg-active:var(--dshpc-success-active);}\n.dshpc-btn--warning{--btn-bg:var(--dshpc-warning);--btn-fg:var(--dshpc-on-warning);\n  --btn-bg-hover:var(--dshpc-warning-hover);--btn-bg-active:var(--dshpc-warning-active);}\n.dshpc-btn--info{--btn-bg:var(--dshpc-business);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-business-hover);--btn-bg-active:var(--dshpc-business-active);}\n/* 扩展八色实心（2026-10-29）：白字两主题均 ≥4.5:1；hover/active 走各自 token 派生。 */\n.dshpc-btn--purple{--btn-bg:var(--dshpc-purple);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-purple-hover);--btn-bg-active:var(--dshpc-purple-active);}\n.dshpc-btn--pink{--btn-bg:var(--dshpc-pink);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-pink-hover);--btn-bg-active:var(--dshpc-pink-active);}\n.dshpc-btn--cyan{--btn-bg:var(--dshpc-cyan);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-cyan-hover);--btn-bg-active:var(--dshpc-cyan-active);}\n.dshpc-btn--teal{--btn-bg:var(--dshpc-teal);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-teal-hover);--btn-bg-active:var(--dshpc-teal-active);}\n.dshpc-btn--orange{--btn-bg:var(--dshpc-orange);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-orange-hover);--btn-bg-active:var(--dshpc-orange-active);}\n.dshpc-btn--indigo{--btn-bg:var(--dshpc-indigo);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-indigo-hover);--btn-bg-active:var(--dshpc-indigo-active);}\n.dshpc-btn--rose{--btn-bg:var(--dshpc-rose);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-rose-hover);--btn-bg-active:var(--dshpc-rose-active);}\n.dshpc-btn--slate{--btn-bg:var(--dshpc-slate);--btn-fg:var(--dshpc-on-signal);\n  --btn-bg-hover:var(--dshpc-slate-hover);--btn-bg-active:var(--dshpc-slate-active);}\n/* danger-outline：红字描边（破坏性次要操作，如卡片上的「删除」）。\n   ⚠️ 旧修饰类 danger-ink 保留为别名（消费方可能还在挂），两者同一套皮肤。 */\n.dshpc-btn--danger-outline,.dshpc-btn--danger-ink{--btn-border:var(--dshpc-danger);--btn-fg:var(--dshpc-danger);\n  --btn-fg-hover:var(--dshpc-danger);--btn-bg-hover:var(--dshpc-danger-soft);--btn-bg-active:var(--dshpc-danger-soft);}\n/* link：行内文字链接型（会话 / 产出文件名），无底无边、品牌蓝、hover 下划线。\n   2026-11-14 二次修：外层 button 挂 text-decoration 这条路走不通 —— W3C css-text-decor-3 §2\n   明确「装饰线不传播到 atomic inline-level 后代的内容」，内容层只要是 inline-flex 就是\n   atomic inline，线进不去；内层靠 inherit 自己画的那条又断在 flex gap 上（真机实测仍断）。\n   成熟解法是避开装饰线、改画盒级线：内容层相对定位，hover 用 ::after 铺满 100% 宽，\n   线必然横跨图标、间距与文字。GitHub Primer 的 Link 靠 text-decoration 是因为外层是 a，\n   我们这里是 button，不能照抄那一条。垂直居中与图标 1:1 尺寸口径不变。 */\n.dshpc-btn--link{--btn-fg:var(--dshpc-link);--btn-fg-hover:var(--dshpc-link);\n  --btn-bg-hover:transparent;--btn-bg-active:transparent;\n  height:auto;padding:0;border:0;background:none;font-weight:400;text-align:left;text-decoration:none;}\n/* block 档仍要撑满父宽，不能被 link 的 inline-block 吃掉。 */\n.dshpc-btn--link:not(.dshpc-btn--block){display:inline-block;}\n.dshpc-btn--link > .dshpc-btn__content{position:relative;display:inline-flex;align-items:center;gap:6px;}\n.dshpc-btn--link:hover:not(:disabled) > .dshpc-btn__content::after{\n  content:'';position:absolute;left:0;right:0;bottom:1px;height:1px;background:currentColor;}\n\n/* 图标钮：纯图标，方形；尺寸档的宽高与同档文字按钮等高、圆角统一吃 md（与 .dshpc-btn 同款，2026-10-28 拍板）\n   底色 / 图标色全走局部变量：默认**无底色**，消费方可传 color（图标色）/ background（底色）覆盖（用户 2026-11-02）。 */\n.dshpc-iconbtn{--icb-bg:transparent;--icb-bg-hover:var(--dshpc-hover);--icb-fg:var(--dshpc-fg-2);--icb-fg-hover:var(--dshpc-fg);\n  appearance:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;padding:0;\n  border:1px solid var(--icb-border,transparent);border-radius:var(--dshpc-radius-md);\n  background:var(--icb-bg);color:var(--icb-fg);\n  font-family:inherit;cursor:pointer;flex:none;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),border-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease),opacity var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-iconbtn--sm{width:var(--dshpc-control-h-sm);height:var(--dshpc-control-h-sm);font-size:var(--dshpc-font-sm);}\n.dshpc-iconbtn--md{width:var(--dshpc-control-h-md);height:var(--dshpc-control-h-md);font-size:var(--dshpc-font-md);}\n.dshpc-iconbtn--lg{width:var(--dshpc-control-h-lg);height:var(--dshpc-control-h-lg);font-size:var(--dshpc-font-md);}\n/* 图标与文字按钮同口径：官方 SVG 由 1em 接管，字体 <i> 直接继承按钮字号，两者 1:1。\n   ⚠️ flex:none 是硬约束：svg 是按钮的直接 flex item，默认 flex-shrink:1 会被按钮内距\n   挤成 10px 窄条；那是布局收缩，不是层叠优先级 —— 改 width、加 !important 都救不回来，\n   而 height 在交叉轴不受影响，于是图标被压扁变形。后代选择器兼容官方图标外的 wrapper。 */\n.dshpc-iconbtn svg{display:block;width:1em;height:1em;flex:none;}\n/* dense：只放大图标的 em 值，正方形宽高与高度档都不动；\n   1.25em 相对按钮字号 12/13 ⇒ 15/16.25px，与 .dshpc-btn--dense 一致。\n   字体图标是 <i> 直接子元素，得单独给它同一系数（svg 那条选择器管不到）。 */\n.dshpc-iconbtn.dshpc-iconbtn--dense svg{width:1.25em;height:1.25em;}\n.dshpc-iconbtn.dshpc-iconbtn--dense > .dshpc-icon{font-size:1.25em;}\n.dshpc-iconbtn--outline{--icb-bg:var(--dshpc-surface-1);--icb-border:var(--dshpc-border);}\n.dshpc-iconbtn--danger{--icb-fg:var(--dshpc-danger);--icb-bg-hover:var(--dshpc-danger-soft);--icb-fg-hover:var(--dshpc-danger);}\n.dshpc-iconbtn:hover:not(:disabled){background:var(--icb-bg-hover);color:var(--icb-fg-hover);}\n.dshpc-iconbtn:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n.dshpc-iconbtn:disabled{cursor:default;opacity:.4;}\n\n/* ── 行式文件按钮（图标 + 文件名）P2：**全站唯一实现**（2026-10-04 收编）──────────\n   用途：「产出物 / 附件」那种**一行一个文件**的清单项（基础信息右栏产出物清单、附件区、\n   执行记录页的展开区）。平时透明、**鼠标移上去才出浅底**（沿用用户 2026-10-03 定的观感）。\n   两个形态修饰类：\n     --block   撑满父宽（清单里一项一行）\n     --inline  内容宽（跟在文字后头，如附件行）\n   收编原因：这份皮肤此前只写在 task-list.tsx 的 TASK_LIST_CSS 里（旧名 .dshpc-info-out），\n   执行记录页展开区要用同一种观感 ⇒ 上提基础层，避免再出现「各写一份外观」（同名不同皮的坑刚踩过）。 */\n.dshpc-filechip{appearance:none;-webkit-appearance:none;border:0;border-radius:var(--dshpc-radius-xs);\n  background:transparent;color:var(--dshpc-fg);font:inherit;text-align:left;cursor:pointer;min-width:0;\n  transition:background-color var(--dshpc-dur) var(--dshpc-ease);}\n.dshpc-filechip:hover:not(:disabled){background:var(--dshpc-chip-bg);}\n.dshpc-filechip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n.dshpc-filechip:disabled{cursor:default;background:transparent;color:var(--dshpc-fg-3);}\n.dshpc-filechip--block{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box;\n  padding:4px 6px;font-size:var(--dshpc-font-xs);}\n.dshpc-filechip--inline{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;font-size:var(--dshpc-font-sm);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-btn,.dshpc-iconbtn,.dshpc-filechip{transition:none;}}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/thenable.js
 		/** 返回值是不是 thenable。Button 的自动 loading 与命令式弹窗的收尾共用这一份判定。 */
 		function isThenable(value) {
 			if (value === null || value === void 0) return false;
@@ -475,7 +767,7 @@ window.__ModuleLoader__.load({
 			return value !== false;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/actions/Button.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/actions/Button.js
 		/**
 		* 按钮 / 图标钮 —— **全站唯一实现**（L2 组件皮肤，P2）
 		*
@@ -492,7 +784,7 @@ window.__ModuleLoader__.load({
 		*
 		* 内容轴：`icon`（前置）/ `iconRight`（后置）/ `loading`（前置小圈并自动禁用）。
 		* 颜色轴：任一档都可以再用 `color` 传任意 CSS 色值 —— 只覆盖 `--btn-*` 几个变量，
-		* 不新增皮肤（皮肤仍只在 `controls-css.ts` 里）。
+		* 不新增皮肤（皮肤只在自己的 `button.css` 真源里，构建期编译成字符串常量）。
 		*
 		* `IconButton` 是纯图标钮：`plain`（默认无底无边，hover 起灰底）/ `outline`（描边）/ `danger`（红）。
 		* 兼容别名：`danger-ink` 仍是 `danger-outline` 的旧类名，可直接挂 className。
@@ -638,10 +930,15 @@ window.__ModuleLoader__.load({
 					...style
 				}
 			};
-			return (0, react$1.createElement)("button", attrs, loading ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon" }, (0, react$1.createElement)(Loader$2, { size: "xs" })) : icon !== void 0 && icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon" }, icon) : null, hideText ? null : marqueeLabel ? (0, react$1.createElement)(MarqueeText, {
-				text: children,
-				className: "dshpc-btn__label"
-			}) : children, iconRight !== void 0 && iconRight !== null && !loading ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon-end" }, iconRight) : null);
+			const kids = [
+				loading ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon" }, (0, react$1.createElement)(Loader$1, { size: "xs" })) : icon !== void 0 && icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon" }, icon) : null,
+				hideText ? null : marqueeLabel ? (0, react$1.createElement)(MarqueeText, {
+					text: children,
+					className: "dshpc-btn__label"
+				}) : children,
+				iconRight !== void 0 && iconRight !== null && !loading ? (0, react$1.createElement)("span", { className: "dshpc-btn__icon-end" }, iconRight) : null
+			];
+			return variant === "link" ? (0, react$1.createElement)("button", attrs, (0, react$1.createElement)("span", { className: "dshpc-btn__content" }, ...kids)) : (0, react$1.createElement)("button", attrs, ...kids);
 		}
 		/**
 		* 渲染一个纯图标按钮。
@@ -679,10 +976,10 @@ window.__ModuleLoader__.load({
 					...style
 				}
 			};
-			return (0, react$1.createElement)("button", attrs, loading ? (0, react$1.createElement)(Loader$2, { size: "xs" }) : icon);
+			return (0, react$1.createElement)("button", attrs, loading ? (0, react$1.createElement)(Loader$1, { size: "xs" }) : icon);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/utils/i18n.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/utils/i18n.js
 		/**
 		* utils 自带的最小多语言。
 		*
@@ -697,7 +994,6 @@ window.__ModuleLoader__.load({
 				sessionEmpty: "该会话暂无内容",
 				explorerLoading: "加载中…",
 				loadingDefault: "数据加载中",
-				explorerFailed: "加载失败",
 				explorerRoot: "工作区",
 				explorerTruncated: "条目过多，已截断",
 				explorerEmptyDir: "空目录",
@@ -791,16 +1087,27 @@ window.__ModuleLoader__.load({
 				codeCopy: "复制",
 				codeCopied: "已复制",
 				sessionUnknownKind: "未支持的节点类型：",
-				sessionLoadOlder: "加载更早记录",
+				sessionLoadOlder: "加载更早",
+				chatLoadingOlder: "正在加载",
+				chatProcessingOlder: "正在处理",
+				chatRetryOlder: "重新加载",
+				chatHistoryStart: "已到会话开头",
 				sessionProcess: "过程",
 				triggerRequest: "收到执行请求",
+				triggerContinuation: "已请求继续生成",
 				triggerGoal: "继续执行目标",
 				triggerAgent: "收到任务消息",
 				triggerTeam: "收到团队消息",
 				triggerSubagent: "子任务状态更新",
+				triggerSubagentCompleted: "子智能体已完成任务",
+				triggerSubagentAborted: "子智能体任务已停止",
+				triggerSubagentError: "子智能体执行失败",
+				triggerSubagentMaxTokens: "子智能体已达 token 上限",
+				triggerSubagentRefusal: "子智能体拒绝执行",
+				triggerSubagentUnknown: "子智能体异常结束",
 				triggerGithub: "收到 GitHub 事件",
 				triggerWebhook: "收到外部事件",
-				triggerSchedule: "定时任务",
+				triggerSchedule: "自动化任务",
 				triggerJob: "后台任务状态更新",
 				triggerPlugin: "插件状态更新",
 				triggerExplanation: "这条通知触发了本轮回复。",
@@ -1265,7 +1572,6 @@ window.__ModuleLoader__.load({
 				sessionEmpty: "No content in this session",
 				explorerLoading: "Loading…",
 				loadingDefault: "Loading",
-				explorerFailed: "Failed to load",
 				explorerRoot: "Workspace",
 				explorerTruncated: "Too many entries, truncated",
 				explorerEmptyDir: "Empty folder",
@@ -1359,19 +1665,30 @@ window.__ModuleLoader__.load({
 				codeCopy: "Copy",
 				codeCopied: "Copied",
 				sessionUnknownKind: "Unsupported node kind: ",
-				sessionLoadOlder: "Load earlier messages",
+				sessionLoadOlder: "Load earlier",
+				chatLoadingOlder: "Loading earlier",
+				chatProcessingOlder: "Processing",
+				chatRetryOlder: "Retry loading",
+				chatHistoryStart: "Start of conversation",
 				sessionProcess: "Process",
-				triggerRequest: "Execution request received",
-				triggerGoal: "Continuing the goal",
+				triggerRequest: "Execution requested",
+				triggerContinuation: "Requested to continue generation",
+				triggerGoal: "Continuing goal",
 				triggerAgent: "Task message received",
 				triggerTeam: "Team message received",
-				triggerSubagent: "Subagent status update",
+				triggerSubagent: "Subtask status updated",
+				triggerSubagentCompleted: "Subagent run completed",
+				triggerSubagentAborted: "Subagent run stopped",
+				triggerSubagentError: "Subagent run failed",
+				triggerSubagentMaxTokens: "Subagent reached the token limit",
+				triggerSubagentRefusal: "Subagent declined the task",
+				triggerSubagentUnknown: "Subagent run ended unexpectedly",
 				triggerGithub: "GitHub event received",
 				triggerWebhook: "External event received",
-				triggerSchedule: "Scheduled task",
-				triggerJob: "Background task status update",
-				triggerPlugin: "Plugin status update",
-				triggerExplanation: "This notification triggered the reply below.",
+				triggerSchedule: "Automation task",
+				triggerJob: "Background task updated",
+				triggerPlugin: "Plugin status updated",
+				triggerExplanation: "This notification triggered this response.",
 				turnProcessTook: "Completed in ",
 				turnProcessWorked: "Completed",
 				turnProcessFailed: "Failed",
@@ -1852,13 +2169,13 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/feedback/feedback-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/feedback-css.generated.js
 		const FEEDBACK_CSS = "/* 遮罩与头部在 overlay.css，表面（底色/描边/圆角/阴影）在 panel.css 的 --modal 档，\n   这里只剩**家族布局与尺寸**。三者各管一段，别再把皮肤抄回来。 */\n.dshpc-modal{\n  display:flex;flex-direction:column;box-sizing:border-box;\n}\n/* body = 唯一滚动容器：内距与滚动都归它（滚动条贴面板右缘，不被内距挤进来）；\n   内容按流排，不设 height:100%、不自己开滚动条。\n   细滚动条与 1px 让位由 .dshpc-scroll-thin 统一给（口径见 style.md §滚动条让位）。 */\n.dshpc-modal__body{flex:1 1 auto;min-height:0;overflow:auto;padding:17px 18px}\n\n/* 底栏与头部同一口径（2026-11-02 用户）：上下内距相等、内容垂直居中、默认带一条分隔线。\n   线可由消费方关掉（Modal 的 footerDivider=false）—— 确认框家族本来就没有线（与头部一致）。 */\n.dshpc-modal .dshpc-modal__foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:18px;border-top:1px solid var(--dshpc-border)}\n.dshpc-modal .dshpc-modal__foot--bare{border-top:none}\n/* 底栏左侧的过程提示：吃掉按钮之外的剩余宽，超长交给 FlipText 省略 / hover 跑马灯。 */\n.dshpc-modal .dshpc-modal__notice{flex:1 1 auto;min-width:0;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-3)}\n/* 自绘 toast 的样式在 2026-11-03 删除：Toast 早已改走宿主 toast()（Toast.ts 的 showNative），\n   .dshpc-toast* 这几个类没有任何消费者，留着只是死样式（还带着裸 z-index 与裸阴影）。 */\n.dshpc-error__retry{\n  margin-top:8px;color:var(--dshpc-link);cursor:pointer;background:none;border:none;padding:0;\n}\n/* 原生弹窗演示：经宿主 Modal 的 contentClassName 注入，证明宿主内容区尺寸可经类名自定义。 */\n.dshpc-native-demo-content{max-width:520px}\n/* 头部信号图标（AlertModal 按 severity 注入）：自含配色，色值在 tokens.css 的 --dshpc-sev-*。 */\n.dshpc-alert-sev{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:12px;color:var(--dshpc-on-signal);flex:none}\n.dshpc-alert-sev--info{background:var(--dshpc-sev-info)}\n.dshpc-alert-sev--success{background:var(--dshpc-sev-success)}\n.dshpc-alert-sev--warning{background:var(--dshpc-sev-warning)}\n.dshpc-alert-sev--error{background:var(--dshpc-sev-error)}\n/* 小确认框家族（sm）：严格抄兄弟项目 renderConfirm 的 dialogStyle（task-list.tsx:456）——\n   360px 宽 / 18px 内距 / 头部无分隔线 / 说明文字 fg-2 / 底部按钮右对齐。 */\n.dshpc-modal--sm{padding:18px}\n.dshpc-modal--sm .dshpc-overlay-head{padding:0 0 8px;border-bottom:none}\n.dshpc-modal--sm .dshpc-modal__body{padding:0 0 14px;overflow:visible;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);line-height:var(--dshpc-line-sm)}\n.dshpc-modal--sm .dshpc-modal__foot{padding:0;border-top:none}\n/* 锁定态（locked）：只给透明点击层做定位锚点，**不压任何遮罩** —— 盖灰会让人以为界面坏了；\n   变灰是各控件自己 :disabled 的事（Button / Input / Picker … 本来就有那套样式）。 */\n.dshpc-modal--locked{position:relative}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/flip-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/flip-css.generated.js
 		const FLIP_CSS = "/* 翻牌文本（FlipText）：一个单行窗口 + 两层同格叠放，换字时旧的上移出、新的从下进。\n   溢出（三点省略 + hover 跑马灯）不在这里做 —— 交给 MarqueeText，本文件只管裁剪与切换动效。\n   叠放用 grid 同格而不是绝对定位：容器高度天然等于一行，不用测量、也不依赖 lh 单位。 */\n.dshpc-flip{--dshpc-flip-dur:260ms;--dshpc-flip-ease:cubic-bezier(.22,.61,.36,1);display:grid;min-width:0;overflow:hidden}\n.dshpc-flip__item{grid-area:1/1;min-width:0}\n.dshpc-flip__in{animation:dshpc-flip-in var(--dshpc-flip-dur) var(--dshpc-flip-ease) both}\n.dshpc-flip__out{animation:dshpc-flip-out var(--dshpc-flip-dur) var(--dshpc-flip-ease) both}\n@keyframes dshpc-flip-in{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}\n@keyframes dshpc-flip-out{from{transform:translateY(0);opacity:1}to{transform:translateY(-100%);opacity:0}}\n/* 前庭敏感 / 低性能设备关掉位移动画：换字仍在，只是不再翻。\n   旧帧没有动画可播，必须自己隐形 —— 两层同格叠放，留着就重影。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-flip__in,.dshpc-flip__out{animation:none}\n  .dshpc-flip__out{opacity:0}\n}\n/* 扫光（sweep）：常驻循环，停在原地的提示也看得出在动。开关默认关，弹窗 / 抽屉底栏默认开。\n   光必须只落在字上：盖一层半透明光带的话，notice 是 flex:1 撑开的宽容器，右侧大片空白\n   里会出现一条白光在扫。故把光做成文字自己的 background + background-clip:text 裁到字形；\n   基色取 currentColor ⇒ 调用方换字色也跟着走，不需要知道文字宽度。 */\n.dshpc-flip--sweep .dshpc-mq-in{\n  background-image:linear-gradient(105deg,currentColor 0,currentColor 47%,color-mix(in srgb,var(--dshpc-on-signal) 70%,currentColor) 50%,currentColor 53%,currentColor 100%);\n  background-size:300% 100%;background-repeat:no-repeat;\n  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;\n  animation:dshpc-flip-sweep 1.5s linear infinite;\n}\n/* 1.5s 一轮：前 40% 扫完，其余停在视野外休息 —— 一直扫会晃眼，间歇才像「还在干活」。 */\n@keyframes dshpc-flip-sweep{0%{background-position:100% 0}40%,100%{background-position:0 0}}\n@media (prefers-reduced-motion:reduce){\n  .dshpc-flip--sweep .dshpc-mq-in{animation:none;background-image:none;-webkit-text-fill-color:currentColor}\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/FlipText.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/FlipText.js
 		/**
 		* 翻牌文本 —— 一行文字，换字时旧的上移出、新的从下进（机场翻牌那种）。
 		*
@@ -1921,7 +2238,7 @@ window.__ModuleLoader__.load({
 			}, (0, react$1.createElement)(MarqueeText, { text: slot.curr })));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/feedback/Modal.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/Modal.js
 		/**
 		* 模态弹窗（自绘 overlay，**不用 react-dom 的 portal**，避免多一个必需依赖）。
 		*
@@ -1984,7 +2301,7 @@ window.__ModuleLoader__.load({
 			}), props.footer), locked ? (0, react$1.createElement)(OverlayLockCatcher) : null)));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/feedback/ConfirmModal.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/ConfirmModal.js
 		/**
 		* 确认框（语义层，基于 Modal）：双按钮（取消 outline + 确认语义档）、无 ✕；无标题时整条头部消失。
 		* 样式封闭：按钮只暴露语义档（tone → variant），不透传任意 className/style。
@@ -2031,7 +2348,7 @@ window.__ModuleLoader__.load({
 			}, props.message ?? null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/feedback/modal-host.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/modal-host.js
 		let hostRoot = null;
 		let hostContainer = null;
 		let entries = [];
@@ -2128,7 +2445,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/official.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/official.js
 		/**
 		* L1 adapter —— 全仓**唯一** import 官方 primitives 平台模块的文件。
 		*
@@ -2145,7 +2462,7 @@ window.__ModuleLoader__.load({
 		*
 		* ⚠️ 非宿主消费面（Node 单测、根预览站）需另配 stub：本文件静态 import 平台模块，
 		*    在 Node 里直接 import 会 `ERR_MODULE_NOT_FOUND` —— 这正是旧坑（SelectField 曾因依赖官方 Menu 被删）。
-		*    该 stub loader 属 P0 待办，见 docs/requirements.md。
+		*    该 stub loader 属 P0 待办，见 docs/features/scope.md。
 		*/
 		var official_exports = /* @__PURE__ */ __exportAll({
 			Official: () => _deepseek_ai_dsh_client_ui_primitives,
@@ -2239,7 +2556,34 @@ window.__ModuleLoader__.load({
 			alert: hostAlert
 		});
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/host-data.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/chevron.js
+		/**
+		* 全站唯一的箭头：现在就是图标库的 `move-*` 字形（2026-11-14 用户定：图标统一走新图标库，
+		* 自绘那条路径删掉）。四向各有一颗字形，不再旋转同一个图形。
+		*
+		* 用法不变：`h(Chevron, { dir: 'up' })`（默认 12px）。要动画就在外层套一个带 transform 的类
+		* （如卡片折叠的 `.dshpc-card__caret.is-open`），不要在组件里写死。
+		*
+		* 为什么用 `FontIcon` 而不是 `Icon`：控件层不许把官方 primitives 拖进产物闭包
+		* （`test/entry-isolation.test.mjs`），字体那条路本来也不需要它。
+		*/
+		/** 方向 → 图标库字形。 */
+		const GLYPH = {
+			down: "common.base:move-down",
+			up: "common.base:move-up",
+			left: "common.base:move-left",
+			right: "common.base:move-right"
+		};
+		/** 箭头。 */
+		function Chevron(props) {
+			return (0, react$1.createElement)(FontIcon, {
+				name: GLYPH[props.dir ?? "down"],
+				size: props.size ?? 12,
+				className: props.className
+			});
+		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/host-data.js
 		/** 模型目录的 observable store（useSyncExternalStore 直接消费）。 */
 		var ModelCatalogStore = class {
 			constructor() {
@@ -2419,7 +2763,7 @@ window.__ModuleLoader__.load({
 			loadModelCatalog(modelsPath);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/locale.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/locale.js
 		/** 返回当前语言，并在宿主语言切换（`<html lang>` 变化）时触发重渲。 */
 		function useLocale() {
 			const [locale, setLocaleState] = (0, react$1.useState)(getLocale);
@@ -2438,7 +2782,7 @@ window.__ModuleLoader__.load({
 			return locale;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/utils/path.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/utils/path.js
 		/**
 		* 纯路径方法 —— 只做字符串切分 / 拼接，不碰宿主、不依赖 React / DOM。
 		*
@@ -2477,7 +2821,7 @@ window.__ModuleLoader__.load({
 			return dir === "" ? name : `${dir}/${name}`;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/types.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/types.js
 		/** HTML 静态预览的扩展名（与官方 htmlBodyDefinition 同款）。 */
 		const HTML_KINDS = ["html", "htm"];
 		/**
@@ -2779,10 +3123,10 @@ window.__ModuleLoader__.load({
 			return best;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/explorer-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/explorer-css.generated.js
 		const EXPLORER_CSS = "/* 工作区文件浏览器（dshpc-fb-*）。\n *\n * 度量真源 = 兄弟项目 dsh-task-dispatch-table 的 src/client/archive-session-css.ts\n * （.dsh-tdt-sv-* 全族）。**逐条照抄，不许自己估**：padding / gap / 圆角 / 字号 / 行高 /\n * 边框色 / 悬停色 / 透明度动画 / 溢出策略，一一对应，改这里之前先去那边对原文。\n * 前缀与变量名换成本仓口径（--tdt-* → --dshpc-*），数值不换。\n * **例外**：容器级内距（__bar / __title / __tree / __body）2026-11-03 起改成四周一致\n * 的 token 档（space-2 / space-3）——用户反馈兄弟那套「左右比上下宽」在这两处窗口里不对称。\n * 行级内距（__row / __row-note / __banner）仍是兄弟数值，未动。\n *\n * 控件：能核心就核心（面包屑 = Button ghost、行尾 = Button outline、展开 / 图标 = IconButton、\n * 分段 = Segmented、文字 = MarqueeText）。核心控件自带的 padding / 高度 / 皮肤在本文件里\n * **按兄弟数值覆盖**（选择器带 .dshpc-fb 前缀提高特异性，确保盖得住控件默认值）。\n */\n/* 背景不在这里画：dock 由 .dshpc-side-surface、选文件弹窗由 .dshpc-panel 提供。\n   自己再刷一层 surface-base 会把面板档位（modal 同色的 surface-1）盖掉 —— 弹窗就显得发黑。 */\n.dshpc-fb{\n  position:relative;display:flex;flex-direction:column;height:100%;min-height:0;\n  background:transparent;color:var(--dshpc-fg);\n}\n\n/* 第一排：▾ 选层 + 面包屑 + 动作（兄弟 .dsh-tdt-sv-crumbbar）\n   ⚠️ 不能 overflow:hidden —— 下拉浮层挂在它下面，裁了就看不见。 */\n.dshpc-fb__bar{\n  position:relative;flex:none;display:flex;align-items:center;gap:2px;\n  /* 四周内距一致（用户 2026-11-03：原来 4/10，左右比上下宽，看着不对称）——下文 __title / __tree / __body 同口径。 */\n  padding:var(--dshpc-space-2);border-bottom:1px solid var(--dshpc-border);white-space:nowrap;\n}\n.dshpc-fb__menu-wrap{position:relative;flex:none;display:inline-flex}\n.dshpc-fb__crumbs{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:2px;overflow:hidden}\n.dshpc-fb__crumbs-measure{\n  position:absolute;top:0;left:0;display:inline-flex;align-items:center;gap:2px;\n  visibility:hidden;pointer-events:none;white-space:nowrap;\n}\n\n/* 面包屑：核心 ghost 钮，但皮肤与尺寸取兄弟 .dsh-tdt-sv-crumb（高由内容决定，不锁控制高）。 */\n.dshpc-fb .dshpc-fb__crumb{\n  appearance:none;background:0 0;border:none;height:auto;\n  padding:2px 4px;border-radius:var(--dshpc-radius-sm);\n  font:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis;\n}\n.dshpc-fb .dshpc-fb__crumb:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-fb .dshpc-fb__crumb:disabled{color:var(--dshpc-fg-2);cursor:default}\n.dshpc-fb .dshpc-fb__crumb--current{cursor:default;color:var(--dshpc-fg);font-weight:600;min-width:0}\n.dshpc-fb .dshpc-fb__crumb--current:hover{background:0 0}\n.dshpc-fb__crumb-mq{flex:1 1 auto;min-width:0}\n.dshpc-fb__crumb-sep{flex:none;color:var(--dshpc-fg-3)}\n\n/* 越界（outside-workspace）第一排：只读完整路径（兄弟 .dsh-tdt-sv-crumbbar-plain-inner）。 */\n.dshpc-fb__bar-plain{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-2);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;user-select:none;\n}\n.dshpc-fb__actions{flex:none;display:flex;align-items:center;gap:4px}\n/* 选择器头部「选当前文件 / 当前文件夹」钮：与 ✕ 并排，不被面包屑挤扁。\n   「选当前目录」= 核心 Button outline（sm 档）：尺寸与皮肤全归核心，这里只留布局。\n   ⚠️ 别再往这里写 height / padding 覆盖 —— 域按登记顺序拼接，核心 .dshpc-btn--sm 谁先谁后\n   取决于渲染次序，覆盖会时灵时不灵（2026-11-03 前就是这么写的）。 */\n.dshpc-fb__pick{flex:none}\n\n/* ▾ 选层浮层。\n   层序：遮罩必须高于 picker 面板（--dshpc-z-panel），否则菜单开着点面板不算「点外部」；\n   菜单再压在遮罩之上，所以是 popmenu 一档 +1。表皮来自 panel.css 的 menu 档。 */\n.dshpc-fb__crumbs-backdrop{position:fixed;inset:0;z-index:var(--dshpc-z-popmenu);background:transparent}\n.dshpc-fb__crumbs-menu{\n  position:absolute;top:calc(100% + 4px);left:0;z-index:calc(var(--dshpc-z-popmenu) + 1);\n  min-width:160px;max-height:240px;overflow:auto;padding:4px;display:flex;flex-direction:column;\n}\n.dshpc-fb__menu-item{\n  appearance:none;background:0 0;border:none;text-align:left;font:inherit;\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);\n  padding:4px 8px;border-radius:var(--dshpc-radius-sm);color:var(--dshpc-fg);cursor:pointer;\n  max-width:280px;display:flex;align-items:center;gap:2px;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n.dshpc-fb__menu-item:hover{background:var(--dshpc-hover)}\n.dshpc-fb__menu-empty{\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-md);padding:4px 8px;color:var(--dshpc-fg-3);\n}\n.dshpc-fb__menu-icon{flex:none;display:inline-flex}\n.dshpc-fb__menu-chev{flex:none;color:var(--dshpc-fg-3);margin-right:1px}\n.dshpc-fb__menu-chev-slot{flex:none;width:11px;height:11px;margin-right:1px}\n.dshpc-fb__menu-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n\n/* 第二排（仅预览态）：文件名 + 工具（兄弟 .dsh-tdt-sv-titlebar / -preview-title-inner）。 */\n.dshpc-fb__title{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:var(--dshpc-space-2);border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-fb__title-inner{\n  font-family:var(--dshpc-font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg);\n  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;\n}\n\n/* 主体（兄弟 .dsh-tdt-sv-preview-body / -hint / -preview-err）\n   下面三个滚动容器只挂 .dshpc-scroll-thin：细滚动条与 1px 让位都由那个类统一给，\n   这里不再写透明边框（口径见 style.md §滚动条让位）。 */\n.dshpc-fb__body{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;padding:var(--dshpc-space-3)}\n.dshpc-fb__note{font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-2);text-align:center;padding:12px 0}\n.dshpc-fb__err{\n  display:flex;flex-direction:column;align-items:flex-start;gap:10px;\n  font-size:var(--dshpc-font-sm);line-height:1.6;color:var(--dshpc-fg-2);padding:8px 0;\n}\n\n/* 目录树（兄弟 .dsh-tdt-sv-tree*） */\n.dshpc-fb__tree{flex:1;min-height:0;overflow:auto;padding:var(--dshpc-space-2)}\n.dshpc-fb__row{\n  display:flex;align-items:center;gap:8px;padding:6px 8px;\n  border-radius:var(--dshpc-radius-sm);cursor:pointer;user-select:none;\n}\n.dshpc-fb__row:hover{background:var(--dshpc-hover)}\n.dshpc-fb__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px}\n.dshpc-fb__row-icon{flex:none;display:inline-flex;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-lg)}\n/* 文件行图标走核心 1em 基线（button.css:112）：不再由调用方 size={18} 说了算。 */\n.dshpc-fb__row-icon svg{display:block;width:1em;height:1em;flex:none;}\n.dshpc-fb__row-name{\n  flex:1;min-width:0;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);color:var(--dshpc-fg);\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n}\n\n/* 展开开关：核心 IconButton，命中位 20×20 + 展开时转 90°（兄弟 .dsh-tdt-sv-tree-toggle{,-open}）。 */\n.dshpc-fb .dshpc-fb__row-toggle{\n  appearance:none;background:0 0;border:none;flex:none;\n  width:20px;height:20px;padding:0;margin:0;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-2);cursor:pointer;\n  display:inline-flex;align-items:center;justify-content:center;\n  transition:transform var(--dshpc-dur-fast) var(--dshpc-ease),background var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb .dshpc-fb__row-toggle--open{transform:rotate(90deg)}\n\n/* 行尾「进入 / 选择」：按钮**皮肤完全交给核心 Button**（2026-11-03：原来这里又写了一遍描边/内距/\n   字号，等于自己手搓了一颗，跟别处的按钮长得不一样）。本仓只保留布局与「悬停才现身」：\n   平时隐身但占位（opacity 而非 display）⇒ 出现时不顶动行内布局。 */\n.dshpc-fb .dshpc-fb__row-act{\n  flex:none;margin-left:auto;\n  opacity:0;pointer-events:none;\n  transition:opacity var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-fb__row:hover .dshpc-fb__row-act,.dshpc-fb .dshpc-fb__row-act:focus-visible{opacity:1;pointer-events:auto}\n\n.dshpc-fb__row-children{\n  margin-left:9px;padding-left:7px;border-left:1px solid var(--dshpc-border);\n  display:flex;flex-direction:column;\n}\n.dshpc-fb__row-note{flex:none;padding:8px 10px;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3)}\n.dshpc-fb__row-err{padding:4px 8px 4px 36px;font-size:var(--dshpc-font-sm);color:var(--dshpc-danger)}\n\n/* 预览体内部容器（仅本仓预览组件用；兄弟对应 preview-fill / preview-body-code 一类）。\n   必须 border-box：渲染态 inline 加了 padding:12px 14px，content-box 下 width:100%+padding\n   会溢出父层 28px（父 .dshpc-fb 无 overflow 裁切）→ 恒多一条横滚条；border-box 把 padding\n   算进 100%，从根消除该溢出。 */\n.dshpc-fb__text{flex:1;min-height:0;overflow:auto;width:100%;box-sizing:border-box}\n.dshpc-fb__banner{padding:6px 10px;background:var(--dshpc-open-bg);color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm)}\n.dshpc-fb__more{display:flex;justify-content:center;padding:10px}\n.dshpc-fb__image{max-width:100%;border-radius:var(--dshpc-radius-sm);border:1px solid var(--dshpc-border)}\n/* iframe 的外壳（兄弟 .dsh-tdt-sv-preview-fill）：iframe 必须包在这一层里才拿得到高度——\n   裸挂 iframe 时替换元素的自动最小尺寸会让高度算不出来（表现为预览区整片空白、像没反应）。 */\n.dshpc-fb__fill{flex:1;min-height:0;display:flex;overflow:hidden;padding:0}\n.dshpc-fb__frame{flex:1;min-height:0;width:100%;height:100%;border:none;background:var(--dshpc-surface-1)}\n\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/preview/BytesPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/preview/BytesPreview.js
 		function BytesPreview(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const tt = props.translate ?? t$2;
@@ -2834,7 +3178,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/code-viewer-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/code-viewer-css.generated.js
 		const CODE_VIEWER_CSS = "/* CodeViewer（只读 CodeMirror 查看器）样式。类名固定 dshpc-cv*；颜色吃 --dshpc-* token，\n   深色由 design 的 token 深色段自动生效（不写死颜色值）。 */\n/* flex:1 1 auto + min-width:0：调用方常把它放进 display:flex 的容器里（TextPreview），\n   不写会在主轴按内容宽排 —— 短文本时 __copy（absolute 相对本层）落在文字右端而不是面板右缘。 */\n.dshpc-cv{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-width:0;height:100%;min-height:0;}\n/* 复制钮复用核心 IconButton（variant=outline / size=md）：盒型、描边、圆角（已统一 md）、底色、hover\n   与图标尺寸全由核心提供 —— 图标跟随 .dshpc-iconbtn svg 的 1em，这里不再单独放大（写死 16px 曾让它显大）。\n   本文件只管「绝对定位 + 默认隐藏、hover/聚焦才显」（overlay 浮在编辑器右上角）。 */\n.dshpc-cv__copy{position:absolute;top:6px;right:6px;z-index:5;opacity:0;}\n.dshpc-cv:hover .dshpc-cv__copy,.dshpc-cv__copy:focus-visible{opacity:1;}\n/* 外层只把 .dshpc-scroll-thin 传给官方生成的 .cm-scroller（线宽 + 右让位都由 tokens.css\n   的后代规则给），自己 overflow:hidden 不滚 ⇒ 关掉自身让位，否则两层各 1px 会叠成 2px。\n   scroller 只让右不让底：给底会改 scroller 高度，CodeMirror 的测量循环会多算一条横滚条。 */\n.dshpc-cv__editor{flex:1 1 auto;min-height:0;overflow:hidden;--dshpc-scroll-inset-right:0px;}\n.dshpc-cv__editor .cm-editor{height:100%;}\n.dshpc-cv__editor .cm-scroller{overflow:auto}\n\n";
 		//#endregion
 		//#region ../../node_modules/.pnpm/@babel+runtime@8.0.8/node_modules/@babel/runtime/helpers/extends.js
@@ -48222,7 +48566,7 @@ window.__ModuleLoader__.load({
 		const stex = mkStex(false);
 		mkStex(true);
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/code-viewer-lang.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/code-viewer-lang.js
 		/**
 		* 源码态语法高亮：扩展名 → CodeMirror 语言映射。
 		*
@@ -48375,7 +48719,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/code-viewer-theme.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/code-viewer-theme.js
 		const CURSOR_FALLBACK_DARK = "#abb2bf";
 		const CURSOR_FALLBACK_LIGHT = "#383a42";
 		const cmSurfaceTheme = EditorView.theme({
@@ -48416,7 +48760,7 @@ window.__ModuleLoader__.load({
 			return [cmSurfaceTheme, cmSurfaceTint(dark)];
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/code-mirror-surface.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/code-mirror-surface.js
 		/**
 		* CodeMirror 共用底座 —— 只读 CodeViewer 与可编辑 CodeEditor 共用这一份渲染。
 		*
@@ -48499,7 +48843,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/CodeViewer.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/CodeViewer.js
 		/**
 		* CodeViewer —— 只读源码查看器（替代官方 Shiki CodeBlock），DSH 共享底座版。
 		*
@@ -48541,7 +48885,7 @@ window.__ModuleLoader__.load({
 				overlay: (0, react$1.createElement)(IconButton$1, {
 					variant: "outline",
 					size: "md",
-					icon: copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular),
+					icon: (0, react$1.createElement)(FontIcon, { name: copied ? "common.base:gou" : "common.base:fuzhi" }),
 					label: copied ? t("codeCopied") : t("codeCopy"),
 					className: "dshpc-cv__copy",
 					onClick: copy
@@ -48549,7 +48893,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/utils/number.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/utils/number.js
 		/**
 		* 字节数 → 人话（`12 KB` / `3.4 MB`）。
 		* 0 与负数 ⇒ `—`（不显示「0 B」这种假精确）。
@@ -48572,7 +48916,7 @@ window.__ModuleLoader__.load({
 			return `${value >= 10 ? String(Math.round(value)) : value.toFixed(1)} ${units[unit]}`;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/preview/md-labels.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/preview/md-labels.js
 		function markdownLabels() {
 			return {
 				code: {
@@ -48588,7 +48932,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/preview/TextPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/preview/TextPreview.js
 		/** 定位到行时最多自动续翻的页数（远处行号不值得为它打一整圈往返；用户仍可手动「加载更多」）。 */
 		const FOCUS_MAX_PAGES = 10;
 		function TextPreview(props) {
@@ -48689,7 +49033,7 @@ window.__ModuleLoader__.load({
 			}, tt("previewLoadMore"))) : null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/preview/HtmlPreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/preview/HtmlPreview.js
 		/** 官方 CSP 原文（documentpreview lib/client.js 同款，不多开不少关）。 */
 		const HTML_CSP = "default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:";
 		/** 禁用标签（官方清单）。 */
@@ -48793,7 +49137,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/preview/OfficePreview.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/preview/OfficePreview.js
 		function OfficePreview(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const tt = props.translate ?? t$2;
@@ -48843,7 +49187,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/preview/index.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/preview/index.js
 		function FilePreview(props) {
 			ensureControls();
 			const tt = props.translate ?? t$2;
@@ -48883,7 +49227,7 @@ window.__ModuleLoader__.load({
 			return null;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/crumbs-menu.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/crumbs-menu.js
 		/**
 		* ▾ 选层下拉的**条目构造**（picker 与 dock 共用同一段代码，差别只在入参 —— 源实现用户 2026-09-29
 		* 点名提炼，严禁两处各写一份）。
@@ -48957,7 +49301,10 @@ window.__ModuleLoader__.load({
 				key: `s${s}`,
 				className: "dshpc-fb__menu-chev-slot",
 				"aria-hidden": true
-			})), (0, react$1.createElement)("span", { className: "dshpc-fb__menu-chev" }, (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, { size: 11 }))) : null, (0, react$1.createElement)("span", { className: "dshpc-fb__menu-label" }, crumb.label));
+			})), (0, react$1.createElement)("span", { className: "dshpc-fb__menu-chev" }, (0, react$1.createElement)(Chevron, {
+				dir: "right",
+				size: 8
+			}))) : null, (0, react$1.createElement)("span", { className: "dshpc-fb__menu-label" }, crumb.label));
 			if (workspaces.length === 0) {
 				if (crumbs.length === 0) return [(0, react$1.createElement)("div", {
 					key: "empty",
@@ -48982,7 +49329,7 @@ window.__ModuleLoader__.load({
 			return out;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/crumb-nav.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/crumb-nav.js
 		/**
 		* 文件浏览器的第一排：▾ 选层 + 面包屑 + 右侧动作（选择 / ✕）。
 		*
@@ -49016,9 +49363,10 @@ window.__ModuleLoader__.load({
 		function CrumbNav(props) {
 			ensureComponentStyles("explorer", EXPLORER_CSS);
 			const { translate: tt, landing, crumbs, overflow, menuItems, menuOpen, onToggleMenu, onCloseMenu, onLoadDir, pickNow, onClose, regionRef, measureRef } = props;
-			const visibleCrumbs = overflow ? crumbButton(crumbs.length > 0 ? crumbs[crumbs.length - 1]?.label ?? tt("explorerRootName") : tt("explorerRootName"), void 0, true) : crumbs.length === 0 ? crumbButton(tt("explorerRootName"), void 0, true) : crumbs.map((crumb, index) => (0, react$1.createElement)(react$1.Fragment, { key: crumb.path }, index > 0 ? (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, {
+			const visibleCrumbs = overflow ? crumbButton(crumbs.length > 0 ? crumbs[crumbs.length - 1]?.label ?? tt("explorerRootName") : tt("explorerRootName"), void 0, true) : crumbs.length === 0 ? crumbButton(tt("explorerRootName"), void 0, true) : crumbs.map((crumb, index) => (0, react$1.createElement)(react$1.Fragment, { key: crumb.path }, index > 0 ? (0, react$1.createElement)(Chevron, {
+				dir: "right",
 				className: "dshpc-fb__crumb-sep",
-				size: 12
+				size: 8
 			}) : null, crumbButton(crumb.label, () => onLoadDir(crumb.path))));
 			return (0, react$1.createElement)("nav", {
 				className: "dshpc-fb__bar",
@@ -49026,7 +49374,10 @@ window.__ModuleLoader__.load({
 			}, (0, react$1.createElement)("div", { className: "dshpc-fb__menu-wrap" }, (0, react$1.createElement)(IconButton$1, {
 				variant: "plain",
 				size: "md",
-				icon: (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, { size: 14 }),
+				icon: (0, react$1.createElement)(Chevron, {
+					dir: "down",
+					size: 8
+				}),
 				label: tt("explorerLevels"),
 				"aria-expanded": menuOpen,
 				onClick: onToggleMenu
@@ -49043,9 +49394,10 @@ window.__ModuleLoader__.load({
 				ref: measureRef,
 				className: "dshpc-fb__crumbs-measure",
 				"aria-hidden": true
-			}, crumbs.length === 0 ? crumbButton(tt("explorerRootName")) : crumbs.map((crumb, index) => (0, react$1.createElement)(react$1.Fragment, { key: crumb.path }, index > 0 ? (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, {
+			}, crumbs.length === 0 ? crumbButton(tt("explorerRootName")) : crumbs.map((crumb, index) => (0, react$1.createElement)(react$1.Fragment, { key: crumb.path }, index > 0 ? (0, react$1.createElement)(Chevron, {
+				dir: "right",
 				className: "dshpc-fb__crumb-sep",
-				size: 12
+				size: 8
 			}) : null, crumbButton(crumb.label)))), visibleCrumbs), actions(pickNow, tt, onClose));
 		}
 		/** 越界（工作区外）：第一排整条换成只读完整路径，不给任何会失败的入口。 */
@@ -49065,7 +49417,7 @@ window.__ModuleLoader__.load({
 			}), actions(pickNow, tt, onClose));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/landing.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/landing.js
 		/**
 		* 落地页主体（picker 刚打开、还没进任何目录时的那张表）：上面一排根层（「根目录」或盘符），
 		* 下面全部工作区。行 = 进去，行尾钮 = 直接选这个目录。
@@ -49097,18 +49449,21 @@ window.__ModuleLoader__.load({
 			return (0, react$1.createElement)("div", { className: "dshpc-fb__tree dshpc-scroll-thin dshpc-scroll-thin--both" }, roots.map((root) => row(`root:${root.path}`, root.label, root.path)), anchors.filter((item) => item.path !== void 0 && item.path !== "").map((item) => row(`ws:${item.title}`, item.title, item.path)));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/tooltip.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/tooltip.js
 		let renderer;
-		/** 注入官方 Tooltip（插件启动时调一次；传 undefined 撤销，回到自绘降级）。 */
+		/** 注入官方 Tooltip（插件启动时调一次；传 undefined 撤销，FieldHint 回到只画图标）。 */
 		function setTooltipRenderer(fn) {
 			renderer = fn;
 		}
-		/** 当前注入的 renderer；未注入返回 undefined（FieldHint 据此走降级路径）。 */
+		/** 当前注入的 renderer；未注入返回 undefined（FieldHint 据此只画图标）。 */
 		function getTooltipRenderer() {
 			return renderer;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/Segmented.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/segmented-css.generated.js
+		const SEGMENTED_CSS = "\n/* ── 分段控件 P2 ─────────────────────────────────────────────────────\n   结构照兄弟项目 dsh-task-dispatch-table 的 Segmented 皮肤（item 无边框、hover 只提亮文字），\n   前缀 / 变量名换成本仓口径。用户额外要的两处（兄弟没有）：weekday 方块间隔（现为 2px）；段内中性计数 __count。\n   ⚠️ 2026-10-19 两次误判均已澄清：① 「宿主只认单行 CSS」——假，多行一直正常；\n   ② 「宿主吃掉 token 块之后第一条规则」——也假，真因是 tokens 模板字符串结尾多了一个反斜杠，\n   注入文本里留下字面反引号，把紧随其后的那条规则的选择器污染掉了（见 dsh-host.md §9）。\n   样式照常多行书写，不必压行；也不需要任何「牺牲规则」。 */\n/* 外观只有一套（2026-10-26）：原 variant 的 default / inset 两档在 CSS 里只差 1px 内距，\n   且 default 比文档承诺矮 2px，却让下游以为「有得选」而反复对图 ⇒ 整轴删除。\n   padding 3px 是尺寸契约的一部分：item 高度 = 控制高 − 6px，加起来正好 24 / 28 / 32。 */\n/* 选中片配色收在两条局部变量里（--seg-thumb 底 / --seg-on 字）：默认走主题亮片，\n   tone 档与自定义 {bg, fg} 都只改这两条（后者由组件内联写根节点，内联恒胜）。 */\n.dshpc-seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--dshpc-radius-md);--seg-thumb:var(--dshpc-surface-raised);--seg-on:var(--dshpc-fg);background:var(--dshpc-seg-track);}\n.dshpc-seg__item{appearance:none;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:calc(var(--dshpc-control-h-sm) - 6px);padding:0 12px;border:0;border-radius:var(--dshpc-radius-sm);background:transparent;color:var(--dshpc-fg-2);font-family:inherit;font-size:var(--dshpc-font-xs);font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:color var(--dshpc-dur-fast) var(--dshpc-ease),background-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-seg--md .dshpc-seg__item{height:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item{height:calc(var(--dshpc-control-h-lg) - 6px);}\n/* 段内图标（前置）：与 Button 同口径 —— inline-flex 吃掉行高基线，svg 按块级。 */\n.dshpc-seg__icon{display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:0;}\n.dshpc-seg__icon svg{display:block;margin:0;}\n/* 只有图标（无文字 / 计数 / 角标）：段必须是正方形 ⇒ 宽 = 段高、左右内距归零、内容居中；\n   否则基础规则的 0 12px 会把它拉成长方形。放在三档之后：同名特异性下后写者胜。 */\n.dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-sm) - 6px);padding:0;justify-content:center;}\n.dshpc-seg--md .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--lg .dshpc-seg__item--icon-only{width:calc(var(--dshpc-control-h-lg) - 6px);}\n/* 多选（2026-11-07 用户）：每段最小宽 = 该档段高 ⇒ 最窄也是正方形，绝不会出现比高还窄的竖条；\n   文案更长时由内容自然撑宽成横向长方形。三档各跟自己的控制高，不写死 px。\n   weekday / icon-only 那种固定 width 若小于段高，同样被 min-width 顶到正方形。 */\n.dshpc-seg--multiple .dshpc-seg__item{min-width:calc(var(--dshpc-control-h-sm) - 6px);}\n.dshpc-seg--multiple.dshpc-seg--md .dshpc-seg__item{min-width:calc(var(--dshpc-control-h-md) - 6px);}\n.dshpc-seg--multiple.dshpc-seg--lg .dshpc-seg__item{min-width:calc(var(--dshpc-control-h-lg) - 6px);}\n.dshpc-seg__item:hover:not([aria-pressed='true']):not(:disabled){color:var(--dshpc-fg);}\n.dshpc-seg__item[aria-pressed='true']{background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);color:var(--seg-on);font-weight:600;}\n.dshpc-seg__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n.dshpc-seg__item:disabled{cursor:default;opacity:.4;}\n/* 段内角标（如「异常」的数量）：语义色实面 + 反白字，0 由组件侧不渲染。必须是正圆（用户 2026-10-03）。 */\n.dshpc-seg__badge{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;padding:0;overflow:hidden;border-radius:50%;background:var(--dshpc-danger);color:var(--dshpc-on-signal);font-size:10px;line-height:16px;font-weight:500;font-variant-numeric:tabular-nums;}\n/* 段内中性计数（如筛选条「全部 11」）：纯文字、无底无边（对齐 task-ledger .dtl-seg__num 拍板口径）；0 由组件侧不渲染。 */\n.dshpc-seg__count{display:inline;flex:none;margin-left:3px;padding:0;border:0;border-radius:0;background:none;color:var(--dshpc-fg-3);font-size:10px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;}\n/* 选中段（彩色实面）里的计数：必须跟着 --seg-on 走再压暗一档（72% 白 ≈ 「比正文稍灰」）。\n   不许用 --dshpc-fg-3：它跟主题走，暗色下是深灰 ⇒ 蓝底上几乎看不见（2026-10-29 用户截图「My todos 4」）。 */\n.dshpc-seg__item[aria-pressed='true'] .dshpc-seg__count{color:color-mix(in srgb,var(--seg-on) 72%,transparent);}\n/* block：撑满父宽（表单行用），各段等分 */\n.dshpc-seg--block{display:flex;width:100%;}\n.dshpc-seg--block .dshpc-seg__item{flex:1 1 auto;justify-content:center;}\n/* weekday：星期多选方块。基础插件的特殊化定制（用户 2026-10-01：原 WeekdayPicker 即「蓝底 + 近似方形」）：\n   每格正方形（宽 = 段高）、选中品牌蓝反白字、**无外描边**（2026-10-18 重申）、\n   方块之间间距 gap:2px（2026-10-20 用户定稿：方块改小后 6px 显得太宽。10-18 曾从 2px 放宽到 6px，\n   两次都是用户拍板 —— 别自作主张改回去）。 */\n.dshpc-seg--weekday{--seg-track:var(--dshpc-seg-track);gap:2px;border:0;padding:3px;background:var(--seg-track);}\n.dshpc-seg--weekday .dshpc-seg__item{width:calc(var(--dshpc-control-h-lg) - 8px);padding:0;justify-content:center;}\n/* 蓝底反白：字色必须是常量白（--dshpc-on-signal）。2026-10-29 用户实测：暗色主题下这里曾用\n   --dshpc-fg-inverse，而它跟随宿主 label-primary-foreground，暗色下是近黑 ⇒ 蓝底黑字看不清。 */\n.dshpc-seg--weekday{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n\n/* ── tone（2026-10-29 用户）：选中片传内置基础色名，底 / 字由核心给，深浅两主题各自成立。\n   放在 weekday 之后：同名变量后写者胜，tone 与 className=\"dshpc-seg--weekday\" 同给时以 tone 为准。\n   黄底按 Chip / Button 同源口径用 on-warning（中高明度，白字看不清）。 */\n.dshpc-seg--tone-business{--seg-thumb:var(--dshpc-business);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-success{--seg-thumb:var(--dshpc-success);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-warning{--seg-thumb:var(--dshpc-warning);--seg-on:var(--dshpc-on-warning);}\n.dshpc-seg--tone-danger{--seg-thumb:var(--dshpc-danger);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-purple{--seg-thumb:var(--dshpc-purple);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-pink{--seg-thumb:var(--dshpc-pink);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-cyan{--seg-thumb:var(--dshpc-cyan);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-teal{--seg-thumb:var(--dshpc-teal);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-orange{--seg-thumb:var(--dshpc-orange);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-indigo{--seg-thumb:var(--dshpc-indigo);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-rose{--seg-thumb:var(--dshpc-rose);--seg-on:var(--dshpc-on-signal);}\n.dshpc-seg--tone-slate{--seg-thumb:var(--dshpc-slate);--seg-on:var(--dshpc-on-signal);}\n\n/* ── 单选滑动块（2026-10-26 用户：点选后选中底应「滑过去」，不是旧段消失、新段直接亮）。\n   结构 = 一块绝对定位的共用底 + 各段透明；位置/尺寸由组件量出后内联，这里只管外观与过渡。\n   --slide 只在单选挂上：多选（如星期）每段各自着色，没有唯一滑块可滑，保持原样。 */\n.dshpc-seg--slide{position:relative;}\n.dshpc-seg--slide .dshpc-seg__item{position:relative;z-index:1;}\n.dshpc-seg--slide .dshpc-seg__item[aria-pressed='true']{background:transparent;box-shadow:none;}\n.dshpc-seg__thumb{position:absolute;z-index:0;border-radius:var(--dshpc-radius-sm);background:var(--seg-thumb);box-shadow:var(--dshpc-shadow-raised);pointer-events:none;transition:left var(--dshpc-dur) var(--dshpc-ease),top var(--dshpc-dur) var(--dshpc-ease),width var(--dshpc-dur) var(--dshpc-ease),height var(--dshpc-dur) var(--dshpc-ease);}\n\n/* ── bordered 外框（2026-10-20 用户要的第二种模式）：**只在最外面套一圈 1px 描边**，\n   里面一概不动 —— 选中片的填充色 / 阴影 / 文字色全部保持原样（weekday 的蓝面照旧），\n   这里不写任何针对 __item 的规则。\n   总高必须与无框版逐像素一致：border 1px×2 由 padding 各让 1px 抵消（3 → 2）；\n   weekday 自己声明的 3px 在文件更后面，靠双类选择器压回 2px。 */\n.dshpc-seg--bordered{border:1px solid var(--dshpc-border);padding:2px;}\n.dshpc-seg--bordered.dshpc-seg--weekday{padding:2px;}\n\n@media (prefers-reduced-motion: reduce){.dshpc-seg__item{transition:none;}.dshpc-seg__thumb{transition:none;}}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/Segmented.js
 		/**
 		* 角标 / 计数要不要显示，返回要显示的文本。
 		* 数字 ≤0 是「没东西可数」的老口径；字符串（`'1K'` / `'99+'`）由调用方决定，原样显示，空串不显示。
@@ -49230,7 +49585,7 @@ window.__ModuleLoader__.load({
 			})]);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/preview-title-bar.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/preview-title-bar.js
 		/**
 		* 预览态的第二排：文件名 + 渲染⇄源码切换 / 复制路径 / 刷新。
 		*
@@ -49262,19 +49617,19 @@ window.__ModuleLoader__.load({
 			}) : null, (0, react$1.createElement)(IconButton$1, {
 				variant: "plain",
 				size: "md",
-				icon: copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular, { size: 14 }) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular, { size: 14 }),
+				icon: (0, react$1.createElement)(FontIcon, { name: copied ? "common.base:gou" : "common.base:fuzhi" }),
 				label: tt("previewCopyPath"),
 				onClick: onCopyPath
 			}), (0, react$1.createElement)(IconButton$1, {
 				variant: "plain",
 				size: "md",
-				icon: (0, react$1.createElement)(official_exports.IconRefreshOutlineRegular, { size: 14 }),
+				icon: (0, react$1.createElement)(FontIcon, { name: "common.base:shuaxin" }),
 				label: tt("previewRefresh"),
 				onClick: onReload
 			})));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/FileBrowser.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/FileBrowser.js
 		/**
 		* 「根」在 POSIX 上的落点 `/`。Windows 没有这一个根 —— 根层是盘符清单，由宿主 `op:'roots'` 给出
 		* （见下面 `roots` 状态），本常量只在 POSIX / 探不到盘符时用。
@@ -49656,7 +50011,10 @@ window.__ModuleLoader__.load({
 					variant: "plain",
 					size: "sm",
 					className: `dshpc-fb__row-toggle${isOpen ? " dshpc-fb__row-toggle--open" : ""}`,
-					icon: (0, react$1.createElement)(official_exports.IconChevronRightOutlineRegular, null),
+					icon: (0, react$1.createElement)(Chevron, {
+						dir: "right",
+						size: 8
+					}),
 					label: isOpen ? tt("explorerCollapse") : tt("explorerExpand"),
 					"aria-expanded": isOpen,
 					onClick: (event) => {
@@ -49785,7 +50143,7 @@ window.__ModuleLoader__.load({
 			}, nav, titleBar, body);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/layout/resizer.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/layout/resizer.js
 		/** 开始一次拖拽调宽（监听 window 的 pointermove / pointerup，松手自动清理）。 */
 		function startResizeLayoutWidth(opts) {
 			opts.startEvent.preventDefault?.();
@@ -49824,7 +50182,7 @@ window.__ModuleLoader__.load({
 			window.addEventListener("pointerup", onUp);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/layout/panel-dock-logic.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/layout/panel-dock-logic.js
 		/**
 		* 停靠面板的状态逻辑（纯函数，零 React / 零 DOM）。
 		*
@@ -49955,13 +50313,13 @@ window.__ModuleLoader__.load({
 			}, 0);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/layout/panel-dock-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/layout/panel-dock-css.generated.js
 		const PANEL_DOCK_CSS = "/* 停靠栏 = **布局成员**，不是浮层：它占宽度、把主区真正挤窄（兄弟项目 2026-09-28：\n   「分栏压过来，不是盖上去」）。所以调用方必须把它放进自己的 flex 根里。\n   皮肤（头部 / 拖拽条 / 关闭钮 / 背景阴影）在 side-panel.css，与 SideSheet 共用。 */\n.dshpc-dock{display:flex;flex:0 0 auto;align-self:stretch;min-width:0}\n/* dock 不再替主区让缝（原 --dshpc-dock-gap 的 1px margin 已删，用户 2026-11-02）：\n   滚动条与容器边缘的 1px 统一由滚动容器自己的透明边框提供（见 style.md §滚动条让位），\n   主区容器带了让位，滚动条与这条分隔线之间自然还是 1px。别再往这里加 margin。 */\n\n/* 自动加的宿主行（openFilePreview 加 / 关闭即摘）：消费方那行不必自己写 flex。\n   只让「第一个非预览子项」当主区伸展，其余直接子项不动（页脚条、工具条不误伤）；\n   display 不在这里写死 —— 本来就是 grid 等布局的元素保持原样，由 TS 侧按计算值补 flex。 */\n.dshpc-dock-host{min-width:0;min-height:0}\n.dshpc-dock-host>:not([data-dshpc-file-preview]){min-width:0}\n.dshpc-dock-host>:first-child:not([data-dshpc-file-preview]){flex:1 1 auto}\n\n/* 单栏**占位**：sticky + 视口高让它在页面滚动时保持可见，同时仍然占宽度。\n   ⚠️ **本条刻意不设 z-index**：布局成员一旦带正 z-index，就会无条件压过宿主 portal 到 body 的\n   弹窗（兄弟项目 2026-10-05 真机事故「侧边栏盖住宿主设置弹窗」）。层序交给 DOM 顺序裁决。\n   外观来自 .dshpc-side-surface（side-panel.css），这里只管怎么占位与朝哪边描边。 */\n.dshpc-dock__panel{\n  position:sticky;top:0;align-self:stretch;\n  /* 高度默认视口高（整页场景）；嵌在定高容器里时由调用方给 --dshpc-dock-h（如 420px / 100%）。 */\n  height:var(--dshpc-dock-h,100vh);max-height:var(--dshpc-dock-h,100vh);\n  border-left:1px solid var(--dshpc-border);\n}\n/* 收起的出场：宽度收到 0、透明淡出；落定后组件才真正摘掉这一栏（JS 延时 220ms 配合）。 */\n.dshpc-dock__panel--closing{\n  width:0!important;min-width:0!important;opacity:0;border-left-width:0;\n  transition:width .2s var(--dshpc-ease),opacity .2s var(--dshpc-ease),border-left-width .2s var(--dshpc-ease);\n}\n\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove，\n   向右拖进 iframe 就卡死 —— 整片让出指针事件；② contain 把重排隔离在栏内，\n   否则每帧改宽度都会牵动整页重排（兄弟项目 2026-10-04 真机「挪很久才动一下」）。 */\n.dshpc-dock.dshpc-dock--resizing iframe{pointer-events:none}\n.dshpc-dock.dshpc-dock--resizing .dshpc-dock__panel{contain:layout paint;will-change:width}\n\n/* 收起钮：**待在面板自己的框里**（用户 2026-10-28 三轮：占面板内部空间，不伸到外面去）。\n   left:0 从内侧贴着分隔线 —— 贴线的一边不描边（线是面板自己的 border-left），页签与线不重合。\n   20×44（用户 2026-10-28 四轮定尺寸）；实色底（--dshpc-plate，明暗各有实值），hover 亮一档。\n   padding-right:2px 是**视觉居中**：右侧是圆角，箭头往直线那边挪 1px（用户 2026-10-28 四轮）。 */\n.dshpc-dock__collapse{\n  position:absolute;left:0;top:50%;transform:translateY(-50%);\n  z-index:8;display:inline-flex;align-items:center;justify-content:center;\n  width:20px;height:44px;padding:0 2px 0 0;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);\n  border-left:none;\n  border-radius:0 var(--dshpc-radius-sm) var(--dshpc-radius-sm) 0;\n  background:var(--dshpc-plate);color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__collapse:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__collapse:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n\n/* 收起后的浮动耳朵：**fixed 贴右缘、垂直居中、独立于分栏**（用户 2026-10-28 定稿：\n   小页签挂中间、里面放面板图标、不显示文字，箭头与收起钮反向）。多个按收起顺序纵向堆叠。\n   z 走 ear 档（高于弹窗遮罩，2026-11-04）：面板在弹窗下面时，耳朵仍是唯一能点到的入口。\n   DOM 上 portal 到 body（PanelDock.ts），否则会被弹窗的 stacking context 关在里面。\n   ⚠️ 这一列**全页唯一**（id = dshpc-dock-ears，由 PanelDock 懒创建、各实例共用）：\n   每个 dock 各建一个的话，容器全部落在 top:50% ⇒ 两个 dock 收起时耳朵重叠\n   （兄弟项目 2026-11-06 真机：文件预览 + 编辑任务）。堆叠交给这里的 flex，别再按实例定位。 */\n.dshpc-dock__ears{\n  position:fixed;top:50%;right:0;transform:translateY(-50%);\n  z-index:var(--dshpc-z-ear,950);\n  display:flex;flex-direction:column;gap:8px;align-items:flex-end;\n  pointer-events:none;\n}\n.dshpc-dock__ear{\n  pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;\n  /* 与收起钮**同尺寸**（20×44，用户 2026-10-28 四轮）：上/下/左描边，贴右缘的一侧不描。\n     实色底（--dshpc-plate），不用透明色 —— 透明底下透出东西很难看。\n     padding-left:2px 是**视觉居中**：左侧是圆角，箭头往直线（右缘）那边挪 1px。 */\n  width:20px;height:44px;box-sizing:border-box;padding:0 0 0 2px;\n  border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  border-left:1px solid var(--dshpc-border);\n  border-right:none;\n  border-radius:var(--dshpc-radius-sm) 0 0 var(--dshpc-radius-sm);\n  background:var(--dshpc-plate);color:var(--dshpc-fg-2);\n  cursor:pointer;font-family:inherit;line-height:1;\n  animation:dshpc-ear-in .2s var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 入场：从右缘外滑进来，别「突然出现」（用户 2026-10-28）。 */\n@keyframes dshpc-ear-in{from{opacity:0;transform:translateX(14px)}}\n.dshpc-dock__ear:hover{background:var(--dshpc-plate-hover);color:var(--dshpc-fg)}\n.dshpc-dock__ear:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 与收起钮的箭头同一个 token（--dshpc-font-lg）：收进去前后箭头一模一样大（用户 2026-10-28）。\n   不再写死 16px —— 箭头 / 图标尺寸一律跟核心字号档。 */\n.dshpc-dock__ear-arrow{font-size:var(--dshpc-font-lg);color:var(--dshpc-fg-3)}\n.dshpc-dock__ear:hover .dshpc-dock__ear-arrow{color:var(--dshpc-fg)}\n/* 动效礼貌：系统声明减少动效时全部关掉，收起退化为瞬时、功能不受影响。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-dock__panel{animation:none}\n  .dshpc-dock__panel--closing{transition:none}\n  .dshpc-dock__ear{animation:none}\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/side-panel-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/side-panel-css.generated.js
 		const SIDE_PANEL_CSS = "/* 侧边面板的公共皮肤 —— PanelDock（占宽分栏）与 SideSheet（覆盖抽屉）共用这一份。\n *\n * 分界：**皮肤在这里，定位各自写**。两者唯一的形态差异就是「怎么占位」——\n * PanelDock 用 sticky 占宽挤窄主区（panel-dock.css），SideSheet 用 absolute 盖在页面上（side-sheet.css）。\n *\n * 类名沿用 dshpc-dock__* 前缀：那是既有公开面（文档与消费方都在用），\n * 这里只搬文件不改名；新增的中性类是 .dshpc-side-surface（外观基类）。 */\n\n/* 入场：宽度从 0 长出来（keyframes 只写 from，终点取内联 / 状态宽度）。两边共用。 */\n@keyframes dshpc-side-in{from{width:0;opacity:0;overflow:hidden}}\n\n/* 外观基类：背景 / 文字色 / 阴影 / 纵向 flex。**不含** position、高度、边框方向、动画触发。 */\n.dshpc-side-surface{\n  box-sizing:border-box;\n  display:flex;flex-direction:column;flex:0 0 auto;min-width:0;\n  background:var(--dshpc-surface-base);color:var(--dshpc-fg);\n  box-shadow:var(--dshpc-shadow-2);\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease);\n  animation:dshpc-side-in .22s var(--dshpc-ease);\n}\n\n/* 头部：右侧 34px = 8(边距) + 20(关钮) + 6(呼吸)：给绝对定位的关钮留位，标题/extra 不从它底下钻。 */\n.dshpc-dock__head{\n  flex:none;display:flex;align-items:center;gap:8px;\n  padding:10px 34px 10px 14px;\n  border-bottom:1px solid var(--dshpc-border-faint);\n}\n/* 图标位 / 标题右侧的内容位：消费方传 ReactNode，可塞多个；库只负责排布，不抢宽度。 */\n.dshpc-dock__lead{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-dock__extra{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto}\n/* 自定义头部：整行归调用方 —— 不加内边距/边框/背景，也不给关钮留内联空间（关钮是绝对定位的）。 */\n.dshpc-dock__head--custom{display:block;padding:0;border-bottom:none}\n.dshpc-dock__title{\n  flex:1 1 auto;min-width:0;\n  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\n  font-size:var(--dshpc-font-md);font-weight:600;\n}\n/* 关闭钮：20×20 方角图标位（与 Modal 的关闭钮同规格，不借 Picker 触发器皮肤）。 */\n.dshpc-dock__close{\n  display:inline-flex;align-items:center;justify-content:center;flex:none;\n  width:20px;height:20px;padding:0;border:none;border-radius:var(--dshpc-radius-sm);\n  background:transparent;color:var(--dshpc-fg-3);\n  font-family:inherit;font-size:13px;line-height:1;cursor:pointer;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n.dshpc-dock__close:hover{background:var(--dshpc-hover);color:var(--dshpc-fg)}\n.dshpc-dock__close:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 头部关钮：绝对定位（top 10 / right 8），锚点是面板本身 —— 正文滚动它不跟滚。 */\n.dshpc-dock__close--abs{position:absolute;top:10px;right:8px;z-index:8}\n/* 浮动关钮：无头部面板用，略收一点边距。 */\n.dshpc-dock__close--floating{\n  position:absolute;top:6px;right:6px;z-index:8;\n  background:var(--dshpc-surface-menu);border:1px solid var(--dshpc-border-faint);\n}\n\n/* 内容区自己滚（面板高度锁死，内容不设内部滚动就会把页面撑高）。\n   细滚动条与 1px 让位由 .dshpc-scroll-thin 统一给（口径见 style.md §滚动条让位）。 */\n.dshpc-dock__body{flex:1 1 auto;min-height:0;overflow:auto}\n\n\n/* 拖拽条：6px 命中区，**自己不画任何线**（贴在朝内那一侧，镜像由各自的定位文件做）。\n   hover / 拖动时把面板自己的边框染成蓝 —— 蓝线只准改原线，不准在旁边再加一条。\n   z-index 7 必须高于面板内容里的浮层（复制钮一类），否则命中区会被内容盖住。 */\n.dshpc-dock__resizer{\n  position:absolute;left:0;top:0;bottom:0;width:6px;\n  z-index:7;cursor:col-resize;background:transparent;\n}\n.dshpc-side-surface:has(> .dshpc-dock__resizer:hover),\n.dshpc-side-surface--resizing{\n  /* 原线保留「上下渐隐」工作区指示条质感：把面板自己的那条边框换成同款渐变。\n     面板四边里只有朝内一侧有宽度，所以渐变只落在那一侧。 */\n  border-image:linear-gradient(180deg,transparent,var(--dshpc-business) 30% 70%,transparent) 1;\n}\n/* 拖动期：① <iframe>（PDF / HTML 预览）是独立文档，会吞掉父文档的 pointermove ——\n   让出指针事件；② contain 把重排隔离在面板内，否则每帧改宽都会牵动整页重排。 */\n.dshpc-side-surface--resizing{contain:layout paint;will-change:width}\n.dshpc-side-surface--resizing iframe{pointer-events:none}\n\n/* 动效礼貌：系统声明减少动效时退化为瞬时（功能不受影响）。 */\n@media (prefers-reduced-motion:reduce){\n  .dshpc-side-surface{animation:none}\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/layout/PanelDock.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/layout/PanelDock.js
 		/**
 		* 停靠面板（PanelDock）—— 可停靠的右侧分栏容器。
 		*
@@ -50230,7 +50588,7 @@ window.__ModuleLoader__.load({
 					className: "dshpc-dock__close dshpc-dock__close--abs",
 					"aria-label": tt("dockClose"),
 					onClick: () => props.dock.close(pane.id, "button")
-				}, pane.closeIcon ?? "✕");
+				}, pane.closeIcon ?? (0, react$1.createElement)(FontIcon, { name: "common.base:guanbi" }));
 			};
 			const renderHeader = (pane) => {
 				if (pane.header === null) return null;
@@ -50247,7 +50605,7 @@ window.__ModuleLoader__.load({
 					className: "dshpc-dock__close dshpc-dock__close--floating",
 					"aria-label": tt("dockClose"),
 					onClick: () => props.dock.close(pane.id, "button")
-				}, pane.closeIcon ?? "✕");
+				}, pane.closeIcon ?? (0, react$1.createElement)(FontIcon, { name: "common.base:guanbi" }));
 			};
 			const rootClass = `dshpc-dock${state.ids.length > 0 ? " dshpc-dock--open" : ""}${props.className === void 0 ? "" : ` ${props.className}`}`;
 			const ears = state.collapsed.map((id) => {
@@ -50261,7 +50619,10 @@ window.__ModuleLoader__.load({
 				}, (0, react$1.createElement)("span", {
 					className: "dshpc-dock__ear-arrow",
 					"aria-hidden": true
-				}, "‹"));
+				}, (0, react$1.createElement)(FontIcon, {
+					name: "common.base:move-left",
+					size: 8
+				})));
 			});
 			const earHost = ears.length === 0 ? null : earsHost();
 			return (0, react$1.createElement)("div", {
@@ -50290,10 +50651,13 @@ window.__ModuleLoader__.load({
 				className: "dshpc-dock__collapse",
 				"aria-label": tt("dockCollapse"),
 				onClick: () => collapseWithAnim(pane.id)
-			}, "›"), renderHeader(pane), headerCloseOf(pane), floatingCloseOf(pane), (0, react$1.createElement)("div", { className: "dshpc-dock__body dshpc-scroll-thin" }, pane.children ?? null))), earHost === null ? null : (0, react_dom.createPortal)(ears, earHost));
+			}, (0, react$1.createElement)(FontIcon, {
+				name: "common.base:move-right",
+				size: 8
+			})), renderHeader(pane), headerCloseOf(pane), floatingCloseOf(pane), (0, react$1.createElement)("div", { className: "dshpc-dock__body dshpc-scroll-thin" }, pane.children ?? null))), earHost === null ? null : (0, react_dom.createPortal)(ears, earHost));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/fs-face.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/fs-face.js
 		/**
 		* client 侧的**只读文件面**：fetch 宿主 `serveFsRoute` 挂的那条路由（`src/host/fs-route.ts`）。
 		*
@@ -50451,7 +50815,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/explorer/open.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/explorer/open.js
 		/**
 		* 入参路径解析成**绝对路径**（`''` = 虚拟根）。用户 2026-11-03 定：绝对/相对都收。
 		*
@@ -50739,7 +51103,808 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/picker-logic.js
+		//#region ../../node_modules/.pnpm/zustand@5.1.0_@types+react@18.3.31_react@19.3.1/node_modules/zustand/esm/vanilla.mjs
+		const createStoreImpl = (createState) => {
+			let state;
+			const listeners = /* @__PURE__ */ new Set();
+			const setState = (partial, replace) => {
+				const nextState = typeof partial === "function" ? partial(state) : partial;
+				if (!Object.is(nextState, state)) {
+					const previousState = state;
+					state = (replace != null ? replace : typeof nextState !== "object" || nextState === null) ? nextState : Object.assign({}, state, nextState);
+					listeners.forEach((listener) => listener(state, previousState));
+				}
+			};
+			const getState = () => state;
+			const getInitialState = () => initialState;
+			const subscribe = (listener) => {
+				listeners.add(listener);
+				return () => listeners.delete(listener);
+			};
+			const api = {
+				setState,
+				getState,
+				getInitialState,
+				subscribe
+			};
+			const initialState = state = createState(setState, getState, api);
+			return api;
+		};
+		const createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
+		const TASK_NOTIFICATIONS_KEY = Symbol.for("dsh-plugin-core/task-notifications/v2");
+		const TASK_NOTIFICATIONS_EVENTS_KEY = Symbol.for("dsh-plugin-core/task-notifications/events/v2");
+		/** Default project lives on a global symbol: every inlined copy must see one value. */
+		const TASK_NOTIFICATIONS_PROJECT_KEY = Symbol.for("dsh-plugin-core/task-notifications/project/v2");
+		const EMPTY_TASKS = Object.freeze([]);
+		const EMPTY_SNAPSHOT = Object.freeze({
+			tasks: EMPTY_TASKS,
+			revision: 0
+		});
+		function projectSlot() {
+			return globalThis[TASK_NOTIFICATIONS_PROJECT_KEY];
+		}
+		function getDefaultTaskProject() {
+			return projectSlot()?.value;
+		}
+		function normalizeGroup(group) {
+			if (group === void 0) return "default";
+			if (group.trim() === "") throw new Error("task notification group must be a non-empty string");
+			return group;
+		}
+		function requireProject(project) {
+			if (project === null) return null;
+			if (project !== void 0) return project;
+			const fallback = getDefaultTaskProject();
+			if (fallback === void 0) throw new Error("task notification project is required: call setDefaultTaskProject() once at app start, or pass `project` explicitly");
+			return fallback;
+		}
+		/** Per-snapshot derived cache: same snapshot + same filter returns the SAME array. */
+		const SELECT_CACHE = /* @__PURE__ */ new WeakMap();
+		/**
+		* Three tiers, in that order:
+		*   - no filter / empty array: every group of the current project;
+		*   - one or more names: only those groups of the current project;
+		*   - `'*'`: every project and every group (pass `{ project }` to scope it).
+		*
+		* The returned reference is stable for the lifetime of the snapshot.
+		*/
+		function selectTaskNotifications(snapshot, groups, options = {}) {
+			const project = groups === "*" && options.project === void 0 ? null : requireProject(options.project);
+			const groupKey = groups === void 0 || groups === "*" ? "" : groups.length === 0 ? "" : [...groups].sort().join("\0");
+			const cacheKey = `${project ?? "*"}\u0002${groups === "*" ? "*" : groupKey}\u0002${options.includeHidden === true ? "hidden" : ""}`;
+			let perSnapshot = SELECT_CACHE.get(snapshot);
+			if (perSnapshot === void 0) {
+				perSnapshot = /* @__PURE__ */ new Map();
+				SELECT_CACHE.set(snapshot, perSnapshot);
+			}
+			const cached = perSnapshot.get(cacheKey);
+			if (cached !== void 0) return cached;
+			const wanted = groupKey === "" ? null : new Set(groupKey.split("\0"));
+			const result = Object.freeze(snapshot.tasks.filter((task) => {
+				if (options.includeHidden !== true && task.hidden === true) return false;
+				if (project !== null && task.project !== project) return false;
+				if (wanted === null) return true;
+				return wanted.has(task.group);
+			}));
+			perSnapshot.set(cacheKey, result);
+			return result;
+		}
+		function createTaskNotificationEventBus() {
+			const listeners = /* @__PURE__ */ new Set();
+			return {
+				subscribe(listener) {
+					listeners.add(listener);
+					return () => {
+						listeners.delete(listener);
+					};
+				},
+				emit(event) {
+					for (const listener of [...listeners]) try {
+						listener(event);
+					} catch (error) {
+						console.error("background task event listener failed", error);
+					}
+				}
+			};
+		}
+		function claim(key, create, isValid) {
+			const g = globalThis;
+			const existing = g[key];
+			if (existing !== void 0) {
+				if (!isValid(existing)) throw new Error("Incompatible dsh-plugin-core background task host; reload the page.");
+				return existing;
+			}
+			const created = create();
+			g[key] = created;
+			return created;
+		}
+		function claimTaskNotifications(create) {
+			return claim(TASK_NOTIFICATIONS_KEY, create, isPool);
+		}
+		function claimTaskNotificationEvents(create) {
+			return claim(TASK_NOTIFICATIONS_EVENTS_KEY, create, isEventBus);
+		}
+		function isPool(value) {
+			return typeof value === "object" && value !== null && value.protocol === 2 && typeof value.getSnapshot === "function";
+		}
+		function isEventBus(value) {
+			return typeof value === "object" && value !== null && typeof value.emit === "function" && typeof value.subscribe === "function";
+		}
+		function isRecord$4(value) {
+			return typeof value === "object" && value !== null && !Array.isArray(value);
+		}
+		/** JSON value check with a depth guard so a cyclic payload cannot hang the parser. */
+		function isDetail(value, depth = 0) {
+			if (depth > 20) return false;
+			if (value === null) return true;
+			const kind = typeof value;
+			if (kind === "string" || kind === "boolean") return true;
+			if (kind === "number") return Number.isFinite(value);
+			if (Array.isArray(value)) return value.every((item) => isDetail(item, depth + 1));
+			if (isRecord$4(value)) return Object.values(value).every((item) => isDetail(item, depth + 1));
+			return false;
+		}
+		/**
+		* Private copy on the way in: mutating the object afterwards must not leak into
+		* the pool, and anything the wire cannot carry must fail here — not later, and
+		* not differently depending on whether a channel happens to be open.
+		*/
+		function cloneDetail(value) {
+			if (value === void 0) return void 0;
+			if (!isDetail(value)) throw new Error("task notification detail must be a JSON value (string, number, boolean, null, array or plain object)");
+			return typeof structuredClone === "function" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+		}
+		function isTaskRecord(value) {
+			if (!isRecord$4(value)) return false;
+			if (value.detail !== void 0 && !isDetail(value.detail)) return false;
+			return typeof value.id === "string" && typeof value.project === "string" && typeof value.group === "string" && typeof value.title === "string" && (value.status === "running" || value.status === "done" || value.status === "failed") && typeof value.startedAt === "number" && typeof value.updatedAt === "number" && typeof value.origin === "string" && typeof value.backgrounded === "boolean";
+		}
+		function isNotice(value) {
+			if (!isRecord$4(value) || !isTaskRecord(value.task)) return false;
+			if (value.type === "settled") return value.outcome === "done" || value.outcome === "failed";
+			return value.type === "registered" || value.type === "updated" || value.type === "backgrounded";
+		}
+		function isWireMessageValue(value) {
+			if (!isRecord$4(value)) return false;
+			if (value.detail !== void 0 && !isDetail(value.detail)) return false;
+			return typeof value.id === "string" && typeof value.project === "string" && typeof value.group === "string" && typeof value.title === "string" && typeof value.at === "number" && (value.level === "info" || value.level === "success" || value.level === "warning" || value.level === "error");
+		}
+		/** Reject malformed / foreign messages instead of letting them poison the pool. */
+		function parseMessage(value) {
+			if (!isRecord$4(value) || typeof value.origin !== "string") return null;
+			if (value.kind === "hello") return {
+				kind: "hello",
+				origin: value.origin
+			};
+			if (value.kind === "bye") return typeof value.seq === "number" ? {
+				kind: "bye",
+				origin: value.origin,
+				seq: value.seq
+			} : null;
+			if (value.kind === "message") {
+				if (typeof value.seq !== "number" || !isWireMessageValue(value.message)) return null;
+				return {
+					kind: "message",
+					origin: value.origin,
+					seq: value.seq,
+					message: value.message
+				};
+			}
+			if (value.kind === "shard") {
+				if (typeof value.seq !== "number" || !Array.isArray(value.tasks)) return null;
+				if (!value.tasks.every(isTaskRecord)) return null;
+				const tasks = value.tasks;
+				if (value.notice === void 0) return {
+					kind: "shard",
+					origin: value.origin,
+					seq: value.seq,
+					tasks
+				};
+				if (!isNotice(value.notice)) return null;
+				return {
+					kind: "shard",
+					origin: value.origin,
+					seq: value.seq,
+					tasks,
+					notice: value.notice
+				};
+			}
+			return null;
+		}
+		function noticeToEvent(notice, remote) {
+			if (notice.type === "settled") return {
+				type: "settled",
+				outcome: notice.outcome === "failed" ? "failed" : "done",
+				task: notice.task,
+				remote
+			};
+			return {
+				type: notice.type,
+				task: notice.task,
+				remote
+			};
+		}
+		function makeOrigin() {
+			const c = globalThis.crypto;
+			if (typeof c?.randomUUID === "function") return c.randomUUID();
+			return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+		}
+		function openChannel(name) {
+			if (typeof BroadcastChannel === "undefined") return null;
+			try {
+				const channel = new BroadcastChannel(name);
+				channel.unref?.();
+				return channel;
+			} catch {
+				return null;
+			}
+		}
+		/** Deterministic order across pages: startedAt first, id as the tie-break. */
+		function compareTasks(a, b) {
+			return a.startedAt - b.startedAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+		}
+		/** One lock per page, named by origin. Bumping the protocol gives a clean namespace. */
+		const TASK_NOTIFICATIONS_LOCK_PREFIX = "dsh-plugin-core/task-notifications/v2/";
+		function lockNameFor(pageOrigin) {
+			return `${TASK_NOTIFICATIONS_LOCK_PREFIX}${pageOrigin}`;
+		}
+		/**
+		* `navigator.locks` bridge. Resolved lazily so importing this module never
+		* touches the DOM (Node / SSR can import it). Returns null where unavailable:
+		* the pool then behaves exactly as before and simply keeps no liveness data.
+		*/
+		function browserLocks() {
+			const locks = typeof navigator === "undefined" ? void 0 : navigator.locks;
+			if (locks === void 0 || locks === null || typeof locks.request !== "function") return null;
+			return {
+				hold(name) {
+					locks.request(name, () => new Promise(() => {}));
+				},
+				free(name) {
+					return locks.request(name, { ifAvailable: true }, (lock) => lock === null).then((occupied) => occupied === false).catch(() => false);
+				}
+			};
+		}
+		function createTaskNotificationPool(options = {}) {
+			const origin = options.origin ?? makeOrigin();
+			const channelName = options.channelName ?? "dsh-plugin-core/task-notifications/v2";
+			const offline = options.offline === true;
+			const wantLifecycle = options.lifecycle ?? (typeof window !== "undefined" && typeof document !== "undefined");
+			const bus = () => options.events ?? taskNotificationEvents;
+			const locks = options.locks === void 0 ? browserLocks() : options.locks;
+			/** Page -> settle function, so a task can be ended without the caller's handle. */
+			const finishers = /* @__PURE__ */ new Map();
+			/** Remotes currently being probed, so overlapping triggers do not stack up. */
+			const probing = /* @__PURE__ */ new Set();
+			let locksHeld = false;
+			const store = createStore(() => EMPTY_SNAPSHOT);
+			const shards = /* @__PURE__ */ new Map();
+			const knownSeq = /* @__PURE__ */ new Map();
+			let seq = 0;
+			let revision = 0;
+			let idSeq = 0;
+			/** 广播消息自己的序号，不参与分片 seq，避免打乱 baseline 的比较。 */
+			let messageSeq = 0;
+			let channel = null;
+			let everConnected = false;
+			let everPublished = false;
+			function collect() {
+				const all = [];
+				const now = Date.now();
+				for (const shard of shards.values()) for (const task of shard.tasks) {
+					if (task.timeoutMs !== void 0 && now - task.updatedAt > task.timeoutMs) continue;
+					all.push(task);
+				}
+				return Object.freeze(all.sort(compareTasks));
+			}
+			let expiring = false;
+			/**
+			* 把本页到点的任务结算为 failed。惰性执行：只在下次写之前跑，不装定时器。
+			* 只放弃池里的记录，不取消调用方还在跑的 work —— 那个我们没能力动。
+			*/
+			function expireLocal() {
+				if (expiring) return;
+				const now = Date.now();
+				for (const task of [...localShard()]) {
+					if (task.timeoutMs === void 0 || now - task.updatedAt <= task.timeoutMs) continue;
+					const finish = finishers.get(task.id);
+					if (finish === void 0) continue;
+					expiring = true;
+					try {
+						finish("failed", "timed out");
+					} finally {
+						expiring = false;
+					}
+				}
+			}
+			function post(message) {
+				if (channel === null) return;
+				channel.postMessage(message);
+			}
+			function localShard() {
+				return shards.get(origin)?.tasks ?? EMPTY_TASKS;
+			}
+			function emit(notice, remote) {
+				bus().emit(noticeToEvent(notice, remote));
+			}
+			function broadcastShard(notice) {
+				const tasks = localShard();
+				post({
+					kind: "shard",
+					origin,
+					seq,
+					tasks,
+					...notice === void 0 ? {} : { notice }
+				});
+			}
+			/** One write path: new local shard -> new snapshot -> local event -> cross-page message. */
+			function publish(nextTasks, notice) {
+				expireLocal();
+				seq += 1;
+				revision += 1;
+				shards.set(origin, {
+					origin,
+					seq,
+					tasks: Object.freeze([...nextTasks])
+				});
+				knownSeq.set(origin, seq);
+				everPublished = true;
+				store.setState({
+					tasks: collect(),
+					revision
+				}, true);
+				emit(notice, false);
+				broadcastShard(notice);
+			}
+			/**
+			* 纯广播：**不写池、不动快照**，所以订阅列表不会因为它多一行再少一行。
+			* 本地先发一次，再发给同源其他页（一次性，不参与 baseline）。
+			*/
+			function broadcast(input) {
+				const project = requireProject(input.project);
+				if (project === null) throw new Error("task notification project cannot be null when broadcasting");
+				const group = normalizeGroup(input.group);
+				const detail = cloneDetail(input.detail);
+				const message = {
+					id: `${origin}:msg:${String(++messageSeq)}`,
+					project,
+					group,
+					title: input.title,
+					...input.icon === void 0 ? {} : { icon: input.icon },
+					...input.iconSvg === void 0 ? {} : { iconSvg: input.iconSvg },
+					...detail === void 0 ? {} : { detail },
+					level: input.level ?? "info",
+					at: Date.now()
+				};
+				bus().emit({
+					type: "message",
+					message,
+					remote: false
+				});
+				connect();
+				post({
+					kind: "message",
+					origin,
+					seq: ++messageSeq,
+					message
+				});
+				return message;
+			}
+			function find(id) {
+				return localShard().find((task) => task.id === id);
+			}
+			function replace(tasks, record) {
+				return tasks.map((task) => task.id === record.id ? record : task);
+			}
+			/** Claim the page-level liveness lock. Called on connect, idempotent. */
+			function holdLiveness() {
+				if (locksHeld || locks === null) return;
+				locksHeld = true;
+				locks.hold(lockNameFor(origin));
+			}
+			/** A page vanished without `bye`: drop its shard and say so. */
+			function dropRemoteShard(pageOrigin) {
+				if (!shards.delete(pageOrigin)) return;
+				revision += 1;
+				store.setState({
+					tasks: collect(),
+					revision
+				}, true);
+				bus().emit({
+					type: "peer-left",
+					origin: pageOrigin,
+					remote: true
+				});
+			}
+			/**
+			* Remove shards whose page no longer holds its liveness lock.
+			*
+			* Two probes 250ms apart: a page that just started may not have taken its
+			* lock yet, and a stale shard must not be dropped on that single sample.
+			* Runs only on real events (message received, tab became visible) — there is
+			* no timer, so an idle or backgrounded tab costs nothing.
+			*/
+			function probeDeadPeers() {
+				if (locks === null) return;
+				for (const pageOrigin of [...shards.keys()]) {
+					if (pageOrigin === origin || probing.has(pageOrigin)) continue;
+					probing.add(pageOrigin);
+					(async () => {
+						try {
+							if (!await locks.free(lockNameFor(pageOrigin))) return;
+							await new Promise((resolve) => setTimeout(resolve, 250));
+							if (!await locks.free(lockNameFor(pageOrigin))) return;
+							dropRemoteShard(pageOrigin);
+						} finally {
+							probing.delete(pageOrigin);
+						}
+					})();
+				}
+			}
+			function onMessage(raw) {
+				const message = parseMessage(raw);
+				if (message === null || message.origin === origin) return;
+				if (message.kind === "hello") {
+					broadcastShard();
+					return;
+				}
+				if (message.kind === "bye") {
+					if (message.seq < (knownSeq.get(message.origin) ?? 0)) return;
+					knownSeq.set(message.origin, message.seq);
+					dropRemoteShard(message.origin);
+					return;
+				}
+				if (message.kind === "message") {
+					bus().emit({
+						type: "message",
+						message: message.message,
+						remote: true
+					});
+					return;
+				}
+				const seen = knownSeq.get(message.origin) ?? 0;
+				if (message.seq <= seen) return;
+				knownSeq.set(message.origin, message.seq);
+				shards.set(message.origin, {
+					origin: message.origin,
+					seq: message.seq,
+					tasks: Object.freeze([...message.tasks])
+				});
+				revision += 1;
+				store.setState({
+					tasks: collect(),
+					revision
+				}, true);
+				if (message.notice !== void 0) emit(message.notice, true);
+				probeDeadPeers();
+			}
+			function onPageHide() {
+				post({
+					kind: "bye",
+					origin,
+					seq
+				});
+			}
+			function onPageShow() {
+				connect();
+				seq += 1;
+				knownSeq.set(origin, seq);
+				broadcastShard();
+				refresh();
+			}
+			function onVisibility() {
+				if (document.visibilityState === "visible") {
+					connect();
+					refresh();
+					probeDeadPeers();
+				}
+			}
+			function attachLifecycle() {
+				if (!wantLifecycle) return;
+				window.addEventListener("pagehide", onPageHide);
+				window.addEventListener("pageshow", onPageShow);
+				document.addEventListener("visibilitychange", onVisibility);
+			}
+			function detachLifecycle() {
+				if (!wantLifecycle) return;
+				window.removeEventListener("pagehide", onPageHide);
+				window.removeEventListener("pageshow", onPageShow);
+				document.removeEventListener("visibilitychange", onVisibility);
+			}
+			function connect() {
+				if (offline || channel !== null) return;
+				channel = openChannel(channelName);
+				if (channel === null) return;
+				channel.onmessage = (event) => {
+					onMessage(event.data);
+				};
+				attachLifecycle();
+				holdLiveness();
+				const reopened = everConnected;
+				everConnected = true;
+				post({
+					kind: "hello",
+					origin
+				});
+				if (reopened && everPublished) {
+					seq += 1;
+					knownSeq.set(origin, seq);
+					broadcastShard();
+				}
+			}
+			function refresh() {
+				post({
+					kind: "hello",
+					origin
+				});
+			}
+			function register(input) {
+				const project = requireProject(input.project);
+				if (project === null) throw new Error("task notification project cannot be null when registering");
+				const group = normalizeGroup(input.group);
+				const detail = cloneDetail(input.detail);
+				const hidden = input.hidden === true;
+				const timeoutMs = input.timeoutMs ?? (hidden ? 3e5 : 0);
+				if (timeoutMs < 0) throw new Error("task notification timeoutMs must be >= 0");
+				connect();
+				const now = Date.now();
+				const id = `${origin}:${String(++idSeq)}`;
+				const record = {
+					id,
+					project,
+					group,
+					...input.projectLabel === void 0 ? {} : { projectLabel: input.projectLabel },
+					...input.groupLabel === void 0 ? {} : { groupLabel: input.groupLabel },
+					...input.icon === void 0 ? {} : { icon: input.icon },
+					...input.iconSvg === void 0 ? {} : { iconSvg: input.iconSvg },
+					title: input.title,
+					...detail === void 0 ? {} : { detail },
+					status: "running",
+					startedAt: now,
+					updatedAt: now,
+					origin,
+					backgrounded: false,
+					...hidden ? { hidden: true } : {},
+					...timeoutMs > 0 ? { timeoutMs } : {}
+				};
+				let isSettled = false;
+				let resolveSettled = () => {};
+				const settled = new Promise((resolve) => {
+					resolveSettled = resolve;
+				});
+				publish([...localShard(), record], {
+					type: "registered",
+					task: record
+				});
+				function finish(outcome, reason) {
+					if (isSettled) return;
+					const current = find(id);
+					if (current === void 0) return;
+					isSettled = true;
+					finishers.delete(id);
+					const final = {
+						...current,
+						status: outcome === "done" ? "done" : "failed",
+						reason,
+						updatedAt: Date.now()
+					};
+					publish(localShard().filter((task) => task.id !== id), {
+						type: "settled",
+						task: final,
+						outcome
+					});
+					resolveSettled({
+						outcome,
+						reason,
+						task: final
+					});
+				}
+				finishers.set(id, finish);
+				const handle = {
+					id,
+					get isSettled() {
+						return isSettled;
+					},
+					settled,
+					update(patch) {
+						if (isSettled) return;
+						const detail = cloneDetail(patch.detail);
+						if (patch.group !== void 0 && patch.group.trim() === "") throw new Error("task notification group must be a non-empty string");
+						const current = find(id);
+						if (current === void 0) return;
+						const next = {
+							...current,
+							...patch.title === void 0 ? {} : { title: patch.title },
+							...detail === void 0 ? {} : { detail },
+							...patch.group === void 0 ? {} : { group: patch.group },
+							...patch.groupLabel === void 0 ? {} : { groupLabel: patch.groupLabel },
+							...patch.icon === void 0 ? {} : { icon: patch.icon },
+							...patch.iconSvg === void 0 ? {} : { iconSvg: patch.iconSvg },
+							...patch.hidden === void 0 ? {} : patch.hidden ? { hidden: true } : {},
+							updatedAt: Date.now()
+						};
+						publish(replace(localShard(), next), {
+							type: "updated",
+							task: next
+						});
+					},
+					background() {
+						if (isSettled) return;
+						const current = find(id);
+						if (current === void 0 || current.backgrounded) return;
+						const next = {
+							...current,
+							backgrounded: true,
+							updatedAt: Date.now()
+						};
+						publish(replace(localShard(), next), {
+							type: "backgrounded",
+							task: next
+						});
+					},
+					done(detail) {
+						if (detail !== void 0) handle.update({ detail });
+						finish("done");
+					},
+					fail(reason) {
+						finish("failed", reason);
+					},
+					track(promise) {
+						promise.then(() => {
+							finish("done");
+						}, (error) => {
+							finish("failed", error instanceof Error ? error.message : String(error));
+						});
+						return promise;
+					}
+				};
+				return handle;
+			}
+			/**
+			* End every task this page still owns, whether or not the caller kept its
+			* handle (component remount, HMR, page switch). Cross-page rows are untouched:
+			* only their owning page may settle them.
+			*/
+			function settleLocal(reason) {
+				let settledCount = 0;
+				for (const task of [...localShard()]) {
+					const finish = finishers.get(task.id);
+					if (finish === void 0) continue;
+					finish("done", reason);
+					settledCount += 1;
+				}
+				return settledCount;
+			}
+			return {
+				protocol: 2,
+				origin,
+				getSnapshot: () => store.getState(),
+				getServerSnapshot: () => EMPTY_SNAPSHOT,
+				subscribe: (listener) => {
+					connect();
+					return store.subscribe(listener);
+				},
+				connect,
+				refresh,
+				select: (groups, options) => selectTaskNotifications(store.getState(), groups, options),
+				register,
+				broadcast,
+				settleLocal,
+				canRestore: (task) => task.origin === origin,
+				requestRestore(taskId) {
+					const record = find(taskId);
+					if (record === void 0 || record.origin !== origin) return false;
+					bus().emit({
+						type: "restored",
+						taskId,
+						remote: false
+					});
+					return true;
+				},
+				/** 关通道、摘监听并广播 bye；状态保留，之后 register / subscribe 会自动重连。 */
+				dispose() {
+					onPageHide();
+					detachLifecycle();
+					if (channel !== null) {
+						channel.onmessage = null;
+						channel.close();
+						channel = null;
+					}
+				}
+			};
+		}
+		/**
+		* One pool and one event bus per page, shared by every inlined core copy.
+		*
+		* Both are lazy facades: importing `ui` must not touch globalThis, must not
+		* create a store, and must not throw when an older core left an incompatible
+		* host behind (that used to break the whole `ui` entry on import). The host is
+		* claimed on first actual use instead.
+		*/
+		let sharedPool;
+		let sharedBus;
+		function globalPool() {
+			if (sharedPool === void 0) sharedPool = claimTaskNotifications(() => createTaskNotificationPool());
+			return sharedPool;
+		}
+		function globalBus() {
+			if (sharedBus === void 0) sharedBus = claimTaskNotificationEvents(createTaskNotificationEventBus);
+			return sharedBus;
+		}
+		const taskNotifications = {
+			protocol: 2,
+			get origin() {
+				return globalPool().origin;
+			},
+			getSnapshot: () => globalPool().getSnapshot(),
+			getServerSnapshot: () => globalPool().getServerSnapshot(),
+			subscribe: (listener) => globalPool().subscribe(listener),
+			connect: () => {
+				globalPool().connect();
+			},
+			refresh: () => {
+				globalPool().refresh();
+			},
+			select: (groups, options) => globalPool().select(groups, options),
+			register: (input) => globalPool().register(input),
+			broadcast: (input) => globalPool().broadcast(input),
+			settleLocal: (reason) => globalPool().settleLocal(reason),
+			canRestore: (task) => globalPool().canRestore(task),
+			requestRestore: (taskId) => globalPool().requestRestore(taskId),
+			dispose: () => {
+				globalPool().dispose();
+			}
+		};
+		function notifyTaskBase(title, options = {}) {
+			return taskNotifications.register({
+				title,
+				...options.project === void 0 ? {} : { project: options.project },
+				...options.group === void 0 ? {} : { group: options.group },
+				...options.detail === void 0 ? {} : { detail: options.detail },
+				...options.projectLabel === void 0 ? {} : { projectLabel: options.projectLabel },
+				...options.groupLabel === void 0 ? {} : { groupLabel: options.groupLabel },
+				...options.icon === void 0 ? {} : { icon: options.icon },
+				...options.iconSvg === void 0 ? {} : { iconSvg: options.iconSvg },
+				...options.hidden === void 0 ? {} : { hidden: options.hidden },
+				...options.timeoutMs === void 0 ? {} : { timeoutMs: options.timeoutMs }
+			});
+		}
+		/**
+		* 纯广播：只发一个 `message` 事件，**不进池、不进列表**，所以不会有「出现一帧又消失」的闪动。
+		*
+		* 常驻、要进监控列表、要能被结束的，用 `notifyTask`。
+		*/
+		function notifyMessage(title, options = {}) {
+			return taskNotifications.broadcast({
+				title,
+				...options.project === void 0 ? {} : { project: options.project },
+				...options.group === void 0 ? {} : { group: options.group },
+				...options.detail === void 0 ? {} : { detail: options.detail },
+				...options.icon === void 0 ? {} : { icon: options.icon },
+				...options.iconSvg === void 0 ? {} : { iconSvg: options.iconSvg },
+				...options.level === void 0 ? {} : { level: options.level }
+			});
+		}
+		function runTask(title, work, options = {}) {
+			const handle = notifyTaskBase(title, options);
+			let pending;
+			try {
+				pending = typeof work === "function" ? work() : work;
+			} catch (error) {
+				handle.fail(error instanceof Error ? error.message : String(error));
+				return Promise.reject(error);
+			}
+			return handle.track(pending);
+		}
+		Object.assign(notifyTaskBase, { run: runTask });
+		const taskNotificationEvents = {
+			subscribe: (listener) => globalBus().subscribe(listener),
+			emit: (event) => {
+				globalBus().emit(event);
+			}
+		};
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/picker-logic.js
 		/** 两种输入归一成 groups：给了 `options` 就当成一个无标题的组。 */
 		function toGroups(groups, options) {
 			if (groups !== void 0 && groups.length > 0) return groups;
@@ -52648,7 +53813,7 @@ window.__ModuleLoader__.load({
 		* earlier React versions.
 		* @see https://floating-ui.com/docs/react-utils#useid
 		*/
-		const useId$1 = SafeReact.useId || useFloatingId;
+		const useId$2 = SafeReact.useId || useFloatingId;
 		function createEventEmitter() {
 			const map = /* @__PURE__ */ new Map();
 			return {
@@ -52728,7 +53893,7 @@ window.__ModuleLoader__.load({
 		function useFloatingPortalNode(props) {
 			if (props === void 0) props = {};
 			const { id, root } = props;
-			const uniqueId = useId$1();
+			const uniqueId = useId$2();
 			const portalContext = usePortalContext();
 			const [portalNode, setPortalNode] = react$1.useState(null);
 			const portalNodeRef = react$1.useRef(null);
@@ -52868,7 +54033,7 @@ window.__ModuleLoader__.load({
 		const usePortalContext = () => react$1.useContext(PortalContext);
 		function useFloatingRootContext(options) {
 			const { open = false, onOpenChange: onOpenChangeProp, elements: elementsProp } = options;
-			const floatingId = useId$1();
+			const floatingId = useId$2();
 			const dataRef = react$1.useRef({});
 			const [events] = react$1.useState(() => createEventEmitter());
 			const nested = useFloatingParentNodeId() != null;
@@ -53003,46 +54168,10 @@ window.__ModuleLoader__.load({
 			]);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/infra/chevron.js
-		/**
-		* 全站唯一的箭头：**自绘 chevron**（就是下拉框右侧那颗）。
-		*
-		* 为什么自绘：`ui` 层零官方依赖（官方图标只在宿主内可解析），官方件在这个包里 import 不到。
-		* 为什么不再写字形：'▾' / '↑' 这类字符在各系统字体下粗细、角度、基线都不一样，
-		* 同一套界面里会出现两种箭头 —— 2026-10-26 用户点名 ▾ 太丑 ⇒ 一律换成这颗 chevron。
-		*
-		* 用法：`h(Chevron, { dir: 'up' })`（默认 12px；要放大用核心 dense 档，别在这里写死大尺寸）；
-		* 要动画就在外层套一个带 transform 的类
-		* （如卡片折叠的 `.dshpc-card__caret.is-open`），不要给每个方向另画一条路径。
-		*/
-		const ROTATE = {
-			down: 0,
-			up: 180,
-			left: 90,
-			right: 270
-		};
-		function Chevron(props) {
-			const size = props.size ?? 12;
-			const deg = ROTATE[props.dir ?? "down"];
-			const style = deg === 0 ? void 0 : { transform: `rotate(${String(deg)}deg)` };
-			return (0, react$1.createElement)("svg", {
-				className: props.className,
-				width: size,
-				height: size,
-				viewBox: "0 0 16 16",
-				fill: "none",
-				"aria-hidden": true,
-				style
-			}, (0, react$1.createElement)("path", {
-				d: "M4 6l4 4 4-4",
-				stroke: "currentColor",
-				"stroke-width": 1.5,
-				"stroke-linecap": "round",
-				"stroke-linejoin": "round"
-			}));
-		}
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/hint-css.generated.js
+		const HINT_CSS = "\n/* ── 问号提示 P4（用户 2026-10-18：对齐真实插件 HelpButton——**带圈的问号图标**）──\n   本体 14px 细圈 + 圈内 ?，颜色 fg-3、hover 只提亮不加底（与 dshpc-ed-help 同规矩）。\n   气泡不在本文件：2026-10-19 用户拍板「问号必须用官方 Tooltip 那一个」⇒ 气泡由注入的\n   官方组件渲染（src/ui/tooltip.ts），这里只管问号图标本身。 */\n.dshpc-hint{display:inline-flex;align-items:center;justify-content:center;flex:none;\n  box-sizing:border-box;width:14px;height:14px;padding:0;border:1px solid currentColor;border-radius:50%;background:transparent;\n  color:var(--dshpc-fg-3);font-family:inherit;font-size:8px;font-weight:600;line-height:12px;cursor:help;vertical-align:middle;\n  transition:color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-hint:hover,.dshpc-hint:focus-visible{color:var(--dshpc-fg);background:0 0;}\n.dshpc-hint:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/FieldHint.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/FieldHint.js
 		/**
 		* 问号提示 —— **全站唯一实现、独立组件**（L2，P4）
 		*
@@ -53064,7 +54193,10 @@ window.__ModuleLoader__.load({
 				tabIndex: 0,
 				role: "note",
 				"aria-label": text
-			}, "?");
+			}, (0, react$1.createElement)(FontIcon, {
+				name: "common.base:qm",
+				size: 8
+			}));
 			const renderer = getTooltipRenderer();
 			if (renderer === void 0) return anchor;
 			return renderer({
@@ -53076,10 +54208,13 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/picker-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/picker-css.generated.js
 		const PICKER_CSS = "\n/* 控件占位宽度由根盒吃：width / minWidth / maxWidth 内联在 .dshpc-picker 上。\n   根盒是 inline-block，只给定内层触发器时 shrink-to-fit 会按选中文字的 max-content 撑宽根盒，\n   含百分比的 clamp 在固有尺寸阶段又解不出来 ⇒ 长模型名让控件右侧留白、同排控件被挤（2026-11-10 真机）。\n   根盒定宽后百分比相对父 flex 行解析，超长文字只由 __label 的省略号接住，控件不再跟着内容跳。 */\n.dshpc-picker{position:relative;display:inline-block;max-width:100%;min-width:0;font-size:13px;line-height:20px}\n/* cascade 外层行之前没有布局：两个 inline-block 按基线排 ⇒ 供应商框下沉、两框之间只剩 HTML 空白看着连体。\n   这里只给默认值，:where() 特异性 0，消费方 rowClassName 的任意规则都能盖回来。 */\n:where(.dshpc-picker__cascade){display:flex;align-items:center;gap:8px}\n/* 触发器铺满根盒；hint 态多一层 fieldwrap，那层也铺满、按钮吃剩余宽度给问号让位。\n   尺寸只由根盒持有：默认下限（PICKER_DEFAULT_MIN_WIDTH）与调用方三轴都在根盒的内联 style 里，\n   trigger 一条 min/max 都不能有 —— 否则 width:96 会被 trigger 的 120 下限顶到 120，\n   向右溢出盖住邻格（2026-11-11 用户截图：年份下拉溢出 24px 压到月份滑轨）。 */\n.dshpc-picker > .dshpc-picker__trigger{width:100%;box-sizing:border-box}\n.dshpc-picker > .dshpc-fieldwrap{display:flex;width:100%;box-sizing:border-box}\n.dshpc-picker .dshpc-fieldwrap > .dshpc-picker__trigger{flex:1 1 auto;width:auto;min-width:0}\n.dshpc-picker__trigger{\n  display:inline-flex;align-items:center;justify-content:space-between;gap:6px;\n  min-width:0;height:28px;padding:0 8px;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-1);\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);cursor:pointer;\n}\n.dshpc-picker__trigger:disabled{color:var(--dshpc-fg-dim);cursor:not-allowed;opacity:.7}\n/* 聚焦（键盘或点击选中）时与全站一致的蓝色描边；菜单打开后焦点会进去，触发器自然失去焦点。 */\n.dshpc-picker__trigger:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 文字默认靠左（吃掉剩余宽度），不给 space-between 把短文案推到中间的机会；\n   确实要居中就显式传 align=\"center\"。 */\n.dshpc-picker__label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}\n.dshpc-picker__trigger--center .dshpc-picker__label{text-align:center}\n.dshpc-picker__caret{flex:none;color:var(--dshpc-fg-3)}\n.dshpc-picker__icon{display:inline-flex;flex:none;color:var(--dshpc-fg-2)}\n.dshpc-picker__option-icon{display:inline-flex;flex:none;color:var(--dshpc-fg-2)}\n/* 下拉面板只留定位 / 裁切 / 字号：底色·描边·圆角·阴影来自 panel.css 的 menu 档。 */\n.dshpc-picker__menu{\n  z-index:var(--dshpc-z-popmenu);max-height:280px;overflow:hidden;\n  display:flex;flex-direction:column;\n  /* 菜单经 FloatingPortal 挂到 body，脱离 .dshpc-picker，须显式字号，否则继承 body 的大字号 */\n  font-size:13px;line-height:20px;\n}\n/* 固定头部（提示 + 搜索框），不随列表滚（2026-11-06 用户）。 */\n.dshpc-picker__head{flex:none;padding:4px 4px 0}\n/* 滚动在内层：列表贴满面板内容区，1px 让位由 .dshpc-scroll-thin 统一给\n   （不留缝就贴死在边框内壁上，2026-11-06 用户反馈）。上下角溢出由面板 overflow:hidden 裁掉。 */\n.dshpc-picker__list{flex:1 1 auto;min-height:0;overflow-y:auto;padding:0 4px 4px}\n/* 尺寸档（与 Field 的 sm/md/lg 对应）。 */\n.dshpc-picker__trigger--sm{height:24px;font-size:12px}\n.dshpc-picker__trigger--lg{height:32px}\n/* ── 菜单内部：全部收进 .dshpc-picker__menu 作用域（不要退回裸单类）─────────────\n   每个消费插件都把 core 内联进自己的产物，同一页上可能同时挂着**旧版 core** 的同一批\n   dshpc-* 规则（v0.35.15 的选项是 4px 圆角、提示条是通栏 0 圆角）。旧规则与本文件同为\n   单类选择器（0,1,0），谁后挂载谁赢 —— 2026-11-10 用户真机：选中行 / 悬停行 / 黄色提示块\n   三处圆角全退回旧值，而搜索框（旧版碰巧同值）看着正常。\n   收进菜单祖先（0,2,0）后，无论新旧 CSS 谁先注入，当前版本都赢。\n   根治是类名跨版本隔离（已知未完成项）；在那之前，这层作用域不是可选修饰。 */\n\n/* 键盘游标所在项（无 hover 也要看得见）。 */\n.dshpc-picker__menu .dshpc-picker__option[data-active='true']{background:var(--dshpc-surface-sunken);outline:1px solid var(--dshpc-border)}\n.dshpc-picker__menu .dshpc-picker__option--clear{color:var(--dshpc-fg-3)}\n.dshpc-picker__menu .dshpc-picker__search{\n  width:100%;height:28px;margin-bottom:4px;padding:0 8px;box-sizing:border-box;\n  color:var(--dshpc-fg);background:var(--dshpc-surface-sunken);\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);outline:none;\n}\n.dshpc-picker__menu .dshpc-picker__search::placeholder{color:var(--dshpc-fg-3)}\n.dshpc-picker__menu .dshpc-picker__group-label{\n  padding:6px 8px 2px;color:var(--dshpc-fg-3);font-size:11px;\n}\n/* 圆角只跟全站「框 / 行」那一档走：--dshpc-radius-md。\n   真源是 Surface（surface.css:4-5「容器档 = --dshpc-radius-md，与 Button / Input 同档」），ListRow 的行\n   圆角也是从 Surface 继承的 —— 所以这里不能自己挑 xs/sm 之类更小的档。2026-11-10 用户真机截图：\n   搜索框（md）与被选中的蓝行（xs）圆角明显不齐，同在一个面板里像两套控件。\n   大圆角仍然只归外层菜单（panel.css 的 menu 档 + overflow:hidden）。 */\n.dshpc-picker__menu .dshpc-picker__option{\n  display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:var(--dshpc-radius-md);cursor:pointer;\n  color:var(--dshpc-fg);white-space:nowrap;\n}\n/* 行与行之间隔 1px（用户 2026-11-10 指名：只要 1px，不要间距四拍里的 4px —— 四档是排版用的，\n   这种「把两条底色分开一点」的细分缝是用户点名的值，按原样写）。 */\n.dshpc-picker__menu .dshpc-picker__option + .dshpc-picker__option{margin-top:1px}\n/* hover / 选中直接借 ListRow 的两条 token —— 同一个「行」语义，与列表条目对齐。\n   选中不染文字色：蓝字是「链接」语义，行选中只换底（list-row.css:44-47 的口径）。\n   2026-11-10 用户：原来蓝底蓝字 + 亮一点的灰，和 ListRow 完全不是一套。 */\n.dshpc-picker__menu .dshpc-picker__option:hover{background:var(--dshpc-listrow-hover-bg)}\n.dshpc-picker__menu .dshpc-picker__option--active{background:var(--dshpc-listrow-selected-bg);color:var(--dshpc-fg)}\n.dshpc-picker__menu .dshpc-picker__option--disabled{color:var(--dshpc-fg-dim);cursor:not-allowed}\n/* 选项文字吃掉剩余宽度：超长省略号（配合 MarqueeText hover 跑马灯），不撑宽菜单。 */\n.dshpc-picker__menu .dshpc-picker__option-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.dshpc-picker__menu .dshpc-picker__tick{width:12px;color:var(--dshpc-business)}\n.dshpc-picker__menu .dshpc-picker__empty{padding:8px;color:var(--dshpc-fg-3);text-align:center}\n/* 提示条（候选不完整 / 已到上限）与列表行同一套「块」：md 圆角 + 行内距，左右对齐搜索框与选项\n   （不再靠负 margin 伸到菜单内壁），只是配色换成提示黄。2026-11-10 用户：那条通栏太难看了，\n   要做成下面选中行那种框、用提示色。 */\n.dshpc-picker__menu .dshpc-picker__degraded{\n  padding:6px 8px;margin:0 0 4px;border-radius:var(--dshpc-radius-md);\n  color:var(--dshpc-warning-label);background:color-mix(in srgb,var(--dshpc-warning) 12%,transparent);\n  font-size:11px;\n}\n.dshpc-picker__menu .dshpc-picker__row{display:flex;align-items:center;gap:8px}\n/* 「显示更多」跟在最后一条后面、长得像多一条选项（2026-11-06 用户：翻到底发现不全才会找它）。\n   圆角同样走 md：它视觉上就是列表里多出来的一行，档位与选项一致，别再单独挑一个。 */\n.dshpc-picker__menu .dshpc-picker__more{\n  display:block;width:100%;margin-top:1px;padding:6px 8px;\n  color:var(--dshpc-business);background:none;\n  border:0;border-radius:var(--dshpc-radius-md);cursor:pointer;\n  font-size:12px;line-height:20px;text-align:center;\n}\n.dshpc-picker__menu .dshpc-picker__more:hover{background:var(--dshpc-surface-sunken)}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/Picker.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/field-css.generated.js
+		const FIELD_CSS = "\n/* ── 字段 + 问号提示（hint 参数内置） ──────────────────────────────────── */\n/* 控件 + FieldHint 同一行；hint 版由组件自己包，调用方只传 hint 字符串。\n   铺满型控件（input/textarea）进包后改吃 flex 弹性，让位给问号。 */\n.dshpc-fieldwrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;}\n.dshpc-fieldwrap--inline{display:inline-flex;}\n.dshpc-fieldwrap > .dshpc-input,.dshpc-fieldwrap > .dshpc-textarea,.dshpc-fieldwrap > .dshpc-iwrap{flex:1 1 auto;width:auto;min-width:0;}\n/* 多行输入：问号钉在**右下角**（2026-10-20 用户：不要垂直居中），文本区底部留出它的位置。\n   ⚠️ 这一档必须把 textarea 的宽度还回去（上面那条 flex 让位规则会把它缩窄）。 */\n.dshpc-fieldwrap--block{position:relative;display:block;}\n.dshpc-fieldwrap--block > .dshpc-textarea{width:100%;padding-bottom:24px;}\n.dshpc-fieldwrap--block > .dshpc-hint{position:absolute;right:8px;bottom:6px;}\n\n/* ── 输入类 P3 ────────────────────────────────────────────────────────── */\n/* 默认铺满容器（width:100%，与 .dshpc-textarea 同口径）：input 原生按 size 属性取内在宽，\n   不铺满 ⇒ 调用方套定宽壳时会「右边空一截、看着没贴右」（2026-10-20 用户抓的 bug）。\n   要定宽由调用方在外面套壳控制（如 192px 搜索槽）。 */\n.dshpc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;outline:none;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-input--sm{height:var(--dshpc-control-h-sm);padding:0 8px;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-input--md{height:var(--dshpc-control-h-md);padding:0 10px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input--lg{height:var(--dshpc-control-h-lg);padding:0 12px;font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-input::placeholder{color:var(--dshpc-fg-3);}\n/* type=\"search\"：原生清除钮（::-webkit-search-cancel-button）整个隐掉，换组件自己挂的 plain IconButton\n   —— 原生那个各子系统长相不一、还不吃 token（2026-10-28 用户：不好看，要数字框加减号那种）。 */\n.dshpc-iwrap .dshpc-input::-webkit-search-cancel-button{display:none;}\n.dshpc-input:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-input--error{border-color:var(--dshpc-danger);}\n.dshpc-input:disabled{cursor:default;opacity:.5;}\n\n/* 左侧图标槽（Input 的 icon 参数）：图标绝对定位压在输入框的左内边距上，\n   输入框自己的边框 / 焦点圈 / 描红一律不动。图标不吃点击（pointer-events:none）⇒ 点在图标上照样聚焦。\n   左内边距 = 左偏 8 + 图标宽（sm 14 / md·lg 16，见 fieldMetricsOf）+ 间距 4。 */\n.dshpc-iwrap{position:relative;display:block;width:100%;min-width:0;}\n.dshpc-iwrap__icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:inline-flex;pointer-events:none;color:var(--dshpc-fg-2);}\n.dshpc-iwrap--sm > .dshpc-input{padding-left:26px;}\n.dshpc-iwrap--md > .dshpc-input,.dshpc-iwrap--lg > .dshpc-input{padding-left:28px;}\n/* 禁用时图标跟输入框一起变淡（输入框自己已有 opacity:.5，图标不在它里面，得单独跟一下）。 */\n.dshpc-iwrap:has(> .dshpc-input:disabled) > .dshpc-iwrap__icon{opacity:.5;}\n\n/* 搜索框的清空钮（Field.ts 在「有焦点 + 有内容」时才挂出来）：**并进框里**，与数字框的 − / +\n   同形态 —— 整段同高、左直右圆、hover 底色铺满这一格（2026-10-28 用户：不要一颗悬在右边的小按钮）。\n   向内让 1px，免得底色压住输入框自己的边框。 */\n.dshpc-iwrap__clear.dshpc-iconbtn{position:absolute;right:1px;top:1px;bottom:1px;height:auto;width:auto;aspect-ratio:1;\n  border-radius:0 var(--dshpc-radius-md) var(--dshpc-radius-md) 0;font-size:var(--dshpc-font-md);}\n/* height:auto 必须：iconbtn--md/lg 的固定 height 会让 absolute 的 bottom 被忽略\n   （top:1 + 固定高 ⇒ 整钮错位 1px，× 显得没居中，2026-10-28 用户截图抓的）。 */\n/* 文字让开这一段（宽度 = 控件高 - 2，故按档位补）。 */\n.dshpc-iwrap--clear > .dshpc-input{padding-right:calc(var(--dshpc-control-h-md) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--sm > .dshpc-input{padding-right:calc(var(--dshpc-control-h-sm) + 3px);}\n.dshpc-iwrap--clear.dshpc-iwrap--lg > .dshpc-input{padding-right:calc(var(--dshpc-control-h-lg) + 3px);}\n\n.dshpc-pfx{display:inline-flex;align-items:center;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n.dshpc-pfx--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-pfx--md{height:var(--dshpc-control-h-md);}\n.dshpc-pfx--lg{height:var(--dshpc-control-h-lg);}\n/* md / lg 档字号跟档走（与同档下拉同字号）：此前写死 sm(12px)，同排下拉是 13px ⇒ 显得「input 字小」。 */\n.dshpc-pfx--md .dshpc-pfx__label,.dshpc-pfx--lg .dshpc-pfx__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--md .dshpc-pfx__input,.dshpc-pfx--lg .dshpc-pfx__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-pfx--error{border-color:var(--dshpc-danger);}\n.dshpc-pfx:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-pfx__label{padding:0 8px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);white-space:nowrap;border-right:1px solid var(--dshpc-border);}\n.dshpc-pfx__input{flex:1 1 auto;min-width:0;height:100%;padding:0 8px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);outline:none;}\n.dshpc-pfx__input::placeholder{color:var(--dshpc-fg-3);}\n\n.dshpc-num{display:inline-flex;align-items:center;justify-content:space-between;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);color:var(--dshpc-fg);}\n/* 中段：数字 + 后缀成组居中；容器被消费端拉宽时吃掉全部余量，两端 − / + 因此钉死在左右边缘。 */\n.dshpc-num__mid{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;}\n.dshpc-num--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-num--md{height:var(--dshpc-control-h-md);}\n.dshpc-num--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-num--md .dshpc-num__input,.dshpc-num--lg .dshpc-num__input{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n.dshpc-num--md .dshpc-num__suffix,.dshpc-num--lg .dshpc-num__suffix{font-size:var(--dshpc-font-md);}\n.dshpc-num--disabled{opacity:.5;}\n/* 焦点态与 Input 同款（2026-10-20 用户：数字框里点进去没有蓝框）：内层 input 无边框，\n   焦点状态画在整个步进控件外框上。 */\n.dshpc-num:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n.dshpc-num__input{width:36px;height:100%;padding:0 2px;border:0;background:transparent;color:var(--dshpc-fg);\n  font-family:inherit;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);text-align:center;outline:none;}\n.dshpc-num__suffix{padding:0 6px;color:var(--dshpc-fg-2);font-size:var(--dshpc-font-sm);white-space:nowrap;}\n.dshpc-num .dshpc-iconbtn{border-radius:0;color:var(--dshpc-fg-2);flex:none;}\n/* 加减钮静止态要有底：纯文字看不出是按钮（2026-11-14 用户）。 */\n.dshpc-num .dshpc-iconbtn{background:var(--dshpc-fill-faint);}\n\n/* 官方 Switch 包装统一：选中 = success 绿。\n   （合并原先 task-editor-css / task-list 两处就地覆盖；选择器带包装类 + role，特异性高于官方。） */\n.dshpc-switch button[role='switch'][aria-checked='true']{background:var(--dshpc-success);}\n\n/* 多行文本输入（提示词等，P3）：**边框 / 圆角 / 底 / 焦点态与 Input 同一套口径**（用户 2026-10-20：\n   「多行输入应该和 input 的边儿是一个道理，包括圆角在内，都是一个东西」）。\n   ⚠️ 旧意图「卡内无边框、视觉重心在整张卡上」已作废 —— 现在它就是一只带框的多行输入框。\n   （从 task-editor-css 的 .dshpc-ed-prompt 上提而来；业务文件不再自写 textarea 皮肤。） */\n.dshpc-textarea{display:block;width:100%;box-sizing:border-box;min-height:132px;padding:8px 12px;\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);outline:none;\n  background:var(--dshpc-surface-1);color:var(--dshpc-fg);font-family:inherit;font-size:var(--dshpc-font-lg);line-height:1.6;resize:vertical;\n  transition:border-color var(--dshpc-dur-fast) var(--dshpc-ease),box-shadow var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-textarea::placeholder{color:var(--dshpc-fg-3);}\n.dshpc-textarea:focus{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n/* 校验不通过：与 Input 一致，走边框描红（旧版是 box-shadow 描红盒，与 Input 不同口径） */\n.dshpc-textarea--error{border-color:var(--dshpc-danger);}\n.dshpc-textarea:disabled{cursor:default;opacity:.5;}\n@media (prefers-reduced-motion: reduce){.dshpc-textarea{transition:none;}}\n\n/* 拖拽分隔条（编辑分栏 / 预览 dock 共用，U20 #3）：6px 命中区，col-resize，不画线，hover/按下浮出浅带。\n   具体 z-index 由 .dshpc-ed-resizer / .dshpc-sv-resizer 各自补。 */\n.dshpc-resizer{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:col-resize;background:0 0;touch-action:none;user-select:none;}\n.dshpc-resizer:hover,.dshpc-resizer:active{background:var(--dshpc-hover);}\n\n@media (prefers-reduced-motion: reduce){.dshpc-input,.dshpc-pfx{transition:none;}}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/Picker.js
 		/**
 		* 通用选择器：单选 / 多选 / 上限 / 搜索 / 分组 / 空态 / 降级。
 		*
@@ -53226,7 +54361,7 @@ window.__ModuleLoader__.load({
 				text: summary,
 				className: "dshpc-picker__label"
 			}), (0, react$1.createElement)(Chevron, {
-				size: 12,
+				size: 6,
 				className: "dshpc-picker__caret"
 			}));
 			const triggerRow = props.hint === void 0 ? trigger : (0, react$1.createElement)("span", { className: "dshpc-fieldwrap dshpc-fieldwrap--inline" }, trigger, (0, react$1.createElement)(FieldHint, { text: props.hint }));
@@ -53270,7 +54405,7 @@ window.__ModuleLoader__.load({
 						onClick: () => {
 							if (!blocked) pick(o.value);
 						}
-					}, mode === "multiple" ? (0, react$1.createElement)("span", { className: "dshpc-picker__tick" }, selected.includes(o.value) ? "✓" : "") : null, o.icon !== void 0 && o.icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-picker__option-icon" }, o.icon) : null, (0, react$1.createElement)(MarqueeText, {
+					}, mode === "multiple" ? (0, react$1.createElement)("span", { className: "dshpc-picker__tick" }, selected.includes(o.value) ? (0, react$1.createElement)(FontIcon, { name: "common.base:gou" }) : null) : null, o.icon !== void 0 && o.icon !== null ? (0, react$1.createElement)("span", { className: "dshpc-picker__option-icon" }, o.icon) : null, (0, react$1.createElement)(MarqueeText, {
 						text: o.label,
 						className: "dshpc-picker__option-label"
 					}));
@@ -53287,19 +54422,19 @@ window.__ModuleLoader__.load({
 			return Array.isArray(v) ? [...v] : [v];
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/utils/date.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/utils/date.js
 		/** 两位补零：`9` → `09`（数字 / 纯数字字符串都收）。 */
 		function pad2$1(value) {
 			return String(value).padStart(2, "0");
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/card-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/card-css.generated.js
 		const CARD_CSS = "\n/* ── Card / StripCard：Surface 外框 + 头部契约 + 色条 ─────────────────────\n   外框（底 / 边框 / 圆角）来自 .dshpc-surface（src/ui/surface.css）：\n   本文件**不再写 border / border-radius**，圆角契约因此只有一个定义点（容器档 = 12）。\n   内距不在根节点：根节点 padding:0，__body（头部区）与 __panel（展开区）各自承担 ——\n   两块区域因此彼此独立，hover 只可能落在头部区，展开区不会被波及。\n   这里只管三件 Surface 不该知道的事：色条几何、头部布局、两块区域的内距。\n\n   色条几何默认值都可被 props 覆盖（Card.ts 写对应的 CSS 变量）：\n     --card-bar-size   条子粗细\n     --card-bar-inset  条子距卡片边缘的距离（= 贴边那一侧的内距）\n     --card-bar-gap    条子距内容的距离（= body 的 gap）\n     --card-bar-length 上下方位时的条长（100% = 跟内容同宽）\n   这些变量只在本文件消费（3 份文件一起引时，跨文件引用别处的变量会静默失效），\n   所以默认值必须写在这里，而不是令牌或别的皮肤里。 */\n.dshpc-card{\n  --card-accent:var(--dshpc-business);\n  --card-accent-soft:var(--dshpc-business-soft);\n  --card-bar-size:6px;\n  --card-bar-inset:12px;\n  --card-bar-gap:12px;\n  --card-bar-length:100%;\n  /* 内距四根轴是唯一真源：根节点自己不留 padding，__body 与 __panel 都只读这四根轴。\n     这样 __body 就是「上面那一整块」，hover 铺色边到边，连原本那圈外圈一起变。\n     --card-pad-all 只是四轴的组合值，消费端 style.padding 由 Card.ts 摊成四根轴后自动派生。 */\n  --card-pad-t:14px;--card-pad-r:14px;--card-pad-b:14px;--card-pad-l:14px;\n  --card-pad-all:var(--card-pad-t) var(--card-pad-r) var(--card-pad-b) var(--card-pad-l);\n  padding:0;\n  /* 头部区背景铺满根节点内容盒，由根节点统一裁成外框圆角；__body 自己不写圆角裸值。 */\n  overflow:hidden;\n}\n/* 档位 → token（照 records-timeline 的 tone 模式：一个变量切档，不写 5 套规则；浅底与色条同源）。 */\n.dshpc-card--success{--card-accent:var(--dshpc-success);--card-accent-soft:var(--dshpc-success-soft)}\n.dshpc-card--warning{--card-accent:var(--dshpc-warning);--card-accent-soft:var(--dshpc-warning-soft)}\n.dshpc-card--danger{--card-accent:var(--dshpc-danger);--card-accent-soft:var(--dshpc-danger-soft)}\n/* neutral 浅底借 chip 底（兄弟项目 mute 档同款：明暗都成立）。 */\n.dshpc-card--neutral{--card-accent:var(--dshpc-fg-4);--card-accent-soft:var(--dshpc-chip-bg)}\n/* 扩展八色（2026-10-29）：色条 + 浅底同源，软底走各自 -soft。 */\n.dshpc-card--purple{--card-accent:var(--dshpc-purple);--card-accent-soft:var(--dshpc-purple-soft)}\n.dshpc-card--pink{--card-accent:var(--dshpc-pink);--card-accent-soft:var(--dshpc-pink-soft)}\n.dshpc-card--cyan{--card-accent:var(--dshpc-cyan);--card-accent-soft:var(--dshpc-cyan-soft)}\n.dshpc-card--teal{--card-accent:var(--dshpc-teal);--card-accent-soft:var(--dshpc-teal-soft)}\n.dshpc-card--orange{--card-accent:var(--dshpc-orange);--card-accent-soft:var(--dshpc-orange-soft)}\n.dshpc-card--indigo{--card-accent:var(--dshpc-indigo);--card-accent-soft:var(--dshpc-indigo-soft)}\n.dshpc-card--rose{--card-accent:var(--dshpc-rose);--card-accent-soft:var(--dshpc-rose-soft)}\n.dshpc-card--slate{--card-accent:var(--dshpc-slate);--card-accent-soft:var(--dshpc-slate-soft)}\n\n/* body = 色条 + 头部，也是「上面那一整块」：它自己承担内距并铺满根节点内容盒，\n   是 head 作用域下唯一的 hover 目标。圆角由根节点 overflow 裁切 ⇒ hover 色不露方角。\n   --card-pad-all 由四根轴派生；消费端 style.padding 覆盖四轴后，头部区与展开区同步对齐。\n   方向跟着条子贴的边切 ⇒ 四个方位只是「换一个方向的 flex 项」，不用各写一套定位。 */\n.dshpc-card__body{\n  display:flex;gap:var(--card-bar-gap);min-width:0;\n  padding:var(--card-pad-all);\n  background:transparent;\n}\n.dshpc-card--bar-top .dshpc-card__body,\n.dshpc-card--bar-bottom .dshpc-card__body{flex-direction:column}\n/* 展开态不特殊处理内距：头部区上下留白始终对称，色条上下才不会一长一短。\n   两块之间的间隔就是 __body 的 padding-bottom，属于头部区、跟着一起变色；\n   __panel 紧接其后，不在中间留一条不变色的带子，也不画分隔线。 */\n\n/* 头部一行 = 主内容 + 右侧槽，**整体垂直居中**：调用方在 action 里裸放一个元素\n   （按钮 / 文字 / 图标）不用自己套容器居中；一行两行、右边怎么放由调用方在框内自定。 */\n.dshpc-card__head{display:flex;align-items:center;gap:8px;min-width:0}\n.dshpc-card--bar-left .dshpc-card__head,\n.dshpc-card--bar-right .dshpc-card__head{flex:1 1 auto}\n.dshpc-card__main{flex:1;min-width:0}\n.dshpc-card__side{display:flex;align-items:center;gap:6px;flex:none}\n\n/* 色条：左/右 = 竖向条（高度跟内容，最小一行）；上/下 = 横向条（长度默认跟内容同宽）。\n   右/下方位靠 order 排到头部之后，DOM 顺序始终不变。 */\n.dshpc-card__bar{flex:none;background:var(--card-accent);border-radius:var(--dshpc-radius-xs)}\n.dshpc-card--bar-left .dshpc-card__bar,\n.dshpc-card--bar-right .dshpc-card__bar{width:var(--card-bar-size);align-self:stretch;min-height:var(--dshpc-line-md)}\n.dshpc-card--bar-top .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{width:var(--card-bar-length);height:var(--card-bar-size);align-self:flex-start}\n.dshpc-card--bar-right .dshpc-card__bar,\n.dshpc-card--bar-bottom .dshpc-card__bar{order:1}\n\n/* ── 外观一 · StripCard：同色系浅底 + 1px 不可见占位边框 + 方角 + 4px 通高方角色条贴左缘 ──\n   底色 / 方角 / 占位边框由 Surface 的三条修饰类提供（Card.ts 按 kind 传），此处只管内距与条子。 */\n.dshpc-card.dshpc-card--strip{\n  --card-bar-size:4px;--card-bar-inset:0;\n  --card-pad-t:12px;--card-pad-r:12px;--card-pad-b:12px;--card-pad-l:20px;\n  /* 底色改走 Surface 的 --surface-bg 变量（surface.css:7-8 契约）：不能写 background 属性，\n     否则透明档要覆盖时会被属性层打架（兄弟项目曾用 background-image 渐变绕过）。 */\n  --surface-bg:var(--card-accent-soft,transparent);\n}\n/* 左内边距 20px = 16 留白 + 4 条宽 ⇒ 内容从色条右缘起算；色条绝对定位通高，跟着内容高度自适应。\n   定位基准是根节点的 position:relative（Surface 提供），top:0 / bottom:0 因此是整卡通高：\n   展开后色条仍一路贯穿到展开区底部，不随 head 分区被裁短（2026-11-08 拍板）。\n   特异性 0,3,0：压过上面 .dshpc-card--bar-left .dshpc-card__bar 的宽度规则，与注入顺序无关。 */\n.dshpc-card.dshpc-card--strip .dshpc-card__bar{position:absolute;left:0;top:0;bottom:0;width:4px;align-self:auto}\n\n/* ── 外观二 · Card：色条贴边那一侧的内距 = 条子距边缘的距离 ──\n   四方位只改对应那根 --card-pad-* 变量，__body 与 __panel 同时跟着对齐。 */\n.dshpc-card--bar-left{--card-pad-l:var(--card-bar-inset)}\n.dshpc-card--bar-right{--card-pad-r:var(--card-bar-inset)}\n.dshpc-card--bar-top{--card-pad-t:var(--card-bar-inset)}\n.dshpc-card--bar-bottom{--card-pad-b:var(--card-bar-inset)}\n\n/* ── 外观轴（2026-11-07）：底色开关 + hover 作用域 ───────────────────────────\n   两块区域各自独立：根节点只铺一层常态底（--surface-bg）；__body 是「上面那一整块」，\n   __panel 是它的兄弟节点，不铺任何背景、不参与 hover。\n   hoverScope（默认 head）：\n     head —— 只有 __body 铺 --dshpc-card-hover，边到边（内距圈 + 圆角都在这一块上）；\n             展开态也不改内距，上下两圈留白同属这一块、一起变色，色条上下才对称；\n             鼠标落在 __panel 时 :hover 根本不成立 ⇒ 整卡不触发，下面永远是常态。\n     card —— 根节点改 --surface-bg，整卡含展开区一起变色，由消费端显式选。\n   ⚠️ 绝不用「给展开区铺一层底色去盖住根节点」：半透明 token 叠两层会更深（真踩过）。 */\n.dshpc-card.dshpc-card--no-fill{--surface-bg:transparent}\n/* 开关打开即声明「上面那一块可交互」：手势跟着变，展开区还原成默认光标。 */\n.dshpc-card.dshpc-card--hoverable{cursor:pointer}\n.dshpc-card.dshpc-card--hover-head .dshpc-card__panel{cursor:auto}\n/* 可点卡片的键盘焦点环：点击层 head = __body、card = 根节点，两者共用这一条。\n   outline 画在盒内（offset 负值）：根节点 overflow:hidden 会裁掉 __body 外侧那一圈。 */\n.dshpc-card__hit:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px}\n/* 顺序即优先级：strip 浅底 / no-fill 透明(0,2,0) → card:hover(0,3,0，最高)。 */\n.dshpc-card.dshpc-card--hover-head .dshpc-card__body:hover{background:var(--dshpc-card-hover)}\n.dshpc-card.dshpc-card--hover-card:hover{--surface-bg:var(--dshpc-card-hover)}\n\n.dshpc-card__toggle{\n  display:inline-flex;align-items:center;justify-content:center;\n  width:24px;height:24px;padding:0;background:none;border:none;border-radius:var(--dshpc-radius-sm);\n  color:var(--dshpc-fg-3);cursor:pointer;\n}\n.dshpc-card__toggle:hover{background:var(--dshpc-surface-sunken);color:var(--dshpc-fg)}\n/* 箭头是 svg（Chevron），不是字形 ⇒ 不要 font-size；inline-flex 免掉 svg 的基线留白。 */\n.dshpc-card__caret{display:inline-flex;transition:transform .15s ease}\n.dshpc-card__caret.is-open{transform:rotate(180deg)}\n/* 展开区只负责「把展开内容放在头部区下面」：自己承担左右 / 底部内距，补上卡片底部留白。\n   margin-top 与 padding-top 双双归 0 ⇒ 两块之间的间隔只有 __body 的 padding-bottom，\n   属于头部区、跟着 hover 一起变色；消费端自绘的线因此能贴住这块色的下沿，中间不夹不变色的带子。\n   左右 / 底部内距读同一组四轴变量 ⇒ 与头部区同源，不会左贴边、右留白。\n   核心不画任何分隔线：需要线由消费端在 panel 内容里自绘（有时要、有时不要，消费端自己决定）。 */\n.dshpc-card__panel{\n  margin:0 var(--card-pad-r) 0 var(--card-pad-l);\n  padding:0 0 var(--card-pad-b);\n}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/surface-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/surface-css.generated.js
 		const SURFACE_CSS = "\n/* ── Surface · 纯框容器 ───────────────────────────────────────────────────\n   只回答「一块面长什么样」：底 / 边 / 圆角 / 内距，四根轴，零业务语义。\n   它是**圆角契约的唯一真源**：容器档 = --dshpc-radius-md(12)，与 Button / Input 同档，\n   外框永远不小于里面的控件 —— 杜绝「卡片 8 < 按钮 12」这类倒挂（2026-11-01）。\n\n   所有轴都用**变量**表达，修饰类只改这些变量、不改属性：\n   消费方（Card、下游插件）自己写规则时，无论两份 CSS 谁先注入，胜负都不依赖顺序。\n\n     tone    plain(默认 surface-1) / raised / sunken / subtle\n     border  默认 1px 实线；faint 更淡；none 透明（保留 1px 占位，不跳高）；\n             dashed 虚线（占位框用，线色仍是 border token）\n     radius  默认 md；none / sm / lg\n     padding 默认由调用方选档；none / sm(8) / md(12) / lg(16)\n   基类不带内距：容器要自己算四边内距时（如 Card 的色条贴边），不传 pad 档即可，不需要覆盖。 */\n.dshpc-surface{\n  position:relative;box-sizing:border-box;color:var(--dshpc-fg);font:inherit;text-align:left;\n  --surface-bg:var(--dshpc-surface-1);\n  --surface-border:var(--dshpc-border);\n  --surface-border-style:solid;\n  --surface-radius:var(--dshpc-radius-md);\n  --surface-pad:0;\n  border:1px var(--surface-border-style) var(--surface-border);\n  border-radius:var(--surface-radius);\n  background:var(--surface-bg);\n  padding:var(--surface-pad);\n}\n.dshpc-surface--tone-raised{--surface-bg:var(--dshpc-surface-raised)}\n.dshpc-surface--tone-sunken{--surface-bg:var(--dshpc-surface-sunken)}\n.dshpc-surface--tone-subtle{--surface-bg:var(--dshpc-chip-bg)}\n.dshpc-surface--border-faint{--surface-border:var(--dshpc-border-faint)}\n.dshpc-surface--border-none{--surface-border:transparent}\n.dshpc-surface--border-dashed{--surface-border-style:dashed}\n.dshpc-surface--radius-none{--surface-radius:0}\n.dshpc-surface--radius-sm{--surface-radius:var(--dshpc-radius-sm)}\n.dshpc-surface--radius-lg{--surface-radius:var(--dshpc-radius-lg)}\n.dshpc-surface--pad-none{--surface-pad:0}\n.dshpc-surface--pad-sm{--surface-pad:var(--dshpc-space-2)}\n.dshpc-surface--pad-md{--surface-pad:var(--dshpc-space-3)}\n.dshpc-surface--pad-lg{--surface-pad:var(--dshpc-space-4)}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/Surface.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/Surface.js
 		/**
 		* 拼 Surface 的类名。独立导出是给组合类容器（Card）用的：
 		* 容器要把 Surface 当外框、又不想吃它的内距时，传 `padding: null` 即可。
@@ -53334,7 +54469,7 @@ window.__ModuleLoader__.load({
 			}, props.children ?? null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/Card.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/Card.js
 		/** 色条档位（映射到 design 的 token，不新增 token；也接受任意 CSS 颜色值）。 */
 		const CARD_ACCENTS = [
 			"business",
@@ -53497,10 +54632,10 @@ window.__ModuleLoader__.load({
 			return CardShell("bordered", props);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/chip-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/chip-css.generated.js
 		const CHIP_CSS = "\n/* 三条局部变量承载配色：neutral 走旧灰面；语义档换底字配对（2026-10-20 用户要多色多尺寸标签）。 */\n.dshpc-chip{--chip-bg:var(--dshpc-chip-bg);--chip-fg:var(--dshpc-fg);--chip-bg-hover:var(--dshpc-chip-bg-hover);\n  display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:1px 8px;\n  box-sizing:border-box;border-radius:var(--dshpc-radius-pill,999px);border:none;\n  background:var(--chip-bg);color:var(--chip-fg);\n  font-family:inherit;font-size:11px;line-height:18px;margin:0;\n  /* 2026-10-18：chip 是 flex 行里的常用项，禁止被压缩换行（预览站出现过文字竖排、互相叠压的挤压）。 */\n  white-space:nowrap;flex:none;\n  appearance:none;-webkit-appearance:none;\n}\n/* md 档：卡片元信息行等稍大场景；sm 即旧版默认，逐像素不动。 */\n.dshpc-chip--md{padding:2px 10px;font-size:12px;line-height:20px;}\n/* xs 档：标题后缀等极紧凑场景（2026-10-20 用户要更小标签）；16px 高、font 10。 */\n.dshpc-chip--xs{padding:0 6px;font-size:10px;line-height:16px;}\n/* 语义色实心档：底 / 字 / hover 配对与 Button 同源（黄底中高明度 ⇒ 字用 --dshpc-on-warning）。 */\n.dshpc-chip--business{--chip-bg:var(--dshpc-business);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-business-hover);}\n.dshpc-chip--success{--chip-bg:var(--dshpc-success);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-success-hover);}\n.dshpc-chip--warning{--chip-bg:var(--dshpc-warning);--chip-fg:var(--dshpc-on-warning);--chip-bg-hover:var(--dshpc-warning-hover);}\n.dshpc-chip--danger{--chip-bg:var(--dshpc-danger);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-danger-hover);}\n/* 扩展八色（2026-10-29）：实心面字色统一白（on-signal），明度均低于黄 / 青柠，白字两主题可读。 */\n.dshpc-chip--purple{--chip-bg:var(--dshpc-purple);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-purple-hover);}\n.dshpc-chip--pink{--chip-bg:var(--dshpc-pink);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-pink-hover);}\n.dshpc-chip--cyan{--chip-bg:var(--dshpc-cyan);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-cyan-hover);}\n.dshpc-chip--teal{--chip-bg:var(--dshpc-teal);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-teal-hover);}\n.dshpc-chip--orange{--chip-bg:var(--dshpc-orange);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-orange-hover);}\n.dshpc-chip--indigo{--chip-bg:var(--dshpc-indigo);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-indigo-hover);}\n.dshpc-chip--rose{--chip-bg:var(--dshpc-rose);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-rose-hover);}\n.dshpc-chip--slate{--chip-bg:var(--dshpc-slate);--chip-fg:var(--dshpc-on-signal);--chip-bg-hover:var(--dshpc-slate-hover);}\n/* 可点态：button 渲染（见 Chip.ts），光标 + hover 加深。 */\n.dshpc-chip--clickable{cursor:pointer;transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n.dshpc-chip--clickable:hover:not(:disabled){background:var(--chip-bg-hover)}\n.dshpc-chip:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px}\n/* 禁用态字色从 --chip-fg 派生（45% ≈ 旧 fg-3 的弱化观感），不许直接用 --dshpc-fg-3：\n   它跟主题走，暗色下是深灰 ⇒ 语义色实心标签（蓝 / 红底）上几乎看不见（与 Segmented 计数 2026-10-29 同类）。 */\n.dshpc-chip:disabled{cursor:default;color:color-mix(in srgb,var(--chip-fg) 45%,transparent)}\n/* maxWidth 包 MarqueeText 时：标签作为 flex 子项必须能收缩到内容以下，否则省略号 / 跑马灯测不准 */\n.dshpc-chip .dshpc-chip__label{min-width:0;}\n@media (prefers-reduced-motion: reduce){.dshpc-chip{transition:none}}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/Chip.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/Chip.js
 		/** 小标签（neutral 用现成的 `--dshpc-chip-bg`；传 `onClick` 才是可点的）。 */
 		function Chip(props) {
 			ensureComponentStyles("chip", CHIP_CSS);
@@ -53524,10 +54659,10 @@ window.__ModuleLoader__.load({
 			}) : children ?? null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/list-row-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/list-row-css.generated.js
 		const LIST_ROW_CSS = "/* ── ListRow · 一行一条的列表条目 ───────────────────────────────────────────\n   外框（底 / 边 / 圆角 / 内距）全部由 Surface 提供：组件调 surfaceClass 拿\n   dshpc-surface + tone-sunken + border-none，本文件不写 background / border / border-radius。\n   所有轴只改 --surface-* 变量：无论 Surface 与本皮肤谁先注入，胜负都不依赖顺序\n   （surface.css:7-8 的既定契约）。本文件只管「行」独有的：默认字号、高度、两槽布局、行级 hover、选中态。 */\n\n/* 双类选择器压过 .dshpc-surface 基类，避免注入顺序影响变量覆盖。 */\n.dshpc-surface.dshpc-listrow{\n  /* 四边等距（8px，与 Surface 的 pad-sm 同档）：不写「上下 0 / 左右 12」那种横宽纵窄的值。 */\n  --surface-pad:var(--dshpc-space-2);\n  /* 具体控件自带默认字号：只有 Surface 这种纯容器才用 font:inherit，行内容不能继承宿主默认 16px。\n     与 Table(table.css:11) / Input md(field.css:22) 同口径；调用方仍可用内联 style 覆盖。 */\n  font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);\n  display:flex;align-items:center;gap:var(--dshpc-space-2);\n  min-height:var(--dshpc-control-h-md);width:100%;\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);\n}\n/* 两个槽都自带垂直居中：__main 曾是普通块级流，调用方把主内容包成 inline-flex 的 span\n   会按基线排、下方多出 descender 空隙 ⇒ 左边偏上、右边居中（2026-11-08 兄弟项目真机反馈）。\n   这里补 display:flex + align-items:center，与 __actions 对称；主内容怎么横排仍归调用方。\n   子项补 min-width:0，MarqueeText 这类可截断内容在 flex 里才不会被自身内容撑破。 */\n.dshpc-listrow__main{flex:1 1 auto;min-width:0;display:flex;align-items:center;}\n.dshpc-listrow__main>*{min-width:0;}\n.dshpc-listrow__actions{flex:none;display:flex;align-items:center;gap:4px;}\n\n/* 整行可点：光标 + 键盘焦点环（与 Button / Chip 同口径）。 */\n.dshpc-listrow--interactive{cursor:pointer;}\n.dshpc-listrow--interactive:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:1px;}\n\n/* 三态各只换一个 --surface-bg：\n     常态     tone-sunken（淡底，由 surface.css 给，此处不重写）\n     hover    --dshpc-listrow-hover-bg = 比常态只深一点点的中性灰（双主题各自定义）\n     selected --dshpc-listrow-selected-bg = slate 极浅蓝灰（双主题各自定义）\n   ⚠️ hover 别用 --dshpc-active（亮黑 18% / 暗白 24%）：相对常态 6% 一下跳太多，\n     整行连同内容的对比度都被改掉，太夸张（2026-11-07 用户反馈）。\n   ⚠️ 亮色也别用 --dshpc-plate-hover：它是 #f5f5f5 实色，常态 tone-sunken ≈ #f0f1f3，\n     白底上几乎同色甚至更白 ⇒ 移上去看不出变化（真踩过，见 tokens.css:153）。\n   ⚠️ 选中别用通用 --dshpc-selected-bg：暗色它是两个深色面互掺 ⇒ 选中行发黑（用户反馈）。\n   双类 + :hover 压得过单类 tone-sunken，不需要 !important。 */\n.dshpc-surface.dshpc-listrow--hoverable:not(.dshpc-listrow--selected):hover{\n  --surface-bg:var(--dshpc-listrow-hover-bg);\n}\n\n/* 选中只换一个背景色：slate 极浅蓝灰，不描边、不渐变、不竖条；状态仍由调用方管。 */\n.dshpc-surface.dshpc-listrow--selected{\n  --surface-bg:var(--dshpc-listrow-selected-bg);\n}\n\n@media (prefers-reduced-motion: reduce){.dshpc-listrow{transition:none}}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/ListRow.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/ListRow.js
 		/**
 		* 一行一条的列表条目：常态带底、整行可点、右侧挂一组小操作。
 		*
@@ -53587,7 +54722,13 @@ window.__ModuleLoader__.load({
 			}, actions));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/navigation/pagination-logic.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/table-plain-css.generated.js
+		const TABLE_PLAIN_CSS = "/* ── 外观一 · Plain（第一个样式：白卡片上的轻量表格）─────────────────────\n   特征：外框 + 灰底表头（含下边线，双行分组表头也清楚）、竖向分隔线、\n   数据行只保留极淡底线（不画重横线）、行悬浮淡蓝、选中行淡蓝底 + 左侧 3px 蓝竖条。\n   选择器全部挂在 .dshpc-table--plain 下，和基础层不同名（注入顺序无关）。\n   竖分隔线按列声明（格子上的 data-divider），不用相邻兄弟选择器 —— 后者会让每行首格\n   永远没有左线（用户 2026-10-30 真机看到的 Name 左侧缺线），且单元格跨列后会画错位置。\n   后续外观照此另建：table-grid.css / table-zebra.css，各自一个组件、各自 import 自己那份。 */\n\n/* 外框四态：all 四边 / x 只有左右 / y 只有上下 / none 全不要。\n   组件总会按 borders 属性和上对应 class，故这里不存在「无 class 的裸表」。\n   「不要左右两条边」就是 borders='y'。 */\n.dshpc-table--plain.dshpc-table--borders-all{border:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-x{border-left:1px solid var(--dshpc-border);\n  border-right:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-y{border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);}\n.dshpc-table--plain.dshpc-table--borders-none{border:0;}\n\n/* 表头：中性灰底 + 下边线。底色走 --dshpc-table-head-bg（= --dshpc-surface-sunken，\n   与通栏那层灰同源；2026-10-30 用户二次定案：表头 / 通栏互换底色）；下边线兜住分组表头的第二层。 */\n.dshpc-table--plain .dshpc-table__head-cell{\n  background:var(--dshpc-table-head-bg);\n  border-bottom:1px solid var(--dshpc-border);\n}\n.dshpc-table--plain .dshpc-table__head-cell--group{color:var(--dshpc-fg-3);}\n\n/* 表头多色：列级 headerTone 打到 data-header-tone，浅底 + 同色文字。\n   色值全部来自 token（soft 底 / 实色字），暗色主题自动跟随，不写死任何 hex。\n   这组规则比上方灰底规则多一个属性选择器，必然覆盖默认灰底。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='business']{background:var(--dshpc-business-soft);color:var(--dshpc-business);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='success']{background:var(--dshpc-success-soft);color:var(--dshpc-success);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='warning']{background:var(--dshpc-warning-soft);color:var(--dshpc-warning);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='danger']{background:var(--dshpc-danger-soft);color:var(--dshpc-danger);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='purple']{background:var(--dshpc-purple-soft);color:var(--dshpc-purple);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='pink']{background:var(--dshpc-pink-soft);color:var(--dshpc-pink);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='cyan']{background:var(--dshpc-cyan-soft);color:var(--dshpc-cyan);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='teal']{background:var(--dshpc-teal-soft);color:var(--dshpc-teal);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='orange']{background:var(--dshpc-orange-soft);color:var(--dshpc-orange);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='indigo']{background:var(--dshpc-indigo-soft);color:var(--dshpc-indigo);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='rose']{background:var(--dshpc-rose-soft);color:var(--dshpc-rose);}\n.dshpc-table--plain .dshpc-table__head-cell[data-header-tone='slate']{background:var(--dshpc-slate-soft);color:var(--dshpc-slate);}\n\n/* 竖分隔线：按列声明，**默认不画**。组件只给 divider: true 的列打 data-divider='left'，\n   首列恒不画（那是外框的位置）。默认表格 = 只有横线、没有一条竖线；\n   要「列间有线」就给对应列 divider:true。 */\n.dshpc-table--plain .dshpc-table__head-cell[data-divider='left'],\n.dshpc-table--plain .dshpc-table__cell[data-divider='left']{border-left:1px solid var(--dshpc-border);}\n\n/* 数据行之间的极淡底线：只帮眼睛「分行」，不回到粗横线表格的老样子。 */\n.dshpc-table--plain .dshpc-table__row + .dshpc-table__row .dshpc-table__cell{\n  border-top:1px solid var(--dshpc-border-faint);\n}\n\n/* 底部状态行（加载更多 / 到底）：整行通栏，与上方数据行之间补一条实线。\n   只补顶线：左右两条不由这一格重复画 —— borders=all / x 时表级外框已经兜住；\n   borders=y / none 本来就没有左右边。整表加载占位行不加（表头已有下边线，再加就成双线）。 */\n.dshpc-table--plain .dshpc-table__state-row--footer .dshpc-table__state-cell{\n  border-top:1px solid var(--dshpc-border);\n}\n\n/* 没有左右外框时（borders=y）底部状态行下面那条表底线也去掉：\n   状态行只留上方一条实线，否则图标 / 文案下方还多一条孤线（2026-10-31 用户定）。\n   borders=none 本来就没有底边，无需在此重复。 */\n.dshpc-table--plain.dshpc-table--borders-y.dshpc-table--foot-no-bottom{border-bottom:0;}\n\n/* 行悬浮：只在可点行上给反馈，静态表格不误导用户以为能点。\n   底色是极淡中性灰（--dshpc-table-row-hover：亮色一层淡黑 ≈1.5%，暗色一层淡白 ≈3%）——\n   2026-10-30 用户：hover 要特别淡的灰、不要淡蓝（第二次又要求再浅一半）。带 __body 上下文是为了压过基础层的斑马纹（见 table.css）。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-interactive='true']:hover{background:var(--dshpc-table-row-hover);}\n\n/* 选中行：淡蓝底 + 左侧蓝竖条。用背景渐变画条，避免 tr 上伪元素 / 定位的兼容问题；\n   两条选择器同一份声明：悬浮态（多一个属性 + 伪类）不会盖掉选中态。\n   底色用 business-soft（比悬浮再明确一档但仍是浅色），条本身才是「选中」的信号。\n   特异性 4 级，高于基础层的斑马纹（3 级）⇒ 偶数行也能正常选中。 */\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'],\n.dshpc-table--plain .dshpc-table__body .dshpc-table__row[data-selected='true'][data-interactive='true']:hover{\n  background:linear-gradient(to right,var(--dshpc-business) 3px,var(--dshpc-business-soft) 3px);\n}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/navigation/pagination-css.generated.js
+		const PAGINATION_CSS = "/* ── 分页（‹ Previous 1 2 3 … 36 Next ›）────────────────────────────────────\n   当前页 = 蓝色圆角方块 + 白字（实心面的字必须走 --dshpc-on-signal，不许用主题反色）；\n   其余页码是纯文字按钮，悬浮只给极淡中性底。对齐由 --left / --center / --right 三个修饰决定，\n   组件默认 right。颜色全部走 token，明暗自动跟随宿主。 */\n\n.dshpc-pagination{display:flex;align-items:center;gap:var(--dshpc-space-2);flex-wrap:wrap;\n  font-size:var(--dshpc-font-sm);line-height:1;color:var(--dshpc-fg-2);}\n\n.dshpc-pagination--left{justify-content:flex-start;}\n.dshpc-pagination--center{justify-content:center;}\n.dshpc-pagination--right{justify-content:flex-end;}\n\n.dshpc-pagination__total{color:var(--dshpc-fg-3);margin-inline-end:var(--dshpc-space-1);}\n\n.dshpc-pagination__pages{display:flex;align-items:center;gap:2px;}\n\n/* 页码 / 上下页 = 核心 Button（当前页 info 实心蓝、其余 ghost），箭头 = 全站唯一 Chevron。\n   这里只补尺寸与间距，不重画按钮皮肤；两级选择器压过 .dshpc-btn--md 的内距。 */\n.dshpc-pagination .dshpc-pagination__page{padding:0 6px;min-width:28px;}\n.dshpc-pagination .dshpc-pagination__nav{padding:0 var(--dshpc-space-2);}\n\n.dshpc-pagination__ellipsis{display:inline-flex;align-items:center;justify-content:center;\n  min-width:28px;height:28px;color:var(--dshpc-fg-3);}\n\n.dshpc-pagination__simple{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;\n  color:var(--dshpc-fg);}\n\n/* 简洁模式只留箭头：文字标签隐藏，箭头仍然可见（无障碍名还在 aria-label 上）。 */\n.dshpc-pagination--simple .dshpc-pagination__text{display:none;}\n\n/* 每页条数下拉 = 核心 Picker（箭头是全站唯一的 Chevron）：只收窄不参与伸缩。 */\n.dshpc-pagination__size{flex:none;}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/navigation/pagination-logic.js
 		/**
 		* 分页纯逻辑：总页数、页码夹取、省略号窗口、当前页可见区间。
 		*
@@ -53651,7 +54792,7 @@ window.__ModuleLoader__.load({
 			return items;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/navigation/Pagination.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/navigation/Pagination.js
 		/**
 		* 分页（`‹ Previous  1 [2] 3 … 36  Next ›`）。
 		*
@@ -53709,11 +54850,11 @@ window.__ModuleLoader__.load({
 					className: "dshpc-pagination__nav",
 					icon: isPrev ? (0, react$1.createElement)(Chevron, {
 						dir: "left",
-						size: 14
+						size: 10
 					}) : void 0,
 					iconRight: isPrev ? void 0 : (0, react$1.createElement)(Chevron, {
 						dir: "right",
-						size: 14
+						size: 10
 					}),
 					"aria-label": label,
 					disabled: disabled || (isPrev ? page <= 1 : page >= count),
@@ -53753,7 +54894,13 @@ window.__ModuleLoader__.load({
 			}, totalNode === null ? null : (0, react$1.createElement)("span", { className: "dshpc-pagination__total" }, totalNode), (0, react$1.createElement)("div", { className: "dshpc-pagination__pages" }, navButton("prev"), ...middle, navButton("next")), sizeNode);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/SectionHead.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/table-css.generated.js
+		const TABLE_BASE_CSS = "/* ── 表格基础层（结构 + 交互 + 空态）─────────────────────────────────────\n   外观分档 = 分组件 + 分文件：本文件只放所有外观共用的部分；\n   表头底色、分隔线、悬浮 / 选中色由皮肤文件负责（table-plain.css 是第一档）。\n   皮肤选择器一律挂在 .dshpc-table--<skin> 下，与基础层不同名 —— 注入顺序不影响胜负\n   （test/css-contract.test.mjs 禁止跨常量同名选择器）。\n   圆角裁剪 / 横向滚动归调用方容器，本层不设 overflow；也不做表头吸顶：\n   分组表头是多行，统一 top:0 会在滚动时互相盖住（要吸顶请在外层容器处理）。 */\n\n.dshpc-table{--dshpc-table-pad-x:var(--dshpc-space-3);--dshpc-table-head-h:44px;--dshpc-table-row-h:48px;\n  width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;box-sizing:border-box;\n  color:var(--dshpc-fg);font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 密度三档：只改行高与水平内距，配色与分隔线归皮肤。compact / comfortable 各一行，\n   新增档位在此追加；列级 padding 走内联 style 覆盖（不在这里再开一套变量）。\n   默认水平内距 12px（space-3）—— 参考稿的色块间距，16px 偏松。 */\n.dshpc-table--density-compact{--dshpc-table-pad-x:var(--dshpc-space-2);--dshpc-table-head-h:36px;--dshpc-table-row-h:36px;}\n.dshpc-table--density-comfortable{--dshpc-table-pad-x:var(--dshpc-space-4);--dshpc-table-head-h:52px;--dshpc-table-row-h:60px;}\n\n.dshpc-table__head-cell,.dshpc-table__cell{box-sizing:border-box;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  text-align:left;vertical-align:middle;font-weight:400;}\n\n/* 表头 44 / 数据行 48 是 default 档（参考稿密度）；height 在 table-cell 上是最小高，\n   多行内容会自动把行撑高，不会被截断。 */\n.dshpc-table__head-cell{height:var(--dshpc-table-head-h);font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg-2);}\n.dshpc-table__head-cell--group{text-align:center;}\n.dshpc-table__cell{height:var(--dshpc-table-row-h);}\n\n.dshpc-table__head-cell--center,.dshpc-table__cell--center{text-align:center;}\n.dshpc-table__head-cell--right,.dshpc-table__cell--right{text-align:right;}\n\n.dshpc-table__row{transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease);}\n/* 只有传了 onRowClick 的行才是可点的（数据属性由组件按此打）。 */\n.dshpc-table__row[data-interactive='true']{cursor:pointer;}\n.dshpc-table__row:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-2px;}\n\n/* 斑马纹是通用能力（表级 striped 开关），放在基础层：底色取 token，各档皮肤不必各自实现。\n   选择器刻意只到 3 个类级别（表级 + 行 + :nth-child）；皮肤层的行态规则带 __body 上下文\n   + 属性选择器，必然是 4 级 ⇒ 与注入顺序无关地压过它。\n   2026-10-30 真机事故：这里曾写满 4 级（多了一个 __body），与选中的 4 级相同 ⇒ 基础层\n   比皮肤后注入，偶数行永远被斑马纹盖住（「单数行能选中、双数行点了没反应」）。 */\n.dshpc-table--striped .dshpc-table__row:nth-child(even){background:var(--dshpc-plate);}\n\n/* 分组通栏：一个表格里放多个板块（工作区 A / 工作区 B）时，每组先来一行横跨全部列的大标题，\n   然后才是这一组自己的表头与数据行。结构 + 底色归基础层（只用 token，各档皮肤共同成立）；\n   通栏底走 --dshpc-table-banner-bg（与表头互换的那一档，2026-10-30 用户定）；\n   通栏与组表头之间画一条线（用户 2026-10-30：那之间也要有 border）；\n   组与组之间用通栏顶线隔开，第一组顶部不画（外框已经在那儿，画了就成双线）。 */\n.dshpc-table__group-cell{height:var(--dshpc-table-head-h);padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;background:var(--dshpc-table-banner-bg);border-top:1px solid var(--dshpc-border);\n  border-bottom:1px solid var(--dshpc-border);\n  text-align:left;vertical-align:middle;font-size:var(--dshpc-font-sm);font-weight:600;color:var(--dshpc-fg);}\n.dshpc-table__group-body:first-of-type .dshpc-table__group-cell{border-top:0;}\n\n/* 通栏标题的固定标签（短竖线）与排版由 SectionHead 自带（4px 圆头），本层不再画。 */\n\n.dshpc-table__empty{height:80px;padding:0 var(--dshpc-space-4);text-align:center;\n  color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n\n/* 加载态行（加载更多 / 没有更多 / 整表加载）：单元格自身不画边框（底部状态行的顶线由皮肤补），内容居中；\n   整表加载默认占位 160px（可由 loadingHeight 覆盖），底部那行只占一行高。 */\n.dshpc-table__state-cell{padding:0;border:0;text-align:center;vertical-align:middle;}\n.dshpc-table__state{display:flex;align-items:center;justify-content:center;\n  gap:var(--dshpc-space-2);min-height:40px;padding:var(--dshpc-space-1) var(--dshpc-table-pad-x);\n  box-sizing:border-box;color:var(--dshpc-fg-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state--full{flex-direction:column;min-height:160px;gap:var(--dshpc-space-3);font-size:var(--dshpc-font-sm);}\n.dshpc-table__state-text{line-height:1;}\n/* 底部哨兵：零高、无边框、无内容，只给 IntersectionObserver 一个落点。 */\n.dshpc-table__sentinel>td{height:0;padding:0;border:0;line-height:0;}\n\n/* 内建分页的外壳：表格在上、分页条在下，间距走 space-3（分页条自己管左右对齐）。 */\n.dshpc-table-frame{display:flex;flex-direction:column;gap:var(--dshpc-space-3);}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/section-head-css.generated.js
+		const SECTION_HEAD_CSS = "/* 分区标题行：标签（可选，画出来的短竖线）/ icon + 标题 + 右侧控件。 */\n.dshpc-section-head{display:flex;align-items:center;gap:var(--dshpc-space-2);\n  margin-bottom:var(--dshpc-space-3);}\n.dshpc-section-head--flush{margin-bottom:0;}\n\n.dshpc-section-head__bar{flex:none;width:4px;height:1em;border-radius:999px;\n  font-size:var(--dshpc-font-lg);background:var(--dshpc-fg-2);}\n\n.dshpc-section-head__icon{display:inline-flex;align-items:center;flex:none;\n  line-height:var(--dshpc-line-lg);color:var(--dshpc-fg-3);}\n\n.dshpc-section-head__title{font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);\n  font-weight:600;color:var(--dshpc-fg);flex:none;}\n\n.dshpc-section-head__right{flex:1;display:flex;align-items:center;\n  justify-content:flex-end;gap:var(--dshpc-space-2);min-width:0;}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/SectionHead.js
 		/**
 		* 模块标题行（UI 基础层）：**标签（可选，画出来的短竖线）/ icon（可选）+ 标题 + 右侧控件**。
 		*
@@ -53802,7 +54949,7 @@ window.__ModuleLoader__.load({
 			}), props.icon === void 0 ? null : (0, react$1.createElement)("span", { className: "dshpc-section-head__icon" }, props.icon), (0, react$1.createElement)("span", { className: "dshpc-section-head__title" }, props.title), props.right === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-section-head__right" }, props.right));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/table-logic.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/table-logic.js
 		/**
 		* 单元格值是不是「对象写法」（跨列 / 跨行 / 对齐）。
 		*
@@ -53873,7 +55020,7 @@ window.__ModuleLoader__.load({
 			return rows;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/table-shared.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/table-shared.js
 		function widthOf(width) {
 			if (width === void 0) return void 0;
 			return typeof width === "number" ? `${width}px` : width;
@@ -54019,7 +55166,7 @@ window.__ModuleLoader__.load({
 			}, (0, react$1.createElement)("div", {
 				className: "dshpc-table__state dshpc-table__state--full",
 				style: props.loadingHeight === void 0 ? void 0 : { height: `${props.loadingHeight}px` }
-			}, (0, react$1.createElement)(Loader$2, {
+			}, (0, react$1.createElement)(Loader$1, {
 				variant: "blocks",
 				size: "xl",
 				label: tt("tableLoading")
@@ -54034,7 +55181,7 @@ window.__ModuleLoader__.load({
 			}, (0, react$1.createElement)("td", {
 				className: "dshpc-table__state-cell",
 				colSpan
-			}, (0, react$1.createElement)("div", { className: "dshpc-table__state" }, (0, react$1.createElement)(Loader$2, {
+			}, (0, react$1.createElement)("div", { className: "dshpc-table__state" }, (0, react$1.createElement)(Loader$1, {
 				variant: "blocks",
 				size: "md",
 				label: tt("tableLoadingMore")
@@ -54092,7 +55239,7 @@ window.__ModuleLoader__.load({
 			}))), groups.length > 0 ? null : (0, react$1.createElement)("thead", { className: "dshpc-table__head" }, ...headRows.map((cells, level) => headRowOf(cells, level))), ...body);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/display/Table.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/Table.js
 		/**
 		* 底部哨兵的滚动监听：哨兵进入视口（提前 200px）就调一次 `onLoadMore`。
 		* `enabled` 由调用方决定（分页 / 分组模式下关掉）；正在加载或已到底时 `blockedRef` 挡住重复触发。
@@ -54180,1175 +55327,129 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/sonner@2.0.8_@types+react@18.3.31_react-dom@19.3.1_react@19.3.1__react@19.3.1/node_modules/sonner/dist/index.mjs
-		function __insertCSS(code) {
-			if (!code || typeof document == "undefined") return;
-			let head = document.head || document.getElementsByTagName("head")[0];
-			let style = document.createElement("style");
-			style.type = "text/css";
-			head.appendChild(style);
-			style.styleSheet ? style.styleSheet.cssText = code : style.appendChild(document.createTextNode(code));
-		}
-		const getAsset = (type) => {
-			switch (type) {
-				case "success": return SuccessIcon;
-				case "info": return InfoIcon;
-				case "warning": return WarningIcon;
-				case "error": return ErrorIcon;
-				default: return null;
-			}
-		};
-		const bars = Array(12).fill(0);
-		const Loader$1 = ({ visible, className }) => {
-			return /*#__PURE__*/ react$1.default.createElement("div", {
-				className: ["sonner-loading-wrapper", className].filter(Boolean).join(" "),
-				"data-visible": visible
-			}, /*#__PURE__*/ react$1.default.createElement("div", { className: "sonner-spinner" }, bars.map((_, i) => /*#__PURE__*/ react$1.default.createElement("div", {
-				className: "sonner-loading-bar",
-				key: `spinner-bar-${i}`
-			}))));
-		};
-		const SuccessIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			viewBox: "0 0 20 20",
-			fill: "currentColor",
-			height: "20",
-			width: "20",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("path", {
-			fillRule: "evenodd",
-			d: "M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z",
-			clipRule: "evenodd"
-		}));
-		const WarningIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			viewBox: "0 0 24 24",
-			fill: "currentColor",
-			height: "20",
-			width: "20",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("path", {
-			fillRule: "evenodd",
-			d: "M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z",
-			clipRule: "evenodd"
-		}));
-		const InfoIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			viewBox: "0 0 20 20",
-			fill: "currentColor",
-			height: "20",
-			width: "20",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("path", {
-			fillRule: "evenodd",
-			d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z",
-			clipRule: "evenodd"
-		}));
-		const ErrorIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			viewBox: "0 0 20 20",
-			fill: "currentColor",
-			height: "20",
-			width: "20",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("path", {
-			fillRule: "evenodd",
-			d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z",
-			clipRule: "evenodd"
-		}));
-		const CloseIcon = /*#__PURE__*/ react$1.default.createElement("svg", {
-			xmlns: "http://www.w3.org/2000/svg",
-			width: "12",
-			height: "12",
-			viewBox: "0 0 24 24",
-			fill: "none",
-			stroke: "currentColor",
-			strokeWidth: "1.5",
-			strokeLinecap: "round",
-			strokeLinejoin: "round",
-			"aria-hidden": "true"
-		}, /*#__PURE__*/ react$1.default.createElement("line", {
-			x1: "18",
-			y1: "6",
-			x2: "6",
-			y2: "18"
-		}), /*#__PURE__*/ react$1.default.createElement("line", {
-			x1: "6",
-			y1: "6",
-			x2: "18",
-			y2: "18"
-		}));
-		const useIsDocumentHidden = () => {
-			const [isDocumentHidden, setIsDocumentHidden] = react$1.default.useState(document.hidden);
-			react$1.default.useEffect(() => {
-				const callback = () => {
-					setIsDocumentHidden(document.hidden);
-				};
-				document.addEventListener("visibilitychange", callback);
-				return () => document.removeEventListener("visibilitychange", callback);
-			}, []);
-			return isDocumentHidden;
-		};
-		let toastsCounter = 1;
-		const MAX_HISTORY_SIZE = 100;
-		const getToastId = (data) => {
-			var _data_id;
-			return typeof (data == null ? void 0 : data.id) === "number" || (data == null ? void 0 : (_data_id = data.id) == null ? void 0 : _data_id.length) > 0 ? data.id : toastsCounter++;
-		};
-		var Observer = class {
-			constructor() {
-				this.subscribe = (subscriber) => {
-					this.subscribers.push(subscriber);
-					this.getActiveToasts().forEach((toast) => subscriber(toast));
-					return () => {
-						const index = this.subscribers.indexOf(subscriber);
-						this.subscribers.splice(index, 1);
-					};
-				};
-				this.publish = (data) => {
-					this.subscribers.forEach((subscriber) => subscriber(data));
-				};
-				this.addToast = (data) => {
-					this.publish(data);
-					this.toasts = [...this.toasts, data];
-					this.trimHistory();
-				};
-				this.trimHistory = () => {
-					let toRemove = this.toasts.length - MAX_HISTORY_SIZE;
-					if (toRemove <= 0) return;
-					this.toasts = this.toasts.filter((toast) => {
-						if (toRemove > 0 && this.dismissedToasts.has(toast.id)) {
-							this.dismissedToasts.delete(toast.id);
-							toRemove--;
-							return false;
-						}
-						return true;
-					});
-				};
-				this.create = (data) => {
-					const { message, ...rest } = data;
-					const id = getToastId(data);
-					const pendingDismissal = this.pendingDismissals.get(id);
-					if (pendingDismissal !== void 0) {
-						cancelAnimationFrame(pendingDismissal);
-						this.pendingDismissals.delete(id);
-						this.dismissedToasts.delete(id);
-					}
-					const wasDismissed = this.dismissedToasts.has(id);
-					const dismissible = data.dismissible === void 0 ? true : data.dismissible;
-					if (wasDismissed) {
-						this.dismissedToasts.delete(id);
-						this.toasts = this.toasts.filter((toast) => toast.id !== id);
-					}
-					if (wasDismissed ? void 0 : this.toasts.find((toast) => {
-						return toast.id === id;
-					})) this.toasts = this.toasts.map((toast) => {
-						if (toast.id === id) {
-							this.publish({
-								...toast,
-								...data,
-								id,
-								title: message
-							});
-							return {
-								...toast,
-								...data,
-								id,
-								dismissible,
-								title: message
-							};
-						}
-						return toast;
-					});
-					else this.addToast({
-						title: message,
-						...rest,
-						dismissible,
-						id
-					});
-					return id;
-				};
-				this.dismiss = (id) => {
-					if (id === void 0 || id === null) {
-						this.getActiveToasts().forEach((toast) => {
-							this.dismissedToasts.add(toast.id);
-							this.subscribers.forEach((subscriber) => subscriber({
-								id: toast.id,
-								dismiss: true
-							}));
-						});
-						return id;
-					}
-					this.dismissedToasts.add(id);
-					const alreadyPending = this.pendingDismissals.get(id);
-					if (alreadyPending !== void 0) cancelAnimationFrame(alreadyPending);
-					this.pendingDismissals.set(id, requestAnimationFrame(() => {
-						this.pendingDismissals.delete(id);
-						this.subscribers.forEach((subscriber) => subscriber({
-							id,
-							dismiss: true
-						}));
-					}));
-					return id;
-				};
-				this.message = (message, data) => {
-					return this.create({
-						...data,
-						message,
-						type: void 0
-					});
-				};
-				this.error = (message, data) => {
-					return this.create({
-						...data,
-						message,
-						type: "error"
-					});
-				};
-				this.success = (message, data) => {
-					return this.create({
-						...data,
-						type: "success",
-						message
-					});
-				};
-				this.info = (message, data) => {
-					return this.create({
-						...data,
-						type: "info",
-						message
-					});
-				};
-				this.warning = (message, data) => {
-					return this.create({
-						...data,
-						type: "warning",
-						message
-					});
-				};
-				this.loading = (message, data) => {
-					return this.create({
-						...data,
-						type: "loading",
-						message
-					});
-				};
-				this.promise = (promise, data) => {
-					if (!data) return;
-					let id = void 0;
-					if (data.loading !== void 0) id = this.create({
-						...data,
-						promise,
-						type: "loading",
-						message: data.loading,
-						description: typeof data.description !== "function" ? data.description : void 0
-					});
-					const p = Promise.resolve(promise instanceof Function ? promise() : promise);
-					let shouldDismiss = id !== void 0;
-					let result;
-					const originalPromise = p.then(async (response) => {
-						result = ["resolve", response];
-						if (react$1.default.isValidElement(response)) {
-							shouldDismiss = false;
-							this.create({
-								id,
-								type: "default",
-								message: response
-							});
-						} else if (isHttpResponse(response) && !response.ok) {
-							shouldDismiss = false;
-							const promiseData = typeof data.error === "function" ? await data.error(`HTTP error! status: ${response.status}`) : data.error;
-							const description = typeof data.description === "function" ? await data.description(`HTTP error! status: ${response.status}`) : data.description;
-							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
-							this.create({
-								id,
-								type: "error",
-								description,
-								...toastSettings
-							});
-						} else if (response instanceof Error) {
-							shouldDismiss = false;
-							const promiseData = typeof data.error === "function" ? await data.error(response) : data.error;
-							const description = typeof data.description === "function" ? await data.description(response) : data.description;
-							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
-							this.create({
-								id,
-								type: "error",
-								description,
-								...toastSettings
-							});
-						} else if (data.success !== void 0) {
-							shouldDismiss = false;
-							const promiseData = typeof data.success === "function" ? await data.success(response) : data.success;
-							const description = typeof data.description === "function" ? await data.description(response) : data.description;
-							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
-							this.create({
-								id,
-								type: "success",
-								description,
-								...toastSettings
-							});
-						}
-					}).catch(async (error) => {
-						result = ["reject", error];
-						if (data.error !== void 0) {
-							shouldDismiss = false;
-							const promiseData = typeof data.error === "function" ? await data.error(error) : data.error;
-							const description = typeof data.description === "function" ? await data.description(error) : data.description;
-							const toastSettings = typeof promiseData === "object" && !react$1.default.isValidElement(promiseData) ? promiseData : { message: promiseData };
-							this.create({
-								id,
-								type: "error",
-								description,
-								...toastSettings
-							});
-						}
-					}).finally(() => {
-						if (shouldDismiss) {
-							this.dismiss(id);
-							id = void 0;
-						}
-						data.finally == null || data.finally.call(data);
-					});
-					const unwrap = () => new Promise((resolve, reject) => originalPromise.then(() => result[0] === "reject" ? reject(result[1]) : resolve(result[1])).catch(reject));
-					if (typeof id !== "string" && typeof id !== "number") return { unwrap };
-					else return Object.assign(id, { unwrap });
-				};
-				this.custom = (jsx, data) => {
-					const id = getToastId(data);
-					this.create({
-						...data,
-						jsx: jsx(id),
-						id,
-						type: void 0
-					});
-					return id;
-				};
-				this.getActiveToasts = () => {
-					return this.toasts.filter((toast) => !this.dismissedToasts.has(toast.id));
-				};
-				this.subscribers = [];
-				this.toasts = [];
-				this.dismissedToasts = /* @__PURE__ */ new Set();
-				this.pendingDismissals = /* @__PURE__ */ new Map();
-			}
-		};
-		const ToastState = new Observer();
-		const toastFunction = (message, data) => {
-			return ToastState.message(message, data);
-		};
-		const isHttpResponse = (data) => {
-			return data && typeof data === "object" && "ok" in data && typeof data.ok === "boolean" && "status" in data && typeof data.status === "number";
-		};
-		const basicToast = toastFunction;
-		const getHistory = () => ToastState.toasts;
-		const getToasts = () => ToastState.getActiveToasts();
-		const toast = Object.assign(basicToast, {
-			success: ToastState.success,
-			info: ToastState.info,
-			warning: ToastState.warning,
-			error: ToastState.error,
-			custom: ToastState.custom,
-			message: ToastState.message,
-			promise: ToastState.promise,
-			dismiss: ToastState.dismiss,
-			loading: ToastState.loading
-		}, {
-			getHistory,
-			getToasts
-		});
-		__insertCSS("[data-sonner-toaster][dir=ltr],html[dir=ltr]{--toast-icon-margin-start:-3px;--toast-icon-margin-end:4px;--toast-svg-margin-start:-1px;--toast-svg-margin-end:0px;--toast-button-margin-start:auto;--toast-button-margin-end:0;--toast-close-button-start:0;--toast-close-button-end:unset;--toast-close-button-transform:translate(-35%, -35%)}[data-sonner-toaster][dir=rtl],html[dir=rtl]{--toast-icon-margin-start:4px;--toast-icon-margin-end:-3px;--toast-svg-margin-start:0px;--toast-svg-margin-end:-1px;--toast-button-margin-start:0;--toast-button-margin-end:auto;--toast-close-button-start:unset;--toast-close-button-end:0;--toast-close-button-transform:translate(35%, -35%)}[data-sonner-toaster]{position:fixed;width:var(--width);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;--gray1:hsl(0, 0%, 99%);--gray2:hsl(0, 0%, 97.3%);--gray3:hsl(0, 0%, 95.1%);--gray4:hsl(0, 0%, 93%);--gray5:hsl(0, 0%, 90.9%);--gray6:hsl(0, 0%, 88.7%);--gray7:hsl(0, 0%, 85.8%);--gray8:hsl(0, 0%, 78%);--gray9:hsl(0, 0%, 56.1%);--gray10:hsl(0, 0%, 52.3%);--gray11:hsl(0, 0%, 43.5%);--gray12:hsl(0, 0%, 9%);--border-radius:8px;box-sizing:border-box;padding:0;margin:0;list-style:none;outline:0;z-index:999999999;transition:transform .4s ease}@media (hover:none) and (pointer:coarse){[data-sonner-toaster][data-lifted=true]{transform:none}}[data-sonner-toaster][data-x-position=right]{right:var(--offset-right)}[data-sonner-toaster][data-x-position=left]{left:var(--offset-left)}[data-sonner-toaster][data-x-position=center]{left:50%;transform:translateX(-50%)}[data-sonner-toaster][data-y-position=top]{top:var(--offset-top)}[data-sonner-toaster][data-y-position=bottom]{bottom:var(--offset-bottom)}[data-sonner-toast]{--y:translateY(100%);--lift-amount:calc(var(--lift) * var(--gap));z-index:var(--z-index);position:absolute;opacity:0;transform:var(--y);touch-action:none;transition:transform .4s,opacity .4s,height .4s,box-shadow .2s;box-sizing:border-box;outline:0;overflow-wrap:anywhere}[data-sonner-toast][data-styled=true]{padding:16px;background:var(--normal-bg);border:1px solid var(--normal-border);color:var(--normal-text);border-radius:var(--border-radius);box-shadow:0 4px 12px rgba(0,0,0,.1);width:var(--width);font-size:13px;display:flex;align-items:center;gap:6px}[data-sonner-toast]:focus-visible{box-shadow:0 4px 12px rgba(0,0,0,.1),0 0 0 2px rgba(0,0,0,.2)}[data-sonner-toast][data-y-position=top]{top:0;--y:translateY(-100%);--lift:1;--lift-amount:calc(1 * var(--gap))}[data-sonner-toast][data-y-position=bottom]{bottom:0;--y:translateY(100%);--lift:-1;--lift-amount:calc(var(--lift) * var(--gap))}[data-sonner-toast][data-styled=true] [data-description]{font-weight:400;line-height:1.4;color:#3f3f3f}[data-rich-colors=true][data-sonner-toast][data-styled=true] [data-description]{color:inherit}[data-sonner-toaster][data-sonner-theme=dark] [data-description]{color:#e8e8e8}[data-sonner-toast][data-styled=true] [data-title]{font-weight:500;line-height:1.5;color:inherit}[data-sonner-toast][data-styled=true] [data-icon]{display:flex;height:16px;width:16px;position:relative;justify-content:flex-start;align-items:center;flex-shrink:0;margin-left:var(--toast-icon-margin-start);margin-right:var(--toast-icon-margin-end)}[data-sonner-toast][data-promise=true] [data-icon]>svg{opacity:0;transform:scale(.8);transform-origin:center;animation:sonner-fade-in .3s ease forwards}[data-sonner-toast][data-styled=true] [data-icon]>*{flex-shrink:0}[data-sonner-toast][data-styled=true] [data-icon] svg{margin-left:var(--toast-svg-margin-start);margin-right:var(--toast-svg-margin-end)}[data-sonner-toast][data-styled=true] [data-content]{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}[data-sonner-toast][data-styled=true] [data-button]{border-radius:4px;padding-left:8px;padding-right:8px;height:24px;font-size:12px;color:var(--normal-bg);background:var(--normal-text);margin-left:var(--toast-button-margin-start);margin-right:var(--toast-button-margin-end);border:none;font-weight:500;cursor:pointer;outline:0;display:flex;align-items:center;flex-shrink:0;transition:opacity .4s,box-shadow .2s}[data-sonner-toast][data-styled=true] [data-button]:focus-visible{box-shadow:0 0 0 2px rgba(0,0,0,.4)}[data-sonner-toast][data-styled=true] [data-button]:first-of-type{margin-left:var(--toast-button-margin-start);margin-right:var(--toast-button-margin-end)}[data-sonner-toast][data-styled=true] [data-cancel]{color:var(--normal-text);background:rgba(0,0,0,.08)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast][data-styled=true] [data-cancel]{background:rgba(255,255,255,.3)}[data-sonner-toast][data-styled=true] [data-close-button]{position:absolute;left:var(--toast-close-button-start);right:var(--toast-close-button-end);top:0;height:20px;width:20px;display:flex;justify-content:center;align-items:center;padding:0;color:var(--normal-text);background:var(--normal-bg);border:1px solid var(--normal-border);transform:var(--toast-close-button-transform);border-radius:50%;cursor:pointer;z-index:1;transition:opacity .1s,background .2s,border-color .2s}[data-sonner-toast][data-styled=true] [data-close-button]:focus-visible{box-shadow:0 4px 12px rgba(0,0,0,.1),0 0 0 2px rgba(0,0,0,.2)}[data-sonner-toast][data-styled=true] [data-disabled=true]{cursor:not-allowed}[data-sonner-toast][data-styled=true]:hover [data-close-button]:hover{background:var(--gray2);border-color:var(--gray5)}[data-sonner-toast][data-swiping=true]::before{content:'';position:absolute;left:-100%;right:-100%;height:100%;z-index:-1}[data-sonner-toast][data-y-position=top][data-swiping=true]::before{bottom:50%;transform:scaleY(3) translateY(50%)}[data-sonner-toast][data-y-position=bottom][data-swiping=true]::before{top:50%;transform:scaleY(3) translateY(-50%)}[data-sonner-toast][data-swiping=false][data-removed=true]::before{content:'';position:absolute;inset:0;transform:scaleY(2)}[data-sonner-toast][data-expanded=true]::after{content:'';position:absolute;left:0;height:calc(var(--gap) + 1px);bottom:100%;width:100%}[data-sonner-toast][data-mounted=true]{--y:translateY(0);opacity:1}[data-sonner-toast][data-expanded=false][data-front=false]{--scale:var(--toasts-before) * 0.05 + 1;--y:translateY(calc(var(--lift-amount) * var(--toasts-before))) scale(calc(-1 * var(--scale)));height:var(--front-toast-height)}[data-sonner-toast]>*{transition:opacity .4s}[data-sonner-toast][data-x-position=right]{right:0}[data-sonner-toast][data-x-position=left]{left:0}[data-sonner-toast][data-expanded=false][data-front=false][data-styled=true]>*{opacity:0}[data-sonner-toast][data-visible=false]{opacity:0;pointer-events:none}[data-sonner-toast][data-mounted=true][data-expanded=true]{--y:translateY(calc(var(--lift) * var(--offset)));height:var(--initial-height)}[data-sonner-toast][data-removed=true][data-front=true][data-swipe-out=false]{--y:translateY(calc(var(--lift) * -100%));opacity:0}[data-sonner-toast][data-removed=true][data-front=false][data-swipe-out=false][data-expanded=true]{--y:translateY(calc(var(--lift) * var(--offset) + var(--lift) * -100%));opacity:0}[data-sonner-toast][data-removed=true][data-front=false][data-swipe-out=false][data-expanded=false]{--y:translateY(40%);opacity:0;transition:transform .5s,opacity .2s}[data-sonner-toast][data-removed=true][data-front=false]::before{height:calc(var(--initial-height) + 20%)}[data-sonner-toast][data-swiping=true]{transform:var(--y) translateY(var(--swipe-amount-y,0)) translateX(var(--swipe-amount-x,0));transition:none}[data-sonner-toast][data-swiped=true]{-webkit-user-select:none;user-select:none}[data-sonner-toast][data-swipe-out=true][data-y-position=bottom],[data-sonner-toast][data-swipe-out=true][data-y-position=top]{animation-duration:.2s;animation-timing-function:ease-out;animation-fill-mode:forwards}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=left]{animation-name:swipe-out-left}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=right]{animation-name:swipe-out-right}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=up]{animation-name:swipe-out-up}[data-sonner-toast][data-swipe-out=true][data-swipe-direction=down]{animation-name:swipe-out-down}@keyframes swipe-out-left{from{transform:var(--y) translateX(var(--swipe-amount-x));opacity:1}to{transform:var(--y) translateX(calc(var(--swipe-amount-x) - 100%));opacity:0}}@keyframes swipe-out-right{from{transform:var(--y) translateX(var(--swipe-amount-x));opacity:1}to{transform:var(--y) translateX(calc(var(--swipe-amount-x) + 100%));opacity:0}}@keyframes swipe-out-up{from{transform:var(--y) translateY(var(--swipe-amount-y));opacity:1}to{transform:var(--y) translateY(calc(var(--swipe-amount-y) - 100%));opacity:0}}@keyframes swipe-out-down{from{transform:var(--y) translateY(var(--swipe-amount-y));opacity:1}to{transform:var(--y) translateY(calc(var(--swipe-amount-y) + 100%));opacity:0}}@media (max-width:600px){[data-sonner-toaster]{position:fixed;right:var(--mobile-offset-right);left:var(--mobile-offset-left);width:100%}[data-sonner-toaster][dir=rtl]{left:calc(var(--mobile-offset-left) * -1)}[data-sonner-toaster] [data-sonner-toast]{left:0;right:0;width:calc(100% - var(--mobile-offset-left) * 2)}[data-sonner-toaster][data-x-position=left]{left:var(--mobile-offset-left)}[data-sonner-toaster][data-y-position=bottom]{bottom:var(--mobile-offset-bottom)}[data-sonner-toaster][data-y-position=top]{top:var(--mobile-offset-top)}[data-sonner-toaster][data-x-position=center]{left:var(--mobile-offset-left);right:var(--mobile-offset-right);transform:none}}[data-sonner-toaster][data-sonner-theme=light]{--normal-bg:#fff;--normal-border:var(--gray4);--normal-text:var(--gray12);--success-bg:hsl(143, 85%, 96%);--success-border:hsl(145, 92%, 87%);--success-text:hsl(140, 100%, 27%);--info-bg:hsl(208, 100%, 97%);--info-border:hsl(221, 91%, 93%);--info-text:hsl(210, 92%, 45%);--warning-bg:hsl(49, 100%, 97%);--warning-border:hsl(49, 91%, 84%);--warning-text:hsl(31, 92%, 45%);--error-bg:hsl(359, 100%, 97%);--error-border:hsl(359, 100%, 94%);--error-text:hsl(360, 100%, 45%)}[data-sonner-toaster][data-sonner-theme=light] [data-sonner-toast][data-invert=true]{--normal-bg:#000;--normal-border:hsl(0, 0%, 20%);--normal-text:var(--gray1)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast][data-invert=true]{--normal-bg:#fff;--normal-border:var(--gray3);--normal-text:var(--gray12)}[data-sonner-toaster][data-sonner-theme=dark]{--normal-bg:#000;--normal-bg-hover:hsl(0, 0%, 12%);--normal-border:hsl(0, 0%, 20%);--normal-border-hover:hsl(0, 0%, 25%);--normal-text:var(--gray1);--success-bg:hsl(150, 100%, 6%);--success-border:hsl(147, 100%, 12%);--success-text:hsl(150, 86%, 65%);--info-bg:hsl(215, 100%, 6%);--info-border:hsl(223, 43%, 17%);--info-text:hsl(216, 87%, 65%);--warning-bg:hsl(64, 100%, 6%);--warning-border:hsl(60, 100%, 9%);--warning-text:hsl(46, 87%, 65%);--error-bg:hsl(358, 76%, 10%);--error-border:hsl(357, 89%, 16%);--error-text:hsl(358, 100%, 81%)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast] [data-close-button]{background:var(--normal-bg);border-color:var(--normal-border);color:var(--normal-text)}[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast] [data-close-button]:hover{background:var(--normal-bg-hover);border-color:var(--normal-border-hover)}[data-rich-colors=true][data-sonner-toast][data-type=success]{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}[data-rich-colors=true][data-sonner-toast][data-type=success] [data-close-button]{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}[data-rich-colors=true][data-sonner-toast][data-type=info]{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text)}[data-rich-colors=true][data-sonner-toast][data-type=info] [data-close-button]{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text)}[data-rich-colors=true][data-sonner-toast][data-type=warning]{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-text)}[data-rich-colors=true][data-sonner-toast][data-type=warning] [data-close-button]{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-text)}[data-rich-colors=true][data-sonner-toast][data-type=error]{background:var(--error-bg);border-color:var(--error-border);color:var(--error-text)}[data-rich-colors=true][data-sonner-toast][data-type=error] [data-close-button]{background:var(--error-bg);border-color:var(--error-border);color:var(--error-text)}.sonner-loading-wrapper{--size:16px;height:var(--size);width:var(--size);position:absolute;inset:0;z-index:10}.sonner-loading-wrapper[data-visible=false]{transform-origin:center;animation:sonner-fade-out .2s ease forwards}.sonner-spinner{position:relative;top:50%;left:50%;height:var(--size);width:var(--size)}.sonner-loading-bar{animation:sonner-spin 1.2s linear infinite;background:var(--gray11);border-radius:6px;height:8%;left:-10%;position:absolute;top:-3.9%;width:24%}.sonner-loading-bar:first-child{animation-delay:-1.2s;transform:rotate(.0001deg) translate(146%)}.sonner-loading-bar:nth-child(2){animation-delay:-1.1s;transform:rotate(30deg) translate(146%)}.sonner-loading-bar:nth-child(3){animation-delay:-1s;transform:rotate(60deg) translate(146%)}.sonner-loading-bar:nth-child(4){animation-delay:-.9s;transform:rotate(90deg) translate(146%)}.sonner-loading-bar:nth-child(5){animation-delay:-.8s;transform:rotate(120deg) translate(146%)}.sonner-loading-bar:nth-child(6){animation-delay:-.7s;transform:rotate(150deg) translate(146%)}.sonner-loading-bar:nth-child(7){animation-delay:-.6s;transform:rotate(180deg) translate(146%)}.sonner-loading-bar:nth-child(8){animation-delay:-.5s;transform:rotate(210deg) translate(146%)}.sonner-loading-bar:nth-child(9){animation-delay:-.4s;transform:rotate(240deg) translate(146%)}.sonner-loading-bar:nth-child(10){animation-delay:-.3s;transform:rotate(270deg) translate(146%)}.sonner-loading-bar:nth-child(11){animation-delay:-.2s;transform:rotate(300deg) translate(146%)}.sonner-loading-bar:nth-child(12){animation-delay:-.1s;transform:rotate(330deg) translate(146%)}@keyframes sonner-fade-in{0%{opacity:0;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}@keyframes sonner-fade-out{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.8)}}@keyframes sonner-spin{0%{opacity:1}100%{opacity:.15}}@media (prefers-reduced-motion){.sonner-loading-bar,[data-sonner-toast],[data-sonner-toast]>*{transition:none!important;animation:none!important}}.sonner-loader{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transform-origin:center;transition:opacity .2s,transform .2s}.sonner-loader[data-visible=false]{opacity:0;transform:scale(.8) translate(-50%,-50%)}");
-		function isAction(action) {
-			return action.label !== void 0;
-		}
-		const VISIBLE_TOASTS_AMOUNT = 3;
-		const VIEWPORT_OFFSET = "24px";
-		const MOBILE_VIEWPORT_OFFSET = "16px";
-		const TOAST_LIFETIME = 4e3;
-		const TOAST_WIDTH = 356;
-		const GAP = 14;
-		const SWIPE_THRESHOLD = 45;
-		const TIME_BEFORE_UNMOUNT = 200;
-		function cn(...classes) {
-			return classes.filter(Boolean).join(" ");
-		}
-		function getDefaultSwipeDirections(position) {
-			const [y, x] = position.split("-");
-			const directions = [];
-			if (y) directions.push(y);
-			if (x) directions.push(x);
-			return directions;
-		}
-		const Toast = (props) => {
-			var _toast_classNames, _toast_classNames1, _toast_classNames2, _toast_classNames3, _toast_classNames4, _toast_classNames5, _toast_classNames6, _toast_classNames7, _toast_classNames8;
-			const { invert: ToasterInvert, toast, unstyled, interacting, setHeights, visibleToasts, heights, index, toasts, expanded, removeToast, defaultRichColors, closeButton: closeButtonFromToaster, style, cancelButtonStyle, actionButtonStyle, className = "", descriptionClassName = "", duration: durationFromToaster, position, gap, expandByDefault, classNames, icons, closeButtonAriaLabel = "Close toast" } = props;
-			const [swipeDirection, setSwipeDirection] = react$1.default.useState(null);
-			const [swipeOutDirection, setSwipeOutDirection] = react$1.default.useState(null);
-			const [mounted, setMounted] = react$1.default.useState(false);
-			const [removed, setRemoved] = react$1.default.useState(false);
-			const [swiping, setSwiping] = react$1.default.useState(false);
-			const [swipeOut, setSwipeOut] = react$1.default.useState(false);
-			const [isSwiped, setIsSwiped] = react$1.default.useState(false);
-			const [offsetBeforeRemove, setOffsetBeforeRemove] = react$1.default.useState(0);
-			const [initialHeight, setInitialHeight] = react$1.default.useState(0);
-			const remainingTime = react$1.default.useRef(toast.duration || durationFromToaster || TOAST_LIFETIME);
-			const dragStartTime = react$1.default.useRef(null);
-			const toastRef = react$1.default.useRef(null);
-			const isFront = index === 0;
-			const isVisible = index + 1 <= visibleToasts;
-			const toastType = toast.type;
-			const toastTypeKey = toastType != null ? toastType : "default";
-			const dismissible = toast.dismissible !== false;
-			const toastClassname = toast.className || "";
-			const toastDescriptionClassname = toast.descriptionClassName || "";
-			const heightIndex = react$1.default.useMemo(() => heights.findIndex((height) => height.toastId === toast.id) || 0, [heights, toast.id]);
-			const closeButton = react$1.default.useMemo(() => {
-				var _toast_closeButton;
-				return (_toast_closeButton = toast.closeButton) != null ? _toast_closeButton : closeButtonFromToaster;
-			}, [toast.closeButton, closeButtonFromToaster]);
-			const duration = react$1.default.useMemo(() => toast.duration || durationFromToaster || TOAST_LIFETIME, [toast.duration, durationFromToaster]);
-			const closeTimerStartTimeRef = react$1.default.useRef(0);
-			const offset = react$1.default.useRef(0);
-			const lastCloseTimerStartTimeRef = react$1.default.useRef(0);
-			const pointerStartRef = react$1.default.useRef(null);
-			const [y, x] = position.split("-");
-			const toastsHeightBefore = react$1.default.useMemo(() => {
-				return heights.reduce((prev, curr, reducerIndex) => {
-					if (reducerIndex >= heightIndex) return prev;
-					return prev + curr.height;
-				}, 0);
-			}, [heights, heightIndex]);
-			const isDocumentHidden = useIsDocumentHidden();
-			const swipeDirections = react$1.default.useMemo(() => {
-				var _props_swipeDirections;
-				return (_props_swipeDirections = props.swipeDirections) != null ? _props_swipeDirections : getDefaultSwipeDirections(position);
-			}, [props.swipeDirections, position]);
-			const invert = toast.invert || ToasterInvert;
-			const disabled = toastType === "loading";
-			offset.current = react$1.default.useMemo(() => heightIndex * gap + toastsHeightBefore, [heightIndex, toastsHeightBefore]);
-			react$1.default.useEffect(() => {
-				remainingTime.current = duration;
-			}, [duration]);
-			react$1.default.useEffect(() => {
-				setMounted(true);
-			}, []);
-			react$1.default.useEffect(() => {
-				const toastNode = toastRef.current;
-				if (toastNode) {
-					const height = toastNode.getBoundingClientRect().height;
-					setInitialHeight(height);
-					setHeights((h) => [{
-						toastId: toast.id,
-						height,
-						position: toast.position
-					}, ...h]);
-					return () => setHeights((h) => h.filter((height) => height.toastId !== toast.id));
-				}
-			}, [setHeights, toast.id]);
-			react$1.default.useLayoutEffect(() => {
-				if (!mounted) return;
-				const toastNode = toastRef.current;
-				const originalHeight = toastNode.style.height;
-				toastNode.style.height = "auto";
-				const newHeight = toastNode.getBoundingClientRect().height;
-				toastNode.style.height = originalHeight;
-				setInitialHeight(newHeight);
-				setHeights((heights) => {
-					if (!heights.find((height) => height.toastId === toast.id)) return [{
-						toastId: toast.id,
-						height: newHeight,
-						position: toast.position
-					}, ...heights];
-					else return heights.map((height) => height.toastId === toast.id ? {
-						...height,
-						height: newHeight
-					} : height);
-				});
-			}, [
-				mounted,
-				toast.title,
-				toast.description,
-				setHeights,
-				toast.id,
-				toast.jsx,
-				toast.action,
-				toast.cancel
-			]);
-			const deleteToast = react$1.default.useCallback(() => {
-				setRemoved(true);
-				setOffsetBeforeRemove(offset.current);
-				setHeights((h) => h.filter((height) => height.toastId !== toast.id));
-				setTimeout(() => {
-					removeToast(toast);
-				}, TIME_BEFORE_UNMOUNT);
-			}, [
-				toast,
-				removeToast,
-				setHeights,
-				offset
-			]);
-			react$1.default.useEffect(() => {
-				if (toast.promise && toastType === "loading" || toast.duration === Infinity || toast.type === "loading") return;
-				let timeoutId;
-				const pauseTimer = () => {
-					if (lastCloseTimerStartTimeRef.current < closeTimerStartTimeRef.current) {
-						const elapsedTime = (/* @__PURE__ */ new Date()).getTime() - closeTimerStartTimeRef.current;
-						remainingTime.current = remainingTime.current - elapsedTime;
-					}
-					lastCloseTimerStartTimeRef.current = (/* @__PURE__ */ new Date()).getTime();
-				};
-				const startTimer = () => {
-					if (remainingTime.current === Infinity) return;
-					closeTimerStartTimeRef.current = (/* @__PURE__ */ new Date()).getTime();
-					timeoutId = setTimeout(() => {
-						toast.onAutoClose == null || toast.onAutoClose.call(toast, toast);
-						deleteToast();
-					}, remainingTime.current);
-				};
-				if (expanded || interacting || isDocumentHidden) pauseTimer();
-				else startTimer();
-				return () => clearTimeout(timeoutId);
-			}, [
-				expanded,
-				interacting,
-				toast,
-				toastType,
-				isDocumentHidden,
-				deleteToast
-			]);
-			react$1.default.useEffect(() => {
-				if (toast.delete) {
-					deleteToast();
-					toast.onDismiss == null || toast.onDismiss.call(toast, toast);
-				}
-			}, [deleteToast, toast.delete]);
-			function getLoadingIcon() {
-				var _toast_classNames;
-				if (icons == null ? void 0 : icons.loading) {
-					var _toast_classNames1;
-					return /*#__PURE__*/ react$1.default.createElement("div", {
-						className: cn(classNames == null ? void 0 : classNames.loader, toast == null ? void 0 : (_toast_classNames1 = toast.classNames) == null ? void 0 : _toast_classNames1.loader, "sonner-loader"),
-						"data-visible": toastType === "loading"
-					}, icons.loading);
-				}
-				return /*#__PURE__*/ react$1.default.createElement(Loader$1, {
-					className: cn(classNames == null ? void 0 : classNames.loader, toast == null ? void 0 : (_toast_classNames = toast.classNames) == null ? void 0 : _toast_classNames.loader),
-					visible: toastType === "loading"
-				});
-			}
-			const icon = toast.icon || (icons == null ? void 0 : icons[toastType]) || getAsset(toastType);
-			var _toast_richColors, _icons_close;
-			return /*#__PURE__*/ react$1.default.createElement("li", {
-				tabIndex: 0,
-				ref: toastRef,
-				className: cn(className, toastClassname, classNames == null ? void 0 : classNames.toast, toast == null ? void 0 : (_toast_classNames = toast.classNames) == null ? void 0 : _toast_classNames.toast, classNames == null ? void 0 : classNames[toastTypeKey], toast == null ? void 0 : (_toast_classNames1 = toast.classNames) == null ? void 0 : _toast_classNames1[toastTypeKey]),
-				"data-sonner-toast": "",
-				"data-rich-colors": (_toast_richColors = toast.richColors) != null ? _toast_richColors : defaultRichColors,
-				"data-styled": !Boolean(toast.jsx || toast.unstyled || unstyled),
-				"data-mounted": mounted,
-				"data-promise": Boolean(toast.promise),
-				"data-swiped": isSwiped,
-				"data-removed": removed,
-				"data-visible": isVisible,
-				"data-y-position": y,
-				"data-x-position": x,
-				"data-index": index,
-				"data-front": isFront,
-				"data-swiping": swiping,
-				"data-dismissible": dismissible,
-				"data-type": toastType,
-				"data-invert": invert,
-				"data-swipe-out": swipeOut,
-				"data-swipe-direction": swipeOutDirection,
-				"data-expanded": Boolean(expanded || expandByDefault && mounted),
-				"data-testid": toast.testId,
-				style: {
-					"--index": index,
-					"--toasts-before": index,
-					"--z-index": toasts.length - index,
-					"--offset": `${removed ? offsetBeforeRemove : offset.current}px`,
-					"--initial-height": expandByDefault ? "auto" : `${initialHeight}px`,
-					...style,
-					...toast.style
-				},
-				onDragEnd: () => {
-					setSwiping(false);
-					setSwipeDirection(null);
-					pointerStartRef.current = null;
-				},
-				onPointerDown: (event) => {
-					if (event.button === 2) return;
-					if (disabled || !dismissible) return;
-					dragStartTime.current = /* @__PURE__ */ new Date();
-					setOffsetBeforeRemove(offset.current);
-					event.target.setPointerCapture(event.pointerId);
-					if (event.target.tagName === "BUTTON") return;
-					setSwiping(true);
-					pointerStartRef.current = {
-						x: event.clientX,
-						y: event.clientY
-					};
-				},
-				onPointerUp: () => {
-					var _toastRef_current, _toastRef_current1, _dragStartTime_current;
-					if (swipeOut || !dismissible) return;
-					pointerStartRef.current = null;
-					const swipeAmountX = Number(((_toastRef_current = toastRef.current) == null ? void 0 : _toastRef_current.style.getPropertyValue("--swipe-amount-x").replace("px", "")) || 0);
-					const swipeAmountY = Number(((_toastRef_current1 = toastRef.current) == null ? void 0 : _toastRef_current1.style.getPropertyValue("--swipe-amount-y").replace("px", "")) || 0);
-					const timeTaken = (/* @__PURE__ */ new Date()).getTime() - ((_dragStartTime_current = dragStartTime.current) == null ? void 0 : _dragStartTime_current.getTime());
-					const swipeAmount = swipeDirection === "x" ? swipeAmountX : swipeAmountY;
-					const velocity = Math.abs(swipeAmount) / timeTaken;
-					if ((swipeDirection === "x" ? swipeDirections.includes(swipeAmountX > 0 ? "right" : "left") : swipeDirections.includes(swipeAmountY > 0 ? "bottom" : "top")) && (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > .11)) {
-						setOffsetBeforeRemove(offset.current);
-						toast.onDismiss == null || toast.onDismiss.call(toast, toast);
-						if (swipeDirection === "x") setSwipeOutDirection(swipeAmountX > 0 ? "right" : "left");
-						else setSwipeOutDirection(swipeAmountY > 0 ? "down" : "up");
-						deleteToast();
-						setSwipeOut(true);
-						return;
-					} else {
-						var _toastRef_current2, _toastRef_current3;
-						(_toastRef_current2 = toastRef.current) == null || _toastRef_current2.style.setProperty("--swipe-amount-x", `0px`);
-						(_toastRef_current3 = toastRef.current) == null || _toastRef_current3.style.setProperty("--swipe-amount-y", `0px`);
-					}
-					setIsSwiped(false);
-					setSwiping(false);
-					setSwipeDirection(null);
-				},
-				onPointerMove: (event) => {
-					var _window_getSelection, _toastRef_current, _toastRef_current1;
-					if (!pointerStartRef.current || !dismissible) return;
-					if (((_window_getSelection = window.getSelection()) == null ? void 0 : _window_getSelection.toString().length) > 0) return;
-					const yDelta = event.clientY - pointerStartRef.current.y;
-					const xDelta = event.clientX - pointerStartRef.current.x;
-					if (!swipeDirection && (Math.abs(xDelta) > 1 || Math.abs(yDelta) > 1)) setSwipeDirection(Math.abs(xDelta) > Math.abs(yDelta) ? "x" : "y");
-					let swipeAmount = {
-						x: 0,
-						y: 0
-					};
-					const getDampening = (delta) => {
-						return 1 / (1.5 + Math.abs(delta) / 20);
-					};
-					if (swipeDirection === "y") {
-						if (swipeDirections.includes("top") || swipeDirections.includes("bottom")) {
-							if (swipeDirections.includes("top") && yDelta < 0 || swipeDirections.includes("bottom") && yDelta > 0) swipeAmount.y = yDelta;
-							else {
-								const dampenedDelta = yDelta * getDampening(yDelta);
-								swipeAmount.y = Math.abs(dampenedDelta) < Math.abs(yDelta) ? dampenedDelta : yDelta;
-							}
-						}
-					} else if (swipeDirection === "x") {
-						if (swipeDirections.includes("left") || swipeDirections.includes("right")) {
-							if (swipeDirections.includes("left") && xDelta < 0 || swipeDirections.includes("right") && xDelta > 0) swipeAmount.x = xDelta;
-							else {
-								const dampenedDelta = xDelta * getDampening(xDelta);
-								swipeAmount.x = Math.abs(dampenedDelta) < Math.abs(xDelta) ? dampenedDelta : xDelta;
-							}
-						}
-					}
-					if (Math.abs(swipeAmount.x) > 0 || Math.abs(swipeAmount.y) > 0) setIsSwiped(true);
-					(_toastRef_current = toastRef.current) == null || _toastRef_current.style.setProperty("--swipe-amount-x", `${swipeAmount.x}px`);
-					(_toastRef_current1 = toastRef.current) == null || _toastRef_current1.style.setProperty("--swipe-amount-y", `${swipeAmount.y}px`);
-				}
-			}, closeButton && !toast.jsx && toastType !== "loading" ? /*#__PURE__*/ react$1.default.createElement("button", {
-				"aria-label": closeButtonAriaLabel,
-				"data-disabled": disabled,
-				"data-close-button": true,
-				onClick: disabled || !dismissible ? () => {} : () => {
-					deleteToast();
-					toast.onDismiss == null || toast.onDismiss.call(toast, toast);
-				},
-				className: cn(classNames == null ? void 0 : classNames.closeButton, toast == null ? void 0 : (_toast_classNames2 = toast.classNames) == null ? void 0 : _toast_classNames2.closeButton)
-			}, (_icons_close = icons == null ? void 0 : icons.close) != null ? _icons_close : CloseIcon) : null, (toastType || toast.icon || toast.promise) && toast.icon !== null && ((icons == null ? void 0 : icons[toastType]) !== null || toast.icon) ? /*#__PURE__*/ react$1.default.createElement("div", {
-				"data-icon": "",
-				className: cn(classNames == null ? void 0 : classNames.icon, toast == null ? void 0 : (_toast_classNames3 = toast.classNames) == null ? void 0 : _toast_classNames3.icon)
-			}, toastType === "loading" ? toast.icon || getLoadingIcon() : toast.promise ? getLoadingIcon() : null, toastType !== "loading" ? icon : null) : null, /*#__PURE__*/ react$1.default.createElement("div", {
-				"data-content": "",
-				className: cn(classNames == null ? void 0 : classNames.content, toast == null ? void 0 : (_toast_classNames4 = toast.classNames) == null ? void 0 : _toast_classNames4.content)
-			}, /*#__PURE__*/ react$1.default.createElement("div", {
-				"data-title": "",
-				className: cn(classNames == null ? void 0 : classNames.title, toast == null ? void 0 : (_toast_classNames5 = toast.classNames) == null ? void 0 : _toast_classNames5.title)
-			}, toast.jsx ? toast.jsx : typeof toast.title === "function" ? toast.title() : toast.title), toast.description ? /*#__PURE__*/ react$1.default.createElement("div", {
-				"data-description": "",
-				className: cn(descriptionClassName, toastDescriptionClassname, classNames == null ? void 0 : classNames.description, toast == null ? void 0 : (_toast_classNames6 = toast.classNames) == null ? void 0 : _toast_classNames6.description)
-			}, typeof toast.description === "function" ? toast.description() : toast.description) : null), /*#__PURE__*/ react$1.default.isValidElement(toast.cancel) ? toast.cancel : toast.cancel && isAction(toast.cancel) ? /*#__PURE__*/ react$1.default.createElement("button", {
-				"data-button": true,
-				"data-cancel": true,
-				style: toast.cancelButtonStyle || cancelButtonStyle,
-				onClick: (event) => {
-					if (!isAction(toast.cancel)) return;
-					if (!dismissible) return;
-					toast.cancel.onClick == null || toast.cancel.onClick.call(toast.cancel, event);
-					deleteToast();
-				},
-				className: cn(classNames == null ? void 0 : classNames.cancelButton, toast == null ? void 0 : (_toast_classNames7 = toast.classNames) == null ? void 0 : _toast_classNames7.cancelButton)
-			}, toast.cancel.label) : null, /*#__PURE__*/ react$1.default.isValidElement(toast.action) ? toast.action : toast.action && isAction(toast.action) ? /*#__PURE__*/ react$1.default.createElement("button", {
-				"data-button": true,
-				"data-action": true,
-				style: toast.actionButtonStyle || actionButtonStyle,
-				onClick: (event) => {
-					if (!isAction(toast.action)) return;
-					toast.action.onClick == null || toast.action.onClick.call(toast.action, event);
-					if (event.defaultPrevented) return;
-					deleteToast();
-				},
-				className: cn(classNames == null ? void 0 : classNames.actionButton, toast == null ? void 0 : (_toast_classNames8 = toast.classNames) == null ? void 0 : _toast_classNames8.actionButton)
-			}, toast.action.label) : null);
-		};
-		function getDocumentDirection() {
-			if (typeof window === "undefined") return "ltr";
-			if (typeof document === "undefined") return "ltr";
-			const dirAttribute = document.documentElement.getAttribute("dir");
-			if (dirAttribute === "auto" || !dirAttribute) return window.getComputedStyle(document.documentElement).direction;
-			return dirAttribute;
-		}
-		function assignOffset(defaultOffset, mobileOffset) {
-			const styles = {};
-			[defaultOffset, mobileOffset].forEach((offset, index) => {
-				const isMobile = index === 1;
-				const prefix = isMobile ? "--mobile-offset" : "--offset";
-				const defaultValue = isMobile ? MOBILE_VIEWPORT_OFFSET : VIEWPORT_OFFSET;
-				function assignAll(offset) {
-					[
-						"top",
-						"right",
-						"bottom",
-						"left"
-					].forEach((key) => {
-						styles[`${prefix}-${key}`] = typeof offset === "number" ? `${offset}px` : offset;
-					});
-				}
-				if (typeof offset === "number" || typeof offset === "string") assignAll(offset);
-				else if (typeof offset === "object") [
-					"top",
-					"right",
-					"bottom",
-					"left"
-				].forEach((key) => {
-					if (offset[key] === void 0) styles[`${prefix}-${key}`] = defaultValue;
-					else styles[`${prefix}-${key}`] = typeof offset[key] === "number" ? `${offset[key]}px` : offset[key];
-				});
-				else assignAll(defaultValue);
-			});
-			return styles;
-		}
-		const Toaster = /*#__PURE__*/ react$1.default.forwardRef(function Toaster(props, ref) {
-			const { id, invert, position = "bottom-right", hotkey = ["altKey", "KeyT"], expand, closeButton, className, offset, mobileOffset, theme = "light", richColors, duration, style, visibleToasts = VISIBLE_TOASTS_AMOUNT, toastOptions, dir = getDocumentDirection(), gap = GAP, icons, customAriaLabel, containerAriaLabel = "Notifications" } = props;
-			const [toasts, setToasts] = react$1.default.useState([]);
-			const filteredToasts = react$1.default.useMemo(() => {
-				if (id) return toasts.filter((toast) => toast.toasterId === id);
-				return toasts.filter((toast) => !toast.toasterId);
-			}, [toasts, id]);
-			const possiblePositions = react$1.default.useMemo(() => {
-				return Array.from(new Set([position].concat(filteredToasts.filter((toast) => toast.position).map((toast) => toast.position))));
-			}, [filteredToasts, position]);
-			const [heights, setHeights] = react$1.default.useState([]);
-			const [expanded, setExpanded] = react$1.default.useState(false);
-			const [interacting, setInteracting] = react$1.default.useState(false);
-			const [actualTheme, setActualTheme] = react$1.default.useState(theme !== "system" ? theme : typeof window !== "undefined" ? window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" : "light");
-			const listRef = react$1.default.useRef(null);
-			const hotkeyLabel = hotkey.join("+").replace(/Key/g, "").replace(/Digit/g, "");
-			const lastFocusedElementRef = react$1.default.useRef(null);
-			const isFocusWithinRef = react$1.default.useRef(false);
-			const removeToast = react$1.default.useCallback((toastToRemove) => {
-				setToasts((toasts) => {
-					var _toasts_find;
-					if (!((_toasts_find = toasts.find((toast) => toast.id === toastToRemove.id)) == null ? void 0 : _toasts_find.delete)) ToastState.dismiss(toastToRemove.id);
-					return toasts.filter(({ id }) => id !== toastToRemove.id);
-				});
-			}, []);
-			react$1.default.useEffect(() => {
-				return ToastState.subscribe((toast) => {
-					if (toast.dismiss) {
-						requestAnimationFrame(() => {
-							setToasts((toasts) => toasts.map((t) => t.id === toast.id ? {
-								...t,
-								delete: true
-							} : t));
-						});
-						return;
-					}
-					setTimeout(() => {
-						react_dom.default.flushSync(() => {
-							setToasts((toasts) => {
-								const indexOfExistingToast = toasts.findIndex((t) => t.id === toast.id);
-								if (indexOfExistingToast !== -1) return [
-									...toasts.slice(0, indexOfExistingToast),
-									{
-										...toasts[indexOfExistingToast],
-										...toast
-									},
-									...toasts.slice(indexOfExistingToast + 1)
-								];
-								return [toast, ...toasts];
-							});
-						});
-					});
-				});
-			}, []);
-			react$1.default.useEffect(() => {
-				if (theme !== "system") {
-					setActualTheme(theme);
-					return;
-				}
-				if (theme === "system") {
-					if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) setActualTheme("dark");
-					else setActualTheme("light");
-				}
-				if (typeof window === "undefined") return;
-				const darkMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-				try {
-					darkMediaQuery.addEventListener("change", ({ matches }) => {
-						if (matches) setActualTheme("dark");
-						else setActualTheme("light");
-					});
-				} catch (error) {
-					darkMediaQuery.addListener(({ matches }) => {
-						try {
-							if (matches) setActualTheme("dark");
-							else setActualTheme("light");
-						} catch (e) {
-							console.error(e);
-						}
-					});
-				}
-			}, [theme]);
-			react$1.default.useEffect(() => {
-				if (toasts.length <= 1) setExpanded(false);
-			}, [toasts]);
-			react$1.default.useEffect(() => {
-				const handleKeyDown = (event) => {
-					var _listRef_current;
-					if (hotkey.length > 0 && hotkey.every((key) => event[key] || event.code === key)) {
-						var _listRef_current1;
-						setExpanded(true);
-						(_listRef_current1 = listRef.current) == null || _listRef_current1.focus();
-					}
-					if (event.code === "Escape" && (document.activeElement === listRef.current || ((_listRef_current = listRef.current) == null ? void 0 : _listRef_current.contains(document.activeElement)))) setExpanded(false);
-				};
-				document.addEventListener("keydown", handleKeyDown);
-				return () => document.removeEventListener("keydown", handleKeyDown);
-			}, [hotkey]);
-			react$1.default.useEffect(() => {
-				if (listRef.current) return () => {
-					if (lastFocusedElementRef.current) {
-						lastFocusedElementRef.current.focus({ preventScroll: true });
-						lastFocusedElementRef.current = null;
-						isFocusWithinRef.current = false;
-					}
-				};
-			}, [listRef.current]);
-			return /*#__PURE__*/ react$1.default.createElement("section", {
-				ref,
-				"aria-label": customAriaLabel != null ? customAriaLabel : `${containerAriaLabel} ${hotkeyLabel}`,
-				tabIndex: -1,
-				"aria-live": "polite",
-				"aria-relevant": "additions text",
-				"aria-atomic": "false",
-				suppressHydrationWarning: true,
-				"data-react-aria-top-layer": true
-			}, possiblePositions.map((position, index) => {
-				var _heights_;
-				const [y, x] = position.split("-");
-				if (!filteredToasts.length) return null;
-				return /*#__PURE__*/ react$1.default.createElement("ol", {
-					key: position,
-					dir: dir === "auto" ? getDocumentDirection() : dir,
-					tabIndex: -1,
-					ref: listRef,
-					className,
-					"data-sonner-toaster": true,
-					"data-sonner-theme": actualTheme,
-					"data-y-position": y,
-					"data-x-position": x,
-					style: {
-						"--front-toast-height": `${((_heights_ = heights[0]) == null ? void 0 : _heights_.height) || 0}px`,
-						"--width": `${TOAST_WIDTH}px`,
-						"--gap": `${gap}px`,
-						...style,
-						...assignOffset(offset, mobileOffset)
-					},
-					onBlur: (event) => {
-						if (isFocusWithinRef.current && !event.currentTarget.contains(event.relatedTarget)) {
-							isFocusWithinRef.current = false;
-							if (lastFocusedElementRef.current) {
-								lastFocusedElementRef.current.focus({ preventScroll: true });
-								lastFocusedElementRef.current = null;
-							}
-						}
-					},
-					onFocus: (event) => {
-						if (event.target instanceof HTMLElement && event.target.dataset.dismissible === "false") return;
-						if (!isFocusWithinRef.current) {
-							isFocusWithinRef.current = true;
-							lastFocusedElementRef.current = event.relatedTarget;
-						}
-					},
-					onMouseEnter: () => setExpanded(true),
-					onMouseMove: () => setExpanded(true),
-					onMouseLeave: () => {
-						if (!interacting) setExpanded(false);
-					},
-					onDragEnd: () => setExpanded(false),
-					onPointerDown: (event) => {
-						if (event.target instanceof HTMLElement && event.target.dataset.dismissible === "false") return;
-						setInteracting(true);
-					},
-					onPointerUp: () => setInteracting(false)
-				}, filteredToasts.filter((toast) => !toast.position && index === 0 || toast.position === position).map((toast, index) => {
-					var _toastOptions_duration, _toastOptions_closeButton;
-					return /*#__PURE__*/ react$1.default.createElement(Toast, {
-						key: toast.id,
-						icons,
-						index,
-						toast,
-						defaultRichColors: richColors,
-						duration: (_toastOptions_duration = toastOptions == null ? void 0 : toastOptions.duration) != null ? _toastOptions_duration : duration,
-						className: toastOptions == null ? void 0 : toastOptions.className,
-						descriptionClassName: toastOptions == null ? void 0 : toastOptions.descriptionClassName,
-						invert,
-						visibleToasts,
-						closeButton: (_toastOptions_closeButton = toastOptions == null ? void 0 : toastOptions.closeButton) != null ? _toastOptions_closeButton : closeButton,
-						interacting,
-						position,
-						style: toastOptions == null ? void 0 : toastOptions.style,
-						unstyled: toastOptions == null ? void 0 : toastOptions.unstyled,
-						classNames: toastOptions == null ? void 0 : toastOptions.classNames,
-						cancelButtonStyle: toastOptions == null ? void 0 : toastOptions.cancelButtonStyle,
-						actionButtonStyle: toastOptions == null ? void 0 : toastOptions.actionButtonStyle,
-						closeButtonAriaLabel: toastOptions == null ? void 0 : toastOptions.closeButtonAriaLabel,
-						removeToast,
-						toasts: filteredToasts.filter((t) => t.position == toast.position),
-						heights: heights.filter((h) => h.position == toast.position),
-						setHeights,
-						expandByDefault: expand,
-						gap,
-						expanded,
-						swipeDirections: props.swipeDirections
-					});
-				}));
-			}));
-		});
-		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/feedback/toast-host.js
-		/** 全局注册表键：Symbol.for 跨 bundle 副本天然共享同一个符号。 */
-		const TOAST_HOST_KEY = Symbol.for("dsh-plugin-core/toast-host");
-		/** 全局单例：已注册则直接返回（不触发 create），否则建一个并注册。 */
-		function claimToastHost(create) {
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/toast-queue.js
+		/** 全局注册表键：`Symbol.for` 跨 bundle 副本天然共享同一个符号。 */
+		const TOAST_QUEUE_KEY = Symbol.for("dsh-plugin-core/toast-queue");
+		/** 界面长期缺席时不让广播把队列撑成无限历史。 */
+		const MAX_PENDING = 20;
+		function queue() {
 			const g = globalThis;
-			const existing = g[TOAST_HOST_KEY];
-			if (existing !== void 0) return existing;
-			const created = create();
-			g[TOAST_HOST_KEY] = created;
-			return created;
+			let q = g[TOAST_QUEUE_KEY];
+			if (q === void 0) {
+				q = {
+					listeners: /* @__PURE__ */ new Set(),
+					pending: []
+				};
+				g[TOAST_QUEUE_KEY] = q;
+			}
+			return q;
+		}
+		function enqueue(q, payload) {
+			q.pending.push({
+				payload,
+				at: Date.now()
+			});
+			if (q.pending.length > MAX_PENDING) q.pending.splice(0, q.pending.length - MAX_PENDING);
+		}
+		/** 单个订阅者画失败不能拖垮其它订阅者，也不能把消息无声吞掉。 */
+		function deliver(listener, payload) {
+			try {
+				listener(payload);
+				return true;
+			} catch (error) {
+				console.warn(`[dsh-plugin-core] toast 渲染失败：${String(error)}`);
+				return false;
+			}
+		}
+		/** 投递一条提示。不碰 DOM，也不要求界面已挂载。 */
+		function pushToast(payload) {
+			const q = queue();
+			if (q.listeners.size === 0) {
+				enqueue(q, payload);
+				return;
+			}
+			let shown = false;
+			for (const listener of q.listeners) if (deliver(listener, payload)) shown = true;
+			if (!shown) enqueue(q, payload);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/feedback/Toast.js
-		const DEFAULT_MS = 2600;
-		const ROOT_ID = "dshpc-toast-root";
-		function currentTheme() {
-			return document.body.hasAttribute("data-ds-dark-theme") ? "dark" : "light";
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/notify-bridge.js
+		/** 全局注册表键：`Symbol.for` 跨 bundle 副本天然共享同一个符号。 */
+		const NOTIFY_BRIDGE_KEY = Symbol.for("dsh-plugin-core/notify-bridge");
+		/** 本页是否已接上广播接收端（给发送侧判断「广播会不会有人收」）。 */
+		function isNotifyBridgeConnected() {
+			return globalThis[NOTIFY_BRIDGE_KEY] !== void 0;
 		}
-		let sharedHost = null;
-		function toasterHost() {
-			if (sharedHost !== null) return sharedHost;
-			if (typeof document === "undefined" || typeof MutationObserver === "undefined") return null;
-			sharedHost = claimToastHost(createToasterHost);
-			return sharedHost;
-		}
-		function createToasterHost() {
-			let root = null;
-			let themeObserver = null;
-			let position = "bottom-center";
-			function renderToaster() {
-				if (root === null) return;
-				root.render((0, react$1.createElement)(Toaster, {
-					theme: currentTheme(),
-					position,
-					richColors: true
-				}));
-			}
-			function ensureToaster() {
-				if (root !== null) return;
-				let container = document.getElementById(ROOT_ID);
-				if (container === null) {
-					container = document.createElement("div");
-					container.id = ROOT_ID;
-					document.body.appendChild(container);
-				}
-				root = (0, react_dom_client.createRoot)(container);
-				renderToaster();
-				themeObserver = new MutationObserver(() => renderToaster());
-				themeObserver.observe(document.body, {
-					attributes: true,
-					attributeFilter: ["data-ds-dark-theme"]
-				});
-			}
-			function showNative(payload) {
-				const duration = payload.durationMs;
-				const onDismiss = payload.onDismiss;
-				if (payload.color !== void 0) {
-					toast(payload.message, {
-						duration,
-						unstyled: true,
-						onDismiss,
-						className: "dshpc-toast-custom",
-						style: {
-							background: payload.color,
-							color: "#fff",
-							minWidth: "320px",
-							minHeight: "48px",
-							padding: "12px 16px",
-							borderRadius: "8px",
-							boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)",
-							fontSize: "14px",
-							lineHeight: "20px",
-							boxSizing: "border-box",
-							display: "flex",
-							alignItems: "center"
-						}
-					});
-					return;
-				}
-				const variant = payload.variant;
-				if (variant === "success") toast.success(payload.message, {
-					duration,
-					onDismiss
-				});
-				else if (variant === "error") toast.error(payload.message, {
-					duration,
-					onDismiss
-				});
-				else if (variant === "warning") toast.warning(payload.message, {
-					duration,
-					onDismiss
-				});
-				else toast(payload.message, {
-					duration,
-					onDismiss
-				});
-			}
-			function showCard(payload) {
-				const palette = notifyPalette(payload.variant, currentTheme());
-				const duration = payload.durationMs;
-				const actions = payload.actions;
-				const id = toast.custom(() => (0, react$1.createElement)("div", { style: {
-					display: "flex",
-					alignItems: "center",
-					gap: "12px",
-					minWidth: "320px",
-					minHeight: "48px",
-					padding: "12px 16px",
-					borderRadius: "10px",
-					boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)",
-					background: palette.bg,
-					color: palette.fg,
-					boxSizing: "border-box",
-					fontSize: "14px",
-					lineHeight: "20px"
-				} }, (0, react$1.createElement)("span", { style: {
-					flexShrink: 0,
-					width: "20px",
-					height: "20px",
-					borderRadius: "50%",
-					background: "rgba(255, 255, 255, 0.25)",
-					display: "inline-flex",
-					alignItems: "center",
-					justifyContent: "center",
-					fontSize: "13px",
-					fontWeight: 700
-				} }, palette.glyph), (0, react$1.createElement)("div", { style: {
-					flex: 1,
-					minWidth: 0
-				} }, (0, react$1.createElement)("div", { style: { fontWeight: 600 } }, payload.message), payload.description !== void 0 ? (0, react$1.createElement)("div", { style: {
-					opacity: .9,
-					fontSize: "13px",
-					marginTop: "2px",
-					whiteSpace: "pre-line"
-				} }, payload.description) : null), actions !== void 0 && actions.length > 0 ? (0, react$1.createElement)("div", { style: {
-					display: "flex",
-					gap: "8px",
-					flexShrink: 0
-				} }, ...actions.slice(0, 2).map((a) => {
-					const successSurface = payload.variant === "success";
-					return (0, react$1.createElement)(Button$4, {
-						variant: successSurface ? "secondary" : a.variant ?? "info",
-						...successSurface ? { color: "var(--dshpc-surface-2)" } : {},
-						size: "md",
-						onClick: () => {
-							a.onClick();
-							toast.dismiss(id);
-						}
-					}, a.text);
-				})) : null), {
-					duration,
-					unstyled: true
-				});
-			}
-			return {
-				show(payload) {
-					ensureToaster();
-					renderToaster();
-					if (payload.style === "card") showCard(payload);
-					else showNative(payload);
-				},
-				setPosition(next) {
-					position = next;
-					renderToaster();
-				}
-			};
-		}
-		function notifyPalette(variant, theme) {
-			switch (variant) {
-				case "success": return {
-					bg: "#16a34a",
-					fg: "#ffffff",
-					glyph: "✓"
-				};
-				case "error": return {
-					bg: "#c0392b",
-					fg: "#ffffff",
-					glyph: "✕"
-				};
-				case "warning": return {
-					bg: "#e0922f",
-					fg: "#1f2937",
-					glyph: "!"
-				};
-				default: return theme === "dark" ? {
-					bg: "#3f3f46",
-					fg: "#fafafa",
-					glyph: "i"
-				} : {
-					bg: "#f4f4f5",
-					fg: "#18181b",
-					glyph: "i"
-				};
-			}
-		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/feedback/notify.js
 		/**
-		* 我们封装好的提示（**推荐项目内使用**）：统一卡片样式（灰/绿/红/黄，跟随明暗皮肤），
-		* 右侧可挂 1–2 个**我们自己的 Button** 动作按钮，点击后自动关闭并调用你的事件。
+		* Toast 的发送 API（**纯 TS：零 React / 零 DOM / 零 sonner**）。
 		*
-		* 底层仍是 Sonner（动画 / 定位 / 堆叠），但视觉与交互是我们定制的。
-		* 无 `document` 时静默跳过。
+		* 默认本页：把载荷投进本页队列，由 `mountToasts()` 挂的界面订阅渲染。
+		* `{ broadcast: true }`：交给通知中心 `notifyMessage` 广播，本页也靠接收端弹。
+		*
+		* 通知中心不认识这里任何字段，只管把纯数据传出去；时长 / 位置 / 按钮的解释权全在 toast 层。
 		*/
-		function notify(message, opts) {
-			if (typeof document === "undefined") return;
-			const host = toasterHost();
-			if (host === null) return;
-			if (opts?.position !== void 0) host.setPosition(opts.position);
-			host.show({
+		const DEFAULT_MS = 2600;
+		/** 攒一条卡片提示的载荷（本页提示与广播失败降级共用）。 */
+		function cardPayload(message, opts) {
+			return {
 				message,
 				variant: opts?.variant ?? "info",
 				style: "card",
 				description: opts?.description,
 				durationMs: opts?.durationMs ?? DEFAULT_MS,
-				actions: opts?.actions
-			});
+				actions: opts?.actions,
+				position: opts?.position
+			};
+		}
+		/**
+		* 我们封装好的提示（**推荐项目内使用**）：统一卡片样式（灰/绿/红/黄，跟随明暗皮肤），
+		* 右侧可挂 1–2 个**我们自己的 Button** 动作按钮，点击后自动关闭并调用你的事件。
+		*
+		* **纯投递**：不碰 DOM / React，只把载荷交给本页队列。界面由 `mountToasts()` 挂，
+		* 广播接收由 `connectToasts()` 接 —— 两者都不在本函数里发生。
+		*
+		* 传 `{ broadcast: true }` 走另一条路：交给通知中心广播，同源每个页面各弹一条，
+		* 本页也靠接收端弹 —— 因此**不能带 `actions`**（函数跨不了页），类型上直接禁止。
+		*/
+		function notify(message, opts) {
+			if (opts?.broadcast === true) {
+				broadcastNotify(message, opts);
+				return;
+			}
+			pushToast(cardPayload(message, opts));
+		}
+		/**
+		* 广播路径：本页**不直接弹**，交给通知中心发出去；本页也会收到同一条（`remote: false`），
+		* 由 `notify-bridge` 收进本页队列 —— 所以整条提示只出现一次，开几个页面就各弹一次。
+		*/
+		function broadcastNotify(message, opts) {
+			if (opts.actions !== void 0) throw new Error("notify({ broadcast: true }) cannot carry actions: functions cannot cross pages (pass a plain-data message, or use a local toast)");
+			if (opts.description !== void 0 && typeof opts.description !== "string") throw new TypeError("notify({ broadcast: true }) description must be a string: only plain data crosses pages");
+			if (typeof document === "undefined") {
+				pushToast(cardPayload(message, opts));
+				return;
+			}
+			if (getDefaultTaskProject() === void 0 || !isNotifyBridgeConnected()) {
+				console.warn("[dsh-plugin-core] 广播条件不满足，降级为本页提示（需设默认项目并在页面加载时调 connectToasts()）");
+				pushToast(cardPayload(message, opts));
+				return;
+			}
+			try {
+				notifyMessage(message, {
+					level: opts.variant ?? "info",
+					...opts.description === void 0 ? {} : { detail: opts.description }
+				});
+			} catch (error) {
+				console.warn(`[dsh-plugin-core] notify({ broadcast: true }) 广播未完全送达：${String(error)}`);
+			}
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/layout/SplitGroup.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/layout/split-group-css.generated.js
+		const SPLIT_GROUP_CSS = "\n/* ── 拼接外壳 SplitGroup ──────────────────────────────────────────────\n   职责只有一条：把两个控件在外观上焊成一体（外框 / 圆角 / 中间 1px 分隔 / 整体聚焦圈）。\n   它**不持状态、不出联动回调** —— 选中与联动全走内件自己的 value / onChange\n   （用户 2026-10-28 拍板：外壳不必知道右边那个下拉管什么）。\n\n   ⚠️ 与内件类名有意耦合：内件是 Picker / Segmented 时由下面几条规则把它们自己的\n   边框 / 底色 / 圆角交出来，由外壳统一画。内件改名或改结构要同步改这里，\n   否则会出现双边框、双底色。\n\n   高度不写死：内件自己按 size 档（sm 24 / md 28 / lg 32）撑开，外壳跟着长。\n   两格要等高，就给内件传**同一个 size**。万一两格 size 不一致，外壳内件用 align-items:center\n   居中（不会顶对齐露白，用户 2026-10-28 截图反馈「本月偏上」后的处理）；**别用 height:100%**，\n   它会覆盖三档高度（与 --lg/--sm 同特异性且注入更晚）。\n\n   左格统一灰底（用户 2026-10-28 拍板）：滑块保留自己的灰轨，左格下拉把底色换成\n   surface-sunken；右格保持原样。层次感 = 左格是「档位/范围」，右格是「值」。 */\n   .dshpc-split{display:inline-flex;align-items:stretch;max-width:100%;overflow:hidden;border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n   /* 两格宽度都由内容给；容器再窄也让内件自己省略，不让外壳被撑破 */\n   .dshpc-split > *{min-width:0;max-width:100%;}\n   /* 分隔：相邻兄弟的左描边，不额外插 DOM，hover / focus 时也不会断 */\n   .dshpc-split > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n   /* 整体聚焦：只在**下拉展开**时画一整圈（判据是内件的 aria-expanded，不是 :focus-within）。\n      2026-11-02 用户定稿：滑块那格是「选中」不是「输入聚焦」，鼠标点它不该让整框常亮；\n      而且选取值后焦点会留在按钮上，用 :focus-within 会一直亮着。 */\n   .dshpc-split:has(.dshpc-picker__trigger[aria-expanded='true']){border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n   /* Picker：去掉自身外框与底色；display 改成 flex，消掉 inline-block 行盒带来的基线间隙。\n      注意**不能用 height:100%**：它会和 .dshpc-picker__trigger--lg / --sm 同特异性（都是两个类），\n      且 split-group.css 在 picker.css 之后注入，会把三档高度全吃掉（md/lg 看起来一样大）。\n      改用 align-items:center —— 同 size 时两格自然等高的同时文字垂直居中；万一两格 size 不一致，\n      较矮的格也只是居中、不会顶对齐露白。 */\n   .dshpc-split .dshpc-picker{display:flex;align-items:center;}\n   .dshpc-split .dshpc-picker__trigger{border:0;border-radius:0;background:transparent;}\n   .dshpc-split .dshpc-picker__trigger:focus-visible{outline:0;}\n   /* 左格下拉：灰底（滑块的灰轨是它自己的 --dshpc-seg-track，不在这里覆盖） */\n   .dshpc-split > :first-child .dshpc-picker__trigger{background:var(--dshpc-surface-sunken);}\n   /* Segmented：只去外圆角与描边，灰轨保留；padding 保持 3px 不动 —— 它是高度契约的一部分\n    （3 + item + 3 = control-h）。bordered 那档去掉描边、把让给描边的 1px 还回 padding，\n    否则会比右边矮 2px。 */\n   .dshpc-split .dshpc-seg{border-radius:0;border:0;}\n   .dshpc-split .dshpc-seg--bordered{padding:3px;}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/layout/SplitGroup.js
 		/**
 		* 拼接外壳 —— 两个控件在外观上焊成一体（L2 组件皮肤，P1）
 		*
@@ -55382,7 +55483,7 @@ window.__ModuleLoader__.load({
 			}, props.children);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/Field.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/Field.js
 		/**
 		* 输入类控件 —— **全站唯一实现**（L2 组件皮肤，P3）
 		*
@@ -55449,7 +55550,7 @@ window.__ModuleLoader__.load({
 				className: "dshpc-iwrap__clear",
 				variant: "plain",
 				size,
-				icon: "×",
+				icon: (0, react$1.createElement)(FontIcon, { name: "common.base:guanbi" }),
 				label: t$2("fieldClear"),
 				onMouseDown: (event) => {
 					event.preventDefault();
@@ -55460,7 +55561,10 @@ window.__ModuleLoader__.load({
 			}) : null), props.hint);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/InputGroup.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/input-group-css.generated.js
+		const INPUT_GROUP_CSS = "\n/* ── 组合输入框 InputGroup ─────────────────────────────────────────────\n   输入框 + 后置按钮（一枚或多枚）+ 可选前置标题，焊成一体。\n   与 SplitGroup 同一套外观口径：外框 / 圆角 / 相邻 1px 分隔 / 整体聚焦圈都由外壳画，\n   内件（.dshpc-input / .dshpc-btn / .dshpc-iconbtn）把自己的边框、圆角、外圈交出来。\n\n   高度默认吃 --dshpc-control-h-*（sm 24 / md 28 / lg 32）；调用方要自定义就在根节点\n   内联 height，这里让内件 height:100% 跟上 —— 内件档位高度只有 0,1,0，被本文件的\n   0,2,0 压掉，不会出现「外壳变高了、里面的框还是 32」。\n   （⚠️ 别改成不写 height:100% 只靠 stretch：input 有确定高度时 flex 不会拉伸它。） */\n/* min-width：输入格是 flex:1，没有它时 inline-flex 按占位文字宽收得很窄（搜索框 + 按钮的典型用法会难看）。\n   要更宽 / 更窄由调用方在外面套壳或给 className，不许在这里写死 max-width。 */\n.dshpc-igroup{display:inline-flex;align-items:stretch;min-width:200px;max-width:100%;box-sizing:border-box;overflow:hidden;\n  border:1px solid var(--dshpc-border-heavy);border-radius:var(--dshpc-radius-md);background:var(--dshpc-surface-1);}\n.dshpc-igroup--sm{height:var(--dshpc-control-h-sm);}\n.dshpc-igroup--md{height:var(--dshpc-control-h-md);}\n.dshpc-igroup--lg{height:var(--dshpc-control-h-lg);}\n.dshpc-igroup--error{border-color:var(--dshpc-danger);}\n/* 整体聚焦：内件自己的焦点圈交出来，由外壳画一整圈（各画各的会变成格内半圈） */\n.dshpc-igroup:focus-within{border-color:var(--dshpc-focus);box-shadow:0 0 0 1px var(--dshpc-focus);}\n\n/* 前置标题：与输入框同格，灰底区分（与 SplitGroup 左格同一口径） */\n.dshpc-igroup__label{display:inline-flex;align-items:center;flex:none;padding:0 8px;white-space:nowrap;\n  background:var(--dshpc-surface-sunken);color:var(--dshpc-fg-2);\n  font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);}\n.dshpc-igroup--md .dshpc-igroup__label,.dshpc-igroup--lg .dshpc-igroup__label{font-size:var(--dshpc-font-md);line-height:var(--dshpc-line-md);}\n\n/* 输入格：交出边框 / 圆角 / 底色 / 焦点圈；宽度交给 flex（原生 width:100% 会和 flex-basis 打架） */\n.dshpc-igroup > .dshpc-input{flex:1 1 auto;width:auto;min-width:0;height:100%;border:0;border-radius:0;background:transparent;}\n.dshpc-igroup > .dshpc-input:focus{box-shadow:none;}\n\n/* 按钮格：交出边框与圆角；实心底色保留（右侧「确定」该有重量）。\n   纯图标钮本身是固定宽的方块，这里改成按高度撑出的正方形，自定义高度时才不会变成竖长条。 */\n.dshpc-igroup > .dshpc-btn,.dshpc-igroup > .dshpc-iconbtn{flex:none;height:100%;border-radius:0;}\n.dshpc-igroup > .dshpc-iconbtn{width:auto;aspect-ratio:1;}\n.dshpc-igroup > .dshpc-btn{border:0;}\n\n/* 分隔线：相邻兄弟的左描边，不额外插 DOM。后两条是给「清过边框」的格子补回来的，\n   必须写成 0,2,0 且写在上面的 border:0 之后 —— 否则被 border:0 压掉，格子之间没分隔。 */\n.dshpc-igroup > * + *{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-input{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n.dshpc-igroup > * + .dshpc-btn{box-sizing:border-box;border-left:1px solid var(--dshpc-border);}\n";
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/InputGroup.js
 		/**
 		* 组合输入框 —— 输入框 + 后置按钮组（+ 可选前置标题）焊成一体（L2 组件皮肤，P3）
 		*
@@ -55531,7 +55635,7 @@ window.__ModuleLoader__.load({
 				key: "undo",
 				variant: "plain",
 				size,
-				icon: "↶",
+				icon: (0, react$1.createElement)(FontIcon, { name: "common.base:chexiao" }),
 				label: undoLabel,
 				disabled: disabled === true || undoStack.length === 0,
 				onClick: undo
@@ -55576,9 +55680,9 @@ window.__ModuleLoader__.load({
 			}, nodes), props.hint);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/Textarea.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/Textarea.js
 		/**
-		* 多行文本输入（P3 输入类家族唯一实现；皮肤见 controls-css.ts 的 `.dshpc-textarea`）。
+		* 多行文本输入（P3 输入类家族唯一实现；皮肤见 `field.css` 的 `.dshpc-textarea`）。
 		*
 		* 以前提示词框是 `task-editor.tsx` 里手写的 `<textarea>` + 业务 CSS `.dshpc-ed-prompt`；
 		* 现上提为基础层件（U20 #6，2026-10-05），业务文件只 `import { Textarea }`。
@@ -55605,6 +55709,9 @@ window.__ModuleLoader__.load({
 			if (props.hint === void 0) return box;
 			return (0, react$1.createElement)("span", { className: "dshpc-fieldwrap dshpc-fieldwrap--block" }, box, (0, react$1.createElement)(FieldHint, { text: props.hint }));
 		}
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/layout/quick-toolbar-css.generated.js
+		const QUICK_TOOLBAR_CSS = "/* 快捷工具栏：右侧悬浮的一列独立圆钮。\n   横向 left / right 与 bottom、按钮直径、纵向间距由组件按 props 实时写入 style；\n   这里只放与位置无关的皮肤。 */\n.dshpc-quick-toolbar{\n  position:fixed;\n  z-index:var(--dshpc-z-dock);\n  display:flex;\n  flex-direction:column;\n  align-items:center;\n}\n/* 出现 / 消失：挂载即淡入，退场先播 fade-out（组件延迟卸载，见 QuickToolbar.ts）。 */\n@keyframes dshpc-quick-toolbar-in{\n  from{opacity:0;transform:translateY(6px) scale(.9);}\n  to{opacity:1;transform:none;}\n}\n@keyframes dshpc-quick-toolbar-out{\n  from{opacity:1;transform:none;}\n  to{opacity:0;transform:translateY(6px) scale(.9);}\n}\n.dshpc-quick-toolbar__item{\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  padding:0;\n  margin:0;\n  box-sizing:border-box;\n  border:1px solid var(--dshpc-border);\n  border-radius:50%;\n  /* 自定义底色 / 字色只写这两个变量（见 QuickToolbar.ts），hover/active 才能跟着混色。 */\n  background:var(--dshpc-quick-toolbar-bg, var(--dshpc-solid));\n  color:var(--dshpc-quick-toolbar-fg, var(--dshpc-on-solid));\n  box-shadow:var(--dshpc-shadow-2);\n  cursor:pointer;\n  animation:dshpc-quick-toolbar-in var(--dshpc-dur) var(--dshpc-ease);\n  transition:background-color var(--dshpc-dur-fast) var(--dshpc-ease),\n             color var(--dshpc-dur-fast) var(--dshpc-ease),\n             transform var(--dshpc-dur-fast) var(--dshpc-ease);\n  font-size:var(--dshpc-font-lg);\n}\n/* 圆钮里的图标走核心 1em 基线（button.css:112）：调用方不必、也不该再传 size 放大。 */\n.dshpc-quick-toolbar__item svg{display:block;width:1em;height:1em;flex:none;}\n/* 退场期保留占位，避免同列其他按钮瞬时跳位。 */\n.dshpc-quick-toolbar__item.is-leaving{\n  animation:dshpc-quick-toolbar-out var(--dshpc-dur) var(--dshpc-ease) forwards;\n  pointer-events:none;\n}\n/* 变色与核心 Button 实心档同一套：按 --dshpc-fg 混出 hover / active 底色（自定义 color 也跟随）。 */\n.dshpc-quick-toolbar__item:hover{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 82%, var(--dshpc-fg));\n}\n.dshpc-quick-toolbar__item:active{\n  background:color-mix(in srgb, var(--dshpc-quick-toolbar-bg, var(--dshpc-solid)) 70%, var(--dshpc-fg));\n  transform:scale(.94);\n}\n.dshpc-quick-toolbar__item:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:2px;}\n@media (prefers-reduced-motion: reduce){\n  .dshpc-quick-toolbar__item{transition:none;transform:none;animation:none;}\n  .dshpc-quick-toolbar__item.is-leaving{animation:none;opacity:0;}\n}\n";
 		/**
 		* 算出工具栏左缘的 x 坐标。
 		*
@@ -55637,7 +55744,7 @@ window.__ModuleLoader__.load({
 			return true;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/layout/QuickToolbar.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/layout/QuickToolbar.js
 		/**
 		* 快捷工具栏（UI 基础层）：**右侧悬浮的一列圆钮**，内置「回到顶部」，并可挂自定义按钮。
 		*
@@ -55846,7 +55953,10 @@ window.__ModuleLoader__.load({
 						},
 						"aria-label": label,
 						onClick: () => scrollToTop(resolveScrollTarget(props.scrollContainer, ref.current))
-					}, (0, react$1.createElement)(Chevron, { dir: "up" }));
+					}, (0, react$1.createElement)(Chevron, {
+						dir: "up",
+						size: 8
+					}));
 				}
 				const item = entry.item;
 				if (item === void 0) return null;
@@ -56947,7 +57057,7 @@ window.__ModuleLoader__.load({
 			return String(n);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/official-classes.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/official-classes.js
 		/** 官方注入 style 标签的 data-plugin-css 包前缀（chat 主视图 + ui-tool / ui-skill 工具卡 + ui-deliverables + ui-approval 审批卡）。 */
 		const CSS_PKG_PREFIXES = [
 			"@deepseek-ai/dsh-client-ui-chat/",
@@ -57042,7 +57152,7 @@ window.__ModuleLoader__.load({
 			return discoverOfficialClasses().get(module)?.get(semantic) ?? null;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChatNodeSeat.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChatNodeSeat.js
 		/**
 		* 官方 TURN_PROCESS_INDEPENDENT_KINDS（lib/client.js:1525）：这些 kind 永远不进过程折叠区。
 		*/
@@ -57133,7 +57243,7 @@ window.__ModuleLoader__.load({
 			}, inner);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/process-groups.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/process-groups.js
 		/** 官方 INDEPENDENT（process-groups.js:10565；注意与 ChatNodeSeat 的清单不同）。 */
 		const INDEPENDENT = /* @__PURE__ */ new Set([
 			"user",
@@ -57366,7 +57476,7 @@ window.__ModuleLoader__.load({
 			return summary.counts.length > 3 ? t("stepProcessMore", { title }) : title;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChatGroupSeat.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChatGroupSeat.js
 		/** 官方 PROCESS_ICONS（lib/client.js:2187-2201）；工具行图标同源（edit/write=铅笔、generic=sparkle）。 */
 		const PROCESS_ICONS = {
 			thinking: official_exports.IconThinkOutlineRegular,
@@ -57492,10 +57602,10 @@ window.__ModuleLoader__.load({
 			})))));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/session-css.generated.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/session-css.generated.js
 		const SESSION_CSS = "/* 会话预览（SessionViewModal）自绘样式：只装本包自己的组件（暂存输入区 / fork / 探针等）\n   + 两个稳定钩子类（dshpc-sv-frame / dshpc-sv-scroll）。\n   已删：ChangedFiles 卡与 FileDiff 的全部自绘规则（2026-10-24）——官方 ChangedFiles /\n   FileDiff 模块类由 officialClass() 运行时发现并挂在元素上，本包不再有一行兜底。\n   ⚠️ 2026-10-23 起不再有官方类兜底：镜像官方组件的元素一律挂官方 CSS-module 类名\n   （officialClass() 运行时发现，取不到 = 空类、裸结构不白屏）——本包只跑 DSH 宿主、官方样式必在场，\n   自绘一一对应是死代码。要改官方观感走 token 覆盖 / 双类名钩子（见 ChatView.ts 头注），别在这加兜底。\n   类名固定 dshpc-sv-*；颜色一律走 --dshpc-* token（明暗自适应）。\n   外壳（遮罩 / 面板 / 头部 / 关闭钮）= 核心 Modal（size lg）。 */\n/* 会话区 = 普通纵向流：不设高度、不自己滚（滚动与内距归核心 Modal body，用户 2026-10-22 口径）。 */\n.dshpc-sv{display:flex;flex-direction:column;min-width:0;gap:10px}\n\n/* 正文两端插槽：只给布局（宽度不被内容撑破），背景 / 边框 / 圆角 / 阴影归调用方自己。\n   不传时不渲染元素 ⇒ 不会多出一个 10px gap。\n   顶端槽**自带固定下边距**：相邻项自己的 margin 各不相同（turn-trigger / 用户气泡 / 提示条），\n   靠它算间距会漂；这里一条规则定死，要调只动这一个值。\n   底端槽在 TurnTailNodeView 的 tailSlot 里，上下间距由该 root 的 gap 负责。 */\n.dshpc-sv-body-header,.dshpc-sv-body-footer{min-width:0}\n\n.dshpc-sv-body-header{margin-bottom:var(--dshpc-space-3)}\n\n/* 官方样式未命中时的可见探针（挂在头部副标题行，不占正文）。 */\n.dshpc-sv-probe{font-size:var(--dshpc-font-xs);color:var(--dshpc-warning)}\n\n/* 头部归档标识（官方归档图标 + 「已归档」）。 */\n.dshpc-sv-archived{display:inline-flex;align-items:center;gap:4px;font-size:var(--dshpc-font-xs);font-weight:400;color:var(--dshpc-fg-3)}\n\n/* 内距与滚动全部让给核心 Modal body ⇒ 这里把官方 ChatView.frame / scroll 的内距、\n   overflow、高度一律归零（双类名 0,2,0 压过 CSS module，不靠注入顺序）。\n   ⚠️ 必须同时把 flex 收掉：官方 scroll 是 flex:1（basis=0），在**自动高**的容器里会把\n   会话区压成 0 高 —— 这正是「内容自管高度」的老毛病，别再放回来。 */\n.dshpc-sv-frame.dshpc-sv-frame{padding-top:0;padding-bottom:0;}\n\n/* 官方组件拿 --dsw-alias-bg-base 做 sticky 遮挡底（思考行展开头等），取值是宿主 app\n   全局基底色，与弹窗面板底不同层 ⇒ 会话区内改指向弹窗面板底（背景保留、颜色贴合）。 */\n.dshpc-sv-frame.dshpc-sv-frame{--dsw-alias-bg-base:var(--dshpc-surface-1);}\n\n.dshpc-sv-scroll.dshpc-sv-scroll{padding:0;overflow:visible;height:auto;max-height:none;flex:none;}\n\n/* 会话区保底：高度由内容决定（撑开由 Modal body 滚）。 */\n.dshpc-sv-chat{flex:none;min-height:0;}\n\n\n.dshpc-sv-assistant{align-self:stretch;font-size:var(--dshpc-font-lg);line-height:1.7;word-break:break-word;}\n\n.dshpc-sv-image{align-self:flex-start;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3);border:1px dashed var(--dshpc-border);border-radius:var(--dshpc-radius-sm);padding:4px 10px;}\n\n/* 工具卡根（SessionViewModal legacy 兜底渲染直接用；正常 keyed 路径一律挂官方 ToolRow 类）。 */\n.dshpc-sv-tool{flex-direction:column;display:flex;}\n\n.dshpc-sv-notice{align-self:center;font-size:var(--dshpc-font-sm);color:var(--dshpc-fg-3);padding:2px 8px;}\n\n\n.dshpc-sv-forkerr{margin:0;font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);color:var(--dshpc-danger);word-break:break-word;}\n\n.dshpc-sv-forktext{margin:0;font-size:var(--dshpc-font-sm);line-height:var(--dshpc-line-sm);color:var(--dshpc-fg-2);}\n\n/* ── 暂存输入区（期4：打字 → 确定 → fork 带话跳官方视图）── */\n.dshpc-sv-composer{flex:1;display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;}\n\n.dshpc-sv-composer textarea{flex:1;min-width:0;resize:none;font:inherit;font-size:var(--dshpc-font-lg);line-height:var(--dshpc-line-lg);color:var(--dshpc-fg);background:var(--dshpc-surface-2);border:1px solid var(--dshpc-border);border-radius:var(--dshpc-radius-md);padding:8px 12px;min-height:40px;max-height:120px;}\n\n.dshpc-sv-composer textarea:focus-visible{outline:2px solid var(--dshpc-focus);outline-offset:-1px;}\n\n.dshpc-sv-composer-hint{flex:none;font-size:var(--dshpc-font-xs);color:var(--dshpc-fg-3);padding-bottom:10px;white-space:nowrap;}\n/* 弹窗底栏纵向栈：审批卡 + 暂存输入框（Modal footer 本身是横向 flex，两块必须叠起来）。 */\n.dshpc-sv-foot{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:8px;}\n\n/* 审批卡外壳（官方 ui-approval 的 ApprovalPanel）：类名全挂官方 module，这里只补官方会话 body\n   （ui-conversation 0.2.2-rc.1 的 .body / .embeddedBody）才有的两个布局变量——弹窗里没有那层，\n   缺了官方 padding / max-width 整条声明失效。用户口径「和官方一模一样」= 卡片占满、不额外缩进，\n   故 content-width 给 100%（官方 920 上限会把 1120 宽的弹窗夹窄），clearance 取 -16px 抵消官方\n   calc(var(--dsh-composer-side-clearance) + 16px) 那 16px —— 弹窗的留白由 Modal footer 自己出。 */\n/* 卡片四周留白对齐：弹窗底栏内距 18px = 卡片左右留白；下方 = 18 - |margin-bottom| + 官方 root 的 12px，\n   取 -12px 时下方同为 18px（与左右等距）。想更贴底部就把 -12px 调大（下限 -18px = 官方那 12px）。 */\n.dshpc-sv-approval{--dsh-chat-content-width:100%;--dsh-composer-side-clearance:-16px;--dsh-composer-text-max-height:336px;flex:none;display:flex;flex-direction:column;margin-bottom:-12px;}\n\n/* 题目面板外壳（官方 ui-user-questions 的 QuestionComposer）：同上，类名全挂官方 module，\n   这里只补会话 body 才有的布局变量。官方 .frame 的 padding 是 6px calc(clearance+16px) 10px ⇒\n   clearance 取 -16px 后左右归零、上下各 6/10px；下方再收回 10px，与左右留白同宽（18px）。 */\n.dshpc-sv-question{--dsh-chat-content-width:100%;--dsh-composer-side-clearance:-16px;flex:none;display:flex;flex-direction:column;margin-bottom:-10px;}\n";
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChatView.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChatView.js
 		/** 会话区骨架：frame > root > scroll > column（类名一律取官方 ChatView.module.css，取不到 = 空类）。
 		*
 		*  `dshpc-sv-frame` / `dshpc-sv-scroll` = 本包**稳定钩子类**（不走 officialClass 发现，官方类命中时也照样挂）：
@@ -57589,15 +57699,30 @@ window.__ModuleLoader__.load({
 		function ChatCallRow(props) {
 			return (0, react$1.createElement)("div", { className: officialClass("ChatView", "callRow") ?? "" }, props.children);
 		}
-		/** 「加载更早记录」按钮（官方 older：按钮 4px 12px / 12px 字号 / radius-sm / 底色 interactive-bg-hover-solid）。 */
+		const CHAT_HISTORY_STATES = [
+			"more",
+			"loading",
+			"processing",
+			"error",
+			"start"
+		];
 		function ChatOlderButton(props) {
-			return (0, react$1.createElement)("div", { className: officialClass("ChatView", "older") ?? "" }, (0, react$1.createElement)("button", {
+			const current = !props.hasMore ? "start" : props.loadingOlder === true ? "loading" : props.historyLoadStatus === "error" ? "error" : props.historyInputHeld === true ? "more" : props.historyProcessing === true ? "processing" : "more";
+			return (0, react$1.createElement)("div", {
+				className: officialClass("ChatView", "older") ?? "",
+				"data-chat-history": props.historyLoadStatus
+			}, (0, react$1.createElement)("button", {
 				type: "button",
+				disabled: !props.hasMore,
 				onClick: props.onClick
-			}, props.label));
+			}, CHAT_HISTORY_STATES.map((state) => (0, react$1.createElement)("span", {
+				key: state,
+				"aria-hidden": state !== current,
+				className: state === current ? void 0 : officialClass("ChatView", "historyHidden") ?? void 0
+			}, props.labels[state]))));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/MessageImage.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/MessageImage.js
 		/** 官方 singleFit（client.js:2168-2184）：长边 240px，显示比夹在 [0.25, 4]，且不放大超过原图。 */
 		function singleFit(dimensions) {
 			const natural = dimensions.width / dimensions.height;
@@ -57708,7 +57833,7 @@ window.__ModuleLoader__.load({
 			})));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/AskCard.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/AskCard.js
 		const isRecord$3 = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 		function parseJson(text) {
 			try {
@@ -57838,7 +57963,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/detail-i18n.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/detail-i18n.js
 		const DETAIL_KEYS = {
 			"detail.agent.reply": "detailAgentReply",
 			"detail.agents.count": "detailAgentsCount",
@@ -57992,7 +58117,7 @@ window.__ModuleLoader__.load({
 			return mapped === void 0 ? key : params === void 0 ? t(mapped) : t(mapped, params);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/control-details.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/control-details.js
 		const isRecord$2 = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 		const arg = (args, key) => typeof args[key] === "string" ? args[key] : "";
 		function detailJson$1(text) {
@@ -58747,7 +58872,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ToolDetails.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ToolDetails.js
 		const isRecord$1 = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 		const nonempty = (value) => typeof value === "string" && value.trim() !== "";
 		const count = (value) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
@@ -59026,7 +59151,7 @@ window.__ModuleLoader__.load({
 			})))) : null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/GenericCommandCard.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/GenericCommandCard.js
 		/** 官方 TOOL_VARIANTS（tool client.js:83-100，cordis_* 一并保留）。 */
 		const TOOL_VARIANTS = {
 			bash: "bash",
@@ -59794,12 +59919,80 @@ window.__ModuleLoader__.load({
 				"aria-hidden": true
 			}), label);
 		}
+		const FILE_TARGET_MOVE = " → ";
+		const PATCH_BEGIN = "*** Begin Patch";
+		const PATCH_END = "*** End Patch";
+		const PATCH_ADD = "*** Add File: ";
+		const PATCH_DELETE = "*** Delete File: ";
+		const PATCH_UPDATE = "*** Update File: ";
+		const PATCH_MOVE = "*** Move to: ";
 		/**
-		* 工具调用 / 命令卡（官方 GenericToolCard + ToolRow 镜像）。
-		* 折叠行 = 图标 + 标题 [+ 分隔点 + 摘要（文件路径链接化）+ 后缀]；展开体按官方分发链。
+		* 官方 tool-call-model.ts:380 `patch = toolName === 'apply_patch' ? patchSummary(block.args, …)`：
+		* patch 原文只来自 apply_patch 的 `input` 参数（`block.args.text('input')`），且只在参数完整时成立。
+		* 本仓 argsRaw 是参数 JSON 文本，流式半截 / 非法 JSON 一律按官方 `args.complete('input') === false` 处理。
 		*/
+		function patchInputOf(name, argsRaw) {
+			if (name !== "apply_patch") return void 0;
+			const parsed = parseArgs(argsRaw);
+			if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return void 0;
+			const input = parsed.input;
+			return typeof input === "string" && input !== "" ? input : void 0;
+		}
+		/** 官方 `@deepseek-ai/dsh-util-workspace-path` src/index.ts:17-19 的等价判定（POSIX / Windows 盘符 / UNC）。 */
+		function isAbsoluteWorkspacePath(path) {
+			return path.startsWith("/") || /^[A-Za-z]:[/\\]/.test(path) || path.startsWith("\\\\");
+		}
+		/**
+		* 官方 tool-call-model.ts:311-330 `patchSummary` 的等价复刻：parsePatch 的文件头操作 → 摘要目标。
+		* parsePatch 实现体属宿主 `@deepseek-ai/dsh-fs-patch`（lib/client.js 内），本仓只复刻其文件头解析；
+		* malformed patch 与官方一样返回空目标（PatchParseError ⇒ operations=[]）。
+		* shortcut: 官方 display() 按 cwd / home 缩写路径，只读预览无这两个上下文，直接显示原始路径。
+		*/
+		function patchFileTargets(patch) {
+			if (patch === void 0) return [];
+			const lines = patch.trim().split(/\r?\n/);
+			if (lines[0]?.trim() !== PATCH_BEGIN || lines[lines.length - 1]?.trim() !== PATCH_END) return [];
+			const operations = [];
+			for (let index = 1; index < lines.length - 1; index += 1) {
+				const header = (lines[index] ?? "").trim();
+				const lineNumber = index + 1;
+				if (header.startsWith(PATCH_ADD)) operations.push({
+					lineNumber,
+					kind: "add",
+					path: header.slice(14)
+				});
+				else if (header.startsWith(PATCH_DELETE)) operations.push({
+					lineNumber,
+					kind: "delete",
+					path: header.slice(17)
+				});
+				else if (header.startsWith(PATCH_UPDATE)) operations.push({
+					lineNumber,
+					kind: "update",
+					path: header.slice(17)
+				});
+				else if (header.startsWith(PATCH_MOVE)) {
+					const last = operations[operations.length - 1];
+					if (last?.kind === "update" && last.moveTo === void 0) last.moveTo = header.slice(13);
+				}
+			}
+			return operations.map((op) => {
+				const moveTo = op.kind === "update" ? op.moveTo : void 0;
+				return moveTo === void 0 ? {
+					id: op.lineNumber,
+					label: op.path,
+					filePath: op.kind === "delete" ? void 0 : op.path
+				} : {
+					id: op.lineNumber,
+					from: op.path,
+					label: moveTo,
+					filePath: moveTo
+				};
+			});
+		}
 		function GenericCommandCard(props) {
-			const { name, argsRaw, output, isError, meta, settled = true, phase, interrupted, errorCode, onOpenFile, image, loadImage, t } = props;
+			const { name, argsRaw, output, isError, meta, settled = true, phase, interrupted, errorCode, fileTargetContextMenuProps, onOpenFile, image, loadImage, t } = props;
+			const patchInput = patchInputOf(name, argsRaw);
 			const [expanded, setExpanded] = (0, react$1.useState)(false);
 			const variant = classifyTool(name);
 			const titleKey = toolTitleKey(name);
@@ -59901,6 +60094,13 @@ window.__ModuleLoader__.load({
 					return;
 				}
 			})();
+			const patchTargets = patchInput === void 0 ? [] : patchFileTargets(patchInput);
+			const usableArgumentPath = (path) => isAbsoluteWorkspacePath(path) || settled && !isError;
+			const fileTargets = patchInput !== void 0 && (patchTargets.length > 1 || patchTargets.some((target) => target.from !== void 0)) ? patchTargets.map((target) => target.filePath === void 0 || usableArgumentPath(target.filePath) ? target : {
+				...target,
+				filePath: void 0
+			}) : void 0;
+			const openTarget = rowState === "ok" && fileTargets?.some((target) => target.filePath !== void 0) === true ? onOpenFile : void 0;
 			const inputRaw = argsRaw === "" || filePath !== void 0 ? null : argsRaw;
 			const outputText = output === "" ? null : output;
 			const card = terminal !== null ? "terminal" : diffs !== null ? "diff" : read !== null ? "read" : image !== void 0 ? "image" : search !== null ? "search" : web !== null ? "web" : details !== null ? "details" : null;
@@ -59916,18 +60116,36 @@ window.__ModuleLoader__.load({
 				terminal: terminalLabels(t)
 			}), [t]);
 			const statusText = rowState === "preparing" ? t("rowPreparing") : rowState === "running" ? t("rowRunning") : rowState === "error" ? t("rowFailed") : rowState === "stopped" ? t("rowStopped") : null;
-			const summaryClassName = `${officialClass("ToolRow", "summary") ?? ""}${rowState === "error" ? ` ${officialClass("ToolRow", "errorSummary") ?? ""}` : ""}${rowState === "stopped" ? ` ${officialClass("ToolRow", "stoppedSummary") ?? ""}` : ""}`;
+			const summaryClassName = `${officialClass("ToolRow", "summary") ?? ""}${exitLabel === null && rowState === "error" ? ` ${officialClass("ToolRow", "errorSummary") ?? ""}` : ""}${exitLabel === null && rowState === "stopped" ? ` ${officialClass("ToolRow", "stoppedSummary") ?? ""}` : ""}`;
 			const collapsedContent = summaryText === "" ? void 0 : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("span", {
 				className: officialClass("ToolRow", "sep") ?? "",
+				"data-shimmer-decoration": true,
 				"aria-hidden": true
-			}), openFile !== void 0 ? (0, react$1.createElement)("button", {
+			}), exitLabel === null && fileTargets !== void 0 && openTarget !== void 0 ? (0, react$1.createElement)("span", { className: officialClass("ToolRow", "fileLinks") ?? "" }, fileTargets.map((target, index) => {
+				const path = target.filePath;
+				const menu = path === void 0 ? void 0 : fileTargetContextMenuProps?.(path);
+				return (0, react$1.createElement)(react$1.Fragment, { key: target.id }, index > 0 ? ", " : null, target.from === void 0 ? null : `${target.from}${FILE_TARGET_MOVE}`, path === void 0 ? target.label : (0, react$1.createElement)("button", {
+					type: "button",
+					className: officialClass("ToolRow", "fileTargetLink") ?? "",
+					...menu,
+					onClick: (event) => {
+						stopLinkClick(event);
+						openTarget(path);
+					},
+					onKeyDown: (event) => {
+						summaryLinkKeyDown(event);
+						const forwarded = menu?.onKeyDown;
+						if (typeof forwarded === "function") forwarded(event);
+					}
+				}, target.label));
+			})) : exitLabel === null && openFile !== void 0 ? (0, react$1.createElement)("button", {
 				type: "button",
 				className: officialClass("ToolRow", "fileLink") ?? "",
 				onClick: (event) => {
 					stopLinkClick(event);
 					openFile();
 				}
-			}, (0, react$1.createElement)(official_exports.TextShimmer, { active: running }, summaryText)) : linkHref !== void 0 ? (0, react$1.createElement)("a", {
+			}, (0, react$1.createElement)(official_exports.TextShimmer, { active: running }, summaryText)) : exitLabel === null && linkHref !== void 0 ? (0, react$1.createElement)("a", {
 				className: officialClass("ToolRow", "fileLink") ?? "",
 				href: linkHref,
 				target: "_blank",
@@ -60033,7 +60251,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/CommandCard.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/CommandCard.js
 		/** 官方 GenericCommandCard 模块类（宿主必注入；缺席 = 空串，裸结构不白屏，不写自绘兜底）。 */
 		const gcc = (semantic) => officialClass("GenericCommandCard", semantic) ?? "";
 		/** 官方 stateOf：未决 = running；outcome.kind==='error' = error；否则 ok。 */
@@ -60085,7 +60303,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/message-chrome.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/message-chrome.js
 		/**
 		* 官方 formatRunDuration（0.2.x，lib/client.js:5067-5095）：整秒；≥1 分带分；≥1 小时带小时。
 		* 单位是独立片段（`duration.hourUnit` / `minuteUnit` / `secondUnit`），不是一条带占位的模板。
@@ -60213,7 +60431,7 @@ window.__ModuleLoader__.load({
 			return `99.${"9".repeat(distinguishingPlaces - 1)}${10 - roundedLoss}`;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/MessageIconActions.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/MessageIconActions.js
 		/** 官方「已复制」复位时间。 */
 		const COPIED_RESET_MS$1 = 1e3;
 		/** 消息操作行（复制 / 分支 / 用量 / 时钟）。 */
@@ -60272,7 +60490,7 @@ window.__ModuleLoader__.load({
 			}, t("branchUnavailableLabel")), clock === "end" ? (0, react$1.createElement)("span", { className: officialClass("MessageIconActions", "endInfo") ?? "" }, usageAction, clockEl) : usageAction);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/MessageItem.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/MessageItem.js
 		/** 助手正文：官方 DOM = AssistantMarkdown.root > body > MarkdownText（chat lib/client.js:8370-8378）。
 		* root 定 14px/24px，body 定 flex-column + 块间 gap 16px（宽表格规则也挂在 body 上）。
 		* U11：fileMentions 词表就位时行内 code 文件引用渲成可点链接（官方语义：resolve 不出保持惰性 code）。 */
@@ -60455,7 +60673,7 @@ window.__ModuleLoader__.load({
 			}), (0, react$1.createElement)("div", { className: officialClass("MessageItem", "turnErrorCopy") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("MessageItem", "maxTokensTitle") ?? "" }, t("maxTokensTitle")), (0, react$1.createElement)("span", { className: officialClass("MessageItem", "turnErrorMessage") ?? "" }, t("maxTokensHint"))));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/BashRow.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/BashRow.js
 		/** 官方 BASH_ICON（tool client.js:2469）：终端图标 14px。 */
 		const BASH_ICON = (0, react$1.createElement)(official_exports.IconApiOutlineRegular, { size: 14 });
 		const firstLine$3 = (text) => {
@@ -60563,16 +60781,13 @@ window.__ModuleLoader__.load({
 			}, outputText)) : null)) : void 0);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ApprovalPanel.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ApprovalPanel.js
 		const cls$2 = (semantic) => officialClass("ApprovalPanel", semantic) ?? "";
-		/** 官方 headline：请求方本地化文案优先，否则退「工具 X 请求越权执行」，再否则用审计 reason。 */
-		function headline(approval, t) {
-			const shown = approval.displayReason;
-			if (shown !== void 0) {
-				const text = shown[getLocale()] ?? shown.en;
-				if (typeof text === "string" && text !== "") return text;
-			}
-			return approval.reason ?? t("approvalEscalation", { toolName: approval.toolName });
+		function defaultResolveReason(shown) {
+			return shown[getLocale()] ?? shown.en;
+		}
+		function headline(approval, t, resolveReason) {
+			return (approval.displayReason === void 0 ? approval.reason : resolveReason(approval.displayReason)) ?? t("approvalEscalation", { toolName: approval.toolName });
 		}
 		/** 官方 ApprovalCommand（ui-chat lib/client.js:151-172）：callId → tool-call 起始节点的 args.command。 */
 		function approvalCommand(order, read, callId) {
@@ -60599,7 +60814,8 @@ window.__ModuleLoader__.load({
 		* shortcut: 未移植官方 root 上的 Enter/Esc 快捷键（要求焦点在卡内），需要键盘作答时补。
 		*/
 		function ApprovalPanelMirror(props) {
-			const { approval, command, t } = props;
+			const { approval, command, subject, description, t } = props;
+			const resolveReason = props.resolveReason ?? defaultResolveReason;
 			const [answered, setAnswered] = (0, react$1.useState)(false);
 			const waiting = (0, react$1.useRef)(false);
 			const answer = (outcome) => {
@@ -60615,13 +60831,19 @@ window.__ModuleLoader__.load({
 				className: cls$2("root"),
 				"data-approval-key": approval.key,
 				"aria-busy": answered
-			}, (0, react$1.createElement)("div", { className: cls$2("card") }, (0, react$1.createElement)("div", { className: cls$2("strip") }, (0, react$1.createElement)(official_exports.StateDot, { state: answered ? "ongoing" : "warning" }), t("approvalWaiting")), (0, react$1.createElement)("div", {
+			}, (0, react$1.createElement)("div", { className: subject === void 0 ? cls$2("card") : `${cls$2("card")} ${cls$2("withSubject")}` }, (0, react$1.createElement)("div", { className: cls$2("strip") }, (0, react$1.createElement)(official_exports.StateDot, { state: answered ? "ongoing" : "warning" }), t("approvalWaiting")), (0, react$1.createElement)("div", {
 				className: cls$2("body"),
 				"data-approval-scroll": "",
 				tabIndex: 0,
 				role: "group",
 				"aria-label": t("approvalDetailAria")
-			}, (0, react$1.createElement)("div", { className: cls$2("headline") }, headline(approval, t)), command === void 0 ? null : (0, react$1.createElement)("div", { className: cls$2("command") }, command)), (0, react$1.createElement)("div", { className: cls$2("actionRow") }, (0, react$1.createElement)(official_exports.Button, {
+			}, subject === void 0 ? null : (0, react$1.createElement)("div", { className: cls$2("subject") }, subject.icon === void 0 ? null : (0, react$1.createElement)("img", {
+				src: subject.icon,
+				alt: "",
+				width: 40,
+				height: 40,
+				draggable: false
+			}), (0, react$1.createElement)("strong", null, subject.name)), (0, react$1.createElement)("div", { className: cls$2("heading") }, (0, react$1.createElement)("div", { className: cls$2("headline") }, headline(approval, t, resolveReason))), description === void 0 ? null : (0, react$1.createElement)("p", { className: cls$2("description") }, description), command === void 0 ? null : (0, react$1.createElement)("div", { className: cls$2("command") }, command)), (0, react$1.createElement)("div", { className: cls$2("actionRow") }, (0, react$1.createElement)(official_exports.Button, {
 				variant: "outline",
 				className: cls$2("reject"),
 				disabled: answered,
@@ -60637,7 +60859,7 @@ window.__ModuleLoader__.load({
 			}, t("approvalAllowOnce")))));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/pending-questions.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/pending-questions.js
 		/**
 		* 从 chat 快照直接读「还没结算的 ask_user_question 调用」——投影缺席或暂时为空时的等价来源。
 		* 官方 tool 卡就是这么判 pending 的（`model.state === 'running'`，ui-tool lib/client.js:2369），
@@ -60868,10 +61090,14 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/QuestionPanel.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/QuestionPanel.js
 		const cls$1 = (...names) => names.filter((name) => typeof name === "string" && name !== "").join(" ");
 		/** 取一个官方题面板类名；官方样式未注入时留空（不写死哈希，也不自绘顶替）。 */
 		const c$1 = (semantic) => officialClass("QuestionComposer", semantic) ?? "";
+		/** 官方 QuestionComposer.tsx:637-642：单选已选中某项 ⇒ 抑制自定义输入行的 focus-within 高亮。 */
+		function customRowYielded(multiSelect, selectedCount) {
+			return multiSelect !== true && selectedCount > 0;
+		}
 		const EMPTY_COPIES = /* @__PURE__ */ new Set();
 		/**
 		* 待答题目面板（官方 QuestionComposer 的 1:1 复刻）。
@@ -61143,7 +61369,7 @@ window.__ModuleLoader__.load({
 						toggleCopy(key);
 					}
 				}, isExpanded ? (0, react$1.createElement)(official_exports.IconChevronUpOutlineRegular) : (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular)));
-			}), hasOptions ? (0, react$1.createElement)("div", { className: cls$1(c$1("customRow"), draft.custom !== "" && c$1("customRowActive")) }, current.multiSelect === true ? (0, react$1.createElement)("span", {
+			}), hasOptions ? (0, react$1.createElement)("div", { className: cls$1(c$1("customRow"), draft.custom !== "" && c$1("customRowActive"), customRowYielded(current.multiSelect === true, draft.selected.length) && c$1("customRowYielded")) }, current.multiSelect === true ? (0, react$1.createElement)("span", {
 				className: cls$1(c$1("checkbox"), draft.custom !== "" && c$1("checkboxChecked")),
 				"aria-hidden": true
 			}, draft.custom !== "" ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular, { size: 12 }) : null) : (0, react$1.createElement)("span", {
@@ -61189,7 +61415,7 @@ window.__ModuleLoader__.load({
 			}, busy ? t("askPanelSubmitting") : index === questions.length - 1 ? t("askPanelSubmit") : t("askPanelNext"))) : null)));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/QuestionReply.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/QuestionReply.js
 		/** 官方「已复制」复位时间（与 MessageIconActions 一致）。 */
 		const COPIED_RESET_MS = 1e3;
 		const c = (semantic) => officialClass("QuestionReplyView", semantic) ?? "";
@@ -61275,7 +61501,7 @@ window.__ModuleLoader__.load({
 			}, copied ? (0, react$1.createElement)(official_exports.IconCheckOutlineRegular) : (0, react$1.createElement)(official_exports.IconCopyOutlineRegular)))));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/SkillRow.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/SkillRow.js
 		const cls = (semantic) => officialClass("SkillRow", semantic) ?? "";
 		const firstLine$2 = (text) => {
 			const nl = text.indexOf("\n");
@@ -61345,7 +61571,7 @@ window.__ModuleLoader__.load({
 			}, output))) : null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ContextBody.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ContextBody.js
 		/** 官方 ContextBody 模块类（宿主必注入；缺席 = 空串，裸结构不白屏）。 */
 		const C$2 = (semantic) => officialClass("ContextBody", semantic) ?? "";
 		/** 官方 MAX_CHARS / MAX_ENTRIES（lib/client.js:5196/5198）。 */
@@ -61671,7 +61897,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ContextInjectionRow.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ContextInjectionRow.js
 		/** 官方 ContextInjectionRow 的标题与汇总口径（纯函数）。 */
 		function contextRowFacts(content, producerRole, t) {
 			const toolBlocks = content.length > 0 && content.every((block) => {
@@ -61741,7 +61967,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ReasoningRow.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ReasoningRow.js
 		/** 官方 firstLine（lib/client.js:6140 区）：首行。 */
 		function firstLine$1(text) {
 			const newline = text.indexOf("\n");
@@ -61823,7 +62049,7 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/RunningStatus.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/RunningStatus.js
 		/** 官方 LIVE_RUN_CLOCK_INTERVAL_MS（lib/client.js:979）。 */
 		const LIVE_RUN_CLOCK_INTERVAL_MS = 1e3;
 		/** 官方静态兜底 SVG 的鲸尾路径（lib/client.js:6340 REST_PATH，16×16）。 */
@@ -61881,7 +62107,7 @@ window.__ModuleLoader__.load({
 			}, label)));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/TurnProcessNodeView.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/TurnProcessNodeView.js
 		/** Turn 过程行：折叠时只有 label + 箭头；点开由外层 seat 把过程节点放出来。 */
 		function TurnProcessNodeViewMirror(props) {
 			const { turn, turnProcess, t } = props;
@@ -61919,34 +62145,23 @@ window.__ModuleLoader__.load({
 			}, part.text))), canCollapse ? (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, { className: officialClass("TurnProcessNodeView", "chevron") ?? "" }) : null));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/StatDialog.js
-		const PANEL_MARGIN = 12;
-		const PANEL_GAP = 8;
-		/**
-		* 官方 stat-dialog.ts 的 MEASURE_STYLE：首趟（pos 未定）时面板「隐藏但仍布局」，
-		* 好让 useAnchoredPosition 量到真实尺寸。官方要求面板铺 `pos ?? MEASURE_STYLE`；
-		* 漏了它 ⇒ 首趟完全无定位、面板落进文档流撑长页面（真机 2026-10-23：点用量无反应 + 滚动条变长）。
-		*/
-		const STAT_MEASURE_STYLE = {
-			visibility: "hidden",
-			left: 0,
-			top: 0
-		};
-		/** 官方 useStatDialog：把弹层挂在触发器上方（side: 'top'），点外 / Esc 关闭。 */
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/StatDialog.js
+		/** 两个 CSS 属性必须指向同一个 anchor 名；抽成纯函数让渲染级自检能直接断言。 */
+		function statDialogStyles(anchorName) {
+			return {
+				anchorStyle: { anchorName },
+				panelStyle: { positionAnchor: anchorName }
+			};
+		}
+		/** 官方 useStatDialog：受控开关 + CSS anchor 定位 + 点外 / Esc 关闭。 */
 		function useStatDialog(controlled) {
 			const [ownOpen, setOwnOpen] = (0, react$1.useState)(false);
 			const open = controlled?.open ?? ownOpen;
 			const setOpen = controlled?.setOpen ?? setOwnOpen;
 			const rootRef = (0, react$1.useRef)(null);
 			const panelRef = (0, react$1.useRef)(null);
-			const pos = (0, official_exports.useAnchoredPosition)({
-				open,
-				anchorRef: rootRef,
-				panelRef,
-				side: "top",
-				gap: PANEL_GAP,
-				margin: PANEL_MARGIN
-			});
+			const anchorName = `--dsh-stat-${(0, react$1.useId)().replace(/:/g, "")}`;
+			const { anchorStyle, panelStyle } = statDialogStyles(anchorName);
 			(0, official_exports.useDismissOnOutsidePointer)(rootRef, open, setOpen, panelRef);
 			(0, react$1.useEffect)(() => {
 				if (!open) return;
@@ -61971,21 +62186,24 @@ window.__ModuleLoader__.load({
 				setOpen,
 				rootRef,
 				panelRef,
-				pos
+				anchorName,
+				anchorStyle,
+				panelStyle
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/TurnUsagePanel.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/TurnUsagePanel.js
 		/** 本轮用量 pill + 明细弹层。 */
 		function TurnUsagePanelMirror(props) {
 			const { usage, t } = props;
-			const { open, setOpen, rootRef, panelRef, pos } = useStatDialog();
+			const { open, setOpen, rootRef, panelRef, anchorStyle, panelStyle } = useStatDialog();
 			const cacheHit = usage.cacheReadTokens === void 0 ? null : formatCacheHitPercent(usage.cacheReadTokens, usage.totalTokens - usage.outputTokens, 1);
 			const total = formatCompactCount(usage.totalTokens, t);
 			const routes = usage.routes?.map((route) => `${route.provider}/${route.model}`).join(", ") ?? "";
 			return (0, react$1.createElement)("span", {
 				ref: rootRef,
-				className: officialClass("TurnUsagePanel", "root") ?? ""
+				className: officialClass("TurnUsagePanel", "root") ?? "",
+				style: anchorStyle
 			}, (0, react$1.createElement)("button", {
 				type: "button",
 				className: officialClass("TurnUsagePanel", "trigger") ?? "",
@@ -61999,7 +62217,7 @@ window.__ModuleLoader__.load({
 				className: officialClass("stat-dialog", "panel") ?? "",
 				role: "dialog",
 				"aria-label": t("turnUsageTitle"),
-				style: pos ?? STAT_MEASURE_STYLE
+				style: panelStyle
 			}, (0, react$1.createElement)("div", { className: officialClass("stat-dialog", "title") ?? "" }, (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "titleLabel") ?? "" }, (0, react$1.createElement)(official_exports.IconDatabaseOutlineRegular, null), t("turnUsageTitle")), (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "titleValue") ?? "" }, formatExactCount(usage.totalTokens, t))), (0, react$1.createElement)("div", {
 				className: officialClass("stat-dialog", "titleRule") ?? "",
 				"aria-hidden": true
@@ -62009,7 +62227,7 @@ window.__ModuleLoader__.load({
 			}, routes === "" ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageModel")), (0, react$1.createElement)("dd", { className: officialClass("stat-dialog", "route") ?? "" }, routes)), cacheHit === null ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheHit")), (0, react$1.createElement)("dd", null, `${cacheHit}%`)), (0, react$1.createElement)("dt", null, t("turnUsageInput")), (0, react$1.createElement)("dd", null, formatExactCount(usage.uncachedInputTokens, t)), usage.cacheReadTokens === void 0 ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheRead")), (0, react$1.createElement)("dd", null, formatExactCount(usage.cacheReadTokens, t))), usage.cacheWriteTokens === void 0 ? null : (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("dt", null, t("turnUsageCacheWrite")), (0, react$1.createElement)("dd", null, formatExactCount(usage.cacheWriteTokens, t))), (0, react$1.createElement)("dt", null, t("turnUsageOutput")), (0, react$1.createElement)("dd", null, formatExactCount(usage.outputTokens, t), usage.reasoningTokens === void 0 ? null : (0, react$1.createElement)("span", { className: officialClass("stat-dialog", "reasoning") ?? "" }, t("turnUsageReasoning", { tokens: formatExactCount(usage.reasoningTokens, t) }))))), document.body) : null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/TurnTailNodeView.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/TurnTailNodeView.js
 		/** 官方 hasAssistantReplyContent。 */
 		function hasAssistantReplyContent(blocks) {
 			return blocks.some((block) => {
@@ -62093,27 +62311,51 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/TurnTriggerNodeView.js
-		/** 官方 TRIGGER_ICONS（lib/client.js:7122-7131）。 */
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/TurnTriggerNodeView.js
+		/** 官方 TRIGGER_ICONS（TurnTriggerNodeView.tsx:16）；continue = 手动继续回执。 */
 		const TRIGGER_ICONS = {
 			request: official_exports.IconContextInjectionOutlineRegular,
 			goal: official_exports.IconGoalOutlineRegular,
 			agent: official_exports.IconPaperPlaneOutlineRegular,
 			team: official_exports.IconAgentPresetOutlineRegular,
-			subagent: official_exports.IconAgentPresetOutlineRegular,
+			subagent: official_exports.IconUsersOutlineRegular,
 			github: official_exports.IconBranchOutlineRegular,
 			webhook: official_exports.IconGlobeOutlineRegular,
 			schedule: official_exports.IconClockOutlineRegular,
 			job: official_exports.IconQueueOutlineRegular,
-			plugin: official_exports.IconCordisPluginOutlineRegular
+			plugin: official_exports.IconCordisPluginOutlineRegular,
+			continue: official_exports.IconPlayOutlineRegular
 		};
 		/** 官方 MAX_CHARS（lib/client.js:4416）：模型面向文本的显示上限。 */
 		const MAX_CHARS = 2e4;
-		/** 官方 turnTriggerDetails：source.kind → 标题与图标家族（默认 request）。 */
-		function turnTriggerDetails(source) {
+		/**
+		* 官方 turn-trigger.ts:20-32 `subagentTitle`：按 source.stopReason 六分支选标题。
+		* 非字符串 / 空串回落到通用态；未收录的 reason 一律走 unknown，不暗示成功。
+		*/
+		function subagentTitle(reason) {
+			if (typeof reason !== "string" || reason === "") return "triggerSubagent";
+			switch (reason) {
+				case "completed": return "triggerSubagentCompleted";
+				case "aborted": return "triggerSubagentAborted";
+				case "error": return "triggerSubagentError";
+				case "max-tokens": return "triggerSubagentMaxTokens";
+				case "refusal": return "triggerSubagentRefusal";
+				default: return "triggerSubagentUnknown";
+			}
+		}
+		/** 官方 turn-trigger.ts:35-46：source.kind → 标题 / 图标 / compact（retry 且 content 为空的继续回执）。 */
+		function turnTriggerDetails(data) {
 			const record = (value) => typeof value === "object" && value !== null && !Array.isArray(value) ? value : {};
-			const src = record(source);
+			const src = record(data?.source);
 			switch (typeof src.kind === "string" ? src.kind : "") {
+				case "retry": return Array.isArray(data?.content) && data.content.length === 0 ? {
+					title: "triggerContinuation",
+					icon: "continue",
+					compact: true
+				} : {
+					title: "triggerRequest",
+					icon: "request"
+				};
 				case "goal": return {
 					title: "triggerGoal",
 					icon: "goal"
@@ -62127,7 +62369,7 @@ window.__ModuleLoader__.load({
 					icon: "team"
 				};
 				case "subagent-settled": return {
-					title: "triggerSubagent",
+					title: subagentTitle(src.stopReason),
 					icon: "subagent"
 				};
 				case "webhook": return src.provider === "github" ? {
@@ -62160,8 +62402,15 @@ window.__ModuleLoader__.load({
 			const { data, t } = props;
 			const [open, setOpen] = (0, react$1.useState)(false);
 			const bodyId = (0, react$1.useId)();
-			const details = turnTriggerDetails(data?.source);
+			const details = turnTriggerDetails(data);
 			const TriggerIcon = TRIGGER_ICONS[details.icon] ?? official_exports.IconContextInjectionOutlineRegular;
+			if (details.compact === true) return (0, react$1.createElement)("div", {
+				className: officialClass("TurnTriggerNodeView", "continuation") ?? "",
+				"data-generation-continuation": true
+			}, (0, react$1.createElement)("span", {
+				className: officialClass("TurnTriggerNodeView", "icon") ?? "",
+				"aria-hidden": true
+			}, (0, react$1.createElement)(TriggerIcon, { size: 14 })), (0, react$1.createElement)("span", null, t(details.title)));
 			const time = typeof data?.time === "number" ? data.time : void 0;
 			return (0, react$1.createElement)("section", {
 				className: officialClass("TurnTriggerNodeView", "root") ?? "",
@@ -62206,7 +62455,7 @@ window.__ModuleLoader__.load({
 			return runs.length === 0 ? [t("sessionEmpty")] : runs;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/Deliverables.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/Deliverables.js
 		const basename = (path) => path.slice(Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1);
 		/** 交付路径的所在目录；无分隔符（纯文件名）⇒ undefined，不出「在文件夹中显示」。 */
 		function parentOf(path) {
@@ -62357,7 +62606,7 @@ window.__ModuleLoader__.load({
 			}, (0, react$1.createElement)("span", null, t(expanded ? "deliverCollapse" : "deliverAll", { count: files.length })), expanded ? (0, react$1.createElement)(official_exports.IconChevronUpOutlineRegular, {}) : (0, react$1.createElement)(official_exports.IconChevronDownOutlineRegular, {})) : null);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/utils/string.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/utils/string.js
 		/**
 		* 路径取末段（文件名显示用）。`/` 与 `\` 都认。
 		*
@@ -62371,7 +62620,7 @@ window.__ModuleLoader__.load({
 			return cut < 0 ? trimmed : trimmed.slice(cut + 1);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/changes.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/changes.js
 		/** 官方 changesSummaryUrl（client.js:90-96）：文档相对路由。 */
 		function changesSummaryUrl(sessionId, seq) {
 			return `api/changes.summary?${new URLSearchParams({
@@ -62513,7 +62762,7 @@ window.__ModuleLoader__.load({
 			return isInt(seq) ? seq : null;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChangedFileDiff.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChangedFileDiff.js
 		/** 官方 ChangedFiles / FileDiff 模块类（ui-deliverables；取不到 = 空类，不白屏）。 */
 		const C$1 = (semantic) => officialClass("ChangedFiles", semantic) ?? "";
 		const D = (semantic) => officialClass("FileDiff", semantic) ?? "";
@@ -62693,7 +62942,7 @@ window.__ModuleLoader__.load({
 			})), body);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChangedFilesCard.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/mirror/ChangedFilesCard.js
 		/** 官方 ChangedFiles 模块类（ui-deliverables；取不到 = 空类，不白屏）。 */
 		const C = (semantic) => officialClass("ChangedFiles", semantic) ?? "";
 		/** 会话级缓存：同一 (sessionId, seq) 只拉一次（官方 ChangesSummaryStore 同语义）。 */
@@ -62826,7 +63075,7 @@ window.__ModuleLoader__.load({
 			}, header, list, toggle);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/pending-inputs.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/pending-inputs.js
 		/** 官方 observedInputs：durable user 节点 source.rpcId（本地回显被持久节点取代的判据）。 */
 		function observedRpcIds(order, readNode) {
 			const ids = /* @__PURE__ */ new Set();
@@ -63026,7 +63275,7 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/SessionViewModal.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/SessionViewModal.js
 		/** 稳定的空序列（避免默认值每次新建数组）。 */
 		const EMPTY_ORDER = [];
 		/** SSR / 数据面未接线时的归档态：如实按未归档，不编造。 */
@@ -63130,7 +63379,7 @@ window.__ModuleLoader__.load({
 		* 官方 ToolCallBlock（uic contract/records.d.ts:140）→ 工具卡 props。
 		* running 半截（phase: preparing/start）只有 name/argsRaw；settled（kind: tool-result）带输出与错误。
 		*/
-		function toolCallCard(node, t, onOpenFile, loadImage) {
+		function toolCallCard(node, t, onOpenFile, loadImage, fileTargetContextMenuProps) {
 			const root = dataOf(node).root;
 			if (root === void 0 || root === null) return null;
 			const settled = root.kind === "tool-result";
@@ -63154,6 +63403,7 @@ window.__ModuleLoader__.load({
 				image: imageCardFace(name, argsRaw, content, root.meta, isError, settled) ?? void 0,
 				loadImage,
 				onOpenFile,
+				fileTargetContextMenuProps,
 				t
 			};
 		}
@@ -63257,7 +63507,7 @@ window.__ModuleLoader__.load({
 						block: root,
 						t
 					});
-					const card = toolCallCard(node, t, fileOpen?.open, loadImage);
+					const card = toolCallCard(node, t, fileOpen?.open, loadImage, fileOpen?.fileTargetContextMenuProps);
 					if (card === null) return null;
 					return card.name === "bash" || card.name === "pwsh" ? (0, react$1.createElement)(BashRowMirror, card) : card.name === "skill" ? (0, react$1.createElement)(SkillRowMirror, card) : (0, react$1.createElement)(GenericCommandCard, card);
 				}
@@ -63423,6 +63673,7 @@ window.__ModuleLoader__.load({
 						settled: true,
 						interrupted: node.error?.code === "interrupted",
 						onOpenFile: fileOpen?.open,
+						fileTargetContextMenuProps: fileOpen?.fileTargetContextMenuProps,
 						t
 					});
 				case "command": return (0, react$1.createElement)(GenericCommandCard, {
@@ -63868,14 +64119,16 @@ window.__ModuleLoader__.load({
 				if (onOpenFile === void 0) return void 0;
 				return {
 					open: openFile,
-					mentions: makeFileMentions(collectFilePaths(order, store, turns), openFile)
+					mentions: makeFileMentions(collectFilePaths(order, store, turns), openFile),
+					fileTargetContextMenuProps: props.fileTargetContextMenuProps
 				};
 			}, [
 				onOpenFile,
 				openFile,
 				order,
 				store,
-				turns
+				turns,
+				props.fileTargetContextMenuProps
 			]);
 			/**
 			* 官方 markdown **链接**的打开出口（`[名](<路径>)` ⇒ 官方 MarkdownFileLink）。
@@ -64096,12 +64349,31 @@ window.__ModuleLoader__.load({
 				console.info(`[dsh-plugin-core:session] 会话 running=${sessionSnap?.running === true}；末 4 个=${tail.join(" | ")}；全流=${[...counts].map(([kind, count]) => `${kind}×${count}`).join(" ")}`);
 			}
 			const openState = sessionSnap?.openState;
-			const showLoadOlder = sessionSnap?.hasMore !== false;
+			const hasMore = sessionSnap?.hasMore === true;
+			const showLoadOlder = hasMore || sessionSnap?.historyWasPartial === true;
 			const runningRow = sessionSnap?.running !== true ? null : (0, react$1.createElement)(RunningStatusMirror, {
 				key: "running",
 				startTime: runningStartTime,
 				t: tt
 			});
+			const olderRow = showLoadOlder ? (0, react$1.createElement)(ChatOlderButton, {
+				key: "older",
+				labels: {
+					more: tt("sessionLoadOlder"),
+					loading: tt("chatLoadingOlder"),
+					processing: tt("chatProcessingOlder"),
+					error: tt("chatRetryOlder"),
+					start: tt("chatHistoryStart")
+				},
+				hasMore,
+				loadingOlder: sessionSnap?.loadingOlder,
+				historyLoadStatus: sessionSnap?.historyLoadStatus,
+				historyInputHeld: props.historyScroll?.inputHeld,
+				historyProcessing: props.historyScroll?.processing,
+				onClick: () => {
+					view.loadOlder();
+				}
+			}) : null;
 			const body = rendered.length === 0 && pendingRows.length === 0 ? [
 				bodyHeaderRow,
 				openState === "error" ? (0, react$1.createElement)(ChatOpenError, {
@@ -64111,17 +64383,12 @@ window.__ModuleLoader__.load({
 					key: "hint",
 					text: openState === "loading" || openState === "cold" ? tt("sessionLoading") : tt("sessionEmpty")
 				}),
+				olderRow,
 				runningRow,
 				footerAnchorKey === void 0 ? bodyFooterRow : null
 			] : [
 				bodyHeaderRow,
-				showLoadOlder ? (0, react$1.createElement)(ChatOlderButton, {
-					key: "older",
-					label: tt("sessionLoadOlder"),
-					onClick: () => {
-						view.loadOlder();
-					}
-				}) : null,
+				olderRow,
 				...rendered,
 				...pendingRows,
 				runningRow,
@@ -64186,6 +64453,7 @@ window.__ModuleLoader__.load({
 			const approvalRow = pendingApproval === void 0 ? null : (0, react$1.createElement)("div", { className: "dshpc-sv-approval" }, (0, react$1.createElement)(ApprovalPanelMirror, {
 				approval: pendingApproval,
 				command: approvalCommand(order, (key) => store?.get(key), pendingApproval.callId),
+				resolveReason: props.resolveApprovalReason,
 				t: tt
 			}));
 			const hasCard = questionRow !== null || approvalRow !== null;
@@ -64246,7 +64514,7 @@ window.__ModuleLoader__.load({
 			}, (0, react$1.createElement)("p", { className: "dshpc-sv-forktext" }, tt("forkConfirmText")), canFork ? null : (0, react$1.createElement)("p", { className: "dshpc-sv-forkerr" }, tt("forkUnavailable")), forkErr !== null ? (0, react$1.createElement)("p", { className: "dshpc-sv-forkerr" }, tt("forkFailed", { error: forkErr })) : null));
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/open-review.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/open-review.js
 		/**
 		* 在右侧分栏打开某次改动的 diff（`ChangedFilesCard` → `onOpenReview` 的落点）。
 		*
@@ -64273,7 +64541,7 @@ window.__ModuleLoader__.load({
 			return handle;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/pending-approval.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/pending-approval.js
 		/**
 		* 订阅某个会话的待审批请求。能力缺席（没有 uiSession / 没 active 快照面）返回 null ⇒ 弹窗不画卡。
 		* @param uiSession - 宿主 client 服务 `uiSession`。
@@ -64303,7 +64571,7 @@ window.__ModuleLoader__.load({
 			return value;
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/adv/session/open-session-view.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/adv/session/open-session-view.js
 		/** 默认 retain source（写进宿主 retainedBy；调用方可覆盖成自己的插件名）。 */
 		const DEFAULT_RETAIN_SOURCE = "dsh-plugin-core";
 		/** 投影面缺席时的稳定空快照：能力缺席按 undefined 呈现，不编造数据。 */
@@ -64931,6 +65199,72 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/infra/official-icons.js
+		/**
+		* 官方 primitives 的**薄 adapter**：只把命名空间与具名导出转出来，不写逻辑、不引本仓任何控件。
+		*
+		* 为什么和 `ui/official.ts` 分开：那个文件为了宿主皮肤的命令式弹窗引了 Button / i18n，
+		* 只想按名取官方图标的组件（`Icon`）从它取命名空间会连带 token CSS、按钮 CSS 与整本字典（实测 124 KB）。
+		* 从这里取只有平台模块的 require；宿主外依旧解析不到，故它仍是「只许两个 adapter 碰平台模块」的例外之一
+		* （见 `test/dependency-guards.test.mjs`）。
+		*/
+		/** 官方命名空间：给按名取组件（图标）与运行时审计用。 */
+		const Official = _deepseek_ai_dsh_client_ui_primitives;
+		//#endregion
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/display/Icon.js
+		/**
+		* 图标：字体图标与官方 primitives 图标**同一个组件**，尺寸统一。
+		*
+		* `name` 的写法（2026-11-13 用户定，组名不可省）：
+		*  - `common.base:sort-down` / `common.logo:github` —— 字体图标：`库名:图标名`，库名是
+		*    {@link ICON_FONTS} 的 key（`所属域.库名[.变体]`，库名本身可以带点）；
+		*  - `IconWrapLinesOutlineRegular` —— 官方图标：没有冒号，直接写官方组件名。
+		*
+		* 尺寸（2026-11-14）：两类图标**不传 `size` 就跟随所在文字的字号** —— 字体 `<i>` 带自有
+		* 基础类 `dshpc-icon`，由 `icon.css` 的 `font-size:inherit` 中和平台基础类的 16px；官方 SVG
+		* 由控件的 `svg{width:1em}` 接管。显式传预设名 / px 才是绝对尺寸，用于独立摆放与装饰性
+		* 小箭头。控件的 `sm|md|lg` 只决定文字字号，不另给图标定值。
+		*
+		* 找不到就**不渲染**（不回落别的库 —— 显示错图标比空白更难查），并一次性告警。
+		* 字体样式仍是运行时 `<link>` 远程加载，字体文件与样式都不入包。
+		*
+		* 字体那条路在 `font-icon.ts`：它**不吃平台模块**，所以纯控件入口要画字体图标时直接引
+		* `FontIcon`，别把这个文件拖进去（官方 primitives 一进来就过不了 `test/entry-isolation.test.mjs`）。
+		*/
+		/**
+		* 图标。字体图标渲染成 `<i>`（字形来自远程字体），官方图标渲染官方组件本体。
+		*
+		* @param props 见 {@link IconProps}。
+		* @returns 元素；找不到对应图标时返回 `null`（并一次性告警）。
+		*/
+		function Icon(props) {
+			const { name, title, style } = props;
+			if (name.indexOf(":") > 0) {
+				if (resolveIconName(name) === void 0) {
+					warnMissingIcon(name);
+					return null;
+				}
+				return FontIcon(props);
+			}
+			const size = props.size === void 0 ? void 0 : typeof props.size === "number" ? props.size : ICON_SIZES[props.size];
+			const glyph = Official[name];
+			if (typeof glyph !== "function" || !/^Icon[A-Z]/.test(name)) {
+				warnMissingIcon(name);
+				return null;
+			}
+			const rendered = (0, react$1.createElement)(glyph, size === void 0 ? {} : { size });
+			if (title === void 0) return rendered;
+			return (0, react$1.createElement)("span", {
+				role: "img",
+				"aria-label": title,
+				title,
+				style: {
+					display: "inline-flex",
+					...style
+				}
+			}, rendered);
+		}
+		//#endregion
 		//#region src/client/tokens.ts
 		/**
 		* 语义 token 层：`--dtl-*`（dtl = dsh-task-ledger）。
@@ -65128,19 +65462,20 @@ body[data-ds-dark-theme]{
   background:var(--dtl-business-soft);color:var(--dtl-business);
   font-size:var(--dtl-font-xs);font-weight:600;}
 .dtl-set__steptitle{font-size:var(--dtl-font-md);font-weight:600;color:var(--dtl-fg);}
-.dtl-set__cmd{display:flex;align-items:center;gap:var(--dtl-space-2);
-  padding:var(--dtl-space-2) var(--dtl-space-3);border:1px solid var(--dtl-border);
-  border-radius:var(--dtl-radius-sm);background:var(--dtl-table-head-bg);}
-.dtl-set__cmdtext{flex:1 1 auto;min-width:0;font-family:var(--dtl-font-mono);
+/* 命令一行 = 核心 ListRow 的带边档（底 / 边 / 圆角 / 内距 / 右侧操作槽全归核心，
+   用户 2026-11-15：不许再自己写 border + border-radius）。这里只留命令文本的等宽排版。 */
+.dtl-set__cmd .dtl-set__cmdtext{min-width:0;font-family:var(--dtl-font-mono);
   font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;}
 .dtl-set__agents-note{margin:var(--dtl-space-2) 0 0;font-size:var(--dtl-font-sm);
   line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
-/* 复制钮钉在框的**右上角**（用户 2026-11-11）：距上、右同为 space-2。
-   正文右侧留出按钮位与间隙；单行时正文行高 = 按钮高 ⇒ 上 8 下 8，视觉上仍是垂直居中。 */
-.dtl-set__prompt{position:relative;margin-top:var(--dtl-space-2);
-  padding:var(--dtl-space-2) calc(var(--dtl-space-2) * 2 + 24px) var(--dtl-space-2) var(--dtl-space-3);
-  border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);}
+/* 可复制正文块 = 核心 Surface 的 dashed 档（底 / 边 / 圆角 / 内距四轴归核心，
+   圆角取核心 md=12）。这里只补两件核心不管的事：给复制钮当定位上下文、
+   把右侧内距让出按钮位（正文不许压到按钮下面）。
+   线色用 strong（比核心默认 border 深一档），改的是 Surface 自己的变量，不覆盖它的皮肤。 */
+.dshpc-surface.dtl-set__prompt{--surface-border:var(--dtl-border-strong);
+  position:relative;margin-top:var(--dtl-space-2);
+  padding-right:calc(var(--dtl-space-2) * 2 + 24px);}
 .dtl-set__promptact{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-2);}
 .dtl-set__promptbody{display:block;min-height:24px;font-size:var(--dtl-font-sm);
   line-height:24px;color:var(--dtl-fg-2);white-space:pre-wrap;word-break:break-word;}
@@ -65200,7 +65535,8 @@ body[data-ds-dark-theme]{
 /* 三步说明（用户 2026-11-02）：一个大框（核心 Surface）里三格并排，中间用**虚线 + 圆箭头节点**分隔。
    每块：图标徽标（左，三格三种颜色）+ 圈数字（右）→ 小标题 → 一条条要点（行间极淡细线，不画小框）。
    分隔线是**真实元素**（.dtl-flow__sep），不靠伪元素 —— 用户那边伪元素没出来过。
-   圆用 SVG <circle>，箭头用官方 chevron 图标（用户 2026-11-02：手画箭头太丑）。
+   圆底由 CSS 画（.dtl-flow__node 的圆角 + 不透明底色），箭头用核心图标库的
+   common.base:jiantou-you（用户 2026-11-15：手绘圆环 + 描边箭头一并换掉）。
    整块撑满右栏高度 ⇒ 与左边身份卡等高。 */
 .dtl-flow__frame{--dtl-flow-pad:calc(var(--dtl-space-3) * 2.5);}
 .dshpc-surface.dtl-flow__frame{flex:1 1 auto;min-height:0;min-width:0;display:flex;}
@@ -65215,24 +65551,21 @@ body[data-ds-dark-theme]{
 .dtl-flow__sep{position:relative;align-self:stretch;justify-self:center;width:0;
   margin:20px 0;border-left:1px dashed var(--dtl-border);}
 .dtl-flow__sep .dtl-flow__node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__ring{position:absolute;inset:0;}
-/* 底色必须是**不透明**的：--dtl-chip-strong 带透明，骑在虚线上会透出线来。
-   这里把「13% fg 叠在面板底上」的结果直接算成实色（color-mix 出不透明结果），
-   与 1/2/3 徽标同观感，又能压过虚线。 */
-.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{
-  fill:color-mix(in srgb,var(--dtl-fg) 13%,var(--dtl-surface-1));stroke:none;}
-/* 箭头 = 一根横杆 + 一个右向尖头（单个 path 描边，不填充）；坐标已几何居中 */
-.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{fill:none;stroke:var(--dtl-fg);
-  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  /* 圆底 = CSS 徽标（原来是 SVG <circle>，用户 2026-11-15 换成核心图标后由 CSS 承担）。
+     底色必须**不透明**：--dtl-chip-strong 带透明，骑在虚线上会透出线来。
+     这里把「13% fg 叠在面板底上」的结果直接算成实色，与 1/2/3 徽标同观感，又能压过虚线。 */
+  border-radius:50%;color:var(--dtl-fg);
+  background:color-mix(in srgb,var(--dtl-fg) 13%,var(--dtl-surface-1));}
 /* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
 /* 图标徽标本身是核心 IconButton（plain + lg=32 方）：尺寸与圆角走核心控件契约，
    这里只留布局。pointer-events 关掉 —— 它是装饰，不该有 hover 变色。 */
 .dtl-flow__icon{flex:none;pointer-events:none;}
-/* 图标本体放大一档（用户 2026-11-02）：只放大里面的 svg，32 方的框不动 */
-.dtl-flow__icon svg{width:22px;height:22px;}
+/* 图标本体不再写死尺寸：调用处给 16px（用户 2026-11-15：22px 把 32 方的框撑满，
+   要留出 4~5px 以上白边）。字体字形的边框就是 em 方框，inline 的 width/height 也不生效，
+   所以只有内联 font-size 说了算，这里不留覆盖，免得两处打架。 */
 .dtl-flow__num{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:26px;height:26px;box-sizing:border-box;border-radius:9999px;
   background:var(--dtl-chip-strong);font-size:var(--dtl-font-sm);font-weight:600;
@@ -65265,8 +65598,8 @@ body[data-ds-dark-theme]{
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
   .dtl-flow__sep{width:auto;height:0;margin:0 var(--dtl-flow-pad);
     border-left:0;border-top:1px dashed var(--dtl-border);}
-  /* 落成一列时箭头朝下：整枚 ring 转 90°（圆对称，箭头与右移量一起转朝下） */
-  .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{transform:rotate(90deg);}
+  /* 落成一列时箭头朝下：只转节点里的那颗箭头（圆底对称，转了也看不出来） */
+  .dtl-flow__sep .dtl-flow__node > *{transform:rotate(90deg);}
 }
 
 /* 台账目录表（核心 Table）：只要列内的排版，表头 / 行线 / 悬浮底都归核心。
@@ -65829,7 +66162,7 @@ body[data-ds-dark-theme]{
 			});
 		}
 		/** 加载图标：核心 `Loader` 原样透出（无背景、无定位；形态 `ring` / `blocks`、尺寸 xs~xl 都走核心档位）。 */
-		const Loader = Loader$2;
+		const Loader = Loader$1;
 		/** 下拉：改由核心 `Picker`（单选、受控、portal 菜单）承担。
 		*  宽度由核心 `Picker` 原生支持（`width`/`minWidth`/`maxWidth` 落到位触发器内联样式，
 		* 超长省略号 + hover 跑马灯）；给了 `width` 即锁定定宽，否则在 min/max 间自适应。 */
@@ -65863,7 +66196,7 @@ body[data-ds-dark-theme]{
 				placeholder: props.placeholder,
 				size: props.size ?? "md",
 				"aria-label": props.ariaLabel,
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 16 })
+				icon: (0, react$1.createElement)(Icon, { name: "common.base:chazhao" })
 			});
 		}
 		/** 统计卡：主数字 + 灰色口径小字；点一下联动下方列表筛选。
@@ -66118,7 +66451,7 @@ body[data-ds-dark-theme]{
 				label,
 				side: "bottom",
 				children: (0, react$1.createElement)(IconButton, {
-					icon: (0, react$1.createElement)(dir === "left" ? _deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }),
+					icon: (0, react$1.createElement)(Icon, { name: dir === "left" ? "common.base:jiantou-zuo" : "common.base:jiantou-you" }),
 					label,
 					title: "",
 					variant: "outline",
@@ -66498,19 +66831,6 @@ body[data-ds-dark-theme]{
 		}
 		//#endregion
 		//#region src/client/history-list.ts
-		/**
-		* 历史页下半部分：筛选行（工作区 / 执行人）+ 结案记录表格。
-		*
-		* 结构（与改版前逐像素一致）：
-		*    [日期 | 创建人 | 执行人 | 时间]   ← 表头第一格为「日期」，每天一行
-		*      C.dsh-plugin-core                    ← 当天某工作区一段，段首一行跨满全列写工作区名
-		*      任务行…
-		*
-		* 渲染：**一张表，只画窗口内的行**（2026-11-01）。原来是一天一张表，块间无间距、
-		* 相邻边框合并 ⇒ 合成一张表后仍是「每天插一行日期头」，外观不变。
-		* 屏幕外的行用首尾两个等高占位行撑住滚动高度 ⇒ DOM 行数与总条数无关。
-		* 分页、按天分片全部取消：整月数据一次取回、全在内存，滚动时只按行号重算窗口。
-		*/
 		const WEEKDAY_KEYS = [
 			"weekdaySun",
 			"weekdayMon",
@@ -67076,7 +67396,7 @@ body[data-ds-dark-theme]{
 						label: t("actionDelete"),
 						title: "",
 						className: "dtl-iconbtn--muted",
-						icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconTrashOutlineRegular, { size: 14 }),
+						icon: (0, react$1.createElement)(Icon, { name: "common.base:shanchu" }),
 						disabled: deleteBusy || record.src === "" || record.line <= 0 || record.fingerprint === "",
 						onClick: () => {
 							setDeleteError(null);
@@ -67180,7 +67500,7 @@ body[data-ds-dark-theme]{
 					size: "lg",
 					minWidth: SELECT_MIN_WIDTH$1,
 					maxWidth: SELECT_MAX_WIDTH$1,
-					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 16 }),
+					icon: (0, react$1.createElement)(Icon, { name: "common.base:gongzuoqu" }),
 					value: workspace,
 					options: props.workspaceOptions,
 					ariaLabel: t("workspaceLabel"),
@@ -67190,7 +67510,7 @@ body[data-ds-dark-theme]{
 					size: "lg",
 					minWidth: SELECT_MIN_WIDTH$1,
 					maxWidth: SELECT_MAX_WIDTH$1,
-					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconUsersOutlineRegular, { size: 16 }),
+					icon: (0, react$1.createElement)(Icon, { name: "common.base:yonghu" }),
 					value: owner,
 					options: [{
 						value: "",
@@ -67883,7 +68203,7 @@ body[data-ds-dark-theme]{
 					label: t("viewDetail"),
 					title: "",
 					className: "dtl-iconbtn--muted",
-					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 14 }),
+					icon: (0, react$1.createElement)(Icon, { name: "common.base:chazhao" }),
 					onClick: () => props.onView?.(row)
 				})
 			});
@@ -67898,12 +68218,12 @@ body[data-ds-dark-theme]{
 				}, t(actionKey))
 			});
 			const claimButton = tipBtn(null, "actionClaim", "tipClaim", () => void runAction("claim"));
-			const resumeButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }), "actionResume", "tipResume", () => void resumeTask());
-			const finishButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }), "actionFinish", closing ? "closeInProgress" : "tipFinish", closing ? void 0 : () => {
+			const resumeButton = tipBtn((0, react$1.createElement)(Icon, { name: "common.base:jiantou-you" }), "actionResume", "tipResume", () => void resumeTask());
+			const finishButton = tipBtn((0, react$1.createElement)(Icon, { name: "common.base:gou" }), "actionFinish", closing ? "closeInProgress" : "tipFinish", closing ? void 0 : () => {
 				setCloseError(null);
 				setCloseOpen(true);
 			});
-			const releaseButton = tipBtn((0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular, { size: 14 }), "actionRelease", "tipRelease", () => void runAction("release"));
+			const releaseButton = tipBtn((0, react$1.createElement)(Icon, { name: "common.base:shifang" }), "actionRelease", "tipRelease", () => void runAction("release"));
 			const cancelButton = (0, react$1.createElement)(Tip, {
 				label: t("tipCancel"),
 				children: (0, react$1.createElement)(IconButton, {
@@ -67912,7 +68232,7 @@ body[data-ds-dark-theme]{
 					label: t("actionCancel"),
 					title: "",
 					className: "dtl-iconbtn--muted",
-					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }),
+					icon: (0, react$1.createElement)(Icon, { name: "common.base:guanbi" }),
 					disabled: busy,
 					onClick: () => {
 						setCancelError(null);
@@ -67928,7 +68248,7 @@ body[data-ds-dark-theme]{
 					label: t("actionDelete"),
 					title: "",
 					className: "dtl-iconbtn--muted",
-					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconTrashOutlineRegular, { size: 14 }),
+					icon: (0, react$1.createElement)(Icon, { name: "common.base:shanchu" }),
 					disabled: busy,
 					onClick: () => {
 						setDeleteError(null);
@@ -67956,7 +68276,7 @@ body[data-ds-dark-theme]{
 					label: t("copyTaskId"),
 					title: "",
 					className: "dtl-iconbtn--muted",
-					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutlineRegular, { size: 14 }),
+					icon: (0, react$1.createElement)(Icon, { name: "common.base:fuzhi" }),
 					onClick: () => {
 						copyText(row.task.id).then((copied) => {
 							notify(t(copied ? "copiedTaskId" : "copyFailed"));
@@ -68155,7 +68475,7 @@ body[data-ds-dark-theme]{
 				label,
 				side: "bottom",
 				children: (0, react$1.createElement)(IconButton, {
-					icon: (0, react$1.createElement)(dir === "left" ? _deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular : _deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14 }),
+					icon: (0, react$1.createElement)(Icon, { name: dir === "left" ? "common.base:jiantou-zuo" : "common.base:jiantou-you" }),
 					label,
 					title: "",
 					variant: "outline",
@@ -68408,7 +68728,7 @@ body[data-ds-dark-theme]{
 			}, ...slots.map(labelOf)))), partial);
 		}
 		//#endregion
-		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.25_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_1f9230727110a5d3dbadb356da9e7701/node_modules/dsh-plugin-core/dist/ui/inputs/CodeEditor.js
+		//#region ../../node_modules/.pnpm/dsh-plugin-core@0.35.28_@babel+runtime@8.0.8_@codemirror+autocomplete@6.20.4_@codemirro_3c9ae330e86ee06c6efa61f10d464662/node_modules/dsh-plugin-core/dist/ui/inputs/CodeEditor.js
 		/**
 		* CodeEditor —— 可编辑的 CodeMirror 控件（录入类）。
 		*
@@ -68445,25 +68765,6 @@ body[data-ds-dark-theme]{
 		*/
 		/** 自定义小标签与 config-panel.ts 的「显示名称」同款：核心 Chip 的 neutral xs 档。 */
 		/** 可编辑输入框只从核心的 ui/code-viewer 子路径导出（重依赖不进 ui/index.ts），不能用 ./ui 汇总表。 */
-		/** GitHub 官方 mark（16×16，monochrome，fill 走 currentColor）。核心图标库没有品牌图标，自绘一份。 */
-		const GithubMark = () => (0, react$1.createElement)("svg", {
-			width: 16,
-			height: 16,
-			viewBox: "0 0 16 16",
-			"aria-hidden": true,
-			fill: "currentColor"
-		}, (0, react$1.createElement)("path", { d: "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" }));
-		/** npm 官方 mark（24×24 simple-icons 路径，evenodd 让「npm」字母镂空）。 */
-		const NpmMark = () => (0, react$1.createElement)("svg", {
-			width: 16,
-			height: 16,
-			viewBox: "0 0 24 24",
-			"aria-hidden": true,
-			fill: "currentColor"
-		}, (0, react$1.createElement)("path", {
-			fillRule: "evenodd",
-			d: "M0 0v24h24V0H0zm19.2 19.2h-2.4v-9.6h-2.4v9.6H4.8V4.8h14.4v14.4z"
-		}));
 		/** 本轮的写动作一律空着（界面先定，方法下一轮接）。 */
 		const notYet = () => {};
 		/** skills CLI 只认 git / 下载 URL（实测 `add task-ledger` 会当 git 仓库克隆并失败），
@@ -68825,7 +69126,7 @@ body[data-ds-dark-theme]{
 				})) : (0, react$1.createElement)("div", { className: "dtl-profile__nameline" }, (0, react$1.createElement)("span", { className: "dtl-profile__nametext" }, `@${who}`)), (0, react$1.createElement)("div", { className: "dtl-profile__uuid" }, uuid), renamingName ? (0, react$1.createElement)("div", { className: "dtl-acts" }, (0, react$1.createElement)(Button, {
 					variant: "info",
 					size: "sm",
-					icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }),
+					icon: (0, react$1.createElement)(Icon, { name: "common.base:gou" }),
 					loading: savingName,
 					disabled: savingName || !canSaveName,
 					onClick: () => {
@@ -68879,7 +69180,7 @@ body[data-ds-dark-theme]{
 					actions: (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)(Tip, {
 						label: "GitHub",
 						children: (0, react$1.createElement)(IconButton, {
-							icon: (0, react$1.createElement)(GithubMark, null),
+							icon: (0, react$1.createElement)(Icon, { name: "common.logo:github" }),
 							label: "GitHub",
 							title: "",
 							onClick: () => {
@@ -68889,7 +69190,7 @@ body[data-ds-dark-theme]{
 					}), (0, react$1.createElement)(Tip, {
 						label: "NPM",
 						children: (0, react$1.createElement)(IconButton, {
-							icon: (0, react$1.createElement)(NpmMark, null),
+							icon: (0, react$1.createElement)(Icon, { name: "common.logo:npm" }),
 							label: "npm",
 							title: "",
 							onClick: openNpm
@@ -68898,30 +69199,29 @@ body[data-ds-dark-theme]{
 				}, (0, react$1.createElement)("code", { className: "dtl-flow__cmd" }, pkg));
 			};
 			/** 格与格之间的分隔：一条虚线（上下留空）中间骑一个**圆箭头节点**。
-			*  圆 + 箭头都画在同一个 SVG 里：一条 `<path>`（横杆 + `>` 箭头，描边不填充，
-			*  像 Lucide 的 arrow-right；坐标按包围盒中心对齐圆心，绝对居中）。 */
-			const sep = () => (0, react$1.createElement)("span", { className: "dtl-flow__sep" }, (0, react$1.createElement)("span", { className: "dtl-flow__node" }, (0, react$1.createElement)("svg", {
-				className: "dtl-flow__ring",
-				width: 32,
-				height: 32,
-				viewBox: "0 0 32 32",
-				"aria-hidden": true
-			}, (0, react$1.createElement)("circle", {
-				cx: 16,
-				cy: 16,
-				r: 14.5
-			}), (0, react$1.createElement)("path", {
-				className: "dtl-flow__arrow",
-				d: "M10.25 16 H21.75 M16.25 10.5 L21.75 16 L16.25 21.5"
-			}))));
+			*  圆底 = CSS 徽标（`.dtl-flow__node` 上的不透明圆，压得住虚线）；箭头 = 核心图标库的
+			*  右向箭头（用户 2026-11-15：手绘的圆环 + 描边箭头换成 `common.base:jiantou-you`）。 */
+			const sep = () => (0, react$1.createElement)("span", { className: "dtl-flow__sep" }, (0, react$1.createElement)("span", { className: "dtl-flow__node" }, (0, react$1.createElement)(Icon, {
+				name: "common.base:jiantou-you",
+				size: 14
+			})));
 			const flow = (0, react$1.createElement)(Surface, {
 				className: "dtl-flow__frame",
 				padding: null
-			}, (0, react$1.createElement)("div", { className: "dtl-flow__grid" }, stepCell(1, "business", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 18 }), t("settingsFlow1"), (0, react$1.createElement)("div", { className: "dtl-flow__body" }, (0, react$1.createElement)("div", { className: "dtl-flow__lead" }, t("settingsFlow1Lead")), (0, react$1.createElement)("div", { className: "dtl-flow__sub" }, t("settingsFlow1Sub")), (0, react$1.createElement)(NpmLink, { pkg: "task-ledger" }))), sep(), stepCell(2, "warning", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 18 }), t("settingsFlow2"), FlowList([
+			}, (0, react$1.createElement)("div", { className: "dtl-flow__grid" }, stepCell(1, "business", (0, react$1.createElement)(Icon, {
+				name: "common.base:xiazai",
+				size: 16
+			}), t("settingsFlow1"), (0, react$1.createElement)("div", { className: "dtl-flow__body" }, (0, react$1.createElement)("div", { className: "dtl-flow__lead" }, t("settingsFlow1Lead")), (0, react$1.createElement)("div", { className: "dtl-flow__sub" }, t("settingsFlow1Sub")), (0, react$1.createElement)(NpmLink, { pkg: "task-ledger" }))), sep(), stepCell(2, "warning", (0, react$1.createElement)(Icon, {
+				name: "common.base:gongzuoqu",
+				size: 22
+			}), t("settingsFlow2"), FlowList([
 				t("settingsFlow2Create"),
 				t("settingsFlow2Exec"),
 				t("settingsFlow2Close")
-			])), sep(), stepCell(3, "success", (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 18 }), t("settingsFlow3"), FlowList([
+			])), sep(), stepCell(3, "success", (0, react$1.createElement)(Icon, {
+				name: "common.base:shuju",
+				size: 16
+			}), t("settingsFlow3"), FlowList([
 				t("settingsFlow3Todo"),
 				t("settingsFlow3History"),
 				t("settingsFlow3Stats")
@@ -69035,7 +69335,7 @@ body[data-ds-dark-theme]{
 						})), (0, react$1.createElement)(Button, {
 							variant: "info",
 							size: "lg",
-							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }),
+							icon: (0, react$1.createElement)(Icon, { name: "common.base:gou" }),
 							loading: dirBusy === `rename:${dir.path}`,
 							disabled: dirBusy !== null,
 							onClick: () => {
@@ -69061,7 +69361,7 @@ body[data-ds-dark-theme]{
 						}), (0, react$1.createElement)(Tip, {
 							label: t("settingsPathCopy"),
 							children: (0, react$1.createElement)(IconButton, {
-								icon: copied === dir.path ? (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }) : (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutlineRegular, { size: 14 }),
+								icon: copied === dir.path ? (0, react$1.createElement)(Icon, { name: "common.base:gou" }) : (0, react$1.createElement)(Icon, { name: "common.base:fuzhi" }),
 								label: t("settingsPathCopy"),
 								size: "sm",
 								className: "dtl-dir__copy",
@@ -69089,7 +69389,7 @@ body[data-ds-dark-theme]{
 								setDraft(dir.name);
 							}
 						}, t("settingsDirRename")), (0, react$1.createElement)(IconButton, {
-							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }),
+							icon: (0, react$1.createElement)(Icon, { name: "common.base:guanbi" }),
 							label: t("settingsDirRemove"),
 							size: "sm",
 							variant: "danger",
@@ -69142,7 +69442,7 @@ body[data-ds-dark-theme]{
 			const copyButton = (value) => (0, react$1.createElement)(Tip, {
 				label: t("settingsCopy"),
 				children: (0, react$1.createElement)(IconButton, {
-					icon: copied === value ? (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }) : (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutlineRegular, { size: 14 }),
+					icon: copied === value ? (0, react$1.createElement)(Icon, { name: "common.base:gou" }) : (0, react$1.createElement)(Icon, { name: "common.base:fuzhi" }),
 					label: t("settingsCopy"),
 					size: "sm",
 					onClick: () => {
@@ -69150,20 +69450,29 @@ body[data-ds-dark-theme]{
 					}
 				})
 			});
-			/** 一块可复制的正文（提示词 / 规则片段共用）：复制钮钉在框的右上角（CSS 绝对定位，
-			*  距上、右同距）；单行内容靠正文的 min-height 让它看起来仍是垂直居中。 */
-			const copyBlock = (text) => (0, react$1.createElement)("div", { className: "dtl-set__prompt" }, (0, react$1.createElement)("span", { className: "dtl-set__promptbody" }, text), (0, react$1.createElement)("div", { className: "dtl-set__promptact" }, copyButton(text)));
+			/** 一块可复制的正文（提示词 / 规则片段共用）：外框 = 核心 `Surface` 的 **dashed 档**
+			*  （底 / 边 / 圆角 / 内距归核心，圆角 12 与其它面同档）；复制钮钉在框的右上角
+			*  （CSS 绝对定位，距上、右同距）；单行内容靠正文的 min-height 让它看起来仍是垂直居中。 */
+			const copyBlock = (text) => (0, react$1.createElement)(Surface, {
+				className: "dtl-set__prompt",
+				border: "dashed",
+				padding: "sm"
+			}, (0, react$1.createElement)("span", { className: "dtl-set__promptbody" }, text), (0, react$1.createElement)("div", { className: "dtl-set__promptact" }, copyButton(text)));
 			const step = (no, title, body) => (0, react$1.createElement)("div", { className: "dtl-set__step" }, (0, react$1.createElement)("div", { className: "dtl-set__stephead" }, (0, react$1.createElement)("span", { className: "dtl-set__stepno" }, no), (0, react$1.createElement)("span", { className: "dtl-set__steptitle" }, title)), body);
 			const note = (text) => (0, react$1.createElement)("p", { className: "dtl-set__agents-note" }, text);
 			const prompt = t("settingsAgentsPrompt");
 			const agentsBlock = (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)(SectionHead, {
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconDownloadOutlineRegular, { size: 16 }),
+				icon: (0, react$1.createElement)(Icon, { name: "common.base:xiazai" }),
 				title: (0, react$1.createElement)("span", { className: "dtl-set__rules-title" }, t("settingsAgentsTitle"), (0, react$1.createElement)(FieldHint, {
 					text: t("settingsAgentsHint"),
 					side: "top",
 					maxWidth: 420
 				}))
-			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, (0, react$1.createElement)("p", { className: "dtl-set__agents-lead" }, t("settingsAgentsLead")), step("1", t("settingsAgentsStep1"), (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)("div", { className: "dtl-set__cmd" }, (0, react$1.createElement)("code", { className: "dtl-set__cmdtext" }, SKILL_ADD), copyButton(SKILL_ADD)), note(t("settingsAgentsStep1Note")), note(t("settingsAgentsPromptLabel")), copyBlock(prompt))), step("2", t("settingsAgentsStep2"), (0, react$1.createElement)(react$1.Fragment, null, note(t("settingsAgentsStep2Note")), copyBlock(rulesDefaultText === "" ? rulesText : rulesDefaultText))), step("3", t("settingsAgentsStep3"), note(t("settingsAgentsStep3Note"))), (0, react$1.createElement)("p", { className: "dtl-set__agents-support" }, t("settingsAgentsSupport"))));
+			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, (0, react$1.createElement)("p", { className: "dtl-set__agents-lead" }, t("settingsAgentsLead")), step("1", t("settingsAgentsStep1"), (0, react$1.createElement)(react$1.Fragment, null, (0, react$1.createElement)(ListRow, {
+				className: "dtl-set__cmd",
+				bordered: true,
+				actions: copyButton(SKILL_ADD)
+			}, (0, react$1.createElement)("code", { className: "dtl-set__cmdtext" }, SKILL_ADD)), note(t("settingsAgentsStep1Note")), note(t("settingsAgentsPromptLabel")), copyBlock(prompt))), step("2", t("settingsAgentsStep2"), (0, react$1.createElement)(react$1.Fragment, null, note(t("settingsAgentsStep2Note")), copyBlock(rulesDefaultText === "" ? rulesText : rulesDefaultText))), step("3", t("settingsAgentsStep3"), note(t("settingsAgentsStep3Note"))), (0, react$1.createElement)("p", { className: "dtl-set__agents-support" }, t("settingsAgentsSupport"))));
 			const userModal = userOpen ? (0, react$1.createElement)(Modal, {
 				title: t("settingsUserModalTitle"),
 				width: "576px",
@@ -69189,7 +69498,7 @@ body[data-ds-dark-theme]{
 					actions: [{
 						label: t("settingsUserModalConfirm"),
 						variant: "info",
-						icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, { size: 14 }),
+						icon: (0, react$1.createElement)(Icon, { name: "common.base:gou" }),
 						disabled: pending !== null || name.trim() === "",
 						onClick: create
 					}]
@@ -69238,7 +69547,7 @@ body[data-ds-dark-theme]{
 								useUser(row);
 							}
 						}, t("settingsUseThis")), (0, react$1.createElement)(IconButton, {
-							icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconCloseOutlineRegular, { size: 14 }),
+							icon: (0, react$1.createElement)(Icon, { name: "common.base:guanbi" }),
 							label: t("settingsDeleteUser"),
 							size: "sm",
 							variant: "danger",
@@ -69278,7 +69587,7 @@ body[data-ds-dark-theme]{
 				accent: hasIdentity ? "success" : "danger",
 				bar: { side: "left" }
 			}, hasIdentity ? profileOf(props.identity.name, props.identity.uuid) : profileOf(null, null))), (0, react$1.createElement)("div", { className: "dtl-hero__flow" }, flow)), (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)(SectionHead, {
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFlatListOutlineRegular, { size: 16 }),
+				icon: (0, react$1.createElement)(Icon, { name: "common.base:shuju" }),
 				title: t("settingsDirsTitle"),
 				right: (0, react$1.createElement)("div", { className: "dtl-set__tools" }, (0, react$1.createElement)(Segmented, {
 					items: [
@@ -69311,7 +69620,7 @@ body[data-ds-dark-theme]{
 					}
 				}, t("settingsDirsAdd")))
 			}), (0, react$1.createElement)("div", { className: "dtl-set__body" }, dirsBody)), (0, react$1.createElement)(Surface, { padding: "lg" }, (0, react$1.createElement)(SectionHead, {
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 16 }),
+				icon: (0, react$1.createElement)(Icon, { name: "common.base:yonghu" }),
 				title: (0, react$1.createElement)("span", { className: "dtl-set__rules-title" }, t("settingsRulesTitle"), (0, react$1.createElement)(FieldHint, {
 					text: t("settingsRulesHint"),
 					side: "top",
@@ -69799,7 +70108,7 @@ body[data-ds-dark-theme]{
 				size: "lg",
 				minWidth: SELECT_MIN_WIDTH,
 				maxWidth: SELECT_MAX_WIDTH,
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, { size: 16 }),
+				icon: (0, react$1.createElement)(Icon, { name: "common.base:gongzuoqu" }),
 				value: workspaceOptions.some((option) => option.value === state.query.workspace) ? state.query.workspace : "",
 				options: workspaceOptions,
 				ariaLabel: t("workspaceLabel"),
@@ -69811,7 +70120,7 @@ body[data-ds-dark-theme]{
 				size: "lg",
 				minWidth: SELECT_MIN_WIDTH,
 				maxWidth: SELECT_MAX_WIDTH,
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconUsersOutlineRegular, { size: 16 }),
+				icon: (0, react$1.createElement)(Icon, { name: "common.base:yonghu" }),
 				value: state.query.owner,
 				options: [{
 					value: "",
@@ -69863,8 +70172,9 @@ body[data-ds-dark-theme]{
 			} }, (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "md",
+				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, `← ${t("backToConversation")}`), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.4 261112-095513-990`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.4 261115-010341-516`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
@@ -69887,7 +70197,7 @@ body[data-ds-dark-theme]{
 					},
 					{
 						value: "settings",
-						icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconSettingsOutlineRegular, { size: 16 }),
+						icon: (0, react$1.createElement)(Icon, { name: "common.base:shezhi1" }),
 						ariaLabel: t("settingsEntry")
 					}
 				],
@@ -69895,7 +70205,7 @@ body[data-ds-dark-theme]{
 			}), (0, react$1.createElement)(Button, {
 				variant: "outline",
 				size: "lg",
-				icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconRefreshOutlineRegular, { size: 16 }),
+				icon: (0, react$1.createElement)(Icon, { name: "common.base:shuaxin" }),
 				loading: state.refreshing,
 				onClick: () => {
 					refresh(true);
@@ -70057,11 +70367,12 @@ body[data-ds-dark-theme]{
 				onClick: props.onReset
 			}, props.resetLabel) : null), props.control, (0, react$1.createElement)("p", { className: "dtl-config__hint" }, props.hint));
 		}
-		/** 一个小外链按钮（图标 + 文案，核心 Button）。 */
+		/** 一个小外链按钮（图标 + 文案，核心 Button）。两个链接都指向 GitHub 上的仓库
+		*  （本插件 / 蓝鲸组件库），所以图标统一用 GitHub 品牌标（用户 2026-11-15）。 */
 		const linkButton = (label, url) => (0, react$1.createElement)(Button$4, {
 			size: "lg",
 			variant: "outline",
-			icon: (0, react$1.createElement)(_deepseek_ai_dsh_client_ui_primitives.IconLinkOutlineRegular, { size: 16 }),
+			icon: (0, react$1.createElement)(Icon, { name: "common.logo:github" }),
 			onClick: () => {
 				window.open(url, "_blank", "noopener");
 			}

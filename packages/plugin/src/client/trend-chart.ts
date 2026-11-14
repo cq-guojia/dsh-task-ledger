@@ -20,15 +20,11 @@
  * y 轴五档（中间三档全虚线，底基线实线）；
  * 一屏几格按容器实宽算（宽屏也不会铺出空柱），右上角**绝对定位**的左右箭头一次翻 10 日 / 4 周。
  */
-import {
-	IconChevronLeftOutlineRegular,
-	IconChevronRightOutlineRegular,
-} from "@deepseek-ai/dsh-client-ui-primitives";
 import { createElement as h, type ReactNode, useEffect, useState } from "react";
 import { addDays, formatCount, mondayOf, ymdOf } from "./format";
 import type { LocaleKey, Translate } from "./locales";
 import type { TrendBucketView, TrendGran, TrendOwnerCounts, TrendView } from "./types";
-import { IconButton, Loader, Segmented, Surface, Tip } from "./ui";
+import { Icon, IconButton, Loader, Segmented, Surface, Tip } from "./ui";
 
 /** 柱宽：原 7.5px 的 1.5 倍（用户 2026-10-30）。 */
 const BAR_W = 11.25;
@@ -115,12 +111,9 @@ export function TrendChart(props: {
 			label,
 			side: "bottom",
 			children: h(IconButton, {
-				icon: h(
-					dir === "left"
-						? IconChevronLeftOutlineRegular
-						: IconChevronRightOutlineRegular,
-					{ size: 14 },
-				),
+				icon: h(Icon, {
+					name: dir === "left" ? "common.base:jiantou-zuo" : "common.base:jiantou-you",
+				}),
 				label,
 				title: "",
 				variant: "outline",

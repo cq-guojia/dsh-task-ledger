@@ -195,19 +195,20 @@ export const UI_CONTROLS_CSS = `
   background:var(--dtl-business-soft);color:var(--dtl-business);
   font-size:var(--dtl-font-xs);font-weight:600;}
 .dtl-set__steptitle{font-size:var(--dtl-font-md);font-weight:600;color:var(--dtl-fg);}
-.dtl-set__cmd{display:flex;align-items:center;gap:var(--dtl-space-2);
-  padding:var(--dtl-space-2) var(--dtl-space-3);border:1px solid var(--dtl-border);
-  border-radius:var(--dtl-radius-sm);background:var(--dtl-table-head-bg);}
-.dtl-set__cmdtext{flex:1 1 auto;min-width:0;font-family:var(--dtl-font-mono);
+/* 命令一行 = 核心 ListRow 的带边档（底 / 边 / 圆角 / 内距 / 右侧操作槽全归核心，
+   用户 2026-11-15：不许再自己写 border + border-radius）。这里只留命令文本的等宽排版。 */
+.dtl-set__cmd .dtl-set__cmdtext{min-width:0;font-family:var(--dtl-font-mono);
   font-size:var(--dtl-font-sm);color:var(--dtl-fg);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;}
 .dtl-set__agents-note{margin:var(--dtl-space-2) 0 0;font-size:var(--dtl-font-sm);
   line-height:var(--dtl-line-sm);color:var(--dtl-fg-3);}
-/* 复制钮钉在框的**右上角**（用户 2026-11-11）：距上、右同为 space-2。
-   正文右侧留出按钮位与间隙；单行时正文行高 = 按钮高 ⇒ 上 8 下 8，视觉上仍是垂直居中。 */
-.dtl-set__prompt{position:relative;margin-top:var(--dtl-space-2);
-  padding:var(--dtl-space-2) calc(var(--dtl-space-2) * 2 + 24px) var(--dtl-space-2) var(--dtl-space-3);
-  border:1px dashed var(--dtl-border-strong);border-radius:var(--dtl-radius-sm);}
+/* 可复制正文块 = 核心 Surface 的 dashed 档（底 / 边 / 圆角 / 内距四轴归核心，
+   圆角取核心 md=12）。这里只补两件核心不管的事：给复制钮当定位上下文、
+   把右侧内距让出按钮位（正文不许压到按钮下面）。
+   线色用 strong（比核心默认 border 深一档），改的是 Surface 自己的变量，不覆盖它的皮肤。 */
+.dshpc-surface.dtl-set__prompt{--surface-border:var(--dtl-border-strong);
+  position:relative;margin-top:var(--dtl-space-2);
+  padding-right:calc(var(--dtl-space-2) * 2 + 24px);}
 .dtl-set__promptact{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-2);}
 .dtl-set__promptbody{display:block;min-height:24px;font-size:var(--dtl-font-sm);
   line-height:24px;color:var(--dtl-fg-2);white-space:pre-wrap;word-break:break-word;}
@@ -267,7 +268,8 @@ export const UI_CONTROLS_CSS = `
 /* 三步说明（用户 2026-11-02）：一个大框（核心 Surface）里三格并排，中间用**虚线 + 圆箭头节点**分隔。
    每块：图标徽标（左，三格三种颜色）+ 圈数字（右）→ 小标题 → 一条条要点（行间极淡细线，不画小框）。
    分隔线是**真实元素**（.dtl-flow__sep），不靠伪元素 —— 用户那边伪元素没出来过。
-   圆用 SVG <circle>，箭头用官方 chevron 图标（用户 2026-11-02：手画箭头太丑）。
+   圆底由 CSS 画（.dtl-flow__node 的圆角 + 不透明底色），箭头用核心图标库的
+   common.base:jiantou-you（用户 2026-11-15：手绘圆环 + 描边箭头一并换掉）。
    整块撑满右栏高度 ⇒ 与左边身份卡等高。 */
 .dtl-flow__frame{--dtl-flow-pad:calc(var(--dtl-space-3) * 2.5);}
 .dshpc-surface.dtl-flow__frame{flex:1 1 auto;min-height:0;min-width:0;display:flex;}
@@ -282,24 +284,21 @@ export const UI_CONTROLS_CSS = `
 .dtl-flow__sep{position:relative;align-self:stretch;justify-self:center;width:0;
   margin:20px 0;border-left:1px dashed var(--dtl-border);}
 .dtl-flow__sep .dtl-flow__node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
-.dtl-flow__sep .dtl-flow__node .dtl-flow__ring{position:absolute;inset:0;}
-/* 底色必须是**不透明**的：--dtl-chip-strong 带透明，骑在虚线上会透出线来。
-   这里把「13% fg 叠在面板底上」的结果直接算成实色（color-mix 出不透明结果），
-   与 1/2/3 徽标同观感，又能压过虚线。 */
-.dtl-flow__sep .dtl-flow__node .dtl-flow__ring circle{
-  fill:color-mix(in srgb,var(--dtl-fg) 13%,var(--dtl-surface-1));stroke:none;}
-/* 箭头 = 一根横杆 + 一个右向尖头（单个 path 描边，不填充）；坐标已几何居中 */
-.dtl-flow__sep .dtl-flow__node .dtl-flow__arrow{fill:none;stroke:var(--dtl-fg);
-  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  /* 圆底 = CSS 徽标（原来是 SVG <circle>，用户 2026-11-15 换成核心图标后由 CSS 承担）。
+     底色必须**不透明**：--dtl-chip-strong 带透明，骑在虚线上会透出线来。
+     这里把「13% fg 叠在面板底上」的结果直接算成实色，与 1/2/3 徽标同观感，又能压过虚线。 */
+  border-radius:50%;color:var(--dtl-fg);
+  background:color-mix(in srgb,var(--dtl-fg) 13%,var(--dtl-surface-1));}
 /* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
 /* 图标徽标本身是核心 IconButton（plain + lg=32 方）：尺寸与圆角走核心控件契约，
    这里只留布局。pointer-events 关掉 —— 它是装饰，不该有 hover 变色。 */
 .dtl-flow__icon{flex:none;pointer-events:none;}
-/* 图标本体放大一档（用户 2026-11-02）：只放大里面的 svg，32 方的框不动 */
-.dtl-flow__icon svg{width:22px;height:22px;}
+/* 图标本体不再写死尺寸：调用处给 16px（用户 2026-11-15：22px 把 32 方的框撑满，
+   要留出 4~5px 以上白边）。字体字形的边框就是 em 方框，inline 的 width/height 也不生效，
+   所以只有内联 font-size 说了算，这里不留覆盖，免得两处打架。 */
 .dtl-flow__num{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:26px;height:26px;box-sizing:border-box;border-radius:9999px;
   background:var(--dtl-chip-strong);font-size:var(--dtl-font-sm);font-weight:600;
@@ -332,8 +331,8 @@ export const UI_CONTROLS_CSS = `
   .dtl-flow__grid{grid-template-columns:minmax(0,1fr);}
   .dtl-flow__sep{width:auto;height:0;margin:0 var(--dtl-flow-pad);
     border-left:0;border-top:1px dashed var(--dtl-border);}
-  /* 落成一列时箭头朝下：整枚 ring 转 90°（圆对称，箭头与右移量一起转朝下） */
-  .dtl-flow__sep .dtl-flow__node .dtl-flow__ring{transform:rotate(90deg);}
+  /* 落成一列时箭头朝下：只转节点里的那颗箭头（圆底对称，转了也看不出来） */
+  .dtl-flow__sep .dtl-flow__node > *{transform:rotate(90deg);}
 }
 
 /* 台账目录表（核心 Table）：只要列内的排版，表头 / 行线 / 悬浮底都归核心。

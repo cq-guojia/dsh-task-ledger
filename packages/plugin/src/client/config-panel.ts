@@ -22,10 +22,9 @@ import {
 	useState,
 	type ReactNode,
 } from "react";
-import { IconLinkOutlineRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 import { Button, Chip, Input, Picker } from "dsh-plugin-core/ui";
 import type { Translate } from "./locales";
-import { ensureUiBase } from "./ui";
+import { ensureUiBase, Icon } from "./ui";
 
 /** 本仓库地址（设置区的第一个链接）。 */
 const PROJECT_URL = "https://github.com/cq-guojia/dsh-task-ledger";
@@ -110,14 +109,15 @@ function configField(props: {
 	);
 }
 
-/** 一个小外链按钮（图标 + 文案，核心 Button）。 */
+/** 一个小外链按钮（图标 + 文案，核心 Button）。两个链接都指向 GitHub 上的仓库
+ *  （本插件 / 蓝鲸组件库），所以图标统一用 GitHub 品牌标（用户 2026-11-15）。 */
 const linkButton = (label: string, url: string): ReactNode =>
 	h(
 		Button,
 		{
 			size: "lg",
 			variant: "outline",
-			icon: h(IconLinkOutlineRegular, { size: 16 }),
+			icon: h(Icon, { name: "common.logo:github" }),
 			onClick: () => {
 				window.open(url, "_blank", "noopener");
 			},

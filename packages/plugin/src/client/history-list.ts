@@ -11,11 +11,6 @@
  * 屏幕外的行用首尾两个等高占位行撑住滚动高度 ⇒ DOM 行数与总条数无关。
  * 分页、按天分片全部取消：整月数据一次取回、全在内存，滚动时只按行号重算窗口。
  */
-import {
-	IconFolderCloseRegular,
-	IconTrashOutlineRegular,
-	IconUsersOutlineRegular,
-} from "@deepseek-ai/dsh-client-ui-primitives";
 import type { PickerGroup } from "dsh-plugin-core/ui";
 import {
 	createElement as h,
@@ -36,7 +31,7 @@ import { markIdentityMissing } from "./store";
 import type { HistoryRecord } from "./types";
 import {
 	Select, Button, SectionHead, Segmented, SplitGroup, Surface, Tag, Loader,
-	IconButton, Tip, notify,
+	IconButton, Icon, Tip, notify,
 } from "./ui";
 
 const WEEKDAY_KEYS = [
@@ -746,7 +741,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							label: t("actionDelete"),
 							title: "",
 							className: "dtl-iconbtn--muted",
-							icon: h(IconTrashOutlineRegular, { size: 14 }),
+							icon: h(Icon, { name: "common.base:shanchu" }),
 							disabled:
 								deleteBusy ||
 								record.src === "" ||
@@ -905,7 +900,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 					size: "lg",
 					minWidth: SELECT_MIN_WIDTH,
 					maxWidth: SELECT_MAX_WIDTH,
-					icon: h(IconFolderCloseRegular, { size: 16 }),
+					icon: h(Icon, { name: "common.base:gongzuoqu" }),
 					value: workspace,
 					options: props.workspaceOptions,
 					ariaLabel: t("workspaceLabel"),
@@ -918,7 +913,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							size: "lg",
 							minWidth: SELECT_MIN_WIDTH,
 							maxWidth: SELECT_MAX_WIDTH,
-							icon: h(IconUsersOutlineRegular, { size: 16 }),
+							icon: h(Icon, { name: "common.base:yonghu" }),
 							value: owner,
 							options: [{ value: "", label: t("ownerAll") }],
 							groups: props.ownerGroups,
