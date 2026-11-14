@@ -1,7 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261114-1624-d008-把插件手绘图标迁到核心图标库": {"category": "重构", "created": "2026-11-14 16:24:52", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-14 16:24:52", "status": "doing", "tags": ["图标", "图标库", "dsh-plugin-core", "依赖升级"], "title": "把插件手绘图标迁到核心图标库", "updated": "2026-11-14 17:27:35", "worklog": "worklog/202611/14-1624-d008-把插件手绘图标迁到核心图标库.md"}
+    "20261114-1624-d008-把插件手绘图标迁到核心图标库": {"category": "重构", "created": "2026-11-14 16:24:52", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-14 16:24:52", "status": "doing", "tags": ["图标", "图标库", "dsh-plugin-core", "依赖升级"], "title": "把插件手绘图标迁到核心图标库", "updated": "2026-11-14 17:27:55", "worklog": "worklog/202611/14-1624-d008-把插件手绘图标迁到核心图标库.md"}
   },
   "version": "20261022000000"
 }
