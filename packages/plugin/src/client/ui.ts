@@ -14,7 +14,7 @@
 import { Tooltip } from "@deepseek-ai/dsh-client-ui-primitives";
 /* 核心 0.35.26 起按控件物理切割（一个控件一个子路径）：这里**只引用到的入口**，
    不再 `from "dsh-plugin-core/ui"` 整包引（用户 2026-11-15）。加控件就加一行对应子路径。 */
-import { Button as CoreButton, IconButton as CoreIconButton } from "dsh-plugin-core/ui/button";
+import { Button as CoreButton } from "dsh-plugin-core/ui/button";
 import { Chip as CoreChip } from "dsh-plugin-core/ui/chip";
 import { Input as CoreInput } from "dsh-plugin-core/ui/input";
 import { Picker as CorePicker, type PickerGroup } from "dsh-plugin-core/ui/picker";
@@ -96,11 +96,11 @@ const UI_BASE_CSS = `
   padding:calc(var(--dtl-space-3) + 25px) var(--dtl-space-4) var(--dtl-space-3);}
 .dtl-hist__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
   display:flex;gap:var(--dtl-space-2);}
-/* 翻页箭头 = 「有底、无边框」款（用户 2026-10-30）：核心 IconButton 没有「实心无描边」这一档
-   （plain 无底 / outline 有底带边）⇒ 这里给它换底、把描边抹平。底取 --dtl-btn-soft（不透明，
+/* 翻页箭头 = 「有底、无边框」款（用户 2026-10-30）：核心按钮没有「实心无描边」这一档
+   （ghost 无底 / outline 有底带边）⇒ 这里给它换底、把描边抹平。底取 --dtl-btn-soft（不透明，
    压得住下面的刻度线）。hover 仍走核心那档灰底；disabled 的弱化改用 fg-dim 字色表达。 */
-.dtl-hist__nav .dshpc-iconbtn{background:var(--dtl-btn-soft);border-color:transparent;}
-.dtl-hist__nav .dshpc-iconbtn:disabled{opacity:1;color:var(--dtl-fg-dim);}
+.dtl-hist__nav .dshpc-btn{background:var(--dtl-btn-soft);border-color:transparent;}
+.dtl-hist__nav .dshpc-btn:disabled{opacity:1;color:var(--dtl-fg-dim);}
 .dtl-hist__plot{position:relative;flex:1 1 auto;min-height:0;}
 /* 刻度线四档：顶/底实线，中间两条虚线（用户 2026-10-29：中间要有两根刻度线） */
 .dtl-hist__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
@@ -205,7 +205,7 @@ const UI_BASE_CSS = `
    底取 --dtl-btn-soft（不透明，压得住下面的刻度线） */
 .dtl-trend__nav{position:absolute;top:var(--dtl-space-2);right:var(--dtl-space-3);z-index:2;
   display:flex;align-items:center;gap:var(--dtl-space-2);}
-.dtl-trend__nav .dshpc-iconbtn{background:var(--dtl-btn-soft);border-color:transparent;}
+.dtl-trend__nav .dshpc-btn{background:var(--dtl-btn-soft);border-color:transparent;}
 .dtl-trend__body{flex:1 1 auto;min-height:0;display:flex;gap:var(--dtl-space-2);}
 .dtl-trend__axis{display:flex;flex-direction:column;justify-content:space-between;flex:none;
   padding-bottom:12px;font-size:10px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;
@@ -543,21 +543,25 @@ export function Button(props: {
 	);
 }
 
-/** 图标钮：改由核心 `IconButton` 承担。
- *  `className` 只用于挂本文件的修饰类（如 `.dtl-iconbtn--muted`），不覆盖核心皮肤。 */
+/** 图标钮：核心 0.36 起 `IconButton` 并入 `Button`（不传 children 即纯图标钮，`label` 当无障碍名）。
+ *  这里只做**旧档位 → 新档位**的映射，使用点不必跟着改：
+ *   `plain` → `ghost`（无底无边、灰字，hover 灰底）、`outline` → `outline`、
+ *   `danger` → `ghost` + 危险色（旧 danger 是红字，不是红实心）。
+ *   `className` 只用于挂本文件的修饰类（如 `.dtl-iconbtn--muted`），不覆盖核心皮肤。 */
 export function IconButton(props: {
 	icon: ReactNode;
 	label: string;
 	onClick?: () => void;
 	variant?: "plain" | "outline" | "danger";
 	size?: "sm" | "md" | "lg";
-	/** 图标色（任意 CSS 色值，hover 按它混浅底）—— 核心 0.20 起。 */
+	/** 图标色（任意 CSS 色值，hover 按它混浅底）—— 核心 `color`。 */
 	color?: string;
-	/** 底色（任意 CSS 色值，不传 = 无底色）—— 核心 0.20 起。 */
+	/** 底色（任意 CSS 色值，不传 = 无底色）。核心合并后没有这个参数，见下方变量覆盖。 */
 	background?: string;
 	disabled?: boolean;
-	/** 加载中：图标位换小圈并禁用 —— 核心 0.22 起（图标钮本身定宽定高，换圈不跳）。 */
+	/** 加载中：图标位换小圈并禁用（图标钮本身定宽定高，换圈不跳）。 */
 	loading?: boolean;
+	/** 已无意义：核心全站不渲染原生 title，提示一律走 `Tip`（保留参数只为旧调用点不用改）。 */
 	title?: string;
 	className?: string;
 	/** 纯装饰时用：不参与 tab 序列（原生属性透传）。 */
@@ -565,22 +569,27 @@ export function IconButton(props: {
 	/** 纯装饰时用：读屏跳过（原生 `aria-hidden`）。 */
 	ariaHidden?: boolean;
 }): ReactNode {
-	return h(CoreIconButton, {
+	const variant = props.variant ?? "plain";
+	// 核心 `Button` 只有 color 一条颜色轴：非实心档里 color 同时当字色与描边色，
+	// 而旧 IconButton 的「浅底 + 同色系图标」需要底与字分开 ⇒ 底与它的 hover 派生走变量覆盖。
+	const accent: Record<string, string> = {};
+	if (props.background !== undefined && props.background !== "") {
+		accent["--btn-bg"] = props.background;
+		accent["--btn-bg-hover"] = `color-mix(in srgb, ${props.background} 85%, var(--dshpc-fg))`;
+	}
+	return h(CoreButton, {
 		icon: props.icon,
 		label: props.label,
 		onClick: props.onClick,
-		variant: props.variant ?? "plain",
+		variant: variant === "outline" ? "outline" : "ghost",
 		size: props.size ?? "md",
-		color: props.color,
-		background: props.background,
+		color: props.color ?? (variant === "danger" ? "var(--dshpc-danger)" : undefined),
 		disabled: props.disabled,
 		loading: props.loading,
-		// 默认压掉原生 title：核心 IconButton 会用 label 兜底成 title，浏览器那套延迟提示
-		// 又慢又土（用户 2026-11-03：全删）。要提示就用核心 `Tip`，无障碍名仍是 label。
-		title: props.title ?? "",
 		className: props.className,
 		tabIndex: props.tabIndex,
 		"aria-hidden": props.ariaHidden === true ? true : undefined,
+		style: Object.keys(accent).length === 0 ? undefined : (accent as CSSProperties),
 	});
 }
 
@@ -593,7 +602,7 @@ setTooltipRenderer((props) => h(Tooltip, { ...props, portal: true }));
 /** 悬停提示（本插件**唯一**挂 Tooltip 的入口）。
  *
  *  ⚠️ 官方 `Tooltip` 给子元素挂 `ref` 来当锚点（`children.ref` → `cloneElement`），
- *  而核心控件（Button / IconButton / Chip）都是**裸函数组件**（无 forwardRef）⇒ ref 被 React
+ *  而核心控件（Button / Chip）都是**裸函数组件**（无 forwardRef）⇒ ref 被 React
  *  丢掉、锚点永远 null、气泡静默不出现。所以这里统一垫一层**真 DOM 的 span** 当锚点：
  *  悬停/聚焦事件冒泡到 span 照样触发，按钮仍由核心控件渲染。
  *  `display:inline-flex` 让垫片不改变原控件在 flex 行里的尺寸与对齐。 */

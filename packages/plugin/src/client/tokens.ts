@@ -9,7 +9,7 @@
  *  - **离散刻度**：圆角 4/8/12、间距 4/8/12/16、字号 11/12/13/14/16/26
  *    ——业务文件不许出现 5/7/9px、不许自造档位（要加档位改本文件）。
  *
- * 2026-10-28 清理：控件皮肤全部交回 `dsh-plugin-core`（Button / IconButton / Input / Picker /
+ * 2026-10-28 清理：控件皮肤全部交回 `dsh-plugin-core`（Button / Input / Picker /
  * Segmented / Chip / StripCard），随之无引用的 token（控件高度三档、旧 chip 底、图表三色、
  * 旧阴影 / 圆角大档等 39 个）一并删除——**本文件只保留本插件业务壳真正消费的变量**。
  *
@@ -150,7 +150,7 @@ body[data-ds-dark-theme]{
 `;
 
 /**
- * 业务壳样式（L2）：核心控件（Button / IconButton / Input / Picker / Segmented / Chip /
+ * 业务壳样式（L2）：核心控件（Button / Input / Picker / Segmented / Chip /
  * StripCard）自己的皮肤全在 core，本文件**不再重写任何控件外观**——只留本插件独有的
  * 容器类。颜色 / 圆角 / 字号一律只消费 `var(--dtl-*)`。
  */
@@ -293,7 +293,7 @@ export const UI_CONTROLS_CSS = `
 /* 顶行：图标徽标在左、圈数字在右 */
 .dtl-flow__top{display:flex;align-items:center;justify-content:space-between;
   gap:var(--dtl-space-2);width:100%;}
-/* 图标徽标本身是核心 IconButton（plain + lg=32 方）：尺寸与圆角走核心控件契约，
+/* 图标徽标本身是核心按钮的纯图标形态（ghost + lg=32 方）：尺寸与圆角走核心控件契约，
    这里只留布局。pointer-events 关掉 —— 它是装饰，不该有 hover 变色。 */
 .dtl-flow__icon{flex:none;pointer-events:none;}
 /* 图标本体不再写死尺寸：调用处给 16px（用户 2026-11-15：22px 把 32 方的框撑满，

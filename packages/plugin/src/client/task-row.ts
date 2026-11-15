@@ -613,8 +613,8 @@ export function TaskRowView(props: {
 			variant: "plain",
 			size: "md",
 			label: t("copyTaskId"),
-			// 抑制原生 title（系统提示要悬停一两秒才出，和官方气泡抢）：
-			// 核心 IconButton 是 `title ?? label`，给空串即不渲染原生提示。
+			// 核心按钮全站不渲染原生 title（系统提示要悬停一两秒才出，和官方气泡抢）；
+			// 空串是旧调用点的遗留，不影响渲染。
 			title: "",
 			className: "dtl-iconbtn--muted",
 			icon: h(Icon, { name: "common.base:fuzhi" }),
