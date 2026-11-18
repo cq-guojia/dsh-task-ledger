@@ -2,7 +2,7 @@
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
     "20261117-0231-8027-慢操作改后台执行并通知": {"category": "建设", "created": "2026-11-17 02:31:03", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-17 02:31:27", "status": "doing", "tags": ["后台任务", "通知中心", "结案", "迁入迁出"], "title": "慢操作改后台执行并通知", "updated": "2026-11-17 09:07:51", "worklog": "worklog/202611/17-0231-8027-慢操作改后台执行并通知.md"},
-    "20261117-1654-6159-后台任务通知与执行方案": {"category": "方案", "created": "2026-11-17 16:54:46", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-17 16:54:46", "status": "doing", "tags": ["通知", "后台任务", "长连接", "方案"], "title": "后台任务通知与执行方案", "updated": "2026-11-18 00:56:08", "worklog": "worklog/202611/17-1654-6159-后台任务通知与执行方案.md"}
+    "20261117-1654-6159-后台任务通知与执行方案": {"category": "方案", "created": "2026-11-17 16:54:46", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-17 16:54:46", "status": "doing", "tags": ["通知", "后台任务", "长连接", "方案"], "title": "后台任务通知与执行方案", "updated": "2026-11-18 01:15:09", "worklog": "worklog/202611/17-1654-6159-后台任务通知与执行方案.md"}
   },
   "version": "20261022000000"
 }
