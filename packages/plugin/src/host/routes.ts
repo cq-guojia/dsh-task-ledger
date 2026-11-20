@@ -24,13 +24,15 @@ import { listDirs, writeDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { actOnTask, type TaskActionInput } from "./services/task.service.js";
 import {
-	continueTask,
-	resolveWorkspace,
+	startSession,
 	type AgentDefaultModelLike,
 	type AgentPresetsLike,
 	type AgentsLike,
+	type SessionDeps,
 	type SessionTitleLike,
-} from "./services/continue.service.js";
+	resolveWorkspace,
+} from "./services/session.service.js";
+import type { SessionJobStore } from "./services/session-job.store.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 import { readSettings, writeSettings } from "./services/rules-injection.service.js";
 import type { RegistryWorkspace } from "./types.js";
@@ -63,6 +65,8 @@ export interface RouteDeps {
 	readonly presets?: () => AgentPresetsLike | undefined;
 	readonly defaultModel?: () => AgentDefaultModelLike | undefined;
 	readonly sessionTitle?: () => SessionTitleLike | undefined;
+	/** 会话作业的状态真源（由入口建一份，同时交给 `serveTaskStream` 作 TaskStreamSource）。 */
+	readonly jobs: SessionJobStore;
 }
 
 /** API 前缀（唯一真源就在这一处）。 */
@@ -70,6 +74,15 @@ const API_PREFIX = "/api/task-ledger";
 
 /** 核心 explorer 的只读文件路由（`serveFsRoute` 挂这里，client 的 `connectFs` 用同一个值）。 */
 export const FS_ROUTE = `${API_PREFIX}/fs`;
+
+/**
+ * 核心任务中心的路由根：`serveTaskStream` 挂 `${TASK_CENTER_ROUTE}/stream`，
+ * `serveTaskSubmit` 挂 `${TASK_CENTER_ROUTE}/submit`；client 用同源相对路径（不带前导斜杠）。
+ */
+export const TASK_CENTER_ROUTE = `${API_PREFIX}/task-center`;
+
+/** 任务中心的 viewer：本机单用户插件没有账号体系，各工作区之间也没有权限边界。 */
+export const TASK_CENTER_VIEWER = "local";
 
 /**
  * JSON 响应出口（全仓唯一）：客户端声明收 gzip 且响应够大就压。
@@ -321,7 +334,13 @@ export function registerRoutes(
 
 	registerRead("/workspaces", async (_req, res) => {
 		try {
-			sendJson(res, 200, { workspaces: await workspacesOf(deps) });
+			// isDsh：这个台账目录是否登记为宿主工作区 —— 「交给 Agent」能不能起会话的判据。
+			// 与 session.service 用同一个 resolveWorkspace，判据只有一处（path 精确 / realpath 归一）。
+			const workspaces = (await workspacesOf(deps)).map((ws) => ({
+				...ws,
+				isDsh: resolveWorkspace(deps.registry, ws.path).kind === "dsh",
+			}));
+			sendJson(res, 200, { workspaces });
 		} catch (error) {
 			sendFailure(res, error);
 		}
@@ -520,38 +539,15 @@ export function registerRoutes(
 		},
 	});
 
-	// 工作区归属探测（2026-11-03）：非 DSH 工作区**起不了会话**，「继续」与「完成」都先问这一下，
-	// 判据与「继续」完全同一条（`resolveWorkspace`，含 realpath 归一），不各写一份。
+	// 起会话的**唯一命令面**（2026-11-17 收敛）：「继续」与「完成」只差 `policy` 一个字段，
+	// 不再各开一条路由、各写一份起会话实现。工作区归属判据在 service 里（唯一一处）。
+	// 非 DSH 工作区**不是错误** ⇒ 200 + `kind: "not-dsh"`，界面据此先复制提示词再弹警告。
 	webServer.register({
 		kind: "exact",
-		path: `${API_PREFIX}/workspace/kind`,
-		handler: (req, res) => {
-			try {
-				const path =
-					new URL(req.url ?? "/", "http://localhost").searchParams.get("path") ?? "";
-				if (path.trim() === "") throw new Error(`${BAD_REQUEST}必须给台账目录路径`);
-				const resolved = resolveWorkspace(deps.registry, path);
-				sendJson(
-					res,
-					200,
-					resolved.kind === "dsh"
-						? { kind: "dsh", workspaceId: resolved.workspace.id }
-						: { kind: "not-dsh" },
-				);
-			} catch (error) {
-				sendFailure(res, error);
-			}
-		},
-	});
-
-	// 「继续」：在该台账所属的 DSH 工作区里起会话 + 注入只读提示词（2026-11-03）。
-	// 非 DSH 工作区**不是错误** ⇒ 200 + `kind: "not-dsh"`，界面据此先复制任务号再弹警告。
-	webServer.register({
-		kind: "exact",
-		path: `${API_PREFIX}/task/continue`,
+		path: `${API_PREFIX}/task/session/start`,
 		handler: async (req, res) => {
 			if (req.method !== "POST") {
-				sendJson(res, 405, { error: "继续任务只接受 POST" });
+				sendJson(res, 405, { error: "起会话只接受 POST" });
 				return;
 			}
 			try {
@@ -569,22 +565,24 @@ export function registerRoutes(
 				// 提示词 / 标题都由客户端拼（要跟界面语言走），host 只负责注入原文
 				const prompt = typeof body.prompt === "string" ? body.prompt : "";
 				if (prompt.trim() === "") throw new Error(`${BAD_REQUEST}必须给提示词`);
+				const policy = body.policy === "close" ? "close" : "resume";
 				const title =
 					typeof body.title === "string" && body.title.trim() !== ""
 						? body.title
-						: `继续任务 ${id}`;
+						: `任务 ${id}`;
 				sendJson(
 					res,
 					200,
-					await continueTask(
+					await startSession(
 						{
 							registry: deps.registry,
 							agents: deps.agents?.(),
 							presets: deps.presets?.(),
 							defaultModel: deps.defaultModel?.(),
 							sessionTitle: deps.sessionTitle?.(),
-						},
-						{ workspaceId, id, title, prompt },
+							jobs: deps.jobs,
+						} satisfies SessionDeps,
+						{ workspace: workspaceId, taskId: id, policy, title, prompt },
 					),
 				);
 			} catch (error) {

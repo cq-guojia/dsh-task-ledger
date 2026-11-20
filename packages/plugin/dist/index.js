@@ -10,9 +10,11 @@
  * 满足不了的依赖会令 entry 一直 pending、卡死整个 dsh 启动）；两条注入线
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
-import { serveFsRoute } from "dsh-plugin-core/host";
-import { FS_ROUTE, registerRoutes } from "./host/routes.js";
+import { serveFsRoute, serveTaskStream, serveTaskSubmit } from "dsh-plugin-core/host";
+import { FS_ROUTE, TASK_CENTER_ROUTE, TASK_CENTER_VIEWER, registerRoutes, } from "./host/routes.js";
+import { startSession } from "./host/services/session.service.js";
 import { installRulesInjection } from "./host/services/rules-injection.service.js";
+import { createSessionJobStore } from "./host/services/session-job.store.js";
 import { buildSkillRegistration, } from "./host/skill/registration.js";
 export const name = "dsh-task-ledger";
 /**
@@ -75,15 +77,73 @@ export function apply(ctx) {
             console.warn("[task-ledger] workspaceRegistry / webServer 未就位，数据面路由不注册");
             return;
         }
+        // 会话作业的状态真源：一份实例同时喂给命令路由与任务中心路由。
+        // 进程内存储，随插件 dispose 释放（宿主重启 ⇒ 会话已断 ⇒ 记录本就该消失）。
+        const jobs = createSessionJobStore();
+        ctx.effect(() => () => {
+            jobs.dispose();
+        });
+        // 起会话要用的宿主服务：现取、不预注入（缺席只让该动作报人话，不拖垮数据面）
+        const getAgents = serviceOf(ctx, "agents");
+        const getPresets = serviceOf(ctx, "agentPresets");
+        const getDefaultModel = serviceOf(ctx, "agentDefaultModel");
+        const getSessionTitle = serviceOf(ctx, "sessionTitle");
         registerRoutes(webServer, {
             registry,
-            // 「继续」要起会话：agents / agentPresets / agentDefaultModel 三者按需现取
-            agents: serviceOf(ctx, "agents"),
-            presets: serviceOf(ctx, "agentPresets"),
-            defaultModel: serviceOf(ctx, "agentDefaultModel"),
-            sessionTitle: serviceOf(ctx, "sessionTitle"),
+            agents: getAgents,
+            presets: getPresets,
+            defaultModel: getDefaultModel,
+            sessionTitle: getSessionTitle,
+            jobs,
         });
-        console.info("[task-ledger] 数据面路由已注册（读 /api/task-ledger/workspaces、/board/snapshot；写 /task/action、/task/continue）");
+        // submit 回调要的是「值」形状（SessionDeps），每次现取，跟路由共用同一组 getter。
+        const sessionDeps = () => ({
+            registry,
+            agents: getAgents(),
+            presets: getPresets(),
+            defaultModel: getDefaultModel(),
+            sessionTitle: getSessionTitle(),
+            jobs,
+        });
+        // 任务中心：服务端权威三件套由核心挂，本插件只给状态源与提交回调。
+        // authorize：本机单用户、工作区之间无权限边界 ⇒ 固定 viewer / true。
+        const offStream = serveTaskStream(ctx, {
+            basePath: TASK_CENTER_ROUTE,
+            authorize: () => TASK_CENTER_VIEWER,
+            source: jobs,
+        });
+        const offSubmit = serveTaskSubmit(ctx, {
+            path: `${TASK_CENTER_ROUTE}/submit`,
+            authorize: () => true,
+            onSubmit: async (payload) => {
+                const key = typeof payload.key === "string" ? payload.key : "";
+                const taskId = key.startsWith("close:") ? key.slice("close:".length) : "";
+                if (taskId === "")
+                    throw new Error("提交缺 close:<任务号> key");
+                const args = (payload.args ?? {});
+                const workspace = typeof args.workspace === "string" ? args.workspace : "";
+                const prompt = typeof args.prompt === "string" ? args.prompt : "";
+                const title = typeof payload.title === "string" ? payload.title : `任务 ${taskId}`;
+                const reply = await startSession(sessionDeps(), {
+                    workspace,
+                    taskId,
+                    policy: "close",
+                    title,
+                    prompt,
+                });
+                if (reply.kind === "not-dsh")
+                    throw new Error("台账目录不是宿主工作区，起不了会话");
+                const record = jobs.find(key);
+                if (record === undefined)
+                    throw new Error("作业登记失败");
+                return record.id;
+            },
+        });
+        ctx.effect(() => () => {
+            offStream();
+            offSubmit();
+        });
+        console.info("[task-ledger] 数据面路由已注册（读 /api/task-ledger/board/snapshot 等；作业流 /task-center/stream、提交 /task-center/submit）");
     });
     // ── 只读文件路由（核心 explorer 的数据面：选目录弹窗 + 文件预览都吃它） ──
     // 官方 workspaceFiles 只能在各自工作区内列目录，选台账目录要能走全盘 ⇒ 用核心这条。

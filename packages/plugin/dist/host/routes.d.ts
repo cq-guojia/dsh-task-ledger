@@ -8,7 +8,8 @@
  * 详情 / 历史 / 筛选项 / 趋势 / 写动作的端点与实现已删除（要接回按 skill 方法重写，不复用旧直读逻辑）。
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { type AgentDefaultModelLike, type AgentPresetsLike, type AgentsLike, type SessionTitleLike } from "./services/continue.service.js";
+import { type AgentDefaultModelLike, type AgentPresetsLike, type AgentsLike, type SessionTitleLike } from "./services/session.service.js";
+import type { SessionJobStore } from "./services/session-job.store.js";
 import type { RegistryWorkspace } from "./types.js";
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 docs/dependencies/host-webserver.md）。 */
 export interface WebServerLike {
@@ -33,7 +34,16 @@ export interface RouteDeps {
     readonly presets?: () => AgentPresetsLike | undefined;
     readonly defaultModel?: () => AgentDefaultModelLike | undefined;
     readonly sessionTitle?: () => SessionTitleLike | undefined;
+    /** 会话作业的状态真源（由入口建一份，同时交给 `serveTaskStream` 作 TaskStreamSource）。 */
+    readonly jobs: SessionJobStore;
 }
 /** 核心 explorer 的只读文件路由（`serveFsRoute` 挂这里，client 的 `connectFs` 用同一个值）。 */
 export declare const FS_ROUTE = "/api/task-ledger/fs";
+/**
+ * 核心任务中心的路由根：`serveTaskStream` 挂 `${TASK_CENTER_ROUTE}/stream`，
+ * `serveTaskSubmit` 挂 `${TASK_CENTER_ROUTE}/submit`；client 用同源相对路径（不带前导斜杠）。
+ */
+export declare const TASK_CENTER_ROUTE = "/api/task-ledger/task-center";
+/** 任务中心的 viewer：本机单用户插件没有账号体系，各工作区之间也没有权限边界。 */
+export declare const TASK_CENTER_VIEWER = "local";
 export declare function registerRoutes(webServer: WebServerLike, deps: RouteDeps): void;

@@ -739,8 +739,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							variant: "plain",
 							size: "md",
 							label: t("actionDelete"),
-							title: "",
-							className: "dtl-iconbtn--muted",
+							className: "dtl-icon--muted",
 							icon: h(Icon, { name: "common.base:shanchu" }),
 							disabled:
 								deleteBusy ||

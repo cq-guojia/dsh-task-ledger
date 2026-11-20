@@ -105,7 +105,7 @@ export function TrendChart(props: {
 	const step = STEP[gran];
 	const unit = t(UNIT[gran]);
 
-	/** 翻页钮：**只画箭头**（核心 `IconButton` 出皮、官方图标出图形）；悬停提示走官方 Tooltip。 */
+	/** 翻页钮：**只画箭头**（核心按钮出皮、官方图标出图形）；悬停提示走官方 Tooltip。 */
 	const navButton = (dir: "left" | "right", label: string, onClick: () => void): ReactNode =>
 		h(Tip, {
 			label,
@@ -115,7 +115,6 @@ export function TrendChart(props: {
 					name: dir === "left" ? "common.base:jiantou-zuo" : "common.base:jiantou-you",
 				}),
 				label,
-				title: "",
 				variant: "outline",
 				size: "sm",
 				onClick,

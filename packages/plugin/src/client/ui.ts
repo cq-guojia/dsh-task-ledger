@@ -319,8 +319,8 @@ const UI_BASE_CSS = `
 /* 次级图标钮（复制 ID / 查看）：动作排里**常驻**，故比旁边那几个描边动作钮浅一档
    （用户 2026-10-28：灰一点、别抢眼）——灰字、无底无边；hover 才回到正常字色。
    明暗都靠 --dtl-fg-3（别名随宿主主题变），不写第二套颜色。 */
-.dtl-taskrow__actions .dtl-iconbtn--muted{color:var(--dtl-fg-3);}
-.dtl-taskrow__actions .dtl-iconbtn--muted:hover:not(:disabled){color:var(--dtl-fg);}
+.dtl-taskrow__actions .dtl-icon--muted{color:var(--dtl-fg-3);}
+.dtl-taskrow__actions .dtl-icon--muted:hover:not(:disabled){color:var(--dtl-fg);}
 
 /* 工作区 / #标签 都是核心可点 Chip（business 档），含最大宽 / 省略号 / 跑马灯，本文件不写皮肤。 */
 
@@ -547,7 +547,7 @@ export function Button(props: {
  *  这里只做**旧档位 → 新档位**的映射，使用点不必跟着改：
  *   `plain` → `ghost`（无底无边、灰字，hover 灰底）、`outline` → `outline`、
  *   `danger` → `ghost` + 危险色（旧 danger 是红字，不是红实心）。
- *   `className` 只用于挂本文件的修饰类（如 `.dtl-iconbtn--muted`），不覆盖核心皮肤。 */
+ *   `className` 只用于挂本文件的修饰类（如 `.dtl-icon--muted`），不覆盖核心皮肤。 */
 export function IconButton(props: {
 	icon: ReactNode;
 	label: string;
@@ -561,8 +561,6 @@ export function IconButton(props: {
 	disabled?: boolean;
 	/** 加载中：图标位换小圈并禁用（图标钮本身定宽定高，换圈不跳）。 */
 	loading?: boolean;
-	/** 已无意义：核心全站不渲染原生 title，提示一律走 `Tip`（保留参数只为旧调用点不用改）。 */
-	title?: string;
 	className?: string;
 	/** 纯装饰时用：不参与 tab 序列（原生属性透传）。 */
 	tabIndex?: number;
@@ -689,6 +687,12 @@ export { ListRow } from "dsh-plugin-core/ui/list-row";
  *  开关：核心没有这一档，台账目录的「显示」直接用官方 `Switch`（见 settings-page.ts）。 */
 export { Card } from "dsh-plugin-core/ui/card";
 export { Modal } from "dsh-plugin-core/ui/modal";
+
+/** 锁定期例外（核心 0.42.0）：包住就地那一块，`locked` 时仍可点、可 Tab。
+ *  用它把「后台执行」留在原来的「取消」位置，不改面板末尾那个固定插槽。
+ *  核心 `ui` 整包入口给它起别名 `ModalLockExempt`，子路径 `ui/overlay` 只有 `OverlayLockExempt`
+ *  这个名字 —— 这里按子路径原样转出（本仓不自造第二套名字）。 */
+export { OverlayLockExempt } from "dsh-plugin-core/ui/overlay";
 
 /** 纯框容器：核心 `Surface`（底 / 边 / 圆角 / 内距四根轴，圆角 12 的唯一真源）。
  *  本插件所有「一块面」都用它 —— 统计卡 / 图表卡 / 任务行 / 空态 / 流程节点 / 图表浮卡，

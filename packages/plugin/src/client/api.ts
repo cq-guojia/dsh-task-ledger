@@ -428,50 +428,79 @@ export async function postTaskAction(
 }
 
 /**
- * 「继续」建会话的超时：不跑 git，但 host 侧要建 agent、挂 preset、归组工作区，
+ * 起会话的超时：不跑 git，但 host 侧要建 agent、挂 preset、归组工作区，
  * 冷启动几秒很正常 ⇒ 单独给 60s，别让界面先报超时（会话其实建成了）。
  */
-const CONTINUE_TIMEOUT_MS = 60_000;
+const SESSION_START_TIMEOUT_MS = 60_000;
 
 /**
- * 「继续」的结果：
- *  - `started`：会话已建，拿 `sessionId` 跳过去；
+ * 起会话的结果（「继续」与「完成」共用这一条）：
+ *  - `started`：会话本次新建；
+ *  - `duplicate`：同一条任务的结案作业已经在跑，没再起第二个会话；
  *  - `not-dsh`：该台账目录不是宿主登记过的工作区 —— **预期分支不是错误**，
- *    界面据此先复制任务号、再弹警告让人去对应的 Agent 继续。
+ *    界面据此先复制提示词、再弹警告让人去对应的 Agent 手动继续。
  */
-export type ContinueResult =
+export type SessionStartReply =
 	| { readonly kind: "started"; readonly sessionId: string }
+	| { readonly kind: "duplicate"; readonly sessionId: string }
 	| { readonly kind: "not-dsh" };
 
-/** 在该台账所属的 DSH 工作区里起会话，并注入「只读读进度、汇报、停下」的提示词。 */
-export function postTaskContinue(body: {
+/** 起一个 agent 会话并注入首条消息；差别只有 `policy`。 */
+export function postSessionStart(body: {
 	/** 工作区 id（= 台账目录绝对路径）。 */
 	readonly workspace: string;
 	readonly id: string;
+	/** `resume` = 只起会话；`close` = 起会话 + 登记后台作业 + 等它结案。 */
+	readonly policy: "resume" | "close";
 	/** 会话标题（客户端按界面语言拼好，会话列表里显示的名字）。 */
 	readonly title: string;
-	/** 注入的首条消息正文（客户端按界面语言拼好；host 不再自带中文模板）。 */
+	/** 注入的首条消息正文（客户端按界面语言拼好；host 不带中文模板）。 */
 	readonly prompt: string;
-}): Promise<ContinueResult> {
-	return fetchJson<ContinueResult>(
-		"/task/continue",
+}): Promise<SessionStartReply> {
+	return fetchJson<SessionStartReply>(
+		"/task/session/start",
 		{
 			method: "POST",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify(body),
 		},
-		CONTINUE_TIMEOUT_MS,
+		SESSION_START_TIMEOUT_MS,
 	);
 }
 
-/** 台账目录的宿主工作区归属：`dsh` 才起得了会话（「继续」「完成」都先问这一下）。 */
-export type WorkspaceKind =
-	| { readonly kind: "dsh"; readonly workspaceId: string }
-	| { readonly kind: "not-dsh" };
+/**
+ * 「这个台账目录能不能起 Agent 会话」的判据：host 的 `/workspaces` 给每项带 `isDsh`
+ * （与 session.service 同一 resolveWorkspace 判据），客户端只查表、不自己判。
+ */
+export async function fetchWorkspaceDshFlags(): Promise<ReadonlyMap<string, boolean>> {
+	const payload = await fetchJson<{
+		readonly workspaces: readonly { readonly id?: string; readonly isDsh?: boolean }[];
+	}>("/workspaces");
+	return new Map(
+		payload.workspaces
+			.filter((item): item is { id: string; isDsh?: boolean } => typeof item.id === "string")
+			.map((item) => [item.id, item.isDsh === true]),
+	);
+}
 
-/** 问 host：这个台账目录是不是宿主登记过的工作区（判据与「继续」同一条）。 */
-export function getWorkspaceKind(path: string): Promise<WorkspaceKind> {
-	return fetchJson<WorkspaceKind>(`/workspace/kind?path=${encodeURIComponent(path)}`);
+/**
+ * 核心任务中心的路由根（**相对路径**：与宿主 `TASK_CENTER_ROUTE` 指向同一个位置，
+ * 但浏览器这边走同源相对请求，所以不带前导斜杠）。
+ */
+export const TASK_CENTER_BASE = `${API_PREFIX}/task-center`;
+
+/** 任务中心的一级项目名：必须与宿主 `session-job.store.ts` 的 `PROJECT` 同值。 */
+export const TASK_PROJECT = "dsh-task-ledger";
+
+/** 二级分组：本插件只有「会话作业」一类后台任务。 */
+export const JOB_GROUP = "session";
+
+/** 后台任务「查看会话」按钮 id（与宿主 session-job.store 同值，mountTaskUI handler 按它注册）。 */
+export const VIEW_SESSION_ACTION = "view-session";
+
+/** 作业业务键：同一条任务同一时刻只允许一个结案作业（与宿主 `closeJobKey` 同构）。 */
+export function closeJobKey(taskId: string): string {
+	return `close:${taskId}`;
 }
 
 /**

@@ -581,7 +581,6 @@ export function SettingsPage(props: {
 				h(IconButton, {
 					icon,
 					label: title,
-					title: "",
 					variant: "plain",
 					size: "lg",
 					background: `var(--dtl-${tone}-soft)`,
@@ -612,8 +611,7 @@ export function SettingsPage(props: {
 	/** 一行：npm 包名（整行可点 → npm 页）+ GitHub / npm 两个图标钮。
 	 *  整行用核心 `ListRow`（自带底色、hover、右侧操作槽，点右侧不连带整行），不再自建框。
 	 *  悬停提示走本地 `Tip`（官方 Tooltip + 真 DOM 锚点；用户 2026-11-03 点名要加，文案就
-	 *  「GitHub」「NPM」两个词）。按钮是函数组件挂不上 ref，Tip 的垫片 span 正好当锚点；
-	 *  `title: ""` 仍压原生提示，避免系统 title 与官方气泡双出（口径同 task-row 的动作钮）。 */
+	 *  「GitHub」「NPM」两个词）。按钮是函数组件挂不上 ref，Tip 的垫片 span 正好当锚点。 */
 	const NpmLink = ({ pkg }: { pkg: string }): ReactNode => {
 		const openNpm = (): void => {
 			window.open(`https://www.npmjs.com/package/${pkg}`, "_blank", "noopener,noreferrer");
@@ -630,7 +628,6 @@ export function SettingsPage(props: {
 						children: h(IconButton, {
 							icon: h(Icon, { name: "common.logo:github" }),
 							label: "GitHub",
-							title: "",
 							onClick: () => {
 								window.open("https://github.com/cq-guojia/dsh-task-ledger", "_blank", "noopener,noreferrer");
 							},
@@ -641,7 +638,6 @@ export function SettingsPage(props: {
 						children: h(IconButton, {
 							icon: h(Icon, { name: "common.logo:npm" }),
 							label: "npm",
-							title: "",
 							onClick: openNpm,
 						}),
 					}),

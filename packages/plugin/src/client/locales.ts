@@ -275,8 +275,9 @@ export type LocaleKey =
 	| "closeNotClosed"
 	| "closeNotClosedDesc"
 	| "closeAgentFailed"
-	| "closeNoSessions"
 	| "actionOpenSession"
+	| "bgRun"
+	| "closeAlreadyRunning"
 	| "closeInProgress"
 	| "tipClaim"
 	| "tipResume"
@@ -663,8 +664,9 @@ export const zh: Record<LocaleKey, string> = {
 	closeNotClosed: "这轮跑完了，但任务没结",
 	closeNotClosedDesc: "去会话里看看它停在哪儿",
 	closeAgentFailed: "Agent 这轮没跑成：{error}",
-	closeNoSessions: "宿主没有提供会话服务，只能手动结案",
 	actionOpenSession: "查看会话",
+	bgRun: "后台执行",
+	closeAlreadyRunning: "这条已经在后台执行了：{title}",
 	closeInProgress: "Agent 正在结案，完成前不能再点",
 	tipClaim: "将该任务归入本人名下，状态置为进行中",
 	tipResume: "恢复对该任务的推进",
@@ -1038,8 +1040,9 @@ export const en: Record<LocaleKey, string> = {
 	closeNotClosed: "The turn finished, but the task is still open",
 	closeNotClosedDesc: "Open the session to see where it stopped",
 	closeAgentFailed: "The agent turn failed: {error}",
-	closeNoSessions: "This host exposes no session service — close it manually",
 	actionOpenSession: "Open session",
+	bgRun: "Run in background",
+	closeAlreadyRunning: "Already running in the background: {title}",
 	closeInProgress: "An agent is closing this task; wait for it to finish",
 	tipClaim: "assign this task to me and set it to in progress",
 	tipResume: "resume work on this task",

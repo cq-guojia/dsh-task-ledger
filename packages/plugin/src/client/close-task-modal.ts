@@ -13,7 +13,16 @@
  */
 import { createElement as h, Fragment, type ReactNode, useState } from "react";
 import type { Translate } from "./locales";
-import { Button, Icon, Loader, Modal, Segmented, Textarea, Tip } from "./ui";
+import {
+	Button,
+	Icon,
+	Loader,
+	Modal,
+	OverlayLockExempt,
+	Segmented,
+	Textarea,
+	Tip,
+} from "./ui";
 
 type CloseMode = "manual" | "agent";
 
@@ -36,6 +45,11 @@ export function CloseTaskModal(props: {
 	locked?: boolean;
 	/** 重开会话视图（locked 时才显示左下按钮）。 */
 	onShowSession?: () => void;
+	/**
+	 * 「后台执行」（用户 2026-11-17）：会话照常转圈，只有这颗钮在锁定期间仍可点；
+	 * 点了才把弹窗收起、任务转到后台列表里继续跑。不给 = locked 时全封。
+	 */
+	onBackground?: () => void;
 	onClose: () => void;
 	onSubmit: (input: { useAgent: boolean; note: string }) => void;
 }): ReactNode {
@@ -84,25 +98,46 @@ export function CloseTaskModal(props: {
 			footer: h(
 				Fragment,
 				null,
-				// 左下：会话在跑时唯一能点的东西（关掉会话视图后回到这个框也能重开）
-				locked && props.onShowSession !== undefined
+				// 左下：锁定期间唯一能点的东西 —— 「后台执行」把框收起、任务转后台继续跑；
+				// 「查看会话」随时把会话视图调出来（用户 2026-11-17 改口径：后台执行就是原来的取消位）。
+				locked && (props.onShowSession !== undefined || props.onBackground !== undefined)
 					? h(
 							"div",
-							{ style: { marginRight: "auto" } },
-							h(Tip, {
-								label: t("tipViewSession"),
-								children: h(
-									Button,
-									{
-										variant: "ghost",
-										size: "md",
-										// 三块脉动的官方加载图标：会话在跑
-										icon: h(Loader, { variant: "blocks", size: "xs" }),
-										onClick: props.onShowSession,
-									},
-									t("closeViewSession"),
-								),
-							}),
+							{
+								style: {
+									marginRight: "auto",
+									display: "flex",
+									alignItems: "center",
+									gap: "var(--dtl-space-2)",
+								},
+							},
+							props.onBackground === undefined
+								? null
+								: h(
+										OverlayLockExempt,
+										null,
+										h(
+											Button,
+											{ variant: "outline", size: "lg", onClick: props.onBackground },
+											t("bgRun"),
+										),
+									),
+							props.onShowSession === undefined
+								? null
+								: h(Tip, {
+										label: t("tipViewSession"),
+										children: h(
+											Button,
+											{
+												variant: "ghost",
+												size: "md",
+												// 三块脉动的官方加载图标：会话在跑
+												icon: h(Loader, { variant: "blocks", size: "xs" }),
+												onClick: props.onShowSession,
+											},
+											t("closeViewSession"),
+										),
+									}),
 						)
 					: null,
 				h(

@@ -25,14 +25,22 @@ import {
 import type { LocaleKey, Translate } from "./locales";
 import { formatCount, mondayOf, pad2, ymdOf } from "./format";
 import { openFilePreview } from "dsh-plugin-core/adv/explorer";
+/* 后台任务中心（核心 v0.43.8）：TaskBar 值导出在 ui 子路径，接线在逻辑入口。 */
+import { TaskBar } from "dsh-plugin-core/adv/tasks/ui";
+import { mountTaskUI } from "dsh-plugin-core/adv/tasks";
 import {
 	openSessionReview,
 	SessionViewModal,
 	type ChangedFileReviewLocator,
 	type SessionViewTarget,
 } from "dsh-plugin-core/adv/session";
-import { openCloseSessionView } from "./close-session";
-import { openSession } from "./nav";
+import {
+	archiveSession,
+	openCloseSessionView,
+	openSession,
+	sessionIdOfDetail,
+} from "./nav";
+import { JOB_GROUP, TASK_PROJECT, VIEW_SESSION_ACTION } from "./api";
 import {
 	groupRows,
 	isSoloLedger,
@@ -202,6 +210,9 @@ function firstLine(message: string): string {
 	return line.length > 80 ? `${line.slice(0, 80)}…` : line;
 }
 
+/** 本页会话里已消费过终态的作业（`key@startedAt`）：只防重复提示，记录真源仍在宿主。 */
+const handledJobs = new Set<string>();
+
 export function BoardHome(props: {
 	t: Translate;
 	onBack: () => void;
@@ -209,6 +220,61 @@ export function BoardHome(props: {
 	const { t, onBack } = props;
 	ensureUiBase();
 	const state = useSyncExternalStore(boardSubscribe, boardSnapshot);
+
+	// 结案作业的终态与行按钮**只在这一处接核心**（2026-11-21 按 v0.43.8 重写）：
+	// 作业跑在宿主、状态真源在宿主，这里只注册「查看会话」handler 和终态收尾（归档 + 提示）。
+	// mountTaskUI 常驻订阅，刷新 / 关页都不影响；核心按 id 去重，一条作业只出一个结论。
+	useEffect(() => {
+		return mountTaskUI({
+			project: TASK_PROJECT,
+			groups: [JOB_GROUP],
+			handlers: {
+				[VIEW_SESSION_ACTION]: (task) => {
+					const sessionId = sessionIdOfDetail(task.detail);
+					if (sessionId !== null) openSession(sessionId);
+				},
+			},
+			onSettled: (task, outcome) => {
+				const key = task.key ?? "";
+				if (!key.startsWith("close:")) return;
+				const stamp = `${key}@${String(task.startedAt)}`;
+				if (handledJobs.has(stamp)) return;
+				handledJobs.add(stamp);
+
+				const sessionId = sessionIdOfDetail(task.detail);
+				if (sessionId !== null) void archiveSession(sessionId).catch(() => false);
+				const openAction =
+					sessionId === null
+						? {}
+						: {
+								actions: [
+									{
+										text: t("actionOpenSession"),
+										onClick: () => {
+											openSession(sessionId);
+										},
+									},
+								],
+							};
+				if (outcome === "done") {
+					notify(t("closeDone", { title: task.title }), {
+						variant: "success",
+						...openAction,
+					});
+					return;
+				}
+				notify(t("closeNotClosed"), {
+					description:
+						task.reason === "still-open" || task.reason === undefined
+							? t("closeNotClosedDesc")
+							: t("closeAgentFailed", { error: task.reason }),
+					variant: "warning",
+					durationMs: 8000,
+					...openAction,
+				});
+			},
+		});
+	}, [t]);
 	const mountRef = useRef<HTMLDivElement>(null);
 	/** 内容滚动层（`pageStyle` 那一层）：快捷工具栏的「回到顶部」滚它（不是 window）。 */
 	const scrollRef = useRef<HTMLDivElement>(null);
@@ -743,6 +809,9 @@ export function BoardHome(props: {
 									gap: "var(--dtl-space-3)",
 								},
 							},
+							/* 后台任务（用户 2026-11-17）：整排最左、纯图标 lg 正方，与滑动块同高；
+							   点开由核心 `TaskBar` 自己弹面板，本仓不自绘。 */
+							h(TaskBar, { form: "icon", size: "lg" }),
 							h(Segmented<ViewMode>, {
 								id: "dtl-view-mode",
 								value: shownView,

@@ -9,12 +9,18 @@
 
 ## 一、结论
 
-**浏览器半（client）没有「往任意会话发自由文本」的官方 API。** 本插件只在自己刚创建的会话上发首条 user message，两个动作各走一条链路，互不复用：
+**浏览器半（client）没有「往任意会话发自由文本」的官方 API。** 本插件只在自己刚创建的会话上发首条 user message。
+
+2026-11-17 收敛：**两个动作合成一条链路**，差别只有 `policy` 一个字段 ——
 
 | 动作 | 半侧 | 起会话 → 发消息 | 真源 |
 |---|---|---|---|
-| 「继续」 | host | `ctx.agents.create()` → `agent.send()` | `packages/plugin/src/host/services/continue.service.ts` |
-| 「完成（由 Agent 结案）」 | client | `ctx.sessions.create()` → `face.prompt()` | `packages/plugin/src/client/close-session.ts` |
+| 「继续」`policy: "resume"` | host | `ctx.agents.create()` → `agent.send()` | `packages/plugin/src/host/services/session.service.ts` |
+| 「完成（由 Agent 结案）」`policy: "close"` | host | 同上 + 服务端作业记录 + `agent.whenIdle()` 结算 | 同上 + `session-job.store.ts` |
+
+页面不再自己建会话；作业状态走核心任务中心（见 [overview.md §2.3](../architecture/overview.md)）。
+「跑完了」的宿主官方信号是 `agent.whenIdle()`（`@deepseek-ai/dsh-agent@0.2.2-rc.3` `lib/types/runtime-types.d.ts:192`），
+另有 `agent/status` 事件（同文件 `:280`）可用来观察 `idle ⇄ running`。
 
 宿主没有 system prompt 参数（见 §二），所以注入的提示词只能是首条 user message，**是软约束，不是系统级硬规则**。
 
@@ -54,7 +60,7 @@
 
 ### 会话创建的三条硬事实（仅 host 半链路）
 
-以下三条只约束 `agents.create()`（「继续」）；client 半 `sessions.create()` 不挂 preset、不传 agentOptions、不调 `attachSession`。
+以下三条约束 `agents.create()`（现在是**唯一**的起会话方式，两个动作共用）。
 
 | 事实 | 后果 |
 |---|---|

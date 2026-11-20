@@ -14,6 +14,7 @@
  */
 import { createStyleKit } from "dsh-plugin-core/design";
 import { connectFs } from "dsh-plugin-core/adv/explorer";
+import { connectTaskCenter, connectTaskLayout } from "dsh-plugin-core/adv/tasks";
 import { connectHost } from "dsh-plugin-core/ui/host-data";
 import { setStyleKit } from "dsh-plugin-core/ui/styles";
 import { createElement as h } from "react";
@@ -23,7 +24,7 @@ import {
 	settingsTextField,
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { SettingsFormScope } from "@deepseek-ai/dsh-client-ui-primitives";
-import { FS_PATH } from "./api";
+import { FS_PATH, TASK_CENTER_BASE } from "./api";
 import { BoardHome } from "./board-home";
 import {
 	ConfigPanel,
@@ -40,7 +41,11 @@ import {
 	type Translate,
 	zh,
 } from "./locales";
-import { setSessions, setUiConversation, type SessionsLike } from "./close-session";
+import {
+	setSessions,
+	setUiConversation,
+	type SessionsLike,
+} from "./nav";
 import type { UiConversationFace } from "dsh-plugin-core/adv/session";
 import { setSessionArchiver, setSessionOpener } from "./nav";
 import { LedgerIcon } from "./ui";
@@ -203,7 +208,24 @@ function applySidebarEntry(): void {
 let selectPanel: (id: string | null) => void = () => {};
 
 export function apply(ctx: ClientContext): void {
-	// ⓪ 接线一次：核心接管文件服务 + 会话解析 + dock 补 flex；查看钮只需给容器和路径。
+	// ⓪ 后台任务中心（核心 v0.43.8）：服务端权威三件套。状态走 SSE 基线 + 增量，
+	//    发起走 POST submit，终态通知按 id 去重；本机单用户，headers 空、401 时重连取新凭证。
+	let offTasks: (() => void) | null = null;
+	const connectTasks = (): void => {
+		offTasks?.();
+		offTasks = connectTaskCenter({
+			streamUrl: `${TASK_CENTER_BASE}/stream`,
+			submitUrl: `${TASK_CENTER_BASE}/submit`,
+			headers: () => ({}),
+			onGiveUp: () => {
+				connectTasks();
+			},
+		});
+	};
+	connectTasks();
+	connectTaskLayout(ctx);
+	ctx.effect(() => () => offTasks?.());
+	// ⓪b 接线一次：核心接管文件服务 + 会话解析 + dock 补 flex；查看钮只需给容器和路径。
 	connectHost(ctx);
 	// 文件面（只读 FS 路由，宿主 apply 里 serveFsRoute 挂的）：选目录弹窗与文件预览都吃它。
 	connectFs({ path: FS_PATH });

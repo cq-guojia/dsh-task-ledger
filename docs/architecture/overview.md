@@ -41,6 +41,27 @@ git 只在命令的前后两端，业务中间不碰 git。推送被拒会触发
 
 七步内部（跳过条件是分组而非逐条判）：只读命令跳「取最新 / 自举 / 提交 / 推送」；`--no-sync` 只跳刷盘与提交推送，**锁集照算**；`already_done` 不跳提交推送，要不要提交只看记账本。逐方法签名见 [ledger-api.md](../api/ledger-api.md)。
 
+### 2.3 一次会话作业（「继续」/「完成」）
+
+```
+点击（任务行）
+  │ ① 命令面：POST /api/task-ledger/task/session/start
+  │    { workspace, id, policy: "resume" | "close", title, prompt }
+  ▼
+host/services/session.service.ts  ← 唯一执行体
+  ├ createSession()     建会话 5 步（preset mount / provider+model 成对 / attachSession / rename / send）
+  ├ policy = "resume"   只起会话，返回 sessionId（不登记作业）
+  └ policy = "close"    claim 占位 → 起会话 → jobs.register（推行）→ 看护 whenIdle()
+                           └ 跑完 → 清读缓存 → 重读在办列表 → 还在办 = failed: still-open / 不在 = done
+  ▼ ② 状态面：核心任务中心（/task-center/stream SSE 三流 + /task-center/submit POST）
+host/services/session-job.store.ts  ← TaskStreamSource 实现（snapshot/subscribe/subscribeNotices，进程内）
+  ▼ ③ 页面：connectTaskCenter 接流、TaskBar 渲染；mountTaskUI 注册按钮 handler 与终态收尾（归档 + 提示）
+```
+
+判重（同一条任务已在跑）在服务端 `jobs.claim(key)` 的原子占位上（先于 `await createSession`），
+`key = close:<任务号>`；跨刷新、跨标签页成立。终态通知带全局唯一 id、按 id 持久去重，
+状态可任意重放而不重弹。
+
 ## 三、关键不变量
 
 1. **台账写路径只经脚本**：写台账只经 `packages/skill/scripts/progress`（Go 二进制），插件与 host 都不手改台账 JSON / history / worklog。「host 直写」= host 代跑同一个脚本。
@@ -56,6 +77,10 @@ git 只在命令的前后两端，业务中间不碰 git。推送被拒会触发
 11. **dist 入仓**：git 直装不跑构建脚本，推送前必须 build（含 typecheck）。
 12. **明暗主题只认宿主**：`body[data-ds-dark-theme]`，禁用 `prefers-color-scheme`。
 13. **路由自持鉴权**：宿主 webServer 无 server-wide auth（默认回环绑定）；若部署暴露非回环地址，闸门必须由插件路由方自持。
+14. **起会话只有一条链路**：`host/services/session.service.ts` 的 `createSession()` 是唯一实现；「继续」与「完成」只差 `policy` 一个字段。页面里出现 `sessions.create` / `agents.create` 即违规。
+15. **会话作业的状态在宿主**：`host/services/session-job.store.ts` 是核心 `TaskStreamSource` 的本仓实现、唯一真源；宿主 `serveTaskStream`（SSE 三流）+ `serveTaskSubmit`（POST）对外，客户端 `connectTaskCenter` / `mountTaskUI` 接线。页面只渲染记录、注册按钮 handler 与终态收尾，**不判终态、不设超时兜底、不做本地判重**。
+16. **作业寿命 = 执行者寿命**：作业记录只在宿主进程内存里，宿主重启即消失（会话必然已断）。不落盘、不做跨重启恢复 —— 落盘等于要求「恢复一个已经死掉的会话」。
+17. **归档是唯一的客户端收尾副作用**：`uiWorkspace.archiveSession` 只有客户端服务有，所以归档留在页面；它不参与状态判定，失败也不改结论。
 
 ## 四、入口与主题
 

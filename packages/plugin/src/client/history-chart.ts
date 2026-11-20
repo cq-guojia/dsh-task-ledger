@@ -264,9 +264,9 @@ export function HistoryChart(props: {
 	const inFocus = (bucket: HistoryBucket): boolean =>
 		bucket.key <= focusLast && bucket.to >= focusFirst;
 
-	/** 翻页钮：**只画箭头** —— 核心 `IconButton` 出皮、`Icon*` 官方图标出图形，本文件不再手写
+	/** 翻页钮：**只画箭头** —— 核心按钮出皮、`Icon*` 官方图标出图形，本文件不再手写
 	 *  按钮样式与箭头字形（用户 2026-10-29）。悬停提示走官方 Tooltip（本仓库 `Tip` 唯一入口）；
-	 *  文案只当无障碍名 + 气泡，且用 `title: ""` 压掉原生 title（照 `task-row.ts` 的惯例）。 */
+	 *  文案只当无障碍名 + 气泡。 */
 	const navButton = (
 		dir: "left" | "right",
 		label: string,
@@ -280,7 +280,6 @@ export function HistoryChart(props: {
 					name: dir === "left" ? "common.base:jiantou-zuo" : "common.base:jiantou-you",
 				}),
 				label,
-				title: "",
 				variant: "outline",
 				size: "sm",
 				onClick,

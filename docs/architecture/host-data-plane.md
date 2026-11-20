@@ -41,8 +41,8 @@
 | `GET /workspaces` | 工作区清单 |
 | `POST /dirs` | 台账目录维护（读/写同一路径） |
 | `POST /task/action` | 任务写操作（认领、继续、完成、释放、取消、删除） |
-| `POST /task/continue` | 从台账任务继续一个会话 |
-| `POST /workspace/kind` | 工作区类型判定 |
+| `POST /task/session/start` | 起会话（`policy: "resume" \| "close"`，唯一入口） |
+| `* /task-center/*` | 核心任务中心（作业状态：create/list/follow/notices/invoke/ack） |
 | `GET /board/snapshot` | 首页一次拿全量：统计、在办、趋势、工作区、身份 |
 | `GET /history/trend` | 趋势点 |
 | `GET /history/list` | 历史列表 |
