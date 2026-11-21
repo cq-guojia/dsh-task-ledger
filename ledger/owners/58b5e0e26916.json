@@ -1,7 +1,6 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
-    "20261117-0231-8027-慢操作改后台执行并通知": {"category": "建设", "created": "2026-11-17 02:31:03", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-17 02:31:27", "status": "doing", "tags": ["后台任务", "通知中心", "结案", "迁入迁出"], "title": "慢操作改后台执行并通知", "updated": "2026-11-21 03:05:03", "worklog": "worklog/202611/17-0231-8027-慢操作改后台执行并通知.md"}
   },
   "version": "20261022000000"
 }
