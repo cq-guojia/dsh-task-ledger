@@ -14,7 +14,10 @@
  */
 import { createStyleKit } from "dsh-plugin-core/design";
 import { connectFs } from "dsh-plugin-core/adv/explorer";
-import { connectTaskCenter, connectTaskLayout } from "dsh-plugin-core/adv/tasks";
+import {
+	connectTaskCenter,
+	connectTaskLayout,
+} from "dsh-plugin-core/adv/tasks";
 import { connectHost } from "dsh-plugin-core/ui/host-data";
 import { setStyleKit } from "dsh-plugin-core/ui/styles";
 import { createElement as h } from "react";
@@ -208,8 +211,9 @@ function applySidebarEntry(): void {
 let selectPanel: (id: string | null) => void = () => {};
 
 export function apply(ctx: ClientContext): void {
-	// ⓪ 后台任务中心（核心 v0.43.8）：服务端权威三件套。状态走 SSE 基线 + 增量，
-	//    发起走 POST submit，终态通知按 id 去重；本机单用户，headers 空、401 时重连取新凭证。
+	// ⓪ 后台任务中心：服务端权威三件套。状态走 SSE 基线 + 增量，
+	//    发起走 POST submit，终态通知按 id 去重。核心 v0.45 起同源跨标签共用一条 SSE
+	//    （Web Locks 选主 + BroadcastChannel 扇出），不再每标签各开常驻连接。
 	let offTasks: (() => void) | null = null;
 	const connectTasks = (): void => {
 		offTasks?.();
@@ -217,14 +221,19 @@ export function apply(ctx: ClientContext): void {
 			streamUrl: `${TASK_CENTER_BASE}/stream`,
 			submitUrl: `${TASK_CENTER_BASE}/submit`,
 			headers: () => ({}),
-			onGiveUp: () => {
-				connectTasks();
+			// 断流由核心协调器负责释放锁、自动换主重连；这里只记录，不再手动裸重连。
+			onGiveUp: (reason) => {
+				console.warn("[dsh-task-ledger] task stream gave up", reason);
 			},
 		});
 	};
 	connectTasks();
-	connectTaskLayout(ctx);
-	ctx.effect(() => () => offTasks?.());
+	// 核心按 streamUrl 幂等 + refcount：layout 接线必须也持有并返回 disposer 配平。
+	const offLayout = connectTaskLayout(ctx);
+	ctx.effect(() => () => {
+		offTasks?.();
+		offLayout();
+	});
 	// ⓪b 接线一次：核心接管文件服务 + 会话解析 + dock 补 flex；查看钮只需给容器和路径。
 	connectHost(ctx);
 	// 文件面（只读 FS 路由，宿主 apply 里 serveFsRoute 挂的）：选目录弹窗与文件预览都吃它。
