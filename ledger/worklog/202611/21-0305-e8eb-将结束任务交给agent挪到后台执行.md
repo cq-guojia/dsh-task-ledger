@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-21 03:37:12 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-21 03:38:46 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -34,7 +34,7 @@
 
 - 2026-11-21：旧任务收尾并结案（v0.43.8 重构已交付 `67a4af9`），本任务接手 4 个真机 bug。
 - 2026-11-21：只读调查三路（工作区判据 / 双通知 / 按钮布局）+ 交叉核对宿主源码，结论见 To Do 各项带 `文件:行号` 的证据；诊断日志为上一任务遗留、暂留待定位。
-- 2026-11-21：问题 1 按用户「不要再来回问、专家组定成熟写法」的指令落地——组三方只读专家（架构师定分层 / 找现成范式借鉴 / 资深程序员列改动清单），同时自行读全落点；判定端点化方案：$\;host/routes.ts$ 新增 `GET /workspace/can-host`（`resolveWorkspace(deps.registry, path)` 现算）、`/workspaces` 撤 isDsh 与诊断恢复清单；$client/api.ts$ `canHostAgentSession(path)` 取代 `fetchWorkspaceDshFlags`；$client/task-row.ts$ 改传当前行 `workspace.path` 判定；3 条诊断日志全清。build + typecheck + verify + codelint 全过（3 文件、六层通过），未提交。
+- 2026-11-21：问题 1 按用户「不要再来回问、专家组定成熟写法」的指令落地——组三方只读专家（架构师定分层 / 找现成范式借鉴 / 资深程序员列改动清单），三路结论一致推荐判定端点化（端点传 path 返布尔、复用 `resolveWorkspace`、后端权威判定不动、零侵入核心），无实质反对。方案：`host/routes.ts` 新增 `GET /workspace/can-host`（`resolveWorkspace(deps.registry, path)` 现算，空 path 自返 400——`registerRead` 的 catch 固定 500）；`/workspaces` 撤 isDsh 与诊断恢复清单、端点保留（无理由多删只读端点）；`client/api.ts` `canHostAgentSession(path)` 取代 `fetchWorkspaceDshFlags`；`client/task-row.ts` 改传当前行 `workspace.path` 判定；3 条诊断日志全清。build + typecheck + verify + codelint 全过（3 文件、六层通过），未提交。
 
 ## Conclusion
 
@@ -48,3 +48,4 @@
 - 2026-11-21 03:05:31 · new · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · created and claimed
 - 2026-11-21 03:06:04 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接任务并写全背景与 4 个真机 bug（工作区判据时好时坏、双红框、新标签重弹、locked 新增按钮）；逐个定位逐个报，未动产品代码
 - 2026-11-21 03:37:12 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 问题1判定端点化修复：新增 GET /workspace/can-host 现算 resolveWorkspace，client 改 canHostAgentSession(path)，撤 /workspaces isDsh 与 3 条诊断日志；build/verify/typecheck/codelint 全过，待真机验收
+- 2026-11-21 03:38:46 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 专家组三路结论一致确认判定端点化；按 impl 指出的坑补读端点空 path 自返 400（registerRead catch 固定 500），verify+codelint 复验全过，未提交
