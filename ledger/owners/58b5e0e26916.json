@@ -2,7 +2,7 @@
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
     "20261121-0305-e8eb-将结束任务交给agent挪到后台执行": {"category": null, "created": "2026-11-21 03:05:31", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-21 03:05:31", "status": "doing", "tags": ["后台任务", "结案", "Agent", "缺陷排查"], "title": "将结束任务交给Agent挪到后台执行", "updated": "2026-11-21 03:38:46", "worklog": "worklog/202611/21-0305-e8eb-将结束任务交给agent挪到后台执行.md"},
-    "20261121-0330-ec37-后台任务-sse-401-零延迟无限重连": {"category": "缺陷排查", "created": "2026-11-21 03:30:33", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-21 03:30:33", "status": "doing", "tags": ["SSE", "401", "重连风暴", "卡死", "后台任务"], "title": "后台任务 SSE 401 零延迟无限重连", "updated": "2026-11-21 10:24:14", "worklog": "worklog/202611/21-0330-ec37-后台任务-sse-401-零延迟无限重连.md"}
+    "20261121-0330-ec37-后台任务-sse-401-零延迟无限重连": {"category": "缺陷排查", "created": "2026-11-21 03:30:33", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-21 03:30:33", "status": "doing", "tags": ["SSE", "401", "重连风暴", "卡死", "后台任务"], "title": "后台任务 SSE 401 零延迟无限重连", "updated": "2026-11-21 10:35:19", "worklog": "worklog/202611/21-0330-ec37-后台任务-sse-401-零延迟无限重连.md"}
   },
   "version": "20261022000000"
 }
