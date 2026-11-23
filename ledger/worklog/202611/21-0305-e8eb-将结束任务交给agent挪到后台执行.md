@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-23 14:44:30 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-23 14:56:23 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -72,3 +72,4 @@
 - 2026-11-23 13:13:04 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心v0.46.2(浮层层级改认标准模态语义dialog/aria-modal，删v0.46.1广播与suspended)：registry有latest但tarball 404，改用本地核心仓库dist软链node_modules编译，产物确认含isModalDialogOpen/aria-modal；验证开关未动，verify(--config.verify-deps-before-run=false)+codelint全过
 - 2026-11-23 14:16:23 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户拍板收敛通知为一张卡：撤销TaskBar验证开关恢复默认(点查看会话自动收起)；删session-job.store的notify配置(第2张卡)；board-home的onSettled只留归档去重、删自弹卡(第3张卡)。只留核心toast(任务结案丨…（已结案/失败）)。dist重建，typecheck/verify/codelint全过
 - 2026-11-23 14:44:30 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心v0.46.3(终态标签区分成功失败，registry tarball已恢复、移除本地软链走正式安装)+收敛为单条toast(撤销验证开关/删notify配置/删onSettled自弹卡保留归档)。verify+codelint全过，已提交b0eb4b4并push main(f8deec4..b0eb4b4)
+- 2026-11-23 14:56:23 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 修确定bug：task-row.ts 认领/继续/释放/取消/删除按钮 disabled 从 busy 扩成 busy||closing，结案中不再能操作；verify/codelint全过未提交。排查另一问题：①agent结案成功只setJobRecord不关弹窗(task-row.ts:347-350)，终态只解locked不关窗；②board-home.ts onSettled只剩归档无refresh，看板终态不自刷；③toast scope默认origin，刷新后origin换随机值致终态toast被isOrigin跳过——待用户确认刷新发生在终态前/后再定修法
