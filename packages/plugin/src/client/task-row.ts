@@ -31,8 +31,8 @@ import { ConfirmModal } from "dsh-plugin-core/ui/confirm-modal";
 import { startTask, taskCenterStore } from "dsh-plugin-core/adv/tasks";
 import type { TaskRecord } from "dsh-plugin-core/adv/tasks";
 import {
+	canHostAgentSession,
 	closeJobKey,
-	fetchWorkspaceDshFlags,
 	JOB_GROUP,
 	postSessionStart,
 	postTaskAction,
@@ -47,7 +47,7 @@ import type { LocaleKey, Translate } from "./locales";
 import { closePrompt, continuePrompt } from "./prompts";
 import { displayName, type Row, resolveActions } from "./rows";
 import { focusOwner, refresh, setQuery } from "./store";
-import { Button, Card, Icon, IconButton, notify, Tag, Tip } from "./ui";
+import { Button, Card, Icon, IconButton, Loader, notify, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
 
@@ -314,10 +314,9 @@ export function TaskRowView(props: {
 			const prompt = closePrompt(t, row.task.id, input.note);
 			const sessionTitle = t("closeSessionTitle", { title });
 
-			// 非 DSH 工作区起不了会话：提交前用 host 的 isDsh 判据（核心 submit 不回业务错误原文），
+			// 非 DSH 工作区起不了会话：提交前问 host 现算一次（核心 submit 不回业务错误原文），
 			// 直接走「复制提示词、去对应 Agent 粘」——弹窗不关也不锁，人还能改成直接结案。
-			const dshFlags = await fetchWorkspaceDshFlags();
-			if (dshFlags.get(row.task.workspace.id) !== true) {
+			if (!(await canHostAgentSession(row.task.workspace.path))) {
 				const copied = await copyText(prompt);
 				notify(t("closeNotDshTitle"), {
 					description: t(copied ? "closeNotDshBody" : "closeNotDshCopyFailedBody"),
@@ -445,17 +444,24 @@ export function TaskRowView(props: {
 		"tipResume",
 		() => void resumeTask(),
 	);
-	const finishButton = tipBtn(
-		h(Icon, { name: "common.base:gou" }),
-		"actionFinish",
-		// 结案中（会话在跑）不再给点：避免一任务开两个结案会话
-		closing ? "closeInProgress" : "tipFinish",
-		closing
-			? undefined
-			: () => {
-					setCloseError(null);
-					setCloseOpen(true);
-				},
+	// 「完成」（用户 2026-11-23）：不挂 hover 提示；点开结案框的行为两种状态都一样。
+	// 后台会话在跑时（closing 来自 SSE 基线，刷新可恢复）按钮换「后台执行」+ 左侧动图标，
+	// 但点击仍打开同一个结案框，不在按钮层禁用（同一任务不开两个会话由 finishTask 内的占位保证）。
+	const finishButton = h(
+		Button,
+		{
+			variant: "secondary",
+			size: "md",
+			icon: closing
+				? h(Loader, { variant: "blocks", size: "xs" })
+				: h(Icon, { name: "common.base:gou" }),
+			onClick: () => {
+				setCloseError(null);
+				setCloseOpen(true);
+			},
+			disabled: busy,
+		},
+		t(closing ? "executing" : "actionFinish"),
 	);
 	// 释放 = 退回公共池：左向箭头（与「继续」的右箭头成一进一出，用户 2026-10-30）
 	const releaseButton = tipBtn(

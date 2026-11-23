@@ -168,12 +168,16 @@ export function apply(ctx: PluginContext): void {
 				const workspace = typeof args.workspace === "string" ? args.workspace : "";
 				const prompt = typeof args.prompt === "string" ? args.prompt : "";
 				const title = typeof payload.title === "string" ? payload.title : `任务 ${taskId}`;
+				const origin = typeof payload.origin === "string" ? payload.origin : undefined;
+				const panelId = typeof payload.panelId === "string" ? payload.panelId : undefined;
 				const reply = await startSession(sessionDeps(), {
 					workspace,
 					taskId,
 					policy: "close",
 					title,
 					prompt,
+					...(origin === undefined ? {} : { origin }),
+					...(panelId === undefined ? {} : { panelId }),
 				});
 				if (reply.kind === "not-dsh") throw new Error("台账目录不是宿主工作区，起不了会话");
 				const record = jobs.find(key);

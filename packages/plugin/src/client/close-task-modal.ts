@@ -8,6 +8,8 @@
  *  · 宿主没会话服务时 Agent 段置灰并说明，只剩直接结案。
  *  · 框里**不放任何提示行**（用户 2026-11-04：警示一律走 Toast，别在弹窗里堆 UI）；
  *    工作区不对、复制成功与否都由弹窗外面的 Toast 说。
+ *  · 会话在跑时底栏右侧换成唯一的「后台执行」（用户 2026-11-23 口径）：隐藏取消/提交，
+ *    终态（locked 解除）再把两颗还回来；左下只留「Agent 会话中」看会话（核心 Modal 内预览，不外跳）。
  *
  * 提交中锁住所有关闭路径（同 cancel-task-modal），失败时弹窗不关、错误红字留在框下可重试。
  */
@@ -39,15 +41,15 @@ export function CloseTaskModal(props: {
 	/** 宿主是否提供会话服务（false ⇒ 「交给 Agent」段置灰，只能直接结案）。 */
 	canUseAgent: boolean;
 	/**
-	 * 交给 Agent 之后：会话在跑，本框**关不掉也提交不了**，只留左下「查看会话」重开会话视图
-	 * （用户 2026-11-04：会话视图可以关，关掉就露出这个框，但框本身不许关）。
+	 * 会话在跑：本框关不掉也提交不了，右侧换成唯一的「后台执行」（用户 2026-11-23）；
+	 * 左下留「Agent 会话中」重开会话视图，终态自动解封还原两颗提交钮。
 	 */
 	locked?: boolean;
 	/** 重开会话视图（locked 时才显示左下按钮）。 */
 	onShowSession?: () => void;
 	/**
-	 * 「后台执行」（用户 2026-11-17）：会话照常转圈，只有这颗钮在锁定期间仍可点；
-	 * 点了才把弹窗收起、任务转到后台列表里继续跑。不给 = locked 时全封。
+	 * 「后台执行」（用户 2026-11-17 定、11-23 改位）：会话照常转圈，locked 时**只有这颗**在右侧可点；
+	 * 点了才把弹窗收起、任务转到后台列表里继续跑。不给 = locked 时右侧无按钮。
 	 */
 	onBackground?: () => void;
 	onClose: () => void;
@@ -98,46 +100,26 @@ export function CloseTaskModal(props: {
 			footer: h(
 				Fragment,
 				null,
-				// 左下：锁定期间唯一能点的东西 —— 「后台执行」把框收起、任务转后台继续跑；
-				// 「查看会话」随时把会话视图调出来（用户 2026-11-17 改口径：后台执行就是原来的取消位）。
-				locked && (props.onShowSession !== undefined || props.onBackground !== undefined)
+				// 左下：会话在跑时只留「Agent 会话中」看会话；「后台执行」移到右侧占原提交位，
+				// 终态 locked 解除后「取消 / 交给 Agent」自动还回来（用户 2026-11-23）。
+				locked && props.onShowSession !== undefined
 					? h(
 							"div",
-							{
-								style: {
-									marginRight: "auto",
-									display: "flex",
-									alignItems: "center",
-									gap: "var(--dtl-space-2)",
-								},
-							},
-							props.onBackground === undefined
-								? null
-								: h(
-										OverlayLockExempt,
-										null,
-										h(
-											Button,
-											{ variant: "outline", size: "lg", onClick: props.onBackground },
-											t("bgRun"),
-										),
-									),
-							props.onShowSession === undefined
-								? null
-								: h(Tip, {
-										label: t("tipViewSession"),
-										children: h(
-											Button,
-											{
-												variant: "ghost",
-												size: "md",
-												// 三块脉动的官方加载图标：会话在跑
-												icon: h(Loader, { variant: "blocks", size: "xs" }),
-												onClick: props.onShowSession,
-											},
-											t("closeViewSession"),
-										),
-									}),
+							{ style: { marginRight: "auto" } },
+							h(Tip, {
+								label: t("tipViewSession"),
+								children: h(
+									Button,
+									{
+										variant: "ghost",
+										size: "md",
+										// 三块脉动的官方加载图标：会话在跑
+										icon: h(Loader, { variant: "blocks", size: "xs" }),
+										onClick: props.onShowSession,
+									},
+									t("closeViewSession"),
+								),
+							}),
 						)
 					: null,
 				h(
@@ -150,28 +132,44 @@ export function CloseTaskModal(props: {
 							gap: "var(--dtl-space-2)",
 						},
 					},
-					h(
-						Button,
-						{
-							variant: "outline",
-							size: "lg",
-							disabled: props.busy || locked,
-							onClick: props.onClose,
-						},
-						t("settingsCancel"),
-					),
-					h(
-						Button,
-						{
-							variant: "primary",
-							size: "lg",
-							loading: props.busy,
-							loadingText: false,
-							disabled: submitBlocked || locked,
-							onClick: submit,
-						},
-						useAgent ? t("closeModalOkAgent") : t("closeModalOkManual"),
-					),
+					locked
+						? props.onBackground === undefined
+							? null
+							: h(
+									OverlayLockExempt,
+									null,
+									h(
+										Button,
+										{ variant: "primary", size: "lg", onClick: props.onBackground },
+										t("bgRun"),
+									),
+								)
+						: h(
+								Fragment,
+								null,
+								h(
+									Button,
+									{
+										variant: "outline",
+										size: "lg",
+										disabled: props.busy,
+										onClick: props.onClose,
+									},
+									t("settingsCancel"),
+								),
+								h(
+									Button,
+									{
+										variant: "primary",
+										size: "lg",
+										loading: props.busy,
+										loadingText: false,
+										disabled: submitBlocked,
+										onClick: submit,
+									},
+									useAgent ? t("closeModalOkAgent") : t("closeModalOkManual"),
+								),
+							),
 				),
 			),
 		},

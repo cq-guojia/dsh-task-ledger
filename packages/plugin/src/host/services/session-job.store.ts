@@ -14,6 +14,7 @@
  *
  * 本文件只管状态：不建会话、不读台账。业务在 `session.service.ts`。
  */
+import { randomUUID } from "node:crypto";
 import type { TaskRecord } from "dsh-plugin-core/adv/tasks";
 import type { TaskStreamSource } from "dsh-plugin-core/host";
 
@@ -56,6 +57,10 @@ export interface RegisterInput {
 	readonly taskId: string;
 	/** 台账目录绝对路径（detail 里给客户端做跳转备份）。 */
 	readonly workspace: string;
+	/** 核心随提交体发来的页面级归属，回显到记录供 scope:'origin' 判弹卡。 */
+	readonly origin?: string;
+	/** 核心随提交体发来的面板级归属，回显到记录供「查看会话」跳回发起面板。 */
+	readonly panelId?: string;
 	/** 超过它还在跑 ⇒ 判超时失败；0 / 缺省 = 不设上限（作业自己会结束）。 */
 	readonly maxDurationMs?: number;
 }
@@ -73,9 +78,14 @@ function keyOf(project: string, key: string): string {
 	return `${project}\u0000${key}`;
 }
 
-/** 行按钮：服务端只声明文案 / 时机 / id，画面由核心 TaskBar 画，handler 在发起页注册。 */
-function rowButtons(): readonly { readonly id: string; readonly text: string; readonly when: "always" }[] {
-	return [{ id: VIEW_SESSION_ACTION, text: "查看会话", when: "always" }];
+/** 行按钮：服务端只声明文案 / 图标 / 时机 / id，画面由核心 TaskBar 画，handler 在发起页注册。 */
+function rowButtons(): readonly {
+	readonly id: string;
+	readonly text: string;
+	readonly icon: string;
+	readonly when: "always";
+}[] {
+	return [{ id: VIEW_SESSION_ACTION, text: "查看会话", icon: "common.base:AIdamoxing", when: "always" }];
 }
 
 /** 把结算 result 并进 detail（detail 是 JSON 值，只有普通对象能就地加键）。 */
@@ -86,16 +96,20 @@ function withResult(detail: TaskRecord["detail"], result: JobDetail): TaskRecord
 	return { ...(detail === undefined ? {} : { detail }), result };
 }
 
-/** toast / notify 配置随记录走：任何页面看到同一条都按同一份配置渲染。 */
+/** toast / notify 配置随记录走：任何页面看到同一条都按同一份配置渲染。
+ *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
+ *  title 是「完成：<任务名>」，这里只补动作结果，不重复拼「已完成：完成：…」。
+ *  三个弹窗（双红框 + 黄框）本次不改，待用户另行拍板。 */
 function completionConfig(title: string) {
+	const label = `关闭任务 · ${title}`;
 	return {
 		toast: {
-			success: { title: `已完成：${title}` },
-			failure: { title: `失败：${title}` },
+			success: { title: `${label}（已结案）` },
+			failure: { title: `${label}（失败）` },
 		},
 		notify: {
-			success: { message: `后台任务已完成：${title}`, scope: "all" as const, broadcast: "plugin" as const },
-			failure: { message: `后台任务失败：${title}`, scope: "all" as const, broadcast: "plugin" as const },
+			success: { message: `${label}已结案`, scope: "all" as const, broadcast: "plugin" as const },
+			failure: { message: `${label}失败`, scope: "all" as const, broadcast: "plugin" as const },
 		},
 	};
 }
@@ -128,6 +142,15 @@ export function createSessionJobStore(): SessionJobStore {
 	const noticeListeners = new Set<NoticeListener>();
 
 	let noticeSeq = 0;
+	// 宿主实例熵：进程每次启动都不同，通知 id 才不会在重启后复用（核心按 id 永久去重）。
+	const instanceId = randomUUID();
+	/** 同一业务键的运行实例身份：startedAt 必须严格递增，不能只靠 Date.now()。 */
+	const lastStartedAt = new Map<string, number>();
+	const nextStartedAt = (key: string): number => {
+		const now = Math.max(Date.now(), (lastStartedAt.get(key) ?? 0) + 1);
+		lastStartedAt.set(key, now);
+		return now;
+	};
 	const deadlineByKey = new Map<string, number>();
 	let reaper: ReturnType<typeof setInterval> | null = null;
 
@@ -198,7 +221,7 @@ export function createSessionJobStore(): SessionJobStore {
 		records.set(id, next);
 		deadlineByKey.delete(key);
 		const notice: TaskNotice = {
-			id: `${PROJECT}:${key}:${String(++noticeSeq)}`,
+			id: `${PROJECT}:${instanceId}:${key}:${String(++noticeSeq)}`,
 			task: next,
 		};
 		outbox.push(notice);
@@ -211,7 +234,7 @@ export function createSessionJobStore(): SessionJobStore {
 		const id = keyOf(PROJECT, key);
 		const existing = records.get(id);
 		if (existing !== undefined && existing.state === "running") return false;
-		const now = Date.now();
+		const now = nextStartedAt(key);
 		const record: TaskRecord = {
 			id: `${PROJECT}:${key}:${String(now)}`,
 			key,
@@ -243,9 +266,10 @@ export function createSessionJobStore(): SessionJobStore {
 
 	function register(input: RegisterInput): TaskRecord {
 		const id = keyOf(PROJECT, input.key);
-		const now = Date.now();
-		const maxDurationMs = input.maxDurationMs ?? 0;
 		const prior = records.get(id);
+		// 有占位就沿用它的 startedAt（同一运行实例）；没有才新造一个严格递增的身份。
+		const now = prior?.startedAt ?? nextStartedAt(input.key);
+		const maxDurationMs = input.maxDurationMs ?? 0;
 		const record: TaskRecord = {
 			...(prior ?? {
 				id: `${PROJECT}:${input.key}:${String(now)}`,
@@ -256,6 +280,9 @@ export function createSessionJobStore(): SessionJobStore {
 				state: "running" as const,
 				startedAt: now,
 			}),
+			// 服务端回显核心随提交体发来的归属字段：scope:'origin' 弹卡与「查看会话」跳回发起面板都靠它。
+			...(input.origin === undefined ? {} : { origin: input.origin }),
+			...(input.panelId === undefined ? {} : { panelId: input.panelId }),
 			title: input.title,
 			state: "running",
 			detail: {

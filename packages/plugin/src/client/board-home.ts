@@ -221,9 +221,39 @@ export function BoardHome(props: {
 	ensureUiBase();
 	const state = useSyncExternalStore(boardSubscribe, boardSnapshot);
 
+	// 只读会话视图托管在这里：任务行结案后会从列表移除并卸载，视图得活在行外面。
+	// 放在 mountTaskUI effect 之前：「查看会话」handler 要用 showSessionView，避免依赖数组 TDZ。
+	const [sessionView, setSessionView] = useState<{
+		id: string;
+		view: SessionViewTarget;
+		heading: string;
+	} | null>(null);
+	const sessionViewRef = useRef<{ view: SessionViewTarget } | null>(null);
+	useEffect(
+		() => () => {
+			sessionViewRef.current?.view.dispose();
+			sessionViewRef.current = null;
+		},
+		[],
+	);
+	const dropSessionView = useCallback((): void => {
+		sessionViewRef.current?.view.dispose();
+		sessionViewRef.current = null;
+		setSessionView(null);
+	}, []);
+	const showSessionView = useCallback((id: string, heading: string): boolean => {
+		const view = openCloseSessionView(id);
+		if (view === null) return false;
+		sessionViewRef.current?.view.dispose();
+		sessionViewRef.current = { view };
+		setSessionView({ id, view, heading });
+		return true;
+	}, []);
+
 	// 结案作业的终态与行按钮**只在这一处接核心**（2026-11-21 按 v0.43.8 重写）：
 	// 作业跑在宿主、状态真源在宿主，这里只注册「查看会话」handler 和终态收尾（归档 + 提示）。
 	// mountTaskUI 常驻订阅，刷新 / 关页都不影响；核心按 id 去重，一条作业只出一个结论。
+	// 「查看会话」一律拉起本仓托管的核心 SessionViewModal（2026-11-23 用户口径：不外跳宿主面板）。
 	useEffect(() => {
 		return mountTaskUI({
 			project: TASK_PROJECT,
@@ -231,7 +261,7 @@ export function BoardHome(props: {
 			handlers: {
 				[VIEW_SESSION_ACTION]: (task) => {
 					const sessionId = sessionIdOfDetail(task.detail);
-					if (sessionId !== null) openSession(sessionId);
+					if (sessionId !== null) showSessionView(sessionId, t("closeSessionTitle", { title: task.title }));
 				},
 			},
 			onSettled: (task, outcome) => {
@@ -251,7 +281,7 @@ export function BoardHome(props: {
 									{
 										text: t("actionOpenSession"),
 										onClick: () => {
-											openSession(sessionId);
+											showSessionView(sessionId, t("closeSessionTitle", { title: task.title }));
 										},
 									},
 								],
@@ -274,7 +304,7 @@ export function BoardHome(props: {
 				});
 			},
 		});
-	}, [t]);
+	}, [t, showSessionView]);
 	const mountRef = useRef<HTMLDivElement>(null);
 	/** 内容滚动层（`pageStyle` 那一层）：快捷工具栏的「回到顶部」滚它（不是 window）。 */
 	const scrollRef = useRef<HTMLDivElement>(null);
@@ -308,33 +338,6 @@ export function BoardHome(props: {
 	}, []);
 	const clearHistScroll = useCallback((): void => {
 		setHistScroll(null);
-	}, []);
-	// 只读会话视图托管在这里：任务行结案后会从列表移除并卸载，视图得活在行外面
-	const [sessionView, setSessionView] = useState<{
-		id: string;
-		view: SessionViewTarget;
-		heading: string;
-	} | null>(null);
-	const sessionViewRef = useRef<{ view: SessionViewTarget } | null>(null);
-	useEffect(
-		() => () => {
-			sessionViewRef.current?.view.dispose();
-			sessionViewRef.current = null;
-		},
-		[],
-	);
-	const dropSessionView = useCallback((): void => {
-		sessionViewRef.current?.view.dispose();
-		sessionViewRef.current = null;
-		setSessionView(null);
-	}, []);
-	const showSessionView = useCallback((id: string, heading: string): boolean => {
-		const view = openCloseSessionView(id);
-		if (view === null) return false;
-		sessionViewRef.current?.view.dispose();
-		sessionViewRef.current = { view };
-		setSessionView({ id, view, heading });
-		return true;
 	}, []);
 	/** 点历史页右侧 4 格 = 图表与列表一起跳过去（用户 2026-11-01）：
 	 *  今日 / 本周 / 本月 ⇒ 图切到该格的粒度（天 / 周 / 月）并选中本期，

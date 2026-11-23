@@ -277,6 +277,7 @@ export type LocaleKey =
 	| "closeAgentFailed"
 	| "actionOpenSession"
 	| "bgRun"
+	| "executing"
 	| "closeAlreadyRunning"
 	| "closeInProgress"
 	| "tipClaim"
@@ -666,6 +667,7 @@ export const zh: Record<LocaleKey, string> = {
 	closeAgentFailed: "Agent 这轮没跑成：{error}",
 	actionOpenSession: "查看会话",
 	bgRun: "后台执行",
+	executing: "执行中",
 	closeAlreadyRunning: "这条已经在后台执行了：{title}",
 	closeInProgress: "Agent 正在结案，完成前不能再点",
 	tipClaim: "将该任务归入本人名下，状态置为进行中",
@@ -1042,6 +1044,7 @@ export const en: Record<LocaleKey, string> = {
 	closeAgentFailed: "The agent turn failed: {error}",
 	actionOpenSession: "Open session",
 	bgRun: "Run in background",
+	executing: "Running",
 	closeAlreadyRunning: "Already running in the background: {title}",
 	closeInProgress: "An agent is closing this task; wait for it to finish",
 	tipClaim: "assign this task to me and set it to in progress",

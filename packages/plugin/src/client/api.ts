@@ -469,18 +469,15 @@ export function postSessionStart(body: {
 }
 
 /**
- * 「这个台账目录能不能起 Agent 会话」的判据：host 的 `/workspaces` 给每项带 `isDsh`
- * （与 session.service 同一 resolveWorkspace 判据），客户端只查表、不自己判。
+ * 「这个台账目录能不能起 Agent 会话」的前端预检：传目录 path，host 用 resolveWorkspace 现算。
+ * 后端起会话时再判一次（同一个函数）——这里是分层里的第一道，不拉整表、不自己拼装。
  */
-export async function fetchWorkspaceDshFlags(): Promise<ReadonlyMap<string, boolean>> {
-	const payload = await fetchJson<{
-		readonly workspaces: readonly { readonly id?: string; readonly isDsh?: boolean }[];
-	}>("/workspaces");
-	return new Map(
-		payload.workspaces
-			.filter((item): item is { id: string; isDsh?: boolean } => typeof item.id === "string")
-			.map((item) => [item.id, item.isDsh === true]),
+export async function canHostAgentSession(path: string): Promise<boolean> {
+	const query = new URLSearchParams({ path }).toString();
+	const payload = await fetchJson<{ readonly dsh?: boolean }>(
+		`/workspace/can-host?${query}`,
 	);
+	return payload.dsh === true;
 }
 
 /**

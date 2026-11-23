@@ -246,13 +246,27 @@ export function registerRoutes(webServer, deps) {
     });
     registerRead("/workspaces", async (_req, res) => {
         try {
-            // isDsh：这个台账目录是否登记为宿主工作区 —— 「交给 Agent」能不能起会话的判据。
-            // 与 session.service 用同一个 resolveWorkspace，判据只有一处（path 精确 / realpath 归一）。
-            const workspaces = (await workspacesOf(deps)).map((ws) => ({
-                ...ws,
-                isDsh: resolveWorkspace(deps.registry, ws.path).kind === "dsh",
-            }));
-            sendJson(res, 200, { workspaces });
+            sendJson(res, 200, { workspaces: await workspacesOf(deps) });
+        }
+        catch (error) {
+            sendFailure(res, error);
+        }
+    });
+    // 「台账目录能不能起 Agent 会话」的前端预检：传目录 path，host 现算布尔。
+    // 与 startSession 共用同一个 resolveWorkspace（path 精确 / realpath 归一）——判据单点，
+    // 且这次判定用的是当刻 registry，不再拿另一个快照的 workspace 表拼装。
+    registerRead("/workspace/can-host", (req, res) => {
+        try {
+            const raw = new URL(req.url ?? "/", "http://localhost").searchParams.get("path");
+            const path = raw === null ? "" : raw.trim();
+            // registerRead 的 catch 固定走 sendFailure(500)，BAD_REQUEST 前缀只在写端点转 400。
+            if (path === "") {
+                sendJson(res, 400, { error: "必须给台账目录路径" });
+                return;
+            }
+            sendJson(res, 200, {
+                dsh: resolveWorkspace(deps.registry, path).kind === "dsh",
+            });
         }
         catch (error) {
             sendFailure(res, error);

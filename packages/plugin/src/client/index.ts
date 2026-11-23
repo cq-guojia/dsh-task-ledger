@@ -51,6 +51,7 @@ import {
 } from "./nav";
 import type { UiConversationFace } from "dsh-plugin-core/adv/session";
 import { setSessionArchiver, setSessionOpener } from "./nav";
+import { initClientUi } from "./ui-init";
 import { LedgerIcon } from "./ui";
 
 // 核心控件样式设施：id 插件内唯一（多插件同页互不覆盖）；控件首次渲染时 ensureControls() 挂载。
@@ -211,8 +212,12 @@ function applySidebarEntry(): void {
 let selectPanel: (id: string | null) => void = () => {};
 
 export function apply(ctx: ClientContext): void {
+	// ⓪ 先挂 UI 接线（Toast / Tooltip / 默认分组 / 样式）：核心是「显式调用一次才生效」，
+	//    不挂则 27 处 notify() 全静默死投递；幂等，apply 重入无副作用。
+	initClientUi();
+
 	// ⓪ 后台任务中心：服务端权威三件套。状态走 SSE 基线 + 增量，
-	//    发起走 POST submit，终态通知按 id 去重。核心 v0.45 起同源跨标签共用一条 SSE
+	//    发起走 POST submit，终态通知按 id 去重。核心同源跨标签共用一条 SSE
 	//    （Web Locks 选主 + BroadcastChannel 扇出），不再每标签各开常驻连接。
 	let offTasks: (() => void) | null = null;
 	const connectTasks = (): void => {

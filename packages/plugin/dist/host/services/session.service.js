@@ -254,6 +254,8 @@ export async function startSession(deps, input) {
             sessionId: created.sessionId,
             taskId: input.taskId,
             workspace: workspace.path,
+            ...(input.origin === undefined ? {} : { origin: input.origin }),
+            ...(input.panelId === undefined ? {} : { panelId: input.panelId }),
         });
         watchCloseJob(deps, {
             key,

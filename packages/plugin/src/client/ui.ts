@@ -20,7 +20,6 @@ import { Input as CoreInput } from "dsh-plugin-core/ui/input";
 import { Picker as CorePicker, type PickerGroup } from "dsh-plugin-core/ui/picker";
 import { Loader as CoreLoader } from "dsh-plugin-core/ui/loader";
 import { Segmented as CoreSegmented } from "dsh-plugin-core/ui/segmented";
-import { setTooltipRenderer } from "dsh-plugin-core/ui/tooltip";
 /** 核心 0.35.29 起 `LoadingHandle` 随使用面一起给（`ui/loading` 直接导出），
  *  不必再去引内部机制入口 `ui/loading-host`。 */
 import { showLoading as CoreShowLoading, type LoadingHandle } from "dsh-plugin-core/ui/loading";
@@ -593,11 +592,11 @@ export function IconButton(props: {
 
 /* ── 提示 ─────────────────────────────────────────────────────────── */
 
-/** 把官方 Tooltip 交给核心当气泡渲染器：核心 `FieldHint`（问号）与本地 `Tip` 从此用同一个气泡
- *  （核心不许静态依赖官方包，注入位是它给的；本项目本来就静态引官方，注入一次即可）。 */
-setTooltipRenderer((props) => h(Tooltip, { ...props, portal: true }));
-
 /** 悬停提示（本插件**唯一**挂 Tooltip 的入口）。
+ *
+ *  气泡渲染器 `setTooltipRenderer` 的注入已迁到 `ui-init.ts` 的 `initClientUi()`：
+ *  核心 `FieldHint` 与这里的 `Tip` 共用同一个官方气泡，但注入是一次性应用接线，
+ *  不该靠「谁 import 过 ui.ts」的模块副作用生效。
  *
  *  ⚠️ 官方 `Tooltip` 给子元素挂 `ref` 来当锚点（`children.ref` → `cloneElement`），
  *  而核心控件（Button / Chip）都是**裸函数组件**（无 forwardRef）⇒ ref 被 React
@@ -635,8 +634,10 @@ export function showLoading(text?: string): LoadingHandle {
 }
 
 /** 核心封装的 Toast 卡（灰/绿/红/黄，随明暗；默认 info 灰卡、位置 bottom-center）。
- *  无关闭句柄，靠 `durationMs` 自退。 */
-export { notify } from "dsh-plugin-core/ui/notify";
+ *  无关闭句柄，靠 `durationMs` 自退。
+ *  投递端统一从这里出；渲染端（mountToasts / connectToasts）与默认分组归 `ui-init.ts`，
+ *  业务代码只管投、不许各自挂界面。 */
+export { notify, showToast } from "dsh-plugin-core/ui/notify";
 
 /** 命令式确认框（Promise：true = 确定 / false = 取消）。 */
 export { confirmModal } from "dsh-plugin-core/ui/dialogs";
