@@ -261,7 +261,7 @@ export function BoardHome(props: {
 			handlers: {
 				[VIEW_SESSION_ACTION]: (task) => {
 					const sessionId = sessionIdOfDetail(task.detail);
-					if (sessionId !== null) showSessionView(sessionId, t("closeSessionTitle", { title: task.title }));
+					if (sessionId !== null) showSessionView(sessionId, t("closeSessionTitle", { title: task.title.description }));
 				},
 			},
 			onSettled: (task, outcome) => {
@@ -281,13 +281,13 @@ export function BoardHome(props: {
 									{
 										text: t("actionOpenSession"),
 										onClick: () => {
-											showSessionView(sessionId, t("closeSessionTitle", { title: task.title }));
+											showSessionView(sessionId, t("closeSessionTitle", { title: task.title.description }));
 										},
 									},
 								],
 							};
 				if (outcome === "done") {
-					notify(t("closeDone", { title: task.title }), {
+					notify(t("closeDone", { title: task.title.description }), {
 						variant: "success",
 						...openAction,
 					});
@@ -315,6 +315,8 @@ export function BoardHome(props: {
 	const toolbarScroll = useCallback((): HTMLElement | null => scrollRef.current, []);
 	// 视图模式：在办看板 / 历史查询 / 身份与设置（用户 2026-11-01：三段同一条滑轨，最右是齿轮）。
 	const [viewMode, setViewMode] = useState<ViewMode>("active");
+	// 验证用：按住后台任务面板不收，供真机核对「查看会话」Modal 与面板同屏的层级。
+	const [taskBarOpen, setTaskBarOpen] = useState(false);
 	// 首页趋势图的粒度（日 / 周），默认日（用户 2026-10-31 起要；收尾时把默认从周翻到日）。两档桶都随快照下来 ⇒ 切换零请求。
 	const [trendGran, setTrendGran] = useState<TrendGran>("day");
 	// 历史页顶部数据：切到历史才拉（拉过一次就复用，切回在办不清）。
@@ -812,9 +814,19 @@ export function BoardHome(props: {
 									gap: "var(--dtl-space-3)",
 								},
 							},
-							/* 后台任务（用户 2026-11-17）：整排最左、纯图标 lg 正方，与滑动块同高；
-							   点开由核心 `TaskBar` 自己弹面板，本仓不自绘。 */
-							h(TaskBar, { form: "icon", size: "lg" }),
+							/* 后台任务（用户 2026-11-17）：整排最左、纯图标 lg 正方，与滑动块同高。
+								   验证用：受控 + closeOnAction=false 按住面板，让「查看会话」Modal 与面板同屏。 */
+							h(TaskBar, {
+								form: "icon",
+								size: "lg",
+								open: taskBarOpen,
+								onOpenChange: (next) => {
+									// 会话浮层在时不回写 false：只挡核心的「浮层让位」，点外部 / Esc 照常关。
+									if (!next && sessionView !== null) return;
+									setTaskBarOpen(next);
+								},
+								closeOnAction: false,
+							}),
 							h(Segmented<ViewMode>, {
 								id: "dtl-view-mode",
 								value: shownView,

@@ -278,6 +278,8 @@ export type LocaleKey =
 	| "actionOpenSession"
 	| "bgRun"
 	| "executing"
+	| "closingNotice"
+	| "taskClosureCategory"
 	| "closeAlreadyRunning"
 	| "closeInProgress"
 	| "tipClaim"
@@ -668,6 +670,8 @@ export const zh: Record<LocaleKey, string> = {
 	actionOpenSession: "查看会话",
 	bgRun: "后台执行",
 	executing: "执行中",
+	closingNotice: "Agent 正在结案，完成后自动归档…",
+	taskClosureCategory: "任务结案",
 	closeAlreadyRunning: "这条已经在后台执行了：{title}",
 	closeInProgress: "Agent 正在结案，完成前不能再点",
 	tipClaim: "将该任务归入本人名下，状态置为进行中",
@@ -1045,6 +1049,8 @@ export const en: Record<LocaleKey, string> = {
 	actionOpenSession: "Open session",
 	bgRun: "Run in background",
 	executing: "Running",
+	closingNotice: "Agent is closing this task; it will be archived when done…",
+	taskClosureCategory: "Task closure",
 	closeAlreadyRunning: "Already running in the background: {title}",
 	closeInProgress: "An agent is closing this task; wait for it to finish",
 	tipClaim: "assign this task to me and set it to in progress",

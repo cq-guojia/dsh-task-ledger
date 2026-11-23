@@ -1,4 +1,4 @@
-import type { TaskRecord } from "dsh-plugin-core/adv/tasks";
+import type { DisplayTitle, TaskRecord } from "dsh-plugin-core/adv/tasks";
 import type { TaskStreamSource } from "dsh-plugin-core/host";
 /** 任务中心的一级项目名（与客户端 `TASK_PROJECT` 必须是同一个值）。 */
 export declare const PROJECT = "dsh-task-ledger";
@@ -14,7 +14,7 @@ export type JobDetail = string | number | boolean | null | readonly JobDetail[] 
 export interface RegisterInput {
     /** 业务键：`close:<任务号>` —— 判重的唯一依据。 */
     readonly key: string;
-    readonly title: string;
+    readonly title: DisplayTitle;
     /** 会话 id（随 detail 下发，客户端拿它归档 / 打开）。 */
     readonly sessionId: string;
     readonly taskId: string;
@@ -37,7 +37,7 @@ export interface SessionJobStore extends TaskStreamSource {
      * 原子占位（消除 TOCTOU）：起会话的 await 之前先占住 key，返回 true 表示拿到；
      * 并发第二个同 key 立刻拿到 false，不会再起第二个会话。失败要 release。
      */
-    claim(key: string, title: string): boolean;
+    claim(key: string, title: DisplayTitle): boolean;
     /** 占位失败时释放（createSession 抛错 / 非 DSH）；没占住就是空操作。 */
     release(key: string): void;
     /** 把占位记录填成正式 running（带 sessionId 等详情）。 */

@@ -1,3 +1,4 @@
+import type { DisplayTitle } from "dsh-plugin-core/adv/tasks";
 import type { RegistryWorkspace } from "../types.js";
 import { type SessionJobStore } from "./session-job.store.js";
 /** 宿主 `agent.send` 收的消息（`dsh-llm` 的 UserMessage 结构面，只声明实际用到的字段）。 */
@@ -100,6 +101,8 @@ export interface StartSessionInput {
     readonly policy: StartPolicy;
     /** 会话标题（客户端按界面语言拼好，会话列表里显示的名字）。 */
     readonly title: string;
+    /** 后台作业的结构化标题（核心 TaskBar 显示「分类丨说明」）；close 必填，resume 不产生作业。 */
+    readonly displayTitle?: DisplayTitle;
     /**
      * 注入的首条消息正文。**由客户端拼好传进来** —— 提示词要跟界面语言（中/英）走，
      * 而语言只有浏览器半知道；host 不自带中文模板（否则英文环境收到的仍是中文）。

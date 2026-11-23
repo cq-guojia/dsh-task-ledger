@@ -15,7 +15,7 @@
  * 本文件只管状态：不建会话、不读台账。业务在 `session.service.ts`。
  */
 import { randomUUID } from "node:crypto";
-import type { TaskRecord } from "dsh-plugin-core/adv/tasks";
+import type { DisplayTitle, TaskRecord } from "dsh-plugin-core/adv/tasks";
 import type { TaskStreamSource } from "dsh-plugin-core/host";
 
 /** 一次性终态通知（核心 `TaskNotice` 未从导出面重导出，这里按契约最小声明）。 */
@@ -51,7 +51,7 @@ export type JobDetail =
 export interface RegisterInput {
 	/** 业务键：`close:<任务号>` —— 判重的唯一依据。 */
 	readonly key: string;
-	readonly title: string;
+	readonly title: DisplayTitle;
 	/** 会话 id（随 detail 下发，客户端拿它归档 / 打开）。 */
 	readonly sessionId: string;
 	readonly taskId: string;
@@ -98,18 +98,17 @@ function withResult(detail: TaskRecord["detail"], result: JobDetail): TaskRecord
 
 /** toast / notify 配置随记录走：任何页面看到同一条都按同一份配置渲染。
  *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
- *  title 是「完成：<任务名>」，这里只补动作结果，不重复拼「已完成：完成：…」。
+ *  分类是「任务结案」，描述是任务名；这里只在描述后补动作结果，不重复拼分类。
  *  三个弹窗（双红框 + 黄框）本次不改，待用户另行拍板。 */
-function completionConfig(title: string) {
-	const label = `关闭任务 · ${title}`;
+function completionConfig(title: DisplayTitle) {
 	return {
 		toast: {
-			success: { title: `${label}（已结案）` },
-			failure: { title: `${label}（失败）` },
+			success: { title: { ...title, description: `${title.description}（已结案）` } },
+			failure: { title: { ...title, description: `${title.description}（失败）` } },
 		},
 		notify: {
-			success: { message: `${label}已结案`, scope: "all" as const, broadcast: "plugin" as const },
-			failure: { message: `${label}失败`, scope: "all" as const, broadcast: "plugin" as const },
+			success: { message: `${title.description}已结案`, scope: "all" as const, broadcast: "plugin" as const },
+			failure: { message: `${title.description}失败`, scope: "all" as const, broadcast: "plugin" as const },
 		},
 	};
 }
@@ -119,7 +118,7 @@ export interface SessionJobStore extends TaskStreamSource {
 	 * 原子占位（消除 TOCTOU）：起会话的 await 之前先占住 key，返回 true 表示拿到；
 	 * 并发第二个同 key 立刻拿到 false，不会再起第二个会话。失败要 release。
 	 */
-	claim(key: string, title: string): boolean;
+	claim(key: string, title: DisplayTitle): boolean;
 	/** 占位失败时释放（createSession 抛错 / 非 DSH）；没占住就是空操作。 */
 	release(key: string): void;
 	/** 把占位记录填成正式 running（带 sessionId 等详情）。 */
@@ -230,7 +229,7 @@ export function createSessionJobStore(): SessionJobStore {
 		return next;
 	}
 
-	function claim(key: string, title: string): boolean {
+	function claim(key: string, title: DisplayTitle): boolean {
 		const id = keyOf(PROJECT, key);
 		const existing = records.get(id);
 		if (existing !== undefined && existing.state === "running") return false;

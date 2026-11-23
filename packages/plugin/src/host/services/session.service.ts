@@ -21,7 +21,7 @@ import { randomUUID } from "node:crypto";
 import { realpathSync } from "node:fs";
 import { invalidate } from "../repositories/cache.js";
 import { readTasks } from "../repositories/ledger.repository.js";
-import type { TaskRecord } from "dsh-plugin-core/adv/tasks";
+import type { DisplayTitle, TaskRecord } from "dsh-plugin-core/adv/tasks";
 import type { RegistryWorkspace } from "../types.js";
 import { closeJobKey, type SessionJobStore } from "./session-job.store.js";
 
@@ -138,6 +138,8 @@ export interface StartSessionInput {
 	readonly policy: StartPolicy;
 	/** 会话标题（客户端按界面语言拼好，会话列表里显示的名字）。 */
 	readonly title: string;
+	/** 后台作业的结构化标题（核心 TaskBar 显示「分类丨说明」）；close 必填，resume 不产生作业。 */
+	readonly displayTitle?: DisplayTitle;
 	/**
 	 * 注入的首条消息正文。**由客户端拼好传进来** —— 提示词要跟界面语言（中/英）走，
 	 * 而语言只有浏览器半知道；host 不自带中文模板（否则英文环境收到的仍是中文）。
@@ -370,13 +372,17 @@ export async function startSession(
 	// ② 判重：原子占位先于 await createSession —— 两个标签页并发点同一任务的「交给 Agent」，
 	//    只有一个能拿到 key，杜绝「都判无作业 → 各起一个会 race 覆盖」的 TOCTOU。
 	const key = closeJobKey(input.taskId);
+	// 结构化标题必须在占位前校验：核心 isTaskRecord 拒收 string 标题，
+	// 缺了就在 SSE 上变成幽灵作业（占位成功却永远不显示、也结不了案）。
+	const displayTitle = input.displayTitle;
 	if (input.policy === "close") {
+		if (displayTitle === undefined) throw new Error("结案作业缺结构化标题");
 		const existing = deps.jobs.find(key);
 		if (existing !== undefined && existing.state === "running") {
 			const sessionId = sessionIdOf(existing);
 			if (sessionId !== null) return { kind: "duplicate", sessionId };
 		}
-		if (!deps.jobs.claim(key, input.title)) {
+		if (!deps.jobs.claim(key, displayTitle)) {
 			const held = deps.jobs.find(key);
 			const sessionId = held === undefined ? null : sessionIdOf(held);
 			return { kind: "duplicate", sessionId: sessionId ?? "" };
@@ -399,9 +405,10 @@ export async function startSession(
 
 	// ④ 只有「完成」产生后台作业；「继续」是用户自己进去干，不登记
 	if (input.policy === "close") {
+		if (displayTitle === undefined) throw new Error("结案作业缺结构化标题");
 		deps.jobs.register({
 			key,
-			title: input.title,
+			title: displayTitle,
 			sessionId: created.sessionId,
 			taskId: input.taskId,
 			workspace: workspace.path,

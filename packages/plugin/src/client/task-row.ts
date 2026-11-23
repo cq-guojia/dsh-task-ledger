@@ -29,7 +29,7 @@ import {
 import { ConfirmModal } from "dsh-plugin-core/ui/confirm-modal";
 /* 后台任务中心（核心 v0.43.8）：startTask 提交、作业状态由宿主持有。 */
 import { startTask, taskCenterStore } from "dsh-plugin-core/adv/tasks";
-import type { TaskRecord } from "dsh-plugin-core/adv/tasks";
+import type { DisplayTitle, TaskRecord } from "dsh-plugin-core/adv/tasks";
 import {
 	canHostAgentSession,
 	closeJobKey,
@@ -313,6 +313,11 @@ export function TaskRowView(props: {
 			// 本行只提交、按返回的作业记录锁弹窗（2026-11-21 按 v0.43.8 重写）。
 			const prompt = closePrompt(t, row.task.id, input.note);
 			const sessionTitle = t("closeSessionTitle", { title });
+			// 后台作业标题走核心 v0.46.0 的结构契约：分类说清「这是什么活」，描述才是任务名。
+			const displayTitle: DisplayTitle = {
+				category: t("taskClosureCategory"),
+				description: title,
+			};
 
 			// 非 DSH 工作区起不了会话：提交前问 host 现算一次（核心 submit 不回业务错误原文），
 			// 直接走「复制提示词、去对应 Agent 粘」——弹窗不关也不锁，人还能改成直接结案。
@@ -330,7 +335,7 @@ export function TaskRowView(props: {
 				project: TASK_PROJECT,
 				group: JOB_GROUP,
 				key: closeJobKey(row.task.id),
-				title: sessionTitle,
+				title: displayTitle,
 				kind: "close-agent",
 				args: {
 					workspace: row.task.workspace.id,
@@ -749,7 +754,10 @@ export function TaskRowView(props: {
 					t,
 					taskTitle: titleOf(row),
 					busy,
-					notice: busy ? progressNotice() : undefined,
+					// 扫光过程提示贯穿整个结案期（核心 Modal.notice → FlipText(sweep)）：
+					// 提交阶段翻 step 文案；交给 Agent 后无 step 流，给一句固定文案常驻扫光，
+					// 终态 locked 解除、弹窗收起才消失（用户 2026-11-23：原来左下有扫光，现在没了）。
+					notice: busy ? progressNotice() : closing ? t("closingNotice") : undefined,
 					error: closeError,
 					// 「交给 Agent」能不能用由宿主说了算：起不来会在提交时回人话（不再靠客户端服务探测）
 					canUseAgent: true,

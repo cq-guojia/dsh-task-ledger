@@ -42,18 +42,17 @@ function withResult(detail, result) {
 }
 /** toast / notify 配置随记录走：任何页面看到同一条都按同一份配置渲染。
  *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
- *  title 是「完成：<任务名>」，这里只补动作结果，不重复拼「已完成：完成：…」。
+ *  分类是「任务结案」，描述是任务名；这里只在描述后补动作结果，不重复拼分类。
  *  三个弹窗（双红框 + 黄框）本次不改，待用户另行拍板。 */
 function completionConfig(title) {
-    const label = `关闭任务 · ${title}`;
     return {
         toast: {
-            success: { title: `${label}（已结案）` },
-            failure: { title: `${label}（失败）` },
+            success: { title: { ...title, description: `${title.description}（已结案）` } },
+            failure: { title: { ...title, description: `${title.description}（失败）` } },
         },
         notify: {
-            success: { message: `${label}已结案`, scope: "all", broadcast: "plugin" },
-            failure: { message: `${label}失败`, scope: "all", broadcast: "plugin" },
+            success: { message: `${title.description}已结案`, scope: "all", broadcast: "plugin" },
+            failure: { message: `${title.description}失败`, scope: "all", broadcast: "plugin" },
         },
     };
 }

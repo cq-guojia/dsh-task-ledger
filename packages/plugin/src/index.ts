@@ -11,6 +11,7 @@
  * 互相独立——skills 缺席不挡数据面，反之亦然。
  */
 import { serveFsRoute, serveTaskStream, serveTaskSubmit } from "dsh-plugin-core/host";
+import { formatDisplayTitle, isDisplayTitle } from "dsh-plugin-core/adv/tasks";
 import {
 	FS_ROUTE,
 	TASK_CENTER_ROUTE,
@@ -167,7 +168,13 @@ export function apply(ctx: PluginContext): void {
 				const args = (payload.args ?? {}) as Record<string, unknown>;
 				const workspace = typeof args.workspace === "string" ? args.workspace : "";
 				const prompt = typeof args.prompt === "string" ? args.prompt : "";
-				const title = typeof payload.title === "string" ? payload.title : `任务 ${taskId}`;
+				// 核心 v0.46.0 起 startTask.title 是 DisplayTitle；string 帧会被 isTaskRecord 拒收，
+				// 所以这里按结构校验，缺了就拒绝提交，不让服务端落一条永远显示不出来的幽灵作业。
+				if (!isDisplayTitle(payload.title)) throw new Error("提交缺结构化任务标题");
+				const displayTitle = payload.title;
+				// 会话名沿用客户端按界面语言拼好的那句；没带才退回结构化标题。
+				const title =
+					typeof args.title === "string" ? args.title : formatDisplayTitle(displayTitle);
 				const origin = typeof payload.origin === "string" ? payload.origin : undefined;
 				const panelId = typeof payload.panelId === "string" ? payload.panelId : undefined;
 				const reply = await startSession(sessionDeps(), {
@@ -175,6 +182,7 @@ export function apply(ctx: PluginContext): void {
 					taskId,
 					policy: "close",
 					title,
+					displayTitle,
 					prompt,
 					...(origin === undefined ? {} : { origin }),
 					...(panelId === undefined ? {} : { panelId }),
