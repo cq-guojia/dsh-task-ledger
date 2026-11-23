@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-23 08:01:03 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-23 09:12:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -42,12 +42,13 @@
 - 2026-11-22：随 core v0.45.4 单飞对接，问题 3 代码层修复——核心按 `task.settledAt` 做 per-project notice watermark（解决 512 条 id 去重溢出后老通知重弹），服务端 `session-job.store.ts` 通知 id 注入 `randomUUID()` 宿主实例熵（跨重启全局唯一），并顺带修同 key `startedAt` 严格递增、`origin`/`panelId` 回显（后两项服务任务 2 的后台会话归属）。`package.json` core 0.44.0→0.45.4 + lockfile 同步、dist 重建；verify + codelint（9 文件六层）全过。问题 1/3 待真机验收、问题 2/4 待逐个过，未提交。
 - 2026-11-23（第二批，用户四条需求）：① 后台「查看会话」一律改走本仓托管的**核心 SessionViewModal**（`board-home.ts` mountTaskUI 的 VIEW_SESSION_ACTION handler + 终态 Toast 按钮），不再 `openSession()` 外跳宿主；`showSessionView` 状态块从 effect 后提到 effect 前避免依赖数组 TDZ。② 截图文案「完成：xxx」自解释化：`session-job.store.ts` completionConfig 改「关闭任务 · xxx（已结案/失败）」，不再「已完成：完成：…」；行按钮 `rowButtons()` 加 `icon: common.base:AIdamoxing`（核心 TaskBar 支持 TaskButton.icon，已核实 `TaskBar.ts:413-434`）。③ 台账行「完成」按钮（`task-row.ts`）去掉 Tip hover 提示，`closing`（来自 SSE 基线、刷新可恢复）时文案换 `bgRun`「后台执行」+ 左侧 `Loader` 动图标，点击仍开同一个结案框。④ 时间秒一直走：查实**核心 v0.45.5 没有渐进式披露时间机制**，「披露」指进度文字翻牌（`TaskBar.ts:119-131`），时间是 `Elapsed` + `useNowMs` 每秒心跳无条件 `formatDurationHms`（`TaskBar.ts:112-133`、`ticker.ts:25`），无开关、`relativePast` 定义了但零消费。按用户「核心不支持就让核心支持、不走后门」落地为**核心需求**（见 Next），本仓未绕路。build/typecheck/verify-skill/verify-ui-wiring/codelint（14 文件六层）全过，未提交。
 - 2026-11-23：用户真机点「停止会话」结束后弹 3 个提示并问来源 —— 查明：两红框「后台任务失败：完成：…」=服务端 `session-job.store.ts:99,103` 给作业配的 `toast.failure`+`notify.failure`，核心 `coordinator.ts:114-135` 结算时各发一次（即问题 2 的双红框，待用户拍板）；黄框「这轮跑完了，但任务没结」=本仓 `board-home.ts:266` 的 onSettled 非 done warning。同轮用户明确问题 4 新口径：执行时右侧隐藏取消/交给 Agent、换成「后台执行」，停止了再还回来 —— 已改 `close-task-modal.ts` footer：locked 时右侧只渲染后台执行（OverlayLockExempt+primary），左下只留 Agent 会话中，终态 locked 解除自动还原两颗提交钮；build/typecheck/verify/codelint 全过，未提交。
+- 2026-11-23：核心 v0.46.0 结构化标题契约落地（用户拍板「标题契约是我让他改的，本仓照改；这个任务叫任务结案，英文对应翻译」）。升级 `package.json` core 0.45.5→0.46.0 + lockfile；`locales.ts` 新增 `taskClosureCategory`（任务结案 / Task closure）；`task-row.ts` 构造 `{category:t('taskClosureCategory'), description:titleOf(row)}` 作 `startTask.title`，会话名仍由 args.title 传原文；`index.ts` onSubmit 用 `isDisplayTitle(payload.title)` 做边界校验（string 帧会被核心 isTaskRecord 拒收，不能放行落幽灵作业），缺就报错，会话名缺退回 formatDisplayTitle；`session.service.ts` `StartSessionInput.displayTitle` 在占位前校验并用于 claim/register；`session-job.store.ts` `RegisterInput`/`claim`/`TaskRecord.title` 全改 DisplayTitle，`completionConfig` 的 toast.title 改成 `{...title, description:'<任务名>（已结案/失败）'}`（核心 isTaskToastConfig 强制校验），notify 文案只取 description；`board-home.ts` 三处 `task.title` 插值改 `task.title.description`。另修一处升级必现 bug：index.ts 原 `typeof payload.title === 'string'` 会把对象标题降级成「任务 <id>」。typecheck/build/verify-skill/verify-ui-wiring + codelint（8 文件六层）全过，未提交。
 - 2026-11-22：问题 1 真机发现「点交给 Agent 只闪一下、无任何提示」。实测 `/workspace/can-host` 正常返 200 `{"dsh":false}`，分支逻辑对；根因是全仓 27 处 `notify()` 死投递——核心 notify 只 push 到模块级 toast-queue，消费方从未调 `mountToasts()` 建 Toaster+订阅（全仓 0 处），本地死投递核心无告警。用户明确「不要补丁、该重构就重构」，拒绝在 apply 里加一行的补丁做法。独立架构专家评审后按修正方案根治：新增 `client/ui-init.ts` 统一初始化入口（setTooltipRenderer → connectToasts → mountToasts → setDefaultTaskProject(TASK_PROJECT) → ensureUiBase，幂等 + Symbol 探测自检），`ui.ts` 移除顶层 setTooltipRenderer 副作用、补 showToast 出口，`index.ts:apply` 开头调 `initClientUi()`，`scripts/verify-ui-wiring.mjs` 构建期静态检查（有契约子路径直引 / notify 导入来源 / apply 调用 / 四件接线），纳入 verify。自检不用 `isNotifyBridgeConnected`（核心未导出、且是广播路径假阳性）也不用 DOM 探测（容器懒建），用 `Symbol.for('dsh-plugin-core/toast-host')`。build/typecheck/verify-skill/verify-ui-wiring/codelint（12 文件六层）全过，未提交。
 
 ## Conclusion
 
 - 已完成：问题 1 判定端点化 + Toast 死投递根治（27 处 notify 现在有渲染端；UI 接线统一到 `ui-init.ts` + 构建期自检，不再是补丁）；诊断日志撤净；旧任务结案、新任务认领。问题 3 代码层修复（notice watermark + id 实例熵，随 core v0.45.4 对接）。
-- 未完成：问题 1/3 待真机验收（这次重点看 Toast 是否恢复）；问题 2（双红框）/4（locked 新增按钮）待逐个报方案并改；未提交。
+- 未完成：问题 1/3 待真机验收（这次重点看 Toast 是否恢复）；问题 2（双红框）待用户拍板；核心 v0.46.0 结构化标题已接入（分类「任务结案」/「Task closure」），弹窗左下扫光已修；TaskBar 时间后五阶段扫光受「交给 Agent 路径拿不到 skill #step」阻塞，另立任务 `20261123-0905-2bf6` 单独推进；未提交。
 
 ## Execution Log
 
@@ -63,3 +64,4 @@
 - 2026-11-23 07:22:43 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 第二批四条：①后台查看会话改走核心SessionViewModal(board-home handler+终态Toast，showSessionView状态提到effect前避TDZ)；②completionConfig文案改关闭任务·xxx、rowButtons加icon common.base:AIdamoxing；③行完成按钮去Tip、closing时显示后台执行+Loader动图标(SSE基线刷新可恢复)；④时间秒一直走查实核心无渐进式披露机制，列为核心需求(timeMode+coarseAfterMs)未绕路。verify/codelint(14文件)全过，未提交
 - 2026-11-23 07:34:53 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 行完成按钮后台态文案由后台执行改执行中(新增executing键中英双语，bgRun保留给结案弹窗)；TaskBar下拉盖住Modal查实是核心bug(popmenu970>modal940、Modal就地渲染、TaskBar走body portal且未订阅浮层关闭广播)，本仓不硬压z-index，列核心需求。verify/codelint(15文件)全过，未提交
 - 2026-11-23 08:01:03 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 已提交f05ffe3并push。扫光渐进披露：查实核心Modal.notice→FlipText(sweep)是正式API且已打进产物，本仓接线本就正规；扫光消失真因是task-row.ts的notice只在busy时给、交给Agent后finally清busy且startTask无step流。正规修法：notice覆盖整个结案期(busy用step文案/closing用新closingNotice中英文案)，核心foot flex布局让notice贴左、按钮贴右共存。verify/codelint全过，未提交
+- 2026-11-23 09:12:31 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心v0.46.0结构化标题契约：全链路改DisplayTitle(任务结案/Task closure)，index.ts onSubmit加isDisplayTitle边界校验修对象标题降级bug，completionConfig/toast标题结构化、board-home取description；package.json+lockfile升级到0.46.0并重建dist。verify+codelint(8文件六层)全过，未提交
