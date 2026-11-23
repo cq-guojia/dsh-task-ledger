@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-23 07:34:53 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-23 08:01:03 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -62,3 +62,4 @@
 - 2026-11-23 06:54:04 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 查明3个提示来源：两红框=session-job.store.ts:99,103的toast.failure+notify.failure两路(核心coordinator各发一次,即问题2双红框)；黄框=board-home.ts:266的onSettled非done warning。按用户新口径改问题4：close-task-modal.ts locked时右侧只留后台执行(OverlayLockExempt+primary)、隐藏取消/提交，终态locked解除还原；左下只留Agent会话中。verify/codelint全过，未提交
 - 2026-11-23 07:22:43 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 第二批四条：①后台查看会话改走核心SessionViewModal(board-home handler+终态Toast，showSessionView状态提到effect前避TDZ)；②completionConfig文案改关闭任务·xxx、rowButtons加icon common.base:AIdamoxing；③行完成按钮去Tip、closing时显示后台执行+Loader动图标(SSE基线刷新可恢复)；④时间秒一直走查实核心无渐进式披露机制，列为核心需求(timeMode+coarseAfterMs)未绕路。verify/codelint(14文件)全过，未提交
 - 2026-11-23 07:34:53 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 行完成按钮后台态文案由后台执行改执行中(新增executing键中英双语，bgRun保留给结案弹窗)；TaskBar下拉盖住Modal查实是核心bug(popmenu970>modal940、Modal就地渲染、TaskBar走body portal且未订阅浮层关闭广播)，本仓不硬压z-index，列核心需求。verify/codelint(15文件)全过，未提交
+- 2026-11-23 08:01:03 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 已提交f05ffe3并push。扫光渐进披露：查实核心Modal.notice→FlipText(sweep)是正式API且已打进产物，本仓接线本就正规；扫光消失真因是task-row.ts的notice只在busy时给、交给Agent后finally清busy且startTask无step流。正规修法：notice覆盖整个结案期(busy用step文案/closing用新closingNotice中英文案)，核心foot flex布局让notice贴左、按钮贴右共存。verify/codelint全过，未提交
