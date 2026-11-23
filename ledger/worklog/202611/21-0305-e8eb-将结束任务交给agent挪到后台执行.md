@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-23 09:12:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-23 09:18:21 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -32,7 +32,8 @@
 4. 行「完成」按钮后台态文案：用户 2026-11-23 看真机图确认按钮形态对了，但文字不要「后台执行」、改「执行中」—— 新增 `executing` 键（中「执行中」/ 英「Running」，`locales.ts` 三处：`LocaleKey` + zh + en），`task-row.ts` 的 closing 文案由 `bgRun` 改 `executing`（`bgRun` 保留给结案弹窗那个「后台执行」按钮，两者语义不同）。verify/codelint 全过。
 5. **核心需求（发何心，本仓不绕路）**：TaskBar 下拉 × Modal 层级 bug —— 用户真机点面板内「查看会话」，Modal 打开后 TaskBar 卡仍浮在 Modal 上。查实是核心 bug：token 阶梯 `--dshpc-z-popmenu`(970) > `--dshpc-z-modal`(940)（`src/design/tokens.css:262,267,273`），Modal 就地渲染（`src/ui/feedback/Modal.ts:107,147-159`，z 来自 `overlay.css:28-32`），TaskBar 面板走 `FloatingPortal` 挂 body（`src/adv/tasks/TaskBar.ts:448-456`，z 来自 `task-bar.css:45-48`）；核心只有 `locked` 广播（`src/ui/infra/overlay.ts:13-36`，Picker 订阅、TaskBar 未订阅），行按钮点击也不收面板（`TaskBar.ts:425-431`）。本仓未设任何 z-index、SessionViewModal 无改层级 prop，不背锅，也不用更高 z-index 硬压。建议给核心：加「浮层打开」广播（Modal 发、TaskBar 收 `setOpen(false)`）+ 行按钮点击即收面板。
 6. **核心需求（发何心，本仓不绕路）**：核心 TaskBar 时间缺「渐进式披露」——`Elapsed`（`src/adv/tasks/TaskBar.ts:112-133`）无条件 `formatDurationHms` + `useNowMs` 每秒心跳（`src/ui/infra/ticker.ts:25`），运行中永远秒级跳；`relativePast`（`src/utils/date.ts:90-105`）已定义但零消费；`TaskBarProps`（`TaskBar.ts:38-76`）无时间粒度开关。请核心加 `timeMode?: 'elapsed'|'relative'|'auto'` + `coarseAfterMs?: number`（默认 elapsed 保持现状），并让 Elapsed 按经过时长切粗粒度；改完重建 dist。
-5. 是否提交另等用户明确指令（未完成前不提交）。
+6. **临时验证开关待还原**：`board-home.ts` 的 TaskBar 改成受控 `open`/`onOpenChange`（会话浮层在时不回写 false）+ `closeOnAction: false`，按住面板不收，供真机核对 Modal 与面板同屏时的层级；验证完必须还原成 `h(TaskBar, { form: "icon", size: "lg" })` 一行。核心 z 阶梯当前仍是 modal=940、popmenu=tip（更高），核心靠「浮层让位」回避遮挡而非真的调层级。
+7. 是否提交另等用户明确指令（未完成前不提交）。
 
 ## Process
 
@@ -65,3 +66,4 @@
 - 2026-11-23 07:34:53 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 行完成按钮后台态文案由后台执行改执行中(新增executing键中英双语，bgRun保留给结案弹窗)；TaskBar下拉盖住Modal查实是核心bug(popmenu970>modal940、Modal就地渲染、TaskBar走body portal且未订阅浮层关闭广播)，本仓不硬压z-index，列核心需求。verify/codelint(15文件)全过，未提交
 - 2026-11-23 08:01:03 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 已提交f05ffe3并push。扫光渐进披露：查实核心Modal.notice→FlipText(sweep)是正式API且已打进产物，本仓接线本就正规；扫光消失真因是task-row.ts的notice只在busy时给、交给Agent后finally清busy且startTask无step流。正规修法：notice覆盖整个结案期(busy用step文案/closing用新closingNotice中英文案)，核心foot flex布局让notice贴左、按钮贴右共存。verify/codelint全过，未提交
 - 2026-11-23 09:12:31 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心v0.46.0结构化标题契约：全链路改DisplayTitle(任务结案/Task closure)，index.ts onSubmit加isDisplayTitle边界校验修对象标题降级bug，completionConfig/toast标题结构化、board-home取description；package.json+lockfile升级到0.46.0并重建dist。verify+codelint(8文件六层)全过，未提交
+- 2026-11-23 09:18:21 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户要求临时按住后台任务面板供真机核对Modal层级：board-home.ts TaskBar改受控open/onOpenChange(会话浮层在时不回写false)+closeOnAction:false，同时挡住核心的行按钮点即收与浮层让位两道机制；核心z阶梯modal=940<popmenu仍旧，靠让位回避遮挡。verify+codelint全过，待用户看完还原
