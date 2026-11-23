@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-23 07:22:43 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-23 07:34:53 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -29,7 +29,9 @@
 1. 问题 1 再交真机验收：点「交给 Agent」后应看到黄色 Toast「此任务不属于 DeepSeek Harness 工作区」+ 复制提示词说明（非 DSH 工作区分支）；同时验证其他操作（复制任务号 / 设置保存等）的 Toast 全部恢复显示。核心单飞锁的 TypeError 也应不再出现。
 2. 问题 4 已改（执行时右侧只留「后台执行」、终态还原），交真机验收；问题 2（双红框）待用户拍板再改；问题 3 已代码层修复，待真机验收。
 3. 三个提示来源已查明并答用户：两红框=服务端 `session-job.store.ts:99,103` 的 toast.failure + notify.failure 两路（核心 coordinator `announce` 各发一次，即问题 2）；黄框=本仓 `board-home.ts:266` 的 onSettled 非 done warning。属问题 2 的红框待用户拍板。
-4. **核心需求（发何心，本仓不绕路）**：核心 TaskBar 时间缺「渐进式披露」——`Elapsed`（`src/adv/tasks/TaskBar.ts:112-133`）无条件 `formatDurationHms` + `useNowMs` 每秒心跳（`src/ui/infra/ticker.ts:25`），运行中永远秒级跳；`relativePast`（`src/utils/date.ts:90-105`）已定义但零消费；`TaskBarProps`（`TaskBar.ts:38-76`）无时间粒度开关。请核心加 `timeMode?: 'elapsed'|'relative'|'auto'` + `coarseAfterMs?: number`（默认 elapsed 保持现状），并让 Elapsed 按经过时长切粗粒度；改完重建 dist。
+4. 行「完成」按钮后台态文案：用户 2026-11-23 看真机图确认按钮形态对了，但文字不要「后台执行」、改「执行中」—— 新增 `executing` 键（中「执行中」/ 英「Running」，`locales.ts` 三处：`LocaleKey` + zh + en），`task-row.ts` 的 closing 文案由 `bgRun` 改 `executing`（`bgRun` 保留给结案弹窗那个「后台执行」按钮，两者语义不同）。verify/codelint 全过。
+5. **核心需求（发何心，本仓不绕路）**：TaskBar 下拉 × Modal 层级 bug —— 用户真机点面板内「查看会话」，Modal 打开后 TaskBar 卡仍浮在 Modal 上。查实是核心 bug：token 阶梯 `--dshpc-z-popmenu`(970) > `--dshpc-z-modal`(940)（`src/design/tokens.css:262,267,273`），Modal 就地渲染（`src/ui/feedback/Modal.ts:107,147-159`，z 来自 `overlay.css:28-32`），TaskBar 面板走 `FloatingPortal` 挂 body（`src/adv/tasks/TaskBar.ts:448-456`，z 来自 `task-bar.css:45-48`）；核心只有 `locked` 广播（`src/ui/infra/overlay.ts:13-36`，Picker 订阅、TaskBar 未订阅），行按钮点击也不收面板（`TaskBar.ts:425-431`）。本仓未设任何 z-index、SessionViewModal 无改层级 prop，不背锅，也不用更高 z-index 硬压。建议给核心：加「浮层打开」广播（Modal 发、TaskBar 收 `setOpen(false)`）+ 行按钮点击即收面板。
+6. **核心需求（发何心，本仓不绕路）**：核心 TaskBar 时间缺「渐进式披露」——`Elapsed`（`src/adv/tasks/TaskBar.ts:112-133`）无条件 `formatDurationHms` + `useNowMs` 每秒心跳（`src/ui/infra/ticker.ts:25`），运行中永远秒级跳；`relativePast`（`src/utils/date.ts:90-105`）已定义但零消费；`TaskBarProps`（`TaskBar.ts:38-76`）无时间粒度开关。请核心加 `timeMode?: 'elapsed'|'relative'|'auto'` + `coarseAfterMs?: number`（默认 elapsed 保持现状），并让 Elapsed 按经过时长切粗粒度；改完重建 dist。
 5. 是否提交另等用户明确指令（未完成前不提交）。
 
 ## Process
@@ -59,3 +61,4 @@
 - 2026-11-22 15:53:37 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 问题1真机提示不显示根治：全仓27处notify死投递(核心notify只入队、本仓从未mountToasts)；按用户不要补丁口径经独立专家评审后重构——新增client/ui-init.ts统一接线(Toaster/bridge/默认分组/Tooltip/样式+Symbol探测自检)、ui.ts收口出口、apply开头初始化、verify-ui-wiring.mjs构建期自检；build/typecheck/verify/codelint全过，待真机验收，未提交
 - 2026-11-23 06:54:04 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 查明3个提示来源：两红框=session-job.store.ts:99,103的toast.failure+notify.failure两路(核心coordinator各发一次,即问题2双红框)；黄框=board-home.ts:266的onSettled非done warning。按用户新口径改问题4：close-task-modal.ts locked时右侧只留后台执行(OverlayLockExempt+primary)、隐藏取消/提交，终态locked解除还原；左下只留Agent会话中。verify/codelint全过，未提交
 - 2026-11-23 07:22:43 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 第二批四条：①后台查看会话改走核心SessionViewModal(board-home handler+终态Toast，showSessionView状态提到effect前避TDZ)；②completionConfig文案改关闭任务·xxx、rowButtons加icon common.base:AIdamoxing；③行完成按钮去Tip、closing时显示后台执行+Loader动图标(SSE基线刷新可恢复)；④时间秒一直走查实核心无渐进式披露机制，列为核心需求(timeMode+coarseAfterMs)未绕路。verify/codelint(14文件)全过，未提交
+- 2026-11-23 07:34:53 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 行完成按钮后台态文案由后台执行改执行中(新增executing键中英双语，bgRun保留给结案弹窗)；TaskBar下拉盖住Modal查实是核心bug(popmenu970>modal940、Modal就地渲染、TaskBar走body portal且未订阅浮层关闭广播)，本仓不硬压z-index，列核心需求。verify/codelint(15文件)全过，未提交
