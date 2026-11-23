@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-23 12:38:37 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-23 13:13:04 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -32,7 +32,7 @@
 4. 行「完成」按钮后台态文案：用户 2026-11-23 看真机图确认按钮形态对了，但文字不要「后台执行」、改「执行中」—— 新增 `executing` 键（中「执行中」/ 英「Running」，`locales.ts` 三处：`LocaleKey` + zh + en），`task-row.ts` 的 closing 文案由 `bgRun` 改 `executing`（`bgRun` 保留给结案弹窗那个「后台执行」按钮，两者语义不同）。verify/codelint 全过。
 5. **核心需求（发何心，本仓不绕路）**：TaskBar 下拉 × Modal 层级 bug —— 用户真机点面板内「查看会话」，Modal 打开后 TaskBar 卡仍浮在 Modal 上。查实是核心 bug：token 阶梯 `--dshpc-z-popmenu`(970) > `--dshpc-z-modal`(940)（`src/design/tokens.css:262,267,273`），Modal 就地渲染（`src/ui/feedback/Modal.ts:107,147-159`，z 来自 `overlay.css:28-32`），TaskBar 面板走 `FloatingPortal` 挂 body（`src/adv/tasks/TaskBar.ts:448-456`，z 来自 `task-bar.css:45-48`）；核心只有 `locked` 广播（`src/ui/infra/overlay.ts:13-36`，Picker 订阅、TaskBar 未订阅），行按钮点击也不收面板（`TaskBar.ts:425-431`）。本仓未设任何 z-index、SessionViewModal 无改层级 prop，不背锅，也不用更高 z-index 硬压。建议给核心：加「浮层打开」广播（Modal 发、TaskBar 收 `setOpen(false)`）+ 行按钮点击即收面板。
 6. **核心需求（发何心，本仓不绕路）**：核心 TaskBar 时间缺「渐进式披露」——`Elapsed`（`src/adv/tasks/TaskBar.ts:112-133`）无条件 `formatDurationHms` + `useNowMs` 每秒心跳（`src/ui/infra/ticker.ts:25`），运行中永远秒级跳；`relativePast`（`src/utils/date.ts:90-105`）已定义但零消费；`TaskBarProps`（`TaskBar.ts:38-76`）无时间粒度开关。请核心加 `timeMode?: 'elapsed'|'relative'|'auto'` + `coarseAfterMs?: number`（默认 elapsed 保持现状），并让 Elapsed 按经过时长切粗粒度；改完重建 dist。
-6. **验证开关按用户要求保留，待真机验收 v0.46.1**：核心 v0.46.1 修层级（新增 `--dshpc-z-page-float`=900，低于 modal 940）与关不掉（`useForegroundOverlayActive()` 读状态代替发关闭信号）。本仓 `board-home.ts` 保留 TaskBar 受控 `open`/`onOpenChange`（会话浮层在时不回写 false）+ `closeOnAction: false`，让点「查看会话」后面板仍留在屏上供真机核对。上一轮 agent 擅自还原过一次，用户明确「没说改回去就别改」，已恢复。
+6. **验证开关按用户要求保留，待真机验收 v0.46.1**：核心 v0.46.1 修层级（新增 `--dshpc-z-page-float`=900，低于 modal 940）与关不掉（`useForegroundOverlayActive()` 读状态代替发关闭信号）。本仓 `board-home.ts` 保留 TaskBar 受控 `open`/`onOpenChange`（会话浮层在时不回写 false）+ `closeOnAction: false`，让点「查看会话」后面板仍留在屏上供真机核对。上一轮 agent 擅自还原过一次，用户明确「没说改回去就别改」，已恢复。v0.46.2（浮层层级改认标准模态语义：dialog/aria-modal，删掉 v0.46.1 的广播与 suspended）已接入：registry 元数据有 latest=0.46.2 但 tarball 404，改用本地核心仓库 dist（软链 node_modules）编译，产物含 isModalDialogOpen/aria-modal；验证开关未动，verify/codelint 全过。
 7. 是否提交另等用户明确指令（未完成前不提交）。
 
 ## Process
@@ -69,3 +69,4 @@
 - 2026-11-23 09:18:21 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户要求临时按住后台任务面板供真机核对Modal层级：board-home.ts TaskBar改受控open/onOpenChange(会话浮层在时不回写false)+closeOnAction:false，同时挡住核心的行按钮点即收与浮层让位两道机制；核心z阶梯modal=940<popmenu仍旧，靠让位回避遮挡。verify+codelint全过，待用户看完还原
 - 2026-11-23 11:52:45 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心v0.46.1(修TaskBar主浮层遮挡与关不掉)：新增z-page-float=900低于modal940、useForegroundOverlayActive读状态代替发关闭信号；本仓还原上一轮临时按住面板的受控开关，TaskBar回默认写法，core 0.46.0→0.46.1+重建dist，verify/codelint全过，待真机验收
 - 2026-11-23 12:38:37 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户要求恢复验证开关：board-home.ts TaskBar 受控 open/onOpenChange(会话浮层在时不回写false)+closeOnAction:false，点查看会话后面板留屏。上一轮agent擅自还原，用户明确未授权不得改回。已重建dist，verify+codelint全过
+- 2026-11-23 13:13:04 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心v0.46.2(浮层层级改认标准模态语义dialog/aria-modal，删v0.46.1广播与suspended)：registry有latest但tarball 404，改用本地核心仓库dist软链node_modules编译，产物确认含isModalDialogOpen/aria-modal；验证开关未动，verify(--config.verify-deps-before-run=false)+codelint全过
