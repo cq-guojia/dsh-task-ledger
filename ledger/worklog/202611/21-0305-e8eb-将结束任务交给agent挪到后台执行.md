@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-23 13:13:04 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-23 14:16:23 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -70,3 +70,4 @@
 - 2026-11-23 11:52:45 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心v0.46.1(修TaskBar主浮层遮挡与关不掉)：新增z-page-float=900低于modal940、useForegroundOverlayActive读状态代替发关闭信号；本仓还原上一轮临时按住面板的受控开关，TaskBar回默认写法，core 0.46.0→0.46.1+重建dist，verify/codelint全过，待真机验收
 - 2026-11-23 12:38:37 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户要求恢复验证开关：board-home.ts TaskBar 受控 open/onOpenChange(会话浮层在时不回写false)+closeOnAction:false，点查看会话后面板留屏。上一轮agent擅自还原，用户明确未授权不得改回。已重建dist，verify+codelint全过
 - 2026-11-23 13:13:04 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心v0.46.2(浮层层级改认标准模态语义dialog/aria-modal，删v0.46.1广播与suspended)：registry有latest但tarball 404，改用本地核心仓库dist软链node_modules编译，产物确认含isModalDialogOpen/aria-modal；验证开关未动，verify(--config.verify-deps-before-run=false)+codelint全过
+- 2026-11-23 14:16:23 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 按用户拍板收敛通知为一张卡：撤销TaskBar验证开关恢复默认(点查看会话自动收起)；删session-job.store的notify配置(第2张卡)；board-home的onSettled只留归档去重、删自弹卡(第3张卡)。只留核心toast(任务结案丨…（已结案/失败）)。dist重建，typecheck/verify/codelint全过
