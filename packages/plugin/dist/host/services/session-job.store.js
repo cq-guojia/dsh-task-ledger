@@ -43,16 +43,12 @@ function withResult(detail, result) {
 /** toast / notify 配置随记录走：任何页面看到同一条都按同一份配置渲染。
  *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
  *  分类是「任务结案」，描述是任务名；这里只在描述后补动作结果，不重复拼分类。
- *  三个弹窗（双红框 + 黄框）本次不改，待用户另行拍板。 */
+ *  只配 toast 交核心弹卡（用户 2026-11-23：本业务用不到 notify 广播与 UI 自弹）。 */
 function completionConfig(title) {
     return {
         toast: {
             success: { title: { ...title, description: `${title.description}（已结案）` } },
             failure: { title: { ...title, description: `${title.description}（失败）` } },
-        },
-        notify: {
-            success: { message: `${title.description}已结案`, scope: "all", broadcast: "plugin" },
-            failure: { message: `${title.description}失败`, scope: "all", broadcast: "plugin" },
         },
     };
 }
