@@ -264,7 +264,8 @@ export function BoardHome(props: {
 					if (sessionId !== null) showSessionView(sessionId, t("closeSessionTitle", { title: task.title.description }));
 				},
 			},
-			// 终态只做归档：提示由服务端记录上的 toast 交核心弹卡，本仓不再自己 notify。
+			// 终态收尾只做本仓共享数据：刷看板 + 成功时归档。toast 由核心按记录配置弹，行弹窗由行自己关。
+			// 核心列表自刷、通知去重都归核心；这里不重复，也不判业务结论（done/failed 由服务端给）。
 			onSettled: (task) => {
 				const key = task.key ?? "";
 				if (!key.startsWith("close:")) return;
@@ -272,6 +273,10 @@ export function BoardHome(props: {
 				if (handledJobs.has(stamp)) return;
 				handledJobs.add(stamp);
 
+				void refresh().catch(() => false);
+				// 只在结案成功时归档：失败（still-open / timeout）要留会话供排查，
+				// 否则「去会话里看它停在哪儿」的入口被自己关掉。
+				if (task.state !== "done") return;
 				const sessionId = sessionIdOfDetail(task.detail);
 				if (sessionId !== null) void archiveSession(sessionId).catch(() => false);
 			},

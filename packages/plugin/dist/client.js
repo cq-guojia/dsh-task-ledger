@@ -69631,6 +69631,11 @@ body[data-ds-dark-theme]{
 			]);
 			const closing = storeJob !== void 0 || jobRecord !== null && jobRecord.state === "running";
 			const closingId = storeJob === void 0 ? closing ? sessionIdOfDetail(jobRecord?.detail) : null : sessionIdOfDetail(storeJob.detail);
+			const wasClosing = (0, react$1.useRef)(closing);
+			(0, react$1.useEffect)(() => {
+				if (wasClosing.current && !closing && closeOpen) setCloseOpen(false);
+				wasClosing.current = closing;
+			}, [closing, closeOpen]);
 			const finishTask = async (input) => {
 				setBusy(true);
 				setStep(null);
@@ -69743,7 +69748,7 @@ body[data-ds-dark-theme]{
 					size: "md",
 					icon: icon ?? void 0,
 					onClick: onPress,
-					disabled: busy
+					disabled: busy || closing
 				}, t(actionKey))
 			});
 			const claimButton = tipBtn(null, "actionClaim", "tipClaim", () => void runAction("claim"));
@@ -69770,7 +69775,7 @@ body[data-ds-dark-theme]{
 					label: t("actionCancel"),
 					className: "dtl-icon--muted",
 					icon: (0, react$1.createElement)(Icon, { name: "common.base:guanbi" }),
-					disabled: busy,
+					disabled: busy || closing,
 					onClick: () => {
 						setCancelError(null);
 						setCancelOpen(true);
@@ -69785,7 +69790,7 @@ body[data-ds-dark-theme]{
 					label: t("actionDelete"),
 					className: "dtl-icon--muted",
 					icon: (0, react$1.createElement)(Icon, { name: "common.base:shanchu" }),
-					disabled: busy,
+					disabled: busy || closing,
 					onClick: () => {
 						setDeleteError(null);
 						setDeleteOpen(true);
@@ -71413,6 +71418,8 @@ body[data-ds-dark-theme]{
 						const stamp = `${key}@${String(task.startedAt)}`;
 						if (handledJobs.has(stamp)) return;
 						handledJobs.add(stamp);
+						refresh().catch(() => false);
+						if (task.state !== "done") return;
 						const sessionId = sessionIdOfDetail(task.detail);
 						if (sessionId !== null) archiveSession(sessionId).catch(() => false);
 					}
@@ -71727,7 +71734,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261123-224356-611`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261124-084316-880`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

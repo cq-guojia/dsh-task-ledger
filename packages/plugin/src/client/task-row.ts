@@ -23,6 +23,7 @@ import {
 	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
 	useEffect,
+	useRef,
 	useState,
 	useSyncExternalStore,
 } from "react";
@@ -287,6 +288,15 @@ export function TaskRowView(props: {
 		? (closing ? sessionIdOfDetail(jobRecord?.detail) : null)
 		: sessionIdOfDetail(storeJob.detail);
 
+	// 结案作业从 running 落终态时收起自己的弹窗（重构前 startCloseSession.onSettled 的
+	// setCloseOpen 回归修复）：弹窗状态是本行私有的，顶层 onSettled 不该跨层来关。
+	// 用户已点「后台执行」关窗的场合 closeOpen 已是 false，这条只是幂等兜底。
+	const wasClosing = useRef(closing);
+	useEffect(() => {
+		if (wasClosing.current && !closing && closeOpen) setCloseOpen(false);
+		wasClosing.current = closing;
+	}, [closing, closeOpen]);
+
 	const finishTask = async (input: { useAgent: boolean; note: string }): Promise<void> => {
 		setBusy(true);
 		setStep(null);
@@ -436,7 +446,7 @@ export function TaskRowView(props: {
 					size: "md",
 					icon: icon ?? undefined,
 					onClick: onPress,
-					disabled: busy,
+					disabled: busy || closing,
 				},
 				t(actionKey),
 			),
@@ -486,7 +496,7 @@ export function TaskRowView(props: {
 			label: t("actionCancel"),
 			className: "dtl-icon--muted",
 			icon: h(Icon, { name: "common.base:guanbi" }),
-			disabled: busy,
+			disabled: busy || closing,
 			onClick: () => {
 				setCancelError(null);
 				setCancelOpen(true);
@@ -502,7 +512,7 @@ export function TaskRowView(props: {
 			label: t("actionDelete"),
 			className: "dtl-icon--muted",
 			icon: h(Icon, { name: "common.base:shanchu" }),
-			disabled: busy,
+			disabled: busy || closing,
 			onClick: () => {
 				setDeleteError(null);
 				setDeleteOpen(true);
