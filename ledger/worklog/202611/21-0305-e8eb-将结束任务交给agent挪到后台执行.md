@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-24 04:59:38 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-24 13:56:01 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -79,3 +79,4 @@
 - 2026-11-24 04:24:01 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 接核心0.46.6(registry未发仅本地tag，软链本地dist)给项目行Card加热呼吸：task-row.ts 调用点加 loading:closing 一行，核心Card 0.46.6自带loading=色条原色呼吸(只改视觉不改交互)，终态SSE摘running后closing转false自动停。产物确认含dshpc-card-bar-breathe动画与loading:closing接线。verify+codelint全过，未提交。注意0.46.5把TaskBar closeOnAction默认true翻成false，本仓未动、待用户确认是否显式传true恢复点按钮收起
 - 2026-11-24 04:30:17 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 更正上一条：registry实时latest确为0.46.6(tarball可下)，之前'未发版'是pnpm缓存读到的旧值。已撤本地软链、走正式pnpm install装0.46.6(node_modules指向.pnpm/dsh-plugin-core@0.46.6)，重新verify+codelint全过，产物含呼吸动画与loading:closing接线
 - 2026-11-24 04:59:38 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 已提交 0e64407 并 push main(d8bb72c..0e64407)：core 0.46.6 正式包+项目行 Card loading:closing 呼吸样式，dist/lockfile 一并入库，verify/codelint 全过
+- 2026-11-24 13:56:01 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 核心toast加查看会话按钮：用核心开放的TaskToastState.button契约(id=VIEW_SESSION_ACTION复用现成handler/icon同rowButtons)，按钮文案按用户要求随界面语言走——客户端t(actionOpenSession)经startTask.args.buttonText透传→onSubmit→StartSessionInput→claim/register→completionConfig→toast.button.text；缺省中文兜老提交。四层契约+产物全链路核对，verify/codelint全过，未提交
