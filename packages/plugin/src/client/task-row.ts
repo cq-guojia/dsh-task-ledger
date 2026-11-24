@@ -626,6 +626,9 @@ export function TaskRowView(props: {
 			Card,
 			{
 				accent: RAIL_COLOR[tone],
+				// 结案作业在跑时色条在原色上呼吸（核心 0.46.6 的 loading，只改视觉不改交互）；
+				// 终态由 SSE 摘掉 running 记录，closing 转 false，呼吸自动停。
+				loading: closing,
 				hoverable: true,
 				hoverScope: "card",
 				style: { padding: "12px 14px" },
