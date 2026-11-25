@@ -51,6 +51,7 @@ import {
 	writeJobProgress,
 } from "./write-job-ui";
 import { CancelTaskModal, ReasonTaskModal } from "./cancel-task-modal";
+import { ConfirmActionModal } from "./confirm-action-modal";
 import { CloseTaskModal } from "./close-task-modal";
 import { formatDateTime, formatRelative } from "./format";
 import { openSession, sessionIdOfDetail } from "./nav";
@@ -171,6 +172,8 @@ export function TaskRowView(props: {
 	const progressOf = (key: string): string | null =>
 		writeJobProgress(storeSnapshot.tasks, TASK_PROJECT, key) ?? jobOf(key)?.progress?.message ?? null;
 	const anyJobRunning = (Object.values(jobKeys) as readonly string[]).some(runningOf);
+	/** 释放后台作业的锁定态：提交后弹窗转圈、底部只留「后台执行」。 */
+	const releaseRunning = runningOf(jobKeys.release);
 
 	// 终态一到就清掉本地乐观兜底：否则乐观行退场后旧记录仍卡着 running，按钮永远解不开。
 	useEffect(() => {
@@ -729,32 +732,61 @@ export function TaskRowView(props: {
 		Fragment,
 		null,
 		card,
-		confirmAct === null
-			? null
-			: (() => {
-					const action = confirmAct;
-					const claim = action === "claim";
-					const title = titleOf(row);
-					return h(ConfirmModal, {
-						title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
-						message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
-						confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
-						cancelText: t("settingsCancel"),
-						// 确定键无 icon ⇒ loading 时清文字、只留圈（核心自己锁宽，中英文都不跳）
-						loadingText: false,
-						// 认领（同步）：底栏提示跟着 NDJSON step 翻；释放（后台）：读 TaskRecord.progress。
-						notice: busy
-							? progressNotice()
-							: action === "release" && runningOf(jobKeys.release)
-								? (progressOf(jobKeys.release) ?? t("actionSyncing"))
-								: undefined,
-						// 提交中整框锁死：命令是 fire-and-forget、中途停不下来。
-						// 释放提交后改由后台作业态锁定（刷新后 SSE 基线恢复也能重新锁住）。
-						locked: busy || (action === "release" && runningOf(jobKeys.release)),
-						onCancel: () => setConfirmAct(null),
-						onConfirm: async () => {
-							if (action === "release") {
-								// 释放改后台：提交即返回，不自己 notify / refresh，终态交给核心。
+		// 认领是同步动作，沿用核心 ConfirmModal（提交期锁定、无「后台执行」）。
+		confirmAct === "claim"
+			? h(ConfirmModal, {
+					title: t("claimConfirmTitle"),
+					message: t("claimConfirmBody", { title: titleOf(row) }),
+					confirmText: t("claimConfirmOk"),
+					cancelText: t("settingsCancel"),
+					loadingText: false,
+					notice: busy ? progressNotice() : undefined,
+					locked: busy,
+					onCancel: () => setConfirmAct(null),
+					onConfirm: async () => {
+						setBusy(true);
+						setStep(null);
+						try {
+							await postTaskAction(
+								{ action: "claim", workspace: row.task.workspace.id, id: row.task.id },
+								onStep,
+							);
+							notify(t("actionClaimDone", { title: titleOf(row) }), { variant: "success" });
+							// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
+							setConfirmAct(null);
+							await refresh();
+						} catch (failure) {
+							notify(
+								t("actionFailed", {
+									error: failure instanceof Error ? failure.message : String(failure),
+								}),
+								{ variant: "error" },
+							);
+							// 不关框：确定键恢复可点，能原地重试
+							throw failure;
+						} finally {
+							setBusy(false);
+							setStep(null);
+						}
+					},
+				})
+			: confirmAct === "release"
+				// 释放是后台作业：点确定提交后弹窗锁定转圈，底部只留「后台执行」可关窗。
+				? h(ConfirmActionModal, {
+						t,
+						title: t("releaseConfirmTitle"),
+						message: t("releaseConfirmBody", { title: titleOf(row) }),
+						confirmText: t("releaseConfirmOk"),
+						busy,
+						notice: releaseRunning
+							? (progressOf(jobKeys.release) ?? t("actionSyncing"))
+							: undefined,
+						locked: releaseRunning,
+						onBackground: () => setConfirmAct(null),
+						onClose: () => setConfirmAct(null),
+						onSubmit: () => {
+							void (async () => {
+								setBusy(true);
 								try {
 									await startWrite("release", jobKeys.release, "");
 								} catch (failure) {
@@ -764,38 +796,13 @@ export function TaskRowView(props: {
 										}),
 										{ variant: "error" },
 									);
-									throw failure;
+								} finally {
+									setBusy(false);
 								}
-								return;
-							}
-							setBusy(true);
-							setStep(null);
-							try {
-								await postTaskAction(
-									{ action: "claim", workspace: row.task.workspace.id, id: row.task.id },
-									onStep,
-								);
-								notify(t("actionClaimDone", { title }), { variant: "success" });
-								// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
-								setConfirmAct(null);
-								await refresh();
-							} catch (failure) {
-								notify(
-									t("actionFailed", {
-										error:
-											failure instanceof Error ? failure.message : String(failure),
-									}),
-									{ variant: "error" },
-								);
-								// 不关框：确定键恢复可点，能原地重试
-								throw failure;
-							} finally {
-								setBusy(false);
-								setStep(null);
-							}
+							})();
 						},
-						});
-				})(),
+					})
+				: null,
 		cancelOpen
 			? h(CancelTaskModal, {
 					t,

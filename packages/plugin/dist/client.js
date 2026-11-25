@@ -69487,6 +69487,57 @@ body[data-ds-dark-theme]{
 			}
 		}
 		//#endregion
+		//#region src/client/confirm-action-modal.ts
+		/**
+		* 无留言的确认弹窗（释放这种「点一下就提交」的动作）：
+		* 与结束任务 / 取消 / 删除共用同一套锁定形态 —— 后台作业在跑时，底部只留一颗「后台执行」，
+		* 点了就把框收起、作业照跑；终态由调用方的作业态 effect 解封并收窗。
+		*
+		* 核心 ConfirmModal 不支持自定义 footer / onBackground（locked 时只豁免内置按钮），
+		* 所以这里用核心 Modal 自绘，footer 与 ReasonTaskModal 的 locked 分支逐字同构。
+		*/
+		function ConfirmActionModal(props) {
+			const { t } = props;
+			const locked = props.locked === true;
+			return (0, react$1.createElement)(Modal, {
+				size: "sm",
+				width: "420px",
+				title: props.title,
+				onClose: props.busy || locked ? void 0 : props.onClose,
+				closeOnMask: !props.busy && !locked,
+				escClose: !props.busy && !locked,
+				notice: props.notice,
+				footer: (0, react$1.createElement)("div", { style: {
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "flex-end",
+					gap: "8px"
+				} }, locked ? props.onBackground === void 0 ? null : (0, react$1.createElement)(OverlayLockExempt, null, (0, react$1.createElement)(Button, {
+					variant: "primary",
+					size: "lg",
+					onClick: props.onBackground
+				}, t("bgRun"))) : (0, react$1.createElement)("span", { style: {
+					display: "flex",
+					gap: "8px"
+				} }, (0, react$1.createElement)(Button, {
+					variant: "outline",
+					size: "lg",
+					disabled: props.busy,
+					onClick: props.onClose
+				}, t("settingsCancel")), (0, react$1.createElement)(Button, {
+					variant: "primary",
+					size: "lg",
+					loading: props.busy,
+					loadingText: false,
+					onClick: props.onSubmit
+				}, props.confirmText)))
+			}, (0, react$1.createElement)("div", { style: {
+				fontSize: "var(--dtl-font-md)",
+				lineHeight: "var(--dtl-line-md)",
+				color: "var(--dtl-fg-2)"
+			} }, props.message));
+		}
+		//#endregion
 		//#region src/client/close-task-modal.ts
 		/**
 		* 结案任务的弹窗（用户 2026-11-03 定口径，二次修订 2026-11-03 晚）：
@@ -69916,6 +69967,8 @@ body[data-ds-dark-theme]{
 			const runningOf = (key) => jobOf(key)?.state === "running";
 			const progressOf = (key) => writeJobProgress(storeSnapshot.tasks, "dsh-task-ledger", key) ?? jobOf(key)?.progress?.message ?? null;
 			const anyJobRunning = Object.values(jobKeys).some(runningOf);
+			/** 释放后台作业的锁定态：提交后弹窗转圈、底部只留「后台执行」。 */
+			const releaseRunning = runningOf(jobKeys.release);
 			(0, react$1.useEffect)(() => {
 				if (optimistic === null || optimistic.key === void 0) return;
 				const settled = findJob(storeSnapshot.tasks, TASK_PROJECT, optimistic.key);
@@ -70270,50 +70323,58 @@ body[data-ds-dark-theme]{
 				maxWidth: 160,
 				onClick: () => setQuery({ keyword: tag })
 			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, actions.delete ? deleteButton : null, copyButton, actions.view ? viewButton : null))));
-			return (0, react$1.createElement)(react$1.Fragment, null, card, confirmAct === null ? null : (() => {
-				const action = confirmAct;
-				const claim = action === "claim";
-				const title = titleOf(row);
-				return (0, react$1.createElement)(ConfirmModal, {
-					title: t(claim ? "claimConfirmTitle" : "releaseConfirmTitle"),
-					message: t(claim ? "claimConfirmBody" : "releaseConfirmBody", { title }),
-					confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
-					cancelText: t("settingsCancel"),
-					loadingText: false,
-					notice: busy ? progressNotice() : action === "release" && runningOf(jobKeys.release) ? progressOf(jobKeys.release) ?? t("actionSyncing") : void 0,
-					locked: busy || action === "release" && runningOf(jobKeys.release),
-					onCancel: () => setConfirmAct(null),
-					onConfirm: async () => {
-						if (action === "release") {
-							try {
-								await startWrite("release", jobKeys.release, "");
-							} catch (failure) {
-								notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
-								throw failure;
-							}
-							return;
-						}
-						setBusy(true);
+			return (0, react$1.createElement)(react$1.Fragment, null, card, confirmAct === "claim" ? (0, react$1.createElement)(ConfirmModal, {
+				title: t("claimConfirmTitle"),
+				message: t("claimConfirmBody", { title: titleOf(row) }),
+				confirmText: t("claimConfirmOk"),
+				cancelText: t("settingsCancel"),
+				loadingText: false,
+				notice: busy ? progressNotice() : void 0,
+				locked: busy,
+				onCancel: () => setConfirmAct(null),
+				onConfirm: async () => {
+					setBusy(true);
+					setStep(null);
+					try {
+						await postTaskAction({
+							action: "claim",
+							workspace: row.task.workspace.id,
+							id: row.task.id
+						}, onStep);
+						notify(t("actionClaimDone", { title: titleOf(row) }), { variant: "success" });
+						setConfirmAct(null);
+						await refresh();
+					} catch (failure) {
+						notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
+						throw failure;
+					} finally {
+						setBusy(false);
 						setStep(null);
+					}
+				}
+			}) : confirmAct === "release" ? (0, react$1.createElement)(ConfirmActionModal, {
+				t,
+				title: t("releaseConfirmTitle"),
+				message: t("releaseConfirmBody", { title: titleOf(row) }),
+				confirmText: t("releaseConfirmOk"),
+				busy,
+				notice: releaseRunning ? progressOf(jobKeys.release) ?? t("actionSyncing") : void 0,
+				locked: releaseRunning,
+				onBackground: () => setConfirmAct(null),
+				onClose: () => setConfirmAct(null),
+				onSubmit: () => {
+					(async () => {
+						setBusy(true);
 						try {
-							await postTaskAction({
-								action: "claim",
-								workspace: row.task.workspace.id,
-								id: row.task.id
-							}, onStep);
-							notify(t("actionClaimDone", { title }), { variant: "success" });
-							setConfirmAct(null);
-							await refresh();
+							await startWrite("release", jobKeys.release, "");
 						} catch (failure) {
 							notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
-							throw failure;
 						} finally {
 							setBusy(false);
-							setStep(null);
 						}
-					}
-				});
-			})(), cancelOpen ? (0, react$1.createElement)(CancelTaskModal, {
+					})();
+				}
+			}) : null, cancelOpen ? (0, react$1.createElement)(CancelTaskModal, {
 				t,
 				taskTitle: titleOf(row),
 				busy,
@@ -72157,7 +72218,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-215343-030`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-222108-776`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
