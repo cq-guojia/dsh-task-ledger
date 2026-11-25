@@ -15,7 +15,7 @@
  * 本文件只管状态：不建会话、不读台账。业务在 `session.service.ts`。
  */
 import { randomUUID } from "node:crypto";
-import type { DisplayTitle, TaskRecord } from "dsh-plugin-core/adv/tasks";
+import type { DisplayTitle, TaskProgress, TaskRecord } from "dsh-plugin-core/adv/tasks";
 import type { TaskStreamSource } from "dsh-plugin-core/host";
 
 /** 一次性终态通知（核心 `TaskNotice` 未从导出面重导出，这里按契约最小声明）。 */
@@ -65,12 +65,16 @@ export interface RegisterInput {
 	readonly panelId?: string;
 	/** 超过它还在跑 ⇒ 判超时失败；0 / 缺省 = 不设上限（作业自己会结束）。 */
 	readonly maxDurationMs?: number;
+	/** running 起始披露文案；客户端按界面语言拼好，host 不产出中文。 */
+	readonly progressMessage?: string;
 }
 
 /** 终态结算载荷。 */
 export interface SettleInput {
 	readonly reason?: string;
 	readonly result?: JobDetail;
+	/** 终态保留的最后一段披露（终态帧不带 progress 时核心保留旧值）。 */
+	readonly progressMessage?: string;
 }
 
 type StateListener = (task: TaskRecord) => void;
@@ -138,6 +142,8 @@ export interface SessionJobStore extends TaskStreamSource {
 	register(input: RegisterInput): TaskRecord;
 	/** 结算成 done / failed（幂等：已终态直接返回旧记录）。 */
 	settle(key: string, state: "done" | "failed", input?: SettleInput): TaskRecord | undefined;
+	/** 更新一段披露（唯一写入口）：仅 running 接受，updatedAt 严格递增。 */
+	reportProgress(key: string, message: string): TaskRecord | undefined;
 	/** 读一条（不含终态也返回，供 service 判「已经在跑」）。 */
 	find(key: string): TaskRecord | undefined;
 	/** 摘掉看护定时器（插件 dispose 时调）。 */
@@ -163,6 +169,17 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 		lastStartedAt.set(key, now);
 		return now;
 	};
+	/** 同一业务键的披露时间严格递增：核心按 updatedAt 做 LWW，回退时间戳会被当旧帧丢弃。 */
+	const lastProgressAt = new Map<string, number>();
+	const nextProgressAt = (key: string): number => {
+		const now = Math.max(Date.now(), (lastProgressAt.get(key) ?? 0) + 1);
+		lastProgressAt.set(key, now);
+		return now;
+	};
+	const progressOf = (key: string, message: string): TaskProgress => ({
+		message,
+		updatedAt: nextProgressAt(key),
+	});
 	const deadlineByKey = new Map<string, number>();
 	let reaper: ReturnType<typeof setInterval> | null = null;
 
@@ -229,6 +246,9 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 			settledAt: now,
 			...(input.reason === undefined ? {} : { reason: input.reason }),
 			...(input.result === undefined ? {} : { detail: withResult(current.detail, input.result) }),
+			...(input.progressMessage === undefined
+				? {}
+				: { progress: progressOf(key, input.progressMessage) }),
 		};
 		records.set(id, next);
 		deadlineByKey.delete(key);
@@ -314,6 +334,9 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 			kind: "session-job",
 			rowButtons: rowButtons(),
 			...completionConfig(input.title, input.buttonText ?? "查看会话"),
+			...(input.progressMessage === undefined
+				? {}
+				: { progress: progressOf(input.key, input.progressMessage) }),
 		};
 		records.set(id, record);
 		deadlineByKey.set(input.key, maxDurationMs > 0 ? now + maxDurationMs : 0);
@@ -322,11 +345,23 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 		return record;
 	}
 
+	function reportProgress(key: string, message: string): TaskRecord | undefined {
+		const id = keyOf(PROJECT, key);
+		const current = records.get(id);
+		if (current === undefined || current.state !== "running") return undefined;
+		if (message.trim() === "") return undefined;
+		const next: TaskRecord = { ...current, progress: progressOf(key, message) };
+		records.set(id, next);
+		emitState(next);
+		return next;
+	}
+
 	return {
 		claim,
 		release,
 		register,
 		settle,
+		reportProgress,
 		find(key) {
 			return records.get(keyOf(PROJECT, key));
 		},

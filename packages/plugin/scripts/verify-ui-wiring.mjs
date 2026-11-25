@@ -82,6 +82,33 @@ for (const [name, pattern] of [
   if (!pattern.test(initText)) problems.push(`ui-init.ts: 缺少 ${name}() 接线`);
 }
 
+// ⑤ 后台结案披露：progress 只有一个服务端写入口，弹窗与 TaskBar 读同一字段。
+const hostDir = join(root, 'src', 'host');
+const readSource = (path) => stripComments(readFileSync(path, 'utf8'));
+const storeText = readSource(join(hostDir, 'services', 'session-job.store.ts'));
+if (!/reportProgress\s*\(key:\s*string,\s*message:\s*string\)/.test(storeText)) {
+  problems.push('session-job.store.ts: 缺 reportProgress 单一写入口');
+}
+const progressService = readSource(join(hostDir, 'services', 'session-progress.service.ts'));
+if (!/on\(['"]session\/event['"]/.test(progressService) || !/step\/start/.test(progressService)) {
+  problems.push('session-progress.service.ts: 未订阅 session/event 的 step/start');
+}
+const sessionText = readSource(join(hostDir, 'services', 'session.service.ts'));
+const entryText = readSource(join(root, 'src', 'index.ts'));
+if (!/reportProgress\(job\.key/.test(sessionText)) {
+  problems.push('session.service.ts: 未调用 jobs.reportProgress');
+}
+if (!/installSessionProgress\(ctx, jobs\)/.test(entryText) || !/\bprogress,\s*$/m.test(entryText)) {
+  problems.push('index.ts: 未安装并注入 progress tracker');
+}
+const taskRowText = readSource(join(clientDir, 'task-row.ts'));
+if (!/progressMessage \?\? jobRecord\?\.progress\?\.message/.test(taskRowText)) {
+  problems.push('task-row.ts: 弹窗 notice 未读 TaskRecord.progress.message');
+}
+if (!/progressTexts:/.test(taskRowText)) {
+  problems.push('task-row.ts: startTask 未透传阶段文案');
+}
+
 if (problems.length > 0) {
   console.error('[verify-ui-wiring] FAIL:');
   for (const p of problems) console.error(`  - ${p}`);

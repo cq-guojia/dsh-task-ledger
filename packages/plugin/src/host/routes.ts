@@ -33,6 +33,7 @@ import {
 	resolveWorkspace,
 } from "./services/session.service.js";
 import type { SessionJobStore } from "./services/session-job.store.js";
+import type { SessionProgressTracker } from "./services/session-progress.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 import { readSettings, writeSettings } from "./services/rules-injection.service.js";
 import type { RegistryWorkspace } from "./types.js";
@@ -69,6 +70,8 @@ export interface RouteDeps {
 	readonly sessionTitle?: () => SessionTitleLike | undefined;
 	/** 会话作业的状态真源（由入口建一份，同时交给 `serveTaskStream` 作 TaskStreamSource）。 */
 	readonly jobs: SessionJobStore;
+	/** 会话事件 → 阶段披露订阅；与 job store 同一生命周期。 */
+	readonly progress: SessionProgressTracker;
 }
 
 /** API 前缀（唯一真源就在这一处）。 */
@@ -597,6 +600,7 @@ export function registerRoutes(
 							defaultModel: deps.defaultModel?.(),
 							sessionTitle: deps.sessionTitle?.(),
 							jobs: deps.jobs,
+							progress: deps.progress,
 						} satisfies SessionDeps,
 						{ workspace: workspaceId, taskId: id, policy, title, prompt },
 					),

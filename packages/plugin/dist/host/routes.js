@@ -499,6 +499,7 @@ export function registerRoutes(webServer, deps) {
                     defaultModel: deps.defaultModel?.(),
                     sessionTitle: deps.sessionTitle?.(),
                     jobs: deps.jobs,
+                    progress: deps.progress,
                 }, { workspace: workspaceId, taskId: id, policy, title, prompt }));
             }
             catch (error) {

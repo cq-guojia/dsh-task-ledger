@@ -81,6 +81,17 @@ export function createSessionJobStore(archive) {
         lastStartedAt.set(key, now);
         return now;
     };
+    /** 同一业务键的披露时间严格递增：核心按 updatedAt 做 LWW，回退时间戳会被当旧帧丢弃。 */
+    const lastProgressAt = new Map();
+    const nextProgressAt = (key) => {
+        const now = Math.max(Date.now(), (lastProgressAt.get(key) ?? 0) + 1);
+        lastProgressAt.set(key, now);
+        return now;
+    };
+    const progressOf = (key, message) => ({
+        message,
+        updatedAt: nextProgressAt(key),
+    });
     const deadlineByKey = new Map();
     let reaper = null;
     const emitState = (record) => {
@@ -146,6 +157,9 @@ export function createSessionJobStore(archive) {
             settledAt: now,
             ...(input.reason === undefined ? {} : { reason: input.reason }),
             ...(input.result === undefined ? {} : { detail: withResult(current.detail, input.result) }),
+            ...(input.progressMessage === undefined
+                ? {}
+                : { progress: progressOf(key, input.progressMessage) }),
         };
         records.set(id, next);
         deadlineByKey.delete(key);
@@ -231,6 +245,9 @@ export function createSessionJobStore(archive) {
             kind: "session-job",
             rowButtons: rowButtons(),
             ...completionConfig(input.title, input.buttonText ?? "查看会话"),
+            ...(input.progressMessage === undefined
+                ? {}
+                : { progress: progressOf(input.key, input.progressMessage) }),
         };
         records.set(id, record);
         deadlineByKey.set(input.key, maxDurationMs > 0 ? now + maxDurationMs : 0);
@@ -238,11 +255,24 @@ export function createSessionJobStore(archive) {
         ensureReaper();
         return record;
     }
+    function reportProgress(key, message) {
+        const id = keyOf(PROJECT, key);
+        const current = records.get(id);
+        if (current === undefined || current.state !== "running")
+            return undefined;
+        if (message.trim() === "")
+            return undefined;
+        const next = { ...current, progress: progressOf(key, message) };
+        records.set(id, next);
+        emitState(next);
+        return next;
+    }
     return {
         claim,
         release,
         register,
         settle,
+        reportProgress,
         find(key) {
             return records.get(keyOf(PROJECT, key));
         },

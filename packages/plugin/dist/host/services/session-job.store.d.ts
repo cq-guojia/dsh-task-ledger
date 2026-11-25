@@ -28,11 +28,15 @@ export interface RegisterInput {
     readonly panelId?: string;
     /** 超过它还在跑 ⇒ 判超时失败；0 / 缺省 = 不设上限（作业自己会结束）。 */
     readonly maxDurationMs?: number;
+    /** running 起始披露文案；客户端按界面语言拼好，host 不产出中文。 */
+    readonly progressMessage?: string;
 }
 /** 终态结算载荷。 */
 export interface SettleInput {
     readonly reason?: string;
     readonly result?: JobDetail;
+    /** 终态保留的最后一段披露（终态帧不带 progress 时核心保留旧值）。 */
+    readonly progressMessage?: string;
 }
 /** 结案归档回调：由入口注入宿主 workspaceRegistry.archiveSession；失败由本文件消化。 */
 export type SessionArchiver = (sessionId: string) => Promise<void>;
@@ -48,6 +52,8 @@ export interface SessionJobStore extends TaskStreamSource {
     register(input: RegisterInput): TaskRecord;
     /** 结算成 done / failed（幂等：已终态直接返回旧记录）。 */
     settle(key: string, state: "done" | "failed", input?: SettleInput): TaskRecord | undefined;
+    /** 更新一段披露（唯一写入口）：仅 running 接受，updatedAt 严格递增。 */
+    reportProgress(key: string, message: string): TaskRecord | undefined;
     /** 读一条（不含终态也返回，供 service 判「已经在跑」）。 */
     find(key: string): TaskRecord | undefined;
     /** 摘掉看护定时器（插件 dispose 时调）。 */

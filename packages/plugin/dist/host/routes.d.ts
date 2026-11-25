@@ -10,6 +10,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { type AgentDefaultModelLike, type AgentPresetsLike, type AgentsLike, type SessionTitleLike } from "./services/session.service.js";
 import type { SessionJobStore } from "./services/session-job.store.js";
+import type { SessionProgressTracker } from "./services/session-progress.service.js";
 import type { RegistryWorkspace } from "./types.js";
 /** 宿主 webServer.register 的最小面（WebRoute 形状见 docs/dependencies/host-webserver.md）。 */
 export interface WebServerLike {
@@ -40,6 +41,8 @@ export interface RouteDeps {
     readonly sessionTitle?: () => SessionTitleLike | undefined;
     /** 会话作业的状态真源（由入口建一份，同时交给 `serveTaskStream` 作 TaskStreamSource）。 */
     readonly jobs: SessionJobStore;
+    /** 会话事件 → 阶段披露订阅；与 job store 同一生命周期。 */
+    readonly progress: SessionProgressTracker;
 }
 /** 核心 explorer 的只读文件路由（`serveFsRoute` 挂这里，client 的 `connectFs` 用同一个值）。 */
 export declare const FS_ROUTE = "/api/task-ledger/fs";

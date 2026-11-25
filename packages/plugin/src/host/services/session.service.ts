@@ -24,6 +24,11 @@ import { readTasks } from "../repositories/ledger.repository.js";
 import type { DisplayTitle, TaskRecord } from "dsh-plugin-core/adv/tasks";
 import type { RegistryWorkspace } from "../types.js";
 import { closeJobKey, type SessionJobStore } from "./session-job.store.js";
+import {
+	isCloseProgressTexts,
+	type CloseProgressTexts,
+	type SessionProgressTracker,
+} from "./session-progress.service.js";
 
 /**
  * 比较用的规范化路径：registry 里存的是建工作区时的 `fs.realpath`，
@@ -103,6 +108,8 @@ export interface SessionDeps {
 	readonly sessionTitle: SessionTitleLike | undefined;
 	/** 服务端作业记录（状态唯一真源）。 */
 	readonly jobs: SessionJobStore;
+	/** 会话事件 → 阶段披露的订阅（无会话作业的「继续」路径可不绑定，但入口同一份实例）。 */
+	readonly progress: SessionProgressTracker;
 }
 
 /** 宿主工作区解析结果：`dsh` 带上 registry 实体（建会话要靠它归组、取名）。 */
@@ -151,6 +158,8 @@ export interface StartSessionInput {
 	readonly origin?: string;
 	/** 核心随提交体带来的面板级归属，回显供「查看会话」跳回发起面板。 */
 	readonly panelId?: string;
+	/** 五段披露文案；由客户端按界面语言拼好，close 必填、resume 不用。 */
+	readonly progressTexts?: CloseProgressTexts;
 }
 
 /**
@@ -211,6 +220,8 @@ interface CreateSessionInput {
 	readonly prompt: string;
 	/** 消息气泡上那行小字（`继续任务 xxx` / `结案任务 xxx`）。 */
 	readonly source: string;
+	/** close 路径在注入首条消息前绑定会话事件 → 作业，避免抢跑丢第一步。 */
+	readonly progress?: { readonly key: string; readonly texts: CloseProgressTexts };
 }
 
 /**
@@ -270,7 +281,11 @@ async function createSession(
 		}
 	}
 
-	// ④ 注入首条消息并唤醒 driver
+	// ④ 先绑定阶段披露订阅，再注入首条消息：抢跑的 step/start 也不能丢
+	if (input.progress !== undefined)
+		deps.progress.bind(sessionId, input.progress.key, input.progress.texts);
+
+	// ⑤ 注入首条消息并唤醒 driver
 	handle.agent.send(messageOf(input.prompt, input.source), "next-turn", true);
 	return { sessionId, agent: handle.agent };
 }
@@ -319,33 +334,46 @@ function watchCloseJob(
 		readonly taskId: string;
 		readonly workspace: RegistryWorkspace;
 		readonly agent: AgentLike;
+		readonly texts: CloseProgressTexts;
 	},
 ): void {
 	void (async (): Promise<void> => {
 		try {
-			await waitTurnSettled(job.agent);
-		} catch (error) {
-			deps.jobs.settle(job.key, "failed", {
-				reason: error instanceof Error ? error.message : "session-error",
-			});
-			return;
-		}
-		// 会话刚写完台账，读缓存必须清掉，否则拿的是跑之前那份
-		invalidate();
-		try {
-			const rows = await readTasks({
-				id: job.workspace.id,
-				title: job.workspace.title,
-				path: job.workspace.path,
-			});
-			const stillOpen = rows.some((row) => row.id === job.taskId);
-			deps.jobs.settle(job.key, stillOpen ? "failed" : "done", {
-				...(stillOpen ? { reason: "still-open" } : {}),
-				result: { sessionId: job.sessionId },
-			});
-		} catch {
-			/* 台账读不到 ⇒ 不谎报成功，按失败结算 */
-			deps.jobs.settle(job.key, "failed", { reason: "ledger-unreadable" });
+			try {
+				await waitTurnSettled(job.agent);
+			} catch (error) {
+				deps.jobs.settle(job.key, "failed", {
+					reason: error instanceof Error ? error.message : "session-error",
+					progressMessage: job.texts.failed,
+				});
+				return;
+			}
+			// 会话已静止、台账结论还没核 ⇒ 第四个真实节点（前三个是建立 / 模型步 / 会话静止）
+			deps.jobs.reportProgress(job.key, job.texts.checking);
+			// 会话刚写完台账，读缓存必须清掉，否则拿的是跑之前那份
+			invalidate();
+			try {
+				const rows = await readTasks({
+					id: job.workspace.id,
+					title: job.workspace.title,
+					path: job.workspace.path,
+				});
+				const stillOpen = rows.some((row) => row.id === job.taskId);
+				deps.jobs.settle(job.key, stillOpen ? "failed" : "done", {
+					...(stillOpen ? { reason: "still-open" } : {}),
+					result: { sessionId: job.sessionId },
+					progressMessage: stillOpen ? job.texts.failed : job.texts.done,
+				});
+			} catch {
+				/* 台账读不到 ⇒ 不谎报成功，按失败结算 */
+				deps.jobs.settle(job.key, "failed", {
+					reason: "ledger-unreadable",
+					progressMessage: job.texts.failed,
+				});
+			}
+		} finally {
+			// 终态一到就不再收该会话的事件；晚到的 step/start 也不会改终态留存文案。
+			deps.progress.unbind(job.sessionId);
 		}
 	})();
 }
@@ -377,8 +405,10 @@ export async function startSession(
 	// 结构化标题必须在占位前校验：核心 isTaskRecord 拒收 string 标题，
 	// 缺了就在 SSE 上变成幽灵作业（占位成功却永远不显示、也结不了案）。
 	const displayTitle = input.displayTitle;
+	const progressTexts = input.progressTexts;
 	if (input.policy === "close") {
 		if (displayTitle === undefined) throw new Error("结案作业缺结构化标题");
+		if (!isCloseProgressTexts(progressTexts)) throw new Error("结案作业缺阶段披露文案");
 		const existing = deps.jobs.find(key);
 		if (existing !== undefined && existing.state === "running") {
 			const sessionId = sessionIdOf(existing);
@@ -399,6 +429,9 @@ export async function startSession(
 			title: input.title,
 			prompt: input.prompt,
 			source: input.policy === "close" ? `结案任务 ${input.taskId}` : `继续任务 ${input.taskId}`,
+			...(input.policy === "close" && isCloseProgressTexts(progressTexts)
+				? { progress: { key, texts: progressTexts } }
+				: {}),
 		});
 	} catch (error) {
 		if (input.policy === "close") deps.jobs.release(key);
@@ -417,13 +450,18 @@ export async function startSession(
 			workspace: workspace.path,
 			...(input.origin === undefined ? {} : { origin: input.origin }),
 			...(input.panelId === undefined ? {} : { panelId: input.panelId }),
+			progressMessage: isCloseProgressTexts(progressTexts) ? progressTexts.starting : undefined,
 		});
+		if (!isCloseProgressTexts(progressTexts)) throw new Error("结案作业缺阶段披露文案");
+		// register 已落起始文案：补报会话创建期抢跑的 step/start，仍走同一个 reportProgress。
+		deps.progress.flush(created.sessionId);
 		watchCloseJob(deps, {
 			key,
 			sessionId: created.sessionId,
 			taskId: input.taskId,
 			workspace,
 			agent: created.agent,
+			texts: progressTexts,
 		});
 	}
 

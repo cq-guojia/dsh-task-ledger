@@ -271,6 +271,10 @@ export function TaskRowView(props: {
 			item.project === TASK_PROJECT &&
 			item.state === "running",
 	);
+	// 披露文字与 TaskBar 同源：核心 store 的 TaskRecord.progress（终态也保留最后一段）。
+	const progressMessage = storeSnapshot.tasks.find(
+		(item) => item.key === jobKey && item.project === TASK_PROJECT,
+	)?.progress?.message;
 	// 终态一到就清掉本地兜底：否则终态行退场后 jobRecord 仍卡着 running，完成钮永远解不开。
 	useEffect(() => {
 		if (jobRecord === null) return;
@@ -354,6 +358,14 @@ export function TaskRowView(props: {
 					title: sessionTitle,
 					// toast 按钮文案只有浏览器知道界面语言，跟 title / prompt 一样拼好传进去。
 					buttonText: t("actionOpenSession"),
+					// 五段阶段披露文案同走 args：host 只替换 {turn}/{step}，不产出中文。
+					progressTexts: {
+						starting: t("closeStepStarting"),
+						step: t("closeStepRunning"),
+						checking: t("closeStepChecking"),
+						done: t("closeStepDone"),
+						failed: t("closeStepFailed"),
+					},
 				},
 			});
 			// 提交成功：弹窗照旧锁定转圈（用户 2026-11-21 重申 —— 不是提交就关、也不自动拉会话）。
@@ -770,9 +782,13 @@ export function TaskRowView(props: {
 					taskTitle: titleOf(row),
 					busy,
 					// 扫光过程提示贯穿整个结案期（核心 Modal.notice → FlipText(sweep)）：
-					// 提交阶段翻 step 文案；交给 Agent 后无 step 流，给一句固定文案常驻扫光，
-					// 终态 locked 解除、弹窗收起才消失（用户 2026-11-23：原来左下有扫光，现在没了）。
-					notice: busy ? progressNotice() : closing ? t("closingNotice") : undefined,
+					// 提交阶段翻 step 文案；交给 Agent 后读服务端同一条 progress.message，
+					// 与 TaskBar 同步翻牌；服务端尚未落首帧时退回固定文案，终态保留最后一段。
+					notice: busy
+						? progressNotice()
+						: closing
+							? (progressMessage ?? jobRecord?.progress?.message ?? t("closingNotice"))
+							: undefined,
 					error: closeError,
 					// 「交给 Agent」能不能用由宿主说了算：起不来会在提交时回人话（不再靠客户端服务探测）
 					canUseAgent: true,

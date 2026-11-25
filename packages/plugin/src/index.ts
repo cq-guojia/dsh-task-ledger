@@ -23,6 +23,10 @@ import {
 import { startSession, type SessionDeps } from "./host/services/session.service.js";
 import { installRulesInjection } from "./host/services/rules-injection.service.js";
 import { createSessionJobStore } from "./host/services/session-job.store.js";
+import {
+	installSessionProgress,
+	isCloseProgressTexts,
+} from "./host/services/session-progress.service.js";
 import type {
 	AgentDefaultModelLike,
 	AgentPresetsLike,
@@ -133,6 +137,12 @@ export function apply(ctx: PluginContext): void {
 			jobs.dispose();
 		});
 
+		// 阶段披露源：宿主会话事件 → jobs.reportProgress（单一写入口）；不落盘、不轮询。
+		const progress = installSessionProgress(ctx, jobs);
+		ctx.effect(() => () => {
+			progress.dispose();
+		});
+
 		// 起会话要用的宿主服务：现取、不预注入（缺席只让该动作报人话，不拖垮数据面）
 		const getAgents = serviceOf<AgentsLike>(ctx, "agents");
 		const getPresets = serviceOf<AgentPresetsLike>(ctx, "agentPresets");
@@ -145,6 +155,7 @@ export function apply(ctx: PluginContext): void {
 			defaultModel: getDefaultModel,
 			sessionTitle: getSessionTitle,
 			jobs,
+			progress,
 		});
 		// submit 回调要的是「值」形状（SessionDeps），每次现取，跟路由共用同一组 getter。
 		const sessionDeps = (): SessionDeps => ({
@@ -154,6 +165,7 @@ export function apply(ctx: PluginContext): void {
 			defaultModel: getDefaultModel(),
 			sessionTitle: getSessionTitle(),
 			jobs,
+			progress,
 		});
 
 		// 任务中心：服务端权威三件套由核心挂，本插件只给状态源与提交回调。
@@ -181,6 +193,9 @@ export function apply(ctx: PluginContext): void {
 				const title =
 					typeof args.title === "string" ? args.title : formatDisplayTitle(displayTitle);
 				const buttonText = typeof args.buttonText === "string" ? args.buttonText : undefined;
+				if (!isCloseProgressTexts(args.progressTexts))
+					throw new Error("提交缺阶段披露文案");
+				const progressTexts = args.progressTexts;
 				const origin = typeof payload.origin === "string" ? payload.origin : undefined;
 				const panelId = typeof payload.panelId === "string" ? payload.panelId : undefined;
 				const reply = await startSession(sessionDeps(), {
@@ -191,6 +206,7 @@ export function apply(ctx: PluginContext): void {
 					displayTitle,
 					prompt,
 					...(buttonText === undefined ? {} : { buttonText }),
+					progressTexts,
 					...(origin === undefined ? {} : { origin }),
 					...(panelId === undefined ? {} : { panelId }),
 				});

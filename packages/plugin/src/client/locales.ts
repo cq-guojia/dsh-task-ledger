@@ -279,6 +279,11 @@ export type LocaleKey =
 	| "bgRun"
 	| "executing"
 	| "closingNotice"
+	| "closeStepStarting"
+	| "closeStepRunning"
+	| "closeStepChecking"
+	| "closeStepDone"
+	| "closeStepFailed"
 	| "taskClosureCategory"
 	| "closeAlreadyRunning"
 	| "closeInProgress"
@@ -671,6 +676,11 @@ export const zh: Record<LocaleKey, string> = {
 	bgRun: "后台执行",
 	executing: "执行中",
 	closingNotice: "Agent 正在结案，完成后自动归档…",
+	closeStepStarting: "结案作业已建立，正在唤醒 Agent…",
+	closeStepRunning: "Agent 正在处理第 {turn} 轮第 {step} 步…",
+	closeStepChecking: "Agent 已停，正在核对台账…",
+	closeStepDone: "结案完成，正在归档会话…",
+	closeStepFailed: "结案未完成，请查看会话…",
 	taskClosureCategory: "任务结案",
 	closeAlreadyRunning: "这条已经在后台执行了：{title}",
 	closeInProgress: "Agent 正在结案，完成前不能再点",
@@ -1050,6 +1060,11 @@ export const en: Record<LocaleKey, string> = {
 	bgRun: "Run in background",
 	executing: "Running",
 	closingNotice: "Agent is closing this task; it will be archived when done…",
+	closeStepStarting: "Closure job created; waking the agent…",
+	closeStepRunning: "Agent is working on turn {turn}, step {step}…",
+	closeStepChecking: "Agent stopped; checking the ledger…",
+	closeStepDone: "Task closed; archiving the session…",
+	closeStepFailed: "Closure did not complete; open the session to review…",
 	taskClosureCategory: "Task closure",
 	closeAlreadyRunning: "Already running in the background: {title}",
 	closeInProgress: "An agent is closing this task; wait for it to finish",

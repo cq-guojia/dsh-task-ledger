@@ -1,6 +1,7 @@
 import type { DisplayTitle } from "dsh-plugin-core/adv/tasks";
 import type { RegistryWorkspace } from "../types.js";
 import { type SessionJobStore } from "./session-job.store.js";
+import { type CloseProgressTexts, type SessionProgressTracker } from "./session-progress.service.js";
 /** 宿主 `agent.send` 收的消息（`dsh-llm` 的 UserMessage 结构面，只声明实际用到的字段）。 */
 interface UserMessageLike {
     readonly id: string;
@@ -75,6 +76,8 @@ export interface SessionDeps {
     readonly sessionTitle: SessionTitleLike | undefined;
     /** 服务端作业记录（状态唯一真源）。 */
     readonly jobs: SessionJobStore;
+    /** 会话事件 → 阶段披露的订阅（无会话作业的「继续」路径可不绑定，但入口同一份实例）。 */
+    readonly progress: SessionProgressTracker;
 }
 /** 宿主工作区解析结果：`dsh` 带上 registry 实体（建会话要靠它归组、取名）。 */
 export type WorkspaceResolution = {
@@ -114,6 +117,8 @@ export interface StartSessionInput {
     readonly origin?: string;
     /** 核心随提交体带来的面板级归属，回显供「查看会话」跳回发起面板。 */
     readonly panelId?: string;
+    /** 五段披露文案；由客户端按界面语言拼好，close 必填、resume 不用。 */
+    readonly progressTexts?: CloseProgressTexts;
 }
 /**
  * `started` = 本次新建；`duplicate` = 同一条任务已有结案作业在跑（不重复起会话）；
