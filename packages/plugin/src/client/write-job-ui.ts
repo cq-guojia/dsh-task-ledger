@@ -15,7 +15,7 @@ export const WRITE_STEP_KEYS = {
 } as const;
 
 /** 写动作类型（与宿主 submit 的 kind 同值）。 */
-export type WriteAction = "release" | "cancel" | "delete" | "delete-hist";
+export type WriteAction = "claim" | "release" | "cancel" | "delete" | "delete-hist";
 
 /**
  * 本仓后台作业的全部 key 前缀：board-home 的 onSettled 用它过滤，
@@ -24,6 +24,7 @@ export type WriteAction = "release" | "cancel" | "delete" | "delete-hist";
  */
 export const WRITE_JOB_KEY_PREFIXES = [
 	"close:",
+	"claim:",
 	"release:",
 	"cancel:",
 	"delete:",
@@ -38,6 +39,12 @@ interface ActionTexts {
 
 function textsOf(action: WriteAction, t: Translate): ActionTexts {
 	switch (action) {
+		case "claim":
+			return {
+				starting: t("writeClaimStarting"),
+				done: t("writeClaimDone"),
+				failed: t("writeClaimFailed"),
+			};
 		case "release":
 			return {
 				starting: t("writeReleaseStarting"),
@@ -62,6 +69,7 @@ function textsOf(action: WriteAction, t: Translate): ActionTexts {
 
 /** 分类按动作给具体名字：toast 形如「释放任务丨xxx」，不用笼统的「任务操作」。 */
 const CATEGORY_KEYS: Record<WriteAction, Parameters<Translate>[0]> = {
+	claim: "claimTaskCategory",
 	release: "releaseTaskCategory",
 	cancel: "cancelTaskCategory",
 	delete: "deleteTaskCategory",

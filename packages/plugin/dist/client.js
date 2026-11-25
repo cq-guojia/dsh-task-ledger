@@ -53671,6 +53671,10 @@ window.__ModuleLoader__.load({
 			actionReleaseDone: "已释放：{title}",
 			actionFailed: "操作失败：{error}",
 			actionSyncing: "正在同步台账并提交…",
+			claimTaskCategory: "认领任务",
+			writeClaimStarting: "认领作业已建立，正在写入台账…",
+			writeClaimDone: "已认领",
+			writeClaimFailed: "认领失败，请稍后重试",
 			releaseTaskCategory: "释放任务",
 			cancelTaskCategory: "取消任务",
 			deleteTaskCategory: "删除任务",
@@ -54028,6 +54032,10 @@ window.__ModuleLoader__.load({
 			actionReleaseDone: "Released: {title}",
 			actionFailed: "Action failed: {error}",
 			actionSyncing: "Syncing the ledger and committing…",
+			claimTaskCategory: "Claim task",
+			writeClaimStarting: "Claim job created; writing to the ledger…",
+			writeClaimDone: "Claimed",
+			writeClaimFailed: "Claim failed; please retry",
 			releaseTaskCategory: "Release task",
 			cancelTaskCategory: "Cancel task",
 			deleteTaskCategory: "Delete task",
@@ -54372,78 +54380,9 @@ window.__ModuleLoader__.load({
 				clearTimeout(timer);
 			}
 		}
-		/**
-		* 任务写动作（认领 / 释放）的超时：host 要跑一次「取最新 → 改 → 提交 → 推送」，
-		* 默认 8s 会在脚本还在改的时候报超时 ⇒ 与 host 侧 120s 对齐。
-		*/
-		const TASK_WRITE_TIMEOUT_MS = 24e4;
 		/** 认识的阶段 key（skill 那边多打一个、这边没跟上就整行忽略，界面继续显示上一句）。 */
 		function isStep(value) {
 			return value === "check" || value === "sync" || value === "write" || value === "commit" || value === "push";
-		}
-		/** 解析一行 NDJSON；不是我们的形状（空行 / 坏行）就返回 null，交给外层继续读。 */
-		function actionEventOf(line) {
-			if (line.trim() === "") return null;
-			let raw;
-			try {
-				raw = JSON.parse(line);
-			} catch {
-				return null;
-			}
-			if (raw === null || typeof raw !== "object") return null;
-			const event = raw;
-			if (event.type === "done") return { type: "done" };
-			if (event.type === "step" && typeof event.step === "string" && isStep(event.step)) return {
-				type: "step",
-				step: event.step
-			};
-			if (event.type === "error") return {
-				type: "error",
-				error: typeof event.error === "string" ? event.error : globalT("errTaskActionFailed"),
-				code: typeof event.code === "string" ? event.code : null
-			};
-			return null;
-		}
-		/**
-		* 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）/ 结案（`close`）/ 删除（`delete`）。
-		* 取消 / 删除可带一句留言（`summary`），进过程文档执行记录。
-		* 删除在办任务用 `id`；删除历史行用 `src` + `line`（两者二选一）。
-		*
-		* 写命令要跑「检查 → 拉取 → 写 → 提交 → 推送」好几秒，host 回的是 **NDJSON 流**：
-		* 每个阶段一行 `{type:"step",step}` 喂给 `onStep` 翻进度文案，末尾 `{type:"done"}` 收尾；
-		* 跑挂时推 `{type:"error",error,code}` ⇒ 这里抛 HttpError（码照旧，界面能认出「没身份」）。
-		* 请求参数本身有问题时 host 还没来得及发头，仍是普通 JSON 400/500。
-		*
-		* 成功后由调用方重读快照。
-		*/
-		async function postTaskAction(body, onStep) {
-			const controller = new AbortController();
-			const timer = setTimeout(() => {
-				controller.abort(new DOMException(globalT("errTimeout", { ms: TASK_WRITE_TIMEOUT_MS }), "TimeoutError"));
-			}, TASK_WRITE_TIMEOUT_MS);
-			try {
-				const res = await fetch(`${API_PREFIX}/task/action`, {
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify(body),
-					signal: controller.signal,
-					cache: "no-store"
-				});
-				if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
-				if (await readLines(res, (line) => {
-					const event = actionEventOf(line);
-					if (event === null) return false;
-					if (event.type === "step") {
-						onStep?.(event.step);
-						return false;
-					}
-					if (event.type === "error") throw new HttpError(event.error, event.code);
-					return true;
-				})) return { ok: true };
-				throw new HttpError(globalT("errTaskActionInterrupted"), null);
-			} finally {
-				clearTimeout(timer);
-			}
 		}
 		/**
 		* 起会话的超时：不跑 git，但 host 侧要建 agent、挂 preset、归组工作区，
@@ -54485,6 +54424,9 @@ window.__ModuleLoader__.load({
 		* 核心按 (project, key) 归一乐观行、宿主按 key 判重；不同动作可并行（真并行由 skill 的
 		* git 锁排队，等不到就报「请稍后重试」），不为每个动作写特例，新增动作照这个模式加前缀。
 		*/
+		function claimJobKey(taskId) {
+			return `claim:${taskId}`;
+		}
 		function releaseJobKey(taskId) {
 			return `release:${taskId}`;
 		}
@@ -64913,6 +64855,7 @@ window.__ModuleLoader__.load({
 		*/
 		const WRITE_JOB_KEY_PREFIXES = [
 			"close:",
+			"claim:",
 			"release:",
 			"cancel:",
 			"delete:",
@@ -64920,6 +64863,11 @@ window.__ModuleLoader__.load({
 		];
 		function textsOf(action, t) {
 			switch (action) {
+				case "claim": return {
+					starting: t("writeClaimStarting"),
+					done: t("writeClaimDone"),
+					failed: t("writeClaimFailed")
+				};
 				case "release": return {
 					starting: t("writeReleaseStarting"),
 					done: t("writeReleaseDone"),
@@ -64940,6 +64888,7 @@ window.__ModuleLoader__.load({
 		}
 		/** 分类按动作给具体名字：toast 形如「释放任务丨xxx」，不用笼统的「任务操作」。 */
 		const CATEGORY_KEYS = {
+			claim: "claimTaskCategory",
 			release: "releaseTaskCategory",
 			cancel: "cancelTaskCategory",
 			delete: "deleteTaskCategory",
@@ -69891,9 +69840,9 @@ body[data-ds-dark-theme]{
 		*
 		* 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
 		*
-		* 点击行为：查看已在用；认领 / 释放（各弹一次确认）与取消（带理由输入框的弹窗）已接台账命令
-		* （2026-11-03，统一走 `/task/action`）；继续走 `/task/continue` 起会话（2026-11-03 晚）；
-		* 完成（含「交给 Agent」）走 `postTaskAction` / `startTask`（2026-11-21 按 v0.43.8 重构）。
+		* 点击行为：认领 / 释放 / 取消 / 删除 / 历史行删除 / 完成全部走核心后台作业 `startTask`；
+		* 「继续」是唯一同步动作，走 `/task/continue` 起会话。各弹窗提交后锁定转圈，
+		* 底部留「后台执行」可关窗，终态由核心 toast + board-home 的 onSettled 统一收口。
 		*/
 		/** 状态条颜色原样喂核心 Card 的 accent（核心接受任意 CSS 色值，档位映射反而不准）。 */
 		const RAIL_COLOR = {
@@ -69957,11 +69906,6 @@ body[data-ds-dark-theme]{
 			const tone = toneOf(row);
 			const tags = row.task.tags ?? [];
 			const [busy, setBusy] = (0, react$1.useState)(false);
-			const [step, setStep] = (0, react$1.useState)(null);
-			/** 底栏进度文案：还没收到第一个阶段就先用一句「同步中」。 */
-			const progressNotice = () => step === null ? t("actionSyncing") : t(STEP_LABEL[step]);
-			/** 起一条写命令：清掉上一轮的阶段，每个阶段到了就翻文案。 */
-			const onStep = (next) => setStep(next);
 			const [confirmAct, setConfirmAct] = (0, react$1.useState)(null);
 			const runAction = (action) => {
 				if (!busy && !anyJobRunning) setConfirmAct(action);
@@ -69969,6 +69913,7 @@ body[data-ds-dark-theme]{
 			const storeSnapshot = (0, react$1.useSyncExternalStore)(taskCenterStore.subscribe, taskCenterStore.getSnapshot);
 			const jobKeys = {
 				close: closeJobKey(row.task.id),
+				claim: claimJobKey(row.task.id),
 				release: releaseJobKey(row.task.id),
 				cancel: cancelJobKey(row.task.id),
 				delete: deleteJobKey(row.task.id)
@@ -69978,7 +69923,8 @@ body[data-ds-dark-theme]{
 			const runningOf = (key) => jobOf(key)?.state === "running";
 			const progressOf = (key) => writeJobProgress(storeSnapshot.tasks, "dsh-task-ledger", key) ?? jobOf(key)?.progress?.message ?? null;
 			const anyJobRunning = Object.values(jobKeys).some(runningOf);
-			/** 释放后台作业的锁定态：提交后弹窗转圈、底部只留「后台执行」。 */
+			/** 认领 / 释放后台作业的锁定态：提交后弹窗转圈、底部只留「后台执行」。 */
+			const claimRunning = runningOf(jobKeys.claim);
 			const releaseRunning = runningOf(jobKeys.release);
 			(0, react$1.useEffect)(() => {
 				if (optimistic === null || optimistic.key === void 0) return;
@@ -70064,18 +70010,21 @@ body[data-ds-dark-theme]{
 			const progressMessage = progressOf(jobKeys.close);
 			const wasRunning = (0, react$1.useRef)({
 				close: closing,
-				release: runningOf(jobKeys.release),
+				claim: claimRunning,
+				release: releaseRunning,
 				cancel: cancelRunning,
 				delete: deleteRunning
 			});
 			(0, react$1.useEffect)(() => {
 				const now = {
 					close: closing,
+					claim: runningOf(jobKeys.claim),
 					release: runningOf(jobKeys.release),
 					cancel: runningOf(jobKeys.cancel),
 					delete: runningOf(jobKeys.delete)
 				};
 				if (wasRunning.current.close && !now.close && closeOpen) setCloseOpen(false);
+				if (wasRunning.current.claim && !now.claim && confirmAct === "claim") setConfirmAct(null);
 				if (wasRunning.current.release && !now.release && confirmAct === "release") setConfirmAct(null);
 				if (wasRunning.current.cancel && !now.cancel && cancelOpen) setCancelOpen(false);
 				if (wasRunning.current.delete && !now.delete && deleteOpen) setDeleteOpen(false);
@@ -70092,7 +70041,6 @@ body[data-ds-dark-theme]{
 			]);
 			const finishTask = async (input) => {
 				setBusy(true);
-				setStep(null);
 				setCloseError(null);
 				const title = titleOf(row);
 				try {
@@ -70164,7 +70112,6 @@ body[data-ds-dark-theme]{
 					setCloseOpen(true);
 				} finally {
 					setBusy(false);
-					setStep(null);
 				}
 			};
 			const created = row.task.created ?? null;
@@ -70334,34 +70281,27 @@ body[data-ds-dark-theme]{
 				maxWidth: 160,
 				onClick: () => setQuery({ keyword: tag })
 			})))), whoNode, (0, react$1.createElement)("span", { className: "dtl-taskrow__meta" }, metaText), (0, react$1.createElement)("span", { className: "dtl-taskrow__actions" }, actions.claim ? claimButton : null, actions.resume ? resumeButton : null, actions.finish ? finishButton : null, actions.release ? releaseButton : null, actions.cancel ? cancelButton : null, actions.delete ? deleteButton : null, copyButton, actions.view ? viewButton : null))));
-			return (0, react$1.createElement)(react$1.Fragment, null, card, confirmAct === "claim" ? (0, react$1.createElement)(ConfirmModal, {
+			return (0, react$1.createElement)(react$1.Fragment, null, card, confirmAct === "claim" ? (0, react$1.createElement)(ConfirmActionModal, {
+				t,
 				title: t("claimConfirmTitle"),
 				message: t("claimConfirmBody", { title: titleOf(row) }),
 				confirmText: t("claimConfirmOk"),
-				cancelText: t("settingsCancel"),
-				loadingText: false,
-				notice: busy ? progressNotice() : void 0,
-				locked: busy,
-				onCancel: () => setConfirmAct(null),
-				onConfirm: async () => {
-					setBusy(true);
-					setStep(null);
-					try {
-						await postTaskAction({
-							action: "claim",
-							workspace: row.task.workspace.id,
-							id: row.task.id
-						}, onStep);
-						notify(t("actionClaimDone", { title: titleOf(row) }), { variant: "success" });
-						setConfirmAct(null);
-						await refresh();
-					} catch (failure) {
-						notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
-						throw failure;
-					} finally {
-						setBusy(false);
-						setStep(null);
-					}
+				busy,
+				notice: claimRunning ? progressOf(jobKeys.claim) ?? t("actionSyncing") : void 0,
+				locked: claimRunning,
+				onBackground: () => setConfirmAct(null),
+				onClose: () => setConfirmAct(null),
+				onSubmit: () => {
+					(async () => {
+						setBusy(true);
+						try {
+							await startWrite("claim", jobKeys.claim, "");
+						} catch (failure) {
+							notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
+						} finally {
+							setBusy(false);
+						}
+					})();
 				}
 			}) : confirmAct === "release" ? (0, react$1.createElement)(ConfirmActionModal, {
 				t,
@@ -70410,7 +70350,7 @@ body[data-ds-dark-theme]{
 				t,
 				taskTitle: titleOf(row),
 				busy,
-				notice: busy ? progressNotice() : closing ? progressMessage ?? t("closingNotice") : void 0,
+				notice: busy ? t("actionSyncing") : closing ? progressMessage ?? t("closingNotice") : void 0,
 				error: closeError,
 				canUseAgent: true,
 				locked: closing,
@@ -72229,7 +72169,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-232241-559`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-235015-835`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

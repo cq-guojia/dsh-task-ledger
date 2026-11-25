@@ -11,7 +11,7 @@ export type JobDetail = string | number | boolean | null | readonly JobDetail[] 
     readonly [key: string]: JobDetail;
 };
 /** 后台作业类型：两种结案执行者 + 三个写命令动作（历史行删除单列，key 形状不同）。 */
-export type JobKind = "close-agent" | "close-direct" | "release" | "cancel" | "delete" | "delete-hist";
+export type JobKind = "close-agent" | "close-direct" | "claim" | "release" | "cancel" | "delete" | "delete-hist";
 /** 终态 toast 的动作后缀：由客户端按界面语言透传，host 不产出中文。 */
 export interface CompletionTexts {
     /** 成功后缀（拼在任务名之后），如「已释放」。 */
@@ -77,3 +77,5 @@ export interface SessionJobStore extends TaskStreamSource {
 export declare function createSessionJobStore(archive?: SessionArchiver): SessionJobStore;
 /** 业务键：同一条任务同一时刻只允许一个结案作业（跨刷新、跨标签页成立）。 */
 export declare function closeJobKey(taskId: string): string;
+/** 各写动作独立业务键，动作不同可并行、同动作同任务互斥。 */
+export declare function claimJobKey(taskId: string): string;

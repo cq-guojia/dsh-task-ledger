@@ -54,6 +54,7 @@ git 只在命令的前后两端，业务中间不碰 git。推送被拒会触发
   │                       claim → jobs.register → host spawn skill 读 #step 五阶段 → settle
   │       kind / key：
   │         close-direct   close:<任务号>          close
+  │         claim          claim:<任务号>          claim
   │         release        release:<任务号>        set --release
   │         cancel         cancel:<任务号>         close --cancel（带理由）
   │         delete         delete:<任务号>         delete（带留言）
@@ -96,7 +97,7 @@ key 每个动作独立：结案两种模式共用 `close:<任务号>`（同一�
 17. **归档在服务端终态漏斗**：宿主 `workspaceRegistry.archiveSession(sessionId, {stopActivity:true})` 由入口注入 `session-job.store.ts` 的 `settle()`，done / failed / 超时一律归档（失败也归档留给用户查看），没有 sessionId 的直接结案作业自然跳过；客户端 `onSettled` 只刷新看板、不订阅归档、不分成败。归档失败只 warn，不改作业结论。签名见 [dependencies/dsh-workspace-registry.md](../dependencies/dsh-workspace-registry.md)。
 18. **披露只有一个源**：`TaskRecord.progress.message` 是唯一的阶段披露源，由 `session-job.store.ts` 的 `reportProgress` 单点写入，弹窗 `notice` 与 TaskBar 都读它。Agent 结案把 `session/event` 的 `step/start` 当「正在处理」作业级节点，文案不带模型轮次 / 步数；直接结案由宿主跑 skill、逐行读 `#step` 的五阶段（check / sync / write / commit / push）。不落中转文件、不轮询、不消耗客户端资源；文案随 `startTask.args.progressTexts` 由客户端按界面语言透传，宿主不写死中文。
 19. **终态披露由核心收口**：成功 / 失败标签出现后，披露文字连扫光一起退场（`progress` 数据仍在 store 里供 handler / selector 读）；核心负责终态呈现，本仓不自行绘制标签、不硬压 z-index。
-20. **写动作后台化只留一份执行体**：释放 / 取消 / 删除 / 历史行删除 / 直接结案共用 `host/services/write-job.service.ts`，只有 agent 结案是另一条路径；每项动作独立 key、终态文案由客户端透传，宿主不产出界面中文。认领与「继续」保持同步链路，`POST /task/action` 的 NDJSON 流为它们保留。
+20. **写动作后台化只留一份执行体**：认领 / 释放 / 取消 / 删除 / 历史行删除 / 直接结案共用 `host/services/write-job.service.ts`，只有 agent 结案是另一条路径；每项动作独立 key、终态文案由客户端透传，宿主不产出界面中文。只有「继续」保持同步起会话；`POST /task/action` 的 NDJSON 链路已随认领后台化一并删除。
 21. **终态成功与失败都需要人话后缀**：核心 toast 只显示结构化标题、不显示 `TaskRecord.reason`，失败原因写进客户端透传的 `completionTexts.failure`（如「释放失败，请稍后重试」）；历史行删除只在成功终态才动本地数据，失败保持原行。
 
 ## 四、入口与主题
@@ -111,3 +112,4 @@ key 每个动作独立：结案两种模式共用 `close:<任务号>`（同一�
 - 2026-11-25 21:52:19：补五类写动作共用执行体、独立 key、参数校验与人话终态文案
 - 2026-11-25 22:49:31：三档超时翻倍：git 60 秒、锁等待 120 秒、宿主 240 秒
 - 2026-11-25 23:14:33：历史行删除统一按任务号定位，去掉行号与指纹
+- 2026-11-25 23:49:25：认领纳入统一写命令执行体，删除旧的 NDJSON 同步链路

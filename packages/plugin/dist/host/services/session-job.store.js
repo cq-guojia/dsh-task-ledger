@@ -363,3 +363,7 @@ export function createSessionJobStore(archive) {
 export function closeJobKey(taskId) {
     return `close:${taskId}`;
 }
+/** 各写动作独立业务键，动作不同可并行、同动作同任务互斥。 */
+export function claimJobKey(taskId) {
+    return `claim:${taskId}`;
+}

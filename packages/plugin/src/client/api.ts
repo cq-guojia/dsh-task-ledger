@@ -308,25 +308,14 @@ export async function postForgetIdentity(
 }
 
 /**
- * 任务写动作（认领 / 释放）的超时：host 要跑一次「取最新 → 改 → 提交 → 推送」，
- * 默认 8s 会在脚本还在改的时候报超时 ⇒ 与 host 侧 120s 对齐。
- */
-const TASK_WRITE_TIMEOUT_MS = 240_000;
-
-/**
  * 任务动作的过程阶段（与 skill `runner.go` 里的 `stepf(...)` 一一对应）：
  * 检查本地改动 → 拉取最新台账 → 写入台账 → 提交 → 推送。
+ * 后台作业经 TaskRecord.progress 披露；本类型仅作阶段 key 的联合口径。
  */
 export type TaskActionStep = "check" | "sync" | "write" | "commit" | "push";
 
-/** host 在 `/task/action` 的 NDJSON 流里推的一行。 */
-type ActionEvent =
-	| { readonly type: "step"; readonly step: TaskActionStep }
-	| { readonly type: "done" }
-	| { readonly type: "error"; readonly error: string; readonly code: string | null };
-
 /** 认识的阶段 key（skill 那边多打一个、这边没跟上就整行忽略，界面继续显示上一句）。 */
-function isStep(value: string): value is TaskActionStep {
+export function isStep(value: string): value is TaskActionStep {
 	return (
 		value === "check" ||
 		value === "sync" ||
@@ -334,92 +323,6 @@ function isStep(value: string): value is TaskActionStep {
 		value === "commit" ||
 		value === "push"
 	);
-}
-
-/** 解析一行 NDJSON；不是我们的形状（空行 / 坏行）就返回 null，交给外层继续读。 */
-function actionEventOf(line: string): ActionEvent | null {
-	if (line.trim() === "") return null;
-	let raw: unknown;
-	try {
-		raw = JSON.parse(line);
-	} catch {
-		return null;
-	}
-	if (raw === null || typeof raw !== "object") return null;
-	const event = raw as Record<string, unknown>;
-	if (event.type === "done") return { type: "done" };
-	if (event.type === "step" && typeof event.step === "string" && isStep(event.step))
-		return { type: "step", step: event.step };
-	if (event.type === "error")
-		return {
-			type: "error",
-			error: typeof event.error === "string" ? event.error : globalT("errTaskActionFailed"),
-			code: typeof event.code === "string" ? event.code : null,
-		};
-	return null;
-}
-
-/**
- * 任务动作：认领（`claim`）/ 释放（`set --release`）/ 取消归档（`close --cancel`）/ 结案（`close`）/ 删除（`delete`）。
- * 取消 / 删除可带一句留言（`summary`），进过程文档执行记录。
- * 删除在办任务用 `id`；删除历史行用 `src` + `line`（两者二选一）。
- *
- * 写命令要跑「检查 → 拉取 → 写 → 提交 → 推送」好几秒，host 回的是 **NDJSON 流**：
- * 每个阶段一行 `{type:"step",step}` 喂给 `onStep` 翻进度文案，末尾 `{type:"done"}` 收尾；
- * 跑挂时推 `{type:"error",error,code}` ⇒ 这里抛 HttpError（码照旧，界面能认出「没身份」）。
- * 请求参数本身有问题时 host 还没来得及发头，仍是普通 JSON 400/500。
- *
- * 成功后由调用方重读快照。
- */
-export async function postTaskAction(
-	body: {
-		readonly action: "claim" | "release" | "cancel" | "close" | "delete";
-		/** 工作区 id（host 据此找台账根）。 */
-		readonly workspace: string;
-		/** 任务号：在办与历史删除都用它定位（历史行由 skill 按 worklog 反查）。 */
-		readonly id?: string;
-		/** 取消 / 删除用留言（可空）/ 结案用摘要（必填）：一句话。 */
-		readonly summary?: string;
-	},
-	onStep?: (step: TaskActionStep) => void,
-): Promise<{ readonly ok: boolean }> {
-	const controller = new AbortController();
-	const timer = setTimeout(() => {
-		controller.abort(
-			new DOMException(
-				globalT("errTimeout", { ms: TASK_WRITE_TIMEOUT_MS }),
-				"TimeoutError",
-			),
-		);
-	}, TASK_WRITE_TIMEOUT_MS);
-	try {
-		const res = await fetch(`${API_PREFIX}/task/action`, {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify(body),
-			signal: controller.signal,
-			cache: "no-store",
-		});
-		if (!res.ok) throw errorOf(res.status, await res.text().catch(() => ""));
-		/**
-		 * 处理一行：翻一行进度文案、`done` 返回 true（该收摊了）、`error` 直接抛。
-		 * 坏行 / 空行当没看见 —— 一条读不懂的行不该让整条命令算失败。
-		 */
-		const done = await readLines(res, (line) => {
-			const event = actionEventOf(line);
-			if (event === null) return false;
-			if (event.type === "step") {
-				onStep?.(event.step);
-				return false;
-			}
-			if (event.type === "error") throw new HttpError(event.error, event.code);
-			return true;
-		});
-		if (done) return { ok: true };
-		throw new HttpError(globalT("errTaskActionInterrupted"), null);
-	} finally {
-		clearTimeout(timer);
-	}
 }
 
 /**
@@ -500,6 +403,10 @@ export function closeJobKey(taskId: string): string {
  * 核心按 (project, key) 归一乐观行、宿主按 key 判重；不同动作可并行（真并行由 skill 的
  * git 锁排队，等不到就报「请稍后重试」），不为每个动作写特例，新增动作照这个模式加前缀。
  */
+export function claimJobKey(taskId: string): string {
+	return `claim:${taskId}`;
+}
+
 export function releaseJobKey(taskId: string): string {
 	return `release:${taskId}`;
 }

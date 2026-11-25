@@ -51,6 +51,7 @@ export type JobDetail =
 export type JobKind =
 	| "close-agent"
 	| "close-direct"
+	| "claim"
 	| "release"
 	| "cancel"
 	| "delete"
@@ -490,4 +491,9 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 /** 业务键：同一条任务同一时刻只允许一个结案作业（跨刷新、跨标签页成立）。 */
 export function closeJobKey(taskId: string): string {
 	return `close:${taskId}`;
+}
+
+/** 各写动作独立业务键，动作不同可并行、同动作同任务互斥。 */
+export function claimJobKey(taskId: string): string {
+	return `claim:${taskId}`;
 }

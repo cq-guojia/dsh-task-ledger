@@ -211,13 +211,15 @@ export function apply(ctx: PluginContext): void {
 				const taskId =
 					kind === "close-agent" || kind === "close-direct"
 						? prefixed("close:")
-						: kind === "release"
-							? prefixed("release:")
-							: kind === "cancel"
-								? prefixed("cancel:")
-								: kind === "delete"
-									? prefixed("delete:")
-									: null;
+						: kind === "claim"
+							? prefixed("claim:")
+							: kind === "release"
+								? prefixed("release:")
+								: kind === "cancel"
+									? prefixed("cancel:")
+									: kind === "delete"
+										? prefixed("delete:")
+										: null;
 				const histLocation = kind === "delete-hist" ? parseDeleteHistKey(key) : null;
 				if (taskId === null && histLocation === null)
 					throw new Error("提交 key 与 kind 不匹配，已拒绝");
@@ -246,12 +248,13 @@ export function apply(ctx: PluginContext): void {
 					if (reply.kind === "not-dsh") throw new Error("台账目录不是宿主工作区，起不了会话");
 				} else if (
 					kind === "close-direct" ||
+					kind === "claim" ||
 					kind === "release" ||
 					kind === "cancel" ||
 					kind === "delete" ||
 					kind === "delete-hist"
 				) {
-					// 其余四种写命令共用一套通用后台执行体；action 由 kind 显式映射。
+					// 其余五种写命令共用一套通用后台执行体；action 由 kind 显式映射。
 					if (!isWriteJobTexts(args.progressTexts))
 						throw new Error("提交缺写命令阶段披露文案");
 					const action =
@@ -259,7 +262,7 @@ export function apply(ctx: PluginContext): void {
 							? ("close" as const)
 							: kind === "delete-hist"
 								? ("delete" as const)
-								: (kind as "release" | "cancel" | "delete");
+								: (kind as "claim" | "release" | "cancel" | "delete");
 					// 历史删除在提交期只校验任务号形状；行定位交给 skill 按任务号反查过程文档。
 					let histTaskId: string | undefined;
 					if (kind === "delete-hist") {

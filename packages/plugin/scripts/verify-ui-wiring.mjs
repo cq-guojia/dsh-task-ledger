@@ -125,14 +125,16 @@ if (!/rowButtons\(kind\)/.test(storeText) || !/kind === ['"]close-agent['"]/.tes
   problems.push('session-job.store.ts: 未按作业类型决定是否挂查看会话按钮');
 }
 
-// ⑦ 释放 / 取消 / 删除 / 历史删除统一走后台：动作独立 key、kind 分派、参数提交期校验。
+// ⑦ 认领 / 释放 / 取消 / 删除 / 历史删除统一走后台：动作独立 key、kind 分派、参数提交期校验。
 const apiText = readSource(join(clientDir, 'api.ts'));
-for (const helper of ['releaseJobKey', 'cancelJobKey', 'deleteJobKey', 'deleteHistJobKey']) {
+for (const helper of ['claimJobKey', 'releaseJobKey', 'cancelJobKey', 'deleteJobKey', 'deleteHistJobKey']) {
   if (!new RegExp(`export function ${helper}\\(`).test(apiText)) {
     problems.push(`api.ts: 缺动作独立作业键 ${helper}()`);
   }
 }
 for (const [name, pattern] of [
+  ['claimJobKey', /claimJobKey\(row\.task\.id\)/],
+  ['认领后台执行按钮', /locked: claimRunning/],
   ['releaseJobKey', /releaseJobKey\(row\.task\.id\)/],
   ['cancelJobKey', /cancelJobKey\(row\.task\.id\)/],
   ['deleteJobKey', /deleteJobKey\(row\.task\.id\)/],

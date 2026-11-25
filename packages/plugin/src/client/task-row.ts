@@ -12,9 +12,9 @@
  *
  * 按钮（含查看）**不各判各的**：权限一律问 `resolveActions()`（rows.ts），本文件只按返回值画。
  *
- * 点击行为：查看已在用；认领 / 释放（各弹一次确认）与取消（带理由输入框的弹窗）已接台账命令
- * （2026-11-03，统一走 `/task/action`）；继续走 `/task/continue` 起会话（2026-11-03 晚）；
- * 完成（含「交给 Agent」）走 `postTaskAction` / `startTask`（2026-11-21 按 v0.43.8 重构）。
+ * 点击行为：认领 / 释放 / 取消 / 删除 / 历史行删除 / 完成全部走核心后台作业 `startTask`；
+ * 「继续」是唯一同步动作，走 `/task/continue` 起会话。各弹窗提交后锁定转圈，
+ * 底部留「后台执行」可关窗，终态由核心 toast + board-home 的 onSettled 统一收口。
  */
 
 import {
@@ -27,18 +27,17 @@ import {
 	useState,
 	useSyncExternalStore,
 } from "react";
-import { ConfirmModal } from "dsh-plugin-core/ui/confirm-modal";
 /* 后台任务中心（核心 v0.43.8）：startTask 提交、作业状态由宿主持有。 */
 import { startTask, taskCenterStore } from "dsh-plugin-core/adv/tasks";
 import type { DisplayTitle, TaskRecord } from "dsh-plugin-core/adv/tasks";
 import {
 	canHostAgentSession,
 	cancelJobKey,
+	claimJobKey,
 	closeJobKey,
 	deleteJobKey,
 	JOB_GROUP,
 	postSessionStart,
-	postTaskAction,
 	releaseJobKey,
 	TASK_PROJECT,
 	type TaskActionStep,
@@ -58,7 +57,7 @@ import { openSession, sessionIdOfDetail } from "./nav";
 import type { LocaleKey, Translate } from "./locales";
 import { closePrompt, continuePrompt } from "./prompts";
 import { displayName, type Row, resolveActions } from "./rows";
-import { focusOwner, refresh, setQuery } from "./store";
+import { focusOwner, setQuery } from "./store";
 import { Button, Card, Icon, IconButton, Loader, notify, Tag, Tip } from "./ui";
 
 type Tone = "doing" | "overdue" | "stale" | "backlog" | "open";
@@ -137,22 +136,15 @@ export function TaskRowView(props: {
 	const tone = toneOf(row);
 	const tags = row.task.tags ?? [];
 
-	// 同步动作（认领 / 继续）仍用 busy + NDJSON step：这两条不改成后台作业。
-	// 释放 / 取消 / 删除 / 结案走核心后台任务中心：提交即返回、进度读 TaskRecord.progress、
-	// 终态由核心 toast + board-home 的 onSettled 统一收口，本行不自己 notify / refresh。
+	// 「继续」仍同步起会话，用 busy 锁提交期；其余写动作全部走核心后台任务中心：
+	// 提交即返回、进度读 TaskRecord.progress、终态由核心 toast + board-home 的 onSettled 收口。
 	const [busy, setBusy] = useState(false);
-	const [step, setStep] = useState<TaskActionStep | null>(null);
-	/** 底栏进度文案：还没收到第一个阶段就先用一句「同步中」。 */
-	const progressNotice = (): string =>
-		step === null ? t("actionSyncing") : t(STEP_LABEL[step]);
-	/** 起一条写命令：清掉上一轮的阶段，每个阶段到了就翻文案。 */
-	const onStep = (next: TaskActionStep): void => setStep(next);
 	const [confirmAct, setConfirmAct] = useState<"claim" | "release" | null>(null);
 	const runAction = (action: "claim" | "release"): void => {
 		if (!busy && !anyJobRunning) setConfirmAct(action);
 	};
 
-	// 这条任务的四类后台作业：结案 / 释放 / 取消 / 删除，每类一个独立 key。
+	// 这条任务的五类后台作业：结案 / 认领 / 释放 / 取消 / 删除，每类一个独立 key。
 	// 本地乐观记录只兜「服务端帧还没到」的提交瞬间；终态一到即以服务端记录为准。
 	const storeSnapshot = useSyncExternalStore(
 		taskCenterStore.subscribe,
@@ -160,6 +152,7 @@ export function TaskRowView(props: {
 	);
 	const jobKeys = {
 		close: closeJobKey(row.task.id),
+		claim: claimJobKey(row.task.id),
 		release: releaseJobKey(row.task.id),
 		cancel: cancelJobKey(row.task.id),
 		delete: deleteJobKey(row.task.id),
@@ -172,7 +165,8 @@ export function TaskRowView(props: {
 	const progressOf = (key: string): string | null =>
 		writeJobProgress(storeSnapshot.tasks, TASK_PROJECT, key) ?? jobOf(key)?.progress?.message ?? null;
 	const anyJobRunning = (Object.values(jobKeys) as readonly string[]).some(runningOf);
-	/** 释放后台作业的锁定态：提交后弹窗转圈、底部只留「后台执行」。 */
+	/** 认领 / 释放后台作业的锁定态：提交后弹窗转圈、底部只留「后台执行」。 */
+	const claimRunning = runningOf(jobKeys.claim);
 	const releaseRunning = runningOf(jobKeys.release);
 
 	// 终态一到就清掉本地乐观兜底：否则乐观行退场后旧记录仍卡着 running，按钮永远解不开。
@@ -184,7 +178,7 @@ export function TaskRowView(props: {
 
 	/** 提交一条写命令后台作业：不等待跑完，提交期错误留给调用方写进弹窗。 */
 	const startWrite = async (
-		action: "release" | "cancel" | "delete",
+		action: "claim" | "release" | "cancel" | "delete",
 		key: string,
 		summary: string,
 	): Promise<void> => {
@@ -301,18 +295,21 @@ export function TaskRowView(props: {
 	// 顶层 onSettled 不该跨层来关；用户已点「后台执行」关窗的场合这里只是幂等兜底。
 	const wasRunning = useRef({
 		close: closing,
-		release: runningOf(jobKeys.release),
+		claim: claimRunning,
+		release: releaseRunning,
 		cancel: cancelRunning,
 		delete: deleteRunning,
 	});
 	useEffect(() => {
 		const now = {
 			close: closing,
+			claim: runningOf(jobKeys.claim),
 			release: runningOf(jobKeys.release),
 			cancel: runningOf(jobKeys.cancel),
 			delete: runningOf(jobKeys.delete),
 		};
 		if (wasRunning.current.close && !now.close && closeOpen) setCloseOpen(false);
+		if (wasRunning.current.claim && !now.claim && confirmAct === "claim") setConfirmAct(null);
 		if (wasRunning.current.release && !now.release && confirmAct === "release")
 			setConfirmAct(null);
 		if (wasRunning.current.cancel && !now.cancel && cancelOpen) setCancelOpen(false);
@@ -322,7 +319,6 @@ export function TaskRowView(props: {
 
 	const finishTask = async (input: { useAgent: boolean; note: string }): Promise<void> => {
 		setBusy(true);
-		setStep(null);
 		setCloseError(null);
 		const title = titleOf(row);
 		try {
@@ -412,7 +408,6 @@ export function TaskRowView(props: {
 			setCloseOpen(true);
 		} finally {
 			setBusy(false);
-			setStep(null);
 		}
 	};
 
@@ -732,42 +727,36 @@ export function TaskRowView(props: {
 		Fragment,
 		null,
 		card,
-		// 认领是同步动作，沿用核心 ConfirmModal（提交期锁定、无「后台执行」）。
+		// 认领是后台作业：点确定提交后弹窗锁定转圈，底部只留「后台执行」可关窗。
 		confirmAct === "claim"
-			? h(ConfirmModal, {
+			? h(ConfirmActionModal, {
+					t,
 					title: t("claimConfirmTitle"),
 					message: t("claimConfirmBody", { title: titleOf(row) }),
 					confirmText: t("claimConfirmOk"),
-					cancelText: t("settingsCancel"),
-					loadingText: false,
-					notice: busy ? progressNotice() : undefined,
-					locked: busy,
-					onCancel: () => setConfirmAct(null),
-					onConfirm: async () => {
-						setBusy(true);
-						setStep(null);
-						try {
-							await postTaskAction(
-								{ action: "claim", workspace: row.task.workspace.id, id: row.task.id },
-								onStep,
-							);
-							notify(t("actionClaimDone", { title: titleOf(row) }), { variant: "success" });
-							// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
-							setConfirmAct(null);
-							await refresh();
-						} catch (failure) {
-							notify(
-								t("actionFailed", {
-									error: failure instanceof Error ? failure.message : String(failure),
-								}),
-								{ variant: "error" },
-							);
-							// 不关框：确定键恢复可点，能原地重试
-							throw failure;
-						} finally {
-							setBusy(false);
-							setStep(null);
-						}
+					busy,
+					notice: claimRunning
+						? (progressOf(jobKeys.claim) ?? t("actionSyncing"))
+						: undefined,
+					locked: claimRunning,
+					onBackground: () => setConfirmAct(null),
+					onClose: () => setConfirmAct(null),
+					onSubmit: () => {
+						void (async () => {
+							setBusy(true);
+							try {
+								await startWrite("claim", jobKeys.claim, "");
+							} catch (failure) {
+								notify(
+									t("actionFailed", {
+										error: failure instanceof Error ? failure.message : String(failure),
+									}),
+									{ variant: "error" },
+								);
+							} finally {
+								setBusy(false);
+							}
+						})();
 					},
 				})
 			: confirmAct === "release"
@@ -843,7 +832,7 @@ export function TaskRowView(props: {
 					// 提交阶段翻 step 文案；两条结案路径（Agent / 直接）都读服务端同一条
 					// progress.message，与 TaskBar 同步翻牌；首帧未落时退回固定文案，终态保留最后一段。
 					notice: busy
-						? progressNotice()
+						? t("actionSyncing")
 						: closing
 							? (progressMessage ?? t("closingNotice"))
 							: undefined,

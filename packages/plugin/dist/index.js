@@ -150,13 +150,15 @@ export function apply(ctx) {
                     : null;
                 const taskId = kind === "close-agent" || kind === "close-direct"
                     ? prefixed("close:")
-                    : kind === "release"
-                        ? prefixed("release:")
-                        : kind === "cancel"
-                            ? prefixed("cancel:")
-                            : kind === "delete"
-                                ? prefixed("delete:")
-                                : null;
+                    : kind === "claim"
+                        ? prefixed("claim:")
+                        : kind === "release"
+                            ? prefixed("release:")
+                            : kind === "cancel"
+                                ? prefixed("cancel:")
+                                : kind === "delete"
+                                    ? prefixed("delete:")
+                                    : null;
                 const histLocation = kind === "delete-hist" ? parseDeleteHistKey(key) : null;
                 if (taskId === null && histLocation === null)
                     throw new Error("提交 key 与 kind 不匹配，已拒绝");
@@ -185,11 +187,12 @@ export function apply(ctx) {
                         throw new Error("台账目录不是宿主工作区，起不了会话");
                 }
                 else if (kind === "close-direct" ||
+                    kind === "claim" ||
                     kind === "release" ||
                     kind === "cancel" ||
                     kind === "delete" ||
                     kind === "delete-hist") {
-                    // 其余四种写命令共用一套通用后台执行体；action 由 kind 显式映射。
+                    // 其余五种写命令共用一套通用后台执行体；action 由 kind 显式映射。
                     if (!isWriteJobTexts(args.progressTexts))
                         throw new Error("提交缺写命令阶段披露文案");
                     const action = kind === "close-direct"
