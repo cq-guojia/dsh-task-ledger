@@ -783,8 +783,10 @@ export function BoardHome(props: {
 								},
 							},
 							/* 后台任务（用户 2026-11-17）：整排最左、纯图标 lg 正方，与滑动块同高；
-							   点开由核心 `TaskBar` 自己弹面板，本仓不自绘。 */
-							h(TaskBar, { form: "icon", size: "lg" }),
+							   点开由核心 `TaskBar` 自己弹面板，本仓不自绘。
+							   closeOnAction:true —— 核心 v0.46.5 把默认翻成 false（点行按钮后留屏），
+							   本仓恢复点击「查看会话」即收起面板的正常行为（用户 2026-11-25）。 */
+							h(TaskBar, { form: "icon", size: "lg", closeOnAction: true }),
 							h(Segmented<ViewMode>, {
 								id: "dtl-view-mode",
 								value: shownView,

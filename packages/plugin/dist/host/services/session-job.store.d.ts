@@ -10,15 +10,18 @@ export declare const VIEW_SESSION_ACTION = "view-session";
 export type JobDetail = string | number | boolean | null | readonly JobDetail[] | {
     readonly [key: string]: JobDetail;
 };
-/** 新建一条作业需要的东西（由 service 在会话建好之后给）。 */
+/** 结案作业的两种执行者：agent 会话 / host 自己跑 skill。同一 key 互斥。 */
+export type CloseJobKind = "close-agent" | "close-direct";
+/** 新建一条作业需要的东西（由 service 在作业建好之后给）。 */
 export interface RegisterInput {
     /** 业务键：`close:<任务号>` —— 判重的唯一依据。 */
     readonly key: string;
     readonly title: DisplayTitle;
-    /** toast「查看会话」按钮文案；客户端按界面语言拼好，缺省写死中文兜老提交。 */
+    readonly kind: CloseJobKind;
+    /** toast「查看会话」按钮文案；只给会话作业，直接结案没有会话可看 ⇒ 不挂按钮。 */
     readonly buttonText?: string;
-    /** 会话 id（随 detail 下发，客户端拿它归档 / 打开）。 */
-    readonly sessionId: string;
+    /** 会话 id（agent 作业必有；直接结案没有会话，省略）。 */
+    readonly sessionId?: string;
     readonly taskId: string;
     /** 台账目录绝对路径（detail 里给客户端做跳转备份）。 */
     readonly workspace: string;
@@ -45,7 +48,7 @@ export interface SessionJobStore extends TaskStreamSource {
      * 原子占位（消除 TOCTOU）：起会话的 await 之前先占住 key，返回 true 表示拿到；
      * 并发第二个同 key 立刻拿到 false，不会再起第二个会话。失败要 release。
      */
-    claim(key: string, title: DisplayTitle, buttonText?: string): boolean;
+    claim(key: string, title: DisplayTitle, kind: CloseJobKind, buttonText?: string): boolean;
     /** 占位失败时释放（createSession 抛错 / 非 DSH）；没占住就是空操作。 */
     release(key: string): void;
     /** 把占位记录填成正式 running（带 sessionId 等详情）。 */

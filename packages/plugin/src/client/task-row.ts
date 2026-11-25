@@ -307,19 +307,40 @@ export function TaskRowView(props: {
 		setCloseError(null);
 		const title = titleOf(row);
 		try {
+			// 后台作业标题走核心 v0.46.0 的结构契约：分类说清「这是什么活」，描述才是任务名。
+			const displayTitle: DisplayTitle = {
+				category: t("taskClosureCategory"),
+				description: title,
+			};
+
 			if (!input.useAgent) {
-				await postTaskAction(
-					{
-						action: "close",
+				// 直接结案也走后台作业：host 自己跑 skill，五阶段经真实 stderr 写 progress。
+				// 与 agent 结案共用 close:<任务号> key（同任务互斥），只按 kind 区分执行者。
+				const record = await startTask({
+					project: TASK_PROJECT,
+					group: JOB_GROUP,
+					key: closeJobKey(row.task.id),
+					kind: "close-direct",
+					title: displayTitle,
+					args: {
 						workspace: row.task.workspace.id,
-						id: row.task.id,
+						taskId: row.task.id,
 						summary: input.note,
+						progressTexts: {
+							starting: t("closeDirectStarting"),
+							check: t("actionStepCheck"),
+							sync: t("actionStepSync"),
+							write: t("actionStepWrite"),
+							commit: t("actionStepCommit"),
+							push: t("actionStepPush"),
+							done: t("closeDirectDone"),
+							failed: t("closeDirectFailed"),
+						},
 					},
-					onStep,
-				);
-				setCloseOpen(false);
-				notify(t("closeDone", { title }), { variant: "success" });
-				await refresh();
+				});
+				// 与 agent 路径一致：提交成功弹窗锁定转圈，不自己 notify / refresh ——
+				// 终态 toast 由核心按作业配置弹，看板刷新由 board-home 的 onSettled 统一做。
+				setJobRecord(record);
 				return;
 			}
 
@@ -327,11 +348,6 @@ export function TaskRowView(props: {
 			// 本行只提交、按返回的作业记录锁弹窗（2026-11-21 按 v0.43.8 重写）。
 			const prompt = closePrompt(t, row.task.id, input.note);
 			const sessionTitle = t("closeSessionTitle", { title });
-			// 后台作业标题走核心 v0.46.0 的结构契约：分类说清「这是什么活」，描述才是任务名。
-			const displayTitle: DisplayTitle = {
-				category: t("taskClosureCategory"),
-				description: title,
-			};
 
 			// 非 DSH 工作区起不了会话：提交前问 host 现算一次（核心 submit 不回业务错误原文），
 			// 直接走「复制提示词、去对应 Agent 粘」——弹窗不关也不锁，人还能改成直接结案。
@@ -782,8 +798,8 @@ export function TaskRowView(props: {
 					taskTitle: titleOf(row),
 					busy,
 					// 扫光过程提示贯穿整个结案期（核心 Modal.notice → FlipText(sweep)）：
-					// 提交阶段翻 step 文案；交给 Agent 后读服务端同一条 progress.message，
-					// 与 TaskBar 同步翻牌；服务端尚未落首帧时退回固定文案，终态保留最后一段。
+					// 提交阶段翻 step 文案；两条结案路径（Agent / 直接）都读服务端同一条
+					// progress.message，与 TaskBar 同步翻牌；首帧未落时退回固定文案，终态保留最后一段。
 					notice: busy
 						? progressNotice()
 						: closing

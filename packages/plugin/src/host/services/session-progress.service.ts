@@ -1,13 +1,13 @@
 /**
- * 后台结案的阶段披露源：把宿主会话事件翻成 `TaskRecord.progress`。
+ * Agent 结案的阶段披露源：把宿主会话事件翻成 `TaskRecord.progress`。
  *
- * 为什么读 `session/event` 而不是 skill 的 stderr：agent 路径里 skill 由宿主执行，
+ * 为什么读 `session/event` 而不是 skill 的 stderr：agent 路径里 skill 由 DSH agent 执行，
  * stderr 归工具结果，且 `tool/result` 是命令结束后一次性 emit——五条 `#step` 同时到达，
- * 根本没有「渐进」。会话的 `step/start` 是模型每一步真实开始时 append 的事件，
- * 带单调 `seq`、turn/step，正好是本仓能给的唯一真源（2026-11-25 三方评审定案）。
+ * 根本没有「渐进」。会话的 `step/start` 是模型每一步真实开始时的事件，带单调 `seq`，
+ * 这里只把它当「Agent 正在处理」这一作业级节点的触发点（2026-11-25 三方评审定案）。
  *
  * 不落盘、不轮询、不改 DSH/核心；文案由 client 按界面语言随 startTask.args 透传，
- * host 只做 `{step}` / `{turn}` 占位替换，不产出中文。
+ * host 不产出中文。直接结案走 direct-close.service.ts 读 skill 真实的五阶段 stderr。
  */
 import type { SessionJobStore } from "./session-job.store.js";
 
@@ -78,14 +78,10 @@ export function installSessionProgress(
 		if (binding === undefined || event?.type !== "step/start") return;
 		const seq = event.seq;
 		if (typeof seq !== "number" || !Number.isFinite(seq) || seq <= binding.lastSeq) return;
-		const data = event.data;
-		if (data === null || typeof data !== "object" || Array.isArray(data)) return;
-		const { turn, step } = data as { turn?: unknown; step?: unknown };
-		if (typeof turn !== "number" || typeof step !== "number") return;
 		binding.lastSeq = seq;
-		const message = binding.texts.step
-			.replaceAll("{turn}", String(turn))
-			.replaceAll("{step}", String(step));
+		// 只用 step/start 当「Agent 正在处理」这一真实节点的触发点——文案由客户端拼好，
+		// 不带 {turn}/{step}：模型第几轮第几步没有业务语义，披露给人看的是作业阶段。
+		const message = binding.texts.step;
 		// register 之前只暂存：claim 占位行虽在内存，但还没推给 UI，写了也会被 starting 覆盖。
 		if (!binding.ready) {
 			binding.pending = message;

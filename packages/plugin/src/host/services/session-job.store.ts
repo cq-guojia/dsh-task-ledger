@@ -47,15 +47,19 @@ export type JobDetail =
 	| readonly JobDetail[]
 	| { readonly [key: string]: JobDetail };
 
-/** 新建一条作业需要的东西（由 service 在会话建好之后给）。 */
+/** 结案作业的两种执行者：agent 会话 / host 自己跑 skill。同一 key 互斥。 */
+export type CloseJobKind = "close-agent" | "close-direct";
+
+/** 新建一条作业需要的东西（由 service 在作业建好之后给）。 */
 export interface RegisterInput {
 	/** 业务键：`close:<任务号>` —— 判重的唯一依据。 */
 	readonly key: string;
 	readonly title: DisplayTitle;
-	/** toast「查看会话」按钮文案；客户端按界面语言拼好，缺省写死中文兜老提交。 */
+	readonly kind: CloseJobKind;
+	/** toast「查看会话」按钮文案；只给会话作业，直接结案没有会话可看 ⇒ 不挂按钮。 */
 	readonly buttonText?: string;
-	/** 会话 id（随 detail 下发，客户端拿它归档 / 打开）。 */
-	readonly sessionId: string;
+	/** 会话 id（agent 作业必有；直接结案没有会话，省略）。 */
+	readonly sessionId?: string;
 	readonly taskId: string;
 	/** 台账目录绝对路径（detail 里给客户端做跳转备份）。 */
 	readonly workspace: string;
@@ -85,13 +89,16 @@ function keyOf(project: string, key: string): string {
 }
 
 /** 行按钮：服务端只声明文案 / 图标 / 时机 / id，画面由核心 TaskBar 画，handler 在发起页注册。 */
-function rowButtons(): readonly {
+function rowButtons(kind: CloseJobKind): readonly {
 	readonly id: string;
 	readonly text: string;
 	readonly icon: string;
 	readonly when: "always";
 }[] {
-	return [{ id: VIEW_SESSION_ACTION, text: "查看会话", icon: "common.base:AIdamoxing", when: "always" }];
+	// 直接结案没有会话可看 ⇒ 不挂「查看会话」，免得画一个点了没反应的死按钮。
+	return kind === "close-agent"
+		? [{ id: VIEW_SESSION_ACTION, text: "查看会话", icon: "common.base:AIdamoxing", when: "always" }]
+		: [];
 }
 
 /** toast 按钮：与行按钮同一个 id，点击走同一处 handler（开会话视图）。文案由客户端按界面语言传。 */
@@ -118,11 +125,12 @@ function withResult(detail: TaskRecord["detail"], result: JobDetail): TaskRecord
  *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
  *  分类是「任务结案」，描述是任务名；这里只在描述后补动作结果，不重复拼分类。
  *  只配 toast 交核心弹卡（用户 2026-11-23：本业务用不到 notify 广播与 UI 自弹）。 */
-function completionConfig(title: DisplayTitle, buttonText: string) {
+function completionConfig(title: DisplayTitle, buttonText?: string) {
+	const button = buttonText === undefined ? {} : { button: toastButton(buttonText) };
 	return {
 		toast: {
-			success: { title: { ...title, description: `${title.description}（已结案）` }, button: toastButton(buttonText) },
-			failure: { title: { ...title, description: `${title.description}（失败）` }, button: toastButton(buttonText) },
+			success: { title: { ...title, description: `${title.description}（已结案）` }, ...button },
+			failure: { title: { ...title, description: `${title.description}（失败）` }, ...button },
 		},
 	};
 }
@@ -135,7 +143,7 @@ export interface SessionJobStore extends TaskStreamSource {
 	 * 原子占位（消除 TOCTOU）：起会话的 await 之前先占住 key，返回 true 表示拿到；
 	 * 并发第二个同 key 立刻拿到 false，不会再起第二个会话。失败要 release。
 	 */
-	claim(key: string, title: DisplayTitle, buttonText?: string): boolean;
+	claim(key: string, title: DisplayTitle, kind: CloseJobKind, buttonText?: string): boolean;
 	/** 占位失败时释放（createSession 抛错 / 非 DSH）；没占住就是空操作。 */
 	release(key: string): void;
 	/** 把占位记录填成正式 running（带 sessionId 等详情）。 */
@@ -271,7 +279,12 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 		return next;
 	}
 
-	function claim(key: string, title: DisplayTitle, buttonText = "查看会话"): boolean {
+	function claim(
+		key: string,
+		title: DisplayTitle,
+		kind: CloseJobKind,
+		buttonText?: string,
+	): boolean {
 		const id = keyOf(PROJECT, key);
 		const existing = records.get(id);
 		if (existing !== undefined && existing.state === "running") return false;
@@ -284,8 +297,8 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 			title,
 			state: "running",
 			startedAt: now,
-			kind: "session-job",
-			rowButtons: rowButtons(),
+			kind,
+			rowButtons: rowButtons(kind),
 			...completionConfig(title, buttonText),
 		};
 		// 占位只在服务端内存里占 key，**不推 SSE**：createSession 期间会话还没建起来，
@@ -327,13 +340,13 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 			title: input.title,
 			state: "running",
 			detail: {
-				sessionId: input.sessionId,
+				...(input.sessionId === undefined ? {} : { sessionId: input.sessionId }),
 				taskId: input.taskId,
 				workspace: input.workspace,
 			},
-			kind: "session-job",
-			rowButtons: rowButtons(),
-			...completionConfig(input.title, input.buttonText ?? "查看会话"),
+			kind: input.kind,
+			rowButtons: rowButtons(input.kind),
+			...completionConfig(input.title, input.buttonText),
 			...(input.progressMessage === undefined
 				? {}
 				: { progress: progressOf(input.key, input.progressMessage) }),

@@ -30,8 +30,11 @@ function keyOf(project, key) {
     return `${project}\u0000${key}`;
 }
 /** 行按钮：服务端只声明文案 / 图标 / 时机 / id，画面由核心 TaskBar 画，handler 在发起页注册。 */
-function rowButtons() {
-    return [{ id: VIEW_SESSION_ACTION, text: "查看会话", icon: "common.base:AIdamoxing", when: "always" }];
+function rowButtons(kind) {
+    // 直接结案没有会话可看 ⇒ 不挂「查看会话」，免得画一个点了没反应的死按钮。
+    return kind === "close-agent"
+        ? [{ id: VIEW_SESSION_ACTION, text: "查看会话", icon: "common.base:AIdamoxing", when: "always" }]
+        : [];
 }
 /** toast 按钮：与行按钮同一个 id，点击走同一处 handler（开会话视图）。文案由客户端按界面语言传。 */
 function toastButton(text) {
@@ -56,10 +59,11 @@ function withResult(detail, result) {
  *  分类是「任务结案」，描述是任务名；这里只在描述后补动作结果，不重复拼分类。
  *  只配 toast 交核心弹卡（用户 2026-11-23：本业务用不到 notify 广播与 UI 自弹）。 */
 function completionConfig(title, buttonText) {
+    const button = buttonText === undefined ? {} : { button: toastButton(buttonText) };
     return {
         toast: {
-            success: { title: { ...title, description: `${title.description}（已结案）` }, button: toastButton(buttonText) },
-            failure: { title: { ...title, description: `${title.description}（失败）` }, button: toastButton(buttonText) },
+            success: { title: { ...title, description: `${title.description}（已结案）` }, ...button },
+            failure: { title: { ...title, description: `${title.description}（失败）` }, ...button },
         },
     };
 }
@@ -181,7 +185,7 @@ export function createSessionJobStore(archive) {
         }
         return next;
     }
-    function claim(key, title, buttonText = "查看会话") {
+    function claim(key, title, kind, buttonText) {
         const id = keyOf(PROJECT, key);
         const existing = records.get(id);
         if (existing !== undefined && existing.state === "running")
@@ -195,8 +199,8 @@ export function createSessionJobStore(archive) {
             title,
             state: "running",
             startedAt: now,
-            kind: "session-job",
-            rowButtons: rowButtons(),
+            kind,
+            rowButtons: rowButtons(kind),
             ...completionConfig(title, buttonText),
         };
         // 占位只在服务端内存里占 key，**不推 SSE**：createSession 期间会话还没建起来，
@@ -238,13 +242,13 @@ export function createSessionJobStore(archive) {
             title: input.title,
             state: "running",
             detail: {
-                sessionId: input.sessionId,
+                ...(input.sessionId === undefined ? {} : { sessionId: input.sessionId }),
                 taskId: input.taskId,
                 workspace: input.workspace,
             },
-            kind: "session-job",
-            rowButtons: rowButtons(),
-            ...completionConfig(input.title, input.buttonText ?? "查看会话"),
+            kind: input.kind,
+            rowButtons: rowButtons(input.kind),
+            ...completionConfig(input.title, input.buttonText),
             ...(input.progressMessage === undefined
                 ? {}
                 : { progress: progressOf(input.key, input.progressMessage) }),

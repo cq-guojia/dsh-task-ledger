@@ -271,7 +271,6 @@ export type LocaleKey =
 	| "closeSessionTitle"
 	| "continueSessionTitle"
 	| "closeStarted"
-	| "closeDone"
 	| "closeNotClosed"
 	| "closeNotClosedDesc"
 	| "closeAgentFailed"
@@ -284,6 +283,9 @@ export type LocaleKey =
 	| "closeStepChecking"
 	| "closeStepDone"
 	| "closeStepFailed"
+	| "closeDirectStarting"
+	| "closeDirectDone"
+	| "closeDirectFailed"
 	| "taskClosureCategory"
 	| "closeAlreadyRunning"
 	| "closeInProgress"
@@ -668,19 +670,21 @@ export const zh: Record<LocaleKey, string> = {
 	closeSessionTitle: "完成：{title}",
 	continueSessionTitle: "继续：{title}",
 	closeStarted: "已交给 Agent 结案：{title}",
-	closeDone: "已结案：{title}",
 	closeNotClosed: "这轮跑完了，但任务没结",
 	closeNotClosedDesc: "去会话里看看它停在哪儿",
 	closeAgentFailed: "Agent 这轮没跑成：{error}",
 	actionOpenSession: "查看会话",
 	bgRun: "后台执行",
 	executing: "执行中",
-	closingNotice: "Agent 正在结案，完成后自动归档…",
+	closingNotice: "结案作业正在执行，完成后自动归档…",
 	closeStepStarting: "结案作业已建立，正在唤醒 Agent…",
-	closeStepRunning: "Agent 正在处理第 {turn} 轮第 {step} 步…",
+	closeStepRunning: "Agent 正在执行结案…",
 	closeStepChecking: "Agent 已停，正在核对台账…",
 	closeStepDone: "结案完成，正在归档会话…",
 	closeStepFailed: "结案未完成，请查看会话…",
+	closeDirectStarting: "结案作业已建立，正在写入台账…",
+	closeDirectDone: "结案完成，正在收尾…",
+	closeDirectFailed: "结案未完成，请查看台账并重试…",
 	taskClosureCategory: "任务结案",
 	closeAlreadyRunning: "这条已经在后台执行了：{title}",
 	closeInProgress: "Agent 正在结案，完成前不能再点",
@@ -1052,19 +1056,21 @@ export const en: Record<LocaleKey, string> = {
 	closeSessionTitle: "Close: {title}",
 	continueSessionTitle: "Continue: {title}",
 	closeStarted: "Handed to an agent: {title}",
-	closeDone: "Task closed: {title}",
 	closeNotClosed: "The turn finished, but the task is still open",
 	closeNotClosedDesc: "Open the session to see where it stopped",
 	closeAgentFailed: "The agent turn failed: {error}",
 	actionOpenSession: "Open session",
 	bgRun: "Run in background",
 	executing: "Running",
-	closingNotice: "Agent is closing this task; it will be archived when done…",
+	closingNotice: "Closure is in progress; it will be archived when done…",
 	closeStepStarting: "Closure job created; waking the agent…",
-	closeStepRunning: "Agent is working on turn {turn}, step {step}…",
+	closeStepRunning: "Agent is working on the closure…",
 	closeStepChecking: "Agent stopped; checking the ledger…",
 	closeStepDone: "Task closed; archiving the session…",
 	closeStepFailed: "Closure did not complete; open the session to review…",
+	closeDirectStarting: "Closure job created; writing to the ledger…",
+	closeDirectDone: "Task closed; wrapping up…",
+	closeDirectFailed: "Closure did not complete; check the ledger and retry…",
 	taskClosureCategory: "Task closure",
 	closeAlreadyRunning: "Already running in the background: {title}",
 	closeInProgress: "An agent is closing this task; wait for it to finish",

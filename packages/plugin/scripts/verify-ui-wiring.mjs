@@ -109,6 +109,21 @@ if (!/progressTexts:/.test(taskRowText)) {
   problems.push('task-row.ts: startTask 未透传阶段文案');
 }
 
+// ⑥ 直接结案也走后台作业：两条路径共用作业键，按 kind 分派，五阶段写同一 progress。
+const directService = readSource(join(hostDir, 'services', 'direct-close.service.ts'));
+if (!/isDirectCloseTexts/.test(directService) || !/jobs\.reportProgress\(job\.key, job\.texts\[step\]\)/.test(directService)) {
+  problems.push('direct-close.service.ts: 直接结案未把 skill 五阶段写入 progress');
+}
+if (!/kind: ['"]close-direct['"]/.test(taskRowText)) {
+  problems.push('task-row.ts: 直接结案未提交 close-direct 后台作业');
+}
+if (!/kind === ['"]close-direct['"]/.test(entryText) || !/startDirectClose\(/.test(entryText)) {
+  problems.push('index.ts: submit 未按 kind 分派直接结案');
+}
+if (!/rowButtons\(kind\)/.test(storeText) || !/kind === ['"]close-agent['"]/.test(storeText)) {
+  problems.push('session-job.store.ts: 未按作业类型决定是否挂查看会话按钮');
+}
+
 if (problems.length > 0) {
   console.error('[verify-ui-wiring] FAIL:');
   for (const p of problems) console.error(`  - ${p}`);

@@ -14,6 +14,7 @@ import { serveFsRoute, serveTaskStream, serveTaskSubmit } from "dsh-plugin-core/
 import { formatDisplayTitle, isDisplayTitle } from "dsh-plugin-core/adv/tasks";
 import { FS_ROUTE, TASK_CENTER_ROUTE, TASK_CENTER_VIEWER, registerRoutes, } from "./host/routes.js";
 import { startSession } from "./host/services/session.service.js";
+import { startDirectClose, isDirectCloseTexts, } from "./host/services/direct-close.service.js";
 import { installRulesInjection } from "./host/services/rules-injection.service.js";
 import { createSessionJobStore } from "./host/services/session-job.store.js";
 import { installSessionProgress, isCloseProgressTexts, } from "./host/services/session-progress.service.js";
@@ -134,34 +135,51 @@ export function apply(ctx) {
                     throw new Error("提交缺 close:<任务号> key");
                 const args = (payload.args ?? {});
                 const workspace = typeof args.workspace === "string" ? args.workspace : "";
-                const prompt = typeof args.prompt === "string" ? args.prompt : "";
                 // 核心 v0.46.0 起 startTask.title 是 DisplayTitle；string 帧会被 isTaskRecord 拒收，
                 // 所以这里按结构校验，缺了就拒绝提交，不让服务端落一条永远显示不出来的幽灵作业。
                 if (!isDisplayTitle(payload.title))
                     throw new Error("提交缺结构化任务标题");
                 const displayTitle = payload.title;
-                // 会话名沿用客户端按界面语言拼好的那句；没带才退回结构化标题。
-                const title = typeof args.title === "string" ? args.title : formatDisplayTitle(displayTitle);
-                const buttonText = typeof args.buttonText === "string" ? args.buttonText : undefined;
-                if (!isCloseProgressTexts(args.progressTexts))
-                    throw new Error("提交缺阶段披露文案");
-                const progressTexts = args.progressTexts;
                 const origin = typeof payload.origin === "string" ? payload.origin : undefined;
                 const panelId = typeof payload.panelId === "string" ? payload.panelId : undefined;
-                const reply = await startSession(sessionDeps(), {
-                    workspace,
-                    taskId,
-                    policy: "close",
-                    title,
-                    displayTitle,
-                    prompt,
-                    ...(buttonText === undefined ? {} : { buttonText }),
-                    progressTexts,
-                    ...(origin === undefined ? {} : { origin }),
-                    ...(panelId === undefined ? {} : { panelId }),
-                });
-                if (reply.kind === "not-dsh")
-                    throw new Error("台账目录不是宿主工作区，起不了会话");
+                // 两种结案共用 key（同任务同一时刻只有一个作业），按 kind 分派执行者。
+                if (payload.kind === "close-direct") {
+                    if (!isDirectCloseTexts(args.progressTexts))
+                        throw new Error("提交缺直接结案阶段披露文案");
+                    const reply = await startDirectClose({ jobs }, {
+                        workspace,
+                        taskId,
+                        summary: typeof args.summary === "string" ? args.summary : "",
+                        title: displayTitle,
+                        texts: args.progressTexts,
+                        ...(origin === undefined ? {} : { origin }),
+                        ...(panelId === undefined ? {} : { panelId }),
+                    });
+                    if (reply.kind === "not-found")
+                        throw new Error("找不到这个台账目录，结不了案");
+                }
+                else {
+                    const prompt = typeof args.prompt === "string" ? args.prompt : "";
+                    // 会话名沿用客户端按界面语言拼好的那句；没带才退回结构化标题。
+                    const title = typeof args.title === "string" ? args.title : formatDisplayTitle(displayTitle);
+                    const buttonText = typeof args.buttonText === "string" ? args.buttonText : undefined;
+                    if (!isCloseProgressTexts(args.progressTexts))
+                        throw new Error("提交缺阶段披露文案");
+                    const reply = await startSession(sessionDeps(), {
+                        workspace,
+                        taskId,
+                        policy: "close",
+                        title,
+                        displayTitle,
+                        prompt,
+                        ...(buttonText === undefined ? {} : { buttonText }),
+                        progressTexts: args.progressTexts,
+                        ...(origin === undefined ? {} : { origin }),
+                        ...(panelId === undefined ? {} : { panelId }),
+                    });
+                    if (reply.kind === "not-dsh")
+                        throw new Error("台账目录不是宿主工作区，起不了会话");
+                }
                 const record = jobs.find(key);
                 if (record === undefined)
                     throw new Error("作业登记失败");

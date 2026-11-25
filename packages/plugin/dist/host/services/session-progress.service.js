@@ -19,16 +19,10 @@ export function installSessionProgress(ctx, jobs) {
         const seq = event.seq;
         if (typeof seq !== "number" || !Number.isFinite(seq) || seq <= binding.lastSeq)
             return;
-        const data = event.data;
-        if (data === null || typeof data !== "object" || Array.isArray(data))
-            return;
-        const { turn, step } = data;
-        if (typeof turn !== "number" || typeof step !== "number")
-            return;
         binding.lastSeq = seq;
-        const message = binding.texts.step
-            .replaceAll("{turn}", String(turn))
-            .replaceAll("{step}", String(step));
+        // 只用 step/start 当「Agent 正在处理」这一真实节点的触发点——文案由客户端拼好，
+        // 不带 {turn}/{step}：模型第几轮第几步没有业务语义，披露给人看的是作业阶段。
+        const message = binding.texts.step;
         // register 之前只暂存：claim 占位行虽在内存，但还没推给 UI，写了也会被 starting 覆盖。
         if (!binding.ready) {
             binding.pending = message;

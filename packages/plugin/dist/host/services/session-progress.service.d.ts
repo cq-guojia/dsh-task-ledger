@@ -1,13 +1,13 @@
 /**
- * 后台结案的阶段披露源：把宿主会话事件翻成 `TaskRecord.progress`。
+ * Agent 结案的阶段披露源：把宿主会话事件翻成 `TaskRecord.progress`。
  *
- * 为什么读 `session/event` 而不是 skill 的 stderr：agent 路径里 skill 由宿主执行，
+ * 为什么读 `session/event` 而不是 skill 的 stderr：agent 路径里 skill 由 DSH agent 执行，
  * stderr 归工具结果，且 `tool/result` 是命令结束后一次性 emit——五条 `#step` 同时到达，
- * 根本没有「渐进」。会话的 `step/start` 是模型每一步真实开始时 append 的事件，
- * 带单调 `seq`、turn/step，正好是本仓能给的唯一真源（2026-11-25 三方评审定案）。
+ * 根本没有「渐进」。会话的 `step/start` 是模型每一步真实开始时的事件，带单调 `seq`，
+ * 这里只把它当「Agent 正在处理」这一作业级节点的触发点（2026-11-25 三方评审定案）。
  *
  * 不落盘、不轮询、不改 DSH/核心；文案由 client 按界面语言随 startTask.args 透传，
- * host 只做 `{step}` / `{turn}` 占位替换，不产出中文。
+ * host 不产出中文。直接结案走 direct-close.service.ts 读 skill 真实的五阶段 stderr。
  */
 import type { SessionJobStore } from "./session-job.store.js";
 type Listener = (...args: never[]) => unknown;
