@@ -47,18 +47,32 @@ export type JobDetail =
 	| readonly JobDetail[]
 	| { readonly [key: string]: JobDetail };
 
-/** 结案作业的两种执行者：agent 会话 / host 自己跑 skill。同一 key 互斥。 */
-export type CloseJobKind = "close-agent" | "close-direct";
+/** 后台作业类型：两种结案执行者 + 三个写命令动作（历史行删除单列，key 形状不同）。 */
+export type JobKind =
+	| "close-agent"
+	| "close-direct"
+	| "release"
+	| "cancel"
+	| "delete"
+	| "delete-hist";
+
+/** 终态 toast 的动作后缀：由客户端按界面语言透传，host 不产出中文。 */
+export interface CompletionTexts {
+	/** 成功后缀（拼在任务名之后），如「已释放」。 */
+	readonly success: string;
+	/** 失败后缀，如「释放失败，请稍后重试」。 */
+	readonly failure: string;
+}
 
 /** 新建一条作业需要的东西（由 service 在作业建好之后给）。 */
 export interface RegisterInput {
-	/** 业务键：`close:<任务号>` —— 判重的唯一依据。 */
+	/** 业务键：`close:<任务号>` / `release:<任务号>` / `delete-hist:<src>:<行号>` —— 判重唯一依据。 */
 	readonly key: string;
 	readonly title: DisplayTitle;
-	readonly kind: CloseJobKind;
-	/** toast「查看会话」按钮文案；只给会话作业，直接结案没有会话可看 ⇒ 不挂按钮。 */
+	readonly kind: JobKind;
+	/** toast「查看会话」按钮文案；只给会话作业，其余动作不开会话 ⇒ 不挂按钮。 */
 	readonly buttonText?: string;
-	/** 会话 id（agent 作业必有；直接结案没有会话，省略）。 */
+	/** 会话 id（agent 作业必有；其余动作没有会话，省略）。 */
 	readonly sessionId?: string;
 	readonly taskId: string;
 	/** 台账目录绝对路径（detail 里给客户端做跳转备份）。 */
@@ -71,6 +85,8 @@ export interface RegisterInput {
 	readonly maxDurationMs?: number;
 	/** running 起始披露文案；客户端按界面语言拼好，host 不产出中文。 */
 	readonly progressMessage?: string;
+	/** 终态 toast 后缀；缺省沿用结案的「已结案 / 失败」。 */
+	readonly completionTexts?: CompletionTexts;
 }
 
 /** 终态结算载荷。 */
@@ -89,13 +105,13 @@ function keyOf(project: string, key: string): string {
 }
 
 /** 行按钮：服务端只声明文案 / 图标 / 时机 / id，画面由核心 TaskBar 画，handler 在发起页注册。 */
-function rowButtons(kind: CloseJobKind): readonly {
+function rowButtons(kind: JobKind): readonly {
 	readonly id: string;
 	readonly text: string;
 	readonly icon: string;
 	readonly when: "always";
 }[] {
-	// 直接结案没有会话可看 ⇒ 不挂「查看会话」，免得画一个点了没反应的死按钮。
+	// 只有 agent 结案有会话可看；其余动作不挂按钮，免得画一个点了没反应的死按钮。
 	return kind === "close-agent"
 		? [{ id: VIEW_SESSION_ACTION, text: "查看会话", icon: "common.base:AIdamoxing", when: "always" }]
 		: [];
@@ -123,14 +139,23 @@ function withResult(detail: TaskRecord["detail"], result: JobDetail): TaskRecord
 
 /** toast / notify 配置随记录走：任何页面看到同一条都按同一份配置渲染。
  *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
- *  分类是「任务结案」，描述是任务名；这里只在描述后补动作结果，不重复拼分类。
+ *  分类由客户端随 title 给（结案 / 释放 / 取消 / 删除各用各的），描述是任务名；
+ *  这里只在描述后补动作结果后缀（中文由客户端按界面语言传，host 不产出）。
+ *  失败后缀含「请稍后重试」这类指引：核心 toast 不显示 TaskRecord.reason，
+ *  所以人类可读的原因必须写进后缀，不能干巴巴一个「失败」（CONCERN 5）。
  *  只配 toast 交核心弹卡（用户 2026-11-23：本业务用不到 notify 广播与 UI 自弹）。 */
-function completionConfig(title: DisplayTitle, buttonText?: string) {
+function completionConfig(
+	title: DisplayTitle,
+	buttonText?: string,
+	completionTexts?: CompletionTexts,
+) {
 	const button = buttonText === undefined ? {} : { button: toastButton(buttonText) };
+	const success = completionTexts?.success ?? "已结案";
+	const failure = completionTexts?.failure ?? "失败";
 	return {
 		toast: {
-			success: { title: { ...title, description: `${title.description}（已结案）` }, ...button },
-			failure: { title: { ...title, description: `${title.description}（失败）` }, ...button },
+			success: { title: { ...title, description: `${title.description}（${success}）` }, ...button },
+			failure: { title: { ...title, description: `${title.description}（${failure}）` }, ...button },
 		},
 	};
 }
@@ -143,7 +168,13 @@ export interface SessionJobStore extends TaskStreamSource {
 	 * 原子占位（消除 TOCTOU）：起会话的 await 之前先占住 key，返回 true 表示拿到；
 	 * 并发第二个同 key 立刻拿到 false，不会再起第二个会话。失败要 release。
 	 */
-	claim(key: string, title: DisplayTitle, kind: CloseJobKind, buttonText?: string): boolean;
+	claim(
+		key: string,
+		title: DisplayTitle,
+		kind: JobKind,
+		buttonText?: string,
+		completionTexts?: CompletionTexts,
+	): boolean;
 	/** 占位失败时释放（createSession 抛错 / 非 DSH）；没占住就是空操作。 */
 	release(key: string): void;
 	/** 把占位记录填成正式 running（带 sessionId 等详情）。 */
@@ -282,8 +313,9 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 	function claim(
 		key: string,
 		title: DisplayTitle,
-		kind: CloseJobKind,
+		kind: JobKind,
 		buttonText?: string,
+		completionTexts?: CompletionTexts,
 	): boolean {
 		const id = keyOf(PROJECT, key);
 		const existing = records.get(id);
@@ -299,7 +331,7 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 			startedAt: now,
 			kind,
 			rowButtons: rowButtons(kind),
-			...completionConfig(title, buttonText),
+			...completionConfig(title, buttonText, completionTexts),
 		};
 		// 占位只在服务端内存里占 key，**不推 SSE**：createSession 期间会话还没建起来，
 		// 推一条无 sessionId 的 running 行会给所有标签页画出点了没反应的「查看会话」死按钮；
@@ -346,7 +378,7 @@ export function createSessionJobStore(archive?: SessionArchiver): SessionJobStor
 			},
 			kind: input.kind,
 			rowButtons: rowButtons(input.kind),
-			...completionConfig(input.title, input.buttonText),
+			...completionConfig(input.title, input.buttonText, input.completionTexts),
 			...(input.progressMessage === undefined
 				? {}
 				: { progress: progressOf(input.key, input.progressMessage) }),

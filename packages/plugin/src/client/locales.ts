@@ -240,6 +240,17 @@ export type LocaleKey =
 	| "actionReleaseDone"
 	| "actionFailed"
 	| "actionSyncing"
+	// 三个写动作改后台：分类 + 每动作「起始 / 终态 toast 后缀」三段（五阶段复用 actionStep*）
+	| "taskActionCategory"
+	| "writeReleaseStarting"
+	| "writeReleaseDone"
+	| "writeReleaseFailed"
+	| "writeCancelStarting"
+	| "writeCancelDone"
+	| "writeCancelFailed"
+	| "writeDeleteStarting"
+	| "writeDeleteDone"
+	| "writeDeleteFailed"
 	// 写命令的分步进度（skill 每进一个阶段推一行，弹窗底栏跟着翻）
 	| "actionStepCheck"
 	| "actionStepSync"
@@ -640,6 +651,16 @@ export const zh: Record<LocaleKey, string> = {
 	actionReleaseDone: "已释放：{title}",
 	actionFailed: "操作失败：{error}",
 	actionSyncing: "正在同步台账并提交…",
+	taskActionCategory: "任务操作",
+	writeReleaseStarting: "释放作业已建立，正在写入台账…",
+	writeReleaseDone: "已释放",
+	writeReleaseFailed: "释放失败，请稍后重试",
+	writeCancelStarting: "取消作业已建立，正在写入台账…",
+	writeCancelDone: "已取消归档",
+	writeCancelFailed: "取消失败，请稍后重试",
+	writeDeleteStarting: "删除作业已建立，正在写入台账…",
+	writeDeleteDone: "已删除",
+	writeDeleteFailed: "删除失败，请稍后重试",
 	actionStepCheck: "正在检查本地台账改动…",
 	actionStepSync: "正在拉取最新台账…",
 	actionStepWrite: "正在写入台账…",
@@ -1022,6 +1043,16 @@ export const en: Record<LocaleKey, string> = {
 	actionReleaseDone: "Released: {title}",
 	actionFailed: "Action failed: {error}",
 	actionSyncing: "Syncing the ledger and committing…",
+	taskActionCategory: "Task action",
+	writeReleaseStarting: "Release job created; writing to the ledger…",
+	writeReleaseDone: "Released",
+	writeReleaseFailed: "Release failed; please retry",
+	writeCancelStarting: "Cancel job created; writing to the ledger…",
+	writeCancelDone: "Cancelled and archived",
+	writeCancelFailed: "Cancellation failed; please retry",
+	writeDeleteStarting: "Delete job created; writing to the ledger…",
+	writeDeleteDone: "Deleted",
+	writeDeleteFailed: "Deletion failed; please retry",
 	actionStepCheck: "Checking local ledger changes…",
 	actionStepSync: "Pulling the latest ledger…",
 	actionStepWrite: "Writing the ledger…",

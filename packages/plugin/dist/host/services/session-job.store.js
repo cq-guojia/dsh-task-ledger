@@ -31,7 +31,7 @@ function keyOf(project, key) {
 }
 /** 行按钮：服务端只声明文案 / 图标 / 时机 / id，画面由核心 TaskBar 画，handler 在发起页注册。 */
 function rowButtons(kind) {
-    // 直接结案没有会话可看 ⇒ 不挂「查看会话」，免得画一个点了没反应的死按钮。
+    // 只有 agent 结案有会话可看；其余动作不挂按钮，免得画一个点了没反应的死按钮。
     return kind === "close-agent"
         ? [{ id: VIEW_SESSION_ACTION, text: "查看会话", icon: "common.base:AIdamoxing", when: "always" }]
         : [];
@@ -56,14 +56,19 @@ function withResult(detail, result) {
 }
 /** toast / notify 配置随记录走：任何页面看到同一条都按同一份配置渲染。
  *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
- *  分类是「任务结案」，描述是任务名；这里只在描述后补动作结果，不重复拼分类。
+ *  分类由客户端随 title 给（结案 / 释放 / 取消 / 删除各用各的），描述是任务名；
+ *  这里只在描述后补动作结果后缀（中文由客户端按界面语言传，host 不产出）。
+ *  失败后缀含「请稍后重试」这类指引：核心 toast 不显示 TaskRecord.reason，
+ *  所以人类可读的原因必须写进后缀，不能干巴巴一个「失败」（CONCERN 5）。
  *  只配 toast 交核心弹卡（用户 2026-11-23：本业务用不到 notify 广播与 UI 自弹）。 */
-function completionConfig(title, buttonText) {
+function completionConfig(title, buttonText, completionTexts) {
     const button = buttonText === undefined ? {} : { button: toastButton(buttonText) };
+    const success = completionTexts?.success ?? "已结案";
+    const failure = completionTexts?.failure ?? "失败";
     return {
         toast: {
-            success: { title: { ...title, description: `${title.description}（已结案）` }, ...button },
-            failure: { title: { ...title, description: `${title.description}（失败）` }, ...button },
+            success: { title: { ...title, description: `${title.description}（${success}）` }, ...button },
+            failure: { title: { ...title, description: `${title.description}（${failure}）` }, ...button },
         },
     };
 }
@@ -185,7 +190,7 @@ export function createSessionJobStore(archive) {
         }
         return next;
     }
-    function claim(key, title, kind, buttonText) {
+    function claim(key, title, kind, buttonText, completionTexts) {
         const id = keyOf(PROJECT, key);
         const existing = records.get(id);
         if (existing !== undefined && existing.state === "running")
@@ -201,7 +206,7 @@ export function createSessionJobStore(archive) {
             startedAt: now,
             kind,
             rowButtons: rowButtons(kind),
-            ...completionConfig(title, buttonText),
+            ...completionConfig(title, buttonText, completionTexts),
         };
         // 占位只在服务端内存里占 key，**不推 SSE**：createSession 期间会话还没建起来，
         // 推一条无 sessionId 的 running 行会给所有标签页画出点了没反应的「查看会话」死按钮；
@@ -248,7 +253,7 @@ export function createSessionJobStore(archive) {
             },
             kind: input.kind,
             rowButtons: rowButtons(input.kind),
-            ...completionConfig(input.title, input.buttonText),
+            ...completionConfig(input.title, input.buttonText, input.completionTexts),
             ...(input.progressMessage === undefined
                 ? {}
                 : { progress: progressOf(input.key, input.progressMessage) }),

@@ -22,9 +22,14 @@ import {
 } from "./host/routes.js";
 import { startSession, type SessionDeps } from "./host/services/session.service.js";
 import {
-	startDirectClose,
-	isDirectCloseTexts,
-} from "./host/services/direct-close.service.js";
+	startWriteJob,
+	isWriteJobTexts,
+	isCompletionTexts,
+} from "./host/services/write-job.service.js";
+import {
+	checkHistoryDelete,
+	parseDeleteHistKey,
+} from "./host/services/task-action-params.js";
 import { installRulesInjection } from "./host/services/rules-injection.service.js";
 import { createSessionJobStore } from "./host/services/session-job.store.js";
 import {
@@ -184,8 +189,7 @@ export function apply(ctx: PluginContext): void {
 			authorize: () => true,
 			onSubmit: async (payload) => {
 				const key = typeof payload.key === "string" ? payload.key : "";
-				const taskId = key.startsWith("close:") ? key.slice("close:".length) : "";
-				if (taskId === "") throw new Error("提交缺 close:<任务号> key");
+				const kind = typeof payload.kind === "string" ? payload.kind : "";
 				const args = (payload.args ?? {}) as Record<string, unknown>;
 				const workspace = typeof args.workspace === "string" ? args.workspace : "";
 				// 核心 v0.46.0 起 startTask.title 是 DisplayTitle；string 帧会被 isTaskRecord 拒收，
@@ -194,27 +198,34 @@ export function apply(ctx: PluginContext): void {
 				const displayTitle = payload.title;
 				const origin = typeof payload.origin === "string" ? payload.origin : undefined;
 				const panelId = typeof payload.panelId === "string" ? payload.panelId : undefined;
+				// 摘要 / 留言与旧路由同口径：trim + 截 200，历史行不该被一段小作文撑开。
+				const summary =
+					typeof args.summary === "string" ? args.summary.trim().slice(0, 200) : "";
 
-				// 两种结案共用 key（同任务同一时刻只有一个作业），按 kind 分派执行者。
-				if (payload.kind === "close-direct") {
-					if (!isDirectCloseTexts(args.progressTexts))
-						throw new Error("提交缺直接结案阶段披露文案");
-					const reply = await startDirectClose(
-						{ jobs },
-						{
-							workspace,
-							taskId,
-							summary: typeof args.summary === "string" ? args.summary : "",
-							title: displayTitle,
-							texts: args.progressTexts,
-							...(origin === undefined ? {} : { origin }),
-							...(panelId === undefined ? {} : { panelId }),
-						},
-					);
-					if (reply.kind === "not-found") throw new Error("找不到这个台账目录，结不了案");
-				} else {
+				// key 前缀决定动作对象：在办任务取任务号，历史行删除取 src/line。
+				// key 与 kind 必须配套，防止前端拼错导致「A 动作的 key 跑 B 命令」。
+				const prefixed = (prefix: string): string | null =>
+					key.startsWith(prefix) && key.slice(prefix.length) !== ""
+						? key.slice(prefix.length)
+						: null;
+				const taskId =
+					kind === "close-agent" || kind === "close-direct"
+						? prefixed("close:")
+						: kind === "release"
+							? prefixed("release:")
+							: kind === "cancel"
+								? prefixed("cancel:")
+								: kind === "delete"
+									? prefixed("delete:")
+									: null;
+				const histLocation = kind === "delete-hist" ? parseDeleteHistKey(key) : null;
+				if (taskId === null && histLocation === null)
+					throw new Error("提交 key 与 kind 不匹配，已拒绝");
+
+				// agent 结案：起会话，走 session.service（唯一不写台账的提交分支）。
+				if (kind === "close-agent") {
+					if (taskId === null) throw new Error("提交缺 close:<任务号> key");
 					const prompt = typeof args.prompt === "string" ? args.prompt : "";
-					// 会话名沿用客户端按界面语言拼好的那句；没带才退回结构化标题。
 					const title =
 						typeof args.title === "string" ? args.title : formatDisplayTitle(displayTitle);
 					const buttonText = typeof args.buttonText === "string" ? args.buttonText : undefined;
@@ -233,6 +244,60 @@ export function apply(ctx: PluginContext): void {
 						...(panelId === undefined ? {} : { panelId }),
 					});
 					if (reply.kind === "not-dsh") throw new Error("台账目录不是宿主工作区，起不了会话");
+				} else if (
+					kind === "close-direct" ||
+					kind === "release" ||
+					kind === "cancel" ||
+					kind === "delete" ||
+					kind === "delete-hist"
+				) {
+					// 其余四种写命令共用一套通用后台执行体；action 由 kind 显式映射。
+					if (!isWriteJobTexts(args.progressTexts))
+						throw new Error("提交缺写命令阶段披露文案");
+					const action =
+						kind === "close-direct"
+							? ("close" as const)
+							: kind === "delete-hist"
+								? ("delete" as const)
+								: (kind as "release" | "cancel" | "delete");
+					// 历史行删除的参数在**提交期**校验：旧路由的同一套规则一字不差复用，
+					// 否则错误会从「提交期可见」退化成「后台跑完 git 才失败」。
+					let history: { readonly src: string; readonly line: number; readonly fingerprint: string } | undefined;
+					if (kind === "delete-hist") {
+						if (histLocation === null) throw new Error("历史删除 key 不合法");
+						const fingerprint =
+							typeof args.fingerprint === "string" ? args.fingerprint.trim() : "";
+						const checked = checkHistoryDelete(histLocation.src, histLocation.line, fingerprint);
+						if (!checked.ok) throw new Error(`历史删除参数不合法：${checked.reason}`);
+						history = checked.value;
+					}
+					// 三个新动作必带终态文案；直接结案沿用 store 默认，可不带。
+					// 带了就一律校验形状，畸形值不许透传给核心 toast（否则终态显示坏文案）。
+					const completionTexts = isCompletionTexts(args.completionTexts)
+						? args.completionTexts
+						: undefined;
+					if (kind !== "close-direct" && completionTexts === undefined)
+						throw new Error("提交缺终态文案");
+					const reply = await startWriteJob(
+						{ jobs },
+						{
+							key,
+							kind,
+							action,
+							title: displayTitle,
+							texts: args.progressTexts,
+							...(completionTexts === undefined ? {} : { completionTexts }),
+							workspace,
+							taskId: taskId ?? "",
+							summary,
+							...(history === undefined ? {} : { history }),
+							...(origin === undefined ? {} : { origin }),
+							...(panelId === undefined ? {} : { panelId }),
+						},
+					);
+					if (reply.kind === "not-found") throw new Error("找不到这个台账目录，写不了台账");
+				} else {
+					throw new Error(`不支持的后台作业类型：${kind}`);
 				}
 				const record = jobs.find(key);
 				if (record === undefined) throw new Error("作业登记失败");

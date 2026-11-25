@@ -39,7 +39,12 @@ import {
 	openSession,
 	sessionIdOfDetail,
 } from "./nav";
-import { JOB_GROUP, TASK_PROJECT, VIEW_SESSION_ACTION } from "./api";
+import {
+	JOB_GROUP,
+	TASK_PROJECT,
+	VIEW_SESSION_ACTION,
+} from "./api";
+import { WRITE_JOB_KEY_PREFIXES } from "./write-job-ui";
 import {
 	groupRows,
 	isSoloLedger,
@@ -263,11 +268,12 @@ export function BoardHome(props: {
 					if (sessionId !== null) showSessionView(sessionId, t("closeSessionTitle", { title: task.title.description }));
 				},
 			},
-			// 终态收尾只刷本仓看板（agent 写完台账后本页数据是旧的）；归档已在服务端终态漏斗做，
-			// toast 由核心按记录配置弹，行弹窗由行自己关。核心列表自刷、通知去重都归核心。
+			// 终态收尾只刷本仓看板（任何写动作改完台账后本页数据都是旧的）；归档已在服务端
+			// 终态漏斗做，toast 由核心按记录配置弹，行弹窗由行自己关。核心列表自刷、通知去重都归核心。
+			// 按动作独立 key 收窄到本仓已知前缀，不误刷别的作业；新增写动作在这里加一个前缀即可。
 			onSettled: (task) => {
 				const key = task.key ?? "";
-				if (!key.startsWith("close:")) return;
+				if (!WRITE_JOB_KEY_PREFIXES.some((prefix) => key.startsWith(prefix))) return;
 				const stamp = `${key}@${String(task.startedAt)}`;
 				if (handledJobs.has(stamp)) return;
 				handledJobs.add(stamp);

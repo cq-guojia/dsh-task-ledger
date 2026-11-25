@@ -53671,6 +53671,16 @@ window.__ModuleLoader__.load({
 			actionReleaseDone: "已释放：{title}",
 			actionFailed: "操作失败：{error}",
 			actionSyncing: "正在同步台账并提交…",
+			taskActionCategory: "任务操作",
+			writeReleaseStarting: "释放作业已建立，正在写入台账…",
+			writeReleaseDone: "已释放",
+			writeReleaseFailed: "释放失败，请稍后重试",
+			writeCancelStarting: "取消作业已建立，正在写入台账…",
+			writeCancelDone: "已取消归档",
+			writeCancelFailed: "取消失败，请稍后重试",
+			writeDeleteStarting: "删除作业已建立，正在写入台账…",
+			writeDeleteDone: "已删除",
+			writeDeleteFailed: "删除失败，请稍后重试",
 			actionStepCheck: "正在检查本地台账改动…",
 			actionStepSync: "正在拉取最新台账…",
 			actionStepWrite: "正在写入台账…",
@@ -54015,6 +54025,16 @@ window.__ModuleLoader__.load({
 			actionReleaseDone: "Released: {title}",
 			actionFailed: "Action failed: {error}",
 			actionSyncing: "Syncing the ledger and committing…",
+			taskActionCategory: "Task action",
+			writeReleaseStarting: "Release job created; writing to the ledger…",
+			writeReleaseDone: "Released",
+			writeReleaseFailed: "Release failed; please retry",
+			writeCancelStarting: "Cancel job created; writing to the ledger…",
+			writeCancelDone: "Cancelled and archived",
+			writeCancelFailed: "Cancellation failed; please retry",
+			writeDeleteStarting: "Delete job created; writing to the ledger…",
+			writeDeleteDone: "Deleted",
+			writeDeleteFailed: "Deletion failed; please retry",
 			actionStepCheck: "Checking local ledger changes…",
 			actionStepSync: "Pulling the latest ledger…",
 			actionStepWrite: "Writing the ledger…",
@@ -54453,6 +54473,24 @@ window.__ModuleLoader__.load({
 		/** 作业业务键：同一条任务同一时刻只允许一个结案作业（与宿主 `closeJobKey` 同构）。 */
 		function closeJobKey(taskId) {
 			return `close:${taskId}`;
+		}
+		/**
+		* 写命令动作的后台作业键：**每个动作独立前缀**，同一动作同一任务只跑一个。
+		* 核心按 (project, key) 归一乐观行、宿主按 key 判重；不同动作可并行（真并行由 skill 的
+		* git 锁排队，等不到就报「请稍后重试」），不为每个动作写特例，新增动作照这个模式加前缀。
+		*/
+		function releaseJobKey(taskId) {
+			return `release:${taskId}`;
+		}
+		function cancelJobKey(taskId) {
+			return `cancel:${taskId}`;
+		}
+		function deleteJobKey(taskId) {
+			return `delete:${taskId}`;
+		}
+		/** 历史行删除不是「在办任务」对象：键里带 src + 行号（src 不含冒号，取最后一段分行号）。 */
+		function deleteHistJobKey(src, line) {
+			return `delete-hist:${src}:${String(line)}`;
 		}
 		/**
 		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
@@ -64853,6 +64891,85 @@ window.__ModuleLoader__.load({
 			return typeof value === "string" ? value : null;
 		}
 		//#endregion
+		//#region src/client/write-job-ui.ts
+		/** skill 五阶段文案键（与 client/api.ts 的 TaskActionStep 一一对应）。 */
+		const WRITE_STEP_KEYS = {
+			check: "actionStepCheck",
+			sync: "actionStepSync",
+			write: "actionStepWrite",
+			commit: "actionStepCommit",
+			push: "actionStepPush"
+		};
+		/**
+		* 本仓后台作业的全部 key 前缀：board-home 的 onSettled 用它过滤，
+		* 只刷本仓写动作（结案 + 三个新动作 + 历史行删除），不误刷别的作业。
+		* 新增写动作时在这里加一个前缀即可，不为每个动作写特例。
+		*/
+		const WRITE_JOB_KEY_PREFIXES = [
+			"close:",
+			"release:",
+			"cancel:",
+			"delete:",
+			"delete-hist:"
+		];
+		function textsOf(action, t) {
+			switch (action) {
+				case "release": return {
+					starting: t("writeReleaseStarting"),
+					done: t("writeReleaseDone"),
+					failed: t("writeReleaseFailed")
+				};
+				case "cancel": return {
+					starting: t("writeCancelStarting"),
+					done: t("writeCancelDone"),
+					failed: t("writeCancelFailed")
+				};
+				case "delete":
+				case "delete-hist": return {
+					starting: t("writeDeleteStarting"),
+					done: t("writeDeleteDone"),
+					failed: t("writeDeleteFailed")
+				};
+			}
+		}
+		/** 后台作业的结构化标题：分类说清「这是什么活」，描述才是任务名。 */
+		function displayTitleForAction(t, title) {
+			return {
+				category: t("taskActionCategory"),
+				description: title
+			};
+		}
+		/** 八段披露文案：起始 + 五阶段（复用 actionStep*）+ 成功 / 失败，全部按界面语言拼好。 */
+		function completeWriteTexts(action, t) {
+			const texts = textsOf(action, t);
+			return {
+				starting: texts.starting,
+				check: t(WRITE_STEP_KEYS.check),
+				sync: t(WRITE_STEP_KEYS.sync),
+				write: t(WRITE_STEP_KEYS.write),
+				commit: t(WRITE_STEP_KEYS.commit),
+				push: t(WRITE_STEP_KEYS.push),
+				done: texts.done,
+				failed: texts.failed
+			};
+		}
+		/** 终态 toast 后缀：核心 toast 不显示 TaskRecord.reason，人话原因必须写进后缀。 */
+		function completionTextsOf(action, t) {
+			const texts = textsOf(action, t);
+			return {
+				success: texts.done,
+				failure: texts.failed
+			};
+		}
+		/** 从核心 store 快照里找一条作业（按 project + key）。 */
+		function findJob(tasks, project, key) {
+			return tasks.find((item) => item.key === key && item.project === project);
+		}
+		/** 作业当前披露文字（终态保留最后一段），没有就 null。 */
+		function writeJobProgress(tasks, project, key) {
+			return findJob(tasks, project, key)?.progress?.message ?? null;
+		}
+		//#endregion
 		//#region src/client/rows.ts
 		/**
 		* 界面上显示人名的**唯一**口径：显示名（`owner_name` / `creator_name`）优先，
@@ -68569,21 +68686,29 @@ body[data-ds-dark-theme]{
 			const { t } = props;
 			const labels = LABELS[props.kind];
 			const [note, setNote] = (0, react$1.useState)("");
+			const locked = props.locked === true;
 			const submit = () => {
-				if (!props.busy) props.onSubmit(note.trim());
+				if (!props.busy && !locked) props.onSubmit(note.trim());
 			};
 			return (0, react$1.createElement)(Modal, {
 				size: "sm",
 				width: "420px",
 				title: t(labels.title),
-				onClose: props.busy ? void 0 : props.onClose,
-				closeOnMask: !props.busy,
-				escClose: !props.busy,
+				onClose: props.busy || locked ? void 0 : props.onClose,
+				closeOnMask: !props.busy && !locked,
+				escClose: !props.busy && !locked,
 				notice: props.notice,
 				footer: (0, react$1.createElement)("div", { style: {
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "flex-end",
+					gap: "8px"
+				} }, locked ? props.onBackground === void 0 ? null : (0, react$1.createElement)(OverlayLockExempt, null, (0, react$1.createElement)(Button, {
+					variant: "primary",
+					size: "lg",
+					onClick: props.onBackground
+				}, t("bgRun"))) : (0, react$1.createElement)("span", { style: {
+					display: "flex",
 					gap: "8px"
 				} }, (0, react$1.createElement)(Button, {
 					variant: "outline",
@@ -68596,7 +68721,7 @@ body[data-ds-dark-theme]{
 					loading: props.busy,
 					loadingText: false,
 					onClick: submit
-				}, t(labels.ok)))
+				}, t(labels.ok))))
 			}, (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				flexDirection: "column",
@@ -68611,7 +68736,7 @@ body[data-ds-dark-theme]{
 				placeholder: t(labels.placeholder),
 				size: "md",
 				"aria-label": t(labels.placeholder),
-				disabled: props.busy,
+				disabled: props.busy || locked,
 				error: props.error !== null,
 				onKeyDown: (event) => {
 					if (event.key === "Enter") submit();
@@ -68786,11 +68911,20 @@ body[data-ds-dark-theme]{
 			const loadedKey = (0, react$1.useRef)(null);
 			/** 删除后的滚动锚点：被删行之后第一条还活着的记录 + 它在删除前的表格偏移（见 captureDeletion）。 */
 			const deleteAnchor = (0, react$1.useRef)(null);
-			/** 删除弹窗：目标历史行 / 提交状态 / 阶段 / host 回的人话错误。 */
+			/** 删除弹窗：目标历史行 / 提交期状态 / host 回的人话错误。 */
 			const [deleteTarget, setDeleteTarget] = (0, react$1.useState)(null);
 			const [deleteBusy, setDeleteBusy] = (0, react$1.useState)(false);
-			const [deleteStep, setDeleteStep] = (0, react$1.useState)(null);
 			const [deleteError, setDeleteError] = (0, react$1.useState)(null);
+			/** 历史行删除的后台作业态：按行 key（src + line）判运行 / 读进度。 */
+			const storeSnapshot = (0, react$1.useSyncExternalStore)(taskCenterStore.subscribe, taskCenterStore.getSnapshot);
+			const [optimisticJob, setOptimisticJob] = (0, react$1.useState)(null);
+			const deleteJobOf = (record) => {
+				const key = deleteHistJobKey(record.src, record.line);
+				return findJob(storeSnapshot.tasks, "dsh-task-ledger", key) ?? (optimisticJob?.key === key && optimisticJob.state === "running" ? optimisticJob : void 0);
+			};
+			const deleteRunningOf = (record) => deleteJobOf(record)?.state === "running";
+			const deleteNoticeOf = (record) => writeJobProgress(storeSnapshot.tasks, "dsh-task-ledger", deleteHistJobKey(record.src, record.line)) ?? deleteJobOf(record)?.progress?.message ?? null;
+			const targetRunning = deleteTarget === null ? false : deleteRunningOf(deleteTarget);
 			/** 删除成功后让取数 effect 重跑（月份缓存会清掉，不能让 60 秒内的旧行再冒出来）。 */
 			const [reloadToken, setReloadToken] = (0, react$1.useState)(0);
 			/** 三类行的固定行高：首帧量一次，之后所有偏移都按它算。 */
@@ -69048,50 +69182,80 @@ body[data-ds-dark-theme]{
 					props.onOpen(file);
 				}, 0);
 			};
-			/** 删除写命令的阶段 → 底栏进度文案（与在办页同一套键）。 */
-			const stepLabel = {
-				check: "actionStepCheck",
-				sync: "actionStepSync",
-				write: "actionStepWrite",
-				commit: "actionStepCommit",
-				push: "actionStepPush"
-			};
-			const deleteNotice = () => deleteBusy ? deleteStep === null ? t("actionSyncing") : t(stepLabel[deleteStep]) : void 0;
-			/** 删除历史行：按 src + line 让 skill 原地打删除三列；成功后清月份缓存并重取。 */
+			/** 提交历史行删除后台作业：同 key 的判重由宿主做，这里只兜提交期错误。 */
 			const deleteRecord = async (note) => {
 				const target = deleteTarget;
 				if (target === null || target.src === "" || target.line <= 0 || target.fingerprint === "") return;
 				setDeleteBusy(true);
-				setDeleteStep(null);
 				setDeleteError(null);
 				try {
-					await postTaskAction({
-						action: "delete",
-						workspace: target.workspaceId,
-						src: target.src,
-						line: target.line,
-						fingerprint: target.fingerprint,
-						...note === "" ? {} : { summary: note }
-					}, (next) => setDeleteStep(next));
-					setDeleteTarget(null);
-					setSelected(null);
-					if (pendingOpen.current !== null) {
-						window.clearTimeout(pendingOpen.current);
-						pendingOpen.current = null;
-					}
-					captureDeletion(target.key);
-					setRecords((prev) => prev.filter((row) => row.key !== target.key));
-					monthCache.current.clear();
-					setReloadToken((value) => value + 1);
-					props.onDeleted();
-					notify(t("actionDeleteDone", { title: target.title }), { variant: "success" });
+					const title = target.title || target.key;
+					const record = await startTask({
+						project: TASK_PROJECT,
+						group: JOB_GROUP,
+						key: deleteHistJobKey(target.src, target.line),
+						kind: "delete-hist",
+						title: displayTitleForAction(t, title),
+						args: {
+							workspace: target.workspaceId,
+							fingerprint: target.fingerprint,
+							...note === "" ? {} : { summary: note },
+							progressTexts: completeWriteTexts("delete-hist", t),
+							completionTexts: completionTextsOf("delete-hist", t)
+						}
+					});
+					setOptimisticJob(record);
 				} catch (error) {
 					setDeleteError(error instanceof Error ? error.message : String(error));
 				} finally {
 					setDeleteBusy(false);
-					setDeleteStep(null);
 				}
 			};
+			/**
+			* 历史行删除的终态收口：后台跑完（成功 / 失败）后做原来同步成功分支的本地清理。
+			* 成功才摘行、清缓存、重取统计；失败只关弹窗 + 由核心 toast 报原因（台账没变）。
+			* 只有成功才动本地数据，避免「后台失败但界面把行删了」的假象。
+			*/
+			const handledHistJobs = (0, react$1.useRef)(/* @__PURE__ */ new Set());
+			(0, react$1.useEffect)(() => {
+				if (optimisticJob !== null) {
+					if (optimisticJob.key === void 0) return;
+					const settled = findJob(storeSnapshot.tasks, TASK_PROJECT, optimisticJob.key);
+					if (settled !== void 0 && settled.state !== "running") setOptimisticJob(null);
+				}
+				for (const task of storeSnapshot.tasks) {
+					const key = task.key ?? "";
+					if (!key.startsWith("delete-hist:") || task.project !== "dsh-task-ledger") continue;
+					if (task.state !== "done" && task.state !== "failed") continue;
+					const stamp = `${key}@${String(task.startedAt)}`;
+					if (handledHistJobs.current.has(stamp)) continue;
+					handledHistJobs.current.add(stamp);
+					const at = key.lastIndexOf(":");
+					const src = key.slice(12, at);
+					const line = Number(key.slice(at + 1));
+					const target = records.find((row) => row.src === src && row.line === line);
+					if (task.state === "done" && target !== void 0) {
+						captureDeletion(target.key);
+						setRecords((prev) => prev.filter((row) => row.key !== target.key));
+						monthCache.current.clear();
+						setReloadToken((value) => value + 1);
+						props.onDeleted();
+						setSelected(null);
+						if (pendingOpen.current !== null) {
+							window.clearTimeout(pendingOpen.current);
+							pendingOpen.current = null;
+						}
+					}
+					if (deleteTarget !== null && deleteHistJobKey(deleteTarget.src, deleteTarget.line) === key) setDeleteTarget(null);
+				}
+			}, [
+				storeSnapshot,
+				optimisticJob,
+				records,
+				deleteTarget,
+				props,
+				captureDeletion
+			]);
 			/** 可选年份：今年往前 5 年。 */
 			const now = /* @__PURE__ */ new Date();
 			const currentYear = now.getFullYear();
@@ -69195,7 +69359,7 @@ body[data-ds-dark-theme]{
 						label: t("actionDelete"),
 						className: "dtl-icon--muted",
 						icon: (0, react$1.createElement)(Icon, { name: "common.base:shanchu" }),
-						disabled: deleteBusy || record.src === "" || record.line <= 0 || record.fingerprint === "",
+						disabled: deleteBusy || deleteRunningOf(record) || record.src === "" || record.line <= 0 || record.fingerprint === "",
 						onClick: () => {
 							setDeleteError(null);
 							setDeleteTarget(record);
@@ -69263,8 +69427,10 @@ body[data-ds-dark-theme]{
 				t,
 				taskTitle: deleteTarget.title || deleteTarget.key,
 				busy: deleteBusy,
-				notice: deleteNotice(),
+				notice: targetRunning ? deleteNoticeOf(deleteTarget) ?? t("actionSyncing") : void 0,
 				error: deleteError,
+				locked: targetRunning,
+				onBackground: () => setDeleteTarget(null),
 				onClose: () => setDeleteTarget(null),
 				onSubmit: (note) => void deleteRecord(note)
 			}));
@@ -69736,52 +69902,63 @@ body[data-ds-dark-theme]{
 			const onStep = (next) => setStep(next);
 			const [confirmAct, setConfirmAct] = (0, react$1.useState)(null);
 			const runAction = (action) => {
-				if (!busy) setConfirmAct(action);
+				if (!busy && !anyJobRunning) setConfirmAct(action);
+			};
+			const storeSnapshot = (0, react$1.useSyncExternalStore)(taskCenterStore.subscribe, taskCenterStore.getSnapshot);
+			const jobKeys = {
+				close: closeJobKey(row.task.id),
+				release: releaseJobKey(row.task.id),
+				cancel: cancelJobKey(row.task.id),
+				delete: deleteJobKey(row.task.id)
+			};
+			const [optimistic, setOptimistic] = (0, react$1.useState)(null);
+			const jobOf = (key) => findJob(storeSnapshot.tasks, "dsh-task-ledger", key) ?? (optimistic?.key === key && optimistic.state === "running" ? optimistic : void 0);
+			const runningOf = (key) => jobOf(key)?.state === "running";
+			const progressOf = (key) => writeJobProgress(storeSnapshot.tasks, "dsh-task-ledger", key) ?? jobOf(key)?.progress?.message ?? null;
+			const anyJobRunning = Object.values(jobKeys).some(runningOf);
+			(0, react$1.useEffect)(() => {
+				if (optimistic === null || optimistic.key === void 0) return;
+				const settled = findJob(storeSnapshot.tasks, TASK_PROJECT, optimistic.key);
+				if (settled !== void 0 && settled.state !== "running") setOptimistic(null);
+			}, [storeSnapshot, optimistic]);
+			/** 提交一条写命令后台作业：不等待跑完，提交期错误留给调用方写进弹窗。 */
+			const startWrite = async (action, key, summary) => {
+				const record = await startTask({
+					project: TASK_PROJECT,
+					group: JOB_GROUP,
+					key,
+					kind: action,
+					title: displayTitleForAction(t, titleOf(row)),
+					args: {
+						workspace: row.task.workspace.id,
+						taskId: row.task.id,
+						...summary === "" ? {} : { summary },
+						progressTexts: completeWriteTexts(action, t),
+						completionTexts: completionTextsOf(action, t)
+					}
+				});
+				setOptimistic(record);
 			};
 			const [cancelOpen, setCancelOpen] = (0, react$1.useState)(false);
 			const [cancelError, setCancelError] = (0, react$1.useState)(null);
+			const cancelRunning = runningOf(jobKeys.cancel);
 			const cancelTask = async (reason) => {
-				setBusy(true);
-				setStep(null);
 				setCancelError(null);
 				try {
-					await postTaskAction({
-						action: "cancel",
-						workspace: row.task.workspace.id,
-						id: row.task.id,
-						...reason === "" ? {} : { summary: reason }
-					}, onStep);
-					setCancelOpen(false);
-					notify(t("actionCancelDone", { title: titleOf(row) }), { variant: "success" });
-					await refresh();
+					await startWrite("cancel", jobKeys.cancel, reason);
 				} catch (error) {
 					setCancelError(error instanceof Error ? error.message : String(error));
-				} finally {
-					setBusy(false);
-					setStep(null);
 				}
 			};
 			const [deleteOpen, setDeleteOpen] = (0, react$1.useState)(false);
 			const [deleteError, setDeleteError] = (0, react$1.useState)(null);
+			const deleteRunning = runningOf(jobKeys.delete);
 			const deleteTask = async (note) => {
-				setBusy(true);
-				setStep(null);
 				setDeleteError(null);
 				try {
-					await postTaskAction({
-						action: "delete",
-						workspace: row.task.workspace.id,
-						id: row.task.id,
-						...note === "" ? {} : { summary: note }
-					}, onStep);
-					setDeleteOpen(false);
-					notify(t("actionDeleteDone", { title: titleOf(row) }), { variant: "success" });
-					await refresh();
+					await startWrite("delete", jobKeys.delete, note);
 				} catch (error) {
 					setDeleteError(error instanceof Error ? error.message : String(error));
-				} finally {
-					setBusy(false);
-					setStep(null);
 				}
 			};
 			const resumeTask = async () => {
@@ -69818,26 +69995,37 @@ body[data-ds-dark-theme]{
 			const [closeError, setCloseError] = (0, react$1.useState)(null);
 			const sessionHeading = t("closeSessionTitle", { title: titleOf(row) });
 			const showSession = (id) => props.onShowSession?.(id, sessionHeading) ?? false;
-			const [jobRecord, setJobRecord] = (0, react$1.useState)(null);
-			const storeSnapshot = (0, react$1.useSyncExternalStore)(taskCenterStore.subscribe, taskCenterStore.getSnapshot);
-			const jobKey = closeJobKey(row.task.id);
-			const storeJob = storeSnapshot.tasks.find((item) => item.key === jobKey && item.project === "dsh-task-ledger" && item.state === "running");
-			const progressMessage = storeSnapshot.tasks.find((item) => item.key === jobKey && item.project === "dsh-task-ledger")?.progress?.message;
+			const closing = runningOf(jobKeys.close);
+			const closingId = closing ? sessionIdOfDetail(jobOf(jobKeys.close)?.detail) : null;
+			const progressMessage = progressOf(jobKeys.close);
+			const wasRunning = (0, react$1.useRef)({
+				close: closing,
+				release: runningOf(jobKeys.release),
+				cancel: cancelRunning,
+				delete: deleteRunning
+			});
 			(0, react$1.useEffect)(() => {
-				if (jobRecord === null) return;
-				if (storeSnapshot.tasks.some((item) => item.key === jobKey && item.project === "dsh-task-ledger" && (item.state === "done" || item.state === "failed"))) setJobRecord(null);
+				const now = {
+					close: closing,
+					release: runningOf(jobKeys.release),
+					cancel: runningOf(jobKeys.cancel),
+					delete: runningOf(jobKeys.delete)
+				};
+				if (wasRunning.current.close && !now.close && closeOpen) setCloseOpen(false);
+				if (wasRunning.current.release && !now.release && confirmAct === "release") setConfirmAct(null);
+				if (wasRunning.current.cancel && !now.cancel && cancelOpen) setCancelOpen(false);
+				if (wasRunning.current.delete && !now.delete && deleteOpen) setDeleteOpen(false);
+				wasRunning.current = now;
 			}, [
-				storeSnapshot,
-				jobRecord,
-				jobKey
+				closing,
+				cancelRunning,
+				deleteRunning,
+				closeOpen,
+				confirmAct,
+				cancelOpen,
+				deleteOpen,
+				storeSnapshot
 			]);
-			const closing = storeJob !== void 0 || jobRecord !== null && jobRecord.state === "running";
-			const closingId = storeJob === void 0 ? closing ? sessionIdOfDetail(jobRecord?.detail) : null : sessionIdOfDetail(storeJob.detail);
-			const wasClosing = (0, react$1.useRef)(closing);
-			(0, react$1.useEffect)(() => {
-				if (wasClosing.current && !closing && closeOpen) setCloseOpen(false);
-				wasClosing.current = closing;
-			}, [closing, closeOpen]);
 			const finishTask = async (input) => {
 				setBusy(true);
 				setStep(null);
@@ -69871,7 +70059,7 @@ body[data-ds-dark-theme]{
 								}
 							}
 						});
-						setJobRecord(record);
+						setOptimistic(record);
 						return;
 					}
 					const prompt = closePrompt(t, row.task.id, input.note);
@@ -69906,7 +70094,7 @@ body[data-ds-dark-theme]{
 							}
 						}
 					});
-					setJobRecord(record);
+					setOptimistic(record);
 				} catch (error) {
 					setCloseError(error instanceof Error ? error.message : String(error));
 					setCloseOpen(true);
@@ -69972,7 +70160,7 @@ body[data-ds-dark-theme]{
 					size: "md",
 					icon: icon ?? void 0,
 					onClick: onPress,
-					disabled: busy || closing
+					disabled: busy || anyJobRunning
 				}, t(actionKey))
 			});
 			const claimButton = tipBtn(null, "actionClaim", "tipClaim", () => void runAction("claim"));
@@ -69988,7 +70176,7 @@ body[data-ds-dark-theme]{
 					setCloseError(null);
 					setCloseOpen(true);
 				},
-				disabled: busy
+				disabled: busy || anyJobRunning
 			}, t(closing ? "executing" : "actionFinish"));
 			const releaseButton = tipBtn((0, react$1.createElement)(Icon, { name: "common.base:shifang" }), "actionRelease", "tipRelease", () => void runAction("release"));
 			const cancelButton = (0, react$1.createElement)(Tip, {
@@ -69999,7 +70187,7 @@ body[data-ds-dark-theme]{
 					label: t("actionCancel"),
 					className: "dtl-icon--muted",
 					icon: (0, react$1.createElement)(Icon, { name: "common.base:guanbi" }),
-					disabled: busy || closing,
+					disabled: busy || anyJobRunning,
 					onClick: () => {
 						setCancelError(null);
 						setCancelOpen(true);
@@ -70014,7 +70202,7 @@ body[data-ds-dark-theme]{
 					label: t("actionDelete"),
 					className: "dtl-icon--muted",
 					icon: (0, react$1.createElement)(Icon, { name: "common.base:shanchu" }),
-					disabled: busy || closing,
+					disabled: busy || anyJobRunning,
 					onClick: () => {
 						setDeleteError(null);
 						setDeleteOpen(true);
@@ -70092,19 +70280,28 @@ body[data-ds-dark-theme]{
 					confirmText: t(claim ? "claimConfirmOk" : "releaseConfirmOk"),
 					cancelText: t("settingsCancel"),
 					loadingText: false,
-					notice: busy ? progressNotice() : void 0,
-					locked: busy,
+					notice: busy ? progressNotice() : action === "release" && runningOf(jobKeys.release) ? progressOf(jobKeys.release) ?? t("actionSyncing") : void 0,
+					locked: busy || action === "release" && runningOf(jobKeys.release),
 					onCancel: () => setConfirmAct(null),
 					onConfirm: async () => {
+						if (action === "release") {
+							try {
+								await startWrite("release", jobKeys.release, "");
+							} catch (failure) {
+								notify(t("actionFailed", { error: failure instanceof Error ? failure.message : String(failure) }), { variant: "error" });
+								throw failure;
+							}
+							return;
+						}
 						setBusy(true);
 						setStep(null);
 						try {
 							await postTaskAction({
-								action,
+								action: "claim",
 								workspace: row.task.workspace.id,
 								id: row.task.id
 							}, onStep);
-							notify(t(claim ? "actionClaimDone" : "actionReleaseDone", { title }), { variant: "success" });
+							notify(t("actionClaimDone", { title }), { variant: "success" });
 							setConfirmAct(null);
 							await refresh();
 						} catch (failure) {
@@ -70120,8 +70317,10 @@ body[data-ds-dark-theme]{
 				t,
 				taskTitle: titleOf(row),
 				busy,
-				notice: busy ? progressNotice() : void 0,
+				notice: cancelRunning ? progressOf(jobKeys.cancel) ?? t("actionSyncing") : void 0,
 				error: cancelError,
+				locked: cancelRunning,
+				onBackground: () => setCancelOpen(false),
 				onClose: () => setCancelOpen(false),
 				onSubmit: (reason) => void cancelTask(reason)
 			}) : null, deleteOpen ? (0, react$1.createElement)(ReasonTaskModal, {
@@ -70129,15 +70328,17 @@ body[data-ds-dark-theme]{
 				t,
 				taskTitle: titleOf(row),
 				busy,
-				notice: busy ? progressNotice() : void 0,
+				notice: deleteRunning ? progressOf(jobKeys.delete) ?? t("actionSyncing") : void 0,
 				error: deleteError,
+				locked: deleteRunning,
+				onBackground: () => setDeleteOpen(false),
 				onClose: () => setDeleteOpen(false),
 				onSubmit: (note) => void deleteTask(note)
 			}) : null, closeOpen ? (0, react$1.createElement)(CloseTaskModal, {
 				t,
 				taskTitle: titleOf(row),
 				busy,
-				notice: busy ? progressNotice() : closing ? progressMessage ?? jobRecord?.progress?.message ?? t("closingNotice") : void 0,
+				notice: busy ? progressNotice() : closing ? progressMessage ?? t("closingNotice") : void 0,
 				error: closeError,
 				canUseAgent: true,
 				locked: closing,
@@ -71639,7 +71840,7 @@ body[data-ds-dark-theme]{
 					} },
 					onSettled: (task) => {
 						const key = task.key ?? "";
-						if (!key.startsWith("close:")) return;
+						if (!WRITE_JOB_KEY_PREFIXES.some((prefix) => key.startsWith(prefix))) return;
 						const stamp = `${key}@${String(task.startedAt)}`;
 						if (handledJobs.has(stamp)) return;
 						handledJobs.add(stamp);
@@ -71956,7 +72157,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-172941-903`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-215343-030`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

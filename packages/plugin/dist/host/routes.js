@@ -7,6 +7,7 @@ import { getBoardHome } from "./services/stats.service.js";
 import { listDirs, writeDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { actOnTask } from "./services/task.service.js";
+import { checkHistoryDelete } from "./services/task-action-params.js";
 import { startSession, resolveWorkspace, } from "./services/session.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 import { readSettings, writeSettings } from "./services/rules-injection.service.js";
@@ -413,14 +414,14 @@ export function registerRoutes(webServer, deps) {
                 const fingerprint = typeof body.fingerprint === "string" ? body.fingerprint.trim() : "";
                 const historyDelete = action === "delete" && src !== "";
                 if (historyDelete) {
-                    if (!src.startsWith("history/") ||
-                        !src.endsWith(".md") ||
-                        src.includes(".."))
-                        throw new Error(`${BAD_REQUEST}历史文件路径不合法`);
-                    if (line === 0)
-                        throw new Error(`${BAD_REQUEST}历史行号不合法`);
-                    if (!/^[0-9a-f]{12}$/.test(fingerprint))
-                        throw new Error(`${BAD_REQUEST}历史行指纹不合法（缺少行身份，删除已拒绝）`);
+                    // 与任务中心 submit 共用同一套校验（task-action-params.ts），避免两处规则漂移。
+                    const checked = checkHistoryDelete(src, line, fingerprint);
+                    if (!checked.ok)
+                        throw new Error(`${BAD_REQUEST}${checked.reason === "path"
+                            ? "历史文件路径不合法"
+                            : checked.reason === "line"
+                                ? "历史行号不合法"
+                                : "历史行指纹不合法（缺少行身份，删除已拒绝）"}`);
                 }
                 else if (id === "") {
                     throw new Error(`${BAD_REQUEST}必须给任务号`);

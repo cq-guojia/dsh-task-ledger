@@ -33,13 +33,23 @@ import { startTask, taskCenterStore } from "dsh-plugin-core/adv/tasks";
 import type { DisplayTitle, TaskRecord } from "dsh-plugin-core/adv/tasks";
 import {
 	canHostAgentSession,
+	cancelJobKey,
 	closeJobKey,
+	deleteJobKey,
 	JOB_GROUP,
 	postSessionStart,
 	postTaskAction,
+	releaseJobKey,
 	TASK_PROJECT,
 	type TaskActionStep,
 } from "./api";
+import {
+	completionTextsOf,
+	completeWriteTexts,
+	displayTitleForAction,
+	findJob,
+	writeJobProgress,
+} from "./write-job-ui";
 import { CancelTaskModal, ReasonTaskModal } from "./cancel-task-modal";
 import { CloseTaskModal } from "./close-task-modal";
 import { formatDateTime, formatRelative } from "./format";
@@ -126,9 +136,9 @@ export function TaskRowView(props: {
 	const tone = toneOf(row);
 	const tags = row.task.tags ?? [];
 
-	// 行内动作（认领 / 释放）：确认框不关、确定键转圈。
-	// 写命令是**一次 spawn**，但 skill 每进一个阶段会打一行 `#step`，host 用 NDJSON 流推回来 ⇒
-	// 底栏进度文案跟着翻（检查 → 拉取 → 写 → 提交 → 推送），比一句固定的「同步中」有准头。
+	// 同步动作（认领 / 继续）仍用 busy + NDJSON step：这两条不改成后台作业。
+	// 释放 / 取消 / 删除 / 结案走核心后台任务中心：提交即返回、进度读 TaskRecord.progress、
+	// 终态由核心 toast + board-home 的 onSettled 统一收口，本行不自己 notify / refresh。
 	const [busy, setBusy] = useState(false);
 	const [step, setStep] = useState<TaskActionStep | null>(null);
 	/** 底栏进度文案：还没收到第一个阶段就先用一句「同步中」。 */
@@ -138,64 +148,84 @@ export function TaskRowView(props: {
 	const onStep = (next: TaskActionStep): void => setStep(next);
 	const [confirmAct, setConfirmAct] = useState<"claim" | "release" | null>(null);
 	const runAction = (action: "claim" | "release"): void => {
-		if (!busy) setConfirmAct(action);
+		if (!busy && !anyJobRunning) setConfirmAct(action);
 	};
 
-	// 取消（归档）：走带理由输入框的弹窗（用户 2026-11-03：理由作为备注记进历史）。
-	// 失败留在弹窗里改理由重试（不弹 Toast 也不关窗），成功后关窗 + 绿 Toast + 重读。
+	// 这条任务的四类后台作业：结案 / 释放 / 取消 / 删除，每类一个独立 key。
+	// 本地乐观记录只兜「服务端帧还没到」的提交瞬间；终态一到即以服务端记录为准。
+	const storeSnapshot = useSyncExternalStore(
+		taskCenterStore.subscribe,
+		taskCenterStore.getSnapshot,
+	);
+	const jobKeys = {
+		close: closeJobKey(row.task.id),
+		release: releaseJobKey(row.task.id),
+		cancel: cancelJobKey(row.task.id),
+		delete: deleteJobKey(row.task.id),
+	} as const;
+	const [optimistic, setOptimistic] = useState<TaskRecord | null>(null);
+	const jobOf = (key: string): TaskRecord | undefined =>
+		findJob(storeSnapshot.tasks, TASK_PROJECT, key) ??
+		(optimistic?.key === key && optimistic.state === "running" ? optimistic : undefined);
+	const runningOf = (key: string): boolean => jobOf(key)?.state === "running";
+	const progressOf = (key: string): string | null =>
+		writeJobProgress(storeSnapshot.tasks, TASK_PROJECT, key) ?? jobOf(key)?.progress?.message ?? null;
+	const anyJobRunning = (Object.values(jobKeys) as readonly string[]).some(runningOf);
+
+	// 终态一到就清掉本地乐观兜底：否则乐观行退场后旧记录仍卡着 running，按钮永远解不开。
+	useEffect(() => {
+		if (optimistic === null || optimistic.key === undefined) return;
+		const settled = findJob(storeSnapshot.tasks, TASK_PROJECT, optimistic.key);
+		if (settled !== undefined && settled.state !== "running") setOptimistic(null);
+	}, [storeSnapshot, optimistic]);
+
+	/** 提交一条写命令后台作业：不等待跑完，提交期错误留给调用方写进弹窗。 */
+	const startWrite = async (
+		action: "release" | "cancel" | "delete",
+		key: string,
+		summary: string,
+	): Promise<void> => {
+		const record = await startTask({
+			project: TASK_PROJECT,
+			group: JOB_GROUP,
+			key,
+			kind: action,
+			title: displayTitleForAction(t, titleOf(row)),
+			args: {
+				workspace: row.task.workspace.id,
+				taskId: row.task.id,
+				...(summary === "" ? {} : { summary }),
+				progressTexts: completeWriteTexts(action, t),
+				completionTexts: completionTextsOf(action, t),
+			},
+		});
+		setOptimistic(record);
+	};
+
+	// 取消（归档）：带理由输入框的弹窗。提交即后台执行，弹窗锁定转圈；
+	// 失败（提交本身出错）留在弹窗改理由重试，命令失败走核心 toast + 看板刷新。
 	const [cancelOpen, setCancelOpen] = useState(false);
 	const [cancelError, setCancelError] = useState<string | null>(null);
+	const cancelRunning = runningOf(jobKeys.cancel);
 	const cancelTask = async (reason: string): Promise<void> => {
-		setBusy(true);
-		setStep(null);
 		setCancelError(null);
 		try {
-			await postTaskAction(
-				{
-					action: "cancel",
-					workspace: row.task.workspace.id,
-					id: row.task.id,
-					...(reason === "" ? {} : { summary: reason }),
-				},
-				onStep,
-			);
-			setCancelOpen(false);
-			notify(t("actionCancelDone", { title: titleOf(row) }), { variant: "success" });
-			await refresh();
+			await startWrite("cancel", jobKeys.cancel, reason);
 		} catch (error) {
 			setCancelError(error instanceof Error ? error.message : String(error));
-		} finally {
-			setBusy(false);
-			setStep(null);
 		}
 	};
 
-	// 删除在办任务（2026-11-04）：与取消同款带留言弹窗，走 skill 的 delete --id。
-	// 删完整行退出所有读侧 ⇒ 重读首屏即可；不提供恢复 / 查询入口。
+	// 删除在办任务：与取消同款留言弹窗，后台执行 delete --id，不提供恢复 / 查询入口。
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
+	const deleteRunning = runningOf(jobKeys.delete);
 	const deleteTask = async (note: string): Promise<void> => {
-		setBusy(true);
-		setStep(null);
 		setDeleteError(null);
 		try {
-			await postTaskAction(
-				{
-					action: "delete",
-					workspace: row.task.workspace.id,
-					id: row.task.id,
-					...(note === "" ? {} : { summary: note }),
-				},
-				onStep,
-			);
-			setDeleteOpen(false);
-			notify(t("actionDeleteDone", { title: titleOf(row) }), { variant: "success" });
-			await refresh();
+			await startWrite("delete", jobKeys.delete, note);
 		} catch (error) {
 			setDeleteError(error instanceof Error ? error.message : String(error));
-		} finally {
-			setBusy(false);
-			setStep(null);
 		}
 	};
 
@@ -257,49 +287,35 @@ export function TaskRowView(props: {
 	const showSession = (id: string): boolean =>
 		props.onShowSession?.(id, sessionHeading) ?? false;
 
-	// 这条任务的结案作业：锁定态订阅核心 store（刷新后 SSE 基线恢复也能重新锁住），
-	// 本地 state 只做提交瞬间的乐观兜底；终态收尾统一在看板 mountTaskUI。
-	const [jobRecord, setJobRecord] = useState<TaskRecord | null>(null);
-	const storeSnapshot = useSyncExternalStore(
-		taskCenterStore.subscribe,
-		taskCenterStore.getSnapshot,
-	);
-	const jobKey = closeJobKey(row.task.id);
-	const storeJob = storeSnapshot.tasks.find(
-		(item) =>
-			item.key === jobKey &&
-			item.project === TASK_PROJECT &&
-			item.state === "running",
-	);
-	// 披露文字与 TaskBar 同源：核心 store 的 TaskRecord.progress（终态也保留最后一段）。
-	const progressMessage = storeSnapshot.tasks.find(
-		(item) => item.key === jobKey && item.project === TASK_PROJECT,
-	)?.progress?.message;
-	// 终态一到就清掉本地兜底：否则终态行退场后 jobRecord 仍卡着 running，完成钮永远解不开。
-	useEffect(() => {
-		if (jobRecord === null) return;
-		const settled = storeSnapshot.tasks.some(
-			(item) =>
-				item.key === jobKey &&
-				item.project === TASK_PROJECT &&
-				(item.state === "done" || item.state === "failed"),
-		);
-		if (settled) setJobRecord(null);
-	}, [storeSnapshot, jobRecord, jobKey]);
+	// 结案作业的锁定态与披露文字：与 TaskBar 同源读 TaskRecord.progress。
+	const closing = runningOf(jobKeys.close);
+	const closingId = closing
+		? sessionIdOfDetail(jobOf(jobKeys.close)?.detail)
+		: null;
+	const progressMessage = progressOf(jobKeys.close);
 
-	const closing = storeJob !== undefined || (jobRecord !== null && jobRecord.state === "running");
-	const closingId = storeJob === undefined
-		? (closing ? sessionIdOfDetail(jobRecord?.detail) : null)
-		: sessionIdOfDetail(storeJob.detail);
-
-	// 结案作业从 running 落终态时收起自己的弹窗（重构前 startCloseSession.onSettled 的
-	// setCloseOpen 回归修复）：弹窗状态是本行私有的，顶层 onSettled 不该跨层来关。
-	// 用户已点「后台执行」关窗的场合 closeOpen 已是 false，这条只是幂等兜底。
-	const wasClosing = useRef(closing);
+	// 各后台作业从 running 落终态时收起自己的弹窗：弹窗状态是本行私有的，
+	// 顶层 onSettled 不该跨层来关；用户已点「后台执行」关窗的场合这里只是幂等兜底。
+	const wasRunning = useRef({
+		close: closing,
+		release: runningOf(jobKeys.release),
+		cancel: cancelRunning,
+		delete: deleteRunning,
+	});
 	useEffect(() => {
-		if (wasClosing.current && !closing && closeOpen) setCloseOpen(false);
-		wasClosing.current = closing;
-	}, [closing, closeOpen]);
+		const now = {
+			close: closing,
+			release: runningOf(jobKeys.release),
+			cancel: runningOf(jobKeys.cancel),
+			delete: runningOf(jobKeys.delete),
+		};
+		if (wasRunning.current.close && !now.close && closeOpen) setCloseOpen(false);
+		if (wasRunning.current.release && !now.release && confirmAct === "release")
+			setConfirmAct(null);
+		if (wasRunning.current.cancel && !now.cancel && cancelOpen) setCancelOpen(false);
+		if (wasRunning.current.delete && !now.delete && deleteOpen) setDeleteOpen(false);
+		wasRunning.current = now;
+	}, [closing, cancelRunning, deleteRunning, closeOpen, confirmAct, cancelOpen, deleteOpen, storeSnapshot]);
 
 	const finishTask = async (input: { useAgent: boolean; note: string }): Promise<void> => {
 		setBusy(true);
@@ -340,7 +356,7 @@ export function TaskRowView(props: {
 				});
 				// 与 agent 路径一致：提交成功弹窗锁定转圈，不自己 notify / refresh ——
 				// 终态 toast 由核心按作业配置弹，看板刷新由 board-home 的 onSettled 统一做。
-				setJobRecord(record);
+				setOptimistic(record);
 				return;
 			}
 
@@ -387,7 +403,7 @@ export function TaskRowView(props: {
 			// 提交成功：弹窗照旧锁定转圈（用户 2026-11-21 重申 —— 不是提交就关、也不自动拉会话）。
 			// 要转后台，点框里那颗「后台执行」例外钮（只关窗）；再看会话自己从后台 UI 的按钮进。
 			// 本行不 showSession：会话由用户之后从后台列表的「查看会话」按钮拉起。
-			setJobRecord(record);
+			setOptimistic(record);
 		} catch (error) {
 			setCloseError(error instanceof Error ? error.message : String(error));
 			setCloseOpen(true);
@@ -476,7 +492,7 @@ export function TaskRowView(props: {
 					size: "md",
 					icon: icon ?? undefined,
 					onClick: onPress,
-					disabled: busy || closing,
+					disabled: busy || anyJobRunning,
 				},
 				t(actionKey),
 			),
@@ -501,10 +517,10 @@ export function TaskRowView(props: {
 				? h(Loader, { variant: "blocks", size: "xs" })
 				: h(Icon, { name: "common.base:gou" }),
 			onClick: () => {
-				setCloseError(null);
-				setCloseOpen(true);
-			},
-			disabled: busy,
+					setCloseError(null);
+					setCloseOpen(true);
+				},
+			disabled: busy || anyJobRunning,
 		},
 		t(closing ? "executing" : "actionFinish"),
 	);
@@ -526,7 +542,7 @@ export function TaskRowView(props: {
 			label: t("actionCancel"),
 			className: "dtl-icon--muted",
 			icon: h(Icon, { name: "common.base:guanbi" }),
-			disabled: busy || closing,
+			disabled: busy || anyJobRunning,
 			onClick: () => {
 				setCancelError(null);
 				setCancelOpen(true);
@@ -542,7 +558,7 @@ export function TaskRowView(props: {
 			label: t("actionDelete"),
 			className: "dtl-icon--muted",
 			icon: h(Icon, { name: "common.base:shanchu" }),
-			disabled: busy || closing,
+			disabled: busy || anyJobRunning,
 			onClick: () => {
 				setDeleteError(null);
 				setDeleteOpen(true);
@@ -726,27 +742,40 @@ export function TaskRowView(props: {
 						cancelText: t("settingsCancel"),
 						// 确定键无 icon ⇒ loading 时清文字、只留圈（核心自己锁宽，中英文都不跳）
 						loadingText: false,
-						// 提交中：底栏提示跟着 skill 的阶段翻（检查 → 拉取 → 写 → 提交 → 推送）
-						notice: busy ? progressNotice() : undefined,
-						// 提交中整框锁死（核心 0.31 的 `locked`）：命令是 fire-and-forget、中途停不下来，
-						// 以前取消键照旧可点、点了只关框、活还在跑（用户 2026-11-05）。
-						locked: busy,
+						// 认领（同步）：底栏提示跟着 NDJSON step 翻；释放（后台）：读 TaskRecord.progress。
+						notice: busy
+							? progressNotice()
+							: action === "release" && runningOf(jobKeys.release)
+								? (progressOf(jobKeys.release) ?? t("actionSyncing"))
+								: undefined,
+						// 提交中整框锁死：命令是 fire-and-forget、中途停不下来。
+						// 释放提交后改由后台作业态锁定（刷新后 SSE 基线恢复也能重新锁住）。
+						locked: busy || (action === "release" && runningOf(jobKeys.release)),
 						onCancel: () => setConfirmAct(null),
 						onConfirm: async () => {
+							if (action === "release") {
+								// 释放改后台：提交即返回，不自己 notify / refresh，终态交给核心。
+								try {
+									await startWrite("release", jobKeys.release, "");
+								} catch (failure) {
+									notify(
+										t("actionFailed", {
+											error: failure instanceof Error ? failure.message : String(failure),
+										}),
+										{ variant: "error" },
+									);
+									throw failure;
+								}
+								return;
+							}
 							setBusy(true);
 							setStep(null);
 							try {
 								await postTaskAction(
-									{
-										action,
-										workspace: row.task.workspace.id,
-										id: row.task.id,
-									},
+									{ action: "claim", workspace: row.task.workspace.id, id: row.task.id },
 									onStep,
 								);
-								notify(t(claim ? "actionClaimDone" : "actionReleaseDone", { title }), {
-									variant: "success",
-								});
+								notify(t("actionClaimDone", { title }), { variant: "success" });
 								// 归属变了 ⇒ 重读首屏（行要换位置，8 卡也跟着动）
 								setConfirmAct(null);
 								await refresh();
@@ -754,9 +783,7 @@ export function TaskRowView(props: {
 								notify(
 									t("actionFailed", {
 										error:
-											failure instanceof Error
-												? failure.message
-												: String(failure),
+											failure instanceof Error ? failure.message : String(failure),
 									}),
 									{ variant: "error" },
 								);
@@ -767,15 +794,19 @@ export function TaskRowView(props: {
 								setStep(null);
 							}
 						},
-					});
+						});
 				})(),
 		cancelOpen
 			? h(CancelTaskModal, {
 					t,
 					taskTitle: titleOf(row),
 					busy,
-					notice: busy ? progressNotice() : undefined,
+					notice: cancelRunning
+						? (progressOf(jobKeys.cancel) ?? t("actionSyncing"))
+						: undefined,
 					error: cancelError,
+					locked: cancelRunning,
+					onBackground: () => setCancelOpen(false),
 					onClose: () => setCancelOpen(false),
 					onSubmit: (reason) => void cancelTask(reason),
 				})
@@ -786,8 +817,12 @@ export function TaskRowView(props: {
 					t,
 					taskTitle: titleOf(row),
 					busy,
-					notice: busy ? progressNotice() : undefined,
+					notice: deleteRunning
+						? (progressOf(jobKeys.delete) ?? t("actionSyncing"))
+						: undefined,
 					error: deleteError,
+					locked: deleteRunning,
+					onBackground: () => setDeleteOpen(false),
 					onClose: () => setDeleteOpen(false),
 					onSubmit: (note) => void deleteTask(note),
 				})
@@ -803,7 +838,7 @@ export function TaskRowView(props: {
 					notice: busy
 						? progressNotice()
 						: closing
-							? (progressMessage ?? jobRecord?.progress?.message ?? t("closingNotice"))
+							? (progressMessage ?? t("closingNotice"))
 							: undefined,
 					error: closeError,
 					// 「交给 Agent」能不能用由宿主说了算：起不来会在提交时回人话（不再靠客户端服务探测）

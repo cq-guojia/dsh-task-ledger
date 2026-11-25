@@ -102,8 +102,8 @@ if (!/installSessionProgress\(ctx, jobs\)/.test(entryText) || !/\bprogress,\s*$/
   problems.push('index.ts: 未安装并注入 progress tracker');
 }
 const taskRowText = readSource(join(clientDir, 'task-row.ts'));
-if (!/progressMessage \?\? jobRecord\?\.progress\?\.message/.test(taskRowText)) {
-  problems.push('task-row.ts: 弹窗 notice 未读 TaskRecord.progress.message');
+if (!/progressMessage \?\? t\(['"]closingNotice['"]\)/.test(taskRowText)) {
+  problems.push('task-row.ts: 结案弹窗 notice 未读 TaskRecord.progress.message');
 }
 if (!/progressTexts:/.test(taskRowText)) {
   problems.push('task-row.ts: startTask 未透传阶段文案');
@@ -111,17 +111,67 @@ if (!/progressTexts:/.test(taskRowText)) {
 
 // ⑥ 直接结案也走后台作业：两条路径共用作业键，按 kind 分派，五阶段写同一 progress。
 const directService = readSource(join(hostDir, 'services', 'direct-close.service.ts'));
-if (!/isDirectCloseTexts/.test(directService) || !/jobs\.reportProgress\(job\.key, job\.texts\[step\]\)/.test(directService)) {
-  problems.push('direct-close.service.ts: 直接结案未把 skill 五阶段写入 progress');
+if (!/isDirectCloseTexts/.test(directService) || !/startWriteJob\(/.test(directService)) {
+  problems.push('direct-close.service.ts: 直接结案未退化为通用写命令执行体的薄封装');
+}
+const writeService = readSource(join(hostDir, 'services', 'write-job.service.ts'));
+if (!/jobs\.reportProgress\(job\.input\.key, job\.input\.texts\[step\]\)/.test(writeService)) {
+  problems.push('write-job.service.ts: 写命令未把 skill 五阶段写入 progress');
 }
 if (!/kind: ['"]close-direct['"]/.test(taskRowText)) {
   problems.push('task-row.ts: 直接结案未提交 close-direct 后台作业');
 }
-if (!/kind === ['"]close-direct['"]/.test(entryText) || !/startDirectClose\(/.test(entryText)) {
-  problems.push('index.ts: submit 未按 kind 分派直接结案');
-}
 if (!/rowButtons\(kind\)/.test(storeText) || !/kind === ['"]close-agent['"]/.test(storeText)) {
   problems.push('session-job.store.ts: 未按作业类型决定是否挂查看会话按钮');
+}
+
+// ⑦ 释放 / 取消 / 删除 / 历史删除统一走后台：动作独立 key、kind 分派、参数提交期校验。
+const apiText = readSource(join(clientDir, 'api.ts'));
+for (const helper of ['releaseJobKey', 'cancelJobKey', 'deleteJobKey', 'deleteHistJobKey']) {
+  if (!new RegExp(`export function ${helper}\\(`).test(apiText)) {
+    problems.push(`api.ts: 缺动作独立作业键 ${helper}()`);
+  }
+}
+for (const [name, pattern] of [
+  ['releaseJobKey', /releaseJobKey\(row\.task\.id\)/],
+  ['cancelJobKey', /cancelJobKey\(row\.task\.id\)/],
+  ['deleteJobKey', /deleteJobKey\(row\.task\.id\)/],
+  ['startWrite', /await startWrite\(/],
+  ['同一行作业禁用', /disabled: busy \|\| anyJobRunning/],
+]) {
+  if (!pattern.test(taskRowText)) problems.push(`task-row.ts: 缺 ${name} 的后台接线`);
+}
+const historyText = readSource(join(clientDir, 'history-list.ts'));
+if (!/kind: ['"]delete-hist['"]/.test(historyText) || !/deleteHistJobKey\(/.test(historyText)) {
+  problems.push('history-list.ts: 历史行删除未提交 delete-hist 后台作业');
+}
+if (!/deleteRunningOf\(record\)/.test(historyText)) {
+  problems.push('history-list.ts: 运行中的历史行删除按钮未禁用');
+}
+if (!/monthCache\.current\.clear\(\)/.test(historyText) || !/props\.onDeleted\(\)/.test(historyText)) {
+  problems.push('history-list.ts: 后台删除终态未清缓存与刷新统计');
+}
+const writeUiText = readSource(join(clientDir, 'write-job-ui.ts'));
+if (!/WRITE_JOB_KEY_PREFIXES/.test(writeUiText) || !/WRITE_JOB_KEY_PREFIXES/.test(readSource(join(clientDir, 'board-home.ts')))) {
+  problems.push('write-job-ui.ts / board-home.ts: onSettled 未按动作前缀集合放宽');
+}
+if (!/completionTexts/.test(entryText) || !/isWriteJobTexts\(/.test(entryText)) {
+  problems.push('index.ts: submit 未校验写命令阶段文案与终态文案');
+}
+if (!/checkHistoryDelete\(/.test(entryText) || !/parseDeleteHistKey\(/.test(entryText)) {
+  problems.push('index.ts: submit 缺历史删除参数校验');
+}
+const paramsText = readSource(join(hostDir, 'services', 'task-action-params.ts'));
+if (!/checkHistoryDelete/.test(paramsText) || !/parseDeleteHistKey/.test(paramsText)) {
+  problems.push('task-action-params.ts: 缺历史删除公共校验');
+}
+if (!/completionTexts\?: CompletionTexts/.test(storeText)) {
+  problems.push('session-job.store.ts: 终态文案未按动作参数化');
+}
+const localeText = readSource(join(clientDir, 'locales.ts'));
+for (const key of ['taskActionCategory', 'writeReleaseDone', 'writeCancelDone', 'writeDeleteDone']) {
+  const occurrences = localeText.split(key).length - 1;
+  if (occurrences < 3) problems.push(`locales.ts: ${key} 缺中英双档或类型声明`);
 }
 
 if (problems.length > 0) {

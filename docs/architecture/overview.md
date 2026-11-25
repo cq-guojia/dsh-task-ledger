@@ -41,17 +41,23 @@ git 只在命令的前后两端，业务中间不碰 git。推送被拒会触发
 
 七步内部（跳过条件是分组而非逐条判）：只读命令跳「取最新 / 自举 / 提交 / 推送」；`--no-sync` 只跳刷盘与提交推送，**锁集照算**；`already_done` 不跳提交推送，要不要提交只看记账本。逐方法签名见 [ledger-api.md](../api/ledger-api.md)。
 
-### 2.3 一次会话作业（「继续」/「完成」）
+### 2.3 一次后台作业（「继续」/「完成」/三个写动作）
 
 ```
-点击（任务行）
+点击（任务行 / 历史行）
   │ ① 继续：POST /task/session/start  { workspace, id, policy:"resume", title, prompt }
   │    └ createSession() 起会话，不登记作业
-  │ ② 结案：startTask({ key: close:<任务号>, kind: close-agent | close-direct, title, args })
-  │    ├ close-agent  → POST /task-center/submit → host/services/session.service.ts
+  │ ② 后台作业：startTask({ key, kind, title, args }) → POST /task-center/submit
+  │    ├ close-agent   → host/services/session.service.ts
   │    │                 claim → 建会话 → jobs.register → 订阅 session/event → whenIdle 核对台账 → settle
-  │    └ close-direct → POST /task-center/submit → host/services/direct-close.service.ts
+  │    └ 其余五种写动作 → host/services/write-job.service.ts（direct-close 是它的薄封装）
   │                       claim → jobs.register → host spawn skill 读 #step 五阶段 → settle
+  │       kind / key：
+  │         close-direct   close:<任务号>          close
+  │         release        release:<任务号>        set --release
+  │         cancel         cancel:<任务号>         close --cancel（带理由）
+  │         delete         delete:<任务号>         delete（带留言）
+  │         delete-hist    delete-hist:<src>:<行号> delete --src --line --expect（带指纹）
   ▼ 状态面：核心任务中心（/task-center/stream SSE 三流 + /task-center/submit POST）
 host/services/session-job.store.ts  ← TaskStreamSource 实现（snapshot/subscribe/subscribeNotices，进程内）
   ├ reportProgress(key, message)   唯一披露写入口，仅 running 接受、updatedAt 严格递增
@@ -59,9 +65,15 @@ host/services/session-job.store.ts  ← TaskStreamSource 实现（snapshot/subsc
   ▼ 页面：connectTaskCenter 接流、TaskBar 渲染；mountTaskUI 注册按钮 handler 与终态收尾（刷新看板）
 ```
 
-判重（同一条任务已在跑）在服务端 `jobs.claim(key)` 的原子占位上（先于任何 `await`），
-`key = close:<任务号>` 由两条结案路径共用，按 `kind` 分派执行者：同一任务同一时刻只有一个结案作业。
-跨刷新、跨标签页成立。终态通知带全局唯一 id、按 id 持久去重，状态可任意重放而不重弹。
+判重（同一条任务已在跑）在服务端 `jobs.claim(key)` 的原子占位上（先于任何 `await`）。
+key 每个动作独立：结案两种模式共用 `close:<任务号>`（同一任务互斥），释放 / 取消 / 删除
+各用各的前缀，不同动作可并行、同一动作同一任务不会双跑；历史行删除按 src + 行号定位，
+不是「在办任务」对象。submit 按 kind 显式分派执行者，并在提交期完成历史删除参数校验
+（`host/services/task-action-params.ts`，与旧 `/task/action` 共用一套规则）。跨刷新、跨标签页
+判重成立。终态通知带全局唯一 id、按 id 持久去重，状态可任意重放而不重弹。
+
+并发写由 skill 自己的整命令锁串行（最多等 60 秒，等不到报「请稍后重试」），插件只做 UI
+禁用防连点，不另加服务端互斥；超时由宿主 spawn 的 120 秒硬超时兜底。
 
 ## 三、关键不变量
 
@@ -84,6 +96,8 @@ host/services/session-job.store.ts  ← TaskStreamSource 实现（snapshot/subsc
 17. **归档在服务端终态漏斗**：宿主 `workspaceRegistry.archiveSession(sessionId, {stopActivity:true})` 由入口注入 `session-job.store.ts` 的 `settle()`，done / failed / 超时一律归档（失败也归档留给用户查看），没有 sessionId 的直接结案作业自然跳过；客户端 `onSettled` 只刷新看板、不订阅归档、不分成败。归档失败只 warn，不改作业结论。签名见 [dependencies/dsh-workspace-registry.md](../dependencies/dsh-workspace-registry.md)。
 18. **披露只有一个源**：`TaskRecord.progress.message` 是唯一的阶段披露源，由 `session-job.store.ts` 的 `reportProgress` 单点写入，弹窗 `notice` 与 TaskBar 都读它。Agent 结案把 `session/event` 的 `step/start` 当「正在处理」作业级节点，文案不带模型轮次 / 步数；直接结案由宿主跑 skill、逐行读 `#step` 的五阶段（check / sync / write / commit / push）。不落中转文件、不轮询、不消耗客户端资源；文案随 `startTask.args.progressTexts` 由客户端按界面语言透传，宿主不写死中文。
 19. **终态披露由核心收口**：成功 / 失败标签出现后，披露文字连扫光一起退场（`progress` 数据仍在 store 里供 handler / selector 读）；核心负责终态呈现，本仓不自行绘制标签、不硬压 z-index。
+20. **写动作后台化只留一份执行体**：释放 / 取消 / 删除 / 历史行删除 / 直接结案共用 `host/services/write-job.service.ts`，只有 agent 结案是另一条路径；每项动作独立 key、终态文案由客户端透传，宿主不产出界面中文。认领与「继续」保持同步链路，`POST /task/action` 的 NDJSON 流为它们保留。
+21. **终态成功与失败都需要人话后缀**：核心 toast 只显示结构化标题、不显示 `TaskRecord.reason`，失败原因写进客户端透传的 `completionTexts.failure`（如「释放失败，请稍后重试」）；历史行删除只在成功终态才动本地数据，失败保持原行。
 
 ## 四、入口与主题
 
@@ -94,3 +108,4 @@ host/services/session-job.store.ts  ← TaskStreamSource 实现（snapshot/subsc
 - 2026-11-07 23:03:03：按 koc-code-docwriter 槽位迁移，剔除过程稿并统一标题头
 - 2026-11-10 22:37:28：源码路径补全为仓库内完整路径
 - 2026-11-25 17:29:30：补两条结案路径、单一 progress 披露源、终态呈现由核心收口
+- 2026-11-25 21:52:19：补五类写动作共用执行体、独立 key、参数校验与人话终态文案

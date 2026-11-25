@@ -501,6 +501,28 @@ export function closeJobKey(taskId: string): string {
 }
 
 /**
+ * 写命令动作的后台作业键：**每个动作独立前缀**，同一动作同一任务只跑一个。
+ * 核心按 (project, key) 归一乐观行、宿主按 key 判重；不同动作可并行（真并行由 skill 的
+ * git 锁排队，等不到就报「请稍后重试」），不为每个动作写特例，新增动作照这个模式加前缀。
+ */
+export function releaseJobKey(taskId: string): string {
+	return `release:${taskId}`;
+}
+
+export function cancelJobKey(taskId: string): string {
+	return `cancel:${taskId}`;
+}
+
+export function deleteJobKey(taskId: string): string {
+	return `delete:${taskId}`;
+}
+
+/** 历史行删除不是「在办任务」对象：键里带 src + 行号（src 不含冒号，取最后一段分行号）。 */
+export function deleteHistJobKey(src: string, line: number): string {
+	return `delete-hist:${src}:${String(line)}`;
+}
+
+/**
  * 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
  * `fresh` = 让 host 先清 1.5s 读缓存再算（手动刷新 / 首读都要最新，不吃上一屏的缓存）。
  * `sync` = 顺带拿宿主工作区补登记清单（**只有进看板与手动刷新**传，其余请求一律不传）。

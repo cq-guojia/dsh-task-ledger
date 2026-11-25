@@ -20,18 +20,34 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	useSyncExternalStore,
 	type ReactNode,
 	type Ref,
 } from "react";
-import { fetchHistoryList, isIdentityMissing, postTaskAction, type TaskActionStep } from "./api";
+import {
+	deleteHistJobKey,
+	fetchHistoryList,
+	isIdentityMissing,
+	JOB_GROUP,
+	TASK_PROJECT,
+} from "./api";
 import { ReasonTaskModal } from "./cancel-task-modal";
-import type { LocaleKey, Translate } from "./locales";
+import {
+	completionTextsOf,
+	completeWriteTexts,
+	displayTitleForAction,
+	findJob,
+	writeJobProgress,
+} from "./write-job-ui";
+import { startTask, taskCenterStore } from "dsh-plugin-core/adv/tasks";
+import type { TaskRecord } from "dsh-plugin-core/adv/tasks";
+import type { Translate } from "./locales";
 import { displayName } from "./rows";
 import { markIdentityMissing } from "./store";
 import type { HistoryRecord } from "./types";
 import {
 	Select, Button, SectionHead, Segmented, SplitGroup, Surface, Tag, Loader,
-	IconButton, Icon, Tip, notify,
+	IconButton, Icon, Tip,
 } from "./ui";
 
 const WEEKDAY_KEYS = [
@@ -290,11 +306,32 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const loadedKey = useRef<string | null>(null);
 	/** 删除后的滚动锚点：被删行之后第一条还活着的记录 + 它在删除前的表格偏移（见 captureDeletion）。 */
 	const deleteAnchor = useRef<{ key: string; oldOffset: number; scrollTop: number } | null>(null);
-	/** 删除弹窗：目标历史行 / 提交状态 / 阶段 / host 回的人话错误。 */
+	/** 删除弹窗：目标历史行 / 提交期状态 / host 回的人话错误。 */
 	const [deleteTarget, setDeleteTarget] = useState<HistoryRecord | null>(null);
 	const [deleteBusy, setDeleteBusy] = useState(false);
-	const [deleteStep, setDeleteStep] = useState<TaskActionStep | null>(null);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
+	/** 历史行删除的后台作业态：按行 key（src + line）判运行 / 读进度。 */
+	const storeSnapshot = useSyncExternalStore(
+		taskCenterStore.subscribe,
+		taskCenterStore.getSnapshot,
+	);
+	const [optimisticJob, setOptimisticJob] = useState<TaskRecord | null>(null);
+	const deleteJobOf = (record: HistoryRecord): TaskRecord | undefined => {
+		const key = deleteHistJobKey(record.src, record.line);
+		return (
+			findJob(storeSnapshot.tasks, TASK_PROJECT, key) ??
+			(optimisticJob?.key === key && optimisticJob.state === "running"
+				? optimisticJob
+				: undefined)
+		);
+	};
+	const deleteRunningOf = (record: HistoryRecord): boolean =>
+		deleteJobOf(record)?.state === "running";
+	const deleteNoticeOf = (record: HistoryRecord): string | null =>
+		writeJobProgress(storeSnapshot.tasks, TASK_PROJECT, deleteHistJobKey(record.src, record.line)) ??
+		deleteJobOf(record)?.progress?.message ??
+		null;
+	const targetRunning = deleteTarget === null ? false : deleteRunningOf(deleteTarget);
 	/** 删除成功后让取数 effect 重跑（月份缓存会清掉，不能让 60 秒内的旧行再冒出来）。 */
 	const [reloadToken, setReloadToken] = useState(0);
 	/** 三类行的固定行高：首帧量一次，之后所有偏移都按它算。 */
@@ -560,22 +597,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		}, 0);
 	};
 
-	/** 删除写命令的阶段 → 底栏进度文案（与在办页同一套键）。 */
-	const stepLabel: Record<TaskActionStep, LocaleKey> = {
-		check: "actionStepCheck",
-		sync: "actionStepSync",
-		write: "actionStepWrite",
-		commit: "actionStepCommit",
-		push: "actionStepPush",
-	};
-	const deleteNotice = (): string | undefined =>
-		deleteBusy
-			? deleteStep === null
-				? t("actionSyncing")
-				: t(stepLabel[deleteStep])
-			: undefined;
-
-	/** 删除历史行：按 src + line 让 skill 原地打删除三列；成功后清月份缓存并重取。 */
+	/** 提交历史行删除后台作业：同 key 的判重由宿主做，这里只兜提交期错误。 */
 	const deleteRecord = async (note: string): Promise<void> => {
 		const target = deleteTarget;
 		if (
@@ -586,41 +608,72 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 		)
 			return;
 		setDeleteBusy(true);
-		setDeleteStep(null);
 		setDeleteError(null);
 		try {
-			await postTaskAction(
-				{
-					action: "delete",
+			const title = target.title || target.key;
+			const record = await startTask({
+				project: TASK_PROJECT,
+				group: JOB_GROUP,
+				key: deleteHistJobKey(target.src, target.line),
+				kind: "delete-hist",
+				title: displayTitleForAction(t, title),
+				args: {
 					workspace: target.workspaceId,
-					src: target.src,
-					line: target.line,
 					fingerprint: target.fingerprint,
 					...(note === "" ? {} : { summary: note }),
+					progressTexts: completeWriteTexts("delete-hist", t),
+					completionTexts: completionTextsOf("delete-hist", t),
 				},
-				(next) => setDeleteStep(next),
-			);
-			setDeleteTarget(null);
-			setSelected(null);
-			if (pendingOpen.current !== null) {
-				window.clearTimeout(pendingOpen.current);
-				pendingOpen.current = null;
-			}
-			// 就地摘掉这一行（不等重取）：列表不闪、滚动位置按锚点回填。
-			// 重取只是把本地视图与台账重新对齐（别的会话可能也刚改过）。
-			captureDeletion(target.key);
-			setRecords((prev) => prev.filter((row) => row.key !== target.key));
-			monthCache.current.clear();
-			setReloadToken((value) => value + 1);
-			props.onDeleted();
-			notify(t("actionDeleteDone", { title: target.title }), { variant: "success" });
+			});
+			setOptimisticJob(record);
+			// 不在这里 notify / 清缓存 / 重取：终态由核心 toast 弹，本地收口在下面的终态 effect。
 		} catch (error) {
 			setDeleteError(error instanceof Error ? error.message : String(error));
 		} finally {
 			setDeleteBusy(false);
-			setDeleteStep(null);
 		}
 	};
+
+	/**
+	 * 历史行删除的终态收口：后台跑完（成功 / 失败）后做原来同步成功分支的本地清理。
+	 * 成功才摘行、清缓存、重取统计；失败只关弹窗 + 由核心 toast 报原因（台账没变）。
+	 * 只有成功才动本地数据，避免「后台失败但界面把行删了」的假象。
+	 */
+	const handledHistJobs = useRef(new Set<string>());
+	useEffect(() => {
+		if (optimisticJob !== null) {
+			if (optimisticJob.key === undefined) return;
+			const settled = findJob(storeSnapshot.tasks, TASK_PROJECT, optimisticJob.key);
+			if (settled !== undefined && settled.state !== "running") setOptimisticJob(null);
+		}
+		for (const task of storeSnapshot.tasks) {
+			const key = task.key ?? "";
+			if (!key.startsWith("delete-hist:") || task.project !== TASK_PROJECT) continue;
+			if (task.state !== "done" && task.state !== "failed") continue;
+			const stamp = `${key}@${String(task.startedAt)}`;
+			if (handledHistJobs.current.has(stamp)) continue;
+			handledHistJobs.current.add(stamp);
+			// 行定位从 key 拆：src 形如 history/202611.md（无冒号），行号在最后一段。
+			const at = key.lastIndexOf(":");
+			const src = key.slice("delete-hist:".length, at);
+			const line = Number(key.slice(at + 1));
+			const target = records.find((row) => row.src === src && row.line === line);
+			if (task.state === "done" && target !== undefined) {
+				captureDeletion(target.key);
+				setRecords((prev) => prev.filter((row) => row.key !== target.key));
+				monthCache.current.clear();
+				setReloadToken((value) => value + 1);
+				props.onDeleted();
+				setSelected(null);
+				if (pendingOpen.current !== null) {
+					window.clearTimeout(pendingOpen.current);
+					pendingOpen.current = null;
+				}
+			}
+			if (deleteTarget !== null && deleteHistJobKey(deleteTarget.src, deleteTarget.line) === key)
+				setDeleteTarget(null);
+		}
+	}, [storeSnapshot, optimisticJob, records, deleteTarget, props, captureDeletion]);
 
 	/** 可选年份：今年往前 5 年。 */
 	const now = new Date();
@@ -743,6 +796,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							icon: h(Icon, { name: "common.base:shanchu" }),
 							disabled:
 								deleteBusy ||
+								deleteRunningOf(record) ||
 								record.src === "" ||
 								record.line <= 0 ||
 								record.fingerprint === "",
@@ -845,8 +899,12 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 					t,
 					taskTitle: deleteTarget.title || deleteTarget.key,
 					busy: deleteBusy,
-					notice: deleteNotice(),
+					notice: targetRunning
+						? (deleteNoticeOf(deleteTarget) ?? t("actionSyncing"))
+						: undefined,
 					error: deleteError,
+					locked: targetRunning,
+					onBackground: () => setDeleteTarget(null),
 					onClose: () => setDeleteTarget(null),
 					onSubmit: (note) => void deleteRecord(note),
 				}),

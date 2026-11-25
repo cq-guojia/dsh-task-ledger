@@ -10,7 +10,7 @@
  */
 import { createElement as h, type ReactNode, useState } from "react";
 import type { LocaleKey, Translate } from "./locales";
-import { Button, Input, Modal } from "./ui";
+import { Button, Input, Modal, OverlayLockExempt } from "./ui";
 
 export type ReasonKind = "cancel" | "delete";
 
@@ -40,7 +40,14 @@ export interface ReasonTaskModalProps {
 	taskTitle: string;
 	/** 提交中：确定键转圈、其余按钮与关闭路径全禁。 */
 	busy: boolean;
-	/** 底栏左侧的过程提示（提交中才给；不给 = 不占位）。 */
+	/**
+	 * 后台作业在跑：本框关不掉也提交不了，右侧换成唯一的「后台执行」（给了 onBackground 时）；
+	 * 终态（locked 解除）由调用方的作业态 effect 收起弹窗，两颗提交钮自动还回来。
+	 */
+	locked?: boolean;
+	/** locked 期间唯一可点的「后台执行」，点了只收起弹窗、作业照跑。 */
+	onBackground?: () => void;
+	/** 底栏左侧的过程提示（提交中 / 后台在跑时给；不给 = 不占位）。 */
 	notice?: string;
 	/** host 回的人话错误：红字列在输入框下。 */
 	error: string | null;
@@ -52,8 +59,9 @@ export function ReasonTaskModal(props: ReasonTaskModalProps): ReactNode {
 	const { t } = props;
 	const labels = LABELS[props.kind];
 	const [note, setNote] = useState("");
+	const locked = props.locked === true;
 	const submit = (): void => {
-		if (!props.busy) props.onSubmit(note.trim());
+		if (!props.busy && !locked) props.onSubmit(note.trim());
 	};
 	return h(
 		Modal,
@@ -61,10 +69,10 @@ export function ReasonTaskModal(props: ReasonTaskModalProps): ReactNode {
 			size: "sm",
 			width: "420px",
 			title: t(labels.title),
-			// busy 时不给关闭回调 ⇒ 核心连 ✕ 都不画，只剩等结果或看错误
-			onClose: props.busy ? undefined : props.onClose,
-			closeOnMask: !props.busy,
-			escClose: !props.busy,
+			// busy / locked 时不给关闭回调 ⇒ 核心连 ✕ 都不画，只剩等结果或看错误
+			onClose: props.busy || locked ? undefined : props.onClose,
+			closeOnMask: !props.busy && !locked,
+			escClose: !props.busy && !locked,
 			notice: props.notice,
 			footer: h(
 				"div",
@@ -76,28 +84,44 @@ export function ReasonTaskModal(props: ReasonTaskModalProps): ReactNode {
 						gap: "8px",
 					},
 				},
-				h(
-					Button,
-					{
-						variant: "outline",
-						size: "lg",
-						disabled: props.busy,
-						onClick: props.onClose,
-					},
-					t("settingsCancel"),
-				),
-				h(
-					Button,
-					{
-						variant: "primary",
-						size: "lg",
-						loading: props.busy,
-						// 无 icon ⇒ loading 时清掉文案、只留居中的圈（核心自己锁宽，中英文都不跳）
-						loadingText: false,
-						onClick: submit,
-					},
-					t(labels.ok),
-				),
+				locked
+					? props.onBackground === undefined
+						? null
+						: h(
+								OverlayLockExempt,
+								null,
+								h(
+									Button,
+									{ variant: "primary", size: "lg", onClick: props.onBackground },
+									t("bgRun"),
+								),
+							)
+					: h(
+							"span",
+							{ style: { display: "flex", gap: "8px" } },
+							h(
+								Button,
+								{
+									variant: "outline",
+									size: "lg",
+									disabled: props.busy,
+									onClick: props.onClose,
+								},
+								t("settingsCancel"),
+							),
+							h(
+								Button,
+								{
+									variant: "primary",
+									size: "lg",
+									loading: props.busy,
+									// 无 icon ⇒ loading 时清掉文案、只留居中的圈（核心自己锁宽，中英文都不跳）
+									loadingText: false,
+									onClick: submit,
+								},
+								t(labels.ok),
+							),
+						),
 			),
 		},
 		h(
@@ -126,7 +150,7 @@ export function ReasonTaskModal(props: ReasonTaskModalProps): ReactNode {
 				placeholder: t(labels.placeholder),
 				size: "md",
 				"aria-label": t(labels.placeholder),
-				disabled: props.busy,
+				disabled: props.busy || locked,
 				error: props.error !== null,
 				onKeyDown: (event) => {
 					if (event.key === "Enter") submit();

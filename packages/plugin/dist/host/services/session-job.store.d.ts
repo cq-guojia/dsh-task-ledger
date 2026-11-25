@@ -10,17 +10,24 @@ export declare const VIEW_SESSION_ACTION = "view-session";
 export type JobDetail = string | number | boolean | null | readonly JobDetail[] | {
     readonly [key: string]: JobDetail;
 };
-/** 结案作业的两种执行者：agent 会话 / host 自己跑 skill。同一 key 互斥。 */
-export type CloseJobKind = "close-agent" | "close-direct";
+/** 后台作业类型：两种结案执行者 + 三个写命令动作（历史行删除单列，key 形状不同）。 */
+export type JobKind = "close-agent" | "close-direct" | "release" | "cancel" | "delete" | "delete-hist";
+/** 终态 toast 的动作后缀：由客户端按界面语言透传，host 不产出中文。 */
+export interface CompletionTexts {
+    /** 成功后缀（拼在任务名之后），如「已释放」。 */
+    readonly success: string;
+    /** 失败后缀，如「释放失败，请稍后重试」。 */
+    readonly failure: string;
+}
 /** 新建一条作业需要的东西（由 service 在作业建好之后给）。 */
 export interface RegisterInput {
-    /** 业务键：`close:<任务号>` —— 判重的唯一依据。 */
+    /** 业务键：`close:<任务号>` / `release:<任务号>` / `delete-hist:<src>:<行号>` —— 判重唯一依据。 */
     readonly key: string;
     readonly title: DisplayTitle;
-    readonly kind: CloseJobKind;
-    /** toast「查看会话」按钮文案；只给会话作业，直接结案没有会话可看 ⇒ 不挂按钮。 */
+    readonly kind: JobKind;
+    /** toast「查看会话」按钮文案；只给会话作业，其余动作不开会话 ⇒ 不挂按钮。 */
     readonly buttonText?: string;
-    /** 会话 id（agent 作业必有；直接结案没有会话，省略）。 */
+    /** 会话 id（agent 作业必有；其余动作没有会话，省略）。 */
     readonly sessionId?: string;
     readonly taskId: string;
     /** 台账目录绝对路径（detail 里给客户端做跳转备份）。 */
@@ -33,6 +40,8 @@ export interface RegisterInput {
     readonly maxDurationMs?: number;
     /** running 起始披露文案；客户端按界面语言拼好，host 不产出中文。 */
     readonly progressMessage?: string;
+    /** 终态 toast 后缀；缺省沿用结案的「已结案 / 失败」。 */
+    readonly completionTexts?: CompletionTexts;
 }
 /** 终态结算载荷。 */
 export interface SettleInput {
@@ -48,7 +57,7 @@ export interface SessionJobStore extends TaskStreamSource {
      * 原子占位（消除 TOCTOU）：起会话的 await 之前先占住 key，返回 true 表示拿到；
      * 并发第二个同 key 立刻拿到 false，不会再起第二个会话。失败要 release。
      */
-    claim(key: string, title: DisplayTitle, kind: CloseJobKind, buttonText?: string): boolean;
+    claim(key: string, title: DisplayTitle, kind: JobKind, buttonText?: string, completionTexts?: CompletionTexts): boolean;
     /** 占位失败时释放（createSession 抛错 / 非 DSH）；没占住就是空操作。 */
     release(key: string): void;
     /** 把占位记录填成正式 running（带 sessionId 等详情）。 */
