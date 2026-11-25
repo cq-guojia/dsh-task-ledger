@@ -2,7 +2,7 @@
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
     "20261121-0305-e8eb-将结束任务交给agent挪到后台执行": {"category": null, "created": "2026-11-21 03:05:31", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-21 03:05:31", "status": "doing", "tags": ["后台任务", "结案", "Agent", "缺陷排查"], "title": "将结束任务交给Agent挪到后台执行", "updated": "2026-11-24 13:56:01", "worklog": "worklog/202611/21-0305-e8eb-将结束任务交给agent挪到后台执行.md"},
-    "20261123-0905-2bf6-恢复后台结案的阶段披露扫光": {"category": null, "created": "2026-11-23 09:05:42", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-23 09:05:42", "status": "doing", "tags": ["扫光披露", "后台任务", "结案"], "title": "恢复后台结案的阶段披露扫光", "updated": "2026-11-25 08:42:08", "worklog": "worklog/202611/23-0905-2bf6-恢复后台结案的阶段披露扫光.md"}
+    "20261123-0905-2bf6-恢复后台结案的阶段披露扫光": {"category": null, "created": "2026-11-23 09:05:42", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-23 09:05:42", "status": "doing", "tags": ["扫光披露", "后台任务", "结案"], "title": "恢复后台结案的阶段披露扫光", "updated": "2026-11-25 09:17:00", "worklog": "worklog/202611/23-0905-2bf6-恢复后台结案的阶段披露扫光.md"}
   },
   "version": "20261022000000"
 }
