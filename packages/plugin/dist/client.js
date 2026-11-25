@@ -53674,7 +53674,7 @@ window.__ModuleLoader__.load({
 			releaseTaskCategory: "释放任务",
 			cancelTaskCategory: "取消任务",
 			deleteTaskCategory: "删除任务",
-			deleteHistoryCategory: "删除历史任务",
+			deleteHistoryCategory: "删除任务",
 			writeReleaseStarting: "释放作业已建立，正在写入台账…",
 			writeReleaseDone: "已释放",
 			writeReleaseFailed: "释放失败，请稍后重试",
@@ -54031,7 +54031,7 @@ window.__ModuleLoader__.load({
 			releaseTaskCategory: "Release task",
 			cancelTaskCategory: "Cancel task",
 			deleteTaskCategory: "Delete task",
-			deleteHistoryCategory: "Delete history entry",
+			deleteHistoryCategory: "Delete task",
 			writeReleaseStarting: "Release job created; writing to the ledger…",
 			writeReleaseDone: "Released",
 			writeReleaseFailed: "Release failed; please retry",
@@ -72231,7 +72231,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-223145-478`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-223356-167`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"
