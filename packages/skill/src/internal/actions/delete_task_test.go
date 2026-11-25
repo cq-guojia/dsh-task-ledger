@@ -74,9 +74,9 @@ func TestDeleteHistoryRowKeepsResult(t *testing.T) {
 	}
 
 	if _, err := DeleteHistoryRow(repo, me, DeleteHistoryParams{
-		Src: "history/202611.md", Line: 5, Note: "建错了", When: delWhen,
+		TID: tid, Note: "建错了", When: delWhen,
 	}); err != nil {
-		t.Fatalf("删除历史行应成功：%v", err)
+		t.Fatalf("按任务号删除历史行应成功：%v", err)
 	}
 
 	after, err := os.ReadFile(histPath)
@@ -106,11 +106,11 @@ func TestDeleteHistoryRowKeepsResult(t *testing.T) {
 	}
 }
 
-// 行指纹对不上 ⇒ 拒绝且一个字节都不写：行号只是坐标，行内容变了就不是同一条记录。
-func TestDeleteHistoryRowRefusesStaleFingerprint(t *testing.T) {
+// 任务号在历史里找不到 ⇒ 拒绝且一个字节都不写。
+func TestDeleteHistoryRowRefusesUnknownTask(t *testing.T) {
 	repo, me := tempLedger(t)
 	line := core.HistoryLine(delFinished, delCreated, "同一行", me.UUID, "摘要", core.ResultDone,
-		"", "建设", nil, me.UUID, "@甲", "@甲", "", "", "", "")
+		core.WorklogRel("20261101-0900-做完的-bbbb", delCreated), "建设", nil, me.UUID, "@甲", "@甲", "", "", "", "")
 	histPath := store.NewHistoryStore(repo).PathFor(delFinished)
 	if err := os.MkdirAll(filepath.Dir(histPath), 0o755); err != nil {
 		t.Fatal(err)
@@ -119,26 +119,20 @@ func TestDeleteHistoryRowRefusesStaleFingerprint(t *testing.T) {
 	if err := os.WriteFile(histPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	// 读侧给出的指纹必须等于写前算的指纹（插件就是拿这个值回传的）
-	rows, _ := core.ParseHistory(content)
-	if len(rows) != 1 || rows[0].Stamp != core.RowStamp(line) {
-		t.Fatalf("history 读回的 fingerprint 与 RowStamp 不一致：%+v", rows)
-	}
-
 	before, err := os.ReadFile(histPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := DeleteHistoryRow(repo, me, DeleteHistoryParams{
-		Src: "history/202611.md", Line: 5, Expect: "0123456789ab", When: delWhen,
+		TID: "20261101-0900-别的任务-cccc", When: delWhen,
 	}); err == nil {
-		t.Fatal("指纹对不上必须拒绝删除")
+		t.Fatal("任务号找不到必须拒绝删除")
 	}
 	after, err := os.ReadFile(histPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(after) != string(before) {
-		t.Error("指纹对不上时不许写盘，文件内容却变了")
+		t.Error("找不到任务号时不许写盘，文件内容却变了")
 	}
 }

@@ -31,11 +31,16 @@ function toRecord(
 ): HistoryRecord {
 	const src = typeof raw.src === "string" ? raw.src : "";
 	const line = typeof raw.line === "number" ? raw.line : 0;
-	// history --json 的 src 相对 repo 根（ledger/history/YYYYMM.md），
-	// skill 的 delete --src 只收相对 ledger/ 的路径（history/YYYYMM.md）⇒ 在这里收口一次。
+	// history --json 的 src 相对 repo 根（ledger/history/YYYYMM.md）；
+	// 对外统一收成相对 ledger/ 的路径（history/YYYYMM.md），仅供列表 key / 选中态用。
 	const deleteSrc = src.startsWith("ledger/") ? src.slice("ledger/".length) : src;
 	const text = (value: unknown): string =>
 		typeof value === "string" ? value : "";
+	// 历史行没有独立的任务号列，但 worklog 链接（../worklog/YYYYMM/DD-HHMM-xxx.md）里带着：
+	// 任务号 = 目录 YYYYMM + 文件名（去 .md）。删除一律传这个号，行号只留给列表 key。
+	const worklog = text(raw.worklog);
+	const monthAndName = /worklog\/(\d{6})\/([^/]+)\.md$/.exec(worklog.replaceAll("\\", "/"));
+	const taskId = monthAndName === null ? "" : monthAndName[1] + monthAndName[2];
 	return {
 		// ⚠️ 必须带工作区：各仓的 src 都是 `ledger/history/YYYYMM.md`、line 各自编号，
 		// 只用 src:line 会让不同工作区的记录撞成同一个 key，合并去重时被当成重复吞掉。
@@ -58,13 +63,12 @@ function toRecord(
 		// worklog 是相对**历史文件所在目录**的串（`../worklog/202610/x.md`）⇒ 这一步算成绝对路径，
 		// 前端拿去直接开预览（页面不许自己拼台账布局）。空 = 这行没有过程文档。
 		filePath:
-			text(raw.worklog) === ""
+			worklog === ""
 				? ""
-				: path.join(workspace.path, "ledger", "history", text(raw.worklog)),
+				: path.join(workspace.path, "ledger", "history", worklog),
+		taskId,
 		src: deleteSrc,
 		line,
-		// 整行指纹：删除时原样回传给 skill（`delete --expect`），行已变就会被拒，防止行号漂移删错行。
-		fingerprint: text(raw.fingerprint),
 	};
 }
 

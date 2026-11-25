@@ -10,7 +10,6 @@
  */
 import { type TaskAction } from "./task.service.js";
 import { type CompletionTexts, type JobKind, type SessionJobStore } from "./session-job.store.js";
-import type { HistoryDeleteParams } from "./task-action-params.js";
 import type { DisplayTitle } from "dsh-plugin-core/adv/tasks";
 /** 八段披露文案：起始 + skill 五阶段 + 成功 / 失败终态。全部由客户端按界面语言透传。 */
 export interface WriteJobTexts {
@@ -30,7 +29,7 @@ export declare function isCompletionTexts(value: unknown): value is CompletionTe
 /** 写命令后台作业的执行者类型（决定作业 store 的 rowButtons：这些都没有会话可看）。 */
 export type WriteJobKind = JobKind;
 export interface StartWriteJobInput {
-    /** 业务键：`release:<任务号>` / `close:<任务号>` / `delete-hist:<src>:<行号>` … */
+    /** 业务键：`release:<任务号>` / `close:<任务号>` / `delete-hist:<任务号>` … */
     readonly key: string;
     readonly kind: WriteJobKind;
     /** skill 写动作（task.repository.ts 的命令名）。 */
@@ -41,12 +40,10 @@ export interface StartWriteJobInput {
     readonly completionTexts?: CompletionTexts;
     /** 台账目录（工作区 id）：清单里没有就报 not-found，不猜路径。 */
     readonly workspace: string;
-    /** 在办任务号；历史行删除给空串（命令改用 src/line 定位）。 */
+    /** 任务号：在办删除与历史删除都用它定位（历史行由 skill 按 worklog 反查）。 */
     readonly taskId: string;
     /** 取消理由 / 删除留言 / 结案摘要；空串就不传 --summary。 */
     readonly summary: string;
-    /** 删历史行时的 src / line / 指纹；不给就是删在办任务。 */
-    readonly history?: HistoryDeleteParams;
     readonly origin?: string;
     readonly panelId?: string;
 }

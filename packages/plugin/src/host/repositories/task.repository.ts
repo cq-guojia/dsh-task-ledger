@@ -29,12 +29,11 @@ const ACTION_NAME: Record<TaskAction, string> = {
 };
 
 /**
- * 跑一条任务写命令。
+ * 跑一条任务写命令。删除（在办 / 历史）统一用 `--id` 传任务号：
+ * skill 自己判断在办还是历史，历史行按任务号对应的过程文档反查，调用方不接触行号。
  *
  * @param summary - 取消 / 结案的摘要、删除的留言；留空就不传 `--summary`。
  * @param onStep - 过程步骤回调（逐条转发给界面做进度翻牌），不传就不让 skill 打标记。
- * @param history - 给就是删历史行（`delete --src/--line [--expect]`），不给就是删在办任务（`delete --id`）。
- *   `fingerprint` 是该行指纹：skill 写前核对，行已变（行号漂移 / 别处改过）就整条拒绝。
  */
 export async function runTaskAction(
 	repo: string,
@@ -42,7 +41,6 @@ export async function runTaskAction(
 	action: TaskAction,
 	summary = "",
 	onStep?: (step: TaskActionStep) => void,
-	history?: { readonly src: string; readonly line: number; readonly fingerprint?: string },
 ): Promise<void> {
 	const opts: RunOptions = {
 		timeoutMs: WRITE_TIMEOUT_MS,
@@ -93,21 +91,12 @@ export async function runTaskAction(
 			);
 			break;
 		case "delete":
-			// 留言可选；删除时刻由 skill 外壳统一算，插件不补录。
+			// 在办 / 历史都按任务号删；留言可选，删除时刻由 skill 外壳统一算。
 			result = await runLedgerCommand(
 				"delete",
 				[
-					...(history === undefined
-						? ["--id", id]
-						: [
-								"--src",
-								history.src,
-								"--line",
-								String(history.line),
-								...((history.fingerprint ?? "") === ""
-									? []
-									: ["--expect", history.fingerprint ?? ""]),
-							]),
+					"--id",
+					id,
 					...(summary === "" ? [] : ["--summary", summary]),
 					"--repo",
 					repo,

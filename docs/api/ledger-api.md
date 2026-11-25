@@ -217,7 +217,8 @@ func IsReadOnly(command string) bool
 | 记进展 `LogProgress` | `(repo, me, tid, note) (*Result, error)` | 刷分片 `updated` → 过程文档追加一行 |
 | 结案 `CloseTask` | `(repo, me, tid, CloseTaskParams) (*Result, error)` | 改标签行（给了 `--tags` 才做）→ 历史加一行 → 封卷 → 删分片（永远最后一步）；多步失败靠 `Snapshot`/`Restore` |
 | 删除在办 `DeleteTask` | `(repo, me, tid, DeleteTaskParams) (*Result, error)` | 只做转接：`CloseTask{Delete: true}`，写序与崩溃恢复和结案同一套；结果列留空、删除四列落值 |
-| 删历史行 `DeleteHistoryRow` | `(repo, me, DeleteHistoryParams) (*Result, error)` | 读历史文件 → 「已删过」判重 → 行指纹核对（`Expect` 与 `core.RowStamp` 不符即中止、零写入）→ 只改该行末尾四格 → 过程文档追加一条 `delete` 执行记录 |
+| 删历史行 `DeleteHistoryRow` | `(repo, me, DeleteHistoryParams) (*Result, error)` | 按任务号扫历史文件、用 `core.WorklogMatchesTask` 对过程文档路径定位该行（0 条 / 多条都拒绝、零写入）→「已删过」判重 → 只改该行末尾四格 → 过程文档追加一条 `delete` 执行记录 |
+| 按任务号删除 `DeleteById` | `(repo, me, DeleteParams) (*Result, error)` | `LoadTask` 判在办：在办 → `DeleteTask`（结案写序移进历史）；不在办 → `DeleteHistoryRow`（历史行原地打删除标记）。两种入口都只认任务号 |
 
 ### 3.3 只读动作
 
@@ -310,7 +311,7 @@ func (t *termState) readKey() key
 | `set` | `--id`（必填）+ `--release` / `--owner` / `--tags` 三选一 | `Release` / `Handoff` / `Relabel`（`set_task.go` 只做路由） |
 | `log` | `--id`、`--note`（都必填） | `LogProgress` |
 | `close` | `--id`、`--summary`（正常结案必填，取消可省）、`--cancel`、`--finished`、`--tags` | `CloseTaskParams` |
-| `delete` | `--id`（在办任务）或 `--src` + `--line`（历史行，二选一）；历史行可加 `--expect <指纹>`、`--summary <留言>` | `DeleteTask` ⇒ `CloseTask{Delete: true}`；`--src` ⇒ `DeleteHistoryRow`，`--expect` 与 `core.RowStamp(该行原文)` 不符即整条拒绝、零写入 |
+| `delete` | `--id <任务号>`（必填；在办与历史通用）、`--summary <留言>`（可省） | `DeleteById` 分流：在办 → `DeleteTask` ⇒ `CloseTask{Delete: true}`；已结案 → `DeleteHistoryRow` 按任务号对应过程文档反查历史行 |
 | `list` | `--mine` / `--pool` / `--owner` / `--owner-name` / `--status` / `--category` / `--tag` / `--since` / `--until` / `--stale-days` / `--overdue-days` / `--backlog-days` / `--json` | `ListQuery`（范围优先级 mine → pool → owner；阈值不传回默认） |
 | `stats` | 与 `list` 完全同名的那套（含三个阈值） / `--json` | `StatsTasks`（共用同一个 `ListQuery`） |
 | `stats --trend` | `--trend <day\|week\|month\|quarter\|year>` + `--since` / `--until` 或 `--last <N><d\|w\|m\|y>`（默认 `8w`）+ `--mine` / `--owner <uuid>[,<uuid>]` / `--by-owner` | `TrendQuery` ⇒ `TrendStats`；不认 `--pool` / `--owner-name` / `--status` / `--category` / `--tag` / 三个阈值 / `--json` |
@@ -336,3 +337,4 @@ func (t *termState) readKey() key
 - 2026-11-08 01:29:50：目录结构改为树 + 每行备注
 - 2026-11-08 23:04:19：目录结构统一为字符画树，逐行补说明
 - 2026-11-10 22:37:27：统一正文树说明列宽，源码路径补全为仓库内完整路径
+- 2026-11-25 23:14:33：delete 命令与动作接口统一为 --id 任务号，新增 DeleteById 分流

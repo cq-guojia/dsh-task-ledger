@@ -76,12 +76,9 @@ var commandHelp = map[string]helpDoc{
 		},
 	},
 	"delete": {
-		usage: "progress delete (--id <任务号> | --src <历史文件> --line <行号> [--expect <指纹>]) [--summary <留言>]",
+		usage: "progress delete --id <任务号> [--summary <留言>]",
 		options: []helpOption{
-			{"--id <任务号>", "删除在办任务（公共池 / 自己名下分片）：移进历史、删除四列落值"},
-			{"--src <路径>", "删历史表格里那一行；收相对 ledger/ 的路径（如 history/202610.md）。只有用户明确说「删除」才用"},
-			{"--line <行号>", "配套 --src：原文行号（1 起，见 history --json 的 line）"},
-			{"--expect <指纹>", "配套 --src：该行指纹（history --json 的 fingerprint）。给了就先核对，行已变则整条拒绝、不写任何文件"},
+			{"--id <任务号>", "删除任务：在办走结案写序移进历史；已结案则按任务号对应的过程文档找到历史行，原地打删除四列。只有用户明确说「删除」才用"},
 			{"--summary <留言>", "删除留言（可省，只进过程文档执行记录，不写历史摘要）"},
 			{"--repo <工作区根>", "同上"},
 		},

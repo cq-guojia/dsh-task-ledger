@@ -197,17 +197,15 @@ export function apply(ctx) {
                         : kind === "delete-hist"
                             ? "delete"
                             : kind;
-                    // 历史行删除的参数在**提交期**校验：旧路由的同一套规则一字不差复用，
-                    // 否则错误会从「提交期可见」退化成「后台跑完 git 才失败」。
-                    let history;
+                    // 历史删除在提交期只校验任务号形状；行定位交给 skill 按任务号反查过程文档。
+                    let histTaskId;
                     if (kind === "delete-hist") {
                         if (histLocation === null)
                             throw new Error("历史删除 key 不合法");
-                        const fingerprint = typeof args.fingerprint === "string" ? args.fingerprint.trim() : "";
-                        const checked = checkHistoryDelete(histLocation.src, histLocation.line, fingerprint);
+                        const checked = checkHistoryDelete(histLocation);
                         if (!checked.ok)
                             throw new Error(`历史删除参数不合法：${checked.reason}`);
-                        history = checked.value;
+                        histTaskId = checked.value.taskId;
                     }
                     // 三个新动作必带终态文案；直接结案沿用 store 默认，可不带。
                     // 带了就一律校验形状，畸形值不许透传给核心 toast（否则终态显示坏文案）。
@@ -224,9 +222,8 @@ export function apply(ctx) {
                         texts: args.progressTexts,
                         ...(completionTexts === undefined ? {} : { completionTexts }),
                         workspace,
-                        taskId: taskId ?? "",
+                        taskId: histTaskId ?? taskId ?? "",
                         summary,
-                        ...(history === undefined ? {} : { history }),
                         ...(origin === undefined ? {} : { origin }),
                         ...(panelId === undefined ? {} : { panelId }),
                     });

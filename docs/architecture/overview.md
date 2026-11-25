@@ -57,7 +57,7 @@ git 只在命令的前后两端，业务中间不碰 git。推送被拒会触发
   │         release        release:<任务号>        set --release
   │         cancel         cancel:<任务号>         close --cancel（带理由）
   │         delete         delete:<任务号>         delete（带留言）
-  │         delete-hist    delete-hist:<src>:<行号> delete --src --line --expect（带指纹）
+  │         delete-hist    delete-hist:<任务号>    delete --id（skill 按 worklog 反查历史行）
   ▼ 状态面：核心任务中心（/task-center/stream SSE 三流 + /task-center/submit POST）
 host/services/session-job.store.ts  ← TaskStreamSource 实现（snapshot/subscribe/subscribeNotices，进程内）
   ├ reportProgress(key, message)   唯一披露写入口，仅 running 接受、updatedAt 严格递增
@@ -67,8 +67,8 @@ host/services/session-job.store.ts  ← TaskStreamSource 实现（snapshot/subsc
 
 判重（同一条任务已在跑）在服务端 `jobs.claim(key)` 的原子占位上（先于任何 `await`）。
 key 每个动作独立：结案两种模式共用 `close:<任务号>`（同一任务互斥），释放 / 取消 / 删除
-各用各的前缀，不同动作可并行、同一动作同一任务不会双跑；历史行删除按 src + 行号定位，
-不是「在办任务」对象。submit 按 kind 显式分派执行者，并在提交期完成历史删除参数校验
+各用各的前缀，不同动作可并行、同一动作同一任务不会双跑；历史行删除同样按任务号定位
+（由 worklog 路径反推，skill 按任务号反查历史行，不传行号 / 指纹）。submit 按 kind 显式分派执行者，并在提交期完成历史删除参数校验
 （`host/services/task-action-params.ts`，与旧 `/task/action` 共用一套规则）。跨刷新、跨标签页
 判重成立。终态通知带全局唯一 id、按 id 持久去重，状态可任意重放而不重弹。
 
@@ -110,3 +110,4 @@ key 每个动作独立：结案两种模式共用 `close:<任务号>`（同一�
 - 2026-11-25 17:29:30：补两条结案路径、单一 progress 披露源、终态呈现由核心收口
 - 2026-11-25 21:52:19：补五类写动作共用执行体、独立 key、参数校验与人话终态文案
 - 2026-11-25 22:49:31：三档超时翻倍：git 60 秒、锁等待 120 秒、宿主 240 秒
+- 2026-11-25 23:14:33：历史行删除统一按任务号定位，去掉行号与指纹

@@ -341,9 +341,6 @@ func paramsOf(command string, a *Args, repo string, me core.Identity) (actions.P
 		Summary:  a.Summary,
 		Finished: a.Finished,
 		Cancel:   a.Cancel,
-		Src:      a.Src,
-		Line:     a.Line,
-		Expect:   a.Expect,
 		Deep:     a.Deep,
 		// forget 专用：界面逐本台账删自己时不清身份，留到最后 logout
 		KeepIdentity: a.KeepIdentity,
@@ -415,7 +412,6 @@ func lockParams(p actions.Params) map[string]any {
 		"created":  p.Created,
 		"mine":     p.Mine,
 		"finished": p.Finished,
-		"src":      p.Src,
 	}
 }
 

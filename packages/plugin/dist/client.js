@@ -54494,9 +54494,9 @@ window.__ModuleLoader__.load({
 		function deleteJobKey(taskId) {
 			return `delete:${taskId}`;
 		}
-		/** 历史行删除不是「在办任务」对象：键里带 src + 行号（src 不含冒号，取最后一段分行号）。 */
-		function deleteHistJobKey(src, line) {
-			return `delete-hist:${src}:${String(line)}`;
+		/** 历史行删除也算任务：键里只带任务号（从该行 worklog 路径反推），不带会漂移的行号。 */
+		function deleteHistJobKey(taskId) {
+			return `delete-hist:${taskId}`;
 		}
 		/**
 		* 首屏快照：8 卡 + 在办列表 + 趋势（host 侧每工作区跑 skill `stats` / `stats --trend` / `list`）。
@@ -68928,15 +68928,15 @@ body[data-ds-dark-theme]{
 			const [deleteTarget, setDeleteTarget] = (0, react$1.useState)(null);
 			const [deleteBusy, setDeleteBusy] = (0, react$1.useState)(false);
 			const [deleteError, setDeleteError] = (0, react$1.useState)(null);
-			/** 历史行删除的后台作业态：按行 key（src + line）判运行 / 读进度。 */
+			/** 历史行删除的后台作业态：按任务号 key 判运行 / 读进度（行号不参与）。 */
 			const storeSnapshot = (0, react$1.useSyncExternalStore)(taskCenterStore.subscribe, taskCenterStore.getSnapshot);
 			const [optimisticJob, setOptimisticJob] = (0, react$1.useState)(null);
 			const deleteJobOf = (record) => {
-				const key = deleteHistJobKey(record.src, record.line);
+				const key = deleteHistJobKey(record.taskId);
 				return findJob(storeSnapshot.tasks, "dsh-task-ledger", key) ?? (optimisticJob?.key === key && optimisticJob.state === "running" ? optimisticJob : void 0);
 			};
 			const deleteRunningOf = (record) => deleteJobOf(record)?.state === "running";
-			const deleteNoticeOf = (record) => writeJobProgress(storeSnapshot.tasks, "dsh-task-ledger", deleteHistJobKey(record.src, record.line)) ?? deleteJobOf(record)?.progress?.message ?? null;
+			const deleteNoticeOf = (record) => writeJobProgress(storeSnapshot.tasks, "dsh-task-ledger", deleteHistJobKey(record.taskId)) ?? deleteJobOf(record)?.progress?.message ?? null;
 			const targetRunning = deleteTarget === null ? false : deleteRunningOf(deleteTarget);
 			/** 删除成功后让取数 effect 重跑（月份缓存会清掉，不能让 60 秒内的旧行再冒出来）。 */
 			const [reloadToken, setReloadToken] = (0, react$1.useState)(0);
@@ -69198,7 +69198,7 @@ body[data-ds-dark-theme]{
 			/** 提交历史行删除后台作业：同 key 的判重由宿主做，这里只兜提交期错误。 */
 			const deleteRecord = async (note) => {
 				const target = deleteTarget;
-				if (target === null || target.src === "" || target.line <= 0 || target.fingerprint === "") return;
+				if (target === null || target.taskId === "") return;
 				setDeleteBusy(true);
 				setDeleteError(null);
 				try {
@@ -69206,12 +69206,12 @@ body[data-ds-dark-theme]{
 					const record = await startTask({
 						project: TASK_PROJECT,
 						group: JOB_GROUP,
-						key: deleteHistJobKey(target.src, target.line),
+						key: deleteHistJobKey(target.taskId),
 						kind: "delete-hist",
 						title: displayTitleForAction("delete-hist", t, title),
 						args: {
 							workspace: target.workspaceId,
-							fingerprint: target.fingerprint,
+							taskId: target.taskId,
 							...note === "" ? {} : { summary: note },
 							progressTexts: completeWriteTexts("delete-hist", t),
 							completionTexts: completionTextsOf("delete-hist", t)
@@ -69243,10 +69243,8 @@ body[data-ds-dark-theme]{
 					const stamp = `${key}@${String(task.startedAt)}`;
 					if (handledHistJobs.current.has(stamp)) continue;
 					handledHistJobs.current.add(stamp);
-					const at = key.lastIndexOf(":");
-					const src = key.slice(12, at);
-					const line = Number(key.slice(at + 1));
-					const target = records.find((row) => row.src === src && row.line === line);
+					const tid = key.slice(12);
+					const target = records.find((row) => row.taskId === tid);
 					if (task.state === "done" && target !== void 0) {
 						captureDeletion(target.key);
 						setRecords((prev) => prev.filter((row) => row.key !== target.key));
@@ -69259,7 +69257,7 @@ body[data-ds-dark-theme]{
 							pendingOpen.current = null;
 						}
 					}
-					if (deleteTarget !== null && deleteHistJobKey(deleteTarget.src, deleteTarget.line) === key) setDeleteTarget(null);
+					if (deleteTarget !== null && deleteHistJobKey(deleteTarget.taskId) === key) setDeleteTarget(null);
 				}
 			}, [
 				storeSnapshot,
@@ -69372,7 +69370,7 @@ body[data-ds-dark-theme]{
 						label: t("actionDelete"),
 						className: "dtl-icon--muted",
 						icon: (0, react$1.createElement)(Icon, { name: "common.base:shanchu" }),
-						disabled: deleteBusy || deleteRunningOf(record) || record.src === "" || record.line <= 0 || record.fingerprint === "",
+						disabled: deleteBusy || deleteRunningOf(record) || record.taskId === "",
 						onClick: () => {
 							setDeleteError(null);
 							setDeleteTarget(record);
@@ -72231,7 +72229,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-224907-394`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-231710-643`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

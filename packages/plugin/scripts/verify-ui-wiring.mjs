@@ -161,6 +161,14 @@ if (!/completionTexts/.test(entryText) || !/isWriteJobTexts\(/.test(entryText)) 
 if (!/checkHistoryDelete\(/.test(entryText) || !/parseDeleteHistKey\(/.test(entryText)) {
   problems.push('index.ts: submit 缺历史删除参数校验');
 }
+// 历史删除一律按任务号定位，不许把 src / 行号 / 指纹跨进程传给 skill。
+const histRepo = readSource(join(hostDir, 'repositories', 'history.repository.ts'));
+if (!histRepo.includes('const taskId = monthAndName') || !histRepo.includes('worklog')) {
+  problems.push('history.repository.ts: 未从 worklog 路径反推任务号');
+}
+if (/fingerprint/.test(readSource(join(hostDir, 'repositories', 'task.repository.ts')))) {
+  problems.push('task.repository.ts: 删除仍在传行指纹，应按任务号定位');
+}
 const paramsText = readSource(join(hostDir, 'services', 'task-action-params.ts'));
 if (!/checkHistoryDelete/.test(paramsText) || !/parseDeleteHistKey/.test(paramsText)) {
   problems.push('task-action-params.ts: 缺历史删除公共校验');

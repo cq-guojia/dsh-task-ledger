@@ -99,6 +99,31 @@ func WorklogRel(tid, created string) string {
 	return WorklogDirFor(created) + "/" + WorklogName(tid)
 }
 
+// WorklogMatchesTask：历史行的 worklog 单元格（已由 ParseHistory 抽成链接目标，
+// 形如 `../worklog/202611/01-1017-ebed-xxx.md`）是否属于任务号 tid。
+//
+// 任务号 = YYYYMMDD-HHMM-随机码-标题；过程文档 = worklog/YYYYMM/DD-HHMM-随机码-标题.md。
+// 于是只比对「月份目录 + 文件名」两段，前面的层级与 `../` 前缀都不参与 —— 归档目录挪层也不影响。
+func WorklogMatchesTask(worklog, tid string) bool {
+	if worklog == "" || len(tid) < 9 {
+		return false
+	}
+	clean := filepath.ToSlash(filepath.Clean(strings.ReplaceAll(worklog, "\\", "/")))
+	// 从任意深度的 worklog/ 段起取后两级：YYYYMM/文件名.md。
+	at := strings.LastIndex(clean, "/"+WorklogDir+"/")
+	if at < 0 {
+		if !strings.HasPrefix(clean, WorklogDir+"/") {
+			return false
+		}
+		at = -1 // 开头就是 worklog/，下面从 0 起截
+	}
+	tail := strings.Split(clean[at+len(WorklogDir)+2:], "/")
+	if len(tail) != 2 {
+		return false
+	}
+	return tail[0]+"/"+tail[1] == tid[:6]+"/"+WorklogName(tid)
+}
+
 // HistoryPathFor：结案时间 → 历史文件相对 ledger/ 的路径。
 func HistoryPathFor(finished string) string {
 	return HistoryDir + "/" + MonthOf(finished, "") + ".md"

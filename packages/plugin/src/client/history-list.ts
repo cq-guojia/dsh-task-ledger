@@ -310,14 +310,14 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const [deleteTarget, setDeleteTarget] = useState<HistoryRecord | null>(null);
 	const [deleteBusy, setDeleteBusy] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
-	/** 历史行删除的后台作业态：按行 key（src + line）判运行 / 读进度。 */
+	/** 历史行删除的后台作业态：按任务号 key 判运行 / 读进度（行号不参与）。 */
 	const storeSnapshot = useSyncExternalStore(
 		taskCenterStore.subscribe,
 		taskCenterStore.getSnapshot,
 	);
 	const [optimisticJob, setOptimisticJob] = useState<TaskRecord | null>(null);
 	const deleteJobOf = (record: HistoryRecord): TaskRecord | undefined => {
-		const key = deleteHistJobKey(record.src, record.line);
+		const key = deleteHistJobKey(record.taskId);
 		return (
 			findJob(storeSnapshot.tasks, TASK_PROJECT, key) ??
 			(optimisticJob?.key === key && optimisticJob.state === "running"
@@ -328,7 +328,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	const deleteRunningOf = (record: HistoryRecord): boolean =>
 		deleteJobOf(record)?.state === "running";
 	const deleteNoticeOf = (record: HistoryRecord): string | null =>
-		writeJobProgress(storeSnapshot.tasks, TASK_PROJECT, deleteHistJobKey(record.src, record.line)) ??
+		writeJobProgress(storeSnapshot.tasks, TASK_PROJECT, deleteHistJobKey(record.taskId)) ??
 		deleteJobOf(record)?.progress?.message ??
 		null;
 	const targetRunning = deleteTarget === null ? false : deleteRunningOf(deleteTarget);
@@ -600,13 +600,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 	/** 提交历史行删除后台作业：同 key 的判重由宿主做，这里只兜提交期错误。 */
 	const deleteRecord = async (note: string): Promise<void> => {
 		const target = deleteTarget;
-		if (
-			target === null ||
-			target.src === "" ||
-			target.line <= 0 ||
-			target.fingerprint === ""
-		)
-			return;
+		if (target === null || target.taskId === "") return;
 		setDeleteBusy(true);
 		setDeleteError(null);
 		try {
@@ -614,12 +608,12 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			const record = await startTask({
 				project: TASK_PROJECT,
 				group: JOB_GROUP,
-				key: deleteHistJobKey(target.src, target.line),
+				key: deleteHistJobKey(target.taskId),
 				kind: "delete-hist",
 				title: displayTitleForAction("delete-hist", t, title),
 				args: {
 					workspace: target.workspaceId,
-					fingerprint: target.fingerprint,
+					taskId: target.taskId,
 					...(note === "" ? {} : { summary: note }),
 					progressTexts: completeWriteTexts("delete-hist", t),
 					completionTexts: completionTextsOf("delete-hist", t),
@@ -653,11 +647,9 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 			const stamp = `${key}@${String(task.startedAt)}`;
 			if (handledHistJobs.current.has(stamp)) continue;
 			handledHistJobs.current.add(stamp);
-			// 行定位从 key 拆：src 形如 history/202611.md（无冒号），行号在最后一段。
-			const at = key.lastIndexOf(":");
-			const src = key.slice("delete-hist:".length, at);
-			const line = Number(key.slice(at + 1));
-			const target = records.find((row) => row.src === src && row.line === line);
+			// key 里只有任务号，按它找行；src/line 漂移不影响定位。
+			const tid = key.slice("delete-hist:".length);
+			const target = records.find((row) => row.taskId === tid);
 			if (task.state === "done" && target !== undefined) {
 				captureDeletion(target.key);
 				setRecords((prev) => prev.filter((row) => row.key !== target.key));
@@ -670,7 +662,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 					pendingOpen.current = null;
 				}
 			}
-			if (deleteTarget !== null && deleteHistJobKey(deleteTarget.src, deleteTarget.line) === key)
+			if (deleteTarget !== null && deleteHistJobKey(deleteTarget.taskId) === key)
 				setDeleteTarget(null);
 		}
 	}, [storeSnapshot, optimisticJob, records, deleteTarget, props, captureDeletion]);
@@ -797,9 +789,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 							disabled:
 								deleteBusy ||
 								deleteRunningOf(record) ||
-								record.src === "" ||
-								record.line <= 0 ||
-								record.fingerprint === "",
+								record.taskId === "",
 							onClick: () => {
 								setDeleteError(null);
 								setDeleteTarget(record);

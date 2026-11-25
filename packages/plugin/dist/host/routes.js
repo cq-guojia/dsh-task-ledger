@@ -7,7 +7,6 @@ import { getBoardHome } from "./services/stats.service.js";
 import { listDirs, writeDirs } from "./services/dirs.service.js";
 import { getHistoryList, getHistoryTrend } from "./services/history.service.js";
 import { actOnTask } from "./services/task.service.js";
-import { checkHistoryDelete } from "./services/task-action-params.js";
 import { startSession, resolveWorkspace, } from "./services/session.service.js";
 import { resolveWorkspaces } from "./services/workspaces.service.js";
 import { readSettings, writeSettings } from "./services/rules-injection.service.js";
@@ -401,42 +400,15 @@ export function registerRoutes(webServer, deps) {
                 // 正常结案必须有摘要（取消 / 删除可以没有）：空着也要在界面先挡住，这里兜一层
                 if (action === "close" && summary === "")
                     throw new Error(`${BAD_REQUEST}结案必须填一句摘要`);
+                // 删除（在办 / 历史）统一用任务号定位：skill 按 worklog 反查历史行。
                 const id = typeof body.id === "string" ? body.id.trim() : "";
-                // 删历史行不用任务号，改用 skill 的 delete --src/--line 定位（src 相对 ledger/）
-                const src = typeof body.src === "string" ? body.src.trim() : "";
-                const line = typeof body.line === "number" &&
-                    Number.isInteger(body.line) &&
-                    body.line > 0
-                    ? body.line
-                    : 0;
-                // 行指纹（skill `history --json` 的 fingerprint）：删历史行必须带 ——
-                // 行号只是坐标，只有整行指纹能证明「要删的还是用户看到的那一条」。
-                const fingerprint = typeof body.fingerprint === "string" ? body.fingerprint.trim() : "";
-                const historyDelete = action === "delete" && src !== "";
-                if (historyDelete) {
-                    // 与任务中心 submit 共用同一套校验（task-action-params.ts），避免两处规则漂移。
-                    const checked = checkHistoryDelete(src, line, fingerprint);
-                    if (!checked.ok)
-                        throw new Error(`${BAD_REQUEST}${checked.reason === "path"
-                            ? "历史文件路径不合法"
-                            : checked.reason === "line"
-                                ? "历史行号不合法"
-                                : "历史行指纹不合法（缺少行身份，删除已拒绝）"}`);
-                }
-                else if (id === "") {
+                if (id === "")
                     throw new Error(`${BAD_REQUEST}必须给任务号`);
-                }
                 const workspaceId = typeof body.workspace === "string" ? body.workspace : "";
                 const workspace = (await workspacesOf(deps)).find((item) => item.id === workspaceId);
                 if (workspace === undefined)
                     throw new Error(`${BAD_REQUEST}找不到这个工作区，改不了任务`);
-                input = {
-                    action,
-                    repo: workspace.path,
-                    id,
-                    summary,
-                    ...(historyDelete ? { src, line, fingerprint } : {}),
-                };
+                input = { action, repo: workspace.path, id, summary };
             }
             catch (error) {
                 sendWriteFailure(res, error);

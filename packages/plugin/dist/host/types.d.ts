@@ -236,12 +236,11 @@ export interface HistoryRecord {
     readonly finished: string;
     /** 过程文档绝对路径；空串 = 这行没有 worklog，不可点开。 */
     readonly filePath: string;
-    /** 历史文件相对 ledger/ 的路径（skill `delete --src` 口径）；空 = 定位不到，不给删。 */
+    /** 任务号：从 worklog 路径反推（YYYYMM + 文件名）。删除一律按它定位；空 = 不给删。 */
+    readonly taskId: string;
+    /** 历史文件相对 ledger/ 的路径 + 原文行号：仅列表 key / 选中态，不参与删除。 */
     readonly src: string;
-    /** 原文行号（1 起）；0 = 定位不到，不给删。 */
     readonly line: number;
-    /** 整行指纹（skill `history --json` 的 fingerprint）：删这行时回传，skill 写前核对；空 = 不给删。 */
-    readonly fingerprint: string;
 }
 /** `/history/list` 响应：选中那个月的结案记录（按结案时间正序）。
  *  分页不在这里做 —— 整月一次下发，前端按行号做虚拟滚动。 */

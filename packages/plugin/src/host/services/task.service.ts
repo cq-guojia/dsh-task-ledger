@@ -16,12 +16,8 @@ export interface TaskActionInput {
 	readonly action: TaskAction;
 	/** 任务所在工作区根（skill 定位台账用）。 */
 	readonly repo: string;
+	/** 任务号：在办与历史删除都用它定位（历史行由 skill 按 worklog 反查）。 */
 	readonly id: string;
-	/** 删除历史行时的定位（相对 ledger/ 的路径 + 原文行号）；不给就是删在办任务。 */
-	readonly src?: string;
-	readonly line?: number;
-	/** 该行指纹（skill `history --json` 的 fingerprint）：写前核对，行已变则拒绝删。 */
-	readonly fingerprint?: string;
 	/** 取消 / 删除时的一句话留言（可选；进过程文档执行记录）。 */
 	readonly summary?: string;
 }
@@ -40,9 +36,6 @@ export async function actOnTask(
 		input.action,
 		input.summary ?? "",
 		onStep,
-		input.src !== undefined && input.line !== undefined
-			? { src: input.src, line: input.line, fingerprint: input.fingerprint ?? "" }
-			: undefined,
 	);
 	invalidate();
 }

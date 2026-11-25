@@ -83,7 +83,6 @@ function watchWriteJob(jobs, input) {
                 repo: job.input.workspace,
                 id: job.input.taskId,
                 summary: job.input.summary,
-                ...(job.input.history === undefined ? {} : { ...job.input.history }),
             }, onStep);
             job.jobs.settle(job.input.key, "done", {
                 progressMessage: job.input.texts.done,

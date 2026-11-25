@@ -14,7 +14,6 @@ import {
 	type JobKind,
 	type SessionJobStore,
 } from "./session-job.store.js";
-import type { HistoryDeleteParams } from "./task-action-params.js";
 import { readDirs } from "../repositories/dirs.repository.js";
 import type { DisplayTitle } from "dsh-plugin-core/adv/tasks";
 
@@ -64,7 +63,7 @@ export function isCompletionTexts(value: unknown): value is CompletionTexts {
 export type WriteJobKind = JobKind;
 
 export interface StartWriteJobInput {
-	/** 业务键：`release:<任务号>` / `close:<任务号>` / `delete-hist:<src>:<行号>` … */
+	/** 业务键：`release:<任务号>` / `close:<任务号>` / `delete-hist:<任务号>` … */
 	readonly key: string;
 	readonly kind: WriteJobKind;
 	/** skill 写动作（task.repository.ts 的命令名）。 */
@@ -75,12 +74,10 @@ export interface StartWriteJobInput {
 	readonly completionTexts?: CompletionTexts;
 	/** 台账目录（工作区 id）：清单里没有就报 not-found，不猜路径。 */
 	readonly workspace: string;
-	/** 在办任务号；历史行删除给空串（命令改用 src/line 定位）。 */
+	/** 任务号：在办删除与历史删除都用它定位（历史行由 skill 按 worklog 反查）。 */
 	readonly taskId: string;
 	/** 取消理由 / 删除留言 / 结案摘要；空串就不传 --summary。 */
 	readonly summary: string;
-	/** 删历史行时的 src / line / 指纹；不给就是删在办任务。 */
-	readonly history?: HistoryDeleteParams;
 	readonly origin?: string;
 	readonly panelId?: string;
 }
@@ -148,7 +145,6 @@ function watchWriteJob(jobs: SessionJobStore, input: StartWriteJobInput): void {
 					repo: job.input.workspace,
 					id: job.input.taskId,
 					summary: job.input.summary,
-					...(job.input.history === undefined ? {} : { ...job.input.history }),
 				},
 				onStep,
 			);

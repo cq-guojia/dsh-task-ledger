@@ -376,13 +376,8 @@ export async function postTaskAction(
 		readonly action: "claim" | "release" | "cancel" | "close" | "delete";
 		/** 工作区 id（host 据此找台账根）。 */
 		readonly workspace: string;
-		/** 在办任务号；删历史行时不给。 */
+		/** 任务号：在办与历史删除都用它定位（历史行由 skill 按 worklog 反查）。 */
 		readonly id?: string;
-		/** 历史行定位：相对 ledger/ 的路径 + 原文行号（删历史行时必给）。 */
-		readonly src?: string;
-		readonly line?: number;
-		/** 该行指纹（`history --json` 的 fingerprint）：skill 写前核对，行已变就拒绝删。 */
-		readonly fingerprint?: string;
 		/** 取消 / 删除用留言（可空）/ 结案用摘要（必填）：一句话。 */
 		readonly summary?: string;
 	},
@@ -517,9 +512,9 @@ export function deleteJobKey(taskId: string): string {
 	return `delete:${taskId}`;
 }
 
-/** 历史行删除不是「在办任务」对象：键里带 src + 行号（src 不含冒号，取最后一段分行号）。 */
-export function deleteHistJobKey(src: string, line: number): string {
-	return `delete-hist:${src}:${String(line)}`;
+/** 历史行删除也算任务：键里只带任务号（从该行 worklog 路径反推），不带会漂移的行号。 */
+export function deleteHistJobKey(taskId: string): string {
+	return `delete-hist:${taskId}`;
 }
 
 /**
