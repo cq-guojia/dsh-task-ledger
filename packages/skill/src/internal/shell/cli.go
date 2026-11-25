@@ -728,7 +728,7 @@ func Main(argv []string) int {
 	if actions.IsReadOnly(a.Command) {
 		return Run(a.Command, a) // 只读不碰 git ⇒ 不拿同步锁
 	}
-	unlock, err := store.SyncLock(lockDir(repo), 60*time.Second)
+	unlock, err := store.SyncLock(lockDir(repo), 120*time.Second)
 	if err != nil {
 		FailMessage("错误", err.Error())
 		return ExitBusiness

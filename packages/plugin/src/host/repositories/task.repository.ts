@@ -12,7 +12,7 @@ import {
  * 而不是 `runLedgerScript`。每条写命令内部都是「取最新 → 改 → 提交 → 推送」，
  * 默认 10s 会被判超时（脚本被 kill 时可能改到一半）⇒ 与 rename / forget 同档给足时间。
  */
-const WRITE_TIMEOUT_MS = 120_000;
+const WRITE_TIMEOUT_MS = 240_000;
 
 /** 界面行内按钮对应的动作：认领 / 释放 / 取消归档 / 正常结案 / 删除。 */
 export type TaskAction = "claim" | "release" | "cancel" | "close" | "delete";

@@ -54376,7 +54376,7 @@ window.__ModuleLoader__.load({
 		* 任务写动作（认领 / 释放）的超时：host 要跑一次「取最新 → 改 → 提交 → 推送」，
 		* 默认 8s 会在脚本还在改的时候报超时 ⇒ 与 host 侧 120s 对齐。
 		*/
-		const TASK_WRITE_TIMEOUT_MS = 12e4;
+		const TASK_WRITE_TIMEOUT_MS = 24e4;
 		/** 认识的阶段 key（skill 那边多打一个、这边没跟上就整行忽略，界面继续显示上一句）。 */
 		function isStep(value) {
 			return value === "check" || value === "sync" || value === "write" || value === "commit" || value === "push";
@@ -72231,7 +72231,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-223356-167`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-224907-394`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

@@ -72,14 +72,14 @@ key 每个动作独立：结案两种模式共用 `close:<任务号>`（同一�
 （`host/services/task-action-params.ts`，与旧 `/task/action` 共用一套规则）。跨刷新、跨标签页
 判重成立。终态通知带全局唯一 id、按 id 持久去重，状态可任意重放而不重弹。
 
-并发写由 skill 自己的整命令锁串行（最多等 60 秒，等不到报「请稍后重试」），插件只做 UI
-禁用防连点，不另加服务端互斥；超时由宿主 spawn 的 120 秒硬超时兜底。
+并发写由 skill 自己的整命令锁串行（最多等 120 秒，等不到报「请稍后重试」），插件只做 UI
+禁用防连点，不另加服务端互斥；超时由宿主 spawn 的 240 秒硬超时兜底。单个 git 操作上限 60 秒。
 
 ## 三、关键不变量
 
 1. **台账写路径只经脚本**：写台账只经 `packages/skill/scripts/progress`（Go 二进制），插件与 host 都不手改台账 JSON / history / worklog。「host 直写」= host 代跑同一个脚本。
 2. **提交只在脚本外壳，业务中间零 git**：取最新 / 提交 / 推送三件事只许放在外壳，不许下放到业务层。
-3. **两级锁不混用**：整条命令级 `store.SyncLock`（锁文件放 git 公共目录，非 git 仓库落系统临时目录按路径哈希；100ms 轮询、最多等 60 秒）；单文件级 `store.ProgressLock`（阻塞无超时、不重入，按绝对路径哈希在系统临时目录开 `<hash>.lock`；linux/darwin 走 flock、Windows 走 LockFileEx，其余平台只为能编译、不加锁）。只有只读命令不拿整命令级锁；`--no-sync` 的写命令照拿。
+3. **两级锁不混用**：整条命令级 `store.SyncLock`（锁文件放 git 公共目录，非 git 仓库落系统临时目录按路径哈希；100ms 轮询、最多等 120 秒）；单文件级 `store.ProgressLock`（阻塞无超时、不重入，按绝对路径哈希在系统临时目录开 `<hash>.lock`；linux/darwin 走 flock、Windows 走 LockFileEx，其余平台只为能编译、不加锁）。只有只读命令不拿整命令级锁；`--no-sync` 的写命令照拿。
 4. **失败收尾只有两套**：`RollbackPresync()` 恢复「写前取最新」覆盖掉的内容，`DiscardCreated()` 删本次新建的文件，成功路径统一 `Clear()`；`CommitStarted` 之后一律不回滚。业务动作自己写坏了走 `store.Snapshot` / `store.Restore`，只还原本次动作碰过的文件，不是 journal。
 5. **唯一一个不回滚的失败分支**：下游读走人（broken pipe）。`shell.IgnoreSIGPIPE()` 让写 stdout 失败变成错误返回，进程继续走完暂存与提交；本次已写过文件就必须提交，否则台账停在「已写未提交」，下一条写命令会被写前 guard 拦死。
 6. **原子性 = 单文件原子写 + 固定写序 + 重跑幂等**，不引入 journal / recover。单文件写走全仓唯一出口 `store.WriteTextAtomic`：临时文件 → write → fsync(file) → chmod → rename → fsync(父目录)。多文件先写目标、后删源，删永远是最后一步。
@@ -109,3 +109,4 @@ key 每个动作独立：结案两种模式共用 `close:<任务号>`（同一�
 - 2026-11-10 22:37:28：源码路径补全为仓库内完整路径
 - 2026-11-25 17:29:30：补两条结案路径、单一 progress 披露源、终态呈现由核心收口
 - 2026-11-25 21:52:19：补五类写动作共用执行体、独立 key、参数校验与人话终态文案
+- 2026-11-25 22:49:31：三档超时翻倍：git 60 秒、锁等待 120 秒、宿主 240 秒

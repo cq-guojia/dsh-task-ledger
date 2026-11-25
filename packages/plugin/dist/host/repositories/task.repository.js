@@ -6,7 +6,7 @@ import { failureOf, runLedgerCommand, } from "./runner.js";
  * 而不是 `runLedgerScript`。每条写命令内部都是「取最新 → 改 → 提交 → 推送」，
  * 默认 10s 会被判超时（脚本被 kill 时可能改到一半）⇒ 与 rename / forget 同档给足时间。
  */
-const WRITE_TIMEOUT_MS = 120_000;
+const WRITE_TIMEOUT_MS = 240_000;
 const ACTION_NAME = {
     claim: "认领",
     release: "释放",

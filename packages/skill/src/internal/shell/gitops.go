@@ -23,7 +23,7 @@ import (
 //
 // 四个动作之外没有别的入口：写前硬拦、取最新、提交、推送（被拒时 rebase 重试）。
 
-const gitTimeout = 30 * time.Second
+const gitTimeout = 60 * time.Second
 
 // SyncEntry 取最新刷过的文件 + 刷之前的字节（had=false 表示刷之前不存在）。
 type SyncEntry struct {

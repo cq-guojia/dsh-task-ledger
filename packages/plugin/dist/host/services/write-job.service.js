@@ -61,9 +61,9 @@ export async function startWriteJob(deps, input) {
         workspace: dir.path,
         ...(input.origin === undefined ? {} : { origin: input.origin }),
         ...(input.panelId === undefined ? {} : { panelId: input.panelId }),
-        // 宿主 spawn skill 的硬超时 120s（task.repository.ts）再留一点收尾余量，
+        // 宿主 spawn skill 的硬超时 240s（task.repository.ts）再留一点收尾余量，
         // 不让 reaper 先于命令自己 settlement 把作业判成超时。
-        maxDurationMs: 130_000,
+        maxDurationMs: 250_000,
         progressMessage: input.texts.starting,
         ...(input.completionTexts === undefined ? {} : { completionTexts: input.completionTexts }),
     });

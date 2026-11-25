@@ -311,7 +311,7 @@ export async function postForgetIdentity(
  * 任务写动作（认领 / 释放）的超时：host 要跑一次「取最新 → 改 → 提交 → 推送」，
  * 默认 8s 会在脚本还在改的时候报超时 ⇒ 与 host 侧 120s 对齐。
  */
-const TASK_WRITE_TIMEOUT_MS = 120_000;
+const TASK_WRITE_TIMEOUT_MS = 240_000;
 
 /**
  * 任务动作的过程阶段（与 skill `runner.go` 里的 `stepf(...)` 一一对应）：

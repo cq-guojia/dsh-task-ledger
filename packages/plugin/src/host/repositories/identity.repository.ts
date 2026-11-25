@@ -44,7 +44,7 @@ export interface RenameView {
 const RENAME_TIMEOUT_MS = 180_000;
 
 /** 删人同样逐本台账走 git（取最新 → 改 → 提交 → 推送），10s 默认值不够。 */
-const FORGET_TIMEOUT_MS = 120_000;
+const FORGET_TIMEOUT_MS = 240_000;
 
 const UNKNOWN_IDENTITY: IdentityView = { uuid: null, name: null };
 
