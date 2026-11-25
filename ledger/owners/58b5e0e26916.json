@@ -1,6 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
+    "20261125-0941-bb43-把释放取消删除三个按钮改到后台执行": {"category": "功能改造", "created": "2026-11-25 09:41:27", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-25 09:41:27", "status": "doing", "tags": ["后台执行", "任务动作", "阶段披露"], "title": "把释放取消删除三个按钮改到后台执行", "updated": "2026-11-25 09:41:27", "worklog": "worklog/202611/25-0941-bb43-把释放取消删除三个按钮改到后台执行.md"}
   },
   "version": "20261022000000"
 }
