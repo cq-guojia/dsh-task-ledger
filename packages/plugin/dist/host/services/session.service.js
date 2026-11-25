@@ -230,7 +230,7 @@ export async function startSession(deps, input) {
             if (sessionId !== null)
                 return { kind: "duplicate", sessionId };
         }
-        if (!deps.jobs.claim(key, displayTitle)) {
+        if (!deps.jobs.claim(key, displayTitle, input.buttonText)) {
             const held = deps.jobs.find(key);
             const sessionId = held === undefined ? null : sessionIdOf(held);
             return { kind: "duplicate", sessionId: sessionId ?? "" };
@@ -258,6 +258,7 @@ export async function startSession(deps, input) {
         deps.jobs.register({
             key,
             title: displayTitle,
+            ...(input.buttonText === undefined ? {} : { buttonText: input.buttonText }),
             sessionId: created.sessionId,
             taskId: input.taskId,
             workspace: workspace.path,

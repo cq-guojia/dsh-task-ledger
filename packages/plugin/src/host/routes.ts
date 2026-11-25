@@ -52,6 +52,8 @@ export interface WebServerLike {
 /** 宿主 workspaceRegistry 的最小面（事实见 docs/dependencies/dsh-workspace-registry.md）。 */
 export interface WorkspaceRegistryLike {
 	list(): readonly RegistryWorkspace[];
+	/** 归档会话；事实见 docs/dependencies/dsh-workspace-registry.md。 */
+	archiveSession?(sessionId: string, options?: { stopActivity?: boolean }): Promise<void>;
 }
 
 export interface RouteDeps {

@@ -52,6 +52,8 @@ export interface RegisterInput {
 	/** 业务键：`close:<任务号>` —— 判重的唯一依据。 */
 	readonly key: string;
 	readonly title: DisplayTitle;
+	/** toast「查看会话」按钮文案；客户端按界面语言拼好，缺省写死中文兜老提交。 */
+	readonly buttonText?: string;
 	/** 会话 id（随 detail 下发，客户端拿它归档 / 打开）。 */
 	readonly sessionId: string;
 	readonly taskId: string;
@@ -88,6 +90,18 @@ function rowButtons(): readonly {
 	return [{ id: VIEW_SESSION_ACTION, text: "查看会话", icon: "common.base:AIdamoxing", when: "always" }];
 }
 
+/** toast 按钮：与行按钮同一个 id，点击走同一处 handler（开会话视图）。文案由客户端按界面语言传。 */
+function toastButton(text: string): { readonly id: string; readonly text: string; readonly icon: string } {
+	return { id: VIEW_SESSION_ACTION, text, icon: "common.base:AIdamoxing" };
+}
+
+/** 从作业 detail 取会话 id（与客户端 sessionIdOfDetail 同口径）。 */
+function sessionIdOf(detail: TaskRecord["detail"]): string | null {
+	if (detail === null || typeof detail !== "object" || Array.isArray(detail)) return null;
+	const value = (detail as { sessionId?: unknown }).sessionId;
+	return typeof value === "string" ? value : null;
+}
+
 /** 把结算 result 并进 detail（detail 是 JSON 值，只有普通对象能就地加键）。 */
 function withResult(detail: TaskRecord["detail"], result: JobDetail): TaskRecord["detail"] {
 	if (detail !== null && typeof detail === "object" && !Array.isArray(detail)) {
@@ -100,21 +114,24 @@ function withResult(detail: TaskRecord["detail"], result: JobDetail): TaskRecord
  *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
  *  分类是「任务结案」，描述是任务名；这里只在描述后补动作结果，不重复拼分类。
  *  只配 toast 交核心弹卡（用户 2026-11-23：本业务用不到 notify 广播与 UI 自弹）。 */
-function completionConfig(title: DisplayTitle) {
+function completionConfig(title: DisplayTitle, buttonText: string) {
 	return {
 		toast: {
-			success: { title: { ...title, description: `${title.description}（已结案）` } },
-			failure: { title: { ...title, description: `${title.description}（失败）` } },
+			success: { title: { ...title, description: `${title.description}（已结案）` }, button: toastButton(buttonText) },
+			failure: { title: { ...title, description: `${title.description}（失败）` }, button: toastButton(buttonText) },
 		},
 	};
 }
+
+/** 结案归档回调：由入口注入宿主 workspaceRegistry.archiveSession；失败由本文件消化。 */
+export type SessionArchiver = (sessionId: string) => Promise<void>;
 
 export interface SessionJobStore extends TaskStreamSource {
 	/**
 	 * 原子占位（消除 TOCTOU）：起会话的 await 之前先占住 key，返回 true 表示拿到；
 	 * 并发第二个同 key 立刻拿到 false，不会再起第二个会话。失败要 release。
 	 */
-	claim(key: string, title: DisplayTitle): boolean;
+	claim(key: string, title: DisplayTitle, buttonText?: string): boolean;
 	/** 占位失败时释放（createSession 抛错 / 非 DSH）；没占住就是空操作。 */
 	release(key: string): void;
 	/** 把占位记录填成正式 running（带 sessionId 等详情）。 */
@@ -130,7 +147,7 @@ export interface SessionJobStore extends TaskStreamSource {
 /**
  * 建一个进程内 store。不落盘是刻意的：宿主重启 ⇒ 会话必然已中断 ⇒ 记录随之消失才是真实状态。
  */
-export function createSessionJobStore(): SessionJobStore {
+export function createSessionJobStore(archive?: SessionArchiver): SessionJobStore {
 	const records = new Map<string, TaskRecord>();
 	const outbox: TaskNotice[] = [];
 	const stateListeners = new Set<StateListener>();
@@ -222,10 +239,19 @@ export function createSessionJobStore(): SessionJobStore {
 		outbox.push(notice);
 		emitState(next);
 		emitNotice(notice);
+		// 结案归档只认终态漏斗：done / failed / reaper 超时都走这里，release 无 sessionId 自然跳过。
+		// 不 await、不改作业结论；归档失败只留 warn，会话仍在侧栏供排查。
+		if (archive !== undefined) {
+			const sessionId = sessionIdOf(next.detail);
+			if (sessionId !== null)
+				void archive(sessionId).catch((error: unknown) => {
+					console.warn(`[task-ledger] archive session ${sessionId} failed`, error);
+				});
+		}
 		return next;
 	}
 
-	function claim(key: string, title: DisplayTitle): boolean {
+	function claim(key: string, title: DisplayTitle, buttonText = "查看会话"): boolean {
 		const id = keyOf(PROJECT, key);
 		const existing = records.get(id);
 		if (existing !== undefined && existing.state === "running") return false;
@@ -240,7 +266,7 @@ export function createSessionJobStore(): SessionJobStore {
 			startedAt: now,
 			kind: "session-job",
 			rowButtons: rowButtons(),
-			...completionConfig(title),
+			...completionConfig(title, buttonText),
 		};
 		// 占位只在服务端内存里占 key，**不推 SSE**：createSession 期间会话还没建起来，
 		// 推一条无 sessionId 的 running 行会给所有标签页画出点了没反应的「查看会话」死按钮；
@@ -287,7 +313,7 @@ export function createSessionJobStore(): SessionJobStore {
 			},
 			kind: "session-job",
 			rowButtons: rowButtons(),
-			...completionConfig(input.title),
+			...completionConfig(input.title, input.buttonText ?? "查看会话"),
 		};
 		records.set(id, record);
 		deadlineByKey.set(input.key, maxDurationMs > 0 ? now + maxDurationMs : 0);

@@ -18,6 +18,7 @@
 | `list()` 签名与语义 | `list()` → *"a fresh ordered array of workspace entities"*；实现 = registry 状态中的 workspaceIds 顺序映射，缺实体抛错 | `lib/index.js:452-458` |
 | Workspace 实体字段 | `id`（uuid）/ `path`（*"Canonical directory path: the `fs.realpath` of the path given at create time… Never rewritten afterwards"*）/ `title`（缺省 = 路径末段，允许重名） | `lib/types/types.d.ts:57-67` |
 | 注册表其余面 | `get(id)` / `resolveByPath(path)` / `create(path)` / `delete(id)` / `insertBefore(...)` / `archiveSession` / `unarchiveSession` / `pinnedSessionIds` 等 | `lib/index.js`；`dsh-api-workspace-controller` `lib/types/commands.js:21-76` |
+| `archiveSession(sessionId, options?)` | `async archiveSession(sessionId, options = {})`：已归档则直接返回；session 不在注册表则抛错；`options.stopActivity !== true` 时查 `workspace/session-activity`，有活动即抛错；`stopActivity === true` 跳过活动检查、先写归档态再 `stopSessionActivity(sessionId)`；归档同时清掉该 session 的 pin。幂等（重复归档 no-op）。会话归档后仍在注册表里可查。 | `@deepseek-ai/dsh-workspace@0.2.0-rc.2` `lib/index.js`（`WorkspaceRegistry` 类 `archiveSession` / `stopSessionActivity`，2026-11-25 实时取包核实） |
 | 覆盖范围 | registry 收录的是「在 dsh 里添加过的工作区」；从未添加的目录不在列表内（默认工作区初始化是显式行为，反证收录非自动全盘扫描） | `lib/index.js:429-436` |
 
 ## 三、对本插件的落地含义

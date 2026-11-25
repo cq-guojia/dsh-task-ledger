@@ -352,6 +352,8 @@ export function TaskRowView(props: {
 					taskId: row.task.id,
 					prompt,
 					title: sessionTitle,
+					// toast 按钮文案只有浏览器知道界面语言，跟 title / prompt 一样拼好传进去。
+					buttonText: t("actionOpenSession"),
 				},
 			});
 			// 提交成功：弹窗照旧锁定转圈（用户 2026-11-21 重申 —— 不是提交就关、也不自动拉会话）。

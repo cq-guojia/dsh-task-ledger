@@ -123,7 +123,12 @@ export function apply(ctx: PluginContext): void {
 		}
 		// 会话作业的状态真源：一份实例同时喂给命令路由与任务中心路由。
 		// 进程内存储，随插件 dispose 释放（宿主重启 ⇒ 会话已断 ⇒ 记录本就该消失）。
-		const jobs = createSessionJobStore();
+		// 结案归档在服务端终态漏斗里做（不依赖客户端订阅是否还在）；宿主没这能力就只跳过归档。
+		const jobs = createSessionJobStore(
+			registry.archiveSession === undefined
+				? undefined
+				: (sessionId) => registry.archiveSession!(sessionId, { stopActivity: true }),
+		);
 		ctx.effect(() => () => {
 			jobs.dispose();
 		});
@@ -175,6 +180,7 @@ export function apply(ctx: PluginContext): void {
 				// 会话名沿用客户端按界面语言拼好的那句；没带才退回结构化标题。
 				const title =
 					typeof args.title === "string" ? args.title : formatDisplayTitle(displayTitle);
+				const buttonText = typeof args.buttonText === "string" ? args.buttonText : undefined;
 				const origin = typeof payload.origin === "string" ? payload.origin : undefined;
 				const panelId = typeof payload.panelId === "string" ? payload.panelId : undefined;
 				const reply = await startSession(sessionDeps(), {
@@ -184,6 +190,7 @@ export function apply(ctx: PluginContext): void {
 					title,
 					displayTitle,
 					prompt,
+					...(buttonText === undefined ? {} : { buttonText }),
 					...(origin === undefined ? {} : { origin }),
 					...(panelId === undefined ? {} : { panelId }),
 				});

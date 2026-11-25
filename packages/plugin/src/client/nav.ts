@@ -7,8 +7,8 @@
  *
  * 三组服务（都由入口在就位时注册；取不到就退化成空操作 / false，不报错）：
  *  · `opener`     `uiWorkspace.openSession(id)` —— 官方导航自己 `retain('mainView')`，插件不得自己 retain；
- *  · `archiver`   `uiWorkspace.archiveSession(id)` —— 结案成功后归档，不归档会在侧栏攒一堆一次性会话；
- *  · `sessions` + `uiConversation` —— 只读会话视图（`adv/session` 的 `openSessionView`）。
+ *  · `sessions` + `uiConversation` —— 只读会话视图（`adv/session` 的 `openSessionView`）；
+ *  · 归档不在这里：服务端终态漏斗直接调 `workspaceRegistry.archiveSession`，与客户端订阅无关。
  */
 import {
 	openSessionView,
@@ -30,18 +30,12 @@ interface SessionRefLike {
 }
 
 let opener: ((sessionId: string) => void) | null = null;
-let archiver: ((sessionId: string) => Promise<void>) | null = null;
 let service: SessionsLike | null = null;
 let conversation: UiConversationFace | null = null;
 
 /** 由入口在 `uiWorkspace` 就位时调用（只注册一次）。 */
 export function setSessionOpener(next: (sessionId: string) => void): void {
 	opener = next;
-}
-
-/** 由入口在 `uiWorkspace` 就位时调用（只注册一次）。 */
-export function setSessionArchiver(next: (sessionId: string) => Promise<void>): void {
-	archiver = next;
 }
 
 /** 由入口在 `sessions` 就位时调用（只注册一次）。 */
@@ -58,13 +52,6 @@ export function setUiConversation(next: UiConversationFace): void {
 export function openSession(sessionId: string): boolean {
 	if (opener === null) return false;
 	opener(sessionId);
-	return true;
-}
-
-/** @returns 是否真的归档了（false = 宿主没这个服务，会话会留在侧栏，不算失败）。 */
-export async function archiveSession(sessionId: string): Promise<boolean> {
-	if (archiver === null) return false;
-	await archiver(sessionId);
 	return true;
 }
 

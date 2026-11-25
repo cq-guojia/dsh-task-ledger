@@ -35,7 +35,6 @@ import {
 	type SessionViewTarget,
 } from "dsh-plugin-core/adv/session";
 import {
-	archiveSession,
 	openCloseSessionView,
 	openSession,
 	sessionIdOfDetail,
@@ -264,21 +263,15 @@ export function BoardHome(props: {
 					if (sessionId !== null) showSessionView(sessionId, t("closeSessionTitle", { title: task.title.description }));
 				},
 			},
-			// 终态收尾只做本仓共享数据：刷看板 + 成功时归档。toast 由核心按记录配置弹，行弹窗由行自己关。
-			// 核心列表自刷、通知去重都归核心；这里不重复，也不判业务结论（done/failed 由服务端给）。
+			// 终态收尾只刷本仓看板（agent 写完台账后本页数据是旧的）；归档已在服务端终态漏斗做，
+			// toast 由核心按记录配置弹，行弹窗由行自己关。核心列表自刷、通知去重都归核心。
 			onSettled: (task) => {
 				const key = task.key ?? "";
 				if (!key.startsWith("close:")) return;
 				const stamp = `${key}@${String(task.startedAt)}`;
 				if (handledJobs.has(stamp)) return;
 				handledJobs.add(stamp);
-
 				void refresh().catch(() => false);
-				// 只在结案成功时归档：失败（still-open / timeout）要留会话供排查，
-				// 否则「去会话里看它停在哪儿」的入口被自己关掉。
-				if (task.state !== "done") return;
-				const sessionId = sessionIdOfDetail(task.detail);
-				if (sessionId !== null) void archiveSession(sessionId).catch(() => false);
 			},
 		});
 	}, [t, showSessionView]);

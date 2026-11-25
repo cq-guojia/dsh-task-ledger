@@ -50,7 +50,7 @@ import {
 	type SessionsLike,
 } from "./nav";
 import type { UiConversationFace } from "dsh-plugin-core/adv/session";
-import { setSessionArchiver, setSessionOpener } from "./nav";
+import { setSessionOpener } from "./nav";
 import { initClientUi } from "./ui-init";
 import { LedgerIcon } from "./ui";
 
@@ -89,10 +89,9 @@ interface ClientContext {
 	layout?: {
 		selectPanel(panelId: string | null): void;
 	};
-	/** 会话导航 / 归档（「继续」跳过去、「完成」结案后归档）：自己 retain mainView，插件不得自己 retain。 */
+	/** 会话导航（「继续」跳过去）：自己 retain mainView，插件不得自己 retain。归档在服务端做。 */
 	uiWorkspace?: {
 		openSession(sessionId: string): void;
-		archiveSession?(sessionId: string, options?: { stopActivity?: boolean }): Promise<void>;
 	};
 	/** 官方客户端会话面（「完成」由 Agent 结案：create / retain / prompt / subscribe）。 */
 	sessions?: SessionsLike;
@@ -269,16 +268,13 @@ export function apply(ctx: ClientContext): void {
 			};
 	});
 
-	// ③ 会话导航 / 归档（「继续」跳过去、「完成」结案成功后归档）：服务缺席 = 只是不跳不归档
+	// ③ 会话导航（「继续」跳过去）：服务缺席 = 只是不跳；归档在服务端终态漏斗做
 	ctx.inject(["uiWorkspace"], (sub) => {
 		const uiWorkspace = sub.uiWorkspace;
 		if (uiWorkspace === undefined) return;
 		setSessionOpener((sessionId) => {
 			uiWorkspace.openSession(sessionId);
 		});
-		const archive = uiWorkspace.archiveSession;
-		if (archive !== undefined)
-			setSessionArchiver((sessionId) => archive.call(uiWorkspace, sessionId));
 	});
 
 	// ④ 官方会话面（「完成」交给 Agent）：服务缺席 ⇒ 弹窗里勾选框置灰，只剩手动结案

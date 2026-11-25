@@ -80,7 +80,7 @@ host/services/session-job.store.ts  ← TaskStreamSource 实现（snapshot/subsc
 14. **起会话只有一条链路**：`host/services/session.service.ts` 的 `createSession()` 是唯一实现；「继续」与「完成」只差 `policy` 一个字段。页面里出现 `sessions.create` / `agents.create` 即违规。
 15. **会话作业的状态在宿主**：`host/services/session-job.store.ts` 是核心 `TaskStreamSource` 的本仓实现、唯一真源；宿主 `serveTaskStream`（SSE 三流）+ `serveTaskSubmit`（POST）对外，客户端 `connectTaskCenter` / `mountTaskUI` 接线。页面只渲染记录、注册按钮 handler 与终态收尾，**不判终态、不设超时兜底、不做本地判重**。
 16. **作业寿命 = 执行者寿命**：作业记录只在宿主进程内存里，宿主重启即消失（会话必然已断）。不落盘、不做跨重启恢复 —— 落盘等于要求「恢复一个已经死掉的会话」。
-17. **归档是唯一的客户端收尾副作用**：`uiWorkspace.archiveSession` 只有客户端服务有，所以归档留在页面；它不参与状态判定，失败也不改结论。
+17. **归档在服务端终态漏斗**：宿主 `workspaceRegistry.archiveSession(sessionId, {stopActivity:true})` 由入口注入 `session-job.store.ts` 的 `settle()`，done / failed / 超时一律归档（2026-11-25 用户口径：失败也归档留给用户查看）；客户端不订阅归档、不分成败。归档失败只 warn，不改作业结论。签名见 [dependencies/dsh-workspace-registry.md](../dependencies/dsh-workspace-registry.md)。
 
 ## 四、入口与主题
 

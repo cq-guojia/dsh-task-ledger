@@ -108,6 +108,8 @@ export interface StartSessionInput {
      * 而语言只有浏览器半知道；host 不自带中文模板（否则英文环境收到的仍是中文）。
      */
     readonly prompt: string;
+    /** 终态 toast「查看会话」按钮的文案；客户端按界面语言拼好，同 title / prompt 口径。 */
+    readonly buttonText?: string;
     /** 核心随提交体带来的页面级归属，登记作业时回显到 SSE 记录（缺省则核心本地兜底）。 */
     readonly origin?: string;
     /** 核心随提交体带来的面板级归属，回显供「查看会话」跳回发起面板。 */
