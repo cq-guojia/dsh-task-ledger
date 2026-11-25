@@ -193,7 +193,7 @@ export function TaskRowView(props: {
 			group: JOB_GROUP,
 			key,
 			kind: action,
-			title: displayTitleForAction(t, titleOf(row)),
+			title: displayTitleForAction(action, t, titleOf(row)),
 			args: {
 				workspace: row.task.workspace.id,
 				taskId: row.task.id,

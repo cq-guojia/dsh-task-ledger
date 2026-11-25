@@ -60,9 +60,21 @@ function textsOf(action: WriteAction, t: Translate): ActionTexts {
 	}
 }
 
-/** 后台作业的结构化标题：分类说清「这是什么活」，描述才是任务名。 */
-export function displayTitleForAction(t: Translate, title: string): DisplayTitle {
-	return { category: t("taskActionCategory"), description: title };
+/** 分类按动作给具体名字：toast 形如「释放任务丨xxx」，不用笼统的「任务操作」。 */
+const CATEGORY_KEYS: Record<WriteAction, Parameters<Translate>[0]> = {
+	release: "releaseTaskCategory",
+	cancel: "cancelTaskCategory",
+	delete: "deleteTaskCategory",
+	"delete-hist": "deleteHistoryCategory",
+};
+
+/** 后台作业的结构化标题：分类说清「这是哪个动作」，描述才是任务名。 */
+export function displayTitleForAction(
+	action: WriteAction,
+	t: Translate,
+	title: string,
+): DisplayTitle {
+	return { category: t(CATEGORY_KEYS[action]), description: title };
 }
 
 /** 八段披露文案：起始 + 五阶段（复用 actionStep*）+ 成功 / 失败，全部按界面语言拼好。 */

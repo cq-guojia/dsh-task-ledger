@@ -616,7 +616,7 @@ export function HistoryList(props: HistoryListProps): ReturnType<typeof h> {
 				group: JOB_GROUP,
 				key: deleteHistJobKey(target.src, target.line),
 				kind: "delete-hist",
-				title: displayTitleForAction(t, title),
+				title: displayTitleForAction("delete-hist", t, title),
 				args: {
 					workspace: target.workspaceId,
 					fingerprint: target.fingerprint,

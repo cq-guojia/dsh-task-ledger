@@ -53671,7 +53671,10 @@ window.__ModuleLoader__.load({
 			actionReleaseDone: "已释放：{title}",
 			actionFailed: "操作失败：{error}",
 			actionSyncing: "正在同步台账并提交…",
-			taskActionCategory: "任务操作",
+			releaseTaskCategory: "释放任务",
+			cancelTaskCategory: "取消任务",
+			deleteTaskCategory: "删除任务",
+			deleteHistoryCategory: "删除历史任务",
 			writeReleaseStarting: "释放作业已建立，正在写入台账…",
 			writeReleaseDone: "已释放",
 			writeReleaseFailed: "释放失败，请稍后重试",
@@ -54025,7 +54028,10 @@ window.__ModuleLoader__.load({
 			actionReleaseDone: "Released: {title}",
 			actionFailed: "Action failed: {error}",
 			actionSyncing: "Syncing the ledger and committing…",
-			taskActionCategory: "Task action",
+			releaseTaskCategory: "Release task",
+			cancelTaskCategory: "Cancel task",
+			deleteTaskCategory: "Delete task",
+			deleteHistoryCategory: "Delete history entry",
 			writeReleaseStarting: "Release job created; writing to the ledger…",
 			writeReleaseDone: "Released",
 			writeReleaseFailed: "Release failed; please retry",
@@ -64932,10 +64938,17 @@ window.__ModuleLoader__.load({
 				};
 			}
 		}
-		/** 后台作业的结构化标题：分类说清「这是什么活」，描述才是任务名。 */
-		function displayTitleForAction(t, title) {
+		/** 分类按动作给具体名字：toast 形如「释放任务丨xxx」，不用笼统的「任务操作」。 */
+		const CATEGORY_KEYS = {
+			release: "releaseTaskCategory",
+			cancel: "cancelTaskCategory",
+			delete: "deleteTaskCategory",
+			"delete-hist": "deleteHistoryCategory"
+		};
+		/** 后台作业的结构化标题：分类说清「这是哪个动作」，描述才是任务名。 */
+		function displayTitleForAction(action, t, title) {
 			return {
-				category: t("taskActionCategory"),
+				category: t(CATEGORY_KEYS[action]),
 				description: title
 			};
 		}
@@ -69195,7 +69208,7 @@ body[data-ds-dark-theme]{
 						group: JOB_GROUP,
 						key: deleteHistJobKey(target.src, target.line),
 						kind: "delete-hist",
-						title: displayTitleForAction(t, title),
+						title: displayTitleForAction("delete-hist", t, title),
 						args: {
 							workspace: target.workspaceId,
 							fingerprint: target.fingerprint,
@@ -69981,7 +69994,7 @@ body[data-ds-dark-theme]{
 					group: JOB_GROUP,
 					key,
 					kind: action,
-					title: displayTitleForAction(t, titleOf(row)),
+					title: displayTitleForAction(action, t, titleOf(row)),
 					args: {
 						workspace: row.task.workspace.id,
 						taskId: row.task.id,
@@ -72218,7 +72231,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-222108-776`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-223145-478`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

@@ -240,8 +240,11 @@ export type LocaleKey =
 	| "actionReleaseDone"
 	| "actionFailed"
 	| "actionSyncing"
-	// 三个写动作改后台：分类 + 每动作「起始 / 终态 toast 后缀」三段（五阶段复用 actionStep*）
-	| "taskActionCategory"
+	// 写动作改后台：分类按动作给具体名字（toast 形如「释放任务丨xxx」，不用笼统的「任务操作」）
+	| "releaseTaskCategory"
+	| "cancelTaskCategory"
+	| "deleteTaskCategory"
+	| "deleteHistoryCategory"
 	| "writeReleaseStarting"
 	| "writeReleaseDone"
 	| "writeReleaseFailed"
@@ -651,7 +654,10 @@ export const zh: Record<LocaleKey, string> = {
 	actionReleaseDone: "已释放：{title}",
 	actionFailed: "操作失败：{error}",
 	actionSyncing: "正在同步台账并提交…",
-	taskActionCategory: "任务操作",
+	releaseTaskCategory: "释放任务",
+	cancelTaskCategory: "取消任务",
+	deleteTaskCategory: "删除任务",
+	deleteHistoryCategory: "删除历史任务",
 	writeReleaseStarting: "释放作业已建立，正在写入台账…",
 	writeReleaseDone: "已释放",
 	writeReleaseFailed: "释放失败，请稍后重试",
@@ -1043,7 +1049,10 @@ export const en: Record<LocaleKey, string> = {
 	actionReleaseDone: "Released: {title}",
 	actionFailed: "Action failed: {error}",
 	actionSyncing: "Syncing the ledger and committing…",
-	taskActionCategory: "Task action",
+	releaseTaskCategory: "Release task",
+	cancelTaskCategory: "Cancel task",
+	deleteTaskCategory: "Delete task",
+	deleteHistoryCategory: "Delete history entry",
 	writeReleaseStarting: "Release job created; writing to the ledger…",
 	writeReleaseDone: "Released",
 	writeReleaseFailed: "Release failed; please retry",

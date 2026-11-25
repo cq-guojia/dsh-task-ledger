@@ -169,7 +169,7 @@ if (!/completionTexts\?: CompletionTexts/.test(storeText)) {
   problems.push('session-job.store.ts: 终态文案未按动作参数化');
 }
 const localeText = readSource(join(clientDir, 'locales.ts'));
-for (const key of ['taskActionCategory', 'writeReleaseDone', 'writeCancelDone', 'writeDeleteDone']) {
+for (const key of ['releaseTaskCategory', 'cancelTaskCategory', 'deleteTaskCategory', 'deleteHistoryCategory', 'writeReleaseDone', 'writeCancelDone', 'writeDeleteDone']) {
   const occurrences = localeText.split(key).length - 1;
   if (occurrences < 3) problems.push(`locales.ts: ${key} 缺中英双档或类型声明`);
 }
