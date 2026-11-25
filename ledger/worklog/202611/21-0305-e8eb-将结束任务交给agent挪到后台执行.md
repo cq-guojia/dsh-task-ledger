@@ -1,7 +1,7 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-24 13:56:01 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: doing · 2026-11-25 09:22:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
@@ -17,7 +17,7 @@
 
 ## To Do
 
-真机暴露的 4 个问题，**逐个定位、逐个报方案、用户确认后才改**：
+真机暴露的 4 个问题，逐个定位、逐个报方案、用户确认后才改——均已完成，用户 2026-11-25 确认 OK 收工：
 
 1. **工作区判据 `isDsh` 时好时坏 — 端点已修，真机暴露「提示不显示」并根治，待再验收**：同一任务 `C.dsh-plugin-core`（`ledgerPath=/code/dsh-plugins/dsh-plugin-core`）点「交给 Agent」，有时 `hit:true` 能提交，有时 `hit:false` 弹「此任务不属于 DeepSeek Harness 工作区」。根因：前端 `fetchWorkspaceDshFlags` 拉 `/workspaces` 整表建 Map，与 `/board/snapshot` 是两次独立的 `readDirs()`+`registry.list()` 快照，两个快照对不上（用户明确判据按目录路径、不按名字/ID；前端判一次+后端判一次的分层保留）。修法（判定端点化）：host 新增 `GET /workspace/can-host?path=...`，用同一个 `resolveWorkspace` 现算返回 `{dsh}`；client `canHostAgentSession(path)` 取代建表；`/workspaces` 恢复只返回目录清单；3 条 `[ledger-ws-diag]` 临时日志全撤。**2026-11-22 真机新发现**：端点正常返 `{"dsh":false}`，但警告 Toast 完全不显示、只见 busy loading 闪一下。根因=本仓 27 处 `notify()` 全是死投递——核心 notify 只 push 到模块级 toast-queue，必须消费方 `mountToasts()` 建 Toaster+订阅渲染，本仓从未调用（全仓 0 处）。按用户「不要补丁、该重构就重构」定性为 UI 接线体系缺失，非端点问题。已做根治（见 Process 与 Conclusion）。
 2. **一次失败结算弹两个红框**：文案 `失败：{title}`（session-job.store.ts:94 `toast.failure`）与 `后台任务失败：{title}`（:98 `notify.failure`，scope=all/broadcast=plugin）。核心 `coordinator.ts:116/125` 各弹一张。触发场景：点「执行」后立刻停会话 → agent 15s 未进 running → failed「会话没有起跑」（session.service.ts:318-323）。
@@ -26,14 +26,8 @@
 
 ## Next
 
-1. 问题 1 再交真机验收：点「交给 Agent」后应看到黄色 Toast「此任务不属于 DeepSeek Harness 工作区」+ 复制提示词说明（非 DSH 工作区分支）；同时验证其他操作（复制任务号 / 设置保存等）的 Toast 全部恢复显示。核心单飞锁的 TypeError 也应不再出现。
-2. 问题 4 已改（执行时右侧只留「后台执行」、终态还原），交真机验收；问题 2（双红框）待用户拍板再改；问题 3 已代码层修复，待真机验收。
-3. 三个提示来源已查明并答用户：两红框=服务端 `session-job.store.ts:99,103` 的 toast.failure + notify.failure 两路（核心 coordinator `announce` 各发一次，即问题 2）；黄框=本仓 `board-home.ts:266` 的 onSettled 非 done warning。属问题 2 的红框待用户拍板。
-4. 行「完成」按钮后台态文案：用户 2026-11-23 看真机图确认按钮形态对了，但文字不要「后台执行」、改「执行中」—— 新增 `executing` 键（中「执行中」/ 英「Running」，`locales.ts` 三处：`LocaleKey` + zh + en），`task-row.ts` 的 closing 文案由 `bgRun` 改 `executing`（`bgRun` 保留给结案弹窗那个「后台执行」按钮，两者语义不同）。verify/codelint 全过。
-5. **核心需求（发何心，本仓不绕路）**：TaskBar 下拉 × Modal 层级 bug —— 用户真机点面板内「查看会话」，Modal 打开后 TaskBar 卡仍浮在 Modal 上。查实是核心 bug：token 阶梯 `--dshpc-z-popmenu`(970) > `--dshpc-z-modal`(940)（`src/design/tokens.css:262,267,273`），Modal 就地渲染（`src/ui/feedback/Modal.ts:107,147-159`，z 来自 `overlay.css:28-32`），TaskBar 面板走 `FloatingPortal` 挂 body（`src/adv/tasks/TaskBar.ts:448-456`，z 来自 `task-bar.css:45-48`）；核心只有 `locked` 广播（`src/ui/infra/overlay.ts:13-36`，Picker 订阅、TaskBar 未订阅），行按钮点击也不收面板（`TaskBar.ts:425-431`）。本仓未设任何 z-index、SessionViewModal 无改层级 prop，不背锅，也不用更高 z-index 硬压。建议给核心：加「浮层打开」广播（Modal 发、TaskBar 收 `setOpen(false)`）+ 行按钮点击即收面板。
-6. **核心需求（发何心，本仓不绕路）**：核心 TaskBar 时间缺「渐进式披露」——`Elapsed`（`src/adv/tasks/TaskBar.ts:112-133`）无条件 `formatDurationHms` + `useNowMs` 每秒心跳（`src/ui/infra/ticker.ts:25`），运行中永远秒级跳；`relativePast`（`src/utils/date.ts:90-105`）已定义但零消费；`TaskBarProps`（`TaskBar.ts:38-76`）无时间粒度开关。请核心加 `timeMode?: 'elapsed'|'relative'|'auto'` + `coarseAfterMs?: number`（默认 elapsed 保持现状），并让 Elapsed 按经过时长切粗粒度；改完重建 dist。
-6. **验证开关按用户要求保留，待真机验收 v0.46.1**：核心 v0.46.1 修层级（新增 `--dshpc-z-page-float`=900，低于 modal 940）与关不掉（`useForegroundOverlayActive()` 读状态代替发关闭信号）。本仓 `board-home.ts` 保留 TaskBar 受控 `open`/`onOpenChange`（会话浮层在时不回写 false）+ `closeOnAction: false`，让点「查看会话」后面板仍留在屏上供真机核对。上一轮 agent 擅自还原过一次，用户明确「没说改回去就别改」，已恢复。v0.46.2（浮层层级改认标准模态语义：dialog/aria-modal，删掉 v0.46.1 的广播与 suspended）已接入：registry 元数据有 latest=0.46.2 但 tarball 404，改用本地核心仓库 dist（软链 node_modules）编译，产物含 isModalDialogOpen/aria-modal；验证开关未动，verify/codelint 全过。
-7. 是否提交另等用户明确指令（未完成前不提交）。
+- 任务已结，4 个真机问题与后续追加项（Toast 收敛、按钮布局、结构化标题、终态三回归、层级对接）均已落地，用户 2026-11-25 确认 OK，无下一步。
+- 遗留待办：核心 `0.46.11` 尚未上架 registry；上架后跑正式 `pnpm add dsh-plugin-core@0.46.11` 同步 lockfile、撤掉本地软链，重建 dist 并复验后提交。
 
 ## Process
 
@@ -49,8 +43,10 @@
 
 ## Conclusion
 
-- 已完成：问题 1 判定端点化 + Toast 死投递根治（27 处 notify 现在有渲染端；UI 接线统一到 `ui-init.ts` + 构建期自检，不再是补丁）；诊断日志撤净；旧任务结案、新任务认领。问题 3 代码层修复（notice watermark + id 实例熵，随 core v0.45.4 对接）。
-- 未完成：问题 1/3 待真机验收；核心 v0.46.3 已接入、单 toast 已收敛、结案中按钮已屏蔽；终态三回归（关窗/刷新/归档分流）已按分层方案修完待真机验收。TaskBar 时间后五阶段扫光受「交给 Agent 路径拿不到 skill #step」阻塞，另立任务 `20261123-0905-2bf6` 单独推进；toast 的 origin 跨刷新失配待拍板；未提交。
+- 已完成：4 个真机问题全部修复并落地——工作区判定端点化、Toast 死投递根治（统一到 `ui-init.ts` + 构建期自检）、双红框收敛为一张核心 toast、新标签重弹修复（notice watermark + id 实例熵）。
+- 后续追加项也已全部落地并确认：后台查看会话走核心 SessionViewModal、结构化标题契约（v0.46.0）、终态三回归按分层方案修复（关窗/刷新/归档分流）、核心层级对接（v0.46.1~v0.46.2）、单 toast + 查看会话按钮（v0.46.3）、刷新后 toast 保留（v0.46.4）、Card 呼吸（v0.46.6）、TaskBar 点按钮恢复默认收起（显式 `closeOnAction: true`）。
+- 阶段披露扫光另立任务 `20261123-0905-2bf6` 推进并已完成，两条结案路径均经单一 `TaskRecord.progress` 披露。
+- 用户 2026-11-25 确认 OK，任务结案。遗留待办见 Next（0.46.11 上架后正式安装同步 lockfile 再提交）。
 
 ## Execution Log
 
@@ -80,3 +76,4 @@
 - 2026-11-24 04:30:17 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 更正上一条：registry实时latest确为0.46.6(tarball可下)，之前'未发版'是pnpm缓存读到的旧值。已撤本地软链、走正式pnpm install装0.46.6(node_modules指向.pnpm/dsh-plugin-core@0.46.6)，重新verify+codelint全过，产物含呼吸动画与loading:closing接线
 - 2026-11-24 04:59:38 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 已提交 0e64407 并 push main(d8bb72c..0e64407)：core 0.46.6 正式包+项目行 Card loading:closing 呼吸样式，dist/lockfile 一并入库，verify/codelint 全过
 - 2026-11-24 13:56:01 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 核心toast加查看会话按钮：用核心开放的TaskToastState.button契约(id=VIEW_SESSION_ACTION复用现成handler/icon同rowButtons)，按钮文案按用户要求随界面语言走——客户端t(actionOpenSession)经startTask.args.buttonText透传→onSubmit→StartSessionInput→claim/register→completionConfig→toast.button.text；缺省中文兜老提交。四层契约+产物全链路核对，verify/codelint全过，未提交
+- 2026-11-25 09:22:31 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 用户2026-11-25确认OK，正文To Do/Next/Conclusion已更新为结案态：4个真机问题+后续追加项(Toast收敛/结构化标题/终态三回归/层级对接/Card呼吸/按钮默认收起)全部落地，阶段披露扫光另立任务已完成。待close
