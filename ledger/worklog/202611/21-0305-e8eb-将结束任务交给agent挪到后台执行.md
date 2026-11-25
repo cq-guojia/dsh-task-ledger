@@ -1,8 +1,9 @@
 # 20261121-0305-e8eb-将结束任务交给agent挪到后台执行: 将结束任务交给Agent挪到后台执行
 
 - **Tags**: 后台任务, 结案, Agent, 缺陷排查
-- **Status**: doing · 2026-11-25 09:22:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Status**: done · 2026-11-25 09:22:56 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 - **Created**: 2026-11-21 03:05:31 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
+- **Sealed**: 2026-11-25 09:22:56 · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6
 
 <!-- Header lines are maintained by the script, fixed order: Tags → Status → Created → Sealed.
      The `- **Tags**: …` line is inserted at the top by new --tags; omitted when there are no tags
@@ -77,3 +78,4 @@
 - 2026-11-24 04:59:38 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 已提交 0e64407 并 push main(d8bb72c..0e64407)：core 0.46.6 正式包+项目行 Card loading:closing 呼吸样式，dist/lockfile 一并入库，verify/codelint 全过
 - 2026-11-24 13:56:01 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 核心toast加查看会话按钮：用核心开放的TaskToastState.button契约(id=VIEW_SESSION_ACTION复用现成handler/icon同rowButtons)，按钮文案按用户要求随界面语言走——客户端t(actionOpenSession)经startTask.args.buttonText透传→onSubmit→StartSessionInput→claim/register→completionConfig→toast.button.text；缺省中文兜老提交。四层契约+产物全链路核对，verify/codelint全过，未提交
 - 2026-11-25 09:22:31 · log · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · 用户2026-11-25确认OK，正文To Do/Next/Conclusion已更新为结案态：4个真机问题+后续追加项(Toast收敛/结构化标题/终态三回归/层级对接/Card呼吸/按钮默认收起)全部落地，阶段披露扫光另立任务已完成。待close
+- 2026-11-25 09:22:56 · close · @GuoJia-Agent · 8d557c6d-7c93-43ac-8c73-5d623e82e1c6 · sealed: 4 个真机 bug 与后续追加项全部落地：工作区判定端点化、Toast 死投递根治、双红框收敛单 toast、新标签重弹修复、核心 SessionViewModal、结构化标题、终态三回归、层级对接、Card 呼吸、按钮默认收起。用户确认 OK。遗留：0.46.11 上架后正式装包同步 lockfile 再提交
