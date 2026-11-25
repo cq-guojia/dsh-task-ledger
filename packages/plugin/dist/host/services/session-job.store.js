@@ -54,6 +54,41 @@ function withResult(detail, result) {
     }
     return { ...(detail === undefined ? {} : { detail }), result };
 }
+/**
+ * 失败原因压成一句可塞进 toast 的短句：skill 的错误原文常带任务号 / 路径 / 换行「处理：」段，
+ * 全搬进 toast 会把人话淹没。规则：只取第一行、抽掉可变标识、去句尾标点、截到 24 字。
+ * 只做无语义的裁剪，不翻译也不造词；TaskRecord.reason 仍保留完整原文供排查。
+ */
+function shortenReason(reason) {
+    const firstLine = reason.split("\n", 1)[0] ?? "";
+    const short = firstLine
+        .replace(/\d{8}-\d{4}-[0-9a-z]+-[^\s，。；]+/gi, "") // 任务号
+        .replace(/[\w./\\-]+\.(?:md|json|lock)/gi, "") // 文件路径
+        .replace(/[（(][^）)]*\d+[^）)]*[）)]/g, "") // 含数字的括号补充（如「已等 120 秒」）
+        .replace(/(?:，|、)?(?:已中止、?)?(?:未写入任何内容|未做任何写入)/g, "") // 零写入尾注（toast 不必说）
+        .replace(/\s+/g, "") // 抽掉任务号 / 路径后的空格
+        .replace(/[，。；,;]+$/, "");
+    return short.length > 24 ? `${short.slice(0, 24)}…` : short;
+}
+/** 失败时在 toast 后缀里补上短原因：把 `xxx（失败后缀）` 改写成 `xxx（失败：短原因）`。 */
+function withFailureReason(toast, reason) {
+    const failure = toast?.failure;
+    const title = failure?.title;
+    if (title === undefined)
+        return toast;
+    const short = shortenReason(reason);
+    if (short === "")
+        return toast;
+    // description 形如「测试一（删除失败，请稍后重试）」⇒ 收成「测试一（失败：短原因）」，
+    // 不重复「请稍后重试」；taskName 从结构化 title 的 description 取，但这里已有括号，
+    // 故用第一个左括号切出任务名部分（标题也可能自带括号，取最后一个「（失败」之前的段）。
+    const at = title.description.lastIndexOf("（");
+    const taskName = at >= 0 ? title.description.slice(0, at) : title.description;
+    return {
+        ...toast,
+        failure: { ...failure, title: { ...title, description: `${taskName}（失败：${short}）` } },
+    };
+}
 /** toast / notify 配置随记录走：任何页面看到同一条都按同一份配置渲染。
  *  文案要能独立看懂（用户 2026-11-23：不要把任务标题直接扔上去）：
  *  分类由客户端随 title 给（结案 / 释放 / 取消 / 删除各用各的），描述是任务名；
@@ -160,11 +195,17 @@ export function createSessionJobStore(archive) {
         if (current.state !== "running")
             return current;
         const now = Date.now();
+        // 失败 toast 补短原因：核心只弹记录上的 toast 文案、不显示 reason，
+        // 所以改写 toast.failure.title；完整 reason 仍留在 reason 字段供排查。
+        const failureToast = state === "failed"
+            ? { toast: withFailureReason(current.toast, input.reason ?? "超时") }
+            : {};
         const next = {
             ...current,
             state,
             settledAt: now,
             ...(input.reason === undefined ? {} : { reason: input.reason }),
+            ...failureToast,
             ...(input.result === undefined ? {} : { detail: withResult(current.detail, input.result) }),
             ...(input.progressMessage === undefined
                 ? {}

@@ -72229,7 +72229,7 @@ body[data-ds-dark-theme]{
 				size: "md",
 				icon: (0, react$1.createElement)(Icon, { name: "common.base:jiantou-zuo" }),
 				onClick: onBack
-			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-231710-643`))), (0, react$1.createElement)("div", { style: {
+			}, t("backToConversation")), (0, react$1.createElement)("div", { style: titleStyle }, t("panelTitle"), (0, react$1.createElement)("span", { style: buildTagStyle }, `v0.2.6 261125-232241-559`))), (0, react$1.createElement)("div", { style: {
 				display: "flex",
 				alignItems: "center",
 				gap: "var(--dtl-space-3)"

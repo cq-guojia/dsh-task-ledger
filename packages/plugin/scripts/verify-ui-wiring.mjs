@@ -169,6 +169,10 @@ if (!histRepo.includes('const taskId = monthAndName') || !histRepo.includes('wor
 if (/fingerprint/.test(readSource(join(hostDir, 'repositories', 'task.repository.ts')))) {
   problems.push('task.repository.ts: 删除仍在传行指纹，应按任务号定位');
 }
+// 失败 toast 必须把真实原因补进 toast.failure.title；核心不显示 TaskRecord.reason。
+if (!/withFailureReason\(current\.toast, input\.reason/.test(storeText)) {
+  problems.push('session-job.store.ts: settle 失败时未把原因补进 toast 文案');
+}
 const paramsText = readSource(join(hostDir, 'services', 'task-action-params.ts'));
 if (!/checkHistoryDelete/.test(paramsText) || !/parseDeleteHistKey/.test(paramsText)) {
   problems.push('task-action-params.ts: 缺历史删除公共校验');
