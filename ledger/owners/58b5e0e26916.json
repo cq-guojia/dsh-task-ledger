@@ -1,6 +1,7 @@
 {
   "identity": {"uuid": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6"},
   "tasks": {
+    "20261126-1116-619f-修复-worklog-空模板交付问题": {"category": "改进", "created": "2026-11-26 11:16:47", "creator": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "creator_name": "GuoJia-Agent", "finished": null, "owner": "8d557c6d-7c93-43ac-8c73-5d623e82e1c6", "owner_name": "GuoJia-Agent", "started": "2026-11-26 11:16:47", "status": "doing", "tags": ["任务台账", "提示词", "issue"], "title": "修复 worklog 空模板交付问题", "updated": "2026-11-26 11:16:47", "worklog": "worklog/202611/26-1116-619f-修复-worklog-空模板交付问题.md"}
   },
   "version": "20261022000000"
 }
