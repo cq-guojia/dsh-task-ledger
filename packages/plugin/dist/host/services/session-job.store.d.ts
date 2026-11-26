@@ -21,7 +21,7 @@ export interface CompletionTexts {
 }
 /** 新建一条作业需要的东西（由 service 在作业建好之后给）。 */
 export interface RegisterInput {
-    /** 业务键：`close:<任务号>` / `release:<任务号>` / `delete-hist:<src>:<行号>` —— 判重唯一依据。 */
+    /** 业务键：`close:<任务号>` / `release:<任务号>` / `delete-hist:<任务号>` —— 判重唯一依据。 */
     readonly key: string;
     readonly title: DisplayTitle;
     readonly kind: JobKind;
